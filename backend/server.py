@@ -483,6 +483,8 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
     """Get compound name in English and Chinese"""
     name_en = None
     name_zh = None
+    all_synonyms = []
+    
     try:
         # Get English name from property endpoint
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,Title/JSON"
@@ -497,19 +499,33 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
         syn_response = await http_client.get(syn_url, timeout=15.0)
         if syn_response.status_code == 200:
             syn_data = syn_response.json()
-            synonyms = syn_data.get("InformationList", {}).get("Information", [{}])[0].get("Synonym", [])
+            all_synonyms = syn_data.get("InformationList", {}).get("Information", [{}])[0].get("Synonym", [])
             
             # If no name_en yet, use first synonym
-            if not name_en and synonyms:
-                name_en = synonyms[0]
+            if not name_en and all_synonyms:
+                name_en = all_synonyms[0]
             
             # Look for Chinese characters in synonyms
-            for syn in synonyms:
+            for syn in all_synonyms:
                 if any('\u4e00' <= char <= '\u9fff' for char in syn):
                     name_zh = syn
                     break
+        
+        # If no Chinese name from PubChem, try local dictionary
+        if not name_zh and name_en:
+            name_zh = get_chinese_name_from_dict(name_en)
+        
+        # Try other synonyms in local dictionary
+        if not name_zh:
+            for syn in all_synonyms[:10]:  # Check first 10 synonyms
+                zh = get_chinese_name_from_dict(syn)
+                if zh:
+                    name_zh = zh
+                    break
+                    
     except Exception as e:
         logger.error(f"Error getting compound name for CID {cid}: {e}")
+    
     return name_en, name_zh
 
 def extract_record_title(ghs_data: dict) -> str:
