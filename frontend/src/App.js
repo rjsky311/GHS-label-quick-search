@@ -228,13 +228,6 @@ function App() {
     localStorage.removeItem(HISTORY_KEY);
   };
 
-  // Use history item
-  const useHistoryItem = (item) => {
-    setSingleCas(item.cas_number);
-    setActiveTab("single");
-    setShowHistory(false);
-  };
-
   // Format date
   const formatDate = (isoString) => {
     const date = new Date(isoString);
