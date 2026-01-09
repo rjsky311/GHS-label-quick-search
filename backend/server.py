@@ -309,6 +309,29 @@ def normalize_cas(cas: str) -> str:
     cas = re.sub(r'^CAS[:\s-]*', '', cas, flags=re.IGNORECASE)
     # Keep only digits and hyphens
     cas = re.sub(r'[^\d-]', '', cas)
+    
+    # Try to fix common format issues
+    if cas:
+        parts = cas.split('-')
+        if len(parts) == 3:
+            # Remove leading zeros from first part
+            parts[0] = parts[0].lstrip('0') or '0'
+            # Remove leading zeros from last part (check digit should be single digit)
+            parts[2] = parts[2].lstrip('0') or '0'
+            # Ensure middle part has 2 digits
+            if len(parts[1]) == 1:
+                parts[1] = '0' + parts[1]
+            cas = '-'.join(parts)
+        elif len(parts) == 1 and len(cas) >= 5:
+            # Try to parse CAS without hyphens (e.g., 6417-5 or 64175)
+            digits = re.sub(r'[^0-9]', '', cas)
+            if len(digits) >= 5:
+                # CAS format: XXXXXX-XX-X
+                check = digits[-1]
+                middle = digits[-3:-1]
+                first = digits[:-3].lstrip('0') or '0'
+                cas = f"{first}-{middle}-{check}"
+    
     return cas
 
 def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
