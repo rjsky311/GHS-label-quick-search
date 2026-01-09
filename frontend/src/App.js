@@ -319,7 +319,11 @@ function App() {
                 {history.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => useHistoryItem(item)}
+                    onClick={() => {
+                      setSingleCas(item.cas_number);
+                      setActiveTab("single");
+                      setShowHistory(false);
+                    }}
                     className="w-full p-3 text-left hover:bg-slate-700 rounded-lg transition-colors mb-1"
                     data-testid={`history-item-${idx}`}
                   >
