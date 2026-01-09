@@ -399,8 +399,34 @@ def extract_signal_word(ghs_data: dict) -> tuple:
         logger.error(f"Error extracting signal word: {e}")
     return None, None
 
+def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
+    """Get Chinese name from local dictionary"""
+    if not name_en:
+        return None
+    name_lower = name_en.lower().strip()
+    
+    # Direct match
+    if name_lower in CHEMICAL_NAMES_ZH:
+        return CHEMICAL_NAMES_ZH[name_lower]
+    
+    # Try partial match for compound names
+    for en_name, zh_name in CHEMICAL_NAMES_ZH.items():
+        if en_name in name_lower or name_lower in en_name:
+            return zh_name
+    
+    # Try matching without special characters
+    name_clean = re.sub(r'[^a-z0-9]', '', name_lower)
+    for en_name, zh_name in CHEMICAL_NAMES_ZH.items():
+        en_clean = re.sub(r'[^a-z0-9]', '', en_name)
+        if en_clean == name_clean or en_clean in name_clean or name_clean in en_clean:
+            return zh_name
+    
+    return None
+
 async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
-    """Get PubChem CID from CAS number"""
+    """Get PubChem CID from CAS number - try multiple methods"""
+    
+    # Method 1: Search by CAS number as name
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/cids/JSON"
         response = await http_client.get(url, timeout=15.0)
@@ -410,7 +436,47 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
             if cids:
                 return cids[0]
     except Exception as e:
-        logger.error(f"Error getting CID for {cas_number}: {e}")
+        logger.debug(f"Method 1 failed for {cas_number}: {e}")
+    
+    # Method 2: Search via xref/rn endpoint (CAS Registry Number lookup)
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/rn/{cas_number}/cids/JSON"
+        response = await http_client.get(url, timeout=15.0)
+        if response.status_code == 200:
+            data = response.json()
+            cids = data.get("IdentifierList", {}).get("CID", [])
+            if cids:
+                return cids[0]
+    except Exception as e:
+        logger.debug(f"Method 2 failed for {cas_number}: {e}")
+    
+    # Method 3: Search via substance xref (some compounds only have substance records)
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/xref/rn/{cas_number}/cids/JSON"
+        response = await http_client.get(url, timeout=15.0)
+        if response.status_code == 200:
+            data = response.json()
+            cids = data.get("InformationList", {}).get("Information", [])
+            if cids and cids[0].get("CID"):
+                return cids[0]["CID"][0] if isinstance(cids[0]["CID"], list) else cids[0]["CID"]
+    except Exception as e:
+        logger.debug(f"Method 3 failed for {cas_number}: {e}")
+    
+    # Method 4: Try with different CAS format (remove leading zeros)
+    cas_alt = re.sub(r'^0+', '', cas_number.split('-')[0]) + '-' + '-'.join(cas_number.split('-')[1:])
+    if cas_alt != cas_number:
+        try:
+            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_alt}/cids/JSON"
+            response = await http_client.get(url, timeout=15.0)
+            if response.status_code == 200:
+                data = response.json()
+                cids = data.get("IdentifierList", {}).get("CID", [])
+                if cids:
+                    return cids[0]
+        except Exception as e:
+            logger.debug(f"Method 4 failed for {cas_number}: {e}")
+    
+    logger.warning(f"Could not find CID for CAS number: {cas_number}")
     return None
 
 async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
