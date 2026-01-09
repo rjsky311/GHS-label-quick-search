@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +7,16 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
-
+import httpx
+import asyncio
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+import csv
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -25,46 +32,458 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# GHS Pictogram mapping
+GHS_PICTOGRAMS = {
+    "GHS01": {"name": "Explosive", "name_zh": "爆炸物", "icon": "💥", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS01.svg"},
+    "GHS02": {"name": "Flammable", "name_zh": "易燃物", "icon": "🔥", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS02.svg"},
+    "GHS03": {"name": "Oxidizer", "name_zh": "氧化劑", "icon": "⭕", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS03.svg"},
+    "GHS04": {"name": "Compressed Gas", "name_zh": "壓縮氣體", "icon": "🫧", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS04.svg"},
+    "GHS05": {"name": "Corrosive", "name_zh": "腐蝕性", "icon": "🧪", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS05.svg"},
+    "GHS06": {"name": "Toxic", "name_zh": "劇毒", "icon": "💀", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS06.svg"},
+    "GHS07": {"name": "Irritant", "name_zh": "刺激性/有害", "icon": "⚠️", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS07.svg"},
+    "GHS08": {"name": "Health Hazard", "name_zh": "健康危害", "icon": "🫁", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS08.svg"},
+    "GHS09": {"name": "Environmental Hazard", "name_zh": "環境危害", "icon": "🐟", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS09.svg"},
+}
+
+# H-code Chinese translations
+H_CODE_TRANSLATIONS = {
+    "H200": "不穩定爆炸物",
+    "H201": "爆炸物；整體爆炸危險",
+    "H202": "爆炸物；嚴重拋射危險",
+    "H203": "爆炸物；火災、爆炸或拋射危險",
+    "H204": "火災或拋射危險",
+    "H205": "遇火可能整體爆炸",
+    "H220": "極易燃氣體",
+    "H221": "易燃氣體",
+    "H222": "極易燃氣溶膠",
+    "H223": "易燃氣溶膠",
+    "H224": "極易燃液體和蒸氣",
+    "H225": "高度易燃液體和蒸氣",
+    "H226": "易燃液體和蒸氣",
+    "H227": "可燃液體",
+    "H228": "易燃固體",
+    "H229": "壓力容器：遇熱可能爆裂",
+    "H230": "可能以爆炸方式反應，即使沒有空氣",
+    "H231": "在高壓/高溫下可能以爆炸方式反應，即使沒有空氣",
+    "H240": "遇熱可能爆炸",
+    "H241": "遇熱可能起火或爆炸",
+    "H242": "遇熱可能起火",
+    "H250": "暴露在空氣中會自燃",
+    "H251": "自熱；可能起火",
+    "H252": "大量堆積時自熱；可能起火",
+    "H260": "遇水放出易燃氣體，可能自燃",
+    "H261": "遇水放出易燃氣體",
+    "H270": "可能導致或加劇燃燒；氧化劑",
+    "H271": "可能引起燃燒或爆炸；強氧化劑",
+    "H272": "可能加劇燃燒；氧化劑",
+    "H280": "內含高壓氣體；遇熱可能爆炸",
+    "H281": "內含冷凍氣體；可能造成低溫灼傷",
+    "H290": "可能腐蝕金屬",
+    "H300": "吞食致命",
+    "H301": "吞食有毒",
+    "H302": "吞食有害",
+    "H303": "吞食可能有害",
+    "H304": "吞食並進入呼吸道可能致命",
+    "H305": "吞食並進入呼吸道可能有害",
+    "H310": "皮膚接觸致命",
+    "H311": "皮膚接觸有毒",
+    "H312": "皮膚接觸有害",
+    "H313": "皮膚接觸可能有害",
+    "H314": "造成嚴重皮膚灼傷和眼睛損傷",
+    "H315": "造成皮膚刺激",
+    "H316": "造成輕微皮膚刺激",
+    "H317": "可能造成皮膚過敏反應",
+    "H318": "造成嚴重眼睛損傷",
+    "H319": "造成嚴重眼睛刺激",
+    "H320": "造成眼睛刺激",
+    "H330": "吸入致命",
+    "H331": "吸入有毒",
+    "H332": "吸入有害",
+    "H333": "吸入可能有害",
+    "H334": "吸入可能導致過敏或哮喘症狀或呼吸困難",
+    "H335": "可能造成呼吸道刺激",
+    "H336": "可能造成昏睡或頭暈",
+    "H340": "可能導致遺傳性缺陷",
+    "H341": "懷疑會導致遺傳性缺陷",
+    "H350": "可能致癌",
+    "H351": "懷疑會致癌",
+    "H360": "可能損害生育能力或胎兒",
+    "H361": "懷疑會損害生育能力或胎兒",
+    "H362": "可能對哺乳兒童造成傷害",
+    "H370": "會對器官造成損害",
+    "H371": "可能會對器官造成損害",
+    "H372": "長期或反覆暴露會對器官造成損害",
+    "H373": "長期或反覆暴露可能會對器官造成損害",
+    "H400": "對水生生物毒性非常大",
+    "H401": "對水生生物有毒",
+    "H402": "對水生生物有害",
+    "H410": "對水生生物毒性非常大並具有長期持續影響",
+    "H411": "對水生生物有毒並具有長期持續影響",
+    "H412": "對水生生物有害並具有長期持續影響",
+    "H413": "可能對水生生物造成長期持續有害影響",
+    "H420": "破壞高層大氣中的臭氧，危害公眾健康和環境",
+}
 
 # Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+class CASQuery(BaseModel):
+    cas_numbers: List[str]
+
+class ChemicalResult(BaseModel):
+    cas_number: str
+    cid: Optional[int] = None
+    name_en: Optional[str] = None
+    name_zh: Optional[str] = None
+    ghs_pictograms: List[Dict[str, Any]] = []
+    hazard_statements: List[Dict[str, str]] = []
+    signal_word: Optional[str] = None
+    signal_word_zh: Optional[str] = None
+    found: bool = False
+    error: Optional[str] = None
+
+class ExportRequest(BaseModel):
+    results: List[Dict[str, Any]]
+    format: str = "xlsx"  # xlsx or csv
+
+# Helper functions
+def normalize_cas(cas: str) -> str:
+    """Normalize CAS number format"""
+    cas = cas.strip()
+    # Remove common prefixes
+    cas = re.sub(r'^CAS[:\s-]*', '', cas, flags=re.IGNORECASE)
+    # Keep only digits and hyphens
+    cas = re.sub(r'[^\d-]', '', cas)
+    return cas
+
+def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
+    """Extract GHS pictogram codes from PubChem data"""
+    pictograms = []
+    try:
+        sections = ghs_data.get("Record", {}).get("Section", [])
+        for section in sections:
+            if section.get("TOCHeading") == "Safety and Hazards":
+                for subsection in section.get("Section", []):
+                    if subsection.get("TOCHeading") == "Hazards Identification":
+                        for subsubsection in subsection.get("Section", []):
+                            if subsubsection.get("TOCHeading") == "GHS Classification":
+                                for info in subsubsection.get("Information", []):
+                                    if info.get("Name") == "Pictogram(s)":
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            for extra in markup.get("Markup", []):
+                                                if extra.get("Type") == "PictogramClass":
+                                                    pic_code = extra.get("Extra", "")
+                                                    if pic_code in GHS_PICTOGRAMS:
+                                                        pictograms.append({
+                                                            "code": pic_code,
+                                                            **GHS_PICTOGRAMS[pic_code]
+                                                        })
+    except Exception as e:
+        logger.error(f"Error extracting pictograms: {e}")
+    return pictograms
+
+def extract_hazard_statements(ghs_data: dict) -> List[Dict[str, str]]:
+    """Extract hazard statements from PubChem data"""
+    statements = []
+    try:
+        sections = ghs_data.get("Record", {}).get("Section", [])
+        for section in sections:
+            if section.get("TOCHeading") == "Safety and Hazards":
+                for subsection in section.get("Section", []):
+                    if subsection.get("TOCHeading") == "Hazards Identification":
+                        for subsubsection in subsection.get("Section", []):
+                            if subsubsection.get("TOCHeading") == "GHS Classification":
+                                for info in subsubsection.get("Information", []):
+                                    if info.get("Name") == "GHS Hazard Statements":
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            text = markup.get("String", "")
+                                            # Extract H-code
+                                            h_match = re.search(r'(H\d{3})', text)
+                                            if h_match:
+                                                h_code = h_match.group(1)
+                                                zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
+                                                statements.append({
+                                                    "code": h_code,
+                                                    "text_en": text,
+                                                    "text_zh": zh_text if zh_text else text
+                                                })
+    except Exception as e:
+        logger.error(f"Error extracting hazard statements: {e}")
+    return statements
+
+def extract_signal_word(ghs_data: dict) -> tuple:
+    """Extract signal word from PubChem data"""
+    signal_translations = {
+        "Danger": "危險",
+        "Warning": "警告",
+    }
+    try:
+        sections = ghs_data.get("Record", {}).get("Section", [])
+        for section in sections:
+            if section.get("TOCHeading") == "Safety and Hazards":
+                for subsection in section.get("Section", []):
+                    if subsection.get("TOCHeading") == "Hazards Identification":
+                        for subsubsection in subsection.get("Section", []):
+                            if subsubsection.get("TOCHeading") == "GHS Classification":
+                                for info in subsubsection.get("Information", []):
+                                    if info.get("Name") == "Signal":
+                                        signal = info.get("Value", {}).get("StringWithMarkup", [{}])[0].get("String", "")
+                                        return signal, signal_translations.get(signal, signal)
+    except Exception as e:
+        logger.error(f"Error extracting signal word: {e}")
+    return None, None
+
+async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
+    """Get PubChem CID from CAS number"""
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/cids/JSON"
+        response = await http_client.get(url, timeout=15.0)
+        if response.status_code == 200:
+            data = response.json()
+            cids = data.get("IdentifierList", {}).get("CID", [])
+            if cids:
+                return cids[0]
+    except Exception as e:
+        logger.error(f"Error getting CID for {cas_number}: {e}")
+    return None
+
+async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
+    """Get compound name in English and Chinese"""
+    name_en = None
+    name_zh = None
+    try:
+        # Get English name
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,Title/JSON"
+        response = await http_client.get(url, timeout=15.0)
+        if response.status_code == 200:
+            data = response.json()
+            props = data.get("PropertyTable", {}).get("Properties", [{}])[0]
+            name_en = props.get("Title") or props.get("IUPACName")
+        
+        # Try to get synonyms for Chinese name
+        syn_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
+        syn_response = await http_client.get(syn_url, timeout=15.0)
+        if syn_response.status_code == 200:
+            syn_data = syn_response.json()
+            synonyms = syn_data.get("InformationList", {}).get("Information", [{}])[0].get("Synonym", [])
+            # Look for Chinese characters in synonyms
+            for syn in synonyms:
+                if any('\u4e00' <= char <= '\u9fff' for char in syn):
+                    name_zh = syn
+                    break
+    except Exception as e:
+        logger.error(f"Error getting compound name for CID {cid}: {e}")
+    return name_en, name_zh
+
+async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
+    """Get GHS classification from PubChem"""
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
+        response = await http_client.get(url, timeout=30.0)
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        logger.error(f"Error getting GHS data for CID {cid}: {e}")
+    return {}
+
+async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> ChemicalResult:
+    """Search for a chemical by CAS number"""
+    normalized_cas = normalize_cas(cas_number)
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    if not normalized_cas:
+        return ChemicalResult(
+            cas_number=cas_number,
+            found=False,
+            error="無效的 CAS 號碼格式"
+        )
+    
+    # Get CID
+    cid = await get_cid_from_cas(normalized_cas, http_client)
+    if not cid:
+        return ChemicalResult(
+            cas_number=cas_number,
+            found=False,
+            error="找不到此 CAS 號碼對應的化學品"
+        )
+    
+    # Get compound name and GHS data concurrently
+    name_task = get_compound_name(cid, http_client)
+    ghs_task = get_ghs_classification(cid, http_client)
+    
+    (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
+    
+    # Extract GHS information
+    pictograms = extract_ghs_pictograms(ghs_data)
+    hazard_statements = extract_hazard_statements(ghs_data)
+    signal_word, signal_word_zh = extract_signal_word(ghs_data)
+    
+    return ChemicalResult(
+        cas_number=cas_number,
+        cid=cid,
+        name_en=name_en,
+        name_zh=name_zh,
+        ghs_pictograms=pictograms,
+        hazard_statements=hazard_statements,
+        signal_word=signal_word,
+        signal_word_zh=signal_word_zh,
+        found=True
+    )
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
+# API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "GHS Label Quick Search API"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+@api_router.post("/search", response_model=List[ChemicalResult])
+async def search_chemicals(query: CASQuery):
+    """Search for chemicals by CAS numbers"""
+    results = []
+    async with httpx.AsyncClient() as http_client:
+        # Process in batches to avoid overwhelming the API
+        batch_size = 5
+        for i in range(0, len(query.cas_numbers), batch_size):
+            batch = query.cas_numbers[i:i+batch_size]
+            tasks = [search_chemical(cas, http_client) for cas in batch]
+            batch_results = await asyncio.gather(*tasks)
+            results.extend(batch_results)
+            # Add small delay between batches
+            if i + batch_size < len(query.cas_numbers):
+                await asyncio.sleep(0.5)
+    return results
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/search/{cas_number}", response_model=ChemicalResult)
+async def search_single_chemical(cas_number: str):
+    """Search for a single chemical by CAS number"""
+    async with httpx.AsyncClient() as http_client:
+        return await search_chemical(cas_number, http_client)
+
+@api_router.post("/export/xlsx")
+async def export_xlsx(request: ExportRequest):
+    """Export results to Excel file"""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "GHS查詢結果"
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    # Header style
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
     
-    return status_checks
+    # Headers
+    headers = ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data
+    for row, result in enumerate(request.results, 2):
+        ws.cell(row=row, column=1, value=result.get("cas_number", "")).border = thin_border
+        ws.cell(row=row, column=2, value=result.get("name_en", "")).border = thin_border
+        ws.cell(row=row, column=3, value=result.get("name_zh", "")).border = thin_border
+        
+        # GHS pictograms
+        pictograms = result.get("ghs_pictograms", [])
+        ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
+        ws.cell(row=row, column=4, value=ghs_text).border = thin_border
+        
+        # Signal word
+        signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
+        ws.cell(row=row, column=5, value=signal).border = thin_border
+        
+        # Hazard statements
+        statements = result.get("hazard_statements", [])
+        hazard_text = "\n".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
+        cell = ws.cell(row=row, column=6, value=hazard_text)
+        cell.border = thin_border
+        cell.alignment = Alignment(wrap_text=True)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 35
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 50
+    
+    # Save to BytesIO
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=ghs_results.xlsx"}
+    )
+
+@api_router.post("/export/csv")
+async def export_csv(request: ExportRequest):
+    """Export results to CSV file"""
+    output = BytesIO()
+    # Add BOM for Excel compatibility with Chinese characters
+    output.write(b'\xef\xbb\xbf')
+    
+    # Write CSV
+    writer = csv.writer(output.getvalue().decode('utf-8-sig').splitlines() if False else output, delimiter=',')
+    
+    # Use StringIO for proper CSV writing
+    from io import StringIO
+    string_output = StringIO()
+    writer = csv.writer(string_output)
+    
+    # Headers
+    writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"])
+    
+    # Data
+    for result in request.results:
+        pictograms = result.get("ghs_pictograms", [])
+        ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
+        
+        signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
+        
+        statements = result.get("hazard_statements", [])
+        hazard_text = "; ".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
+        
+        writer.writerow([
+            result.get("cas_number", ""),
+            result.get("name_en", ""),
+            result.get("name_zh", ""),
+            ghs_text,
+            signal,
+            hazard_text
+        ])
+    
+    # Convert to bytes with BOM
+    csv_content = string_output.getvalue()
+    output = BytesIO()
+    output.write(b'\xef\xbb\xbf')  # BOM
+    output.write(csv_content.encode('utf-8'))
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=ghs_results.csv"}
+    )
+
+@api_router.get("/ghs-pictograms")
+async def get_ghs_pictograms():
+    """Get all GHS pictogram information"""
+    return GHS_PICTOGRAMS
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -76,13 +495,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
