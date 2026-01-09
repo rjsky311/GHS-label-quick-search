@@ -197,6 +197,7 @@ def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
 def extract_hazard_statements(ghs_data: dict) -> List[Dict[str, str]]:
     """Extract hazard statements from PubChem data"""
     statements = []
+    seen_codes = set()
     try:
         sections = ghs_data.get("Record", {}).get("Section", [])
         for section in sections:
@@ -213,12 +214,15 @@ def extract_hazard_statements(ghs_data: dict) -> List[Dict[str, str]]:
                                             h_match = re.search(r'(H\d{3})', text)
                                             if h_match:
                                                 h_code = h_match.group(1)
-                                                zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
-                                                statements.append({
-                                                    "code": h_code,
-                                                    "text_en": text,
-                                                    "text_zh": zh_text if zh_text else text
-                                                })
+                                                # Avoid duplicates
+                                                if h_code not in seen_codes:
+                                                    seen_codes.add(h_code)
+                                                    zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
+                                                    statements.append({
+                                                        "code": h_code,
+                                                        "text_en": text,
+                                                        "text_zh": zh_text if zh_text else text
+                                                    })
     except Exception as e:
         logger.error(f"Error extracting hazard statements: {e}")
     return statements
