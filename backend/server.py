@@ -554,16 +554,26 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         return ChemicalResult(
             cas_number=cas_number,
             found=False,
-            error="無效的 CAS 號碼格式"
+            error="無效的 CAS 號碼格式（正確格式如：64-17-5）"
         )
     
-    # Get CID
-    cid = await get_cid_from_cas(normalized_cas, http_client)
-    if not cid:
+    # Validate CAS number format (should be like XX-XX-X or XXXXX-XX-X)
+    cas_pattern = re.match(r'^(\d{2,7})-(\d{2})-(\d)$', normalized_cas)
+    if not cas_pattern:
         return ChemicalResult(
             cas_number=cas_number,
             found=False,
-            error="找不到此 CAS 號碼對應的化學品"
+            error=f"CAS 號碼格式不正確：{normalized_cas}（正確格式如：64-17-5）"
+        )
+    
+    # Get CID - try multiple methods
+    cid = await get_cid_from_cas(normalized_cas, http_client)
+    if not cid:
+        # Provide more helpful error message
+        return ChemicalResult(
+            cas_number=cas_number,
+            found=False,
+            error=f"在 PubChem 資料庫中找不到 CAS {normalized_cas}，請確認號碼是否正確"
         )
     
     # Get compound name and GHS data concurrently
@@ -580,6 +590,10 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     # Use RecordTitle as fallback for name_en if not found
     if not name_en:
         name_en = extract_record_title(ghs_data)
+    
+    # Final attempt to get Chinese name from dictionary
+    if not name_zh and name_en:
+        name_zh = get_chinese_name_from_dict(name_en)
     
     return ChemicalResult(
         cas_number=cas_number,
