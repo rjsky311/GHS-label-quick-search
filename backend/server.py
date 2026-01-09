@@ -39,6 +39,156 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Common chemical names Chinese translation dictionary
+CHEMICAL_NAMES_ZH = {
+    # 常見溶劑
+    "ethanol": "乙醇",
+    "methanol": "甲醇",
+    "water": "水",
+    "acetone": "丙酮",
+    "isopropanol": "異丙醇",
+    "2-propanol": "異丙醇",
+    "ethyl acetate": "乙酸乙酯",
+    "dichloromethane": "二氯甲烷",
+    "chloroform": "氯仿",
+    "toluene": "甲苯",
+    "benzene": "苯",
+    "hexane": "己烷",
+    "diethyl ether": "乙醚",
+    "tetrahydrofuran": "四氫呋喃",
+    "dimethyl sulfoxide": "二甲基亞碸",
+    "dmso": "二甲基亞碸",
+    "dimethylformamide": "二甲基甲醯胺",
+    "dmf": "二甲基甲醯胺",
+    "acetonitrile": "乙腈",
+    "pyridine": "吡啶",
+    "triethylamine": "三乙胺",
+    
+    # 常見酸鹼
+    "hydrochloric acid": "鹽酸",
+    "sulfuric acid": "硫酸",
+    "nitric acid": "硝酸",
+    "acetic acid": "乙酸",
+    "phosphoric acid": "磷酸",
+    "sodium hydroxide": "氫氧化鈉",
+    "potassium hydroxide": "氫氧化鉀",
+    "ammonia": "氨",
+    "ammonium hydroxide": "氨水",
+    
+    # 常見化學品
+    "sodium chloride": "氯化鈉",
+    "potassium chloride": "氯化鉀",
+    "calcium chloride": "氯化鈣",
+    "magnesium sulfate": "硫酸鎂",
+    "sodium carbonate": "碳酸鈉",
+    "sodium bicarbonate": "碳酸氫鈉",
+    "hydrogen peroxide": "過氧化氫",
+    "formaldehyde": "甲醛",
+    "glutaraldehyde": "戊二醛",
+    "phenol": "苯酚",
+    "aniline": "苯胺",
+    "nitrobenzene": "硝基苯",
+    "chlorobenzene": "氯苯",
+    "bromobenzene": "溴苯",
+    "iodobenzene": "碘苯",
+    "benzoic acid": "苯甲酸",
+    "benzaldehyde": "苯甲醛",
+    "benzyl alcohol": "苄醇",
+    "styrene": "苯乙烯",
+    "naphthalene": "萘",
+    "anthracene": "蒽",
+    "anthraquinone": "蒽醌",
+    "xylene": "二甲苯",
+    
+    # 金屬與化合物
+    "mercury": "汞",
+    "lead": "鉛",
+    "arsenic": "砷",
+    "cadmium": "鎘",
+    "chromium": "鉻",
+    "nickel": "鎳",
+    "copper sulfate": "硫酸銅",
+    "silver nitrate": "硝酸銀",
+    "zinc chloride": "氯化鋅",
+    "iron(iii) chloride": "氯化鐵",
+    "ferric chloride": "氯化鐵",
+    
+    # 有機化合物
+    "glucose": "葡萄糖",
+    "sucrose": "蔗糖",
+    "fructose": "果糖",
+    "glycerol": "甘油",
+    "urea": "尿素",
+    "citric acid": "檸檬酸",
+    "oxalic acid": "草酸",
+    "tartaric acid": "酒石酸",
+    "lactic acid": "乳酸",
+    "formic acid": "甲酸",
+    "propionic acid": "丙酸",
+    "butyric acid": "丁酸",
+    
+    # 胺類
+    "methylamine": "甲胺",
+    "dimethylamine": "二甲胺",
+    "trimethylamine": "三甲胺",
+    "ethylamine": "乙胺",
+    "diethylamine": "二乙胺",
+    "aniline": "苯胺",
+    "4-bromoaniline": "4-溴苯胺",
+    "3-aminopyridine": "3-氨基吡啶",
+    
+    # 醛類
+    "formaldehyde": "甲醛",
+    "acetaldehyde": "乙醛",
+    "propionaldehyde": "丙醛",
+    "butyraldehyde": "丁醛",
+    "benzaldehyde": "苯甲醛",
+    
+    # 酮類
+    "acetone": "丙酮",
+    "methyl ethyl ketone": "丁酮",
+    "cyclohexanone": "環己酮",
+    "acetophenone": "苯乙酮",
+    
+    # 硼化合物
+    "boric acid": "硼酸",
+    "sodium borate": "硼砂",
+    "bis(pinacolato)diboron": "雙(頻那醇)二硼",
+    "bis(pinacolato)diborane": "雙(頻那醇硼酸)二硼烷",
+    
+    # 鹵化物
+    "bromine": "溴",
+    "iodine": "碘",
+    "chlorine": "氯",
+    "fluorine": "氟",
+    "carbon tetrachloride": "四氯化碳",
+    "chloroform": "氯仿",
+    "methyl iodide": "碘甲烷",
+    "methyl bromide": "溴甲烷",
+    "ethyl bromide": "溴乙烷",
+    
+    # 氟化物
+    "hydrofluoric acid": "氫氟酸",
+    "sodium fluoride": "氟化鈉",
+    "potassium fluoride": "氟化鉀",
+    
+    # 氰化物
+    "hydrogen cyanide": "氰化氫",
+    "sodium cyanide": "氰化鈉",
+    "potassium cyanide": "氰化鉀",
+    "benzonitrile": "苯甲腈",
+    "acetonitrile": "乙腈",
+    
+    # 其他常見化學品
+    "silica gel": "矽膠",
+    "activated carbon": "活性炭",
+    "sodium sulfate": "硫酸鈉",
+    "magnesium chloride": "氯化鎂",
+    "potassium permanganate": "高錳酸鉀",
+    "sodium hypochlorite": "次氯酸鈉",
+    "calcium hypochlorite": "次氯酸鈣",
+}
+
 # GHS Pictogram mapping
 GHS_PICTOGRAMS = {
     "GHS01": {"name": "Explosive", "name_zh": "爆炸物", "icon": "💥", "image": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS01.svg"},
