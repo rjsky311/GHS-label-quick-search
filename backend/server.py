@@ -268,7 +268,7 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
     name_en = None
     name_zh = None
     try:
-        # Get English name
+        # Get English name from property endpoint
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,Title/JSON"
         response = await http_client.get(url, timeout=15.0)
         if response.status_code == 200:
@@ -276,12 +276,17 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
             props = data.get("PropertyTable", {}).get("Properties", [{}])[0]
             name_en = props.get("Title") or props.get("IUPACName")
         
-        # Try to get synonyms for Chinese name
+        # Try to get synonyms for better name and Chinese name
         syn_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
         syn_response = await http_client.get(syn_url, timeout=15.0)
         if syn_response.status_code == 200:
             syn_data = syn_response.json()
             synonyms = syn_data.get("InformationList", {}).get("Information", [{}])[0].get("Synonym", [])
+            
+            # If no name_en yet, use first synonym
+            if not name_en and synonyms:
+                name_en = synonyms[0]
+            
             # Look for Chinese characters in synonyms
             for syn in synonyms:
                 if any('\u4e00' <= char <= '\u9fff' for char in syn):
@@ -290,6 +295,13 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
     except Exception as e:
         logger.error(f"Error getting compound name for CID {cid}: {e}")
     return name_en, name_zh
+
+def extract_record_title(ghs_data: dict) -> str:
+    """Extract RecordTitle from GHS data as fallback name"""
+    try:
+        return ghs_data.get("Record", {}).get("RecordTitle", "")
+    except:
+        return ""
 
 async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
     """Get GHS classification from PubChem"""
