@@ -492,22 +492,22 @@ function App() {
 
             {/* Results Table */}
             <div className="overflow-x-auto">
-              <table className="w-full" data-testid="results-table">
+              <table className="w-full min-w-[800px]" data-testid="results-table">
                 <thead>
                   <tr className="bg-slate-900/50">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-28">
                       CAS No.
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider min-w-[200px]">
                       名稱
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-48">
                       GHS 標示
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-20">
                       警示語
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-24">
                       操作
                     </th>
                   </tr>
@@ -521,7 +521,7 @@ function App() {
                       }`}
                       data-testid={`result-row-${idx}`}
                     >
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <span className="font-mono text-amber-400">
                           {result.cas_number}
                         </span>
@@ -529,8 +529,8 @@ function App() {
                       <td className="px-4 py-4">
                         {result.found ? (
                           <div>
-                            <div className="text-white font-medium">
-                              {result.name_en}
+                            <div className="text-white font-medium break-words">
+                              {result.name_en || "（名稱載入中...）"}
                             </div>
                             {result.name_zh && (
                               <div className="text-slate-400 text-sm">
