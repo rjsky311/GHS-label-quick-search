@@ -164,6 +164,7 @@ def normalize_cas(cas: str) -> str:
 def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
     """Extract GHS pictogram codes from PubChem data"""
     pictograms = []
+    seen_codes = set()
     try:
         sections = ghs_data.get("Record", {}).get("Section", [])
         for section in sections:
@@ -176,13 +177,19 @@ def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
                                     if info.get("Name") == "Pictogram(s)":
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             for extra in markup.get("Markup", []):
-                                                if extra.get("Type") == "PictogramClass":
-                                                    pic_code = extra.get("Extra", "")
-                                                    if pic_code in GHS_PICTOGRAMS:
-                                                        pictograms.append({
-                                                            "code": pic_code,
-                                                            **GHS_PICTOGRAMS[pic_code]
-                                                        })
+                                                # Check for Icon type with URL containing GHS code
+                                                if extra.get("Type") == "Icon":
+                                                    url = extra.get("URL", "")
+                                                    # Extract GHS code from URL like "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS02.svg"
+                                                    match = re.search(r'(GHS\d{2})', url)
+                                                    if match:
+                                                        pic_code = match.group(1)
+                                                        if pic_code in GHS_PICTOGRAMS and pic_code not in seen_codes:
+                                                            seen_codes.add(pic_code)
+                                                            pictograms.append({
+                                                                "code": pic_code,
+                                                                **GHS_PICTOGRAMS[pic_code]
+                                                            })
     except Exception as e:
         logger.error(f"Error extracting pictograms: {e}")
     return pictograms
