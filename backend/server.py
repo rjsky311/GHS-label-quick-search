@@ -345,6 +345,10 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     hazard_statements = extract_hazard_statements(ghs_data)
     signal_word, signal_word_zh = extract_signal_word(ghs_data)
     
+    # Use RecordTitle as fallback for name_en if not found
+    if not name_en:
+        name_en = extract_record_title(ghs_data)
+    
     return ChemicalResult(
         cas_number=cas_number,
         cid=cid,
