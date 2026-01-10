@@ -2,7 +2,6 @@ from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
@@ -21,13 +20,24 @@ import re
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection (optional - for future features)
+mongo_url = os.environ.get('MONGO_URL', '')
+db = None
+client = None
+
+if mongo_url:
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        client = AsyncIOMotorClient(mongo_url)
+        db = client[os.environ.get('DB_NAME', 'ghs_db')]
+        logging.info("MongoDB connected successfully")
+    except Exception as e:
+        logging.warning(f"MongoDB connection failed: {e}. Running without database.")
+else:
+    logging.info("No MONGO_URL provided. Running without database.")
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="GHS Label Quick Search API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
