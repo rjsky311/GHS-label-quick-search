@@ -1,0 +1,25 @@
+# Zeabur deployment configuration for GHS Label Quick Search
+
+services:
+  - name: backend
+    type: docker
+    context: ./backend
+    dockerfile: Dockerfile
+    ports:
+      - 8001
+    env:
+      - MONGO_URL=${MONGO_URL}
+      - DB_NAME=${DB_NAME:-ghs_db}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    healthcheck:
+      path: /api/
+      port: 8001
+
+  - name: frontend
+    type: static
+    build:
+      command: yarn build
+      output: build
+    context: ./frontend
+    env:
+      - REACT_APP_BACKEND_URL=${BACKEND_URL}
