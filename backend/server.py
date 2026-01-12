@@ -666,27 +666,30 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             error=f"CAS 號碼格式不正確：{normalized_cas}（正確格式如：64-17-5）"
         )
     
-    # ===== NEW: Try to get Chinese name from CAS dictionary FIRST (most accurate) =====
+    # ===== NEW: Try to get Chinese and English name from CAS dictionary FIRST (most accurate) =====
     name_zh_from_cas = get_chinese_name_from_cas(normalized_cas)
+    name_en_from_cas = get_english_name_from_cas(normalized_cas)
     if name_zh_from_cas:
         logger.info(f"Found Chinese name from CAS dictionary for {normalized_cas}: {name_zh_from_cas}")
+    if name_en_from_cas:
+        logger.info(f"Found English name from CAS dictionary for {normalized_cas}: {name_en_from_cas}")
     
     # Get CID - try multiple methods
     cid = await get_cid_from_cas(normalized_cas, http_client)
     if not cid:
         # Even if PubChem doesn't have CID, we might have local data
-        if name_zh_from_cas:
+        if name_zh_from_cas or name_en_from_cas:
             return ChemicalResult(
                 cas_number=cas_number,
                 cid=None,
-                name_en=None,
+                name_en=name_en_from_cas,  # Provide English name from local dictionary
                 name_zh=name_zh_from_cas,
                 ghs_pictograms=[],
                 hazard_statements=[],
                 signal_word=None,
                 signal_word_zh=None,
                 found=True,
-                error="PubChem 無 GHS 資料，僅提供本地字典中文名稱"
+                error="PubChem 無 GHS 資料，僅提供本地字典名稱"
             )
         # Provide more helpful error message
         return ChemicalResult(
