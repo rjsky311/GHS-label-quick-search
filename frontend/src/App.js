@@ -41,12 +41,7 @@ function App() {
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [labelConfig, setLabelConfig] = useState({
     size: "medium", // small, medium, large
-    columns: 2,
-    showCas: true,
-    showName: true,
-    showNameZh: true,
-    showSignal: true,
-    showHazards: true,
+    template: "standard", // icon, standard, full, qrcode
   });
   const [selectedForLabel, setSelectedForLabel] = useState([]);
   const printRef = useRef(null);
