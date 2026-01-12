@@ -448,19 +448,15 @@ def get_chinese_name_from_cas(cas_number: str) -> Optional[str]:
     return None
 
 def get_english_name_from_cas(cas_number: str) -> Optional[str]:
-    """Get English name from CAS number via reverse lookup in expanded dictionary"""
+    """Get English name from CAS number via local dictionary"""
     if not cas_number:
         return None
     cas_normalized = cas_number.strip()
     
-    # Reverse lookup: find English name that maps to same Chinese name as this CAS
-    zh_name = CAS_TO_ZH.get(cas_normalized)
-    if zh_name:
-        # Find the English name that corresponds to this Chinese name
-        for en_name, zh in CHEMICAL_NAMES_ZH_EXPANDED.items():
-            if zh == zh_name:
-                # Return properly capitalized English name
-                return en_name.title() if en_name.islower() else en_name
+    # Direct lookup from CAS_TO_EN dictionary
+    if cas_normalized in CAS_TO_EN:
+        return CAS_TO_EN[cas_normalized]
+    
     return None
 
 def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
