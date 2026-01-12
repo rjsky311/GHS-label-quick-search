@@ -313,86 +313,396 @@ function App() {
     setSelectedForLabel([]);
   };
 
-  // Print labels
+  // Generate QR Code URL (using Google Charts API)
+  const getQRCodeUrl = (text, size = 100) => {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+  };
+
+  // Print labels with multiple templates
   const printLabels = () => {
     if (selectedForLabel.length === 0) return;
     
     const printWindow = window.open("", "_blank");
-    const labelSize = {
-      small: { width: "45mm", height: "30mm", fontSize: "7px", imgSize: "15px" },
-      medium: { width: "70mm", height: "50mm", fontSize: "9px", imgSize: "24px" },
-      large: { width: "100mm", height: "70mm", fontSize: "11px", imgSize: "32px" },
+    
+    // Size configurations
+    const sizeConfig = {
+      small: { width: "50mm", height: "35mm", fontSize: "7px", imgSize: "18px", qrSize: "20mm" },
+      medium: { width: "70mm", height: "50mm", fontSize: "9px", imgSize: "24px", qrSize: "25mm" },
+      large: { width: "100mm", height: "70mm", fontSize: "11px", imgSize: "32px", qrSize: "35mm" },
     }[labelConfig.size];
 
-    const columns = labelConfig.columns;
-    
-    const labelsHtml = selectedForLabel.map((chemical) => {
-      const pictograms = chemical.ghs_pictograms || [];
-      const hazards = chemical.hazard_statements || [];
-      const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-      const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
-
-      return `
-        <div class="label" style="width: ${labelSize.width}; min-height: ${labelSize.height};">
-          <div class="label-header">
-            ${labelConfig.showName && chemical.name_en ? `<div class="name-en">${chemical.name_en}</div>` : ""}
-            ${labelConfig.showNameZh && chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-            ${labelConfig.showCas ? `<div class="cas">CAS: ${chemical.cas_number}</div>` : ""}
+    // Template generators
+    const templates = {
+      // 版型 1 - 圖示版：只有圖示 + 警示語
+      icon: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        
+        return `
+          <div class="label label-icon" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
+            <div class="label-name-short">
+              <strong>${chemical.name_en || ""}</strong>
+              ${chemical.name_zh ? `<br/><span class="name-zh">${chemical.name_zh}</span>` : ""}
+            </div>
+            <div class="cas-small">CAS: ${chemical.cas_number}</div>
+            ${pictograms.length > 0 ? `
+              <div class="pictograms-large">
+                ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+              </div>
+            ` : '<div class="no-hazard">無危害標示</div>'}
+            ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
           </div>
-          ${pictograms.length > 0 ? `
-            <div class="pictograms">
-              ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" style="width: ${labelSize.imgSize}; height: ${labelSize.imgSize};" />`).join("")}
+        `;
+      },
+
+      // 版型 2 - 標準版：名稱 + 圖示 + 警示語 + 前 3 條危害說明
+      standard: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const hazards = chemical.hazard_statements || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        
+        return `
+          <div class="label label-standard" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
+            <div class="label-header">
+              <div class="name-en">${chemical.name_en || ""}</div>
+              ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+              <div class="cas">CAS: ${chemical.cas_number}</div>
             </div>
-          ` : ""}
-          ${labelConfig.showSignal && signalWord ? `
-            <div class="signal ${signalClass}">${signalWord}</div>
-          ` : ""}
-          ${labelConfig.showHazards && hazards.length > 0 ? `
-            <div class="hazards">
-              ${hazards.slice(0, 4).map((h) => `<div class="hazard">${h.code}: ${h.text_zh}</div>`).join("")}
-              ${hazards.length > 4 ? `<div class="hazard">...及其他 ${hazards.length - 4} 項</div>` : ""}
+            <div class="label-body">
+              ${pictograms.length > 0 ? `
+                <div class="pictograms">
+                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" title="${p.name_zh}" />`).join("")}
+                </div>
+              ` : ""}
+              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
             </div>
-          ` : ""}
-        </div>
-      `;
+            ${hazards.length > 0 ? `
+              <div class="hazards">
+                ${hazards.slice(0, 3).map((h) => `<div class="hazard">${h.code} ${h.text_zh}</div>`).join("")}
+                ${hazards.length > 3 ? `<div class="hazard more">...等 ${hazards.length} 項危害說明</div>` : ""}
+              </div>
+            ` : ""}
+          </div>
+        `;
+      },
+
+      // 版型 3 - 完整版：所有內容，字體自動縮小
+      full: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const hazards = chemical.hazard_statements || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        
+        // 根據危害說明數量動態調整字體
+        const hazardFontSize = hazards.length > 6 ? "6px" : hazards.length > 4 ? "7px" : "8px";
+        
+        return `
+          <div class="label label-full" style="width: ${sizeConfig.width}; min-height: ${sizeConfig.height};">
+            <div class="label-header">
+              <div class="name-en">${chemical.name_en || ""}</div>
+              ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+              <div class="cas">CAS: ${chemical.cas_number}</div>
+            </div>
+            <div class="label-body">
+              ${pictograms.length > 0 ? `
+                <div class="pictograms">
+                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" title="${p.name_zh}" />`).join("")}
+                </div>
+              ` : ""}
+              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+            </div>
+            ${hazards.length > 0 ? `
+              <div class="hazards-full" style="font-size: ${hazardFontSize};">
+                ${hazards.map((h) => `<div class="hazard">${h.code} ${h.text_zh}</div>`).join("")}
+              </div>
+            ` : ""}
+          </div>
+        `;
+      },
+
+      // 版型 4 - QR Code 版：基本資訊 + QR Code 連結到 PubChem
+      qrcode: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const pubchemUrl = chemical.cid 
+          ? `https://pubchem.ncbi.nlm.nih.gov/compound/${chemical.cid}`
+          : `https://pubchem.ncbi.nlm.nih.gov/#query=${chemical.cas_number}`;
+        
+        return `
+          <div class="label label-qrcode" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
+            <div class="qr-layout">
+              <div class="qr-left">
+                <div class="name-en">${chemical.name_en || ""}</div>
+                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${chemical.cas_number}</div>
+                ${pictograms.length > 0 ? `
+                  <div class="pictograms-small">
+                    ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  </div>
+                ` : ""}
+                ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+              </div>
+              <div class="qr-right">
+                <img class="qrcode" src="${getQRCodeUrl(pubchemUrl, 150)}" alt="QR Code" />
+                <div class="qr-hint">掃碼查看<br/>完整資訊</div>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+    };
+
+    // Generate labels HTML
+    const labelsHtml = selectedForLabel.map((chemical) => {
+      return templates[labelConfig.template](chemical);
     }).join("");
+
+    // CSS Styles for all templates
+    const styles = `
+      @page {
+        size: A4;
+        margin: 8mm;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", sans-serif;
+        font-size: ${sizeConfig.fontSize};
+        padding: 5mm;
+        background: #fff;
+      }
+      .labels-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4mm;
+      }
+      .label {
+        border: 2px solid #333;
+        border-radius: 3mm;
+        padding: 2mm;
+        page-break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        overflow: hidden;
+      }
+      
+      /* Common styles */
+      .label-header {
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 1.5mm;
+        margin-bottom: 1.5mm;
+      }
+      .name-en {
+        font-weight: bold;
+        font-size: 1.2em;
+        line-height: 1.2;
+        color: #000;
+      }
+      .name-zh {
+        color: #333;
+        font-size: 0.95em;
+      }
+      .cas {
+        font-family: "Consolas", "Monaco", monospace;
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 0.5mm;
+      }
+      .pictograms, .pictograms-large, .pictograms-small {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5mm;
+        justify-content: center;
+        padding: 1.5mm 0;
+      }
+      .pictograms img {
+        width: ${sizeConfig.imgSize};
+        height: ${sizeConfig.imgSize};
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+      }
+      .pictograms-large img {
+        width: calc(${sizeConfig.imgSize} * 1.5);
+        height: calc(${sizeConfig.imgSize} * 1.5);
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+      }
+      .pictograms-small img {
+        width: calc(${sizeConfig.imgSize} * 0.8);
+        height: calc(${sizeConfig.imgSize} * 0.8);
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+      }
+      .signal {
+        text-align: center;
+        font-weight: bold;
+        padding: 1mm 2mm;
+        margin: 1mm 0;
+        border-radius: 1mm;
+        font-size: 1.1em;
+      }
+      .signal.danger {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #dc2626;
+      }
+      .signal.warning {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #d97706;
+      }
+      .hazards, .hazards-full {
+        font-size: 0.85em;
+        line-height: 1.3;
+        margin-top: auto;
+        padding-top: 1mm;
+        border-top: 1px dashed #ddd;
+      }
+      .hazard {
+        margin-bottom: 0.5mm;
+        color: #333;
+      }
+      .hazard.more {
+        color: #666;
+        font-style: italic;
+      }
+      .no-hazard {
+        text-align: center;
+        color: #22c55e;
+        padding: 2mm;
+        font-weight: 500;
+      }
+
+      /* Icon template specific */
+      .label-icon {
+        justify-content: space-between;
+        text-align: center;
+      }
+      .label-name-short {
+        font-size: 1.1em;
+        line-height: 1.3;
+      }
+      .label-name-short .name-zh {
+        font-size: 0.9em;
+      }
+      .cas-small {
+        font-family: monospace;
+        font-size: 0.85em;
+        color: #666;
+      }
+
+      /* Standard template */
+      .label-standard .label-body {
+        display: flex;
+        align-items: center;
+        gap: 2mm;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .label-standard .pictograms {
+        padding: 1mm 0;
+      }
+      .label-standard .signal {
+        margin: 0;
+        font-size: 0.95em;
+      }
+
+      /* Full template */
+      .label-full {
+        height: auto !important;
+      }
+      .label-full .hazards-full {
+        max-height: none;
+      }
+
+      /* QR Code template */
+      .label-qrcode .qr-layout {
+        display: flex;
+        gap: 2mm;
+        height: 100%;
+      }
+      .label-qrcode .qr-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1mm;
+      }
+      .label-qrcode .qr-right {
+        width: ${sizeConfig.qrSize};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-left: 1px dashed #ccc;
+        padding-left: 2mm;
+      }
+      .label-qrcode .qrcode {
+        width: calc(${sizeConfig.qrSize} - 5mm);
+        height: calc(${sizeConfig.qrSize} - 5mm);
+      }
+      .label-qrcode .qr-hint {
+        font-size: 6px;
+        color: #666;
+        text-align: center;
+        margin-top: 1mm;
+        line-height: 1.2;
+      }
+      .label-qrcode .name-en {
+        font-size: 1em;
+      }
+      .label-qrcode .pictograms-small {
+        justify-content: flex-start;
+        padding: 0.5mm 0;
+      }
+      .label-qrcode .signal {
+        font-size: 0.85em;
+        padding: 0.5mm 1mm;
+      }
+
+      @media print {
+        body {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+        .label {
+          break-inside: avoid;
+        }
+      }
+    `;
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
         <title>GHS 標籤列印</title>
-        <style>
-          @page {
-            size: A4;
-            margin: 10mm;
-          }
-          * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-          }
-          body {
-            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
-            font-size: ${labelSize.fontSize};
-            padding: 5mm;
-          }
-          .labels-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3mm;
-          }
-          .label {
-            border: 1px solid #333;
-            padding: 2mm;
-            page-break-inside: avoid;
-            display: flex;
-            flex-direction: column;
-            gap: 1mm;
-          }
-          .label-header {
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 1mm;
+        <style>${styles}</style>
+      </head>
+      <body>
+        <div class="labels-container">
+          ${labelsHtml}
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
             margin-bottom: 1mm;
           }
           .name-en {
