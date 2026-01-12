@@ -513,21 +513,24 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
     return None
 
 async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
-    """Get compound name in English and Chinese"""
+    """Get compound name in English and Chinese with multiple fallbacks"""
     name_en = None
     name_zh = None
     all_synonyms = []
     
+    # Method 1: Get from property endpoint
     try:
-        # Get English name from property endpoint
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,Title/JSON"
         response = await http_client.get(url, timeout=15.0)
         if response.status_code == 200:
             data = response.json()
             props = data.get("PropertyTable", {}).get("Properties", [{}])[0]
             name_en = props.get("Title") or props.get("IUPACName")
-        
-        # Try to get synonyms for better name and Chinese name
+    except Exception as e:
+        logger.debug(f"Property endpoint failed for CID {cid}: {e}")
+    
+    # Method 2: Get from synonyms endpoint
+    try:
         syn_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
         syn_response = await http_client.get(syn_url, timeout=15.0)
         if syn_response.status_code == 200:
@@ -543,21 +546,33 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
                 if any('\u4e00' <= char <= '\u9fff' for char in syn):
                     name_zh = syn
                     break
-        
-        # If no Chinese name from PubChem, try local dictionary
-        if not name_zh and name_en:
-            name_zh = get_chinese_name_from_dict(name_en)
-        
-        # Try other synonyms in local dictionary
-        if not name_zh:
-            for syn in all_synonyms[:10]:  # Check first 10 synonyms
-                zh = get_chinese_name_from_dict(syn)
-                if zh:
-                    name_zh = zh
-                    break
-                    
     except Exception as e:
-        logger.error(f"Error getting compound name for CID {cid}: {e}")
+        logger.debug(f"Synonyms endpoint failed for CID {cid}: {e}")
+    
+    # Method 3: Try description endpoint for name
+    if not name_en:
+        try:
+            desc_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/description/JSON"
+            desc_response = await http_client.get(desc_url, timeout=15.0)
+            if desc_response.status_code == 200:
+                desc_data = desc_response.json()
+                info_list = desc_data.get("InformationList", {}).get("Information", [])
+                if info_list:
+                    name_en = info_list[0].get("Title")
+        except Exception as e:
+            logger.debug(f"Description endpoint failed for CID {cid}: {e}")
+    
+    # If no Chinese name from PubChem, try local dictionary
+    if not name_zh and name_en:
+        name_zh = get_chinese_name_from_dict(name_en)
+    
+    # Try other synonyms in local dictionary
+    if not name_zh:
+        for syn in all_synonyms[:15]:  # Check first 15 synonyms
+            zh = get_chinese_name_from_dict(syn)
+            if zh:
+                name_zh = zh
+                break
     
     return name_en, name_zh
 
@@ -567,6 +582,22 @@ def extract_record_title(ghs_data: dict) -> str:
         return ghs_data.get("Record", {}).get("RecordTitle", "")
     except:
         return ""
+
+def extract_iupac_name(ghs_data: dict) -> str:
+    """Extract IUPAC name from GHS data as another fallback"""
+    try:
+        sections = ghs_data.get("Record", {}).get("Section", [])
+        for section in sections:
+            if section.get("TOCHeading") == "Names and Identifiers":
+                for subsection in section.get("Section", []):
+                    if subsection.get("TOCHeading") == "Computed Descriptors":
+                        for subsubsection in subsection.get("Section", []):
+                            if subsubsection.get("TOCHeading") == "IUPAC Name":
+                                info = subsubsection.get("Information", [{}])[0]
+                                return info.get("Value", {}).get("StringWithMarkup", [{}])[0].get("String", "")
+    except:
+        pass
+    return ""
 
 async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
     """Get GHS classification from PubChem"""
