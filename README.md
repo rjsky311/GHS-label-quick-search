@@ -2,6 +2,20 @@
 
 化學品危險標籤快速查詢系統 - 輸入 CAS 號碼即可查詢化學品的 GHS 危害標示和安全資訊。
 
+## 目錄
+
+- [功能特色](#功能特色)
+- [技術架構](#技術架構)
+- [專案結構](#專案結構)
+- [安裝與執行](#安裝與執行)
+- [化學品名稱查詢邏輯](#化學品名稱查詢邏輯)
+- [字典維護指南](#字典維護指南)
+- [GHS 危害圖示說明](#ghs-危害圖示說明)
+- [API 文件](#api-文件)
+- [版本更新紀錄](#版本更新紀錄)
+
+---
+
 ## 功能特色
 
 ### 🔍 單一查詢
@@ -33,47 +47,128 @@
 - 內建 **1,816 個** 英文名稱對應的中文翻譯
 - 支援 PubChem 資料庫無法查詢的化學品名稱顯示
 
+---
+
 ## 技術架構
 
-- **前端**: React + Tailwind CSS
-- **後端**: FastAPI (Python)
-- **資料來源**: 
-  - PubChem API (美國國家衛生研究院) - GHS 危害標示資料
-  - 本地化學品字典 - 中英文名稱對照
-- **資料庫**: MongoDB (用於其他功能擴展)
+| 層級 | 技術 | 說明 |
+|------|------|------|
+| 前端 | React + Tailwind CSS | 響應式使用者介面 |
+| 後端 | FastAPI (Python) | RESTful API 服務 |
+| 資料來源 | PubChem API | GHS 危害標示資料 |
+| 本地字典 | Python Dict | 中英文名稱對照 (1,707+ 筆) |
+| 資料庫 | MongoDB | 功能擴展用 |
+
+---
+
+## 專案結構
+
+```
+/app
+├── backend/
+│   ├── server.py              # FastAPI 主程式
+│   ├── chemical_dict.py       # 化學品字典 (CAS/英文/中文對照)
+│   ├── requirements.txt       # Python 依賴套件
+│   └── .env                   # 環境變數
+├── frontend/
+│   ├── src/
+│   │   ├── App.js             # React 主元件
+│   │   ├── components/        # UI 元件
+│   │   └── index.js           # 進入點
+│   ├── package.json           # Node.js 依賴套件
+│   └── .env                   # 前端環境變數
+├── 字典.csv                    # 原始字典 CSV 檔案
+└── README.md                  # 專案說明文件
+```
+
+---
+
+## 安裝與執行
+
+### 環境需求
+- Python 3.9+
+- Node.js 18+
+- MongoDB (選用)
+
+### 後端安裝
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 前端安裝
+
+```bash
+cd frontend
+yarn install
+```
+
+### 啟動服務
+
+```bash
+# 後端 (預設 port 8001)
+cd backend
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# 前端 (預設 port 3000)
+cd frontend
+yarn start
+```
+
+---
 
 ## 化學品名稱查詢邏輯
 
 系統使用多層查詢策略，確保最高的名稱準確度：
 
 ```
-查詢優先順序：
-1. CAS 字典直接查詢 → 最準確（使用本地 CAS_TO_ZH / CAS_TO_EN 字典）
-2. PubChem API 查詢 → 取得 GHS 危害資料及名稱
-3. 英文名稱字典查詢 → 備用翻譯方式
+┌─────────────────────────────────────────────────────────┐
+│                    查詢優先順序                          │
+├─────────────────────────────────────────────────────────┤
+│ 1. CAS 字典直接查詢 (最準確)                             │
+│    └─ 使用本地 CAS_TO_ZH / CAS_TO_EN 字典               │
+│                                                         │
+│ 2. PubChem API 查詢                                     │
+│    └─ 取得 GHS 危害資料及名稱                            │
+│                                                         │
+│ 3. 英文名稱字典查詢 (備用)                               │
+│    └─ 使用 CHEMICAL_NAMES_ZH_EXPANDED 字典              │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### 字典檔案結構
+### 字典檔案說明
 
-字典資料位於 `/backend/chemical_dict.py`，包含：
+字典資料位於 `backend/chemical_dict.py`：
 
-| 字典名稱 | 用途 | 數量 |
-|---------|------|------|
-| `CAS_TO_ZH` | CAS 號碼 → 中文名稱 | 1,707 筆 |
-| `CAS_TO_EN` | CAS 號碼 → 英文名稱 | 1,707 筆 |
-| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文名稱 → 中文名稱 | 1,816 筆 |
+| 字典名稱 | 用途 | 數量 | 範例 |
+|---------|------|------|------|
+| `CAS_TO_ZH` | CAS → 中文 | 1,707 筆 | `"64-17-5": "乙醇"` |
+| `CAS_TO_EN` | CAS → 英文 | 1,707 筆 | `"64-17-5": "Ethanol"` |
+| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文 → 中文 | 1,816 筆 | `"ethanol": "乙醇"` |
 
-### 更新字典
+---
 
-如需擴充或修正字典，請準備 CSV 檔案，格式如下：
+## 字典維護指南
+
+### 步驟 1：準備 CSV 檔案
+
+建立或更新 `字典.csv`，格式如下：
 
 ```csv
 CAS No.,英文名稱,中文名稱
 64-17-5,Ethanol,乙醇
 67-56-1,Methanol,甲醇
+100-42-5,Styrene,苯乙烯
+1072951-51-9,"3,4-Bis(methoxycarbonyl)phenylboronic acid","3,4-雙(甲氧羰基)苯硼酸"
 ```
 
-然後使用以下 Python 腳本重新生成字典：
+> ⚠️ **注意事項**：
+> - 含逗號的名稱需用雙引號包覆
+> - 中文名稱請保留完整（包含括號內的內容）
+> - 確保 UTF-8 編碼
+
+### 步驟 2：執行字典生成腳本
 
 ```python
 import csv
@@ -89,54 +184,95 @@ with open('字典.csv', 'r', encoding='utf-8') as f:
         en_name = row['英文名稱'].strip()
         zh_name = row['中文名稱'].strip()
         
+        # CAS → 中文 (保留第一筆)
         if cas and zh_name and cas not in cas_to_zh:
             cas_to_zh[cas] = zh_name
+        
+        # CAS → 英文 (保留第一筆)
         if cas and en_name and cas not in cas_to_en:
             cas_to_en[cas] = en_name
+        
+        # 英文 → 中文 (小寫為 key)
         if en_name and zh_name:
             en_lower = en_name.lower()
             if en_lower not in en_to_zh:
                 en_to_zh[en_lower] = zh_name
 
-# 輸出到 chemical_dict.py
+# 生成 chemical_dict.py
+with open('backend/chemical_dict.py', 'w', encoding='utf-8') as f:
+    f.write('# -*- coding: utf-8 -*-\n')
+    f.write('CAS_TO_ZH = {\n')
+    for cas, zh in sorted(cas_to_zh.items()):
+        f.write(f'    "{cas}": "{zh}",\n')
+    f.write('}\n\n')
+    
+    f.write('CAS_TO_EN = {\n')
+    for cas, en in sorted(cas_to_en.items()):
+        f.write(f'    "{cas}": "{en}",\n')
+    f.write('}\n\n')
+    
+    f.write('CHEMICAL_NAMES_ZH_EXPANDED = {\n')
+    for en, zh in sorted(en_to_zh.items()):
+        f.write(f'    "{en}": "{zh}",\n')
+    f.write('}\n')
+
+print(f"✅ 字典生成完成！")
+print(f"   CAS_TO_ZH: {len(cas_to_zh)} 筆")
+print(f"   CAS_TO_EN: {len(cas_to_en)} 筆")
+print(f"   EN_TO_ZH:  {len(en_to_zh)} 筆")
 ```
+
+### 步驟 3：重啟後端服務
+
+```bash
+sudo supervisorctl restart backend
+```
+
+---
 
 ## GHS 危害圖示說明
 
-| 圖示代碼 | 中文名稱 | 說明 |
-|---------|---------|------|
-| GHS01 | 爆炸物 | 爆炸性物質 |
-| GHS02 | 易燃物 | 易燃液體、氣體、固體 |
-| GHS03 | 氧化劑 | 可能導致或加劇燃燒 |
-| GHS04 | 壓縮氣體 | 高壓氣體容器 |
-| GHS05 | 腐蝕性 | 對皮膚或金屬有腐蝕性 |
-| GHS06 | 劇毒 | 急性毒性（致命） |
-| GHS07 | 刺激性/有害 | 刺激性或有害物質 |
-| GHS08 | 健康危害 | 致癌、致突變等長期健康危害 |
-| GHS09 | 環境危害 | 對水生生物有毒 |
+| 圖示 | 代碼 | 中文名稱 | 說明 |
+|:---:|------|---------|------|
+| 💥 | GHS01 | 爆炸物 | 爆炸性物質 |
+| 🔥 | GHS02 | 易燃物 | 易燃液體、氣體、固體 |
+| ⭕ | GHS03 | 氧化劑 | 可能導致或加劇燃燒 |
+| 🫧 | GHS04 | 壓縮氣體 | 高壓氣體容器 |
+| 🧪 | GHS05 | 腐蝕性 | 對皮膚或金屬有腐蝕性 |
+| 💀 | GHS06 | 劇毒 | 急性毒性（致命） |
+| ⚠️ | GHS07 | 刺激性/有害 | 刺激性或有害物質 |
+| 🫁 | GHS08 | 健康危害 | 致癌、致突變等長期健康危害 |
+| 🐟 | GHS09 | 環境危害 | 對水生生物有毒 |
 
-## 使用範例
+---
 
-### 常見化學品 CAS 號碼
-- `64-17-5` - 乙醇 (Ethanol)
-- `67-56-1` - 甲醇 (Methanol)
-- `7732-18-5` - 水 (Water)
-- `7647-01-0` - 鹽酸 (Hydrochloric acid)
-- `7664-93-9` - 硫酸 (Sulfuric acid)
-- `100-42-5` - 苯乙烯 (Styrene)
-- `10025-87-3` - 三氯氧磷 (Phosphorus oxychloride)
+## API 文件
 
-## API 端點
+### 端點一覽
 
 | 端點 | 方法 | 說明 |
 |------|------|------|
 | `/api/search/{cas_number}` | GET | 單一 CAS 號碼查詢 |
-| `/api/search` | POST | 批次查詢（JSON body: `{"cas_numbers": [...]}`) |
+| `/api/search` | POST | 批次查詢 |
 | `/api/export/xlsx` | POST | 匯出 Excel |
 | `/api/export/csv` | POST | 匯出 CSV |
 | `/api/ghs-pictograms` | GET | 取得所有 GHS 圖示資訊 |
 
-### API 回應範例
+### 單一查詢範例
+
+```bash
+curl https://your-domain.com/api/search/64-17-5
+```
+
+### 批次查詢範例
+
+```bash
+curl -X POST https://your-domain.com/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"cas_numbers": ["64-17-5", "67-56-1", "100-42-5"]}'
+```
+
+### 回應格式
 
 ```json
 {
@@ -167,12 +303,27 @@ with open('字典.csv', 'r', encoding='utf-8') as f:
 }
 ```
 
+### 常見化學品 CAS 號碼
+
+| CAS No. | 英文名稱 | 中文名稱 |
+|---------|---------|---------|
+| 64-17-5 | Ethanol | 乙醇 |
+| 67-56-1 | Methanol | 甲醇 |
+| 7732-18-5 | Water | 水 |
+| 7647-01-0 | Hydrochloric acid | 鹽酸 |
+| 7664-93-9 | Sulfuric acid | 硫酸 |
+| 100-42-5 | Styrene | 苯乙烯 |
+| 10025-87-3 | Phosphorus oxychloride | 三氯氧磷 |
+
+---
+
 ## 版本更新紀錄
 
 ### v1.1.0 (2025-01)
 - ✨ 整合用戶提供的化學品字典（1,707 個 CAS 號碼）
-- ✨ 新增 CAS → 英文名稱直接查詢功能
+- ✨ 新增 `CAS_TO_EN` 字典，支援 CAS → 英文名稱直接查詢
 - 🐛 修正含括號的化學品名稱被截斷的問題
+  - 例：`3,4-雙(甲氧羰基)苯硼酸` 原被截斷為 `3,4-雙`
 - 🐛 修正 PubChem 無資料時英文名稱顯示「名稱載入中...」的問題
 - 📈 中文名稱覆蓋率從約 150 個提升至 1,707 個
 
@@ -181,10 +332,9 @@ with open('字典.csv', 'r', encoding='utf-8') as f:
 - 🎉 單一/批次查詢
 - 🎉 Excel/CSV 匯出
 - 🎉 搜尋紀錄功能
+- 🎉 內建約 150 個常見化學品中文名稱
 
-## 注意事項
-
-⚠️ **免責聲明**: 本系統資料來自 PubChem (NIH) 及本地字典，僅供參考用途。實際使用化學品時，請以官方安全資料表 (SDS) 為準。
+---
 
 ## 未來規劃
 
@@ -192,7 +342,22 @@ with open('字典.csv', 'r', encoding='utf-8') as f:
 - [ ] 內嵌標籤預覽功能（不另開新視窗）
 - [ ] 增加其他資料來源（如 ChemSpider）作為備援
 - [ ] 支援更多化學品資料庫
+- [ ] 字典管理後台介面
+
+---
+
+## 注意事項
+
+⚠️ **免責聲明**: 本系統資料來自 PubChem (NIH) 及本地字典，僅供參考用途。實際使用化學品時，請以官方安全資料表 (SDS) 為準。
+
+---
 
 ## 授權
 
 MIT License
+
+---
+
+## 聯絡方式
+
+如有問題或建議，歡迎透過 Issue 回報。
