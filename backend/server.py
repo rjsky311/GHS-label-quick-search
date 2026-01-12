@@ -654,9 +654,28 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             error=f"CAS 號碼格式不正確：{normalized_cas}（正確格式如：64-17-5）"
         )
     
+    # ===== NEW: Try to get Chinese name from CAS dictionary FIRST (most accurate) =====
+    name_zh_from_cas = get_chinese_name_from_cas(normalized_cas)
+    if name_zh_from_cas:
+        logger.info(f"Found Chinese name from CAS dictionary for {normalized_cas}: {name_zh_from_cas}")
+    
     # Get CID - try multiple methods
     cid = await get_cid_from_cas(normalized_cas, http_client)
     if not cid:
+        # Even if PubChem doesn't have CID, we might have local data
+        if name_zh_from_cas:
+            return ChemicalResult(
+                cas_number=cas_number,
+                cid=None,
+                name_en=None,
+                name_zh=name_zh_from_cas,
+                ghs_pictograms=[],
+                hazard_statements=[],
+                signal_word=None,
+                signal_word_zh=None,
+                found=True,
+                error="PubChem 無 GHS 資料，僅提供本地字典中文名稱"
+            )
         # Provide more helpful error message
         return ChemicalResult(
             cas_number=cas_number,
@@ -688,8 +707,15 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         name_en = f"CID-{cid}"
         logger.warning(f"No name found for CAS {cas_number}, using CID as fallback")
     
-    # Final attempt to get Chinese name from dictionary
-    if not name_zh and name_en:
+    # ===== OPTIMIZED Chinese name lookup order =====
+    # Priority 1: CAS dictionary (most accurate - from user's Excel)
+    if name_zh_from_cas:
+        name_zh = name_zh_from_cas
+    # Priority 2: PubChem Chinese synonyms (already fetched)
+    elif name_zh:
+        pass  # Keep PubChem result
+    # Priority 3: English name dictionary lookup
+    else:
         name_zh = get_chinese_name_from_dict(name_en)
     
     return ChemicalResult(
