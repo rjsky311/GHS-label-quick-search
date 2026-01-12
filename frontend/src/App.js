@@ -789,65 +789,7 @@ function App() {
   };
 
   return (
-                  <div class="pictograms-small">
-                    ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
-                  </div>
-                ` : ""}
-                ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
-              </div>
-              <div class="qr-right">
-                <img class="qrcode" src="${getQRCodeUrl(pubchemUrl, 150)}" alt="QR Code" />
-                <div class="qr-hint">掃碼查看<br/>完整資訊</div>
-              </div>
-            </div>
-          </div>
-        `;
-      },
-    };
-
-    // Generate labels HTML
-    const labelsHtml = selectedForLabel.map((chemical) => {
-      return templates[labelConfig.template](chemical);
-    }).join("");
-
-    // CSS Styles for all templates
-    const styles = `
-      @page {
-        size: A4;
-        margin: 8mm;
-      }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: "Microsoft JhengHei", "PingFang TC", "Helvetica Neue", sans-serif;
-        font-size: ${sizeConfig.fontSize};
-        padding: 5mm;
-        background: #fff;
-      }
-      .labels-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4mm;
-      }
-      .label {
-        border: 2px solid #333;
-        border-radius: 3mm;
-        padding: 2mm;
-        page-break-inside: avoid;
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        overflow: hidden;
-      }
-      
-      /* Common styles */
-      .label-header {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 1.5mm;
-        margin-bottom: 1.5mm;
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       }
       .name-en {
         font-weight: bold;
