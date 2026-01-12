@@ -787,67 +787,8 @@ function App() {
     `);
     printWindow.document.close();
   };
-            ${hazards.length > 0 ? `
-              <div class="hazards">
-                ${hazards.slice(0, 3).map((h) => `<div class="hazard">${h.code} ${h.text_zh}</div>`).join("")}
-                ${hazards.length > 3 ? `<div class="hazard more">...等 ${hazards.length} 項危害說明</div>` : ""}
-              </div>
-            ` : ""}
-          </div>
-        `;
-      },
 
-      // 版型 3 - 完整版：所有內容，字體自動縮小
-      full: (chemical) => {
-        const pictograms = chemical.ghs_pictograms || [];
-        const hazards = chemical.hazard_statements || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
-        
-        // 根據危害說明數量動態調整字體
-        const hazardFontSize = hazards.length > 6 ? "6px" : hazards.length > 4 ? "7px" : "8px";
-        
-        return `
-          <div class="label label-full" style="width: ${sizeConfig.width}; min-height: ${sizeConfig.height};">
-            <div class="label-header">
-              <div class="name-en">${chemical.name_en || ""}</div>
-              ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${chemical.cas_number}</div>
-            </div>
-            <div class="label-body">
-              ${pictograms.length > 0 ? `
-                <div class="pictograms">
-                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" title="${p.name_zh}" />`).join("")}
-                </div>
-              ` : ""}
-              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
-            </div>
-            ${hazards.length > 0 ? `
-              <div class="hazards-full" style="font-size: ${hazardFontSize};">
-                ${hazards.map((h) => `<div class="hazard">${h.code} ${h.text_zh}</div>`).join("")}
-              </div>
-            ` : ""}
-          </div>
-        `;
-      },
-
-      // 版型 4 - QR Code 版：基本資訊 + QR Code 連結到 PubChem
-      qrcode: (chemical) => {
-        const pictograms = chemical.ghs_pictograms || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
-        const pubchemUrl = chemical.cid 
-          ? `https://pubchem.ncbi.nlm.nih.gov/compound/${chemical.cid}`
-          : `https://pubchem.ncbi.nlm.nih.gov/#query=${chemical.cas_number}`;
-        
-        return `
-          <div class="label label-qrcode" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
-            <div class="qr-layout">
-              <div class="qr-left">
-                <div class="name-en">${chemical.name_en || ""}</div>
-                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-                <div class="cas">CAS: ${chemical.cas_number}</div>
-                ${pictograms.length > 0 ? `
+  return (
                   <div class="pictograms-small">
                     ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
                   </div>
