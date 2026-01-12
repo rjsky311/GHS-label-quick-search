@@ -655,6 +655,15 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     if not name_en:
         name_en = extract_record_title(ghs_data)
     
+    # Try IUPAC name as another fallback
+    if not name_en:
+        name_en = extract_iupac_name(ghs_data)
+    
+    # If still no name, use CAS number as name
+    if not name_en:
+        name_en = f"CID-{cid}"
+        logger.warning(f"No name found for CAS {cas_number}, using CID as fallback")
+    
     # Final attempt to get Chinese name from dictionary
     if not name_zh and name_en:
         name_zh = get_chinese_name_from_dict(name_en)
