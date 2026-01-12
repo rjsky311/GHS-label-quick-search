@@ -18,7 +18,7 @@ import csv
 import re
 
 # Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
-from chemical_dict import CAS_TO_ZH, CHEMICAL_NAMES_ZH_EXPANDED
+from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
