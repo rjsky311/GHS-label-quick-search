@@ -435,24 +435,45 @@ def extract_signal_word(ghs_data: dict) -> tuple:
         logger.error(f"Error extracting signal word: {e}")
     return None, None
 
+def get_chinese_name_from_cas(cas_number: str) -> Optional[str]:
+    """Get Chinese name directly from CAS number (most accurate method)"""
+    if not cas_number:
+        return None
+    cas_normalized = cas_number.strip()
+    
+    # Direct CAS lookup - highest priority
+    if cas_normalized in CAS_TO_ZH:
+        return CAS_TO_ZH[cas_normalized]
+    
+    return None
+
 def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
-    """Get Chinese name from local dictionary"""
+    """Get Chinese name from English name dictionary"""
     if not name_en:
         return None
     name_lower = name_en.lower().strip()
     
-    # Direct match
+    # Try expanded dictionary first (1816 entries)
+    if name_lower in CHEMICAL_NAMES_ZH_EXPANDED:
+        return CHEMICAL_NAMES_ZH_EXPANDED[name_lower]
+    
+    # Try legacy dictionary
     if name_lower in CHEMICAL_NAMES_ZH:
         return CHEMICAL_NAMES_ZH[name_lower]
     
-    # Try partial match for compound names
+    # Try partial match for compound names in expanded dict
+    for en_name, zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
+        if en_name in name_lower or name_lower in en_name:
+            return zh_name
+    
+    # Try partial match in legacy dict
     for en_name, zh_name in CHEMICAL_NAMES_ZH.items():
         if en_name in name_lower or name_lower in en_name:
             return zh_name
     
     # Try matching without special characters
     name_clean = re.sub(r'[^a-z0-9]', '', name_lower)
-    for en_name, zh_name in CHEMICAL_NAMES_ZH.items():
+    for en_name, zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
         en_clean = re.sub(r'[^a-z0-9]', '', en_name)
         if en_clean == name_clean or en_clean in name_clean or name_clean in en_clean:
             return zh_name
