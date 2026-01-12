@@ -313,71 +313,480 @@ function App() {
     setSelectedForLabel([]);
   };
 
-  // Generate QR Code URL (using Google Charts API)
+  // Generate QR Code URL
   const getQRCodeUrl = (text, size = 100) => {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
   };
 
-  // Print labels with multiple templates
+  // Print labels with multiple templates - IMPROVED VERSION
   const printLabels = () => {
     if (selectedForLabel.length === 0) return;
     
     const printWindow = window.open("", "_blank");
     
-    // Size configurations
+    // Size configurations - LARGER SIZES
     const sizeConfig = {
-      small: { width: "50mm", height: "35mm", fontSize: "7px", imgSize: "18px", qrSize: "20mm" },
-      medium: { width: "70mm", height: "50mm", fontSize: "9px", imgSize: "24px", qrSize: "25mm" },
-      large: { width: "100mm", height: "70mm", fontSize: "11px", imgSize: "32px", qrSize: "35mm" },
+      small: { 
+        width: "60mm", 
+        height: "45mm", 
+        fontSize: "10px", 
+        titleSize: "12px",
+        imgSize: "22px", 
+        qrSize: "25mm",
+        signalSize: "11px",
+        hazardSize: "8px"
+      },
+      medium: { 
+        width: "80mm", 
+        height: "60mm", 
+        fontSize: "12px", 
+        titleSize: "14px",
+        imgSize: "30px", 
+        qrSize: "30mm",
+        signalSize: "13px",
+        hazardSize: "9px"
+      },
+      large: { 
+        width: "105mm", 
+        height: "80mm", 
+        fontSize: "14px", 
+        titleSize: "16px",
+        imgSize: "38px", 
+        qrSize: "38mm",
+        signalSize: "15px",
+        hazardSize: "11px"
+      },
     }[labelConfig.size];
 
-    // Template generators
+    // Template generators with FIXED LAYOUT
     const templates = {
-      // 版型 1 - 圖示版：只有圖示 + 警示語
+      // 版型 1 - 圖示版
       icon: (chemical) => {
         const pictograms = chemical.ghs_pictograms || [];
         const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
         const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
         
         return `
-          <div class="label label-icon" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
-            <div class="label-name-short">
-              <strong>${chemical.name_en || ""}</strong>
-              ${chemical.name_zh ? `<br/><span class="name-zh">${chemical.name_zh}</span>` : ""}
-            </div>
-            <div class="cas-small">CAS: ${chemical.cas_number}</div>
-            ${pictograms.length > 0 ? `
-              <div class="pictograms-large">
-                ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+          <div class="label">
+            <div class="label-top">
+              <div class="name-section">
+                <div class="name-en">${chemical.name_en || ""}</div>
+                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${chemical.cas_number}</div>
               </div>
-            ` : '<div class="no-hazard">無危害標示</div>'}
-            ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+            </div>
+            <div class="label-middle">
+              ${pictograms.length > 0 ? `
+                <div class="pictograms">
+                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                </div>
+              ` : '<div class="no-hazard">無危害標示</div>'}
+            </div>
+            <div class="label-bottom">
+              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : '<div class="signal-placeholder"></div>'}
+            </div>
           </div>
         `;
       },
 
-      // 版型 2 - 標準版：名稱 + 圖示 + 警示語 + 前 3 條危害說明
+      // 版型 2 - 標準版
       standard: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const hazards = chemical.hazard_statements || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const maxHazards = labelConfig.size === "small" ? 2 : labelConfig.size === "medium" ? 3 : 4;
+        
+        return `
+          <div class="label">
+            <div class="label-top">
+              <div class="name-section">
+                <div class="name-en">${chemical.name_en || ""}</div>
+                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${chemical.cas_number}</div>
+              </div>
+            </div>
+            <div class="label-middle">
+              <div class="middle-row">
+                ${pictograms.length > 0 ? `
+                  <div class="pictograms">
+                    ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  </div>
+                ` : ""}
+                ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+              </div>
+            </div>
+            <div class="label-bottom hazards-section">
+              ${hazards.length > 0 ? `
+                ${hazards.slice(0, maxHazards).map((h) => `<div class="hazard-item">${h.code} ${h.text_zh}</div>`).join("")}
+                ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ 共 ${hazards.length} 項</div>` : ""}
+              ` : '<div class="no-hazard-text">無危害說明</div>'}
+            </div>
+          </div>
+        `;
+      },
+
+      // 版型 3 - 完整版
+      full: (chemical) => {
         const pictograms = chemical.ghs_pictograms || [];
         const hazards = chemical.hazard_statements || [];
         const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
         const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
         
         return `
-          <div class="label label-standard" style="width: ${sizeConfig.width}; height: ${sizeConfig.height};">
-            <div class="label-header">
-              <div class="name-en">${chemical.name_en || ""}</div>
-              ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${chemical.cas_number}</div>
+          <div class="label label-full">
+            <div class="label-top">
+              <div class="name-section">
+                <div class="name-en">${chemical.name_en || ""}</div>
+                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${chemical.cas_number}</div>
+              </div>
             </div>
-            <div class="label-body">
+            <div class="label-middle compact">
+              <div class="middle-row">
+                ${pictograms.length > 0 ? `
+                  <div class="pictograms compact">
+                    ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  </div>
+                ` : ""}
+                ${signalWord ? `<div class="signal compact ${signalClass}">${signalWord}</div>` : ""}
+              </div>
+            </div>
+            <div class="label-bottom hazards-full">
+              ${hazards.length > 0 ? `
+                ${hazards.map((h) => `<div class="hazard-item-full">${h.code} ${h.text_zh}</div>`).join("")}
+              ` : '<div class="no-hazard-text">無危害說明</div>'}
+            </div>
+          </div>
+        `;
+      },
+
+      // 版型 4 - QR Code 版
+      qrcode: (chemical) => {
+        const pictograms = chemical.ghs_pictograms || [];
+        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
+        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const pubchemUrl = chemical.cid 
+          ? `https://pubchem.ncbi.nlm.nih.gov/compound/${chemical.cid}`
+          : `https://pubchem.ncbi.nlm.nih.gov/#query=${chemical.cas_number}`;
+        
+        return `
+          <div class="label label-qr">
+            <div class="qr-left">
+              <div class="name-section">
+                <div class="name-en">${chemical.name_en || ""}</div>
+                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${chemical.cas_number}</div>
+              </div>
               ${pictograms.length > 0 ? `
-                <div class="pictograms">
-                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" title="${p.name_zh}" />`).join("")}
+                <div class="pictograms qr-pics">
+                  ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  ${pictograms.length > 4 ? `<span class="more-pics">+${pictograms.length - 4}</span>` : ""}
                 </div>
               ` : ""}
-              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+              ${signalWord ? `<div class="signal qr-signal ${signalClass}">${signalWord}</div>` : ""}
             </div>
+            <div class="qr-right">
+              <img class="qrcode-img" src="${getQRCodeUrl(pubchemUrl, 200)}" alt="QR" />
+              <div class="qr-hint">掃碼查看詳情</div>
+            </div>
+          </div>
+        `;
+      },
+    };
+
+    // Generate labels
+    const labelsHtml = selectedForLabel.map((chemical) => templates[labelConfig.template](chemical)).join("");
+
+    // Improved CSS with FIXED dimensions
+    const styles = `
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+        padding: 5mm;
+        background: #fff;
+      }
+      .labels-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5mm;
+      }
+      
+      /* ===== LABEL BASE ===== */
+      .label {
+        width: ${sizeConfig.width};
+        height: ${sizeConfig.height};
+        border: 2px solid #222;
+        border-radius: 2mm;
+        padding: 3mm;
+        page-break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        overflow: hidden;
+        font-size: ${sizeConfig.fontSize};
+      }
+      .label-full {
+        height: auto;
+        min-height: ${sizeConfig.height};
+      }
+      .label-qr {
+        flex-direction: row;
+      }
+      
+      /* ===== LABEL SECTIONS ===== */
+      .label-top {
+        flex-shrink: 0;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 2mm;
+        margin-bottom: 2mm;
+      }
+      .label-middle {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 0;
+      }
+      .label-middle.compact {
+        flex: 0;
+        margin-bottom: 2mm;
+      }
+      .label-bottom {
+        flex-shrink: 0;
+        margin-top: auto;
+      }
+      
+      /* ===== NAME SECTION ===== */
+      .name-section {
+        text-align: left;
+      }
+      .name-en {
+        font-weight: bold;
+        font-size: ${sizeConfig.titleSize};
+        line-height: 1.2;
+        color: #000;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .name-zh {
+        font-size: calc(${sizeConfig.titleSize} - 2px);
+        color: #333;
+        margin-top: 0.5mm;
+      }
+      .cas {
+        font-family: "Consolas", "Monaco", "Courier New", monospace;
+        font-size: calc(${sizeConfig.fontSize} - 1px);
+        color: #555;
+        margin-top: 1mm;
+      }
+      
+      /* ===== PICTOGRAMS ===== */
+      .pictograms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2mm;
+        justify-content: center;
+        align-items: center;
+      }
+      .pictograms img {
+        width: ${sizeConfig.imgSize};
+        height: ${sizeConfig.imgSize};
+        background: #fff;
+        border: 1px solid #bbb;
+        border-radius: 1mm;
+      }
+      .pictograms.compact img {
+        width: calc(${sizeConfig.imgSize} - 4px);
+        height: calc(${sizeConfig.imgSize} - 4px);
+      }
+      .pictograms.qr-pics {
+        justify-content: flex-start;
+        margin: 2mm 0;
+      }
+      .pictograms.qr-pics img {
+        width: calc(${sizeConfig.imgSize} - 6px);
+        height: calc(${sizeConfig.imgSize} - 6px);
+      }
+      .more-pics {
+        font-size: 10px;
+        color: #666;
+        display: flex;
+        align-items: center;
+      }
+      
+      /* ===== SIGNAL WORD ===== */
+      .signal {
+        display: inline-block;
+        font-weight: bold;
+        font-size: ${sizeConfig.signalSize};
+        padding: 1.5mm 4mm;
+        border-radius: 1mm;
+        text-align: center;
+        margin: 2mm 0;
+      }
+      .signal.compact {
+        font-size: calc(${sizeConfig.signalSize} - 2px);
+        padding: 1mm 3mm;
+        margin: 1mm 0;
+      }
+      .signal.qr-signal {
+        font-size: calc(${sizeConfig.signalSize} - 2px);
+        padding: 1mm 2mm;
+        margin-top: auto;
+      }
+      .signal.danger {
+        background: #fecaca;
+        color: #b91c1c;
+        border: 1.5px solid #dc2626;
+      }
+      .signal.warning {
+        background: #fef08a;
+        color: #a16207;
+        border: 1.5px solid #ca8a04;
+      }
+      .signal-placeholder {
+        height: 8mm;
+      }
+      
+      /* ===== MIDDLE ROW ===== */
+      .middle-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3mm;
+        flex-wrap: wrap;
+      }
+      
+      /* ===== HAZARDS SECTION ===== */
+      .hazards-section {
+        border-top: 1px dashed #aaa;
+        padding-top: 2mm;
+        font-size: ${sizeConfig.hazardSize};
+        line-height: 1.4;
+      }
+      .hazards-full {
+        border-top: 1px dashed #aaa;
+        padding-top: 2mm;
+        font-size: calc(${sizeConfig.hazardSize} - 1px);
+        line-height: 1.3;
+      }
+      .hazard-item {
+        margin-bottom: 1mm;
+        color: #222;
+      }
+      .hazard-item-full {
+        margin-bottom: 0.8mm;
+        color: #222;
+      }
+      .hazard-more {
+        color: #666;
+        font-style: italic;
+        margin-top: 0.5mm;
+      }
+      .no-hazard {
+        color: #16a34a;
+        font-weight: 500;
+        text-align: center;
+        padding: 3mm;
+      }
+      .no-hazard-text {
+        color: #666;
+        font-style: italic;
+      }
+      
+      /* ===== QR CODE LAYOUT ===== */
+      .qr-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding-right: 2mm;
+        border-right: 1px dashed #ccc;
+        min-width: 0;
+      }
+      .qr-right {
+        width: ${sizeConfig.qrSize};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-left: 2mm;
+      }
+      .qrcode-img {
+        width: calc(${sizeConfig.qrSize} - 8mm);
+        height: calc(${sizeConfig.qrSize} - 8mm);
+      }
+      .qr-hint {
+        font-size: 8px;
+        color: #666;
+        text-align: center;
+        margin-top: 1mm;
+      }
+      
+      /* ===== PRINT STYLES ===== */
+      @media print {
+        body {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+        .label {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+      }
+    `;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>GHS 標籤列印</title>
+        <style>${styles}</style>
+      </head>
+      <body>
+        <div class="labels-container">
+          ${labelsHtml}
+        </div>
+        <script>
+          // Wait for images to load before printing
+          window.onload = function() {
+            const images = document.querySelectorAll('img');
+            let loaded = 0;
+            const total = images.length;
+            
+            if (total === 0) {
+              setTimeout(() => window.print(), 300);
+              return;
+            }
+            
+            images.forEach(img => {
+              if (img.complete) {
+                loaded++;
+                if (loaded === total) setTimeout(() => window.print(), 300);
+              } else {
+                img.onload = img.onerror = function() {
+                  loaded++;
+                  if (loaded === total) setTimeout(() => window.print(), 300);
+                };
+              }
+            });
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
             ${hazards.length > 0 ? `
               <div class="hazards">
                 ${hazards.slice(0, 3).map((h) => `<div class="hazard">${h.code} ${h.text_zh}</div>`).join("")}
