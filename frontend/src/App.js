@@ -1595,9 +1595,9 @@ function App() {
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { value: "small", label: "小", desc: "50×35mm", tip: "小瓶/試管" },
-                    { value: "medium", label: "中", desc: "70×50mm", tip: "標準瓶" },
-                    { value: "large", label: "大", desc: "100×70mm", tip: "大容器" },
+                    { value: "small", label: "小", desc: "60×45mm", tip: "小瓶/試管" },
+                    { value: "medium", label: "中", desc: "80×60mm", tip: "標準瓶" },
+                    { value: "large", label: "大", desc: "105×80mm", tip: "大容器" },
                   ].map((size) => (
                     <button
                       key={size.value}
