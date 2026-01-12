@@ -1598,21 +1598,6 @@ function App() {
           </div>
         </div>
       )}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <span>🖨️</span> 列印標籤
-                </button>
-                <button
-                  onClick={() => setShowLabelModal(false)}
-                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-700 mt-12 py-6">
