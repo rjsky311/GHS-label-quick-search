@@ -1430,7 +1430,7 @@ function App() {
           onClick={() => setShowLabelModal(false)}
         >
           <div
-            className="bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-slate-700 flex items-center justify-between">
@@ -1446,6 +1446,64 @@ function App() {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Template Selection */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">
+                  選擇版型
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { 
+                      value: "icon", 
+                      label: "圖示版", 
+                      desc: "名稱 + 圖示 + 警示語",
+                      icon: "🎯",
+                      tip: "最精簡，適合小容器"
+                    },
+                    { 
+                      value: "standard", 
+                      label: "標準版", 
+                      desc: "圖示 + 警示語 + 3條危害說明",
+                      icon: "📋",
+                      tip: "常規使用推薦"
+                    },
+                    { 
+                      value: "full", 
+                      label: "完整版", 
+                      desc: "所有危害說明（自動縮小字體）",
+                      icon: "📄",
+                      tip: "需要完整資訊時使用"
+                    },
+                    { 
+                      value: "qrcode", 
+                      label: "QR Code 版", 
+                      desc: "基本資訊 + 掃碼查看詳情",
+                      icon: "📱",
+                      tip: "掃碼連結 PubChem 完整資料"
+                    },
+                  ].map((template) => (
+                    <button
+                      key={template.value}
+                      onClick={() => setLabelConfig((prev) => ({ ...prev, template: template.value }))}
+                      className={`p-4 rounded-lg border-2 transition-colors text-left ${
+                        labelConfig.template === template.value
+                          ? "border-purple-500 bg-purple-500/10"
+                          : "border-slate-600 bg-slate-900 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{template.icon}</span>
+                        <span className={`font-medium ${labelConfig.template === template.value ? "text-purple-400" : "text-white"}`}>
+                          {template.label}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400">{template.desc}</div>
+                      <div className="text-xs text-slate-500 mt-1">{template.tip}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Label Size Selection */}
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-3">
@@ -1453,9 +1511,9 @@ function App() {
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { value: "small", label: "小", desc: "45×30mm" },
-                    { value: "medium", label: "中", desc: "70×50mm" },
-                    { value: "large", label: "大", desc: "100×70mm" },
+                    { value: "small", label: "小", desc: "50×35mm", tip: "小瓶/試管" },
+                    { value: "medium", label: "中", desc: "70×50mm", tip: "標準瓶" },
+                    { value: "large", label: "大", desc: "100×70mm", tip: "大容器" },
                   ].map((size) => (
                     <button
                       key={size.value}
@@ -1468,41 +1526,8 @@ function App() {
                     >
                       <div className="font-medium">{size.label}</div>
                       <div className="text-xs opacity-70">{size.desc}</div>
+                      <div className="text-xs opacity-50">{size.tip}</div>
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Label Content Options */}
-              <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
-                  標籤內容
-                </h3>
-                <div className="space-y-2">
-                  {[
-                    { key: "showCas", label: "CAS 號碼" },
-                    { key: "showName", label: "英文名稱" },
-                    { key: "showNameZh", label: "中文名稱" },
-                    { key: "showSignal", label: "警示語" },
-                    { key: "showHazards", label: "危害說明" },
-                  ].map((option) => (
-                    <label
-                      key={option.key}
-                      className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={labelConfig[option.key]}
-                        onChange={(e) =>
-                          setLabelConfig((prev) => ({
-                            ...prev,
-                            [option.key]: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 rounded border-slate-500 text-amber-500 focus:ring-amber-500 bg-slate-700"
-                      />
-                      <span className="text-white">{option.label}</span>
-                    </label>
                   ))}
                 </div>
               </div>
@@ -1512,7 +1537,7 @@ function App() {
                 <h3 className="text-sm font-medium text-slate-400 mb-3">
                   已選擇 {selectedForLabel.length} 個化學品
                 </h3>
-                <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-900 rounded-lg p-3">
+                <div className="max-h-40 overflow-y-auto space-y-2 bg-slate-900 rounded-lg p-3">
                   {selectedForLabel.length === 0 ? (
                     <p className="text-slate-500 text-center py-4">
                       尚未選擇任何化學品
@@ -1523,17 +1548,22 @@ function App() {
                         key={idx}
                         className="flex items-center justify-between p-2 bg-slate-800 rounded"
                       >
-                        <div>
+                        <div className="flex items-center gap-2">
                           <span className="font-mono text-amber-400 text-sm">
                             {chem.cas_number}
                           </span>
-                          <span className="text-white text-sm ml-2">
+                          <span className="text-white text-sm truncate max-w-[200px]">
                             {chem.name_en}
                           </span>
+                          {chem.ghs_pictograms?.length > 0 && (
+                            <span className="text-xs text-slate-500">
+                              ({chem.ghs_pictograms.length} 個圖示)
+                            </span>
+                          )}
                         </div>
                         <button
                           onClick={() => toggleSelectForLabel(chem)}
-                          className="text-slate-400 hover:text-red-400"
+                          className="text-slate-400 hover:text-red-400 px-2"
                         >
                           ✕
                         </button>
@@ -1543,11 +1573,31 @@ function App() {
                 </div>
               </div>
 
+              {/* Preview hint */}
+              <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
+                <span className="text-amber-400">💡 提示：</span> 點擊「列印標籤」後會開啟預覽視窗，您可以在列印前確認標籤樣式。
+              </div>
+
               {/* Print Button */}
               <div className="flex gap-3">
                 <button
                   onClick={printLabels}
                   disabled={selectedForLabel.length === 0}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <span>🖨️</span> 列印標籤 ({selectedForLabel.length} 張)
+                </button>
+                <button
+                  onClick={() => setShowLabelModal(false)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span>🖨️</span> 列印標籤
