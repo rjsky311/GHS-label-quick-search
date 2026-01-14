@@ -1380,73 +1380,110 @@ function App() {
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        {result.found && result.ghs_pictograms?.length > 0 ? (
+                        {result.found && (result.ghs_pictograms?.length > 0 || result.other_classifications?.length > 0) ? (
                           <div className="space-y-2">
-                            {/* Primary Classification */}
-                            <div className="flex gap-1 flex-wrap items-center">
-                              <span className="text-xs text-emerald-400 mr-1" title="主要分類（最多報告）">●</span>
-                              {result.ghs_pictograms.map((pic, pIdx) => (
-                                <div
-                                  key={pIdx}
-                                  className="group relative"
-                                  title={`${pic.code}: ${pic.name_zh}`}
-                                >
-                                  <img
-                                    src={GHS_IMAGES[pic.code]}
-                                    alt={pic.name_zh}
-                                    className="w-10 h-10 bg-white rounded"
-                                  />
-                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                    {pic.code}: {pic.name_zh}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            
-                            {/* Other Classifications Toggle */}
-                            {result.has_multiple_classifications && result.other_classifications?.length > 0 && (
-                              <div>
-                                <button
-                                  onClick={() => toggleOtherClassifications(result.cas_number)}
-                                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                                >
-                                  <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
-                                  其他 {result.other_classifications.length} 種分類
-                                </button>
-                                
-                                {/* Expanded Other Classifications */}
-                                {expandedOtherClassifications[result.cas_number] && (
-                                  <div className="mt-2 space-y-2 pl-2 border-l-2 border-slate-600">
-                                    {result.other_classifications.map((otherClass, ocIdx) => (
-                                      <div key={ocIdx} className="flex gap-1 flex-wrap items-center">
-                                        <span className="text-xs text-slate-500 mr-1" title="其他分類報告">○</span>
-                                        {otherClass.pictograms?.map((pic, pIdx) => (
-                                          <div
-                                            key={pIdx}
-                                            className="group relative"
-                                            title={`${pic.code}: ${pic.name_zh}`}
-                                          >
-                                            <img
-                                              src={GHS_IMAGES[pic.code]}
-                                              alt={pic.name_zh}
-                                              className="w-8 h-8 bg-white rounded opacity-70"
-                                            />
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                              {pic.code}: {pic.name_zh}
-                                            </div>
-                                          </div>
-                                        ))}
-                                        {otherClass.source && (
-                                          <span className="text-xs text-slate-500 ml-1" title={otherClass.source}>
-                                            {otherClass.report_count ? `(${otherClass.report_count} 份)` : ''}
-                                          </span>
-                                        )}
+                            {/* Current Selected Classification */}
+                            {(() => {
+                              const effective = getEffectiveClassification(result);
+                              const allClassifications = [
+                                {
+                                  pictograms: result.ghs_pictograms || [],
+                                  hazard_statements: result.hazard_statements || [],
+                                  signal_word: result.signal_word,
+                                  signal_word_zh: result.signal_word_zh,
+                                },
+                                ...(result.other_classifications || [])
+                              ];
+                              
+                              return (
+                                <>
+                                  <div className="flex gap-1 flex-wrap items-center">
+                                    {effective.isCustom ? (
+                                      <span className="text-xs text-purple-400 mr-1" title="您選擇的分類">★</span>
+                                    ) : (
+                                      <span className="text-xs text-emerald-400 mr-1" title="主要分類（預設）">●</span>
+                                    )}
+                                    {effective.pictograms?.map((pic, pIdx) => (
+                                      <div
+                                        key={pIdx}
+                                        className="group relative"
+                                        title={`${pic.code}: ${pic.name_zh}`}
+                                      >
+                                        <img
+                                          src={GHS_IMAGES[pic.code]}
+                                          alt={pic.name_zh}
+                                          className="w-10 h-10 bg-white rounded"
+                                        />
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                          {pic.code}: {pic.name_zh}
+                                        </div>
                                       </div>
                                     ))}
+                                    {effective.isCustom && (
+                                      <button
+                                        onClick={() => clearCustomClassification(result.cas_number)}
+                                        className="ml-2 text-xs text-slate-500 hover:text-red-400"
+                                        title="恢復預設分類"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            )}
+                                  {effective.note && (
+                                    <div className="text-xs text-purple-300">📝 {effective.note}</div>
+                                  )}
+                                  
+                                  {/* Other Classifications Toggle */}
+                                  {allClassifications.length > 1 && (
+                                    <div>
+                                      <button
+                                        onClick={() => toggleOtherClassifications(result.cas_number)}
+                                        className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                      >
+                                        <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
+                                        {allClassifications.length - 1} 種其他分類
+                                      </button>
+                                      
+                                      {/* Expanded Other Classifications */}
+                                      {expandedOtherClassifications[result.cas_number] && (
+                                        <div className="mt-2 space-y-2 pl-2 border-l-2 border-slate-600">
+                                          {allClassifications.map((cls, clsIdx) => {
+                                            const isSelected = effective.customIndex === clsIdx;
+                                            if (isSelected) return null; // Skip the currently selected one
+                                            
+                                            return (
+                                              <div key={clsIdx} className="flex gap-1 flex-wrap items-center group/item">
+                                                <span className="text-xs text-slate-500 mr-1">○</span>
+                                                {cls.pictograms?.map((pic, pIdx) => (
+                                                  <div
+                                                    key={pIdx}
+                                                    className="group relative"
+                                                    title={`${pic.code}: ${pic.name_zh}`}
+                                                  >
+                                                    <img
+                                                      src={GHS_IMAGES[pic.code]}
+                                                      alt={pic.name_zh}
+                                                      className="w-8 h-8 bg-white rounded opacity-70"
+                                                    />
+                                                  </div>
+                                                ))}
+                                                <button
+                                                  onClick={() => setCustomClassification(result.cas_number, clsIdx)}
+                                                  className="ml-2 text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                                  title="設為我的主要分類"
+                                                >
+                                                  設為主要
+                                                </button>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ) : result.found ? (
                           <span className="text-slate-500">無危害標示</span>
@@ -1456,19 +1493,22 @@ function App() {
                       </td>
                       <td className="px-4 py-4">
                         {result.found ? (
-                          result.signal_word ? (
-                            <span
-                              className={`px-2 py-1 rounded text-sm font-medium ${
-                                result.signal_word === "Danger"
-                                  ? "bg-red-500/20 text-red-400"
-                                  : "bg-amber-500/20 text-amber-400"
-                              }`}
-                            >
-                              {result.signal_word_zh || result.signal_word}
-                            </span>
-                          ) : (
-                            <span className="text-slate-500">-</span>
-                          )
+                          (() => {
+                            const effective = getEffectiveClassification(result);
+                            return effective?.signal_word ? (
+                              <span
+                                className={`px-2 py-1 rounded text-sm font-medium ${
+                                  effective.signal_word === "Danger"
+                                    ? "bg-red-500/20 text-red-400"
+                                    : "bg-amber-500/20 text-amber-400"
+                                }`}
+                              >
+                                {effective.signal_word_zh || effective.signal_word}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500">-</span>
+                            );
+                          })()
                         ) : (
                           "-"
                         )}
