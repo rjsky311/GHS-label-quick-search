@@ -127,7 +127,7 @@ function App() {
     return customGHSSettings[casNumber]?.selectedIndex !== undefined;
   };
 
-  // Load history and favorites from localStorage
+  // Load history, favorites, and custom GHS settings from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem(HISTORY_KEY);
     if (savedHistory) {
@@ -144,6 +144,15 @@ function App() {
         setFavorites(JSON.parse(savedFavorites));
       } catch (e) {
         console.error("Failed to parse favorites", e);
+      }
+    }
+    
+    const savedCustomGHS = localStorage.getItem(CUSTOM_GHS_KEY);
+    if (savedCustomGHS) {
+      try {
+        setCustomGHSSettings(JSON.parse(savedCustomGHS));
+      } catch (e) {
+        console.error("Failed to parse custom GHS settings", e);
       }
     }
   }, []);
