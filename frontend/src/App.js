@@ -22,6 +22,7 @@ const GHS_IMAGES = {
 
 const HISTORY_KEY = "ghs_search_history";
 const FAVORITES_KEY = "ghs_favorites";
+const CUSTOM_GHS_KEY = "ghs_custom_settings";
 const MAX_HISTORY = 50;
 
 function App() {
