@@ -1592,112 +1592,187 @@ function App() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Signal Word */}
-              {selectedResult.signal_word && (
-                <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-2">
-                    警示語
+              {/* Custom Classification Note Input */}
+              {(selectedResult.has_multiple_classifications || selectedResult.other_classifications?.length > 0) && (
+                <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-purple-300 mb-2 flex items-center gap-2">
+                    <span>⚙️</span> 自訂分類設定
                   </h3>
-                  <span
-                    className={`inline-block px-4 py-2 rounded-lg text-lg font-bold ${
-                      selectedResult.signal_word === "Danger"
-                        ? "bg-red-500/20 text-red-400 border border-red-500/50"
-                        : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
-                    }`}
-                  >
-                    {selectedResult.signal_word_zh || selectedResult.signal_word}
-                  </span>
-                </div>
-              )}
-
-              {/* GHS Pictograms */}
-              {selectedResult.ghs_pictograms?.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-3">
-                    GHS 危害圖示 <span className="text-emerald-400">（主要分類）</span>
-                  </h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                    {selectedResult.ghs_pictograms.map((pic, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-slate-900 rounded-xl p-4 text-center"
+                  <p className="text-xs text-slate-400 mb-3">
+                    您可以選擇最適合您用途的 GHS 分類（如：實驗室純品、工業級等）
+                  </p>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="備註（如：實驗室用純品）"
+                      value={customGHSSettings[selectedResult.cas_number]?.note || ""}
+                      onChange={(e) => {
+                        const currentIndex = customGHSSettings[selectedResult.cas_number]?.selectedIndex || 0;
+                        setCustomClassification(selectedResult.cas_number, currentIndex, e.target.value);
+                      }}
+                      className="flex-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    {hasCustomClassification(selectedResult.cas_number) && (
+                      <button
+                        onClick={() => clearCustomClassification(selectedResult.cas_number)}
+                        className="px-3 py-2 bg-slate-700 hover:bg-red-600/50 text-slate-300 text-sm rounded-lg transition-colors"
+                        title="清除自訂設定"
                       >
-                        <img
-                          src={GHS_IMAGES[pic.code]}
-                          alt={pic.name_zh}
-                          className="w-16 h-16 mx-auto bg-white rounded-lg"
-                        />
-                        <p className="text-white text-sm font-medium mt-2">
-                          {pic.code}
-                        </p>
-                        <p className="text-slate-400 text-xs">{pic.name_zh}</p>
-                      </div>
-                    ))}
+                        重置
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
               
-              {/* Other Classifications in Modal */}
-              {selectedResult.has_multiple_classifications && selectedResult.other_classifications?.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-3">
-                    其他分類報告 <span className="text-blue-400">（{selectedResult.other_classifications.length} 種）</span>
-                  </h3>
-                  <div className="space-y-3">
-                    {selectedResult.other_classifications.map((otherClass, ocIdx) => (
-                      <div key={ocIdx} className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
-                        <div className="flex gap-2 flex-wrap mb-2">
-                          {otherClass.pictograms?.map((pic, pIdx) => (
-                            <div key={pIdx} className="text-center">
-                              <img
-                                src={GHS_IMAGES[pic.code]}
-                                alt={pic.name_zh}
-                                className="w-10 h-10 bg-white rounded"
-                                title={`${pic.code}: ${pic.name_zh}`}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        {otherClass.signal_word_zh && (
-                          <p className="text-xs text-slate-400">
-                            警示語: <span className={otherClass.signal_word === "Danger" ? "text-red-400" : "text-amber-400"}>{otherClass.signal_word_zh}</span>
-                          </p>
-                        )}
-                        {otherClass.source && (
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2" title={otherClass.source}>
-                            來源: {otherClass.source.substring(0, 100)}...
-                          </p>
-                        )}
-                      </div>
-                    ))}
+              {/* Signal Word - using effective classification */}
+              {(() => {
+                const effective = getEffectiveClassification(selectedResult);
+                return effective?.signal_word && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-400 mb-2">
+                      警示語
+                    </h3>
+                    <span
+                      className={`inline-block px-4 py-2 rounded-lg text-lg font-bold ${
+                        effective.signal_word === "Danger"
+                          ? "bg-red-500/20 text-red-400 border border-red-500/50"
+                          : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
+                      }`}
+                    >
+                      {effective.signal_word_zh || effective.signal_word}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    💡 不同分類可能因產品形態（純品/溶液/工業級）、濃度、或添加劑而異
-                  </p>
-                </div>
-              )}
+                );
+              })()}
 
-              {/* Hazard Statements */}
-              {selectedResult.hazard_statements?.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-3">
-                    危害說明
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedResult.hazard_statements.map((stmt, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-slate-900 rounded-lg p-3 flex gap-3"
-                      >
-                        <span className="text-amber-400 font-mono font-medium shrink-0">
-                          {stmt.code}
-                        </span>
-                        <span className="text-white">{stmt.text_zh}</span>
-                      </div>
-                    ))}
+              {/* All GHS Classifications with Selection */}
+              {(() => {
+                const effective = getEffectiveClassification(selectedResult);
+                const allClassifications = [
+                  {
+                    pictograms: selectedResult.ghs_pictograms || [],
+                    hazard_statements: selectedResult.hazard_statements || [],
+                    signal_word: selectedResult.signal_word,
+                    signal_word_zh: selectedResult.signal_word_zh,
+                    source: "預設分類（第一筆報告）"
+                  },
+                  ...(selectedResult.other_classifications || [])
+                ];
+                
+                return allClassifications.length > 0 && allClassifications[0].pictograms?.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-400 mb-3">
+                      GHS 危害圖示分類
+                      {allClassifications.length > 1 && (
+                        <span className="text-blue-400 ml-2">（共 {allClassifications.length} 種）</span>
+                      )}
+                    </h3>
+                    <div className="space-y-3">
+                      {allClassifications.map((cls, clsIdx) => {
+                        const isSelected = effective.customIndex === clsIdx;
+                        const hasNoPictograms = !cls.pictograms || cls.pictograms.length === 0;
+                        if (hasNoPictograms) return null;
+                        
+                        return (
+                          <div
+                            key={clsIdx}
+                            className={`rounded-xl p-4 border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-purple-900/30 border-purple-500"
+                                : "bg-slate-900/50 border-slate-700 hover:border-slate-500"
+                            }`}
+                            onClick={() => setCustomClassification(
+                              selectedResult.cas_number, 
+                              clsIdx, 
+                              customGHSSettings[selectedResult.cas_number]?.note || ""
+                            )}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                {isSelected ? (
+                                  <span className="text-purple-400 text-lg">★</span>
+                                ) : (
+                                  <span className="text-slate-500 text-lg">○</span>
+                                )}
+                                <span className={`text-sm font-medium ${isSelected ? "text-purple-300" : "text-slate-400"}`}>
+                                  {clsIdx === 0 ? "預設分類" : `分類 ${clsIdx + 1}`}
+                                </span>
+                                {isSelected && (
+                                  <span className="px-2 py-0.5 bg-purple-500/30 text-purple-300 text-xs rounded">
+                                    目前選擇
+                                  </span>
+                                )}
+                              </div>
+                              {!isSelected && (
+                                <button
+                                  className="text-xs text-blue-400 hover:text-blue-300"
+                                >
+                                  點擊選擇
+                                </button>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-3 flex-wrap">
+                              {cls.pictograms?.map((pic, pIdx) => (
+                                <div key={pIdx} className="text-center">
+                                  <img
+                                    src={GHS_IMAGES[pic.code]}
+                                    alt={pic.name_zh}
+                                    className={`w-14 h-14 bg-white rounded-lg ${!isSelected ? "opacity-70" : ""}`}
+                                  />
+                                  <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {cls.signal_word_zh && (
+                              <p className="text-xs text-slate-400 mt-2">
+                                警示語: <span className={cls.signal_word === "Danger" ? "text-red-400" : "text-amber-400"}>{cls.signal_word_zh}</span>
+                              </p>
+                            )}
+                            
+                            {cls.source && clsIdx > 0 && (
+                              <p className="text-xs text-slate-500 mt-1 line-clamp-1" title={cls.source}>
+                                {cls.source.substring(0, 80)}...
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3">
+                      💡 點擊任一分類即可設為您的主要分類，設定會自動儲存
+                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })()}
+
+              {/* Hazard Statements - using effective classification */}
+              {(() => {
+                const effective = getEffectiveClassification(selectedResult);
+                return effective?.hazard_statements?.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-400 mb-3">
+                      危害說明
+                      {effective.isCustom && <span className="text-purple-400 ml-2">（依您選擇的分類）</span>}
+                    </h3>
+                    <div className="space-y-2">
+                      {effective.hazard_statements.map((stmt, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-900 rounded-lg p-3 flex gap-3"
+                        >
+                          <span className="text-amber-400 font-mono font-medium shrink-0">
+                            {stmt.code}
+                          </span>
+                          <span className="text-white">{stmt.text_zh}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Action Buttons */}
               <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-3">
