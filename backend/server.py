@@ -298,15 +298,28 @@ H_CODE_TRANSLATIONS = {
 class CASQuery(BaseModel):
     cas_numbers: List[str]
 
+class GHSReport(BaseModel):
+    """Single GHS classification report"""
+    pictograms: List[Dict[str, Any]] = []
+    hazard_statements: List[Dict[str, str]] = []
+    signal_word: Optional[str] = None
+    signal_word_zh: Optional[str] = None
+    source: Optional[str] = None
+    report_count: Optional[str] = None
+
 class ChemicalResult(BaseModel):
     cas_number: str
     cid: Optional[int] = None
     name_en: Optional[str] = None
     name_zh: Optional[str] = None
+    # Primary (main) classification - first/most reported
     ghs_pictograms: List[Dict[str, Any]] = []
     hazard_statements: List[Dict[str, str]] = []
     signal_word: Optional[str] = None
     signal_word_zh: Optional[str] = None
+    # Other classification reports
+    other_classifications: List[GHSReport] = []
+    has_multiple_classifications: bool = False
     found: bool = False
     error: Optional[str] = None
 
