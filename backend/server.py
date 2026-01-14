@@ -815,10 +815,41 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     
     (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
     
-    # Extract GHS information
-    pictograms = extract_ghs_pictograms(ghs_data)
-    hazard_statements = extract_hazard_statements(ghs_data)
-    signal_word, signal_word_zh = extract_signal_word(ghs_data)
+    # Extract ALL GHS classification reports
+    all_classifications = extract_all_ghs_classifications(ghs_data)
+    
+    # Separate primary (first) classification from others
+    primary_pictograms = []
+    primary_hazards = []
+    primary_signal = None
+    primary_signal_zh = None
+    other_classifications = []
+    
+    if all_classifications:
+        # First report is the primary classification
+        primary = all_classifications[0]
+        primary_pictograms = primary.get("pictograms", [])
+        primary_hazards = primary.get("hazard_statements", [])
+        primary_signal = primary.get("signal_word")
+        primary_signal_zh = primary.get("signal_word_zh")
+        
+        # Rest are other classifications (deduplicate by pictogram set)
+        seen_pictogram_sets = set()
+        primary_pic_set = frozenset(p["code"] for p in primary_pictograms)
+        seen_pictogram_sets.add(primary_pic_set)
+        
+        for report in all_classifications[1:]:
+            pic_set = frozenset(p["code"] for p in report.get("pictograms", []))
+            if pic_set and pic_set not in seen_pictogram_sets:
+                seen_pictogram_sets.add(pic_set)
+                other_classifications.append(GHSReport(
+                    pictograms=report.get("pictograms", []),
+                    hazard_statements=report.get("hazard_statements", []),
+                    signal_word=report.get("signal_word"),
+                    signal_word_zh=report.get("signal_word_zh"),
+                    source=report.get("source"),
+                    report_count=report.get("report_count")
+                ))
     
     # Use RecordTitle as fallback for name_en if not found
     if not name_en:
@@ -849,10 +880,12 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         cid=cid,
         name_en=name_en,
         name_zh=name_zh,
-        ghs_pictograms=pictograms,
-        hazard_statements=hazard_statements,
-        signal_word=signal_word,
-        signal_word_zh=signal_word_zh,
+        ghs_pictograms=primary_pictograms,
+        hazard_statements=primary_hazards,
+        signal_word=primary_signal,
+        signal_word_zh=primary_signal_zh,
+        other_classifications=other_classifications,
+        has_multiple_classifications=len(other_classifications) > 0,
         found=True
     )
 
