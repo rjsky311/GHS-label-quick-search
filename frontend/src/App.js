@@ -50,12 +50,81 @@ function App() {
   // State to track which results have expanded "other classifications"
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   
+  // State for custom GHS settings (user-selected primary classifications)
+  const [customGHSSettings, setCustomGHSSettings] = useState({});
+  
   // Toggle function for other classifications
   const toggleOtherClassifications = (casNumber) => {
     setExpandedOtherClassifications(prev => ({
       ...prev,
       [casNumber]: !prev[casNumber]
     }));
+  };
+  
+  // Get the effective GHS classification for a result (considering user customization)
+  const getEffectiveClassification = (result) => {
+    if (!result || !result.found) return null;
+    
+    const customSetting = customGHSSettings[result.cas_number];
+    
+    // If user has customized, use their selection
+    if (customSetting && customSetting.selectedIndex !== undefined) {
+      const allClassifications = [
+        {
+          pictograms: result.ghs_pictograms || [],
+          hazard_statements: result.hazard_statements || [],
+          signal_word: result.signal_word,
+          signal_word_zh: result.signal_word_zh,
+        },
+        ...(result.other_classifications || [])
+      ];
+      
+      if (customSetting.selectedIndex < allClassifications.length) {
+        return {
+          ...allClassifications[customSetting.selectedIndex],
+          isCustom: true,
+          customIndex: customSetting.selectedIndex,
+          note: customSetting.note
+        };
+      }
+    }
+    
+    // Default to primary classification
+    return {
+      pictograms: result.ghs_pictograms || [],
+      hazard_statements: result.hazard_statements || [],
+      signal_word: result.signal_word,
+      signal_word_zh: result.signal_word_zh,
+      isCustom: false,
+      customIndex: 0
+    };
+  };
+  
+  // Set custom GHS classification for a CAS number
+  const setCustomClassification = (casNumber, selectedIndex, note = "") => {
+    const newSettings = {
+      ...customGHSSettings,
+      [casNumber]: {
+        selectedIndex,
+        note,
+        updatedAt: new Date().toISOString()
+      }
+    };
+    setCustomGHSSettings(newSettings);
+    localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
+  };
+  
+  // Clear custom GHS classification for a CAS number
+  const clearCustomClassification = (casNumber) => {
+    const newSettings = { ...customGHSSettings };
+    delete newSettings[casNumber];
+    setCustomGHSSettings(newSettings);
+    localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
+  };
+  
+  // Check if a CAS number has custom classification
+  const hasCustomClassification = (casNumber) => {
+    return customGHSSettings[casNumber]?.selectedIndex !== undefined;
   };
 
   // Load history and favorites from localStorage
