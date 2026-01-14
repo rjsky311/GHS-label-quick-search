@@ -551,18 +551,18 @@ function App() {
       // 版型 3 - 完整版
       full: (chemical) => {
         const effectiveChem = getEffectiveForPrint(chemical);
-        const pictograms = chemical.ghs_pictograms || [];
-        const hazards = chemical.hazard_statements || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const pictograms = effectiveChem.ghs_pictograms || [];
+        const hazards = effectiveChem.hazard_statements || [];
+        const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+        const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
         
         return `
           <div class="label label-full">
             <div class="label-top">
               <div class="name-section">
-                <div class="name-en">${chemical.name_en || ""}</div>
-                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-                <div class="cas">CAS: ${chemical.cas_number}</div>
+                <div class="name-en">${effectiveChem.name_en || ""}</div>
+                ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${effectiveChem.cas_number}</div>
               </div>
             </div>
             <div class="label-middle compact">
@@ -586,20 +586,21 @@ function App() {
 
       // 版型 4 - QR Code 版
       qrcode: (chemical) => {
-        const pictograms = chemical.ghs_pictograms || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
-        const pubchemUrl = chemical.cid 
-          ? `https://pubchem.ncbi.nlm.nih.gov/compound/${chemical.cid}`
-          : `https://pubchem.ncbi.nlm.nih.gov/#query=${chemical.cas_number}`;
+        const effectiveChem = getEffectiveForPrint(chemical);
+        const pictograms = effectiveChem.ghs_pictograms || [];
+        const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+        const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+        const pubchemUrl = effectiveChem.cid 
+          ? `https://pubchem.ncbi.nlm.nih.gov/compound/${effectiveChem.cid}`
+          : `https://pubchem.ncbi.nlm.nih.gov/#query=${effectiveChem.cas_number}`;
         
         return `
           <div class="label label-qr">
             <div class="qr-left">
               <div class="name-section">
-                <div class="name-en">${chemical.name_en || ""}</div>
-                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-                <div class="cas">CAS: ${chemical.cas_number}</div>
+                <div class="name-en">${effectiveChem.name_en || ""}</div>
+                ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${effectiveChem.cas_number}</div>
               </div>
               ${pictograms.length > 0 ? `
                 <div class="pictograms qr-pics">
