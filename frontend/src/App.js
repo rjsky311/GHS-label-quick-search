@@ -1495,7 +1495,7 @@ function App() {
               {selectedResult.ghs_pictograms?.length > 0 && (
                 <div>
                   <h3 className="text-sm font-medium text-slate-400 mb-3">
-                    GHS 危害圖示
+                    GHS 危害圖示 <span className="text-emerald-400">（主要分類）</span>
                   </h3>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                     {selectedResult.ghs_pictograms.map((pic, idx) => (
@@ -1515,6 +1515,46 @@ function App() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Other Classifications in Modal */}
+              {selectedResult.has_multiple_classifications && selectedResult.other_classifications?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-3">
+                    其他分類報告 <span className="text-blue-400">（{selectedResult.other_classifications.length} 種）</span>
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedResult.other_classifications.map((otherClass, ocIdx) => (
+                      <div key={ocIdx} className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                        <div className="flex gap-2 flex-wrap mb-2">
+                          {otherClass.pictograms?.map((pic, pIdx) => (
+                            <div key={pIdx} className="text-center">
+                              <img
+                                src={GHS_IMAGES[pic.code]}
+                                alt={pic.name_zh}
+                                className="w-10 h-10 bg-white rounded"
+                                title={`${pic.code}: ${pic.name_zh}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {otherClass.signal_word_zh && (
+                          <p className="text-xs text-slate-400">
+                            警示語: <span className={otherClass.signal_word === "Danger" ? "text-red-400" : "text-amber-400"}>{otherClass.signal_word_zh}</span>
+                          </p>
+                        )}
+                        {otherClass.source && (
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2" title={otherClass.source}>
+                            來源: {otherClass.source.substring(0, 100)}...
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    💡 不同分類可能因產品形態（純品/溶液/工業級）、濃度、或添加劑而異
+                  </p>
                 </div>
               )}
 
