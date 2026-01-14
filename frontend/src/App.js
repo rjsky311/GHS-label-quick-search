@@ -448,21 +448,52 @@ function App() {
       },
     }[labelConfig.size];
 
+    // Helper function to get effective classification for printing
+    const getEffectiveForPrint = (chemical) => {
+      const customSetting = customGHSSettings[chemical.cas_number];
+      
+      if (customSetting && customSetting.selectedIndex !== undefined) {
+        const allClassifications = [
+          {
+            pictograms: chemical.ghs_pictograms || [],
+            hazard_statements: chemical.hazard_statements || [],
+            signal_word: chemical.signal_word,
+            signal_word_zh: chemical.signal_word_zh,
+          },
+          ...(chemical.other_classifications || [])
+        ];
+        
+        if (customSetting.selectedIndex < allClassifications.length) {
+          return {
+            ...chemical,
+            ghs_pictograms: allClassifications[customSetting.selectedIndex].pictograms || [],
+            hazard_statements: allClassifications[customSetting.selectedIndex].hazard_statements || [],
+            signal_word: allClassifications[customSetting.selectedIndex].signal_word,
+            signal_word_zh: allClassifications[customSetting.selectedIndex].signal_word_zh,
+            customNote: customSetting.note
+          };
+        }
+      }
+      
+      return chemical;
+    };
+
     // Template generators with FIXED LAYOUT
     const templates = {
       // 版型 1 - 圖示版
       icon: (chemical) => {
-        const pictograms = chemical.ghs_pictograms || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const effectiveChem = getEffectiveForPrint(chemical);
+        const pictograms = effectiveChem.ghs_pictograms || [];
+        const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+        const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
         
         return `
           <div class="label">
             <div class="label-top">
               <div class="name-section">
-                <div class="name-en">${chemical.name_en || ""}</div>
-                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-                <div class="cas">CAS: ${chemical.cas_number}</div>
+                <div class="name-en">${effectiveChem.name_en || ""}</div>
+                ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${effectiveChem.cas_number}</div>
               </div>
             </div>
             <div class="label-middle">
@@ -481,19 +512,20 @@ function App() {
 
       // 版型 2 - 標準版
       standard: (chemical) => {
-        const pictograms = chemical.ghs_pictograms || [];
-        const hazards = chemical.hazard_statements || [];
-        const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
-        const signalClass = chemical.signal_word === "Danger" ? "danger" : "warning";
+        const effectiveChem = getEffectiveForPrint(chemical);
+        const pictograms = effectiveChem.ghs_pictograms || [];
+        const hazards = effectiveChem.hazard_statements || [];
+        const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+        const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
         const maxHazards = labelConfig.size === "small" ? 2 : labelConfig.size === "medium" ? 3 : 4;
         
         return `
           <div class="label">
             <div class="label-top">
               <div class="name-section">
-                <div class="name-en">${chemical.name_en || ""}</div>
-                ${chemical.name_zh ? `<div class="name-zh">${chemical.name_zh}</div>` : ""}
-                <div class="cas">CAS: ${chemical.cas_number}</div>
+                <div class="name-en">${effectiveChem.name_en || ""}</div>
+                ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
+                <div class="cas">CAS: ${effectiveChem.cas_number}</div>
               </div>
             </div>
             <div class="label-middle">
@@ -518,6 +550,7 @@ function App() {
 
       // 版型 3 - 完整版
       full: (chemical) => {
+        const effectiveChem = getEffectiveForPrint(chemical);
         const pictograms = chemical.ghs_pictograms || [];
         const hazards = chemical.hazard_statements || [];
         const signalWord = chemical.signal_word_zh || chemical.signal_word || "";
