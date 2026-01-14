@@ -1302,23 +1302,72 @@ function App() {
                       </td>
                       <td className="px-4 py-4">
                         {result.found && result.ghs_pictograms?.length > 0 ? (
-                          <div className="flex gap-1 flex-wrap">
-                            {result.ghs_pictograms.map((pic, pIdx) => (
-                              <div
-                                key={pIdx}
-                                className="group relative"
-                                title={`${pic.code}: ${pic.name_zh}`}
-                              >
-                                <img
-                                  src={GHS_IMAGES[pic.code]}
-                                  alt={pic.name_zh}
-                                  className="w-10 h-10 bg-white rounded"
-                                />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                  {pic.code}: {pic.name_zh}
+                          <div className="space-y-2">
+                            {/* Primary Classification */}
+                            <div className="flex gap-1 flex-wrap items-center">
+                              <span className="text-xs text-emerald-400 mr-1" title="主要分類（最多報告）">●</span>
+                              {result.ghs_pictograms.map((pic, pIdx) => (
+                                <div
+                                  key={pIdx}
+                                  className="group relative"
+                                  title={`${pic.code}: ${pic.name_zh}`}
+                                >
+                                  <img
+                                    src={GHS_IMAGES[pic.code]}
+                                    alt={pic.name_zh}
+                                    className="w-10 h-10 bg-white rounded"
+                                  />
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                    {pic.code}: {pic.name_zh}
+                                  </div>
                                 </div>
+                              ))}
+                            </div>
+                            
+                            {/* Other Classifications Toggle */}
+                            {result.has_multiple_classifications && result.other_classifications?.length > 0 && (
+                              <div>
+                                <button
+                                  onClick={() => toggleOtherClassifications(result.cas_number)}
+                                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                >
+                                  <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
+                                  其他 {result.other_classifications.length} 種分類
+                                </button>
+                                
+                                {/* Expanded Other Classifications */}
+                                {expandedOtherClassifications[result.cas_number] && (
+                                  <div className="mt-2 space-y-2 pl-2 border-l-2 border-slate-600">
+                                    {result.other_classifications.map((otherClass, ocIdx) => (
+                                      <div key={ocIdx} className="flex gap-1 flex-wrap items-center">
+                                        <span className="text-xs text-slate-500 mr-1" title="其他分類報告">○</span>
+                                        {otherClass.pictograms?.map((pic, pIdx) => (
+                                          <div
+                                            key={pIdx}
+                                            className="group relative"
+                                            title={`${pic.code}: ${pic.name_zh}`}
+                                          >
+                                            <img
+                                              src={GHS_IMAGES[pic.code]}
+                                              alt={pic.name_zh}
+                                              className="w-8 h-8 bg-white rounded opacity-70"
+                                            />
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                              {pic.code}: {pic.name_zh}
+                                            </div>
+                                          </div>
+                                        ))}
+                                        {otherClass.source && (
+                                          <span className="text-xs text-slate-500 ml-1" title={otherClass.source}>
+                                            {otherClass.report_count ? `(${otherClass.report_count} 份)` : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            ))}
+                            )}
                           </div>
                         ) : result.found ? (
                           <span className="text-slate-500">無危害標示</span>
