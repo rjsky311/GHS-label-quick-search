@@ -361,7 +361,7 @@ def normalize_cas(cas: str) -> str:
     return cas
 
 def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
-    """Extract GHS pictogram codes from PubChem data"""
+    """Extract GHS pictogram codes from PubChem data - DEPRECATED, use extract_all_ghs_classifications"""
     pictograms = []
     seen_codes = set()
     try:
@@ -376,10 +376,8 @@ def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
                                     if info.get("Name") == "Pictogram(s)":
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             for extra in markup.get("Markup", []):
-                                                # Check for Icon type with URL containing GHS code
                                                 if extra.get("Type") == "Icon":
                                                     url = extra.get("URL", "")
-                                                    # Extract GHS code from URL like "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS02.svg"
                                                     match = re.search(r'(GHS\d{2})', url)
                                                     if match:
                                                         pic_code = match.group(1)
@@ -392,6 +390,106 @@ def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error extracting pictograms: {e}")
     return pictograms
+
+def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
+    """
+    Extract ALL GHS classification reports from PubChem data.
+    Returns a list of classification reports, each containing pictograms, hazards, signal word, and source.
+    The first report is typically the primary/most common classification.
+    """
+    reports = []
+    
+    try:
+        sections = ghs_data.get("Record", {}).get("Section", [])
+        for section in sections:
+            if section.get("TOCHeading") == "Safety and Hazards":
+                for subsection in section.get("Section", []):
+                    if subsection.get("TOCHeading") == "Hazards Identification":
+                        for subsubsection in subsection.get("Section", []):
+                            if subsubsection.get("TOCHeading") == "GHS Classification":
+                                # Parse each report entry
+                                current_report = None
+                                
+                                for info in subsubsection.get("Information", []):
+                                    info_name = info.get("Name", "")
+                                    
+                                    if info_name == "Pictogram(s)":
+                                        # Start a new report when we encounter Pictogram(s)
+                                        if current_report is not None:
+                                            reports.append(current_report)
+                                        
+                                        current_report = {
+                                            "pictograms": [],
+                                            "hazard_statements": [],
+                                            "signal_word": None,
+                                            "signal_word_zh": None,
+                                            "source": None,
+                                            "report_count": None
+                                        }
+                                        
+                                        # Extract pictogram codes
+                                        seen_codes = set()
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            for extra in markup.get("Markup", []):
+                                                if extra.get("Type") == "Icon":
+                                                    url = extra.get("URL", "")
+                                                    match = re.search(r'(GHS\d{2})', url)
+                                                    if match:
+                                                        pic_code = match.group(1)
+                                                        if pic_code in GHS_PICTOGRAMS and pic_code not in seen_codes:
+                                                            seen_codes.add(pic_code)
+                                                            current_report["pictograms"].append({
+                                                                "code": pic_code,
+                                                                **GHS_PICTOGRAMS[pic_code]
+                                                            })
+                                    
+                                    elif info_name == "Signal" and current_report is not None:
+                                        signal_translations = {"Danger": "危險", "Warning": "警告"}
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            signal = markup.get("String", "")
+                                            if signal:
+                                                current_report["signal_word"] = signal
+                                                current_report["signal_word_zh"] = signal_translations.get(signal, signal)
+                                                break
+                                    
+                                    elif info_name == "GHS Hazard Statements" and current_report is not None:
+                                        seen_codes = set()
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            text = markup.get("String", "")
+                                            h_match = re.search(r'(H\d{3})', text)
+                                            if h_match:
+                                                h_code = h_match.group(1)
+                                                if h_code not in seen_codes:
+                                                    seen_codes.add(h_code)
+                                                    zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
+                                                    current_report["hazard_statements"].append({
+                                                        "code": h_code,
+                                                        "text_en": text,
+                                                        "text_zh": zh_text if zh_text else text
+                                                    })
+                                    
+                                    elif info_name == "ECHA C&L Notifications Summary" and current_report is not None:
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            text = markup.get("String", "")
+                                            if text:
+                                                current_report["source"] = text
+                                                # Extract report count if available
+                                                count_match = re.search(r'(\d+)\s*report', text.lower())
+                                                if count_match:
+                                                    current_report["report_count"] = count_match.group(1)
+                                                break
+                                
+                                # Don't forget the last report
+                                if current_report is not None:
+                                    reports.append(current_report)
+    
+    except Exception as e:
+        logger.error(f"Error extracting GHS classifications: {e}")
+    
+    # Filter out empty reports
+    reports = [r for r in reports if r.get("pictograms")]
+    
+    return reports
 
 def extract_hazard_statements(ghs_data: dict) -> List[Dict[str, str]]:
     """Extract hazard statements from PubChem data"""
