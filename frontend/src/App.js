@@ -45,6 +45,17 @@ function App() {
   });
   const [selectedForLabel, setSelectedForLabel] = useState([]);
   const printRef = useRef(null);
+  
+  // State to track which results have expanded "other classifications"
+  const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
+  
+  // Toggle function for other classifications
+  const toggleOtherClassifications = (casNumber) => {
+    setExpandedOtherClassifications(prev => ({
+      ...prev,
+      [casNumber]: !prev[casNumber]
+    }));
+  };
 
   // Load history and favorites from localStorage
   useEffect(() => {
