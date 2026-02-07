@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 class GHSAPITester:
-    def __init__(self, base_url="https://chemtag-enhance.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

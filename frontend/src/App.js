@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -6,6 +6,29 @@ import { saveAs } from "file-saver";
 import useSearchHistory from "@/hooks/useSearchHistory";
 import useFavorites from "@/hooks/useFavorites";
 import useCustomGHS from "@/hooks/useCustomGHS";
+import {
+  AlertTriangle,
+  Search,
+  ClipboardList,
+  Star,
+  Tag,
+  FileSpreadsheet,
+  FileText,
+  FlaskConical,
+  Loader2,
+  Printer,
+  QrCode,
+  Target,
+  PenLine,
+  Lightbulb,
+  X,
+  ExternalLink,
+  Copy,
+  BookOpen,
+  LayoutGrid,
+  Download,
+} from "lucide-react";
+import { Toaster, toast } from "sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -37,6 +60,7 @@ function App() {
   const [labelConfig, setLabelConfig] = useState({
     size: "medium",
     template: "standard",
+    orientation: "portrait",
   });
   const [selectedForLabel, setSelectedForLabel] = useState([]);
   const printRef = useRef(null);
@@ -52,6 +76,33 @@ function App() {
     clearCustomClassification,
     hasCustomClassification,
   } = useCustomGHS();
+
+  const searchInputRef = useRef(null);
+
+  // Keyboard shortcut: Ctrl+K / Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Batch count detection
+  const batchCount = batchCas
+    .split(/[,\n\t;]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0).length;
+
+  // Copy CAS to clipboard
+  const copyCAS = useCallback((cas) => {
+    navigator.clipboard.writeText(cas).then(() => {
+      toast.success(`已複製 ${cas}`);
+    });
+  }, []);
 
   // Toggle function for other classifications
   const toggleOtherClassifications = (casNumber) => {
@@ -247,45 +298,67 @@ function App() {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
   };
 
-  // Print labels with multiple templates - IMPROVED VERSION
+  // Print labels with smart grid layout
   const printLabels = () => {
     if (selectedForLabel.length === 0) return;
-    
+
     const printWindow = window.open("", "_blank");
-    
-    // Size configurations - LARGER SIZES
+    const isLandscape = labelConfig.orientation === "landscape";
+
+    // Size configurations
     const sizeConfig = {
-      small: { 
-        width: "60mm", 
-        height: "45mm", 
-        fontSize: "10px", 
+      small: {
+        width: "60mm",
+        height: "45mm",
+        fontSize: "10px",
         titleSize: "12px",
-        imgSize: "22px", 
+        imgSize: "22px",
         qrSize: "25mm",
         signalSize: "11px",
         hazardSize: "8px"
       },
-      medium: { 
-        width: "80mm", 
-        height: "60mm", 
-        fontSize: "12px", 
+      medium: {
+        width: "80mm",
+        height: "60mm",
+        fontSize: "12px",
         titleSize: "14px",
-        imgSize: "30px", 
+        imgSize: "30px",
         qrSize: "30mm",
         signalSize: "13px",
         hazardSize: "9px"
       },
-      large: { 
-        width: "105mm", 
-        height: "80mm", 
-        fontSize: "14px", 
+      large: {
+        width: "105mm",
+        height: "80mm",
+        fontSize: "14px",
         titleSize: "16px",
-        imgSize: "38px", 
+        imgSize: "38px",
         qrSize: "38mm",
         signalSize: "15px",
         hazardSize: "11px"
       },
     }[labelConfig.size];
+
+    // Grid layout calculation based on A4 page and label size
+    const gridConfig = {
+      portrait: {
+        small:  { cols: 3, rows: 5, perPage: 15 },
+        medium: { cols: 2, rows: 4, perPage: 8 },
+        large:  { cols: 1, rows: 3, perPage: 3 },
+      },
+      landscape: {
+        small:  { cols: 4, rows: 4, perPage: 16 },
+        medium: { cols: 3, rows: 3, perPage: 9 },
+        large:  { cols: 2, rows: 2, perPage: 4 },
+      },
+    }[labelConfig.orientation][labelConfig.size];
+
+    // Split labels into page-sized chunks
+    const pages = [];
+    for (let i = 0; i < selectedForLabel.length; i += gridConfig.perPage) {
+      pages.push(selectedForLabel.slice(i, i + gridConfig.perPage));
+    }
+    const totalPages = pages.length;
 
     // Helper function to get effective classification for printing
     const getEffectiveForPrint = (chemical) => {
@@ -458,14 +531,22 @@ function App() {
       },
     };
 
-    // Generate labels
-    const labelsHtml = selectedForLabel.map((chemical) => templates[labelConfig.template](chemical)).join("");
+    // Generate pages with grid layout
+    const pagesHtml = pages.map((pageLabels, pageIdx) => {
+      const labelsHtml = pageLabels.map((chemical) => templates[labelConfig.template](chemical)).join("");
+      return `
+        <div class="page">
+          ${labelsHtml}
+          <div class="page-number">第 ${pageIdx + 1} / ${totalPages} 頁</div>
+        </div>
+      `;
+    }).join("");
 
-    // Improved CSS with FIXED dimensions
+    // CSS with smart grid layout
     const styles = `
       @page {
-        size: A4;
-        margin: 10mm;
+        size: A4${isLandscape ? " landscape" : ""};
+        margin: 5mm;
       }
       * {
         box-sizing: border-box;
@@ -474,13 +555,30 @@ function App() {
       }
       body {
         font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
-        padding: 5mm;
+        padding: 0;
         background: #fff;
       }
-      .labels-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5mm;
+      .page {
+        display: grid;
+        grid-template-columns: repeat(${gridConfig.cols}, ${sizeConfig.width});
+        gap: 3mm;
+        justify-content: center;
+        align-content: start;
+        padding: 2mm;
+        page-break-after: always;
+        position: relative;
+        min-height: ${isLandscape ? "190mm" : "277mm"};
+      }
+      .page:last-child {
+        page-break-after: auto;
+      }
+      .page-number {
+        position: absolute;
+        bottom: 1mm;
+        right: 3mm;
+        font-size: 8px;
+        color: #999;
+        grid-column: 1 / -1;
       }
       
       /* ===== LABEL BASE ===== */
@@ -489,7 +587,7 @@ function App() {
         height: ${sizeConfig.height};
         border: 2px solid #222;
         border-radius: 2mm;
-        padding: 3mm;
+        padding: 2.5mm;
         page-break-inside: avoid;
         display: flex;
         flex-direction: column;
@@ -498,8 +596,8 @@ function App() {
         font-size: ${sizeConfig.fontSize};
       }
       .label-full {
-        height: auto;
-        min-height: ${sizeConfig.height};
+        height: ${sizeConfig.height};
+        max-height: ${sizeConfig.height};
       }
       .label-qr {
         flex-direction: row;
@@ -509,8 +607,8 @@ function App() {
       .label-top {
         flex-shrink: 0;
         border-bottom: 1px solid #ccc;
-        padding-bottom: 2mm;
-        margin-bottom: 2mm;
+        padding-bottom: 1.5mm;
+        margin-bottom: 1.5mm;
       }
       .label-middle {
         flex: 1;
@@ -522,7 +620,7 @@ function App() {
       }
       .label-middle.compact {
         flex: 0;
-        margin-bottom: 2mm;
+        margin-bottom: 1.5mm;
       }
       .label-bottom {
         flex-shrink: 0;
@@ -540,6 +638,10 @@ function App() {
         color: #000;
         word-wrap: break-word;
         overflow-wrap: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
       .name-zh {
         font-size: calc(${sizeConfig.titleSize} - 2px);
@@ -595,7 +697,7 @@ function App() {
         padding: 1.5mm 4mm;
         border-radius: 1mm;
         text-align: center;
-        margin: 2mm 0;
+        margin: 1mm 0;
       }
       .signal.compact {
         font-size: calc(${sizeConfig.signalSize} - 2px);
@@ -618,7 +720,7 @@ function App() {
         border: 1.5px solid #ca8a04;
       }
       .signal-placeholder {
-        height: 8mm;
+        height: 4mm;
       }
       
       /* ===== MIDDLE ROW ===== */
@@ -633,15 +735,16 @@ function App() {
       /* ===== HAZARDS SECTION ===== */
       .hazards-section {
         border-top: 1px dashed #aaa;
-        padding-top: 2mm;
+        padding-top: 1.5mm;
         font-size: ${sizeConfig.hazardSize};
-        line-height: 1.4;
+        line-height: 1.3;
       }
       .hazards-full {
         border-top: 1px dashed #aaa;
-        padding-top: 2mm;
+        padding-top: 1.5mm;
         font-size: calc(${sizeConfig.hazardSize} - 1px);
-        line-height: 1.3;
+        line-height: 1.2;
+        overflow: hidden;
       }
       .hazard-item {
         margin-bottom: 1mm;
@@ -717,21 +820,19 @@ function App() {
         <style>${styles}</style>
       </head>
       <body>
-        <div class="labels-container">
-          ${labelsHtml}
-        </div>
+        ${pagesHtml}
         <script>
           // Wait for images to load before printing
           window.onload = function() {
             const images = document.querySelectorAll('img');
             let loaded = 0;
             const total = images.length;
-            
+
             if (total === 0) {
               setTimeout(() => window.print(), 300);
               return;
             }
-            
+
             images.forEach(img => {
               if (img.complete) {
                 loaded++;
@@ -753,13 +854,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Toaster position="top-right" theme="dark" richColors />
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-500 rounded-lg flex items-center justify-center">
-                <span className="text-xl">⚠️</span>
+                <AlertTriangle className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">
@@ -775,7 +877,7 @@ function App() {
                 className="relative px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors flex items-center gap-2"
                 data-testid="favorites-toggle-btn"
               >
-                <span>⭐</span>
+                <Star className="w-4 h-4" />
                 <span className="hidden sm:inline">收藏</span>
                 {favorites.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -789,7 +891,7 @@ function App() {
                 className="relative px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors flex items-center gap-2"
                 data-testid="history-toggle-btn"
               >
-                <span>📋</span>
+                <ClipboardList className="w-4 h-4" />
                 <span className="hidden sm:inline">搜尋紀錄</span>
                 {history.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -814,7 +916,7 @@ function App() {
           >
             <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <span>⭐</span> 我的收藏
+                <Star className="w-5 h-5 text-amber-400" /> 我的收藏
               </h2>
               <div className="flex gap-2">
                 {favorites.length > 0 && (
@@ -830,15 +932,15 @@ function App() {
                   onClick={() => setShowFavorites(false)}
                   className="text-slate-400 hover:text-white"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
             {favorites.length === 0 ? (
               <div className="p-8 text-center text-slate-500">
-                <p className="text-4xl mb-4">⭐</p>
+                <Star className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p>尚無收藏的化學品</p>
-                <p className="text-sm mt-2">點擊查詢結果中的星號即可收藏</p>
+                <p className="text-sm mt-2">點擊查詢結果中的 ☆ 即可收藏，下次打開時自動載入</p>
               </div>
             ) : (
               <div className="p-2">
@@ -869,6 +971,7 @@ function App() {
                                 alt={pic.name_zh}
                                 className="w-8 h-8 bg-white rounded"
                                 title={`${pic.code}: ${pic.name_zh}`}
+                                onError={(e) => { e.target.style.display = "none"; e.target.insertAdjacentHTML("afterend", `<span class="inline-flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 text-[10px] font-bold rounded border border-red-300">${pic.code}</span>`); }}
                               />
                             ))}
                           </div>
@@ -876,10 +979,10 @@ function App() {
                       </div>
                       <button
                         onClick={() => toggleFavorite(item)}
-                        className="text-amber-400 hover:text-amber-300 text-xl"
+                        className="text-amber-400 hover:text-amber-300"
                         title="取消收藏"
                       >
-                        ⭐
+                        <Star className="w-5 h-5 fill-current" />
                       </button>
                     </div>
                     <div className="flex gap-2 mt-2">
@@ -937,7 +1040,7 @@ function App() {
                   onClick={() => setShowHistory(false)}
                   className="text-slate-400 hover:text-white"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -994,7 +1097,7 @@ function App() {
               }`}
               data-testid="single-search-tab"
             >
-              <span className="mr-2">🔍</span> 單一查詢
+              <Search className="w-4 h-4 mr-2 inline" /> 單一查詢
             </button>
             <button
               onClick={() => setActiveTab("batch")}
@@ -1005,7 +1108,7 @@ function App() {
               }`}
               data-testid="batch-search-tab"
             >
-              <span className="mr-2">📋</span> 批次查詢
+              <ClipboardList className="w-4 h-4 mr-2 inline" /> 批次查詢
             </button>
           </div>
 
@@ -1017,15 +1120,26 @@ function App() {
                     輸入 CAS 號碼
                   </label>
                   <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={singleCas}
-                      onChange={(e) => setSingleCas(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && searchSingle()}
-                      placeholder="例如: 64-17-5"
-                      className="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono"
-                      data-testid="single-cas-input"
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={singleCas}
+                        onChange={(e) => setSingleCas(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && searchSingle()}
+                        placeholder="例如: 64-17-5"
+                        className="w-full px-4 py-3 pr-10 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono"
+                        data-testid="single-cas-input"
+                      />
+                      {singleCas && (
+                        <button
+                          onClick={() => setSingleCas("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                     <button
                       onClick={searchSingle}
                       disabled={loading}
@@ -1034,15 +1148,18 @@ function App() {
                     >
                       {loading ? (
                         <>
-                          <span className="animate-spin">⏳</span> 查詢中...
+                          <Loader2 className="w-4 h-4 animate-spin" /> 查詢中...
                         </>
                       ) : (
                         <>
-                          <span>🔍</span> 查詢
+                          <Search className="w-4 h-4" /> 查詢
                         </>
                       )}
                     </button>
                   </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    輸入 CAS 號碼、英文名或中文名即可搜尋　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">Ctrl+K</kbd>
+                  </p>
                 </div>
               </div>
             ) : (
@@ -1054,25 +1171,35 @@ function App() {
                   <textarea
                     value={batchCas}
                     onChange={(e) => setBatchCas(e.target.value)}
-                    placeholder="支援逗號、換行、Tab 分隔\n例如:\n64-17-5\n67-56-1\n7732-18-5"
+                    placeholder="支援逗號、換行、Tab 分隔&#10;例如:&#10;64-17-5&#10;67-56-1&#10;7732-18-5"
                     className="w-full h-40 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono resize-none"
                     data-testid="batch-cas-input"
                   />
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-slate-500">
+                      支援逗號、換行、Tab 分隔，最多 100 筆
+                    </p>
+                    {batchCount > 0 && (
+                      <span className={`text-xs font-medium ${batchCount > 100 ? "text-red-400" : "text-amber-400"}`}>
+                        已偵測 {batchCount} 個號碼{batchCount > 100 ? " ⚠ 超過上限" : ""}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={searchBatch}
-                    disabled={loading}
+                    disabled={loading || batchCount > 100}
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     data-testid="batch-search-btn"
                   >
                     {loading ? (
                       <>
-                        <span className="animate-spin">⏳</span> 查詢中...
+                        <Loader2 className="w-4 h-4 animate-spin" /> 查詢中...
                       </>
                     ) : (
                       <>
-                        <span>🔍</span> 批次查詢
+                        <Search className="w-4 h-4" /> 批次查詢
                       </>
                     )}
                   </button>
@@ -1089,10 +1216,10 @@ function App() {
 
             {error && (
               <div
-                className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400"
+                className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 flex items-center gap-2"
                 data-testid="error-message"
               >
-                ⚠️ {error}
+                <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
               </div>
             )}
           </div>
@@ -1122,7 +1249,7 @@ function App() {
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
                   data-testid="print-label-btn"
                 >
-                  <span>🏷️</span> 列印標籤
+                  <Tag className="w-4 h-4" /> 列印標籤
                   {selectedForLabel.length > 0 && (
                     <span className="bg-purple-800 px-2 py-0.5 rounded-full text-xs">
                       {selectedForLabel.length}
@@ -1134,21 +1261,21 @@ function App() {
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
                   data-testid="export-xlsx-btn"
                 >
-                  <span>📊</span> 匯出 Excel
+                  <FileSpreadsheet className="w-4 h-4" /> 匯出 Excel
                 </button>
                 <button
                   onClick={exportToCSV}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
                   data-testid="export-csv-btn"
                 >
-                  <span>📄</span> 匯出 CSV
+                  <FileText className="w-4 h-4" /> 匯出 CSV
                 </button>
               </div>
             </div>
 
             {/* Selection controls */}
             {results.filter((r) => r.found).length > 0 && (
-              <div className="px-4 py-2 bg-slate-900/30 border-b border-slate-700 flex items-center gap-4 text-sm">
+              <div className="px-4 py-2 bg-slate-900/30 border-b border-slate-700 flex items-center gap-4 text-sm flex-wrap">
                 <span className="text-slate-400">標籤列印選擇：</span>
                 <button
                   onClick={selectAllForLabel}
@@ -1219,7 +1346,7 @@ function App() {
                         {result.found && (
                           <button
                             onClick={() => toggleFavorite(result)}
-                            className={`text-xl transition-colors ${
+                            className={`transition-colors ${
                               isFavorited(result.cas_number)
                                 ? "text-amber-400 hover:text-amber-300"
                                 : "text-slate-600 hover:text-amber-400"
@@ -1227,7 +1354,7 @@ function App() {
                             title={isFavorited(result.cas_number) ? "取消收藏" : "加入收藏"}
                             data-testid={`favorite-btn-${idx}`}
                           >
-                            {isFavorited(result.cas_number) ? "⭐" : "☆"}
+                            <Star className={`w-5 h-5 ${isFavorited(result.cas_number) ? "fill-current" : ""}`} />
                           </button>
                         )}
                       </td>
@@ -1286,6 +1413,7 @@ function App() {
                                           src={GHS_IMAGES[pic.code]}
                                           alt={pic.name_zh}
                                           className="w-10 h-10 bg-white rounded"
+                                          onError={(e) => { e.target.style.display = "none"; e.target.insertAdjacentHTML("afterend", `<span class="inline-flex items-center justify-center w-10 h-10 bg-red-100 text-red-600 text-xs font-bold rounded border border-red-300">${pic.code}</span>`); }}
                                         />
                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                                           {pic.code}: {pic.name_zh}
@@ -1298,12 +1426,12 @@ function App() {
                                         className="ml-2 text-xs text-slate-500 hover:text-red-400"
                                         title="恢復預設分類"
                                       >
-                                        ✕
+                                        <X className="w-3 h-3 inline" />
                                       </button>
                                     )}
                                   </div>
                                   {effective.note && (
-                                    <div className="text-xs text-purple-300">📝 {effective.note}</div>
+                                    <div className="text-xs text-purple-300 flex items-center gap-1"><PenLine className="w-3 h-3" /> {effective.note}</div>
                                   )}
                                   
                                   {/* Other Classifications Toggle */}
@@ -1407,15 +1535,51 @@ function App() {
 
         {/* Empty State */}
         {results.length === 0 && !loading && (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🧪</div>
+          <div className="text-center py-12">
+            <FlaskConical className="w-16 h-16 mx-auto mb-4 text-slate-600" />
             <h2 className="text-xl font-semibold text-white mb-2">
               開始查詢化學品 GHS 標籤
             </h2>
-            <p className="text-slate-400 max-w-md mx-auto">
-              輸入 CAS 號碼（如 64-17-5）即可查詢化學品的 GHS
-              危害標示和安全資訊。支援批次查詢和 Excel 匯出。
+            <p className="text-slate-400 max-w-md mx-auto mb-6">
+              輸入 CAS 號碼即可查詢化學品的 GHS 危害標示和安全資訊
             </p>
+
+            {/* Quick Examples */}
+            <div className="mb-8">
+              <p className="text-sm text-slate-500 mb-3">試試看：</p>
+              <div className="flex gap-3 justify-center flex-wrap">
+                {[
+                  { cas: "64-17-5", name: "乙醇" },
+                  { cas: "7732-18-5", name: "水" },
+                  { cas: "7647-01-0", name: "鹽酸" },
+                ].map((ex) => (
+                  <button
+                    key={ex.cas}
+                    onClick={() => { setSingleCas(ex.cas); setActiveTab("single"); }}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-amber-500/50 text-slate-300 rounded-lg transition-all text-sm"
+                  >
+                    <span className="font-mono text-amber-400">{ex.cas}</span>
+                    <span className="ml-2 text-slate-500">{ex.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
+              {[
+                { icon: <ClipboardList className="w-6 h-6" />, title: "批次查詢", desc: "一次查詢最多 100 個 CAS 號碼" },
+                { icon: <Printer className="w-6 h-6" />, title: "標籤列印", desc: "4 種版型 × 3 種尺寸 × 2 種方向" },
+                { icon: <FileSpreadsheet className="w-6 h-6" />, title: "Excel 匯出", desc: "匯出完整 GHS 資訊至試算表" },
+                { icon: <Star className="w-6 h-6" />, title: "收藏功能", desc: "收藏常用化學品，隨時快速取用" },
+              ].map((feat, i) => (
+                <div key={i} className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl text-left">
+                  <div className="text-amber-400 mb-2">{feat.icon}</div>
+                  <h3 className="text-sm font-medium text-white mb-1">{feat.title}</h3>
+                  <p className="text-xs text-slate-500">{feat.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>
@@ -1438,28 +1602,35 @@ function App() {
                 {selectedResult.name_zh && (
                   <p className="text-slate-400">{selectedResult.name_zh}</p>
                 )}
-                <p className="text-amber-400 font-mono mt-1">
+                <p className="text-amber-400 font-mono mt-1 flex items-center gap-2">
                   CAS: {selectedResult.cas_number}
+                  <button
+                    onClick={() => copyCAS(selectedResult.cas_number)}
+                    className="text-slate-500 hover:text-amber-400 transition-colors"
+                    title="複製 CAS 號碼"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => toggleFavorite(selectedResult)}
-                  className={`text-2xl transition-colors ${
+                  className={`transition-colors ${
                     isFavorited(selectedResult.cas_number)
                       ? "text-amber-400 hover:text-amber-300"
                       : "text-slate-600 hover:text-amber-400"
                   }`}
                   title={isFavorited(selectedResult.cas_number) ? "取消收藏" : "加入收藏"}
                 >
-                  {isFavorited(selectedResult.cas_number) ? "⭐" : "☆"}
+                  <Star className={`w-6 h-6 ${isFavorited(selectedResult.cas_number) ? "fill-current" : ""}`} />
                 </button>
                 <button
                   onClick={() => setSelectedResult(null)}
-                  className="text-slate-400 hover:text-white text-2xl"
+                  className="text-slate-400 hover:text-white"
                   data-testid="close-modal-btn"
                 >
-                  ✕
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -1469,7 +1640,7 @@ function App() {
               {(selectedResult.has_multiple_classifications || selectedResult.other_classifications?.length > 0) && (
                 <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-purple-300 mb-2 flex items-center gap-2">
-                    <span>⚙️</span> 自訂分類設定
+                    <LayoutGrid className="w-4 h-4" /> 自訂分類設定
                   </h3>
                   <p className="text-xs text-slate-400 mb-3">
                     您可以選擇最適合您用途的 GHS 分類（如：實驗室純品、工業級等）
@@ -1614,8 +1785,8 @@ function App() {
                         );
                       })}
                     </div>
-                    <p className="text-xs text-slate-500 mt-3">
-                      💡 點擊任一分類即可設為您的主要分類，設定會自動儲存
+                    <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3 text-amber-400 shrink-0" /> 點擊任一分類即可設為您的主要分類，設定會自動儲存
                     </p>
                   </div>
                 );
@@ -1656,7 +1827,7 @@ function App() {
                   }}
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2"
                 >
-                  <span>🏷️</span> 列印標籤
+                  <Tag className="w-4 h-4" /> 列印標籤
                 </button>
                 {selectedResult.cid && (
                   <a
@@ -1665,7 +1836,7 @@ function App() {
                     rel="noopener noreferrer"
                     className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg flex items-center gap-2"
                   >
-                    <span>🔗</span> 在 PubChem 查看完整資訊
+                    <ExternalLink className="w-4 h-4" /> 在 PubChem 查看完整資訊
                   </a>
                 )}
               </div>
@@ -1686,13 +1857,13 @@ function App() {
           >
             <div className="p-6 border-b border-slate-700 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span>🏷️</span> GHS 標籤列印
+                <Tag className="w-5 h-5 text-purple-400" /> GHS 標籤列印
               </h2>
               <button
                 onClick={() => setShowLabelModal(false)}
-                className="text-slate-400 hover:text-white text-2xl"
+                className="text-slate-400 hover:text-white"
               >
-                ✕
+                <X className="w-6 h-6" />
               </button>
             </div>
 
@@ -1704,32 +1875,32 @@ function App() {
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { 
-                      value: "icon", 
-                      label: "圖示版", 
+                    {
+                      value: "icon",
+                      label: "圖示版",
                       desc: "名稱 + 圖示 + 警示語",
-                      icon: "🎯",
+                      icon: <Target className="w-5 h-5" />,
                       tip: "最精簡，適合小容器"
                     },
-                    { 
-                      value: "standard", 
-                      label: "標準版", 
+                    {
+                      value: "standard",
+                      label: "標準版",
                       desc: "圖示 + 警示語 + 3條危害說明",
-                      icon: "📋",
+                      icon: <ClipboardList className="w-5 h-5" />,
                       tip: "常規使用推薦"
                     },
-                    { 
-                      value: "full", 
-                      label: "完整版", 
+                    {
+                      value: "full",
+                      label: "完整版",
                       desc: "所有危害說明（自動縮小字體）",
-                      icon: "📄",
+                      icon: <FileText className="w-5 h-5" />,
                       tip: "需要完整資訊時使用"
                     },
-                    { 
-                      value: "qrcode", 
-                      label: "QR Code 版", 
+                    {
+                      value: "qrcode",
+                      label: "QR Code 版",
                       desc: "基本資訊 + 掃碼查看詳情",
-                      icon: "📱",
+                      icon: <QrCode className="w-5 h-5" />,
                       tip: "掃碼連結 PubChem 完整資料"
                     },
                   ].map((template) => (
@@ -1743,7 +1914,7 @@ function App() {
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">{template.icon}</span>
+                        <span className="text-purple-400">{template.icon}</span>
                         <span className={`font-medium ${labelConfig.template === template.value ? "text-purple-400" : "text-white"}`}>
                           {template.label}
                         </span>
@@ -1783,6 +1954,51 @@ function App() {
                 </div>
               </div>
 
+              {/* Orientation Selection */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-400 mb-3">
+                  列印方向
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: "portrait", label: "直向", desc: "A4 直式", icon: <FileText className="w-4 h-4" /> },
+                    { value: "landscape", label: "橫向", desc: "A4 橫式", icon: <BookOpen className="w-4 h-4" /> },
+                  ].map((orient) => (
+                    <button
+                      key={orient.value}
+                      onClick={() => setLabelConfig((prev) => ({ ...prev, orientation: orient.value }))}
+                      className={`p-3 rounded-lg border-2 transition-colors ${
+                        labelConfig.orientation === orient.value
+                          ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                          : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {orient.icon}
+                        <span className="font-medium">{orient.label}</span>
+                      </div>
+                      <div className="text-xs opacity-70">{orient.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page Estimation */}
+              {selectedForLabel.length > 0 && (() => {
+                const perPageMap = {
+                  portrait:  { small: 15, medium: 8, large: 3 },
+                  landscape: { small: 16, medium: 9, large: 4 },
+                };
+                const perPage = perPageMap[labelConfig.orientation][labelConfig.size];
+                const estPages = Math.ceil(selectedForLabel.length / perPage);
+                return (
+                  <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
+                    <FileSpreadsheet className="w-4 h-4 text-blue-400 inline mr-1" /> 預計列印 <span className="text-white font-medium">{estPages}</span> 頁（每頁 {perPage} 張標籤）
+                    {labelConfig.size === "small" && <span className="ml-2 text-xs text-slate-500">建議中型以上標籤以獲得最佳閱讀效果</span>}
+                  </div>
+                );
+              })()}
+
               {/* Selected Chemicals */}
               <div>
                 <h3 className="text-sm font-medium text-slate-400 mb-3">
@@ -1816,7 +2032,7 @@ function App() {
                           onClick={() => toggleSelectForLabel(chem)}
                           className="text-slate-400 hover:text-red-400 px-2"
                         >
-                          ✕
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     ))
@@ -1825,8 +2041,9 @@ function App() {
               </div>
 
               {/* Preview hint */}
-              <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
-                <span className="text-amber-400">💡 提示：</span> 點擊「列印標籤」後會開啟預覽視窗，您可以在列印前確認標籤樣式。
+              <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400 flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>點擊「列印標籤」後會開啟預覽視窗，您可以在列印前確認標籤樣式。</span>
               </div>
 
               {/* Print Button */}
@@ -1836,7 +2053,7 @@ function App() {
                   disabled={selectedForLabel.length === 0}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <span>🖨️</span> 列印標籤 ({selectedForLabel.length} 張)
+                  <Printer className="w-4 h-4" /> 列印標籤 ({selectedForLabel.length} 張)
                 </button>
                 <button
                   onClick={() => setShowLabelModal(false)}
@@ -1852,8 +2069,20 @@ function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-700 mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-          <p>資料來源: PubChem (NIH) | 僅供參考，請以官方 SDS 為準</p>
+        <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm space-y-1">
+          <p>
+            資料來源:{" "}
+            <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-amber-400 transition-colors">
+              PubChem (NIH)
+            </a>
+            {" "}| 僅供參考，請以官方 SDS 為準
+          </p>
+          <p className="text-slate-600">
+            v1.3.0 |{" "}
+            <a href="https://github.com/rjsky311/GHS-label-quick-search/issues" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">
+              回報問題
+            </a>
+          </p>
         </div>
       </footer>
     </div>
