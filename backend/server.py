@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import csv
 import re
+from cachetools import TTLCache
 
 # Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
 from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED
@@ -23,24 +25,30 @@ from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection (optional - for future features)
-mongo_url = os.environ.get('MONGO_URL', '')
-db = None
-client = None
 
-if mongo_url:
-    try:
-        from motor.motor_asyncio import AsyncIOMotorClient
-        client = AsyncIOMotorClient(mongo_url)
-        db = client[os.environ.get('DB_NAME', 'ghs_db')]
-        logging.info("MongoDB connected successfully")
-    except Exception as e:
-        logging.warning(f"MongoDB connection failed: {e}. Running without database.")
-else:
-    logging.info("No MONGO_URL provided. Running without database.")
+APP_VERSION = "1.2.0"
 
-# Create the main app without a prefix
-app = FastAPI(title="GHS Label Quick Search API")
+# Shared httpx client (initialized in lifespan)
+shared_http_client: Optional[httpx.AsyncClient] = None
+
+# In-memory caches (TTL = 24 hours, max 5000 entries each)
+cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: startup and shutdown events."""
+    global shared_http_client
+    shared_http_client = httpx.AsyncClient(
+        timeout=30.0,
+        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+    )
+    yield
+    # Shutdown
+    await shared_http_client.aclose()
+
+# Create the main app with lifespan
+app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -52,155 +60,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Common chemical names Chinese translation dictionary
-CHEMICAL_NAMES_ZH = {
-    # 常見溶劑
-    "ethanol": "乙醇",
-    "methanol": "甲醇",
-    "water": "水",
-    "acetone": "丙酮",
-    "isopropanol": "異丙醇",
-    "2-propanol": "異丙醇",
-    "ethyl acetate": "乙酸乙酯",
-    "dichloromethane": "二氯甲烷",
-    "chloroform": "氯仿",
-    "toluene": "甲苯",
-    "benzene": "苯",
-    "hexane": "己烷",
-    "diethyl ether": "乙醚",
-    "tetrahydrofuran": "四氫呋喃",
-    "dimethyl sulfoxide": "二甲基亞碸",
-    "dmso": "二甲基亞碸",
-    "dimethylformamide": "二甲基甲醯胺",
-    "dmf": "二甲基甲醯胺",
-    "acetonitrile": "乙腈",
-    "pyridine": "吡啶",
-    "triethylamine": "三乙胺",
-    
-    # 常見酸鹼
-    "hydrochloric acid": "鹽酸",
-    "sulfuric acid": "硫酸",
-    "nitric acid": "硝酸",
-    "acetic acid": "乙酸",
-    "phosphoric acid": "磷酸",
-    "sodium hydroxide": "氫氧化鈉",
-    "potassium hydroxide": "氫氧化鉀",
-    "ammonia": "氨",
-    "ammonium hydroxide": "氨水",
-    
-    # 常見化學品
-    "sodium chloride": "氯化鈉",
-    "potassium chloride": "氯化鉀",
-    "calcium chloride": "氯化鈣",
-    "magnesium sulfate": "硫酸鎂",
-    "sodium carbonate": "碳酸鈉",
-    "sodium bicarbonate": "碳酸氫鈉",
-    "hydrogen peroxide": "過氧化氫",
-    "formaldehyde": "甲醛",
-    "glutaraldehyde": "戊二醛",
-    "phenol": "苯酚",
-    "aniline": "苯胺",
-    "nitrobenzene": "硝基苯",
-    "chlorobenzene": "氯苯",
-    "bromobenzene": "溴苯",
-    "iodobenzene": "碘苯",
-    "benzoic acid": "苯甲酸",
-    "benzaldehyde": "苯甲醛",
-    "benzyl alcohol": "苄醇",
-    "styrene": "苯乙烯",
-    "naphthalene": "萘",
-    "anthracene": "蒽",
-    "anthraquinone": "蒽醌",
-    "xylene": "二甲苯",
-    
-    # 金屬與化合物
-    "mercury": "汞",
-    "lead": "鉛",
-    "arsenic": "砷",
-    "cadmium": "鎘",
-    "chromium": "鉻",
-    "nickel": "鎳",
-    "copper sulfate": "硫酸銅",
-    "silver nitrate": "硝酸銀",
-    "zinc chloride": "氯化鋅",
-    "iron(iii) chloride": "氯化鐵",
-    "ferric chloride": "氯化鐵",
-    
-    # 有機化合物
-    "glucose": "葡萄糖",
-    "sucrose": "蔗糖",
-    "fructose": "果糖",
-    "glycerol": "甘油",
-    "urea": "尿素",
-    "citric acid": "檸檬酸",
-    "oxalic acid": "草酸",
-    "tartaric acid": "酒石酸",
-    "lactic acid": "乳酸",
-    "formic acid": "甲酸",
-    "propionic acid": "丙酸",
-    "butyric acid": "丁酸",
-    
-    # 胺類
-    "methylamine": "甲胺",
-    "dimethylamine": "二甲胺",
-    "trimethylamine": "三甲胺",
-    "ethylamine": "乙胺",
-    "diethylamine": "二乙胺",
-    "aniline": "苯胺",
-    "4-bromoaniline": "4-溴苯胺",
-    "3-aminopyridine": "3-氨基吡啶",
-    
-    # 醛類
-    "formaldehyde": "甲醛",
-    "acetaldehyde": "乙醛",
-    "propionaldehyde": "丙醛",
-    "butyraldehyde": "丁醛",
-    "benzaldehyde": "苯甲醛",
-    
-    # 酮類
-    "acetone": "丙酮",
-    "methyl ethyl ketone": "丁酮",
-    "cyclohexanone": "環己酮",
-    "acetophenone": "苯乙酮",
-    
-    # 硼化合物
-    "boric acid": "硼酸",
-    "sodium borate": "硼砂",
-    "bis(pinacolato)diboron": "雙(頻那醇)二硼",
-    "bis(pinacolato)diborane": "雙(頻那醇硼酸)二硼烷",
-    
-    # 鹵化物
-    "bromine": "溴",
-    "iodine": "碘",
-    "chlorine": "氯",
-    "fluorine": "氟",
-    "carbon tetrachloride": "四氯化碳",
-    "chloroform": "氯仿",
-    "methyl iodide": "碘甲烷",
-    "methyl bromide": "溴甲烷",
-    "ethyl bromide": "溴乙烷",
-    
-    # 氟化物
-    "hydrofluoric acid": "氫氟酸",
-    "sodium fluoride": "氟化鈉",
-    "potassium fluoride": "氟化鉀",
-    
-    # 氰化物
-    "hydrogen cyanide": "氰化氫",
-    "sodium cyanide": "氰化鈉",
-    "potassium cyanide": "氰化鉀",
-    "benzonitrile": "苯甲腈",
-    "acetonitrile": "乙腈",
-    
-    # 其他常見化學品
-    "silica gel": "矽膠",
-    "activated carbon": "活性炭",
-    "sodium sulfate": "硫酸鈉",
-    "magnesium chloride": "氯化鎂",
-    "potassium permanganate": "高錳酸鉀",
-    "sodium hypochlorite": "次氯酸鈉",
-    "calcium hypochlorite": "次氯酸鈣",
-}
 
 # GHS Pictogram mapping
 GHS_PICTOGRAMS = {
@@ -294,9 +153,15 @@ H_CODE_TRANSLATIONS = {
     "H420": "破壞高層大氣中的臭氧，危害公眾健康和環境",
 }
 
+# Pre-computed cleaned-name index for O(1) fuzzy lookups (built once at startup)
+_CLEAN_NAME_INDEX: Dict[str, str] = {}
+for _en_name, _zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
+    _clean = re.sub(r'[^a-z0-9]', '', _en_name)
+    _CLEAN_NAME_INDEX[_clean] = _zh_name
+
 # Define Models
 class CASQuery(BaseModel):
-    cas_numbers: List[str]
+    cas_numbers: List[str] = Field(..., max_length=100)
 
 class GHSReport(BaseModel):
     """Single GHS classification report"""
@@ -359,37 +224,6 @@ def normalize_cas(cas: str) -> str:
                 cas = f"{first}-{middle}-{check}"
     
     return cas
-
-def extract_ghs_pictograms(ghs_data: dict) -> List[Dict[str, Any]]:
-    """Extract GHS pictogram codes from PubChem data - DEPRECATED, use extract_all_ghs_classifications"""
-    pictograms = []
-    seen_codes = set()
-    try:
-        sections = ghs_data.get("Record", {}).get("Section", [])
-        for section in sections:
-            if section.get("TOCHeading") == "Safety and Hazards":
-                for subsection in section.get("Section", []):
-                    if subsection.get("TOCHeading") == "Hazards Identification":
-                        for subsubsection in subsection.get("Section", []):
-                            if subsubsection.get("TOCHeading") == "GHS Classification":
-                                for info in subsubsection.get("Information", []):
-                                    if info.get("Name") == "Pictogram(s)":
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            for extra in markup.get("Markup", []):
-                                                if extra.get("Type") == "Icon":
-                                                    url = extra.get("URL", "")
-                                                    match = re.search(r'(GHS\d{2})', url)
-                                                    if match:
-                                                        pic_code = match.group(1)
-                                                        if pic_code in GHS_PICTOGRAMS and pic_code not in seen_codes:
-                                                            seen_codes.add(pic_code)
-                                                            pictograms.append({
-                                                                "code": pic_code,
-                                                                **GHS_PICTOGRAMS[pic_code]
-                                                            })
-    except Exception as e:
-        logger.error(f"Error extracting pictograms: {e}")
-    return pictograms
 
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     """
@@ -491,60 +325,6 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     
     return reports
 
-def extract_hazard_statements(ghs_data: dict) -> List[Dict[str, str]]:
-    """Extract hazard statements from PubChem data"""
-    statements = []
-    seen_codes = set()
-    try:
-        sections = ghs_data.get("Record", {}).get("Section", [])
-        for section in sections:
-            if section.get("TOCHeading") == "Safety and Hazards":
-                for subsection in section.get("Section", []):
-                    if subsection.get("TOCHeading") == "Hazards Identification":
-                        for subsubsection in subsection.get("Section", []):
-                            if subsubsection.get("TOCHeading") == "GHS Classification":
-                                for info in subsubsection.get("Information", []):
-                                    if info.get("Name") == "GHS Hazard Statements":
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
-                                            # Extract H-code
-                                            h_match = re.search(r'(H\d{3})', text)
-                                            if h_match:
-                                                h_code = h_match.group(1)
-                                                # Avoid duplicates
-                                                if h_code not in seen_codes:
-                                                    seen_codes.add(h_code)
-                                                    zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
-                                                    statements.append({
-                                                        "code": h_code,
-                                                        "text_en": text,
-                                                        "text_zh": zh_text if zh_text else text
-                                                    })
-    except Exception as e:
-        logger.error(f"Error extracting hazard statements: {e}")
-    return statements
-
-def extract_signal_word(ghs_data: dict) -> tuple:
-    """Extract signal word from PubChem data"""
-    signal_translations = {
-        "Danger": "危險",
-        "Warning": "警告",
-    }
-    try:
-        sections = ghs_data.get("Record", {}).get("Section", [])
-        for section in sections:
-            if section.get("TOCHeading") == "Safety and Hazards":
-                for subsection in section.get("Section", []):
-                    if subsection.get("TOCHeading") == "Hazards Identification":
-                        for subsubsection in subsection.get("Section", []):
-                            if subsubsection.get("TOCHeading") == "GHS Classification":
-                                for info in subsubsection.get("Information", []):
-                                    if info.get("Name") == "Signal":
-                                        signal = info.get("Value", {}).get("StringWithMarkup", [{}])[0].get("String", "")
-                                        return signal, signal_translations.get(signal, signal)
-    except Exception as e:
-        logger.error(f"Error extracting signal word: {e}")
-    return None, None
 
 def get_chinese_name_from_cas(cas_number: str) -> Optional[str]:
     """Get Chinese name directly from CAS number (most accurate method)"""
@@ -571,98 +351,95 @@ def get_english_name_from_cas(cas_number: str) -> Optional[str]:
     return None
 
 def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
-    """Get Chinese name from English name dictionary"""
+    """Get Chinese name from English name dictionary (optimized with pre-built index)."""
     if not name_en:
         return None
     name_lower = name_en.lower().strip()
-    
-    # Try expanded dictionary first (1816 entries)
+
+    # O(1) exact match in expanded dictionary (1861 entries)
     if name_lower in CHEMICAL_NAMES_ZH_EXPANDED:
         return CHEMICAL_NAMES_ZH_EXPANDED[name_lower]
-    
-    # Try legacy dictionary
-    if name_lower in CHEMICAL_NAMES_ZH:
-        return CHEMICAL_NAMES_ZH[name_lower]
-    
-    # Try partial match for compound names in expanded dict
-    for en_name, zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
-        if en_name in name_lower or name_lower in en_name:
-            return zh_name
-    
-    # Try partial match in legacy dict
-    for en_name, zh_name in CHEMICAL_NAMES_ZH.items():
-        if en_name in name_lower or name_lower in en_name:
-            return zh_name
-    
-    # Try matching without special characters
+
+    # O(1) cleaned-name match via pre-built index
     name_clean = re.sub(r'[^a-z0-9]', '', name_lower)
-    for en_name, zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
-        en_clean = re.sub(r'[^a-z0-9]', '', en_name)
-        if en_clean == name_clean or en_clean in name_clean or name_clean in en_clean:
-            return zh_name
-    
+    if name_clean in _CLEAN_NAME_INDEX:
+        return _CLEAN_NAME_INDEX[name_clean]
+
     return None
 
-async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
-    """Get PubChem CID from CAS number - try multiple methods"""
-    
-    # Method 1: Search by CAS number as name
+async def _try_cid_by_name(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
+    """CID lookup Method 1: Search by CAS number as compound name."""
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/cids/JSON"
         response = await http_client.get(url, timeout=15.0)
         if response.status_code == 200:
-            data = response.json()
-            cids = data.get("IdentifierList", {}).get("CID", [])
+            cids = response.json().get("IdentifierList", {}).get("CID", [])
             if cids:
                 return cids[0]
     except Exception as e:
-        logger.debug(f"Method 1 failed for {cas_number}: {e}")
-    
-    # Method 2: Search via xref/rn endpoint (CAS Registry Number lookup)
+        logger.debug(f"CID by name failed for {cas_number}: {e}")
+    return None
+
+async def _try_cid_by_xref(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
+    """CID lookup Method 2: Search via xref/rn endpoint."""
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/rn/{cas_number}/cids/JSON"
         response = await http_client.get(url, timeout=15.0)
         if response.status_code == 200:
-            data = response.json()
-            cids = data.get("IdentifierList", {}).get("CID", [])
+            cids = response.json().get("IdentifierList", {}).get("CID", [])
             if cids:
                 return cids[0]
     except Exception as e:
-        logger.debug(f"Method 2 failed for {cas_number}: {e}")
-    
-    # Method 3: Search via substance xref (some compounds only have substance records)
+        logger.debug(f"CID by xref failed for {cas_number}: {e}")
+    return None
+
+async def _try_cid_by_substance(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
+    """CID lookup Method 3: Search via substance xref."""
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/xref/rn/{cas_number}/cids/JSON"
         response = await http_client.get(url, timeout=15.0)
         if response.status_code == 200:
-            data = response.json()
-            cids = data.get("InformationList", {}).get("Information", [])
+            cids = response.json().get("InformationList", {}).get("Information", [])
             if cids and cids[0].get("CID"):
                 return cids[0]["CID"][0] if isinstance(cids[0]["CID"], list) else cids[0]["CID"]
     except Exception as e:
-        logger.debug(f"Method 3 failed for {cas_number}: {e}")
-    
-    # Method 4: Try with different CAS format (remove leading zeros)
+        logger.debug(f"CID by substance failed for {cas_number}: {e}")
+    return None
+
+async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
+    """Get PubChem CID from CAS number — runs methods 1-3 concurrently, with cache."""
+    # Check cache first
+    if cas_number in cid_cache:
+        return cid_cache[cas_number]
+
+    # Run methods 1-3 concurrently
+    results = await asyncio.gather(
+        _try_cid_by_name(cas_number, http_client),
+        _try_cid_by_xref(cas_number, http_client),
+        _try_cid_by_substance(cas_number, http_client),
+        return_exceptions=True,
+    )
+    for result in results:
+        if isinstance(result, int):
+            cid_cache[cas_number] = result
+            return result
+
+    # Method 4 (fallback): Try with alternate CAS format
     cas_alt = re.sub(r'^0+', '', cas_number.split('-')[0]) + '-' + '-'.join(cas_number.split('-')[1:])
     if cas_alt != cas_number:
-        try:
-            url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_alt}/cids/JSON"
-            response = await http_client.get(url, timeout=15.0)
-            if response.status_code == 200:
-                data = response.json()
-                cids = data.get("IdentifierList", {}).get("CID", [])
-                if cids:
-                    return cids[0]
-        except Exception as e:
-            logger.debug(f"Method 4 failed for {cas_number}: {e}")
-    
+        cid = await _try_cid_by_name(cas_alt, http_client)
+        if cid:
+            cid_cache[cas_number] = cid
+            return cid
+
     logger.warning(f"Could not find CID for CAS number: {cas_number}")
     return None
 
-async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
-    """Get compound name in English and Chinese with multiple fallbacks"""
+async def get_compound_name(cid: int, http_client: httpx.AsyncClient, known_zh: Optional[str] = None) -> tuple:
+    """Get compound name in English and Chinese with multiple fallbacks.
+    If known_zh is provided, skip expensive Chinese name lookups."""
     name_en = None
-    name_zh = None
+    name_zh = known_zh
     all_synonyms = []
     
     # Method 1: Get from property endpoint
@@ -709,18 +486,16 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient) -> tuple:
         except Exception as e:
             logger.debug(f"Description endpoint failed for CID {cid}: {e}")
     
-    # If no Chinese name from PubChem, try local dictionary
+    # If no Chinese name yet, try local dictionary lookups
     if not name_zh and name_en:
         name_zh = get_chinese_name_from_dict(name_en)
-    
-    # Try other synonyms in local dictionary
     if not name_zh:
-        for syn in all_synonyms[:15]:  # Check first 15 synonyms
+        for syn in all_synonyms[:15]:
             zh = get_chinese_name_from_dict(syn)
             if zh:
                 name_zh = zh
                 break
-    
+
     return name_en, name_zh
 
 def extract_record_title(ghs_data: dict) -> str:
@@ -747,12 +522,16 @@ def extract_iupac_name(ghs_data: dict) -> str:
     return ""
 
 async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
-    """Get GHS classification from PubChem"""
+    """Get GHS classification from PubChem (with 24hr cache)."""
+    if cid in ghs_cache:
+        return ghs_cache[cid]
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
         response = await http_client.get(url, timeout=30.0)
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            ghs_cache[cid] = data
+            return data
     except Exception as e:
         logger.error(f"Error getting GHS data for CID {cid}: {e}")
     return {}
@@ -810,7 +589,8 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         )
     
     # Get compound name and GHS data concurrently
-    name_task = get_compound_name(cid, http_client)
+    # Pass known Chinese name to skip redundant dictionary lookups
+    name_task = get_compound_name(cid, http_client, known_zh=name_zh_from_cas)
     ghs_task = get_ghs_classification(cid, http_client)
     
     (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
@@ -894,28 +674,36 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
 async def root():
     return {"message": "GHS Label Quick Search API"}
 
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancers."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": APP_VERSION,
+    }
+
 @api_router.post("/search", response_model=List[ChemicalResult])
 async def search_chemicals(query: CASQuery):
     """Search for chemicals by CAS numbers"""
     results = []
-    async with httpx.AsyncClient() as http_client:
-        # Process in batches to avoid overwhelming the API
-        batch_size = 5
-        for i in range(0, len(query.cas_numbers), batch_size):
-            batch = query.cas_numbers[i:i+batch_size]
-            tasks = [search_chemical(cas, http_client) for cas in batch]
-            batch_results = await asyncio.gather(*tasks)
-            results.extend(batch_results)
-            # Add small delay between batches
-            if i + batch_size < len(query.cas_numbers):
-                await asyncio.sleep(0.5)
+    http_client = shared_http_client
+    # Process in batches to avoid overwhelming the API
+    batch_size = 5
+    for i in range(0, len(query.cas_numbers), batch_size):
+        batch = query.cas_numbers[i:i+batch_size]
+        tasks = [search_chemical(cas, http_client) for cas in batch]
+        batch_results = await asyncio.gather(*tasks)
+        results.extend(batch_results)
+        # Add small delay between batches
+        if i + batch_size < len(query.cas_numbers):
+            await asyncio.sleep(0.5)
     return results
 
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
 async def search_single_chemical(cas_number: str):
     """Search for a single chemical by CAS number"""
-    async with httpx.AsyncClient() as http_client:
-        return await search_chemical(cas_number, http_client)
+    return await search_chemical(cas_number, shared_http_client)
 
 @api_router.post("/export/xlsx")
 async def export_xlsx(request: ExportRequest):
@@ -988,14 +776,6 @@ async def export_xlsx(request: ExportRequest):
 @api_router.post("/export/csv")
 async def export_csv(request: ExportRequest):
     """Export results to CSV file"""
-    output = BytesIO()
-    # Add BOM for Excel compatibility with Chinese characters
-    output.write(b'\xef\xbb\xbf')
-    
-    # Write CSV
-    writer = csv.writer(output.getvalue().decode('utf-8-sig').splitlines() if False else output, delimiter=',')
-    
-    # Use StringIO for proper CSV writing
     from io import StringIO
     string_output = StringIO()
     writer = csv.writer(string_output)
@@ -1046,12 +826,8 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=os.environ.get('CORS_ORIGINS', 'https://ghs-frontend.zeabur.app').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    if client:
-        client.close()

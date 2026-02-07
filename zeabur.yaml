@@ -8,11 +8,9 @@ services:
     ports:
       - 8001
     env:
-      - MONGO_URL=${MONGO_URL}
-      - DB_NAME=${DB_NAME:-ghs_db}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
     healthcheck:
-      path: /api/
+      path: /api/health
       port: 8001
 
   - name: frontend

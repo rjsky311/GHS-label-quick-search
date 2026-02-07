@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
 import "@/App.css";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import useSearchHistory from "@/hooks/useSearchHistory";
+import useFavorites from "@/hooks/useFavorites";
+import useCustomGHS from "@/hooks/useCustomGHS";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -20,39 +23,36 @@ const GHS_IMAGES = {
   GHS09: "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS09.svg",
 };
 
-const HISTORY_KEY = "ghs_search_history";
-const FAVORITES_KEY = "ghs_favorites";
-const CUSTOM_GHS_KEY = "ghs_custom_settings";
-const MAX_HISTORY = 50;
-
 function App() {
   const [singleCas, setSingleCas] = useState("");
   const [batchCas, setBatchCas] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
-  const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState("");
   const [selectedResult, setSelectedResult] = useState(null);
-  
-  // New states for favorites and labels
-  const [favorites, setFavorites] = useState([]);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [labelConfig, setLabelConfig] = useState({
-    size: "medium", // small, medium, large
-    template: "standard", // icon, standard, full, qrcode
+    size: "medium",
+    template: "standard",
   });
   const [selectedForLabel, setSelectedForLabel] = useState([]);
   const printRef = useRef(null);
-  
-  // State to track which results have expanded "other classifications"
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
-  
-  // State for custom GHS settings (user-selected primary classifications)
-  const [customGHSSettings, setCustomGHSSettings] = useState({});
-  
+
+  // Custom hooks for localStorage-backed state
+  const { history, saveToHistory, clearHistory } = useSearchHistory();
+  const { favorites, toggleFavorite, isFavorited, clearFavorites } = useFavorites();
+  const {
+    customGHSSettings,
+    getEffectiveClassification,
+    setCustomClassification,
+    clearCustomClassification,
+    hasCustomClassification,
+  } = useCustomGHS();
+
   // Toggle function for other classifications
   const toggleOtherClassifications = (casNumber) => {
     setExpandedOtherClassifications(prev => ({
@@ -60,155 +60,6 @@ function App() {
       [casNumber]: !prev[casNumber]
     }));
   };
-  
-  // Get the effective GHS classification for a result (considering user customization)
-  const getEffectiveClassification = (result) => {
-    if (!result || !result.found) return null;
-    
-    const customSetting = customGHSSettings[result.cas_number];
-    
-    // If user has customized, use their selection
-    if (customSetting && customSetting.selectedIndex !== undefined) {
-      const allClassifications = [
-        {
-          pictograms: result.ghs_pictograms || [],
-          hazard_statements: result.hazard_statements || [],
-          signal_word: result.signal_word,
-          signal_word_zh: result.signal_word_zh,
-        },
-        ...(result.other_classifications || [])
-      ];
-      
-      if (customSetting.selectedIndex < allClassifications.length) {
-        return {
-          ...allClassifications[customSetting.selectedIndex],
-          isCustom: true,
-          customIndex: customSetting.selectedIndex,
-          note: customSetting.note
-        };
-      }
-    }
-    
-    // Default to primary classification
-    return {
-      pictograms: result.ghs_pictograms || [],
-      hazard_statements: result.hazard_statements || [],
-      signal_word: result.signal_word,
-      signal_word_zh: result.signal_word_zh,
-      isCustom: false,
-      customIndex: 0
-    };
-  };
-  
-  // Set custom GHS classification for a CAS number
-  const setCustomClassification = (casNumber, selectedIndex, note = "") => {
-    const newSettings = {
-      ...customGHSSettings,
-      [casNumber]: {
-        selectedIndex,
-        note,
-        updatedAt: new Date().toISOString()
-      }
-    };
-    setCustomGHSSettings(newSettings);
-    localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
-  };
-  
-  // Clear custom GHS classification for a CAS number
-  const clearCustomClassification = (casNumber) => {
-    const newSettings = { ...customGHSSettings };
-    delete newSettings[casNumber];
-    setCustomGHSSettings(newSettings);
-    localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
-  };
-  
-  // Check if a CAS number has custom classification
-  const hasCustomClassification = (casNumber) => {
-    return customGHSSettings[casNumber]?.selectedIndex !== undefined;
-  };
-
-  // Load history, favorites, and custom GHS settings from localStorage
-  useEffect(() => {
-    const savedHistory = localStorage.getItem(HISTORY_KEY);
-    if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
-    }
-    
-    const savedFavorites = localStorage.getItem(FAVORITES_KEY);
-    if (savedFavorites) {
-      try {
-        setFavorites(JSON.parse(savedFavorites));
-      } catch (e) {
-        console.error("Failed to parse favorites", e);
-      }
-    }
-    
-    const savedCustomGHS = localStorage.getItem(CUSTOM_GHS_KEY);
-    if (savedCustomGHS) {
-      try {
-        setCustomGHSSettings(JSON.parse(savedCustomGHS));
-      } catch (e) {
-        console.error("Failed to parse custom GHS settings", e);
-      }
-    }
-  }, []);
-
-  // Save history to localStorage
-  const saveToHistory = useCallback((newResults) => {
-    const successfulResults = newResults.filter((r) => r.found);
-    if (successfulResults.length === 0) return;
-
-    const timestamp = new Date().toISOString();
-    const newHistoryItems = successfulResults.map((r) => ({
-      cas_number: r.cas_number,
-      name_en: r.name_en,
-      name_zh: r.name_zh,
-      timestamp,
-    }));
-
-    setHistory((prev) => {
-      const existingCas = new Set(newHistoryItems.map((h) => h.cas_number));
-      const filtered = prev.filter((h) => !existingCas.has(h.cas_number));
-      const updated = [...newHistoryItems, ...filtered].slice(0, MAX_HISTORY);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
-
-  // Toggle favorite
-  const toggleFavorite = useCallback((chemical) => {
-    setFavorites((prev) => {
-      const exists = prev.find((f) => f.cas_number === chemical.cas_number);
-      let updated;
-      if (exists) {
-        updated = prev.filter((f) => f.cas_number !== chemical.cas_number);
-      } else {
-        const favoriteItem = {
-          cas_number: chemical.cas_number,
-          cid: chemical.cid,
-          name_en: chemical.name_en,
-          name_zh: chemical.name_zh,
-          ghs_pictograms: chemical.ghs_pictograms,
-          hazard_statements: chemical.hazard_statements,
-          signal_word: chemical.signal_word,
-          signal_word_zh: chemical.signal_word_zh,
-          added_at: new Date().toISOString(),
-        };
-        updated = [favoriteItem, ...prev];
-      }
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
-
-  // Check if chemical is favorited
-  const isFavorited = useCallback((cas_number) => {
-    return favorites.some((f) => f.cas_number === cas_number);
-  }, [favorites]);
 
   // Search single CAS
   const searchSingle = async () => {
@@ -350,18 +201,6 @@ function App() {
       });
       saveAs(blob, "ghs_results.csv");
     }
-  };
-
-  // Clear history
-  const clearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem(HISTORY_KEY);
-  };
-
-  // Clear favorites
-  const clearFavorites = () => {
-    setFavorites([]);
-    localStorage.removeItem(FAVORITES_KEY);
   };
 
   // Format date

@@ -25,7 +25,7 @@
 ### 📋 批次查詢
 - 支援從 Excel 複製貼上多個 CAS 號碼
 - 支援逗號、換行、Tab 分隔
-- 一次查詢多筆資料並以表格顯示
+- 一次查詢多筆資料並以表格顯示（上限 100 筆）
 
 ### 📊 匯出功能
 - 匯出為 Excel (.xlsx) 格式
@@ -41,11 +41,24 @@
 - 儲存在瀏覽器本地，保護隱私
 - 點擊紀錄可快速重新查詢
 
+### ⭐ 收藏功能
+- 將常用化學品加入收藏
+- 一鍵快速查看收藏的化學品資訊
+
+### 🏷️ 標籤列印
+- 多種標籤版型（圖示版、標準版、完整版、QR Code 版）
+- 可調整標籤尺寸（小、中、大）
+- 支援批次列印
+
+### 🔧 自訂 GHS 分類
+- 當化學品有多種 GHS 分類時，可選擇適用的分類
+- 自訂設定儲存於瀏覽器，不會遺失
+
 ### 🌐 中文化學品名稱字典
 - 內建 **1,707 個** CAS 號碼對應的中文名稱
 - 內建 **1,707 個** CAS 號碼對應的英文名稱
-- 內建 **1,816 個** 英文名稱對應的中文翻譯
-- 支援 PubChem 資料庫無法查詢的化學品名稱顯示
+- 內建 **1,861 個** 英文名稱對應的中文翻譯
+- 支援模糊比對（去除特殊字元後匹配）
 
 ---
 
@@ -53,31 +66,40 @@
 
 | 層級 | 技術 | 說明 |
 |------|------|------|
-| 前端 | React + Tailwind CSS | 響應式使用者介面 |
+| 前端 | React 19 + Tailwind CSS + Radix UI | 響應式使用者介面 |
 | 後端 | FastAPI (Python) | RESTful API 服務 |
 | 資料來源 | PubChem API | GHS 危害標示資料 |
 | 本地字典 | Python Dict | 中英文名稱對照 (1,707+ 筆) |
-| 資料庫 | MongoDB | 功能擴展用 |
+| 快取 | cachetools (TTLCache) | 24 小時記憶體快取 |
+| 部署 | Zeabur (Docker) | 自動部署 |
 
 ---
 
 ## 專案結構
 
 ```
-/app
+GHS-label-quick-search/
 ├── backend/
-│   ├── server.py              # FastAPI 主程式
+│   ├── server.py              # FastAPI 主程式 (API、快取、PubChem 整合)
 │   ├── chemical_dict.py       # 化學品字典 (CAS/英文/中文對照)
 │   ├── requirements.txt       # Python 依賴套件
-│   └── .env                   # 環境變數
+│   ├── requirements-dev.txt   # 開發工具 (black, flake8, pytest 等)
+│   ├── Dockerfile             # Docker 容器設定
+│   └── .env.example           # 環境變數範本
 ├── frontend/
 │   ├── src/
 │   │   ├── App.js             # React 主元件
-│   │   ├── components/        # UI 元件
-│   │   └── index.js           # 進入點
+│   │   ├── App.css            # 全域樣式
+│   │   ├── index.js           # 進入點 (含 ErrorBoundary)
+│   │   ├── components/
+│   │   │   └── ErrorBoundary.jsx  # 錯誤邊界元件
+│   │   └── hooks/
+│   │       ├── useSearchHistory.js  # 搜尋紀錄 Hook
+│   │       ├── useFavorites.js      # 收藏功能 Hook
+│   │       └── useCustomGHS.js      # 自訂 GHS 分類 Hook
 │   ├── package.json           # Node.js 依賴套件
-│   └── .env                   # 前端環境變數
-├── 字典.csv                    # 原始字典 CSV 檔案
+│   └── .env.example           # 前端環境變數範本
+├── zeabur.yaml                # Zeabur 部署設定
 └── README.md                  # 專案說明文件
 ```
 
@@ -88,13 +110,17 @@
 ### 環境需求
 - Python 3.9+
 - Node.js 18+
-- MongoDB (選用)
 
 ### 後端安裝
 
 ```bash
 cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+# 建立環境變數 (可選)
+cp .env.example .env
 ```
 
 ### 前端安裝
@@ -102,6 +128,9 @@ pip install -r requirements.txt
 ```bash
 cd frontend
 yarn install
+
+# 建立環境變數
+cp .env.example .env
 ```
 
 ### 啟動服務
@@ -129,11 +158,12 @@ yarn start
 │ 1. CAS 字典直接查詢 (最準確)                             │
 │    └─ 使用本地 CAS_TO_ZH / CAS_TO_EN 字典               │
 │                                                         │
-│ 2. PubChem API 查詢                                     │
+│ 2. PubChem API 查詢 (並行 3 種方法)                      │
 │    └─ 取得 GHS 危害資料及名稱                            │
 │                                                         │
 │ 3. 英文名稱字典查詢 (備用)                               │
-│    └─ 使用 CHEMICAL_NAMES_ZH_EXPANDED 字典              │
+│    ├─ 精確匹配 CHEMICAL_NAMES_ZH_EXPANDED               │
+│    └─ 模糊匹配 (去除特殊字元後比對)                       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -145,7 +175,7 @@ yarn start
 |---------|------|------|------|
 | `CAS_TO_ZH` | CAS → 中文 | 1,707 筆 | `"64-17-5": "乙醇"` |
 | `CAS_TO_EN` | CAS → 英文 | 1,707 筆 | `"64-17-5": "Ethanol"` |
-| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文 → 中文 | 1,816 筆 | `"ethanol": "乙醇"` |
+| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文 → 中文 | 1,861 筆 | `"ethanol": "乙醇"` |
 
 ---
 
@@ -183,15 +213,15 @@ with open('字典.csv', 'r', encoding='utf-8') as f:
         cas = row['CAS No.'].strip()
         en_name = row['英文名稱'].strip()
         zh_name = row['中文名稱'].strip()
-        
+
         # CAS → 中文 (保留第一筆)
         if cas and zh_name and cas not in cas_to_zh:
             cas_to_zh[cas] = zh_name
-        
+
         # CAS → 英文 (保留第一筆)
         if cas and en_name and cas not in cas_to_en:
             cas_to_en[cas] = en_name
-        
+
         # 英文 → 中文 (小寫為 key)
         if en_name and zh_name:
             en_lower = en_name.lower()
@@ -205,12 +235,12 @@ with open('backend/chemical_dict.py', 'w', encoding='utf-8') as f:
     for cas, zh in sorted(cas_to_zh.items()):
         f.write(f'    "{cas}": "{zh}",\n')
     f.write('}\n\n')
-    
+
     f.write('CAS_TO_EN = {\n')
     for cas, en in sorted(cas_to_en.items()):
         f.write(f'    "{cas}": "{en}",\n')
     f.write('}\n\n')
-    
+
     f.write('CHEMICAL_NAMES_ZH_EXPANDED = {\n')
     for en, zh in sorted(en_to_zh.items()):
         f.write(f'    "{en}": "{zh}",\n')
@@ -225,7 +255,11 @@ print(f"   EN_TO_ZH:  {len(en_to_zh)} 筆")
 ### 步驟 3：重啟後端服務
 
 ```bash
-sudo supervisorctl restart backend
+# 本地開發
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# Zeabur 部署 (自動)
+git push origin main
 ```
 
 ---
@@ -252,8 +286,9 @@ sudo supervisorctl restart backend
 
 | 端點 | 方法 | 說明 |
 |------|------|------|
+| `/api/health` | GET | 健康檢查 |
 | `/api/search/{cas_number}` | GET | 單一 CAS 號碼查詢 |
-| `/api/search` | POST | 批次查詢 |
+| `/api/search` | POST | 批次查詢（上限 100 筆） |
 | `/api/export/xlsx` | POST | 匯出 Excel |
 | `/api/export/csv` | POST | 匯出 CSV |
 | `/api/ghs-pictograms` | GET | 取得所有 GHS 圖示資訊 |
@@ -261,15 +296,22 @@ sudo supervisorctl restart backend
 ### 單一查詢範例
 
 ```bash
-curl https://your-domain.com/api/search/64-17-5
+curl https://ghs-backend.zeabur.app/api/search/64-17-5
 ```
 
 ### 批次查詢範例
 
 ```bash
-curl -X POST https://your-domain.com/api/search \
+curl -X POST https://ghs-backend.zeabur.app/api/search \
   -H "Content-Type: application/json" \
   -d '{"cas_numbers": ["64-17-5", "67-56-1", "100-42-5"]}'
+```
+
+### 健康檢查
+
+```bash
+curl https://ghs-backend.zeabur.app/api/health
+# {"status": "healthy", "timestamp": "...", "version": "1.2.0"}
 ```
 
 ### 回應格式
@@ -319,11 +361,21 @@ curl -X POST https://your-domain.com/api/search \
 
 ## 版本更新紀錄
 
+### v1.2.0 (2026-02)
+- 🔒 安全性強化：CORS 限制、Dockerfile 非 root 使用者、批次查詢上限 100 筆
+- ⚡ 效能優化：PubChem 回應快取（24hr TTL）、並行 CID 查詢、共享 HTTP 連線池
+- 🏗️ 架構重構：提取 React 自訂 Hooks（useSearchHistory / useFavorites / useCustomGHS）
+- 🛡️ 新增 React ErrorBoundary 防止白畫面
+- 🩺 新增 `/api/health` 健康檢查端點
+- 📦 精簡依賴：requirements.txt 從 73 個套件減至 12 個
+- 🧹 程式碼清理：移除未使用的 MongoDB 連線、重複字典檔、廢棄函式
+- ⚙️ FastAPI lifespan 取代已棄用的 `on_event`
+- 📖 英文→中文字典擴充至 1,861 筆（合併 45 個常見化學品）
+
 ### v1.1.0 (2025-01)
 - ✨ 整合用戶提供的化學品字典（1,707 個 CAS 號碼）
 - ✨ 新增 `CAS_TO_EN` 字典，支援 CAS → 英文名稱直接查詢
 - 🐛 修正含括號的化學品名稱被截斷的問題
-  - 例：`3,4-雙(甲氧羰基)苯硼酸` 原被截斷為 `3,4-雙`
 - 🐛 修正 PubChem 無資料時英文名稱顯示「名稱載入中...」的問題
 - 📈 中文名稱覆蓋率從約 150 個提升至 1,707 個
 
@@ -333,16 +385,6 @@ curl -X POST https://your-domain.com/api/search \
 - 🎉 Excel/CSV 匯出
 - 🎉 搜尋紀錄功能
 - 🎉 內建約 150 個常見化學品中文名稱
-
----
-
-## 未來規劃
-
-- [ ] 自訂標籤背景色或框線樣式
-- [ ] 內嵌標籤預覽功能（不另開新視窗）
-- [ ] 增加其他資料來源（如 ChemSpider）作為備援
-- [ ] 支援更多化學品資料庫
-- [ ] 字典管理後台介面
 
 ---
 
