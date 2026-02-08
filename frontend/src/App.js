@@ -2,12 +2,14 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Toaster } from "sonner";
+import { useTranslation } from "react-i18next";
 
 // Hooks
 import useSearchHistory from "@/hooks/useSearchHistory";
 import useFavorites from "@/hooks/useFavorites";
 import useCustomGHS from "@/hooks/useCustomGHS";
 import useLabelSelection from "@/hooks/useLabelSelection";
+import useResultSort from "@/hooks/useResultSort";
 
 // Constants & Utils
 import { API } from "@/constants/ghs";
@@ -27,6 +29,8 @@ import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
 
 function App() {
+  const { t } = useTranslation();
+
   // ── State ──
   const [singleCas, setSingleCas] = useState("");
   const [batchCas, setBatchCas] = useState("");
@@ -46,6 +50,7 @@ function App() {
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
+  const [advancedFilter, setAdvancedFilter] = useState({ minPictograms: 0, hCodeSearch: "" });
 
   // ── Refs ──
   const searchInputRef = useRef(null);
@@ -88,17 +93,47 @@ function App() {
     .filter((s) => s.length > 0).length;
 
   const filteredResults = useMemo(() => {
-    if (resultFilter === "all") return results;
-    return results.filter((r) => {
-      if (!r.found) return resultFilter === "all";
-      const effective = getEffectiveClassification(r);
-      const sw = effective?.signal_word;
-      if (resultFilter === "danger") return sw === "Danger";
-      if (resultFilter === "warning") return sw === "Warning";
-      if (resultFilter === "none") return !sw;
-      return true;
-    });
-  }, [results, resultFilter, getEffectiveClassification]);
+    let filtered = results;
+
+    // Signal word filter
+    if (resultFilter !== "all") {
+      filtered = filtered.filter((r) => {
+        if (!r.found) return false;
+        const effective = getEffectiveClassification(r);
+        const sw = effective?.signal_word;
+        if (resultFilter === "danger") return sw === "Danger";
+        if (resultFilter === "warning") return sw === "Warning";
+        if (resultFilter === "none") return !sw;
+        return true;
+      });
+    }
+
+    // Advanced: min pictograms
+    if (advancedFilter.minPictograms > 0) {
+      filtered = filtered.filter((r) => {
+        if (!r.found) return false;
+        const effective = getEffectiveClassification(r);
+        return (effective?.pictograms?.length || 0) >= advancedFilter.minPictograms;
+      });
+    }
+
+    // Advanced: H-code search
+    if (advancedFilter.hCodeSearch.trim()) {
+      const hQuery = advancedFilter.hCodeSearch.trim().toUpperCase();
+      filtered = filtered.filter((r) => {
+        if (!r.found) return false;
+        const effective = getEffectiveClassification(r);
+        return effective?.hazard_statements?.some((s) =>
+          s.code?.toUpperCase().includes(hQuery)
+        );
+      });
+    }
+
+    return filtered;
+  }, [results, resultFilter, advancedFilter, getEffectiveClassification]);
+
+  // Sort hook — applied after filtering
+  const { sortedResults, sortConfig, requestSort } = useResultSort(filteredResults, getEffectiveClassification);
 
   // ── Handlers ──
   const toggleOtherClassifications = (casNumber) => {
@@ -111,7 +146,7 @@ function App() {
   const searchSingle = async (directCas) => {
     const query = (directCas || singleCas).trim();
     if (!query) {
-      setError("請輸入 CAS 號碼");
+      setError(t("search.errorEmpty"));
       return;
     }
     setError("");
@@ -124,7 +159,7 @@ function App() {
       saveToHistory([response.data]);
     } catch (e) {
       console.error(e);
-      setError("查詢失敗，請檢查網路連線或稍後再試");
+      setError(t("search.errorSingle"));
     } finally {
       setLoading(false);
     }
@@ -132,7 +167,7 @@ function App() {
 
   const searchBatch = async () => {
     if (!batchCas.trim()) {
-      setError("請輸入 CAS 號碼");
+      setError(t("search.errorEmpty"));
       return;
     }
     setError("");
@@ -144,7 +179,7 @@ function App() {
       .filter((s) => s.length > 0);
 
     if (casNumbers.length === 0) {
-      setError("未偵測到有效的 CAS 號碼");
+      setError(t("search.errorNoValid"));
       setLoading(false);
       return;
     }
@@ -159,7 +194,7 @@ function App() {
       saveToHistory(response.data);
     } catch (e) {
       console.error(e);
-      setError("批次查詢失敗，請檢查網路連線或稍後再試");
+      setError(t("search.errorBatch"));
     } finally {
       setLoading(false);
       setTimeout(() => setBatchProgress(null), 800);
@@ -208,7 +243,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-amber-500 focus:text-white focus:rounded-lg">
-        跳至主要內容
+        {t("a11y.skipToContent")}
       </a>
       <Toaster position="top-right" theme="dark" richColors />
 
@@ -264,10 +299,14 @@ function App() {
 
         {results.length > 0 && !loading && (
           <ResultsTable
-            results={filteredResults}
+            results={sortedResults}
             totalCount={results.length}
             resultFilter={resultFilter}
             onSetResultFilter={setResultFilter}
+            advancedFilter={advancedFilter}
+            onSetAdvancedFilter={setAdvancedFilter}
+            sortConfig={sortConfig}
+            onRequestSort={requestSort}
             selectedForLabel={selectedForLabel}
             expandedOtherClassifications={expandedOtherClassifications}
             onOpenLabelModal={handleOpenLabelModal}

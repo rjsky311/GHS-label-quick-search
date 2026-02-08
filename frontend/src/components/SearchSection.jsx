@@ -1,4 +1,5 @@
 import { Search, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 
 export default function SearchSection({
@@ -18,6 +19,8 @@ export default function SearchSection({
   favorites,
   batchProgress,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden mb-6">
       <div className="flex border-b border-slate-700">
@@ -30,7 +33,7 @@ export default function SearchSection({
           }`}
           data-testid="single-search-tab"
         >
-          <Search className="w-4 h-4 mr-2 inline" /> 單一查詢
+          <Search className="w-4 h-4 mr-2 inline" /> {t("search.singleTab")}
         </button>
         <button
           onClick={() => onSetActiveTab("batch")}
@@ -41,7 +44,7 @@ export default function SearchSection({
           }`}
           data-testid="batch-search-tab"
         >
-          <ClipboardList className="w-4 h-4 mr-2 inline" /> 批次查詢
+          <ClipboardList className="w-4 h-4 mr-2 inline" /> {t("search.batchTab")}
         </button>
       </div>
 
@@ -50,7 +53,7 @@ export default function SearchSection({
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-slate-400 mb-2">
-                輸入 CAS 號碼
+                {t("search.inputLabel")}
               </label>
               <div className="flex gap-3">
                 <SearchAutocomplete
@@ -70,17 +73,17 @@ export default function SearchSection({
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> 查詢中...
+                      <Loader2 className="w-4 h-4 animate-spin" /> {t("search.searching")}
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4" /> 查詢
+                      <Search className="w-4 h-4" /> {t("search.searchBtn")}
                     </>
                   )}
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                輸入 CAS 號碼、英文名或中文名即可搜尋　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">Ctrl+K</kbd>
+                {t("search.inputHint")}　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">Ctrl+K</kbd>
               </p>
             </div>
           </div>
@@ -88,22 +91,24 @@ export default function SearchSection({
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-slate-400 mb-2">
-                批次輸入 CAS 號碼（可從 Excel 複製貼上）
+                {t("search.batchInputLabel")}
               </label>
               <textarea
                 value={batchCas}
                 onChange={(e) => onSetBatchCas(e.target.value)}
-                placeholder="支援逗號、換行、Tab 分隔&#10;例如:&#10;64-17-5&#10;67-56-1&#10;7732-18-5"
+                placeholder={t("search.batchPlaceholder")}
                 className="w-full h-40 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono resize-none"
                 data-testid="batch-cas-input"
               />
               <div className="flex justify-between items-center mt-2">
                 <p className="text-xs text-slate-500">
-                  支援逗號、換行、Tab 分隔，最多 100 筆
+                  {t("search.batchHint")}
                 </p>
                 {batchCount > 0 && (
                   <span className={`text-xs font-medium ${batchCount > 100 ? "text-red-400" : "text-amber-400"}`}>
-                    已偵測 {batchCount} 個號碼{batchCount > 100 ? " ⚠ 超過上限" : ""}
+                    {batchCount > 100
+                      ? t("search.batchOverLimit", { count: batchCount })
+                      : t("search.batchDetected", { count: batchCount })}
                   </span>
                 )}
               </div>
@@ -117,11 +122,11 @@ export default function SearchSection({
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> 查詢中...
+                    <Loader2 className="w-4 h-4 animate-spin" /> {t("search.searching")}
                   </>
                 ) : (
                   <>
-                    <Search className="w-4 h-4" /> 批次查詢
+                    <Search className="w-4 h-4" /> {t("search.batchSearchBtn")}
                   </>
                 )}
               </button>
@@ -130,7 +135,7 @@ export default function SearchSection({
                 className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
                 data-testid="clear-batch-btn"
               >
-                清除
+                {t("search.clear")}
               </button>
             </div>
 
@@ -138,8 +143,8 @@ export default function SearchSection({
             {batchProgress && (
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-slate-400 mb-1">
-                  <span>查詢進度</span>
-                  <span>{batchProgress.current === batchProgress.total ? "完成" : "處理中..."} ({batchProgress.current}/{batchProgress.total})</span>
+                  <span>{t("search.progress")}</span>
+                  <span>{batchProgress.current === batchProgress.total ? t("search.progressDone") : t("search.progressProcessing")} ({batchProgress.current}/{batchProgress.total})</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
                   <div

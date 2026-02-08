@@ -1,4 +1,5 @@
 import { GHS_IMAGES } from "@/constants/ghs";
+import i18n from "@/i18n";
 
 export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
@@ -6,6 +7,7 @@ export function getQRCodeUrl(text, size = 100) {
 
 export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
   if (selectedForLabel.length === 0) return;
+  const t = i18n.t.bind(i18n);
 
   const printWindow = window.open("", "_blank");
   const isLandscape = labelConfig.orientation === "landscape";
@@ -118,7 +120,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
               <div class="pictograms">
                 ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
               </div>
-            ` : '<div class="no-hazard">無危害標示</div>'}
+            ` : '<div class="no-hazard">${t("print.noHazardLabel")}</div>'}
           </div>
           <div class="label-bottom">
             ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : '<div class="signal-placeholder"></div>'}
@@ -158,8 +160,8 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
           <div class="label-bottom hazards-section">
             ${hazards.length > 0 ? `
               ${hazards.slice(0, maxHazards).map((h) => `<div class="hazard-item">${h.code} ${h.text_zh}</div>`).join("")}
-              ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ 共 ${hazards.length} 項</div>` : ""}
-            ` : '<div class="no-hazard-text">無危害說明</div>'}
+              ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ ${t("print.totalItems", { count: hazards.length })}</div>` : ""}
+            ` : '<div class="no-hazard-text">${t("print.noHazardStatement")}</div>'}
           </div>
         </div>
       `;
@@ -195,7 +197,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
           <div class="label-bottom hazards-full">
             ${hazards.length > 0 ? `
               ${hazards.map((h) => `<div class="hazard-item-full">${h.code} ${h.text_zh}</div>`).join("")}
-            ` : '<div class="no-hazard-text">無危害說明</div>'}
+            ` : '<div class="no-hazard-text">${t("print.noHazardStatement")}</div>'}
           </div>
         </div>
       `;
@@ -229,7 +231,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
           </div>
           <div class="qr-right">
             <img class="qrcode-img" src="${getQRCodeUrl(pubchemUrl, 200)}" alt="QR" />
-            <div class="qr-hint">掃碼查看詳情</div>
+            <div class="qr-hint">${t("print.scanForDetail")}</div>
           </div>
         </div>
       `;
@@ -242,7 +244,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
     return `
       <div class="page">
         ${labelsHtml}
-        <div class="page-number">第 ${pageIdx + 1} / ${totalPages} 頁</div>
+        <div class="page-number">${t("print.pageNumber", { current: pageIdx + 1, total: totalPages })}</div>
       </div>
     `;
   }).join("");
@@ -521,7 +523,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>GHS 標籤列印</title>
+      <title>${t("print.title")}</title>
       <style>${styles}</style>
     </head>
     <body>

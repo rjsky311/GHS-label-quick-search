@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Search, Clock, Star, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function SearchAutocomplete({
   value,
@@ -10,6 +11,7 @@ export default function SearchAutocomplete({
   searchInputRef,
   loading,
 }) {
+  const { t } = useTranslation();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef(null);
@@ -102,7 +104,7 @@ export default function SearchAutocomplete({
         }}
         onFocus={() => value.trim() && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
-        placeholder="例如: 64-17-5"
+        placeholder={t("search.placeholder")}
         className="w-full px-4 py-3 pr-10 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono"
         data-testid="single-cas-input"
         role="combobox"
@@ -159,7 +161,7 @@ export default function SearchAutocomplete({
                 )}
               </div>
               <span className="text-xs text-slate-500 shrink-0">
-                {item._source === "favorite" ? "收藏" : "紀錄"}
+                {item._source === "favorite" ? t("autocomplete.favorite") : t("autocomplete.history")}
               </span>
             </li>
           ))}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Tag, X, Target, ClipboardList, FileText, QrCode,
   BookOpen, FileSpreadsheet, Printer, Lightbulb,
@@ -12,6 +13,7 @@ export default function LabelPrintModal({
   onToggleSelectForLabel,
   onClose,
 }) {
+  const { t } = useTranslation();
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function LabelPrintModal({
       >
         <div className="p-6 border-b border-slate-700 flex items-center justify-between">
           <h2 id="label-modal-title" className="text-xl font-bold text-white flex items-center gap-2">
-            <Tag className="w-5 h-5 text-purple-400" /> GHS 標籤列印
+            <Tag className="w-5 h-5 text-purple-400" /> {t("label.title")}
           </h2>
           <button
             onClick={onClose}
@@ -53,37 +55,37 @@ export default function LabelPrintModal({
           {/* Template Selection */}
           <div>
             <h3 className="text-sm font-medium text-slate-400 mb-3">
-              選擇版型
+              {t("label.selectTemplate")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {[
                 {
                   value: "icon",
-                  label: "圖示版",
-                  desc: "名稱 + 圖示 + 警示語",
+                  labelKey: "label.templateIcon",
+                  descKey: "label.templateIconDesc",
                   icon: <Target className="w-5 h-5" />,
-                  tip: "最精簡，適合小容器"
+                  tipKey: "label.templateIconTip"
                 },
                 {
                   value: "standard",
-                  label: "標準版",
-                  desc: "圖示 + 警示語 + 3條危害說明",
+                  labelKey: "label.templateStandard",
+                  descKey: "label.templateStandardDesc",
                   icon: <ClipboardList className="w-5 h-5" />,
-                  tip: "常規使用推薦"
+                  tipKey: "label.templateStandardTip"
                 },
                 {
                   value: "full",
-                  label: "完整版",
-                  desc: "所有危害說明（自動縮小字體）",
+                  labelKey: "label.templateFull",
+                  descKey: "label.templateFullDesc",
                   icon: <FileText className="w-5 h-5" />,
-                  tip: "需要完整資訊時使用"
+                  tipKey: "label.templateFullTip"
                 },
                 {
                   value: "qrcode",
-                  label: "QR Code 版",
-                  desc: "基本資訊 + 掃碼查看詳情",
+                  labelKey: "label.templateQR",
+                  descKey: "label.templateQRDesc",
                   icon: <QrCode className="w-5 h-5" />,
-                  tip: "掃碼連結 PubChem 完整資料"
+                  tipKey: "label.templateQRTip"
                 },
               ].map((template) => (
                 <button
@@ -98,11 +100,11 @@ export default function LabelPrintModal({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-purple-400">{template.icon}</span>
                     <span className={`font-medium ${labelConfig.template === template.value ? "text-purple-400" : "text-white"}`}>
-                      {template.label}
+                      {t(template.labelKey)}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-400">{template.desc}</div>
-                  <div className="text-xs text-slate-500 mt-1">{template.tip}</div>
+                  <div className="text-xs text-slate-400">{t(template.descKey)}</div>
+                  <div className="text-xs text-slate-500 mt-1">{t(template.tipKey)}</div>
                 </button>
               ))}
             </div>
@@ -111,13 +113,13 @@ export default function LabelPrintModal({
           {/* Label Size Selection */}
           <div>
             <h3 className="text-sm font-medium text-slate-400 mb-3">
-              標籤尺寸
+              {t("label.labelSize")}
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { value: "small", label: "小", desc: "60×45mm", tip: "小瓶/試管" },
-                { value: "medium", label: "中", desc: "80×60mm", tip: "標準瓶" },
-                { value: "large", label: "大", desc: "105×80mm", tip: "大容器" },
+                { value: "small", labelKey: "label.sizeSmall", descKey: "label.sizeSmallDesc", tipKey: "label.sizeSmallTip" },
+                { value: "medium", labelKey: "label.sizeMedium", descKey: "label.sizeMediumDesc", tipKey: "label.sizeMediumTip" },
+                { value: "large", labelKey: "label.sizeLarge", descKey: "label.sizeLargeDesc", tipKey: "label.sizeLargeTip" },
               ].map((size) => (
                 <button
                   key={size.value}
@@ -128,9 +130,9 @@ export default function LabelPrintModal({
                       : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
                   }`}
                 >
-                  <div className="font-medium">{size.label}</div>
-                  <div className="text-xs opacity-70">{size.desc}</div>
-                  <div className="text-xs opacity-50">{size.tip}</div>
+                  <div className="font-medium">{t(size.labelKey)}</div>
+                  <div className="text-xs opacity-70">{t(size.descKey)}</div>
+                  <div className="text-xs opacity-50">{t(size.tipKey)}</div>
                 </button>
               ))}
             </div>
@@ -139,12 +141,12 @@ export default function LabelPrintModal({
           {/* Orientation Selection */}
           <div>
             <h3 className="text-sm font-medium text-slate-400 mb-3">
-              列印方向
+              {t("label.orientation")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { value: "portrait", label: "直向", desc: "A4 直式", icon: <FileText className="w-4 h-4" /> },
-                { value: "landscape", label: "橫向", desc: "A4 橫式", icon: <BookOpen className="w-4 h-4" /> },
+                { value: "portrait", labelKey: "label.portrait", descKey: "label.portraitDesc", icon: <FileText className="w-4 h-4" /> },
+                { value: "landscape", labelKey: "label.landscape", descKey: "label.landscapeDesc", icon: <BookOpen className="w-4 h-4" /> },
               ].map((orient) => (
                 <button
                   key={orient.value}
@@ -157,9 +159,9 @@ export default function LabelPrintModal({
                 >
                   <div className="flex items-center gap-2">
                     {orient.icon}
-                    <span className="font-medium">{orient.label}</span>
+                    <span className="font-medium">{t(orient.labelKey)}</span>
                   </div>
-                  <div className="text-xs opacity-70">{orient.desc}</div>
+                  <div className="text-xs opacity-70">{t(orient.descKey)}</div>
                 </button>
               ))}
             </div>
@@ -175,8 +177,8 @@ export default function LabelPrintModal({
             const estPages = Math.ceil(selectedForLabel.length / perPage);
             return (
               <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
-                <FileSpreadsheet className="w-4 h-4 text-blue-400 inline mr-1" /> 預計列印 <span className="text-white font-medium">{estPages}</span> 頁（每頁 {perPage} 張標籤）
-                {labelConfig.size === "small" && <span className="ml-2 text-xs text-slate-500">建議中型以上標籤以獲得最佳閱讀效果</span>}
+                <FileSpreadsheet className="w-4 h-4 text-blue-400 inline mr-1" /> {t("label.estPages", { pages: estPages, perPage })}
+                {labelConfig.size === "small" && <span className="ml-2 text-xs text-slate-500">{t("label.smallSizeHint")}</span>}
               </div>
             );
           })()}
@@ -184,12 +186,12 @@ export default function LabelPrintModal({
           {/* Selected Chemicals */}
           <div>
             <h3 className="text-sm font-medium text-slate-400 mb-3">
-              已選擇 {selectedForLabel.length} 個化學品
+              {t("label.selectedCount", { count: selectedForLabel.length })}
             </h3>
             <div className="max-h-40 overflow-y-auto space-y-2 bg-slate-900 rounded-lg p-3">
               {selectedForLabel.length === 0 ? (
                 <p className="text-slate-500 text-center py-4">
-                  尚未選擇任何化學品
+                  {t("label.noneSelected")}
                 </p>
               ) : (
                 selectedForLabel.map((chem, idx) => (
@@ -206,7 +208,7 @@ export default function LabelPrintModal({
                       </span>
                       {chem.ghs_pictograms?.length > 0 && (
                         <span className="text-xs text-slate-500">
-                          ({chem.ghs_pictograms.length} 個圖示)
+                          {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
                         </span>
                       )}
                     </div>
@@ -225,7 +227,7 @@ export default function LabelPrintModal({
           {/* Preview hint */}
           <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400 flex items-start gap-2">
             <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <span>點擊「列印標籤」後會開啟預覽視窗，您可以在列印前確認標籤樣式。</span>
+            <span>{t("label.previewHint")}</span>
           </div>
 
           {/* Print Button */}
@@ -235,13 +237,13 @@ export default function LabelPrintModal({
               disabled={selectedForLabel.length === 0}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <Printer className="w-4 h-4" /> 列印標籤 ({selectedForLabel.length} 張)
+              <Printer className="w-4 h-4" /> {t("label.printBtn", { count: selectedForLabel.length })}
             </button>
             <button
               onClick={onClose}
               className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
             >
-              取消
+              {t("label.cancel")}
             </button>
           </div>
         </div>

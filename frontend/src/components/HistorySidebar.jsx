@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/formatDate";
 
 export default function HistorySidebar({
@@ -8,6 +9,8 @@ export default function HistorySidebar({
   onClearHistory,
   onSelectHistoryItem,
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -22,14 +25,14 @@ export default function HistorySidebar({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="搜尋紀錄"
+      aria-label={t("history.title")}
     >
       <div
         className="absolute right-0 top-0 h-full w-80 bg-slate-800 shadow-xl overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
-          <h2 className="text-lg font-semibold text-white">搜尋紀錄</h2>
+          <h2 className="text-lg font-semibold text-white">{t("history.title")}</h2>
           <div className="flex gap-2">
             {history.length > 0 && (
               <button
@@ -37,7 +40,7 @@ export default function HistorySidebar({
                 className="text-sm text-red-400 hover:text-red-300"
                 data-testid="clear-history-btn"
               >
-                清除全部
+                {t("history.clearAll")}
               </button>
             )}
             <button
@@ -50,7 +53,7 @@ export default function HistorySidebar({
         </div>
         {history.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            <p>尚無搜尋紀錄</p>
+            <p>{t("history.empty")}</p>
           </div>
         ) : (
           <div className="p-2">

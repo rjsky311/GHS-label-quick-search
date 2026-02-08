@@ -2,9 +2,11 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { API } from "@/constants/ghs";
+import i18n from "@/i18n";
 
 export async function exportToExcel(results) {
   if (results.length === 0) return;
+  const t = i18n.t.bind(i18n);
 
   try {
     const response = await axios.post(
@@ -15,17 +17,17 @@ export async function exportToExcel(results) {
     saveAs(response.data, "ghs_results.xlsx");
   } catch (e) {
     const wsData = [
-      ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"],
+      [t("export.cas"), t("export.nameEn"), t("export.nameZh"), t("export.ghs"), t("export.signalWord"), t("export.hazardStatements")],
     ];
 
     results.forEach((r) => {
       const ghsText = r.ghs_pictograms
         ? r.ghs_pictograms.map((p) => `${p.code} (${p.name_zh})`).join(", ")
-        : "無";
+        : t("export.none");
       const signal = r.signal_word_zh || r.signal_word || "-";
       const hazardText = r.hazard_statements
         ? r.hazard_statements.map((s) => `${s.code}: ${s.text_zh}`).join("; ")
-        : "無危害說明";
+        : t("export.noHazard");
 
       wsData.push([
         r.cas_number || "",
@@ -39,13 +41,14 @@ export async function exportToExcel(results) {
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "GHS查詢結果");
+    XLSX.utils.book_append_sheet(wb, ws, t("export.sheetName"));
     XLSX.writeFile(wb, "ghs_results.xlsx");
   }
 }
 
 export async function exportToCSV(results) {
   if (results.length === 0) return;
+  const t = i18n.t.bind(i18n);
 
   try {
     const response = await axios.post(
@@ -56,17 +59,17 @@ export async function exportToCSV(results) {
     saveAs(response.data, "ghs_results.csv");
   } catch (e) {
     const wsData = [
-      ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"],
+      [t("export.cas"), t("export.nameEn"), t("export.nameZh"), t("export.ghs"), t("export.signalWord"), t("export.hazardStatements")],
     ];
 
     results.forEach((r) => {
       const ghsText = r.ghs_pictograms
         ? r.ghs_pictograms.map((p) => `${p.code} (${p.name_zh})`).join(", ")
-        : "無";
+        : t("export.none");
       const signal = r.signal_word_zh || r.signal_word || "-";
       const hazardText = r.hazard_statements
         ? r.hazard_statements.map((s) => `${s.code}: ${s.text_zh}`).join("; ")
-        : "無危害說明";
+        : t("export.noHazard");
 
       wsData.push([
         r.cas_number || "",

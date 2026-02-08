@@ -1,11 +1,17 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import GHSImage from "@/components/GHSImage";
+import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 
 export default function ResultsTable({
   results,
   totalCount,
   resultFilter,
   onSetResultFilter,
+  advancedFilter,
+  onSetAdvancedFilter,
+  sortConfig,
+  onRequestSort,
   selectedForLabel,
   expandedOtherClassifications,
   onOpenLabelModal,
@@ -23,15 +29,23 @@ export default function ResultsTable({
   onClearCustomClassification,
   onViewDetail,
 }) {
+  const { t } = useTranslation();
+
+  const SortIcon = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="w-3 h-3 text-slate-500 ml-1 inline" />;
+    return sortConfig.direction === "asc"
+      ? <ArrowUp className="w-3 h-3 text-amber-400 ml-1 inline" />
+      : <ArrowDown className="w-3 h-3 text-amber-400 ml-1 inline" />;
+  };
+
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden">
       {/* Results Header */}
       <div className="p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-3">
         <div className="text-white">
-          <span className="font-semibold">查詢結果</span>
+          <span className="font-semibold">{t("results.title")}</span>
           <span className="text-slate-400 ml-2">
-            共 {totalCount} 筆，成功{" "}
-            {results.filter((r) => r.found).length} 筆
+            {t("results.summary", { total: totalCount, found: results.filter((r) => r.found).length })}
           </span>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -40,7 +54,7 @@ export default function ResultsTable({
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
             data-testid="print-label-btn"
           >
-            <Tag className="w-4 h-4" /> 列印標籤
+            <Tag className="w-4 h-4" /> {t("results.printLabel")}
             {selectedForLabel.length > 0 && (
               <span className="bg-purple-800 px-2 py-0.5 rounded-full text-xs">
                 {selectedForLabel.length}
@@ -52,14 +66,14 @@ export default function ResultsTable({
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
             data-testid="export-xlsx-btn"
           >
-            <FileSpreadsheet className="w-4 h-4" /> 匯出 Excel
+            <FileSpreadsheet className="w-4 h-4" /> {t("results.exportExcel")}
           </button>
           <button
             onClick={onExportToCSV}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
             data-testid="export-csv-btn"
           >
-            <FileText className="w-4 h-4" /> 匯出 CSV
+            <FileText className="w-4 h-4" /> {t("results.exportCSV")}
           </button>
         </div>
       </div>
@@ -67,21 +81,21 @@ export default function ResultsTable({
       {/* Selection controls */}
       {results.filter((r) => r.found).length > 0 && (
         <div className="px-4 py-2 bg-slate-900/30 border-b border-slate-700 flex items-center gap-4 text-sm flex-wrap">
-          <span className="text-slate-400">標籤列印選擇：</span>
+          <span className="text-slate-400">{t("results.labelSelect")}</span>
           <button
             onClick={onSelectAllForLabel}
             className="text-amber-400 hover:text-amber-300"
           >
-            全選
+            {t("results.selectAll")}
           </button>
           <button
             onClick={onClearLabelSelection}
             className="text-slate-400 hover:text-slate-300"
           >
-            取消全選
+            {t("results.deselectAll")}
           </button>
           <span className="text-slate-500">
-            已選 {selectedForLabel.length} 項
+            {t("results.selectedCount", { count: selectedForLabel.length })}
           </span>
         </div>
       )}
@@ -91,10 +105,10 @@ export default function ResultsTable({
         <div className="px-4 py-2 bg-slate-900/20 border-b border-slate-700 flex items-center gap-2 text-sm flex-wrap">
           <Filter className="w-4 h-4 text-slate-400 shrink-0" />
           {[
-            { value: "all", label: "全部" },
-            { value: "danger", label: "危險", color: "red" },
-            { value: "warning", label: "警告", color: "amber" },
-            { value: "none", label: "無危害", color: "slate" },
+            { value: "all", labelKey: "filter.all" },
+            { value: "danger", labelKey: "filter.danger", color: "red" },
+            { value: "warning", labelKey: "filter.warning", color: "amber" },
+            { value: "none", labelKey: "filter.none", color: "slate" },
           ].map((f) => (
             <button
               key={f.value}
@@ -107,12 +121,37 @@ export default function ResultsTable({
                   : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
               }`}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
-          {resultFilter !== "all" && (
+          {/* Advanced Filters */}
+          <span className="text-slate-600 mx-1">|</span>
+          {[1, 2, 3].map((n) => (
+            <button
+              key={n}
+              onClick={() => onSetAdvancedFilter({ ...advancedFilter, minPictograms: advancedFilter.minPictograms === n ? 0 : n })}
+              className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                advancedFilter.minPictograms === n
+                  ? "bg-blue-500/30 text-blue-300 ring-1 ring-blue-500/50"
+                  : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+              }`}
+            >
+              {t("filter.pictogramCount", { count: n })}
+            </button>
+          ))}
+          <div className="relative ml-1">
+            <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={advancedFilter.hCodeSearch}
+              onChange={(e) => onSetAdvancedFilter({ ...advancedFilter, hCodeSearch: e.target.value })}
+              placeholder={t("filter.hCodePlaceholder")}
+              className="w-24 pl-6 pr-2 py-1 bg-slate-800 border border-slate-600 rounded-full text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            />
+          </div>
+          {(resultFilter !== "all" || advancedFilter.minPictograms > 0 || advancedFilter.hCodeSearch) && (
             <span className="text-slate-500 ml-2">
-              顯示 {results.length}/{totalCount} 筆
+              {t("filter.showing", { shown: results.length, total: totalCount })}
             </span>
           )}
         </div>
@@ -121,29 +160,41 @@ export default function ResultsTable({
       {/* Results Table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px]" data-testid="results-table">
-          <caption className="sr-only">GHS 化學品查詢結果</caption>
+          <caption className="sr-only">{t("results.tableCaption")}</caption>
           <thead>
             <tr className="bg-slate-900/50">
               <th className="px-2 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
-                選擇
+                {t("results.colSelect")}
               </th>
               <th className="px-2 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
-                收藏
+                {t("results.colFavorite")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-28">
-                CAS No.
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-28 cursor-pointer hover:text-white select-none"
+                onClick={() => onRequestSort("cas_number")}
+                title={t("sort.tooltip")}
+              >
+                {t("results.colCAS")} <SortIcon columnKey="cas_number" />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider min-w-[200px]">
-                名稱
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider min-w-[200px] cursor-pointer hover:text-white select-none"
+                onClick={() => onRequestSort("name")}
+                title={t("sort.tooltip")}
+              >
+                {t("results.colName")} <SortIcon columnKey="name" />
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-48">
-                GHS 標示
+                {t("results.colGHS")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-20">
-                警示語
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white select-none"
+                onClick={() => onRequestSort("signal_word")}
+                title={t("sort.tooltip")}
+              >
+                {t("results.colSignalWord")} <SortIcon columnKey="signal_word" />
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-24">
-                操作
+                {t("results.colAction")}
               </th>
             </tr>
           </thead>
@@ -162,7 +213,7 @@ export default function ResultsTable({
                       type="checkbox"
                       checked={isSelectedForLabel(result.cas_number)}
                       onChange={() => onToggleSelectForLabel(result)}
-                      aria-label={`選擇 ${result.cas_number} 用於列印標籤`}
+                      aria-label={t("results.selectForLabel", { cas: result.cas_number })}
                       className="w-4 h-4 rounded border-slate-500 text-purple-500 focus:ring-purple-500 bg-slate-700"
                     />
                   )}
@@ -176,7 +227,7 @@ export default function ResultsTable({
                           ? "text-amber-400 hover:text-amber-300"
                           : "text-slate-600 hover:text-amber-400"
                       }`}
-                      title={isFavorited(result.cas_number) ? "取消收藏" : "加入收藏"}
+                      title={isFavorited(result.cas_number) ? t("favorites.removeFavorite") : t("favorites.addFavorite")}
                       data-testid={`favorite-btn-${idx}`}
                     >
                       <Star className={`w-5 h-5 ${isFavorited(result.cas_number) ? "fill-current" : ""}`} />
@@ -192,7 +243,7 @@ export default function ResultsTable({
                   {result.found ? (
                     <div>
                       <div className="text-white font-medium break-words">
-                        {result.name_en || "（名稱載入中...）"}
+                        {result.name_en || t("results.loadingName")}
                       </div>
                       {result.name_zh && (
                         <div className="text-slate-400 text-sm">
@@ -223,9 +274,9 @@ export default function ResultsTable({
                           <>
                             <div className="flex gap-1 flex-wrap items-center">
                               {effective.isCustom ? (
-                                <span className="text-xs text-purple-400 mr-1" title="您選擇的分類">★</span>
+                                <span className="text-xs text-purple-400 mr-1" title={t("results.customMarker")}>★</span>
                               ) : (
-                                <span className="text-xs text-emerald-400 mr-1" title="主要分類（預設）">●</span>
+                                <span className="text-xs text-emerald-400 mr-1" title={t("results.defaultMarker")}>●</span>
                               )}
                               {effective.pictograms?.map((pic, pIdx) => (
                                 <GHSImage
@@ -240,7 +291,7 @@ export default function ResultsTable({
                                 <button
                                   onClick={() => onClearCustomClassification(result.cas_number)}
                                   className="ml-2 text-xs text-slate-500 hover:text-red-400"
-                                  title="恢復預設分類"
+                                  title={t("results.restoreDefault")}
                                 >
                                   <X className="w-3 h-3 inline" />
                                 </button>
@@ -259,7 +310,7 @@ export default function ResultsTable({
                                   aria-expanded={!!expandedOtherClassifications[result.cas_number]}
                                 >
                                   <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
-                                  {allClassifications.length - 1} 種其他分類
+                                  {t("results.otherClassifications", { count: allClassifications.length - 1 })}
                                 </button>
 
                                 {/* Expanded Other Classifications */}
@@ -283,9 +334,9 @@ export default function ResultsTable({
                                           <button
                                             onClick={() => onSetCustomClassification(result.cas_number, clsIdx)}
                                             className="ml-2 text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                            title="設為我的主要分類"
+                                            title={t("detail.setAsMain")}
                                           >
-                                            設為主要
+                                            {t("results.setAsPrimary")}
                                           </button>
                                         </div>
                                       );
@@ -299,7 +350,7 @@ export default function ResultsTable({
                       })()}
                     </div>
                   ) : result.found ? (
-                    <span className="text-slate-500">無危害標示</span>
+                    <span className="text-slate-500">{t("results.noHazard")}</span>
                   ) : (
                     "-"
                   )}
@@ -328,13 +379,27 @@ export default function ResultsTable({
                 </td>
                 <td className="px-4 py-4">
                   {result.found && (
-                    <button
-                      onClick={() => onViewDetail(result)}
-                      className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded transition-colors"
-                      data-testid={`detail-btn-${idx}`}
-                    >
-                      詳細資訊
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => onViewDetail(result)}
+                        className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded transition-colors"
+                        data-testid={`detail-btn-${idx}`}
+                      >
+                        {t("results.detail")}
+                      </button>
+                      {getPubChemSDSUrl(result.cid) && (
+                        <a
+                          href={getPubChemSDSUrl(result.cid)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 bg-emerald-700/60 hover:bg-emerald-600 text-emerald-200 text-sm rounded transition-colors flex items-center gap-1"
+                          title={t("sds.viewSDS")}
+                          data-testid={`sds-btn-${idx}`}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" /> {t("sds.viewSDS")}
+                        </a>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
