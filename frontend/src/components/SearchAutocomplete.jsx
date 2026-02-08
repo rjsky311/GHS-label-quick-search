@@ -47,7 +47,10 @@ export default function SearchAutocomplete({
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setShowSuggestions(false);
+        // Delay closing so the external element's click event fires first
+        requestAnimationFrame(() => {
+          setShowSuggestions(false);
+        });
       }
     };
     document.addEventListener("mousedown", handleClickOutside);

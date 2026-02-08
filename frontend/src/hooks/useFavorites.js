@@ -33,6 +33,9 @@ export default function useFavorites() {
           hazard_statements: chemical.hazard_statements,
           signal_word: chemical.signal_word,
           signal_word_zh: chemical.signal_word_zh,
+          found: true,
+          other_classifications: chemical.other_classifications || [],
+          has_multiple_classifications: chemical.has_multiple_classifications || false,
           added_at: new Date().toISOString(),
         };
         updated = [favoriteItem, ...prev];

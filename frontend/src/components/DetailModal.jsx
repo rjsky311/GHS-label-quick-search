@@ -35,7 +35,14 @@ export default function DetailModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const effective = getEffectiveClassification(result);
+  const effective = getEffectiveClassification(result) || {
+    pictograms: result.ghs_pictograms || [],
+    hazard_statements: result.hazard_statements || [],
+    signal_word: result.signal_word,
+    signal_word_zh: result.signal_word_zh,
+    isCustom: false,
+    customIndex: 0,
+  };
   const allClassifications = [
     {
       pictograms: result.ghs_pictograms || [],
