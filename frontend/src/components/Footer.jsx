@@ -10,7 +10,7 @@ export default function Footer() {
           {" "}| 僅供參考，請以官方 SDS 為準
         </p>
         <p className="text-slate-600">
-          v1.4.0 |{" "}
+          v1.5.0 |{" "}
           <a href="https://github.com/rjsky311/GHS-label-quick-search/issues" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">
             回報問題
           </a>

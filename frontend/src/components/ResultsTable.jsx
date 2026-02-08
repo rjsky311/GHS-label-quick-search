@@ -1,8 +1,11 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine } from "lucide-react";
-import { GHS_IMAGES } from "@/constants/ghs";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter } from "lucide-react";
+import GHSImage from "@/components/GHSImage";
 
 export default function ResultsTable({
   results,
+  totalCount,
+  resultFilter,
+  onSetResultFilter,
   selectedForLabel,
   expandedOtherClassifications,
   onOpenLabelModal,
@@ -27,7 +30,7 @@ export default function ResultsTable({
         <div className="text-white">
           <span className="font-semibold">查詢結果</span>
           <span className="text-slate-400 ml-2">
-            共 {results.length} 筆，成功{" "}
+            共 {totalCount} 筆，成功{" "}
             {results.filter((r) => r.found).length} 筆
           </span>
         </div>
@@ -83,9 +86,42 @@ export default function ResultsTable({
         </div>
       )}
 
+      {/* Filter Toolbar */}
+      {totalCount > 1 && (
+        <div className="px-4 py-2 bg-slate-900/20 border-b border-slate-700 flex items-center gap-2 text-sm flex-wrap">
+          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+          {[
+            { value: "all", label: "全部" },
+            { value: "danger", label: "危險", color: "red" },
+            { value: "warning", label: "警告", color: "amber" },
+            { value: "none", label: "無危害", color: "slate" },
+          ].map((f) => (
+            <button
+              key={f.value}
+              onClick={() => onSetResultFilter(f.value)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                resultFilter === f.value
+                  ? f.color === "red" ? "bg-red-500/30 text-red-300 ring-1 ring-red-500/50"
+                  : f.color === "amber" ? "bg-amber-500/30 text-amber-300 ring-1 ring-amber-500/50"
+                  : "bg-slate-600 text-white ring-1 ring-slate-500"
+                  : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          {resultFilter !== "all" && (
+            <span className="text-slate-500 ml-2">
+              顯示 {results.length}/{totalCount} 筆
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Results Table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px]" data-testid="results-table">
+          <caption className="sr-only">GHS 化學品查詢結果</caption>
           <thead>
             <tr className="bg-slate-900/50">
               <th className="px-2 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
@@ -126,6 +162,7 @@ export default function ResultsTable({
                       type="checkbox"
                       checked={isSelectedForLabel(result.cas_number)}
                       onChange={() => onToggleSelectForLabel(result)}
+                      aria-label={`選擇 ${result.cas_number} 用於列印標籤`}
                       className="w-4 h-4 rounded border-slate-500 text-purple-500 focus:ring-purple-500 bg-slate-700"
                     />
                   )}
@@ -191,21 +228,13 @@ export default function ResultsTable({
                                 <span className="text-xs text-emerald-400 mr-1" title="主要分類（預設）">●</span>
                               )}
                               {effective.pictograms?.map((pic, pIdx) => (
-                                <div
+                                <GHSImage
                                   key={pIdx}
-                                  className="group relative"
-                                  title={`${pic.code}: ${pic.name_zh}`}
-                                >
-                                  <img
-                                    src={GHS_IMAGES[pic.code]}
-                                    alt={pic.name_zh}
-                                    className="w-10 h-10 bg-white rounded"
-                                    onError={(e) => { e.target.style.display = "none"; e.target.insertAdjacentHTML("afterend", `<span class="inline-flex items-center justify-center w-10 h-10 bg-red-100 text-red-600 text-xs font-bold rounded border border-red-300">${pic.code}</span>`); }}
-                                  />
-                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                    {pic.code}: {pic.name_zh}
-                                  </div>
-                                </div>
+                                  code={pic.code}
+                                  name={pic.name_zh}
+                                  className="w-10 h-10"
+                                  showTooltip
+                                />
                               ))}
                               {effective.isCustom && (
                                 <button
@@ -227,6 +256,7 @@ export default function ResultsTable({
                                 <button
                                   onClick={() => onToggleOtherClassifications(result.cas_number)}
                                   className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                  aria-expanded={!!expandedOtherClassifications[result.cas_number]}
                                 >
                                   <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
                                   {allClassifications.length - 1} 種其他分類
@@ -243,17 +273,12 @@ export default function ResultsTable({
                                         <div key={clsIdx} className="flex gap-1 flex-wrap items-center group/item">
                                           <span className="text-xs text-slate-500 mr-1">○</span>
                                           {cls.pictograms?.map((pic, pIdx) => (
-                                            <div
+                                            <GHSImage
                                               key={pIdx}
-                                              className="group relative"
-                                              title={`${pic.code}: ${pic.name_zh}`}
-                                            >
-                                              <img
-                                                src={GHS_IMAGES[pic.code]}
-                                                alt={pic.name_zh}
-                                                className="w-8 h-8 bg-white rounded opacity-70"
-                                              />
-                                            </div>
+                                              code={pic.code}
+                                              name={pic.name_zh}
+                                              className="w-8 h-8 opacity-70"
+                                            />
                                           ))}
                                           <button
                                             onClick={() => onSetCustomClassification(result.cas_number, clsIdx)}

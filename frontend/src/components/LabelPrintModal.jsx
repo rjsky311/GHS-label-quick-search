@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   Tag, X, Target, ClipboardList, FileText, QrCode,
   BookOpen, FileSpreadsheet, Printer, Lightbulb,
@@ -11,17 +12,33 @@ export default function LabelPrintModal({
   onToggleSelectForLabel,
   onClose,
 }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="label-modal-title"
     >
       <div
-        className="bg-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="bg-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 id="label-modal-title" className="text-xl font-bold text-white flex items-center gap-2">
             <Tag className="w-5 h-5 text-purple-400" /> GHS 標籤列印
           </h2>
           <button

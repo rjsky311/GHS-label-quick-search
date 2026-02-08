@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Toaster } from "sonner";
@@ -24,6 +24,7 @@ import EmptyState from "@/components/EmptyState";
 import DetailModal from "@/components/DetailModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
 import Footer from "@/components/Footer";
+import SkeletonTable from "@/components/SkeletonTable";
 
 function App() {
   // ── State ──
@@ -43,6 +44,8 @@ function App() {
     orientation: "portrait",
   });
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
+  const [batchProgress, setBatchProgress] = useState(null);
+  const [resultFilter, setResultFilter] = useState("all");
 
   // ── Refs ──
   const searchInputRef = useRef(null);
@@ -84,6 +87,19 @@ function App() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0).length;
 
+  const filteredResults = useMemo(() => {
+    if (resultFilter === "all") return results;
+    return results.filter((r) => {
+      if (!r.found) return resultFilter === "all";
+      const effective = getEffectiveClassification(r);
+      const sw = effective?.signal_word;
+      if (resultFilter === "danger") return sw === "Danger";
+      if (resultFilter === "warning") return sw === "Warning";
+      if (resultFilter === "none") return !sw;
+      return true;
+    });
+  }, [results, resultFilter, getEffectiveClassification]);
+
   // ── Handlers ──
   const toggleOtherClassifications = (casNumber) => {
     setExpandedOtherClassifications((prev) => ({
@@ -92,8 +108,9 @@ function App() {
     }));
   };
 
-  const searchSingle = async () => {
-    if (!singleCas.trim()) {
+  const searchSingle = async (directCas) => {
+    const query = (directCas || singleCas).trim();
+    if (!query) {
       setError("請輸入 CAS 號碼");
       return;
     }
@@ -101,7 +118,7 @@ function App() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${API}/search/${encodeURIComponent(singleCas.trim())}`
+        `${API}/search/${encodeURIComponent(query)}`
       );
       setResults([response.data]);
       saveToHistory([response.data]);
@@ -132,10 +149,12 @@ function App() {
       return;
     }
 
+    setBatchProgress({ current: 0, total: casNumbers.length });
     try {
       const response = await axios.post(`${API}/search`, {
         cas_numbers: casNumbers,
       });
+      setBatchProgress({ current: casNumbers.length, total: casNumbers.length });
       setResults(response.data);
       saveToHistory(response.data);
     } catch (e) {
@@ -143,6 +162,7 @@ function App() {
       setError("批次查詢失敗，請檢查網路連線或稍後再試");
     } finally {
       setLoading(false);
+      setTimeout(() => setBatchProgress(null), 800);
     }
   };
 
@@ -187,6 +207,9 @@ function App() {
   // ── Render ──
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-amber-500 focus:text-white focus:rounded-lg">
+        跳至主要內容
+      </a>
       <Toaster position="top-right" theme="dark" richColors />
 
       <Header
@@ -218,7 +241,7 @@ function App() {
         />
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 py-6">
         <SearchSection
           activeTab={activeTab}
           singleCas={singleCas}
@@ -232,11 +255,19 @@ function App() {
           onSetBatchCas={setBatchCas}
           onSearchSingle={searchSingle}
           onSearchBatch={searchBatch}
+          history={history}
+          favorites={favorites}
+          batchProgress={batchProgress}
         />
 
-        {results.length > 0 && (
+        {loading && <SkeletonTable />}
+
+        {results.length > 0 && !loading && (
           <ResultsTable
-            results={results}
+            results={filteredResults}
+            totalCount={results.length}
+            resultFilter={resultFilter}
+            onSetResultFilter={setResultFilter}
             selectedForLabel={selectedForLabel}
             expandedOtherClassifications={expandedOtherClassifications}
             onOpenLabelModal={handleOpenLabelModal}

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { X } from "lucide-react";
 import { formatDate } from "@/utils/formatDate";
 
@@ -7,10 +8,21 @@ export default function HistorySidebar({
   onClearHistory,
   onSelectHistoryItem,
 }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="搜尋紀錄"
     >
       <div
         className="absolute right-0 top-0 h-full w-80 bg-slate-800 shadow-xl overflow-y-auto"

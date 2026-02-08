@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { Star, X } from "lucide-react";
-import { GHS_IMAGES } from "@/constants/ghs";
+import GHSImage from "@/components/GHSImage";
 
 export default function FavoritesSidebar({
   favorites,
@@ -9,10 +10,21 @@ export default function FavoritesSidebar({
   onViewDetail,
   onPrintLabel,
 }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="我的收藏"
     >
       <div
         className="absolute right-0 top-0 h-full w-96 bg-slate-800 shadow-xl overflow-y-auto"
@@ -69,13 +81,11 @@ export default function FavoritesSidebar({
                     {item.ghs_pictograms?.length > 0 && (
                       <div className="flex gap-1 mt-2">
                         {item.ghs_pictograms.map((pic, pIdx) => (
-                          <img
+                          <GHSImage
                             key={pIdx}
-                            src={GHS_IMAGES[pic.code]}
-                            alt={pic.name_zh}
-                            className="w-8 h-8 bg-white rounded"
-                            title={`${pic.code}: ${pic.name_zh}`}
-                            onError={(e) => { e.target.style.display = "none"; e.target.insertAdjacentHTML("afterend", `<span class="inline-flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 text-[10px] font-bold rounded border border-red-300">${pic.code}</span>`); }}
+                            code={pic.code}
+                            name={pic.name_zh}
+                            className="w-8 h-8"
                           />
                         ))}
                       </div>

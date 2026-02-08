@@ -1,4 +1,5 @@
-import { Search, ClipboardList, Loader2, X, AlertTriangle } from "lucide-react";
+import { Search, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
+import SearchAutocomplete from "@/components/SearchAutocomplete";
 
 export default function SearchSection({
   activeTab,
@@ -13,6 +14,9 @@ export default function SearchSection({
   onSetBatchCas,
   onSearchSingle,
   onSearchBatch,
+  history,
+  favorites,
+  batchProgress,
 }) {
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden mb-6">
@@ -49,26 +53,15 @@ export default function SearchSection({
                 輸入 CAS 號碼
               </label>
               <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={singleCas}
-                    onChange={(e) => onSetSingleCas(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && onSearchSingle()}
-                    placeholder="例如: 64-17-5"
-                    className="w-full px-4 py-3 pr-10 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono"
-                    data-testid="single-cas-input"
-                  />
-                  {singleCas && (
-                    <button
-                      onClick={() => onSetSingleCas("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+                <SearchAutocomplete
+                  value={singleCas}
+                  onChange={onSetSingleCas}
+                  onSearch={onSearchSingle}
+                  history={history}
+                  favorites={favorites}
+                  searchInputRef={searchInputRef}
+                  loading={loading}
+                />
                 <button
                   onClick={onSearchSingle}
                   disabled={loading}
@@ -140,6 +133,30 @@ export default function SearchSection({
                 清除
               </button>
             </div>
+
+            {/* Batch Progress Bar */}
+            {batchProgress && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>查詢進度</span>
+                  <span>{batchProgress.current === batchProgress.total ? "完成" : "處理中..."} ({batchProgress.current}/{batchProgress.total})</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      batchProgress.current === batchProgress.total
+                        ? "bg-green-500"
+                        : "bg-amber-500 progress-bar-animated"
+                    }`}
+                    style={{ width: batchProgress.current === batchProgress.total ? "100%" : "85%" }}
+                    role="progressbar"
+                    aria-valuenow={batchProgress.current}
+                    aria-valuemin={0}
+                    aria-valuemax={batchProgress.total}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 

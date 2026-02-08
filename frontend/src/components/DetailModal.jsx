@@ -1,7 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Star, X, Copy, LayoutGrid, Lightbulb, Tag, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { GHS_IMAGES } from "@/constants/ghs";
+import GHSImage from "@/components/GHSImage";
 
 export default function DetailModal({
   result,
@@ -15,11 +15,22 @@ export default function DetailModal({
   onClearCustomClassification,
   onPrintLabel,
 }) {
+  const dialogRef = useRef(null);
+
   const copyCAS = useCallback((cas) => {
     navigator.clipboard.writeText(cas).then(() => {
       toast.success(`已複製 ${cas}`);
     });
   }, []);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const effective = getEffectiveClassification(result);
   const allClassifications = [
@@ -37,14 +48,19 @@ export default function DetailModal({
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detail-modal-title"
     >
       <div
-        className="bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-slate-700 flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h2 id="detail-modal-title" className="text-xl font-bold text-white">
               {result.name_en}
             </h2>
             {result.name_zh && (
@@ -192,10 +208,10 @@ export default function DetailModal({
                       <div className="flex gap-3 flex-wrap">
                         {cls.pictograms?.map((pic, pIdx) => (
                           <div key={pIdx} className="text-center">
-                            <img
-                              src={GHS_IMAGES[pic.code]}
-                              alt={pic.name_zh}
-                              className={`w-14 h-14 bg-white rounded-lg ${!isSelected ? "opacity-70" : ""}`}
+                            <GHSImage
+                              code={pic.code}
+                              name={pic.name_zh}
+                              className={`w-14 h-14 ${!isSelected ? "opacity-70" : ""}`}
                             />
                             <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
                           </div>
