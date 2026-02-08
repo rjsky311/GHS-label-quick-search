@@ -54,7 +54,27 @@
 - 當化學品有多種 GHS 分類時，可選擇適用的分類
 - 自訂設定儲存於瀏覽器，不會遺失
 
-### 🌐 中文化學品名稱字典
+### 🌐 雙語介面
+- 繁體中文 / English 一鍵切換
+- 187 個翻譯 key，完整涵蓋所有介面文字
+- 瀏覽器自動偵測語言，手動切換後記憶偏好
+
+### 🔗 SDS 安全資料連結
+- PubChem Safety 頁面直連
+- ECHA 化學品搜尋連結
+- 在結果表格與詳細資訊中皆可快速存取
+
+### 📊 表格排序與篩選
+- 支援 CAS 號碼、化學品名稱、警示語、GHS 圖示數排序
+- 關鍵字即時篩選
+- 警示語（危險/警告）下拉篩選
+
+### ⌨️ 鍵盤快捷鍵
+- `Ctrl+K` 快速聚焦搜尋框
+- 方向鍵導航自動完成建議
+- `Enter` 直接觸發搜尋
+
+### 📚 中文化學品名稱字典
 - 內建 **1,707 個** CAS 號碼對應的中文名稱
 - 內建 **1,707 個** CAS 號碼對應的英文名稱
 - 內建 **1,861 個** 英文名稱對應的中文翻譯
@@ -66,12 +86,15 @@
 
 | 層級 | 技術 | 說明 |
 |------|------|------|
-| 前端 | React 19 + Tailwind CSS + Radix UI | 響應式使用者介面 |
-| 後端 | FastAPI (Python) | RESTful API 服務 |
+| 前端 | React 19 + Tailwind CSS 3.4 + Radix UI | 響應式使用者介面 |
+| UI 元件 | 13 自訂元件 + 46 個 shadcn/ui 原件 | lucide-react 圖示 |
+| 建置工具 | CRACO 7.1.0 (wrapping CRA) | `@` alias, ESLint |
+| 國際化 | react-i18next 14.x + i18next 23.x | 187 keys × 2 語言 |
+| 後端 | FastAPI (Python 3.11) | RESTful API 服務 |
 | 資料來源 | PubChem API | GHS 危害標示資料 |
 | 本地字典 | Python Dict | 中英文名稱對照 (1,707+ 筆) |
-| 快取 | cachetools (TTLCache) | 24 小時記憶體快取 |
-| 部署 | Zeabur (Docker) | 自動部署 |
+| 快取 | cachetools (TTLCache) | 24 小時記憶體快取 (最多 5,000 筆) |
+| 部署 | Zeabur (Docker + Static) | Git push 自動部署 |
 
 ---
 
@@ -80,26 +103,57 @@
 ```
 GHS-label-quick-search/
 ├── backend/
-│   ├── server.py              # FastAPI 主程式 (API、快取、PubChem 整合)
-│   ├── chemical_dict.py       # 化學品字典 (CAS/英文/中文對照)
-│   ├── requirements.txt       # Python 依賴套件
+│   ├── server.py              # FastAPI 主程式 (834 行, API、快取、PubChem 整合)
+│   ├── chemical_dict.py       # 化學品字典 (CAS/英文/中文對照, 5295 行)
+│   ├── requirements.txt       # Python 依賴套件 (11 個)
 │   ├── requirements-dev.txt   # 開發工具 (black, flake8, pytest 等)
-│   ├── Dockerfile             # Docker 容器設定
+│   ├── Dockerfile             # Docker 容器設定 (非 root 執行)
 │   └── .env.example           # 環境變數範本
 ├── frontend/
 │   ├── src/
-│   │   ├── App.js             # React 主元件
-│   │   ├── App.css            # 全域樣式
-│   │   ├── index.js           # 進入點 (含 ErrorBoundary)
-│   │   ├── components/
-│   │   │   └── ErrorBoundary.jsx  # 錯誤邊界元件
-│   │   └── hooks/
-│   │       ├── useSearchHistory.js  # 搜尋紀錄 Hook
-│   │       ├── useFavorites.js      # 收藏功能 Hook
-│   │       └── useCustomGHS.js      # 自訂 GHS 分類 Hook
+│   │   ├── App.js             # React 主元件 (366 行, 所有狀態)
+│   │   ├── index.js           # 進入點 (ErrorBoundary + i18n)
+│   │   ├── components/        # 13 個自訂元件
+│   │   │   ├── Header.jsx            # 頂部列 (收藏/紀錄/語言切換)
+│   │   │   ├── SearchSection.jsx     # 搜尋區塊 (單一/批次標籤)
+│   │   │   ├── SearchAutocomplete.jsx # 自動完成下拉選單
+│   │   │   ├── ResultsTable.jsx      # 結果表格 (排序/篩選/匯出/SDS)
+│   │   │   ├── DetailModal.jsx       # 詳細資訊 Modal
+│   │   │   ├── LabelPrintModal.jsx   # 標籤列印設定
+│   │   │   ├── FavoritesSidebar.jsx  # 收藏側邊欄
+│   │   │   ├── HistorySidebar.jsx    # 搜尋紀錄側邊欄
+│   │   │   ├── EmptyState.jsx        # 首頁快速開始
+│   │   │   ├── Footer.jsx            # 頁尾 (版本/聲明)
+│   │   │   ├── ErrorBoundary.jsx     # 錯誤邊界
+│   │   │   ├── SkeletonTable.jsx     # 載入骨架屏
+│   │   │   └── GHSImage.jsx          # GHS 圖示顯示
+│   │   ├── hooks/             # 6 個自訂 Hooks
+│   │   │   ├── useSearchHistory.js   # 搜尋紀錄 (localStorage, 上限 50)
+│   │   │   ├── useFavorites.js       # 收藏功能
+│   │   │   ├── useCustomGHS.js       # 自訂 GHS 分類
+│   │   │   ├── useLabelSelection.js  # 標籤勾選狀態
+│   │   │   ├── useResultSort.js      # 表格排序
+│   │   │   └── use-toast.js          # Toast 通知
+│   │   ├── utils/             # 4 個工具函式
+│   │   │   ├── exportData.js         # Excel/CSV 匯出
+│   │   │   ├── printLabels.js        # 標籤列印引擎 (4 版型)
+│   │   │   ├── sdsLinks.js           # SDS 安全資料連結產生器
+│   │   │   └── formatDate.js         # 日期格式化
+│   │   ├── i18n/              # 國際化
+│   │   │   ├── index.js              # i18next 初始化
+│   │   │   └── locales/
+│   │   │       ├── zh-TW.json        # 繁體中文 (187 keys)
+│   │   │       └── en.json           # English (187 keys)
+│   │   ├── constants/
+│   │   │   └── ghs.js               # BACKEND_URL, API, GHS_IMAGES
+│   │   └── components/ui/    # 46 個 shadcn/ui 元件
+│   ├── craco.config.js        # CRACO 設定 (@ alias, ESLint)
+│   ├── tailwind.config.js     # Tailwind CSS 設定
 │   ├── package.json           # Node.js 依賴套件
+│   ├── .npmrc                 # npm legacy-peer-deps
 │   └── .env.example           # 前端環境變數範本
-├── zeabur.yaml                # Zeabur 部署設定
+├── CLAUDE.md                  # Claude Code 專案上下文
+├── zeabur.yaml                # Zeabur 部署設定 (前後端 2 服務)
 └── README.md                  # 專案說明文件
 ```
 
@@ -360,6 +414,30 @@ curl https://ghs-backend.zeabur.app/api/health
 ---
 
 ## 版本更新紀錄
+
+### v1.6.0 (2026-02)
+- 🌐 **i18n 雙語系統**：繁體中文 / English 一鍵切換，187 個翻譯 key
+- 📊 **表格排序**：支援 CAS 號碼、名稱、警示語、GHS 圖示數（升序/降序切換）
+- 🔍 **表格篩選**：關鍵字即時篩選 + 警示語下拉篩選
+- 🔗 **SDS 安全資料連結**：PubChem Safety 頁面直連 + ECHA 化學品搜尋
+- 🐛 修復搜尋按鈕首次點擊無反應（rAF 延遲 mousedown handler）
+- 🐛 修復收藏詳細資訊點擊崩潰（補齊 favorite 物件遺漏欄位 + null fallback）
+- ⬇️ 降版 i18n 套件（23.x / 14.x / 7.x）解決 Zeabur npm peer dep 衝突
+
+### v1.5.0 (2026-02)
+- ⚡ 效能與使用者體驗優化
+- 🎨 互動動畫和載入狀態改善
+
+### v1.4.0 (2026-02)
+- 🏗️ **架構重構**：單體 App.js 拆分為 15 個模組
+- 📦 13 個 React 元件 + 6 個自訂 Hooks + 4 個工具函式
+- 📐 CRACO 整合，支援 `@` 路徑別名
+- 🎨 shadcn/ui 元件庫整合（46 個 UI 基礎元件）
+
+### v1.3.0 (2026-02)
+- 🎨 UI 現代化：深色主題全面翻新
+- 🏷️ 移除 Emergent 品牌標識
+- 🖨️ 修正標籤列印版面配置
 
 ### v1.2.0 (2026-02)
 - 🔒 安全性強化：CORS 限制、Dockerfile 非 root 使用者、批次查詢上限 100 筆
