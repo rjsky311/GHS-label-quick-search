@@ -143,6 +143,10 @@ User Browser
 
 ### Git History (key commits)
 ```
+f23258f fix: autocomplete dropdown clipped by overflow-hidden parent
+dc6f91c feat: add live name search autocomplete from backend API
+ebcf812 fix: change search focus shortcut from Ctrl+K to "/" key
+ebdfa0e docs: update CLAUDE.md for v1.7.0 + add .claude/ to .gitignore
 df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 0cf9826 test: add frontend unit tests Phase 2 (92 tests, 4 complex components)
 e45ec01 ci: add GitHub Actions CI workflow
@@ -155,7 +159,7 @@ a5653e5 v1.5.0: Performance + UX optimization
 ```
 
 ### Test Results
-- **Frontend**: 180+ tests, 16 test suites (Phase 1: 88 + Phase 2: 92)
+- **Frontend**: 188+ tests, 16 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete server search: 8)
 - **Backend**: 29 tests (name search + reverse dictionaries + API endpoints)
 - **CI**: GitHub Actions runs both on every push to main
 
@@ -177,16 +181,37 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] GitHub Actions CI/CD (frontend tests + build + backend tests)
 - [x] English/Chinese name search (backend resolve + /search-by-name/ endpoint + 29 tests)
 - [x] ECHA SDS link URL update → `chem.echa.europa.eu/substance-search`
+- [x] Search shortcut: "/" key (Ctrl+K fallback) — same as GitHub/YouTube
+- [x] Live name search autocomplete (debounced API + dedup + 8 tests)
+- [x] Fix autocomplete dropdown overflow-hidden clipping
 
 ## Roadmap / Pending Work
 
-### Medium Priority
-- [ ] Frontend name search UX (autocomplete dropdown calling /search-by-name/ endpoint)
-- [ ] Zeabur Dockerfile sync (make Zeabur use repo's Dockerfile instead of stored one)
-- [ ] Backend version evolution (match frontend feature growth)
+### 🔴 High Priority — Core UX
+| # | Feature | Description | Difficulty |
+|---|---------|-------------|------------|
+| 1 | **Chemical aliases / common names** | Add common aliases (酒精→乙醇, 漂白水→次氯酸鈉, etc.) to backend dictionary to improve search hit rate | Medium |
+| 2 | **Custom label fields** | Add lab name, date, batch number fields to label printing config (stored in localStorage) | Medium |
+| 3 | **Print popup blocker fix** | Browser blocks window.open popup — explore alternatives (iframe print, in-page preview) | Medium |
+| 4 | **Full-template font auto-sizing** | Dynamic font adjustment for "Full" label template when content is long | Low |
 
-### Low Priority / Nice to Have
-- [ ] PWA support (offline usage)
-- [ ] Performance monitoring (Sentry / LogRocket)
-- [ ] Dark/light theme toggle
-- [ ] Mobile-optimized label printing
+### 🟡 Medium Priority — Enhanced Features
+| # | Feature | Description | Difficulty |
+|---|---------|-------------|------------|
+| 5 | **Bilingual labels** | Show both Chinese + English names on same label | Low |
+| 6 | **Print quantity per chemical** | Allow "print X copies" per chemical in label print modal | Low |
+| 7 | **Save print templates** | Save frequently-used print settings as named templates | Medium |
+| 8 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
+| 9 | **Classification comparison table** | Side-by-side comparison of multiple GHS classifications for same chemical | Medium |
+
+### 🟢 Low Priority — Nice to Have
+| # | Feature | Description | Difficulty |
+|---|---------|-------------|------------|
+| 10 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
+| 11 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
+| 12 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
+| 13 | **PWA support** | Offline usage with service worker | High |
+| 14 | **Dark/light theme toggle** | Theme switcher | Medium |
+| 15 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
+| 16 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
+| 17 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
