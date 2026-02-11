@@ -1,6 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import SearchAutocomplete from '../SearchAutocomplete';
+import axios from 'axios';
+
+jest.mock('axios');
 
 // requestAnimationFrame mock — execute callback synchronously
 let rafSpy;
@@ -26,6 +29,13 @@ const defaultProps = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.useFakeTimers();
+  // Default: server returns empty results
+  axios.get.mockResolvedValue({ data: { results: [], query: '' } });
+});
+
+afterEach(() => {
+  jest.useRealTimers();
 });
 
 const favItems = [
@@ -54,7 +64,6 @@ describe('SearchAutocomplete', () => {
 
     it('does not show clear button when value is empty', () => {
       render(<SearchAutocomplete {...defaultProps} value="" />);
-      // No button besides the input itself
       const buttons = screen.queryAllByRole('button');
       expect(buttons).toHaveLength(0);
     });
@@ -113,13 +122,13 @@ describe('SearchAutocomplete', () => {
       render(<SearchAutocomplete {...defaultProps} value="chemical" history={manyItems} />);
       const input = screen.getByTestId('single-cas-input');
       fireEvent.focus(input);
+      // Local suggestions capped at 8; server results may add more
+      // but default mock returns empty, so should be exactly 8
       const options = screen.getAllByRole('option');
-      expect(options.length).toBeLessThanOrEqual(8);
+      expect(options).toHaveLength(8);
     });
 
     it('shows favorite label for items from favorites and history label for history', () => {
-      // Use a query that matches both Ethanol (favorite) and Acetone (history)
-      // "e" matches both "Ethanol" and "Acetone"
       render(
         <SearchAutocomplete
           {...defaultProps}
@@ -130,9 +139,7 @@ describe('SearchAutocomplete', () => {
       );
       const input = screen.getByTestId('single-cas-input');
       fireEvent.focus(input);
-      // Ethanol from favorites should show autocomplete.favorite key
       expect(screen.getByText('autocomplete.favorite')).toBeInTheDocument();
-      // Acetone from history should show autocomplete.history key
       expect(screen.getByText('autocomplete.history')).toBeInTheDocument();
     });
   });
@@ -236,6 +243,157 @@ describe('SearchAutocomplete', () => {
       expect(screen.getByRole('listbox')).toBeInTheDocument();
       fireEvent.keyDown(input, { key: 'Escape' });
       expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Server name search', () => {
+    const serverResults = [
+      { cas_number: '64-17-5', name_en: 'Ethanol', name_zh: '乙醇' },
+      { cas_number: '67-56-1', name_en: 'Methanol', name_zh: '甲醇' },
+      { cas_number: '71-36-3', name_en: '1-Butanol', name_zh: '正丁醇' },
+    ];
+
+    it('does not call API for CAS-like input', () => {
+      render(<SearchAutocomplete {...defaultProps} value="64-17" />);
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      act(() => { jest.advanceTimersByTime(500); });
+      expect(axios.get).not.toHaveBeenCalled();
+    });
+
+    it('does not call API for input shorter than 2 chars', () => {
+      render(<SearchAutocomplete {...defaultProps} value="a" />);
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      act(() => { jest.advanceTimersByTime(500); });
+      expect(axios.get).not.toHaveBeenCalled();
+    });
+
+    it('calls API after 300ms debounce for name input', () => {
+      render(<SearchAutocomplete {...defaultProps} value="ethanol" />);
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      // Before 300ms — no call yet
+      act(() => { jest.advanceTimersByTime(200); });
+      expect(axios.get).not.toHaveBeenCalled();
+
+      // After 300ms — call fires
+      act(() => { jest.advanceTimersByTime(100); });
+      expect(axios.get).toHaveBeenCalledTimes(1);
+      expect(axios.get).toHaveBeenCalledWith(
+        expect.stringContaining('/search-by-name/ethanol'),
+        expect.objectContaining({ signal: expect.any(Object) })
+      );
+    });
+
+    it('shows server results in dropdown below local results', async () => {
+      axios.get.mockResolvedValue({
+        data: { results: serverResults, query: 'ol' },
+      });
+
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="ol"
+          favorites={[favItems[0]]} // Ethanol matches "ol"
+        />
+      );
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      // Advance past debounce and flush promises
+      await act(async () => { jest.advanceTimersByTime(300); });
+
+      const options = screen.getAllByRole('option');
+      // Local: Ethanol (favorite); Server: Methanol + 1-Butanol (Ethanol deduped)
+      expect(options.length).toBe(3);
+      // First item should be local favorite
+      expect(options[0].textContent).toContain('autocomplete.favorite');
+      // Server items should show autocomplete.search badge
+      expect(options[1].textContent).toContain('autocomplete.search');
+    });
+
+    it('deduplicates server results already in local suggestions', async () => {
+      axios.get.mockResolvedValue({
+        data: { results: serverResults, query: 'ol' },
+      });
+
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="ol"
+          favorites={favItems} // Both Ethanol and Methanol in favorites
+        />
+      );
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      await act(async () => { jest.advanceTimersByTime(300); });
+
+      const options = screen.getAllByRole('option');
+      // Local: Ethanol + Methanol (favorites); Server: only 1-Butanol (other two deduped)
+      expect(options.length).toBe(3);
+      // Verify 1-Butanol appears as server result
+      const butanolOption = options.find((o) => o.textContent.includes('71-36-3'));
+      expect(butanolOption).toBeTruthy();
+      expect(butanolOption.textContent).toContain('autocomplete.search');
+    });
+
+    it('shows loading spinner while fetching', () => {
+      // Mock a pending promise
+      axios.get.mockReturnValue(new Promise(() => {}));
+
+      render(<SearchAutocomplete {...defaultProps} value="ethanol" />);
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      // Advance past debounce to trigger request
+      act(() => { jest.advanceTimersByTime(300); });
+
+      expect(screen.getByText('autocomplete.searching')).toBeInTheDocument();
+    });
+
+    it('clicking server result calls onChange and onSearch with CAS', async () => {
+      const onChange = jest.fn();
+      const onSearch = jest.fn();
+      axios.get.mockResolvedValue({
+        data: { results: [serverResults[2]], query: 'butanol' },
+      });
+
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="butanol"
+          onChange={onChange}
+          onSearch={onSearch}
+        />
+      );
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      await act(async () => { jest.advanceTimersByTime(300); });
+
+      const option = screen.getByText('71-36-3').closest('[role="option"]');
+      fireEvent.click(option);
+      expect(onChange).toHaveBeenCalledWith('71-36-3');
+      expect(onSearch).toHaveBeenCalledWith('71-36-3');
+    });
+
+    it('hides server results on API error', async () => {
+      axios.get.mockRejectedValue(new Error('Network error'));
+
+      render(<SearchAutocomplete {...defaultProps} value="ethanol" />);
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      await act(async () => { jest.advanceTimersByTime(300); });
+
+      // No crash, no server results shown
+      expect(screen.queryByText('autocomplete.search')).not.toBeInTheDocument();
+      expect(screen.queryByText('autocomplete.searching')).not.toBeInTheDocument();
     });
   });
 });

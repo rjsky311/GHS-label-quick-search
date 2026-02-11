@@ -29,6 +29,8 @@
 
   "autocomplete.favorite": "Fav",
   "autocomplete.history": "History",
+  "autocomplete.search": "Search",
+  "autocomplete.searching": "Searching...",
 
   "results.title": "Results",
   "results.summary": "{{total}} total, {{found}} found",

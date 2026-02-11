@@ -29,6 +29,8 @@
 
   "autocomplete.favorite": "收藏",
   "autocomplete.history": "紀錄",
+  "autocomplete.search": "搜尋",
+  "autocomplete.searching": "搜尋中...",
 
   "results.title": "查詢結果",
   "results.summary": "共 {{total}} 筆，成功 {{found}} 筆",
