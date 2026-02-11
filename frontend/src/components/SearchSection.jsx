@@ -22,8 +22,8 @@ export default function SearchSection({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden mb-6">
-      <div className="flex border-b border-slate-700">
+    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 mb-6">
+      <div className="flex border-b border-slate-700 rounded-t-2xl overflow-hidden">
         <button
           onClick={() => onSetActiveTab("single")}
           className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
