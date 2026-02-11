@@ -83,3 +83,6 @@ android-sdk/
 *.env
 *.env.*
 !*.env.example
+
+# Claude Code sessions
+.claude/
