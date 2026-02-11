@@ -51,3 +51,6 @@ jobs:
 
       - name: Syntax check
         run: python -m py_compile server.py
+
+      - name: Run tests
+        run: python -m pytest test_name_search.py -v

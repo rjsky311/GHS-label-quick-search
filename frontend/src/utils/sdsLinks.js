@@ -11,6 +11,6 @@ export function getPubChemSDSUrl(cid) {
 
 export function getECHASearchUrl(cas) {
   return cas
-    ? `https://echa.europa.eu/search-for-chemicals/-/search/?q=${encodeURIComponent(cas)}`
+    ? `https://chem.echa.europa.eu/substance-search?searchText=${encodeURIComponent(cas)}`
     : null;
 }

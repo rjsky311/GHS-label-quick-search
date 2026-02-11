@@ -20,7 +20,7 @@ import re
 from cachetools import TTLCache
 
 # Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
-from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED
+from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED, EN_TO_CAS, ZH_TO_CAS
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -224,6 +224,49 @@ def normalize_cas(cas: str) -> str:
                 cas = f"{first}-{middle}-{check}"
     
     return cas
+
+
+def resolve_name_to_cas(query: str) -> Optional[str]:
+    """Resolve English or Chinese chemical name to CAS number.
+    Returns the first matching CAS number, or None.
+    Priority: exact Chinese → exact English → English name contains query (unique) →
+              Chinese name contains query (unique) → unique prefix English → unique prefix Chinese
+    """
+    q = query.strip()
+    if not q:
+        return None
+
+    # Try exact Chinese name match
+    if q in ZH_TO_CAS:
+        return ZH_TO_CAS[q]
+
+    # Try exact English name match (case-insensitive)
+    q_lower = q.lower()
+    if q_lower in EN_TO_CAS:
+        return EN_TO_CAS[q_lower]
+
+    # Try English names containing the query as a word boundary match
+    # e.g., "Methanol" matches "Methyl alcohol (Methanol)"
+    en_contains = []
+    for name, cas in EN_TO_CAS.items():
+        # Check if query appears as a word (bounded by space, parens, or start/end)
+        if re.search(r'(?:^|[\s(])' + re.escape(q_lower) + r'(?:$|[\s)])', name):
+            en_contains.append(cas)
+    if len(en_contains) == 1:
+        return en_contains[0]
+
+    # Try partial match (prefix) — English (case-insensitive)
+    en_prefix = [cas for name, cas in EN_TO_CAS.items() if name.startswith(q_lower)]
+    if len(en_prefix) == 1:
+        return en_prefix[0]
+
+    # Try partial match (prefix) — Chinese
+    zh_prefix = [cas for name, cas in ZH_TO_CAS.items() if name.startswith(q)]
+    if len(zh_prefix) == 1:
+        return zh_prefix[0]
+
+    return None
+
 
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     """
@@ -700,10 +743,71 @@ async def search_chemicals(query: CASQuery):
             await asyncio.sleep(0.5)
     return results
 
+@api_router.get("/search-by-name/{query}")
+async def search_by_name(query: str):
+    """Search for chemicals by English or Chinese name.
+    Returns list of matching {cas_number, name_en, name_zh} (max 20).
+    Used for autocomplete / name lookup before full GHS search.
+    """
+    q = query.strip()
+    if not q or len(q) < 2:
+        return {"results": [], "query": q}
+
+    q_lower = q.lower()
+    matches = []
+    seen_cas = set()
+
+    # Chinese name matches (substring)
+    for name, cas in ZH_TO_CAS.items():
+        if q in name and cas not in seen_cas:
+            seen_cas.add(cas)
+            matches.append({
+                "cas_number": cas,
+                "name_en": CAS_TO_EN.get(cas, ""),
+                "name_zh": name,
+            })
+
+    # English name matches (case-insensitive substring)
+    for name, cas in EN_TO_CAS.items():
+        if q_lower in name and cas not in seen_cas:
+            seen_cas.add(cas)
+            matches.append({
+                "cas_number": cas,
+                "name_en": CAS_TO_EN.get(cas, ""),
+                "name_zh": CAS_TO_ZH.get(cas, ""),
+            })
+
+    # Sort: exact match first, then by name length (shorter = more relevant)
+    matches.sort(key=lambda m: (
+        0 if m["name_en"].lower() == q_lower or m["name_zh"] == q else 1,
+        len(m["name_en"])
+    ))
+
+    return {"results": matches[:20], "query": q}
+
+
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
 async def search_single_chemical(cas_number: str):
-    """Search for a single chemical by CAS number"""
-    return await search_chemical(cas_number, shared_http_client)
+    """Search by CAS number or chemical name.
+    Auto-detects whether input is a CAS number or name."""
+    query = cas_number.strip()
+
+    # Check if it looks like a CAS number (digits and hyphens only)
+    if re.match(r'^[\d-]+$', query):
+        return await search_chemical(query, shared_http_client)
+
+    # Try to resolve name to CAS
+    resolved_cas = resolve_name_to_cas(query)
+    if resolved_cas:
+        return await search_chemical(resolved_cas, shared_http_client)
+
+    # Not found by name
+    return ChemicalResult(
+        cas_number=query,
+        found=False,
+        error=f"No chemical found for name: {query}"
+    )
+
 
 @api_router.post("/export/xlsx")
 async def export_xlsx(request: ExportRequest):

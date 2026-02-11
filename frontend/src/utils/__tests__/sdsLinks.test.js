@@ -24,7 +24,7 @@ describe('getECHASearchUrl', () => {
   it('returns correct URL for a valid CAS number', () => {
     const url = getECHASearchUrl('64-17-5');
     expect(url).toBe(
-      'https://echa.europa.eu/search-for-chemicals/-/search/?q=64-17-5'
+      'https://chem.echa.europa.eu/substance-search?searchText=64-17-5'
     );
   });
 

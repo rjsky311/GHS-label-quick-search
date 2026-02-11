@@ -5293,3 +5293,13 @@ CHEMICAL_NAMES_ZH_EXPANDED = {
     "water": "水",
     "xylene": "二甲苯",
 }
+
+# ============================================================
+# Reverse lookup dictionaries (auto-generated from above)
+# ============================================================
+
+# English name (lowercase) → CAS number
+EN_TO_CAS = {name.lower(): cas for cas, name in CAS_TO_EN.items()}
+
+# Chinese name → CAS number
+ZH_TO_CAS = {name: cas for cas, name in CAS_TO_ZH.items()}
