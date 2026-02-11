@@ -74,10 +74,23 @@ function App() {
     clearLabelSelection,
   } = useLabelSelection();
 
-  // ── Keyboard Shortcut: Ctrl+K ──
+  // ── Keyboard Shortcut: "/" or Ctrl+K to focus search ──
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (
+        e.key === "/" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(
+          document.activeElement?.tagName
+        ) &&
+        !document.activeElement?.isContentEditable
+      ) {
         e.preventDefault();
         searchInputRef.current?.focus();
       }

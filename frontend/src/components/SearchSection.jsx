@@ -83,7 +83,7 @@ export default function SearchSection({
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                {t("search.inputHint")}　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">Ctrl+K</kbd>
+                {t("search.inputHint")}　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">/</kbd>
               </p>
             </div>
           </div>
