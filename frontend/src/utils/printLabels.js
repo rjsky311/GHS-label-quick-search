@@ -117,6 +117,27 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return `<div class="custom-fields">${fields.join(" ｜ ")}</div>`;
   };
 
+  // Render name section based on nameDisplay setting
+  const renderNameSection = (effectiveChem) => {
+    const nd = labelConfig.nameDisplay || "both";
+    let nameHtml = "";
+    if (nd === "en" || nd === "both") {
+      nameHtml += `<div class="name-en">${effectiveChem.name_en || ""}</div>`;
+    }
+    if (nd === "zh") {
+      // Chinese-only mode: use Chinese name, fallback to English if unavailable
+      const displayName = effectiveChem.name_zh || effectiveChem.name_en || "";
+      nameHtml += `<div class="name-en">${displayName}</div>`;
+    } else if (nd === "both" && effectiveChem.name_zh) {
+      nameHtml += `<div class="name-zh">${effectiveChem.name_zh}</div>`;
+    }
+    return `<div class="name-section">
+      ${nameHtml}
+      <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+      ${renderCustomFields()}
+    </div>`;
+  };
+
   // Template generators with FIXED LAYOUT
   const templates = {
     // 版型 1 - 圖示版
@@ -129,12 +150,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       return `
         <div class="label">
           <div class="label-top">
-            <div class="name-section">
-              <div class="name-en">${effectiveChem.name_en || ""}</div>
-              ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${effectiveChem.cas_number}</div>
-              ${renderCustomFields()}
-            </div>
+            ${renderNameSection(effectiveChem)}
           </div>
           <div class="label-middle">
             ${pictograms.length > 0 ? `
@@ -162,12 +178,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       return `
         <div class="label">
           <div class="label-top">
-            <div class="name-section">
-              <div class="name-en">${effectiveChem.name_en || ""}</div>
-              ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${effectiveChem.cas_number}</div>
-              ${renderCustomFields()}
-            </div>
+            ${renderNameSection(effectiveChem)}
           </div>
           <div class="label-middle">
             <div class="middle-row">
@@ -200,12 +211,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       return `
         <div class="label label-full">
           <div class="label-top">
-            <div class="name-section">
-              <div class="name-en">${effectiveChem.name_en || ""}</div>
-              ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${effectiveChem.cas_number}</div>
-              ${renderCustomFields()}
-            </div>
+            ${renderNameSection(effectiveChem)}
           </div>
           <div class="label-middle compact">
             <div class="middle-row">
@@ -239,12 +245,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       return `
         <div class="label label-qr">
           <div class="qr-left">
-            <div class="name-section">
-              <div class="name-en">${effectiveChem.name_en || ""}</div>
-              ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
-              <div class="cas">CAS: ${effectiveChem.cas_number}</div>
-              ${renderCustomFields()}
-            </div>
+            ${renderNameSection(effectiveChem)}
             ${pictograms.length > 0 ? `
               <div class="pictograms qr-pics">
                 ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}

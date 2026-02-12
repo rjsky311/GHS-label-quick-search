@@ -323,6 +323,49 @@ describe('printLabels', () => {
     });
   });
 
+  describe('name display modes', () => {
+    it('shows both names by default (nameDisplay: "both")', () => {
+      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'both' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Ethanol');
+      expect(html).toContain('乙醇');
+    });
+
+    it('shows only English name when nameDisplay is "en"', () => {
+      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'en' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Ethanol');
+      expect(html).not.toContain('乙醇');
+    });
+
+    it('shows only Chinese name when nameDisplay is "zh"', () => {
+      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'zh' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('乙醇');
+      expect(html).not.toContain('Ethanol');
+    });
+
+    it('falls back to English when nameDisplay is "zh" but no Chinese name', () => {
+      const enOnlyChem = { ...mockChemical, name_zh: '' };
+      printLabels([enOnlyChem], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'zh' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Ethanol');
+    });
+
+    it('respects nameDisplay across all 4 templates', () => {
+      ['icon', 'standard', 'full', 'qrcode'].forEach((template) => {
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        getByIdSpy.mockReturnValue(null);
+
+        printLabels([mockChemical], { size: 'medium', template, orientation: 'portrait', nameDisplay: 'en' }, {});
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain('Ethanol');
+        expect(html).not.toContain('乙醇');
+      });
+    });
+  });
+
   describe('custom GHS settings', () => {
     it('uses alternate classification when customGHSSettings specifies index', () => {
       const chemWithAlternate = {

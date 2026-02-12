@@ -46,6 +46,7 @@ function App() {
     size: "medium",
     template: "standard",
     orientation: "portrait",
+    nameDisplay: "both",
   });
   // Custom label fields — persisted to localStorage
   const [customLabelFields, setCustomLabelFields] = useState(() => {

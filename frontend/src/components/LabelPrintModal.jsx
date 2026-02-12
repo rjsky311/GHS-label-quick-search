@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Tag, X, Target, ClipboardList, FileText, QrCode,
-  BookOpen, FileSpreadsheet, Printer, Lightbulb,
+  BookOpen, FileSpreadsheet, Printer, Lightbulb, Languages,
 } from "lucide-react";
 
 export default function LabelPrintModal({
@@ -164,6 +164,36 @@ export default function LabelPrintModal({
                     <span className="font-medium">{t(orient.labelKey)}</span>
                   </div>
                   <div className="text-xs opacity-70">{t(orient.descKey)}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Name Display Mode */}
+          <div>
+            <h3 className="text-sm font-medium text-slate-400 mb-3">
+              {t("label.nameDisplay")}
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "both", labelKey: "label.nameBoth", descKey: "label.nameBothDesc", icon: <Languages className="w-4 h-4" /> },
+                { value: "en", labelKey: "label.nameEn", icon: <span className="text-sm font-bold">EN</span> },
+                { value: "zh", labelKey: "label.nameZh", icon: <span className="text-sm font-bold">中</span> },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onLabelConfigChange({ ...labelConfig, nameDisplay: opt.value })}
+                  className={`p-3 rounded-lg border-2 transition-colors ${
+                    labelConfig.nameDisplay === opt.value
+                      ? "border-green-500 bg-green-500/10 text-green-400"
+                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 justify-center">
+                    {opt.icon}
+                    <span className="font-medium">{t(opt.labelKey)}</span>
+                  </div>
+                  {opt.descKey && <div className="text-xs opacity-70 mt-1">{t(opt.descKey)}</div>}
                 </button>
               ))}
             </div>
