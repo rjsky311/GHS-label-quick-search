@@ -6,8 +6,12 @@ import axios from 'axios';
 jest.mock('axios');
 
 // requestAnimationFrame mock — execute callback synchronously
+// jsdom on CI may not have requestAnimationFrame; define it before spying
 let rafSpy;
 beforeEach(() => {
+  if (!window.requestAnimationFrame) {
+    window.requestAnimationFrame = (cb) => setTimeout(cb, 0);
+  }
   rafSpy = jest.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
     cb();
     return 0;
