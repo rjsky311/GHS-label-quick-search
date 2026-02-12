@@ -129,7 +129,7 @@
   "label.selectedCount": "已選擇 {{count}} 個化學品",
   "label.noneSelected": "尚未選擇任何化學品",
   "label.pictogramCount": "({{count}} 個圖示)",
-  "label.previewHint": "點擊「列印標籤」後會開啟預覽視窗，您可以在列印前確認標籤樣式。",
+  "label.previewHint": "點擊「列印標籤」後會開啟列印對話框，您可以在列印預覽中確認標籤樣式。",
   "label.printBtn": "列印標籤 ({{count}} 張)",
   "label.cancel": "取消",
 

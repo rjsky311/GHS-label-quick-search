@@ -9,7 +9,17 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
   if (selectedForLabel.length === 0) return;
   const t = i18n.t.bind(i18n);
 
-  const printWindow = window.open("", "_blank");
+  // Remove any previous print iframe
+  const existingFrame = document.getElementById("ghs-print-frame");
+  if (existingFrame) existingFrame.remove();
+
+  // Create hidden iframe (avoids popup blocker issues with window.open)
+  const iframe = document.createElement("iframe");
+  iframe.id = "ghs-print-frame";
+  iframe.style.cssText =
+    "position:fixed;right:0;bottom:0;width:0;height:0;border:none;opacity:0;pointer-events:none;";
+  document.body.appendChild(iframe);
+
   const isLandscape = labelConfig.orientation === "landscape";
 
   // Size configurations
@@ -518,43 +528,42 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
     }
   `;
 
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>${t("print.title")}</title>
-      <style>${styles}</style>
-    </head>
-    <body>
-      ${pagesHtml}
-      <script>
-        // Wait for images to load before printing
-        window.onload = function() {
-          const images = document.querySelectorAll('img');
-          let loaded = 0;
-          const total = images.length;
+  // Write content to hidden iframe
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t("print.title")}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`
+  );
+  iframeDoc.close();
 
-          if (total === 0) {
-            setTimeout(() => window.print(), 300);
-            return;
-          }
+  // Wait for images to load, then trigger print
+  const images = iframeDoc.querySelectorAll("img");
+  let loaded = 0;
+  const total = images.length;
 
-          images.forEach(img => {
-            if (img.complete) {
-              loaded++;
-              if (loaded === total) setTimeout(() => window.print(), 300);
-            } else {
-              img.onload = img.onerror = function() {
-                loaded++;
-                if (loaded === total) setTimeout(() => window.print(), 300);
-              };
-            }
-          });
-        };
-      </script>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
+  const triggerPrint = () => {
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      // Clean up iframe after print dialog closes
+      setTimeout(() => iframe.remove(), 1000);
+    }, 300);
+  };
+
+  if (total === 0) {
+    triggerPrint();
+    return;
+  }
+
+  images.forEach((img) => {
+    if (img.complete) {
+      loaded++;
+      if (loaded === total) triggerPrint();
+    } else {
+      img.onload = img.onerror = () => {
+        loaded++;
+        if (loaded === total) triggerPrint();
+      };
+    }
+  });
 }

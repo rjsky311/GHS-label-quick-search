@@ -129,7 +129,7 @@
   "label.selectedCount": "{{count}} chemical(s) selected",
   "label.noneSelected": "No chemicals selected",
   "label.pictogramCount": "({{count}} pictograms)",
-  "label.previewHint": "A preview window will open after clicking \"Print Labels\". You can verify the layout before printing.",
+  "label.previewHint": "Click \"Print Labels\" to open the print dialog. You can verify the layout in the print preview.",
   "label.printBtn": "Print Labels ({{count}})",
   "label.cancel": "Cancel",
 
