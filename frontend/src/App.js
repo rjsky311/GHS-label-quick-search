@@ -10,6 +10,7 @@ import useFavorites from "@/hooks/useFavorites";
 import useCustomGHS from "@/hooks/useCustomGHS";
 import useLabelSelection from "@/hooks/useLabelSelection";
 import useResultSort from "@/hooks/useResultSort";
+import usePrintTemplates from "@/hooks/usePrintTemplates";
 
 // Constants & Utils
 import { API } from "@/constants/ghs";
@@ -83,6 +84,12 @@ function App() {
     selectAllForLabel,
     clearLabelSelection,
   } = useLabelSelection();
+  const { templates: printTemplates, saveTemplate, deleteTemplate } = usePrintTemplates();
+
+  const handleLoadTemplate = useCallback((template) => {
+    setLabelConfig(template.labelConfig);
+    setCustomLabelFields(template.customLabelFields);
+  }, []);
 
   // Persist custom label fields to localStorage
   useEffect(() => {
@@ -385,6 +392,10 @@ function App() {
           onLabelQuantitiesChange={setLabelQuantities}
           onPrintLabels={handlePrintLabels}
           onToggleSelectForLabel={toggleSelectForLabel}
+          printTemplates={printTemplates}
+          onSaveTemplate={(name) => saveTemplate(name, labelConfig, customLabelFields)}
+          onLoadTemplate={handleLoadTemplate}
+          onDeleteTemplate={deleteTemplate}
           onClose={() => setShowLabelModal(false)}
         />
       )}

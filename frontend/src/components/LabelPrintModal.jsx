@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   Tag, X, Target, ClipboardList, FileText, QrCode,
   BookOpen, FileSpreadsheet, Printer, Lightbulb, Languages,
+  Bookmark, Check, Plus,
 } from "lucide-react";
 
 export default function LabelPrintModal({
@@ -15,10 +17,16 @@ export default function LabelPrintModal({
   onLabelQuantitiesChange,
   onPrintLabels,
   onToggleSelectForLabel,
+  printTemplates = [],
+  onSaveTemplate,
+  onLoadTemplate,
+  onDeleteTemplate,
   onClose,
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
+  const [showSaveInput, setShowSaveInput] = useState(false);
+  const [templateName, setTemplateName] = useState("");
 
   useEffect(() => {
     dialogRef.current?.focus();
@@ -53,6 +61,109 @@ export default function LabelPrintModal({
           >
             <X className="w-6 h-6" />
           </button>
+        </div>
+
+        {/* Quick Templates Section */}
+        <div className="px-6 pt-4 pb-3 border-b border-slate-700">
+          <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center gap-1.5">
+            <Bookmark className="w-3.5 h-3.5 text-purple-400" /> {t("label.quickTemplates")}
+          </h3>
+          {printTemplates.length === 0 && !showSaveInput ? (
+            <p className="text-xs text-slate-500">{t("label.noTemplates")}</p>
+          ) : (
+            <div className="flex gap-2 flex-wrap">
+              {printTemplates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  className="group flex items-center gap-1 px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-300 hover:border-purple-500 hover:text-purple-400 cursor-pointer transition-colors"
+                >
+                  <span
+                    onClick={() => {
+                      onLoadTemplate(tpl);
+                      toast.success(t("label.loadTemplateSuccess", { name: tpl.name }));
+                    }}
+                  >
+                    {tpl.name}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(t("label.deleteTemplateConfirm", { name: tpl.name }))) {
+                        onDeleteTemplate(tpl.id);
+                        toast.success(t("label.deleteTemplateSuccess"));
+                      }
+                    }}
+                    className="ml-1 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Save current settings */}
+          <div className="mt-2">
+            {!showSaveInput ? (
+              printTemplates.length < 10 ? (
+                <button
+                  onClick={() => setShowSaveInput(true)}
+                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> {t("label.saveCurrentBtn")}
+                </button>
+              ) : (
+                <p className="text-xs text-amber-500">{t("label.templateLimitHint")}</p>
+              )
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value.slice(0, 30))}
+                  placeholder={t("label.templateNamePlaceholder")}
+                  className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-sm text-slate-300 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && templateName.trim()) {
+                      const success = onSaveTemplate(templateName.trim());
+                      if (success) {
+                        toast.success(t("label.saveTemplateSuccess", { name: templateName.trim() }));
+                        setTemplateName("");
+                        setShowSaveInput(false);
+                      }
+                    }
+                    if (e.key === "Escape") {
+                      setTemplateName("");
+                      setShowSaveInput(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (!templateName.trim()) {
+                      toast.error(t("label.templateNameRequired"));
+                      return;
+                    }
+                    const success = onSaveTemplate(templateName.trim());
+                    if (success) {
+                      toast.success(t("label.saveTemplateSuccess", { name: templateName.trim() }));
+                      setTemplateName("");
+                      setShowSaveInput(false);
+                    }
+                  }}
+                  className="p-1.5 rounded bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => { setTemplateName(""); setShowSaveInput(false); }}
+                  className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
