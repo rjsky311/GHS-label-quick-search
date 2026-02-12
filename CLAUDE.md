@@ -77,8 +77,8 @@ User Browser
 
 ### i18n (`src/i18n/`)
 - `index.js` — i18next init with LanguageDetector, fallback zh-TW
-- `locales/zh-TW.json` — 207 keys (Traditional Chinese)
-- `locales/en.json` — 207 keys (English)
+- `locales/zh-TW.json` — 210 keys (Traditional Chinese)
+- `locales/en.json` — 210 keys (English)
 - Language stored in localStorage key `ghs_language`
 
 ### Build
@@ -146,6 +146,7 @@ User Browser
 
 ### Git History (key commits)
 ```
+94179e4 feat: add B&W / Color print mode toggle for GHS pictograms
 daa462a feat: add classification comparison table (same-chemical + cross-chemical)
 b4ea2f7 docs: update CLAUDE.md for save print templates feature
 581c7c8 feat: add save print templates (localStorage, max 10 presets)
@@ -165,7 +166,7 @@ a5653e5 v1.5.0: Performance + UX optimization
 ```
 
 ### Test Results
-- **Frontend**: 279+ tests, 20 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 46 + usePrintTemplates: 12 + comparison: 30)
+- **Frontend**: 282+ tests, 20 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 49 + usePrintTemplates: 12 + comparison: 30)
 - **Backend**: 59 tests (name search + reverse dictionaries + aliases + API endpoints)
 - **CI**: GitHub Actions runs both on every push to main
 
@@ -198,22 +199,18 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] Full-template font auto-sizing (4-tier system based on hazard count × label size, 11 new tests)
 - [x] Save print templates (localStorage max 10 presets, usePrintTemplates hook, 12 new tests)
 - [x] Classification comparison table — same-chemical (Part A) + cross-chemical (Part B), 30 new tests
+- [x] B&W / Color print option — colorMode toggle in labelConfig, CSS grayscale filter, 3 new tests
 
 ## Roadmap / Pending Work
-
-### 🟡 Medium Priority — Enhanced Features
-| # | Feature | Description | Difficulty |
-|---|---------|-------------|------------|
-| 1 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
 
 ### 🟢 Low Priority — Nice to Have
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
-| 2 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
-| 3 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
-| 4 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
-| 5 | **PWA support** | Offline usage with service worker | High |
-| 6 | **Dark/light theme toggle** | Theme switcher | Medium |
-| 7 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
-| 8 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
-| 9 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
+| 1 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
+| 2 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
+| 3 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
+| 4 | **PWA support** | Offline usage with service worker | High |
+| 5 | **Dark/light theme toggle** | Theme switcher | Medium |
+| 6 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
+| 7 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
+| 8 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
