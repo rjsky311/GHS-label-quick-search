@@ -142,6 +142,8 @@
   "label.batchNumber": "批號",
   "label.batchNumberPlaceholder": "如：B-2026-001",
   "label.customFieldsHint": "選填，留空則不會印在標籤上",
+  "label.totalLabels": "共 {{count}} 張標籤",
+  "label.quantityMax": "每種最多 20 張",
   "label.previewHint": "點擊「列印標籤」後會開啟列印對話框，您可以在列印預覽中確認標籤樣式。",
   "label.printBtn": "列印標籤 ({{count}} 張)",
   "label.cancel": "取消",

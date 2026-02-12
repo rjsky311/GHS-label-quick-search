@@ -11,6 +11,8 @@ export default function LabelPrintModal({
   onLabelConfigChange,
   customLabelFields,
   onCustomLabelFieldsChange,
+  labelQuantities,
+  onLabelQuantitiesChange,
   onPrintLabels,
   onToggleSelectForLabel,
   onClose,
@@ -232,10 +234,16 @@ export default function LabelPrintModal({
               landscape: { small: 16, medium: 9, large: 4 },
             };
             const perPage = perPageMap[labelConfig.orientation][labelConfig.size];
-            const estPages = Math.ceil(selectedForLabel.length / perPage);
+            const totalLabels = selectedForLabel.reduce(
+              (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1), 0
+            );
+            const estPages = Math.ceil(totalLabels / perPage);
             return (
               <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
                 <FileSpreadsheet className="w-4 h-4 text-blue-400 inline mr-1" /> {t("label.estPages", { pages: estPages, perPage })}
+                {totalLabels !== selectedForLabel.length && (
+                  <span className="ml-2 text-xs text-slate-500">{t("label.totalLabels", { count: totalLabels })}</span>
+                )}
                 {labelConfig.size === "small" && <span className="ml-2 text-xs text-slate-500">{t("label.smallSizeHint")}</span>}
               </div>
             );
@@ -270,12 +278,36 @@ export default function LabelPrintModal({
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={() => onToggleSelectForLabel(chem)}
-                      className="text-slate-400 hover:text-red-400 px-2"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Per-chemical quantity controls */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            const cur = labelQuantities?.[chem.cas_number] || 1;
+                            if (cur > 1) onLabelQuantitiesChange({ ...labelQuantities, [chem.cas_number]: cur - 1 });
+                          }}
+                          disabled={(labelQuantities?.[chem.cas_number] || 1) <= 1}
+                          className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                        >−</button>
+                        <span className="w-6 text-center text-sm text-white">
+                          {labelQuantities?.[chem.cas_number] || 1}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const cur = labelQuantities?.[chem.cas_number] || 1;
+                            if (cur < 20) onLabelQuantitiesChange({ ...labelQuantities, [chem.cas_number]: cur + 1 });
+                          }}
+                          disabled={(labelQuantities?.[chem.cas_number] || 1) >= 20}
+                          className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                        >+</button>
+                      </div>
+                      <button
+                        onClick={() => onToggleSelectForLabel(chem)}
+                        className="text-slate-400 hover:text-red-400 px-2"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -295,7 +327,7 @@ export default function LabelPrintModal({
               disabled={selectedForLabel.length === 0}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <Printer className="w-4 h-4" /> {t("label.printBtn", { count: selectedForLabel.length })}
+              <Printer className="w-4 h-4" /> {t("label.printBtn", { count: selectedForLabel.reduce((sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1), 0) })}
             </button>
             <button
               onClick={onClose}

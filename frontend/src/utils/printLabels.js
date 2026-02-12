@@ -5,7 +5,7 @@ export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 }
 
-export function printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields = {}) {
+export function printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields = {}, labelQuantities = {}) {
   if (selectedForLabel.length === 0) return;
   const t = i18n.t.bind(i18n);
 
@@ -70,10 +70,17 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     },
   }[labelConfig.orientation][labelConfig.size];
 
+  // Expand chemicals by quantity
+  const expandedLabels = [];
+  selectedForLabel.forEach((chem) => {
+    const qty = labelQuantities[chem.cas_number] || 1;
+    for (let i = 0; i < qty; i++) expandedLabels.push(chem);
+  });
+
   // Split labels into page-sized chunks
   const pages = [];
-  for (let i = 0; i < selectedForLabel.length; i += gridConfig.perPage) {
-    pages.push(selectedForLabel.slice(i, i + gridConfig.perPage));
+  for (let i = 0; i < expandedLabels.length; i += gridConfig.perPage) {
+    pages.push(expandedLabels.slice(i, i + gridConfig.perPage));
   }
   const totalPages = pages.length;
 

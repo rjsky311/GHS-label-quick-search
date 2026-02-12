@@ -129,6 +129,8 @@
   "label.selectedCount": "{{count}} chemical(s) selected",
   "label.noneSelected": "No chemicals selected",
   "label.pictogramCount": "({{count}} pictograms)",
+  "label.totalLabels": "{{count}} label(s) total",
+  "label.quantityMax": "Max 20 per chemical",
   "label.previewHint": "Click \"Print Labels\" to open the print dialog. You can verify the layout in the print preview.",
   "label.nameDisplay": "Name Display",
   "label.nameBoth": "Bilingual",

@@ -366,6 +366,46 @@ describe('printLabels', () => {
     });
   });
 
+  describe('label quantities', () => {
+    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+
+    it('prints multiple copies when quantity > 1', () => {
+      const quantities = { '64-17-5': 3 };
+      printLabels([mockChemical], config, {}, {}, quantities);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Should contain 3 label divs for the same chemical
+      const matches = html.match(/CAS: 64-17-5/g);
+      expect(matches).toHaveLength(3);
+    });
+
+    it('defaults to quantity 1 when not specified', () => {
+      printLabels([mockChemical], config, {}, {}, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      const matches = html.match(/CAS: 64-17-5/g);
+      expect(matches).toHaveLength(1);
+    });
+
+    it('respects different quantities for different chemicals', () => {
+      const quantities = { '64-17-5': 2, '7732-18-5': 3 };
+      printLabels([mockChemical, mockChemicalNoGHS], config, {}, {}, quantities);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      const ethanolMatches = html.match(/CAS: 64-17-5/g);
+      const waterMatches = html.match(/CAS: 7732-18-5/g);
+      expect(ethanolMatches).toHaveLength(2);
+      expect(waterMatches).toHaveLength(3);
+    });
+
+    it('paginates correctly with expanded quantities', () => {
+      // perPage for medium+portrait = 8 labels per page
+      // 5 copies of ethanol + 5 copies of water = 10 total → 2 pages
+      const quantities = { '64-17-5': 5, '7732-18-5': 5 };
+      printLabels([mockChemical, mockChemicalNoGHS], config, {}, {}, quantities);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      const pageMatches = html.match(/class="page"/g);
+      expect(pageMatches).toHaveLength(2);
+    });
+  });
+
   describe('custom GHS settings', () => {
     it('uses alternate classification when customGHSSettings specifies index', () => {
       const chemWithAlternate = {

@@ -55,6 +55,8 @@ function App() {
       return saved ? JSON.parse(saved) : { labName: "", date: "", batchNumber: "" };
     } catch { return { labName: "", date: "", batchNumber: "" }; }
   });
+  // Label print quantities — CAS → count (default 1, not persisted)
+  const [labelQuantities, setLabelQuantities] = useState({});
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
@@ -262,8 +264,8 @@ function App() {
   }, [selectedForLabel.length, selectAllForLabel, results]);
 
   const handlePrintLabels = useCallback(() => {
-    printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields);
-  }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields]);
+    printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities);
+  }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities]);
 
   // ── Render ──
   return (
@@ -379,6 +381,8 @@ function App() {
           onLabelConfigChange={setLabelConfig}
           customLabelFields={customLabelFields}
           onCustomLabelFieldsChange={setCustomLabelFields}
+          labelQuantities={labelQuantities}
+          onLabelQuantitiesChange={setLabelQuantities}
           onPrintLabels={handlePrintLabels}
           onToggleSelectForLabel={toggleSelectForLabel}
           onClose={() => setShowLabelModal(false)}
