@@ -5295,6 +5295,177 @@ CHEMICAL_NAMES_ZH_EXPANDED = {
 }
 
 # ============================================================
+# Chemical Aliases / Common Names (俗名、商品名、口語名)
+# ============================================================
+# Maps colloquial/common names → CAS numbers.
+# These are NOT formal IUPAC or dictionary names, but names commonly
+# used in labs, industry, and everyday speech (especially in Taiwan).
+
+# Chinese aliases (俗名/口語名 → CAS)
+ALIASES_ZH = {
+    # ── 常見溶劑 ──
+    "酒精": "64-17-5",           # 乙醇 Ethanol
+    "工業酒精": "67-56-1",       # 甲醇 Methanol
+    "木精": "67-56-1",           # 甲醇 Methanol
+    "木醇": "67-56-1",           # 甲醇 Methanol
+    "去光水": "67-64-1",         # 丙酮 Acetone
+    "指甲油去除劑": "67-64-1",   # 丙酮 Acetone
+    "天拿水": "108-88-3",        # 甲苯 Toluene (港澳常用)
+    "香蕉水": "141-78-6",        # 乙酸乙酯 Ethyl acetate
+    "松節油": "8006-64-2",       # Turpentine
+    "松香水": "8006-64-2",       # Turpentine (台灣常用)
+    # ── 常見酸鹼 ──
+    "鹽酸": "7647-01-0",         # 氯化氫 Hydrochloric acid
+    "硫酸": "7664-93-9",         # Sulfuric acid
+    "硝酸": "7697-37-2",         # Nitric acid
+    "磷酸": "7664-38-2",         # Phosphoric acid
+    "醋酸": "64-19-7",           # 乙酸 Acetic acid
+    "冰醋酸": "64-19-7",         # 冰乙酸 Glacial acetic acid
+    "蟻酸": "64-18-6",           # 甲酸 Formic acid
+    "草酸": "144-62-7",          # 乙二酸 Oxalic acid
+    "燒鹼": "1310-73-2",         # 氫氧化鈉 NaOH
+    "火鹼": "1310-73-2",         # 氫氧化鈉 NaOH
+    "苛性鈉": "1310-73-2",       # 氫氧化鈉 NaOH
+    "片鹼": "1310-73-2",         # 氫氧化鈉 NaOH
+    "苛性鉀": "1310-58-3",       # 氫氧化鉀 KOH
+    "石灰": "1305-78-8",         # 氧化鈣 CaO
+    "生石灰": "1305-78-8",       # 氧化鈣 CaO
+    "熟石灰": "1305-62-0",       # 氫氧化鈣 Ca(OH)2
+    "消石灰": "1305-62-0",       # 氫氧化鈣 Ca(OH)2
+    "石灰水": "1305-62-0",       # 氫氧化鈣 Ca(OH)2
+    "純鹼": "497-19-8",          # 碳酸鈉 Na2CO3
+    "蘇打": "497-19-8",          # 碳酸鈉 Na2CO3
+    "洗滌鹼": "497-19-8",        # 碳酸鈉 Na2CO3
+    "小蘇打": "144-55-8",        # 碳酸氫鈉 NaHCO3
+    "氨水": "1336-21-6",         # Ammonium hydroxide
+    "阿摩尼亞": "7664-41-7",     # 氨 Ammonia
+    # ── 漂白劑 / 消毒劑 ──
+    "漂白水": "7681-52-9",       # 次氯酸鈉 NaClO
+    "次氯酸鈉": "7681-52-9",     # Sodium hypochlorite
+    "雙氧水": "7722-84-1",       # 過氧化氫 H2O2
+    "福馬林": "50-00-0",         # 甲醛 Formaldehyde
+    "福爾馬林": "50-00-0",       # 甲醛 Formaldehyde
+    # ── 常用化學品 ──
+    "水": "7732-18-5",           # Water
+    "蒸餾水": "7732-18-5",       # Distilled water
+    "純水": "7732-18-5",         # Purified water
+    "食鹽": "7647-14-5",         # 氯化鈉 NaCl
+    "食鹽水": "7647-14-5",       # NaCl solution
+    "蔗糖": "57-50-1",           # Sucrose
+    "糖": "57-50-1",             # Sugar
+    "葡萄糖": "50-99-7",         # Glucose
+    "味精": "142-47-2",          # 麩胺酸鈉 MSG
+    "甘油": "56-81-5",           # 丙三醇 Glycerol
+    "凡士林": "8009-03-8",       # Petrolatum
+    "石蠟": "8002-74-2",         # Paraffin wax
+    "矽膠": "112926-00-8",      # Silica gel
+    "乾冰": "124-38-9",          # 二氧化碳 CO2 (固態)
+    "笑氣": "10024-97-2",       # 一氧化二氮 N2O
+    # ── 實驗室常用 ──
+    "乙醚": "60-29-7",           # Diethyl ether
+    "石油醚": "8032-32-4",       # Petroleum ether
+    "氯仿": "67-66-3",           # 三氯甲烷 Chloroform
+    "四氯化碳": "56-23-5",       # Carbon tetrachloride
+    "二氯甲烷": "75-09-2",       # DCM
+    "二甲基亞碸": "67-68-5",     # DMSO
+    "DMSO": "67-68-5",           # Dimethyl sulfoxide
+    "DMF": "68-12-2",            # N,N-Dimethylformamide
+    "THF": "109-99-9",           # Tetrahydrofuran
+    "正己烷": "110-54-3",        # n-Hexane
+    "環己烷": "110-82-7",        # Cyclohexane
+    "甲苯": "108-88-3",          # Toluene
+    "二甲苯": "1330-20-7",       # Xylene
+    "苯": "71-43-2",             # Benzene
+    "吡啶": "110-86-1",          # Pyridine
+    "三乙胺": "121-44-8",        # Triethylamine
+    "王水": "8007-56-5",         # Aqua regia (HNO3 + HCl mixture)
+    # ── 金屬 / 無機 ──
+    "水銀": "7439-97-6",         # 汞 Mercury
+    "銀粉": "7440-22-4",         # Silver
+    "鐵粉": "7439-89-6",         # Iron
+    "銅粉": "7440-50-8",         # Copper
+    "鋅粉": "7440-66-6",         # Zinc
+    "鋁粉": "7429-90-5",         # Aluminum
+    "碘酒": "7553-56-2",         # 碘 Iodine (碘的酒精溶液)
+    # ── 氣體 ──
+    "天然氣": "74-82-8",         # 甲烷 Methane
+    "瓦斯": "74-82-8",           # 甲烷 (台灣口語)
+    "乙炔": "74-86-2",           # Acetylene
+    "電石氣": "74-86-2",         # Acetylene (俗名)
+    # ── 農藥 / 殺蟲劑常見名 ──
+    "石灰硫磺": "1344-81-6",    # 多硫化鈣 Calcium polysulfide
+    "波爾多液": "1332-03-2",     # 鹼式硫酸銅 Bordeaux mixture
+}
+
+# English aliases (common/trade names → CAS)
+ALIASES_EN = {
+    # ── Common solvents ──
+    "rubbing alcohol": "67-63-0",       # Isopropanol
+    "isopropyl alcohol": "67-63-0",     # IPA
+    "ipa": "67-63-0",                   # Isopropanol
+    "denatured alcohol": "64-17-5",     # Ethanol (denatured)
+    "grain alcohol": "64-17-5",         # Ethanol
+    "wood alcohol": "67-56-1",          # Methanol
+    "wood spirit": "67-56-1",           # Methanol
+    "nail polish remover": "67-64-1",   # Acetone
+    "paint thinner": "8006-64-2",       # Turpentine
+    "mineral spirits": "64742-88-7",    # Stoddard solvent / mineral spirits
+    "white spirit": "64742-88-7",       # Mineral spirits
+    # ── Common acids/bases ──
+    "muriatic acid": "7647-01-0",       # Hydrochloric acid
+    "battery acid": "7664-93-9",        # Sulfuric acid
+    "oil of vitriol": "7664-93-9",      # Sulfuric acid
+    "vinegar": "64-19-7",              # Acetic acid
+    "lye": "1310-73-2",               # NaOH
+    "caustic soda": "1310-73-2",       # NaOH
+    "caustic potash": "1310-58-3",     # KOH
+    "baking soda": "144-55-8",         # NaHCO3
+    "washing soda": "497-19-8",        # Na2CO3
+    "soda ash": "497-19-8",            # Na2CO3
+    "quicklime": "1305-78-8",          # CaO
+    "slaked lime": "1305-62-0",        # Ca(OH)2
+    "lime water": "1305-62-0",         # Ca(OH)2
+    "ammonia water": "1336-21-6",      # Ammonium hydroxide
+    "aqua regia": "8007-56-5",         # HNO3 + HCl mixture
+    # ── Bleach / Disinfectants ──
+    "bleach": "7681-52-9",             # NaClO
+    "hydrogen peroxide": "7722-84-1",  # H2O2
+    "formalin": "50-00-0",             # Formaldehyde
+    # ── Common chemicals ──
+    "table salt": "7647-14-5",         # NaCl
+    "rock salt": "7647-14-5",          # NaCl
+    "sugar": "57-50-1",                # Sucrose
+    "glucose": "50-99-7",              # Glucose
+    "msg": "142-47-2",                 # Monosodium glutamate
+    "glycerine": "56-81-5",            # Glycerol
+    "glycerin": "56-81-5",             # Glycerol
+    "petroleum jelly": "8009-03-8",    # Petrolatum
+    "vaseline": "8009-03-8",           # Petrolatum
+    "dry ice": "124-38-9",             # CO2 (solid)
+    "laughing gas": "10024-97-2",      # N2O
+    "silica gel": "112926-00-8",       # SiO2 gel
+    # ── Lab solvents (abbreviations) ──
+    "dmso": "67-68-5",                 # Dimethyl sulfoxide
+    "dmf": "68-12-2",                  # N,N-Dimethylformamide
+    "thf": "109-99-9",                 # Tetrahydrofuran
+    "dcm": "75-09-2",                  # Dichloromethane
+    "chloroform": "67-66-3",           # CHCl3
+    "ether": "60-29-7",               # Diethyl ether
+    "pet ether": "8032-32-4",         # Petroleum ether
+    "carbon tet": "56-23-5",          # Carbon tetrachloride
+    "hexane": "110-54-3",             # n-Hexane
+    "toluene": "108-88-3",            # Toluene
+    "xylene": "1330-20-7",            # Xylene
+    "benzene": "71-43-2",             # Benzene
+    # ── Metals ──
+    "quicksilver": "7439-97-6",        # Mercury
+    "mercury": "7439-97-6",            # Hg
+    # ── Gases ──
+    "natural gas": "74-82-8",          # Methane
+    "acetylene": "74-86-2",            # C2H2
+}
+
+# ============================================================
 # Reverse lookup dictionaries (auto-generated from above)
 # ============================================================
 
@@ -5303,3 +5474,19 @@ EN_TO_CAS = {name.lower(): cas for cas, name in CAS_TO_EN.items()}
 
 # Chinese name → CAS number
 ZH_TO_CAS = {name: cas for cas, name in CAS_TO_ZH.items()}
+
+# ============================================================
+# Merge aliases into reverse lookup dictionaries
+# Aliases have LOWER priority than formal names (won't overwrite)
+# ============================================================
+
+# Merge English aliases (lowercase) into EN_TO_CAS
+for _alias, _cas in ALIASES_EN.items():
+    _key = _alias.lower()
+    if _key not in EN_TO_CAS:
+        EN_TO_CAS[_key] = _cas
+
+# Merge Chinese aliases into ZH_TO_CAS
+for _alias, _cas in ALIASES_ZH.items():
+    if _alias not in ZH_TO_CAS:
+        ZH_TO_CAS[_alias] = _cas

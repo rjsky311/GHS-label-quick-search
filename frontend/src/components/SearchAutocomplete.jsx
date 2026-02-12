@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Search, Clock, Star, X, Loader2 } from "lucide-react";
+import { Search, Clock, Star, X, Loader2, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "@/constants/ghs";
@@ -265,6 +265,7 @@ export default function SearchAutocomplete({
           {/* Server results */}
           {dedupedServerResults.map((item, idx) => {
             const globalIdx = localSuggestions.length + idx;
+            const isAlias = !!item.alias;
             return (
               <li
                 key={`server-${item.cas_number}`}
@@ -279,7 +280,11 @@ export default function SearchAutocomplete({
                 }`}
               >
                 <span className="text-slate-500 shrink-0">
-                  <Search className="w-4 h-4 text-sky-400" />
+                  {isAlias ? (
+                    <Tag className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <Search className="w-4 h-4 text-sky-400" />
+                  )}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -287,11 +292,16 @@ export default function SearchAutocomplete({
                     <span className="text-white text-sm truncate">{item.name_en}</span>
                   </div>
                   {item.name_zh && (
-                    <div className="text-slate-400 text-xs truncate">{item.name_zh}</div>
+                    <div className="text-slate-400 text-xs truncate">
+                      {item.name_zh}
+                      {isAlias && (
+                        <span className="ml-1 text-emerald-400/70">← {item.alias}</span>
+                      )}
+                    </div>
                   )}
                 </div>
-                <span className="text-xs text-sky-400/70 shrink-0">
-                  {t("autocomplete.search")}
+                <span className={`text-xs shrink-0 ${isAlias ? "text-emerald-400/70" : "text-sky-400/70"}`}>
+                  {isAlias ? t("autocomplete.alias") : t("autocomplete.search")}
                 </span>
               </li>
             );

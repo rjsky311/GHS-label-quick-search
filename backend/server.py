@@ -20,7 +20,11 @@ import re
 from cachetools import TTLCache
 
 # Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
-from chemical_dict import CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED, EN_TO_CAS, ZH_TO_CAS
+# + alias dictionaries for common/colloquial chemical names
+from chemical_dict import (
+    CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
+    EN_TO_CAS, ZH_TO_CAS, ALIASES_ZH, ALIASES_EN,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -229,18 +233,20 @@ def normalize_cas(cas: str) -> str:
 def resolve_name_to_cas(query: str) -> Optional[str]:
     """Resolve English or Chinese chemical name to CAS number.
     Returns the first matching CAS number, or None.
-    Priority: exact Chinese → exact English → English name contains query (unique) →
-              Chinese name contains query (unique) → unique prefix English → unique prefix Chinese
+    Priority: exact Chinese → exact English (includes merged aliases) →
+              word-boundary English → unique prefix English → unique prefix Chinese
+    Note: ALIASES_ZH and ALIASES_EN are already merged into ZH_TO_CAS and EN_TO_CAS
+    at import time, so exact alias matches are handled by the first two checks.
     """
     q = query.strip()
     if not q:
         return None
 
-    # Try exact Chinese name match
+    # Try exact Chinese name match (includes aliases like 酒精, 漂白水, etc.)
     if q in ZH_TO_CAS:
         return ZH_TO_CAS[q]
 
-    # Try exact English name match (case-insensitive)
+    # Try exact English name match (case-insensitive, includes aliases like "bleach", "dmso")
     q_lower = q.lower()
     if q_lower in EN_TO_CAS:
         return EN_TO_CAS[q_lower]
@@ -745,9 +751,10 @@ async def search_chemicals(query: CASQuery):
 
 @api_router.get("/search-by-name/{query}")
 async def search_by_name(query: str):
-    """Search for chemicals by English or Chinese name.
-    Returns list of matching {cas_number, name_en, name_zh} (max 20).
+    """Search for chemicals by English or Chinese name (including aliases/common names).
+    Returns list of matching {cas_number, name_en, name_zh, alias} (max 20).
     Used for autocomplete / name lookup before full GHS search.
+    The `alias` field is set when matched via a common name (e.g., "酒精" → 乙醇).
     """
     q = query.strip()
     if not q or len(q) < 2:
@@ -757,29 +764,36 @@ async def search_by_name(query: str):
     matches = []
     seen_cas = set()
 
-    # Chinese name matches (substring)
+    # Chinese name matches (substring) — includes aliases merged into ZH_TO_CAS
     for name, cas in ZH_TO_CAS.items():
         if q in name and cas not in seen_cas:
             seen_cas.add(cas)
+            # Check if this match is via an alias
+            alias = name if name in ALIASES_ZH else None
             matches.append({
                 "cas_number": cas,
                 "name_en": CAS_TO_EN.get(cas, ""),
-                "name_zh": name,
+                "name_zh": CAS_TO_ZH.get(cas, name),
+                "alias": alias,
             })
 
-    # English name matches (case-insensitive substring)
+    # English name matches (case-insensitive substring) — includes aliases merged into EN_TO_CAS
     for name, cas in EN_TO_CAS.items():
         if q_lower in name and cas not in seen_cas:
             seen_cas.add(cas)
+            # Check if this match is via an alias
+            alias = name if name in ALIASES_EN else None
             matches.append({
                 "cas_number": cas,
                 "name_en": CAS_TO_EN.get(cas, ""),
                 "name_zh": CAS_TO_ZH.get(cas, ""),
+                "alias": alias,
             })
 
-    # Sort: exact match first, then by name length (shorter = more relevant)
+    # Sort: exact match first, then alias matches, then by name length
     matches.sort(key=lambda m: (
-        0 if m["name_en"].lower() == q_lower or m["name_zh"] == q else 1,
+        0 if m["name_en"].lower() == q_lower or m["name_zh"] == q else
+        0 if m.get("alias") and (m["alias"] == q or m["alias"].lower() == q_lower) else 1,
         len(m["name_en"])
     ))
 
