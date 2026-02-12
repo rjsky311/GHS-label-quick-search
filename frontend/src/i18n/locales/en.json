@@ -130,6 +130,14 @@
   "label.noneSelected": "No chemicals selected",
   "label.pictogramCount": "({{count}} pictograms)",
   "label.previewHint": "Click \"Print Labels\" to open the print dialog. You can verify the layout in the print preview.",
+  "label.customFields": "Custom Fields",
+  "label.labName": "Lab",
+  "label.labNamePlaceholder": "e.g. Materials Science Lab",
+  "label.printDate": "Date",
+  "label.printDatePlaceholder": "e.g. 2026-02-12",
+  "label.batchNumber": "Batch #",
+  "label.batchNumberPlaceholder": "e.g. B-2026-001",
+  "label.customFieldsHint": "Optional — empty fields won't appear on labels",
   "label.printBtn": "Print Labels ({{count}})",
   "label.cancel": "Cancel",
 
@@ -181,6 +189,7 @@
   "print.scanForDetail": "Scan for details",
   "print.totalItems": "{{count}} item(s)",
   "print.pageNumber": "Page {{current}} / {{total}}",
+  "print.batch": "Batch",
 
   "footer.source": "Data source: ",
   "footer.disclaimer": "For reference only. Refer to official SDS.",

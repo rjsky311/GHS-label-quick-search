@@ -47,6 +47,13 @@ function App() {
     template: "standard",
     orientation: "portrait",
   });
+  // Custom label fields — persisted to localStorage
+  const [customLabelFields, setCustomLabelFields] = useState(() => {
+    try {
+      const saved = localStorage.getItem("ghs_custom_label_fields");
+      return saved ? JSON.parse(saved) : { labName: "", date: "", batchNumber: "" };
+    } catch { return { labName: "", date: "", batchNumber: "" }; }
+  });
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
@@ -73,6 +80,11 @@ function App() {
     selectAllForLabel,
     clearLabelSelection,
   } = useLabelSelection();
+
+  // Persist custom label fields to localStorage
+  useEffect(() => {
+    localStorage.setItem("ghs_custom_label_fields", JSON.stringify(customLabelFields));
+  }, [customLabelFields]);
 
   // ── Keyboard Shortcut: "/" or Ctrl+K to focus search ──
   useEffect(() => {
@@ -249,8 +261,8 @@ function App() {
   }, [selectedForLabel.length, selectAllForLabel, results]);
 
   const handlePrintLabels = useCallback(() => {
-    printLabels(selectedForLabel, labelConfig, customGHSSettings);
-  }, [selectedForLabel, labelConfig, customGHSSettings]);
+    printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields);
+  }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields]);
 
   // ── Render ──
   return (
@@ -364,6 +376,8 @@ function App() {
           selectedForLabel={selectedForLabel}
           labelConfig={labelConfig}
           onLabelConfigChange={setLabelConfig}
+          customLabelFields={customLabelFields}
+          onCustomLabelFieldsChange={setCustomLabelFields}
           onPrintLabels={handlePrintLabels}
           onToggleSelectForLabel={toggleSelectForLabel}
           onClose={() => setShowLabelModal(false)}

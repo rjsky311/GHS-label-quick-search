@@ -268,6 +268,62 @@ describe('printLabels', () => {
     });
   });
 
+  describe('custom label fields', () => {
+    const fields = { labName: 'Lab A', date: '2026-02-12', batchNumber: 'B-001' };
+    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+
+    it('renders all custom fields in generated HTML', () => {
+      printLabels([mockChemical], config, {}, fields);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Lab A');
+      expect(html).toContain('2026-02-12');
+      expect(html).toContain('B-001');
+      expect(html).toContain('custom-fields');
+    });
+
+    it('does not render custom fields section when all empty', () => {
+      printLabels([mockChemical], config, {}, { labName: '', date: '', batchNumber: '' });
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('custom-fields');
+    });
+
+    it('renders only non-empty fields', () => {
+      printLabels([mockChemical], config, {}, { labName: 'Lab B', date: '', batchNumber: '' });
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Lab B');
+      expect(html).toContain('custom-fields');
+      expect(html).not.toContain('B-001');
+    });
+
+    it('renders custom fields in all 4 templates', () => {
+      ['icon', 'standard', 'full', 'qrcode'].forEach((template) => {
+        jest.clearAllMocks();
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        mockIframeDoc = mocks.mockIframeDoc;
+
+        printLabels([mockChemical], { ...config, template }, {}, fields);
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain('custom-fields');
+        expect(html).toContain('Lab A');
+      });
+    });
+
+    it('renders custom fields with default empty object', () => {
+      // No customLabelFields argument → uses default {}
+      printLabels([mockChemical], config, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('custom-fields');
+    });
+
+    it('batch number includes prefix label', () => {
+      printLabels([mockChemical], config, {}, { labName: '', date: '', batchNumber: 'X-99' });
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('print.batch');
+      expect(html).toContain('X-99');
+    });
+  });
+
   describe('custom GHS settings', () => {
     it('uses alternate classification when customGHSSettings specifies index', () => {
       const chemWithAlternate = {

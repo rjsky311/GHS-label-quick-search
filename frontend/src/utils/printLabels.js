@@ -5,7 +5,7 @@ export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 }
 
-export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
+export function printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields = {}) {
   if (selectedForLabel.length === 0) return;
   const t = i18n.t.bind(i18n);
 
@@ -107,6 +107,16 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
     return chemical;
   };
 
+  // Render custom label fields (lab name, date, batch number)
+  const renderCustomFields = () => {
+    const fields = [];
+    if (customLabelFields.labName) fields.push(customLabelFields.labName);
+    if (customLabelFields.date) fields.push(customLabelFields.date);
+    if (customLabelFields.batchNumber) fields.push(`${t("print.batch")}: ${customLabelFields.batchNumber}`);
+    if (fields.length === 0) return "";
+    return `<div class="custom-fields">${fields.join(" ｜ ")}</div>`;
+  };
+
   // Template generators with FIXED LAYOUT
   const templates = {
     // 版型 1 - 圖示版
@@ -123,6 +133,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
               <div class="name-en">${effectiveChem.name_en || ""}</div>
               ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
               <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+              ${renderCustomFields()}
             </div>
           </div>
           <div class="label-middle">
@@ -155,6 +166,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
               <div class="name-en">${effectiveChem.name_en || ""}</div>
               ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
               <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+              ${renderCustomFields()}
             </div>
           </div>
           <div class="label-middle">
@@ -192,6 +204,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
               <div class="name-en">${effectiveChem.name_en || ""}</div>
               ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
               <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+              ${renderCustomFields()}
             </div>
           </div>
           <div class="label-middle compact">
@@ -230,6 +243,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
               <div class="name-en">${effectiveChem.name_en || ""}</div>
               ${effectiveChem.name_zh ? `<div class="name-zh">${effectiveChem.name_zh}</div>` : ""}
               <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+              ${renderCustomFields()}
             </div>
             ${pictograms.length > 0 ? `
               <div class="pictograms qr-pics">
@@ -370,6 +384,14 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings) {
       font-size: calc(${sizeConfig.fontSize} - 1px);
       color: #555;
       margin-top: 1mm;
+    }
+    .custom-fields {
+      font-size: calc(${sizeConfig.fontSize} - 2px);
+      color: #666;
+      margin-top: 0.5mm;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ===== PICTOGRAMS ===== */

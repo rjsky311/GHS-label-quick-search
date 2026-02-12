@@ -9,6 +9,8 @@ export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
   onLabelConfigChange,
+  customLabelFields,
+  onCustomLabelFieldsChange,
   onPrintLabels,
   onToggleSelectForLabel,
   onClose,
@@ -165,6 +167,32 @@ export default function LabelPrintModal({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Custom Label Fields */}
+          <div>
+            <h3 className="text-sm font-medium text-slate-400 mb-3">
+              {t("label.customFields")}
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { key: "labName", labelKey: "label.labName", placeholderKey: "label.labNamePlaceholder" },
+                { key: "date", labelKey: "label.printDate", placeholderKey: "label.printDatePlaceholder" },
+                { key: "batchNumber", labelKey: "label.batchNumber", placeholderKey: "label.batchNumberPlaceholder" },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center gap-2">
+                  <label className="text-xs text-slate-500 w-16 shrink-0">{t(field.labelKey)}</label>
+                  <input
+                    type="text"
+                    value={customLabelFields[field.key]}
+                    onChange={(e) => onCustomLabelFieldsChange({ ...customLabelFields, [field.key]: e.target.value })}
+                    placeholder={t(field.placeholderKey)}
+                    className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-600 mt-1.5">{t("label.customFieldsHint")}</p>
           </div>
 
           {/* Page Estimation */}
