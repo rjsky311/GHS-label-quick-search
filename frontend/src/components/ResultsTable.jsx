@@ -1,4 +1,4 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSImage from "@/components/GHSImage";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
@@ -28,6 +28,7 @@ export default function ResultsTable({
   onSetCustomClassification,
   onClearCustomClassification,
   onViewDetail,
+  onOpenComparison,
 }) {
   const { t } = useTranslation();
 
@@ -61,6 +62,29 @@ export default function ResultsTable({
               </span>
             )}
           </button>
+          {(() => {
+            const comparableCount = selectedForLabel.filter(
+              (r) => r.found && r.ghs_pictograms?.length > 0
+            ).length;
+            return comparableCount >= 2 ? (
+              <button
+                onClick={onOpenComparison}
+                disabled={comparableCount > 5}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                data-testid="compare-btn"
+                title={
+                  comparableCount > 5
+                    ? t("compare.maxReached")
+                    : t("compare.btnTooltip")
+                }
+              >
+                <LayoutGrid className="w-4 h-4" /> {t("compare.btn")}
+                <span className="bg-blue-800 px-2 py-0.5 rounded-full text-xs">
+                  {comparableCount}
+                </span>
+              </button>
+            ) : null;
+          })()}
           <button
             onClick={onExportToExcel}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"

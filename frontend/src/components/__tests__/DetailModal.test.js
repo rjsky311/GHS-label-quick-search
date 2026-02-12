@@ -14,6 +14,30 @@ jest.mock('../GHSImage', () => {
   };
 });
 
+// Mock ClassificationComparisonTable
+jest.mock('../ClassificationComparisonTable', () => {
+  return function MockComparisonTable(props) {
+    return (
+      <div data-testid="comparison-table" data-mode={props.mode}>
+        {props.columns.map((col, i) => (
+          <div key={i} data-testid={`comparison-col-${i}`}>
+            {col.label}
+            {col.classification?.signal_word_zh && (
+              <span data-testid={`comparison-signal-${i}`}>{col.classification.signal_word_zh}</span>
+            )}
+            {(col.classification?.pictograms || []).map((p) => (
+              <span key={p.code} data-testid={`ghs-img-${p.code}`}>{p.code}</span>
+            ))}
+          </div>
+        ))}
+        {props.selectedIndex != null && (
+          <span data-testid="comparison-selected">{props.selectedIndex}</span>
+        )}
+      </div>
+    );
+  };
+});
+
 // Mock sdsLinks
 jest.mock('@/utils/sdsLinks', () => ({
   getPubChemSDSUrl: jest.fn((cid) => (cid ? `https://pubchem.example.com/${cid}` : null)),
@@ -87,14 +111,29 @@ describe('DetailModal', () => {
     });
 
     it('renders signal word with Danger styling', () => {
-      render(<DetailModal {...defaultProps} />);
-      // Signal word zh "危險" appears in both main display and classification boxes
+      // Use single-classification result so standalone signal word section shows
+      const singleClassResult = {
+        ...mockFoundResult,
+        has_multiple_classifications: false,
+        other_classifications: [],
+      };
+      render(
+        <DetailModal {...defaultProps} result={singleClassResult} />
+      );
       const dangerElements = screen.getAllByText('危險');
       expect(dangerElements.length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders GHS pictograms via mocked GHSImage', () => {
-      render(<DetailModal {...defaultProps} />);
+      // Use single-classification result so simple pictogram display shows
+      const singleClassResult = {
+        ...mockFoundResult,
+        has_multiple_classifications: false,
+        other_classifications: [],
+      };
+      render(
+        <DetailModal {...defaultProps} result={singleClassResult} />
+      );
       // Default classification has GHS02 and GHS07
       expect(screen.getAllByTestId(/ghs-img-GHS/).length).toBeGreaterThanOrEqual(2);
     });
@@ -242,6 +281,36 @@ describe('DetailModal', () => {
       );
       fireEvent.click(screen.getByText('detail.restoreDefault'));
       expect(onClear).toHaveBeenCalledWith('64-17-5');
+    });
+
+    it('renders ClassificationComparisonTable in same-chemical mode when multiple classifications', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      const table = screen.getByTestId('comparison-table');
+      expect(table).toBeInTheDocument();
+      expect(table).toHaveAttribute('data-mode', 'same-chemical');
+    });
+
+    it('does not render comparison table for single classification', () => {
+      const singleClassResult = {
+        ...mockFoundResult,
+        has_multiple_classifications: false,
+        other_classifications: [],
+      };
+      render(<DetailModal {...defaultProps} result={singleClassResult} />);
+      expect(screen.queryByTestId('comparison-table')).not.toBeInTheDocument();
+    });
+
+    it('hides standalone signal word when multiple classifications exist', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      // The standalone signal word section uses detail.signalWord as label
+      expect(screen.queryByText('detail.signalWord')).not.toBeInTheDocument();
+    });
+
+    it('uses wider modal (max-w-3xl) for multiple classifications', () => {
+      const { container } = render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      // The inner content div should have max-w-3xl
+      const innerDiv = container.querySelector('.max-w-3xl');
+      expect(innerDiv).toBeInTheDocument();
     });
   });
 

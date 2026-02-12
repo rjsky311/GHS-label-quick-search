@@ -3,6 +3,7 @@ import { Star, X, Copy, LayoutGrid, Lightbulb, Tag, ExternalLink, ShieldCheck } 
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSImage from "@/components/GHSImage";
+import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
 
 export default function DetailModal({
@@ -64,7 +65,9 @@ export default function DetailModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto outline-none"
+        className={`bg-slate-800 rounded-2xl w-full max-h-[90vh] overflow-y-auto outline-none ${
+          allClassifications.length > 1 ? "max-w-3xl" : "max-w-2xl"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-slate-700 flex items-start justify-between">
@@ -142,8 +145,8 @@ export default function DetailModal({
             </div>
           )}
 
-          {/* Signal Word */}
-          {effective?.signal_word && (
+          {/* Signal Word — only for single classification */}
+          {allClassifications.length <= 1 && effective?.signal_word && (
             <div>
               <h3 className="text-sm font-medium text-slate-400 mb-2">
                 {t("detail.signalWord")}
@@ -160,93 +163,54 @@ export default function DetailModal({
             </div>
           )}
 
-          {/* All GHS Classifications with Selection */}
-          {allClassifications.length > 0 && allClassifications[0].pictograms?.length > 0 && (
+          {/* GHS Classifications */}
+          {allClassifications.length > 1 && allClassifications[0].pictograms?.length > 0 ? (
+            /* Multiple classifications — comparison table */
             <div>
               <h3 className="text-sm font-medium text-slate-400 mb-3">
                 {t("detail.ghsClassification")}
-                {allClassifications.length > 1 && (
-                  <span className="text-blue-400 ml-2">{t("detail.classificationCount", { count: allClassifications.length })}</span>
-                )}
+                <span className="text-blue-400 ml-2">{t("detail.classificationCount", { count: allClassifications.length })}</span>
               </h3>
-              <div className="space-y-3">
-                {allClassifications.map((cls, clsIdx) => {
-                  const isSelected = effective.customIndex === clsIdx;
-                  const hasNoPictograms = !cls.pictograms || cls.pictograms.length === 0;
-                  if (hasNoPictograms) return null;
-
-                  return (
-                    <div
-                      key={clsIdx}
-                      className={`rounded-xl p-4 border-2 transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-purple-900/30 border-purple-500"
-                          : "bg-slate-900/50 border-slate-700 hover:border-slate-500"
-                      }`}
-                      onClick={() => onSetCustomClassification(
-                        result.cas_number,
-                        clsIdx,
-                        customGHSSettings[result.cas_number]?.note || ""
-                      )}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          {isSelected ? (
-                            <span className="text-purple-400 text-lg">★</span>
-                          ) : (
-                            <span className="text-slate-500 text-lg">○</span>
-                          )}
-                          <span className={`text-sm font-medium ${isSelected ? "text-purple-300" : "text-slate-400"}`}>
-                            {clsIdx === 0 ? t("detail.defaultClass") : t("detail.classN", { n: clsIdx + 1 })}
-                          </span>
-                          {isSelected && (
-                            <span className="px-2 py-0.5 bg-purple-500/30 text-purple-300 text-xs rounded">
-                              {t("detail.currentSelection")}
-                            </span>
-                          )}
-                        </div>
-                        {!isSelected && (
-                          <button
-                            className="text-xs text-blue-400 hover:text-blue-300"
-                          >
-                            {t("detail.clickToSelect")}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3 flex-wrap">
-                        {cls.pictograms?.map((pic, pIdx) => (
-                          <div key={pIdx} className="text-center">
-                            <GHSImage
-                              code={pic.code}
-                              name={pic.name_zh}
-                              className={`w-14 h-14 ${!isSelected ? "opacity-70" : ""}`}
-                            />
-                            <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {cls.signal_word_zh && (
-                        <p className="text-xs text-slate-400 mt-2">
-                          {t("detail.signalWord")}: <span className={cls.signal_word === "Danger" ? "text-red-400" : "text-amber-400"}>{cls.signal_word_zh}</span>
-                        </p>
-                      )}
-
-                      {cls.source && clsIdx > 0 && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-1" title={cls.source}>
-                          {cls.source.substring(0, 80)}...
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <ClassificationComparisonTable
+                mode="same-chemical"
+                columns={allClassifications.map((cls, idx) => ({
+                  label: idx === 0 ? t("detail.defaultClass") : t("detail.classN", { n: idx + 1 }),
+                  classification: cls,
+                  index: idx,
+                }))}
+                selectedIndex={effective.customIndex}
+                onSelectClassification={(idx) =>
+                  onSetCustomClassification(
+                    result.cas_number,
+                    idx,
+                    customGHSSettings[result.cas_number]?.note || ""
+                  )
+                }
+              />
               <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
                 <Lightbulb className="w-3 h-3 text-amber-400 shrink-0" /> {t("detail.classificationHint")}
               </p>
             </div>
-          )}
+          ) : allClassifications.length === 1 && allClassifications[0].pictograms?.length > 0 ? (
+            /* Single classification — simple pictogram display */
+            <div>
+              <h3 className="text-sm font-medium text-slate-400 mb-3">
+                {t("detail.ghsClassification")}
+              </h3>
+              <div className="flex gap-3 flex-wrap">
+                {allClassifications[0].pictograms.map((pic, pIdx) => (
+                  <div key={pIdx} className="text-center">
+                    <GHSImage
+                      code={pic.code}
+                      name={pic.name_zh}
+                      className="w-14 h-14"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {/* Hazard Statements */}
           {effective?.hazard_statements?.length > 0 && (

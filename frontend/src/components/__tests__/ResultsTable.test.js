@@ -46,6 +46,7 @@ const defaultProps = {
   onSetCustomClassification: jest.fn(),
   onClearCustomClassification: jest.fn(),
   onViewDetail: jest.fn(),
+  onOpenComparison: jest.fn(),
 };
 
 // Re-import the mock module to restore its mock implementation after clearAllMocks
@@ -282,6 +283,67 @@ describe('ResultsTable', () => {
     it('does not show toggle when result has no other classifications', () => {
       render(<ResultsTable {...defaultProps} results={[mockWarningResult]} />);
       expect(screen.queryByText(/results\.otherClassifications/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Compare button', () => {
+    it('renders compare button when 2+ found chemicals with pictograms are selected', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          selectedForLabel={[mockFoundResult, mockWarningResult]}
+        />
+      );
+      expect(screen.getByTestId('compare-btn')).toBeInTheDocument();
+    });
+
+    it('does not render compare button when fewer than 2 comparable chemicals selected', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          selectedForLabel={[mockFoundResult]}
+        />
+      );
+      expect(screen.queryByTestId('compare-btn')).not.toBeInTheDocument();
+    });
+
+    it('disables compare button when more than 5 comparable chemicals selected', () => {
+      const manyChemicals = Array.from({ length: 6 }, (_, i) => ({
+        ...mockFoundResult,
+        cas_number: `64-17-${i}`,
+      }));
+      render(
+        <ResultsTable
+          {...defaultProps}
+          selectedForLabel={manyChemicals}
+        />
+      );
+      const btn = screen.getByTestId('compare-btn');
+      expect(btn).toBeDisabled();
+    });
+
+    it('clicking compare button calls onOpenComparison', () => {
+      const onOpenComparison = jest.fn();
+      render(
+        <ResultsTable
+          {...defaultProps}
+          selectedForLabel={[mockFoundResult, mockWarningResult]}
+          onOpenComparison={onOpenComparison}
+        />
+      );
+      fireEvent.click(screen.getByTestId('compare-btn'));
+      expect(onOpenComparison).toHaveBeenCalled();
+    });
+
+    it('does not count chemicals without pictograms as comparable', () => {
+      // mockNoHazardResult has empty pictograms — should not count
+      render(
+        <ResultsTable
+          {...defaultProps}
+          selectedForLabel={[mockFoundResult, mockNoHazardResult]}
+        />
+      );
+      expect(screen.queryByTestId('compare-btn')).not.toBeInTheDocument();
     });
   });
 });

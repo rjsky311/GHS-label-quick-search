@@ -25,6 +25,7 @@ import SearchSection from "@/components/SearchSection";
 import ResultsTable from "@/components/ResultsTable";
 import EmptyState from "@/components/EmptyState";
 import DetailModal from "@/components/DetailModal";
+import ComparisonModal from "@/components/ComparisonModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
 import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
@@ -58,6 +59,7 @@ function App() {
   });
   // Label print quantities — CAS → count (default 1, not persisted)
   const [labelQuantities, setLabelQuantities] = useState({});
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
@@ -358,6 +360,7 @@ function App() {
             onSetCustomClassification={setCustomClassification}
             onClearCustomClassification={clearCustomClassification}
             onViewDetail={setSelectedResult}
+            onOpenComparison={() => setShowComparisonModal(true)}
           />
         )}
 
@@ -378,6 +381,14 @@ function App() {
           hasCustomClassification={hasCustomClassification}
           onClearCustomClassification={clearCustomClassification}
           onPrintLabel={handlePrintLabelFromDetail}
+        />
+      )}
+
+      {showComparisonModal && (
+        <ComparisonModal
+          chemicals={selectedForLabel.filter((r) => r.found && r.ghs_pictograms?.length > 0).slice(0, 5)}
+          getEffectiveClassification={getEffectiveClassification}
+          onClose={() => setShowComparisonModal(false)}
         />
       )}
 
