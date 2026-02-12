@@ -5,6 +5,33 @@ export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 }
 
+// Font auto-sizing tiers for "full" template based on hazard count × label size
+export function getHazardFontTier(hazardCount, labelSize) {
+  const tiers = [
+    { maxCount: 5,
+      small:  { fontSize: '7px',   lineHeight: '1.2',  marginBottom: '0.8mm' },
+      medium: { fontSize: '8px',   lineHeight: '1.2',  marginBottom: '0.8mm' },
+      large:  { fontSize: '10px',  lineHeight: '1.2',  marginBottom: '0.8mm' } },
+    { maxCount: 8,
+      small:  { fontSize: '6px',   lineHeight: '1.15', marginBottom: '0.5mm' },
+      medium: { fontSize: '7px',   lineHeight: '1.15', marginBottom: '0.5mm' },
+      large:  { fontSize: '9px',   lineHeight: '1.15', marginBottom: '0.6mm' } },
+    { maxCount: 12,
+      small:  { fontSize: '5.5px', lineHeight: '1.1',  marginBottom: '0.3mm' },
+      medium: { fontSize: '6px',   lineHeight: '1.1',  marginBottom: '0.3mm' },
+      large:  { fontSize: '7.5px', lineHeight: '1.1',  marginBottom: '0.4mm' } },
+    { maxCount: Infinity,
+      small:  { fontSize: '5px',   lineHeight: '1.05', marginBottom: '0.2mm' },
+      medium: { fontSize: '5.5px', lineHeight: '1.05', marginBottom: '0.2mm' },
+      large:  { fontSize: '6.5px', lineHeight: '1.05', marginBottom: '0.3mm' } },
+  ];
+  const size = labelSize || 'medium';
+  for (const tier of tiers) {
+    if (hazardCount <= tier.maxCount) return tier[size] || tier.medium;
+  }
+  return tiers[tiers.length - 1][size] || tiers[tiers.length - 1].medium;
+}
+
 export function printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields = {}, labelQuantities = {}) {
   if (selectedForLabel.length === 0) return;
   const t = i18n.t.bind(i18n);
@@ -207,13 +234,14 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       `;
     },
 
-    // 版型 3 - 完整版
+    // 版型 3 - 完整版（字體依危害數量自動縮放）
     full: (chemical) => {
       const effectiveChem = getEffectiveForPrint(chemical);
       const pictograms = effectiveChem.ghs_pictograms || [];
       const hazards = effectiveChem.hazard_statements || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+      const hazardTier = getHazardFontTier(hazards.length, labelConfig.size);
 
       return `
         <div class="label label-full">
@@ -230,9 +258,9 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
               ${signalWord ? `<div class="signal compact ${signalClass}">${signalWord}</div>` : ""}
             </div>
           </div>
-          <div class="label-bottom hazards-full">
+          <div class="label-bottom hazards-full" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
             ${hazards.length > 0 ? `
-              ${hazards.map((h) => `<div class="hazard-item-full">${h.code} ${h.text_zh}</div>`).join("")}
+              ${hazards.map((h) => `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${h.code} ${h.text_zh}</div>`).join("")}
             ` : '<div class="no-hazard-text">${t("print.noHazardStatement")}</div>'}
           </div>
         </div>
@@ -492,6 +520,13 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       font-size: calc(${sizeConfig.hazardSize} - 1px);
       line-height: 1.2;
       overflow: hidden;
+      flex: 1;
+      min-height: 0;
+    }
+    .label-full .label-bottom {
+      flex: 1;
+      min-height: 0;
+      margin-top: 0;
     }
     .hazard-item {
       margin-bottom: 1mm;

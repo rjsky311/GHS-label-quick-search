@@ -10,7 +10,7 @@ jest.mock('@/constants/ghs', () => ({
   },
 }));
 
-import { printLabels, getQRCodeUrl } from '../printLabels';
+import { printLabels, getQRCodeUrl, getHazardFontTier } from '../printLabels';
 
 // ── Mock chemical fixtures ──
 const mockChemical = {
@@ -82,6 +82,48 @@ describe('getQRCodeUrl', () => {
   it('encodes special characters in data URL', () => {
     const url = getQRCodeUrl('https://example.com?a=1&b=2');
     expect(url).toContain('data=https%3A%2F%2Fexample.com%3Fa%3D1%26b%3D2');
+  });
+});
+
+describe('getHazardFontTier', () => {
+  it('returns default tier for 1-5 hazards (medium)', () => {
+    const tier = getHazardFontTier(3, 'medium');
+    expect(tier.fontSize).toBe('8px');
+    expect(tier.lineHeight).toBe('1.2');
+    expect(tier.marginBottom).toBe('0.8mm');
+  });
+
+  it('returns reduced tier for 6-8 hazards (medium)', () => {
+    const tier = getHazardFontTier(6, 'medium');
+    expect(tier.fontSize).toBe('7px');
+    expect(tier.lineHeight).toBe('1.15');
+  });
+
+  it('returns small tier for 9-12 hazards (medium)', () => {
+    const tier = getHazardFontTier(10, 'medium');
+    expect(tier.fontSize).toBe('6px');
+    expect(tier.lineHeight).toBe('1.1');
+  });
+
+  it('returns tiny tier for 13+ hazards (medium)', () => {
+    const tier = getHazardFontTier(15, 'medium');
+    expect(tier.fontSize).toBe('5.5px');
+    expect(tier.lineHeight).toBe('1.05');
+  });
+
+  it('scales appropriately for small labels', () => {
+    const tier = getHazardFontTier(10, 'small');
+    expect(tier.fontSize).toBe('5.5px');
+  });
+
+  it('scales appropriately for large labels', () => {
+    const tier = getHazardFontTier(10, 'large');
+    expect(tier.fontSize).toBe('7.5px');
+  });
+
+  it('defaults to medium when size is undefined', () => {
+    const tier = getHazardFontTier(3, undefined);
+    expect(tier.fontSize).toBe('8px');
   });
 });
 
@@ -403,6 +445,55 @@ describe('printLabels', () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       const pageMatches = html.match(/class="page"/g);
       expect(pageMatches).toHaveLength(2);
+    });
+  });
+
+  describe('full template font auto-sizing', () => {
+    it('applies default font size for few hazards (tier 1)', () => {
+      // mockChemical has 2 hazards → tier 1
+      printLabels([mockChemical], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('font-size:8px');
+    });
+
+    it('applies reduced font size for many hazards (tier 3)', () => {
+      const manyHazards = {
+        ...mockChemical,
+        hazard_statements: Array.from({ length: 10 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_zh: `危害說明 ${i + 1}`,
+        })),
+      };
+      printLabels([manyHazards], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('font-size:6px');
+    });
+
+    it('applies tiny font size for very many hazards (tier 4)', () => {
+      const manyHazards = {
+        ...mockChemical,
+        hazard_statements: Array.from({ length: 15 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_zh: `危害說明 ${i + 1}`,
+        })),
+      };
+      printLabels([manyHazards], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('font-size:5.5px');
+    });
+
+    it('does not apply auto-sizing inline styles to standard template', () => {
+      const manyHazards = {
+        ...mockChemical,
+        hazard_statements: Array.from({ length: 15 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_zh: `危害說明 ${i + 1}`,
+        })),
+      };
+      printLabels([manyHazards], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Standard template truncates hazards, does not use auto-sizing inline styles
+      expect(html).not.toContain('font-size:5.5px');
     });
   });
 
