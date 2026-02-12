@@ -159,8 +159,8 @@ a5653e5 v1.5.0: Performance + UX optimization
 ```
 
 ### Test Results
-- **Frontend**: 188+ tests, 16 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete server search: 8)
-- **Backend**: 29 tests (name search + reverse dictionaries + API endpoints)
+- **Frontend**: 208+ tests, 17 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 20)
+- **Backend**: 59 tests (name search + reverse dictionaries + aliases + API endpoints)
 - **CI**: GitHub Actions runs both on every push to main
 
 ### CI/CD (`.github/workflows/ci.yml`)
@@ -185,6 +185,7 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] Live name search autocomplete (debounced API + dedup + 8 tests)
 - [x] Fix autocomplete dropdown overflow-hidden clipping
 - [x] Chemical aliases / common names (~90 ZH + ~60 EN aliases, 30 new backend tests, alias badge UI)
+- [x] Print popup blocker fix (hidden iframe replaces window.open, 20 new tests)
 
 ## Roadmap / Pending Work
 
@@ -192,26 +193,25 @@ a5653e5 v1.5.0: Performance + UX optimization
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
 | 1 | **Custom label fields** | Add lab name, date, batch number fields to label printing config (stored in localStorage) | Medium |
-| 2 | **Print popup blocker fix** | Browser blocks window.open popup — explore alternatives (iframe print, in-page preview) | Medium |
-| 3 | **Full-template font auto-sizing** | Dynamic font adjustment for "Full" label template when content is long | Low |
+| 2 | **Full-template font auto-sizing** | Dynamic font adjustment for "Full" label template when content is long | Low |
 
 ### 🟡 Medium Priority — Enhanced Features
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
-| 4 | **Bilingual labels** | Show both Chinese + English names on same label | Low |
-| 5 | **Print quantity per chemical** | Allow "print X copies" per chemical in label print modal | Low |
-| 6 | **Save print templates** | Save frequently-used print settings as named templates | Medium |
-| 7 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
-| 8 | **Classification comparison table** | Side-by-side comparison of multiple GHS classifications for same chemical | Medium |
+| 3 | **Bilingual labels** | Show both Chinese + English names on same label | Low |
+| 4 | **Print quantity per chemical** | Allow "print X copies" per chemical in label print modal | Low |
+| 5 | **Save print templates** | Save frequently-used print settings as named templates | Medium |
+| 6 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
+| 7 | **Classification comparison table** | Side-by-side comparison of multiple GHS classifications for same chemical | Medium |
 
 ### 🟢 Low Priority — Nice to Have
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
-| 9 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
-| 10 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
-| 11 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
-| 12 | **PWA support** | Offline usage with service worker | High |
-| 13 | **Dark/light theme toggle** | Theme switcher | Medium |
-| 14 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
-| 15 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
-| 16 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
+| 8 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
+| 9 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
+| 10 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
+| 11 | **PWA support** | Offline usage with service worker | High |
+| 12 | **Dark/light theme toggle** | Theme switcher | Medium |
+| 13 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
+| 14 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
+| 15 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
