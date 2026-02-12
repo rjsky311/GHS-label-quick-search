@@ -159,7 +159,7 @@ a5653e5 v1.5.0: Performance + UX optimization
 ```
 
 ### Test Results
-- **Frontend**: 226+ tests, 17 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 35)
+- **Frontend**: 237+ tests, 17 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 46)
 - **Backend**: 59 tests (name search + reverse dictionaries + aliases + API endpoints)
 - **CI**: GitHub Actions runs both on every push to main
 
@@ -189,29 +189,25 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] Custom label fields (lab name, date, batch number — localStorage, 4 templates, 6 new tests)
 - [x] Bilingual labels (name display mode: both/en/zh with fallback, 5 new tests)
 - [x] Print quantity per chemical (1-20 copies per label, +/- controls, expand before paging, 4 new tests)
+- [x] Full-template font auto-sizing (4-tier system based on hazard count × label size, 11 new tests)
 
 ## Roadmap / Pending Work
-
-### 🔴 High Priority — Core UX
-| # | Feature | Description | Difficulty |
-|---|---------|-------------|------------|
-| 1 | **Full-template font auto-sizing** | Dynamic font adjustment for "Full" label template when content is long | Low |
 
 ### 🟡 Medium Priority — Enhanced Features
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
-| 2 | **Save print templates** | Save frequently-used print settings as named templates | Medium |
-| 3 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
-| 4 | **Classification comparison table** | Side-by-side comparison of multiple GHS classifications for same chemical | Medium |
+| 1 | **Save print templates** | Save frequently-used print settings as named templates | Medium |
+| 2 | **B&W / Color print option** | Toggle color vs B&W GHS pictograms (saves ink) | Low |
+| 3 | **Classification comparison table** | Side-by-side comparison of multiple GHS classifications for same chemical | Medium |
 
 ### 🟢 Low Priority — Nice to Have
 | # | Feature | Description | Difficulty |
 |---|---------|-------------|------------|
-| 5 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
-| 6 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
-| 7 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
-| 8 | **PWA support** | Offline usage with service worker | High |
-| 9 | **Dark/light theme toggle** | Theme switcher | Medium |
-| 10 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
-| 11 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
-| 12 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
+| 4 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
+| 5 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
+| 6 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
+| 7 | **PWA support** | Offline usage with service worker | High |
+| 8 | **Dark/light theme toggle** | Theme switcher | Medium |
+| 9 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
+| 10 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
+| 11 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
