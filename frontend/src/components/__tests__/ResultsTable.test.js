@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ResultsTable from '../ResultsTable';
 import {
   mockFoundResult,
@@ -104,7 +104,8 @@ describe('ResultsTable', () => {
           selectedForLabel={[mockFoundResult, mockWarningResult]}
         />
       );
-      expect(screen.getByText('2')).toBeInTheDocument();
+      const printBtn = screen.getByTestId('print-label-btn');
+      expect(within(printBtn).getByText('2')).toBeInTheDocument();
     });
   });
 
