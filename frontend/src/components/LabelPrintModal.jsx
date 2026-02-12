@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   Tag, X, Target, ClipboardList, FileText, QrCode,
   BookOpen, FileSpreadsheet, Printer, Lightbulb, Languages,
-  Bookmark, Check, Plus,
+  Bookmark, Check, Plus, Palette,
 } from "lucide-react";
 
 export default function LabelPrintModal({
@@ -307,6 +307,34 @@ export default function LabelPrintModal({
                     <span className="font-medium">{t(opt.labelKey)}</span>
                   </div>
                   {opt.descKey && <div className="text-xs opacity-70 mt-1">{t(opt.descKey)}</div>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Mode */}
+          <div>
+            <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <Palette className="w-4 h-4 inline mr-1 text-green-400" /> {t("label.colorMode")}
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "color", labelKey: "label.colorColor", icon: "🎨" },
+                { value: "bw", labelKey: "label.colorBW", icon: "⬛" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onLabelConfigChange({ ...labelConfig, colorMode: opt.value })}
+                  className={`p-3 rounded-lg border-2 transition-colors ${
+                    labelConfig.colorMode === opt.value
+                      ? "border-green-500 bg-green-500/10 text-green-400"
+                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 justify-center">
+                    <span>{opt.icon}</span>
+                    <span className="font-medium">{t(opt.labelKey)}</span>
+                  </div>
                 </button>
               ))}
             </div>

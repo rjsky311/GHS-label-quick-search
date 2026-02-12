@@ -580,6 +580,11 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       margin-top: 1mm;
     }
 
+    /* ===== B&W MODE ===== */
+    ${labelConfig.colorMode === "bw" ? `.pictograms img {
+      filter: grayscale(1) contrast(1.2);
+    }` : ""}
+
     /* ===== PRINT STYLES ===== */
     @media print {
       body {

@@ -497,6 +497,29 @@ describe('printLabels', () => {
     });
   });
 
+  describe('color mode (B&W / Color)', () => {
+    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+
+    it('does not include grayscale filter when colorMode is "color"', () => {
+      printLabels([mockChemical], { ...config, colorMode: 'color' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('grayscale');
+    });
+
+    it('includes grayscale filter when colorMode is "bw"', () => {
+      printLabels([mockChemical], { ...config, colorMode: 'bw' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('grayscale(1)');
+      expect(html).toContain('contrast(1.2)');
+    });
+
+    it('does not include grayscale filter when colorMode is not set (default)', () => {
+      printLabels([mockChemical], config, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('grayscale');
+    });
+  });
+
   describe('custom GHS settings', () => {
     it('uses alternate classification when customGHSSettings specifies index', () => {
       const chemWithAlternate = {
