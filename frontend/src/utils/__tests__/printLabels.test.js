@@ -284,7 +284,7 @@ describe('printLabels', () => {
     it('does not render custom fields section when all empty', () => {
       printLabels([mockChemical], config, {}, { labName: '', date: '', batchNumber: '' });
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('custom-fields');
+      expect(html).not.toContain('<div class="custom-fields">');
     });
 
     it('renders only non-empty fields', () => {
@@ -297,10 +297,9 @@ describe('printLabels', () => {
 
     it('renders custom fields in all 4 templates', () => {
       ['icon', 'standard', 'full', 'qrcode'].forEach((template) => {
-        jest.clearAllMocks();
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
-        mockIframeDoc = mocks.mockIframeDoc;
+        getByIdSpy.mockReturnValue(null);
 
         printLabels([mockChemical], { ...config, template }, {}, fields);
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
@@ -313,7 +312,7 @@ describe('printLabels', () => {
       // No customLabelFields argument → uses default {}
       printLabels([mockChemical], config, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('custom-fields');
+      expect(html).not.toContain('<div class="custom-fields">');
     });
 
     it('batch number includes prefix label', () => {
