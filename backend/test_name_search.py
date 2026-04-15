@@ -875,3 +875,73 @@ async def test_cors_does_not_advertise_credentials_mode():
         )
     cred_header = response.headers.get("access-control-allow-credentials", "").lower()
     assert cred_header != "true"
+
+
+# ─── Rate limiting ──────────────────────────────────────────
+
+from server import limiter as _limiter
+
+
+def test_limiter_is_configured_with_custom_key_func():
+    """Rate limit buckets must key off client IP (including
+    X-Forwarded-For for Zeabur proxy), not a shared global."""
+    from server import _client_ip
+    assert _limiter._key_func is _client_ip
+
+
+def test_pubchem_outbound_semaphore_is_bounded():
+    """The outbound PubChem concurrency gate must be a small positive
+    integer so a burst of client requests cannot flood PubChem."""
+    from server import _pubchem_semaphore, PUBCHEM_OUTBOUND_CONCURRENCY
+    assert isinstance(PUBCHEM_OUTBOUND_CONCURRENCY, int)
+    assert 1 <= PUBCHEM_OUTBOUND_CONCURRENCY <= 32
+    # The semaphore's value should match the configured concurrency.
+    # The `_value` attribute exists on asyncio.Semaphore in CPython.
+    assert _pubchem_semaphore._value == PUBCHEM_OUTBOUND_CONCURRENCY
+
+
+def test_client_ip_prefers_leftmost_x_forwarded_for():
+    """When behind a proxy, X-Forwarded-For's leftmost IP is the real
+    client, so rate limiting must bucket on that rather than the
+    proxy's address. Otherwise every user shares one bucket."""
+    from server import _client_ip
+
+    class _FakeHeaders(dict):
+        def get(self, k, default=None):
+            return super().get(k.lower(), default)
+
+    class _FakeClient:
+        host = "10.0.0.1"
+
+    class _FakeRequest:
+        headers = _FakeHeaders({"x-forwarded-for": "203.0.113.9, 10.0.0.1"})
+        client = _FakeClient()
+
+    assert _client_ip(_FakeRequest()) == "203.0.113.9"
+
+
+def test_client_ip_falls_back_to_direct_peer_without_forwarded_header():
+    from server import _client_ip
+
+    class _FakeHeaders(dict):
+        def get(self, k, default=None):
+            return super().get(k.lower(), default)
+
+    class _FakeClient:
+        host = "198.51.100.5"
+
+    class _FakeRequest:
+        headers = _FakeHeaders()
+        client = _FakeClient()
+
+    assert _client_ip(_FakeRequest()) == "198.51.100.5"
+
+
+def test_health_endpoint_has_no_rate_limit():
+    """/api/health must remain unlimited so load balancers / uptime
+    monitors don't trip the limiter when polling."""
+    from starlette.testclient import TestClient
+    client = TestClient(app)
+    # Burst 20 requests; none should be 429.
+    statuses = [client.get("/api/health").status_code for _ in range(20)]
+    assert all(s == 200 for s in statuses), statuses

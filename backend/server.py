@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 import os
 import logging
 from pathlib import Path
@@ -40,6 +43,56 @@ shared_http_client: Optional[httpx.AsyncClient] = None
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 
+# ─── Outbound PubChem concurrency gate ──────────────────────
+#
+# Limits how many concurrent PubChem requests this process can have in
+# flight regardless of how many client requests come in. Without this
+# gate, a single burst of batch searches (100 CAS numbers × 3-4 PubChem
+# calls each) could blow past PubChem's published rate limits and get
+# the whole deploy temporarily blocked. 8 is a conservative default
+# that still benefits from the shared httpx client's keep-alive pool.
+PUBCHEM_OUTBOUND_CONCURRENCY = int(os.environ.get("PUBCHEM_CONCURRENCY", "8"))
+_pubchem_semaphore = asyncio.Semaphore(PUBCHEM_OUTBOUND_CONCURRENCY)
+
+
+# ─── Client IP resolution for rate limiting ─────────────────
+#
+# The service sits behind Zeabur's proxy, so `request.client.host`
+# always resolves to the proxy. Without taking X-Forwarded-For into
+# account, every user would share one rate-limit bucket.
+#
+# Trust the LEFTMOST (original client) IP in X-Forwarded-For when
+# present, and fall back to the direct peer address otherwise.
+#
+# Deployment caveat (documented here and in README): this assumes the
+# API is only reachable through a trusted reverse proxy. If the API
+# is ever exposed directly to the public, a malicious client could
+# forge X-Forwarded-For. In that case set TRUST_FORWARDED_HEADERS=0.
+def _client_ip(request: "Request") -> str:
+    if os.environ.get("TRUST_FORWARDED_HEADERS", "1") == "1":
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            first = forwarded.split(",")[0].strip()
+            if first:
+                return first
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+
+# slowapi limiter. In-memory bucket — correct for a single-worker
+# deployment. Scaling to multiple workers/instances requires swapping
+# in a Redis-backed storage URI or pushing rate-limiting out to the
+# edge (Zeabur router, Cloudflare, etc.).
+limiter = Limiter(
+    key_func=_client_ip,
+    default_limits=[],  # no implicit global limit; per-route only
+    # headers_enabled=False so slowapi's decorator does not try to
+    # pluck a Response from each endpoint signature. Rate-limit
+    # signalling happens through the 429 status + exception handler.
+    headers_enabled=False,
+)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
@@ -54,6 +107,13 @@ async def lifespan(app: FastAPI):
 
 # Create the main app with lifespan
 app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
+
+# Register the rate limiter. The exception handler translates
+# RateLimitExceeded into a 429 response so clients see a clear signal
+# rather than a generic 500.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -276,12 +336,17 @@ async def pubchem_get_json(
     while True:
         retry_after: Optional[str] = None
         transient = False
-        try:
-            resp = await http_client.get(url, timeout=timeout)
-        except (httpx.TimeoutException, httpx.TransportError) as exc:
-            last_error = f"{type(exc).__name__}: {exc}"
-            transient = True
-        else:
+        # Bound the number of concurrent outbound PubChem requests so
+        # a single burst of client traffic cannot balloon into a DoS
+        # of PubChem (and get our IP rate-limited for everyone).
+        async with _pubchem_semaphore:
+            try:
+                resp = await http_client.get(url, timeout=timeout)
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                transient = True
+                resp = None
+        if resp is not None:
             status = resp.status_code
             if status == 200:
                 try:
@@ -959,7 +1024,8 @@ async def health_check():
     }
 
 @api_router.post("/search", response_model=List[ChemicalResult])
-async def search_chemicals(query: CASQuery):
+@limiter.limit("10/minute")
+async def search_chemicals(request: Request, query: CASQuery):
     """Search for chemicals by CAS numbers"""
     results = []
     http_client = shared_http_client
@@ -976,7 +1042,8 @@ async def search_chemicals(query: CASQuery):
     return results
 
 @api_router.get("/search-by-name/{query}")
-async def search_by_name(query: str):
+@limiter.limit("60/minute")
+async def search_by_name(request: Request, query: str):
     """Search for chemicals by English or Chinese name (including aliases/common names).
     Returns list of matching {cas_number, name_en, name_zh, alias} (max 20).
     Used for autocomplete / name lookup before full GHS search.
@@ -1027,7 +1094,8 @@ async def search_by_name(query: str):
 
 
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
-async def search_single_chemical(cas_number: str):
+@limiter.limit("30/minute")
+async def search_single_chemical(request: Request, cas_number: str):
     """Search by CAS number or chemical name.
     Auto-detects whether input is a CAS number or name."""
     query = cas_number.strip()
@@ -1050,7 +1118,8 @@ async def search_single_chemical(cas_number: str):
 
 
 @api_router.post("/export/xlsx")
-async def export_xlsx(request: ExportRequest):
+@limiter.limit("10/minute")
+async def export_xlsx(request: Request, payload: ExportRequest):
     """Export results to Excel file"""
     wb = Workbook()
     ws = wb.active
@@ -1080,7 +1149,7 @@ async def export_xlsx(request: ExportRequest):
     # neutralize values that start with a formula prefix (e.g.
     # `=HYPERLINK(...)`, `+cmd`, `@SUM(...)`), preventing CSV/XLSX
     # injection when the file is opened in Excel / Sheets / Calc.
-    for row, result in enumerate(request.results, 2):
+    for row, result in enumerate(payload.results, 2):
         ws.cell(row=row, column=1, value=spreadsheet_safe(result.get("cas_number", ""))).border = thin_border
         ws.cell(row=row, column=2, value=spreadsheet_safe(result.get("name_en", ""))).border = thin_border
         ws.cell(row=row, column=3, value=spreadsheet_safe(result.get("name_zh", ""))).border = thin_border
@@ -1121,7 +1190,8 @@ async def export_xlsx(request: ExportRequest):
     )
 
 @api_router.post("/export/csv")
-async def export_csv(request: ExportRequest):
+@limiter.limit("10/minute")
+async def export_csv(request: Request, payload: ExportRequest):
     """Export results to CSV file"""
     from io import StringIO
     string_output = StringIO()
@@ -1131,7 +1201,7 @@ async def export_csv(request: ExportRequest):
     writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"])
     
     # Data
-    for result in request.results:
+    for result in payload.results:
         pictograms = result.get("ghs_pictograms", [])
         ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
         

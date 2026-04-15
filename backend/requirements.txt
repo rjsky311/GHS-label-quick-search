@@ -15,6 +15,9 @@ openpyxl==3.1.5
 # Performance (Phase 3)
 cachetools==5.5.2
 
+# Rate limiting (Phase 1 security hardening)
+slowapi==0.1.9
+
 # Testing
 pytest==8.3.4
 pytest-asyncio==0.24.0
