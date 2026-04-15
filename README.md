@@ -235,86 +235,34 @@ yarn start
 
 ## 字典維護指南
 
-### 步驟 1：準備 CSV 檔案
+字典的真實來源是 `backend/chemical_dict.py`（直接編輯 Python literal）。
+該檔包含 6 個資料結構：
 
-建立或更新 `字典.csv`，格式如下：
+| 結構 | 用途 |
+|------|------|
+| `CAS_TO_ZH` / `CAS_TO_EN` | CAS → 正式中 / 英文名（主字典，1,707 筆） |
+| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文名（小寫）→ 中文，補 PubChem 同義詞查不到時使用 |
+| `ALIASES_ZH` / `ALIASES_EN` | 俗名／別名 → CAS（例：`酒精 → 64-17-5`） |
+| 自動建立的反向索引 | `EN_TO_CAS` / `ZH_TO_CAS` 在模組 import 時由上面幾個 dict 合併產生 |
 
-```csv
-CAS No.,英文名稱,中文名稱
-64-17-5,Ethanol,乙醇
-67-56-1,Methanol,甲醇
-100-42-5,Styrene,苯乙烯
-1072951-51-9,"3,4-Bis(methoxycarbonyl)phenylboronic acid","3,4-雙(甲氧羰基)苯硼酸"
-```
+### 新增化學品（少量手動）
 
-> ⚠️ **注意事項**：
-> - 含逗號的名稱需用雙引號包覆
-> - 中文名稱請保留完整（包含括號內的內容）
-> - 確保 UTF-8 編碼
+1. 在 `CAS_TO_ZH` 和 `CAS_TO_EN` 兩個 dict 中各加一筆：
+   ```python
+   "123-45-6": "化學品中文名",
+   "123-45-6": "Chemical English Name",
+   ```
+2. 若希望以英文名稱模糊搜尋找到，在 `CHEMICAL_NAMES_ZH_EXPANDED` 加入該名稱（小寫為 key）。
+3. 若有俗名／別名，在 `ALIASES_ZH` 或 `ALIASES_EN` 加入，值指向 CAS。
+4. 執行 `python -m pytest backend/test_name_search.py -v` 驗證。
+5. 重啟後端（本機 `uvicorn server:app --reload`；Zeabur `git push`）。
 
-### 步驟 2：執行字典生成腳本
+### 批次匯入
 
-```python
-import csv
-
-cas_to_zh = {}
-cas_to_en = {}
-en_to_zh = {}
-
-with open('字典.csv', 'r', encoding='utf-8') as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        cas = row['CAS No.'].strip()
-        en_name = row['英文名稱'].strip()
-        zh_name = row['中文名稱'].strip()
-
-        # CAS → 中文 (保留第一筆)
-        if cas and zh_name and cas not in cas_to_zh:
-            cas_to_zh[cas] = zh_name
-
-        # CAS → 英文 (保留第一筆)
-        if cas and en_name and cas not in cas_to_en:
-            cas_to_en[cas] = en_name
-
-        # 英文 → 中文 (小寫為 key)
-        if en_name and zh_name:
-            en_lower = en_name.lower()
-            if en_lower not in en_to_zh:
-                en_to_zh[en_lower] = zh_name
-
-# 生成 chemical_dict.py
-with open('backend/chemical_dict.py', 'w', encoding='utf-8') as f:
-    f.write('# -*- coding: utf-8 -*-\n')
-    f.write('CAS_TO_ZH = {\n')
-    for cas, zh in sorted(cas_to_zh.items()):
-        f.write(f'    "{cas}": "{zh}",\n')
-    f.write('}\n\n')
-
-    f.write('CAS_TO_EN = {\n')
-    for cas, en in sorted(cas_to_en.items()):
-        f.write(f'    "{cas}": "{en}",\n')
-    f.write('}\n\n')
-
-    f.write('CHEMICAL_NAMES_ZH_EXPANDED = {\n')
-    for en, zh in sorted(en_to_zh.items()):
-        f.write(f'    "{en}": "{zh}",\n')
-    f.write('}\n')
-
-print(f"✅ 字典生成完成！")
-print(f"   CAS_TO_ZH: {len(cas_to_zh)} 筆")
-print(f"   CAS_TO_EN: {len(cas_to_en)} 筆")
-print(f"   EN_TO_ZH:  {len(en_to_zh)} 筆")
-```
-
-### 步驟 3：重啟後端服務
-
-```bash
-# 本地開發
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Zeabur 部署 (自動)
-git push origin main
-```
+若要大量匯入（數百筆以上），建議：
+- 以自己的來源資料（Excel / CSV / 其他 SDS 資料庫）為主，
+- 寫一次性腳本輸出成 Python dict literal，再 diff 貼到 `chemical_dict.py`。
+- 不要覆寫檔案：`ALIASES_ZH` / `ALIASES_EN` 和任何手動調整都會丟失。
 
 ---
 
