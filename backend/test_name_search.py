@@ -516,3 +516,125 @@ async def test_search_chemical_both_distinct_reports_survive_dedup(monkeypatch):
     # Specifically: report_count=120 (the H336 one) must be primary
     primary_has_h336 = any(h["code"] == "H336" for h in result.hazard_statements)
     assert primary_has_h336, "Higher report_count must be chosen as primary"
+
+
+# ─── Export endpoint safety ─────────────────────────────────
+
+from server import spreadsheet_safe, MAX_EXPORT_ROWS
+
+
+class TestSpreadsheetSafe:
+    """spreadsheet_safe() neutralizes CSV/XLSX formula injection."""
+
+    def test_none_becomes_empty_string(self):
+        assert spreadsheet_safe(None) == ""
+
+    def test_plain_text_unchanged(self):
+        assert spreadsheet_safe("Ethanol") == "Ethanol"
+        assert spreadsheet_safe("64-17-5") == "64-17-5"  # leading digit is safe
+
+    def test_equals_prefix_is_neutralized(self):
+        assert spreadsheet_safe('=HYPERLINK("http://bad","click")') == "'=HYPERLINK(\"http://bad\",\"click\")"
+
+    def test_plus_prefix_is_neutralized(self):
+        assert spreadsheet_safe("+cmd|calc") == "'+cmd|calc"
+
+    def test_minus_prefix_is_neutralized(self):
+        # A minus sign in front is a formula trigger too
+        assert spreadsheet_safe("-1+1") == "'-1+1"
+
+    def test_at_prefix_is_neutralized(self):
+        assert spreadsheet_safe("@SUM(A1:A10)") == "'@SUM(A1:A10)"
+
+    def test_tab_prefix_is_neutralized(self):
+        assert spreadsheet_safe("\tmalicious") == "'\tmalicious"
+
+    def test_non_string_values_coerced(self):
+        assert spreadsheet_safe(42) == "42"
+        assert spreadsheet_safe(True) == "True"
+
+
+async def test_export_csv_neutralizes_formula_injection():
+    """Malicious `=...` value in a result field must be prefixed with
+    an apostrophe in the CSV output."""
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": '=HYPERLINK("http://bad","click")',
+                "name_zh": "乙醇",
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/csv", json=payload)
+    assert response.status_code == 200
+    # Body is UTF-8 with BOM. The neutralized cell must start with an
+    # apostrophe before the formula trigger, so the spreadsheet reads
+    # the value as literal text.
+    body = response.content.decode("utf-8-sig")
+    assert "'=HYPERLINK" in body
+    # There must be NO formula-triggering cell: every `=...` occurrence
+    # must be preceded by the neutralizing apostrophe.
+    assert ",=HYPERLINK" not in body
+    assert '"=HYPERLINK' not in body
+
+
+async def test_export_xlsx_neutralizes_formula_injection():
+    """Same regression for the XLSX endpoint."""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": "=1+1",
+                "name_zh": "+test",
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/xlsx", json=payload)
+    assert response.status_code == 200
+
+    wb = load_workbook(BytesIO(response.content))
+    ws = wb.active
+    # Row 2 is the first data row. Columns: 1=CAS, 2=en, 3=zh ...
+    assert ws.cell(row=2, column=2).value == "'=1+1"
+    assert ws.cell(row=2, column=3).value == "'+test"
+
+
+async def test_export_rejects_payload_exceeding_max_rows():
+    """Payload with > MAX_EXPORT_ROWS items must be rejected with 422."""
+    transport = ASGITransport(app=app)
+    oversized = [
+        {"cas_number": f"000-00-{i}", "name_en": "x", "name_zh": "x",
+         "ghs_pictograms": [], "hazard_statements": []}
+        for i in range(MAX_EXPORT_ROWS + 1)
+    ]
+    payload = {"results": oversized}
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/csv", json=payload)
+    assert response.status_code == 422
+
+
+async def test_export_accepts_payload_at_max_rows():
+    """MAX_EXPORT_ROWS items exactly must still succeed (inclusive limit)."""
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {"cas_number": f"000-00-{i}", "name_en": "x", "name_zh": "x",
+             "ghs_pictograms": [], "hazard_statements": []}
+            for i in range(MAX_EXPORT_ROWS)
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/csv", json=payload)
+    assert response.status_code == 200

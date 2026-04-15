@@ -192,9 +192,34 @@ class ChemicalResult(BaseModel):
     found: bool = False
     error: Optional[str] = None
 
+# Maximum rows accepted by the export endpoints. Keeps request size
+# bounded and prevents abuse of the export pipeline as a DoS vector.
+MAX_EXPORT_ROWS = 500
+
 class ExportRequest(BaseModel):
-    results: List[Dict[str, Any]]
+    results: List[Dict[str, Any]] = Field(..., max_length=MAX_EXPORT_ROWS)
     format: str = "xlsx"  # xlsx or csv
+
+
+# Characters that Excel / Google Sheets / LibreOffice Calc treat as the
+# start of a formula. Values beginning with any of these can execute
+# content when the exported file is opened elsewhere (CSV injection).
+_FORMULA_TRIGGER_CHARS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def spreadsheet_safe(value: Any) -> str:
+    """Neutralize spreadsheet formula injection in exported cells.
+
+    Any string whose first character would be interpreted as a formula
+    prefix is prefixed with an apostrophe, which spreadsheet apps treat
+    as a text-only marker. `None` is coerced to an empty string.
+    """
+    if value is None:
+        return ""
+    text = str(value)
+    if text and text[0] in _FORMULA_TRIGGER_CHARS:
+        return "'" + text
+    return text
 
 # Helper functions
 def normalize_cas(cas: str) -> str:
@@ -900,25 +925,28 @@ async def export_xlsx(request: ExportRequest):
         cell.alignment = header_alignment
         cell.border = thin_border
     
-    # Data
+    # Data — every cell value is routed through spreadsheet_safe() to
+    # neutralize values that start with a formula prefix (e.g.
+    # `=HYPERLINK(...)`, `+cmd`, `@SUM(...)`), preventing CSV/XLSX
+    # injection when the file is opened in Excel / Sheets / Calc.
     for row, result in enumerate(request.results, 2):
-        ws.cell(row=row, column=1, value=result.get("cas_number", "")).border = thin_border
-        ws.cell(row=row, column=2, value=result.get("name_en", "")).border = thin_border
-        ws.cell(row=row, column=3, value=result.get("name_zh", "")).border = thin_border
-        
+        ws.cell(row=row, column=1, value=spreadsheet_safe(result.get("cas_number", ""))).border = thin_border
+        ws.cell(row=row, column=2, value=spreadsheet_safe(result.get("name_en", ""))).border = thin_border
+        ws.cell(row=row, column=3, value=spreadsheet_safe(result.get("name_zh", ""))).border = thin_border
+
         # GHS pictograms
         pictograms = result.get("ghs_pictograms", [])
         ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
-        ws.cell(row=row, column=4, value=ghs_text).border = thin_border
-        
+        ws.cell(row=row, column=4, value=spreadsheet_safe(ghs_text)).border = thin_border
+
         # Signal word
         signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
-        ws.cell(row=row, column=5, value=signal).border = thin_border
-        
+        ws.cell(row=row, column=5, value=spreadsheet_safe(signal)).border = thin_border
+
         # Hazard statements
         statements = result.get("hazard_statements", [])
         hazard_text = "\n".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-        cell = ws.cell(row=row, column=6, value=hazard_text)
+        cell = ws.cell(row=row, column=6, value=spreadsheet_safe(hazard_text))
         cell.border = thin_border
         cell.alignment = Alignment(wrap_text=True)
     
@@ -962,12 +990,12 @@ async def export_csv(request: ExportRequest):
         hazard_text = "; ".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
         
         writer.writerow([
-            result.get("cas_number", ""),
-            result.get("name_en", ""),
-            result.get("name_zh", ""),
-            ghs_text,
-            signal,
-            hazard_text
+            spreadsheet_safe(result.get("cas_number", "")),
+            spreadsheet_safe(result.get("name_en", "")),
+            spreadsheet_safe(result.get("name_zh", "")),
+            spreadsheet_safe(ghs_text),
+            spreadsheet_safe(signal),
+            spreadsheet_safe(hazard_text),
         ])
     
     # Convert to bytes with BOM
