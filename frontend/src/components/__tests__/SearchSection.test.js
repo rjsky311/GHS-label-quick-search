@@ -123,6 +123,39 @@ describe('SearchSection', () => {
       fireEvent.click(screen.getByTestId('clear-batch-btn'));
       expect(defaultProps.onSetBatchCas).toHaveBeenCalledWith('');
     });
+
+    it('shows detailed over-limit alert when batchCount exceeds the limit', () => {
+      render(<SearchSection {...defaultProps} activeTab="batch" batchCount={150} />);
+      const alert = screen.getByTestId('batch-over-limit-alert');
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveAttribute('role', 'alert');
+      // i18n mock returns keys as-is
+      expect(alert.textContent).toContain('search.batchOverLimitDetail');
+    });
+
+    it('does not show over-limit alert when batchCount is at the limit', () => {
+      render(<SearchSection {...defaultProps} activeTab="batch" batchCount={100} />);
+      expect(screen.queryByTestId('batch-over-limit-alert')).not.toBeInTheDocument();
+    });
+
+    it('over-limit disables the submit button AND clicking it must not call onSearchBatch', () => {
+      const onSearchBatch = jest.fn();
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchCount={150}
+          onSearchBatch={onSearchBatch}
+        />
+      );
+      const btn = screen.getByTestId('batch-search-btn');
+      expect(btn).toBeDisabled();
+      // Even if someone forces a click through, the native disabled
+      // attribute is the guard the browser enforces. Attempting a click
+      // on a disabled button should not invoke the handler.
+      fireEvent.click(btn);
+      expect(onSearchBatch).not.toHaveBeenCalled();
+    });
   });
 
   describe('Batch progress bar', () => {

@@ -13,7 +13,7 @@ import useResultSort from "@/hooks/useResultSort";
 import usePrintTemplates from "@/hooks/usePrintTemplates";
 
 // Constants & Utils
-import { API } from "@/constants/ghs";
+import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
 import { printLabels } from "@/utils/printLabels";
 
@@ -218,6 +218,22 @@ function App() {
 
     if (casNumbers.length === 0) {
       setError(t("search.errorNoValid"));
+      setLoading(false);
+      return;
+    }
+
+    // Defence-in-depth: the UI already disables the submit button when
+    // batchCount > limit, but refuse here too so a stray programmatic
+    // call or rapid click cannot bypass the guard and hit the backend
+    // (which would 422 on the same check).
+    if (casNumbers.length > BATCH_SEARCH_LIMIT) {
+      setError(
+        t("search.batchOverLimitDetail", {
+          count: casNumbers.length,
+          limit: BATCH_SEARCH_LIMIT,
+          excess: casNumbers.length - BATCH_SEARCH_LIMIT,
+        })
+      );
       setLoading(false);
       return;
     }
