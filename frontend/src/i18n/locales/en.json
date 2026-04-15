@@ -224,6 +224,8 @@
   "export.sheetName": "GHS Results",
   "export.none": "None",
   "export.noHazard": "No hazard statements",
+  "export.errorXlsx": "Excel export failed. Please check your connection and try again.",
+  "export.csvFallbackHint": "Server export was unavailable — saved with a local fallback.",
 
   "print.title": "GHS Label Print",
   "print.noHazardLabel": "No hazard label",

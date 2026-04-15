@@ -1023,3 +1023,40 @@ def test_health_endpoint_has_no_rate_limit():
     # Burst 20 requests; none should be 429.
     statuses = [client.get("/api/health").status_code for _ in range(20)]
     assert all(s == 200 for s in statuses), statuses
+
+
+# ─── Security response headers ──────────────────────────────
+
+async def test_health_response_has_nosniff_header():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/health")
+    assert response.status_code == 200
+    assert response.headers.get("x-content-type-options") == "nosniff"
+
+
+async def test_health_response_has_referrer_policy():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/health")
+    assert response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+
+
+async def test_health_response_has_permissions_policy():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/health")
+    # The policy must disable at least the sensor/credential-style APIs.
+    pp = response.headers.get("permissions-policy", "")
+    for directive in ("camera=", "microphone=", "geolocation="):
+        assert directive in pp, f"missing {directive!r} in Permissions-Policy"
+
+
+async def test_api_response_has_strict_csp():
+    """API returns JSON/binary; its CSP must be extremely restrictive."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/health")
+    csp = response.headers.get("content-security-policy", "")
+    assert "default-src 'none'" in csp
+    assert "frame-ancestors 'none'" in csp

@@ -20,6 +20,9 @@
 
 ### 🔍 單一查詢
 - 輸入單個 CAS 號碼（如 `64-17-5`）
+- 支援中文／英文化學品名稱（如 `乙醇`、`Ethanol`、`acetone`）
+- 實時自動完成下拉（後端 `/search-by-name`，debounce 300ms，自動取消舊請求）
+- 俗名／別名（例：`酒精` → 64-17-5）以綠色標籤區分
 - 即時顯示化學品名稱和 GHS 危害標示
 
 ### 📋 批次查詢
@@ -56,7 +59,7 @@
 
 ### 🌐 雙語介面
 - 繁體中文 / English 一鍵切換
-- 187 個翻譯 key，完整涵蓋所有介面文字
+- 210 個翻譯 key，完整涵蓋所有介面文字
 - 瀏覽器自動偵測語言，手動切換後記憶偏好
 
 ### 🔗 SDS 安全資料連結
@@ -70,9 +73,11 @@
 - 警示語（危險/警告）下拉篩選
 
 ### ⌨️ 鍵盤快捷鍵
-- `Ctrl+K` 快速聚焦搜尋框
+- `/` 快速聚焦搜尋框（與 GitHub / YouTube 一致，`Ctrl+K` 仍保留為備援）
 - 方向鍵導航自動完成建議
 - `Enter` 直接觸發搜尋
+- `Escape` 關閉側欄或 Modal
+- Tab 鍵被 focus trap 限制在當前對話框內
 
 ### 📚 中文化學品名稱字典
 - 內建 **1,707 個** CAS 號碼對應的中文名稱
@@ -87,13 +92,15 @@
 | 層級 | 技術 | 說明 |
 |------|------|------|
 | 前端 | React 19 + Tailwind CSS 3.4 + Radix UI | 響應式使用者介面 |
-| UI 元件 | 13 自訂元件 + 46 個 shadcn/ui 原件 | lucide-react 圖示 |
+| UI 元件 | 15 自訂元件 + 46 個 shadcn/ui 原件 | lucide-react 圖示 |
+| React 自訂 Hooks | 8 個 | localStorage 狀態、排序、列印模板、focus trap |
 | 建置工具 | CRACO 7.1.0 (wrapping CRA) | `@` alias, ESLint |
-| 國際化 | react-i18next 14.x + i18next 23.x | 187 keys × 2 語言 |
+| 國際化 | react-i18next 14.x + i18next 23.x | 210 keys × 2 語言 |
 | 後端 | FastAPI (Python 3.11) | RESTful API 服務 |
-| 資料來源 | PubChem API | GHS 危害標示資料 |
-| 本地字典 | Python Dict | 中英文名稱對照 (1,707+ 筆) |
+| 資料來源 | PubChem API | GHS 危害標示資料；含重試 / 退避 / 出站 semaphore |
+| 本地字典 | Python Dict | 中英文名稱對照 (1,707 筆) + 別名 (~150 筆) |
 | 快取 | cachetools (TTLCache) | 24 小時記憶體快取 (最多 5,000 筆) |
+| Rate limiting | slowapi (in-memory) | 每 IP 每端點分別限流 |
 | 部署 | Zeabur (Docker + Static) | Git push 自動部署 |
 
 ---
@@ -103,55 +110,62 @@
 ```
 GHS-label-quick-search/
 ├── backend/
-│   ├── server.py              # FastAPI 主程式 (834 行, API、快取、PubChem 整合)
-│   ├── chemical_dict.py       # 化學品字典 (CAS/英文/中文對照, 5295 行)
-│   ├── requirements.txt       # Python 依賴套件 (11 個)
+│   ├── server.py              # FastAPI 主程式（API、快取、PubChem 整合、rate limit）
+│   ├── chemical_dict.py       # 化學品字典（CAS/英/中對照 + ALIASES_ZH/EN）
+│   ├── test_name_search.py    # 99 個後端測試
+│   ├── requirements.txt       # Python 依賴套件
 │   ├── requirements-dev.txt   # 開發工具 (black, flake8, pytest 等)
 │   ├── Dockerfile             # Docker 容器設定 (非 root 執行)
+│   ├── pytest.ini             # asyncio_mode = auto
 │   └── .env.example           # 環境變數範本
 ├── frontend/
 │   ├── src/
-│   │   ├── App.js             # React 主元件 (366 行, 所有狀態)
+│   │   ├── App.js             # React 主元件（所有 state hub）
 │   │   ├── index.js           # 進入點 (ErrorBoundary + i18n)
-│   │   ├── components/        # 13 個自訂元件
-│   │   │   ├── Header.jsx            # 頂部列 (收藏/紀錄/語言切換)
-│   │   │   ├── SearchSection.jsx     # 搜尋區塊 (單一/批次標籤)
-│   │   │   ├── SearchAutocomplete.jsx # 自動完成下拉選單
-│   │   │   ├── ResultsTable.jsx      # 結果表格 (排序/篩選/匯出/SDS)
-│   │   │   ├── DetailModal.jsx       # 詳細資訊 Modal
-│   │   │   ├── LabelPrintModal.jsx   # 標籤列印設定
-│   │   │   ├── FavoritesSidebar.jsx  # 收藏側邊欄
-│   │   │   ├── HistorySidebar.jsx    # 搜尋紀錄側邊欄
-│   │   │   ├── EmptyState.jsx        # 首頁快速開始
-│   │   │   ├── Footer.jsx            # 頁尾 (版本/聲明)
-│   │   │   ├── ErrorBoundary.jsx     # 錯誤邊界
-│   │   │   ├── SkeletonTable.jsx     # 載入骨架屏
-│   │   │   └── GHSImage.jsx          # GHS 圖示顯示
-│   │   ├── hooks/             # 6 個自訂 Hooks
+│   │   ├── components/        # 15 個自訂元件
+│   │   │   ├── Header.jsx                       # 頂部列（收藏／紀錄／語言切換）
+│   │   │   ├── SearchSection.jsx                # 搜尋區塊（單一／批次 tab，batch>100 alert）
+│   │   │   ├── SearchAutocomplete.jsx           # 自動完成下拉（含 abort race guard）
+│   │   │   ├── ResultsTable.jsx                 # 結果表格（排序／篩選／匯出／SDS／比較按鈕）
+│   │   │   ├── DetailModal.jsx                  # 詳細資訊 Modal
+│   │   │   ├── ClassificationComparisonTable.jsx # 多分類對照表（same-chem / cross-chem 共用）
+│   │   │   ├── ComparisonModal.jsx              # 跨化學品比較 Modal
+│   │   │   ├── LabelPrintModal.jsx              # 標籤列印設定（含儲存 preset）
+│   │   │   ├── FavoritesSidebar.jsx             # 收藏側邊欄
+│   │   │   ├── HistorySidebar.jsx               # 搜尋紀錄側邊欄
+│   │   │   ├── EmptyState.jsx                   # 首頁快速開始
+│   │   │   ├── Footer.jsx                       # 頁尾（版本／聲明）
+│   │   │   ├── ErrorBoundary.jsx                # 錯誤邊界
+│   │   │   ├── SkeletonTable.jsx                # 載入骨架屏
+│   │   │   └── GHSImage.jsx                     # GHS 圖示顯示
+│   │   ├── hooks/             # 8 個自訂 Hooks
 │   │   │   ├── useSearchHistory.js   # 搜尋紀錄 (localStorage, 上限 50)
 │   │   │   ├── useFavorites.js       # 收藏功能
 │   │   │   ├── useCustomGHS.js       # 自訂 GHS 分類
 │   │   │   ├── useLabelSelection.js  # 標籤勾選狀態
 │   │   │   ├── useResultSort.js      # 表格排序
-│   │   │   └── use-toast.js          # Toast 通知
+│   │   │   ├── usePrintTemplates.js  # 列印設定 preset（localStorage，上限 10 組）
+│   │   │   ├── useFocusTrap.js       # Modal/Sidebar focus trap + 焦點還原
+│   │   │   └── use-toast.js          # Toast 通知（sonner）
 │   │   ├── utils/             # 4 個工具函式
-│   │   │   ├── exportData.js         # Excel/CSV 匯出
-│   │   │   ├── printLabels.js        # 標籤列印引擎 (4 版型)
+│   │   │   ├── exportData.js         # Excel/CSV 匯出（呼叫後端）
+│   │   │   ├── printLabels.js        # 標籤列印引擎（4 版型 + HTML escape + afterprint 清理）
 │   │   │   ├── sdsLinks.js           # SDS 安全資料連結產生器
 │   │   │   └── formatDate.js         # 日期格式化
 │   │   ├── i18n/              # 國際化
 │   │   │   ├── index.js              # i18next 初始化
 │   │   │   └── locales/
-│   │   │       ├── zh-TW.json        # 繁體中文 (187 keys)
-│   │   │       └── en.json           # English (187 keys)
+│   │   │       ├── zh-TW.json        # 繁體中文 (210 keys)
+│   │   │       └── en.json           # English (210 keys)
 │   │   ├── constants/
-│   │   │   └── ghs.js               # BACKEND_URL, API, GHS_IMAGES
+│   │   │   └── ghs.js               # BACKEND_URL, API, GHS_IMAGES, BATCH_SEARCH_LIMIT
 │   │   └── components/ui/    # 46 個 shadcn/ui 元件
 │   ├── craco.config.js        # CRACO 設定 (@ alias, ESLint)
 │   ├── tailwind.config.js     # Tailwind CSS 設定
 │   ├── package.json           # Node.js 依賴套件
 │   ├── .npmrc                 # npm legacy-peer-deps
 │   └── .env.example           # 前端環境變數範本
+├── .github/workflows/ci.yml   # GitHub Actions（frontend + backend 測試）
 ├── CLAUDE.md                  # Claude Code 專案上下文
 ├── zeabur.yaml                # Zeabur 部署設定 (前後端 2 服務)
 └── README.md                  # 專案說明文件
@@ -235,86 +249,34 @@ yarn start
 
 ## 字典維護指南
 
-### 步驟 1：準備 CSV 檔案
+字典的真實來源是 `backend/chemical_dict.py`（直接編輯 Python literal）。
+該檔包含 6 個資料結構：
 
-建立或更新 `字典.csv`，格式如下：
+| 結構 | 用途 |
+|------|------|
+| `CAS_TO_ZH` / `CAS_TO_EN` | CAS → 正式中 / 英文名（主字典，1,707 筆） |
+| `CHEMICAL_NAMES_ZH_EXPANDED` | 英文名（小寫）→ 中文，補 PubChem 同義詞查不到時使用 |
+| `ALIASES_ZH` / `ALIASES_EN` | 俗名／別名 → CAS（例：`酒精 → 64-17-5`） |
+| 自動建立的反向索引 | `EN_TO_CAS` / `ZH_TO_CAS` 在模組 import 時由上面幾個 dict 合併產生 |
 
-```csv
-CAS No.,英文名稱,中文名稱
-64-17-5,Ethanol,乙醇
-67-56-1,Methanol,甲醇
-100-42-5,Styrene,苯乙烯
-1072951-51-9,"3,4-Bis(methoxycarbonyl)phenylboronic acid","3,4-雙(甲氧羰基)苯硼酸"
-```
+### 新增化學品（少量手動）
 
-> ⚠️ **注意事項**：
-> - 含逗號的名稱需用雙引號包覆
-> - 中文名稱請保留完整（包含括號內的內容）
-> - 確保 UTF-8 編碼
+1. 在 `CAS_TO_ZH` 和 `CAS_TO_EN` 兩個 dict 中各加一筆：
+   ```python
+   "123-45-6": "化學品中文名",
+   "123-45-6": "Chemical English Name",
+   ```
+2. 若希望以英文名稱模糊搜尋找到，在 `CHEMICAL_NAMES_ZH_EXPANDED` 加入該名稱（小寫為 key）。
+3. 若有俗名／別名，在 `ALIASES_ZH` 或 `ALIASES_EN` 加入，值指向 CAS。
+4. 執行 `python -m pytest backend/test_name_search.py -v` 驗證。
+5. 重啟後端（本機 `uvicorn server:app --reload`；Zeabur `git push`）。
 
-### 步驟 2：執行字典生成腳本
+### 批次匯入
 
-```python
-import csv
-
-cas_to_zh = {}
-cas_to_en = {}
-en_to_zh = {}
-
-with open('字典.csv', 'r', encoding='utf-8') as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        cas = row['CAS No.'].strip()
-        en_name = row['英文名稱'].strip()
-        zh_name = row['中文名稱'].strip()
-
-        # CAS → 中文 (保留第一筆)
-        if cas and zh_name and cas not in cas_to_zh:
-            cas_to_zh[cas] = zh_name
-
-        # CAS → 英文 (保留第一筆)
-        if cas and en_name and cas not in cas_to_en:
-            cas_to_en[cas] = en_name
-
-        # 英文 → 中文 (小寫為 key)
-        if en_name and zh_name:
-            en_lower = en_name.lower()
-            if en_lower not in en_to_zh:
-                en_to_zh[en_lower] = zh_name
-
-# 生成 chemical_dict.py
-with open('backend/chemical_dict.py', 'w', encoding='utf-8') as f:
-    f.write('# -*- coding: utf-8 -*-\n')
-    f.write('CAS_TO_ZH = {\n')
-    for cas, zh in sorted(cas_to_zh.items()):
-        f.write(f'    "{cas}": "{zh}",\n')
-    f.write('}\n\n')
-
-    f.write('CAS_TO_EN = {\n')
-    for cas, en in sorted(cas_to_en.items()):
-        f.write(f'    "{cas}": "{en}",\n')
-    f.write('}\n\n')
-
-    f.write('CHEMICAL_NAMES_ZH_EXPANDED = {\n')
-    for en, zh in sorted(en_to_zh.items()):
-        f.write(f'    "{en}": "{zh}",\n')
-    f.write('}\n')
-
-print(f"✅ 字典生成完成！")
-print(f"   CAS_TO_ZH: {len(cas_to_zh)} 筆")
-print(f"   CAS_TO_EN: {len(cas_to_en)} 筆")
-print(f"   EN_TO_ZH:  {len(en_to_zh)} 筆")
-```
-
-### 步驟 3：重啟後端服務
-
-```bash
-# 本地開發
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Zeabur 部署 (自動)
-git push origin main
-```
+若要大量匯入（數百筆以上），建議：
+- 以自己的來源資料（Excel / CSV / 其他 SDS 資料庫）為主，
+- 寫一次性腳本輸出成 Python dict literal，再 diff 貼到 `chemical_dict.py`。
+- 不要覆寫檔案：`ALIASES_ZH` / `ALIASES_EN` 和任何手動調整都會丟失。
 
 ---
 
@@ -338,14 +300,17 @@ git push origin main
 
 ### 端點一覽
 
-| 端點 | 方法 | 說明 |
-|------|------|------|
-| `/api/health` | GET | 健康檢查 |
-| `/api/search/{cas_number}` | GET | 單一 CAS 號碼查詢 |
-| `/api/search` | POST | 批次查詢（上限 100 筆） |
-| `/api/export/xlsx` | POST | 匯出 Excel |
-| `/api/export/csv` | POST | 匯出 CSV |
-| `/api/ghs-pictograms` | GET | 取得所有 GHS 圖示資訊 |
+| 端點 | 方法 | 限流 | 說明 |
+|------|------|------|------|
+| `/api/health` | GET | – | 健康檢查（部署健檢不限流） |
+| `/api/search/{query}` | GET | 30/min/IP | 單一查詢；自動偵測 CAS 或中／英文名稱 |
+| `/api/search-by-name/{query}` | GET | 60/min/IP | 名稱自動完成（回傳至多 20 筆） |
+| `/api/search` | POST | 10/min/IP | 批次 CAS 查詢（上限 100 筆，超過回 422） |
+| `/api/export/xlsx` | POST | 10/min/IP | 匯出 Excel（上限 500 筆，含公式注入中和） |
+| `/api/export/csv` | POST | 10/min/IP | 匯出 CSV（上限 500 筆，含公式注入中和） |
+| `/api/ghs-pictograms` | GET | – | 取得所有 GHS 圖示資訊 |
+
+回應格式中的 `upstream_error: true` 代表 PubChem 暫時無法回應，前端會顯示「請稍後再試」而非「查無資料」。
 
 ### 單一查詢範例
 
@@ -365,7 +330,7 @@ curl -X POST https://ghs-backend.zeabur.app/api/search \
 
 ```bash
 curl https://ghs-backend.zeabur.app/api/health
-# {"status": "healthy", "timestamp": "...", "version": "1.2.0"}
+# {"status": "healthy", "timestamp": "...", "version": "1.7.0"}
 ```
 
 ### 回應格式
@@ -414,6 +379,42 @@ curl https://ghs-backend.zeabur.app/api/health
 ---
 
 ## 版本更新紀錄
+
+### v1.7.0 (2026-04)
+
+**使用者功能**
+- 🔎 **化學品名稱搜尋**：後端反向字典 + `/api/search-by-name/{query}`，支援中文／英文實時自動完成（300ms debounce，自動取消舊請求）
+- 🧭 **搜尋框快捷鍵**：「`/`」鍵（瀏覽器不會攔截，與 GitHub/YouTube 相同）
+- 🏷️ **俗名／別名**：ALIASES_ZH (~90 個) + ALIASES_EN (~60 個)，例 `酒精 → 64-17-5`；autocomplete 顯示綠色標籤
+- 🏷️ **列印強化**：
+  - 4 種標籤版型 + 3 尺寸 + 橫／直印
+  - 雙語顯示：both / 純英文 / 純中文
+  - 每個化學品 1–20 份獨立份數
+  - 完整版依危害數量自動縮字
+  - 實驗室名稱 / 日期 / 批號自訂欄位
+  - 儲存列印設定（最多 10 組 preset）
+  - B&W / Color 列印切換
+- ⚖️ **分類比較表**：DetailModal 內同一化學品多分類並排比較 + ResultsTable 跨化學品比較 Modal
+- 🖼️ **彈跳視窗攔截修復**：popup blocker 不再擋列印；改用隱藏 iframe + `afterprint` 清理
+
+**可靠性 / 安全性（Phase 1）**
+- 🔒 **PubChem 錯誤分類**：加入 `pubchem_get_json()` 重試 helper（指數退避 + jitter + Retry-After），區分 transient (429/5xx/timeout) 與 definitive (404)；回傳 `upstream_error: true` 而不是偽裝成「無危害」
+- 🔒 **GHS 分類去重**：用完整簽章 `(pictograms, signal_word, H-codes, source)` 取代 pictogram-only，不再丟失同圖示但 H-code 不同的報告
+- 🔒 **匯出安全**：CSV/XLSX 公式注入中和（`'=HYPERLINK(...)` 前置 apostrophe），500 筆上限
+- 🔒 **列印 HTML escaping**：localStorage / 使用者輸入 / PubChem 文字在寫入 iframe 前全部 escape
+- 🔒 **CORS 收嚴**：預設不再是 `*`；`allow_credentials=False`
+- 🔒 **Rate limiting**：slowapi 每 IP 每端點限流 + PubChem 出站 `asyncio.Semaphore(8)`
+
+**穩定性 / 無障礙（Phase 2）**
+- 🏁 **Autocomplete 競態修復**：input 改變立即 abort 飛行中請求，`latestQueryRef` 二層保險過濾 stale response
+- 🧹 **iframe 清理改用 afterprint**：原本固定 1 秒，現以 `afterprint` 事件觸發 + 60 秒 fallback
+- 🚦 **前端攔截 batch > 100**：顯示本地化警示，雙層守門
+- ♿ **自訂側欄 focus trap**：新 `useFocusTrap` hook 處理初始 focus、Tab 循環、Escape 關閉、焦點還原
+
+**品質**
+- 🧪 **測試覆蓋**：Backend 99（原 30）、Frontend 354（原 180）；補齊 LabelPrintModal、ErrorBoundary、FavoritesSidebar、HistorySidebar、useFocusTrap
+- 📈 i18n key 數量：210（原 187）
+- 🗑️ 清理死檔：`backend_test.py`、`tests/`、`字典.csv`、`test_result.md`
 
 ### v1.6.0 (2026-02)
 - 🌐 **i18n 雙語系統**：繁體中文 / English 一鍵切換，187 個翻譯 key
