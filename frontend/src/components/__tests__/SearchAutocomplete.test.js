@@ -257,35 +257,35 @@ describe('SearchAutocomplete', () => {
       { cas_number: '71-36-3', name_en: '1-Butanol', name_zh: '正丁醇' },
     ];
 
-    it('does not call API for CAS-like input', () => {
+    it('does not call API for CAS-like input', async () => {
       render(<SearchAutocomplete {...defaultProps} value="64-17" />);
       const input = screen.getByTestId('single-cas-input');
       fireEvent.focus(input);
 
-      act(() => { jest.advanceTimersByTime(500); });
+      await act(async () => { jest.advanceTimersByTime(500); });
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it('does not call API for input shorter than 2 chars', () => {
+    it('does not call API for input shorter than 2 chars', async () => {
       render(<SearchAutocomplete {...defaultProps} value="a" />);
       const input = screen.getByTestId('single-cas-input');
       fireEvent.focus(input);
 
-      act(() => { jest.advanceTimersByTime(500); });
+      await act(async () => { jest.advanceTimersByTime(500); });
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it('calls API after 300ms debounce for name input', () => {
+    it('calls API after 300ms debounce for name input', async () => {
       render(<SearchAutocomplete {...defaultProps} value="ethanol" />);
       const input = screen.getByTestId('single-cas-input');
       fireEvent.focus(input);
 
       // Before 300ms — no call yet
-      act(() => { jest.advanceTimersByTime(200); });
+      await act(async () => { jest.advanceTimersByTime(200); });
       expect(axios.get).not.toHaveBeenCalled();
 
-      // After 300ms — call fires
-      act(() => { jest.advanceTimersByTime(100); });
+      // After 300ms — call fires and promise resolves (microtask flushed by act)
+      await act(async () => { jest.advanceTimersByTime(100); });
       expect(axios.get).toHaveBeenCalledTimes(1);
       expect(axios.get).toHaveBeenCalledWith(
         expect.stringContaining('/search-by-name/ethanol'),
@@ -346,7 +346,7 @@ describe('SearchAutocomplete', () => {
       expect(butanolOption.textContent).toContain('autocomplete.search');
     });
 
-    it('shows loading spinner while fetching', () => {
+    it('shows loading spinner while fetching', async () => {
       // Mock a pending promise
       axios.get.mockReturnValue(new Promise(() => {}));
 
@@ -355,7 +355,7 @@ describe('SearchAutocomplete', () => {
       fireEvent.focus(input);
 
       // Advance past debounce to trigger request
-      act(() => { jest.advanceTimersByTime(300); });
+      await act(async () => { jest.advanceTimersByTime(300); });
 
       expect(screen.getByText('autocomplete.searching')).toBeInTheDocument();
     });
@@ -398,6 +398,74 @@ describe('SearchAutocomplete', () => {
       // No crash, no server results shown
       expect(screen.queryByText('autocomplete.search')).not.toBeInTheDocument();
       expect(screen.queryByText('autocomplete.searching')).not.toBeInTheDocument();
+    });
+
+    it('ignores a stale in-flight response after the input has changed', async () => {
+      // Two manually-controlled promises so we can resolve them in the
+      // order that reproduces the race: first request dispatched, input
+      // changes, second request dispatched, then FIRST resolves with
+      // stale data, then SECOND resolves with fresh data.
+      let resolveFirst;
+      let resolveSecond;
+      const firstPromise = new Promise((r) => { resolveFirst = r; });
+      const secondPromise = new Promise((r) => { resolveSecond = r; });
+
+      axios.get
+        .mockImplementationOnce(() => firstPromise)
+        .mockImplementationOnce(() => secondPromise);
+
+      const { rerender } = render(
+        <SearchAutocomplete {...defaultProps} value="eth" />
+      );
+      const input = screen.getByTestId('single-cas-input');
+      fireEvent.focus(input);
+
+      // Dispatch the first request.
+      await act(async () => { jest.advanceTimersByTime(300); });
+      expect(axios.get).toHaveBeenCalledTimes(1);
+      expect(axios.get).toHaveBeenLastCalledWith(
+        expect.stringContaining('/search-by-name/eth'),
+        expect.any(Object)
+      );
+
+      // User types a new query. The effect cleanup must abort the
+      // first in-flight request and schedule a new timer.
+      rerender(<SearchAutocomplete {...defaultProps} value="met" />);
+      await act(async () => { jest.advanceTimersByTime(300); });
+      expect(axios.get).toHaveBeenCalledTimes(2);
+      expect(axios.get).toHaveBeenLastCalledWith(
+        expect.stringContaining('/search-by-name/met'),
+        expect.any(Object)
+      );
+
+      // Resolve the STALE request first with a result that would have
+      // been wrong for the current query. This must NOT reach state.
+      await act(async () => {
+        resolveFirst({
+          data: {
+            results: [
+              { cas_number: '999-99-9', name_en: 'StaleResult', name_zh: '' },
+            ],
+          },
+        });
+      });
+
+      // Resolve the FRESH request.
+      await act(async () => {
+        resolveSecond({
+          data: {
+            results: [
+              { cas_number: '67-56-1', name_en: 'FreshResult', name_zh: '' },
+            ],
+          },
+        });
+      });
+
+      // Dropdown must only reflect the fresh response.
+      fireEvent.focus(input);
+      expect(screen.queryByText(/StaleResult/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('999-99-9')).not.toBeInTheDocument();
+      expect(screen.getByText('67-56-1')).toBeInTheDocument();
     });
   });
 });

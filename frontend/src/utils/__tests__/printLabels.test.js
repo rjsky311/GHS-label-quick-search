@@ -41,6 +41,9 @@ const mockChemicalNoGHS = {
 };
 
 // ── Helper to create mock iframe ──
+// The iframe's contentWindow also records `afterprint` listeners so
+// tests can simulate the browser firing the event when the print
+// dialog closes.
 function createMockIframe() {
   const mockImages = [];
   const mockIframeDoc = {
@@ -49,10 +52,19 @@ function createMockIframe() {
     close: jest.fn(),
     querySelectorAll: jest.fn(() => mockImages),
   };
+  const afterPrintListeners = [];
   const mockIframeWindow = {
     focus: jest.fn(),
     print: jest.fn(),
     document: mockIframeDoc,
+    addEventListener: jest.fn((event, cb) => {
+      if (event === 'afterprint') afterPrintListeners.push(cb);
+    }),
+    dispatchAfterPrint() {
+      // Drain listeners (emulates { once: true } behaviour).
+      const callbacks = afterPrintListeners.splice(0);
+      callbacks.forEach((cb) => cb());
+    },
   };
   const mockIframe = {
     id: '',
@@ -244,17 +256,53 @@ describe('printLabels', () => {
     expect(oldIframe.remove).toHaveBeenCalled();
   });
 
-  it('cleans up iframe 1 second after printing', () => {
+  it('registers an afterprint listener on the iframe window', () => {
     printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
-
-    // Trigger print (300ms)
     jest.advanceTimersByTime(300);
+
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(mockIframeWindow.addEventListener).toHaveBeenCalledWith(
+      'afterprint',
+      expect.any(Function),
+      expect.objectContaining({ once: true })
+    );
+  });
+
+  it('cleans up iframe when afterprint fires (dialog closed)', () => {
+    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    jest.advanceTimersByTime(300);
+
     expect(mockIframeWindow.print).toHaveBeenCalled();
     expect(mockIframe.remove).not.toHaveBeenCalled();
 
-    // Cleanup (1000ms after print)
-    jest.advanceTimersByTime(1000);
+    // Simulate the browser firing afterprint (user printed or cancelled).
+    mockIframeWindow.dispatchAfterPrint();
     expect(mockIframe.remove).toHaveBeenCalled();
+  });
+
+  it('does not leak iframe even if afterprint never fires (fallback)', () => {
+    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    jest.advanceTimersByTime(300);
+    expect(mockIframe.remove).not.toHaveBeenCalled();
+
+    // Deliberately do NOT dispatch afterprint. The fallback timeout
+    // must still clean up — previously this path would leak the
+    // iframe into the DOM.
+    jest.advanceTimersByTime(60000);
+    expect(mockIframe.remove).toHaveBeenCalled();
+  });
+
+  it('does not double-remove iframe when afterprint and fallback both fire', () => {
+    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    jest.advanceTimersByTime(300);
+
+    mockIframeWindow.dispatchAfterPrint();
+    expect(mockIframe.remove).toHaveBeenCalledTimes(1);
+
+    // Even if the fallback timeout fires later, iframe must not be
+    // removed a second time.
+    jest.advanceTimersByTime(60000);
+    expect(mockIframe.remove).toHaveBeenCalledTimes(1);
   });
 
   describe('templates', () => {

@@ -1,6 +1,7 @@
 import { Search, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
+import { BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 
 export default function SearchSection({
   activeTab,
@@ -105,18 +106,34 @@ export default function SearchSection({
                   {t("search.batchHint")}
                 </p>
                 {batchCount > 0 && (
-                  <span className={`text-xs font-medium ${batchCount > 100 ? "text-red-400" : "text-amber-400"}`}>
-                    {batchCount > 100
-                      ? t("search.batchOverLimit", { count: batchCount })
+                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-400" : "text-amber-400"}`}>
+                    {batchCount > BATCH_SEARCH_LIMIT
+                      ? t("search.batchOverLimit", { count: batchCount, limit: BATCH_SEARCH_LIMIT })
                       : t("search.batchDetected", { count: batchCount })}
                   </span>
                 )}
               </div>
+              {batchCount > BATCH_SEARCH_LIMIT && (
+                <div
+                  className="mt-3 p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-300 flex items-start gap-2"
+                  role="alert"
+                  data-testid="batch-over-limit-alert"
+                >
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <p className="text-sm">
+                    {t("search.batchOverLimitDetail", {
+                      count: batchCount,
+                      limit: BATCH_SEARCH_LIMIT,
+                      excess: batchCount - BATCH_SEARCH_LIMIT,
+                    })}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3">
               <button
                 onClick={onSearchBatch}
-                disabled={loading || batchCount > 100}
+                disabled={loading || batchCount > BATCH_SEARCH_LIMIT}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-testid="batch-search-btn"
               >

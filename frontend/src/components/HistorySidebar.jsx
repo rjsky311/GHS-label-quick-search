@@ -1,7 +1,7 @@
-import { useEffect } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/formatDate";
+import useFocusTrap from "@/hooks/useFocusTrap";
 
 export default function HistorySidebar({
   history,
@@ -10,14 +10,10 @@ export default function HistorySidebar({
   onSelectHistoryItem,
 }) {
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  // Handles Escape-to-close, initial focus, Tab trap, and focus
+  // restore on close. Ref goes on the inner panel so the backdrop's
+  // click-to-close handler doesn't fight the trap.
+  const panelRef = useFocusTrap(onClose);
 
   return (
     <div
@@ -28,6 +24,7 @@ export default function HistorySidebar({
       aria-label={t("history.title")}
     >
       <div
+        ref={panelRef}
         className="absolute right-0 top-0 h-full w-80 bg-slate-800 shadow-xl overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >

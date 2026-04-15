@@ -24,6 +24,10 @@ export default function SearchAutocomplete({
   const [serverResults, setServerResults] = useState([]);
   const [serverLoading, setServerLoading] = useState(false);
   const abortControllerRef = useRef(null);
+  // Tracks the most recent query string the user has typed. A second
+  // guard (in addition to AbortController) that filters out stale
+  // responses if the abort raced the network layer.
+  const latestQueryRef = useRef("");
 
   // ── Local suggestions (history + favorites) ──
   const localSuggestions = useMemo(() => {
@@ -71,8 +75,21 @@ export default function SearchAutocomplete({
   }, [allSuggestions]);
 
   // ── Debounced server name search ──
+  //
+  // Previous implementation's cleanup only cleared the debounce timer,
+  // so a request already in flight (dispatched 0–300ms ago) could
+  // continue to completion and overwrite `serverResults` with stale
+  // data after the user had already typed something else. Two guards:
+  //
+  //   1. Cleanup aborts the in-flight controller immediately, so the
+  //      current effect body's request is cancelled the moment `value`
+  //      changes.
+  //   2. Before `setServerResults`, check `latestQueryRef.current` in
+  //      case the abort loses the race with the network layer (the
+  //      `aborted` check is best-effort in some transports).
   useEffect(() => {
     const query = value.trim();
+    latestQueryRef.current = query;
 
     if (!query || query.length < 2 || isCasLike(query)) {
       setServerResults([]);
@@ -87,10 +104,6 @@ export default function SearchAutocomplete({
     setServerLoading(true);
 
     const timerId = setTimeout(() => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
@@ -99,32 +112,31 @@ export default function SearchAutocomplete({
           signal: controller.signal,
         })
         .then((response) => {
-          if (!controller.signal.aborted) {
-            setServerResults(response.data.results || []);
-            setServerLoading(false);
-          }
+          if (controller.signal.aborted) return;
+          if (latestQueryRef.current !== query) return;
+          setServerResults(response.data.results || []);
+          setServerLoading(false);
         })
-        .catch((err) => {
-          if (!controller.signal.aborted) {
-            setServerResults([]);
-            setServerLoading(false);
-          }
+        .catch(() => {
+          if (controller.signal.aborted) return;
+          if (latestQueryRef.current !== query) return;
+          setServerResults([]);
+          setServerLoading(false);
         });
     }, 300);
 
     return () => {
       clearTimeout(timerId);
-    };
-  }, [value]);
-
-  // ── Cleanup abort controller on unmount ──
-  useEffect(() => {
-    return () => {
+      // Abort whatever request is currently in flight (or about to
+      // be dispatched by the pending timer). This is the critical
+      // fix — without it, an in-flight request for a superseded
+      // query could resolve and overwrite state.
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
-  }, []);
+  }, [value]);
 
   // ── Click outside to close dropdown ──
   useEffect(() => {
