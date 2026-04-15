@@ -224,6 +224,8 @@
   "export.sheetName": "GHS查詢結果",
   "export.none": "無",
   "export.noHazard": "無危害說明",
+  "export.errorXlsx": "Excel 匯出失敗，請檢查網路連線或稍後再試。",
+  "export.csvFallbackHint": "伺服器匯出暫時無法使用 — 已改用本地備援下載。",
 
   "print.title": "GHS 標籤列印",
   "print.noHazardLabel": "無危害標示",
