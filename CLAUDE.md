@@ -35,7 +35,7 @@ User Browser
 **State management**: All state in `App.js` via `useState`, 5 custom hooks extract localStorage-backed logic.
 **Caching**: Server-side 24hr TTL in-memory (cachetools, max 5000). Client-side localStorage.
 
-## Frontend Architecture (15 components + 7 hooks + 4 utils)
+## Frontend Architecture (15 components + 8 hooks + 4 utils)
 
 ### Components (`src/components/`)
 | File | Purpose |
@@ -65,13 +65,14 @@ User Browser
 | `useLabelSelection.js` | Tracks selected chemicals for printing |
 | `useResultSort.js` | Table sort state (4 columns) |
 | `usePrintTemplates.js` | Save/load/delete print setting presets (max 10) |
+| `useFocusTrap.js` | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap) |
 | `use-toast.js` | shadcn toast hook |
 
 ### Utils (`src/utils/`)
 | File | Purpose |
 |------|---------|
-| `exportData.js` | Excel/CSV export (server-side primary, client-side fallback) |
-| `printLabels.js` | Label printing engine (4 templates, HTML popup) |
+| `exportData.js` | Excel/CSV export (backend-only; no client-side fallback after Phase 3) |
+| `printLabels.js` | Label printing engine (4 templates, iframe with HTML escaping + afterprint cleanup + 60s fallback) |
 | `sdsLinks.js` | PubChem Safety + ECHA CHEM search URL builders |
 | `formatDate.js` | i18n-aware date formatting |
 
@@ -86,26 +87,31 @@ User Browser
 - `@` alias → `src/`
 - Tailwind CSS 3.4 + shadcn/ui (46 primitives)
 
-## Backend Architecture (`backend/server.py`, ~870 lines)
+## Backend Architecture (`backend/server.py`)
 
 ### API Endpoints (all under `/api`)
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/health` | GET | Health check |
-| `/api/search-by-name/{query}` | GET | Name search (EN/ZH substring match, max 20) |
-| `/api/search/{cas_number}` | GET | Single CAS or name search (auto-detect) |
-| `/api/search` | POST | Batch CAS search (max 100) |
-| `/api/export/xlsx` | POST | Export to Excel |
-| `/api/export/csv` | POST | Export to CSV |
-| `/api/ghs-pictograms` | GET | GHS pictogram metadata |
+| Endpoint | Method | Rate limit (per IP) | Description |
+|----------|--------|--------|-------------|
+| `/api/health` | GET | — | Health check; unlimited so LB/uptime monitors don't trip |
+| `/api/search-by-name/{query}` | GET | 60/min | Name search (EN/ZH substring + aliases, max 20) |
+| `/api/search/{query}` | GET | 30/min | Single CAS or name search (auto-detect) |
+| `/api/search` | POST | 10/min | Batch CAS search (Pydantic `max_length=100` → 422 on overflow) |
+| `/api/export/xlsx` | POST | 10/min | Export to Excel (Pydantic `max_length=500`, formula-injection safe) |
+| `/api/export/csv` | POST | 10/min | Export to CSV (same limits) |
+| `/api/ghs-pictograms` | GET | — | GHS pictogram metadata (static) |
 
 ### Key Functions
 - `normalize_cas()` — CAS format normalization (strips non-digits except hyphens)
 - `resolve_name_to_cas()` — 4-tier name→CAS resolution (exact ZH → exact EN → word-boundary regex → prefix)
-- `get_cid_from_cas()` — 4-method CID lookup (3 concurrent + 1 fallback)
-- `get_compound_name()` — 3-method name lookup with dictionary fallbacks
+- `pubchem_get_json()` — Retry helper: exponential backoff with jitter, honours `Retry-After`, raises `PubChemError` on exhausted transient failures; gated by `_pubchem_semaphore` (outbound concurrency cap, default 8)
+- `get_cid_from_cas()` — 4-method CID lookup (3 concurrent + 1 alt-CAS fallback); raises `PubChemError` when any attempt is transient AND no CID was found
+- `get_compound_name()` — 3-method name lookup with local dictionary fallbacks (lenient: per-endpoint catches `PubChemError`)
+- `get_ghs_classification()` — Strict: lets `PubChemError` propagate so `search_chemical` can surface `upstream_error=True` instead of an empty-hazards response
+- `_classification_signature()` / `_report_rank_key()` — Richer GHS dedup (`pictograms + signal + H-codes + source`) and deterministic primary-selection ranking (`report_count → ECHA → hazard count → source order`)
 - `extract_all_ghs_classifications()` — Parses ALL GHS reports from PubChem
-- `search_chemical()` — Main orchestrator
+- `search_chemical()` — Main orchestrator; catches `PubChemError` at both the CID and GHS phases
+- `spreadsheet_safe()` — Prefixes cells starting with `=+-@\t\r` with `'` to neutralize CSV/XLSX formula injection
+- `_client_ip()` — Reads leftmost `X-Forwarded-For` for rate-limit bucketing behind Zeabur's proxy (disable via `TRUST_FORWARDED_HEADERS=0`)
 
 ### Chemical Dictionaries (`backend/chemical_dict.py`)
 - `CAS_TO_EN` — 1,707 CAS→English name entries
@@ -115,7 +121,10 @@ User Browser
 - `ZH_TO_CAS` — Chinese name→CAS reverse lookup
 
 ### Backend Tests (`backend/test_name_search.py`)
-- 29 tests: `TestResolveNameToCas` (13) + `TestReverseDictionaries` (7) + async API endpoint tests (9)
+- 99 tests covering: name resolution, reverse dictionaries, aliases, API endpoints,
+  GHS classification dedup/ranking, export formula injection + size limits,
+  PubChem retry helper (429/5xx/timeout/Retry-After), `search_chemical` upstream_error
+  scenarios (including partial-transient mixed with 404), CORS config, rate limiter config
 - Run with: `python -m pytest test_name_search.py -v`
 - Config: `pytest.ini` with `asyncio_mode = auto`
 
@@ -142,6 +151,29 @@ User Browser
 - react-scripts 5.0.1 wants typescript@^3||^4
 - Downgraded to 14.x / 23.x / 7.x (identical API, no typescript peer dep)
 
+### PubChem Silent Degradation (Phase 1 fix)
+- Prior `get_ghs_classification` returned `{}` on any exception → `search_chemical` emitted `found=True` with empty hazards. For a safety tool, that is indistinguishable from "no hazards" — the worst failure mode this app can have
+- Fix: classify transient (429/5xx/timeout) vs definitive (404) in `pubchem_get_json`; surface via `upstream_error: true`; UI shows "PubChem 暫時無法回應" rather than "no data"
+- Partial-transient note: if ANY CID-lookup method raised `PubChemError` and no method found a CID, `get_cid_from_cas` raises — we must not trust a not-found conclusion based on a partial outage
+
+### GHS Dedup by Pictogram Only (Phase 1 fix)
+- Old dedup key `frozenset(p['code'])` dropped reports with same icons but different H-codes / signal word
+- New signature `(pic_set, signal_word, sorted(h_codes), source)`; primary selected by deterministic rank (report_count → ECHA → hazard count → source order)
+
+### printLabels Was an XSS Vector (Phase 1 fix)
+- `iframeDoc.write(...)` with template-string interpolation bypassed React's auto-escaping
+- Custom fields from localStorage, CAS input, PubChem text all flowed in raw
+- Fix: `escapeHtml()` applied to every interpolated text and attribute value
+
+### CSV/XLSX Formula Injection (Phase 1 fix)
+- Values starting with `=`, `+`, `-`, `@`, `\t`, `\r` execute as formulas in Excel/Sheets/Calc when the export is opened
+- `spreadsheet_safe()` prefixes with `'`; applied to every cell in both export endpoints
+
+### useFocusTrap onClose Identity (Phase 2 post-review fix)
+- Initial implementation had `useEffect(…, [onClose])`
+- App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
+- Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
+
 ## Current State (v1.7.0)
 
 ### Git History (key commits)
@@ -165,10 +197,12 @@ a5653e5 v1.5.0: Performance + UX optimization
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results
-- **Frontend**: 282+ tests, 20 test suites (Phase 1: 88 + Phase 2: 92 + autocomplete: 8 + printLabels: 49 + usePrintTemplates: 12 + comparison: 30)
-- **Backend**: 59 tests (name search + reverse dictionaries + aliases + API endpoints)
-- **CI**: GitHub Actions runs both on every push to main
+### Test Results (as of v1.7.0)
+- **Frontend**: 354 tests across 25 suites; 0 React `act(...)` warnings
+- **Backend**: 99 tests covering name resolution, reverse dicts, aliases, API endpoints,
+  GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
+  surfacing (including partial-transient), CORS config, rate limiter config
+- **CI**: GitHub Actions runs both on every push to main and on PRs
 
 ### CI/CD (`.github/workflows/ci.yml`)
 - **Frontend job**: `npm install` → `npx craco test --watchAll=false` → `npx craco build`
@@ -200,6 +234,9 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] Save print templates (localStorage max 10 presets, usePrintTemplates hook, 12 new tests)
 - [x] Classification comparison table — same-chemical (Part A) + cross-chemical (Part B), 30 new tests
 - [x] B&W / Color print option — colorMode toggle in labelConfig, CSS grayscale filter, 3 new tests
+- [x] **Phase 1 hardening** — printLabels HTML escaping; GHS dedup/ranking; export row-limit + formula neutralization; PubChem retry + upstream_error; CORS default + `allow_credentials=False`; slowapi rate limits + outbound PubChem semaphore
+- [x] **Phase 2 hardening** — autocomplete abort + stale-response guard; iframe cleanup via `afterprint`; frontend batch>100 alert + double-guard; `useFocusTrap` hook + sidebar adoption; test coverage for LabelPrintModal / ErrorBoundary / sidebars
+- [x] **Phase 3 cleanup** — version sync 1.7.0; removed dead files (`backend_test.py`, `tests/`, `字典.csv`, `test_result.md`); README + CLAUDE.md sync
 
 ## Roadmap / Pending Work
 
