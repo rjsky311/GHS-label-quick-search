@@ -810,6 +810,84 @@ async def test_search_chemical_surfaces_upstream_error_on_cid_outage(monkeypatch
     assert "PubChem 暫時無法回應" in (result.error or "")
 
 
+async def test_get_cid_partial_transient_mixed_with_404_raises(monkeypatch):
+    """Regression (Codex review): if one CID lookup method returns a
+    clean 404 but another is transient, we cannot trust the 'not found'
+    conclusion — the transient endpoint might have held a record.
+
+    For a chemical safety tool this matters: returning not-found here
+    could present a transient outage as confirmed absence of hazard data.
+
+    Scenario: method A (name) → None (clean 404)
+              method B (xref) → PubChemError (503 exhausted)
+              method C (substance) → PubChemError (timeout)
+              method 4 fallback → None (clean, alt-cas path)
+
+    Expected: get_cid_from_cas raises PubChemError, NOT returns None.
+    """
+    import server as srv
+
+    async def _method_a_clean_404(*_a, **_k):
+        return None
+
+    async def _method_b_transient(*_a, **_k):
+        raise PubChemError("HTTP 503 after retries")
+
+    async def _method_c_transient(*_a, **_k):
+        raise PubChemError("TimeoutException after retries")
+
+    monkeypatch.setattr(srv, "_try_cid_by_name", _method_a_clean_404)
+    monkeypatch.setattr(srv, "_try_cid_by_xref", _method_b_transient)
+    monkeypatch.setattr(srv, "_try_cid_by_substance", _method_c_transient)
+    # Use an unambiguous CAS that won't trigger the alt-CAS fallback
+    # (no leading zeros in the first segment).
+    cas = "64-17-5"
+    # Ensure the cache is empty for this CAS so we actually call the methods.
+    srv.cid_cache.pop(cas, None)
+
+    with pytest.raises(PubChemError):
+        await srv.get_cid_from_cas(cas, http_client=None)
+
+
+async def test_search_chemical_partial_cid_transient_surfaces_upstream_error(monkeypatch):
+    """End-to-end version of the partial-transient regression.
+
+    One CID method returns a clean 'no match', another times out.
+    `search_chemical` must NOT fall back to local-dictionary-only
+    success; it must return upstream_error=True so the UI tells the
+    user to retry rather than treating a transient outage as
+    confirmed absence."""
+    import server as srv
+
+    async def _clean_404(*_a, **_k):
+        return None
+
+    async def _transient(*_a, **_k):
+        raise PubChemError("HTTP 503 after retries")
+
+    monkeypatch.setattr(srv, "_try_cid_by_name", _clean_404)
+    monkeypatch.setattr(srv, "_try_cid_by_xref", _transient)
+    monkeypatch.setattr(srv, "_try_cid_by_substance", _transient)
+
+    # 64-17-5 (ethanol) also appears in the local CAS dictionary, so
+    # the OLD code path would happily return a found=True result with
+    # empty hazards and no indication that PubChem was actually
+    # unreachable. That is the dangerous case we're guarding against.
+    cas = "64-17-5"
+    srv.cid_cache.pop(cas, None)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical(cas, _NullClient())
+    assert result.found is False, (
+        "Partial upstream failures must NOT be presented as found-with-no-hazards"
+    )
+    assert result.upstream_error is True
+    assert "PubChem 暫時無法回應" in (result.error or "")
+
+
 # ─── CORS config safety ─────────────────────────────────────
 
 from server import _cors_origins as _configured_cors_origins

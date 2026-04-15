@@ -685,9 +685,20 @@ async def _try_cid_by_substance(cas_number: str, http_client: httpx.AsyncClient)
 async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
     """Get PubChem CID from CAS number — runs methods 1-3 concurrently, with cache.
 
-    Raises PubChemError if ALL methods (including the fallback) failed
-    with transient upstream errors. Returns None only when PubChem
-    confidently reported no match.
+    Policy for a safety-critical tool:
+
+      1. If any method returns an int, use it.
+      2. Otherwise, if ANY method (primary or alt-CAS fallback) raised
+         `PubChemError` — i.e. at least one endpoint transiently failed
+         — the "not found" conclusion is not trustworthy, so we raise
+         `PubChemError` and let the caller surface `upstream_error=True`.
+      3. Only when every method returned a clean "no match" do we
+         return `None` to mean "truly not in PubChem".
+
+    Previously the function only raised when ALL three primary methods
+    were transient failures, which let the mixed case through
+    (e.g. one 404 + two 503) and could present a transient outage as a
+    confirmed absence. That is unsafe for a GHS lookup tool.
     """
     # Check cache first
     if cas_number in cid_cache:
@@ -706,28 +717,30 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
             cid_cache[cas_number] = result
             return result
 
-    # If every concurrent method raised PubChemError AND no method
-    # returned a clean None, then this is an upstream outage rather
-    # than a true "not found". Surface it up.
-    all_transient = all(isinstance(r, PubChemError) for r in results)
-    if all_transient:
-        raise PubChemError(
-            f"All CID lookup methods transiently failed for {cas_number}"
-        )
+    primary_had_transient = any(isinstance(r, PubChemError) for r in results)
 
     # Method 4 (fallback): alternate CAS format (strip leading zeros).
+    # We attempt it whether or not the primary results had transient
+    # failures — it might still succeed and give us a definitive CID.
+    fallback_had_transient = False
     cas_alt = re.sub(r'^0+', '', cas_number.split('-')[0]) + '-' + '-'.join(cas_number.split('-')[1:])
     if cas_alt != cas_number:
         try:
             cid = await _try_cid_by_name(cas_alt, http_client)
         except PubChemError:
-            # Fallback also transient-failed; but primary methods had at
-            # least one clean "no-match" response. Prefer surfacing the
-            # not-found outcome over a noisy retry error.
             cid = None
+            fallback_had_transient = True
         if cid:
             cid_cache[cas_number] = cid
             return cid
+
+    # No CID found anywhere. If ANY attempt (primary or fallback) was
+    # a transient failure, refuse to commit to "not found".
+    if primary_had_transient or fallback_had_transient:
+        raise PubChemError(
+            f"CID lookup for {cas_number} had partial upstream failures; "
+            "cannot confirm not-found."
+        )
 
     logger.info(f"PubChem has no CID for CAS number: {cas_number}")
     return None
