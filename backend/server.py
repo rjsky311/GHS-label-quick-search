@@ -274,6 +274,50 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
     return None
 
 
+def _classification_signature(report: Dict[str, Any]) -> tuple:
+    """Stable signature for deduplicating GHS classification reports.
+
+    Two reports collapse into one only when ALL of the following match:
+      - set of pictogram codes
+      - signal word (e.g. Danger / Warning)
+      - sorted set of H-statement codes
+      - source string (e.g. ECHA C&L Notifications Summary)
+
+    Previously dedup was keyed on pictogram set only, which dropped
+    materially different classifications that shared the same icons
+    but differed in hazard codes / signal word. That was a real data
+    correctness issue for a chemical safety tool.
+    """
+    pic_codes = frozenset((p.get("code") or "") for p in report.get("pictograms", []))
+    h_codes = tuple(sorted((h.get("code") or "") for h in report.get("hazard_statements", [])))
+    signal = (report.get("signal_word") or "").strip()
+    source = (report.get("source") or "").strip()
+    return (pic_codes, signal, h_codes, source)
+
+
+def _report_rank_key(report: Dict[str, Any], source_index: int) -> tuple:
+    """Deterministic rank key for choosing the primary classification.
+
+    Lower tuple ranks first (ascending sort), so values that should
+    rank earlier are negated.
+
+    Priority, highest first:
+      1. Larger ECHA report_count (stronger evidence base)
+      2. Reports labelled as ECHA C&L Notifications (regulatory source)
+      3. More hazard statements (more complete classification)
+      4. Original PubChem source order as the stable tie-breaker
+    """
+    raw = report.get("report_count")
+    try:
+        count = int(raw) if raw else 0
+    except (TypeError, ValueError):
+        count = 0
+    source = (report.get("source") or "").lower()
+    echa_bonus = 1 if "echa" in source else 0
+    hazard_count = len(report.get("hazard_statements") or [])
+    return (-count, -echa_bonus, -hazard_count, source_index)
+
+
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     """
     Extract ALL GHS classification reports from PubChem data.
@@ -655,30 +699,36 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     other_classifications = []
     
     if all_classifications:
-        # First report is the primary classification
-        primary = all_classifications[0]
+        # Rank all reports deterministically; the top-ranked is primary.
+        # Prior behaviour used PubChem's source order blindly, which could
+        # demote the strongest classification and silently drop reports
+        # sharing the same pictograms but differing in H-codes/signal.
+        indexed = list(enumerate(all_classifications))
+        indexed.sort(key=lambda ix: _report_rank_key(ix[1], ix[0]))
+
+        _, primary = indexed[0]
         primary_pictograms = primary.get("pictograms", [])
         primary_hazards = primary.get("hazard_statements", [])
         primary_signal = primary.get("signal_word")
         primary_signal_zh = primary.get("signal_word_zh")
-        
-        # Rest are other classifications (deduplicate by pictogram set)
-        seen_pictogram_sets = set()
-        primary_pic_set = frozenset(p["code"] for p in primary_pictograms)
-        seen_pictogram_sets.add(primary_pic_set)
-        
-        for report in all_classifications[1:]:
-            pic_set = frozenset(p["code"] for p in report.get("pictograms", []))
-            if pic_set and pic_set not in seen_pictogram_sets:
-                seen_pictogram_sets.add(pic_set)
-                other_classifications.append(GHSReport(
-                    pictograms=report.get("pictograms", []),
-                    hazard_statements=report.get("hazard_statements", []),
-                    signal_word=report.get("signal_word"),
-                    signal_word_zh=report.get("signal_word_zh"),
-                    source=report.get("source"),
-                    report_count=report.get("report_count")
-                ))
+
+        # Dedup using the full signature (pictograms + signal + h-codes + source).
+        seen_signatures = {_classification_signature(primary)}
+        for _, report in indexed[1:]:
+            if not report.get("pictograms"):
+                continue
+            sig = _classification_signature(report)
+            if sig in seen_signatures:
+                continue
+            seen_signatures.add(sig)
+            other_classifications.append(GHSReport(
+                pictograms=report.get("pictograms", []),
+                hazard_statements=report.get("hazard_statements", []),
+                signal_word=report.get("signal_word"),
+                signal_word_zh=report.get("signal_word_zh"),
+                source=report.get("source"),
+                report_count=report.get("report_count")
+            ))
     
     # Use RecordTitle as fallback for name_en if not found
     if not name_en:

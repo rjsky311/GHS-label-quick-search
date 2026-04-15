@@ -8,7 +8,12 @@ Tests for name search functionality:
 """
 import pytest
 from httpx import AsyncClient, ASGITransport
-from server import app, resolve_name_to_cas
+from server import (
+    app,
+    resolve_name_to_cas,
+    _classification_signature,
+    _report_rank_key,
+)
 from chemical_dict import EN_TO_CAS, ZH_TO_CAS, CAS_TO_EN, CAS_TO_ZH, ALIASES_ZH, ALIASES_EN
 
 
@@ -352,3 +357,162 @@ async def test_search_by_name_lye_alias():
     data = response.json()
     cas_numbers = [r["cas_number"] for r in data["results"]]
     assert "1310-73-2" in cas_numbers
+
+
+# ─── GHS classification dedup / ranking ─────────────────────
+
+def _pic(code):
+    return {"code": code}
+
+
+def _hz(code, text="x"):
+    return {"code": code, "text_en": text, "text_zh": text}
+
+
+class TestClassificationSignature:
+    """Dedup must collapse only truly identical reports."""
+
+    def test_same_pictograms_but_different_h_codes_produce_different_signatures(self):
+        """Regression: previously deduped on pictogram set only, silently
+        losing a materially different classification."""
+        a = {
+            "pictograms": [_pic("GHS02"), _pic("GHS07")],
+            "hazard_statements": [_hz("H225"), _hz("H319")],
+            "signal_word": "Danger",
+            "source": "ECHA C&L Notifications Summary",
+        }
+        b = {
+            "pictograms": [_pic("GHS02"), _pic("GHS07")],
+            "hazard_statements": [_hz("H225"), _hz("H336")],
+            "signal_word": "Danger",
+            "source": "ECHA C&L Notifications Summary",
+        }
+        assert _classification_signature(a) != _classification_signature(b)
+
+    def test_different_signal_word_produces_different_signature(self):
+        a = {
+            "pictograms": [_pic("GHS07")],
+            "hazard_statements": [_hz("H319")],
+            "signal_word": "Danger",
+            "source": "ECHA",
+        }
+        b = {**a, "signal_word": "Warning"}
+        assert _classification_signature(a) != _classification_signature(b)
+
+    def test_different_source_produces_different_signature(self):
+        a = {
+            "pictograms": [_pic("GHS07")],
+            "hazard_statements": [_hz("H319")],
+            "signal_word": "Warning",
+            "source": "ECHA C&L",
+        }
+        b = {**a, "source": "Other vendor SDS"}
+        assert _classification_signature(a) != _classification_signature(b)
+
+    def test_identical_reports_produce_equal_signatures(self):
+        a = {
+            "pictograms": [_pic("GHS07"), _pic("GHS02")],
+            "hazard_statements": [_hz("H319"), _hz("H225")],
+            "signal_word": "Danger",
+            "source": "ECHA C&L Notifications Summary",
+        }
+        b = {
+            "pictograms": [_pic("GHS02"), _pic("GHS07")],  # reversed order
+            "hazard_statements": [_hz("H225"), _hz("H319")],  # reversed order
+            "signal_word": "Danger",
+            "source": "ECHA C&L Notifications Summary",
+        }
+        assert _classification_signature(a) == _classification_signature(b)
+
+
+class TestReportRankKey:
+    """Primary classification selection must be deterministic and prefer
+    the most-reported / most-complete classification."""
+
+    def test_higher_report_count_ranks_first(self):
+        a = {"report_count": "120", "source": "ECHA", "hazard_statements": [_hz("H1")]}
+        b = {"report_count": "3", "source": "ECHA", "hazard_statements": [_hz("H1")]}
+        # Ascending sort; lower tuple wins → a should rank before b
+        assert _report_rank_key(a, 0) < _report_rank_key(b, 1)
+
+    def test_echa_source_bonus_when_count_equal(self):
+        a = {"report_count": "10", "source": "Other", "hazard_statements": [_hz("H1")]}
+        b = {"report_count": "10", "source": "ECHA C&L Notifications", "hazard_statements": [_hz("H1")]}
+        assert _report_rank_key(b, 1) < _report_rank_key(a, 0)
+
+    def test_more_hazards_wins_on_tie(self):
+        a = {"report_count": None, "source": "ECHA", "hazard_statements": [_hz("H1"), _hz("H2")]}
+        b = {"report_count": None, "source": "ECHA", "hazard_statements": [_hz("H1")]}
+        assert _report_rank_key(a, 0) < _report_rank_key(b, 1)
+
+    def test_source_order_is_stable_tiebreaker(self):
+        a = {"report_count": None, "source": "ECHA", "hazard_statements": [_hz("H1")]}
+        b = {"report_count": None, "source": "ECHA", "hazard_statements": [_hz("H1")]}
+        assert _report_rank_key(a, 0) < _report_rank_key(b, 1)
+
+    def test_non_numeric_report_count_treated_as_zero(self):
+        a = {"report_count": "not-a-number", "source": "ECHA", "hazard_statements": []}
+        b = {"report_count": None, "source": "ECHA", "hazard_statements": []}
+        # Both should produce the same count component; only source_index differs
+        assert _report_rank_key(a, 0) < _report_rank_key(b, 1)
+
+
+async def test_search_chemical_both_distinct_reports_survive_dedup(monkeypatch):
+    """End-to-end: two reports with identical pictograms but different
+    H-codes must BOTH survive (regression against the old pic-set-only
+    dedup), and the higher report_count must become primary."""
+    import server as srv
+
+    fake_reports = [
+        {
+            "pictograms": [_pic("GHS02"), _pic("GHS07")],
+            "hazard_statements": [_hz("H225"), _hz("H319")],
+            "signal_word": "Danger",
+            "signal_word_zh": "危險",
+            "source": "ECHA C&L Notifications Summary",
+            "report_count": "5",
+        },
+        {
+            "pictograms": [_pic("GHS02"), _pic("GHS07")],
+            "hazard_statements": [_hz("H225"), _hz("H336")],
+            "signal_word": "Danger",
+            "signal_word_zh": "危險",
+            "source": "ECHA C&L Notifications Summary",
+            "report_count": "120",
+        },
+    ]
+
+    async def fake_get_cid(*_args, **_kwargs):
+        return 702
+
+    async def fake_get_name(*_args, **_kwargs):
+        return ("Ethanol", "乙醇")
+
+    async def fake_get_ghs(*_args, **_kwargs):
+        return {}
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: fake_reports)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):  # pragma: no cover - unused
+            raise RuntimeError("http should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+
+    # Both distinct reports must survive dedup
+    assert result.has_multiple_classifications is True
+    assert len(result.other_classifications) == 1
+
+    primary_h_codes = sorted(h["code"] for h in result.hazard_statements)
+    other_h_codes = sorted(h["code"] for h in result.other_classifications[0].hazard_statements)
+    assert {tuple(primary_h_codes), tuple(other_h_codes)} == {
+        ("H225", "H319"),
+        ("H225", "H336"),
+    }
+
+    # Specifically: report_count=120 (the H336 one) must be primary
+    primary_has_h336 = any(h["code"] == "H336" for h in result.hazard_statements)
+    assert primary_has_h336, "Higher report_count must be chosen as primary"
