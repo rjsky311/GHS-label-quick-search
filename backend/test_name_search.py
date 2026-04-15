@@ -808,3 +808,70 @@ async def test_search_chemical_surfaces_upstream_error_on_cid_outage(monkeypatch
     assert result.found is False
     assert result.upstream_error is True
     assert "PubChem 暫時無法回應" in (result.error or "")
+
+
+# ─── CORS config safety ─────────────────────────────────────
+
+from server import _cors_origins as _configured_cors_origins
+
+
+def test_cors_origins_config_rejects_wildcard():
+    """The parsed CORS_ORIGINS list must never contain `*`."""
+    assert "*" not in _configured_cors_origins
+    assert len(_configured_cors_origins) >= 1
+
+
+def test_cors_origins_are_real_urls():
+    """Every configured origin must look like an http(s) URL, not a glob."""
+    for origin in _configured_cors_origins:
+        assert origin.startswith(("http://", "https://")), (
+            f"Non-URL origin in CORS config: {origin!r}"
+        )
+
+
+async def test_cors_preflight_echoes_configured_origin_exactly():
+    """A preflight from a configured origin must be accepted and the
+    allow-origin header must be the exact string — never `*`."""
+    configured = _configured_cors_origins[0]
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.options(
+            "/api/health",
+            headers={
+                "Origin": configured,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+    allowed = response.headers.get("access-control-allow-origin")
+    assert allowed == configured
+    assert allowed != "*"
+
+
+async def test_cors_rejects_disallowed_origin():
+    """A non-whitelisted origin must not be echoed back."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.options(
+            "/api/health",
+            headers={
+                "Origin": "https://attacker.example.com",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+    assert response.headers.get("access-control-allow-origin") != "https://attacker.example.com"
+
+
+async def test_cors_does_not_advertise_credentials_mode():
+    """allow_credentials must be False (API has no cookies or auth headers)."""
+    configured = _configured_cors_origins[0]
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.options(
+            "/api/health",
+            headers={
+                "Origin": configured,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+    cred_header = response.headers.get("access-control-allow-credentials", "").lower()
+    assert cred_header != "true"

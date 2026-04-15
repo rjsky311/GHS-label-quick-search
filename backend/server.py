@@ -1170,11 +1170,33 @@ async def get_ghs_pictograms():
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS configuration.
+#
+# Defaults are intentionally strict:
+#   - `allow_credentials=False` because the API does not use cookies,
+#     `Authorization` headers, or any other credentialed browser flow.
+#     Keeping it False means that even if an origin is mis-allowed, the
+#     browser will refuse to attach credentials — narrowing blast radius.
+#   - `allow_origins` falls back to the production frontend only.
+#     Wildcard (`*`) is explicitly rejected here because it is unsafe
+#     with credentials (and confusing if credentials are later enabled).
+#
+# Local development should set `CORS_ORIGINS=http://localhost:3000`
+# (or a comma-separated list) in `.env` / Docker compose.
+_raw_cors = os.environ.get("CORS_ORIGINS", "https://ghs-frontend.zeabur.app")
+_cors_origins = [o.strip() for o in _raw_cors.split(",") if o.strip()]
+if "*" in _cors_origins:
+    logger.warning(
+        "CORS_ORIGINS=* is unsafe for a public API; falling back to the "
+        "production frontend. Set explicit origins for multi-origin deploys."
+    )
+    _cors_origins = ["https://ghs-frontend.zeabur.app"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', 'https://ghs-frontend.zeabur.app').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
