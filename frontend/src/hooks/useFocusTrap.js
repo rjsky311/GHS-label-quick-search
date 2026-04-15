@@ -20,9 +20,25 @@ import { useEffect, useRef } from "react";
  * The ref should be attached to the inner panel element, not to the
  * backdrop — otherwise the backdrop's click-to-close handler can
  * interfere with the focus trap.
+ *
+ * Lifecycle note:
+ *   The trap must NOT re-run if the parent happens to pass a new
+ *   `onClose` identity on each render (very common with inline arrow
+ *   functions). Otherwise cleanup would restore focus to the opener
+ *   mid-session and the next mount would jump focus back to the
+ *   panel's first focusable, producing visible focus "flicker" on
+ *   every parent re-render. We hold the latest `onClose` in a ref
+ *   so the main effect's dependency list stays empty.
  */
 export default function useFocusTrap(onClose) {
   const containerRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+
+  // Keep the ref in sync with the latest `onClose` without causing
+  // the main effect to tear down and rebuild the trap.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -54,7 +70,9 @@ export default function useFocusTrap(onClose) {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        if (onClose) onClose();
+        // Read through the ref so we always invoke the latest callback,
+        // even if the parent has re-rendered since mount.
+        if (onCloseRef.current) onCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -87,7 +105,10 @@ export default function useFocusTrap(onClose) {
         previouslyFocused.focus();
       }
     };
-  }, [onClose]);
+    // Intentionally empty: we want the trap set up once per panel
+    // lifetime. `onClose` identity changes are absorbed by onCloseRef.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return containerRef;
 }
