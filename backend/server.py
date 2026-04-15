@@ -1283,3 +1283,47 @@ app.add_middleware(
     allow_headers=["Content-Type", "Accept"],
 )
 
+
+# ─── Security response headers ──────────────────────────────
+#
+# Add a small set of defence-in-depth headers to every API response.
+# These are cheap, widely supported, and make common attacks harder:
+#
+#   - `X-Content-Type-Options: nosniff`
+#     Browsers must not sniff and "guess" a different content-type
+#     than what we send. Prevents a JSON payload being rendered as
+#     HTML/JS if a Content-Type header is ever malformed.
+#
+#   - `Referrer-Policy: strict-origin-when-cross-origin`
+#     When the frontend navigates away or issues cross-origin
+#     requests, don't leak the full URL (including query strings,
+#     which could contain a chemical name the user typed).
+#
+#   - `Permissions-Policy: camera=(), microphone=(), geolocation=()...`
+#     Explicitly disable browser APIs this app never uses. Reduces
+#     attack surface if an XSS were ever to land.
+#
+#   - `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`
+#     The API returns JSON (and a binary xlsx/csv stream); it never
+#     renders HTML. `default-src 'none'` means a browser that
+#     somehow interpreted a response as HTML would execute no
+#     scripts, load no images, etc. `frame-ancestors 'none'`
+#     prevents API responses from being framed at all.
+#
+# The frontend is a static site and carries its own CSP via a meta
+# tag in index.html (added alongside this change).
+@app.middleware("http")
+async def security_headers_middleware(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    )
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'none'; frame-ancestors 'none'",
+    )
+    return response
+

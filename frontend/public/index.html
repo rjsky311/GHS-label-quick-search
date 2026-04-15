@@ -8,6 +8,39 @@
         <meta property="og:title" content="GHS Label Quick Search" />
         <meta property="og:description" content="化學品危險標籤快速查詢系統 — 支援 CAS 號碼查詢、批次搜尋、GHS 標籤列印" />
         <meta property="og:type" content="website" />
+        <!--
+          Content Security Policy (defence-in-depth).
+
+          Allowlisted external origins:
+            - pubchem.ncbi.nlm.nih.gov   GHS pictogram SVGs and compound pages
+            - api.qrserver.com           QR codes rendered inside the print iframe
+            - ghs-backend.zeabur.app     production API
+            - http://localhost:8001      local-dev API (safe: browsers restrict
+                                         mixed-content so this has no effect in prod)
+
+          Notes:
+            - `'unsafe-inline'` on style-src is required because Radix UI and
+              React set inline `style="..."` attributes on DOM nodes, and the
+              print iframe generates inline <style>; tightening this would
+              require migrating those to CSS-in-JS with nonces/hashes.
+            - `frame-ancestors` is honoured only when set as an HTTP header,
+              not via <meta>. It is kept here for documentation; the real
+              guarantee is configured at the static hosting edge (and the
+              API sets it via middleware for JSON responses).
+        -->
+        <meta http-equiv="Content-Security-Policy" content="
+          default-src 'self';
+          img-src 'self' data: https://pubchem.ncbi.nlm.nih.gov https://api.qrserver.com;
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          connect-src 'self' http://localhost:8001 https://ghs-backend.zeabur.app;
+          font-src 'self' data:;
+          frame-ancestors 'none';
+          base-uri 'self';
+          form-action 'self';
+        " />
+        <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <link rel="preconnect" href="https://pubchem.ncbi.nlm.nih.gov" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='15' y='15' width='70' height='70' rx='4' transform='rotate(45 50 50)' fill='none' stroke='%23f59e0b' stroke-width='6'/><text x='50' y='62' text-anchor='middle' font-size='36' font-weight='bold' fill='%23f59e0b'>!</text></svg>" />
         <title>GHS Label Quick Search</title>
