@@ -10,7 +10,7 @@ jest.mock('@/constants/ghs', () => ({
   },
 }));
 
-import { printLabels, getQRCodeUrl, getHazardFontTier } from '../printLabels';
+import { printLabels, getQRCodeUrl, getHazardFontTier, escapeHtml } from '../printLabels';
 
 // ── Mock chemical fixtures ──
 const mockChemical = {
@@ -542,5 +542,133 @@ describe('printLabels', () => {
       expect(html).toContain('GHS01');
       expect(html).toContain('H200');
     });
+  });
+
+  // ── HTML Injection Regression Tests ──
+  // These verify that user-controlled values (localStorage custom fields,
+  // chemical names/CAS from PubChem or user input, hazard statement text)
+  // are HTML-escaped before being written into the print iframe. The iframe
+  // is same-origin, so unescaped interpolation would be a real XSS vector.
+  describe('HTML injection safety', () => {
+    it('escapes <script> tags in custom label fields', () => {
+      const customFields = {
+        labName: '<script>alert("xss")</script>',
+        date: '2026-01-01',
+        batchNumber: 'B001',
+      };
+      printLabels(
+        [mockChemical],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {},
+        customFields,
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('<script>alert');
+      expect(html).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    });
+
+    it('escapes onerror-style image injection in chemical name', () => {
+      const malicious = {
+        ...mockChemical,
+        name_en: '<img src=x onerror=alert(1)>',
+      };
+      printLabels(
+        [malicious],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Must NOT contain a functional injected <img> tag from the name
+      expect(html).not.toMatch(/<img[^>]*onerror/i);
+      expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    });
+
+    it('escapes ampersands, angle brackets and quotes in hazard text', () => {
+      const chem = {
+        ...mockChemical,
+        hazard_statements: [
+          { code: 'H<200>', text_zh: 'Fire & "explosion" <hazard>' },
+        ],
+      };
+      printLabels(
+        [chem],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('H&lt;200&gt;');
+      expect(html).toContain('Fire &amp; &quot;explosion&quot; &lt;hazard&gt;');
+      expect(html).not.toContain('Fire & "explosion" <hazard>');
+    });
+
+    it('escapes quote characters in CAS number to prevent attribute break-out', () => {
+      const chem = {
+        ...mockChemical,
+        cas_number: '64-17-5"><script>alert(1)</script>',
+      };
+      printLabels(
+        [chem],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('><script>alert(1)');
+      expect(html).toContain('&quot;&gt;&lt;script&gt;');
+    });
+
+    it('escapes signal word to prevent injection into class-adjacent content', () => {
+      const chem = {
+        ...mockChemical,
+        signal_word_zh: '危險</div><script>alert(1)</script>',
+        signal_word: 'Danger',
+      };
+      printLabels(
+        [chem],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('</div><script>alert(1)');
+      expect(html).toContain('&lt;/div&gt;&lt;script&gt;');
+    });
+
+    it('escapes pictogram code used in alt attribute', () => {
+      const chem = {
+        ...mockChemical,
+        ghs_pictograms: [{ code: 'GHS02" onerror="alert(1)', name_zh: 'x' }],
+      };
+      printLabels(
+        [chem],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/alt="GHS02" onerror="alert/);
+      expect(html).toContain('&quot; onerror=&quot;alert(1)');
+    });
+  });
+});
+
+// ── escapeHtml unit tests ──
+describe('escapeHtml', () => {
+  it('returns empty string for null/undefined', () => {
+    expect(escapeHtml(null)).toBe('');
+    expect(escapeHtml(undefined)).toBe('');
+  });
+
+  it('escapes all five dangerous HTML characters', () => {
+    expect(escapeHtml('<script>')).toBe('&lt;script&gt;');
+    expect(escapeHtml('a & b')).toBe('a &amp; b');
+    expect(escapeHtml('"q"')).toBe('&quot;q&quot;');
+    expect(escapeHtml("'s")).toBe('&#39;s');
+  });
+
+  it('coerces non-string values to string', () => {
+    expect(escapeHtml(42)).toBe('42');
+    expect(escapeHtml(true)).toBe('true');
+  });
+
+  it('leaves safe strings unchanged', () => {
+    expect(escapeHtml('Ethanol 乙醇')).toBe('Ethanol 乙醇');
   });
 });

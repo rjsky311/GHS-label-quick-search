@@ -1,6 +1,26 @@
 import { GHS_IMAGES } from "@/constants/ghs";
 import i18n from "@/i18n";
 
+/**
+ * HTML escape helper for safe interpolation into the print iframe.
+ *
+ * The print document is written via `iframeDoc.write(...)` which bypasses
+ * React's automatic escaping. Any user-controlled value (custom label
+ * fields from localStorage, CAS inputs, upstream PubChem text, hazard
+ * statements, etc.) must be escaped before being inlined into HTML.
+ *
+ * Escapes for both text-node and quoted-attribute contexts.
+ */
+export function escapeHtml(value) {
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 }
@@ -142,32 +162,38 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
   };
 
   // Render custom label fields (lab name, date, batch number)
+  // All user-controlled values are escaped to prevent HTML injection
+  // via localStorage or form inputs.
   const renderCustomFields = () => {
     const fields = [];
-    if (customLabelFields.labName) fields.push(customLabelFields.labName);
-    if (customLabelFields.date) fields.push(customLabelFields.date);
-    if (customLabelFields.batchNumber) fields.push(`${t("print.batch")}: ${customLabelFields.batchNumber}`);
+    if (customLabelFields.labName) fields.push(escapeHtml(customLabelFields.labName));
+    if (customLabelFields.date) fields.push(escapeHtml(customLabelFields.date));
+    if (customLabelFields.batchNumber) {
+      fields.push(`${escapeHtml(t("print.batch"))}: ${escapeHtml(customLabelFields.batchNumber)}`);
+    }
     if (fields.length === 0) return "";
     return `<div class="custom-fields">${fields.join(" ｜ ")}</div>`;
   };
 
-  // Render name section based on nameDisplay setting
+  // Render name section based on nameDisplay setting.
+  // Chemical names / CAS numbers originate from PubChem or user input
+  // and must be escaped before being written into the iframe document.
   const renderNameSection = (effectiveChem) => {
     const nd = labelConfig.nameDisplay || "both";
     let nameHtml = "";
     if (nd === "en" || nd === "both") {
-      nameHtml += `<div class="name-en">${effectiveChem.name_en || ""}</div>`;
+      nameHtml += `<div class="name-en">${escapeHtml(effectiveChem.name_en || "")}</div>`;
     }
     if (nd === "zh") {
       // Chinese-only mode: use Chinese name, fallback to English if unavailable
       const displayName = effectiveChem.name_zh || effectiveChem.name_en || "";
-      nameHtml += `<div class="name-en">${displayName}</div>`;
+      nameHtml += `<div class="name-en">${escapeHtml(displayName)}</div>`;
     } else if (nd === "both" && effectiveChem.name_zh) {
-      nameHtml += `<div class="name-zh">${effectiveChem.name_zh}</div>`;
+      nameHtml += `<div class="name-zh">${escapeHtml(effectiveChem.name_zh)}</div>`;
     }
     return `<div class="name-section">
       ${nameHtml}
-      <div class="cas">CAS: ${effectiveChem.cas_number}</div>
+      <div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>
       ${renderCustomFields()}
     </div>`;
   };
@@ -189,12 +215,12 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
           <div class="label-middle">
             ${pictograms.length > 0 ? `
               <div class="pictograms">
-                ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                ${pictograms.map((p) => `<img src="${escapeHtml(GHS_IMAGES[p.code] || "")}" alt="${escapeHtml(p.code)}" />`).join("")}
               </div>
-            ` : '<div class="no-hazard">${t("print.noHazardLabel")}</div>'}
+            ` : `<div class="no-hazard">${escapeHtml(t("print.noHazardLabel"))}</div>`}
           </div>
           <div class="label-bottom">
-            ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : '<div class="signal-placeholder"></div>'}
+            ${signalWord ? `<div class="signal ${signalClass}">${escapeHtml(signalWord)}</div>` : '<div class="signal-placeholder"></div>'}
           </div>
         </div>
       `;
@@ -218,17 +244,17 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
             <div class="middle-row">
               ${pictograms.length > 0 ? `
                 <div class="pictograms">
-                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  ${pictograms.map((p) => `<img src="${escapeHtml(GHS_IMAGES[p.code] || "")}" alt="${escapeHtml(p.code)}" />`).join("")}
                 </div>
               ` : ""}
-              ${signalWord ? `<div class="signal ${signalClass}">${signalWord}</div>` : ""}
+              ${signalWord ? `<div class="signal ${signalClass}">${escapeHtml(signalWord)}</div>` : ""}
             </div>
           </div>
           <div class="label-bottom hazards-section">
             ${hazards.length > 0 ? `
-              ${hazards.slice(0, maxHazards).map((h) => `<div class="hazard-item">${h.code} ${h.text_zh}</div>`).join("")}
-              ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ ${t("print.totalItems", { count: hazards.length })}</div>` : ""}
-            ` : '<div class="no-hazard-text">${t("print.noHazardStatement")}</div>'}
+              ${hazards.slice(0, maxHazards).map((h) => `<div class="hazard-item">${escapeHtml(h.code)} ${escapeHtml(h.text_zh)}</div>`).join("")}
+              ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ ${escapeHtml(t("print.totalItems", { count: hazards.length }))}</div>` : ""}
+            ` : `<div class="no-hazard-text">${escapeHtml(t("print.noHazardStatement"))}</div>`}
           </div>
         </div>
       `;
@@ -252,16 +278,16 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
             <div class="middle-row">
               ${pictograms.length > 0 ? `
                 <div class="pictograms compact">
-                  ${pictograms.map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                  ${pictograms.map((p) => `<img src="${escapeHtml(GHS_IMAGES[p.code] || "")}" alt="${escapeHtml(p.code)}" />`).join("")}
                 </div>
               ` : ""}
-              ${signalWord ? `<div class="signal compact ${signalClass}">${signalWord}</div>` : ""}
+              ${signalWord ? `<div class="signal compact ${signalClass}">${escapeHtml(signalWord)}</div>` : ""}
             </div>
           </div>
           <div class="label-bottom hazards-full" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
             ${hazards.length > 0 ? `
-              ${hazards.map((h) => `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${h.code} ${h.text_zh}</div>`).join("")}
-            ` : '<div class="no-hazard-text">${t("print.noHazardStatement")}</div>'}
+              ${hazards.map((h) => `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(h.code)} ${escapeHtml(h.text_zh)}</div>`).join("")}
+            ` : `<div class="no-hazard-text">${escapeHtml(t("print.noHazardStatement"))}</div>`}
           </div>
         </div>
       `;
@@ -273,6 +299,8 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const pictograms = effectiveChem.ghs_pictograms || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+      // pubchemUrl is passed through encodeURIComponent by getQRCodeUrl,
+      // so no additional escape is needed for the resulting src attribute.
       const pubchemUrl = effectiveChem.cid
         ? `https://pubchem.ncbi.nlm.nih.gov/compound/${effectiveChem.cid}`
         : `https://pubchem.ncbi.nlm.nih.gov/#query=${effectiveChem.cas_number}`;
@@ -283,15 +311,15 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
             ${renderNameSection(effectiveChem)}
             ${pictograms.length > 0 ? `
               <div class="pictograms qr-pics">
-                ${pictograms.slice(0, 4).map((p) => `<img src="${GHS_IMAGES[p.code]}" alt="${p.code}" />`).join("")}
+                ${pictograms.slice(0, 4).map((p) => `<img src="${escapeHtml(GHS_IMAGES[p.code] || "")}" alt="${escapeHtml(p.code)}" />`).join("")}
                 ${pictograms.length > 4 ? `<span class="more-pics">+${pictograms.length - 4}</span>` : ""}
               </div>
             ` : ""}
-            ${signalWord ? `<div class="signal qr-signal ${signalClass}">${signalWord}</div>` : ""}
+            ${signalWord ? `<div class="signal qr-signal ${signalClass}">${escapeHtml(signalWord)}</div>` : ""}
           </div>
           <div class="qr-right">
             <img class="qrcode-img" src="${getQRCodeUrl(pubchemUrl, 200)}" alt="QR" />
-            <div class="qr-hint">${t("print.scanForDetail")}</div>
+            <div class="qr-hint">${escapeHtml(t("print.scanForDetail"))}</div>
           </div>
         </div>
       `;
@@ -304,7 +332,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return `
       <div class="page">
         ${labelsHtml}
-        <div class="page-number">${t("print.pageNumber", { current: pageIdx + 1, total: totalPages })}</div>
+        <div class="page-number">${escapeHtml(t("print.pageNumber", { current: pageIdx + 1, total: totalPages }))}</div>
       </div>
     `;
   }).join("");
@@ -602,7 +630,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
   iframeDoc.write(
-    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t("print.title")}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(t("print.title"))}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`
   );
   iframeDoc.close();
 

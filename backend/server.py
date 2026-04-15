@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 import os
 import logging
 from pathlib import Path
@@ -16,6 +19,7 @@ from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import csv
+import random
 import re
 from cachetools import TTLCache
 
@@ -39,6 +43,56 @@ shared_http_client: Optional[httpx.AsyncClient] = None
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 
+# ─── Outbound PubChem concurrency gate ──────────────────────
+#
+# Limits how many concurrent PubChem requests this process can have in
+# flight regardless of how many client requests come in. Without this
+# gate, a single burst of batch searches (100 CAS numbers × 3-4 PubChem
+# calls each) could blow past PubChem's published rate limits and get
+# the whole deploy temporarily blocked. 8 is a conservative default
+# that still benefits from the shared httpx client's keep-alive pool.
+PUBCHEM_OUTBOUND_CONCURRENCY = int(os.environ.get("PUBCHEM_CONCURRENCY", "8"))
+_pubchem_semaphore = asyncio.Semaphore(PUBCHEM_OUTBOUND_CONCURRENCY)
+
+
+# ─── Client IP resolution for rate limiting ─────────────────
+#
+# The service sits behind Zeabur's proxy, so `request.client.host`
+# always resolves to the proxy. Without taking X-Forwarded-For into
+# account, every user would share one rate-limit bucket.
+#
+# Trust the LEFTMOST (original client) IP in X-Forwarded-For when
+# present, and fall back to the direct peer address otherwise.
+#
+# Deployment caveat (documented here and in README): this assumes the
+# API is only reachable through a trusted reverse proxy. If the API
+# is ever exposed directly to the public, a malicious client could
+# forge X-Forwarded-For. In that case set TRUST_FORWARDED_HEADERS=0.
+def _client_ip(request: "Request") -> str:
+    if os.environ.get("TRUST_FORWARDED_HEADERS", "1") == "1":
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            first = forwarded.split(",")[0].strip()
+            if first:
+                return first
+    if request.client:
+        return request.client.host
+    return "unknown"
+
+
+# slowapi limiter. In-memory bucket — correct for a single-worker
+# deployment. Scaling to multiple workers/instances requires swapping
+# in a Redis-backed storage URI or pushing rate-limiting out to the
+# edge (Zeabur router, Cloudflare, etc.).
+limiter = Limiter(
+    key_func=_client_ip,
+    default_limits=[],  # no implicit global limit; per-route only
+    # headers_enabled=False so slowapi's decorator does not try to
+    # pluck a Response from each endpoint signature. Rate-limit
+    # signalling happens through the 429 status + exception handler.
+    headers_enabled=False,
+)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
@@ -53,6 +107,13 @@ async def lifespan(app: FastAPI):
 
 # Create the main app with lifespan
 app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
+
+# Register the rate limiter. The exception handler translates
+# RateLimitExceeded into a 429 response so clients see a clear signal
+# rather than a generic 500.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -191,10 +252,135 @@ class ChemicalResult(BaseModel):
     has_multiple_classifications: bool = False
     found: bool = False
     error: Optional[str] = None
+    # True when the lookup failed because PubChem was temporarily
+    # unavailable (timeout, 5xx, 429). Distinguishes "transient
+    # upstream failure — please retry" from "CAS truly not in PubChem".
+    # Frontend can display a different message for each case.
+    upstream_error: bool = False
+
+# Maximum rows accepted by the export endpoints. Keeps request size
+# bounded and prevents abuse of the export pipeline as a DoS vector.
+MAX_EXPORT_ROWS = 500
 
 class ExportRequest(BaseModel):
-    results: List[Dict[str, Any]]
+    results: List[Dict[str, Any]] = Field(..., max_length=MAX_EXPORT_ROWS)
     format: str = "xlsx"  # xlsx or csv
+
+
+# Characters that Excel / Google Sheets / LibreOffice Calc treat as the
+# start of a formula. Values beginning with any of these can execute
+# content when the exported file is opened elsewhere (CSV injection).
+_FORMULA_TRIGGER_CHARS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def spreadsheet_safe(value: Any) -> str:
+    """Neutralize spreadsheet formula injection in exported cells.
+
+    Any string whose first character would be interpreted as a formula
+    prefix is prefixed with an apostrophe, which spreadsheet apps treat
+    as a text-only marker. `None` is coerced to an empty string.
+    """
+    if value is None:
+        return ""
+    text = str(value)
+    if text and text[0] in _FORMULA_TRIGGER_CHARS:
+        return "'" + text
+    return text
+
+# ─── PubChem resilience helper ──────────────────────────────
+#
+# Previously every PubChem call caught `Exception` and returned `{}`,
+# so a 429 or 503 was indistinguishable from "no GHS data for this
+# compound". For a chemical-safety tool that silent degradation is
+# dangerous: users can read "no hazard" when really the upstream was
+# briefly unavailable.
+#
+# `pubchem_get_json()` retries transient errors with exponential
+# backoff and jitter, respects Retry-After on 429, and raises
+# `PubChemError` when retries are exhausted so callers can decide
+# whether to surface an upstream_error to the user.
+
+class PubChemError(Exception):
+    """Raised when PubChem is transiently unavailable after retries."""
+
+
+_PUBCHEM_TRANSIENT_STATUS = {429, 500, 502, 503, 504}
+
+
+async def pubchem_get_json(
+    http_client: httpx.AsyncClient,
+    url: str,
+    *,
+    timeout: float,
+    retries: int = 2,
+    max_delay: float = 4.0,
+):
+    """GET JSON from PubChem with retry/backoff.
+
+    Returns
+    -------
+    (status_code, parsed_json_or_None)
+        - (200, dict)         : success
+        - (404, None)         : resource truly does not exist (no retry)
+        - (4xx_other, None)   : treat as no-data (no retry)
+
+    Raises
+    ------
+    PubChemError
+        All retries exhausted on transient errors (timeout / 429 / 5xx /
+        network). Callers should treat this as "upstream unavailable",
+        NOT "no hazard data".
+    """
+    attempt = 0
+    last_error = "unknown"
+    while True:
+        retry_after: Optional[str] = None
+        transient = False
+        # Bound the number of concurrent outbound PubChem requests so
+        # a single burst of client traffic cannot balloon into a DoS
+        # of PubChem (and get our IP rate-limited for everyone).
+        async with _pubchem_semaphore:
+            try:
+                resp = await http_client.get(url, timeout=timeout)
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                transient = True
+                resp = None
+        if resp is not None:
+            status = resp.status_code
+            if status == 200:
+                try:
+                    return status, resp.json()
+                except ValueError:
+                    # 200 with non-JSON body — treat as no usable data
+                    return status, None
+            if status in _PUBCHEM_TRANSIENT_STATUS:
+                transient = True
+                if status == 429:
+                    retry_after = resp.headers.get("Retry-After")
+                last_error = f"HTTP {status}"
+            else:
+                # 4xx other than 429 (incl. 404) — definitive, no retry
+                return status, None
+
+        if not transient:
+            # Shouldn't reach here, but guard against logic drift.
+            raise PubChemError(f"{url}: {last_error}")
+
+        attempt += 1
+        if attempt > retries:
+            raise PubChemError(f"{url} failed after {attempt} attempts: {last_error}")
+
+        # Exponential backoff with jitter; honour Retry-After when sensible.
+        delay = min(max_delay, 0.3 * (2 ** (attempt - 1)))
+        if retry_after:
+            try:
+                delay = max(delay, min(max_delay, float(retry_after)))
+            except (TypeError, ValueError):
+                pass
+        delay += random.uniform(0, 0.15)
+        await asyncio.sleep(delay)
+
 
 # Helper functions
 def normalize_cas(cas: str) -> str:
@@ -272,6 +458,50 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
         return zh_prefix[0]
 
     return None
+
+
+def _classification_signature(report: Dict[str, Any]) -> tuple:
+    """Stable signature for deduplicating GHS classification reports.
+
+    Two reports collapse into one only when ALL of the following match:
+      - set of pictogram codes
+      - signal word (e.g. Danger / Warning)
+      - sorted set of H-statement codes
+      - source string (e.g. ECHA C&L Notifications Summary)
+
+    Previously dedup was keyed on pictogram set only, which dropped
+    materially different classifications that shared the same icons
+    but differed in hazard codes / signal word. That was a real data
+    correctness issue for a chemical safety tool.
+    """
+    pic_codes = frozenset((p.get("code") or "") for p in report.get("pictograms", []))
+    h_codes = tuple(sorted((h.get("code") or "") for h in report.get("hazard_statements", [])))
+    signal = (report.get("signal_word") or "").strip()
+    source = (report.get("source") or "").strip()
+    return (pic_codes, signal, h_codes, source)
+
+
+def _report_rank_key(report: Dict[str, Any], source_index: int) -> tuple:
+    """Deterministic rank key for choosing the primary classification.
+
+    Lower tuple ranks first (ascending sort), so values that should
+    rank earlier are negated.
+
+    Priority, highest first:
+      1. Larger ECHA report_count (stronger evidence base)
+      2. Reports labelled as ECHA C&L Notifications (regulatory source)
+      3. More hazard statements (more complete classification)
+      4. Original PubChem source order as the stable tie-breaker
+    """
+    raw = report.get("report_count")
+    try:
+        count = int(raw) if raw else 0
+    except (TypeError, ValueError):
+        count = 0
+    source = (report.get("source") or "").lower()
+    echa_bonus = 1 if "echa" in source else 0
+    hazard_count = len(report.get("hazard_statements") or [])
+    return (-count, -echa_bonus, -hazard_count, source_index)
 
 
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
@@ -417,51 +647,65 @@ def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
     return None
 
 async def _try_cid_by_name(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
-    """CID lookup Method 1: Search by CAS number as compound name."""
-    try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/cids/JSON"
-        response = await http_client.get(url, timeout=15.0)
-        if response.status_code == 200:
-            cids = response.json().get("IdentifierList", {}).get("CID", [])
-            if cids:
-                return cids[0]
-    except Exception as e:
-        logger.debug(f"CID by name failed for {cas_number}: {e}")
+    """CID lookup Method 1: Search by CAS number as compound name.
+
+    Transient failures propagate as PubChemError so get_cid_from_cas()
+    can distinguish "all methods failed due to upstream outage" from
+    "PubChem returned 404 on every method (truly unknown CAS)".
+    """
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/cids/JSON"
+    status, data = await pubchem_get_json(http_client, url, timeout=15.0)
+    if status == 200 and data:
+        cids = data.get("IdentifierList", {}).get("CID", [])
+        if cids:
+            return cids[0]
     return None
 
 async def _try_cid_by_xref(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
     """CID lookup Method 2: Search via xref/rn endpoint."""
-    try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/rn/{cas_number}/cids/JSON"
-        response = await http_client.get(url, timeout=15.0)
-        if response.status_code == 200:
-            cids = response.json().get("IdentifierList", {}).get("CID", [])
-            if cids:
-                return cids[0]
-    except Exception as e:
-        logger.debug(f"CID by xref failed for {cas_number}: {e}")
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/xref/rn/{cas_number}/cids/JSON"
+    status, data = await pubchem_get_json(http_client, url, timeout=15.0)
+    if status == 200 and data:
+        cids = data.get("IdentifierList", {}).get("CID", [])
+        if cids:
+            return cids[0]
     return None
 
 async def _try_cid_by_substance(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
     """CID lookup Method 3: Search via substance xref."""
-    try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/xref/rn/{cas_number}/cids/JSON"
-        response = await http_client.get(url, timeout=15.0)
-        if response.status_code == 200:
-            cids = response.json().get("InformationList", {}).get("Information", [])
-            if cids and cids[0].get("CID"):
-                return cids[0]["CID"][0] if isinstance(cids[0]["CID"], list) else cids[0]["CID"]
-    except Exception as e:
-        logger.debug(f"CID by substance failed for {cas_number}: {e}")
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/xref/rn/{cas_number}/cids/JSON"
+    status, data = await pubchem_get_json(http_client, url, timeout=15.0)
+    if status == 200 and data:
+        info = data.get("InformationList", {}).get("Information", [])
+        if info and info[0].get("CID"):
+            cid_field = info[0]["CID"]
+            return cid_field[0] if isinstance(cid_field, list) else cid_field
     return None
 
 async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
-    """Get PubChem CID from CAS number — runs methods 1-3 concurrently, with cache."""
+    """Get PubChem CID from CAS number — runs methods 1-3 concurrently, with cache.
+
+    Policy for a safety-critical tool:
+
+      1. If any method returns an int, use it.
+      2. Otherwise, if ANY method (primary or alt-CAS fallback) raised
+         `PubChemError` — i.e. at least one endpoint transiently failed
+         — the "not found" conclusion is not trustworthy, so we raise
+         `PubChemError` and let the caller surface `upstream_error=True`.
+      3. Only when every method returned a clean "no match" do we
+         return `None` to mean "truly not in PubChem".
+
+    Previously the function only raised when ALL three primary methods
+    were transient failures, which let the mixed case through
+    (e.g. one 404 + two 503) and could present a transient outage as a
+    confirmed absence. That is unsafe for a GHS lookup tool.
+    """
     # Check cache first
     if cas_number in cid_cache:
         return cid_cache[cas_number]
 
-    # Run methods 1-3 concurrently
+    # Run methods 1-3 concurrently; return_exceptions so one transient
+    # failure does not abort the others.
     results = await asyncio.gather(
         _try_cid_by_name(cas_number, http_client),
         _try_cid_by_xref(cas_number, http_client),
@@ -473,68 +717,87 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
             cid_cache[cas_number] = result
             return result
 
-    # Method 4 (fallback): Try with alternate CAS format
+    primary_had_transient = any(isinstance(r, PubChemError) for r in results)
+
+    # Method 4 (fallback): alternate CAS format (strip leading zeros).
+    # We attempt it whether or not the primary results had transient
+    # failures — it might still succeed and give us a definitive CID.
+    fallback_had_transient = False
     cas_alt = re.sub(r'^0+', '', cas_number.split('-')[0]) + '-' + '-'.join(cas_number.split('-')[1:])
     if cas_alt != cas_number:
-        cid = await _try_cid_by_name(cas_alt, http_client)
+        try:
+            cid = await _try_cid_by_name(cas_alt, http_client)
+        except PubChemError:
+            cid = None
+            fallback_had_transient = True
         if cid:
             cid_cache[cas_number] = cid
             return cid
 
-    logger.warning(f"Could not find CID for CAS number: {cas_number}")
+    # No CID found anywhere. If ANY attempt (primary or fallback) was
+    # a transient failure, refuse to commit to "not found".
+    if primary_had_transient or fallback_had_transient:
+        raise PubChemError(
+            f"CID lookup for {cas_number} had partial upstream failures; "
+            "cannot confirm not-found."
+        )
+
+    logger.info(f"PubChem has no CID for CAS number: {cas_number}")
     return None
 
 async def get_compound_name(cid: int, http_client: httpx.AsyncClient, known_zh: Optional[str] = None) -> tuple:
     """Get compound name in English and Chinese with multiple fallbacks.
+
+    Name resolution is explicitly best-effort: a transient PubChem
+    failure here is not fatal (we can still fall back to the local
+    dictionary and to the RecordTitle inside the GHS payload). So we
+    catch PubChemError per endpoint instead of propagating.
     If known_zh is provided, skip expensive Chinese name lookups."""
     name_en = None
     name_zh = known_zh
     all_synonyms = []
-    
+
     # Method 1: Get from property endpoint
     try:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/IUPACName,Title/JSON"
-        response = await http_client.get(url, timeout=15.0)
-        if response.status_code == 200:
-            data = response.json()
+        status, data = await pubchem_get_json(http_client, url, timeout=15.0)
+        if status == 200 and data:
             props = data.get("PropertyTable", {}).get("Properties", [{}])[0]
             name_en = props.get("Title") or props.get("IUPACName")
-    except Exception as e:
-        logger.debug(f"Property endpoint failed for CID {cid}: {e}")
-    
+    except PubChemError as e:
+        logger.debug(f"Property endpoint transient failure for CID {cid}: {e}")
+
     # Method 2: Get from synonyms endpoint
     try:
         syn_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
-        syn_response = await http_client.get(syn_url, timeout=15.0)
-        if syn_response.status_code == 200:
-            syn_data = syn_response.json()
+        status, syn_data = await pubchem_get_json(http_client, syn_url, timeout=15.0)
+        if status == 200 and syn_data:
             all_synonyms = syn_data.get("InformationList", {}).get("Information", [{}])[0].get("Synonym", [])
-            
+
             # If no name_en yet, use first synonym
             if not name_en and all_synonyms:
                 name_en = all_synonyms[0]
-            
+
             # Look for Chinese characters in synonyms
             for syn in all_synonyms:
                 if any('\u4e00' <= char <= '\u9fff' for char in syn):
                     name_zh = syn
                     break
-    except Exception as e:
-        logger.debug(f"Synonyms endpoint failed for CID {cid}: {e}")
-    
+    except PubChemError as e:
+        logger.debug(f"Synonyms endpoint transient failure for CID {cid}: {e}")
+
     # Method 3: Try description endpoint for name
     if not name_en:
         try:
             desc_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/description/JSON"
-            desc_response = await http_client.get(desc_url, timeout=15.0)
-            if desc_response.status_code == 200:
-                desc_data = desc_response.json()
+            status, desc_data = await pubchem_get_json(http_client, desc_url, timeout=15.0)
+            if status == 200 and desc_data:
                 info_list = desc_data.get("InformationList", {}).get("Information", [])
                 if info_list:
                     name_en = info_list[0].get("Title")
-        except Exception as e:
-            logger.debug(f"Description endpoint failed for CID {cid}: {e}")
-    
+        except PubChemError as e:
+            logger.debug(f"Description endpoint transient failure for CID {cid}: {e}")
+
     # If no Chinese name yet, try local dictionary lookups
     if not name_zh and name_en:
         name_zh = get_chinese_name_from_dict(name_en)
@@ -571,31 +834,35 @@ def extract_iupac_name(ghs_data: dict) -> str:
     return ""
 
 async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
-    """Get GHS classification from PubChem (with 24hr cache)."""
+    """Get GHS classification from PubChem (with 24hr cache).
+
+    Unlike the name endpoints, transient failures here are critical:
+    returning `{}` would cause the rest of search_chemical() to emit
+    a found=True result with empty hazard data, which is dangerous
+    for a safety tool. So we let PubChemError propagate to the caller
+    and only return `{}` when PubChem definitively says there's no
+    GHS section for this CID (e.g. 404).
+    """
     if cid in ghs_cache:
         return ghs_cache[cid]
-    try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
-        response = await http_client.get(url, timeout=30.0)
-        if response.status_code == 200:
-            data = response.json()
-            ghs_cache[cid] = data
-            return data
-    except Exception as e:
-        logger.error(f"Error getting GHS data for CID {cid}: {e}")
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
+    status, data = await pubchem_get_json(http_client, url, timeout=30.0)
+    if status == 200 and data:
+        ghs_cache[cid] = data
+        return data
     return {}
 
 async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> ChemicalResult:
     """Search for a chemical by CAS number"""
     normalized_cas = normalize_cas(cas_number)
-    
+
     if not normalized_cas:
         return ChemicalResult(
             cas_number=cas_number,
             found=False,
             error="無效的 CAS 號碼格式（正確格式如：64-17-5）"
         )
-    
+
     # Validate CAS number format (should be like XX-XX-X or XXXXX-XX-X)
     cas_pattern = re.match(r'^(\d{2,7})-(\d{2})-(\d)$', normalized_cas)
     if not cas_pattern:
@@ -604,7 +871,7 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             found=False,
             error=f"CAS 號碼格式不正確：{normalized_cas}（正確格式如：64-17-5）"
         )
-    
+
     # ===== NEW: Try to get Chinese and English name from CAS dictionary FIRST (most accurate) =====
     name_zh_from_cas = get_chinese_name_from_cas(normalized_cas)
     name_en_from_cas = get_english_name_from_cas(normalized_cas)
@@ -612,9 +879,23 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         logger.info(f"Found Chinese name from CAS dictionary for {normalized_cas}: {name_zh_from_cas}")
     if name_en_from_cas:
         logger.info(f"Found English name from CAS dictionary for {normalized_cas}: {name_en_from_cas}")
-    
-    # Get CID - try multiple methods
-    cid = await get_cid_from_cas(normalized_cas, http_client)
+
+    # Get CID - try multiple methods. A transient upstream failure must
+    # NOT collapse into "not found" — surface it as upstream_error so
+    # the frontend can tell the user to retry rather than assume the
+    # chemical has no hazard data.
+    try:
+        cid = await get_cid_from_cas(normalized_cas, http_client)
+    except PubChemError as e:
+        logger.warning(f"PubChem unavailable during CID lookup for {normalized_cas}: {e}")
+        return ChemicalResult(
+            cas_number=cas_number,
+            name_en=name_en_from_cas,
+            name_zh=name_zh_from_cas,
+            found=False,
+            upstream_error=True,
+            error="PubChem 暫時無法回應，請稍後再試 (CID lookup failed)"
+        )
     if not cid:
         # Even if PubChem doesn't have CID, we might have local data
         if name_zh_from_cas or name_en_from_cas:
@@ -638,11 +919,28 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         )
     
     # Get compound name and GHS data concurrently
-    # Pass known Chinese name to skip redundant dictionary lookups
+    # Pass known Chinese name to skip redundant dictionary lookups.
+    # Critical: a transient failure of the GHS endpoint must not be
+    # silently rendered as "no hazards". `get_ghs_classification()`
+    # raises PubChemError for transient cases; catch it here and
+    # return an upstream_error result so the UI can distinguish
+    # "retry later" from "this chemical has no GHS data".
     name_task = get_compound_name(cid, http_client, known_zh=name_zh_from_cas)
     ghs_task = get_ghs_classification(cid, http_client)
-    
-    (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
+
+    try:
+        (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
+    except PubChemError as e:
+        logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
+        return ChemicalResult(
+            cas_number=cas_number,
+            cid=cid,
+            name_en=name_en_from_cas,
+            name_zh=name_zh_from_cas,
+            found=False,
+            upstream_error=True,
+            error="PubChem 暫時無法回應，請稍後再試 (GHS classification fetch failed)"
+        )
     
     # Extract ALL GHS classification reports
     all_classifications = extract_all_ghs_classifications(ghs_data)
@@ -655,30 +953,36 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     other_classifications = []
     
     if all_classifications:
-        # First report is the primary classification
-        primary = all_classifications[0]
+        # Rank all reports deterministically; the top-ranked is primary.
+        # Prior behaviour used PubChem's source order blindly, which could
+        # demote the strongest classification and silently drop reports
+        # sharing the same pictograms but differing in H-codes/signal.
+        indexed = list(enumerate(all_classifications))
+        indexed.sort(key=lambda ix: _report_rank_key(ix[1], ix[0]))
+
+        _, primary = indexed[0]
         primary_pictograms = primary.get("pictograms", [])
         primary_hazards = primary.get("hazard_statements", [])
         primary_signal = primary.get("signal_word")
         primary_signal_zh = primary.get("signal_word_zh")
-        
-        # Rest are other classifications (deduplicate by pictogram set)
-        seen_pictogram_sets = set()
-        primary_pic_set = frozenset(p["code"] for p in primary_pictograms)
-        seen_pictogram_sets.add(primary_pic_set)
-        
-        for report in all_classifications[1:]:
-            pic_set = frozenset(p["code"] for p in report.get("pictograms", []))
-            if pic_set and pic_set not in seen_pictogram_sets:
-                seen_pictogram_sets.add(pic_set)
-                other_classifications.append(GHSReport(
-                    pictograms=report.get("pictograms", []),
-                    hazard_statements=report.get("hazard_statements", []),
-                    signal_word=report.get("signal_word"),
-                    signal_word_zh=report.get("signal_word_zh"),
-                    source=report.get("source"),
-                    report_count=report.get("report_count")
-                ))
+
+        # Dedup using the full signature (pictograms + signal + h-codes + source).
+        seen_signatures = {_classification_signature(primary)}
+        for _, report in indexed[1:]:
+            if not report.get("pictograms"):
+                continue
+            sig = _classification_signature(report)
+            if sig in seen_signatures:
+                continue
+            seen_signatures.add(sig)
+            other_classifications.append(GHSReport(
+                pictograms=report.get("pictograms", []),
+                hazard_statements=report.get("hazard_statements", []),
+                signal_word=report.get("signal_word"),
+                signal_word_zh=report.get("signal_word_zh"),
+                source=report.get("source"),
+                report_count=report.get("report_count")
+            ))
     
     # Use RecordTitle as fallback for name_en if not found
     if not name_en:
@@ -733,7 +1037,8 @@ async def health_check():
     }
 
 @api_router.post("/search", response_model=List[ChemicalResult])
-async def search_chemicals(query: CASQuery):
+@limiter.limit("10/minute")
+async def search_chemicals(request: Request, query: CASQuery):
     """Search for chemicals by CAS numbers"""
     results = []
     http_client = shared_http_client
@@ -750,7 +1055,8 @@ async def search_chemicals(query: CASQuery):
     return results
 
 @api_router.get("/search-by-name/{query}")
-async def search_by_name(query: str):
+@limiter.limit("60/minute")
+async def search_by_name(request: Request, query: str):
     """Search for chemicals by English or Chinese name (including aliases/common names).
     Returns list of matching {cas_number, name_en, name_zh, alias} (max 20).
     Used for autocomplete / name lookup before full GHS search.
@@ -801,7 +1107,8 @@ async def search_by_name(query: str):
 
 
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
-async def search_single_chemical(cas_number: str):
+@limiter.limit("30/minute")
+async def search_single_chemical(request: Request, cas_number: str):
     """Search by CAS number or chemical name.
     Auto-detects whether input is a CAS number or name."""
     query = cas_number.strip()
@@ -824,7 +1131,8 @@ async def search_single_chemical(cas_number: str):
 
 
 @api_router.post("/export/xlsx")
-async def export_xlsx(request: ExportRequest):
+@limiter.limit("10/minute")
+async def export_xlsx(request: Request, payload: ExportRequest):
     """Export results to Excel file"""
     wb = Workbook()
     ws = wb.active
@@ -850,25 +1158,28 @@ async def export_xlsx(request: ExportRequest):
         cell.alignment = header_alignment
         cell.border = thin_border
     
-    # Data
-    for row, result in enumerate(request.results, 2):
-        ws.cell(row=row, column=1, value=result.get("cas_number", "")).border = thin_border
-        ws.cell(row=row, column=2, value=result.get("name_en", "")).border = thin_border
-        ws.cell(row=row, column=3, value=result.get("name_zh", "")).border = thin_border
-        
+    # Data — every cell value is routed through spreadsheet_safe() to
+    # neutralize values that start with a formula prefix (e.g.
+    # `=HYPERLINK(...)`, `+cmd`, `@SUM(...)`), preventing CSV/XLSX
+    # injection when the file is opened in Excel / Sheets / Calc.
+    for row, result in enumerate(payload.results, 2):
+        ws.cell(row=row, column=1, value=spreadsheet_safe(result.get("cas_number", ""))).border = thin_border
+        ws.cell(row=row, column=2, value=spreadsheet_safe(result.get("name_en", ""))).border = thin_border
+        ws.cell(row=row, column=3, value=spreadsheet_safe(result.get("name_zh", ""))).border = thin_border
+
         # GHS pictograms
         pictograms = result.get("ghs_pictograms", [])
         ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
-        ws.cell(row=row, column=4, value=ghs_text).border = thin_border
-        
+        ws.cell(row=row, column=4, value=spreadsheet_safe(ghs_text)).border = thin_border
+
         # Signal word
         signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
-        ws.cell(row=row, column=5, value=signal).border = thin_border
-        
+        ws.cell(row=row, column=5, value=spreadsheet_safe(signal)).border = thin_border
+
         # Hazard statements
         statements = result.get("hazard_statements", [])
         hazard_text = "\n".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-        cell = ws.cell(row=row, column=6, value=hazard_text)
+        cell = ws.cell(row=row, column=6, value=spreadsheet_safe(hazard_text))
         cell.border = thin_border
         cell.alignment = Alignment(wrap_text=True)
     
@@ -892,7 +1203,8 @@ async def export_xlsx(request: ExportRequest):
     )
 
 @api_router.post("/export/csv")
-async def export_csv(request: ExportRequest):
+@limiter.limit("10/minute")
+async def export_csv(request: Request, payload: ExportRequest):
     """Export results to CSV file"""
     from io import StringIO
     string_output = StringIO()
@@ -902,7 +1214,7 @@ async def export_csv(request: ExportRequest):
     writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"])
     
     # Data
-    for result in request.results:
+    for result in payload.results:
         pictograms = result.get("ghs_pictograms", [])
         ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
         
@@ -912,12 +1224,12 @@ async def export_csv(request: ExportRequest):
         hazard_text = "; ".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
         
         writer.writerow([
-            result.get("cas_number", ""),
-            result.get("name_en", ""),
-            result.get("name_zh", ""),
-            ghs_text,
-            signal,
-            hazard_text
+            spreadsheet_safe(result.get("cas_number", "")),
+            spreadsheet_safe(result.get("name_en", "")),
+            spreadsheet_safe(result.get("name_zh", "")),
+            spreadsheet_safe(ghs_text),
+            spreadsheet_safe(signal),
+            spreadsheet_safe(hazard_text),
         ])
     
     # Convert to bytes with BOM
@@ -941,11 +1253,33 @@ async def get_ghs_pictograms():
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS configuration.
+#
+# Defaults are intentionally strict:
+#   - `allow_credentials=False` because the API does not use cookies,
+#     `Authorization` headers, or any other credentialed browser flow.
+#     Keeping it False means that even if an origin is mis-allowed, the
+#     browser will refuse to attach credentials — narrowing blast radius.
+#   - `allow_origins` falls back to the production frontend only.
+#     Wildcard (`*`) is explicitly rejected here because it is unsafe
+#     with credentials (and confusing if credentials are later enabled).
+#
+# Local development should set `CORS_ORIGINS=http://localhost:3000`
+# (or a comma-separated list) in `.env` / Docker compose.
+_raw_cors = os.environ.get("CORS_ORIGINS", "https://ghs-frontend.zeabur.app")
+_cors_origins = [o.strip() for o in _raw_cors.split(",") if o.strip()]
+if "*" in _cors_origins:
+    logger.warning(
+        "CORS_ORIGINS=* is unsafe for a public API; falling back to the "
+        "production frontend. Set explicit origins for multi-origin deploys."
+    )
+    _cors_origins = ["https://ghs-frontend.zeabur.app"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', 'https://ghs-frontend.zeabur.app').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 

@@ -8,7 +8,10 @@ services:
     ports:
       - 8001
     env:
-      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      # Default to the production frontend only. Override CORS_ORIGINS
+      # with an explicit comma-separated list for multi-origin deploys.
+      # `*` is rejected at runtime because it is unsafe for a public API.
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://ghs-frontend.zeabur.app}
     healthcheck:
       path: /api/health
       port: 8001
