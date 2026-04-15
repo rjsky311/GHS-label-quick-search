@@ -642,9 +642,36 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
   const triggerPrint = () => {
     setTimeout(() => {
       iframe.contentWindow.focus();
+
+      // Tie iframe removal to the `afterprint` event so cleanup fires
+      // when the dialog actually closes (whether the user printed,
+      // saved as PDF, or cancelled) rather than on a fixed 1-second
+      // timer that could either fire mid-dialog or leak the iframe
+      // if the user lingered.
+      let removed = false;
+      const cleanup = () => {
+        if (removed) return;
+        removed = true;
+        iframe.remove();
+      };
+
+      // Safari/Firefox fire `afterprint` reliably on the iframe's
+      // window; Chromium too. Use { once: true } so the listener
+      // detaches after first invocation.
+      try {
+        iframe.contentWindow.addEventListener("afterprint", cleanup, { once: true });
+      } catch (_) {
+        // If the contentWindow is not accessible for any reason, the
+        // fallback timeout below will still clean up.
+      }
+
+      // Defensive fallback: some embedded browsers/webviews don't
+      // dispatch `afterprint` on iframes. Guarantee cleanup within
+      // 60s regardless. Previously this was 1s, which was too short
+      // if the user paused on the print dialog.
+      setTimeout(cleanup, 60000);
+
       iframe.contentWindow.print();
-      // Clean up iframe after print dialog closes
-      setTimeout(() => iframe.remove(), 1000);
     }, 300);
   };
 
