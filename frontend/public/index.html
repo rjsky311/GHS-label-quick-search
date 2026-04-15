@@ -23,10 +23,22 @@
               React set inline `style="..."` attributes on DOM nodes, and the
               print iframe generates inline <style>; tightening this would
               require migrating those to CSS-in-JS with nonces/hashes.
-            - `frame-ancestors` is honoured only when set as an HTTP header,
-              not via <meta>. It is kept here for documentation; the real
-              guarantee is configured at the static hosting edge (and the
-              API sets it via middleware for JSON responses).
+            - `frame-ancestors` here is documentation-only; browsers honour it
+              exclusively when delivered as a real HTTP header. The effective
+              guarantee for this static frontend has to be configured at the
+              Zeabur edge (static hosting response headers). The API does set
+              `frame-ancestors 'none'` via middleware for its own JSON
+              responses — see `backend/server.py`'s
+              `security_headers_middleware`.
+
+          The `<meta name="referrer">` tag below IS honoured by all major
+          browsers (it maps to the same-named HTML attribute, not an HTTP
+          header). `X-Content-Type-Options: nosniff` is NOT expressible via
+          `<meta http-equiv>` — it MUST come from the server/edge — so we do
+          not add a misleading meta tag for it. The API sets it in middleware;
+          the static site needs the same header configured at Zeabur's edge
+          (together with `X-Frame-Options: DENY` or equivalent CSP
+          `frame-ancestors` via real HTTP header).
         -->
         <meta http-equiv="Content-Security-Policy" content="
           default-src 'self';
@@ -39,7 +51,6 @@
           base-uri 'self';
           form-action 'self';
         " />
-        <meta http-equiv="X-Content-Type-Options" content="nosniff" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <link rel="preconnect" href="https://pubchem.ncbi.nlm.nih.gov" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='15' y='15' width='70' height='70' rx='4' transform='rotate(45 50 50)' fill='none' stroke='%23f59e0b' stroke-width='6'/><text x='50' y='62' text-anchor='middle' font-size='36' font-weight='bold' fill='%23f59e0b'>!</text></svg>" />
