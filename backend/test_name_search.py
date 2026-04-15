@@ -638,3 +638,173 @@ async def test_export_accepts_payload_at_max_rows():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/api/export/csv", json=payload)
     assert response.status_code == 200
+
+
+# ─── PubChem retry / backoff ────────────────────────────────
+
+import httpx as _httpx_for_tests
+from server import PubChemError, pubchem_get_json
+
+
+class _FakeResponse:
+    def __init__(self, status_code, json_body=None, headers=None):
+        self.status_code = status_code
+        self._json = json_body if json_body is not None else {}
+        self.headers = headers or {}
+
+    def json(self):
+        return self._json
+
+
+class _ScriptedClient:
+    """Scripted httpx replacement. Each `get` call pops the next entry
+    from `.script`. Entries may be:
+        - a _FakeResponse to return
+        - an Exception instance to raise
+    """
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.calls = 0
+
+    async def get(self, url, timeout=None):
+        self.calls += 1
+        item = self.script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+@pytest.fixture(autouse=True)
+def _fast_pubchem_sleep(monkeypatch):
+    """Keep retry tests quick: replace asyncio.sleep with a no-op."""
+    import asyncio as _a
+    import server as _srv
+
+    async def _no_sleep(_delay):
+        return None
+
+    monkeypatch.setattr(_srv.asyncio, "sleep", _no_sleep)
+    yield
+
+
+async def test_pubchem_get_json_returns_200_without_retry():
+    client = _ScriptedClient([_FakeResponse(200, {"ok": True})])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
+    assert status == 200
+    assert data == {"ok": True}
+    assert client.calls == 1
+
+
+async def test_pubchem_get_json_returns_404_without_retry():
+    client = _ScriptedClient([_FakeResponse(404)])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
+    assert status == 404
+    assert data is None
+    assert client.calls == 1  # 404 must NOT trigger retries
+
+
+async def test_pubchem_get_json_retries_503_then_succeeds():
+    client = _ScriptedClient([
+        _FakeResponse(503),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert data == {"ok": True}
+    assert client.calls == 2
+
+
+async def test_pubchem_get_json_retries_429_with_retry_after():
+    client = _ScriptedClient([
+        _FakeResponse(429, headers={"Retry-After": "1"}),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert client.calls == 2
+
+
+async def test_pubchem_get_json_raises_after_exhausted_retries_on_5xx():
+    client = _ScriptedClient([
+        _FakeResponse(503),
+        _FakeResponse(502),
+        _FakeResponse(500),
+    ])
+    with pytest.raises(PubChemError):
+        await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+
+
+async def test_pubchem_get_json_raises_on_timeout_exhausted():
+    timeout_exc = _httpx_for_tests.TimeoutException("read timeout")
+    client = _ScriptedClient([timeout_exc, timeout_exc, timeout_exc])
+    with pytest.raises(PubChemError):
+        await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+
+
+async def test_pubchem_get_json_timeout_then_success():
+    client = _ScriptedClient([
+        _httpx_for_tests.TimeoutException("slow"),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert client.calls == 2
+
+
+async def test_pubchem_get_json_returns_none_for_non_transient_4xx():
+    client = _ScriptedClient([_FakeResponse(400)])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
+    assert status == 400
+    assert data is None
+    assert client.calls == 1  # 400 is not retriable
+
+
+async def test_search_chemical_surfaces_upstream_error_on_ghs_outage(monkeypatch):
+    """A 429/5xx storm on the GHS endpoint must produce
+    found=False, upstream_error=True — never a found=True result with
+    empty hazard data."""
+    import server as srv
+
+    async def fake_get_cid(*_a, **_k):
+        return 702  # pretend CID lookup worked
+
+    async def fake_get_name(*_a, **_k):
+        return ("Ethanol", "乙醇")
+
+    async def fake_ghs_raise(*_a, **_k):
+        raise PubChemError("all retries exhausted")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_ghs_raise)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+    assert result.found is False
+    assert result.upstream_error is True
+    assert result.ghs_pictograms == []
+    assert result.hazard_statements == []
+    assert "PubChem 暫時無法回應" in (result.error or "")
+
+
+async def test_search_chemical_surfaces_upstream_error_on_cid_outage(monkeypatch):
+    """When all CID lookup methods transient-fail, surface upstream_error."""
+    import server as srv
+
+    async def fake_cid_raise(*_a, **_k):
+        raise PubChemError("all CID methods failed")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_cid_raise)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+    assert result.found is False
+    assert result.upstream_error is True
+    assert "PubChem 暫時無法回應" in (result.error or "")
