@@ -330,7 +330,7 @@ curl -X POST https://ghs-backend.zeabur.app/api/search \
 
 ```bash
 curl https://ghs-backend.zeabur.app/api/health
-# {"status": "healthy", "timestamp": "...", "version": "1.7.0"}
+# {"status": "healthy", "timestamp": "...", "version": "1.8.0"}
 ```
 
 ### 回應格式
@@ -379,6 +379,35 @@ curl https://ghs-backend.zeabur.app/api/health
 ---
 
 ## 版本更新紀錄
+
+### v1.8.0 (2026-04)
+
+**M0 — 預防措施說明（P-codes）**
+- 🔸 後端解析 PubChem 的 Precautionary Statement Codes（單碼 + 組合碼 P301+P310 / P303+P361+P353 等）
+- 🔸 142 筆 P-code 繁體中文對照表（`backend/p_code_translations.py`）
+- 🔸 `ChemicalResult.precautionary_statements` 欄位（`text_en` / `text_zh` 與 `hazard_statements` 一致 contract）
+- 🔸 DetailModal + ClassificationComparisonTable 顯示 P-code 列
+- 🔸 列印「完整版」模板含 P-code 全文；「標準版」顯示 code-only 精簡 pill + 溢出提示；「圖示版」/「QR 版」維持精簡
+- 🔸 匯出 XLSX / CSV 新增第 7 欄「預防措施」，沿用 `spreadsheet_safe()` 中和公式注入
+
+**M1 — 資料來源與可信度訊號**
+- 🔸 Backend 回傳 `primary_source` / `primary_report_count` / `retrieved_at` / `cache_hit`
+- 🔸 DetailModal 新增「資料來源」區塊；ResultsTable 加 ECHA / 報告數 / 快取 chips
+- 🔸 Cache 結果保留原始抓取時間，不在每次 hit 時刷新；24 小時後才重抓
+- 🔸 Upstream-error banner（`role="alert"`）與 SDS-authoritative note 一起登場於結果頁 / DetailModal / 列印 footer
+- 🔸 `formatRelativeTime()` helper 支援 zh-TW / en 的「5 分鐘前」相對時間
+
+**M2 — 信任邊界收斂與工作流微改善**
+- 🔸 `hasGhsData()` + `hasRenderableGhsVisual()` helpers；ResultsTable GHS 欄位改成三段式邏輯（未歸類 / 無 pictogram 但有 H-codes / 可渲染 pictogram）
+- 🔸「PubChem 無 GHS 分類資料」明確警語取代舊有「No hazard label」的誤導文案
+- 🔸 Cache badge tooltip 有 / 無 `retrieved_at` 兩個 i18n key，with-age 版顯示實際陳舊時間
+- 🔸 新快捷按鈕「Print all with GHS data / 列印所有有 GHS 分類的化學品」，作用在整次搜尋結果（**不跟畫面 filter 綁**）；直接 setState 不走既有 `handleOpenLabelModal` auto-select-all-found 路徑
+
+**Tests**
+- Backend: 103 → **123** tests
+- Frontend: 294 → **448** tests across **29** suites
+- React `act(...)` warnings: **0**
+- 直接 dependency CVE: 維持清零
 
 ### v1.7.0 (2026-04)
 

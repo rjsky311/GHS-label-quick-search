@@ -1,10 +1,21 @@
 import { render, screen } from '@testing-library/react';
 import Footer from '../Footer';
+import { APP_VERSION } from '@/constants/version';
 
 describe('Footer', () => {
-  it('renders version string', () => {
+  it('renders the current app version string from the shared constant', () => {
     render(<Footer />);
-    expect(screen.getByText(/v1\.6\.0/)).toBeInTheDocument();
+    // Match `vX.Y.Z` using the value from the constant so the
+    // assertion stays in sync automatically on future bumps.
+    expect(
+      screen.getByText(new RegExp(`v${APP_VERSION.replace(/\./g, '\\.')}`))
+    ).toBeInTheDocument();
+  });
+
+  it('APP_VERSION constant is 1.8.0 (single source of truth pin)', () => {
+    // Hard-pinned in ONE place so a future bump produces exactly one
+    // failing test with a clear reason.
+    expect(APP_VERSION).toBe('1.8.0');
   });
 
   it('renders PubChem link with correct href', () => {
