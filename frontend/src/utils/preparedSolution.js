@@ -186,6 +186,58 @@ export function buildRecentRecord(preparedItem) {
 }
 
 /**
+ * Tier 2 PR-3: derived display name for a prepared workflow entry.
+ *
+ * Produces a short human-readable string like `"10% Ethanol in Water"`
+ * for use in app-internal surfaces — the LabelPrintModal selected-row
+ * title, the Recent / Saved entries inside PrepareSolutionModal. This
+ * is a **workflow display helper**, not a canonical chemical identity:
+ *
+ *   - It is **not** used as a search key.
+ *   - It is **not** stored anywhere.
+ *   - It is **not** rendered on the printed label (that would cross
+ *     into labelling identity territory; scope-locked to in-app use
+ *     per the Tier 2 PR-3 contract).
+ *   - It does NOT replace the parent CAS / name rendering in any UI
+ *     surface — it is always a supplement.
+ *
+ * Accepts either a prepared item (`isPreparedSolution + preparedSolution`)
+ * or a bare record shape (recent / preset). Returns "" when the inputs
+ * don't have enough to form a meaningful display string; callers must
+ * tolerate "" and fall back to the parent's raw name.
+ *
+ * @param {Object} input  Either a prepared item or a recent/preset record.
+ * @returns {string}      Formatted display name, or "" when unavailable.
+ */
+export function formatPreparedDisplayName(input) {
+  if (!input) return "";
+  // Unify the two shapes: prepared items carry their workflow inputs
+  // under `preparedSolution`, whereas recents/presets are flat.
+  const src =
+    input.preparedSolution && typeof input.preparedSolution === "object"
+      ? input.preparedSolution
+      : input;
+  const concentration = (src.concentration || "").trim();
+  const solvent = (src.solvent || "").trim();
+  if (!concentration || !solvent) return "";
+  // Prefer the most specific parent-name label we can find. We look at
+  // the record/workflow-shape fields first, then fall back to the
+  // prepared item's top-level name fields if present. If nothing is
+  // available we still produce a useful "concentration solute in
+  // solvent" string by leaving solute out — "10% in Water" is less
+  // informative but honest about what we know.
+  const parentName =
+    src.parentNameEn ||
+    src.parentNameZh ||
+    input.name_en ||
+    input.name_zh ||
+    "";
+  const parent = parentName.trim();
+  if (!parent) return `${concentration} in ${solvent}`;
+  return `${concentration} ${parent} in ${solvent}`;
+}
+
+/**
  * Tier 2 PR-2B: build a "saved preset" record from the current parent
  * chemical + form values.
  *

@@ -649,4 +649,35 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
     ).toBeInTheDocument();
   });
+
+  // Tier 2 PR-3: derived display name appears in LabelPrintModal's
+  // selected-row area as a *supplement*, not a replacement — the
+  // parent CAS + name header row must still be present, because that
+  // is the canonical identity the Tier 1 trust boundary relies on.
+  it("derived display name appears in LabelPrintModal selected row without hiding the parent CAS / name", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+    await submitPreparedForm({ concentration: "10% (v/v)", solvent: "Water" });
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    // Derived display row appears…
+    const displayRow = screen.getByTestId(
+      `selected-prepared-display-${ethanolResult.cas_number}`
+    );
+    expect(displayRow.textContent).toContain("10% (v/v) Ethanol in Water");
+
+    // …and the canonical parent CAS + name header row is still rendered.
+    const dialog = screen.getByRole("dialog", { name: /label\.title/i });
+    const casSpans = dialog.querySelectorAll(
+      "span.font-mono.text-amber-400.text-sm"
+    );
+    expect(casSpans).toHaveLength(1);
+    expect(casSpans[0].textContent).toBe("64-17-5");
+  });
 });
