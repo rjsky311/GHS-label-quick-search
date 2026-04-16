@@ -330,7 +330,7 @@ curl -X POST https://ghs-backend.zeabur.app/api/search \
 
 ```bash
 curl https://ghs-backend.zeabur.app/api/health
-# {"status": "healthy", "timestamp": "...", "version": "1.8.0"}
+# {"status": "healthy", "timestamp": "...", "version": "1.9.0"}
 ```
 
 ### 回應格式
@@ -379,6 +379,42 @@ curl https://ghs-backend.zeabur.app/api/health
 ---
 
 ## 版本更新紀錄
+
+### v1.9.0 (2026-04)
+
+完整「prepared-solution workflow」— 稀釋液 / 工作液的 secondary-container
+標籤流程，完全守在 v1.8 的 trust boundary 內：parent-verbatim GHS、不做
+mixture classification、不做 multi-solute、不加 backend persistence。
+
+**M3 Tier 1 — 稀釋液標籤列印流程**
+- 🧪 DetailModal 新增「Prepare solution / 配製稀釋液」入口（僅對有 GHS 的化學品）
+- 🧪 `PrepareSolutionModal`：read-only 母化學品摘要 + concentration / solvent 輸入 + trust-boundary 註記
+- 🧪 `buildPreparedSolutionItem()` 以 parent spread 保留所有母化學品欄位；prepared item 進 `selectedForLabel`
+- 🧪 `LabelPrintModal` 為 prepared item 顯示藍色列 + `Prepared` 徽章 + concentration / solvent meta
+- 🧪 四種列印模板都支援 prepared-solution 渲染（`label-prepared` CSS class + badge + meta + 標籤印出的 trust note）
+- 🧪 Lifecycle 硬規則：submit 時 `selectedForLabel` 換成 `[preparedItem]`、`labelQuantities = {}`、`preparedFlowActive` session flag；LabelPrintModal 關閉時一律清空選擇與數量（不倚賴當下 selection 狀態），Escape 在 PrepareSolutionModal 只關這一層，DetailModal 會被標為 `inert` / `aria-hidden`
+
+**M3 Tier 2 — 日常可重用的配製工作流**
+- ⏱️ **Operational metadata**：`preparedBy` / `preparedDate` / `expiryDate`（都是選填、使用者自填、系統不推導）
+- ⏱️ **Recent prepared** (`usePreparedRecents`)：localStorage-only、schemaVersion:1、最多 10 筆、以 `(parentCas, concentration, solvent, preparedBy, preparedDate, expiryDate)` 去重；PrepareSolutionModal 內顯示 parent-scoped recent 清單，點選僅 prefill 不 auto-submit
+- 📚 **Saved presets** (`usePreparedPresets`)：localStorage-only、recipe-only（只存 parent identity + concentration + solvent；operational fields 刻意不存）、以 `(parentCas, concentration, solvent)` 去重；點選僅帶回配方，清空 operational 欄位
+- 🏷️ **Derived preview name**（`formatPreparedDisplayName`）：在 app 內顯示 `10% Ethanol in Water`（不印到標籤，留待 pilot 回饋）
+- 🗂️ Stores 隔離：prepared recents / presets 完全不流進 favorites / history / comparison / search；hook 層級有 isolation 測試釘住
+
+**Dogfood-driven UX cleanup**
+- ✉️ Save-as-preset 有 `toast.success` 確認（解決「按下去像沒事發生」）
+- 📅 `preparedDate` mount 預設今天（local TZ `todayDateString()` helper，不走 UTC `toISOString().slice(0,10)` 避免 off-by-one-day）
+- 📅 點 Recent 不再靜默帶回舊日期：`preparedDate` 重設成今天、`expiryDate` 清空；`preparedBy` 與配方欄位仍沿用
+- 📅 點 Preset 一致化：`preparedBy` 清空、`preparedDate` 今天、`expiryDate` 清空
+
+**Residual debt cleared**
+- 🧹 Dead `selectionHasPreparedItem` helper 移除 + dead-export guard
+- 🧹 Stacked `aria-modal` 修正：DetailModal `suppressed` prop 處理 `inert` / `aria-hidden` / `aria-modal` drop / Escape + backdrop gate
+
+**Tests**
+- Backend: **123** tests（不變，v1.9 沒有新 backend 程式碼）
+- Frontend: 448 → **597** tests across 29 → **34** suites
+- React `act(...)` warnings: **0**
 
 ### v1.8.0 (2026-04)
 

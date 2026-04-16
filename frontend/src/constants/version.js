@@ -5,8 +5,8 @@
  *   - frontend/package.json  "version"
  *   - backend/server.py      APP_VERSION
  *
- * Deliberately a hardcoded constant (not build-time-injected) for
- * v1.8.0. A follow-up can wire this to the package.json version at
- * build time once we actually need that indirection.
+ * Deliberately a hardcoded constant (not build-time-injected). A
+ * follow-up can wire this to the package.json version at build time
+ * once we actually need that indirection.
  */
-export const APP_VERSION = "1.8.0";
+export const APP_VERSION = "1.9.0";

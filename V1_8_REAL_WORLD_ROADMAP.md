@@ -1043,7 +1043,7 @@ At that point, the roadmap has moved from planning into concrete product expansi
 | M4 — Print workflow (supplier profile, label-stock presets, small-container mode, QR/SDS convenience) | proposed, not yet scoped into PRs |
 | S-level / N-level items | proposed, unchanged |
 
-Runtime version remains `1.8.0` by explicit choice. A version bump is out of scope for the planning phase that follows.
+Runtime is now `1.9.0` after the v1.9 release sync — `frontend/package.json`, `frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`, the Footer test pin, and the README health-check example are all aligned.
 
 ---
 

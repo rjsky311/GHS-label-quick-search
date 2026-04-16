@@ -12,10 +12,10 @@ describe('Footer', () => {
     ).toBeInTheDocument();
   });
 
-  it('APP_VERSION constant is 1.8.0 (single source of truth pin)', () => {
+  it('APP_VERSION constant is 1.9.0 (single source of truth pin)', () => {
     // Hard-pinned in ONE place so a future bump produces exactly one
     // failing test with a clear reason.
-    expect(APP_VERSION).toBe('1.8.0');
+    expect(APP_VERSION).toBe('1.9.0');
   });
 
   it('renders PubChem link with correct href', () => {
