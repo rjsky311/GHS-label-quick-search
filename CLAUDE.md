@@ -4,7 +4,7 @@
 - **Purpose**: Chemical GHS hazard label quick search system
 - **Stack**: React 19 + Tailwind CSS + Radix UI (frontend) / FastAPI + Python 3.11 (backend)
 - **Data Source**: PubChem REST API + local chemical dictionary (1,707 CAS entries)
-- **Current Version**: v1.7.0
+- **Current Version**: v1.8.0
 - **GitHub**: `rjsky311/GHS-label-quick-search` (private)
 - **Deployment**: Zeabur auto-deploy on push to main
 - **Frontend URL**: https://ghs-frontend.zeabur.app
@@ -174,32 +174,33 @@ User Browser
 - App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
 - Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
 
-## Current State (v1.7.0)
+## Current State (v1.8.0)
 
 ### Git History (key commits)
 ```
+6591a63 Merge pull request #11 — M2 PR-B Print all with GHS data
+f24c650 Merge pull request #10 — M2 PR-A no-GHS warning + aged cache tooltip
+b734520 Merge pull request #9  — M1 PR-C upstream banner + authoritative note
+acef423 Merge pull request #8  — M1 PR-B provenance UI in DetailModal / ResultsTable
+e2c90bd Merge pull request #7  — M1 PR-A provenance fields in backend
+d2903c4 Merge pull request #6  — M0 PR-C P-codes in print + export
+7323974 Merge pull request #5  — M0 PR-B P-codes UI rendering
+0b7a754 Merge pull request #4  — M0 PR-A backend P-code extraction
+84c948a Merge pull request #3  — Phase 3 cleanup (dead files, headers, audit)
+8fd6185 Merge pull request #2  — Phase 2 (autocomplete race, afterprint, focus trap)
+f7ed4c8 Merge pull request #1  — Phase 1 hardening (CORS, rate limits, retry)
 94179e4 feat: add B&W / Color print mode toggle for GHS pictograms
 daa462a feat: add classification comparison table (same-chemical + cross-chemical)
-b4ea2f7 docs: update CLAUDE.md for save print templates feature
 581c7c8 feat: add save print templates (localStorage, max 10 presets)
-f23258f fix: autocomplete dropdown clipped by overflow-hidden parent
 dc6f91c feat: add live name search autocomplete from backend API
-ebcf812 fix: change search focus shortcut from Ctrl+K to "/" key
-ebdfa0e docs: update CLAUDE.md for v1.7.0 + add .claude/ to .gitignore
 df396b4 feat: add English/Chinese name search + update ECHA SDS URL
-0cf9826 test: add frontend unit tests Phase 2 (92 tests, 4 complex components)
-e45ec01 ci: add GitHub Actions CI workflow
-ef64801 test: add frontend unit tests Phase 1 (88 tests, 12 suites)
-b4d2a82 docs: update README + add CLAUDE.md + sync versions to v1.6.0
-5ce04d5 fix: search button first-click and favorites detail crash
 5414eb2 v1.6.0: i18n dual-language + table sort & filter + SDS links
-a5653e5 v1.5.0: Performance + UX optimization
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results (as of v1.7.0)
-- **Frontend**: 354 tests across 25 suites; 0 React `act(...)` warnings
-- **Backend**: 99 tests covering name resolution, reverse dicts, aliases, API endpoints,
+### Test Results (as of v1.8.0)
+- **Frontend**: 448 tests across 29 suites; 0 React `act(...)` warnings
+- **Backend**: 123 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
 - **CI**: GitHub Actions runs both on every push to main and on PRs
@@ -238,7 +239,11 @@ a5653e5 v1.5.0: Performance + UX optimization
 - [x] **Phase 2 hardening** — autocomplete abort + stale-response guard; iframe cleanup via `afterprint`; frontend batch>100 alert + double-guard; `useFocusTrap` hook + sidebar adoption; test coverage for LabelPrintModal / ErrorBoundary / sidebars
 - [x] **Phase 3 cleanup** — version sync 1.7.0; removed dead files (`backend_test.py`, `tests/`, `字典.csv`, `test_result.md`); README + CLAUDE.md sync
 
-## Roadmap / Pending Work
+## v1.8 Roadmap
+
+See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. Key priorities: P-codes extraction, trust/provenance signals, prepared-solution mode, print workflow improvements. This is a shared planning document between Claude Code and Codex — editable, not frozen.
+
+## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 
 ### 🟢 Low Priority — Nice to Have
 | # | Feature | Description | Difficulty |

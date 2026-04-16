@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { APP_VERSION } from "@/constants/version";
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -14,7 +15,7 @@ export default function Footer() {
           {" "}| {t("footer.disclaimer")}
         </p>
         <p className="text-slate-600">
-          v1.6.0 |{" "}
+          v{APP_VERSION} |{" "}
           <a href="https://github.com/rjsky311/GHS-label-quick-search/issues" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">
             {t("footer.reportIssue")}
           </a>
