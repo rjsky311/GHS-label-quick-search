@@ -96,6 +96,8 @@
   "prepared.labelPrefix": "稀釋自",
   "prepared.labelMeta": "{{solvent}} 中 {{concentration}}",
   "prepared.recentHeading": "此化學品最近的配製紀錄 — 點擊可帶入填寫值",
+  "prepared.presetHeading": "此化學品已儲存的配方 — 點擊可帶入濃度 / 溶劑",
+  "prepared.saveAsPreset": "儲存為配方",
   "prepared.operationalHeading": "作業資訊（選填）",
   "prepared.operationalSubheading": "供實驗室作業辨識用的使用者輸入欄位，不是 GHS 分類資料。",
   "prepared.preparedBy": "配製人",

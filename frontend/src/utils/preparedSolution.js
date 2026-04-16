@@ -186,6 +186,67 @@ export function buildRecentRecord(preparedItem) {
 }
 
 /**
+ * Tier 2 PR-2B: build a "saved preset" record from the current parent
+ * chemical + form values.
+ *
+ * Presets are the MORE RESTRICTIVE sibling of recent records: they
+ * only store the long-stable workflow inputs (parent identity +
+ * concentration + solvent). The operational fields (preparedBy /
+ * preparedDate / expiryDate) are deliberately NOT stored, because
+ * they are session-like identifiers — pre-filling a stored preparedDate
+ * from weeks ago would silently produce a misleading label. The user
+ * should enter those fresh every time.
+ *
+ * Called directly from the form state (not from a prepared item) so
+ * "Save as preset" does not require a valid prepared item — it is
+ * saving the REUSABLE pieces of the recipe, not a specific prepared
+ * instance.
+ *
+ * @param {Object} parent      Parent chemical result (must have
+ *                             `cas_number` at minimum).
+ * @param {Object} formValues  `{ concentration, solvent }` — trimmed
+ *                             defensively here.
+ * @returns {Object|null}      Preset record or null when required
+ *                             inputs are missing.
+ */
+export function buildPresetRecord(parent, formValues) {
+  if (!parent || !parent.cas_number) return null;
+  const concentration = (formValues?.concentration || "").trim();
+  const solvent = (formValues?.solvent || "").trim();
+  if (!concentration || !solvent) return null;
+  return {
+    schemaVersion: 1,
+    createdAt: new Date().toISOString(),
+    parentCas: parent.cas_number,
+    parentNameEn: parent.name_en || null,
+    parentNameZh: parent.name_zh || null,
+    concentration,
+    solvent,
+    // NOTE: operational fields (preparedBy / preparedDate / expiryDate)
+    // are intentionally NOT in this shape. Do not add them without
+    // revisiting the Tier 2 PR-2B trust-boundary contract — the whole
+    // reason presets exclude them is to prevent stale session data
+    // from leaking onto a new label months later.
+  };
+}
+
+/**
+ * Tier 2 PR-2B: dedup key for saved presets.
+ *
+ * Presets dedupe on `parentCas | concentration | solvent` only. Two
+ * presets with the same recipe inputs collapse regardless of when
+ * they were saved.
+ */
+export function preparedPresetKey(record) {
+  if (!record) return "";
+  return [
+    record.parentCas || "",
+    record.concentration || "",
+    record.solvent || "",
+  ].join("|");
+}
+
+/**
  * Tier 2 PR-2A: dedup key for recent records.
  *
  * Two recents are considered "the same" when their workflow inputs

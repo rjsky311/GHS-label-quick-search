@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, FlaskConical, Clock } from "lucide-react";
+import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -37,6 +37,8 @@ export default function PrepareSolutionModal({
   onSubmit,
   onClose,
   recents = [],
+  presets = [],
+  onSavePreset,
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
@@ -84,6 +86,32 @@ export default function PrepareSolutionModal({
     concentrationInputRef.current?.focus();
   };
 
+  // Tier 2 PR-2B: parent-scoped saved presets. Same filtering pattern
+  // as recents so there is never any cross-parent reuse: a preset
+  // stored against one chemical cannot pre-fill a different chemical's
+  // form, which is the core trust-boundary property for this surface.
+  const parentPresets = useMemo(() => {
+    if (!parent || !Array.isArray(presets)) return [];
+    return presets.filter(
+      (p) => p && p.parentCas && p.parentCas === parent.cas_number
+    );
+  }, [parent, presets]);
+
+  // Tier 2 PR-2B: preset prefill is deliberately MORE RESTRICTIVE than
+  // recent prefill. We only restore the two stable recipe inputs and
+  // ACTIVELY CLEAR the three operational fields (preparedBy /
+  // preparedDate / expiryDate). Letting a months-old preparedDate leak
+  // into a freshly-applied label would be misleading; we want the user
+  // to re-enter those every time they reuse a preset.
+  const handlePrefillFromPreset = (preset) => {
+    setConcentration(preset.concentration || "");
+    setSolvent(preset.solvent || "");
+    setPreparedBy("");
+    setPreparedDate("");
+    setExpiryDate("");
+    concentrationInputRef.current?.focus();
+  };
+
   useEffect(() => {
     // Put focus on the first meaningful input, not the X button.
     concentrationInputRef.current?.focus();
@@ -126,6 +154,21 @@ export default function PrepareSolutionModal({
       preparedBy: preparedBy.trim(),
       preparedDate: preparedDate.trim(),
       expiryDate: expiryDate.trim(),
+    });
+  };
+
+  // Tier 2 PR-2B: "Save as preset" handler. Triggered by a non-submit
+  // button in the bottom action row. Requires the same `canSubmit`
+  // gate as submit, because a preset with empty concentration/solvent
+  // would be useless. This deliberately does NOT open the label
+  // modal, touch selection, or reset quantities — it is a side-channel
+  // save, not a workflow advance.
+  const handleSavePresetClick = () => {
+    if (!canSubmit) return;
+    if (typeof onSavePreset !== "function") return;
+    onSavePreset({
+      concentration: trimmedConcentration,
+      solvent: trimmedSolvent,
     });
   };
 
@@ -195,6 +238,47 @@ export default function PrepareSolutionModal({
               <div className="text-slate-400 text-sm">{parent.name_zh}</div>
             )}
           </div>
+
+          {/* Tier 2 PR-2B: Saved presets (parent-scoped).
+              Shown above Recent so presets — which the user explicitly
+              curated — take visual precedence over auto-captured
+              recents. Clicking a preset prefills ONLY concentration
+              and solvent, and CLEARS the operational fields so no
+              stale preparedDate / expiryDate slips onto a fresh
+              label. See handlePrefillFromPreset. */}
+          {parentPresets.length > 0 && (
+            <div
+              className="bg-slate-900/40 border border-slate-700 rounded-lg p-3 space-y-2"
+              data-testid="prepare-solution-preset-section"
+            >
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Bookmark className="w-3.5 h-3.5 text-purple-400" />
+                <span>{t("prepared.presetHeading")}</span>
+              </div>
+              <ul
+                className="space-y-1"
+                data-testid="prepare-solution-preset-list"
+              >
+                {parentPresets.map((p, idx) => (
+                  <li key={`${p.createdAt || "noTs"}-${idx}`}>
+                    <button
+                      type="button"
+                      onClick={() => handlePrefillFromPreset(p)}
+                      className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-purple-500 transition-colors"
+                      data-testid={`prepare-solution-preset-item-${idx}`}
+                    >
+                      <div className="text-sm text-white">
+                        {t("prepared.labelMeta", {
+                          concentration: p.concentration || "",
+                          solvent: p.solvent || "",
+                        })}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Tier 2 PR-2A: Recent prepared (parent-scoped).
               Only shown when the current parent has at least one
@@ -393,6 +477,21 @@ export default function PrepareSolutionModal({
             >
               {t("prepared.cancel")}
             </button>
+            {/* Tier 2 PR-2B: Save-as-preset is a non-submit action.
+                Same enable gate as the primary submit (both require
+                valid required inputs), but styled as a secondary
+                button so it cannot be mistaken for "print now". */}
+            {typeof onSavePreset === "function" && (
+              <button
+                type="button"
+                onClick={handleSavePresetClick}
+                disabled={!canSubmit}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700/40 disabled:cursor-not-allowed text-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
+                data-testid="prepare-solution-save-preset-btn"
+              >
+                <Save className="w-4 h-4" /> {t("prepared.saveAsPreset")}
+              </button>
+            )}
             <button
               type="submit"
               disabled={!canSubmit}
