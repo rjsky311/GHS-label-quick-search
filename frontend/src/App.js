@@ -17,10 +17,7 @@ import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
 import { printLabels } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
-import {
-  buildPreparedSolutionItem,
-  selectionHasPreparedItem,
-} from "@/utils/preparedSolution";
+import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
 
 // Components
 import Header from "@/components/Header";
@@ -57,6 +54,15 @@ function App() {
   // selectedResult so closing DetailModal doesn't tear down the prepare
   // flow, and vice versa.
   const [prepareSolutionParent, setPrepareSolutionParent] = useState(null);
+  // v1.9 M3 Tier 1: session flag for the prepared-solution print flow.
+  // Flipped on at submit (we're entering LabelPrintModal with a prepared
+  // item), flipped off when LabelPrintModal closes along with cleanup.
+  // Using a session flag instead of inspecting `selectedForLabel` at
+  // close time so we still clean up even if the user manually removed
+  // the prepared item inside LabelPrintModal — without this, its
+  // labelQuantities[parentCas] entry would leak into a later normal
+  // print flow for the same parent chemical.
+  const [preparedFlowActive, setPreparedFlowActive] = useState(false);
   const [labelConfig, setLabelConfig] = useState({
     size: "medium",
     template: "standard",
@@ -378,6 +384,11 @@ function App() {
       // Reset quantities so the prepared item starts at 1, not inheriting
       // any stale count from a parent chemical that happens to share its CAS.
       setLabelQuantities({});
+      // Mark the prepared-solution print session as active. This signal
+      // is what `handleCloseLabelModal` uses to wipe selection + quantities
+      // on close — independent of whether the user has manually removed
+      // the prepared item from the selected list inside LabelPrintModal.
+      setPreparedFlowActive(true);
       // Close both modals of the prepare-solution flow.
       setPrepareSolutionParent(null);
       setSelectedResult(null);
@@ -392,20 +403,27 @@ function App() {
     ]
   );
 
-  // LabelPrintModal close: if the selection contains any prepared item,
-  // wipe the selection and quantities so the prepared flow doesn't leave
-  // a ghost CAS-match selected state back in ResultsTable. If the user
-  // was in a normal (non-prepared) print flow, this branch is a no-op.
+  // LabelPrintModal close: if this close is ending a prepared-solution
+  // print session, wipe selection + quantities so the prepared flow
+  // doesn't leave a ghost CAS-match selected state back in ResultsTable
+  // and — critically — doesn't leak `labelQuantities[parentCas]` into
+  // a subsequent normal print flow for the same parent chemical.
+  //
+  // We gate on the session flag, NOT on "is there still a prepared item
+  // in `selectedForLabel`?" — a user who removes the prepared item
+  // inside LabelPrintModal and THEN closes would otherwise bypass
+  // cleanup and leak a stale quantity.
   //
   // Decision locked in plan v2: "prepared flow is one-shot ephemeral".
   // We do NOT attempt to restore a previous selection snapshot.
   const handleCloseLabelModal = useCallback(() => {
     setShowLabelModal(false);
-    if (selectionHasPreparedItem(selectedForLabel)) {
+    if (preparedFlowActive) {
       setSelectedForLabel([]);
       setLabelQuantities({});
+      setPreparedFlowActive(false);
     }
-  }, [selectedForLabel, setSelectedForLabel, setLabelQuantities]);
+  }, [preparedFlowActive, setSelectedForLabel, setLabelQuantities]);
 
   // ── Render ──
   return (

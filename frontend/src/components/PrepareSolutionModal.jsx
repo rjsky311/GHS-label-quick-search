@@ -44,10 +44,20 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
     // Put focus on the first meaningful input, not the X button.
     concentrationInputRef.current?.focus();
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        // Capture phase + stopImmediatePropagation so the DetailModal
+        // that is still mounted underneath does NOT also receive this
+        // Escape via its own window keydown listener. Cancel semantics
+        // here are "never mind, back to detail" — not "close both".
+        // Pointer paths (Cancel button / backdrop / X) already go
+        // through onClose directly and don't propagate; this brings
+        // the keyboard path in line with them.
+        e.stopImmediatePropagation();
+        onClose();
+      }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [onClose]);
 
   // Validation is purely "both fields non-empty after trim". We do not

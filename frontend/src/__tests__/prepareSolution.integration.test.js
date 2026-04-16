@@ -317,4 +317,102 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     // No prepared markers anywhere.
     expect(screen.queryAllByTestId(/^selected-prepared-/)).toHaveLength(0);
   });
+
+  // Regression: Escape in PrepareSolutionModal must close ONLY that modal,
+  // not also the underlying DetailModal. Both modals register window-
+  // level Escape listeners; without capture-phase + stopImmediatePropagation
+  // in PrepareSolutionModal, a single Esc would close both — diverging
+  // from the pointer-driven Cancel / backdrop / X path (which only closes
+  // the prepare modal). Pins keyboard-vs-pointer parity.
+  it("Escape in PrepareSolutionModal closes ONLY that modal — DetailModal stays open", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+
+    // Press Escape while prepare modal is on top.
+    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+
+    // Prepare modal gone.
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("prepare-solution-modal")
+      ).not.toBeInTheDocument()
+    );
+    // DetailModal still present — its "Prepare solution" button lives
+    // only inside DetailModal, so finding it proves DetailModal is
+    // still mounted. Cancel/backdrop path would behave the same; this
+    // test pins that Escape now matches.
+    expect(screen.getByTestId("prepare-solution-btn")).toBeInTheDocument();
+    // LabelPrintModal must NOT have opened (cancel path, not submit).
+    expect(screen.queryAllByText("label.title")).toHaveLength(0);
+  });
+
+  // Regression: cleanup must fire even if the user manually removed the
+  // prepared item from the selected list BEFORE closing LabelPrintModal.
+  // Gating cleanup on `selectionHasPreparedItem(selectedForLabel)` would
+  // miss this path (selection no longer has a prepared item at close
+  // time) and leak `labelQuantities[parentCas]` into the next normal
+  // print flow for the same parent chemical.
+  it("removing prepared item then closing LabelPrintModal does NOT leak labelQuantities to the normal parent flow", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+    await submitPreparedForm({ concentration: "10%", solvent: "Water" });
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+
+    // Bump prepared item quantity to 5. The single `+` inside the
+    // dialog belongs to the prepared row.
+    const plusBtn = screen.getByText("+");
+    for (let i = 0; i < 4; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await act(async () => fireEvent.click(plusBtn));
+    }
+
+    // Manually remove the prepared item via its per-row X (not the
+    // modal-header X). That button lives inside the testid'd row and
+    // carries the `hover:text-red-400` class — find it relative to
+    // the row.
+    const preparedRow = screen.getByTestId(
+      `selected-prepared-${ethanolResult.cas_number}`
+    );
+    const removeBtn = preparedRow.querySelector(
+      'button[class*="hover:text-red-400"]'
+    );
+    expect(removeBtn).not.toBeNull();
+    await act(async () => fireEvent.click(removeBtn));
+
+    // Selection is now empty BUT the prepared-flow session is still
+    // active. Close the modal via Escape.
+    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await waitFor(() =>
+      expect(screen.queryAllByText("label.title").length).toBe(0)
+    );
+
+    // Reopen via the normal purple Print-label path (auto-select-all
+    // found rows). The parent Ethanol row auto-selects; its quantity
+    // MUST be 1, not the 5 we set during the prepared flow.
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("print-label-btn"))
+    );
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    const dialog = screen.getByRole("dialog", { name: /label\.title/i });
+    const qtySpans = dialog.querySelectorAll(
+      "span.w-6.text-center.text-sm.text-white"
+    );
+    expect(qtySpans).toHaveLength(1);
+    expect(qtySpans[0].textContent).toBe("1");
+    // And no prepared marker — we're in a pure normal flow now.
+    expect(screen.queryAllByTestId(/^selected-prepared-/)).toHaveLength(0);
+  });
 });
