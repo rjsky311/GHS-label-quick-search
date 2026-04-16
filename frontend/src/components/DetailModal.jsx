@@ -8,6 +8,7 @@ import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
+import { FlaskConical } from "lucide-react";
 
 export default function DetailModal({
   result,
@@ -20,6 +21,7 @@ export default function DetailModal({
   hasCustomClassification,
   onClearCustomClassification,
   onPrintLabel,
+  onPrepareSolution,
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
@@ -384,6 +386,19 @@ export default function DetailModal({
             >
               <Tag className="w-4 h-4" /> {t("detail.printLabel")}
             </button>
+            {/* v1.9 M3 Tier 1: Prepare-solution entry.
+                Only shown for found chemicals — prepared items rely on
+                parent's GHS arrays being populated to copy over, and
+                for a not-found result there's nothing to copy. */}
+            {result.found && onPrepareSolution && (
+              <button
+                onClick={() => onPrepareSolution(result)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+                data-testid="prepare-solution-btn"
+              >
+                <FlaskConical className="w-4 h-4" /> {t("detail.prepareSolution")}
+              </button>
+            )}
             {result.cid && (
               <a
                 href={`https://pubchem.ncbi.nlm.nih.gov/compound/${result.cid}`}

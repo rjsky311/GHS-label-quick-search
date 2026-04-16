@@ -402,19 +402,49 @@ export default function LabelPrintModal({
                 selectedForLabel.map((chem, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 bg-slate-800 rounded"
+                    className={`flex items-center justify-between p-2 rounded ${
+                      chem.isPreparedSolution
+                        ? "bg-blue-900/30 border border-blue-700/40"
+                        : "bg-slate-800"
+                    }`}
+                    data-testid={
+                      chem.isPreparedSolution
+                        ? `selected-prepared-${chem.cas_number}`
+                        : undefined
+                    }
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-amber-400 text-sm">
-                        {chem.cas_number}
-                      </span>
-                      <span className="text-white text-sm truncate max-w-[200px]">
-                        {chem.name_en}
-                      </span>
-                      {chem.ghs_pictograms?.length > 0 && (
-                        <span className="text-xs text-slate-500">
-                          {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-amber-400 text-sm">
+                          {chem.cas_number}
                         </span>
+                        <span className="text-white text-sm truncate max-w-[200px]">
+                          {chem.name_en}
+                        </span>
+                        {chem.ghs_pictograms?.length > 0 && (
+                          <span className="text-xs text-slate-500">
+                            {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
+                          </span>
+                        )}
+                        {/* v1.9 M3 Tier 1: visible prepared marker on the
+                            selection row so there's no way to miss that
+                            the thing about to print isn't a pure substance. */}
+                        {chem.isPreparedSolution && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-800 text-blue-100 font-medium">
+                            {t("print.preparedShort")}
+                          </span>
+                        )}
+                      </div>
+                      {chem.isPreparedSolution && chem.preparedSolution && (
+                        <div
+                          className="text-xs text-blue-300"
+                          data-testid={`selected-prepared-meta-${chem.cas_number}`}
+                        >
+                          {t("prepared.labelMeta", {
+                            concentration: chem.preparedSolution.concentration || "",
+                            solvent: chem.preparedSolution.solvent || "",
+                          })}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
