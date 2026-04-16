@@ -29,7 +29,7 @@ from chemical_dict import (
     CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
     EN_TO_CAS, ZH_TO_CAS, ALIASES_ZH, ALIASES_EN,
 )
-from p_code_translations import P_CODE_TRANSLATIONS
+from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -599,10 +599,11 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                 p_code = p_match.group(1)
                                                 if p_code not in seen_p:
                                                     seen_p.add(p_code)
+                                                    en_text = P_CODE_TEXTS_EN.get(p_code, "")
                                                     zh_text = P_CODE_TRANSLATIONS.get(p_code, "")
                                                     current_report["precautionary_statements"].append({
                                                         "code": p_code,
-                                                        "text_en": p_code,  # PubChem only provides the code, not full EN text
+                                                        "text_en": en_text if en_text else p_code,
                                                         "text_zh": zh_text if zh_text else p_code,
                                                     })
 

@@ -208,3 +208,203 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P410+P412":      "防止陽光照射，不得暴露於超過50°C的溫度。",
 
 }
+
+# ─── English P-code texts (UN GHS Rev.8 / Rev.10) ────────────────────────────
+
+P_CODE_TEXTS_EN: dict[str, str] = {
+
+    # ─── General (P100 series) ────────────────────────────────────────────────
+    "P101": "If medical advice is needed, have product container or label at hand.",
+    "P102": "Keep out of reach of children.",
+    "P103": "Read label before use.",
+
+    # ─── Prevention (P200 series) ─────────────────────────────────────────────
+    "P201": "Obtain special instructions before use.",
+    "P202": "Do not handle until all safety precautions have been read and understood.",
+    "P210": "Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.",
+    "P211": "Do not spray on an open flame or other ignition source.",
+    "P212": "Avoid heating under confinement or reduction of the headspace.",
+    "P220": "Keep away from clothing and other combustible materials.",
+    "P221": "Take precautionary measures against mixing with combustibles.",
+    "P222": "Do not allow contact with air.",
+    "P223": "Do not allow contact with water.",
+    "P230": "Keep wetted with ...",
+    "P231": "Handle and store contents under inert gas.",
+    "P232": "Protect from moisture.",
+    "P233": "Keep container tightly closed.",
+    "P234": "Keep only in original packaging.",
+    "P235": "Keep cool.",
+    "P240": "Ground and bond container and receiving equipment.",
+    "P241": "Use explosion-proof electrical, ventilating, lighting and other equipment.",
+    "P242": "Use non-sparking tools.",
+    "P243": "Take action to prevent static discharges.",
+    "P244": "Keep valves and fittings free from oil and grease.",
+    "P250": "Do not subject to grinding, shock, friction.",
+    "P251": "Do not pierce, burn, or incinerate, even after use.",
+    "P260": "Do not breathe dust, fume, gas, mist, vapours, spray.",
+    "P261": "Avoid breathing dust, fume, gas, mist, vapours, spray.",
+    "P262": "Do not get in eyes, on skin, or on clothing.",
+    "P263": "Avoid contact during pregnancy and while nursing.",
+    "P264": "Wash hands thoroughly after handling.",
+    "P265": "Wash affected body parts thoroughly after handling.",
+    "P270": "Do not eat, drink or smoke when using this product.",
+    "P271": "Use only outdoors or in a well-ventilated area.",
+    "P272": "Contaminated work clothing should not be allowed out of the workplace.",
+    "P273": "Avoid release to the environment.",
+    "P280": "Wear protective gloves, protective clothing, eye protection, face protection.",
+    "P281": "Use personal protective equipment as required.",
+    "P282": "Wear cold-insulating gloves and either face shield or eye protection.",
+    "P283": "Wear fire-resistant or flame-retardant clothing.",
+    "P284": "In case of inadequate ventilation wear respiratory protection.",
+    "P285": "In case of inadequate ventilation wear respiratory protection.",
+
+    # ─── Response (P300 series) ───────────────────────────────────────────────
+    "P301": "IF SWALLOWED:",
+    "P302": "IF ON SKIN:",
+    "P303": "IF ON SKIN (or hair):",
+    "P304": "IF INHALED:",
+    "P305": "IF IN EYES:",
+    "P306": "IF ON SKIN OR HAIR: Immediately rinse contaminated clothing and skin with water.",
+    "P307": "IF exposed:",
+    "P308": "IF exposed or concerned:",
+    "P310": "Immediately call a POISON CENTER or doctor.",
+    "P311": "Call a POISON CENTER or doctor.",
+    "P312": "Call a POISON CENTER or doctor if you feel unwell.",
+    "P313": "Get medical advice.",
+    "P314": "Get medical advice if you feel unwell.",
+    "P315": "Get immediate medical advice.",
+    "P317": "Get emergency medical help.",
+    "P320": "Specific treatment is urgent (see ... on this label).",
+    "P321": "Specific treatment (see ... on this label).",
+    "P322": "Specific measures (see ... on this label).",
+    "P330": "Rinse mouth.",
+    "P331": "Do NOT induce vomiting.",
+    "P332": "If skin irritation occurs:",
+    "P333": "If skin irritation or rash occurs:",
+    "P334": "Immerse in cool water or wrap in wet bandages.",
+    "P335": "Brush off loose particles from skin.",
+    "P336": "Thaw frosted parts with lukewarm water. Do not rub affected area.",
+    "P337": "If eye irritation persists:",
+    "P338": "Remove contact lenses, if present and easy to do. Continue rinsing.",
+    "P340": "Remove person to fresh air and keep comfortable for breathing.",
+    "P341": "If breathing is difficult, remove person to fresh air and keep comfortable for breathing.",
+    "P342": "If experiencing respiratory symptoms:",
+    "P350": "Gently wash with plenty of soap and water.",
+    "P351": "Rinse cautiously with water for several minutes.",
+    "P352": "Wash with plenty of water.",
+    "P353": "Rinse skin with water or shower.",
+    "P360": "Rinse immediately contaminated clothing and skin with plenty of water before removing clothes.",
+    "P361": "Take off immediately all contaminated clothing.",
+    "P362": "Take off contaminated clothing.",
+    "P363": "Wash contaminated clothing before reuse.",
+    "P364": "And wash it before reuse.",
+    "P370": "In case of fire:",
+    "P371": "In case of major fire and large quantities:",
+    "P372": "Explosion risk.",
+    "P373": "DO NOT fight fire when fire reaches explosives.",
+    "P374": "Fight fire with normal precautions from a reasonable distance.",
+    "P375": "Fight fire remotely due to the risk of explosion.",
+    "P376": "Stop leak if safe to do so.",
+    "P377": "Leaking gas fire: Do not extinguish, unless leak can be stopped safely.",
+    "P378": "Use ... for extinction.",
+    "P380": "Evacuate area.",
+    "P381": "In case of leakage, eliminate all ignition sources.",
+    "P390": "Absorb spillage to prevent material damage.",
+    "P391": "Collect spillage.",
+
+    # ─── Storage (P400 series) ────────────────────────────────────────────────
+    "P401": "Store in accordance with ...",
+    "P402": "Store in a dry place.",
+    "P403": "Store in a well-ventilated place.",
+    "P404": "Store in a closed container.",
+    "P405": "Store locked up.",
+    "P406": "Store in a corrosion-resistant container with a resistant inner liner.",
+    "P407": "Maintain air gap between stacks or pallets.",
+    "P410": "Protect from sunlight.",
+    "P411": "Store at temperatures not exceeding ... °C.",
+    "P412": "Do not expose to temperatures exceeding 50 °C.",
+    "P413": "Store bulk masses greater than ... kg at temperatures not exceeding ... °C.",
+    "P420": "Store away from other materials.",
+    "P422": "Store contents under ...",
+
+    # ─── Disposal (P500 series) ───────────────────────────────────────────────
+    "P501": "Dispose of contents and container in accordance with local regulations.",
+    "P502": "Refer to manufacturer or supplier for information on recovery or recycling.",
+
+    # ─── Common combined codes ────────────────────────────────────────────────
+
+    # P264 + P265
+    "P264+P265": "Wash all exposed body parts thoroughly after handling.",
+
+    # P301 combinations
+    "P301+P310":      "IF SWALLOWED: Immediately call a POISON CENTER or doctor.",
+    "P301+P312":      "IF SWALLOWED: Call a POISON CENTER or doctor if you feel unwell.",
+    "P301+P330+P331": "IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.",
+
+    # P302 combinations
+    "P302+P334":      "IF ON SKIN: Immerse in cool water or wrap in wet bandages.",
+    "P302+P350":      "IF ON SKIN: Gently wash with plenty of soap and water.",
+    "P302+P352":      "IF ON SKIN: Wash with plenty of water.",
+    "P302+P352+P333+P313": "IF ON SKIN: Wash with plenty of water. If skin irritation or rash occurs: Get medical advice.",
+
+    # P303 combinations
+    "P303+P361+P353": "IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water or shower.",
+
+    # P304 combinations
+    "P304+P312":      "IF INHALED: Call a POISON CENTER or doctor if you feel unwell.",
+    "P304+P340":      "IF INHALED: Remove person to fresh air and keep comfortable for breathing.",
+    "P304+P341":      "IF INHALED: If breathing is difficult, remove person to fresh air and keep comfortable for breathing.",
+
+    # P305 combinations
+    "P305+P351+P338": "IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.",
+
+    # P306 combinations
+    "P306+P360":      "IF ON SKIN OR HAIR: Rinse immediately contaminated clothing and skin with plenty of water before removing clothes.",
+
+    # P307+P311
+    "P307+P311":      "IF exposed: Call a POISON CENTER or doctor.",
+
+    # P308 combinations
+    "P308+P311":      "IF exposed or concerned: Call a POISON CENTER or doctor.",
+    "P308+P313":      "IF exposed or concerned: Get medical advice.",
+
+    # P332 combinations
+    "P332+P313":      "If skin irritation occurs: Get medical advice.",
+
+    # P333 combinations
+    "P333+P313":      "If skin irritation or rash occurs: Get medical advice.",
+
+    # P335+P334
+    "P335+P334":      "Brush off loose particles from skin. Immerse in cool water or wrap in wet bandages.",
+
+    # P337 combinations
+    "P337+P313":      "If eye irritation persists: Get medical advice.",
+    "P337+P317":      "If eye irritation persists: Get emergency medical help.",
+
+    # P342 combinations
+    "P342+P311":      "If experiencing respiratory symptoms: Call a POISON CENTER or doctor.",
+
+    # P361+P364
+    "P361+P364":      "Take off immediately all contaminated clothing and wash it before reuse.",
+
+    # P362+P364
+    "P362+P364":      "Take off contaminated clothing and wash it before reuse.",
+
+    # P370 combinations
+    "P370+P376":      "In case of fire: Stop leak if safe to do so.",
+    "P370+P378":      "In case of fire: Use ... for extinction.",
+    "P370+P380":      "In case of fire: Evacuate area.",
+    "P370+P380+P375": "In case of fire: Evacuate area. Fight fire remotely due to the risk of explosion.",
+
+    # P371 combinations
+    "P371+P380+P375": "In case of major fire and large quantities: Evacuate area. Fight fire remotely due to the risk of explosion.",
+
+    # P403 combinations
+    "P403+P233":      "Store in a well-ventilated place. Keep container tightly closed.",
+    "P403+P235":      "Store in a well-ventilated place. Keep cool.",
+
+    # P410 combinations
+    "P410+P403":      "Protect from sunlight. Store in a well-ventilated place.",
+    "P410+P412":      "Protect from sunlight. Do not expose to temperatures exceeding 50 °C.",
+
+}

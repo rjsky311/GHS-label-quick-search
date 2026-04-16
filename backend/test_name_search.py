@@ -1174,7 +1174,7 @@ class TestPCodeExtraction:
         assert p_codes.count("P264") == 1
         assert p_codes.count("P280") == 1
 
-    def test_known_translation_populates_text_zh(self):
+    def test_known_translation_populates_text_zh_and_text_en(self):
         data = _make_ghs_data(
             _pic_info(["GHS02"]),
             _precaution_info("P210"),
@@ -1182,8 +1182,12 @@ class TestPCodeExtraction:
         reports = extract_all_ghs_classifications(data)
         stmt = reports[0]["precautionary_statements"][0]
         assert stmt["code"] == "P210"
+        # text_zh must be the Chinese translation, not the code
         assert stmt["text_zh"] != "P210"
         assert len(stmt["text_zh"]) > 5
+        # text_en must be the full English text, not just the code
+        assert stmt["text_en"] != "P210"
+        assert "heat" in stmt["text_en"].lower() or "ignition" in stmt["text_en"].lower()
 
     def test_unknown_code_falls_back_to_code_string(self):
         """P-codes not in the translation dict should not be dropped;
