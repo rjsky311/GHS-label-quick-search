@@ -1275,4 +1275,153 @@ describe('prepared solution print rendering', () => {
       expect(html).toContain('1 N');
     });
   });
+
+  // ── Tier 2 PR-1: operational metadata on the printed label ──
+  //
+  // Ground rules being pinned:
+  //   1. Operational fields appear on `standard` and `full` templates
+  //      when the user filled them in.
+  //   2. Compact templates (`icon`, `qrcode`) do NOT carry them —
+  //      these label sizes are already space-constrained.
+  //   3. Operational fields are OPTIONAL — absence must not regress
+  //      the Tier 1 concentration/solvent rendering, and must not
+  //      emit an empty `.prepared-operational` block.
+  //   4. User input flows through `escapeHtml` like other prepared
+  //      content (same XSS guarantees as Tier 1).
+
+  const makePreparedWithOps = (opsOverrides = {}) => ({
+    ...mockChemical,
+    isPreparedSolution: true,
+    preparedSolution: {
+      concentration: '10% (v/v)',
+      solvent: 'Water',
+      parentCas: mockChemical.cas_number,
+      parentNameEn: mockChemical.name_en,
+      parentNameZh: mockChemical.name_zh,
+      preparedBy: 'A. Chen',
+      preparedDate: '2026-04-16',
+      expiryDate: '2026-10-16',
+      ...opsOverrides,
+    },
+  });
+
+  describe('operational metadata (Tier 2 PR-1)', () => {
+    it('full template renders operational fields when all three are present', () => {
+      printLabels(
+        [makePreparedWithOps()],
+        { size: 'large', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).toContain('A. Chen');
+      expect(html).toContain('2026-04-16');
+      expect(html).toContain('2026-10-16');
+    });
+
+    it('standard template renders operational fields when present', () => {
+      printLabels(
+        [makePreparedWithOps()],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).toContain('A. Chen');
+      expect(html).toContain('2026-04-16');
+      expect(html).toContain('2026-10-16');
+    });
+
+    it('icon template does NOT render operational fields (space-constrained)', () => {
+      printLabels(
+        [makePreparedWithOps()],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).not.toContain('A. Chen');
+      // Tier 1 prepared identity stays intact on icon template.
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+    });
+
+    it('qrcode template does NOT render operational fields (space-constrained)', () => {
+      printLabels(
+        [makePreparedWithOps()],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).not.toContain('A. Chen');
+      // Tier 1 prepared identity stays intact on qrcode template.
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+    });
+
+    it('renders only the filled-in subset of operational fields', () => {
+      printLabels(
+        [
+          makePreparedWithOps({
+            preparedDate: null,
+            expiryDate: null,
+          }),
+        ],
+        { size: 'large', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).toContain('A. Chen');
+      // Dates absent → their rows must not appear
+      expect(html).not.toContain('2026-04-16');
+      expect(html).not.toContain('2026-10-16');
+    });
+
+    it('emits no .prepared-operational block when all three fields are absent (Tier 1 shape)', () => {
+      // A Tier 1-style prepared item with no operational metadata at
+      // all must not cause an empty block to appear anywhere.
+      const tier1Shape = {
+        ...mockChemical,
+        isPreparedSolution: true,
+        preparedSolution: {
+          concentration: '10% (v/v)',
+          solvent: 'Water',
+        },
+      };
+      printLabels(
+        [tier1Shape],
+        { size: 'large', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
+      // Tier 1 behaviour still works — concentration + solvent still
+      // render in the main prepared-meta block.
+      expect(html).toContain('10% (v/v)');
+      expect(html).toContain('Water');
+    });
+
+    it('escapes HTML in operational fields', () => {
+      printLabels(
+        [
+          makePreparedWithOps({
+            preparedBy: '<img src=x onerror=alert(9)>',
+            preparedDate: '"><script>1</script>',
+            expiryDate: '& already ampersanded',
+          }),
+        ],
+        { size: 'large', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Raw attack payloads must not survive
+      expect(html).not.toMatch(/<img\s+src=x\s+onerror=alert\(9\)/);
+      expect(html).not.toMatch(/"><script>1<\/script>/);
+      // Escaped equivalents must be present
+      expect(html).toContain('&lt;img src=x onerror=alert(9)&gt;');
+      expect(html).toContain('&amp; already ampersanded');
+    });
+  });
 });

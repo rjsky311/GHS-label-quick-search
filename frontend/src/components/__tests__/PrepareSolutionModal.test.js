@@ -97,9 +97,16 @@ describe("PrepareSolutionModal", () => {
     });
     fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"));
     expect(onSubmit).toHaveBeenCalledTimes(1);
+    // Tier 2 PR-1: operational-field slots always pass through in the
+    // payload so the helper has a single consistent destructure site.
+    // When the user skips them, they come across as empty strings;
+    // buildPreparedSolutionItem normalises to null.
     expect(onSubmit).toHaveBeenCalledWith({
       concentration: "10% (v/v)",
       solvent: "Water",
+      preparedBy: "",
+      preparedDate: "",
+      expiryDate: "",
     });
   });
 
@@ -126,6 +133,9 @@ describe("PrepareSolutionModal", () => {
     expect(onSubmit).toHaveBeenCalledWith({
       concentration: "10%",
       solvent: "Water",
+      preparedBy: "",
+      preparedDate: "",
+      expiryDate: "",
     });
   });
 
@@ -223,5 +233,101 @@ describe("PrepareSolutionModal", () => {
       />
     );
     expect(screen.getByTestId("prepare-solution-form-note")).toBeInTheDocument();
+  });
+
+  // ── Tier 2 PR-1: optional operational metadata ──────────────
+
+  it("renders the operational-info section with preparedBy / preparedDate / expiryDate inputs (all optional)", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-operational-section")
+    ).toBeInTheDocument();
+    const byInput = screen.getByTestId("prepared-prepared-by-input");
+    const dateInput = screen.getByTestId("prepared-prepared-date-input");
+    const expiryInput = screen.getByTestId("prepared-expiry-date-input");
+    expect(byInput).toBeInTheDocument();
+    expect(dateInput).toBeInTheDocument();
+    expect(expiryInput).toBeInTheDocument();
+    // None are marked `required` (they are optional by product decision).
+    expect(byInput).not.toBeRequired();
+    expect(dateInput).not.toBeRequired();
+    expect(expiryInput).not.toBeRequired();
+    // Date inputs use the HTML5 date picker so users don't have to
+    // worry about formatting.
+    expect(dateInput).toHaveAttribute("type", "date");
+    expect(expiryInput).toHaveAttribute("type", "date");
+  });
+
+  it("submit is still enabled when operational fields are blank — they do not gate submit", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "10%" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "Water" },
+    });
+    expect(screen.getByTestId("prepare-solution-submit-btn")).not.toBeDisabled();
+  });
+
+  it("submit carries operational-field values when the user fills them in", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+      />
+    );
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "10%" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "Water" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+      target: { value: "  A. Chen  " },
+    });
+    fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
+      target: { value: "2026-04-16" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-expiry-date-input"), {
+      target: { value: "2026-10-16" },
+    });
+    fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"));
+    expect(onSubmit).toHaveBeenCalledWith({
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+    });
+  });
+
+  it("operational section copy signals user-entered / not-derived framing", () => {
+    // Pins the intent that the section must NOT be framed as GHS or
+    // hazard data. If someone later swaps the copy for something
+    // classification-flavoured, this guard fails.
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    const section = screen.getByTestId("prepare-solution-operational-section");
+    expect(section.textContent).toContain("prepared.operationalHeading");
+    expect(section.textContent).toContain("prepared.operationalSubheading");
   });
 });

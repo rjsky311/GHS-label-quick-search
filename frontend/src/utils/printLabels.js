@@ -249,6 +249,36 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return `<div class="prepared-note" data-testid="prepared-note">${escapeHtml(t("print.preparedNote"))}</div>`;
   };
 
+  // Tier 2 PR-1: operational metadata (preparedBy / preparedDate /
+  // expiryDate) is USER-ENTERED operational info, not classification
+  // data. Rendered only for standard + full templates (icon + qrcode
+  // stay compact — operational fields would push label content past
+  // legible limits on those sizes). Returns "" if the item has no
+  // operational fields filled in, so existing Tier 1 labels with
+  // concentration + solvent alone are visually unchanged.
+  const renderPreparedOperational = (chem) => {
+    if (!isPrepared(chem)) return "";
+    const meta = chem.preparedSolution || {};
+    const rows = [];
+    if (meta.preparedBy) {
+      rows.push(
+        `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(t("print.preparedBy"))}:</span> <span class="prepared-operational-value">${escapeHtml(meta.preparedBy)}</span></div>`
+      );
+    }
+    if (meta.preparedDate) {
+      rows.push(
+        `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(t("print.preparedDate"))}:</span> <span class="prepared-operational-value">${escapeHtml(meta.preparedDate)}</span></div>`
+      );
+    }
+    if (meta.expiryDate) {
+      rows.push(
+        `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(t("print.expiryDate"))}:</span> <span class="prepared-operational-value">${escapeHtml(meta.expiryDate)}</span></div>`
+      );
+    }
+    if (rows.length === 0) return "";
+    return `<div class="prepared-operational" data-testid="prepared-operational">${rows.join("")}</div>`;
+  };
+
   // Template generators with FIXED LAYOUT
   const templates = {
     // 版型 1 - 圖示版
@@ -298,7 +328,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
         <div class="label${prepared ? " label-prepared" : ""}">
           <div class="label-top">
             ${renderNameSection(effectiveChem)}
-            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) + renderPreparedOperational(effectiveChem) : ""}
           </div>
           <div class="label-middle">
             <div class="middle-row">
@@ -344,7 +374,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
         <div class="label label-full${prepared ? " label-prepared" : ""}">
           <div class="label-top">
             ${renderNameSection(effectiveChem)}
-            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) + renderPreparedOperational(effectiveChem) : ""}
           </div>
           <div class="label-middle compact">
             <div class="middle-row">
@@ -606,6 +636,28 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       background: #eff6ff;
       border-left: 1.5px solid #60a5fa;
       border-radius: 0.5mm;
+    }
+    /* Tier 2 PR-1: operational metadata row. Styled slightly lighter
+       than the core prepared-meta so the GHS-adjacent fields read as
+       primary and the user-entered operational fields read as
+       secondary. */
+    .prepared-operational {
+      margin-top: 0.6mm;
+      font-size: calc(${sizeConfig.fontSize} - 2px);
+      line-height: 1.2;
+      color: #374151;
+    }
+    .prepared-operational-row {
+      display: block;
+      word-break: break-word;
+    }
+    .prepared-operational-label {
+      color: #4b5563;
+      font-weight: 600;
+      margin-right: 0.8mm;
+    }
+    .prepared-operational-value {
+      color: #111827;
     }
 
     /* ===== PICTOGRAMS ===== */

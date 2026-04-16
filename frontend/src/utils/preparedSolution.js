@@ -33,11 +33,17 @@
  *       ...parentChemicalAllFieldsPreserved,
  *       isPreparedSolution: true,
  *       preparedSolution: {
+ *         // required (Tier 1):
  *         concentration: "10% (v/v)",
  *         solvent:       "Water",
  *         parentCas:     "64-17-5",
  *         parentNameEn:  "Ethanol",
  *         parentNameZh:  "乙醇",
+ *         // optional operational metadata (Tier 2 PR-1, all user-
+ *         // entered, not derived; null when blank):
+ *         preparedBy:    "A. Chen",
+ *         preparedDate:  "2026-04-16",
+ *         expiryDate:    "2026-10-16",
  *       }
  *     }
  *
@@ -46,6 +52,16 @@
  * template renderers read `ghs_pictograms` / `hazard_statements` /
  * `precautionary_statements` / `signal_word*` from the item
  * directly, same as a normal chemical.
+ *
+ * ## Operational metadata (Tier 2 PR-1)
+ *
+ * `preparedBy`, `preparedDate`, `expiryDate` are **optional**. They
+ * are user-entered strings — this helper does NOT parse or validate
+ * dates beyond trim + empty-string-to-null normalisation. The label
+ * prints whatever the user typed. These are operational identifiers
+ * for lab workflow, NOT hazard / classification data; downstream
+ * rendering must keep that framing (copy on form and label makes it
+ * explicit).
  */
 
 /**
@@ -57,13 +73,18 @@
  *                            `found: true` and `cas_number` at
  *                            minimum; missing GHS arrays are
  *                            tolerated (defaulted to []).
- * @param {Object} formValues `{ concentration, solvent }` —
- *                            trimmed by the form before reaching
- *                            this helper, but we trim again
- *                            defensively.
+ * @param {Object} formValues `{ concentration, solvent, preparedBy?,
+ *                            preparedDate?, expiryDate? }` — trimmed
+ *                            by the form before reaching this helper,
+ *                            but we trim again defensively. Optional
+ *                            operational fields default to empty and
+ *                            are normalised to null on the output
+ *                            when blank.
  * @returns {Object|null}     Derived prepared item, or null if the
- *                            inputs are invalid (no parent, missing
- *                            concentration, or missing solvent).
+ *                            required inputs are invalid (no parent,
+ *                            missing concentration, or missing
+ *                            solvent). Optional operational fields
+ *                            being blank NEVER blocks the build.
  *
  * Null-return contract: the caller (App.js) should treat null as
  * "do not open the label modal". Form-level validation in
@@ -75,6 +96,18 @@ export function buildPreparedSolutionItem(parent, formValues) {
   const concentration = (formValues?.concentration || "").trim();
   const solvent = (formValues?.solvent || "").trim();
   if (!concentration || !solvent) return null;
+
+  // Tier 2 PR-1: optional operational metadata. Trim, then normalise
+  // blank → null so downstream print / UI branches can use a simple
+  // truthy check without worrying about whitespace strings slipping
+  // through as "present".
+  const normaliseOptional = (v) => {
+    const trimmed = (v || "").trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+  const preparedBy = normaliseOptional(formValues?.preparedBy);
+  const preparedDate = normaliseOptional(formValues?.preparedDate);
+  const expiryDate = normaliseOptional(formValues?.expiryDate);
 
   return {
     // Pass every parent field through verbatim. Using spread rather
@@ -96,6 +129,12 @@ export function buildPreparedSolutionItem(parent, formValues) {
       parentCas: parent.cas_number,
       parentNameEn: parent.name_en || null,
       parentNameZh: parent.name_zh || null,
+      // Tier 2 PR-1 operational metadata — always present on the
+      // object (so consumers can destructure without undefined
+      // checks), but null when the user left the field blank.
+      preparedBy,
+      preparedDate,
+      expiryDate,
     },
   };
 }

@@ -39,6 +39,14 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
 
   const [concentration, setConcentration] = useState("");
   const [solvent, setSolvent] = useState("");
+  // Tier 2 PR-1: optional operational metadata. All three are free to
+  // be blank; they do not gate submit. Dates use the native HTML5 date
+  // input (yyyy-mm-dd). We do not parse them — whatever the user typed
+  // is what the label prints, because these are operational identifiers
+  // (who / when), not classification data.
+  const [preparedBy, setPreparedBy] = useState("");
+  const [preparedDate, setPreparedDate] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
 
   useEffect(() => {
     // Put focus on the first meaningful input, not the X button.
@@ -72,9 +80,16 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (!canSubmit) return;
+    // Operational fields are passed through as-is. Any blank-string →
+    // null normalisation happens inside buildPreparedSolutionItem;
+    // keeping it there means a single source of truth and lets other
+    // (future) callers of the helper get the same shape.
     onSubmit({
       concentration: trimmedConcentration,
       solvent: trimmedSolvent,
+      preparedBy: preparedBy.trim(),
+      preparedDate: preparedDate.trim(),
+      expiryDate: expiryDate.trim(),
     });
   };
 
@@ -190,6 +205,80 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
               required
               maxLength={60}
             />
+          </div>
+
+          {/* Tier 2 PR-1: Operational metadata section.
+              Clearly separated from the required hazard-adjacent inputs
+              above, and labelled as user-entered operational info so the
+              user is never nudged to believe these are derived from GHS
+              data. All three are optional; they never block submit. */}
+          <div
+            className="border-t border-slate-700 pt-4 space-y-4"
+            data-testid="prepare-solution-operational-section"
+          >
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">
+                {t("prepared.operationalHeading")}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {t("prepared.operationalSubheading")}
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="prepared-prepared-by"
+                className="block text-sm text-slate-300 mb-1"
+              >
+                {t("prepared.preparedBy")}
+              </label>
+              <input
+                id="prepared-prepared-by"
+                type="text"
+                value={preparedBy}
+                onChange={(e) => setPreparedBy(e.target.value)}
+                placeholder={t("prepared.preparedByPlaceholder")}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                data-testid="prepared-prepared-by-input"
+                maxLength={60}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="prepared-prepared-date"
+                  className="block text-sm text-slate-300 mb-1"
+                >
+                  {t("prepared.preparedDate")}
+                </label>
+                <input
+                  id="prepared-prepared-date"
+                  type="date"
+                  value={preparedDate}
+                  onChange={(e) => setPreparedDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-400"
+                  data-testid="prepared-prepared-date-input"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="prepared-expiry-date"
+                  className="block text-sm text-slate-300 mb-1"
+                >
+                  {t("prepared.expiryDate")}
+                </label>
+                <input
+                  id="prepared-expiry-date"
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-400"
+                  data-testid="prepared-expiry-date-input"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Trust-boundary note.

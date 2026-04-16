@@ -109,12 +109,19 @@ describe("buildPreparedSolutionItem", () => {
       concentration: "  10% (v/v)  ",
       solvent: "  Water  ",
     });
+    // Tier 1 required fields are trimmed; Tier 2 optional operational
+    // fields are present on the shape and normalised to null when no
+    // values were supplied (so consumers can destructure without
+    // undefined checks).
     expect(item.preparedSolution).toEqual({
       concentration: "10% (v/v)",
       solvent: "Water",
       parentCas: baseParent.cas_number,
       parentNameEn: baseParent.name_en,
       parentNameZh: baseParent.name_zh,
+      preparedBy: null,
+      preparedDate: null,
+      expiryDate: null,
     });
   });
 
@@ -164,6 +171,60 @@ describe("buildPreparedSolutionItem", () => {
     expect(item.retrieved_at).toBe("2026-04-16T00:00:00Z");
     expect(item.cache_hit).toBe(false);
     expect(item.some_future_field).toBe("future");
+  });
+
+  // ── Tier 2 PR-1: optional operational metadata ────────────────
+
+  it("captures optional operational fields (preparedBy / preparedDate / expiryDate)", () => {
+    const item = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+    });
+    expect(item.preparedSolution.preparedBy).toBe("A. Chen");
+    expect(item.preparedSolution.preparedDate).toBe("2026-04-16");
+    expect(item.preparedSolution.expiryDate).toBe("2026-10-16");
+  });
+
+  it("trims optional operational fields and normalises blank → null", () => {
+    const item = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "   A. Chen   ",
+      preparedDate: "",
+      expiryDate: "   ",
+    });
+    expect(item.preparedSolution.preparedBy).toBe("A. Chen");
+    expect(item.preparedSolution.preparedDate).toBeNull();
+    expect(item.preparedSolution.expiryDate).toBeNull();
+  });
+
+  it("blank operational fields never block the build (unlike concentration/solvent)", () => {
+    // No operational fields supplied at all — still a valid prepared item.
+    const item = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+    });
+    expect(item).not.toBeNull();
+    expect(item.preparedSolution.preparedBy).toBeNull();
+    expect(item.preparedSolution.preparedDate).toBeNull();
+    expect(item.preparedSolution.expiryDate).toBeNull();
+  });
+
+  it("returns null when concentration is missing even if operational fields are filled (required > optional)", () => {
+    // Operational fields must not compensate for a missing required
+    // input. This pins that the build rule ordering didn't slip when
+    // the helper grew new optional fields.
+    expect(
+      buildPreparedSolutionItem(baseParent, {
+        solvent: "Water",
+        preparedBy: "A. Chen",
+        preparedDate: "2026-04-16",
+        expiryDate: "2026-10-16",
+      })
+    ).toBeNull();
   });
 });
 

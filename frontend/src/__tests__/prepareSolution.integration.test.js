@@ -415,4 +415,63 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     // And no prepared marker — we're in a pure normal flow now.
     expect(screen.queryAllByTestId(/^selected-prepared-/)).toHaveLength(0);
   });
+
+  // Tier 2 PR-1: operational metadata ends up on the prepared item
+  // and is surfaced in LabelPrintModal. The form fields are optional —
+  // filling them in must not perturb the Tier 1 submit path (selection,
+  // quantity reset, modal lifecycle) in any way.
+  it("operational metadata from the form flows into LabelPrintModal's selected-row meta", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+
+    // Fill required + optional operational fields together.
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+        target: { value: "10%" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+        target: { value: "Water" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+        target: { value: "A. Chen" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
+        target: { value: "2026-04-16" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-expiry-date-input"), {
+        target: { value: "2026-10-16" },
+      })
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"))
+    );
+
+    // LabelPrintModal opened with the prepared item — Tier 1 markers
+    // still present, plus the new operational row.
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(
+      screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
+    ).toBeInTheDocument();
+    const opRow = screen.getByTestId(
+      `selected-prepared-operational-${ethanolResult.cas_number}`
+    );
+    expect(opRow).toBeInTheDocument();
+    expect(opRow.textContent).toContain("A. Chen");
+    expect(opRow.textContent).toContain("2026-04-16");
+    expect(opRow.textContent).toContain("2026-10-16");
+  });
 });

@@ -446,6 +446,47 @@ export default function LabelPrintModal({
                           })}
                         </div>
                       )}
+                      {/* Tier 2 PR-1: operational metadata surfaced under
+                          the concentration/solvent line. Only renders
+                          whichever pieces the user actually filled in;
+                          the whole block is hidden when all three are
+                          blank, so Tier 1 behaviour is preserved for
+                          users who skip the optional section. */}
+                      {chem.isPreparedSolution &&
+                        chem.preparedSolution &&
+                        (chem.preparedSolution.preparedBy ||
+                          chem.preparedSolution.preparedDate ||
+                          chem.preparedSolution.expiryDate) && (
+                          <div
+                            className="text-xs text-blue-300/80 flex flex-wrap gap-x-3"
+                            data-testid={`selected-prepared-operational-${chem.cas_number}`}
+                          >
+                            {chem.preparedSolution.preparedBy && (
+                              <span>
+                                <span className="text-blue-400/70">
+                                  {t("prepared.preparedByShort")}:{" "}
+                                </span>
+                                {chem.preparedSolution.preparedBy}
+                              </span>
+                            )}
+                            {chem.preparedSolution.preparedDate && (
+                              <span>
+                                <span className="text-blue-400/70">
+                                  {t("prepared.preparedDateShort")}:{" "}
+                                </span>
+                                {chem.preparedSolution.preparedDate}
+                              </span>
+                            )}
+                            {chem.preparedSolution.expiryDate && (
+                              <span>
+                                <span className="text-blue-400/70">
+                                  {t("prepared.expiryDateShort")}:{" "}
+                                </span>
+                                {chem.preparedSolution.expiryDate}
+                              </span>
+                            )}
+                          </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Per-chemical quantity controls */}
