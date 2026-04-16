@@ -31,6 +31,12 @@ import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import axios from "axios";
 import App from "@/App";
+import { todayDateString } from "@/utils/preparedSolution";
+
+// UX cleanup: integration tests that check the preparedDate input
+// use this to pin the expected "today" value to whatever the
+// component produces in the same instant.
+const TODAY = todayDateString();
 
 jest.mock("axios");
 
@@ -623,16 +629,19 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     expect(presetItem.textContent).not.toContain("A. Chen");
     expect(presetItem.textContent).not.toContain("2026-04-16");
 
-    // Click preset: recipe fields prefill; operational fields stay
-    // blank even though they had been filled in when the preset was
-    // originally saved.
+    // Click preset: recipe fields prefill; preparedBy + expiryDate
+    // stay blank; preparedDate is reset to TODAY (UX cleanup: not
+    // blank, not the stored 2026-04-16 — a preset-click must never
+    // silently carry an older preparedDate forward).
     await act(async () => fireEvent.click(presetItem));
     expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
       "10%"
     );
     expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
     expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
-    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      TODAY
+    );
     expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
 
     // Auto-submit must NOT have fired.
@@ -724,5 +733,49 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     );
     expect(casSpans).toHaveLength(1);
     expect(casSpans[0].textContent).toBe("64-17-5");
+  });
+
+  // UX cleanup: the dogfood pass found that Save-as-preset had zero
+  // visible feedback. This pins the fix at the App level: clicking
+  // Save fires a toast.success, and it is emphatically NOT a submit
+  // (LabelPrintModal does not open, selection / quantities stay put).
+  it("Save-as-preset fires toast.success and does NOT open LabelPrintModal", async () => {
+    // eslint-disable-next-line global-require
+    const { toast } = require("sonner");
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+        target: { value: "10%" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+        target: { value: "Water" },
+      })
+    );
+
+    expect(toast.success).not.toHaveBeenCalled();
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"))
+    );
+
+    // Toast fired exactly once with the save-preset-success key.
+    expect(toast.success).toHaveBeenCalledTimes(1);
+    expect(toast.success).toHaveBeenCalledWith("prepared.savePresetSuccess");
+
+    // Non-submit: LabelPrintModal must NOT have opened.
+    expect(screen.queryAllByText("label.title")).toHaveLength(0);
+
+    // The prepare modal itself stays open so the user can keep
+    // editing / hit submit / save another preset.
+    expect(
+      screen.getByTestId("prepare-solution-modal")
+    ).toBeInTheDocument();
   });
 });

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import {
+  formatPreparedDisplayName,
+  todayDateString,
+} from "@/utils/preparedSolution";
 
 /**
  * Prepare-solution / dilution workflow modal (v1.9 M3 Tier 1).
@@ -52,8 +55,15 @@ export default function PrepareSolutionModal({
   // input (yyyy-mm-dd). We do not parse them — whatever the user typed
   // is what the label prints, because these are operational identifiers
   // (who / when), not classification data.
+  //
+  // UX cleanup: `preparedDate` initialises to today (local TZ via
+  // `todayDateString`, not UTC). Dogfood pass showed the blank default
+  // produced 1–2 extra interactions per label for the common
+  // "made-today, labeling-now" path. The user can still clear the
+  // input or change the date if needed. `expiryDate` stays blank —
+  // there is no sensible default shelf-life.
   const [preparedBy, setPreparedBy] = useState("");
-  const [preparedDate, setPreparedDate] = useState("");
+  const [preparedDate, setPreparedDate] = useState(() => todayDateString());
   const [expiryDate, setExpiryDate] = useState("");
 
   // Tier 2 PR-2A: parent-scoped recent prepared workflow inputs.
@@ -76,12 +86,21 @@ export default function PrepareSolutionModal({
   // boundary guarantees stay intact. Hazard data is never sourced from
   // the recent record; it continues to come from the current parent
   // result via `buildPreparedSolutionItem`.
+  //
+  // UX cleanup: date-sensitive fields are NEVER silently carried
+  // forward from a recent entry — `preparedDate` resets to today,
+  // `expiryDate` resets to blank. The dogfood pass showed that
+  // carrying yesterday's `preparedDate` into today's form can silently
+  // produce a wrong-dated label, which is unacceptable in a safety
+  // workflow. `preparedBy` is still carried (same operator is a
+  // reasonable assumption) and `concentration` / `solvent` still
+  // carry (that is the whole point of reusing a recent).
   const handlePrefillFromRecent = (recent) => {
     setConcentration(recent.concentration || "");
     setSolvent(recent.solvent || "");
     setPreparedBy(recent.preparedBy || "");
-    setPreparedDate(recent.preparedDate || "");
-    setExpiryDate(recent.expiryDate || "");
+    setPreparedDate(todayDateString());
+    setExpiryDate("");
     // Send focus back to the concentration input so the user can still
     // tweak and submit with keyboard flow intact.
     concentrationInputRef.current?.focus();
@@ -100,15 +119,17 @@ export default function PrepareSolutionModal({
 
   // Tier 2 PR-2B: preset prefill is deliberately MORE RESTRICTIVE than
   // recent prefill. We only restore the two stable recipe inputs and
-  // ACTIVELY CLEAR the three operational fields (preparedBy /
-  // preparedDate / expiryDate). Letting a months-old preparedDate leak
-  // into a freshly-applied label would be misleading; we want the user
-  // to re-enter those every time they reuse a preset.
+  // clear the operational fields so no stale session metadata rides
+  // along. UX cleanup: `preparedDate` now resets to TODAY rather than
+  // blank, matching the on-mount default — the user is still forced
+  // to consciously set / confirm the date, but the most common answer
+  // ("today") is already filled in. `preparedBy` and `expiryDate`
+  // stay blank.
   const handlePrefillFromPreset = (preset) => {
     setConcentration(preset.concentration || "");
     setSolvent(preset.solvent || "");
     setPreparedBy("");
-    setPreparedDate("");
+    setPreparedDate(todayDateString());
     setExpiryDate("");
     concentrationInputRef.current?.focus();
   };

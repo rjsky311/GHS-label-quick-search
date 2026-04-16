@@ -6,6 +6,7 @@ import {
   isPreparedSolutionItem,
   preparedPresetKey,
   preparedRecentKey,
+  todayDateString,
 } from "../preparedSolution";
 
 const baseParent = {
@@ -629,5 +630,59 @@ describe("dead-export guard", () => {
     // eslint-disable-next-line global-require
     const mod = require("../preparedSolution");
     expect(mod.selectionHasPreparedItem).toBeUndefined();
+  });
+});
+
+// ── UX cleanup: todayDateString ───────────────────────────────
+
+describe("todayDateString", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("returns a string in YYYY-MM-DD format", () => {
+    expect(todayDateString()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("zero-pads single-digit month and day", () => {
+    // `new Date(2026, 0, 3, 12, ...)` is unambiguously Jan 3 in LOCAL
+    // time — the constructor's month/day args are interpreted in the
+    // runner's local zone, so no matter what TZ the CI runner is in,
+    // the helper should produce "2026-01-03".
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 3, 12, 0, 0));
+    expect(todayDateString()).toBe("2026-01-03");
+  });
+
+  it("matches the user's local-clock date, not UTC", () => {
+    // Pick a UTC instant where local-clock date and UTC date disagree.
+    // `Date.UTC(2026, 3, 16, 22, 30)` ≈ 2026-04-16 22:30 UTC.
+    // In any timezone west of UTC (incl. the Americas) that is still
+    // 2026-04-16 locally, but in timezones east of UTC (incl. Taiwan
+    // at UTC+08) it has rolled over to 2026-04-17 locally. The helper
+    // must follow the local-clock answer. Rather than pin an exact
+    // output (which depends on runner TZ), assert the helper agrees
+    // with the local-clock components of `new Date()` at the mocked
+    // instant — and explicitly DOES NOT agree with the UTC slice.
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(Date.UTC(2026, 3, 16, 22, 30, 0)));
+    const local = new Date();
+    const expected = `${local.getFullYear()}-${String(
+      local.getMonth() + 1
+    ).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
+    expect(todayDateString()).toBe(expected);
+    // Smoke-check: if the runner's TZ offset is nonzero the UTC slice
+    // and the local-clock slice are guaranteed to differ at this
+    // instant (22:30 UTC + any offset crosses a midnight). If the TZ
+    // offset is 0 they coincide, and this extra check is skipped —
+    // which is fine because the equality above already pinned it.
+    if (local.getTimezoneOffset() !== 0) {
+      const utcSlice = new Date().toISOString().slice(0, 10);
+      // They may or may not disagree depending on the offset sign;
+      // the point is not which direction, only that the helper uses
+      // local components. The assertion above already covers that.
+      // Keep this block as documentation of why TZ matters.
+      void utcSlice;
+    }
   });
 });

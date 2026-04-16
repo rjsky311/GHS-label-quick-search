@@ -322,3 +322,27 @@ export function preparedRecentKey(record) {
     record.expiryDate || "",
   ].join("|");
 }
+
+/**
+ * UX cleanup: today's date as `YYYY-MM-DD`, using LOCAL time (not UTC).
+ *
+ * Why not `new Date().toISOString().slice(0, 10)`? That returns UTC.
+ * For a user in UTC+08 preparing a solution at 09:00 on 2026-04-16
+ * local time, `toISOString().slice(0, 10)` returns `"2026-04-15"` —
+ * yesterday. For a safety-tool workflow where the printed label
+ * carries a prepared-date, an off-by-one-day bug would be quietly
+ * wrong. This helper uses `getFullYear/getMonth/getDate`, which
+ * always report local-clock components, so the output matches what
+ * the user's wall clock says.
+ *
+ * Output format matches what an HTML5 `<input type="date">` expects
+ * as its `value` / emits as its `onChange` payload, so it slots
+ * directly into form state.
+ */
+export function todayDateString() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 // Hooks
@@ -138,8 +138,13 @@ function App() {
       const record = buildPresetRecord(prepareSolutionParent, formValues);
       if (!record) return;
       addPreparedPreset(record);
+      // UX cleanup: success feedback. Without this, the Save-as-preset
+      // button looked like a no-op — there was no visible signal that
+      // the preset had been written. Matches the existing pattern used
+      // by LabelPrintModal's print-templates flow.
+      toast.success(t("prepared.savePresetSuccess"));
     },
-    [prepareSolutionParent, addPreparedPreset]
+    [prepareSolutionParent, addPreparedPreset, t]
   );
 
   const handleLoadTemplate = useCallback((template) => {
