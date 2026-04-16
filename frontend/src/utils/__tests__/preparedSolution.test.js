@@ -6,7 +6,6 @@ import {
   isPreparedSolutionItem,
   preparedPresetKey,
   preparedRecentKey,
-  selectionHasPreparedItem,
 } from "../preparedSolution";
 
 const baseParent = {
@@ -254,31 +253,6 @@ describe("isPreparedSolutionItem", () => {
 
   it("is false when isPreparedSolution is explicitly false", () => {
     expect(isPreparedSolutionItem({ isPreparedSolution: false })).toBe(false);
-  });
-});
-
-describe("selectionHasPreparedItem", () => {
-  it("is false for non-array input", () => {
-    expect(selectionHasPreparedItem(null)).toBe(false);
-    expect(selectionHasPreparedItem(undefined)).toBe(false);
-    expect(selectionHasPreparedItem("not-an-array")).toBe(false);
-  });
-
-  it("is false for an empty selection", () => {
-    expect(selectionHasPreparedItem([])).toBe(false);
-  });
-
-  it("is false for a selection of normal chemicals", () => {
-    expect(selectionHasPreparedItem([baseParent, baseParent])).toBe(false);
-  });
-
-  it("is true when any item in the selection is prepared", () => {
-    const prepared = buildPreparedSolutionItem(baseParent, {
-      concentration: "10%",
-      solvent: "Water",
-    });
-    expect(selectionHasPreparedItem([baseParent, prepared])).toBe(true);
-    expect(selectionHasPreparedItem([prepared])).toBe(true);
   });
 });
 
@@ -639,5 +613,21 @@ describe("formatPreparedDisplayName", () => {
         parentNameEn: "  Ethanol  ",
       })
     ).toBe("10% Ethanol in Water");
+  });
+});
+
+// Guard against regressing the cleanup that removed `selectionHasPreparedItem`
+// when App.js stopped using it (PR #14 replaced its caller with the
+// `preparedFlowActive` session flag). If someone re-exports it without
+// a callsite, this test fails — which is the signal to either restore
+// a real consumer or drop it again.
+describe("dead-export guard", () => {
+  it("selectionHasPreparedItem is NOT exported (dead helper removed)", () => {
+    // Import via require so the test reads the current module surface
+    // rather than relying on the test-file import list (which is a
+    // statically declared thing at the top of this file).
+    // eslint-disable-next-line global-require
+    const mod = require("../preparedSolution");
+    expect(mod.selectionHasPreparedItem).toBeUndefined();
   });
 });

@@ -650,6 +650,51 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     ).toBeInTheDocument();
   });
 
+  // Debt cleanup: when PrepareSolutionModal stacks on top of DetailModal,
+  // DetailModal must be marked inert + aria-hidden (and must drop
+  // aria-modal), so screen readers see only one active modal at a time.
+  // App.js wires this via `suppressed={Boolean(prepareSolutionParent)}`;
+  // this assertion pins both states end-to-end.
+  it("opening PrepareSolutionModal marks the underlying DetailModal inert / aria-hidden; closing it restores aria-modal", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+
+    const detailBtn = screen.getAllByTestId(/^detail-btn-/)[0];
+    await act(async () => fireEvent.click(detailBtn));
+    const backdropBefore = await screen.findByTestId("detail-modal");
+    expect(backdropBefore).toHaveAttribute("aria-modal", "true");
+    expect(backdropBefore).not.toHaveAttribute("inert");
+    expect(backdropBefore).not.toHaveAttribute("aria-hidden");
+
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-btn"))
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("prepare-solution-modal")).toBeInTheDocument()
+    );
+
+    const backdropDuring = screen.getByTestId("detail-modal");
+    expect(backdropDuring).not.toHaveAttribute("aria-modal");
+    expect(backdropDuring).toHaveAttribute("aria-hidden", "true");
+    expect(backdropDuring).toHaveAttribute("inert");
+
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-cancel-btn"))
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("prepare-solution-modal")
+      ).not.toBeInTheDocument()
+    );
+    const backdropAfter = screen.getByTestId("detail-modal");
+    expect(backdropAfter).toHaveAttribute("aria-modal", "true");
+    expect(backdropAfter).not.toHaveAttribute("inert");
+    expect(backdropAfter).not.toHaveAttribute("aria-hidden");
+  });
+
   // Tier 2 PR-3: derived display name appears in LabelPrintModal's
   // selected-row area as a *supplement*, not a replacement — the
   // parent CAS + name header row must still be present, because that

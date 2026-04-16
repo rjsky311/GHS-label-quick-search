@@ -322,16 +322,3 @@ export function preparedRecentKey(record) {
     record.expiryDate || "",
   ].join("|");
 }
-
-/**
- * Predicate: does the current selection contain any prepared item?
- *
- * In M3 Tier 1 the selection either contains exactly one prepared
- * item (after a Prepare-solution submit) or zero prepared items
- * (normal selection). The helper still handles multi-item defensively
- * so future expansion doesn't need to retrofit the check.
- */
-export function selectionHasPreparedItem(selection) {
-  if (!Array.isArray(selection)) return false;
-  return selection.some(isPreparedSolutionItem);
-}

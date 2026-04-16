@@ -484,4 +484,59 @@ describe('DetailModal', () => {
     // The static-fallback key selection IS covered in ResultsTable.test.js
     // where cache chip visibility is NOT nested under retrieved_at.
   });
+
+  // ── Debt cleanup: `suppressed` prop (stacked-modal a11y) ─────
+  //
+  // When PrepareSolutionModal stacks on top of DetailModal the app
+  // passes `suppressed={true}`. This should:
+  //   1. drop `aria-modal` so screen readers announce only the
+  //      topmost modal as the active dialog
+  //   2. set `aria-hidden="true"` as a fallback for older AT
+  //   3. set the `inert` attribute so modern browsers block focus +
+  //      pointer interaction inside this layer
+  //   4. suppress the Escape handler so pressing Esc inside the
+  //      stacked modal doesn't *also* fire this modal's onClose
+  //   5. suppress the backdrop-click close handler for the same reason
+  describe("suppressed prop (stacked-modal a11y)", () => {
+    it("is NOT suppressed by default — aria-modal=true, no inert, no aria-hidden", () => {
+      render(<DetailModal {...defaultProps} />);
+      const backdrop = screen.getByTestId("detail-modal");
+      expect(backdrop).toHaveAttribute("aria-modal", "true");
+      expect(backdrop).not.toHaveAttribute("aria-hidden");
+      expect(backdrop).not.toHaveAttribute("inert");
+    });
+
+    it("when suppressed, drops aria-modal, sets aria-hidden + inert", () => {
+      render(<DetailModal {...defaultProps} suppressed />);
+      const backdrop = screen.getByTestId("detail-modal");
+      expect(backdrop).not.toHaveAttribute("aria-modal");
+      expect(backdrop).toHaveAttribute("aria-hidden", "true");
+      expect(backdrop).toHaveAttribute("inert");
+    });
+
+    it("when suppressed, backdrop click does NOT fire onClose", () => {
+      const onClose = jest.fn();
+      render(
+        <DetailModal {...defaultProps} onClose={onClose} suppressed />
+      );
+      fireEvent.click(screen.getByTestId("detail-modal"));
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("when suppressed, Escape does NOT fire onClose (listener gated)", () => {
+      const onClose = jest.fn();
+      render(
+        <DetailModal {...defaultProps} onClose={onClose} suppressed />
+      );
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("when not suppressed, Escape still fires onClose (no regression on Tier 1 behaviour)", () => {
+      const onClose = jest.fn();
+      render(<DetailModal {...defaultProps} onClose={onClose} />);
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });
