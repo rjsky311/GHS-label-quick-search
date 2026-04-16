@@ -430,4 +430,58 @@ describe('DetailModal', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('No GHS data banner + cache tooltip (v1.8 M2 PR-A)', () => {
+    it('renders the no-GHS banner when effective classification is empty', () => {
+      // Override getEffectiveClassification to return empty everything
+      const overrideEffective = jest.fn(() => ({
+        pictograms: [],
+        hazard_statements: [],
+        precautionary_statements: [],
+        signal_word: null,
+        isCustom: false,
+        customIndex: 0,
+      }));
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={{ ...mockFoundResult, ghs_pictograms: [], hazard_statements: [], precautionary_statements: [], signal_word: null, other_classifications: [] }}
+          getEffectiveClassification={overrideEffective}
+        />
+      );
+      expect(screen.getByTestId('detail-no-ghs-data-banner')).toBeInTheDocument();
+    });
+
+    it('does NOT render the no-GHS banner when any GHS signal is present', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      expect(
+        screen.queryByTestId('detail-no-ghs-data-banner')
+      ).not.toBeInTheDocument();
+    });
+
+    it('cache badge uses the with-age key when retrieved_at is present', () => {
+      const cached = {
+        ...mockFoundResult,
+        cache_hit: true,
+        retrieved_at: '2026-04-16T11:55:00Z',
+      };
+      render(<DetailModal {...defaultProps} result={cached} />);
+      const badge = screen.getByTestId('provenance-cache-badge');
+      // i18n mock returns keys verbatim — assert the key the component chose.
+      expect(badge.getAttribute('title')).toBe(
+        'detail.provenanceCacheTooltipWithAge'
+      );
+    });
+
+    // NOTE: the static-fallback ("retrieved_at absent") branch is not
+    // reachable from DetailModal because the cache badge lives INSIDE
+    // the `{result.retrieved_at && (...)}` wrapper — no timestamp means
+    // the whole retrieval row is hidden. That's a correct UI rule (don't
+    // show "Retrieved: …" without a time). The static fallback code path
+    // still runs in production for defensive programming but cannot
+    // realistically fire here.
+    //
+    // The static-fallback key selection IS covered in ResultsTable.test.js
+    // where cache chip visibility is NOT nested under retrieved_at.
+  });
 });

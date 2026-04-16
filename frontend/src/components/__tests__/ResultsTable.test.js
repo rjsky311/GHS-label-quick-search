@@ -239,8 +239,12 @@ describe('ResultsTable', () => {
     });
   });
 
-  describe('No hazard result', () => {
-    it('renders "no hazard" text for found result with empty pictograms', () => {
+  describe('GHS data availability (v1.8 M2)', () => {
+    // mockNoHazardResult has no pictograms, no H-codes, no P-codes, no signal word.
+    // Per M2 contract, that is "PubChem has no GHS classification data for this
+    // CAS" rather than "this chemical is safe" — so we show the new warning
+    // instead of the misleading "No hazard label" string.
+    it('renders "no GHS classification" warning when no GHS data at all', () => {
       render(
         <ResultsTable
           {...defaultProps}
@@ -248,7 +252,173 @@ describe('ResultsTable', () => {
           getEffectiveClassification={createMockGetEffective()}
         />
       );
+      expect(screen.getByText('results.noGhsDataAvailable')).toBeInTheDocument();
+      expect(screen.getByText('results.noGhsDataHint')).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`no-ghs-data-${mockNoHazardResult.cas_number}`)
+      ).toBeInTheDocument();
+    });
+
+    it('does NOT render the new warning when the classification has any signal (regression against over-eager warning)', () => {
+      // Has H-codes and signal word but no pictogram — this is a real GHS record
+      // that the pictogram visual can't render. The new warning must NOT fire;
+      // the UI falls back to the existing `results.noHazard` text.
+      const signalOnly = {
+        ...mockNoHazardResult,
+        cas_number: '100-00-1',
+        hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+        signal_word: 'Danger',
+        signal_word_zh: '危險',
+      };
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[signalOnly]}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+      expect(screen.queryByText('results.noGhsDataAvailable')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`no-ghs-data-${signalOnly.cas_number}`)
+      ).not.toBeInTheDocument();
+      // Falls back to existing `results.noHazard` — must not be blank
       expect(screen.getByText('results.noHazard')).toBeInTheDocument();
+    });
+
+    it('shows results.noHazard (not the visual block) when H/P/signal exist but NOTHING has pictograms (Codex PR #10 regression)', () => {
+      // Codex caught that hasRenderableGhsVisual was treating
+      // `other_classifications.length > 0` as renderable even when
+      // those alternate classifications had no pictograms.
+      //
+      // Scenario:
+      //   - found = true
+      //   - primary has no pictograms
+      //   - other_classifications has entries, but none have pictograms
+      //   - there ARE hazard_statements + signal_word
+      //
+      // Expected: no "no GHS data" warning (there IS GHS data), AND
+      // no empty pictogram block, AND the existing `results.noHazard`
+      // fallback text is shown.
+      const noPicsAnywhere = {
+        ...mockNoHazardResult,
+        cas_number: '300-00-3',
+        ghs_pictograms: [],
+        hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+        signal_word: 'Warning',
+        signal_word_zh: '警告',
+        other_classifications: [
+          {
+            pictograms: [],
+            hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+            signal_word: 'Warning',
+          },
+        ],
+      };
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[noPicsAnywhere]}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+      // Not the "no GHS data" warning — there IS GHS data
+      expect(screen.queryByText('results.noGhsDataAvailable')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`no-ghs-data-${noPicsAnywhere.cas_number}`)
+      ).not.toBeInTheDocument();
+      // And not the visual pictogram block either (nothing to draw)
+      // We verify this indirectly: the `noHazard` fallback text is present.
+      expect(screen.getByText('results.noHazard')).toBeInTheDocument();
+    });
+
+    it('custom override that selects an alternate classification with H-codes suppresses the warning', () => {
+      // Raw result has no GHS data. But the custom override points at an
+      // alternate classification that DOES have H-codes. The warning must
+      // follow the effective classification, not the raw one.
+      const emptyRaw = {
+        ...mockNoHazardResult,
+        cas_number: '200-00-2',
+        other_classifications: [
+          {
+            pictograms: [],
+            hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+            signal_word: 'Warning',
+          },
+        ],
+      };
+      // Override getEffectiveClassification to return the alternate shape
+      const overrideEffective = jest.fn(() => ({
+        pictograms: [],
+        hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+        precautionary_statements: [],
+        signal_word: 'Warning',
+        isCustom: true,
+        customIndex: 1,
+      }));
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[emptyRaw]}
+          getEffectiveClassification={overrideEffective}
+        />
+      );
+      expect(screen.queryByText('results.noGhsDataAvailable')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`no-ghs-data-${emptyRaw.cas_number}`)
+      ).not.toBeInTheDocument();
+    });
+
+    it('custom override that selects an empty classification DOES show the warning (regression: effective really drives it)', () => {
+      // Raw result has pictograms (so without custom override, normal
+      // visual would render). Custom override points at an empty classification.
+      // The warning must follow the override, proving the helper runs on
+      // effective rather than raw.
+      const overrideEffective = jest.fn(() => ({
+        pictograms: [],
+        hazard_statements: [],
+        precautionary_statements: [],
+        signal_word: null,
+        isCustom: true,
+        customIndex: 2,
+      }));
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          getEffectiveClassification={overrideEffective}
+        />
+      );
+      expect(screen.getByText('results.noGhsDataAvailable')).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`no-ghs-data-${mockFoundResult.cas_number}`)
+      ).toBeInTheDocument();
+    });
+
+    it('cache tooltip uses the with-age key when retrieved_at is present', () => {
+      const cached = {
+        ...mockFoundResult,
+        cache_hit: true,
+        retrieved_at: '2026-04-16T11:55:00Z',
+      };
+      render(<ResultsTable {...defaultProps} results={[cached]} />);
+      // i18n mock returns keys verbatim — assert which key was selected.
+      const cacheBadge = screen.getByText('results.cacheBadge').closest('span');
+      expect(cacheBadge.getAttribute('title')).toBe(
+        'detail.provenanceCacheTooltipWithAge'
+      );
+    });
+
+    it('cache tooltip falls back to static key when retrieved_at is absent', () => {
+      const cached = {
+        ...mockFoundResult,
+        cache_hit: true,
+        retrieved_at: null,
+      };
+      render(<ResultsTable {...defaultProps} results={[cached]} />);
+      const cacheBadge = screen.getByText('results.cacheBadge').closest('span');
+      expect(cacheBadge.getAttribute('title')).toBe(
+        'detail.provenanceCacheTooltip'
+      );
     });
   });
 
