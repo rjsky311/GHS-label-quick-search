@@ -6,6 +6,7 @@ import {
   BookOpen, FileSpreadsheet, Printer, Lightbulb, Languages,
   Bookmark, Check, Plus, Palette,
 } from "lucide-react";
+import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 
 export default function LabelPrintModal({
   selectedForLabel,
@@ -435,6 +436,23 @@ export default function LabelPrintModal({
                           </span>
                         )}
                       </div>
+                      {/* Tier 2 PR-3: derived preview name. A workflow
+                          display only — the parent CAS + name line above
+                          remains the canonical identity. Rendered when
+                          formatPreparedDisplayName returns a meaningful
+                          string; otherwise omitted so the existing Tier 1
+                          concentration-in-solvent meta row still shows
+                          even in edge cases where the parent name is
+                          missing. */}
+                      {chem.isPreparedSolution &&
+                        formatPreparedDisplayName(chem) && (
+                          <div
+                            className="text-sm text-blue-200"
+                            data-testid={`selected-prepared-display-${chem.cas_number}`}
+                          >
+                            {formatPreparedDisplayName(chem)}
+                          </div>
+                        )}
                       {chem.isPreparedSolution && chem.preparedSolution && (
                         <div
                           className="text-xs text-blue-300"

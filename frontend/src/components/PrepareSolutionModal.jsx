@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 
 /**
  * Prepare-solution / dilution workflow modal (v1.9 M3 Tier 1).
@@ -259,23 +260,32 @@ export default function PrepareSolutionModal({
                 className="space-y-1"
                 data-testid="prepare-solution-preset-list"
               >
-                {parentPresets.map((p, idx) => (
-                  <li key={`${p.createdAt || "noTs"}-${idx}`}>
-                    <button
-                      type="button"
-                      onClick={() => handlePrefillFromPreset(p)}
-                      className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-purple-500 transition-colors"
-                      data-testid={`prepare-solution-preset-item-${idx}`}
-                    >
-                      <div className="text-sm text-white">
-                        {t("prepared.labelMeta", {
-                          concentration: p.concentration || "",
-                          solvent: p.solvent || "",
-                        })}
-                      </div>
-                    </button>
-                  </li>
-                ))}
+                {parentPresets.map((p, idx) => {
+                  // Tier 2 PR-3: prefer the derived display name
+                  // ("10% Ethanol in Water") when we have enough info,
+                  // otherwise fall back to the Tier 1 concentration/
+                  // solvent meta string so edge cases (missing parent
+                  // name) still read cleanly.
+                  const display = formatPreparedDisplayName(p);
+                  return (
+                    <li key={`${p.createdAt || "noTs"}-${idx}`}>
+                      <button
+                        type="button"
+                        onClick={() => handlePrefillFromPreset(p)}
+                        className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-purple-500 transition-colors"
+                        data-testid={`prepare-solution-preset-item-${idx}`}
+                      >
+                        <div className="text-sm text-white">
+                          {display ||
+                            t("prepared.labelMeta", {
+                              concentration: p.concentration || "",
+                              solvent: p.solvent || "",
+                            })}
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -295,7 +305,14 @@ export default function PrepareSolutionModal({
                 <span>{t("prepared.recentHeading")}</span>
               </div>
               <ul className="space-y-1" data-testid="prepare-solution-recent-list">
-                {parentRecents.map((r, idx) => (
+                {parentRecents.map((r, idx) => {
+                  // Tier 2 PR-3: derived display name with Tier 1
+                  // fallback, same pattern as presets. Operational
+                  // fields still render on the second line so the
+                  // user can see who/when at a glance without needing
+                  // to click-to-prefill.
+                  const display = formatPreparedDisplayName(r);
+                  return (
                   <li key={`${r.createdAt || "noTs"}-${idx}`}>
                     <button
                       type="button"
@@ -304,10 +321,11 @@ export default function PrepareSolutionModal({
                       data-testid={`prepare-solution-recent-item-${idx}`}
                     >
                       <div className="text-sm text-white">
-                        {t("prepared.labelMeta", {
-                          concentration: r.concentration || "",
-                          solvent: r.solvent || "",
-                        })}
+                        {display ||
+                          t("prepared.labelMeta", {
+                            concentration: r.concentration || "",
+                            solvent: r.solvent || "",
+                          })}
                       </div>
                       {(r.preparedBy || r.preparedDate || r.expiryDate) && (
                         <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
@@ -330,7 +348,8 @@ export default function PrepareSolutionModal({
                       )}
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
           )}
