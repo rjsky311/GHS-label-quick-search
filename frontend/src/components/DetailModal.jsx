@@ -22,6 +22,17 @@ export default function DetailModal({
   onClearCustomClassification,
   onPrintLabel,
   onPrepareSolution,
+  // When another modal (e.g. PrepareSolutionModal) is stacked on top
+  // of this one, the parent passes `suppressed={true}` so this dialog:
+  //   - becomes `inert` (nothing inside is focusable / clickable /
+  //     announced by screen readers)
+  //   - gets `aria-hidden="true"` as a fallback for older AT
+  //   - drops `aria-modal` so only the topmost modal is announced
+  //     as the active modal dialog
+  // This closes the long-standing stacked-aria-modal debt without
+  // unmounting DetailModal (which would blow away its focus / scroll
+  // state for when the user cancels back to it).
+  suppressed = false,
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
@@ -33,13 +44,19 @@ export default function DetailModal({
   }, [t]);
 
   useEffect(() => {
+    // Don't pull focus or register the Escape handler while a higher
+    // modal is stacked on top of us — the stacked modal owns focus +
+    // Escape. PR #14 added capture-phase stopImmediatePropagation in
+    // PrepareSolutionModal as the first line of defence; this is the
+    // structurally cleaner second line.
+    if (suppressed) return;
     dialogRef.current?.focus();
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, suppressed]);
 
   const effective = getEffectiveClassification(result) || {
     pictograms: result.ghs_pictograms || [],
@@ -64,10 +81,16 @@ export default function DetailModal({
   return (
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={suppressed ? undefined : onClose}
       role="dialog"
-      aria-modal="true"
+      aria-modal={suppressed ? undefined : "true"}
+      aria-hidden={suppressed ? "true" : undefined}
+      // React 19 supports `inert` as a boolean attribute; passing
+      // `true` serializes to `inert=""` on the DOM, `false` omits it.
+      // eslint-disable-next-line react/no-unknown-property
+      inert={suppressed || undefined}
       aria-labelledby="detail-modal-title"
+      data-testid="detail-modal"
     >
       <div
         ref={dialogRef}

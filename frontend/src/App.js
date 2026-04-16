@@ -581,6 +581,11 @@ function App() {
           onClearCustomClassification={clearCustomClassification}
           onPrintLabel={handlePrintLabelFromDetail}
           onPrepareSolution={handleOpenPrepareSolution}
+          // When PrepareSolutionModal is stacked on top, mark the
+          // DetailModal as inert / aria-hidden so screen readers see
+          // only one active modal at a time and pointer/keyboard
+          // interaction is suppressed on this layer.
+          suppressed={Boolean(prepareSolutionParent)}
         />
       )}
 
