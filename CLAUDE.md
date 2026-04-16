@@ -274,7 +274,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ## v1.8 Roadmap
 
-See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 and M3 Tier 2 have all landed. Next decision-points are whether to bump runtime to `1.9.0`, pick up **M4 print workflow** (supplier profile / real label-stock presets / small-container mode / QR→SDS), or run pilot UX to drive the next prioritization. This is a shared planning document between Claude Code and Codex — editable, not frozen.
+See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 + M3 Tier 2 + Tier 2 debt cleanup + pilot-dogfood UX cleanup have all landed; runtime is now `1.9.0`. Next decision-points are **M4 print workflow** (supplier profile / real label-stock presets / small-container mode / QR→SDS), the deferred **Option B** (derived preview on printed label), or another short pilot round to drive further prioritization. This is a shared planning document between Claude Code and Codex — editable, not frozen.
 
 ## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 
