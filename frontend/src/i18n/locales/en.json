@@ -255,5 +255,11 @@
   "footer.disclaimer": "For reference only. Refer to official SDS.",
   "footer.reportIssue": "Report Issue",
 
+  "upstream.bannerTitle": "PubChem was temporarily unavailable for {{count}} result(s)",
+  "upstream.bannerBody": "Those entries may not reflect current hazard data. Please retry before relying on this result, and always verify against the official SDS.",
+
+  "trust.authoritativeNote": "Quick reference only. The official Safety Data Sheet (SDS), supplier label, and local regulations remain the authoritative source for final hazard classification.",
+  "trust.printFooter": "For reference only — confirm against the official SDS, supplier label, and local regulations before use.",
+
   "a11y.skipToContent": "Skip to main content"
 }

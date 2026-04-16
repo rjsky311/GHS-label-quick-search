@@ -861,3 +861,83 @@ describe('escapeHtml', () => {
     expect(escapeHtml('Ethanol 乙醇')).toBe('Ethanol 乙醇');
   });
 });
+
+// ── Page-level trust-boundary footer (v1.8 M1 PR-C) ──
+describe('print page footer disclaimer', () => {
+  let mockIframe, mockIframeDoc, mockIframeWindow;
+  let createElementSpy, appendChildSpy, getByIdSpy;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const mocks = createMockIframe();
+    mockIframe = mocks.mockIframe;
+    mockIframeDoc = mocks.mockIframeDoc;
+    mockIframeWindow = mocks.mockIframeWindow;
+
+    createElementSpy = jest
+      .spyOn(document, 'createElement')
+      .mockImplementation((tag) => {
+        if (tag === 'iframe') return mockIframe;
+        return document.createElement.wrappedMethod
+          ? document.createElement.wrappedMethod(tag)
+          : {};
+      });
+    appendChildSpy = jest
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation(() => {});
+    getByIdSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null);
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    createElementSpy.mockRestore();
+    appendChildSpy.mockRestore();
+    getByIdSpy.mockRestore();
+    jest.useRealTimers();
+  });
+
+  it('renders a page-footer-note element on every page', () => {
+    printLabels(
+      [mockChemical],
+      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      {}
+    );
+    const html = mockIframeDoc.write.mock.calls[0][0];
+    expect(html).toMatch(/<div\s+class="page-footer-note">/);
+    // The i18n key is rendered (mock returns it verbatim)
+    expect(html).toContain('trust.printFooter');
+  });
+
+  it('footer note is emitted once per page', () => {
+    // 12 labels + medium size + portrait => perPage=8 => 2 pages
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      ...mockChemical,
+      cas_number: `64-17-${i}`,
+    }));
+    printLabels(
+      many,
+      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      {}
+    );
+    const html = mockIframeDoc.write.mock.calls[0][0];
+    const matches = html.match(/<div\s+class="page-footer-note">/g) || [];
+    expect(matches.length).toBe(2);
+  });
+
+  it('footer note text is HTML-escaped (defence-in-depth)', () => {
+    // Even though t() returns a safe string, the renderer still runs it
+    // through escapeHtml(); confirm no raw "<" survives.
+    printLabels(
+      [mockChemical],
+      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      {}
+    );
+    const html = mockIframeDoc.write.mock.calls[0][0];
+    const footerMatch = html.match(
+      /<div\s+class="page-footer-note">([^<]*)<\/div>/
+    );
+    expect(footerMatch).not.toBeNull();
+    // The content between the tags is the escaped i18n key; no `<` inside
+    expect(footerMatch[1]).not.toMatch(/</);
+  });
+});

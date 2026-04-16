@@ -6,6 +6,7 @@ import GHSImage from "@/components/GHSImage";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
+import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 
 export default function DetailModal({
   result,
@@ -347,6 +348,9 @@ export default function DetailModal({
               </div>
             </div>
           )}
+
+          {/* v1.8 M1: trust-boundary disclaimer — SDS / supplier / regulation is authoritative */}
+          {result.found && <AuthoritativeSourceNote variant="detail" />}
 
           {/* Action Buttons */}
           <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-3">
