@@ -32,10 +32,10 @@ User Browser
 [chemical_dict.py]                 (1,707 CAS↔ZH, 1,707 CAS↔EN, 1,816 EN→ZH, reverse lookup dicts)
 ```
 
-**State management**: All state in `App.js` via `useState`, 5 custom hooks extract localStorage-backed logic.
+**State management**: top-level state lives in `App.js` via `useState`; persistence, selection, sort, and modal-workflow behaviour are factored out into custom hooks (`src/hooks/`) and workflow helpers (`src/utils/`). Prefer adding new behaviour as a hook/util rather than widening `App.js` further.
 **Caching**: Server-side 24hr TTL in-memory (cachetools, max 5000). Client-side localStorage.
 
-## Frontend Architecture (15 components + 8 hooks + 4 utils)
+## Frontend Architecture (16 components + 8 hooks + 5 utils)
 
 ### Components (`src/components/`)
 | File | Purpose |
@@ -45,7 +45,8 @@ User Browser
 | `SearchAutocomplete.jsx` | Autocomplete dropdown (history + favorites) |
 | `ResultsTable.jsx` | Results table with sort, filter, export, SDS, print |
 | `DetailModal.jsx` | Full chemical detail (GHS classification, SDS links) |
-| `LabelPrintModal.jsx` | Label printing config (4 templates, 3 sizes, saved presets) |
+| `LabelPrintModal.jsx` | Label printing config (4 templates, 3 sizes, saved presets); renders prepared-solution rows with blue tint + "Prepared" badge + concentration/solvent meta |
+| `PrepareSolutionModal.jsx` | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1 |
 | `FavoritesSidebar.jsx` | Favorites management sidebar |
 | `HistorySidebar.jsx` | Search history sidebar |
 | `EmptyState.jsx` | Landing page with quick-start buttons |
@@ -72,14 +73,15 @@ User Browser
 | File | Purpose |
 |------|---------|
 | `exportData.js` | Excel/CSV export (backend-only; no client-side fallback after Phase 3) |
-| `printLabels.js` | Label printing engine (4 templates, iframe with HTML escaping + afterprint cleanup + 60s fallback) |
+| `printLabels.js` | Label printing engine (4 templates, iframe with HTML escaping + afterprint cleanup + 60s fallback); prepared-solution rendering branch keyed on `isPreparedSolution` |
+| `preparedSolution.js` | Prepared-solution helpers: `buildPreparedSolutionItem(parent, formValues)` + `isPreparedSolutionItem` + `selectionHasPreparedItem` predicates; v1.9 M3 Tier 1 |
 | `sdsLinks.js` | PubChem Safety + ECHA CHEM search URL builders |
 | `formatDate.js` | i18n-aware date formatting |
 
 ### i18n (`src/i18n/`)
 - `index.js` — i18next init with LanguageDetector, fallback zh-TW
-- `locales/zh-TW.json` — 210 keys (Traditional Chinese)
-- `locales/en.json` — 210 keys (English)
+- `locales/zh-TW.json` — Traditional Chinese (grew across v1.8 M0–M2 and v1.9 M3 Tier 1; keep additions tagged to their milestone in PRs)
+- `locales/en.json` — English (same growth pattern as zh-TW)
 - Language stored in localStorage key `ghs_language`
 
 ### Build
@@ -174,10 +176,17 @@ User Browser
 - App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
 - Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
 
-## Current State (v1.8.0)
+## Current State (runtime v1.8.0)
+
+Runtime version label is still `1.8.0` by explicit choice — v1.9 M3 Tier 1
+merged under `v1.9-*` branches but the app/package/footer/backend version
+has **not** been bumped yet. Do not version-bump without an explicit ask.
 
 ### Git History (key commits)
 ```
+70b35f6 Merge pull request #14 — M3 Tier 1 PR-A prepared-solution UI flow + lifecycle fixes
+fe5e124 Merge pull request #13 — M3 Tier 1 PR-B prepared-solution print path
+fdada04 Merge pull request #12 — v1.8 version sync (runtime/docs → 1.8.0)
 6591a63 Merge pull request #11 — M2 PR-B Print all with GHS data
 f24c650 Merge pull request #10 — M2 PR-A no-GHS warning + aged cache tooltip
 b734520 Merge pull request #9  — M1 PR-C upstream banner + authoritative note
@@ -198,11 +207,12 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results (as of v1.8.0)
-- **Frontend**: 448 tests across 29 suites; 0 React `act(...)` warnings
+### Test Results (as of M3 Tier 1 merge, runtime v1.8.0)
+- **Frontend**: 506 tests across 32 suites; 0 React `act(...)` warnings
 - **Backend**: 123 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
+- **Build**: `npx craco build` → OK (~140 kB gzip main bundle)
 - **CI**: GitHub Actions runs both on every push to main and on PRs
 
 ### CI/CD (`.github/workflows/ci.yml`)
@@ -238,10 +248,15 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 - [x] **Phase 1 hardening** — printLabels HTML escaping; GHS dedup/ranking; export row-limit + formula neutralization; PubChem retry + upstream_error; CORS default + `allow_credentials=False`; slowapi rate limits + outbound PubChem semaphore
 - [x] **Phase 2 hardening** — autocomplete abort + stale-response guard; iframe cleanup via `afterprint`; frontend batch>100 alert + double-guard; `useFocusTrap` hook + sidebar adoption; test coverage for LabelPrintModal / ErrorBoundary / sidebars
 - [x] **Phase 3 cleanup** — version sync 1.7.0; removed dead files (`backend_test.py`, `tests/`, `字典.csv`, `test_result.md`); README + CLAUDE.md sync
+- [x] **v1.8 M0** — P-codes (precautionary statements): backend extraction, UI rendering, print + export (PRs #4/#5/#6)
+- [x] **v1.8 M1** — Data provenance + trust signals: backend provenance fields, DetailModal/ResultsTable surfaces, upstream banner + authoritative-source note (PRs #7/#8/#9)
+- [x] **v1.8 M2** — No-GHS warning + aged-cache tooltip + "Print all with GHS data" shortcut (PRs #10/#11)
+- [x] **v1.8 version sync** — runtime/docs aligned to `1.8.0` (PR #12)
+- [x] **v1.9 M3 Tier 1** — Prepared-solution workflow (single-parent, concentration + solvent inputs, trust boundary preserved): PR-B print path (#13) + PR-A UI flow with Escape-parity + stale-quantity lifecycle fixes (#14; merge SHA `70b35f6`)
 
 ## v1.8 Roadmap
 
-See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. Key priorities: P-codes extraction, trust/provenance signals, prepared-solution mode, print workflow improvements. This is a shared planning document between Claude Code and Codex — editable, not frozen.
+See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 have landed. The next planning phase is **M3 Tier 2 — Operational Prepared Workflow** (drafted inside the same roadmap document, not yet an implementation commitment). This is a shared planning document between Claude Code and Codex — editable, not frozen.
 
 ## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 
