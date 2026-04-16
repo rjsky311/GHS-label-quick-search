@@ -1039,7 +1039,7 @@ At that point, the roadmap has moved from planning into concrete product expansi
 | M1 — Data provenance + trust signals | **done** | #7 / #8 / #9 |
 | M2 — Secondary-container disclaimer + no-GHS warning + Print-all-with-GHS shortcut | **done** | #10 / #11 |
 | M3 Tier 1 — Prepared-solution workflow (single-parent, concentration + solvent) | **done** | #13 (print path) / #14 (UI flow + lifecycle fixes); merge SHA `70b35f6` |
-| M3 Tier 2 — Operational Prepared Workflow | **planning** (this document) |
+| M3 Tier 2 — Operational Prepared Workflow | **done** | #15 (PR-1 operational fields) / #16 (PR-2A recent) / #17 (PR-2B saved presets) / #19 (PR-3 derived preview, Option A); final merge SHA `456e376` |
 | M4 — Print workflow (supplier profile, label-stock presets, small-container mode, QR/SDS convenience) | proposed, not yet scoped into PRs |
 | S-level / N-level items | proposed, unchanged |
 
@@ -1190,20 +1190,20 @@ Three small frontend-only PRs, in this order. Do **not** bundle them.
 
 Each PR must keep or extend the sabotage-verified regression-test discipline established in PR #14.
 
-### 7. Open Questions (require product decision before implementation)
+### 7. Open Questions — resolved at implementation time
 
-Exactly three, to keep the decision surface small.
+All three open questions have now been resolved by the actual PR
+landings. Kept here for historical continuity; do not re-open without
+new pilot evidence.
 
-1. **Recent & saved prepared — localStorage only, or localStorage-with-backend-ready shape?**
-   Should the stored object shape already anticipate a later sync-to-backend direction (stable IDs, timestamps, schema version field), even though Tier 2 is localStorage-only? A conservative shape now costs little; a naive shape will need migration if the product later grows a backend. Default recommendation: include `id`, `createdAt`, and a `schemaVersion: 1` field from day one, but no backend wiring.
+1. **Recent & saved prepared — localStorage only, or localStorage-with-backend-ready shape?** — **Resolved: backend-ready shape, but no backend wiring.** Both stores carry `schemaVersion: 1` + `createdAt` + stable workflow fields (PR-2A `#16`, PR-2B `#17`). Entries with unknown schemaVersion are filtered on load so future migrations do not silently leak stale data.
 
-2. **How should recent / saved prepared items surface in the UI?**
-   Options are (a) a new panel next to the existing Favorites / History sidebars, (b) a section inside `PrepareSolutionModal` itself, (c) a new tab in `LabelPrintModal`. Option (a) is the most discoverable but widens the header surface; (b) keeps prepared-only UI encapsulated but hides recent items when the user isn't already in the prepare flow; (c) blurs "print config" and "prepared history". Owner call before PR-2 starts.
+2. **How should recent / saved prepared items surface in the UI?** — **Resolved: Option (b) — sections inside `PrepareSolutionModal`.** Both Recent (blue `Clock` icon) and Saved presets (purple `Bookmark` icon) render as their own section inside the prepare modal, parent-scoped on display. No sidebar, no `LabelPrintModal` tab, no global surface.
 
-3. **Does the derived preview name (`10% Ethanol in Water`) enter the printed label subtitle, or stay in-app only?**
-   Printing it makes the label more self-describing; leaving it in-app keeps the printed surface strictly tied to the parent chemical's identity. Either is defensible; the decision affects PR-3's scope (label CSS + template work) and the wording of the trust note. Owner call before PR-3 starts.
+3. **Does the derived preview name (`10% Ethanol in Water`) enter the printed label subtitle, or stay in-app only?** — **Resolved: Option A (app-only) in PR-3 `#19`.** Derived name is rendered in `LabelPrintModal` selected-row title and in Recent / Saved preset list entries, but **not** on the printed label. Option B (printed subtitle) is **deferred pending pilot feedback** — deliberately not pre-committed to avoid pulling derived names into labelling-identity territory without evidence of user need.
 
 ### 8. Out-of-band Notes
 
 - Tier 2 plan assumes the Tier 1 trust boundary will not be relaxed. If the owner later decides to allow multi-solute prepared items, this entire plan must be re-drafted rather than patched.
-- Carry-forward residual notes from Tier 1 (stacked `aria-modal` dialogs, dead `selectionHasPreparedItem` helper) are **not** part of Tier 2 scope; they remain in the handoff document for a separate cleanup pass.
+- Carry-forward residual notes from Tier 1 (stacked `aria-modal` dialogs, dead `selectionHasPreparedItem` helper) remain in the handoff document for a separate cleanup pass after Tier 2.
+- A new residual note from Tier 2 PR-3: derived preview name is not locale-aware (always prefers `parentNameEn`). Acceptable for current scope; revisit if pilot users in zh-TW contexts report confusion.

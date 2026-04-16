@@ -35,7 +35,7 @@ User Browser
 **State management**: top-level state lives in `App.js` via `useState`; persistence, selection, sort, and modal-workflow behaviour are factored out into custom hooks (`src/hooks/`) and workflow helpers (`src/utils/`). Prefer adding new behaviour as a hook/util rather than widening `App.js` further.
 **Caching**: Server-side 24hr TTL in-memory (cachetools, max 5000). Client-side localStorage.
 
-## Frontend Architecture (16 components + 8 hooks + 5 utils)
+## Frontend Architecture (16 components + 10 hooks + 5 utils)
 
 ### Components (`src/components/`)
 | File | Purpose |
@@ -66,6 +66,8 @@ User Browser
 | `useLabelSelection.js` | Tracks selected chemicals for printing |
 | `useResultSort.js` | Table sort state (4 columns) |
 | `usePrintTemplates.js` | Save/load/delete print setting presets (max 10) |
+| `usePreparedRecents.js` | Prepared-solution recent workflow inputs (localStorage, schemaVersion:1, max 10, dedup+prepend); v1.9 M3 Tier 2 |
+| `usePreparedPresets.js` | Prepared-solution saved recipe presets (localStorage, schemaVersion:1, max 10, recipe-only: parent+concentration+solvent); v1.9 M3 Tier 2 |
 | `useFocusTrap.js` | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap) |
 | `use-toast.js` | shadcn toast hook |
 
@@ -74,7 +76,7 @@ User Browser
 |------|---------|
 | `exportData.js` | Excel/CSV export (backend-only; no client-side fallback after Phase 3) |
 | `printLabels.js` | Label printing engine (4 templates, iframe with HTML escaping + afterprint cleanup + 60s fallback); prepared-solution rendering branch keyed on `isPreparedSolution` |
-| `preparedSolution.js` | Prepared-solution helpers: `buildPreparedSolutionItem(parent, formValues)` + `isPreparedSolutionItem` + `selectionHasPreparedItem` predicates; v1.9 M3 Tier 1 |
+| `preparedSolution.js` | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only — drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
 | `sdsLinks.js` | PubChem Safety + ECHA CHEM search URL builders |
 | `formatDate.js` | i18n-aware date formatting |
 
@@ -184,6 +186,10 @@ has **not** been bumped yet. Do not version-bump without an explicit ask.
 
 ### Git History (key commits)
 ```
+456e376 Merge pull request #19 — M3 Tier 2 PR-3 derived preview name + trust copy refresh (Option A app-only)
+aa2f29b Merge pull request #17 — M3 Tier 2 PR-2B parent-scoped saved presets
+f2a9a0f Merge pull request #16 — M3 Tier 2 PR-2A parent-scoped recent prepared workflow
+a3b420e Merge pull request #15 — M3 Tier 2 PR-1 operational metadata on prepared items
 70b35f6 Merge pull request #14 — M3 Tier 1 PR-A prepared-solution UI flow + lifecycle fixes
 fe5e124 Merge pull request #13 — M3 Tier 1 PR-B prepared-solution print path
 fdada04 Merge pull request #12 — v1.8 version sync (runtime/docs → 1.8.0)
@@ -207,12 +213,12 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results (as of M3 Tier 1 merge, runtime v1.8.0)
-- **Frontend**: 506 tests across 32 suites; 0 React `act(...)` warnings
+### Test Results (as of M3 Tier 2 complete, runtime v1.8.0)
+- **Frontend**: 588 tests across 34 suites; 0 React `act(...)` warnings
 - **Backend**: 123 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
-- **Build**: `npx craco build` → OK (~140 kB gzip main bundle)
+- **Build**: `npx craco build` → OK (~142 kB gzip main bundle)
 - **CI**: GitHub Actions runs both on every push to main and on PRs
 
 ### CI/CD (`.github/workflows/ci.yml`)
@@ -253,10 +259,15 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 - [x] **v1.8 M2** — No-GHS warning + aged-cache tooltip + "Print all with GHS data" shortcut (PRs #10/#11)
 - [x] **v1.8 version sync** — runtime/docs aligned to `1.8.0` (PR #12)
 - [x] **v1.9 M3 Tier 1** — Prepared-solution workflow (single-parent, concentration + solvent inputs, trust boundary preserved): PR-B print path (#13) + PR-A UI flow with Escape-parity + stale-quantity lifecycle fixes (#14; merge SHA `70b35f6`)
+- [x] **v1.9 M3 Tier 2** — Operational Prepared Workflow (all frontend-only, localStorage-only, trust boundary preserved):
+  - PR-1 (#15) — optional operational metadata on prepared items: `preparedBy` / `preparedDate` / `expiryDate`
+  - PR-2A (#16) — parent-scoped recent prepared store (`usePreparedRecents`, schemaVersion:1, max 10, dedup+prepend) with form prefill
+  - PR-2B (#17) — parent-scoped saved presets (`usePreparedPresets`, recipe-only: parent+concentration+solvent; preset click clears operational fields to prevent stale-date leak)
+  - PR-3 (#19, merge SHA `456e376`) — `formatPreparedDisplayName` app-only display helper (Option A: not rendered on printed label) + `prepared.formNote` copy refresh
 
 ## v1.8 Roadmap
 
-See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 have landed. The next planning phase is **M3 Tier 2 — Operational Prepared Workflow** (drafted inside the same roadmap document, not yet an implementation commitment). This is a shared planning document between Claude Code and Codex — editable, not frozen.
+See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 and M3 Tier 2 have all landed. Next decision-points are whether to bump runtime to `1.9.0`, pick up **M4 print workflow** (supplier profile / real label-stock presets / small-container mode / QR→SDS), or run pilot UX to drive the next prioritization. This is a shared planning document between Claude Code and Codex — editable, not frozen.
 
 ## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 
