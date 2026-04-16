@@ -95,6 +95,7 @@
   "prepared.formNote": "此流程「不會」重新計算混合物的 GHS 分類。標籤會以母化學品的危害資料加上濃度 / 溶劑註記；使用前請以官方安全資料表（SDS）為準。",
   "prepared.labelPrefix": "稀釋自",
   "prepared.labelMeta": "{{solvent}} 中 {{concentration}}",
+  "prepared.recentHeading": "此化學品最近的配製紀錄 — 點擊可帶入填寫值",
   "prepared.operationalHeading": "作業資訊（選填）",
   "prepared.operationalSubheading": "供實驗室作業辨識用的使用者輸入欄位，不是 GHS 分類資料。",
   "prepared.preparedBy": "配製人",

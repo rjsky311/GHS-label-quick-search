@@ -11,13 +11,17 @@ import useCustomGHS from "@/hooks/useCustomGHS";
 import useLabelSelection from "@/hooks/useLabelSelection";
 import useResultSort from "@/hooks/useResultSort";
 import usePrintTemplates from "@/hooks/usePrintTemplates";
+import usePreparedRecents from "@/hooks/usePreparedRecents";
 
 // Constants & Utils
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
 import { printLabels } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
-import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
+import {
+  buildPreparedSolutionItem,
+  buildRecentRecord,
+} from "@/utils/preparedSolution";
 
 // Components
 import Header from "@/components/Header";
@@ -107,6 +111,12 @@ function App() {
     clearLabelSelection,
   } = useLabelSelection();
   const { templates: printTemplates, saveTemplate, deleteTemplate } = usePrintTemplates();
+  // Tier 2 PR-2A: recent prepared-solution workflow inputs. localStorage-
+  // only, parent-scoped on read inside PrepareSolutionModal. Carries
+  // NO GHS data — hazards still come from the current parent result
+  // at reuse time.
+  const { recents: preparedRecents, addRecent: addPreparedRecent } =
+    usePreparedRecents();
 
   const handleLoadTemplate = useCallback((template) => {
     setLabelConfig(template.labelConfig);
@@ -389,6 +399,11 @@ function App() {
       // on close — independent of whether the user has manually removed
       // the prepared item from the selected list inside LabelPrintModal.
       setPreparedFlowActive(true);
+      // Tier 2 PR-2A: append to recent-prepared localStorage store.
+      // Workflow-only — no hazard data flows in here (see
+      // buildRecentRecord + usePreparedRecents).
+      const recentRecord = buildRecentRecord(preparedItem);
+      if (recentRecord) addPreparedRecent(recentRecord);
       // Close both modals of the prepare-solution flow.
       setPrepareSolutionParent(null);
       setSelectedResult(null);
@@ -400,6 +415,7 @@ function App() {
       setSelectedForLabel,
       setLabelQuantities,
       setShowLabelModal,
+      addPreparedRecent,
     ]
   );
 
@@ -549,6 +565,7 @@ function App() {
           parent={prepareSolutionParent}
           onSubmit={handleSubmitPrepareSolution}
           onClose={handleClosePrepareSolution}
+          recents={preparedRecents}
         />
       )}
 

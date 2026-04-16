@@ -474,4 +474,85 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     expect(opRow.textContent).toContain("2026-04-16");
     expect(opRow.textContent).toContain("2026-10-16");
   });
+
+  // Tier 2 PR-2A: submitting a prepared flow writes a recent entry,
+  // and reopening the same parent's modal later surfaces it. This pins
+  // the end-to-end "write + read + prefill" loop across a full App
+  // instance, including the localStorage hop.
+  it("submit writes to recent-prepared store; reopening same parent surfaces it and prefill fills the form", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+
+    // First pass: full prepare flow with operational fields.
+    await enterPrepareFlowFor(ethanolResult);
+    // First time, no recents — section must not render.
+    expect(
+      screen.queryByTestId("prepare-solution-recent-section")
+    ).not.toBeInTheDocument();
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+        target: { value: "10%" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+        target: { value: "Water" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+        target: { value: "A. Chen" },
+      })
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"))
+    );
+
+    // LabelPrintModal opened — we don't need to print. Close it to
+    // let the prepared-flow cleanup run and take us back to the
+    // base app state.
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await waitFor(() =>
+      expect(screen.queryAllByText("label.title").length).toBe(0)
+    );
+
+    // Second pass: reopen the same parent's prepare modal. The recent
+    // from the first submit must be visible AND parent-scoped.
+    await enterPrepareFlowFor(ethanolResult);
+    const recentSection = await screen.findByTestId(
+      "prepare-solution-recent-section"
+    );
+    expect(recentSection).toBeInTheDocument();
+    const recentItem = screen.getByTestId("prepare-solution-recent-item-0");
+    expect(recentItem.textContent).toContain("A. Chen");
+
+    // Click the recent → form fields prefill from the stored workflow
+    // inputs, but submit does NOT auto-fire.
+    await act(async () => fireEvent.click(recentItem));
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue("10%");
+    expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue(
+      "A. Chen"
+    );
+    // LabelPrintModal must not have opened yet — prefill is not submit.
+    expect(screen.queryAllByText("label.title")).toHaveLength(0);
+
+    // Now submit the prefilled form — the existing lifecycle still runs
+    // (selection gets the prepared item, quantity resets to 1).
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"))
+    );
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(
+      screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
+    ).toBeInTheDocument();
+  });
 });

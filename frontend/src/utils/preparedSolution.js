@@ -151,6 +151,66 @@ export function isPreparedSolutionItem(item) {
 }
 
 /**
+ * Tier 2 PR-2A: build the "recent prepared" record shape from a
+ * prepared item. Captures ONLY workflow inputs (parent identity +
+ * the user-entered fields) — never any GHS / hazard / classification
+ * data. On reuse, hazard data is sourced from the current parent
+ * result at that time, not from this stored snapshot.
+ *
+ * Stable record shape, versioned with `schemaVersion: 1` so future
+ * migrations can filter or transform entries.
+ *
+ * @param {Object} preparedItem  Output of `buildPreparedSolutionItem`.
+ * @returns {Object|null}        Recent record, or null if the input
+ *                               is not a valid prepared item.
+ */
+export function buildRecentRecord(preparedItem) {
+  if (!isPreparedSolutionItem(preparedItem)) return null;
+  const meta = preparedItem.preparedSolution || {};
+  if (!meta.concentration || !meta.solvent) return null;
+  return {
+    schemaVersion: 1,
+    createdAt: new Date().toISOString(),
+    // parent identity — enough to scope "recents for THIS parent"
+    // and to label a recent-list entry without touching GHS fields.
+    parentCas: meta.parentCas || preparedItem.cas_number || null,
+    parentNameEn: meta.parentNameEn || preparedItem.name_en || null,
+    parentNameZh: meta.parentNameZh || preparedItem.name_zh || null,
+    // workflow inputs (Tier 1 required + Tier 2 PR-1 optional)
+    concentration: meta.concentration,
+    solvent: meta.solvent,
+    preparedBy: meta.preparedBy || null,
+    preparedDate: meta.preparedDate || null,
+    expiryDate: meta.expiryDate || null,
+  };
+}
+
+/**
+ * Tier 2 PR-2A: dedup key for recent records.
+ *
+ * Two recents are considered "the same" when their workflow inputs
+ * match exactly (parent CAS + both required fields + all three
+ * operational fields). Creation time is intentionally excluded —
+ * resubmitting the same solution multiple times should bubble it to
+ * the top, not fill the list with near-duplicates.
+ *
+ * Blanks are represented as the empty string so the resulting key
+ * is stable regardless of whether the caller uses null or "" for an
+ * unset optional field.
+ */
+export function preparedRecentKey(record) {
+  if (!record) return "";
+  return [
+    record.parentCas || "",
+    record.concentration || "",
+    record.solvent || "",
+    record.preparedBy || "",
+    record.preparedDate || "",
+    record.expiryDate || "",
+  ].join("|");
+}
+
+/**
  * Predicate: does the current selection contain any prepared item?
  *
  * In M3 Tier 1 the selection either contains exactly one prepared

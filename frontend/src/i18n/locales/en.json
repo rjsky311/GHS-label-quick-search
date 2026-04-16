@@ -95,6 +95,7 @@
   "prepared.formNote": "This workflow does NOT re-classify the mixture. The label uses the parent chemical's hazard data with a concentration / solvent annotation. Always verify against the official SDS before use.",
   "prepared.labelPrefix": "Prepared from",
   "prepared.labelMeta": "{{concentration}} in {{solvent}}",
+  "prepared.recentHeading": "Recent for this chemical — click to reuse these inputs",
   "prepared.operationalHeading": "Operational info (optional)",
   "prepared.operationalSubheading": "User-entered identifiers for lab workflow. Not derived from GHS data.",
   "prepared.preparedBy": "Prepared by",
