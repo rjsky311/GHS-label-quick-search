@@ -35,7 +35,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.9.0"
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None

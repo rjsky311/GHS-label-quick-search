@@ -4,7 +4,7 @@
 - **Purpose**: Chemical GHS hazard label quick search system
 - **Stack**: React 19 + Tailwind CSS + Radix UI (frontend) / FastAPI + Python 3.11 (backend)
 - **Data Source**: PubChem REST API + local chemical dictionary (1,707 CAS entries)
-- **Current Version**: v1.8.0
+- **Current Version**: v1.9.0
 - **GitHub**: `rjsky311/GHS-label-quick-search` (private)
 - **Deployment**: Zeabur auto-deploy on push to main
 - **Frontend URL**: https://ghs-frontend.zeabur.app
@@ -178,14 +178,18 @@ User Browser
 - App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
 - Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
 
-## Current State (runtime v1.8.0)
+## Current State (runtime v1.9.0)
 
-Runtime version label is still `1.8.0` by explicit choice — v1.9 M3 Tier 1
-merged under `v1.9-*` branches but the app/package/footer/backend version
-has **not** been bumped yet. Do not version-bump without an explicit ask.
+Runtime version label is `1.9.0` as of the v1.9 release bump. All
+prior v1.9-* branches (M3 Tier 1, M3 Tier 2, debt cleanup, UX cleanup)
+are merged. `frontend/package.json`, `frontend/src/constants/version.js`,
+`backend/server.py` `APP_VERSION`, and the Footer test pin are all
+aligned. Do not version-bump further without an explicit ask.
 
 ### Git History (key commits)
 ```
+6c846c5 Merge pull request #21 — UX cleanup from pilot dogfood (toast + today default + recent no-stale-date)
+e1f0a3b Merge pull request #20 — Tier 2 debt cleanup (dead helper + stacked aria-modal)
 456e376 Merge pull request #19 — M3 Tier 2 PR-3 derived preview name + trust copy refresh (Option A app-only)
 aa2f29b Merge pull request #17 — M3 Tier 2 PR-2B parent-scoped saved presets
 f2a9a0f Merge pull request #16 — M3 Tier 2 PR-2A parent-scoped recent prepared workflow
@@ -213,8 +217,8 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results (as of M3 Tier 2 complete, runtime v1.8.0)
-- **Frontend**: 588 tests across 34 suites; 0 React `act(...)` warnings
+### Test Results (as of v1.9.0 release, runtime v1.9.0)
+- **Frontend**: 597 tests across 34 suites; 0 React `act(...)` warnings
 - **Backend**: 123 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
@@ -264,6 +268,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
   - PR-2A (#16) — parent-scoped recent prepared store (`usePreparedRecents`, schemaVersion:1, max 10, dedup+prepend) with form prefill
   - PR-2B (#17) — parent-scoped saved presets (`usePreparedPresets`, recipe-only: parent+concentration+solvent; preset click clears operational fields to prevent stale-date leak)
   - PR-3 (#19, merge SHA `456e376`) — `formatPreparedDisplayName` app-only display helper (Option A: not rendered on printed label) + `prepared.formNote` copy refresh
+- [x] **v1.9 Tier 2 debt cleanup** (#20, merge SHA `e1f0a3b`) — removed dead `selectionHasPreparedItem` helper; closed stacked `aria-modal` a11y debt via `suppressed` prop on DetailModal (`inert` + `aria-hidden` + `aria-modal` drop + Escape / backdrop gates)
+- [x] **v1.9 prepared-solution UX cleanup** (#21, merge SHA `6c846c5`) — pilot-dogfood-driven: Save-as-preset toast, `preparedDate` defaults to today (local TZ via `todayDateString`), Recent prefill no longer silently carries yesterday's date, Preset prefill same rule
+- [x] **v1.9 version sync** — runtime/docs aligned to `1.9.0`
 
 ## v1.8 Roadmap
 
