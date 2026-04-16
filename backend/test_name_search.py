@@ -489,7 +489,8 @@ async def test_search_chemical_both_distinct_reports_survive_dedup(monkeypatch):
         return ("Ethanol", "乙醇")
 
     async def fake_get_ghs(*_args, **_kwargs):
-        return {}
+        # v1.8 M1: get_ghs_classification now returns (data, cache_hit, retrieved_at)
+        return ({}, False, "2026-04-16T00:00:00+00:00")
 
     monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
     monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
@@ -1431,7 +1432,8 @@ async def test_search_chemical_returns_precautionary_statements(monkeypatch):
         return ("Ethanol", "\u4e59\u9187")
 
     async def fake_get_ghs(*_a, **_k):
-        return {}
+        # v1.8 M1: get_ghs_classification now returns (data, cache_hit, retrieved_at)
+        return ({}, False, "2026-04-16T00:00:00+00:00")
 
     monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
     monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
@@ -1454,3 +1456,143 @@ async def test_search_chemical_returns_precautionary_statements(monkeypatch):
     assert len(result.other_classifications) == 1
     other_p = {p["code"] for p in result.other_classifications[0].precautionary_statements}
     assert other_p != primary_p
+
+
+# ─── Provenance / trust signals (v1.8 M1) ───────────────────
+
+class TestGhsCacheProvenance:
+    """get_ghs_classification now returns (data, cache_hit, retrieved_at).
+    First call fetches fresh; second hits cache; both carry timestamps."""
+
+    async def test_first_call_is_cache_miss_with_timestamp(self, monkeypatch):
+        import server as srv
+        # Clear cache for determinism
+        srv.ghs_cache.clear()
+
+        async def fake_pubchem_get_json(*_a, **_k):
+            return 200, {"Record": {"some": "payload"}}
+
+        monkeypatch.setattr(srv, "pubchem_get_json", fake_pubchem_get_json)
+
+        data, cache_hit, retrieved_at = await srv.get_ghs_classification(12345, http_client=None)
+        assert cache_hit is False
+        assert retrieved_at is not None
+        # ISO-8601 with timezone offset
+        assert "T" in retrieved_at
+        assert data == {"Record": {"some": "payload"}}
+
+    async def test_second_call_is_cache_hit_with_same_timestamp(self, monkeypatch):
+        import server as srv
+        srv.ghs_cache.clear()
+
+        call_count = {"n": 0}
+
+        async def fake_pubchem_get_json(*_a, **_k):
+            call_count["n"] += 1
+            return 200, {"Record": {"some": "payload"}}
+
+        monkeypatch.setattr(srv, "pubchem_get_json", fake_pubchem_get_json)
+
+        _, cache_hit_1, ts_1 = await srv.get_ghs_classification(12345, http_client=None)
+        _, cache_hit_2, ts_2 = await srv.get_ghs_classification(12345, http_client=None)
+
+        assert cache_hit_1 is False
+        assert cache_hit_2 is True, "second call must hit the 24hr cache"
+        assert ts_1 == ts_2, "cached timestamp should match the original fetch time"
+        assert call_count["n"] == 1, "pubchem must not be hit twice for same CID"
+
+    async def test_cache_miss_on_404_not_persisted(self, monkeypatch):
+        """Genuine no-data responses (404) should not be cached so the
+        next request can retry. Timestamp still populated."""
+        import server as srv
+        srv.ghs_cache.clear()
+
+        async def fake_pubchem_get_json(*_a, **_k):
+            return 404, None
+
+        monkeypatch.setattr(srv, "pubchem_get_json", fake_pubchem_get_json)
+
+        data, cache_hit, retrieved_at = await srv.get_ghs_classification(99999, http_client=None)
+        assert data == {}
+        assert cache_hit is False
+        assert retrieved_at is not None
+        # Second call must NOT report cache_hit=True since 404 wasn't cached
+        data2, cache_hit_2, _ = await srv.get_ghs_classification(99999, http_client=None)
+        assert cache_hit_2 is False
+
+
+async def test_search_chemical_response_includes_provenance(monkeypatch):
+    """search_chemical must surface primary_source, primary_report_count,
+    retrieved_at, and cache_hit in the response."""
+    import server as srv
+
+    fake_reports = [
+        {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [],
+            "signal_word": "Danger",
+            "signal_word_zh": "\u5371\u96aa",
+            "source": "ECHA C&L Notifications Summary",
+            "report_count": "236",
+        },
+    ]
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fake_get_name(*_a, **_k):
+        return ("Ethanol", "\u4e59\u9187")
+
+    async def fake_get_ghs(*_a, **_k):
+        return ({}, True, "2026-04-16T01:23:45+00:00")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: fake_reports)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+
+    # Provenance fields
+    assert result.primary_source == "ECHA C&L Notifications Summary"
+    assert result.primary_report_count == "236"
+    assert result.retrieved_at == "2026-04-16T01:23:45+00:00"
+    assert result.cache_hit is True
+
+
+async def test_search_chemical_no_ghs_reports_still_populates_timestamp(monkeypatch):
+    """Even when PubChem has a CID but no GHS reports, the response
+    must carry the retrieval timestamp so the UI can say
+    'checked at X, no hazard data available'."""
+    import server as srv
+
+    async def fake_get_cid(*_a, **_k):
+        return 12345
+
+    async def fake_get_name(*_a, **_k):
+        return ("SomeCompound", None)
+
+    async def fake_get_ghs(*_a, **_k):
+        return ({}, False, "2026-04-16T02:00:00+00:00")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: [])
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("123-45-6", _NullClient())
+
+    assert result.found is True
+    assert result.retrieved_at == "2026-04-16T02:00:00+00:00"
+    assert result.cache_hit is False
+    assert result.primary_source is None
+    assert result.primary_report_count is None
