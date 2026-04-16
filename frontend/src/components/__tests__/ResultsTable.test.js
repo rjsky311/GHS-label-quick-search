@@ -565,4 +565,65 @@ describe('ResultsTable', () => {
       expect(screen.queryByText('results.cacheBadge')).not.toBeInTheDocument();
     });
   });
+
+  describe('Print all with GHS data shortcut (v1.8 M2 PR-B)', () => {
+    it('does NOT render the button when results is empty', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[]}
+          onPrintAllWithGhs={jest.fn()}
+        />
+      );
+      expect(
+        screen.queryByTestId('print-all-with-ghs-btn')
+      ).not.toBeInTheDocument();
+    });
+
+    it('does NOT render the button when no result qualifies (all no-GHS or not-found)', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockNoHazardResult, mockNotFoundResult]}
+          getEffectiveClassification={createMockGetEffective()}
+          onPrintAllWithGhs={jest.fn()}
+        />
+      );
+      expect(
+        screen.queryByTestId('print-all-with-ghs-btn')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders the button with a count badge when at least one row qualifies', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockNoHazardResult, mockNotFoundResult]}
+          getEffectiveClassification={createMockGetEffective()}
+          onPrintAllWithGhs={jest.fn()}
+        />
+      );
+      const btn = screen.getByTestId('print-all-with-ghs-btn');
+      expect(btn).toBeInTheDocument();
+      // Only mockFoundResult qualifies → count should be 1
+      expect(btn.textContent).toContain('1');
+    });
+
+    it('clicking the button invokes onPrintAllWithGhs exactly once', () => {
+      const onPrintAllWithGhs = jest.fn();
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          getEffectiveClassification={createMockGetEffective()}
+          onPrintAllWithGhs={onPrintAllWithGhs}
+        />
+      );
+      fireEvent.click(screen.getByTestId('print-all-with-ghs-btn'));
+      expect(onPrintAllWithGhs).toHaveBeenCalledTimes(1);
+      // React forwards the click SyntheticEvent as the first argument;
+      // the handler itself ignores it and calls a parameter-less
+      // useCallback. We deliberately don't assert on the event object.
+    });
+  });
 });

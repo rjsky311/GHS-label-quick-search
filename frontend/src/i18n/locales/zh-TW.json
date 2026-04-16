@@ -56,6 +56,7 @@
   "results.loadingName": "（名稱載入中...）",
   "results.noGhsDataAvailable": "PubChem 無 GHS 分類資料",
   "results.noGhsDataHint": "無資料不代表安全，請查閱 SDS。",
+  "results.printAllWithGhs": "列印所有有 GHS 分類的化學品",
   "results.sourceEcha": "ECHA",
   "results.reportCountBadge": "{{count}} 筆通報",
   "results.cacheBadge": "快取",
