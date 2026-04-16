@@ -73,6 +73,7 @@
 
   "detail.signalWord": "警示語",
   "detail.hazardStatements": "危害說明",
+  "detail.precautionaryStatements": "預防措施說明",
   "detail.ghsClassification": "GHS 危害圖示分類",
   "detail.customSettings": "自訂分類設定",
   "detail.currentSelection": "目前選擇",
@@ -104,6 +105,8 @@
   "compare.noPictograms": "無",
   "compare.noSignalWord": "無",
   "compare.noHazards": "無",
+  "compare.rowPrecautions": "預防措施",
+  "compare.noPrecautions": "無",
   "compare.setAsPrimary": "設為主要",
   "compare.currentBadge": "目前",
   "compare.defaultLabel": "預設",

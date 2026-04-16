@@ -39,6 +39,7 @@ export default function DetailModal({
   const effective = getEffectiveClassification(result) || {
     pictograms: result.ghs_pictograms || [],
     hazard_statements: result.hazard_statements || [],
+    precautionary_statements: result.precautionary_statements || [],
     signal_word: result.signal_word,
     signal_word_zh: result.signal_word_zh,
     isCustom: false,
@@ -48,6 +49,7 @@ export default function DetailModal({
     {
       pictograms: result.ghs_pictograms || [],
       hazard_statements: result.hazard_statements || [],
+      precautionary_statements: result.precautionary_statements || [],
       signal_word: result.signal_word,
       signal_word_zh: result.signal_word_zh,
     },
@@ -226,6 +228,28 @@ export default function DetailModal({
                     className="bg-slate-900 rounded-lg p-3 flex gap-3"
                   >
                     <span className="text-amber-400 font-mono font-medium shrink-0">
+                      {stmt.code}
+                    </span>
+                    <span className="text-white">{stmt.text_zh}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Precautionary Statements */}
+          {effective?.precautionary_statements?.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-slate-400 mb-3">
+                {t("detail.precautionaryStatements")}
+              </h3>
+              <div className="space-y-2">
+                {effective.precautionary_statements.map((stmt, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-slate-900 rounded-lg p-3 flex gap-3"
+                  >
+                    <span className="text-blue-400 font-mono font-medium shrink-0">
                       {stmt.code}
                     </span>
                     <span className="text-white">{stmt.text_zh}</span>

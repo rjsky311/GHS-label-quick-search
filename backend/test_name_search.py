@@ -1062,10 +1062,23 @@ async def test_api_response_has_strict_csp():
     assert "frame-ancestors 'none'" in csp
 
 
+# ─── P-code translation dictionaries ────────────────────────
+
+def test_p_code_zh_and_en_dicts_have_identical_keys():
+    """If someone adds a P-code to one dictionary but forgets the
+    other, this test catches it immediately."""
+    zh_keys = set(P_CODE_TRANSLATIONS.keys())
+    en_keys = set(P_CODE_TEXTS_EN.keys())
+    missing_en = zh_keys - en_keys
+    missing_zh = en_keys - zh_keys
+    assert not missing_en, f"Keys in ZH but missing from EN: {missing_en}"
+    assert not missing_zh, f"Keys in EN but missing from ZH: {missing_zh}"
+
+
 # ─── P-code extraction (v1.8 M0) ───────────────────────────
 
 from server import extract_all_ghs_classifications
-from p_code_translations import P_CODE_TRANSLATIONS
+from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
 
 
 def _make_ghs_data(*reports):

@@ -43,6 +43,14 @@ export default function ClassificationComparisonTable({
     return [...codeSet].sort();
   }, [columns]);
 
+  const allPCodes = useMemo(() => {
+    const codeSet = new Set();
+    columns.forEach((col) => {
+      (col.classification?.precautionary_statements || []).forEach((s) => codeSet.add(s.code));
+    });
+    return [...codeSet].sort();
+  }, [columns]);
+
   // Count how many columns contain each H-code (for "unique" marking)
   const hCodePresenceCount = useMemo(() => {
     const counts = {};
@@ -73,6 +81,12 @@ export default function ClassificationComparisonTable({
 
   const getHStatement = (col, code) =>
     (col.classification?.hazard_statements || []).find((s) => s.code === code);
+
+  const getColumnPCodes = (col) =>
+    new Set((col.classification?.precautionary_statements || []).map((s) => s.code));
+
+  const getPStatement = (col, code) =>
+    (col.classification?.precautionary_statements || []).find((s) => s.code === code);
 
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-700" data-testid="comparison-table">
@@ -287,6 +301,51 @@ export default function ClassificationComparisonTable({
               );
             })}
           </tr>
+
+          {/* ── Row: Precautionary Statements ── */}
+          {allPCodes.length > 0 && (
+            <tr>
+              <td className="sticky left-0 z-10 bg-slate-800 border-r border-b border-slate-700 p-3 text-slate-400 font-medium align-top">
+                {t("compare.rowPrecautions")}
+              </td>
+              {columns.map((col, colIdx) => {
+                const colPCodes = getColumnPCodes(col);
+                const isSelected = isSameChemical && selectedIndex === col.index;
+                return (
+                  <td
+                    key={colIdx}
+                    className={`border-b border-slate-700 p-3 align-top ${
+                      isSelected ? "bg-purple-900/20" : ""
+                    }`}
+                  >
+                    {colPCodes.size > 0 ? (
+                      <div className="space-y-1">
+                        {allPCodes.map((code) => {
+                          if (!colPCodes.has(code)) return null;
+                          const stmt = getPStatement(col, code);
+                          return (
+                            <div
+                              key={code}
+                              className="flex gap-2 items-start text-xs rounded px-2 py-1 bg-slate-900/50"
+                            >
+                              <span className="text-blue-400 font-mono font-medium shrink-0">
+                                {code}
+                              </span>
+                              <span className="text-slate-300">
+                                {stmt?.text_zh || stmt?.text_en || ""}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-slate-500">{t("compare.noPrecautions")}</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
 
           {/* ── Row: Source (same-chemical only) ── */}
           {isSameChemical && (

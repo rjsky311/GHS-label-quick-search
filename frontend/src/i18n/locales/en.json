@@ -73,6 +73,7 @@
 
   "detail.signalWord": "Signal Word",
   "detail.hazardStatements": "Hazard Statements",
+  "detail.precautionaryStatements": "Precautionary Statements",
   "detail.ghsClassification": "GHS Hazard Pictogram Classification",
   "detail.customSettings": "Custom Classification Settings",
   "detail.currentSelection": "Current selection",
@@ -104,6 +105,8 @@
   "compare.noPictograms": "None",
   "compare.noSignalWord": "None",
   "compare.noHazards": "None",
+  "compare.rowPrecautions": "Precautionary Statements",
+  "compare.noPrecautions": "None",
   "compare.setAsPrimary": "Set as primary",
   "compare.currentBadge": "Current",
   "compare.defaultLabel": "Default",

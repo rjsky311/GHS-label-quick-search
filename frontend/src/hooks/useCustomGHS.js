@@ -29,6 +29,7 @@ export default function useCustomGHS() {
           {
             pictograms: result.ghs_pictograms || [],
             hazard_statements: result.hazard_statements || [],
+            precautionary_statements: result.precautionary_statements || [],
             signal_word: result.signal_word,
             signal_word_zh: result.signal_word_zh,
           },
@@ -48,6 +49,7 @@ export default function useCustomGHS() {
       return {
         pictograms: result.ghs_pictograms || [],
         hazard_statements: result.hazard_statements || [],
+        precautionary_statements: result.precautionary_statements || [],
         signal_word: result.signal_word,
         signal_word_zh: result.signal_word_zh,
         isCustom: false,
