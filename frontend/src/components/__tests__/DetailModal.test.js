@@ -413,4 +413,21 @@ describe('DetailModal', () => {
       expect(screen.getByTestId('provenance-retrieved-at')).toBeInTheDocument();
     });
   });
+
+  describe('Authoritative-source disclaimer (v1.8 M1 PR-C)', () => {
+    it('renders the disclaimer when result.found is true', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      expect(
+        screen.getByTestId('authoritative-source-note-detail')
+      ).toBeInTheDocument();
+    });
+
+    it('does NOT render the disclaimer for not-found results', () => {
+      const notFound = { cas_number: '999-99-9', found: false, error: 'unknown' };
+      render(<DetailModal {...defaultProps} result={notFound} />);
+      expect(
+        screen.queryByTestId('authoritative-source-note-detail')
+      ).not.toBeInTheDocument();
+    });
+  });
 });

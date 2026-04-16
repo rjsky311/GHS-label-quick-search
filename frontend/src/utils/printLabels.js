@@ -347,12 +347,19 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     },
   };
 
-  // Generate pages with grid layout
+  // Generate pages with grid layout.
+  // Each page carries two footer lines:
+  //   - page number (existing)
+  //   - v1.8 M1 trust-boundary note (small grey text, left-aligned)
+  // Per-label disclaimers were considered but rejected — they eat
+  // label content area. A page-level footer keeps labels legible
+  // while still reminding the user that SDS is authoritative.
   const pagesHtml = pages.map((pageLabels, pageIdx) => {
     const labelsHtml = pageLabels.map((chemical) => templates[labelConfig.template](chemical)).join("");
     return `
       <div class="page">
         ${labelsHtml}
+        <div class="page-footer-note">${escapeHtml(t("trust.printFooter"))}</div>
         <div class="page-number">${escapeHtml(t("print.pageNumber", { current: pageIdx + 1, total: totalPages }))}</div>
       </div>
     `;
@@ -395,6 +402,23 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       font-size: 8px;
       color: #999;
       grid-column: 1 / -1;
+    }
+    /* v1.8 M1: per-page trust-boundary disclaimer. Kept small and grey
+       so it doesn't compete with label content, but present on every
+       printed page so the reminder can't be lost if a single page is
+       reprinted or photocopied in isolation. */
+    .page-footer-note {
+      position: absolute;
+      bottom: 1mm;
+      left: 3mm;
+      right: 30mm; /* reserve space for the page-number on the right */
+      font-size: 7px;
+      color: #999;
+      font-style: italic;
+      grid-column: 1 / -1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ===== LABEL BASE ===== */

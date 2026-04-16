@@ -255,5 +255,11 @@
   "footer.disclaimer": "僅供參考，請以官方 SDS 為準",
   "footer.reportIssue": "回報問題",
 
+  "upstream.bannerTitle": "有 {{count}} 筆資料因 PubChem 暫時無法回應而未能確認",
+  "upstream.bannerBody": "這些項目可能不反映最新的危害資料。在依賴此結果之前請稍後重試，並務必對照官方安全資料表（SDS）確認。",
+
+  "trust.authoritativeNote": "此處僅為快速參考。最終的危害分類仍以官方安全資料表（SDS）、供應商標示及當地法規為準。",
+  "trust.printFooter": "僅供參考 — 使用前請對照官方安全資料表（SDS）、供應商標示與當地法規。",
+
   "a11y.skipToContent": "跳至主要內容"
 }

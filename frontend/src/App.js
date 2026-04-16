@@ -24,6 +24,8 @@ import HistorySidebar from "@/components/HistorySidebar";
 import SearchSection from "@/components/SearchSection";
 import ResultsTable from "@/components/ResultsTable";
 import EmptyState from "@/components/EmptyState";
+import UpstreamErrorBanner from "@/components/UpstreamErrorBanner";
+import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import DetailModal from "@/components/DetailModal";
 import ComparisonModal from "@/components/ComparisonModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
@@ -352,33 +354,41 @@ function App() {
         {loading && <SkeletonTable />}
 
         {results.length > 0 && !loading && (
-          <ResultsTable
-            results={sortedResults}
-            totalCount={results.length}
-            resultFilter={resultFilter}
-            onSetResultFilter={setResultFilter}
-            advancedFilter={advancedFilter}
-            onSetAdvancedFilter={setAdvancedFilter}
-            sortConfig={sortConfig}
-            onRequestSort={requestSort}
-            selectedForLabel={selectedForLabel}
-            expandedOtherClassifications={expandedOtherClassifications}
-            onOpenLabelModal={handleOpenLabelModal}
-            onExportToExcel={() => exportToExcel(results)}
-            onExportToCSV={() => exportToCSV(results)}
-            onSelectAllForLabel={() => selectAllForLabel(results)}
-            onClearLabelSelection={clearLabelSelection}
-            onToggleSelectForLabel={toggleSelectForLabel}
-            isSelectedForLabel={isSelectedForLabel}
-            onToggleFavorite={toggleFavorite}
-            isFavorited={isFavorited}
-            getEffectiveClassification={getEffectiveClassification}
-            onToggleOtherClassifications={toggleOtherClassifications}
-            onSetCustomClassification={setCustomClassification}
-            onClearCustomClassification={clearCustomClassification}
-            onViewDetail={setSelectedResult}
-            onOpenComparison={() => setShowComparisonModal(true)}
-          />
+          <>
+            {/* v1.8 M1: warn when any row had a transient PubChem failure */}
+            <UpstreamErrorBanner
+              count={results.filter((r) => r.upstream_error).length}
+            />
+            <ResultsTable
+              results={sortedResults}
+              totalCount={results.length}
+              resultFilter={resultFilter}
+              onSetResultFilter={setResultFilter}
+              advancedFilter={advancedFilter}
+              onSetAdvancedFilter={setAdvancedFilter}
+              sortConfig={sortConfig}
+              onRequestSort={requestSort}
+              selectedForLabel={selectedForLabel}
+              expandedOtherClassifications={expandedOtherClassifications}
+              onOpenLabelModal={handleOpenLabelModal}
+              onExportToExcel={() => exportToExcel(results)}
+              onExportToCSV={() => exportToCSV(results)}
+              onSelectAllForLabel={() => selectAllForLabel(results)}
+              onClearLabelSelection={clearLabelSelection}
+              onToggleSelectForLabel={toggleSelectForLabel}
+              isSelectedForLabel={isSelectedForLabel}
+              onToggleFavorite={toggleFavorite}
+              isFavorited={isFavorited}
+              getEffectiveClassification={getEffectiveClassification}
+              onToggleOtherClassifications={toggleOtherClassifications}
+              onSetCustomClassification={setCustomClassification}
+              onClearCustomClassification={clearCustomClassification}
+              onViewDetail={setSelectedResult}
+              onOpenComparison={() => setShowComparisonModal(true)}
+            />
+            {/* v1.8 M1: trust-boundary disclaimer */}
+            <AuthoritativeSourceNote variant="results" />
+          </>
         )}
 
         {results.length === 0 && !loading && (
