@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Star, X, Copy, LayoutGrid, Lightbulb, Tag, ExternalLink, ShieldCheck } from "lucide-react";
+import { Star, X, Copy, LayoutGrid, Lightbulb, Tag, ExternalLink, ShieldCheck, Clock, Database, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSImage from "@/components/GHSImage";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
+import { formatRelativeTime } from "@/utils/formatDate";
 
 export default function DetailModal({
   result,
@@ -285,6 +286,63 @@ export default function DetailModal({
                   >
                     <ExternalLink className="w-4 h-4" /> {t("sds.echa")}
                   </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Data Provenance (v1.8 M1) */}
+          {(result.primary_source || result.retrieved_at) && (
+            <div>
+              <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+                <Info className="w-4 h-4 text-slate-400" /> {t("detail.provenance")}
+              </h3>
+              <div className="bg-slate-900 rounded-lg p-3 space-y-2 text-sm">
+                {result.primary_source && (
+                  <div className="flex items-start gap-2">
+                    <Database className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <span className="text-slate-500 mr-2">{t("detail.provenanceSource")}:</span>
+                      <span className="text-slate-200">{result.primary_source}</span>
+                      {result.primary_report_count && (
+                        <span
+                          className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 text-xs"
+                          title={t("detail.provenanceReportCountTooltip", {
+                            count: result.primary_report_count,
+                          })}
+                          data-testid="provenance-report-count"
+                        >
+                          {t("detail.provenanceReportCount", {
+                            count: result.primary_report_count,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {result.retrieved_at && (
+                  <div className="flex items-start gap-2">
+                    <Clock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <span className="text-slate-500 mr-2">{t("detail.provenanceRetrieved")}:</span>
+                      <span
+                        className="text-slate-200"
+                        title={result.retrieved_at}
+                        data-testid="provenance-retrieved-at"
+                      >
+                        {formatRelativeTime(result.retrieved_at)}
+                      </span>
+                      {result.cache_hit && (
+                        <span
+                          className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-900/30 text-amber-300 border border-amber-700/40 text-xs"
+                          title={t("detail.provenanceCacheTooltip")}
+                          data-testid="provenance-cache-badge"
+                        >
+                          {t("detail.provenanceCache")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

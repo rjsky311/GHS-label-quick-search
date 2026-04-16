@@ -274,6 +274,44 @@ export default function ResultsTable({
                           {result.name_zh}
                         </div>
                       )}
+                      {/* Provenance chips (v1.8 M1). Compact, glanceable.
+                          Full provenance (timestamp, full source text) lives
+                          in the detail modal to keep the results table
+                          readable when many rows are shown. */}
+                      {(result.primary_source || result.cache_hit) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                          {result.primary_source &&
+                            /echa/i.test(result.primary_source) && (
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40"
+                                title={result.primary_source}
+                                data-testid={`source-badge-echa-${result.cas_number}`}
+                              >
+                                {t("results.sourceEcha")}
+                              </span>
+                            )}
+                          {result.primary_report_count && (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300"
+                              title={t("detail.provenanceReportCountTooltip", {
+                                count: result.primary_report_count,
+                              })}
+                            >
+                              {t("results.reportCountBadge", {
+                                count: result.primary_report_count,
+                              })}
+                            </span>
+                          )}
+                          {result.cache_hit && (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-300 border border-amber-700/40"
+                              title={t("detail.provenanceCacheTooltip")}
+                            >
+                              {t("results.cacheBadge")}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <span className="text-red-400">{result.error}</span>

@@ -348,4 +348,69 @@ describe('DetailModal', () => {
       expect(screen.getByText('P301+P310')).toBeInTheDocument();
     });
   });
+
+  describe('Data Provenance (v1.8 M1)', () => {
+    it('renders the provenance section header when source or retrieved_at present', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      // i18n mock returns keys verbatim
+      expect(screen.getByText('detail.provenance')).toBeInTheDocument();
+    });
+
+    it('shows the primary source string from the backend', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      expect(screen.getByText('ECHA C&L Notifications Summary')).toBeInTheDocument();
+    });
+
+    it('renders the report count badge with count interpolated', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      const badge = screen.getByTestId('provenance-report-count');
+      // i18n mock returns the key, so count does not interpolate — just verify
+      // the badge element rendered and carries a tooltip with the count.
+      expect(badge).toBeInTheDocument();
+      expect(badge.getAttribute('title')).toContain('detail.provenanceReportCountTooltip');
+    });
+
+    it('renders the retrieved-at relative time with an absolute tooltip', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      const retrieved = screen.getByTestId('provenance-retrieved-at');
+      // Tooltip falls back to the raw ISO-8601 timestamp so the full
+      // value is always accessible for users who need precision.
+      expect(retrieved.getAttribute('title')).toBe('2026-04-16T11:55:00Z');
+    });
+
+    it('does NOT render the cache badge when cache_hit is false', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      expect(screen.queryByTestId('provenance-cache-badge')).not.toBeInTheDocument();
+    });
+
+    it('renders the cache badge when cache_hit is true', () => {
+      const cachedResult = { ...mockFoundResult, cache_hit: true };
+      render(<DetailModal {...defaultProps} result={cachedResult} />);
+      expect(screen.getByTestId('provenance-cache-badge')).toBeInTheDocument();
+    });
+
+    it('omits the entire provenance section when backend did not supply it', () => {
+      const noProvenance = {
+        ...mockFoundResult,
+        primary_source: null,
+        primary_report_count: null,
+        retrieved_at: null,
+        cache_hit: false,
+      };
+      render(<DetailModal {...defaultProps} result={noProvenance} />);
+      expect(screen.queryByText('detail.provenance')).not.toBeInTheDocument();
+    });
+
+    it('renders provenance even when only retrieved_at is present (no source)', () => {
+      const onlyTimestamp = {
+        ...mockFoundResult,
+        primary_source: null,
+        primary_report_count: null,
+        retrieved_at: '2026-04-16T11:55:00Z',
+      };
+      render(<DetailModal {...defaultProps} result={onlyTimestamp} />);
+      expect(screen.getByText('detail.provenance')).toBeInTheDocument();
+      expect(screen.getByTestId('provenance-retrieved-at')).toBeInTheDocument();
+    });
+  });
 });
