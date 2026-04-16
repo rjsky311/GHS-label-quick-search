@@ -1060,3 +1060,251 @@ async def test_api_response_has_strict_csp():
     csp = response.headers.get("content-security-policy", "")
     assert "default-src 'none'" in csp
     assert "frame-ancestors 'none'" in csp
+
+
+# ─── P-code extraction (v1.8 M0) ───────────────────────────
+
+from server import extract_all_ghs_classifications
+from p_code_translations import P_CODE_TRANSLATIONS
+
+
+def _make_ghs_data(*reports):
+    """Build a minimal PubChem-shaped dict containing the given
+    GHS report Information entries."""
+    return {
+        "Record": {
+            "Section": [{
+                "TOCHeading": "Safety and Hazards",
+                "Section": [{
+                    "TOCHeading": "Hazards Identification",
+                    "Section": [{
+                        "TOCHeading": "GHS Classification",
+                        "Information": list(reports),
+                    }]
+                }]
+            }]
+        }
+    }
+
+
+def _pic_info(codes):
+    """Create a Pictogram(s) Information entry."""
+    return {
+        "Name": "Pictogram(s)",
+        "Value": {"StringWithMarkup": [{
+            "Markup": [
+                {"Type": "Icon", "URL": f"https://example.com/{c}.svg"}
+                for c in codes
+            ]
+        }]}
+    }
+
+
+def _signal_info(word):
+    return {"Name": "Signal", "Value": {"StringWithMarkup": [{"String": word}]}}
+
+
+def _hazard_info(*h_texts):
+    return {
+        "Name": "GHS Hazard Statements",
+        "Value": {"StringWithMarkup": [{"String": t} for t in h_texts]},
+    }
+
+
+def _precaution_info(codes_csv):
+    """Create a Precautionary Statement Codes Information entry.
+    PubChem returns P-codes as a comma-separated string."""
+    return {
+        "Name": "Precautionary Statement Codes",
+        "Value": {"StringWithMarkup": [{"String": codes_csv}]},
+    }
+
+
+class TestPCodeExtraction:
+    """Tests for parsing PubChem Precautionary Statement Codes."""
+
+    def test_single_p_codes_extracted(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS02"]),
+            _signal_info("Danger"),
+            _hazard_info("H225: Highly Flammable liquid"),
+            _precaution_info("P210, P233, P240, P280, and P501"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        assert len(reports) == 1
+        p_codes = [p["code"] for p in reports[0]["precautionary_statements"]]
+        assert "P210" in p_codes
+        assert "P233" in p_codes
+        assert "P501" in p_codes
+        assert len(p_codes) == 5
+
+    def test_combined_p_codes_kept_intact(self):
+        """Combined codes like P301+P310 must not be split."""
+        data = _make_ghs_data(
+            _pic_info(["GHS06"]),
+            _signal_info("Danger"),
+            _hazard_info("H301: Toxic if swallowed"),
+            _precaution_info("P264, P270, P301+P310, P321, P405, and P501"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        p_codes = [p["code"] for p in reports[0]["precautionary_statements"]]
+        assert "P301+P310" in p_codes
+        assert p_codes.count("P301+P310") == 1
+
+    def test_triple_combined_code(self):
+        """Three-part combined codes like P303+P361+P353 must survive."""
+        data = _make_ghs_data(
+            _pic_info(["GHS02"]),
+            _signal_info("Danger"),
+            _precaution_info("P210, P303+P361+P353, P403+P235"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        p_codes = [p["code"] for p in reports[0]["precautionary_statements"]]
+        assert "P303+P361+P353" in p_codes
+        assert "P403+P235" in p_codes
+
+    def test_p_codes_deduplicated_within_report(self):
+        """If PubChem repeats a code in the same string, only keep one."""
+        data = _make_ghs_data(
+            _pic_info(["GHS07"]),
+            _precaution_info("P264, P280, P264, P280, P501"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        p_codes = [p["code"] for p in reports[0]["precautionary_statements"]]
+        assert p_codes.count("P264") == 1
+        assert p_codes.count("P280") == 1
+
+    def test_known_translation_populates_text_zh(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS02"]),
+            _precaution_info("P210"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        stmt = reports[0]["precautionary_statements"][0]
+        assert stmt["code"] == "P210"
+        assert stmt["text_zh"] != "P210"
+        assert len(stmt["text_zh"]) > 5
+
+    def test_unknown_code_falls_back_to_code_string(self):
+        """P-codes not in the translation dict should not be dropped;
+        they should fall back to using the code itself as text_zh."""
+        data = _make_ghs_data(
+            _pic_info(["GHS07"]),
+            _precaution_info("P999"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        stmt = reports[0]["precautionary_statements"][0]
+        assert stmt["code"] == "P999"
+        assert stmt["text_zh"] == "P999"
+
+    def test_report_without_p_codes_has_empty_list(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS02"]),
+            _signal_info("Danger"),
+            _hazard_info("H225: Highly Flammable liquid"),
+        )
+        reports = extract_all_ghs_classifications(data)
+        assert len(reports) == 1
+        assert reports[0]["precautionary_statements"] == []
+
+
+class TestClassificationSignatureWithPCodes:
+    """P-codes must now be part of the dedup signature."""
+
+    def test_different_p_codes_produce_different_signatures(self):
+        a = {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [{"code": "P210"}, {"code": "P233"}],
+            "signal_word": "Danger",
+            "source": "ECHA",
+        }
+        b = {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [{"code": "P210"}, {"code": "P501"}],
+            "signal_word": "Danger",
+            "source": "ECHA",
+        }
+        assert _classification_signature(a) != _classification_signature(b)
+
+    def test_same_p_codes_different_order_equal_signature(self):
+        a = {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [{"code": "P501"}, {"code": "P210"}],
+            "signal_word": "Danger",
+            "source": "ECHA",
+        }
+        b = {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [{"code": "P210"}, {"code": "P501"}],
+            "signal_word": "Danger",
+            "source": "ECHA",
+        }
+        assert _classification_signature(a) == _classification_signature(b)
+
+
+async def test_search_chemical_returns_precautionary_statements(monkeypatch):
+    """End-to-end: search_chemical must surface P-codes in the primary
+    result and in other_classifications."""
+    import server as srv
+
+    fake_reports = [
+        {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [
+                {"code": "P210", "text_en": "P210", "text_zh": "test-zh"},
+                {"code": "P233", "text_en": "P233", "text_zh": "test-zh2"},
+            ],
+            "signal_word": "Danger",
+            "signal_word_zh": "\u5371\u96aa",
+            "source": "ECHA",
+            "report_count": "100",
+        },
+        {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [
+                {"code": "P210", "text_en": "P210", "text_zh": "test-zh"},
+                {"code": "P501", "text_en": "P501", "text_zh": "test-zh3"},
+            ],
+            "signal_word": "Danger",
+            "signal_word_zh": "\u5371\u96aa",
+            "source": "ECHA",
+            "report_count": "50",
+        },
+    ]
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fake_get_name(*_a, **_k):
+        return ("Ethanol", "\u4e59\u9187")
+
+    async def fake_get_ghs(*_a, **_k):
+        return {}
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: fake_reports)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+
+    # Primary must have P-codes
+    assert len(result.precautionary_statements) > 0
+    primary_p = {p["code"] for p in result.precautionary_statements}
+    assert "P210" in primary_p
+
+    # Both reports must survive (different P-codes = different signature)
+    assert result.has_multiple_classifications is True
+    assert len(result.other_classifications) == 1
+    other_p = {p["code"] for p in result.other_classifications[0].precautionary_statements}
+    assert other_p != primary_p
