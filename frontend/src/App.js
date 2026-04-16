@@ -16,6 +16,7 @@ import usePrintTemplates from "@/hooks/usePrintTemplates";
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
 import { printLabels } from "@/utils/printLabels";
+import { hasGhsData } from "@/utils/ghsAvailability";
 
 // Components
 import Header from "@/components/Header";
@@ -291,6 +292,43 @@ function App() {
     setShowLabelModal(true);
   }, [selectedForLabel.length, selectAllForLabel, results]);
 
+  // v1.8 M2 PR-B: "Print all with GHS data" shortcut.
+  //
+  // Deliberately bypasses handleOpenLabelModal. That handler contains
+  // a legacy fallback — "if selectedForLabel.length === 0, select all
+  // found rows" — designed for the purple Print-label button's
+  // implicit auto-select behaviour. React state updates are batched,
+  // so inside a single event tick handleOpenLabelModal would still
+  // see the pre-set `selectedForLabel` length (stale closure) and
+  // overwrite the printable subset we just computed.
+  //
+  // The fix is not to delegate. Set both pieces of state here in the
+  // same tick, on our own terms. The existing purple button's path is
+  // unchanged — it still auto-selects all found rows when invoked
+  // with an empty selection, which is its documented behaviour.
+  const handlePrintAllWithGhs = useCallback(() => {
+    const printable = results.filter(
+      (r) => r.found && hasGhsData(getEffectiveClassification(r))
+    );
+    setSelectedForLabel(printable);
+    setShowLabelModal(true);
+  }, [results, getEffectiveClassification, setSelectedForLabel]);
+
+  // v1.8 M2 PR-B post-review fix: the shortcut must reflect the FULL
+  // search result set, not whatever filter/sort is currently applied.
+  // Compute the count here — where `results` is the raw search array
+  // — and pass it down. Previously ResultsTable computed this from
+  // its `results` prop, which is `sortedResults` (post-filter), so a
+  // filter that hid all GHS-bearing rows would have made the button
+  // disappear or mis-count.
+  const printableWithGhsCount = useMemo(
+    () =>
+      results.filter(
+        (r) => r.found && hasGhsData(getEffectiveClassification(r))
+      ).length,
+    [results, getEffectiveClassification]
+  );
+
   const handlePrintLabels = useCallback(() => {
     printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities);
   }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities]);
@@ -371,6 +409,8 @@ function App() {
               selectedForLabel={selectedForLabel}
               expandedOtherClassifications={expandedOtherClassifications}
               onOpenLabelModal={handleOpenLabelModal}
+              onPrintAllWithGhs={handlePrintAllWithGhs}
+              printAllWithGhsCount={printableWithGhsCount}
               onExportToExcel={() => exportToExcel(results)}
               onExportToCSV={() => exportToCSV(results)}
               onSelectAllForLabel={() => selectAllForLabel(results)}

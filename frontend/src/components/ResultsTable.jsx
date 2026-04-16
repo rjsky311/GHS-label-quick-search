@@ -1,4 +1,4 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSImage from "@/components/GHSImage";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
@@ -17,6 +17,8 @@ export default function ResultsTable({
   selectedForLabel,
   expandedOtherClassifications,
   onOpenLabelModal,
+  onPrintAllWithGhs,
+  printAllWithGhsCount = 0,
   onExportToExcel,
   onExportToCSV,
   onSelectAllForLabel,
@@ -33,6 +35,14 @@ export default function ResultsTable({
   onOpenComparison,
 }) {
   const { t } = useTranslation();
+
+  // v1.8 M2 PR-B: `printAllWithGhsCount` is computed in App.js from
+  // the RAW search results (pre-filter, pre-sort). Don't recompute
+  // here — the `results` prop is `sortedResults`, which is already
+  // filtered, and using it would silently couple the shortcut to
+  // whatever filter is currently visible on screen. That contradicts
+  // the "acts on the full search result set" contract we agreed on
+  // in the plan. Consume the prop as-is.
 
   const SortIcon = ({ columnKey }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="w-3 h-3 text-slate-500 ml-1 inline" />;
@@ -64,6 +74,23 @@ export default function ResultsTable({
               </span>
             )}
           </button>
+          {/* v1.8 M2 PR-B: precise shortcut — opens the modal with
+              ONLY rows that have GHS data (no-GHS rows excluded).
+              Button name matches the action exactly. Acts on the full
+              search result set, independent of current filter state. */}
+          {printAllWithGhsCount > 0 && (
+            <button
+              onClick={onPrintAllWithGhs}
+              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+              data-testid="print-all-with-ghs-btn"
+            >
+              <Printer className="w-4 h-4" />
+              {t("results.printAllWithGhs")}
+              <span className="bg-emerald-900 px-2 py-0.5 rounded-full text-xs">
+                {printAllWithGhsCount}
+              </span>
+            </button>
+          )}
           {(() => {
             const comparableCount = selectedForLabel.filter(
               (r) => r.found && r.ghs_pictograms?.length > 0
