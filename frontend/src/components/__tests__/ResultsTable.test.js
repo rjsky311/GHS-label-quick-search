@@ -347,4 +347,52 @@ describe('ResultsTable', () => {
       expect(screen.queryByTestId('compare-btn')).not.toBeInTheDocument();
     });
   });
+
+  describe('Provenance chips (v1.8 M1)', () => {
+    it('renders the ECHA source badge when primary_source contains "ECHA"', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
+      expect(
+        screen.getByTestId(`source-badge-echa-${mockFoundResult.cas_number}`)
+      ).toBeInTheDocument();
+    });
+
+    it('renders the report-count badge when primary_report_count is present', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
+      expect(screen.getByText('results.reportCountBadge')).toBeInTheDocument();
+    });
+
+    it('does NOT render the cache badge when cache_hit is false', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
+      expect(screen.queryByText('results.cacheBadge')).not.toBeInTheDocument();
+    });
+
+    it('renders the cache badge when cache_hit is true', () => {
+      const cached = { ...mockFoundResult, cache_hit: true };
+      render(<ResultsTable {...defaultProps} results={[cached]} />);
+      expect(screen.getByText('results.cacheBadge')).toBeInTheDocument();
+    });
+
+    it('does NOT render the ECHA badge for non-ECHA sources', () => {
+      const vendor = { ...mockFoundResult, primary_source: 'Some SDS vendor notification' };
+      render(<ResultsTable {...defaultProps} results={[vendor]} />);
+      expect(
+        screen.queryByTestId(`source-badge-echa-${vendor.cas_number}`)
+      ).not.toBeInTheDocument();
+    });
+
+    it('omits all provenance chips when backend did not supply them', () => {
+      const bare = {
+        ...mockFoundResult,
+        primary_source: null,
+        primary_report_count: null,
+        cache_hit: false,
+      };
+      render(<ResultsTable {...defaultProps} results={[bare]} />);
+      expect(
+        screen.queryByTestId(`source-badge-echa-${bare.cas_number}`)
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText('results.reportCountBadge')).not.toBeInTheDocument();
+      expect(screen.queryByText('results.cacheBadge')).not.toBeInTheDocument();
+    });
+  });
 });

@@ -37,6 +37,11 @@ export const mockFoundResult = {
     },
   ],
   has_multiple_classifications: true,
+  // v1.8 M1 provenance
+  primary_source: 'ECHA C&L Notifications Summary',
+  primary_report_count: '236',
+  retrieved_at: '2026-04-16T11:55:00Z',
+  cache_hit: false,
 };
 
 // Not found result
