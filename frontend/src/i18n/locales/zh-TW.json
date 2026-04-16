@@ -92,7 +92,7 @@
   "prepared.solventPlaceholder": "例如 水、甲醇、PBS",
   "prepared.cancel": "取消",
   "prepared.continueToPrint": "繼續列印",
-  "prepared.formNote": "此流程「不會」重新計算混合物的 GHS 分類。標籤會以母化學品的危害資料加上濃度 / 溶劑註記；使用前請以官方安全資料表（SDS）為準。",
+  "prepared.formNote": "此流程「不會」重新計算混合物的 GHS 分類。標籤會以母化學品的危害資料加上濃度 / 溶劑註記。作業資訊（配製人 / 日期 / 有效期限）是你自行填寫的紀錄，不是系統推導的資料。使用前請以官方安全資料表（SDS）為準。",
   "prepared.labelPrefix": "稀釋自",
   "prepared.labelMeta": "{{solvent}} 中 {{concentration}}",
   "prepared.recentHeading": "此化學品最近的配製紀錄 — 點擊可帶入填寫值",

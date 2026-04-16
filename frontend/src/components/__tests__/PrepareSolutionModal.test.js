@@ -710,4 +710,55 @@ describe("PrepareSolutionModal", () => {
       expiryDate: "",
     });
   });
+
+  // ── Tier 2 PR-3: derived display name in list entries ───────
+
+  it("recent entry shows the derived display name ('X Y in Z') when parent name is present", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[baseRecent]}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-recent-item-0").textContent
+    ).toContain("10% (v/v) Ethanol in Water");
+  });
+
+  it("recent entry falls back to 'concentration in solvent' when parentName is missing", () => {
+    const noName = {
+      ...baseRecent,
+      parentNameEn: null,
+      parentNameZh: null,
+    };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[noName]}
+      />
+    );
+    const txt = screen.getByTestId("prepare-solution-recent-item-0").textContent;
+    // Helper fallback: "10% (v/v) in Water" (no solute name inserted).
+    expect(txt).toContain("10% (v/v) in Water");
+    expect(txt).not.toContain("Ethanol");
+  });
+
+  it("preset entry shows the derived display name when parent name is present", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-preset-item-0").textContent
+    ).toContain("10% (v/v) Ethanol in Water");
+  });
 });

@@ -2,6 +2,7 @@ import {
   buildPreparedSolutionItem,
   buildPresetRecord,
   buildRecentRecord,
+  formatPreparedDisplayName,
   isPreparedSolutionItem,
   preparedPresetKey,
   preparedRecentKey,
@@ -549,5 +550,94 @@ describe("preparedPresetKey", () => {
       expiryDate: null,
     });
     expect(recentA).not.toBe(recentB);
+  });
+});
+
+// ── Tier 2 PR-3: formatPreparedDisplayName ────────────────────
+
+describe("formatPreparedDisplayName", () => {
+  it("returns '' for null / undefined / empty input", () => {
+    expect(formatPreparedDisplayName(null)).toBe("");
+    expect(formatPreparedDisplayName(undefined)).toBe("");
+    expect(formatPreparedDisplayName({})).toBe("");
+  });
+
+  it("returns '' when required concentration or solvent is missing", () => {
+    expect(
+      formatPreparedDisplayName({ concentration: "10%" })
+    ).toBe("");
+    expect(
+      formatPreparedDisplayName({ solvent: "Water" })
+    ).toBe("");
+    expect(
+      formatPreparedDisplayName({ concentration: "   ", solvent: "Water" })
+    ).toBe("");
+    expect(
+      formatPreparedDisplayName({ concentration: "10%", solvent: "   " })
+    ).toBe("");
+  });
+
+  it("works on a bare record shape (recent / preset) with parentNameEn", () => {
+    expect(
+      formatPreparedDisplayName({
+        concentration: "10%",
+        solvent: "Water",
+        parentNameEn: "Ethanol",
+      })
+    ).toBe("10% Ethanol in Water");
+  });
+
+  it("falls back to parentNameZh when parentNameEn is missing", () => {
+    expect(
+      formatPreparedDisplayName({
+        concentration: "0.1 N",
+        solvent: "Water",
+        parentNameZh: "乙醇",
+      })
+    ).toBe("0.1 N 乙醇 in Water");
+  });
+
+  it("works on a prepared item (reads nested preparedSolution + top-level names)", () => {
+    const preparedItem = buildPreparedSolutionItem(baseParent, {
+      concentration: "10% (v/v)",
+      solvent: "Water",
+    });
+    // baseParent.name_en === "Ethanol"; nested preparedSolution sets
+    // parentNameEn to the same. Either source is acceptable.
+    expect(formatPreparedDisplayName(preparedItem)).toBe(
+      "10% (v/v) Ethanol in Water"
+    );
+  });
+
+  it("prefers nested preparedSolution over top-level names when both exist", () => {
+    // A prepared item whose preparedSolution.parentNameEn differs from
+    // its top-level name_en — the nested value should win, because it
+    // is the snapshot we took at the moment of preparing.
+    const item = {
+      name_en: "TOP_LEVEL_NAME",
+      preparedSolution: {
+        concentration: "5%",
+        solvent: "Water",
+        parentNameEn: "SNAPSHOT_NAME",
+      },
+    };
+    expect(formatPreparedDisplayName(item)).toBe("5% SNAPSHOT_NAME in Water");
+  });
+
+  it("degrades gracefully to 'X in Y' when no parent name is available", () => {
+    // Rare shape but valid — still want something useful rather than "".
+    expect(
+      formatPreparedDisplayName({ concentration: "10%", solvent: "Water" })
+    ).toBe("10% in Water");
+  });
+
+  it("trims whitespace from concentration / solvent / parent name", () => {
+    expect(
+      formatPreparedDisplayName({
+        concentration: "  10%  ",
+        solvent: "  Water  ",
+        parentNameEn: "  Ethanol  ",
+      })
+    ).toBe("10% Ethanol in Water");
   });
 });
