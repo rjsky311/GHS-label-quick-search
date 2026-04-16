@@ -85,13 +85,49 @@ describe("hasRenderableGhsVisual", () => {
     ).toBe(true);
   });
 
-  it("returns true when found and has other_classifications (even with no primary pictograms)", () => {
+  it("returns true when found and has at least one alternate classification WITH pictograms", () => {
     expect(
       hasRenderableGhsVisual({
         found: true,
         ghs_pictograms: [],
         other_classifications: [
           { pictograms: [{ code: "GHS07" }], hazard_statements: [] },
+        ],
+      })
+    ).toBe(true);
+  });
+
+  it("returns false when primary and ALL alternates have no pictograms (regression for Codex PR #10 review)", () => {
+    // This is the key case: the result is found, there's genuine GHS
+    // data (H-codes and a signal word), but nothing here has any
+    // pictogram for the existing visual block to draw. ResultsTable
+    // should fall through to its `results.noHazard` branch, not into
+    // the pictogram block that would render nothing.
+    expect(
+      hasRenderableGhsVisual({
+        found: true,
+        ghs_pictograms: [],
+        hazard_statements: [{ code: "H302", text_zh: "x" }],
+        signal_word: "Warning",
+        other_classifications: [
+          {
+            pictograms: [],
+            hazard_statements: [{ code: "H302", text_zh: "x" }],
+            signal_word: "Warning",
+          },
+        ],
+      })
+    ).toBe(false);
+  });
+
+  it("returns true when ANY one alternate has pictograms even if other alternates do not", () => {
+    expect(
+      hasRenderableGhsVisual({
+        found: true,
+        ghs_pictograms: [],
+        other_classifications: [
+          { pictograms: [], hazard_statements: [{ code: "H302" }] },
+          { pictograms: [{ code: "GHS02" }], hazard_statements: [] },
         ],
       })
     ).toBe(true);

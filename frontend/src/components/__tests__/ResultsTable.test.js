@@ -285,6 +285,52 @@ describe('ResultsTable', () => {
       expect(screen.getByText('results.noHazard')).toBeInTheDocument();
     });
 
+    it('shows results.noHazard (not the visual block) when H/P/signal exist but NOTHING has pictograms (Codex PR #10 regression)', () => {
+      // Codex caught that hasRenderableGhsVisual was treating
+      // `other_classifications.length > 0` as renderable even when
+      // those alternate classifications had no pictograms.
+      //
+      // Scenario:
+      //   - found = true
+      //   - primary has no pictograms
+      //   - other_classifications has entries, but none have pictograms
+      //   - there ARE hazard_statements + signal_word
+      //
+      // Expected: no "no GHS data" warning (there IS GHS data), AND
+      // no empty pictogram block, AND the existing `results.noHazard`
+      // fallback text is shown.
+      const noPicsAnywhere = {
+        ...mockNoHazardResult,
+        cas_number: '300-00-3',
+        ghs_pictograms: [],
+        hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+        signal_word: 'Warning',
+        signal_word_zh: '警告',
+        other_classifications: [
+          {
+            pictograms: [],
+            hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+            signal_word: 'Warning',
+          },
+        ],
+      };
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[noPicsAnywhere]}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+      // Not the "no GHS data" warning — there IS GHS data
+      expect(screen.queryByText('results.noGhsDataAvailable')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`no-ghs-data-${noPicsAnywhere.cas_number}`)
+      ).not.toBeInTheDocument();
+      // And not the visual pictogram block either (nothing to draw)
+      // We verify this indirectly: the `noHazard` fallback text is present.
+      expect(screen.getByText('results.noHazard')).toBeInTheDocument();
+    });
+
     it('custom override that selects an alternate classification with H-codes suppresses the warning', () => {
       // Raw result has no GHS data. But the custom override points at an
       // alternate classification that DOES have H-codes. The warning must

@@ -41,7 +41,18 @@ export function hasGhsData(classification) {
 
 export function hasRenderableGhsVisual(result) {
   if (!result || !result.found) return false;
-  const pic = result.ghs_pictograms || [];
-  const other = result.other_classifications || [];
-  return pic.length > 0 || other.length > 0;
+  // The existing ResultsTable pictogram block renders ONLY pictograms
+  // (plus an expandable list of other_classifications, each of which
+  // is also shown by its pictograms). A classification that has
+  // H-codes / P-codes / signal word but zero pictograms is real GHS
+  // data, but has nothing for THIS cell to draw — it should route to
+  // the `results.noHazard` fallback, which is exactly what the third
+  // branch of the ResultsTable decision tree is there for.
+  //
+  // So "renderable" means: there is at least one pictogram somewhere
+  // the block would actually display — primary or any alternate.
+  const primaryPics = result.ghs_pictograms || [];
+  if (primaryPics.length > 0) return true;
+  const others = result.other_classifications || [];
+  return others.some((cls) => (cls.pictograms || []).length > 0);
 }
