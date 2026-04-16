@@ -279,4 +279,114 @@ describe("ClassificationComparisonTable", () => {
       expect(screen.getByTestId("comparison-table")).toBeInTheDocument();
     });
   });
+
+  // ── Precautionary Statements row (v1.8 M0 PR-B) ──
+  describe("Precautionary statements row", () => {
+    const clsWithP = {
+      ...cls1,
+      precautionary_statements: [
+        { code: "P210", text_en: "Keep away from heat.", text_zh: "遠離熱源。" },
+        { code: "P301+P310", text_en: "IF SWALLOWED: Call a POISON CENTER.", text_zh: "如誤吞食：立即呼叫毒物中心。" },
+      ],
+    };
+    const clsNoP = {
+      ...cls2,
+      precautionary_statements: [],
+    };
+
+    it("renders precautionary row header when any column has P-codes", () => {
+      const columns = makeColumns([clsWithP, clsNoP], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+        />
+      );
+      expect(screen.getByText("compare.rowPrecautions")).toBeInTheDocument();
+    });
+
+    it("does NOT render precautionary row when no column has P-codes", () => {
+      // cls1 and cls2 in the default fixtures have no precautionary_statements field at all
+      const columns = makeColumns([cls1, cls2], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+        />
+      );
+      // The header label must not appear — row is suppressed entirely
+      expect(screen.queryByText("compare.rowPrecautions")).not.toBeInTheDocument();
+    });
+
+    it("renders P-code values and localized text for the column that has them", () => {
+      const columns = makeColumns([clsWithP, clsNoP], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+        />
+      );
+      expect(screen.getByText("P210")).toBeInTheDocument();
+      expect(screen.getByText("P301+P310")).toBeInTheDocument();
+      // Chinese text wins over English via `stmt?.text_zh || stmt?.text_en`
+      expect(screen.getByText("遠離熱源。")).toBeInTheDocument();
+    });
+
+    it("renders compare.noPrecautions for the column missing P-codes", () => {
+      const columns = makeColumns([clsWithP, clsNoP], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+        />
+      );
+      // The column without P-codes shows the "none" placeholder
+      expect(screen.getByText("compare.noPrecautions")).toBeInTheDocument();
+    });
+
+    it("keeps combined P-codes intact (not split into P301 and P310)", () => {
+      const columns = makeColumns([clsWithP, clsNoP], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+        />
+      );
+      expect(screen.getByText("P301+P310")).toBeInTheDocument();
+      // The bare "P301" should NOT appear as a separate badge
+      expect(screen.queryByText("P301")).not.toBeInTheDocument();
+      expect(screen.queryByText("P310")).not.toBeInTheDocument();
+    });
+
+    it("works in cross-chemical mode as well", () => {
+      const clsChemA = {
+        ...cls1,
+        precautionary_statements: [
+          { code: "P210", text_en: "Keep away from heat.", text_zh: "遠離熱源。" },
+        ],
+      };
+      const clsChemB = {
+        ...cls3,
+        precautionary_statements: [
+          { code: "P280", text_en: "Wear protective gloves.", text_zh: "戴防護手套。" },
+        ],
+      };
+      const columns = makeColumns([clsChemA, clsChemB], "cross-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="cross-chemical"
+          columns={columns}
+          selectedIndex={null}
+        />
+      );
+      expect(screen.getByText("compare.rowPrecautions")).toBeInTheDocument();
+      expect(screen.getByText("P210")).toBeInTheDocument();
+      expect(screen.getByText("P280")).toBeInTheDocument();
+    });
+  });
 });

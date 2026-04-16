@@ -1177,14 +1177,14 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     )
     
     # Headers
-    headers = ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"]
+    headers = ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明", "預防措施"]
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
         cell.border = thin_border
-    
+
     # Data — every cell value is routed through spreadsheet_safe() to
     # neutralize values that start with a formula prefix (e.g.
     # `=HYPERLINK(...)`, `+cmd`, `@SUM(...)`), preventing CSV/XLSX
@@ -1206,10 +1206,21 @@ async def export_xlsx(request: Request, payload: ExportRequest):
         # Hazard statements
         statements = result.get("hazard_statements", [])
         hazard_text = "\n".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-        cell = ws.cell(row=row, column=6, value=spreadsheet_safe(hazard_text))
-        cell.border = thin_border
-        cell.alignment = Alignment(wrap_text=True)
-    
+        hazard_cell = ws.cell(row=row, column=6, value=spreadsheet_safe(hazard_text))
+        hazard_cell.border = thin_border
+        hazard_cell.alignment = Alignment(wrap_text=True)
+
+        # Precautionary statements (v1.8 M0)
+        precautions = result.get("precautionary_statements", [])
+        precaution_text = (
+            "\n".join([f"{p.get('code', '')}: {p.get('text_zh', '')}" for p in precautions])
+            if precautions
+            else "無預防措施說明"
+        )
+        prec_cell = ws.cell(row=row, column=7, value=spreadsheet_safe(precaution_text))
+        prec_cell.border = thin_border
+        prec_cell.alignment = Alignment(wrap_text=True)
+
     # Adjust column widths
     ws.column_dimensions['A'].width = 15
     ws.column_dimensions['B'].width = 30
@@ -1217,6 +1228,7 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     ws.column_dimensions['D'].width = 35
     ws.column_dimensions['E'].width = 12
     ws.column_dimensions['F'].width = 50
+    ws.column_dimensions['G'].width = 55
     
     # Save to BytesIO
     output = BytesIO()
@@ -1238,18 +1250,25 @@ async def export_csv(request: Request, payload: ExportRequest):
     writer = csv.writer(string_output)
     
     # Headers
-    writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明"])
-    
+    writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明", "預防措施"])
+
     # Data
     for result in payload.results:
         pictograms = result.get("ghs_pictograms", [])
         ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
-        
+
         signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
-        
+
         statements = result.get("hazard_statements", [])
         hazard_text = "; ".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-        
+
+        precautions = result.get("precautionary_statements", [])
+        precaution_text = (
+            "; ".join([f"{p.get('code', '')}: {p.get('text_zh', '')}" for p in precautions])
+            if precautions
+            else "無預防措施說明"
+        )
+
         writer.writerow([
             spreadsheet_safe(result.get("cas_number", "")),
             spreadsheet_safe(result.get("name_en", "")),
@@ -1257,6 +1276,7 @@ async def export_csv(request: Request, payload: ExportRequest):
             spreadsheet_safe(ghs_text),
             spreadsheet_safe(signal),
             spreadsheet_safe(hazard_text),
+            spreadsheet_safe(precaution_text),
         ])
     
     # Convert to bytes with BOM
