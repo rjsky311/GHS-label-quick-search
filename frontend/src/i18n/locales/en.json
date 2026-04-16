@@ -96,6 +96,8 @@
   "prepared.labelPrefix": "Prepared from",
   "prepared.labelMeta": "{{concentration}} in {{solvent}}",
   "prepared.recentHeading": "Recent for this chemical — click to reuse these inputs",
+  "prepared.presetHeading": "Saved presets for this chemical — click to reuse concentration / solvent",
+  "prepared.saveAsPreset": "Save as preset",
   "prepared.operationalHeading": "Operational info (optional)",
   "prepared.operationalSubheading": "User-entered identifiers for lab workflow. Not derived from GHS data.",
   "prepared.preparedBy": "Prepared by",

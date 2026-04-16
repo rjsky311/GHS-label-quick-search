@@ -555,4 +555,98 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
     ).toBeInTheDocument();
   });
+
+  // Tier 2 PR-2B: "Save as preset" writes to the preset store WITHOUT
+  // submitting, and reopening the same parent surfaces it. Preset
+  // prefill restores only concentration + solvent; operational fields
+  // must NOT come back even if they were filled when the preset was
+  // originally saved (buildPresetRecord drops them).
+  it("save-as-preset writes a recipe-only preset; reopening same parent surfaces it; preset prefill restores recipe only", async () => {
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+
+    // First open: fill required + operational fields, hit "Save as
+    // preset", then cancel the modal (no submit, no print).
+    await enterPrepareFlowFor(ethanolResult);
+    expect(
+      screen.queryByTestId("prepare-solution-preset-section")
+    ).not.toBeInTheDocument();
+
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+        target: { value: "10%" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+        target: { value: "Water" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+        target: { value: "A. Chen" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
+        target: { value: "2026-04-16" },
+      })
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"))
+    );
+
+    // Save must NOT open the label modal — it is a non-submit action.
+    expect(screen.queryAllByText("label.title")).toHaveLength(0);
+
+    // Close the prepare modal via Cancel (no submit).
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-cancel-btn"))
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("prepare-solution-modal")
+      ).not.toBeInTheDocument()
+    );
+
+    // Second open: preset section is visible and scoped to this parent.
+    await enterPrepareFlowFor(ethanolResult);
+    const presetSection = await screen.findByTestId(
+      "prepare-solution-preset-section"
+    );
+    expect(presetSection).toBeInTheDocument();
+    const presetItem = screen.getByTestId("prepare-solution-preset-item-0");
+    // Preset label shows the recipe — not the operational fields.
+    expect(presetItem.textContent).not.toContain("A. Chen");
+    expect(presetItem.textContent).not.toContain("2026-04-16");
+
+    // Click preset: recipe fields prefill; operational fields stay
+    // blank even though they had been filled in when the preset was
+    // originally saved.
+    await act(async () => fireEvent.click(presetItem));
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
+      "10%"
+    );
+    expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
+
+    // Auto-submit must NOT have fired.
+    expect(screen.queryAllByText("label.title")).toHaveLength(0);
+
+    // Submitting after preset prefill still drives the existing flow.
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"))
+    );
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(
+      screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
+    ).toBeInTheDocument();
+  });
 });

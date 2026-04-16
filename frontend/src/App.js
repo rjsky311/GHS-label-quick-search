@@ -12,6 +12,7 @@ import useLabelSelection from "@/hooks/useLabelSelection";
 import useResultSort from "@/hooks/useResultSort";
 import usePrintTemplates from "@/hooks/usePrintTemplates";
 import usePreparedRecents from "@/hooks/usePreparedRecents";
+import usePreparedPresets from "@/hooks/usePreparedPresets";
 
 // Constants & Utils
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
@@ -20,6 +21,7 @@ import { printLabels } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import {
   buildPreparedSolutionItem,
+  buildPresetRecord,
   buildRecentRecord,
 } from "@/utils/preparedSolution";
 
@@ -117,6 +119,28 @@ function App() {
   // at reuse time.
   const { recents: preparedRecents, addRecent: addPreparedRecent } =
     usePreparedRecents();
+  // Tier 2 PR-2B: saved prepared-solution presets. Like recents, but
+  // more restrictive: only parent identity + concentration + solvent.
+  // Operational fields (preparedBy / preparedDate / expiryDate) are
+  // intentionally not stored — see buildPresetRecord for the reason.
+  const { presets: preparedPresets, addPreset: addPreparedPreset } =
+    usePreparedPresets();
+
+  // Tier 2 PR-2B: "Save as preset" handler. Accepts a formValues
+  // payload (same shape PrepareSolutionModal already hands to onSubmit)
+  // and a parent chemical, builds a recipe-only preset record, and
+  // writes it into the preset store. Does NOT open the label modal,
+  // does NOT touch selection, does NOT reset quantities — saving a
+  // preset is a non-submit action.
+  const handleSavePreparedPreset = useCallback(
+    (formValues) => {
+      if (!prepareSolutionParent) return;
+      const record = buildPresetRecord(prepareSolutionParent, formValues);
+      if (!record) return;
+      addPreparedPreset(record);
+    },
+    [prepareSolutionParent, addPreparedPreset]
+  );
 
   const handleLoadTemplate = useCallback((template) => {
     setLabelConfig(template.labelConfig);
@@ -566,6 +590,8 @@ function App() {
           onSubmit={handleSubmitPrepareSolution}
           onClose={handleClosePrepareSolution}
           recents={preparedRecents}
+          presets={preparedPresets}
+          onSavePreset={handleSavePreparedPreset}
         />
       )}
 

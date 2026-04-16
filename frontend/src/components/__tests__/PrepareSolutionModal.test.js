@@ -476,4 +476,238 @@ describe("PrepareSolutionModal", () => {
       expiryDate: "2026-10-16",
     });
   });
+
+  // ── Tier 2 PR-2B: Saved presets ────────────────────────────
+
+  const basePreset = {
+    schemaVersion: 1,
+    createdAt: "2026-04-16T10:00:00.000Z",
+    parentCas: baseParent.cas_number, // 64-17-5
+    parentNameEn: baseParent.name_en,
+    parentNameZh: baseParent.name_zh,
+    concentration: "10% (v/v)",
+    solvent: "Water",
+  };
+
+  it("Save-as-preset button is rendered only when onSavePreset is provided", () => {
+    const { rerender } = render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-save-preset-btn")
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-save-preset-btn")
+    ).toBeInTheDocument();
+  });
+
+  it("Save-as-preset button is disabled until both required fields are filled", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={jest.fn()}
+      />
+    );
+    const btn = screen.getByTestId("prepare-solution-save-preset-btn");
+    expect(btn).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "10%" },
+    });
+    expect(btn).toBeDisabled(); // solvent still blank
+
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "Water" },
+    });
+    expect(btn).not.toBeDisabled();
+  });
+
+  it("Save-as-preset calls onSavePreset with {concentration, solvent} only — no operational fields", () => {
+    // Even if the user has filled in operational fields, the preset
+    // payload must not carry them. buildPresetRecord is the second
+    // line of defence; the modal is the first — assert it here.
+    const onSavePreset = jest.fn();
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        onSavePreset={onSavePreset}
+      />
+    );
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "  10% (v/v)  " },
+    });
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "  Water  " },
+    });
+    fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+      target: { value: "A. Chen" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
+      target: { value: "2026-04-16" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-expiry-date-input"), {
+      target: { value: "2026-10-16" },
+    });
+    fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"));
+    expect(onSavePreset).toHaveBeenCalledTimes(1);
+    expect(onSavePreset).toHaveBeenCalledWith({
+      concentration: "10% (v/v)",
+      solvent: "Water",
+    });
+    // Save is a non-submit action — onSubmit must NOT fire.
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does NOT render the Saved-presets section when there are no presets", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-preset-section")
+    ).not.toBeInTheDocument();
+  });
+
+  it("does NOT render Saved-presets when no preset matches the current parent CAS", () => {
+    const otherParent = { ...basePreset, parentCas: "67-56-1" };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[otherParent]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-preset-section")
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders parent-scoped presets when available", () => {
+    const otherParent = { ...basePreset, parentCas: "67-56-1" };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[otherParent, basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-preset-section")
+    ).toBeInTheDocument();
+    const list = screen.getByTestId("prepare-solution-preset-list");
+    // Only 1 list item — the one whose parentCas matches the current parent.
+    expect(list.querySelectorAll("li")).toHaveLength(1);
+    expect(
+      screen.getByTestId("prepare-solution-preset-item-0")
+    ).toBeInTheDocument();
+  });
+
+  it("clicking a preset prefills concentration + solvent ONLY", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        presets={[basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-preset-item-0"));
+
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
+      "10% (v/v)"
+    );
+    expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
+    // No auto-submit.
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("clicking a preset CLEARS preparedBy / preparedDate / expiryDate (no stale leak)", () => {
+    // Central PR-2B behaviour: reusing a preset must never carry over
+    // operational fields from a previous session — those could silently
+    // apply the wrong date to a new label. This is the second line of
+    // defence (first is buildPresetRecord not storing them at all).
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    // Simulate the user having already typed operational values before
+    // clicking a preset (e.g. they reopened the modal without closing
+    // and switched to preset reuse).
+    fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
+      target: { value: "STALE Chen" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
+      target: { value: "2020-01-01" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-expiry-date-input"), {
+      target: { value: "2020-07-01" },
+    });
+    fireEvent.click(screen.getByTestId("prepare-solution-preset-item-0"));
+    // All three operational inputs must now be blank.
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
+    // Recipe fields are the ones that got populated from the preset.
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
+      "10% (v/v)"
+    );
+    expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
+  });
+
+  it("after preset prefill, submit goes through the existing onSubmit path with CLEARED operational fields", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        presets={[basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-preset-item-0"));
+    fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith({
+      concentration: "10% (v/v)",
+      solvent: "Water",
+      preparedBy: "",
+      preparedDate: "",
+      expiryDate: "",
+    });
+  });
 });

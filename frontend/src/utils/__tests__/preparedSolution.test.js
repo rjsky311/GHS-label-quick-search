@@ -1,7 +1,9 @@
 import {
   buildPreparedSolutionItem,
+  buildPresetRecord,
   buildRecentRecord,
   isPreparedSolutionItem,
+  preparedPresetKey,
   preparedRecentKey,
   selectionHasPreparedItem,
 } from "../preparedSolution";
@@ -405,5 +407,147 @@ describe("preparedRecentKey", () => {
     expect(preparedRecentKey(base)).not.toBe(
       preparedRecentKey({ ...base, parentCas: "67-56-1" })
     );
+  });
+});
+
+// ── Tier 2 PR-2B: buildPresetRecord / preparedPresetKey ──────────
+
+describe("buildPresetRecord", () => {
+  it("returns null when parent is null / missing cas_number", () => {
+    expect(
+      buildPresetRecord(null, { concentration: "10%", solvent: "Water" })
+    ).toBeNull();
+    expect(
+      buildPresetRecord({}, { concentration: "10%", solvent: "Water" })
+    ).toBeNull();
+    expect(
+      buildPresetRecord(
+        { cas_number: "" },
+        { concentration: "10%", solvent: "Water" }
+      )
+    ).toBeNull();
+  });
+
+  it("returns null when required inputs are missing or blank", () => {
+    expect(buildPresetRecord(baseParent, { solvent: "Water" })).toBeNull();
+    expect(
+      buildPresetRecord(baseParent, { concentration: "", solvent: "Water" })
+    ).toBeNull();
+    expect(
+      buildPresetRecord(baseParent, { concentration: "   ", solvent: "Water" })
+    ).toBeNull();
+    expect(buildPresetRecord(baseParent, { concentration: "10%" })).toBeNull();
+    expect(
+      buildPresetRecord(baseParent, { concentration: "10%", solvent: "   " })
+    ).toBeNull();
+  });
+
+  it("builds a schemaVersion:1 record with parent identity + concentration + solvent", () => {
+    const record = buildPresetRecord(baseParent, {
+      concentration: "  10% (v/v)  ",
+      solvent: "  Water  ",
+    });
+    expect(record.schemaVersion).toBe(1);
+    expect(typeof record.createdAt).toBe("string");
+    expect(record.parentCas).toBe(baseParent.cas_number);
+    expect(record.parentNameEn).toBe(baseParent.name_en);
+    expect(record.parentNameZh).toBe(baseParent.name_zh);
+    expect(record.concentration).toBe("10% (v/v)");
+    expect(record.solvent).toBe("Water");
+  });
+
+  it("does NOT carry operational fields even if they are passed in formValues", () => {
+    // This is the central PR-2B contract: operational fields
+    // (preparedBy / preparedDate / expiryDate) must never land in a
+    // preset record, because stale session data would silently bleed
+    // onto future labels. Even if a caller accidentally hands them in,
+    // the helper must drop them on the floor.
+    const record = buildPresetRecord(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+    });
+    expect(record).not.toHaveProperty("preparedBy");
+    expect(record).not.toHaveProperty("preparedDate");
+    expect(record).not.toHaveProperty("expiryDate");
+  });
+
+  it("does NOT carry GHS / hazard / classification data", () => {
+    const record = buildPresetRecord(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+    });
+    expect(record).not.toHaveProperty("ghs_pictograms");
+    expect(record).not.toHaveProperty("hazard_statements");
+    expect(record).not.toHaveProperty("precautionary_statements");
+    expect(record).not.toHaveProperty("signal_word");
+    expect(record).not.toHaveProperty("signal_word_zh");
+    expect(record).not.toHaveProperty("other_classifications");
+    expect(record).not.toHaveProperty("isPreparedSolution");
+    expect(record).not.toHaveProperty("preparedSolution");
+  });
+});
+
+describe("preparedPresetKey", () => {
+  it("returns '' for null / undefined input", () => {
+    expect(preparedPresetKey(null)).toBe("");
+    expect(preparedPresetKey(undefined)).toBe("");
+  });
+
+  it("depends only on parentCas + concentration + solvent", () => {
+    const base = {
+      parentCas: "64-17-5",
+      concentration: "10%",
+      solvent: "Water",
+    };
+    // Same recipe + extraneous fields → same key
+    expect(preparedPresetKey(base)).toBe(
+      preparedPresetKey({
+        ...base,
+        parentNameEn: "Ethanol",
+        createdAt: "whatever",
+      })
+    );
+    // Different recipe → different key
+    expect(preparedPresetKey(base)).not.toBe(
+      preparedPresetKey({ ...base, concentration: "20%" })
+    );
+    expect(preparedPresetKey(base)).not.toBe(
+      preparedPresetKey({ ...base, solvent: "Methanol" })
+    );
+    expect(preparedPresetKey(base)).not.toBe(
+      preparedPresetKey({ ...base, parentCas: "67-56-1" })
+    );
+  });
+
+  it("preset key differs from recent key because operational fields are excluded", () => {
+    // A recent has a wider dedup footprint (6 fields) than a preset
+    // (3 fields). For the same concentration/solvent, two records
+    // that differ only on preparedBy collapse in the preset dedup
+    // but NOT in the recent dedup.
+    const commonRecipe = {
+      parentCas: "64-17-5",
+      concentration: "10%",
+      solvent: "Water",
+    };
+    const presetA = preparedPresetKey({ ...commonRecipe });
+    const presetB = preparedPresetKey({ ...commonRecipe });
+    expect(presetA).toBe(presetB);
+
+    const recentA = preparedRecentKey({
+      ...commonRecipe,
+      preparedBy: "A. Chen",
+      preparedDate: null,
+      expiryDate: null,
+    });
+    const recentB = preparedRecentKey({
+      ...commonRecipe,
+      preparedBy: "B. Liu",
+      preparedDate: null,
+      expiryDate: null,
+    });
+    expect(recentA).not.toBe(recentB);
   });
 });
