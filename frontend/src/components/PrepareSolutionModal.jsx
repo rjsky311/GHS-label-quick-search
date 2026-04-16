@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { X, FlaskConical } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { X, FlaskConical, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -32,7 +32,12 @@ import { useTranslation } from "react-i18next";
  * @param {Function} onSubmit  ({concentration, solvent}) => void
  * @param {Function} onClose   () => void (called for both Cancel and Esc)
  */
-export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
+export default function PrepareSolutionModal({
+  parent,
+  onSubmit,
+  onClose,
+  recents = [],
+}) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
   const concentrationInputRef = useRef(null);
@@ -47,6 +52,37 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
   const [preparedBy, setPreparedBy] = useState("");
   const [preparedDate, setPreparedDate] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
+
+  // Tier 2 PR-2A: parent-scoped recent prepared workflow inputs.
+  // Filtered down to THIS parent's CAS so the section only ever shows
+  // entries the user could meaningfully reuse for the current chemical.
+  // We intentionally do not show a global list here — the trust-boundary
+  // plan keeps recents bound to the current parent so there is no way
+  // to accidentally "reuse" a concentration/solvent combo against a
+  // different chemical's GHS data.
+  const parentRecents = useMemo(() => {
+    if (!parent || !Array.isArray(recents)) return [];
+    return recents.filter(
+      (r) => r && r.parentCas && r.parentCas === parent.cas_number
+    );
+  }, [parent, recents]);
+
+  // Prefill handler: fills the form from a recent entry. We deliberately
+  // do NOT auto-submit — the user still reviews and submits through the
+  // existing path, which means existing validation + lifecycle + trust-
+  // boundary guarantees stay intact. Hazard data is never sourced from
+  // the recent record; it continues to come from the current parent
+  // result via `buildPreparedSolutionItem`.
+  const handlePrefillFromRecent = (recent) => {
+    setConcentration(recent.concentration || "");
+    setSolvent(recent.solvent || "");
+    setPreparedBy(recent.preparedBy || "");
+    setPreparedDate(recent.preparedDate || "");
+    setExpiryDate(recent.expiryDate || "");
+    // Send focus back to the concentration input so the user can still
+    // tweak and submit with keyboard flow intact.
+    concentrationInputRef.current?.focus();
+  };
 
   useEffect(() => {
     // Put focus on the first meaningful input, not the X button.
@@ -159,6 +195,61 @@ export default function PrepareSolutionModal({ parent, onSubmit, onClose }) {
               <div className="text-slate-400 text-sm">{parent.name_zh}</div>
             )}
           </div>
+
+          {/* Tier 2 PR-2A: Recent prepared (parent-scoped).
+              Only shown when the current parent has at least one
+              matching recent record. Clicking an entry prefills the
+              form; the user still has to submit. Hazard data is never
+              sourced from here — see handlePrefillFromRecent. */}
+          {parentRecents.length > 0 && (
+            <div
+              className="bg-slate-900/40 border border-slate-700 rounded-lg p-3 space-y-2"
+              data-testid="prepare-solution-recent-section"
+            >
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <span>{t("prepared.recentHeading")}</span>
+              </div>
+              <ul className="space-y-1" data-testid="prepare-solution-recent-list">
+                {parentRecents.map((r, idx) => (
+                  <li key={`${r.createdAt || "noTs"}-${idx}`}>
+                    <button
+                      type="button"
+                      onClick={() => handlePrefillFromRecent(r)}
+                      className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-blue-500 transition-colors"
+                      data-testid={`prepare-solution-recent-item-${idx}`}
+                    >
+                      <div className="text-sm text-white">
+                        {t("prepared.labelMeta", {
+                          concentration: r.concentration || "",
+                          solvent: r.solvent || "",
+                        })}
+                      </div>
+                      {(r.preparedBy || r.preparedDate || r.expiryDate) && (
+                        <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
+                          {r.preparedBy && (
+                            <span>
+                              {t("prepared.preparedByShort")}: {r.preparedBy}
+                            </span>
+                          )}
+                          {r.preparedDate && (
+                            <span>
+                              {t("prepared.preparedDateShort")}: {r.preparedDate}
+                            </span>
+                          )}
+                          {r.expiryDate && (
+                            <span>
+                              {t("prepared.expiryDateShort")}: {r.expiryDate}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <label

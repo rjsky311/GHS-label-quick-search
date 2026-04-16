@@ -1,6 +1,8 @@
 import {
   buildPreparedSolutionItem,
+  buildRecentRecord,
   isPreparedSolutionItem,
+  preparedRecentKey,
   selectionHasPreparedItem,
 } from "../preparedSolution";
 
@@ -274,5 +276,134 @@ describe("selectionHasPreparedItem", () => {
     });
     expect(selectionHasPreparedItem([baseParent, prepared])).toBe(true);
     expect(selectionHasPreparedItem([prepared])).toBe(true);
+  });
+});
+
+// ── Tier 2 PR-2A: buildRecentRecord / preparedRecentKey ──────────
+
+describe("buildRecentRecord", () => {
+  it("returns null for non-prepared inputs", () => {
+    expect(buildRecentRecord(null)).toBeNull();
+    expect(buildRecentRecord(undefined)).toBeNull();
+    expect(buildRecentRecord(baseParent)).toBeNull();
+    expect(
+      buildRecentRecord({ isPreparedSolution: false, preparedSolution: {} })
+    ).toBeNull();
+  });
+
+  it("returns null when required workflow inputs are missing", () => {
+    expect(
+      buildRecentRecord({
+        isPreparedSolution: true,
+        preparedSolution: { solvent: "Water" }, // missing concentration
+      })
+    ).toBeNull();
+    expect(
+      buildRecentRecord({
+        isPreparedSolution: true,
+        preparedSolution: { concentration: "10%" }, // missing solvent
+      })
+    ).toBeNull();
+  });
+
+  it("builds a schemaVersion:1 record with parent identity + workflow inputs", () => {
+    const prepared = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+    });
+    const record = buildRecentRecord(prepared);
+    expect(record.schemaVersion).toBe(1);
+    expect(typeof record.createdAt).toBe("string");
+    expect(record.parentCas).toBe(baseParent.cas_number);
+    expect(record.parentNameEn).toBe(baseParent.name_en);
+    expect(record.parentNameZh).toBe(baseParent.name_zh);
+    expect(record.concentration).toBe("10%");
+    expect(record.solvent).toBe("Water");
+    expect(record.preparedBy).toBe("A. Chen");
+    expect(record.preparedDate).toBe("2026-04-16");
+    expect(record.expiryDate).toBe("2026-10-16");
+  });
+
+  it("carries NO GHS / hazard / classification fields on the record", () => {
+    // This is the central trust-boundary guarantee for recents.
+    // If this ever starts failing, something is leaking GHS data into
+    // the workflow-only store.
+    const prepared = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+    });
+    const record = buildRecentRecord(prepared);
+    expect(record).not.toHaveProperty("ghs_pictograms");
+    expect(record).not.toHaveProperty("hazard_statements");
+    expect(record).not.toHaveProperty("precautionary_statements");
+    expect(record).not.toHaveProperty("signal_word");
+    expect(record).not.toHaveProperty("signal_word_zh");
+    expect(record).not.toHaveProperty("other_classifications");
+    expect(record).not.toHaveProperty("isPreparedSolution");
+    expect(record).not.toHaveProperty("preparedSolution");
+  });
+
+  it("normalises unset operational fields to null on the record", () => {
+    const prepared = buildPreparedSolutionItem(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+    });
+    const record = buildRecentRecord(prepared);
+    expect(record.preparedBy).toBeNull();
+    expect(record.preparedDate).toBeNull();
+    expect(record.expiryDate).toBeNull();
+  });
+});
+
+describe("preparedRecentKey", () => {
+  it("returns '' for null / undefined input", () => {
+    expect(preparedRecentKey(null)).toBe("");
+    expect(preparedRecentKey(undefined)).toBe("");
+  });
+
+  it("produces the same key for records with equivalent null/empty optionals", () => {
+    const a = {
+      parentCas: "64-17-5",
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: null,
+      preparedDate: null,
+      expiryDate: null,
+    };
+    const b = {
+      parentCas: "64-17-5",
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "",
+      preparedDate: "",
+      expiryDate: "",
+    };
+    expect(preparedRecentKey(a)).toBe(preparedRecentKey(b));
+  });
+
+  it("produces different keys for different workflow inputs", () => {
+    const base = {
+      parentCas: "64-17-5",
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: null,
+      preparedDate: null,
+      expiryDate: null,
+    };
+    expect(preparedRecentKey(base)).not.toBe(
+      preparedRecentKey({ ...base, concentration: "20%" })
+    );
+    expect(preparedRecentKey(base)).not.toBe(
+      preparedRecentKey({ ...base, solvent: "Methanol" })
+    );
+    expect(preparedRecentKey(base)).not.toBe(
+      preparedRecentKey({ ...base, preparedBy: "A. Chen" })
+    );
+    expect(preparedRecentKey(base)).not.toBe(
+      preparedRecentKey({ ...base, parentCas: "67-56-1" })
+    );
   });
 });

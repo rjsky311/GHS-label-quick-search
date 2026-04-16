@@ -330,4 +330,150 @@ describe("PrepareSolutionModal", () => {
     expect(section.textContent).toContain("prepared.operationalHeading");
     expect(section.textContent).toContain("prepared.operationalSubheading");
   });
+
+  // ── Tier 2 PR-2A: Recent prepared (parent-scoped) ───────────
+
+  const baseRecent = {
+    schemaVersion: 1,
+    createdAt: "2026-04-16T10:00:00.000Z",
+    parentCas: baseParent.cas_number, // 64-17-5
+    parentNameEn: baseParent.name_en,
+    parentNameZh: baseParent.name_zh,
+    concentration: "10% (v/v)",
+    solvent: "Water",
+    preparedBy: "A. Chen",
+    preparedDate: "2026-04-16",
+    expiryDate: "2026-10-16",
+  };
+
+  it("does NOT render the Recent section when there are no recents at all", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[]}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-recent-section")
+    ).not.toBeInTheDocument();
+  });
+
+  it("does NOT render the Recent section when no recents match the current parent CAS", () => {
+    // A recent for a different parent must not leak into this parent's
+    // modal. Scoping is the whole point of showing recents here.
+    const fromOtherParent = { ...baseRecent, parentCas: "67-56-1" };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[fromOtherParent]}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-recent-section")
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders parent-scoped recents when available", () => {
+    const otherParent = { ...baseRecent, parentCas: "67-56-1" };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[otherParent, baseRecent]}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-recent-section")
+    ).toBeInTheDocument();
+    const list = screen.getByTestId("prepare-solution-recent-list");
+    // Only 1 list item — the one that matches the current parent.
+    expect(list.querySelectorAll("li")).toHaveLength(1);
+    expect(screen.getByTestId("prepare-solution-recent-item-0")).toHaveTextContent(
+      "A. Chen"
+    );
+  });
+
+  it("clicking a recent item prefills the form without auto-submitting", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        recents={[baseRecent]}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
+
+    // Form inputs reflect the recent values (prefilled, not submitted)
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
+      "10% (v/v)"
+    );
+    expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue(
+      "A. Chen"
+    );
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      "2026-04-16"
+    );
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue(
+      "2026-10-16"
+    );
+
+    // Critical: onSubmit must NOT have fired — prefill only.
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("clicking a recent item with blank optional fields leaves those inputs blank", () => {
+    const minimal = {
+      ...baseRecent,
+      preparedBy: null,
+      preparedDate: null,
+      expiryDate: null,
+    };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[minimal]}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
+
+    expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
+      "10% (v/v)"
+    );
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
+  });
+
+  it("after prefilling, submit still goes through the existing onSubmit path (validation intact)", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        recents={[baseRecent]}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
+    fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"));
+    // Submit carries the prefilled values — including operational ones.
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith({
+      concentration: "10% (v/v)",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+    });
+  });
 });
