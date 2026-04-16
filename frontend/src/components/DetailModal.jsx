@@ -6,6 +6,7 @@ import GHSImage from "@/components/GHSImage";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
+import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 
 export default function DetailModal({
@@ -292,6 +293,23 @@ export default function DetailModal({
             </div>
           )}
 
+          {/* v1.8 M2: "no GHS data available" banner.
+              Surfaced ABOVE Data Provenance so the trust frame is set
+              before users see source / timestamp — otherwise those
+              signals might suggest completeness when there's nothing
+              to be complete about. Follows the effective classification
+              so custom overrides flip the banner on/off correctly. */}
+          {result.found && !hasGhsData(effective) && (
+            <div
+              role="note"
+              data-testid="detail-no-ghs-data-banner"
+              className="p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-slate-300 text-sm flex items-start gap-2"
+            >
+              <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <span>{t("detail.noGhsDataBanner")}</span>
+            </div>
+          )}
+
           {/* Data Provenance (v1.8 M1) */}
           {(result.primary_source || result.retrieved_at) && (
             <div>
@@ -336,7 +354,13 @@ export default function DetailModal({
                       {result.cache_hit && (
                         <span
                           className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-900/30 text-amber-300 border border-amber-700/40 text-xs"
-                          title={t("detail.provenanceCacheTooltip")}
+                          title={
+                            result.retrieved_at
+                              ? t("detail.provenanceCacheTooltipWithAge", {
+                                  age: formatRelativeTime(result.retrieved_at),
+                                })
+                              : t("detail.provenanceCacheTooltip")
+                          }
                           data-testid="provenance-cache-badge"
                         >
                           {t("detail.provenanceCache")}

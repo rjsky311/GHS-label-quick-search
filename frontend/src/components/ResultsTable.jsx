@@ -2,6 +2,8 @@ import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, 
 import { useTranslation } from "react-i18next";
 import GHSImage from "@/components/GHSImage";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
+import { hasGhsData, hasRenderableGhsVisual } from "@/utils/ghsAvailability";
+import { formatRelativeTime } from "@/utils/formatDate";
 
 export default function ResultsTable({
   results,
@@ -305,7 +307,13 @@ export default function ResultsTable({
                           {result.cache_hit && (
                             <span
                               className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-300 border border-amber-700/40"
-                              title={t("detail.provenanceCacheTooltip")}
+                              title={
+                                result.retrieved_at
+                                  ? t("detail.provenanceCacheTooltipWithAge", {
+                                      age: formatRelativeTime(result.retrieved_at),
+                                    })
+                                  : t("detail.provenanceCacheTooltip")
+                              }
                             >
                               {t("results.cacheBadge")}
                             </span>
@@ -318,11 +326,39 @@ export default function ResultsTable({
                   )}
                 </td>
                 <td className="px-4 py-4">
-                  {result.found && (result.ghs_pictograms?.length > 0 || result.other_classifications?.length > 0) ? (
-                    <div className="space-y-2">
-                      {(() => {
-                        const effective = getEffectiveClassification(result);
-                        const allClassifications = [
+                  {(() => {
+                    // v1.8 M2 three-branch decision:
+                    //   1. not-found → "-"
+                    //   2. found but no GHS data anywhere (on effective) → new warning
+                    //   3. found with GHS data but nothing for the visual block to draw → existing `noHazard`
+                    //   4. found with renderable visual → existing pictogram block (unchanged)
+                    if (!result.found) return "-";
+                    const effectiveForGhsCheck = getEffectiveClassification(result);
+                    if (!hasGhsData(effectiveForGhsCheck)) {
+                      return (
+                        <div
+                          className="space-y-1"
+                          data-testid={`no-ghs-data-${result.cas_number}`}
+                        >
+                          <div className="text-slate-400 text-sm">
+                            {t("results.noGhsDataAvailable")}
+                          </div>
+                          <div className="text-slate-500 text-xs">
+                            {t("results.noGhsDataHint")}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (!hasRenderableGhsVisual(result)) {
+                      return (
+                        <span className="text-slate-500">{t("results.noHazard")}</span>
+                      );
+                    }
+                    return (
+                      <div className="space-y-2">
+                        {(() => {
+                          const effective = getEffectiveClassification(result);
+                          const allClassifications = [
                           {
                             pictograms: result.ghs_pictograms || [],
                             hazard_statements: result.hazard_statements || [],
@@ -409,13 +445,10 @@ export default function ResultsTable({
                             )}
                           </>
                         );
-                      })()}
-                    </div>
-                  ) : result.found ? (
-                    <span className="text-slate-500">{t("results.noHazard")}</span>
-                  ) : (
-                    "-"
-                  )}
+                        })()}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-4">
                   {result.found ? (
