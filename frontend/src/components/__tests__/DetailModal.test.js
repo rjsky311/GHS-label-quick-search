@@ -326,4 +326,26 @@ describe('DetailModal', () => {
       expect(screen.getByText('Water')).toBeInTheDocument();
     });
   });
+
+  describe('Precautionary Statements', () => {
+    it('renders P-codes section with code and Chinese text', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      // The section header (i18n mock returns key as-is)
+      expect(screen.getByText('detail.precautionaryStatements')).toBeInTheDocument();
+      // P-code values from the fixture
+      expect(screen.getByText('P210')).toBeInTheDocument();
+      expect(screen.getByText('P301+P310')).toBeInTheDocument();
+    });
+
+    it('does not render P-codes section when precautionary_statements is empty', () => {
+      render(<DetailModal {...defaultProps} result={mockNoHazardResult} />);
+      expect(screen.queryByText('detail.precautionaryStatements')).not.toBeInTheDocument();
+    });
+
+    it('renders combined P-codes intact (not split)', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      // P301+P310 should appear as one code, not as P301 and P310 separately
+      expect(screen.getByText('P301+P310')).toBeInTheDocument();
+    });
+  });
 });

@@ -17,12 +17,20 @@ export const mockFoundResult = {
     { code: 'H225', text_zh: '高度易燃液體和蒸氣' },
     { code: 'H319', text_zh: '造成嚴重眼睛刺激' },
   ],
+  precautionary_statements: [
+    { code: 'P210', text_en: 'Keep away from heat.', text_zh: '遠離熱源。' },
+    { code: 'P233', text_en: 'Keep container tightly closed.', text_zh: '保持容器密閉。' },
+    { code: 'P301+P310', text_en: 'IF SWALLOWED: Immediately call a POISON CENTER.', text_zh: '如誤吞食：立即呼叫毒物中心。' },
+  ],
   signal_word: 'Danger',
   signal_word_zh: '危險',
   other_classifications: [
     {
       pictograms: [{ code: 'GHS07', name_zh: '刺激性' }],
       hazard_statements: [{ code: 'H302', text_zh: '吞食有害' }],
+      precautionary_statements: [
+        { code: 'P264', text_en: 'Wash hands thoroughly after handling.', text_zh: '處理後徹底洗手。' },
+      ],
       signal_word: 'Warning',
       signal_word_zh: '警告',
       source: 'ECHA C&L Notifications (source 2)',
@@ -78,6 +86,7 @@ export function createMockGetEffective(overrides = {}) {
     return {
       pictograms: result.ghs_pictograms || [],
       hazard_statements: result.hazard_statements || [],
+      precautionary_statements: result.precautionary_statements || [],
       signal_word: result.signal_word,
       signal_word_zh: result.signal_word_zh,
       isCustom: false,
