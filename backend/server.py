@@ -260,6 +260,26 @@ class ChemicalResult(BaseModel):
     # upstream failure — please retry" from "CAS truly not in PubChem".
     # Frontend can display a different message for each case.
     upstream_error: bool = False
+    # ── Provenance / trust signals (v1.8 M1) ──
+    # Which primary-report source PubChem attributed the hazard data
+    # to (e.g. "ECHA C&L Notifications Summary"). Pulled from the
+    # top-ranked classification so users can gauge evidence strength
+    # at a glance without opening the comparison table.
+    primary_source: Optional[str] = None
+    # How many notifier reports back the primary classification, if
+    # PubChem exposed a count (e.g. "236 of 412 notifications from
+    # companies ... with a classification ..."). Parsed as a plain
+    # string because PubChem does not always express it as an int.
+    primary_report_count: Optional[str] = None
+    # ISO-8601 UTC timestamp when the GHS payload was fetched (or
+    # last refreshed from PubChem). Helps the UI display "data as of
+    # ..." so users can judge freshness.
+    retrieved_at: Optional[str] = None
+    # True when the GHS data was served from the 24hr TTL cache rather
+    # than a fresh upstream fetch. The frontend can surface this as a
+    # "cached" badge so users know to refresh if they need the very
+    # latest data.
+    cache_hit: bool = False
 
 # Maximum rows accepted by the export endpoints. Keeps request size
 # bounded and prevents abuse of the export pipeline as a DoS vector.
@@ -859,24 +879,41 @@ def extract_iupac_name(ghs_data: dict) -> str:
         pass
     return ""
 
-async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> dict:
+async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tuple:
     """Get GHS classification from PubChem (with 24hr cache).
 
     Unlike the name endpoints, transient failures here are critical:
     returning `{}` would cause the rest of search_chemical() to emit
     a found=True result with empty hazard data, which is dangerous
     for a safety tool. So we let PubChemError propagate to the caller
-    and only return `{}` when PubChem definitively says there's no
-    GHS section for this CID (e.g. 404).
+    and only return `({}, ...)` when PubChem definitively says there's
+    no GHS section for this CID (e.g. 404).
+
+    Returns
+    -------
+    (ghs_data, cache_hit, retrieved_at)
+        - ghs_data     : dict (empty if no GHS section exists)
+        - cache_hit    : bool (True if served from ghs_cache)
+        - retrieved_at : ISO-8601 UTC timestamp string recording when
+                         we fetched or last refreshed this entry
+
+    The cache value is now `(data, retrieved_at)` so provenance can be
+    surfaced to the user ("data fetched at X / served from cache").
     """
-    if cid in ghs_cache:
-        return ghs_cache[cid]
+    cached = ghs_cache.get(cid)
+    if cached is not None:
+        data, retrieved_at = cached
+        return data, True, retrieved_at
+
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     status, data = await pubchem_get_json(http_client, url, timeout=30.0)
+    now = datetime.now(timezone.utc).isoformat()
     if status == 200 and data:
-        ghs_cache[cid] = data
-        return data
-    return {}
+        ghs_cache[cid] = (data, now)
+        return data, False, now
+    # 404 / empty: don't cache a fresh miss (keeps retry-able) but still
+    # report the current timestamp so the caller can annotate the result.
+    return {}, False, now
 
 async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> ChemicalResult:
     """Search for a chemical by CAS number"""
@@ -955,7 +992,9 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     ghs_task = get_ghs_classification(cid, http_client)
 
     try:
-        (name_en, name_zh), ghs_data = await asyncio.gather(name_task, ghs_task)
+        name_result, ghs_result = await asyncio.gather(name_task, ghs_task)
+        name_en, name_zh = name_result
+        ghs_data, cache_hit, retrieved_at = ghs_result
     except PubChemError as e:
         logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
         return ChemicalResult(
@@ -977,6 +1016,8 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     primary_precautions = []
     primary_signal = None
     primary_signal_zh = None
+    primary_source: Optional[str] = None
+    primary_report_count: Optional[str] = None
     other_classifications = []
 
     if all_classifications:
@@ -990,6 +1031,8 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         primary_precautions = primary.get("precautionary_statements", [])
         primary_signal = primary.get("signal_word")
         primary_signal_zh = primary.get("signal_word_zh")
+        primary_source = primary.get("source")
+        primary_report_count = primary.get("report_count")
 
         # Dedup using the full signature (pictograms + signal + h-codes + source).
         seen_signatures = {_classification_signature(primary)}
@@ -1046,7 +1089,11 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         signal_word_zh=primary_signal_zh,
         other_classifications=other_classifications,
         has_multiple_classifications=len(other_classifications) > 0,
-        found=True
+        found=True,
+        primary_source=primary_source,
+        primary_report_count=primary_report_count,
+        retrieved_at=retrieved_at,
+        cache_hit=cache_hit,
     )
 
 # API Routes

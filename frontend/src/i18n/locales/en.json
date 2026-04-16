@@ -238,7 +238,6 @@
   "print.scanForDetail": "Scan for details",
   "print.totalItems": "{{count}} item(s)",
   "print.morePrecautionary": "+{{count}} more",
-  "print.noPrecautionaryStatement": "No precautionary statements",
   "print.pageNumber": "Page {{current}} / {{total}}",
   "print.batch": "Batch",
 
