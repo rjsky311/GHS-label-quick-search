@@ -1,5 +1,12 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import PrepareSolutionModal from "../PrepareSolutionModal";
+import { todayDateString } from "@/utils/preparedSolution";
+
+// UX cleanup: several tests below assert that `preparedDate` reflects
+// "today" — either on mount or after recent/preset prefill. We use
+// the same helper the component uses so assertions are pinned to
+// local-clock today, not a hard-coded string that would rot daily.
+const TODAY = todayDateString();
 
 const baseParent = {
   cas_number: "64-17-5",
@@ -105,7 +112,10 @@ describe("PrepareSolutionModal", () => {
       concentration: "10% (v/v)",
       solvent: "Water",
       preparedBy: "",
-      preparedDate: "",
+      // UX cleanup: preparedDate now defaults to today's local date.
+      // The user didn't touch the date input, but the form's initial
+      // state has it pre-filled — that default flows into onSubmit.
+      preparedDate: TODAY,
       expiryDate: "",
     });
   });
@@ -134,7 +144,7 @@ describe("PrepareSolutionModal", () => {
       concentration: "10%",
       solvent: "Water",
       preparedBy: "",
-      preparedDate: "",
+      preparedDate: TODAY,
       expiryDate: "",
     });
   });
@@ -236,6 +246,24 @@ describe("PrepareSolutionModal", () => {
   });
 
   // ── Tier 2 PR-1: optional operational metadata ──────────────
+
+  it("preparedDate defaults to today on mount; preparedBy and expiryDate stay blank", () => {
+    // UX cleanup: the modal pre-fills preparedDate with today's local
+    // date so the "made-today, labeling-now" path (the common case)
+    // needs zero extra interactions for the date field.
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      TODAY
+    );
+    expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
+  });
 
   it("renders the operational-info section with preparedBy / preparedDate / expiryDate inputs (all optional)", () => {
     render(
@@ -410,7 +438,11 @@ describe("PrepareSolutionModal", () => {
     );
     fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
 
-    // Form inputs reflect the recent values (prefilled, not submitted)
+    // UX cleanup: concentration + solvent + preparedBy ride along,
+    // but date-sensitive fields are NEVER carried from the recent
+    // record. preparedDate is reset to today; expiryDate is cleared.
+    // Rationale: silently reusing yesterday's preparedDate on a new
+    // label is a safety-adjacent miscommunication.
     expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
       "10% (v/v)"
     );
@@ -419,17 +451,42 @@ describe("PrepareSolutionModal", () => {
       "A. Chen"
     );
     expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
-      "2026-04-16"
+      TODAY
     );
-    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue(
-      "2026-10-16"
-    );
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
 
     // Critical: onSubmit must NOT have fired — prefill only.
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("clicking a recent item with blank optional fields leaves those inputs blank", () => {
+  it("clicking a recent item resets preparedDate to today even if the record stored an older date", () => {
+    // Regression guard for the dogfood finding: a recent from weeks ago
+    // would previously copy its preparedDate into today's form, quietly
+    // mis-dating the new label. The recent's old date must be dropped.
+    const oldRecent = {
+      ...baseRecent,
+      preparedDate: "2025-01-01",
+      expiryDate: "2025-07-01",
+    };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[oldRecent]}
+      />
+    );
+    fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      TODAY
+    );
+    expect(screen.getByTestId("prepared-prepared-date-input")).not.toHaveValue(
+      "2025-01-01"
+    );
+    expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
+  });
+
+  it("clicking a recent item with blank optional fields: preparedBy stays blank, preparedDate is today, expiry is blank", () => {
     const minimal = {
       ...baseRecent,
       preparedBy: null,
@@ -450,7 +507,10 @@ describe("PrepareSolutionModal", () => {
       "10% (v/v)"
     );
     expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
-    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    // Even when the record has no preparedDate, the form shows today.
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      TODAY
+    );
     expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
   });
 
@@ -466,14 +526,15 @@ describe("PrepareSolutionModal", () => {
     );
     fireEvent.click(screen.getByTestId("prepare-solution-recent-item-0"));
     fireEvent.click(screen.getByTestId("prepare-solution-submit-btn"));
-    // Submit carries the prefilled values — including operational ones.
+    // Submit carries the prefilled values. preparedBy rides along from
+    // the recent; preparedDate is today; expiryDate is blank.
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledWith({
       concentration: "10% (v/v)",
       solvent: "Water",
       preparedBy: "A. Chen",
-      preparedDate: "2026-04-16",
-      expiryDate: "2026-10-16",
+      preparedDate: TODAY,
+      expiryDate: "",
     });
   });
 
@@ -650,11 +711,12 @@ describe("PrepareSolutionModal", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("clicking a preset CLEARS preparedBy / preparedDate / expiryDate (no stale leak)", () => {
-    // Central PR-2B behaviour: reusing a preset must never carry over
-    // operational fields from a previous session — those could silently
-    // apply the wrong date to a new label. This is the second line of
-    // defence (first is buildPresetRecord not storing them at all).
+  it("clicking a preset clears preparedBy + expiryDate, and sets preparedDate to today (no stale leak)", () => {
+    // PR-2B behaviour kept; UX cleanup tightens the rule: reusing a
+    // preset must never carry over operational fields from a previous
+    // session — preparedBy and expiryDate are blanked, preparedDate
+    // is reset to today (so the most common answer is already filled
+    // in without the risk of silently carrying a stale date).
     render(
       <PrepareSolutionModal
         parent={baseParent}
@@ -677,9 +739,11 @@ describe("PrepareSolutionModal", () => {
       target: { value: "2020-07-01" },
     });
     fireEvent.click(screen.getByTestId("prepare-solution-preset-item-0"));
-    // All three operational inputs must now be blank.
+    // preparedBy and expiryDate blanked; preparedDate = today.
     expect(screen.getByTestId("prepared-prepared-by-input")).toHaveValue("");
-    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue("");
+    expect(screen.getByTestId("prepared-prepared-date-input")).toHaveValue(
+      TODAY
+    );
     expect(screen.getByTestId("prepared-expiry-date-input")).toHaveValue("");
     // Recipe fields are the ones that got populated from the preset.
     expect(screen.getByTestId("prepared-concentration-input")).toHaveValue(
@@ -688,7 +752,7 @@ describe("PrepareSolutionModal", () => {
     expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
   });
 
-  it("after preset prefill, submit goes through the existing onSubmit path with CLEARED operational fields", () => {
+  it("after preset prefill, submit carries cleared preparedBy + cleared expiryDate + today's preparedDate", () => {
     const onSubmit = jest.fn();
     render(
       <PrepareSolutionModal
@@ -706,7 +770,7 @@ describe("PrepareSolutionModal", () => {
       concentration: "10% (v/v)",
       solvent: "Water",
       preparedBy: "",
-      preparedDate: "",
+      preparedDate: TODAY,
       expiryDate: "",
     });
   });
