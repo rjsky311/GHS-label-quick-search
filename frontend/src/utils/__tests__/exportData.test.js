@@ -29,6 +29,10 @@ const mockResult = {
   name_zh: '乙醇',
   ghs_pictograms: [{ code: 'GHS02', name_zh: '易燃' }],
   hazard_statements: [{ code: 'H225', text_zh: '高度易燃液體和蒸氣' }],
+  precautionary_statements: [
+    { code: 'P210', text_zh: '遠離熱源。' },
+    { code: 'P301+P310', text_zh: '如誤吞食：立即呼叫毒物中心。' },
+  ],
   signal_word: 'Danger',
   signal_word_zh: '危險',
 };
@@ -229,5 +233,75 @@ describe('exportToCSV', () => {
     const text = capture.content;
     expect(text).toContain('export.none');
     expect(text).toContain('export.noHazard');
+  });
+
+  // ── Precautionary statements column (v1.8 M0 PR-C) ──
+  it('client-side CSV fallback includes precautionary statements column', async () => {
+    axios.post.mockRejectedValueOnce(new Error('fail'));
+
+    const capture = captureBlobContents();
+    try {
+      await exportToCSV([mockResult]);
+    } finally {
+      capture.restore();
+    }
+
+    const text = capture.content;
+    // Header key for the new column (i18n mock returns keys as-is)
+    expect(text).toContain('export.precautionaryStatements');
+    // P-code values present
+    expect(text).toContain('P210');
+    expect(text).toContain('P301+P310');
+  });
+
+  it('client-side CSV fallback uses export.noPrecautionary when P-codes missing', async () => {
+    axios.post.mockRejectedValueOnce(new Error('fail'));
+    const noP = {
+      cas_number: '7732-18-5',
+      name_en: 'Water',
+      name_zh: '水',
+      ghs_pictograms: [],
+      hazard_statements: [],
+      precautionary_statements: [],
+    };
+
+    const capture = captureBlobContents();
+    try {
+      await exportToCSV([noP]);
+    } finally {
+      capture.restore();
+    }
+
+    const text = capture.content;
+    expect(text).toContain('export.noPrecautionary');
+  });
+
+  it('client-side CSV fallback neutralizes formula injection inside P-code text', async () => {
+    axios.post.mockRejectedValueOnce(new Error('fail'));
+    const hostile = {
+      cas_number: '64-17-5',
+      name_en: 'x',
+      name_zh: 'x',
+      ghs_pictograms: [],
+      hazard_statements: [],
+      precautionary_statements: [
+        // Whole cell value will be "P999: =HYPERLINK(...)" which does
+        // NOT start with =, but ensures CSV escape handles the quote
+        // character correctly.
+        { code: 'P999', text_zh: '=HYPERLINK("http://bad")' },
+      ],
+    };
+
+    const capture = captureBlobContents();
+    try {
+      await exportToCSV([hostile]);
+    } finally {
+      capture.restore();
+    }
+
+    const text = capture.content;
+    // No raw unescaped HYPERLINK formula at the start of a cell
+    expect(text).not.toMatch(/,=HYPERLINK/);
+    expect(text).not.toMatch(/"=HYPERLINK/);
   });
 });

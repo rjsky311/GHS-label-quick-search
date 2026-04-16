@@ -47,6 +47,7 @@ function buildCsvRows(results, t) {
       t("export.ghs"),
       t("export.signalWord"),
       t("export.hazardStatements"),
+      t("export.precautionaryStatements"),
     ],
   ];
   for (const r of results) {
@@ -59,6 +60,10 @@ function buildCsvRows(results, t) {
       r.hazard_statements && r.hazard_statements.length
         ? r.hazard_statements.map((s) => `${s.code}: ${s.text_zh}`).join("; ")
         : t("export.noHazard");
+    const precautionText =
+      r.precautionary_statements && r.precautionary_statements.length
+        ? r.precautionary_statements.map((p) => `${p.code}: ${p.text_zh}`).join("; ")
+        : t("export.noPrecautionary");
     rows.push([
       r.cas_number || "",
       r.name_en || "",
@@ -66,6 +71,7 @@ function buildCsvRows(results, t) {
       ghsText,
       signal,
       hazardText,
+      precautionText,
     ]);
   }
   return rows;

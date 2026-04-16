@@ -140,6 +140,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
         {
           pictograms: chemical.ghs_pictograms || [],
           hazard_statements: chemical.hazard_statements || [],
+          precautionary_statements: chemical.precautionary_statements || [],
           signal_word: chemical.signal_word,
           signal_word_zh: chemical.signal_word_zh,
         },
@@ -147,12 +148,14 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       ];
 
       if (customSetting.selectedIndex < allClassifications.length) {
+        const sel = allClassifications[customSetting.selectedIndex];
         return {
           ...chemical,
-          ghs_pictograms: allClassifications[customSetting.selectedIndex].pictograms || [],
-          hazard_statements: allClassifications[customSetting.selectedIndex].hazard_statements || [],
-          signal_word: allClassifications[customSetting.selectedIndex].signal_word,
-          signal_word_zh: allClassifications[customSetting.selectedIndex].signal_word_zh,
+          ghs_pictograms: sel.pictograms || [],
+          hazard_statements: sel.hazard_statements || [],
+          precautionary_statements: sel.precautionary_statements || [],
+          signal_word: sel.signal_word,
+          signal_word_zh: sel.signal_word_zh,
           customNote: customSetting.note
         };
       }
@@ -231,9 +234,14 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const effectiveChem = getEffectiveForPrint(chemical);
       const pictograms = effectiveChem.ghs_pictograms || [];
       const hazards = effectiveChem.hazard_statements || [];
+      const precautions = effectiveChem.precautionary_statements || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
       const maxHazards = labelConfig.size === "small" ? 2 : labelConfig.size === "medium" ? 3 : 4;
+      // Precaution budget is tighter — space-constrained; show code-only
+      // with an overflow marker when truncated. Full localized text goes
+      // to the "full" template and to exports.
+      const maxPrecautions = labelConfig.size === "small" ? 3 : labelConfig.size === "medium" ? 5 : 7;
 
       return `
         <div class="label">
@@ -255,6 +263,12 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
               ${hazards.slice(0, maxHazards).map((h) => `<div class="hazard-item">${escapeHtml(h.code)} ${escapeHtml(h.text_zh)}</div>`).join("")}
               ${hazards.length > maxHazards ? `<div class="hazard-more">⋯ ${escapeHtml(t("print.totalItems", { count: hazards.length }))}</div>` : ""}
             ` : `<div class="no-hazard-text">${escapeHtml(t("print.noHazardStatement"))}</div>`}
+            ${precautions.length > 0 ? `
+              <div class="precautions-compact">
+                ${precautions.slice(0, maxPrecautions).map((p) => `<span class="precaution-code">${escapeHtml(p.code)}</span>`).join(" ")}
+                ${precautions.length > maxPrecautions ? `<span class="precaution-more">⋯ ${escapeHtml(t("print.morePrecautionary", { count: precautions.length - maxPrecautions }))}</span>` : ""}
+              </div>
+            ` : ""}
           </div>
         </div>
       `;
@@ -265,9 +279,12 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const effectiveChem = getEffectiveForPrint(chemical);
       const pictograms = effectiveChem.ghs_pictograms || [];
       const hazards = effectiveChem.hazard_statements || [];
+      const precautions = effectiveChem.precautionary_statements || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
-      const hazardTier = getHazardFontTier(hazards.length, labelConfig.size);
+      // Tier is based on combined H+P count so font scales when both
+      // lists contribute to the label body.
+      const hazardTier = getHazardFontTier(hazards.length + precautions.length, labelConfig.size);
 
       return `
         <div class="label label-full">
@@ -288,6 +305,10 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
             ${hazards.length > 0 ? `
               ${hazards.map((h) => `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(h.code)} ${escapeHtml(h.text_zh)}</div>`).join("")}
             ` : `<div class="no-hazard-text">${escapeHtml(t("print.noHazardStatement"))}</div>`}
+            ${precautions.length > 0 ? `
+              <div class="precautions-divider"></div>
+              ${precautions.map((p) => `<div class="precaution-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(p.code)} ${escapeHtml(p.text_zh)}</div>`).join("")}
+            ` : ""}
           </div>
         </div>
       `;
@@ -576,6 +597,34 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       padding: 3mm;
     }
     .no-hazard-text {
+      color: #666;
+      font-style: italic;
+    }
+
+    /* ===== PRECAUTIONARY STATEMENTS ===== */
+    .precaution-item-full {
+      margin-bottom: 0.8mm;
+      color: #1e3a8a;
+    }
+    .precautions-divider {
+      border-top: 1px dotted #94a3b8;
+      margin: 1mm 0 1mm 0;
+    }
+    .precautions-compact {
+      margin-top: 1mm;
+      border-top: 1px dotted #aaa;
+      padding-top: 0.8mm;
+      line-height: 1.35;
+    }
+    .precaution-code {
+      display: inline-block;
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: calc(${sizeConfig.hazardSize} - 1px);
+      color: #1e3a8a;
+      margin-right: 1.5mm;
+    }
+    .precaution-more {
+      font-size: calc(${sizeConfig.hazardSize} - 1px);
       color: #666;
       font-style: italic;
     }

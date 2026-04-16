@@ -592,6 +592,147 @@ describe('printLabels', () => {
     });
   });
 
+  // ── Precautionary Statements (v1.8 M0 PR-C) ──
+  describe('precautionary statements', () => {
+    const chemWithP = {
+      ...mockChemical,
+      precautionary_statements: [
+        { code: 'P210', text_en: 'Keep away from heat.', text_zh: '遠離熱源。' },
+        { code: 'P233', text_en: 'Keep container closed.', text_zh: '保持容器密閉。' },
+        { code: 'P301+P310', text_en: 'IF SWALLOWED: Call POISON CENTER.', text_zh: '如誤吞食：立即呼叫毒物中心。' },
+      ],
+    };
+
+    it('full template renders P-codes with localized text', () => {
+      printLabels([chemWithP], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('P210');
+      expect(html).toContain('P233');
+      expect(html).toContain('P301+P310');
+      // Full Chinese text present
+      expect(html).toContain('遠離熱源。');
+      expect(html).toContain('如誤吞食：立即呼叫毒物中心。');
+    });
+
+    it('full template inserts a visual divider between H-codes and P-codes', () => {
+      printLabels([chemWithP], { size: 'large', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('precautions-divider');
+    });
+
+    it('standard template renders P-codes as compact code-only pills', () => {
+      printLabels([chemWithP], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Look for actual element markup, not the CSS class definition
+      expect(html).toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).toMatch(/<span\s+class="precaution-code"/);
+      expect(html).toContain('P210');
+      expect(html).toContain('P301+P310');
+      // In compact view we do NOT inline the long Chinese text
+      expect(html).not.toContain('如誤吞食：立即呼叫毒物中心。');
+    });
+
+    it('standard template shows overflow marker when P-codes exceed size budget', () => {
+      const chemManyP = {
+        ...mockChemical,
+        precautionary_statements: Array.from({ length: 12 }, (_, i) => ({
+          code: `P${200 + i}`,
+          text_en: 'x',
+          text_zh: 'x',
+        })),
+      };
+      // small => budget is 3
+      printLabels([chemManyP], { size: 'small', template: 'standard', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('precaution-more');
+      // First 3 codes should appear
+      expect(html).toContain('P200');
+      expect(html).toContain('P201');
+      expect(html).toContain('P202');
+      // Later codes should NOT appear inline (they're in the overflow)
+      expect(html).not.toContain('>P210<');
+    });
+
+    it('standard template omits P-code section when no P-codes', () => {
+      // mockChemical has no precautionary_statements field
+      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // CSS class definitions still live in <style>; check for actual element usage
+      expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).not.toMatch(/<span\s+class="precaution-code"/);
+    });
+
+    it('full template renders "no precautionary" state without crashing when P-codes empty', () => {
+      printLabels([mockChemical], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Divider and per-item markup should not render (CSS class definitions don't count)
+      expect(html).not.toMatch(/<div\s+class="precautions-divider"/);
+      expect(html).not.toMatch(/<div\s+class="precaution-item-full/);
+    });
+
+    it('icon and qrcode templates do not render full P-code content (compact by design)', () => {
+      printLabels([chemWithP], { size: 'medium', template: 'icon', orientation: 'portrait' }, {});
+      const iconHtml = mockIframeDoc.write.mock.calls[0][0];
+      // Check for actual div elements using the classes, not the CSS block
+      expect(iconHtml).not.toMatch(/<div\s+class="precaution-item-full/);
+      expect(iconHtml).not.toMatch(/<div\s+class="precautions-compact"/);
+      // And no P-code values appear in the body
+      expect(iconHtml).not.toContain('P210');
+      expect(iconHtml).not.toContain('P301+P310');
+
+      mockIframeDoc.write.mockClear();
+      printLabels([chemWithP], { size: 'medium', template: 'qrcode', orientation: 'portrait' }, {});
+      const qrHtml = mockIframeDoc.write.mock.calls[0][0];
+      expect(qrHtml).not.toMatch(/<div\s+class="precaution-item-full/);
+      expect(qrHtml).not.toMatch(/<div\s+class="precautions-compact"/);
+      expect(qrHtml).not.toContain('P210');
+    });
+
+    it('custom GHS override swaps to alternate classification P-codes', () => {
+      const chemWithAlt = {
+        ...chemWithP,
+        other_classifications: [
+          {
+            pictograms: [{ code: 'GHS07', name_zh: '感嘆號' }],
+            hazard_statements: [{ code: 'H302', text_zh: '吞食有害' }],
+            precautionary_statements: [
+              { code: 'P264', text_en: 'Wash after use.', text_zh: '處理後洗手。' },
+            ],
+            signal_word: 'Warning',
+            signal_word_zh: '警告',
+          },
+        ],
+      };
+      const customSettings = { '64-17-5': { selectedIndex: 1, note: 'alt' } };
+      printLabels([chemWithAlt], { size: 'medium', template: 'full', orientation: 'portrait' }, customSettings);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Alternate's P-code must appear
+      expect(html).toContain('P264');
+      expect(html).toContain('處理後洗手。');
+      // Primary P-codes must NOT appear (swapped out)
+      expect(html).not.toContain('P301+P310');
+    });
+
+    it('P-code text is HTML-escaped like other interpolated values', () => {
+      const chemHostile = {
+        ...mockChemical,
+        precautionary_statements: [
+          {
+            code: 'P<img src=x onerror=alert(1)>',
+            text_en: '<script>alert(1)</script>',
+            text_zh: '"></div><script>evil</script>',
+          },
+        ],
+      };
+      printLabels([chemHostile], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toContain('<script>evil</script>');
+      expect(html).not.toMatch(/<img\s+src=x\s+onerror/);
+      // Escaped forms must be present
+      expect(html).toContain('&lt;script&gt;evil&lt;/script&gt;');
+    });
+  });
+
   // ── HTML Injection Regression Tests ──
   // These verify that user-controlled values (localStorage custom fields,
   // chemical names/CAS from PubChem or user input, hazard statement text)

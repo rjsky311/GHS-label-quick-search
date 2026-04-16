@@ -229,12 +229,16 @@
   "export.noHazard": "No hazard statements",
   "export.errorXlsx": "Excel export failed. Please check your connection and try again.",
   "export.csvFallbackHint": "Server export was unavailable — saved with a local fallback.",
+  "export.precautionaryStatements": "Precautionary Statements",
+  "export.noPrecautionary": "No precautionary statements",
 
   "print.title": "GHS Label Print",
   "print.noHazardLabel": "No hazard label",
   "print.noHazardStatement": "No hazard statements",
   "print.scanForDetail": "Scan for details",
   "print.totalItems": "{{count}} item(s)",
+  "print.morePrecautionary": "+{{count}} more",
+  "print.noPrecautionaryStatement": "No precautionary statements",
   "print.pageNumber": "Page {{current}} / {{total}}",
   "print.batch": "Batch",
 
