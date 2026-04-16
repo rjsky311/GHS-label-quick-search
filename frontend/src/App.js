@@ -17,6 +17,7 @@ import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
 import { printLabels } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
+import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
 
 // Components
 import Header from "@/components/Header";
@@ -30,6 +31,7 @@ import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import DetailModal from "@/components/DetailModal";
 import ComparisonModal from "@/components/ComparisonModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
+import PrepareSolutionModal from "@/components/PrepareSolutionModal";
 import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
 
@@ -47,6 +49,20 @@ function App() {
   const [selectedResult, setSelectedResult] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
+  // v1.9 M3 Tier 1: parent chemical of the current prepare-solution flow.
+  // Non-null ⇒ PrepareSolutionModal is visible. Separate from
+  // selectedResult so closing DetailModal doesn't tear down the prepare
+  // flow, and vice versa.
+  const [prepareSolutionParent, setPrepareSolutionParent] = useState(null);
+  // v1.9 M3 Tier 1: session flag for the prepared-solution print flow.
+  // Flipped on at submit (we're entering LabelPrintModal with a prepared
+  // item), flipped off when LabelPrintModal closes along with cleanup.
+  // Using a session flag instead of inspecting `selectedForLabel` at
+  // close time so we still clean up even if the user manually removed
+  // the prepared item inside LabelPrintModal — without this, its
+  // labelQuantities[parentCas] entry would leak into a later normal
+  // print flow for the same parent chemical.
+  const [preparedFlowActive, setPreparedFlowActive] = useState(false);
   const [labelConfig, setLabelConfig] = useState({
     size: "medium",
     template: "standard",
@@ -333,6 +349,82 @@ function App() {
     printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities);
   }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities]);
 
+  // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────
+  //
+  // Three entry / exit points, all wired directly — no delegation
+  // through handleOpenLabelModal (which contains the auto-select-
+  // all-found fallback that would clobber our single prepared item).
+
+  // Entry: from DetailModal's "Prepare solution" button.
+  const handleOpenPrepareSolution = useCallback((chem) => {
+    setPrepareSolutionParent(chem);
+  }, []);
+
+  // Cancel / close the PrepareSolutionModal without submitting.
+  // Must not touch any selection state: user intent was "never mind".
+  const handleClosePrepareSolution = useCallback(() => {
+    setPrepareSolutionParent(null);
+  }, []);
+
+  // Submit: build the derived item, hard-replace selection + quantities,
+  // close BOTH the prepare-solution modal and the underlying DetailModal,
+  // then open LabelPrintModal. All state mutations happen in the same
+  // tick so React batches them — no delegation to legacy handlers.
+  const handleSubmitPrepareSolution = useCallback(
+    (formValues) => {
+      if (!prepareSolutionParent) return;
+      const preparedItem = buildPreparedSolutionItem(
+        prepareSolutionParent,
+        formValues
+      );
+      if (!preparedItem) return; // validation already blocked this in the modal, but guard anyway
+
+      // Replace selection with exactly this one prepared item.
+      setSelectedForLabel([preparedItem]);
+      // Reset quantities so the prepared item starts at 1, not inheriting
+      // any stale count from a parent chemical that happens to share its CAS.
+      setLabelQuantities({});
+      // Mark the prepared-solution print session as active. This signal
+      // is what `handleCloseLabelModal` uses to wipe selection + quantities
+      // on close — independent of whether the user has manually removed
+      // the prepared item from the selected list inside LabelPrintModal.
+      setPreparedFlowActive(true);
+      // Close both modals of the prepare-solution flow.
+      setPrepareSolutionParent(null);
+      setSelectedResult(null);
+      // Hand off to the existing print modal.
+      setShowLabelModal(true);
+    },
+    [
+      prepareSolutionParent,
+      setSelectedForLabel,
+      setLabelQuantities,
+      setShowLabelModal,
+    ]
+  );
+
+  // LabelPrintModal close: if this close is ending a prepared-solution
+  // print session, wipe selection + quantities so the prepared flow
+  // doesn't leave a ghost CAS-match selected state back in ResultsTable
+  // and — critically — doesn't leak `labelQuantities[parentCas]` into
+  // a subsequent normal print flow for the same parent chemical.
+  //
+  // We gate on the session flag, NOT on "is there still a prepared item
+  // in `selectedForLabel`?" — a user who removes the prepared item
+  // inside LabelPrintModal and THEN closes would otherwise bypass
+  // cleanup and leak a stale quantity.
+  //
+  // Decision locked in plan v2: "prepared flow is one-shot ephemeral".
+  // We do NOT attempt to restore a previous selection snapshot.
+  const handleCloseLabelModal = useCallback(() => {
+    setShowLabelModal(false);
+    if (preparedFlowActive) {
+      setSelectedForLabel([]);
+      setLabelQuantities({});
+      setPreparedFlowActive(false);
+    }
+  }, [preparedFlowActive, setSelectedForLabel, setLabelQuantities]);
+
   // ── Render ──
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -448,6 +540,15 @@ function App() {
           hasCustomClassification={hasCustomClassification}
           onClearCustomClassification={clearCustomClassification}
           onPrintLabel={handlePrintLabelFromDetail}
+          onPrepareSolution={handleOpenPrepareSolution}
+        />
+      )}
+
+      {prepareSolutionParent && (
+        <PrepareSolutionModal
+          parent={prepareSolutionParent}
+          onSubmit={handleSubmitPrepareSolution}
+          onClose={handleClosePrepareSolution}
         />
       )}
 
@@ -474,7 +575,7 @@ function App() {
           onSaveTemplate={(name) => saveTemplate(name, labelConfig, customLabelFields)}
           onLoadTemplate={handleLoadTemplate}
           onDeleteTemplate={deleteTemplate}
-          onClose={() => setShowLabelModal(false)}
+          onClose={handleCloseLabelModal}
         />
       )}
 
