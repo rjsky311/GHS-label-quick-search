@@ -201,6 +201,54 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     </div>`;
   };
 
+  // ── Prepared-solution (v1.9 M3 Tier 1) helpers ──
+  //
+  // A "prepared solution" item has:
+  //   isPreparedSolution: true
+  //   preparedSolution: { concentration, solvent, parentCas?,
+  //                       parentNameEn?, parentNameZh? }
+  //
+  // The item itself still carries the parent chemical's name / CAS /
+  // GHS fields (see preparedSolution util). These helpers ONLY render
+  // the additional prepared-solution markers. All user-controlled
+  // strings (concentration, solvent) are HTML-escaped.
+  //
+  // Design principle: every template must make it VISUALLY obvious
+  // that the label is not a pure-substance label. The full/standard
+  // templates render the full disclaimer; icon/qrcode are space-
+  // constrained and render a short badge + meta rows instead. None
+  // of them may silently drop the prepared identity.
+
+  const isPrepared = (chem) => Boolean(chem && chem.isPreparedSolution);
+
+  const renderPreparedBadge = () =>
+    `<div class="prepared-badge" data-testid="prepared-badge">${escapeHtml(t("print.preparedShort"))}</div>`;
+
+  const renderPreparedMeta = (chem) => {
+    if (!isPrepared(chem)) return "";
+    const meta = chem.preparedSolution || {};
+    const concentration = meta.concentration || "";
+    const solvent = meta.solvent || "";
+    const rows = [];
+    if (concentration) {
+      rows.push(
+        `<div class="prepared-meta-row"><span class="prepared-label">${escapeHtml(t("print.concentration"))}:</span> <span class="prepared-value">${escapeHtml(concentration)}</span></div>`
+      );
+    }
+    if (solvent) {
+      rows.push(
+        `<div class="prepared-meta-row"><span class="prepared-label">${escapeHtml(t("print.solvent"))}:</span> <span class="prepared-value">${escapeHtml(solvent)}</span></div>`
+      );
+    }
+    if (rows.length === 0) return "";
+    return `<div class="prepared-meta" data-testid="prepared-meta">${rows.join("")}</div>`;
+  };
+
+  const renderPreparedNote = (chem) => {
+    if (!isPrepared(chem)) return "";
+    return `<div class="prepared-note" data-testid="prepared-note">${escapeHtml(t("print.preparedNote"))}</div>`;
+  };
+
   // Template generators with FIXED LAYOUT
   const templates = {
     // 版型 1 - 圖示版
@@ -209,11 +257,13 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const pictograms = effectiveChem.ghs_pictograms || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+      const prepared = isPrepared(effectiveChem);
 
       return `
-        <div class="label">
+        <div class="label${prepared ? " label-prepared" : ""}">
           <div class="label-top">
             ${renderNameSection(effectiveChem)}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
           </div>
           <div class="label-middle">
             ${pictograms.length > 0 ? `
@@ -242,11 +292,13 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       // with an overflow marker when truncated. Full localized text goes
       // to the "full" template and to exports.
       const maxPrecautions = labelConfig.size === "small" ? 3 : labelConfig.size === "medium" ? 5 : 7;
+      const prepared = isPrepared(effectiveChem);
 
       return `
-        <div class="label">
+        <div class="label${prepared ? " label-prepared" : ""}">
           <div class="label-top">
             ${renderNameSection(effectiveChem)}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
           </div>
           <div class="label-middle">
             <div class="middle-row">
@@ -269,6 +321,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
                 ${precautions.length > maxPrecautions ? `<span class="precaution-more">⋯ ${escapeHtml(t("print.morePrecautionary", { count: precautions.length - maxPrecautions }))}</span>` : ""}
               </div>
             ` : ""}
+            ${prepared ? renderPreparedNote(effectiveChem) : ""}
           </div>
         </div>
       `;
@@ -285,11 +338,13 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       // Tier is based on combined H+P count so font scales when both
       // lists contribute to the label body.
       const hazardTier = getHazardFontTier(hazards.length + precautions.length, labelConfig.size);
+      const prepared = isPrepared(effectiveChem);
 
       return `
-        <div class="label label-full">
+        <div class="label label-full${prepared ? " label-prepared" : ""}">
           <div class="label-top">
             ${renderNameSection(effectiveChem)}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
           </div>
           <div class="label-middle compact">
             <div class="middle-row">
@@ -309,6 +364,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
               <div class="precautions-divider"></div>
               ${precautions.map((p) => `<div class="precaution-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(p.code)} ${escapeHtml(p.text_zh)}</div>`).join("")}
             ` : ""}
+            ${prepared ? renderPreparedNote(effectiveChem) : ""}
           </div>
         </div>
       `;
@@ -320,6 +376,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const pictograms = effectiveChem.ghs_pictograms || [];
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+      const prepared = isPrepared(effectiveChem);
       // pubchemUrl is passed through encodeURIComponent by getQRCodeUrl,
       // so no additional escape is needed for the resulting src attribute.
       const pubchemUrl = effectiveChem.cid
@@ -327,9 +384,10 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
         : `https://pubchem.ncbi.nlm.nih.gov/#query=${effectiveChem.cas_number}`;
 
       return `
-        <div class="label label-qr">
+        <div class="label label-qr${prepared ? " label-prepared" : ""}">
           <div class="qr-left">
             ${renderNameSection(effectiveChem)}
+            ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
             ${pictograms.length > 0 ? `
               <div class="pictograms qr-pics">
                 ${pictograms.slice(0, 4).map((p) => `<img src="${escapeHtml(GHS_IMAGES[p.code] || "")}" alt="${escapeHtml(p.code)}" />`).join("")}
@@ -501,6 +559,53 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* ===== PREPARED SOLUTION (v1.9 M3 Tier 1) ===== */
+    /* Goal: make it visually unmistakable that this is NOT a pure-
+       substance label. Every template must carry at least the
+       short badge + meta rows; standard/full also carry the full
+       note (rendered separately in .prepared-note). Colours are
+       print-safe (no opacity tricks) so they survive B&W too. */
+    .prepared-badge {
+      display: inline-block;
+      font-size: calc(${sizeConfig.fontSize} - 2px);
+      font-weight: bold;
+      color: #1e40af;
+      background: #dbeafe;
+      border: 1px solid #60a5fa;
+      border-radius: 1.5mm;
+      padding: 0.3mm 1.5mm;
+      margin-top: 0.8mm;
+      letter-spacing: 0.3mm;
+    }
+    .prepared-meta {
+      margin-top: 0.8mm;
+      font-size: calc(${sizeConfig.fontSize} - 1px);
+      line-height: 1.2;
+      color: #1e3a8a;
+    }
+    .prepared-meta-row {
+      display: block;
+      word-break: break-word;
+    }
+    .prepared-label {
+      color: #1e40af;
+      font-weight: 600;
+      margin-right: 0.8mm;
+    }
+    .prepared-value {
+      color: #1e3a8a;
+    }
+    .prepared-note {
+      margin-top: 1.2mm;
+      padding: 0.8mm 1.2mm;
+      font-size: calc(${sizeConfig.fontSize} - 3px);
+      line-height: 1.25;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-left: 1.5px solid #60a5fa;
+      border-radius: 0.5mm;
     }
 
     /* ===== PICTOGRAMS ===== */

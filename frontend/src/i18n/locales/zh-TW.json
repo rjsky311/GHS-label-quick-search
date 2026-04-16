@@ -253,6 +253,11 @@
   "print.scanForDetail": "掃碼查看詳情",
   "print.totalItems": "共 {{count}} 項",
   "print.morePrecautionary": "另有 {{count}} 項",
+  "print.preparedSolution": "配製稀釋液",
+  "print.preparedShort": "稀釋液",
+  "print.concentration": "濃度",
+  "print.solvent": "溶劑",
+  "print.preparedNote": "此為配製稀釋液 — 危害資料沿用母化學品。實際混合物分類可能不同，使用前請以官方安全資料表（SDS）為準。",
   "print.pageNumber": "第 {{current}} / {{total}} 頁",
   "print.batch": "批號",
 
