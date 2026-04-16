@@ -253,6 +253,11 @@
   "print.scanForDetail": "Scan for details",
   "print.totalItems": "{{count}} item(s)",
   "print.morePrecautionary": "+{{count}} more",
+  "print.preparedSolution": "Prepared solution",
+  "print.preparedShort": "Prepared",
+  "print.concentration": "Concentration",
+  "print.solvent": "Solvent",
+  "print.preparedNote": "Prepared solution — hazard data copied from the parent chemical. Classification may differ for the actual mixture; verify against the official SDS before use.",
   "print.pageNumber": "Page {{current}} / {{total}}",
   "print.batch": "Batch",
 

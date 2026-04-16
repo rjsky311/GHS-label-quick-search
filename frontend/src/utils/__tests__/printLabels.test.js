@@ -941,3 +941,338 @@ describe('print page footer disclaimer', () => {
     expect(footerMatch[1]).not.toMatch(/</);
   });
 });
+
+// ── Prepared solution rendering (v1.9 M3 Tier 1 PR-B) ──
+//
+// PR-B is print-path-only: it verifies that `printLabels()` renders
+// a derived prepared-solution item (`isPreparedSolution: true`)
+// correctly across all four templates. PR-A will build the UI flow
+// that produces such items; these tests construct them directly.
+describe('prepared solution print rendering', () => {
+  let mockIframe, mockIframeDoc, mockIframeWindow;
+  let createElementSpy, appendChildSpy, getByIdSpy;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const mocks = createMockIframe();
+    mockIframe = mocks.mockIframe;
+    mockIframeDoc = mocks.mockIframeDoc;
+    mockIframeWindow = mocks.mockIframeWindow;
+
+    createElementSpy = jest
+      .spyOn(document, 'createElement')
+      .mockImplementation((tag) => {
+        if (tag === 'iframe') return mockIframe;
+        return document.createElement.wrappedMethod
+          ? document.createElement.wrappedMethod(tag)
+          : {};
+      });
+    appendChildSpy = jest
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation(() => {});
+    getByIdSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null);
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    createElementSpy.mockRestore();
+    appendChildSpy.mockRestore();
+    getByIdSpy.mockRestore();
+    jest.useRealTimers();
+  });
+
+  // Construct a prepared-solution item in the exact shape PR-A will
+  // produce (parent chemical's fields preserved, plus the metadata).
+  const makePrepared = (overrides = {}) => ({
+    ...mockChemical,
+    isPreparedSolution: true,
+    preparedSolution: {
+      concentration: '10% (v/v)',
+      solvent: 'Water',
+      parentCas: mockChemical.cas_number,
+      parentNameEn: mockChemical.name_en,
+      parentNameZh: mockChemical.name_zh,
+    },
+    ...overrides,
+  });
+
+  describe('full template', () => {
+    it('renders prepared badge, meta rows, and note', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toMatch(/<div\s+class="prepared-note"/);
+      expect(html).toContain('10% (v/v)');
+      expect(html).toContain('Water');
+    });
+
+    it('applies label-prepared class so CSS scoping is possible', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/class="label\s+label-full\s+label-prepared"/);
+    });
+
+    it('parent pictograms / hazards / precautions are still rendered', () => {
+      const prepared = {
+        ...makePrepared(),
+        precautionary_statements: [
+          { code: 'P210', text_en: 'Keep away from heat.', text_zh: '遠離熱源。' },
+        ],
+      };
+      printLabels(
+        [prepared],
+        { size: 'large', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Parent pictograms
+      expect(html).toContain('GHS02');
+      expect(html).toContain('GHS07');
+      // Parent hazards
+      expect(html).toContain('H225');
+      // Parent precautions (from the override above)
+      expect(html).toContain('P210');
+      // Parent signal word
+      expect(html).toContain('危險');
+    });
+  });
+
+  describe('standard template', () => {
+    it('renders prepared badge, meta rows, and note', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toMatch(/<div\s+class="prepared-note"/);
+    });
+
+    it('parent pictograms and hazards still render', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('GHS02');
+      expect(html).toContain('H225');
+    });
+  });
+
+  describe('icon template', () => {
+    // Space-constrained template. Must preserve prepared identity
+    // via the compact badge + meta rows, but does NOT render the
+    // full prepared note (no room).
+    it('renders compact prepared badge and meta rows', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toContain('10% (v/v)');
+      expect(html).toContain('Water');
+    });
+
+    it('does NOT render the full prepared-note on icon template (space)', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-note"/);
+    });
+
+    it('parent pictograms still render', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('GHS02');
+      expect(html).toContain('GHS07');
+    });
+  });
+
+  describe('qrcode template', () => {
+    it('renders compact prepared badge and meta rows in left column', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toContain('10% (v/v)');
+      expect(html).toContain('Water');
+    });
+
+    it('does NOT render the full prepared-note on qrcode template (space)', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-note"/);
+    });
+
+    it('parent QR code is still generated (not replaced)', () => {
+      printLabels(
+        [makePrepared()],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<img\s+class="qrcode-img"/);
+    });
+  });
+
+  describe('HTML injection safety', () => {
+    it('concentration and solvent values are HTML-escaped', () => {
+      const hostile = {
+        ...mockChemical,
+        isPreparedSolution: true,
+        preparedSolution: {
+          concentration: '<script>alert(1)</script>',
+          solvent: '"><img src=x onerror=alert(2)>',
+        },
+      };
+      printLabels(
+        [hostile],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // No raw script tag or injected onerror image should survive
+      expect(html).not.toMatch(/<script>alert\(1\)/);
+      expect(html).not.toMatch(/<img\s+src=x\s+onerror=alert\(2\)/);
+      // Escaped forms must be present
+      expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+      expect(html).toContain('&quot;&gt;&lt;img src=x onerror=alert(2)&gt;');
+    });
+  });
+
+  describe('custom GHS override', () => {
+    it('prepared item still receives the custom override selection', () => {
+      const prepared = {
+        ...makePrepared(),
+        other_classifications: [
+          {
+            pictograms: [{ code: 'GHS06', name_zh: '劇毒' }],
+            hazard_statements: [{ code: 'H301', text_zh: '吞食有毒' }],
+            signal_word: 'Danger',
+            signal_word_zh: '危險',
+          },
+        ],
+      };
+      const customSettings = {
+        [prepared.cas_number]: { selectedIndex: 1, note: 'use alt' },
+      };
+      printLabels(
+        [prepared],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        customSettings
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Alternate classification's pictogram/hazard should be used
+      expect(html).toContain('GHS06');
+      expect(html).toContain('H301');
+      // Prepared identity still preserved
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+    });
+  });
+
+  describe('non-prepared regression', () => {
+    it('a normal chemical (isPreparedSolution not set) renders no prepared markers', () => {
+      printLabels(
+        [mockChemical], // no isPreparedSolution flag
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // None of the prepared element classes should appear as elements
+      expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-note"/);
+      // And the label-prepared class should NOT be applied
+      expect(html).not.toMatch(/class="label[^"]*\blabel-prepared\b/);
+    });
+
+    it('a normal chemical + standard template is unaffected', () => {
+      printLabels(
+        [mockChemical],
+        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-note"/);
+    });
+
+    it('isPreparedSolution=false explicitly also renders no markers', () => {
+      printLabels(
+        [{ ...mockChemical, isPreparedSolution: false }],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
+    });
+  });
+
+  describe('meta-only edge cases', () => {
+    it('handles missing concentration (only solvent provided)', () => {
+      const prepared = {
+        ...mockChemical,
+        isPreparedSolution: true,
+        preparedSolution: { solvent: 'Water' },
+      };
+      printLabels(
+        [prepared],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      // Badge and note still present
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toMatch(/<div\s+class="prepared-note"/);
+      // Solvent row appears, concentration row does not
+      expect(html).toContain('Water');
+    });
+
+    it('handles missing solvent (only concentration provided)', () => {
+      const prepared = {
+        ...mockChemical,
+        isPreparedSolution: true,
+        preparedSolution: { concentration: '1 N' },
+      };
+      printLabels(
+        [prepared],
+        { size: 'medium', template: 'full', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).toContain('1 N');
+    });
+  });
+});
