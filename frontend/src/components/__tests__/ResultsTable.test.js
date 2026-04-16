@@ -567,11 +567,20 @@ describe('ResultsTable', () => {
   });
 
   describe('Print all with GHS data shortcut (v1.8 M2 PR-B)', () => {
-    it('does NOT render the button when results is empty', () => {
+    // Post-review fix: ResultsTable no longer computes the count
+    // itself — App.js derives it from the RAW results array (pre-
+    // filter, pre-sort) and passes it down as `printAllWithGhsCount`.
+    // These tests now verify the wiring off that prop directly,
+    // independently of what's in the visible `results` prop (which
+    // is `sortedResults` in production). Filter-independence is
+    // verified at App level in `printAllWithGhs.integration.test.js`.
+
+    it('does NOT render the button when printAllWithGhsCount is 0', () => {
       render(
         <ResultsTable
           {...defaultProps}
           results={[]}
+          printAllWithGhsCount={0}
           onPrintAllWithGhs={jest.fn()}
         />
       );
@@ -580,11 +589,11 @@ describe('ResultsTable', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('does NOT render the button when no result qualifies (all no-GHS or not-found)', () => {
+    it('does NOT render the button when prop is omitted (defaults to 0)', () => {
       render(
         <ResultsTable
           {...defaultProps}
-          results={[mockNoHazardResult, mockNotFoundResult]}
+          results={[mockFoundResult]}
           getEffectiveClassification={createMockGetEffective()}
           onPrintAllWithGhs={jest.fn()}
         />
@@ -594,19 +603,37 @@ describe('ResultsTable', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('renders the button with a count badge when at least one row qualifies', () => {
+    it('renders the button with a count badge when printAllWithGhsCount >= 1', () => {
       render(
         <ResultsTable
           {...defaultProps}
-          results={[mockFoundResult, mockNoHazardResult, mockNotFoundResult]}
+          results={[mockFoundResult]}
           getEffectiveClassification={createMockGetEffective()}
+          printAllWithGhsCount={3}
           onPrintAllWithGhs={jest.fn()}
         />
       );
       const btn = screen.getByTestId('print-all-with-ghs-btn');
       expect(btn).toBeInTheDocument();
-      // Only mockFoundResult qualifies → count should be 1
-      expect(btn.textContent).toContain('1');
+      expect(btn.textContent).toContain('3');
+    });
+
+    it('badge count reflects the PROP, not an internal recompute over filtered results', () => {
+      // Raw-result count (8) can legitimately exceed the number of
+      // rows visible in the table (1). The badge must show 8 — that's
+      // the whole point of the post-review fix.
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          getEffectiveClassification={createMockGetEffective()}
+          printAllWithGhsCount={8}
+          onPrintAllWithGhs={jest.fn()}
+        />
+      );
+      expect(
+        screen.getByTestId('print-all-with-ghs-btn').textContent
+      ).toContain('8');
     });
 
     it('clicking the button invokes onPrintAllWithGhs exactly once', () => {
@@ -616,14 +643,15 @@ describe('ResultsTable', () => {
           {...defaultProps}
           results={[mockFoundResult]}
           getEffectiveClassification={createMockGetEffective()}
+          printAllWithGhsCount={1}
           onPrintAllWithGhs={onPrintAllWithGhs}
         />
       );
       fireEvent.click(screen.getByTestId('print-all-with-ghs-btn'));
       expect(onPrintAllWithGhs).toHaveBeenCalledTimes(1);
       // React forwards the click SyntheticEvent as the first argument;
-      // the handler itself ignores it and calls a parameter-less
-      // useCallback. We deliberately don't assert on the event object.
+      // the handler itself ignores it. We deliberately don't assert
+      // on the event object.
     });
   });
 });

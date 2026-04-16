@@ -251,4 +251,91 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     const dialogText = dialog.textContent;
     expect(dialogText).not.toContain('7732-18-5');
   });
+
+  it('filter-independence: the shortcut count reflects RAW results, not the currently visible filter set', async () => {
+    // Post-review fix verification: the shortcut acts on the RAW
+    // results array, not on whatever is currently visible in the
+    // filtered table view. If the count had been computed from
+    // filter-visible rows (the pre-fix bug), applying a filter that
+    // hides some rows would make the count drop below the true total.
+    //
+    // Scenario:
+    //   - Batch returns 2 rows that both have GHS data, one with
+    //     signal_word="Danger" and one with signal_word="Warning"
+    //   - Apply the "Danger" filter → only 1 row visible in the table
+    //   - The shortcut badge must still say "2" (both raw-eligible rows)
+    //   - Clicking must open the modal with BOTH rows selected
+    const dangerRow = {
+      cas_number: '64-17-5',
+      cid: 702,
+      name_en: 'Ethanol',
+      name_zh: '乙醇',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02', name_zh: '易燃' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      signal_word_zh: '危險',
+      other_classifications: [],
+    };
+    const warningRow = {
+      cas_number: '67-64-1',
+      cid: 180,
+      name_en: 'Acetone',
+      name_zh: '丙酮',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS07', name_zh: '刺激性' }],
+      hazard_statements: [{ code: 'H319', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Warning',
+      signal_word_zh: '警告',
+      other_classifications: [],
+    };
+
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ['64-17-5', '67-64-1'],
+      mockResponses: [dangerRow, warningRow],
+    });
+
+    // Baseline: both rows eligible, shortcut badge = 2.
+    let btn = await screen.findByTestId('print-all-with-ghs-btn');
+    expect(btn.textContent).toContain('2');
+
+    // Apply the "Danger" filter. filter.danger is the i18n key for
+    // the Danger pill in the filter toolbar.
+    const dangerPill = screen.getByText('filter.danger');
+    await act(async () => {
+      fireEvent.click(dangerPill);
+    });
+
+    // The filter toolbar now shows a "showing 1 of 2" indicator via
+    // filter.showing key. Sanity-check the filter actually applied
+    // by looking for that key.
+    expect(screen.getByText('filter.showing')).toBeInTheDocument();
+
+    // CRITICAL: the shortcut badge must still say "2" because the
+    // count reflects RAW results (pre-filter). Before the post-review
+    // fix, this would have been "1" — one visible Danger row.
+    btn = screen.getByTestId('print-all-with-ghs-btn');
+    expect(btn).toBeInTheDocument();
+    expect(btn.textContent).toContain('2');
+
+    // Clicking it opens the modal with BOTH rows selected, proving
+    // the handler (already on raw results) and the count (now also
+    // on raw results) are in sync.
+    await act(async () => {
+      fireEvent.click(btn);
+    });
+    await waitFor(() =>
+      expect(screen.getAllByText('label.title').length).toBeGreaterThan(0)
+    );
+    const dialog = screen.getByRole('dialog', { name: /label\.title/i });
+    const selectedCasSpans = dialog.querySelectorAll(
+      'span.font-mono.text-amber-400.text-sm'
+    );
+    expect(selectedCasSpans).toHaveLength(2);
+    const selectedCasValues = Array.from(selectedCasSpans).map((n) => n.textContent);
+    expect(selectedCasValues).toEqual(expect.arrayContaining(['64-17-5', '67-64-1']));
+  });
 });

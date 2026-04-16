@@ -314,6 +314,21 @@ function App() {
     setShowLabelModal(true);
   }, [results, getEffectiveClassification, setSelectedForLabel]);
 
+  // v1.8 M2 PR-B post-review fix: the shortcut must reflect the FULL
+  // search result set, not whatever filter/sort is currently applied.
+  // Compute the count here — where `results` is the raw search array
+  // — and pass it down. Previously ResultsTable computed this from
+  // its `results` prop, which is `sortedResults` (post-filter), so a
+  // filter that hid all GHS-bearing rows would have made the button
+  // disappear or mis-count.
+  const printableWithGhsCount = useMemo(
+    () =>
+      results.filter(
+        (r) => r.found && hasGhsData(getEffectiveClassification(r))
+      ).length,
+    [results, getEffectiveClassification]
+  );
+
   const handlePrintLabels = useCallback(() => {
     printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities);
   }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities]);
@@ -395,6 +410,7 @@ function App() {
               expandedOtherClassifications={expandedOtherClassifications}
               onOpenLabelModal={handleOpenLabelModal}
               onPrintAllWithGhs={handlePrintAllWithGhs}
+              printAllWithGhsCount={printableWithGhsCount}
               onExportToExcel={() => exportToExcel(results)}
               onExportToCSV={() => exportToCSV(results)}
               onSelectAllForLabel={() => selectAllForLabel(results)}
