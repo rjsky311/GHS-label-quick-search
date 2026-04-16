@@ -29,6 +29,7 @@ from chemical_dict import (
     CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
     EN_TO_CAS, ZH_TO_CAS, ALIASES_ZH, ALIASES_EN,
 )
+from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -232,6 +233,7 @@ class GHSReport(BaseModel):
     """Single GHS classification report"""
     pictograms: List[Dict[str, Any]] = []
     hazard_statements: List[Dict[str, str]] = []
+    precautionary_statements: List[Dict[str, str]] = []
     signal_word: Optional[str] = None
     signal_word_zh: Optional[str] = None
     source: Optional[str] = None
@@ -245,6 +247,7 @@ class ChemicalResult(BaseModel):
     # Primary (main) classification - first/most reported
     ghs_pictograms: List[Dict[str, Any]] = []
     hazard_statements: List[Dict[str, str]] = []
+    precautionary_statements: List[Dict[str, str]] = []
     signal_word: Optional[str] = None
     signal_word_zh: Optional[str] = None
     # Other classification reports
@@ -476,9 +479,10 @@ def _classification_signature(report: Dict[str, Any]) -> tuple:
     """
     pic_codes = frozenset((p.get("code") or "") for p in report.get("pictograms", []))
     h_codes = tuple(sorted((h.get("code") or "") for h in report.get("hazard_statements", [])))
+    p_codes = tuple(sorted((p.get("code") or "") for p in report.get("precautionary_statements", [])))
     signal = (report.get("signal_word") or "").strip()
     source = (report.get("source") or "").strip()
-    return (pic_codes, signal, h_codes, source)
+    return (pic_codes, signal, h_codes, p_codes, source)
 
 
 def _report_rank_key(report: Dict[str, Any], source_index: int) -> tuple:
@@ -534,6 +538,7 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         current_report = {
                                             "pictograms": [],
                                             "hazard_statements": [],
+                                            "precautionary_statements": [],
                                             "signal_word": None,
                                             "signal_word_zh": None,
                                             "source": None,
@@ -581,6 +586,27 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                         "text_zh": zh_text if zh_text else text
                                                     })
                                     
+                                    elif info_name == "Precautionary Statement Codes" and current_report is not None:
+                                        # PubChem returns P-codes as a comma-separated
+                                        # list in a single StringWithMarkup.String,
+                                        # e.g. "P210, P233, P240, P303+P361+P353, and P501".
+                                        # Combined codes like P301+P310 are kept intact.
+                                        seen_p = set()
+                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
+                                            text = markup.get("String", "")
+                                            # Extract every P-code token (single or combined)
+                                            for p_match in re.finditer(r'(P\d{3}(?:\+P\d{3})*)', text):
+                                                p_code = p_match.group(1)
+                                                if p_code not in seen_p:
+                                                    seen_p.add(p_code)
+                                                    en_text = P_CODE_TEXTS_EN.get(p_code, "")
+                                                    zh_text = P_CODE_TRANSLATIONS.get(p_code, "")
+                                                    current_report["precautionary_statements"].append({
+                                                        "code": p_code,
+                                                        "text_en": en_text if en_text else p_code,
+                                                        "text_zh": zh_text if zh_text else p_code,
+                                                    })
+
                                     elif info_name == "ECHA C&L Notifications Summary" and current_report is not None:
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             text = markup.get("String", "")
@@ -948,21 +974,20 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     # Separate primary (first) classification from others
     primary_pictograms = []
     primary_hazards = []
+    primary_precautions = []
     primary_signal = None
     primary_signal_zh = None
     other_classifications = []
-    
+
     if all_classifications:
         # Rank all reports deterministically; the top-ranked is primary.
-        # Prior behaviour used PubChem's source order blindly, which could
-        # demote the strongest classification and silently drop reports
-        # sharing the same pictograms but differing in H-codes/signal.
         indexed = list(enumerate(all_classifications))
         indexed.sort(key=lambda ix: _report_rank_key(ix[1], ix[0]))
 
         _, primary = indexed[0]
         primary_pictograms = primary.get("pictograms", [])
         primary_hazards = primary.get("hazard_statements", [])
+        primary_precautions = primary.get("precautionary_statements", [])
         primary_signal = primary.get("signal_word")
         primary_signal_zh = primary.get("signal_word_zh")
 
@@ -978,10 +1003,11 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             other_classifications.append(GHSReport(
                 pictograms=report.get("pictograms", []),
                 hazard_statements=report.get("hazard_statements", []),
+                precautionary_statements=report.get("precautionary_statements", []),
                 signal_word=report.get("signal_word"),
                 signal_word_zh=report.get("signal_word_zh"),
                 source=report.get("source"),
-                report_count=report.get("report_count")
+                report_count=report.get("report_count"),
             ))
     
     # Use RecordTitle as fallback for name_en if not found
@@ -1015,6 +1041,7 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         name_zh=name_zh,
         ghs_pictograms=primary_pictograms,
         hazard_statements=primary_hazards,
+        precautionary_statements=primary_precautions,
         signal_word=primary_signal,
         signal_word_zh=primary_signal_zh,
         other_classifications=other_classifications,
