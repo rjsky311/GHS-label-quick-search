@@ -79,7 +79,7 @@ const getLocalizedText = (statement) =>
 const normalizeTemplate = (template) =>
   ALLOWED_TEMPLATES.has(template) ? template : "standard";
 
-const getEffectiveForPrint = (chemical, customGHSSettings) => {
+export const resolveEffectiveChemicalForPrint = (chemical, customGHSSettings) => {
   const customSetting = customGHSSettings?.[chemical.cas_number];
 
   if (customSetting && customSetting.selectedIndex !== undefined) {
@@ -360,7 +360,10 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
 };
 
 const renderIconTemplate = (chemical, model) => {
-  const effectiveChem = getEffectiveForPrint(chemical, model.customGHSSettings);
+  const effectiveChem = resolveEffectiveChemicalForPrint(
+    chemical,
+    model.customGHSSettings
+  );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
@@ -390,7 +393,10 @@ const renderIconTemplate = (chemical, model) => {
 };
 
 const renderStandardTemplate = (chemical, model) => {
-  const effectiveChem = getEffectiveForPrint(chemical, model.customGHSSettings);
+  const effectiveChem = resolveEffectiveChemicalForPrint(
+    chemical,
+    model.customGHSSettings
+  );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const precautions = effectiveChem.precautionary_statements || [];
@@ -470,7 +476,10 @@ const renderStandardTemplate = (chemical, model) => {
 };
 
 const renderFullTemplate = (chemical, model) => {
-  const effectiveChem = getEffectiveForPrint(chemical, model.customGHSSettings);
+  const effectiveChem = resolveEffectiveChemicalForPrint(
+    chemical,
+    model.customGHSSettings
+  );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const precautions = effectiveChem.precautionary_statements || [];
@@ -532,7 +541,10 @@ const renderFullTemplate = (chemical, model) => {
 };
 
 const renderQRCodeTemplate = (chemical, model) => {
-  const effectiveChem = getEffectiveForPrint(chemical, model.customGHSSettings);
+  const effectiveChem = resolveEffectiveChemicalForPrint(
+    chemical,
+    model.customGHSSettings
+  );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
@@ -639,7 +651,8 @@ const buildStyles = (model) => {
     .page-grid {
       display: grid;
       grid-template-columns: repeat(${layout.page.cols}, ${layout.label.width});
-      gap: ${layout.page.gap};
+      column-gap: ${layout.page.columnGap};
+      row-gap: ${layout.page.rowGap};
       justify-content: center;
       align-content: start;
       transform: translate(${layout.page.nudgeX}, ${layout.page.nudgeY});

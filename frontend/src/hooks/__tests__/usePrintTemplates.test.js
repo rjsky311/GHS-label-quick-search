@@ -46,8 +46,8 @@ describe('usePrintTemplates', () => {
     expect(result.current.templates).toHaveLength(1);
     const tpl = result.current.templates[0];
     expect(tpl.name).toBe('My Template');
-    expect(tpl.labelConfig).toEqual(mockConfig);
-    expect(tpl.customLabelFields).toEqual(mockCustomFields);
+    expect(tpl.labelConfig).toEqual(expect.objectContaining(mockConfig));
+    expect(tpl.customLabelFields).toEqual(expect.objectContaining(mockCustomFields));
     expect(tpl.id).toMatch(/^tpl-/);
     expect(tpl.createdAt).toBeDefined();
   });

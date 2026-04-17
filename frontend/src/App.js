@@ -10,15 +10,17 @@ import useFavorites from "@/hooks/useFavorites";
 import useCustomGHS from "@/hooks/useCustomGHS";
 import useLabelSelection from "@/hooks/useLabelSelection";
 import useResultSort from "@/hooks/useResultSort";
-import usePrintTemplates from "@/hooks/usePrintTemplates";
 import usePreparedRecents from "@/hooks/usePreparedRecents";
 import usePreparedPresets from "@/hooks/usePreparedPresets";
-import useLabProfile from "@/hooks/useLabProfile";
+import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 import { exportToExcel, exportToCSV } from "@/utils/exportData";
-import { printLabels } from "@/utils/printLabels";
+import {
+  printLabels,
+  resolveEffectiveChemicalForPrint,
+} from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import {
   buildPreparedSolutionItem,
@@ -73,22 +75,6 @@ function App() {
   // print flow for the same parent chemical.
   const [preparedFlowActive, setPreparedFlowActive] = useState(false);
   const [preparedPresetNameDraft, setPreparedPresetNameDraft] = useState("");
-  const [labelConfig, setLabelConfig] = useState({
-    size: "medium",
-    template: "standard",
-    orientation: "portrait",
-    nameDisplay: "both",
-    colorMode: "color",
-  });
-  // Custom label fields — persisted to localStorage
-  const [customLabelFields, setCustomLabelFields] = useState(() => {
-    try {
-      const saved = localStorage.getItem("ghs_custom_label_fields");
-      return saved ? JSON.parse(saved) : { labName: "", date: "", batchNumber: "" };
-    } catch { return { labName: "", date: "", batchNumber: "" }; }
-  });
-  // Label print quantities — CAS → count (default 1, not persisted)
-  const [labelQuantities, setLabelQuantities] = useState({});
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
@@ -117,12 +103,25 @@ function App() {
     selectAllForLabel,
     clearLabelSelection,
   } = useLabelSelection();
-  const { templates: printTemplates, saveTemplate, deleteTemplate } = usePrintTemplates();
   const {
+    labelConfig,
+    setLabelConfig,
+    customLabelFields,
+    setCustomLabelFields,
+    labelQuantities,
+    setLabelQuantities,
+    templates: printTemplates,
+    saveTemplate,
+    deleteTemplate,
+    loadTemplate,
     labProfile,
     setLabProfile,
     clearLabProfile,
-  } = useLabProfile();
+    recentPrints,
+    addRecentPrint,
+    clearRecentPrints,
+    loadRecentPrint,
+  } = usePrintWorkspace();
   // Tier 2 PR-2A: recent prepared-solution workflow inputs. localStorage-
   // only, parent-scoped on read inside PrepareSolutionModal. Carries
   // NO GHS data — hazards still come from the current parent result
@@ -172,16 +171,6 @@ function App() {
     },
     [prepareSolutionParent, addPreparedPreset, t]
   );
-
-  const handleLoadTemplate = useCallback((template) => {
-    setLabelConfig(template.labelConfig);
-    setCustomLabelFields(template.customLabelFields);
-  }, []);
-
-  // Persist custom label fields to localStorage
-  useEffect(() => {
-    localStorage.setItem("ghs_custom_label_fields", JSON.stringify(customLabelFields));
-  }, [customLabelFields]);
 
   // ── Keyboard Shortcut: "/" or Ctrl+K to focus search ──
   useEffect(() => {
@@ -411,10 +400,22 @@ function App() {
   );
 
   const handlePrintLabels = useCallback(() => {
-    printLabels(
-      selectedForLabel,
+    const printableSelection = selectedForLabel.map((chemical) =>
+      resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
+    );
+
+    addRecentPrint({
+      items: printableSelection,
       labelConfig,
-      customGHSSettings,
+      customLabelFields,
+      labelQuantities,
+      labProfile,
+    });
+
+    printLabels(
+      printableSelection,
+      labelConfig,
+      {},
       customLabelFields,
       labelQuantities,
       labProfile
@@ -426,7 +427,18 @@ function App() {
     customLabelFields,
     labelQuantities,
     labProfile,
+    addRecentPrint,
   ]);
+
+  const handleLoadRecentPrint = useCallback(
+    (record) => {
+      const items = loadRecentPrint(record);
+      if (items.length === 0) return;
+      setSelectedForLabel(items);
+      setShowLabelModal(true);
+    },
+    [loadRecentPrint, setSelectedForLabel]
+  );
 
   // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────
   //
@@ -709,6 +721,7 @@ function App() {
         <LabelPrintModal
           selectedForLabel={selectedForLabel}
           labelConfig={labelConfig}
+          customGHSSettings={customGHSSettings}
           onLabelConfigChange={setLabelConfig}
           customLabelFields={customLabelFields}
           onCustomLabelFieldsChange={setCustomLabelFields}
@@ -720,9 +733,12 @@ function App() {
           onPrintLabels={handlePrintLabels}
           onToggleSelectForLabel={toggleSelectForLabel}
           printTemplates={printTemplates}
-          onSaveTemplate={(name) => saveTemplate(name, labelConfig, customLabelFields)}
-          onLoadTemplate={handleLoadTemplate}
+          onSaveTemplate={saveTemplate}
+          onLoadTemplate={loadTemplate}
           onDeleteTemplate={deleteTemplate}
+          recentPrints={recentPrints}
+          onLoadRecentPrint={handleLoadRecentPrint}
+          onClearRecentPrints={clearRecentPrints}
           onClose={handleCloseLabelModal}
         />
       )}

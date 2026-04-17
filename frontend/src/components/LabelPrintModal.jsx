@@ -1,12 +1,251 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  Tag, X, Target, ClipboardList, FileText, QrCode,
-  BookOpen, FileSpreadsheet, Printer, Lightbulb, Languages,
-  Bookmark, Check, Plus, Palette,
+  AlertTriangle,
+  BookOpen,
+  Bookmark,
+  Building2,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  ClipboardList,
+  FileSpreadsheet,
+  FileText,
+  FlaskConical,
+  Languages,
+  LayoutPanelTop,
+  Lightbulb,
+  MapPin,
+  Package2,
+  Palette,
+  Phone,
+  Plus,
+  Printer,
+  QrCode,
+  ScanLine,
+  Settings2,
+  Tag,
+  Target,
+  X,
 } from "lucide-react";
+import {
+  LABEL_STOCK_PRESETS,
+  resolvePrintLayoutConfig,
+} from "@/constants/labelStocks";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+
+const TEMPLATE_OPTIONS = [
+  {
+    value: "icon",
+    labelKey: "label.templateIcon",
+    descKey: "label.templateIconDesc",
+    tipKey: "label.templateIconTip",
+    icon: Target,
+  },
+  {
+    value: "standard",
+    labelKey: "label.templateStandard",
+    descKey: "label.templateStandardDesc",
+    tipKey: "label.templateStandardTip",
+    icon: ClipboardList,
+  },
+  {
+    value: "full",
+    labelKey: "label.templateFull",
+    descKey: "label.templateFullDesc",
+    tipKey: "label.templateFullTip",
+    icon: FileText,
+  },
+  {
+    value: "qrcode",
+    labelKey: "label.templateQR",
+    descKey: "label.templateQRDesc",
+    tipKey: "label.templateQRTip",
+    icon: QrCode,
+  },
+];
+
+const SIZE_OPTIONS = [
+  { value: "small", labelKey: "label.sizeSmall", descKey: "label.sizeSmallDesc", tipKey: "label.sizeSmallTip" },
+  { value: "medium", labelKey: "label.sizeMedium", descKey: "label.sizeMediumDesc", tipKey: "label.sizeMediumTip" },
+  { value: "large", labelKey: "label.sizeLarge", descKey: "label.sizeLargeDesc", tipKey: "label.sizeLargeTip" },
+];
+
+const ORIENTATION_OPTIONS = [
+  { value: "portrait", labelKey: "label.portrait", descKey: "label.portraitDesc", icon: FileText },
+  { value: "landscape", labelKey: "label.landscape", descKey: "label.landscapeDesc", icon: BookOpen },
+];
+
+const NAME_DISPLAY_OPTIONS = [
+  { value: "both", labelKey: "label.nameBoth", descKey: "label.nameBothDesc", icon: Languages },
+  { value: "en", labelKey: "label.nameEn", iconLabel: "EN" },
+  { value: "zh", labelKey: "label.nameZh", iconLabel: "ZH" },
+];
+
+const COLOR_OPTIONS = [
+  { value: "color", labelKey: "label.colorColor", iconLabel: "CMYK" },
+  { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
+];
+
+const STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
+  ...preset,
+  perPage: preset.columns * preset.rows,
+  widthMm: preset.labelWidthMm,
+  heightMm: preset.labelHeightMm,
+}));
+
+const GRID_MAP = {
+  portrait: { small: 15, medium: 8, large: 3 },
+  landscape: { small: 16, medium: 9, large: 4 },
+};
+
+const COLUMN_MAP = {
+  portrait: { small: 3, medium: 2, large: 1 },
+  landscape: { small: 4, medium: 3, large: 2 },
+};
+
+const SIZE_DIMENSIONS = {
+  small: {
+    portrait: [54, 32],
+    landscape: [70, 24],
+  },
+  medium: {
+    portrait: [95, 50],
+    landscape: [90, 38],
+  },
+  large: {
+    portrait: [140, 88],
+    landscape: [128, 60],
+  },
+};
+
+function parseNumber(value, fallback) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function getBaseLayout(size = "medium", orientation = "portrait") {
+  const perPage = GRID_MAP[orientation]?.[size] ?? 8;
+  const columns = COLUMN_MAP[orientation]?.[size] ?? 2;
+  const rows = Math.max(1, Math.ceil(perPage / columns));
+  const dimensions = SIZE_DIMENSIONS[size] ?? SIZE_DIMENSIONS.medium;
+  const [widthMm, heightMm] = dimensions[orientation] ?? dimensions.portrait;
+
+  return {
+    size,
+    orientation,
+    columns,
+    rows,
+    perPage,
+    widthMm,
+    heightMm,
+    pagePaddingMm: size === "large" ? 10 : 8,
+    columnGapMm: size === "small" ? 3 : 4,
+    rowGapMm: size === "small" ? 3 : 4,
+    offsetXmm: 0,
+    offsetYmm: 0,
+    stockPreset: "custom",
+    stockPresetName: "Custom Tuning",
+    note: null,
+  };
+}
+
+function resolveLayoutProfile(labelConfig) {
+  return resolvePrintLayoutConfig(labelConfig);
+}
+
+function buildDisplayNames(chem, nameDisplay) {
+  if (!chem) return [];
+
+  const preparedName = chem.isPreparedSolution ? formatPreparedDisplayName(chem) : null;
+  const englishName = preparedName || chem.name_en || chem.name || chem.cas_number;
+  const chineseName = chem.name_zh || chem.name_zh_tw || "";
+
+  if (nameDisplay === "en") return [englishName].filter(Boolean);
+  if (nameDisplay === "zh") return [chineseName || englishName].filter(Boolean);
+
+  return [englishName, chineseName].filter(Boolean);
+}
+
+function buildHazardPreview(chem, template, tx) {
+  if (!chem) {
+    return [tx("label.previewHazardPlaceholder", "Signal word, pictograms, and hazards will appear here.")];
+  }
+
+  if (template === "icon") {
+    return [tx("label.previewIconFocus", "Compact label: pictograms and signal word stay dominant.")];
+  }
+
+  if (template === "qrcode") {
+    return [tx("label.previewScanFocus", "Scan-first layout keeps only the essentials next to the QR.")];
+  }
+
+  const limit = template === "full" ? 3 : 2;
+  const statements = (chem.hazard_statements || [])
+    .slice(0, limit)
+    .map((statement) => {
+      const text = statement.text_zh || statement.text_en || "";
+      return text ? `${statement.code}: ${text}` : statement.code;
+    })
+    .filter(Boolean);
+
+  return statements.length
+    ? statements
+    : [tx("label.previewHazardPlaceholder", "Signal word, pictograms, and hazards will appear here.")];
+}
+
+function buildPreviewRisks({ previewChem, labelConfig, layoutProfile, labProfile, displayNames, tx }) {
+  if (!previewChem) {
+    return [tx("label.previewRiskEmpty", "Select a chemical to see live density and scan balance.")];
+  }
+
+  const risks = [];
+  const longestName = displayNames.reduce((longest, name) => Math.max(longest, name.length), 0);
+  const pictogramCount = previewChem.ghs_pictograms?.length || 0;
+  const hasProfile = Boolean(labProfile.organization || labProfile.phone || labProfile.address);
+
+  if (longestName > 28 && layoutProfile.size === "small") {
+    risks.push(tx("label.previewRiskName", "Long names will crowd a small stock preset quickly."));
+  }
+
+  if (pictogramCount > 3 && (labelConfig.template === "icon" || layoutProfile.size === "small")) {
+    risks.push(tx("label.previewRiskPictograms", "This selection carries enough pictograms to pressure compact layouts."));
+  }
+
+  if (previewChem.isPreparedSolution && (labelConfig.template === "icon" || layoutProfile.size === "small")) {
+    risks.push(tx("label.previewRiskPrepared", "Prepared-solution metadata is likely to feel tight in compact templates."));
+  }
+
+  if (!hasProfile && labelConfig.template !== "icon") {
+    risks.push(tx("label.previewRiskProfile", "No lab/supplier profile is set, so the printed label will stay generic."));
+  }
+
+  if (labelConfig.template === "qrcode" && layoutProfile.size === "large") {
+    risks.push(tx("label.previewRiskQr", "QR layouts read best when the scan block stays dominant; keep the left side short."));
+  }
+
+  return risks.length
+    ? risks
+    : [tx("label.previewRiskReady", "This combination looks balanced for the current content load.")];
+}
+
+function getDensityLabel(labelConfig, layoutProfile, previewChem, tx) {
+  if (labelConfig.template === "icon" || layoutProfile.size === "small") {
+    return tx("label.previewDensityTight", "Tight");
+  }
+
+  if (labelConfig.template === "full" || layoutProfile.size === "large" || previewChem?.ghs_pictograms?.length > 2) {
+    return tx("label.previewDensityRich", "Roomy");
+  }
+
+  return tx("label.previewDensityBalanced", "Balanced");
+}
+
+function getOptionLabel(options, value, t, fallback) {
+  const option = options.find((item) => item.value === value);
+  return option ? t(option.labelKey) : fallback;
+}
 
 export default function LabelPrintModal({
   selectedForLabel,
@@ -25,6 +264,9 @@ export default function LabelPrintModal({
   onSaveTemplate,
   onLoadTemplate,
   onDeleteTemplate,
+  recentPrints = [],
+  onLoadRecentPrint,
+  onClearRecentPrints,
   onClose,
 }) {
   const { t } = useTranslation();
@@ -32,18 +274,151 @@ export default function LabelPrintModal({
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
+  const tx = (key, fallback, options = {}) => {
+    const translated = t(key, { ...options, defaultValue: fallback });
+    return translated === key ? fallback : translated;
+  };
+
   useEffect(() => {
     dialogRef.current?.focus();
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  const layoutProfile = resolveLayoutProfile(labelConfig);
+  const previewChem = selectedForLabel[0] ?? null;
+  const totalLabels = selectedForLabel.reduce(
+    (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1),
+    0
+  );
+  const estimatedPages = totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
+  const displayNames = buildDisplayNames(previewChem, labelConfig.nameDisplay);
+  const hazardPreview = buildHazardPreview(previewChem, labelConfig.template, tx);
+  const previewRisks = buildPreviewRisks({
+    previewChem,
+    labelConfig,
+    layoutProfile,
+    labProfile,
+    displayNames,
+    tx,
+  });
+  const densityLabel = getDensityLabel(labelConfig, layoutProfile, previewChem, tx);
+  const hasProfile = Boolean(labProfile.organization || labProfile.phone || labProfile.address);
+  const hasCustomFields = Boolean(customLabelFields.date || customLabelFields.batchNumber);
+  const previewPreparedName = previewChem?.isPreparedSolution ? formatPreparedDisplayName(previewChem) : null;
+  const sheetCells = Array.from({ length: layoutProfile.columns * layoutProfile.rows });
+  const filledCells = selectedForLabel.length === 0 ? 1 : Math.min(totalLabels, sheetCells.length);
+  const visibleRecentPrints = recentPrints.slice(0, 5);
+
+  const formatPrintTimestamp = (value) => {
+    if (!value) return "";
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(value));
+    } catch {
+      return value;
+    }
+  };
+
+  const updateVisualConfig = (patch) => {
+    onLabelConfigChange({ ...labelConfig, ...patch });
+  };
+
+  const updateLayoutConfig = (patch) => {
+    onLabelConfigChange({
+      ...labelConfig,
+      ...patch,
+      stockPreset: patch.stockPreset ?? "custom",
+    });
+  };
+
+  const applyStockPreset = (preset) => {
+    onLabelConfigChange({
+      ...labelConfig,
+      stockPreset: preset.id,
+      size: preset.size,
+      orientation: preset.orientation,
+      columns: preset.columns,
+      rows: preset.rows,
+      perPage: preset.perPage,
+      labelWidthMm: preset.widthMm,
+      labelHeightMm: preset.heightMm,
+      pagePaddingMm: preset.pagePaddingMm,
+      columnGapMm: preset.columnGapMm,
+      rowGapMm: preset.rowGapMm,
+      offsetXmm: preset.offsetXmm,
+      offsetYmm: preset.offsetYmm,
+    });
+  };
+
+  const renderConfigButtons = (options, value, onSelect, activeClasses) => (
+    <div className="grid grid-cols-2 gap-3">
+      {options.map((option) => {
+        const Icon = option.icon;
+        const selected = value === option.value;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onSelect(option.value)}
+            className={`rounded-xl border p-3 text-left transition-colors ${
+              selected
+                ? activeClasses
+                : "border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {Icon ? (
+                <Icon className="h-4 w-4 shrink-0" />
+              ) : (
+                <span className="text-xs font-semibold tracking-[0.2em]">{option.iconLabel}</span>
+              )}
+              <span className="font-medium">{t(option.labelKey)}</span>
+            </div>
+            {option.descKey && <div className="mt-1 text-xs text-slate-400">{t(option.descKey)}</div>}
+            {option.tipKey && <div className="mt-1 text-xs text-slate-500">{t(option.tipKey)}</div>}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderPreviewMeta = () => (
+    <div className="flex flex-wrap gap-2 text-xs text-slate-300">
+      <span className="rounded-full bg-slate-900/80 px-2 py-1 font-mono text-amber-300">
+        {previewChem?.cas_number || "CAS"}
+      </span>
+      {previewChem?.signal_word && (
+        <span className="rounded-full bg-rose-500/15 px-2 py-1 font-medium text-rose-200">
+          {previewChem.signal_word}
+        </span>
+      )}
+      {(previewChem?.ghs_pictograms?.length || 0) > 0 && (
+        <span className="rounded-full bg-slate-900/80 px-2 py-1 text-slate-200">
+          {tx("label.previewPictograms", "Pictograms")}: {previewChem.ghs_pictograms.length}
+        </span>
+      )}
+      {previewChem?.isPreparedSolution && (
+        <span className="rounded-full bg-blue-500/15 px-2 py-1 text-blue-200">
+          {t("print.preparedShort")}
+        </span>
+      )}
+    </div>
+  );
+
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -52,68 +427,78 @@ export default function LabelPrintModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="bg-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto outline-none"
-        onClick={(e) => e.stopPropagation()}
+        className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-3xl bg-slate-800 outline-none"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-700 flex items-center justify-between">
-          <h2 id="label-modal-title" className="text-xl font-bold text-white flex items-center gap-2">
-            <Tag className="w-5 h-5 text-purple-400" /> {t("label.title")}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white"
-          >
-            <X className="w-6 h-6" />
+        <div className="flex items-center justify-between border-b border-slate-700 px-6 py-5">
+          <div>
+            <h2 id="label-modal-title" className="flex items-center gap-2 text-xl font-bold text-white">
+              <Tag className="h-5 w-5 text-purple-400" /> {t("label.title")}
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              {tx(
+                "label.settingsPreviewIntro",
+                "Tune the label layout on the left and watch the preview react immediately on the right."
+              )}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="text-slate-400 transition-colors hover:text-white">
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Quick Templates Section */}
-        <div className="px-6 pt-4 pb-3 border-b border-slate-700">
-          <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center gap-1.5">
-            <Bookmark className="w-3.5 h-3.5 text-purple-400" /> {t("label.quickTemplates")}
-          </h3>
-          {printTemplates.length === 0 && !showSaveInput ? (
-            <p className="text-xs text-slate-500">{t("label.noTemplates")}</p>
-          ) : (
-            <div className="flex gap-2 flex-wrap">
-              {printTemplates.map((tpl) => (
-                <div
-                  key={tpl.id}
-                  className="group flex items-center gap-1 px-3 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-300 hover:border-purple-500 hover:text-purple-400 cursor-pointer transition-colors"
-                >
-                  <span
-                    onClick={() => {
-                      onLoadTemplate(tpl);
-                      toast.success(t("label.loadTemplateSuccess", { name: tpl.name }));
-                    }}
+        <div className="border-b border-slate-700 px-6 py-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <Bookmark className="h-4 w-4 text-purple-400" />
+            {t("label.quickTemplates")}
+          </div>
+          <div className="mt-3">
+            {printTemplates.length === 0 && !showSaveInput ? (
+              <p className="text-xs text-slate-500">{t("label.noTemplates")}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {printTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="group flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-purple-500"
                   >
-                    {tpl.name}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(t("label.deleteTemplateConfirm", { name: tpl.name }))) {
-                        onDeleteTemplate(tpl.id);
-                        toast.success(t("label.deleteTemplateSuccess"));
-                      }
-                    }}
-                    className="ml-1 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          {/* Save current settings */}
-          <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLoadTemplate(template);
+                        toast.success(t("label.loadTemplateSuccess", { name: template.name }));
+                      }}
+                    >
+                      {template.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (window.confirm(t("label.deleteTemplateConfirm", { name: template.name }))) {
+                          onDeleteTemplate(template.id);
+                          toast.success(t("label.deleteTemplateSuccess"));
+                        }
+                      }}
+                      className="ml-1 text-slate-500 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3">
             {!showSaveInput ? (
               printTemplates.length < 10 ? (
                 <button
+                  type="button"
                   onClick={() => setShowSaveInput(true)}
-                  className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                  className="flex items-center gap-1 text-xs text-purple-400 transition-colors hover:text-purple-300"
                 >
-                  <Plus className="w-3 h-3" /> {t("label.saveCurrentBtn")}
+                  <Plus className="h-3 w-3" /> {t("label.saveCurrentBtn")}
                 </button>
               ) : (
                 <p className="text-xs text-amber-500">{t("label.templateLimitHint")}</p>
@@ -123,12 +508,12 @@ export default function LabelPrintModal({
                 <input
                   type="text"
                   value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value.slice(0, 30))}
+                  onChange={(event) => setTemplateName(event.target.value.slice(0, 30))}
                   placeholder={t("label.templateNamePlaceholder")}
-                  className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-sm text-slate-300 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none"
+                  className="flex-1 rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
                   autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && templateName.trim()) {
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && templateName.trim()) {
                       const success = onSaveTemplate(templateName.trim());
                       if (success) {
                         toast.success(t("label.saveTemplateSuccess", { name: templateName.trim() }));
@@ -136,18 +521,22 @@ export default function LabelPrintModal({
                         setShowSaveInput(false);
                       }
                     }
-                    if (e.key === "Escape") {
+
+                    if (event.key === "Escape") {
+                      event.stopPropagation();
                       setTemplateName("");
                       setShowSaveInput(false);
                     }
                   }}
                 />
                 <button
+                  type="button"
                   onClick={() => {
                     if (!templateName.trim()) {
                       toast.error(t("label.templateNameRequired"));
                       return;
                     }
+
                     const success = onSaveTemplate(templateName.trim());
                     if (success) {
                       toast.success(t("label.saveTemplateSuccess", { name: templateName.trim() }));
@@ -155,477 +544,896 @@ export default function LabelPrintModal({
                       setShowSaveInput(false);
                     }
                   }}
-                  className="p-1.5 rounded bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                  className="rounded bg-purple-500 p-1.5 text-white transition-colors hover:bg-purple-600"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="h-3.5 w-3.5" />
                 </button>
                 <button
-                  onClick={() => { setTemplateName(""); setShowSaveInput(false); }}
-                  className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                  type="button"
+                  onClick={() => {
+                    setTemplateName("");
+                    setShowSaveInput(false);
+                  }}
+                  className="rounded bg-slate-700 p-1.5 text-slate-300 transition-colors hover:bg-slate-600"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Template Selection */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.selectTemplate")}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                {
-                  value: "icon",
-                  labelKey: "label.templateIcon",
-                  descKey: "label.templateIconDesc",
-                  icon: <Target className="w-5 h-5" />,
-                  tipKey: "label.templateIconTip"
-                },
-                {
-                  value: "standard",
-                  labelKey: "label.templateStandard",
-                  descKey: "label.templateStandardDesc",
-                  icon: <ClipboardList className="w-5 h-5" />,
-                  tipKey: "label.templateStandardTip"
-                },
-                {
-                  value: "full",
-                  labelKey: "label.templateFull",
-                  descKey: "label.templateFullDesc",
-                  icon: <FileText className="w-5 h-5" />,
-                  tipKey: "label.templateFullTip"
-                },
-                {
-                  value: "qrcode",
-                  labelKey: "label.templateQR",
-                  descKey: "label.templateQRDesc",
-                  icon: <QrCode className="w-5 h-5" />,
-                  tipKey: "label.templateQRTip"
-                },
-              ].map((template) => (
-                <button
-                  key={template.value}
-                  onClick={() => onLabelConfigChange({ ...labelConfig, template: template.value })}
-                  className={`p-4 rounded-lg border-2 transition-colors text-left ${
-                    labelConfig.template === template.value
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-600 bg-slate-900 hover:border-slate-500"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-purple-400">{template.icon}</span>
-                    <span className={`font-medium ${labelConfig.template === template.value ? "text-purple-400" : "text-white"}`}>
-                      {t(template.labelKey)}
+        <div className="border-b border-slate-700 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+              <LayoutPanelTop className="h-4 w-4 text-blue-400" />
+              {tx("label.recentPrintsTitle", "Recent print queue")}
+            </div>
+            {visibleRecentPrints.length > 0 && typeof onClearRecentPrints === "function" && (
+              <button
+                type="button"
+                onClick={onClearRecentPrints}
+                className="text-xs text-slate-400 transition-colors hover:text-white"
+              >
+                {tx("label.recentPrintsClear", "Clear")}
+              </button>
+            )}
+          </div>
+          {visibleRecentPrints.length === 0 ? (
+            <p className="mt-3 text-xs text-slate-500">
+              {tx(
+                "label.recentPrintsEmpty",
+                "Recent print jobs will appear here so you can reload a label set in one click."
+              )}
+            </p>
+          ) : (
+            <div className="mt-3 grid gap-2">
+              {visibleRecentPrints.map((job) => {
+                const firstItem = job.items?.[0];
+                const remaining = Math.max(0, (job.totalChemicals || job.items?.length || 1) - 1);
+                const primaryLabel = firstItem?.name_en || firstItem?.cas_number || tx("label.recentPrintUnknown", "Saved job");
+
+                return (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-white">
+                        {primaryLabel}
+                        {remaining > 0 ? ` +${remaining}` : ""}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-400">
+                        <span>{formatPrintTimestamp(job.createdAt)}</span>
+                        <span>{job.totalLabels || 0} {tx("label.recentPrintLabels", "labels")}</span>
+                        <span>{job.labelConfig?.template || "standard"}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onLoadRecentPrint?.(job)}
+                      className="rounded-lg bg-blue-500/15 px-3 py-1.5 text-xs font-medium text-blue-200 transition-colors hover:bg-blue-500/25"
+                    >
+                      {tx("label.recentPrintLoad", "Load")}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                <Settings2 className="h-4 w-4 text-purple-400" />
+                {tx("label.settingsTitle", "Print setup")}
+              </div>
+              <p className="mt-2 text-sm text-slate-400">
+                {tx(
+                  "label.settingsBody",
+                  "Use stock presets for a fast starting point, then fine-tune spacing and nudges without leaving the modal."
+                )}
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-medium text-slate-300">{t("label.selectTemplate")}</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {TEMPLATE_OPTIONS.map((template) => {
+                  const Icon = template.icon;
+                  const selected = labelConfig.template === template.value;
+
+                  return (
+                    <button
+                      key={template.value}
+                      type="button"
+                      onClick={() => updateVisualConfig({ template: template.value })}
+                      className={`rounded-2xl border p-4 text-left transition-colors ${
+                        selected
+                          ? "border-purple-500 bg-purple-500/10"
+                          : "border-slate-700 bg-slate-900/80 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-lg bg-slate-800 p-2 text-purple-300">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className={`font-medium ${selected ? "text-purple-300" : "text-white"}`}>
+                          {t(template.labelKey)}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-sm text-slate-400">{t(template.descKey)}</div>
+                      <div className="mt-2 text-xs text-slate-500">{t(template.tipKey)}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-300">
+                  {tx("label.stockPresetsTitle", "Label stock presets")}
+                </h3>
+                <span className="text-xs text-slate-500">
+                  {layoutProfile.stockPreset === "custom"
+                    ? tx("label.stockPresetCustom", "Custom tuning")
+                    : layoutProfile.stockPresetName}
+                </span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {STOCK_PRESETS.map((preset) => {
+                  const selected = layoutProfile.stockPreset === preset.id;
+
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyStockPreset(preset)}
+                      data-testid={`stock-preset-${preset.id}`}
+                      className={`rounded-2xl border p-4 text-left transition-colors ${
+                        selected
+                          ? "border-amber-500 bg-amber-500/10"
+                          : "border-slate-700 bg-slate-900/80 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className={`font-medium ${selected ? "text-amber-300" : "text-white"}`}>
+                            {preset.name}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-400">{preset.note}</div>
+                        </div>
+                        <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                          {preset.perPage}/page
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
+                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                          {preset.widthMm} x {preset.heightMm} mm
+                        </span>
+                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                          {preset.columns} x {preset.rows}
+                        </span>
+                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                          {t(
+                            ORIENTATION_OPTIONS.find((item) => item.value === preset.orientation)?.labelKey ||
+                              "label.portrait"
+                          )}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-500">
+                {tx(
+                  "label.stockPresetsHint",
+                  "Presets are a starting point. Any manual spacing or nudge change switches the modal into custom tuning."
+                )}
+              </p>
+            </section>
+
+            <div className="grid gap-6 xl:grid-cols-2">
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-slate-300">{t("label.labelSize")}</h3>
+                {renderConfigButtons(
+                  SIZE_OPTIONS,
+                  labelConfig.size,
+                  (size) => updateLayoutConfig({ size }),
+                  "border-amber-500 bg-amber-500/10 text-amber-300"
+                )}
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-slate-300">{t("label.orientation")}</h3>
+                {renderConfigButtons(
+                  ORIENTATION_OPTIONS,
+                  labelConfig.orientation,
+                  (orientation) => updateLayoutConfig({ orientation }),
+                  "border-blue-500 bg-blue-500/10 text-blue-300"
+                )}
+              </section>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-2">
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-slate-300">{t("label.nameDisplay")}</h3>
+                {renderConfigButtons(
+                  NAME_DISPLAY_OPTIONS,
+                  labelConfig.nameDisplay,
+                  (nameDisplay) => updateVisualConfig({ nameDisplay }),
+                  "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                )}
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                  <Palette className="h-4 w-4 text-emerald-400" />
+                  {t("label.colorMode")}
+                </h3>
+                {renderConfigButtons(
+                  COLOR_OPTIONS,
+                  labelConfig.colorMode,
+                  (colorMode) => updateVisualConfig({ colorMode }),
+                  "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                )}
+              </section>
+            </div>
+
+            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-200">
+                    {tx("label.calibrationTitle", "Fine-tune layout")}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {tx(
+                      "label.calibrationHint",
+                      "These values stage stock-specific tuning in the config so the parent can persist or reuse them."
+                    )}
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                  {layoutProfile.widthMm} x {layoutProfile.heightMm} mm
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  {
+                    key: "pagePaddingMm",
+                    label: tx("label.pagePadding", "Page padding (mm)"),
+                    value: layoutProfile.pagePaddingMm,
+                    min: 0,
+                    max: 20,
+                    step: 0.5,
+                  },
+                  {
+                    key: "columnGapMm",
+                    label: tx("label.columnGap", "Column gap (mm)"),
+                    value: layoutProfile.columnGapMm,
+                    min: 0,
+                    max: 20,
+                    step: 0.5,
+                  },
+                  {
+                    key: "rowGapMm",
+                    label: tx("label.rowGap", "Row gap (mm)"),
+                    value: layoutProfile.rowGapMm,
+                    min: 0,
+                    max: 20,
+                    step: 0.5,
+                  },
+                  {
+                    key: "offsetXmm",
+                    label: tx("label.offsetX", "Offset X (mm)"),
+                    value: layoutProfile.offsetXmm,
+                    min: -10,
+                    max: 10,
+                    step: 0.5,
+                  },
+                  {
+                    key: "offsetYmm",
+                    label: tx("label.offsetY", "Offset Y (mm)"),
+                    value: layoutProfile.offsetYmm,
+                    min: -10,
+                    max: 10,
+                    step: 0.5,
+                  },
+                ].map((field) => (
+                  <label key={field.key} className="block">
+                    <span className="mb-1 block text-xs text-slate-400">{field.label}</span>
+                    <input
+                      type="number"
+                      value={field.value}
+                      min={field.min}
+                      max={field.max}
+                      step={field.step}
+                      onChange={(event) =>
+                        updateLayoutConfig({
+                          [field.key]: event.target.value === "" ? 0 : Number(event.target.value),
+                        })
+                      }
+                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none"
+                    />
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-200">{t("label.profileTitle")}</h3>
+                {(labProfile.organization || labProfile.phone || labProfile.address) &&
+                  typeof onClearLabProfile === "function" && (
+                    <button
+                      type="button"
+                      onClick={onClearLabProfile}
+                      className="text-xs text-red-400 transition-colors hover:text-red-300"
+                    >
+                      {t("label.profileClear")}
+                    </button>
+                  )}
+              </div>
+              <div className="grid gap-2">
+                {[
+                  {
+                    key: "organization",
+                    labelKey: "label.profileOrganization",
+                    placeholderKey: "label.profileOrganizationPlaceholder",
+                  },
+                  {
+                    key: "phone",
+                    labelKey: "label.profilePhone",
+                    placeholderKey: "label.profilePhonePlaceholder",
+                  },
+                  {
+                    key: "address",
+                    labelKey: "label.profileAddress",
+                    placeholderKey: "label.profileAddressPlaceholder",
+                  },
+                ].map((field) => (
+                  <div key={field.key} className="grid gap-1 sm:grid-cols-[6rem_minmax(0,1fr)] sm:items-center">
+                    <label className="text-xs text-slate-500">{t(field.labelKey)}</label>
+                    <input
+                      type="text"
+                      value={labProfile[field.key] || ""}
+                      onChange={(event) =>
+                        onLabProfileChange?.({
+                          ...labProfile,
+                          [field.key]: event.target.value,
+                        })
+                      }
+                      placeholder={t(field.placeholderKey)}
+                      className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-slate-500">{t("label.profileHint")}</p>
+            </section>
+
+            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+              <h3 className="text-sm font-medium text-slate-200">{t("label.customFields")}</h3>
+              <div className="mt-3 grid gap-2">
+                {[
+                  { key: "date", labelKey: "label.printDate", placeholderKey: "label.printDatePlaceholder" },
+                  {
+                    key: "batchNumber",
+                    labelKey: "label.batchNumber",
+                    placeholderKey: "label.batchNumberPlaceholder",
+                  },
+                ].map((field) => (
+                  <div key={field.key} className="grid gap-1 sm:grid-cols-[6rem_minmax(0,1fr)] sm:items-center">
+                    <label className="text-xs text-slate-500">{t(field.labelKey)}</label>
+                    <input
+                      type="text"
+                      value={customLabelFields[field.key]}
+                      onChange={(event) =>
+                        onCustomLabelFieldsChange({
+                          ...customLabelFields,
+                          [field.key]: event.target.value,
+                        })
+                      }
+                      placeholder={t(field.placeholderKey)}
+                      className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-slate-500">{t("label.customFieldsHint")}</p>
+            </section>
+
+            {selectedForLabel.length > 0 && (
+              <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+                  <FileSpreadsheet className="h-4 w-4 text-blue-400" />
+                  <span>{t("label.estPages", { pages: estimatedPages, perPage: layoutProfile.perPage })}</span>
+                  {totalLabels !== selectedForLabel.length && (
+                    <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-400">
+                      {t("label.totalLabels", { count: totalLabels })}
+                    </span>
+                  )}
+                  {layoutProfile.size === "small" && (
+                    <span className="text-xs text-slate-500">{t("label.smallSizeHint")}</span>
+                  )}
+                </div>
+              </section>
+            )}
+
+            <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
+              <h3 className="text-sm font-medium text-slate-200">
+                {t("label.selectedCount", { count: selectedForLabel.length })}
+              </h3>
+              <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+                {selectedForLabel.length === 0 ? (
+                  <p className="rounded-xl bg-slate-950 px-4 py-6 text-center text-slate-500">
+                    {t("label.noneSelected")}
+                  </p>
+                ) : (
+                  selectedForLabel.map((chem, index) => {
+                    const quantity = labelQuantities?.[chem.cas_number] || 1;
+                    const derivedPreparedName = chem.isPreparedSolution ? formatPreparedDisplayName(chem) : null;
+
+                    return (
+                      <div
+                        key={`${chem.cas_number}-${index}`}
+                        className={`flex items-start justify-between gap-3 rounded-xl border p-3 ${
+                          chem.isPreparedSolution
+                            ? "border-blue-700/50 bg-blue-900/20"
+                            : "border-slate-700 bg-slate-950"
+                        }`}
+                        data-testid={chem.isPreparedSolution ? `selected-prepared-${chem.cas_number}` : undefined}
+                      >
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-sm text-amber-400">{chem.cas_number}</span>
+                            <span className="truncate text-sm text-white">{chem.name_en}</span>
+                            {(chem.ghs_pictograms?.length || 0) > 0 && (
+                              <span className="text-xs text-slate-500">
+                                {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
+                              </span>
+                            )}
+                            {chem.isPreparedSolution && (
+                              <span className="rounded bg-blue-800 px-1.5 py-0.5 text-xs font-medium text-blue-100">
+                                {t("print.preparedShort")}
+                              </span>
+                            )}
+                          </div>
+
+                          {chem.isPreparedSolution && derivedPreparedName && (
+                            <div
+                              className="text-sm text-blue-200"
+                              data-testid={`selected-prepared-display-${chem.cas_number}`}
+                            >
+                              {derivedPreparedName}
+                            </div>
+                          )}
+
+                          {chem.isPreparedSolution && chem.preparedSolution && (
+                            <div
+                              className="text-xs text-blue-300"
+                              data-testid={`selected-prepared-meta-${chem.cas_number}`}
+                            >
+                              {t("prepared.labelMeta", {
+                                concentration: chem.preparedSolution.concentration || "",
+                                solvent: chem.preparedSolution.solvent || "",
+                              })}
+                            </div>
+                          )}
+
+                          {chem.isPreparedSolution &&
+                            chem.preparedSolution &&
+                            (chem.preparedSolution.preparedBy ||
+                              chem.preparedSolution.preparedDate ||
+                              chem.preparedSolution.expiryDate) && (
+                              <div
+                                className="flex flex-wrap gap-x-3 text-xs text-blue-300/80"
+                                data-testid={`selected-prepared-operational-${chem.cas_number}`}
+                              >
+                                {chem.preparedSolution.preparedBy && (
+                                  <span>
+                                    <span className="text-blue-400/70">{t("prepared.preparedByShort")}: </span>
+                                    {chem.preparedSolution.preparedBy}
+                                  </span>
+                                )}
+                                {chem.preparedSolution.preparedDate && (
+                                  <span>
+                                    <span className="text-blue-400/70">{t("prepared.preparedDateShort")}: </span>
+                                    {chem.preparedSolution.preparedDate}
+                                  </span>
+                                )}
+                                {chem.preparedSolution.expiryDate && (
+                                  <span>
+                                    <span className="text-blue-400/70">{t("prepared.expiryDateShort")}: </span>
+                                    {chem.preparedSolution.expiryDate}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (quantity > 1) {
+                                  onLabelQuantitiesChange({
+                                    ...labelQuantities,
+                                    [chem.cas_number]: quantity - 1,
+                                  });
+                                }
+                              }}
+                              disabled={quantity <= 1}
+                              className="flex h-6 w-6 items-center justify-center rounded bg-slate-700 text-xs text-slate-300 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                            >
+                              -
+                            </button>
+                            <span className="w-6 text-center text-sm text-white">{quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (quantity < 20) {
+                                  onLabelQuantitiesChange({
+                                    ...labelQuantities,
+                                    [chem.cas_number]: quantity + 1,
+                                  });
+                                }
+                              }}
+                              disabled={quantity >= 20}
+                              className="flex h-6 w-6 items-center justify-center rounded bg-slate-700 text-xs text-slate-300 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onToggleSelectForLabel(chem)}
+                            className="px-2 text-slate-400 transition-colors hover:text-red-400"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </section>
+          </div>
+
+          <aside className="self-start lg:sticky lg:top-6">
+            <div
+              className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/70"
+              data-testid="label-preview-panel"
+            >
+              <div className="border-b border-slate-700 px-5 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      {tx("label.previewTitle", "Live preview")}
+                    </div>
+                    <h3 className="mt-1 text-lg font-semibold text-white">
+                      {previewChem
+                        ? tx("label.previewFocusFilled", "Previewing the first selected label")
+                        : tx("label.previewFocusEmptyTitle", "No chemical selected yet")}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {previewChem
+                        ? tx("label.previewFocusBody", "This pane reflects the current template, stock preset, and fields.")
+                        : tx("label.previewFocusEmptyBody", "Select at least one chemical to preview real content density.")}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                    {layoutProfile.stockPresetName}
+                  </span>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    getOptionLabel(TEMPLATE_OPTIONS, labelConfig.template, t, "Template"),
+                    getOptionLabel(SIZE_OPTIONS, labelConfig.size, t, "Size"),
+                    getOptionLabel(ORIENTATION_OPTIONS, labelConfig.orientation, t, "Orientation"),
+                    getOptionLabel(NAME_DISPLAY_OPTIONS, labelConfig.nameDisplay, t, "Names"),
+                    getOptionLabel(COLOR_OPTIONS, labelConfig.colorMode, t, "Color"),
+                  ].map((label) => (
+                    <span key={label} className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4 px-5 py-4">
+                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                      <LayoutPanelTop className="h-4 w-4 text-blue-400" />
+                      {tx("label.previewSheetTitle", "Sheet layout")}
+                    </div>
+                    <span className="rounded-full bg-slate-900 px-2 py-1 text-xs text-slate-400">
+                      {layoutProfile.columns} x {layoutProfile.rows}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-400">{t(template.descKey)}</div>
-                  <div className="text-xs text-slate-500 mt-1">{t(template.tipKey)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Label Size Selection */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.labelSize")}
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: "small", labelKey: "label.sizeSmall", descKey: "label.sizeSmallDesc", tipKey: "label.sizeSmallTip" },
-                { value: "medium", labelKey: "label.sizeMedium", descKey: "label.sizeMediumDesc", tipKey: "label.sizeMediumTip" },
-                { value: "large", labelKey: "label.sizeLarge", descKey: "label.sizeLargeDesc", tipKey: "label.sizeLargeTip" },
-              ].map((size) => (
-                <button
-                  key={size.value}
-                  onClick={() => onLabelConfigChange({ ...labelConfig, size: size.value })}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
-                    labelConfig.size === size.value
-                      ? "border-amber-500 bg-amber-500/10 text-amber-400"
-                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
-                  }`}
-                >
-                  <div className="font-medium">{t(size.labelKey)}</div>
-                  <div className="text-xs opacity-70">{t(size.descKey)}</div>
-                  <div className="text-xs opacity-50">{t(size.tipKey)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Orientation Selection */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.orientation")}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "portrait", labelKey: "label.portrait", descKey: "label.portraitDesc", icon: <FileText className="w-4 h-4" /> },
-                { value: "landscape", labelKey: "label.landscape", descKey: "label.landscapeDesc", icon: <BookOpen className="w-4 h-4" /> },
-              ].map((orient) => (
-                <button
-                  key={orient.value}
-                  onClick={() => onLabelConfigChange({ ...labelConfig, orientation: orient.value })}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
-                    labelConfig.orientation === orient.value
-                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {orient.icon}
-                    <span className="font-medium">{t(orient.labelKey)}</span>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+                    <span>{layoutProfile.widthMm} x {layoutProfile.heightMm} mm</span>
+                    <span>{layoutProfile.perPage}/page</span>
+                    {estimatedPages > 0 && <span>{estimatedPages} page(s)</span>}
                   </div>
-                  <div className="text-xs opacity-70">{t(orient.descKey)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Name Display Mode */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.nameDisplay")}
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: "both", labelKey: "label.nameBoth", descKey: "label.nameBothDesc", icon: <Languages className="w-4 h-4" /> },
-                { value: "en", labelKey: "label.nameEn", icon: <span className="text-sm font-bold">EN</span> },
-                { value: "zh", labelKey: "label.nameZh", icon: <span className="text-sm font-bold">中</span> },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => onLabelConfigChange({ ...labelConfig, nameDisplay: opt.value })}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
-                    labelConfig.nameDisplay === opt.value
-                      ? "border-green-500 bg-green-500/10 text-green-400"
-                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 justify-center">
-                    {opt.icon}
-                    <span className="font-medium">{t(opt.labelKey)}</span>
-                  </div>
-                  {opt.descKey && <div className="text-xs opacity-70 mt-1">{t(opt.descKey)}</div>}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Color Mode */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              <Palette className="w-4 h-4 inline mr-1 text-green-400" /> {t("label.colorMode")}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "color", labelKey: "label.colorColor", icon: "🎨" },
-                { value: "bw", labelKey: "label.colorBW", icon: "⬛" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => onLabelConfigChange({ ...labelConfig, colorMode: opt.value })}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
-                    labelConfig.colorMode === opt.value
-                      ? "border-green-500 bg-green-500/10 text-green-400"
-                      : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 justify-center">
-                    <span>{opt.icon}</span>
-                    <span className="font-medium">{t(opt.labelKey)}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom Label Fields */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-slate-400">
-                {t("label.profileTitle")}
-              </h3>
-              {(labProfile.organization || labProfile.phone || labProfile.address) &&
-                typeof onClearLabProfile === "function" && (
-                  <button
-                    type="button"
-                    onClick={onClearLabProfile}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    {t("label.profileClear")}
-                  </button>
-                )}
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              {[
-                {
-                  key: "organization",
-                  labelKey: "label.profileOrganization",
-                  placeholderKey: "label.profileOrganizationPlaceholder",
-                },
-                {
-                  key: "phone",
-                  labelKey: "label.profilePhone",
-                  placeholderKey: "label.profilePhonePlaceholder",
-                },
-                {
-                  key: "address",
-                  labelKey: "label.profileAddress",
-                  placeholderKey: "label.profileAddressPlaceholder",
-                },
-              ].map((field) => (
-                <div key={field.key} className="flex items-center gap-2">
-                  <label className="text-xs text-slate-500 w-20 shrink-0">
-                    {t(field.labelKey)}
-                  </label>
-                  <input
-                    type="text"
-                    value={labProfile[field.key] || ""}
-                    onChange={(e) =>
-                      onLabProfileChange?.({
-                        ...labProfile,
-                        [field.key]: e.target.value,
-                      })
-                    }
-                    placeholder={t(field.placeholderKey)}
-                    className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-slate-600 mt-1.5">
-              {t("label.profileHint")}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.customFields")}
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {[
-                { key: "date", labelKey: "label.printDate", placeholderKey: "label.printDatePlaceholder" },
-                { key: "batchNumber", labelKey: "label.batchNumber", placeholderKey: "label.batchNumberPlaceholder" },
-              ].map((field) => (
-                <div key={field.key} className="flex items-center gap-2">
-                  <label className="text-xs text-slate-500 w-16 shrink-0">{t(field.labelKey)}</label>
-                  <input
-                    type="text"
-                    value={customLabelFields[field.key]}
-                    onChange={(e) => onCustomLabelFieldsChange({ ...customLabelFields, [field.key]: e.target.value })}
-                    placeholder={t(field.placeholderKey)}
-                    className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-slate-600 mt-1.5">
-              {t("label.customFieldsHint")}
-            </p>
-          </div>
-
-          {/* Page Estimation */}
-          {selectedForLabel.length > 0 && (() => {
-            const perPageMap = {
-              portrait:  { small: 15, medium: 8, large: 3 },
-              landscape: { small: 16, medium: 9, large: 4 },
-            };
-            const perPage = perPageMap[labelConfig.orientation][labelConfig.size];
-            const totalLabels = selectedForLabel.reduce(
-              (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1), 0
-            );
-            const estPages = Math.ceil(totalLabels / perPage);
-            return (
-              <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400">
-                <FileSpreadsheet className="w-4 h-4 text-blue-400 inline mr-1" /> {t("label.estPages", { pages: estPages, perPage })}
-                {totalLabels !== selectedForLabel.length && (
-                  <span className="ml-2 text-xs text-slate-500">{t("label.totalLabels", { count: totalLabels })}</span>
-                )}
-                {labelConfig.size === "small" && <span className="ml-2 text-xs text-slate-500">{t("label.smallSizeHint")}</span>}
-              </div>
-            );
-          })()}
-
-          {/* Selected Chemicals */}
-          <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
-              {t("label.selectedCount", { count: selectedForLabel.length })}
-            </h3>
-            <div className="max-h-40 overflow-y-auto space-y-2 bg-slate-900 rounded-lg p-3">
-              {selectedForLabel.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">
-                  {t("label.noneSelected")}
-                </p>
-              ) : (
-                selectedForLabel.map((chem, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-center justify-between p-2 rounded ${
-                      chem.isPreparedSolution
-                        ? "bg-blue-900/30 border border-blue-700/40"
-                        : "bg-slate-800"
-                    }`}
-                    data-testid={
-                      chem.isPreparedSolution
-                        ? `selected-prepared-${chem.cas_number}`
-                        : undefined
-                    }
-                  >
-                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-amber-400 text-sm">
-                          {chem.cas_number}
-                        </span>
-                        <span className="text-white text-sm truncate max-w-[200px]">
-                          {chem.name_en}
-                        </span>
-                        {chem.ghs_pictograms?.length > 0 && (
-                          <span className="text-xs text-slate-500">
-                            {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
-                          </span>
-                        )}
-                        {/* v1.9 M3 Tier 1: visible prepared marker on the
-                            selection row so there's no way to miss that
-                            the thing about to print isn't a pure substance. */}
-                        {chem.isPreparedSolution && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-800 text-blue-100 font-medium">
-                            {t("print.preparedShort")}
-                          </span>
-                        )}
-                      </div>
-                      {/* Tier 2 PR-3: derived preview name. A workflow
-                          display only — the parent CAS + name line above
-                          remains the canonical identity. Rendered when
-                          formatPreparedDisplayName returns a meaningful
-                          string; otherwise omitted so the existing Tier 1
-                          concentration-in-solvent meta row still shows
-                          even in edge cases where the parent name is
-                          missing. */}
-                      {chem.isPreparedSolution &&
-                        formatPreparedDisplayName(chem) && (
-                          <div
-                            className="text-sm text-blue-200"
-                            data-testid={`selected-prepared-display-${chem.cas_number}`}
-                          >
-                            {formatPreparedDisplayName(chem)}
-                          </div>
-                        )}
-                      {chem.isPreparedSolution && chem.preparedSolution && (
+                  <div className="mt-4 rounded-2xl bg-white/95 p-3 shadow-inner">
+                    <div className="mx-auto aspect-[210/297] max-w-[220px] rounded-xl bg-slate-50 p-2">
+                      <div className="h-full overflow-hidden rounded-lg border border-slate-300 bg-white">
                         <div
-                          className="text-xs text-blue-300"
-                          data-testid={`selected-prepared-meta-${chem.cas_number}`}
+                          data-testid="label-sheet-preview"
+                          className="grid h-full w-full rounded-lg bg-slate-100"
+                          style={{
+                            gridTemplateColumns: `repeat(${layoutProfile.columns}, minmax(0, 1fr))`,
+                            gridTemplateRows: `repeat(${layoutProfile.rows}, minmax(0, 1fr))`,
+                            gap: `${Math.max(layoutProfile.columnGapMm, layoutProfile.rowGapMm) * 1.4}px`,
+                            padding: `${layoutProfile.pagePaddingMm * 1.2}px`,
+                            transform: `translate(${layoutProfile.offsetXmm * 1.4}px, ${layoutProfile.offsetYmm * 1.4}px)`,
+                          }}
                         >
-                          {t("prepared.labelMeta", {
-                            concentration: chem.preparedSolution.concentration || "",
-                            solvent: chem.preparedSolution.solvent || "",
-                          })}
+                          {sheetCells.map((_, index) => (
+                            <div
+                              key={`sheet-cell-${index}`}
+                              className={`rounded-sm border ${
+                                index === 0
+                                  ? "border-purple-400 bg-purple-500/20"
+                                  : index < filledCells
+                                    ? "border-slate-300 bg-slate-200"
+                                    : "border-dashed border-slate-300 bg-white"
+                              }`}
+                              style={{ aspectRatio: `${layoutProfile.widthMm} / ${layoutProfile.heightMm}` }}
+                            />
+                          ))}
                         </div>
-                      )}
-                      {/* Tier 2 PR-1: operational metadata surfaced under
-                          the concentration/solvent line. Only renders
-                          whichever pieces the user actually filled in;
-                          the whole block is hidden when all three are
-                          blank, so Tier 1 behaviour is preserved for
-                          users who skip the optional section. */}
-                      {chem.isPreparedSolution &&
-                        chem.preparedSolution &&
-                        (chem.preparedSolution.preparedBy ||
-                          chem.preparedSolution.preparedDate ||
-                          chem.preparedSolution.expiryDate) && (
-                          <div
-                            className="text-xs text-blue-300/80 flex flex-wrap gap-x-3"
-                            data-testid={`selected-prepared-operational-${chem.cas_number}`}
-                          >
-                            {chem.preparedSolution.preparedBy && (
-                              <span>
-                                <span className="text-blue-400/70">
-                                  {t("prepared.preparedByShort")}:{" "}
-                                </span>
-                                {chem.preparedSolution.preparedBy}
-                              </span>
-                            )}
-                            {chem.preparedSolution.preparedDate && (
-                              <span>
-                                <span className="text-blue-400/70">
-                                  {t("prepared.preparedDateShort")}:{" "}
-                                </span>
-                                {chem.preparedSolution.preparedDate}
-                              </span>
-                            )}
-                            {chem.preparedSolution.expiryDate && (
-                              <span>
-                                <span className="text-blue-400/70">
-                                  {t("prepared.expiryDateShort")}:{" "}
-                                </span>
-                                {chem.preparedSolution.expiryDate}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* Per-chemical quantity controls */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            const cur = labelQuantities?.[chem.cas_number] || 1;
-                            if (cur > 1) onLabelQuantitiesChange({ ...labelQuantities, [chem.cas_number]: cur - 1 });
-                          }}
-                          disabled={(labelQuantities?.[chem.cas_number] || 1) <= 1}
-                          className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                        >−</button>
-                        <span className="w-6 text-center text-sm text-white">
-                          {labelQuantities?.[chem.cas_number] || 1}
-                        </span>
-                        <button
-                          onClick={() => {
-                            const cur = labelQuantities?.[chem.cas_number] || 1;
-                            if (cur < 20) onLabelQuantitiesChange({ ...labelQuantities, [chem.cas_number]: cur + 1 });
-                          }}
-                          disabled={(labelQuantities?.[chem.cas_number] || 1) >= 20}
-                          className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                        >+</button>
                       </div>
-                      <button
-                        onClick={() => onToggleSelectForLabel(chem)}
-                        className="text-slate-400 hover:text-red-400 px-2"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
-                ))
-              )}
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                      {tx("label.previewPadding", "Padding")}: {layoutProfile.pagePaddingMm} mm
+                    </div>
+                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                      {tx("label.previewGap", "Gap")}: {layoutProfile.columnGapMm}/{layoutProfile.rowGapMm} mm
+                    </div>
+                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                      {tx("label.previewOffsetX", "Offset X")}: {layoutProfile.offsetXmm} mm
+                    </div>
+                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                      {tx("label.previewOffsetY", "Offset Y")}: {layoutProfile.offsetYmm} mm
+                    </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-medium text-slate-200">
+                      {tx("label.previewLabelTitle", "Primary label preview")}
+                    </div>
+                    <span className="rounded-full bg-slate-900 px-2 py-1 text-xs text-slate-400">
+                      {densityLabel}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`mt-4 overflow-hidden rounded-2xl border border-slate-700 ${
+                      labelConfig.template === "qrcode"
+                        ? "bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40"
+                        : "bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800"
+                    } p-4`}
+                    style={{
+                      aspectRatio:
+                        labelConfig.template === "qrcode"
+                          ? "16 / 10"
+                          : layoutProfile.orientation === "portrait"
+                            ? "4 / 5"
+                            : "5 / 3",
+                    }}
+                  >
+                    {labelConfig.template === "qrcode" ? (
+                      <div className="grid h-full grid-cols-[minmax(0,1fr)_6.25rem] gap-4">
+                        <div className="min-w-0 space-y-3">
+                          {renderPreviewMeta()}
+                          <div className="space-y-1">
+                            <div className="text-lg font-semibold leading-tight text-white">
+                              {displayNames[0] || tx("label.previewNameFallback", "Chemical name")}
+                            </div>
+                            {displayNames[1] && (
+                              <div className="text-sm text-slate-300">{displayNames[1]}</div>
+                            )}
+                            {previewPreparedName && (
+                              <div className="text-xs text-blue-200">{previewPreparedName}</div>
+                            )}
+                          </div>
+                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                            <div className="flex items-center gap-2 font-medium">
+                              <ScanLine className="h-4 w-4" />
+                              {tx("label.previewScanTitle", "Scan-first layout")}
+                            </div>
+                            <p className="mt-2 text-xs text-amber-100/80">
+                              {tx(
+                                "label.previewScanBody",
+                                "QR should stay visually dominant so SDS access is obvious even on dense labels."
+                              )}
+                            </p>
+                          </div>
+                          {hasProfile && (
+                            <div className="space-y-1 text-xs text-slate-300">
+                              {labProfile.organization && (
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                                  <span>{labProfile.organization}</span>
+                                </div>
+                              )}
+                              {labProfile.phone && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-3.5 w-3.5 text-slate-500" />
+                                  <span>{labProfile.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-3 text-slate-900">
+                          <QrCode className="h-14 w-14" />
+                          <div className="mt-2 text-center text-[11px] font-semibold uppercase tracking-wide">
+                            {tx("label.previewScanAction", "Scan for SDS")}
+                          </div>
+                          <div className="mt-1 text-center text-[10px] text-slate-500">
+                            {previewChem?.cas_number || "CAS"}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-full flex-col">
+                        {renderPreviewMeta()}
+
+                        <div className="mt-3 space-y-1">
+                          <div className="text-lg font-semibold leading-tight text-white">
+                            {displayNames[0] || tx("label.previewNameFallback", "Chemical name")}
+                          </div>
+                          {displayNames[1] && <div className="text-sm text-slate-300">{displayNames[1]}</div>}
+                          {previewPreparedName && (
+                            <div className="text-xs text-blue-200">{previewPreparedName}</div>
+                          )}
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                          {hasProfile && labProfile.organization && (
+                            <span className="rounded-full bg-slate-800 px-2 py-1">{labProfile.organization}</span>
+                          )}
+                          {hasCustomFields && customLabelFields.date && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1">
+                              <CalendarDays className="h-3 w-3" />
+                              {customLabelFields.date}
+                            </span>
+                          )}
+                          {hasCustomFields && customLabelFields.batchNumber && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1">
+                              <Package2 className="h-3 w-3" />
+                              {customLabelFields.batchNumber}
+                            </span>
+                          )}
+                          {previewChem?.isPreparedSolution && previewChem.preparedSolution && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-1 text-blue-100">
+                              <FlaskConical className="h-3 w-3" />
+                              {t("prepared.labelMeta", {
+                                concentration: previewChem.preparedSolution.concentration || "",
+                                solvent: previewChem.preparedSolution.solvent || "",
+                              })}
+                            </span>
+                          )}
+                        </div>
+
+                        <div
+                          className={`mt-4 grid flex-1 gap-3 ${
+                            labelConfig.template === "icon" ? "grid-cols-2" : "grid-cols-[5.5rem_minmax(0,1fr)]"
+                          }`}
+                        >
+                          <div className="grid content-start gap-2">
+                            {(previewChem?.ghs_pictograms || []).slice(0, 4).map((pictogram, index) => (
+                              <div
+                                key={`${pictogram.code || "pictogram"}-${index}`}
+                                className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-center text-xs font-medium text-rose-100"
+                              >
+                                {pictogram.code || `GHS${index + 1}`}
+                              </div>
+                            ))}
+                            {!previewChem?.ghs_pictograms?.length && (
+                              <div className="rounded-xl border border-dashed border-slate-600 px-3 py-4 text-center text-xs text-slate-500">
+                                {tx("label.previewPictogramPlaceholder", "Pictograms")}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex min-w-0 flex-col justify-between">
+                            <div className="space-y-2">
+                              {hazardPreview.map((line) => (
+                                <div key={line} className="rounded-xl bg-slate-800/70 px-3 py-2 text-xs text-slate-200">
+                                  {line}
+                                </div>
+                              ))}
+                            </div>
+
+                            {hasProfile && (
+                              <div className="mt-3 grid gap-1 text-xs text-slate-400">
+                                {labProfile.phone && (
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-3.5 w-3.5" />
+                                    <span>{labProfile.phone}</span>
+                                  </div>
+                                )}
+                                {labProfile.address && (
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    <span className="line-clamp-2">{labProfile.address}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                    {previewRisks[0] === tx("label.previewRiskReady", "This combination looks balanced for the current content load.") ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                    )}
+                    {tx("label.previewChecklistTitle", "Preview checklist")}
+                  </div>
+                  <div className="mt-3 space-y-2 text-sm text-slate-300">
+                    {previewRisks.map((risk) => (
+                      <div key={risk} className="rounded-xl bg-slate-900 px-3 py-2">
+                        {risk}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl bg-slate-900/50 p-4 text-sm text-slate-400">
+                  <div className="flex items-start gap-2">
+                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                    <span>{t("label.previewHint")}</span>
+                  </div>
+                </section>
+              </div>
             </div>
-          </div>
+          </aside>
+        </div>
 
-          {/* Preview hint */}
-          <div className="bg-slate-900/50 rounded-lg p-3 text-sm text-slate-400 flex items-start gap-2">
-            <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <span>{t("label.previewHint")}</span>
-          </div>
-
-          {/* Print Button */}
-          <div className="flex gap-3">
-            <button
-              onClick={onPrintLabels}
-              disabled={selectedForLabel.length === 0}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Printer className="w-4 h-4" /> {t("label.printBtn", { count: selectedForLabel.reduce((sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1), 0) })}
-            </button>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
-            >
-              {t("label.cancel")}
-            </button>
-          </div>
+        <div className="flex gap-3 border-t border-slate-700 px-6 py-5">
+          <button
+            type="button"
+            onClick={onPrintLabels}
+            disabled={selectedForLabel.length === 0}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-3 font-medium text-white transition-all hover:from-purple-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Printer className="h-4 w-4" />
+            {t("label.printBtn", { count: totalLabels })}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-slate-700 px-6 py-3 text-slate-300 transition-colors hover:bg-slate-600"
+          >
+            {t("label.cancel")}
+          </button>
         </div>
       </div>
     </div>

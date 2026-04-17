@@ -155,8 +155,8 @@ describe('print layout model', () => {
       orientation: 'portrait',
     });
 
-    expect(layout.stockId).toBe('small');
-    expect(layout.label.width).toBe('60mm');
+    expect(layout.stockId).toBe('small-rack');
+    expect(layout.label.width).toBe('54mm');
     expect(layout.page.perPage).toBe(15);
   });
 
@@ -208,7 +208,7 @@ describe('print layout model', () => {
 
     expect(documentBundle.html).toContain('class="page-grid"');
     expect(documentBundle.html).toContain('transform: translate(2mm, 1mm)');
-    expect(documentBundle.model.layout.stockId).toBe('medium');
+    expect(documentBundle.model.layout.stockId).toBe('medium-bottle');
   });
 });
 
@@ -433,13 +433,13 @@ describe('printLabels', () => {
     it('handles small size', () => {
       printLabels([mockChemical], { size: 'small', template: 'standard', orientation: 'portrait' }, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('60mm');
+      expect(html).toContain('54mm');
     });
 
     it('handles large size', () => {
       printLabels([mockChemical], { size: 'large', template: 'standard', orientation: 'portrait' }, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('105mm');
+      expect(html).toContain('140mm');
     });
 
     it('handles landscape orientation', () => {

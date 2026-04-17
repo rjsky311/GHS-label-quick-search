@@ -1,4 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+import {
+  buildPrintTemplateRecord,
+  normalizePrintTemplate,
+} from "@/utils/printStorage";
 
 const TEMPLATES_KEY = "ghs_print_templates";
 const MAX_TEMPLATES = 10;
@@ -12,7 +16,9 @@ export default function usePrintTemplates() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setTemplates(parsed);
+        if (Array.isArray(parsed)) {
+          setTemplates(parsed.map(normalizePrintTemplate).filter(Boolean));
+        }
       } catch (e) {
         console.error("Failed to parse print templates", e);
       }
@@ -26,13 +32,12 @@ export default function usePrintTemplates() {
     setTemplates((prev) => {
       if (prev.length >= MAX_TEMPLATES) return prev;
 
-      const newTemplate = {
-        id: `tpl-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-        name: name.trim().slice(0, 30),
-        labelConfig: { ...labelConfig },
-        customLabelFields: { ...customLabelFields },
-        createdAt: new Date().toISOString(),
-      };
+      const newTemplate = buildPrintTemplateRecord(
+        name,
+        labelConfig,
+        customLabelFields
+      );
+      if (!newTemplate) return prev;
       const updated = [newTemplate, ...prev];
       localStorage.setItem(TEMPLATES_KEY, JSON.stringify(updated));
       saved = true;
