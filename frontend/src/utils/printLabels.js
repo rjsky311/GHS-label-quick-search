@@ -1,5 +1,6 @@
 import { GHS_IMAGES } from "@/constants/ghs";
 import i18n from "@/i18n";
+import { getPreferredQrTarget } from "@/utils/sdsLinks";
 
 /**
  * HTML escape helper for safe interpolation into the print iframe.
@@ -52,7 +53,14 @@ export function getHazardFontTier(hazardCount, labelSize) {
   return tiers[tiers.length - 1][size] || tiers[tiers.length - 1].medium;
 }
 
-export function printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields = {}, labelQuantities = {}) {
+export function printLabels(
+  selectedForLabel,
+  labelConfig,
+  customGHSSettings,
+  customLabelFields = {},
+  labelQuantities = {},
+  labProfile = {}
+) {
   if (selectedForLabel.length === 0) return;
   const t = i18n.t.bind(i18n);
 
@@ -164,12 +172,19 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return chemical;
   };
 
-  // Render custom label fields (lab name, date, batch number)
+  const resolvedLabProfile = {
+    organization:
+      (labProfile.organization || "").trim() ||
+      (customLabelFields.labName || "").trim(),
+    phone: (labProfile.phone || "").trim(),
+    address: (labProfile.address || "").trim(),
+  };
+
+  // Render print-job custom fields (date, batch number)
   // All user-controlled values are escaped to prevent HTML injection
   // via localStorage or form inputs.
   const renderCustomFields = () => {
     const fields = [];
-    if (customLabelFields.labName) fields.push(escapeHtml(customLabelFields.labName));
     if (customLabelFields.date) fields.push(escapeHtml(customLabelFields.date));
     if (customLabelFields.batchNumber) {
       fields.push(`${escapeHtml(t("print.batch"))}: ${escapeHtml(customLabelFields.batchNumber)}`);
@@ -178,10 +193,49 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return `<div class="custom-fields">${fields.join(" ｜ ")}</div>`;
   };
 
+  const renderProfileFields = ({ compact = false } = {}) => {
+    if (
+      !resolvedLabProfile.organization &&
+      !resolvedLabProfile.phone &&
+      !resolvedLabProfile.address
+    ) {
+      return "";
+    }
+
+    const rows = [];
+    if (resolvedLabProfile.organization) {
+      rows.push(
+        `<div class="profile-row profile-org">${escapeHtml(
+          resolvedLabProfile.organization
+        )}</div>`
+      );
+    }
+    if (resolvedLabProfile.phone) {
+      rows.push(
+        `<div class="profile-row"><span class="profile-label">${escapeHtml(
+          t("print.profilePhone")
+        )}:</span> <span class="profile-value">${escapeHtml(
+          resolvedLabProfile.phone
+        )}</span></div>`
+      );
+    }
+    if (!compact && resolvedLabProfile.address) {
+      rows.push(
+        `<div class="profile-row profile-address">${escapeHtml(
+          resolvedLabProfile.address
+        )}</div>`
+      );
+    }
+    return `<div class="profile-block${
+      compact ? " profile-block-compact" : ""
+    }">${rows.join("")}</div>`;
+  };
+
   // Render name section based on nameDisplay setting.
   // Chemical names / CAS numbers originate from PubChem or user input
   // and must be escaped before being written into the iframe document.
-  const renderNameSection = (effectiveChem) => {
+  const renderNameSection = (effectiveChem, options = {}) => {
+    const { compactProfile = false } = options;
     const nd = labelConfig.nameDisplay || "both";
     let nameHtml = "";
     if (nd === "en" || nd === "both") {
@@ -197,6 +251,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
     return `<div class="name-section">
       ${nameHtml}
       <div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>
+      ${renderProfileFields({ compact: compactProfile })}
       ${renderCustomFields()}
     </div>`;
   };
@@ -292,7 +347,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       return `
         <div class="label${prepared ? " label-prepared" : ""}">
           <div class="label-top">
-            ${renderNameSection(effectiveChem)}
+            ${renderNameSection(effectiveChem, { compactProfile: true })}
             ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
           </div>
           <div class="label-middle">
@@ -407,16 +462,17 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
       const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
       const prepared = isPrepared(effectiveChem);
-      // pubchemUrl is passed through encodeURIComponent by getQRCodeUrl,
-      // so no additional escape is needed for the resulting src attribute.
-      const pubchemUrl = effectiveChem.cid
-        ? `https://pubchem.ncbi.nlm.nih.gov/compound/${effectiveChem.cid}`
-        : `https://pubchem.ncbi.nlm.nih.gov/#query=${effectiveChem.cas_number}`;
+      // getPreferredQrTarget() already resolves to the best available
+      // authoritative link, and getQRCodeUrl() handles URL encoding for
+      // the resulting QR payload.
+      const qrTarget =
+        getPreferredQrTarget(effectiveChem.cid, effectiveChem.cas_number) ||
+        "https://pubchem.ncbi.nlm.nih.gov/";
 
       return `
         <div class="label label-qr${prepared ? " label-prepared" : ""}">
           <div class="qr-left">
-            ${renderNameSection(effectiveChem)}
+            ${renderNameSection(effectiveChem, { compactProfile: true })}
             ${prepared ? renderPreparedBadge() + renderPreparedMeta(effectiveChem) : ""}
             ${pictograms.length > 0 ? `
               <div class="pictograms qr-pics">
@@ -427,7 +483,7 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
             ${signalWord ? `<div class="signal qr-signal ${signalClass}">${escapeHtml(signalWord)}</div>` : ""}
           </div>
           <div class="qr-right">
-            <img class="qrcode-img" src="${getQRCodeUrl(pubchemUrl, 200)}" alt="QR" />
+            <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" />
             <div class="qr-hint">${escapeHtml(t("print.scanForDetail"))}</div>
           </div>
         </div>
@@ -589,6 +645,30 @@ export function printLabels(selectedForLabel, labelConfig, customGHSSettings, cu
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .profile-block {
+      margin-top: 0.8mm;
+      padding: 0.6mm 0.8mm;
+      border: 0.2mm solid #cbd5e1;
+      background: #f8fafc;
+      color: #1f2937;
+    }
+    .profile-block-compact {
+      padding: 0.4mm 0.6mm;
+    }
+    .profile-row {
+      font-size: calc(${sizeConfig.fontSize} - 2px);
+      line-height: 1.25;
+    }
+    .profile-org {
+      font-weight: bold;
+    }
+    .profile-address {
+      color: #475569;
+    }
+    .profile-label {
+      color: #475569;
+      font-weight: bold;
     }
 
     /* ===== PREPARED SOLUTION (v1.9 M3 Tier 1) ===== */

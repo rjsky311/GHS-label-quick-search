@@ -95,8 +95,14 @@ export default function usePreparedRecents() {
     });
   }, []);
 
+  const clearRecents = useCallback(() => {
+    setRecents([]);
+    persist([]);
+  }, []);
+
   return {
     recents,
     addRecent,
+    clearRecents,
   };
 }

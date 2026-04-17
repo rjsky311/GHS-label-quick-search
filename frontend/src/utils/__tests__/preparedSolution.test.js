@@ -428,8 +428,33 @@ describe("buildPresetRecord", () => {
     expect(record.parentCas).toBe(baseParent.cas_number);
     expect(record.parentNameEn).toBe(baseParent.name_en);
     expect(record.parentNameZh).toBe(baseParent.name_zh);
+    expect(record.name).toBe("10% (v/v) Ethanol in Water");
     expect(record.concentration).toBe("10% (v/v)");
     expect(record.solvent).toBe("Water");
+  });
+
+  it("prefers a custom presetName over the derived display name", () => {
+    const record = buildPresetRecord(baseParent, {
+      concentration: "10%",
+      solvent: "Water",
+      presetName: "Bench spray",
+    });
+    expect(record.name).toBe("Bench spray");
+  });
+
+  it("falls back to 'concentration in solvent' when no parent name exists", () => {
+    const record = buildPresetRecord(
+      {
+        ...baseParent,
+        name_en: null,
+        name_zh: null,
+      },
+      {
+        concentration: "10%",
+        solvent: "Water",
+      }
+    );
+    expect(record.name).toBe("10% in Water");
   });
 
   it("does NOT carry operational fields even if they are passed in formValues", () => {

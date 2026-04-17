@@ -266,12 +266,23 @@ export function buildPresetRecord(parent, formValues) {
   const concentration = (formValues?.concentration || "").trim();
   const solvent = (formValues?.solvent || "").trim();
   if (!concentration || !solvent) return null;
+  const presetName = (formValues?.presetName || "").trim();
+  const derivedName =
+    presetName ||
+    formatPreparedDisplayName({
+      concentration,
+      solvent,
+      parentNameEn: parent.name_en || null,
+      parentNameZh: parent.name_zh || null,
+    }) ||
+    `${concentration} in ${solvent}`;
   return {
     schemaVersion: 1,
     createdAt: new Date().toISOString(),
     parentCas: parent.cas_number,
     parentNameEn: parent.name_en || null,
     parentNameZh: parent.name_zh || null,
+    name: derivedName,
     concentration,
     solvent,
     // NOTE: operational fields (preparedBy / preparedDate / expiryDate)

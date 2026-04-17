@@ -575,6 +575,32 @@ describe("PrepareSolutionModal", () => {
     ).toBeInTheDocument();
   });
 
+  it("preset-name input is rendered only when onSavePreset is provided", () => {
+    const { rerender } = render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    expect(
+      screen.queryByTestId("prepare-solution-preset-name-section")
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={jest.fn()}
+      />
+    );
+    expect(
+      screen.getByTestId("prepare-solution-preset-name-section")
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("prepared-preset-name-input")).toBeInTheDocument();
+  });
+
   it("Save-as-preset button is disabled until both required fields are filled", () => {
     render(
       <PrepareSolutionModal
@@ -598,7 +624,7 @@ describe("PrepareSolutionModal", () => {
     expect(btn).not.toBeDisabled();
   });
 
-  it("Save-as-preset calls onSavePreset with {concentration, solvent} only — no operational fields", () => {
+  it("Save-as-preset calls onSavePreset with recipe fields plus presetName only — no operational fields", () => {
     // Even if the user has filled in operational fields, the preset
     // payload must not carry them. buildPresetRecord is the second
     // line of defence; the modal is the first — assert it here.
@@ -631,10 +657,40 @@ describe("PrepareSolutionModal", () => {
     expect(onSavePreset).toHaveBeenCalledTimes(1);
     expect(onSavePreset).toHaveBeenCalledWith({
       concentration: "10% (v/v)",
+      presetName: "",
       solvent: "Water",
     });
     // Save is a non-submit action — onSubmit must NOT fire.
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("Save-as-preset trims and passes the preset name", () => {
+    const onSavePreset = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={onSavePreset}
+      />
+    );
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "10%" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "Water" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-preset-name-input"), {
+      target: { value: "  Bench spray  " },
+    });
+
+    fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"));
+
+    expect(onSavePreset).toHaveBeenCalledWith({
+      concentration: "10%",
+      presetName: "Bench spray",
+      solvent: "Water",
+    });
   });
 
   it("does NOT render the Saved-presets section when there are no presets", () => {
@@ -709,6 +765,24 @@ describe("PrepareSolutionModal", () => {
     expect(screen.getByTestId("prepared-solvent-input")).toHaveValue("Water");
     // No auto-submit.
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("clicking a named preset prefills the preset-name input", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        presets={[{ ...basePreset, name: "Bench spray" }]}
+        onSavePreset={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("prepare-solution-preset-item-0"));
+
+    expect(screen.getByTestId("prepared-preset-name-input")).toHaveValue(
+      "Bench spray"
+    );
   });
 
   it("clicking a preset clears preparedBy + expiryDate, and sets preparedDate to today (no stale leak)", () => {

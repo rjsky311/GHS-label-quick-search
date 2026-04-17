@@ -1,13 +1,21 @@
-import { AlertTriangle, Star, ClipboardList, Globe } from "lucide-react";
+import {
+  AlertTriangle,
+  Star,
+  ClipboardList,
+  Globe,
+  FlaskConical,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Header({
   favorites,
   history,
+  preparedCount = 0,
   showFavorites,
   showHistory,
   onToggleFavorites,
   onToggleHistory,
+  onTogglePrepared,
 }) {
   const { t, i18n } = useTranslation();
 
@@ -53,6 +61,20 @@ export default function Header({
               {favorites.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   {favorites.length}
+                </span>
+              )}
+            </button>
+            {/* Prepared / reprint workflow */}
+            <button
+              onClick={onTogglePrepared}
+              className="relative px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2"
+              data-testid="prepared-toggle-btn"
+            >
+              <FlaskConical className="w-4 h-4" />
+              <span className="hidden sm:inline">{t("header.prepared")}</span>
+              {preparedCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-cyan-500 text-slate-900 text-xs rounded-full flex items-center justify-center font-semibold">
+                  {preparedCount}
                 </span>
               )}
             </button>

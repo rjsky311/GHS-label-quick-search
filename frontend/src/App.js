@@ -13,6 +13,7 @@ import useResultSort from "@/hooks/useResultSort";
 import usePrintTemplates from "@/hooks/usePrintTemplates";
 import usePreparedRecents from "@/hooks/usePreparedRecents";
 import usePreparedPresets from "@/hooks/usePreparedPresets";
+import useLabProfile from "@/hooks/useLabProfile";
 
 // Constants & Utils
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
@@ -29,6 +30,7 @@ import {
 import Header from "@/components/Header";
 import FavoritesSidebar from "@/components/FavoritesSidebar";
 import HistorySidebar from "@/components/HistorySidebar";
+import PreparedSidebar from "@/components/PreparedSidebar";
 import SearchSection from "@/components/SearchSection";
 import ResultsTable from "@/components/ResultsTable";
 import EmptyState from "@/components/EmptyState";
@@ -51,6 +53,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
   const [showHistory, setShowHistory] = useState(false);
+  const [showPrepared, setShowPrepared] = useState(false);
   const [error, setError] = useState("");
   const [selectedResult, setSelectedResult] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
@@ -69,6 +72,7 @@ function App() {
   // labelQuantities[parentCas] entry would leak into a later normal
   // print flow for the same parent chemical.
   const [preparedFlowActive, setPreparedFlowActive] = useState(false);
+  const [preparedPresetNameDraft, setPreparedPresetNameDraft] = useState("");
   const [labelConfig, setLabelConfig] = useState({
     size: "medium",
     template: "standard",
@@ -90,6 +94,7 @@ function App() {
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
   const [advancedFilter, setAdvancedFilter] = useState({ minPictograms: 0, hCodeSearch: "" });
+  const [preparedReprintingId, setPreparedReprintingId] = useState(null);
 
   // ── Refs ──
   const searchInputRef = useRef(null);
@@ -113,11 +118,20 @@ function App() {
     clearLabelSelection,
   } = useLabelSelection();
   const { templates: printTemplates, saveTemplate, deleteTemplate } = usePrintTemplates();
+  const {
+    labProfile,
+    setLabProfile,
+    clearLabProfile,
+  } = useLabProfile();
   // Tier 2 PR-2A: recent prepared-solution workflow inputs. localStorage-
   // only, parent-scoped on read inside PrepareSolutionModal. Carries
   // NO GHS data — hazards still come from the current parent result
   // at reuse time.
-  const { recents: preparedRecents, addRecent: addPreparedRecent } =
+  const {
+    recents: preparedRecents,
+    addRecent: addPreparedRecent,
+    clearRecents: clearPreparedRecents,
+  } =
     usePreparedRecents();
   // Tier 2 PR-2B: saved prepared-solution presets. Like recents, but
   // more restrictive: only parent identity + concentration + solvent.
@@ -137,12 +151,24 @@ function App() {
       if (!prepareSolutionParent) return;
       const record = buildPresetRecord(prepareSolutionParent, formValues);
       if (!record) return;
-      addPreparedPreset(record);
+      const explicitPresetName =
+        typeof formValues?.presetName === "string"
+          ? formValues.presetName.trim()
+          : "";
+      const normalizedRecord =
+        explicitPresetName && record.name !== explicitPresetName
+          ? { ...record, name: explicitPresetName }
+          : record;
+      addPreparedPreset(normalizedRecord);
       // UX cleanup: success feedback. Without this, the Save-as-preset
       // button looked like a no-op — there was no visible signal that
       // the preset had been written. Matches the existing pattern used
       // by LabelPrintModal's print-templates flow.
-      toast.success(t("prepared.savePresetSuccess"));
+      toast.success(
+        t("prepared.savePresetSuccessNamed", {
+          name: normalizedRecord.name || "",
+        })
+      );
     },
     [prepareSolutionParent, addPreparedPreset, t]
   );
@@ -385,8 +411,22 @@ function App() {
   );
 
   const handlePrintLabels = useCallback(() => {
-    printLabels(selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities);
-  }, [selectedForLabel, labelConfig, customGHSSettings, customLabelFields, labelQuantities]);
+    printLabels(
+      selectedForLabel,
+      labelConfig,
+      customGHSSettings,
+      customLabelFields,
+      labelQuantities,
+      labProfile
+    );
+  }, [
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile,
+  ]);
 
   // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────
   //
@@ -396,14 +436,50 @@ function App() {
 
   // Entry: from DetailModal's "Prepare solution" button.
   const handleOpenPrepareSolution = useCallback((chem) => {
+    setPreparedPresetNameDraft("");
     setPrepareSolutionParent(chem);
   }, []);
 
   // Cancel / close the PrepareSolutionModal without submitting.
   // Must not touch any selection state: user intent was "never mind".
   const handleClosePrepareSolution = useCallback(() => {
+    setPreparedPresetNameDraft("");
     setPrepareSolutionParent(null);
   }, []);
+
+  const handleReprintPreparedRecent = useCallback(
+    async (record, recordId) => {
+      if (!record?.parentCas) return;
+      const activeId = recordId || record.createdAt || `recent-${record.parentCas}`;
+      setPreparedReprintingId(activeId);
+      try {
+        const response = await axios.get(
+          `${API}/search/${encodeURIComponent(record.parentCas)}`
+        );
+        const parent = response.data;
+        if (!parent?.found) {
+          toast.error(t("prepared.reprintParentUnavailable"));
+          return;
+        }
+        const preparedItem = buildPreparedSolutionItem(parent, record);
+        if (!preparedItem) {
+          toast.error(t("prepared.reprintBuildFailed"));
+          return;
+        }
+        setSelectedForLabel([preparedItem]);
+        setLabelQuantities({});
+        setPreparedFlowActive(true);
+        setShowPrepared(false);
+        setShowLabelModal(true);
+      } catch (e) {
+        console.error(e);
+        toast.error(t("prepared.reprintFailed"));
+      } finally {
+        setPreparedReprintingId(null);
+      }
+    },
+    [setSelectedForLabel, setLabelQuantities, t]
+  );
 
   // Submit: build the derived item, hard-replace selection + quantities,
   // close BOTH the prepare-solution modal and the underlying DetailModal,
@@ -434,6 +510,7 @@ function App() {
       const recentRecord = buildRecentRecord(preparedItem);
       if (recentRecord) addPreparedRecent(recentRecord);
       // Close both modals of the prepare-solution flow.
+      setPreparedPresetNameDraft("");
       setPrepareSolutionParent(null);
       setSelectedResult(null);
       // Hand off to the existing print modal.
@@ -445,6 +522,7 @@ function App() {
       setLabelQuantities,
       setShowLabelModal,
       addPreparedRecent,
+      setPreparedPresetNameDraft,
     ]
   );
 
@@ -481,10 +559,12 @@ function App() {
       <Header
         favorites={favorites}
         history={history}
+        preparedCount={preparedRecents.length}
         showFavorites={showFavorites}
         showHistory={showHistory}
         onToggleFavorites={() => setShowFavorites(!showFavorites)}
         onToggleHistory={() => setShowHistory(!showHistory)}
+        onTogglePrepared={() => setShowPrepared(!showPrepared)}
       />
 
       {showFavorites && (
@@ -504,6 +584,16 @@ function App() {
           onClose={() => setShowHistory(false)}
           onClearHistory={clearHistory}
           onSelectHistoryItem={handleSelectHistoryItem}
+        />
+      )}
+
+      {showPrepared && (
+        <PreparedSidebar
+          recents={preparedRecents}
+          onClose={() => setShowPrepared(false)}
+          onClearRecents={clearPreparedRecents}
+          onReprint={handleReprintPreparedRecent}
+          reprintingId={preparedReprintingId}
         />
       )}
 
@@ -602,6 +692,8 @@ function App() {
           recents={preparedRecents}
           presets={preparedPresets}
           onSavePreset={handleSavePreparedPreset}
+          presetNameValue={preparedPresetNameDraft}
+          onPresetNameChange={setPreparedPresetNameDraft}
         />
       )}
 
@@ -620,6 +712,9 @@ function App() {
           onLabelConfigChange={setLabelConfig}
           customLabelFields={customLabelFields}
           onCustomLabelFieldsChange={setCustomLabelFields}
+          labProfile={labProfile}
+          onLabProfileChange={setLabProfile}
+          onClearLabProfile={clearLabProfile}
           labelQuantities={labelQuantities}
           onLabelQuantitiesChange={setLabelQuantities}
           onPrintLabels={handlePrintLabels}

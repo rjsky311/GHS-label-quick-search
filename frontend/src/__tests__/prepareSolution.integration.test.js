@@ -445,15 +445,31 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
         target: { value: "Water" },
       })
     );
+    await act(async () => {
+      const presetNameInput = screen.getByTestId("prepared-preset-name-input");
+      fireEvent.input(presetNameInput, {
+        target: { value: "Bench spray" },
+      });
+      fireEvent.blur(presetNameInput);
+    });
+    expect(screen.getByTestId("prepared-preset-name-input")).toHaveValue(
+      "Bench spray"
+    );
     await act(async () =>
       fireEvent.change(screen.getByTestId("prepared-prepared-by-input"), {
         target: { value: "A. Chen" },
       })
     );
+    expect(screen.getByTestId("prepared-preset-name-input")).toHaveValue(
+      "Bench spray"
+    );
     await act(async () =>
       fireEvent.change(screen.getByTestId("prepared-prepared-date-input"), {
         target: { value: "2026-04-16" },
       })
+    );
+    expect(screen.getByTestId("prepared-preset-name-input")).toHaveValue(
+      "Bench spray"
     );
     await act(async () =>
       fireEvent.change(screen.getByTestId("prepared-expiry-date-input"), {
@@ -506,6 +522,11 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     await act(async () =>
       fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
         target: { value: "Water" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-preset-name-input"), {
+        target: { value: "Bench spray" },
       })
     );
     await act(async () =>
@@ -607,6 +628,15 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
 
     // Save must NOT open the label modal — it is a non-submit action.
     expect(screen.queryAllByText("label.title")).toHaveLength(0);
+    expect(
+      JSON.parse(localStorage.getItem("ghs_prepared_presets"))[0]
+    ).toEqual(
+      expect.objectContaining({
+        parentCas: "64-17-5",
+        concentration: "10%",
+        solvent: "Water",
+      })
+    );
 
     // Close the prepare modal via Cancel (no submit).
     await act(async () =>
@@ -767,7 +797,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
 
     // Toast fired exactly once with the save-preset-success key.
     expect(toast.success).toHaveBeenCalledTimes(1);
-    expect(toast.success).toHaveBeenCalledWith("prepared.savePresetSuccess");
+    expect(toast.success).toHaveBeenCalledWith("prepared.savePresetSuccessNamed");
 
     // Non-submit: LabelPrintModal must NOT have opened.
     expect(screen.queryAllByText("label.title")).toHaveLength(0);
@@ -776,6 +806,55 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     // editing / hit submit / save another preset.
     expect(
       screen.getByTestId("prepare-solution-modal")
+    ).toBeInTheDocument();
+  });
+
+  it("prepared sidebar can reprint a saved recent after app restart by refetching the parent chemical", async () => {
+    localStorage.setItem(
+      "ghs_prepared_recents",
+      JSON.stringify([
+        {
+          schemaVersion: 1,
+          createdAt: "2026-04-16T10:00:00.000Z",
+          parentCas: "64-17-5",
+          parentNameEn: "Ethanol",
+          parentNameZh: "乙醇",
+          concentration: "10%",
+          solvent: "Water",
+          preparedBy: "A. Chen",
+          preparedDate: "2026-04-16",
+          expiryDate: null,
+        },
+      ])
+    );
+    axios.get.mockImplementation(async (url) => {
+      if (url.endsWith("/api/search/64-17-5")) {
+        return { data: ethanolResult };
+      }
+      return { data: { results: [] } };
+    });
+
+    render(<App />);
+
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepared-toggle-btn"))
+    );
+    expect(
+      await screen.findByText("prepared.sidebarTitle")
+    ).toBeInTheDocument();
+
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepared-reprint-btn-0"))
+    );
+
+    await waitFor(() =>
+      expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
+    );
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining("/api/search/64-17-5")
+    );
+    expect(
+      screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)
     ).toBeInTheDocument();
   });
 });

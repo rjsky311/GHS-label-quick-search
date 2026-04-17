@@ -85,6 +85,28 @@ describe("usePreparedPresets", () => {
     expect(result.current.presets[1].concentration).toBe("B");
   });
 
+  it("dedup ignores preset name and keeps the latest saved label", () => {
+    const { result } = renderHook(() => usePreparedPresets());
+    act(() => {
+      result.current.addPreset(
+        makePreset({ concentration: "A", name: "First name" })
+      );
+    });
+    act(() => {
+      result.current.addPreset(
+        makePreset({
+          concentration: "A",
+          createdAt: "later",
+          name: "Second name",
+        })
+      );
+    });
+
+    expect(result.current.presets).toHaveLength(1);
+    expect(result.current.presets[0].name).toBe("Second name");
+    expect(result.current.presets[0].createdAt).toBe("later");
+  });
+
   it("caps the list at MAX_PREPARED_PRESETS", () => {
     const { result } = renderHook(() => usePreparedPresets());
     act(() => {

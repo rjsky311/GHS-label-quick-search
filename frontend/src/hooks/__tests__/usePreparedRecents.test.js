@@ -137,6 +137,22 @@ describe("usePreparedRecents", () => {
     expect(result.current.recents).toEqual([]);
   });
 
+  it("clearRecents empties state and persists an empty list", () => {
+    const { result } = renderHook(() => usePreparedRecents());
+    act(() => {
+      result.current.addRecent(makeRecord({ concentration: "1 N" }));
+      result.current.addRecent(makeRecord({ concentration: "2 N" }));
+    });
+    expect(result.current.recents).toHaveLength(2);
+
+    act(() => {
+      result.current.clearRecents();
+    });
+
+    expect(result.current.recents).toEqual([]);
+    expect(JSON.parse(localStorage.getItem(RECENTS_KEY))).toEqual([]);
+  });
+
   it("stores no GHS / hazard / classification fields on the recent record", () => {
     // This is the core trust-boundary assertion: recents must never
     // carry pictograms / hazard_statements / precautionary_statements /

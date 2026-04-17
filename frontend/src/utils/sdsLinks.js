@@ -14,3 +14,15 @@ export function getECHASearchUrl(cas) {
     ? `https://chem.echa.europa.eu/substance-search?searchText=${encodeURIComponent(cas)}`
     : null;
 }
+
+export function getPreferredQrTarget(cid, cas) {
+  return (
+    getPubChemSDSUrl(cid) ||
+    getECHASearchUrl(cas) ||
+    (cid
+      ? `https://pubchem.ncbi.nlm.nih.gov/compound/${cid}`
+      : cas
+        ? `https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(cas)}`
+        : null)
+  );
+}

@@ -4,16 +4,19 @@ import Header from '../Header';
 const defaultProps = {
   favorites: [],
   history: [],
+  preparedCount: 0,
   showFavorites: false,
   showHistory: false,
   onToggleFavorites: jest.fn(),
   onToggleHistory: jest.fn(),
+  onTogglePrepared: jest.fn(),
 };
 
 describe('Header', () => {
   beforeEach(() => {
     defaultProps.onToggleFavorites.mockClear();
     defaultProps.onToggleHistory.mockClear();
+    defaultProps.onTogglePrepared.mockClear();
   });
 
   it('renders app title translation key', () => {
@@ -57,5 +60,19 @@ describe('Header', () => {
     render(<Header {...defaultProps} />);
     fireEvent.click(screen.getByTestId('history-toggle-btn'));
     expect(defaultProps.onToggleHistory).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows prepared count badge when prepared recents exist', () => {
+    render(<Header {...defaultProps} preparedCount={3} />);
+    const preparedBtn = screen.getByTestId('prepared-toggle-btn');
+    const badge = preparedBtn.querySelector('.bg-cyan-500');
+    expect(badge).not.toBeNull();
+    expect(badge.textContent).toBe('3');
+  });
+
+  it('clicking prepared button calls onTogglePrepared', () => {
+    render(<Header {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('prepared-toggle-btn'));
+    expect(defaultProps.onTogglePrepared).toHaveBeenCalledTimes(1);
   });
 });

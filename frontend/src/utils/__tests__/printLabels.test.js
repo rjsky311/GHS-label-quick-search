@@ -413,6 +413,57 @@ describe('printLabels', () => {
     });
   });
 
+  describe('lab profile rendering', () => {
+    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+    const profile = {
+      organization: 'Materials Lab',
+      phone: '+886-2-1234-5678',
+      address: 'Taipei',
+    };
+
+    it('renders organization, phone, and address on standard labels', () => {
+      printLabels([mockChemical], config, {}, { date: '', batchNumber: '' }, {}, profile);
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('profile-block');
+      expect(html).toContain('Materials Lab');
+      expect(html).toContain('+886-2-1234-5678');
+      expect(html).toContain('Taipei');
+    });
+
+    it('renders compact profile blocks without address on icon/qrcode templates', () => {
+      ['icon', 'qrcode'].forEach((template) => {
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        getByIdSpy.mockReturnValue(null);
+
+        printLabels(
+          [mockChemical],
+          { ...config, template },
+          {},
+          { date: '', batchNumber: '' },
+          {},
+          profile,
+        );
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain('profile-block-compact');
+        expect(html).toContain('Materials Lab');
+        expect(html).toContain('+886-2-1234-5678');
+        expect(html).not.toContain('Taipei');
+      });
+    });
+
+    it('falls back to legacy customLabelFields.labName when labProfile is empty', () => {
+      printLabels(
+        [mockChemical],
+        config,
+        {},
+        { labName: 'Legacy Lab', date: '', batchNumber: '' },
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain('Legacy Lab');
+    });
+  });
+
   describe('name display modes', () => {
     it('shows both names by default (nameDisplay: "both")', () => {
       printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'both' }, {});
@@ -1142,6 +1193,30 @@ describe('prepared solution print rendering', () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<img\s+class="qrcode-img"/);
+    });
+
+    it('uses the PubChem SDS target in the QR payload when CID is available', () => {
+      printLabels(
+        [mockChemical],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain(
+        'data=https%3A%2F%2Fpubchem.ncbi.nlm.nih.gov%2Fcompound%2F702%23section%3DSafety-and-Hazards'
+      );
+    });
+
+    it('falls back to the ECHA search target in the QR payload when CID is missing', () => {
+      printLabels(
+        [{ ...mockChemical, cid: null }],
+        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+        {}
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain(
+        'data=https%3A%2F%2Fchem.echa.europa.eu%2Fsubstance-search%3FsearchText%3D64-17-5'
+      );
     });
   });
 

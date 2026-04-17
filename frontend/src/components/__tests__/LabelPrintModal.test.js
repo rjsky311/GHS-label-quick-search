@@ -31,6 +31,7 @@ const baseConfig = {
 };
 
 const baseFields = { labName: '', date: '', batchNumber: '' };
+const baseProfile = { organization: '', phone: '', address: '' };
 
 function renderModal(overrides = {}) {
   const props = {
@@ -39,6 +40,9 @@ function renderModal(overrides = {}) {
     onLabelConfigChange: jest.fn(),
     customLabelFields: baseFields,
     onCustomLabelFieldsChange: jest.fn(),
+    labProfile: baseProfile,
+    onLabProfileChange: jest.fn(),
+    onClearLabProfile: jest.fn(),
     labelQuantities: {},
     onLabelQuantitiesChange: jest.fn(),
     onPrintLabels: jest.fn(),
@@ -175,15 +179,44 @@ describe('LabelPrintModal', () => {
   });
 
   describe('Custom fields', () => {
-    it('typing into labName calls onCustomLabelFieldsChange with the merged object', () => {
+    it('typing into lab profile fields calls onLabProfileChange with the merged object', () => {
+      const { props } = renderModal({
+        labProfile: { organization: '', phone: '02-1234', address: 'Lab 1' },
+      });
+
+      fireEvent.change(
+        screen.getByPlaceholderText('label.profileOrganizationPlaceholder'),
+        { target: { value: 'Lab A' } }
+      );
+
+      expect(props.onLabProfileChange).toHaveBeenCalledWith({
+        organization: 'Lab A',
+        phone: '02-1234',
+        address: 'Lab 1',
+      });
+    });
+
+    it('shows clear-profile action when any lab profile field exists', () => {
+      const { props } = renderModal({
+        labProfile: { organization: 'Lab A', phone: '', address: '' },
+      });
+
+      fireEvent.click(screen.getByText('label.profileClear'));
+      expect(props.onClearLabProfile).toHaveBeenCalledTimes(1);
+    });
+
+    it('typing into per-print custom fields keeps lab profile separate', () => {
       const { props } = renderModal({
         customLabelFields: { labName: '', date: '2026-04-15', batchNumber: 'B1' },
       });
-      const labInput = screen.getByPlaceholderText('label.labNamePlaceholder');
-      fireEvent.change(labInput, { target: { value: 'Lab A' } });
+
+      fireEvent.change(screen.getByPlaceholderText('label.printDatePlaceholder'), {
+        target: { value: '2026-04-17' },
+      });
+
       expect(props.onCustomLabelFieldsChange).toHaveBeenCalledWith({
-        labName: 'Lab A',
-        date: '2026-04-15',
+        labName: '',
+        date: '2026-04-17',
         batchNumber: 'B1',
       });
     });

@@ -43,6 +43,8 @@ export default function PrepareSolutionModal({
   recents = [],
   presets = [],
   onSavePreset,
+  presetNameValue,
+  onPresetNameChange,
 }) {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
@@ -65,6 +67,13 @@ export default function PrepareSolutionModal({
   const [preparedBy, setPreparedBy] = useState("");
   const [preparedDate, setPreparedDate] = useState(() => todayDateString());
   const [expiryDate, setExpiryDate] = useState("");
+  const [localPresetName, setLocalPresetName] = useState("");
+  const presetName =
+    typeof presetNameValue === "string" ? presetNameValue : localPresetName;
+  const setPresetName = (nextValue) => {
+    setLocalPresetName(nextValue);
+    onPresetNameChange?.(nextValue);
+  };
 
   // Tier 2 PR-2A: parent-scoped recent prepared workflow inputs.
   // Filtered down to THIS parent's CAS so the section only ever shows
@@ -101,6 +110,7 @@ export default function PrepareSolutionModal({
     setPreparedBy(recent.preparedBy || "");
     setPreparedDate(todayDateString());
     setExpiryDate("");
+    setPresetName("");
     // Send focus back to the concentration input so the user can still
     // tweak and submit with keyboard flow intact.
     concentrationInputRef.current?.focus();
@@ -131,6 +141,7 @@ export default function PrepareSolutionModal({
     setPreparedBy("");
     setPreparedDate(todayDateString());
     setExpiryDate("");
+    setPresetName(preset.name || "");
     concentrationInputRef.current?.focus();
   };
 
@@ -191,6 +202,7 @@ export default function PrepareSolutionModal({
     onSavePreset({
       concentration: trimmedConcentration,
       solvent: trimmedSolvent,
+      presetName: presetName.trim(),
     });
   };
 
@@ -297,12 +309,18 @@ export default function PrepareSolutionModal({
                         data-testid={`prepare-solution-preset-item-${idx}`}
                       >
                         <div className="text-sm text-white">
-                          {display ||
+                          {p.name ||
+                            display ||
                             t("prepared.labelMeta", {
                               concentration: p.concentration || "",
                               solvent: p.solvent || "",
                             })}
                         </div>
+                        {p.name && display && p.name !== display && (
+                          <div className="text-xs text-slate-400 mt-0.5">
+                            {display}
+                          </div>
+                        )}
                       </button>
                     </li>
                   );
@@ -495,6 +513,33 @@ export default function PrepareSolutionModal({
               </div>
             </div>
           </div>
+
+          {typeof onSavePreset === "function" && (
+            <div
+              className="border-t border-slate-700 pt-4"
+              data-testid="prepare-solution-preset-name-section"
+            >
+              <label
+                htmlFor="prepared-preset-name"
+                className="block text-sm text-slate-300 mb-1"
+              >
+                {t("prepared.presetName")}
+              </label>
+              <input
+                id="prepared-preset-name"
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value.slice(0, 60))}
+                placeholder={t("prepared.presetNamePlaceholder")}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                data-testid="prepared-preset-name-input"
+                maxLength={60}
+              />
+              <p className="text-xs text-slate-500 mt-1.5">
+                {t("prepared.presetNameHint")}
+              </p>
+            </div>
+          )}
 
           {/* Trust-boundary note.
               Mirrors (but is shorter than) the printed note that PR-B

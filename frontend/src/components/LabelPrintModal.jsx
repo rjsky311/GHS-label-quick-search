@@ -14,6 +14,9 @@ export default function LabelPrintModal({
   onLabelConfigChange,
   customLabelFields,
   onCustomLabelFieldsChange,
+  labProfile = {},
+  onLabProfileChange,
+  onClearLabProfile,
   labelQuantities,
   onLabelQuantitiesChange,
   onPrintLabels,
@@ -343,12 +346,69 @@ export default function LabelPrintModal({
 
           {/* Custom Label Fields */}
           <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-slate-400">
+                {t("label.profileTitle")}
+              </h3>
+              {(labProfile.organization || labProfile.phone || labProfile.address) &&
+                typeof onClearLabProfile === "function" && (
+                  <button
+                    type="button"
+                    onClick={onClearLabProfile}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    {t("label.profileClear")}
+                  </button>
+                )}
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                {
+                  key: "organization",
+                  labelKey: "label.profileOrganization",
+                  placeholderKey: "label.profileOrganizationPlaceholder",
+                },
+                {
+                  key: "phone",
+                  labelKey: "label.profilePhone",
+                  placeholderKey: "label.profilePhonePlaceholder",
+                },
+                {
+                  key: "address",
+                  labelKey: "label.profileAddress",
+                  placeholderKey: "label.profileAddressPlaceholder",
+                },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center gap-2">
+                  <label className="text-xs text-slate-500 w-20 shrink-0">
+                    {t(field.labelKey)}
+                  </label>
+                  <input
+                    type="text"
+                    value={labProfile[field.key] || ""}
+                    onChange={(e) =>
+                      onLabProfileChange?.({
+                        ...labProfile,
+                        [field.key]: e.target.value,
+                      })
+                    }
+                    placeholder={t(field.placeholderKey)}
+                    className="flex-1 bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-600 mt-1.5">
+              {t("label.profileHint")}
+            </p>
+          </div>
+
+          <div>
             <h3 className="text-sm font-medium text-slate-400 mb-3">
               {t("label.customFields")}
             </h3>
             <div className="grid grid-cols-1 gap-2">
               {[
-                { key: "labName", labelKey: "label.labName", placeholderKey: "label.labNamePlaceholder" },
                 { key: "date", labelKey: "label.printDate", placeholderKey: "label.printDatePlaceholder" },
                 { key: "batchNumber", labelKey: "label.batchNumber", placeholderKey: "label.batchNumberPlaceholder" },
               ].map((field) => (
@@ -364,7 +424,9 @@ export default function LabelPrintModal({
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-600 mt-1.5">{t("label.customFieldsHint")}</p>
+            <p className="text-xs text-slate-600 mt-1.5">
+              {t("label.customFieldsHint")}
+            </p>
           </div>
 
           {/* Page Estimation */}
