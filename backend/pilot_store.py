@@ -524,9 +524,10 @@ class PilotStore:
         *,
         status: Optional[str] = None,
         locale: Optional[str] = None,
+        cas_number: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         sql = """
-            SELECT alias_text, locale, cas_number, source, confidence, status, notes, first_seen_at, last_seen_at, hit_count
+            SELECT id, alias_text, locale, cas_number, source, confidence, status, notes, first_seen_at, last_seen_at, hit_count
             FROM dictionary_aliases
             WHERE 1 = 1
         """
@@ -537,6 +538,9 @@ class PilotStore:
         if locale:
             sql += " AND locale = ?"
             params.append(locale)
+        if cas_number:
+            sql += " AND cas_number = ?"
+            params.append(cas_number)
         sql += " ORDER BY status, hit_count DESC, alias_text ASC"
         rows = self._fetchall(sql, params)
         return [dict(row) for row in rows]
@@ -746,23 +750,27 @@ class PilotStore:
 
     def list_reference_links(
         self,
-        cas_number: str,
+        cas_number: Optional[str] = None,
         *,
         include_inactive: bool = False,
     ) -> list[dict[str, Any]]:
         sql = """
-            SELECT cas_number, cid, link_type, label, url, source, priority, status, updated_at
+            SELECT id, cas_number, cid, link_type, label, url, source, priority, status, updated_at
             FROM dictionary_reference_links
-            WHERE cas_number = ?
+            WHERE 1 = 1
         """
-        params: list[Any] = [cas_number]
+        params: list[Any] = []
+        if cas_number:
+            sql += " AND cas_number = ?"
+            params.append(cas_number)
         if not include_inactive:
             sql += " AND status = ?"
             params.append(ACTIVE_REFERENCE_STATUS)
-        sql += " ORDER BY priority ASC, label ASC"
+        sql += " ORDER BY cas_number ASC, priority ASC, label ASC"
         rows = self._fetchall(sql, params)
         return [
             {
+                "id": row["id"],
                 "casNumber": row["cas_number"],
                 "cid": row["cid"],
                 "linkType": row["link_type"],

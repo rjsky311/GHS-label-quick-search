@@ -108,3 +108,55 @@ async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_s
     assert result.reference_links[0]["label"] == "Internal SDS"
     assert any(link["label"] == "ECHA Substance Search" for link in result.reference_links)
     assert any(link["label"] == "NIOSH Pocket Guide" for link in result.reference_links)
+
+
+async def test_dictionary_admin_endpoints_roundtrip(temp_store):
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/manual-entries",
+            json={
+                "cas_number": "321-54-7",
+                "name_en": "Pilot Solvent",
+                "name_zh": "試驗溶劑",
+                "notes": "seeded from admin panel",
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["record"]["cas_number"] == "321-54-7"
+
+        response = await ac.post(
+            "/api/dictionary/aliases",
+            json={
+                "alias_text": "pilot solvent x",
+                "locale": "en",
+                "cas_number": "321-54-7",
+                "status": "approved",
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["record"]["cas_number"] == "321-54-7"
+
+        response = await ac.post(
+            "/api/dictionary/reference-links",
+            json={
+                "cas_number": "321-54-7",
+                "label": "Vendor SDS",
+                "url": "https://vendor.example/sds",
+                "link_type": "sds",
+                "priority": 5,
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["record"]["label"] == "Vendor SDS"
+
+        entries = await ac.get("/api/dictionary/manual-entries")
+        aliases = await ac.get("/api/dictionary/aliases?status=approved")
+        links = await ac.get("/api/dictionary/reference-links?cas_number=321-54-7")
+
+    assert entries.status_code == 200
+    assert any(item["cas_number"] == "321-54-7" for item in entries.json()["items"])
+    assert aliases.status_code == 200
+    assert any(item["alias_text"] == "pilot solvent x" for item in aliases.json()["items"])
+    assert links.status_code == 200
+    assert links.json()["items"][0]["label"] == "Vendor SDS"

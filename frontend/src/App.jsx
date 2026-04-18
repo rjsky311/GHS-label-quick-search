@@ -13,6 +13,7 @@ import useResultSort from "@/hooks/useResultSort";
 import usePreparedRecents from "@/hooks/usePreparedRecents";
 import usePreparedPresets from "@/hooks/usePreparedPresets";
 import useObservability from "@/hooks/useObservability";
+import usePilotDashboard from "@/hooks/usePilotDashboard";
 import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
@@ -33,6 +34,7 @@ import {
 import Header from "@/components/Header";
 import FavoritesSidebar from "@/components/FavoritesSidebar";
 import HistorySidebar from "@/components/HistorySidebar";
+import PilotDashboardSidebar from "@/components/PilotDashboardSidebar";
 import PreparedSidebar from "@/components/PreparedSidebar";
 import SearchSection from "@/components/SearchSection";
 import ResultsTable from "@/components/ResultsTable";
@@ -56,6 +58,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
   const [showHistory, setShowHistory] = useState(false);
+  const [showPilotDashboard, setShowPilotDashboard] = useState(false);
   const [showPrepared, setShowPrepared] = useState(false);
   const [error, setError] = useState("");
   const [selectedResult, setSelectedResult] = useState(null);
@@ -94,6 +97,19 @@ function App() {
     logEvent: logObservabilityEvent,
     exportReport: exportObservabilityReport,
   } = useObservability();
+  const {
+    report: pilotReport,
+    aliases: pilotAliases,
+    manualEntries: pilotManualEntries,
+    referenceLinks: pilotReferenceLinks,
+    loading: pilotLoading,
+    saving: pilotSaving,
+    error: pilotError,
+    refresh: refreshPilotDashboard,
+    saveManualEntry: savePilotManualEntry,
+    saveAlias: savePilotAlias,
+    saveReferenceLink: savePilotReferenceLink,
+  } = usePilotDashboard(showPilotDashboard);
   const {
     customGHSSettings,
     getEffectiveClassification,
@@ -430,6 +446,11 @@ function App() {
     [results, getEffectiveClassification]
   );
 
+  const pilotAttentionCount = useMemo(() => {
+    const dictionary = pilotReport?.dictionary || {};
+    return (dictionary.pendingAliasCount || 0) + (dictionary.openMissQueryCount || 0);
+  }, [pilotReport]);
+
   const handlePrintLabels = useCallback(() => {
     const printableSelection = selectedForLabel.map((chemical) =>
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
@@ -604,13 +625,33 @@ function App() {
         history={history}
         preparedCount={preparedRecents.length}
         opsEventCount={observabilityEventCount}
+        pilotAttentionCount={pilotAttentionCount}
         showFavorites={showFavorites}
         showHistory={showHistory}
-        onExportObservabilityReport={() => exportObservabilityReport()}
+        showPilotDashboard={showPilotDashboard}
+        onTogglePilotDashboard={() => setShowPilotDashboard(!showPilotDashboard)}
         onToggleFavorites={() => setShowFavorites(!showFavorites)}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}
       />
+
+      {showPilotDashboard && (
+        <PilotDashboardSidebar
+          report={pilotReport}
+          aliases={pilotAliases}
+          manualEntries={pilotManualEntries}
+          referenceLinks={pilotReferenceLinks}
+          loading={pilotLoading}
+          saving={pilotSaving}
+          error={pilotError}
+          onClose={() => setShowPilotDashboard(false)}
+          onRefresh={refreshPilotDashboard}
+          onExportObservabilityReport={() => exportObservabilityReport()}
+          onSaveManualEntry={savePilotManualEntry}
+          onSaveAlias={savePilotAlias}
+          onSaveReferenceLink={savePilotReferenceLink}
+        />
+      )}
 
       {showFavorites && (
         <FavoritesSidebar

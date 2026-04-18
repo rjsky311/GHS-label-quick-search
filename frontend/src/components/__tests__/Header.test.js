@@ -5,8 +5,11 @@ const defaultProps = {
   favorites: [],
   history: [],
   preparedCount: 0,
+  pilotAttentionCount: 0,
   showFavorites: false,
   showHistory: false,
+  showPilotDashboard: false,
+  onTogglePilotDashboard: jest.fn(),
   onToggleFavorites: jest.fn(),
   onToggleHistory: jest.fn(),
   onTogglePrepared: jest.fn(),
@@ -17,6 +20,7 @@ describe('Header', () => {
     defaultProps.onToggleFavorites.mockClear();
     defaultProps.onToggleHistory.mockClear();
     defaultProps.onTogglePrepared.mockClear();
+    defaultProps.onTogglePilotDashboard.mockClear();
   });
 
   it('renders app title translation key', () => {
@@ -54,6 +58,12 @@ describe('Header', () => {
     render(<Header {...defaultProps} />);
     fireEvent.click(screen.getByTestId('favorites-toggle-btn'));
     expect(defaultProps.onToggleFavorites).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicking pilot dashboard button calls onTogglePilotDashboard', () => {
+    render(<Header {...defaultProps} />);
+    fireEvent.click(screen.getByTestId('pilot-dashboard-toggle-btn'));
+    expect(defaultProps.onTogglePilotDashboard).toHaveBeenCalledTimes(1);
   });
 
   it('clicking history button calls onToggleHistory', () => {

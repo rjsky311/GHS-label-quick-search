@@ -533,6 +533,35 @@ class DictionaryMissQueryPayload(BaseModel):
     context: Dict[str, Any] = Field(default_factory=dict)
 
 
+class DictionaryManualEntryPayload(BaseModel):
+    cas_number: str
+    name_en: Optional[str] = None
+    name_zh: Optional[str] = None
+    notes: str = ""
+    source: str = "manual"
+
+
+class DictionaryAliasPayload(BaseModel):
+    alias_text: str
+    locale: str
+    cas_number: str
+    source: str = "manual"
+    confidence: float = 1.0
+    status: str = APPROVED_ALIAS_STATUS
+    notes: str = ""
+
+
+class DictionaryReferenceLinkPayload(BaseModel):
+    cas_number: str
+    label: str
+    url: str
+    link_type: str = "reference"
+    source: str = "manual"
+    priority: int = 50
+    status: str = "active"
+    cid: Optional[int] = None
+
+
 # Characters that Excel / Google Sheets / LibreOffice Calc treat as the
 # start of a formula. Values beginning with any of these can execute
 # content when the exported file is opened elsewhere (CSV injection).
@@ -1466,6 +1495,85 @@ async def dictionary_report():
         "version": APP_VERSION,
         "dictionary": pilot_store.get_dictionary_summary(limit=50),
     }
+
+
+@api_router.get("/dictionary/manual-entries")
+async def dictionary_manual_entries():
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "items": pilot_store.list_manual_entries(),
+    }
+
+
+@api_router.post("/dictionary/manual-entries")
+async def upsert_dictionary_manual_entry(payload: DictionaryManualEntryPayload):
+    record = pilot_store.upsert_dictionary_entry(
+        payload.cas_number,
+        name_en=payload.name_en,
+        name_zh=payload.name_zh,
+        notes=payload.notes,
+        source=payload.source,
+    )
+    return {"ok": True, "record": record}
+
+
+@api_router.get("/dictionary/aliases")
+async def dictionary_aliases(
+    status: Optional[str] = None,
+    locale: Optional[str] = None,
+    cas_number: Optional[str] = None,
+):
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "items": pilot_store.list_aliases(
+            status=status,
+            locale=locale,
+            cas_number=cas_number,
+        ),
+    }
+
+
+@api_router.post("/dictionary/aliases")
+async def upsert_dictionary_alias(payload: DictionaryAliasPayload):
+    record = pilot_store.upsert_alias(
+        payload.alias_text,
+        payload.locale,
+        payload.cas_number,
+        source=payload.source,
+        confidence=payload.confidence,
+        status=payload.status,
+        notes=payload.notes,
+    )
+    return {"ok": True, "record": record}
+
+
+@api_router.get("/dictionary/reference-links")
+async def dictionary_reference_links(
+    cas_number: Optional[str] = None,
+    include_inactive: bool = False,
+):
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "items": pilot_store.list_reference_links(
+            cas_number,
+            include_inactive=include_inactive,
+        ),
+    }
+
+
+@api_router.post("/dictionary/reference-links")
+async def upsert_dictionary_reference_link(payload: DictionaryReferenceLinkPayload):
+    record = pilot_store.upsert_reference_link(
+        payload.cas_number,
+        label=payload.label,
+        url=payload.url,
+        link_type=payload.link_type,
+        source=payload.source,
+        priority=payload.priority,
+        status=payload.status,
+        cid=payload.cid,
+    )
+    return {"ok": True, "record": record}
 
 
 @api_router.post("/dictionary/miss-query")
