@@ -40,8 +40,24 @@ jest.mock('../ClassificationComparisonTable', () => {
 
 // Mock sdsLinks
 jest.mock('@/utils/sdsLinks', () => ({
-  getPubChemSDSUrl: jest.fn((cid) => (cid ? `https://pubchem.example.com/${cid}` : null)),
-  getECHASearchUrl: jest.fn((cas) => (cas ? `https://echa.example.com/${cas}` : null)),
+  getReferenceLinks: jest.fn((result) => {
+    const links = [];
+    if (result?.cid) {
+      links.push({
+        label: "PubChem Safety & Hazards",
+        url: `https://pubchem.example.com/${result.cid}`,
+        linkType: "sds",
+      });
+    }
+    if (result?.cas_number) {
+      links.push({
+        label: "ECHA Substance Search",
+        url: `https://echa.example.com/${result.cas_number}`,
+        linkType: "regulatory",
+      });
+    }
+    return links;
+  }),
 }));
 
 // Mock sonner toast
@@ -76,8 +92,24 @@ beforeEach(() => {
   defaultProps.getEffectiveClassification = createMockGetEffective();
   defaultProps.hasCustomClassification = jest.fn(() => false);
   // Restore sdsLinks mock implementations
-  sdsLinks.getPubChemSDSUrl.mockImplementation((cid) => (cid ? `https://pubchem.example.com/${cid}` : null));
-  sdsLinks.getECHASearchUrl.mockImplementation((cas) => (cas ? `https://echa.example.com/${cas}` : null));
+  sdsLinks.getReferenceLinks.mockImplementation((result) => {
+    const links = [];
+    if (result?.cid) {
+      links.push({
+        label: "PubChem Safety & Hazards",
+        url: `https://pubchem.example.com/${result.cid}`,
+        linkType: "sds",
+      });
+    }
+    if (result?.cas_number) {
+      links.push({
+        label: "ECHA Substance Search",
+        url: `https://echa.example.com/${result.cas_number}`,
+        linkType: "regulatory",
+      });
+    }
+    return links;
+  });
 
   // Mock clipboard API
   Object.assign(navigator, {

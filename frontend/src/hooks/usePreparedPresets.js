@@ -1,5 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { preparedPresetKey } from "@/utils/preparedSolution";
+import {
+  fetchWorkspaceDocument,
+  saveWorkspaceDocument,
+} from "@/utils/workspaceDocuments";
 
 /**
  * usePreparedPresets — Tier 2 PR-2B.
@@ -66,6 +70,39 @@ function persist(list) {
 export default function usePreparedPresets() {
   const [presets, setPresets] = useState(() => loadFromStorage());
 
+  useEffect(() => {
+    let cancelled = false;
+    const localSnapshot = loadFromStorage();
+
+    async function syncFromBackend() {
+      try {
+        const remote = await fetchWorkspaceDocument("prepared_presets");
+        const remotePayload = Array.isArray(remote?.payload)
+          ? remote.payload.filter((r) => r && r.schemaVersion === 1)
+          : [];
+
+        if (remotePayload.length > 0) {
+          if (!cancelled) {
+            setPresets(remotePayload);
+            persist(remotePayload);
+          }
+          return;
+        }
+
+        if (localSnapshot.length > 0) {
+          await saveWorkspaceDocument("prepared_presets", localSnapshot);
+        }
+      } catch {
+        // Local fallback stays in place when backend persistence is unavailable.
+      }
+    }
+
+    syncFromBackend();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const addPreset = useCallback((record) => {
     if (!record) return;
     // Recipe minimum: parent identity + both required inputs. Without
@@ -77,6 +114,7 @@ export default function usePreparedPresets() {
       const filtered = prev.filter((r) => preparedPresetKey(r) !== key);
       const next = [record, ...filtered].slice(0, MAX_PREPARED_PRESETS);
       persist(next);
+      void saveWorkspaceDocument("prepared_presets", next).catch(() => {});
       return next;
     });
   }, []);

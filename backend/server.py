@@ -23,6 +23,7 @@ import csv
 import random
 import re
 from cachetools import TTLCache
+from pilot_store import APPROVED_ALIAS_STATUS, PilotStore, infer_locale, normalize_compact_text
 
 # Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
 # + alias dictionaries for common/colloquial chemical names
@@ -37,6 +38,14 @@ load_dotenv(ROOT_DIR / '.env')
 
 
 APP_VERSION = "1.9.0"
+WORKSPACE_DOC_TYPES = {
+    "lab_profile",
+    "print_templates",
+    "prepared_recents",
+    "prepared_presets",
+}
+PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
+pilot_store = PilotStore(PILOT_STORE_PATH)
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None
@@ -130,6 +139,149 @@ def _record_upstream_failure(kind: str, url: str, attempt: int, **payload: Any) 
     )
 
 
+def _ensure_workspace_doc_type(doc_type: str) -> str:
+    if doc_type not in WORKSPACE_DOC_TYPES:
+        raise HTTPException(status_code=404, detail=f"Unsupported workspace document: {doc_type}")
+    return doc_type
+
+
+def _is_cas_like_query(query: str) -> bool:
+    return bool(re.match(r"^[\d-]+$", query.strip()))
+
+
+def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
+    pairs = []
+    for entry in pilot_store.list_manual_entries():
+        if locale == "zh":
+            name = (entry.get("name_zh") or "").strip()
+        else:
+            name = (entry.get("name_en") or "").strip().lower()
+        if name:
+            pairs.append((name, entry["cas_number"]))
+    return pairs
+
+
+def _approved_alias_pairs(locale: str) -> list[tuple[str, str]]:
+    pairs = []
+    for alias in pilot_store.list_aliases(status=APPROVED_ALIAS_STATUS, locale=locale):
+        key = (alias.get("alias_text") or "").strip()
+        if not key:
+            continue
+        pairs.append((key.lower() if locale == "en" else key, alias["cas_number"]))
+    return pairs
+
+
+def _combined_lookup_map(locale: str) -> Dict[str, str]:
+    if locale == "zh":
+        combined = dict(ZH_TO_CAS)
+    else:
+        combined = dict(EN_TO_CAS)
+
+    for key, cas in _manual_name_pairs(locale):
+        combined[key] = cas
+
+    for key, cas in _approved_alias_pairs(locale):
+        if key not in combined:
+            combined[key] = cas
+
+    return combined
+
+
+def _compact_exact_match(query: str, locale: str) -> Optional[str]:
+    compact_query = normalize_compact_text(query, locale=locale)
+    if not compact_query:
+        return None
+
+    matches = set()
+    for key, cas in _combined_lookup_map(locale).items():
+        if normalize_compact_text(key, locale=locale) == compact_query:
+            matches.add(cas)
+    if len(matches) == 1:
+        return next(iter(matches))
+    return None
+
+
+def _build_reference_links(
+    cas_number: Optional[str],
+    cid: Optional[int],
+    name_en: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    links: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+
+    if cid:
+        links.append(
+            {
+                "label": "PubChem Safety & Hazards",
+                "url": f"https://pubchem.ncbi.nlm.nih.gov/compound/{cid}#section=Safety-and-Hazards",
+                "link_type": "sds",
+                "source": "pubchem",
+                "priority": 10,
+            }
+        )
+        links.append(
+            {
+                "label": "PubChem Compound Overview",
+                "url": f"https://pubchem.ncbi.nlm.nih.gov/compound/{cid}",
+                "link_type": "reference",
+                "source": "pubchem",
+                "priority": 40,
+            }
+        )
+    if cas_number:
+        links.append(
+            {
+                "label": "ECHA Substance Search",
+                "url": f"https://chem.echa.europa.eu/substance-search?searchText={cas_number}",
+                "link_type": "regulatory",
+                "source": "echa",
+                "priority": 20,
+            }
+        )
+    if cas_number or name_en:
+        links.append(
+            {
+                "label": "NIOSH Pocket Guide",
+                "url": "https://www.cdc.gov/niosh/npg/default.html",
+                "link_type": "occupational",
+                "source": "niosh",
+                "priority": 60,
+            }
+        )
+
+    if cas_number:
+        for link in pilot_store.list_reference_links(cas_number):
+            links.append(
+                {
+                    "label": link["label"],
+                    "url": link["url"],
+                    "link_type": link["linkType"],
+                    "source": link["source"],
+                    "priority": link["priority"],
+                }
+            )
+
+    deduped = []
+    for link in sorted(links, key=lambda item: (item["priority"], item["label"])):
+        if link["url"] in seen_urls:
+            continue
+        seen_urls.add(link["url"])
+        deduped.append(link)
+    return deduped
+
+
+def _record_dictionary_miss(query: str, query_kind: str, endpoint: str, *, context: Optional[Dict[str, Any]] = None) -> None:
+    try:
+        pilot_store.record_miss_query(
+            query,
+            query_kind,
+            endpoint,
+            context=context or {},
+        )
+    except Exception as exc:
+        logger.warning("Failed to persist miss query '%s': %s", query, exc)
+
+
 # ─── Client IP resolution for rate limiting ─────────────────
 #
 # The service sits behind Zeabur's proxy, so `request.client.host`
@@ -172,6 +324,7 @@ limiter = Limiter(
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     global shared_http_client
+    pilot_store.connect()
     shared_http_client = httpx.AsyncClient(
         timeout=30.0,
         limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
@@ -179,6 +332,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     await shared_http_client.aclose()
+    pilot_store.close()
 
 # Create the main app with lifespan
 app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
@@ -354,6 +508,10 @@ class ChemicalResult(BaseModel):
     # "cached" badge so users know to refresh if they need the very
     # latest data.
     cache_hit: bool = False
+    # Enriched reference links combining built-in sources (PubChem /
+    # ECHA / NIOSH) with any manually-added single-tenant links from
+    # the pilot backend.
+    reference_links: List[Dict[str, Any]] = []
 
 # Maximum rows accepted by the export endpoints. Keeps request size
 # bounded and prevents abuse of the export pipeline as a DoS vector.
@@ -362,6 +520,17 @@ MAX_EXPORT_ROWS = 500
 class ExportRequest(BaseModel):
     results: List[Dict[str, Any]] = Field(..., max_length=MAX_EXPORT_ROWS)
     format: str = "xlsx"  # xlsx or csv
+
+
+class WorkspaceDocumentPayload(BaseModel):
+    payload: Any
+
+
+class DictionaryMissQueryPayload(BaseModel):
+    query: str
+    query_kind: str = "name"
+    endpoint: str = "frontend"
+    context: Dict[str, Any] = Field(default_factory=dict)
 
 
 # Characters that Excel / Google Sheets / LibreOffice Calc treat as the
@@ -546,14 +715,19 @@ def normalize_cas(cas: str) -> str:
 def resolve_name_to_cas(query: str) -> Optional[str]:
     """Resolve English or Chinese chemical name to CAS number.
     Returns the first matching CAS number, or None.
-    Priority: exact Chinese → exact English (includes merged aliases) →
+    Priority: manual exact formal name → seed exact formal name →
+              approved exact alias → compact exact match →
               word-boundary English → unique prefix English → unique prefix Chinese
-    Note: ALIASES_ZH and ALIASES_EN are already merged into ZH_TO_CAS and EN_TO_CAS
-    at import time, so exact alias matches are handled by the first two checks.
     """
     q = query.strip()
     if not q:
         return None
+
+    locale = infer_locale(q)
+
+    manual_entry = pilot_store.get_manual_entry_by_name(q, locale, allow_compact=True)
+    if manual_entry:
+        return manual_entry["cas_number"]
 
     # Try exact Chinese name match (includes aliases like 酒精, 漂白水, etc.)
     if q in ZH_TO_CAS:
@@ -564,10 +738,21 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
     if q_lower in EN_TO_CAS:
         return EN_TO_CAS[q_lower]
 
+    exact_alias = pilot_store.get_alias_exact(q, locale)
+    if exact_alias:
+        return exact_alias["cas_number"]
+
+    compact_match = _compact_exact_match(q, locale)
+    if compact_match:
+        return compact_match
+
+    en_lookup = _combined_lookup_map("en")
+    zh_lookup = _combined_lookup_map("zh")
+
     # Try English names containing the query as a word boundary match
     # e.g., "Methanol" matches "Methyl alcohol (Methanol)"
     en_contains = []
-    for name, cas in EN_TO_CAS.items():
+    for name, cas in en_lookup.items():
         # Check if query appears as a word (bounded by space, parens, or start/end)
         if re.search(r'(?:^|[\s(])' + re.escape(q_lower) + r'(?:$|[\s)])', name):
             en_contains.append(cas)
@@ -575,12 +760,12 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
         return en_contains[0]
 
     # Try partial match (prefix) — English (case-insensitive)
-    en_prefix = [cas for name, cas in EN_TO_CAS.items() if name.startswith(q_lower)]
+    en_prefix = [cas for name, cas in en_lookup.items() if name.startswith(q_lower)]
     if len(en_prefix) == 1:
         return en_prefix[0]
 
     # Try partial match (prefix) — Chinese
-    zh_prefix = [cas for name, cas in ZH_TO_CAS.items() if name.startswith(q)]
+    zh_prefix = [cas for name, cas in zh_lookup.items() if name.startswith(q)]
     if len(zh_prefix) == 1:
         return zh_prefix[0]
 
@@ -760,6 +945,10 @@ def get_chinese_name_from_cas(cas_number: str) -> Optional[str]:
     if not cas_number:
         return None
     cas_normalized = cas_number.strip()
+
+    manual = pilot_store.get_manual_entry_by_cas(cas_normalized)
+    if manual and manual.get("name_zh"):
+        return manual["name_zh"]
     
     # Direct CAS lookup - highest priority
     if cas_normalized in CAS_TO_ZH:
@@ -772,6 +961,10 @@ def get_english_name_from_cas(cas_number: str) -> Optional[str]:
     if not cas_number:
         return None
     cas_normalized = cas_number.strip()
+
+    manual = pilot_store.get_manual_entry_by_cas(cas_normalized)
+    if manual and manual.get("name_en"):
+        return manual["name_en"]
     
     # Direct lookup from CAS_TO_EN dictionary
     if cas_normalized in CAS_TO_EN:
@@ -784,6 +977,10 @@ def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
     if not name_en:
         return None
     name_lower = name_en.lower().strip()
+
+    manual = pilot_store.get_manual_entry_by_name(name_en, "en", allow_compact=True)
+    if manual and manual.get("name_zh"):
+        return manual["name_zh"]
 
     # O(1) exact match in expanded dictionary (1861 entries)
     if name_lower in CHEMICAL_NAMES_ZH_EXPANDED:
@@ -895,7 +1092,12 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
     logger.info(f"PubChem has no CID for CAS number: {cas_number}")
     return None
 
-async def get_compound_name(cid: int, http_client: httpx.AsyncClient, known_zh: Optional[str] = None) -> tuple:
+async def get_compound_name(
+    cid: int,
+    http_client: httpx.AsyncClient,
+    known_zh: Optional[str] = None,
+    cas_number: Optional[str] = None,
+) -> tuple:
     """Get compound name in English and Chinese with multiple fallbacks.
 
     Name resolution is explicitly best-effort: a transient PubChem
@@ -957,6 +1159,21 @@ async def get_compound_name(cid: int, http_client: httpx.AsyncClient, known_zh: 
             if zh:
                 name_zh = zh
                 break
+
+    if cas_number and all_synonyms:
+        excluded = {
+            normalize_compact_text(known_zh, locale="zh"),
+            normalize_compact_text(name_en, locale="en"),
+            normalize_compact_text(name_zh, locale="zh"),
+        }
+        candidate_synonyms = []
+        for synonym in all_synonyms[:25]:
+            locale = infer_locale(synonym)
+            compact = normalize_compact_text(synonym, locale=locale)
+            if not compact or compact in excluded:
+                continue
+            candidate_synonyms.append(synonym)
+        pilot_store.capture_alias_candidates(cas_number, candidate_synonyms)
 
     return name_en, name_zh
 
@@ -1076,9 +1293,11 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
                 name_zh=name_zh_from_cas,
                 ghs_pictograms=[],
                 hazard_statements=[],
+                precautionary_statements=[],
                 signal_word=None,
                 signal_word_zh=None,
                 found=True,
+                reference_links=_build_reference_links(normalized_cas, None, name_en_from_cas),
                 error="PubChem 無 GHS 資料，僅提供本地字典名稱"
             )
         # Provide more helpful error message
@@ -1095,7 +1314,12 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
     # raises PubChemError for transient cases; catch it here and
     # return an upstream_error result so the UI can distinguish
     # "retry later" from "this chemical has no GHS data".
-    name_task = get_compound_name(cid, http_client, known_zh=name_zh_from_cas)
+    name_task = get_compound_name(
+        cid,
+        http_client,
+        known_zh=name_zh_from_cas,
+        cas_number=normalized_cas,
+    )
     ghs_task = get_ghs_classification(cid, http_client)
 
     try:
@@ -1201,6 +1425,7 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         primary_report_count=primary_report_count,
         retrieved_at=retrieved_at,
         cache_hit=cache_hit,
+        reference_links=_build_reference_links(normalized_cas, cid, name_en),
     )
 
 # API Routes
@@ -1230,6 +1455,57 @@ async def ops_report():
             "ghsEntries": len(ghs_cache),
         },
         "recentEvents": list(ops_recent_events),
+        "dictionary": pilot_store.get_dictionary_summary(limit=10),
+    }
+
+
+@api_router.get("/dictionary/report")
+async def dictionary_report():
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "version": APP_VERSION,
+        "dictionary": pilot_store.get_dictionary_summary(limit=50),
+    }
+
+
+@api_router.post("/dictionary/miss-query")
+async def dictionary_miss_query(payload: DictionaryMissQueryPayload):
+    return {
+        "ok": True,
+        "record": pilot_store.record_miss_query(
+            payload.query,
+            payload.query_kind,
+            payload.endpoint,
+            context=payload.context,
+        ),
+    }
+
+
+@api_router.get("/workspace/{doc_type}")
+async def get_workspace_document(doc_type: str):
+    doc_type = _ensure_workspace_doc_type(doc_type)
+    document = pilot_store.get_document(doc_type)
+    if document is None:
+        return {
+            "docType": doc_type,
+            "payload": None,
+            "updatedAt": None,
+        }
+    return {
+        "docType": doc_type,
+        "payload": document["payload"],
+        "updatedAt": document["updatedAt"],
+    }
+
+
+@api_router.put("/workspace/{doc_type}")
+async def put_workspace_document(doc_type: str, payload: WorkspaceDocumentPayload):
+    doc_type = _ensure_workspace_doc_type(doc_type)
+    document = pilot_store.put_document(doc_type, payload.payload)
+    return {
+        "docType": doc_type,
+        "payload": document["payload"],
+        "updatedAt": document["updatedAt"],
     }
 
 @api_router.post("/search", response_model=List[ChemicalResult])
@@ -1248,6 +1524,15 @@ async def search_chemicals(request: Request, query: CASQuery):
         # Add small delay between batches
         if i + batch_size < len(query.cas_numbers):
             await asyncio.sleep(0.5)
+    for raw_query, result in zip(query.cas_numbers, results):
+        if result.found or result.upstream_error:
+            continue
+        _record_dictionary_miss(
+            raw_query,
+            "cas",
+            "search_batch",
+            context={"normalizedCas": normalize_cas(raw_query)},
+        )
     return results
 
 @api_router.get("/search-by-name/{query}")
@@ -1264,33 +1549,46 @@ async def search_by_name(request: Request, query: str):
 
     q_lower = q.lower()
     matches = []
-    seen_cas = set()
+    seen_rows = set()
 
-    # Chinese name matches (substring) — includes aliases merged into ZH_TO_CAS
+    def append_match(cas: str, *, alias: Optional[str] = None) -> None:
+        key = (cas, alias or "")
+        if key in seen_rows:
+            return
+        seen_rows.add(key)
+        matches.append({
+            "cas_number": cas,
+            "name_en": get_english_name_from_cas(cas) or "",
+            "name_zh": get_chinese_name_from_cas(cas) or "",
+            "alias": alias,
+            "reference_links": _build_reference_links(cas, None, get_english_name_from_cas(cas)),
+        })
+
+    # Chinese name matches (substring) — includes seed aliases merged into ZH_TO_CAS
     for name, cas in ZH_TO_CAS.items():
-        if q in name and cas not in seen_cas:
-            seen_cas.add(cas)
-            # Check if this match is via an alias
-            alias = name if name in ALIASES_ZH else None
-            matches.append({
-                "cas_number": cas,
-                "name_en": CAS_TO_EN.get(cas, ""),
-                "name_zh": CAS_TO_ZH.get(cas, name),
-                "alias": alias,
-            })
+        if q in name:
+            append_match(cas, alias=name if name in ALIASES_ZH else None)
 
-    # English name matches (case-insensitive substring) — includes aliases merged into EN_TO_CAS
+    # English name matches (case-insensitive substring) — includes seed aliases merged into EN_TO_CAS
     for name, cas in EN_TO_CAS.items():
-        if q_lower in name and cas not in seen_cas:
-            seen_cas.add(cas)
-            # Check if this match is via an alias
-            alias = name if name in ALIASES_EN else None
-            matches.append({
-                "cas_number": cas,
-                "name_en": CAS_TO_EN.get(cas, ""),
-                "name_zh": CAS_TO_ZH.get(cas, ""),
-                "alias": alias,
-            })
+        if q_lower in name:
+            append_match(cas, alias=name if name in ALIASES_EN else None)
+
+    for name, cas in _manual_name_pairs("zh"):
+        if q in name:
+            append_match(cas)
+
+    for name, cas in _manual_name_pairs("en"):
+        if q_lower in name:
+            append_match(cas)
+
+    for alias_text, cas in _approved_alias_pairs("zh"):
+        if q in alias_text:
+            append_match(cas, alias=alias_text)
+
+    for alias_text, cas in _approved_alias_pairs("en"):
+        if q_lower in alias_text:
+            append_match(cas, alias=alias_text)
 
     # Sort: exact match first, then alias matches, then by name length
     matches.sort(key=lambda m: (
@@ -1299,7 +1597,11 @@ async def search_by_name(request: Request, query: str):
         len(m["name_en"])
     ))
 
-    return {"results": matches[:20], "query": q}
+    results = matches[:20]
+    if len(results) == 0:
+        _record_dictionary_miss(q, "autocomplete", "search_by_name")
+
+    return {"results": results, "query": q}
 
 
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
@@ -1311,7 +1613,15 @@ async def search_single_chemical(request: Request, cas_number: str):
 
     # Check if it looks like a CAS number (digits and hyphens only)
     if re.match(r'^[\d-]+$', query):
-        return await search_chemical(query, shared_http_client)
+        result = await search_chemical(query, shared_http_client)
+        if not result.found and not result.upstream_error:
+            _record_dictionary_miss(
+                query,
+                "cas",
+                "search_single",
+                context={"normalizedCas": normalize_cas(query)},
+            )
+        return result
 
     # Try to resolve name to CAS
     resolved_cas = resolve_name_to_cas(query)
@@ -1319,6 +1629,7 @@ async def search_single_chemical(request: Request, cas_number: str):
         return await search_chemical(resolved_cas, shared_http_client)
 
     # Not found by name
+    _record_dictionary_miss(query, "name", "search_single")
     return ChemicalResult(
         cas_number=query,
         found=False,

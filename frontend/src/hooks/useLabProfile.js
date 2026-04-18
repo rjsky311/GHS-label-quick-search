@@ -1,4 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  fetchWorkspaceDocument,
+  hasMeaningfulWorkspacePayload,
+  saveWorkspaceDocument,
+} from "@/utils/workspaceDocuments";
 
 export const LAB_PROFILE_KEY = "ghs_lab_profile";
 
@@ -49,12 +54,44 @@ function persist(profile) {
 export default function useLabProfile() {
   const [labProfile, setLabProfileState] = useState(() => loadFromStorage());
 
+  useEffect(() => {
+    let cancelled = false;
+    const localSnapshot = loadFromStorage();
+
+    async function syncFromBackend() {
+      try {
+        const remote = await fetchWorkspaceDocument("lab_profile");
+        const remoteProfile = sanitizeProfile(remote?.payload);
+
+        if (hasMeaningfulWorkspacePayload(remoteProfile)) {
+          if (!cancelled) {
+            setLabProfileState(remoteProfile);
+            persist(remoteProfile);
+          }
+          return;
+        }
+
+        if (hasMeaningfulWorkspacePayload(localSnapshot)) {
+          await saveWorkspaceDocument("lab_profile", localSnapshot);
+        }
+      } catch {
+        // Keep local fallback behaviour if the pilot backend is unreachable.
+      }
+    }
+
+    syncFromBackend();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const setLabProfile = useCallback((nextProfile) => {
     setLabProfileState((prev) => {
       const resolved =
         typeof nextProfile === "function" ? nextProfile(prev) : nextProfile;
       const sanitized = sanitizeProfile(resolved);
       persist(sanitized);
+      void saveWorkspaceDocument("lab_profile", sanitized).catch(() => {});
       return sanitized;
     });
   }, []);
@@ -63,6 +100,7 @@ export default function useLabProfile() {
     const empty = { ...EMPTY_PROFILE };
     persist(empty);
     setLabProfileState(empty);
+    void saveWorkspaceDocument("lab_profile", empty).catch(() => {});
   }, []);
 
   return {

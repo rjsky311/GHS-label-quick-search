@@ -3,6 +3,10 @@ import {
   buildPrintTemplateRecord,
   normalizePrintTemplate,
 } from "@/utils/printStorage";
+import {
+  fetchWorkspaceDocument,
+  saveWorkspaceDocument,
+} from "@/utils/workspaceDocuments";
 
 const TEMPLATES_KEY = "ghs_print_templates";
 const MAX_TEMPLATES = 10;
@@ -12,17 +16,51 @@ export default function usePrintTemplates() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(TEMPLATES_KEY);
-    if (saved) {
+    const localTemplates = (() => {
+      const saved = localStorage.getItem(TEMPLATES_KEY);
+      if (!saved) return [];
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setTemplates(parsed.map(normalizePrintTemplate).filter(Boolean));
-        }
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(normalizePrintTemplate).filter(Boolean);
       } catch (e) {
         console.error("Failed to parse print templates", e);
+        return [];
+      }
+    })();
+
+    if (localTemplates.length > 0) {
+      setTemplates(localTemplates);
+    }
+
+    let cancelled = false;
+    async function syncFromBackend() {
+      try {
+        const remote = await fetchWorkspaceDocument("print_templates");
+        const remotePayload = Array.isArray(remote?.payload)
+          ? remote.payload.map(normalizePrintTemplate).filter(Boolean)
+          : [];
+
+        if (remotePayload.length > 0) {
+          if (!cancelled) {
+            setTemplates(remotePayload);
+            localStorage.setItem(TEMPLATES_KEY, JSON.stringify(remotePayload));
+          }
+          return;
+        }
+
+        if (localTemplates.length > 0) {
+          await saveWorkspaceDocument("print_templates", localTemplates);
+        }
+      } catch {
+        // Local fallback remains active when backend sync fails.
       }
     }
+
+    syncFromBackend();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const saveTemplate = useCallback((name, labelConfig, customLabelFields) => {
@@ -40,6 +78,7 @@ export default function usePrintTemplates() {
       if (!newTemplate) return prev;
       const updated = [newTemplate, ...prev];
       localStorage.setItem(TEMPLATES_KEY, JSON.stringify(updated));
+      void saveWorkspaceDocument("print_templates", updated).catch(() => {});
       saved = true;
       return updated;
     });
@@ -50,6 +89,7 @@ export default function usePrintTemplates() {
     setTemplates((prev) => {
       const updated = prev.filter((t) => t.id !== templateId);
       localStorage.setItem(TEMPLATES_KEY, JSON.stringify(updated));
+      void saveWorkspaceDocument("print_templates", updated).catch(() => {});
       return updated;
     });
   }, []);
@@ -57,6 +97,7 @@ export default function usePrintTemplates() {
   const clearTemplates = useCallback(() => {
     setTemplates([]);
     localStorage.removeItem(TEMPLATES_KEY);
+    void saveWorkspaceDocument("print_templates", []).catch(() => {});
   }, []);
 
   return {

@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { preparedRecentKey } from "@/utils/preparedSolution";
+import {
+  fetchWorkspaceDocument,
+  saveWorkspaceDocument,
+} from "@/utils/workspaceDocuments";
 
 /**
  * usePreparedRecents — Tier 2 PR-2A.
@@ -70,14 +74,39 @@ export default function usePreparedRecents() {
   // avoids a flash where the Recent section is empty on modal open.
   const [recents, setRecents] = useState(() => loadFromStorage());
 
-  // Defence-in-depth: if some other tab wrote to the same key, pick
-  // it up on visibility change. We do NOT install a `storage` event
-  // listener because the scope of the prepared flow is one tab at a
-  // time and cross-tab races aren't a concern today; adding that
-  // would widen the hook's surface area without evidence of need.
   useEffect(() => {
-    // Intentionally empty — present so future maintainers don't
-    // think an effect was omitted by accident.
+    let cancelled = false;
+    const localSnapshot = loadFromStorage();
+
+    async function syncFromBackend() {
+      try {
+        const remote = await fetchWorkspaceDocument("prepared_recents");
+        const remotePayload = Array.isArray(remote?.payload)
+          ? remote.payload.filter((r) => r && r.schemaVersion === 1)
+          : [];
+
+        if (remotePayload.length > 0) {
+          if (!cancelled) {
+            setRecents(remotePayload);
+            persist(remotePayload);
+          }
+          return;
+        }
+
+        if (localSnapshot.length > 0) {
+          await saveWorkspaceDocument("prepared_recents", localSnapshot);
+        }
+      } catch {
+        // Local fallback stays authoritative when the backend is
+        // unavailable. The hook still behaves exactly like the
+        // pre-persistence version for the current tab.
+      }
+    }
+
+    syncFromBackend();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const addRecent = useCallback((record) => {
@@ -91,6 +120,7 @@ export default function usePreparedRecents() {
       const filtered = prev.filter((r) => preparedRecentKey(r) !== key);
       const next = [record, ...filtered].slice(0, MAX_PREPARED_RECENTS);
       persist(next);
+      void saveWorkspaceDocument("prepared_recents", next).catch(() => {});
       return next;
     });
   }, []);
@@ -98,6 +128,7 @@ export default function usePreparedRecents() {
   const clearRecents = useCallback(() => {
     setRecents([]);
     persist([]);
+    void saveWorkspaceDocument("prepared_recents", []).catch(() => {});
   }, []);
 
   return {

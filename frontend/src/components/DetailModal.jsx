@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSImage from "@/components/GHSImage";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
-import { getPubChemSDSUrl, getECHASearchUrl } from "@/utils/sdsLinks";
+import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
@@ -77,6 +77,17 @@ export default function DetailModal({
     },
     ...(result.other_classifications || [])
   ];
+  const referenceLinks = getReferenceLinks(result);
+
+  const getReferenceLinkClassName = (linkType) => {
+    if (linkType === "sds") {
+      return "px-4 py-2 bg-emerald-700/40 hover:bg-emerald-600/60 text-emerald-200 border border-emerald-600/40 rounded-lg flex items-center gap-2 transition-colors";
+    }
+    if (linkType === "regulatory") {
+      return "px-4 py-2 bg-blue-700/40 hover:bg-blue-600/60 text-blue-200 border border-blue-600/40 rounded-lg flex items-center gap-2 transition-colors";
+    }
+    return "px-4 py-2 bg-slate-700/60 hover:bg-slate-600/70 text-slate-100 border border-slate-600 rounded-lg flex items-center gap-2 transition-colors";
+  };
 
   return (
     <div
@@ -287,33 +298,24 @@ export default function DetailModal({
             </div>
           )}
 
-          {/* SDS Links */}
-          {(getPubChemSDSUrl(result.cid) || getECHASearchUrl(result.cas_number)) && (
+          {/* Reference Links */}
+          {referenceLinks.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" /> {t("sds.section")}
               </h3>
               <div className="flex gap-3 flex-wrap">
-                {getPubChemSDSUrl(result.cid) && (
+                {referenceLinks.map((link) => (
                   <a
-                    href={getPubChemSDSUrl(result.cid)}
+                    key={link.url}
+                    href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-emerald-700/40 hover:bg-emerald-600/60 text-emerald-200 border border-emerald-600/40 rounded-lg flex items-center gap-2 transition-colors"
+                    className={getReferenceLinkClassName(link.linkType)}
                   >
-                    <ExternalLink className="w-4 h-4" /> {t("sds.pubchem")}
+                    <ExternalLink className="w-4 h-4" /> {link.label}
                   </a>
-                )}
-                {getECHASearchUrl(result.cas_number) && (
-                  <a
-                    href={getECHASearchUrl(result.cas_number)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-700/40 hover:bg-blue-600/60 text-blue-200 border border-blue-600/40 rounded-lg flex items-center gap-2 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" /> {t("sds.echa")}
-                  </a>
-                )}
+                ))}
               </div>
             </div>
           )}

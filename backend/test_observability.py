@@ -38,6 +38,7 @@ async def test_ops_report_endpoint_returns_current_counters():
     data = response.json()
     assert data["counters"]["cache.ghs.hit"] == 1
     assert data["recentEvents"][0]["type"] == "cache_stale_hit"
+    assert "dictionary" in data
     assert "generatedAt" in data
 
 

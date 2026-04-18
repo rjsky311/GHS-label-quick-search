@@ -130,6 +130,20 @@ function buildObservabilityCsvRows({ clientEvents, backendReport, backendError }
     });
   }
 
+  if (backendReport?.dictionary) {
+    Object.entries(backendReport.dictionary).forEach(([key, value]) => {
+      if (Array.isArray(value)) return;
+      rows.push(["dictionary_summary", key, value]);
+    });
+    (backendReport.dictionary.topMissQueries || []).forEach((item) => {
+      rows.push([
+        "dictionary_miss",
+        item.query_text,
+        `${item.query_kind} (${item.endpoint}) x${item.hit_count}`,
+      ]);
+    });
+  }
+
   if (backendError) {
     rows.push(["backend", "error", backendError]);
   }

@@ -552,7 +552,11 @@ const renderQRCodeTemplate = (chemical, model) => {
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
   const qrTarget =
-    getPreferredQrTarget(effectiveChem.cid, effectiveChem.cas_number) ||
+    getPreferredQrTarget(
+      effectiveChem.cid,
+      effectiveChem.cas_number,
+      effectiveChem.reference_links
+    ) ||
     "https://pubchem.ncbi.nlm.nih.gov/";
   const budgets = model.layout.templateBudgets.qrcode;
   const hazardTeasers = hazards.slice(0, budgets.hazardTeasers);
