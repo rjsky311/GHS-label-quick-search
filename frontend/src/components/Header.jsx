@@ -1,4 +1,5 @@
 import {
+  Activity,
   AlertTriangle,
   Star,
   ClipboardList,
@@ -11,8 +12,10 @@ export default function Header({
   favorites,
   history,
   preparedCount = 0,
+  opsEventCount = 0,
   showFavorites,
   showHistory,
+  onExportObservabilityReport,
   onToggleFavorites,
   onToggleHistory,
   onTogglePrepared,
@@ -41,6 +44,24 @@ export default function Header({
             </div>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={onExportObservabilityReport}
+              className="relative px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg transition-colors flex items-center gap-2"
+              data-testid="ops-report-btn"
+              title={t("header.opsReportTitle", {
+                defaultValue: "Export observability report",
+              })}
+            >
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {t("header.opsReport", { defaultValue: "Ops report" })}
+              </span>
+              {opsEventCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-emerald-950 text-emerald-200 text-xs rounded-full flex items-center justify-center font-semibold">
+                  {opsEventCount}
+                </span>
+              )}
+            </button>
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}

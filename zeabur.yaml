@@ -19,8 +19,8 @@ services:
   - name: frontend
     type: static
     build:
-      command: yarn build
+      command: npm ci && npm run build
       output: build
     context: ./frontend
     env:
-      - REACT_APP_BACKEND_URL=${BACKEND_URL}
+      - VITE_BACKEND_URL=${BACKEND_URL}

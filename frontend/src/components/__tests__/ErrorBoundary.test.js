@@ -59,28 +59,15 @@ describe('ErrorBoundary', () => {
   });
 
   it('reload button triggers window.location.reload', () => {
-    const reload = jest.fn();
-    // jsdom's window.location.reload is not overridable directly;
-    // redefine via Object.defineProperty for the duration of the test.
-    const original = window.location;
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { ...original, reload },
-    });
+    const reloadSpy = jest.fn();
 
     render(
-      <ErrorBoundary>
+      <ErrorBoundary onReload={reloadSpy}>
         <Thrower />
       </ErrorBoundary>
     );
 
     fireEvent.click(screen.getByText('error.reload'));
-    expect(reload).toHaveBeenCalledTimes(1);
-
-    // Restore
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: original,
-    });
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 });

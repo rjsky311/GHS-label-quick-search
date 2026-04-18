@@ -16,7 +16,10 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    const { t } = this.props;
+    const {
+      t,
+      onReload = () => window.location.reload(),
+    } = this.props;
 
     if (this.state.hasError) {
       return (
@@ -29,7 +32,7 @@ class ErrorBoundary extends React.Component {
               {t("error.message")}
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={onReload}
               className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
             >
               {t("error.reload")}

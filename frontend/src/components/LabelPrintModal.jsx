@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -33,6 +33,7 @@ import {
   LABEL_STOCK_PRESETS,
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
+import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 
 const TEMPLATE_OPTIONS = [
@@ -250,6 +251,7 @@ function getOptionLabel(options, value, t, fallback) {
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
+  customGHSSettings = {},
   onLabelConfigChange,
   customLabelFields,
   onCustomLabelFieldsChange,
@@ -298,7 +300,6 @@ export default function LabelPrintModal({
   );
   const estimatedPages = totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
   const displayNames = buildDisplayNames(previewChem, labelConfig.nameDisplay);
-  const hazardPreview = buildHazardPreview(previewChem, labelConfig.template, tx);
   const previewRisks = buildPreviewRisks({
     previewChem,
     labelConfig,
@@ -308,12 +309,46 @@ export default function LabelPrintModal({
     tx,
   });
   const densityLabel = getDensityLabel(labelConfig, layoutProfile, previewChem, tx);
-  const hasProfile = Boolean(labProfile.organization || labProfile.phone || labProfile.address);
-  const hasCustomFields = Boolean(customLabelFields.date || customLabelFields.batchNumber);
-  const previewPreparedName = previewChem?.isPreparedSolution ? formatPreparedDisplayName(previewChem) : null;
-  const sheetCells = Array.from({ length: layoutProfile.columns * layoutProfile.rows });
-  const filledCells = selectedForLabel.length === 0 ? 1 : Math.min(totalLabels, sheetCells.length);
   const visibleRecentPrints = recentPrints.slice(0, 5);
+  const sheetPreviewBundle = useMemo(
+    () =>
+      buildPrintPreviewDocument(
+        selectedForLabel,
+        labelConfig,
+        customGHSSettings,
+        customLabelFields,
+        labelQuantities,
+        labProfile,
+        { mode: "sheet" }
+      ),
+    [
+      selectedForLabel,
+      labelConfig,
+      customGHSSettings,
+      customLabelFields,
+      labelQuantities,
+      labProfile,
+    ]
+  );
+  const labelPreviewBundle = useMemo(() => {
+    if (!previewChem) return null;
+
+    return buildPrintPreviewDocument(
+      [previewChem],
+      labelConfig,
+      customGHSSettings,
+      customLabelFields,
+      { [previewChem.cas_number]: 1 },
+      labProfile,
+      { mode: "label" }
+    );
+  }, [
+    previewChem,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labProfile,
+  ]);
 
   const formatPrintTimestamp = (value) => {
     if (!value) return "";
@@ -1166,36 +1201,19 @@ export default function LabelPrintModal({
                     {estimatedPages > 0 && <span>{estimatedPages} page(s)</span>}
                   </div>
 
-                  <div className="mt-4 rounded-2xl bg-white/95 p-3 shadow-inner">
-                    <div className="mx-auto aspect-[210/297] max-w-[220px] rounded-xl bg-slate-50 p-2">
-                      <div className="h-full overflow-hidden rounded-lg border border-slate-300 bg-white">
-                        <div
-                          data-testid="label-sheet-preview"
-                          className="grid h-full w-full rounded-lg bg-slate-100"
-                          style={{
-                            gridTemplateColumns: `repeat(${layoutProfile.columns}, minmax(0, 1fr))`,
-                            gridTemplateRows: `repeat(${layoutProfile.rows}, minmax(0, 1fr))`,
-                            gap: `${Math.max(layoutProfile.columnGapMm, layoutProfile.rowGapMm) * 1.4}px`,
-                            padding: `${layoutProfile.pagePaddingMm * 1.2}px`,
-                            transform: `translate(${layoutProfile.offsetXmm * 1.4}px, ${layoutProfile.offsetYmm * 1.4}px)`,
-                          }}
-                        >
-                          {sheetCells.map((_, index) => (
-                            <div
-                              key={`sheet-cell-${index}`}
-                              className={`rounded-sm border ${
-                                index === 0
-                                  ? "border-purple-400 bg-purple-500/20"
-                                  : index < filledCells
-                                    ? "border-slate-300 bg-slate-200"
-                                    : "border-dashed border-slate-300 bg-white"
-                              }`}
-                              style={{ aspectRatio: `${layoutProfile.widthMm} / ${layoutProfile.heightMm}` }}
-                            />
-                          ))}
-                        </div>
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
+                    {sheetPreviewBundle ? (
+                      <iframe
+                        title={tx("label.previewSheetTitle", "Sheet layout")}
+                        srcDoc={sheetPreviewBundle.html}
+                        data-testid="label-sheet-preview"
+                        className="h-60 w-full bg-slate-950"
+                      />
+                    ) : (
+                      <div className="flex h-60 items-center justify-center px-4 text-sm text-slate-500">
+                        {tx("label.previewFocusEmptyBody", "Select at least one chemical to preview real content density.")}
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-400">
@@ -1224,165 +1242,32 @@ export default function LabelPrintModal({
                     </span>
                   </div>
 
-                  <div
-                    className={`mt-4 overflow-hidden rounded-2xl border border-slate-700 ${
-                      labelConfig.template === "qrcode"
-                        ? "bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40"
-                        : "bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800"
-                    } p-4`}
-                    style={{
-                      aspectRatio:
-                        labelConfig.template === "qrcode"
-                          ? "16 / 10"
-                          : layoutProfile.orientation === "portrait"
-                            ? "4 / 5"
-                            : "5 / 3",
-                    }}
-                  >
-                    {labelConfig.template === "qrcode" ? (
-                      <div className="grid h-full grid-cols-[minmax(0,1fr)_6.25rem] gap-4">
-                        <div className="min-w-0 space-y-3">
-                          {renderPreviewMeta()}
-                          <div className="space-y-1">
-                            <div className="text-lg font-semibold leading-tight text-white">
-                              {displayNames[0] || tx("label.previewNameFallback", "Chemical name")}
-                            </div>
-                            {displayNames[1] && (
-                              <div className="text-sm text-slate-300">{displayNames[1]}</div>
-                            )}
-                            {previewPreparedName && (
-                              <div className="text-xs text-blue-200">{previewPreparedName}</div>
-                            )}
-                          </div>
-                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
-                            <div className="flex items-center gap-2 font-medium">
-                              <ScanLine className="h-4 w-4" />
-                              {tx("label.previewScanTitle", "Scan-first layout")}
-                            </div>
-                            <p className="mt-2 text-xs text-amber-100/80">
-                              {tx(
-                                "label.previewScanBody",
-                                "QR should stay visually dominant so SDS access is obvious even on dense labels."
-                              )}
-                            </p>
-                          </div>
-                          {hasProfile && (
-                            <div className="space-y-1 text-xs text-slate-300">
-                              {labProfile.organization && (
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-3.5 w-3.5 text-slate-500" />
-                                  <span>{labProfile.organization}</span>
-                                </div>
-                              )}
-                              {labProfile.phone && (
-                                <div className="flex items-center gap-2">
-                                  <Phone className="h-3.5 w-3.5 text-slate-500" />
-                                  <span>{labProfile.phone}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                  <div className="mt-3 text-xs text-slate-400">
+                    {tx(
+                      "label.previewRealFragmentHint",
+                      "This preview now reuses the same HTML fragment that gets written into the print document."
+                    )}
+                  </div>
 
-                        <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-3 text-slate-900">
-                          <QrCode className="h-14 w-14" />
-                          <div className="mt-2 text-center text-[11px] font-semibold uppercase tracking-wide">
-                            {tx("label.previewScanAction", "Scan for SDS")}
-                          </div>
-                          <div className="mt-1 text-center text-[10px] text-slate-500">
-                            {previewChem?.cas_number || "CAS"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
+                    {labelPreviewBundle ? (
+                      <iframe
+                        title={tx("label.previewLabelTitle", "Primary label preview")}
+                        srcDoc={labelPreviewBundle.html}
+                        data-testid="label-fragment-preview"
+                        className="w-full bg-slate-950"
+                        style={{
+                          height:
+                            labelConfig.template === "qrcode"
+                              ? "20rem"
+                              : layoutProfile.orientation === "portrait"
+                                ? "24rem"
+                                : "18rem",
+                        }}
+                      />
                     ) : (
-                      <div className="flex h-full flex-col">
-                        {renderPreviewMeta()}
-
-                        <div className="mt-3 space-y-1">
-                          <div className="text-lg font-semibold leading-tight text-white">
-                            {displayNames[0] || tx("label.previewNameFallback", "Chemical name")}
-                          </div>
-                          {displayNames[1] && <div className="text-sm text-slate-300">{displayNames[1]}</div>}
-                          {previewPreparedName && (
-                            <div className="text-xs text-blue-200">{previewPreparedName}</div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
-                          {hasProfile && labProfile.organization && (
-                            <span className="rounded-full bg-slate-800 px-2 py-1">{labProfile.organization}</span>
-                          )}
-                          {hasCustomFields && customLabelFields.date && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1">
-                              <CalendarDays className="h-3 w-3" />
-                              {customLabelFields.date}
-                            </span>
-                          )}
-                          {hasCustomFields && customLabelFields.batchNumber && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1">
-                              <Package2 className="h-3 w-3" />
-                              {customLabelFields.batchNumber}
-                            </span>
-                          )}
-                          {previewChem?.isPreparedSolution && previewChem.preparedSolution && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-1 text-blue-100">
-                              <FlaskConical className="h-3 w-3" />
-                              {t("prepared.labelMeta", {
-                                concentration: previewChem.preparedSolution.concentration || "",
-                                solvent: previewChem.preparedSolution.solvent || "",
-                              })}
-                            </span>
-                          )}
-                        </div>
-
-                        <div
-                          className={`mt-4 grid flex-1 gap-3 ${
-                            labelConfig.template === "icon" ? "grid-cols-2" : "grid-cols-[5.5rem_minmax(0,1fr)]"
-                          }`}
-                        >
-                          <div className="grid content-start gap-2">
-                            {(previewChem?.ghs_pictograms || []).slice(0, 4).map((pictogram, index) => (
-                              <div
-                                key={`${pictogram.code || "pictogram"}-${index}`}
-                                className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-center text-xs font-medium text-rose-100"
-                              >
-                                {pictogram.code || `GHS${index + 1}`}
-                              </div>
-                            ))}
-                            {!previewChem?.ghs_pictograms?.length && (
-                              <div className="rounded-xl border border-dashed border-slate-600 px-3 py-4 text-center text-xs text-slate-500">
-                                {tx("label.previewPictogramPlaceholder", "Pictograms")}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex min-w-0 flex-col justify-between">
-                            <div className="space-y-2">
-                              {hazardPreview.map((line) => (
-                                <div key={line} className="rounded-xl bg-slate-800/70 px-3 py-2 text-xs text-slate-200">
-                                  {line}
-                                </div>
-                              ))}
-                            </div>
-
-                            {hasProfile && (
-                              <div className="mt-3 grid gap-1 text-xs text-slate-400">
-                                {labProfile.phone && (
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-3.5 w-3.5" />
-                                    <span>{labProfile.phone}</span>
-                                  </div>
-                                )}
-                                {labProfile.address && (
-                                  <div className="flex items-center gap-2">
-                                    <MapPin className="h-3.5 w-3.5" />
-                                    <span className="line-clamp-2">{labProfile.address}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                      <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
+                        {tx("label.previewFocusEmptyBody", "Select at least one chemical to preview real content density.")}
                       </div>
                     )}
                   </div>

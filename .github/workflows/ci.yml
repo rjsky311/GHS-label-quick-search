@@ -23,20 +23,17 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Run tests
-        run: npx craco test --watchAll=false
+        run: npm test -- --runInBand
 
       - name: Build
         run: npm run build
 
-      # Dependency vulnerability scan (production deps only).
-      # `continue-on-error` keeps this informational — the CRA
-      # toolchain (react-scripts) still pulls transitive packages
-      # with known advisories that require a framework migration to
-      # fully clear. We want visibility on every PR; we do not want
-      # to block the pipeline on that pre-existing debt.
+      # Informational only: we want visibility on production
+      # dependency advisories without blocking every change while the
+      # remaining transitive packages are reviewed.
       - name: Audit production dependencies (informational)
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
@@ -63,14 +60,11 @@ jobs:
         run: python -m py_compile server.py
 
       - name: Run tests
-        run: python -m pytest test_name_search.py -v
+        run: python -m pytest -v
 
       # pip-audit surfaces any CVE against the pinned requirements.
-      # Informational for now — known baseline as of 1.7.0:
-      #   - starlette       0.37.2 → 0.40.0 / 0.47.2
-      #   - python-multipart 0.0.21 → 0.0.22
-      #   - pytest          8.3.4 → 9.0.3 (dev/test only)
-      # These will be addressed in a follow-up that also bumps FastAPI.
+      # Informational for now. Known baseline issues will be handled
+      # in the FastAPI dependency refresh follow-up.
       - name: Audit Python dependencies (informational)
         continue-on-error: true
         run: |

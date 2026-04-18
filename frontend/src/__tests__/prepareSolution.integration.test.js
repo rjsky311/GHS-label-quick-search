@@ -50,7 +50,11 @@ jest.mock("sonner", () => ({
 }));
 
 jest.mock("@/utils/printLabels", () => ({
+  buildPrintPreviewDocument: jest.fn(() => ({
+    html: "<html><body>preview</body></html>",
+  })),
   printLabels: jest.fn(),
+  resolveEffectiveChemicalForPrint: jest.fn((chemical) => chemical),
   getQRCodeUrl: jest.fn(() => "http://qr.test"),
 }));
 

@@ -1,6 +1,7 @@
 import { GHS_IMAGES } from "@/constants/ghs";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import i18n from "@/i18n";
+import { recordObservabilityEvent } from "@/utils/observability";
 import { getPreferredQrTarget } from "@/utils/sdsLinks";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
@@ -1210,6 +1211,139 @@ export function buildPrintDocument(
   };
 }
 
+function buildPreviewStyles(mode) {
+  return `
+    body.preview-body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .preview-shell {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-card {
+      background: #ffffff;
+      border-radius: 5mm;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+      overflow: hidden;
+    }
+    .preview-card-label {
+      padding: 3mm;
+    }
+    .preview-card-sheet {
+      padding: 4mm;
+      max-width: 100%;
+    }
+    .preview-grid-scaler {
+      transform: scale(0.42);
+      transform-origin: top left;
+      width: max-content;
+    }
+    .preview-grid-shell {
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .label-placeholder {
+      border-style: dashed;
+      border-color: #cbd5e1;
+      background: repeating-linear-gradient(
+        135deg,
+        #f8fafc 0,
+        #f8fafc 3mm,
+        #e2e8f0 3mm,
+        #e2e8f0 6mm
+      );
+      box-shadow: none;
+    }
+    ${
+      mode === "label"
+        ? `.preview-card-label .label {
+             box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+           }`
+        : ""
+    }
+  `;
+}
+
+export function buildPrintPreviewDocument(
+  selectedForLabel,
+  labelConfig,
+  customGHSSettings,
+  customLabelFields = {},
+  labelQuantities = {},
+  labProfile = {},
+  options = {}
+) {
+  const mode = options.mode === "label" ? "label" : "sheet";
+  const model = buildPrintDocumentModel(
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile
+  );
+
+  if (!model) return null;
+
+  const renderer = TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
+  const previewStyles = buildPreviewStyles(mode);
+  const sharedStyles = buildStyles(model);
+
+  let fragmentHtml = "";
+  if (mode === "label") {
+    fragmentHtml = renderer(model.expandedLabels[0], model);
+  } else {
+    const firstPage = model.pages[0] || [];
+    const labelMarkup = firstPage.map((chemical) => renderer(chemical, model)).join("");
+    const placeholderCount = Math.max(model.layout.page.perPage - firstPage.length, 0);
+    const placeholders = Array.from({ length: placeholderCount }, (_, index) => {
+      return `<div class="label label-placeholder" aria-hidden="true" data-placeholder-index="${index}"></div>`;
+    }).join("");
+
+    fragmentHtml = `
+      <div class="preview-grid-shell">
+        <div class="preview-grid-scaler">
+          <div class="page-grid">${labelMarkup}${placeholders}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
+    model.t("print.title")
+  )}</title><style>${sharedStyles}${previewStyles}</style></head><body class="preview-body preview-body-${mode}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
+
+  return {
+    html,
+    fragmentHtml,
+    model,
+    mode,
+  };
+}
+
+function buildPrintLifecycleMeta(documentBundle) {
+  const model = documentBundle?.model;
+  if (!model) return {};
+
+  return {
+    template: model.layout.template,
+    stockPreset: model.layout.stockId || model.layout.stockPresetName,
+    orientation: model.layout.orientation,
+    size: model.layout.size,
+    totalLabels: model.expandedLabels.length,
+    totalPages: model.totalPages,
+    totalChemicals: model.selectedForLabel.length,
+  };
+}
+
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -1250,21 +1384,37 @@ export function printLabels(
   const triggerPrint = () => {
     setTimeout(() => {
       iframe.contentWindow.focus();
+      const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+      recordObservabilityEvent("print_start", {
+        status: "started",
+        count: lifecycleMeta.totalLabels || 1,
+        meta: lifecycleMeta,
+      });
 
       let removed = false;
-      const cleanup = () => {
+      const cleanup = (reason = "afterprint") => {
         if (removed) return;
         removed = true;
+        recordObservabilityEvent("print_complete", {
+          status: reason,
+          count: lifecycleMeta.totalLabels || 1,
+          meta: {
+            ...lifecycleMeta,
+            completionReason: reason,
+          },
+        });
         iframe.remove();
       };
 
       try {
-        iframe.contentWindow.addEventListener("afterprint", cleanup, { once: true });
+        iframe.contentWindow.addEventListener("afterprint", () => cleanup("afterprint"), {
+          once: true,
+        });
       } catch (_) {
         // Embedded webviews may not support afterprint on iframe windows.
       }
 
-      setTimeout(cleanup, 60000);
+      setTimeout(() => cleanup("cleanup_timeout"), 60000);
       iframe.contentWindow.print();
     }, 300);
   };

@@ -12,6 +12,7 @@ import useLabelSelection from "@/hooks/useLabelSelection";
 import useResultSort from "@/hooks/useResultSort";
 import usePreparedRecents from "@/hooks/usePreparedRecents";
 import usePreparedPresets from "@/hooks/usePreparedPresets";
+import useObservability from "@/hooks/useObservability";
 import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
@@ -88,6 +89,11 @@ function App() {
   // ── Custom Hooks ──
   const { history, saveToHistory, clearHistory } = useSearchHistory();
   const { favorites, toggleFavorite, isFavorited, clearFavorites } = useFavorites();
+  const {
+    eventCount: observabilityEventCount,
+    logEvent: logObservabilityEvent,
+    exportReport: exportObservabilityReport,
+  } = useObservability();
   const {
     customGHSSettings,
     getEffectiveClassification,
@@ -254,6 +260,21 @@ function App() {
     }));
   };
 
+  const logUnresolvedSearch = useCallback(
+    (query, queryType, result, meta = {}) => {
+      if (!result || result.found) return;
+
+      logObservabilityEvent("search_unresolved", {
+        query,
+        queryType,
+        cas: result.cas_number || query,
+        status: result.upstream_error ? "upstream_error" : "not_found",
+        meta,
+      });
+    },
+    [logObservabilityEvent]
+  );
+
   const searchSingle = async (directCas) => {
     const query = (directCas || singleCas).trim();
     if (!query) {
@@ -266,8 +287,10 @@ function App() {
       const response = await axios.get(
         `${API}/search/${encodeURIComponent(query)}`
       );
-      setResults([response.data]);
-      saveToHistory([response.data]);
+      const result = response.data;
+      setResults([result]);
+      saveToHistory([result]);
+      logUnresolvedSearch(query, "single", result, { activeTab: "single" });
     } catch (e) {
       console.error(e);
       setError(t("search.errorSingle"));
@@ -316,9 +339,17 @@ function App() {
       const response = await axios.post(`${API}/search`, {
         cas_numbers: casNumbers,
       });
+      const batchResults = Array.isArray(response.data) ? response.data : [];
       setBatchProgress({ current: casNumbers.length, total: casNumbers.length });
-      setResults(response.data);
-      saveToHistory(response.data);
+      setResults(batchResults);
+      saveToHistory(batchResults);
+      batchResults.forEach((result, index) => {
+        logUnresolvedSearch(casNumbers[index] || result?.cas_number || "", "batch", result, {
+          activeTab: "batch",
+          batchSize: casNumbers.length,
+          batchIndex: index,
+        });
+      });
     } catch (e) {
       console.error(e);
       setError(t("search.errorBatch"));
@@ -572,8 +603,10 @@ function App() {
         favorites={favorites}
         history={history}
         preparedCount={preparedRecents.length}
+        opsEventCount={observabilityEventCount}
         showFavorites={showFavorites}
         showHistory={showHistory}
+        onExportObservabilityReport={() => exportObservabilityReport()}
         onToggleFavorites={() => setShowFavorites(!showFavorites)}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}

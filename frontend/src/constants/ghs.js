@@ -1,5 +1,13 @@
-export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+const rawBackendUrl =
+  (typeof globalThis.__APP_BACKEND_URL__ === "string"
+    ? globalThis.__APP_BACKEND_URL__
+    : "") ||
+  (typeof process !== "undefined" && process.env
+    ? process.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || ""
+    : "");
+
+export const BACKEND_URL = rawBackendUrl.trim().replace(/\/+$/, "");
+export const API = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
 
 // Mirrors the backend's Pydantic `CASQuery.cas_numbers` max_length.
 // Keep these in sync — oversized batch requests are already rejected

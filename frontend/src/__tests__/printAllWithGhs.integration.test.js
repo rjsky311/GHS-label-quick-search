@@ -38,7 +38,11 @@ jest.mock('sonner', () => ({
 // Neutralize `printLabels` so a real window.print / iframe isn't
 // spawned in jsdom. We only care about selection state + modal open.
 jest.mock('@/utils/printLabels', () => ({
+  buildPrintPreviewDocument: jest.fn(() => ({
+    html: '<html><body>preview</body></html>',
+  })),
   printLabels: jest.fn(),
+  resolveEffectiveChemicalForPrint: jest.fn((chemical) => chemical),
   getQRCodeUrl: jest.fn(() => 'http://qr.test'),
 }));
 

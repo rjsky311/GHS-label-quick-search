@@ -9,16 +9,21 @@ jest.mock('@/constants/ghs', () => ({
     GHS07: 'https://example.com/GHS07.svg',
   },
 }));
+jest.mock('@/utils/observability', () => ({
+  recordObservabilityEvent: jest.fn(),
+}));
 
 import {
   buildPrintDocument,
   buildPrintDocumentModel,
+  buildPrintPreviewDocument,
   printLabels,
   getQRCodeUrl,
   getHazardFontTier,
   escapeHtml,
 } from '../printLabels';
 import { resolvePrintLayoutConfig } from '@/constants/labelStocks';
+import { recordObservabilityEvent } from '@/utils/observability';
 
 // ── Mock chemical fixtures ──
 const mockChemical = {
@@ -210,6 +215,32 @@ describe('print layout model', () => {
     expect(documentBundle.html).toContain('transform: translate(2mm, 1mm)');
     expect(documentBundle.model.layout.stockId).toBe('medium-bottle');
   });
+
+  it('buildPrintPreviewDocument reuses the shared renderer for label and sheet previews', () => {
+    const labelPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+      {},
+      {},
+      { '64-17-5': 1 },
+      {},
+      { mode: 'label' }
+    );
+    const sheetPreview = buildPrintPreviewDocument(
+      [mockChemical, mockChemicalNoGHS],
+      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      {},
+      {},
+      { '64-17-5': 1, '7732-18-5': 1 },
+      {},
+      { mode: 'sheet' }
+    );
+
+    expect(labelPreview.html).toContain('preview-body-label');
+    expect(labelPreview.html).toContain('label label-qr');
+    expect(sheetPreview.html).toContain('preview-grid-scaler');
+    expect(sheetPreview.html).toContain('label-placeholder');
+  });
 });
 
 describe('printLabels', () => {
@@ -347,6 +378,33 @@ describe('printLabels', () => {
       'afterprint',
       expect.any(Function),
       expect.objectContaining({ once: true })
+    );
+  });
+
+  it('records print lifecycle events for observability', () => {
+    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    jest.advanceTimersByTime(300);
+
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      'print_start',
+      expect.objectContaining({
+        status: 'started',
+        meta: expect.objectContaining({
+          template: 'standard',
+          totalLabels: 1,
+        }),
+      })
+    );
+
+    mockIframeWindow.dispatchAfterPrint();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      'print_complete',
+      expect.objectContaining({
+        status: 'afterprint',
+        meta: expect.objectContaining({
+          completionReason: 'afterprint',
+        }),
+      })
     );
   });
 

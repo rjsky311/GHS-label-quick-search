@@ -1,3 +1,4 @@
+from collections import Counter, deque
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -43,6 +44,9 @@ shared_http_client: Optional[httpx.AsyncClient] = None
 # In-memory caches (TTL = 24 hours, max 5000 entries each)
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+ops_counters: Counter = Counter()
+ops_recent_events = deque(maxlen=50)
+OPS_STALE_THRESHOLD_HOURS = float(os.environ.get("OPS_STALE_THRESHOLD_HOURS", "12"))
 
 # ─── Outbound PubChem concurrency gate ──────────────────────
 #
@@ -54,6 +58,76 @@ ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 # that still benefits from the shared httpx client's keep-alive pool.
 PUBCHEM_OUTBOUND_CONCURRENCY = int(os.environ.get("PUBCHEM_CONCURRENCY", "8"))
 _pubchem_semaphore = asyncio.Semaphore(PUBCHEM_OUTBOUND_CONCURRENCY)
+
+
+def _record_ops_counter(key: str, amount: int = 1) -> None:
+    ops_counters[key] += amount
+
+
+def _record_ops_event(event_type: str, **payload: Any) -> None:
+    ops_recent_events.append(
+        {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "type": event_type,
+            **payload,
+        }
+    )
+
+
+def _parse_iso_ts(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _cache_age_hours(retrieved_at: Optional[str]) -> Optional[float]:
+    parsed = _parse_iso_ts(retrieved_at)
+    if parsed is None:
+        return None
+    return max(0.0, (datetime.now(timezone.utc) - parsed).total_seconds() / 3600)
+
+
+def _cache_age_bucket(age_hours: float) -> str:
+    if age_hours < 1:
+        return "<1h"
+    if age_hours < 6:
+        return "1-6h"
+    if age_hours < 12:
+        return "6-12h"
+    if age_hours < 24:
+        return "12-24h"
+    return "24h+"
+
+
+def _observe_ghs_cache_hit(cid: int, retrieved_at: Optional[str]) -> None:
+    _record_ops_counter("cache.ghs.hit")
+    age_hours = _cache_age_hours(retrieved_at)
+    if age_hours is None:
+        return
+    _record_ops_counter(f"cache.ghs.age_bucket.{_cache_age_bucket(age_hours)}")
+    if age_hours >= OPS_STALE_THRESHOLD_HOURS:
+        _record_ops_counter("cache.ghs.stale_hit")
+        _record_ops_event(
+            "cache_stale_hit",
+            cid=cid,
+            age_hours=round(age_hours, 2),
+            threshold_hours=OPS_STALE_THRESHOLD_HOURS,
+        )
+
+
+def _record_upstream_failure(kind: str, url: str, attempt: int, **payload: Any) -> None:
+    _record_ops_counter("upstream.total")
+    _record_ops_counter(f"upstream.{kind}")
+    _record_ops_event(
+        "upstream_error",
+        kind=kind,
+        attempt=attempt,
+        url=url,
+        **payload,
+    )
 
 
 # ─── Client IP resolution for rate limiting ─────────────────
@@ -365,9 +439,25 @@ async def pubchem_get_json(
         async with _pubchem_semaphore:
             try:
                 resp = await http_client.get(url, timeout=timeout)
-            except (httpx.TimeoutException, httpx.TransportError) as exc:
+            except httpx.TimeoutException as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
                 transient = True
+                _record_upstream_failure(
+                    "timeout",
+                    url,
+                    attempt + 1,
+                    detail=type(exc).__name__,
+                )
+                resp = None
+            except httpx.TransportError as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                transient = True
+                _record_upstream_failure(
+                    "transport_error",
+                    url,
+                    attempt + 1,
+                    detail=type(exc).__name__,
+                )
                 resp = None
         if resp is not None:
             status = resp.status_code
@@ -381,6 +471,19 @@ async def pubchem_get_json(
                 transient = True
                 if status == 429:
                     retry_after = resp.headers.get("Retry-After")
+                    _record_upstream_failure(
+                        "http_429",
+                        url,
+                        attempt + 1,
+                        status_code=status,
+                    )
+                elif status >= 500:
+                    _record_upstream_failure(
+                        "http_5xx",
+                        url,
+                        attempt + 1,
+                        status_code=status,
+                    )
                 last_error = f"HTTP {status}"
             else:
                 # 4xx other than 429 (incl. 404) — definitive, no retry
@@ -392,6 +495,7 @@ async def pubchem_get_json(
 
         attempt += 1
         if attempt > retries:
+            _record_ops_counter("upstream.retry_exhausted")
             raise PubChemError(f"{url} failed after {attempt} attempts: {last_error}")
 
         # Exponential backoff with jitter; honour Retry-After when sensible.
@@ -903,7 +1007,10 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     cached = ghs_cache.get(cid)
     if cached is not None:
         data, retrieved_at = cached
+        _observe_ghs_cache_hit(cid, retrieved_at)
         return data, True, retrieved_at
+
+    _record_ops_counter("cache.ghs.miss")
 
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     status, data = await pubchem_get_json(http_client, url, timeout=30.0)
@@ -1108,6 +1215,21 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
+    }
+
+
+@api_router.get("/ops/report")
+async def ops_report():
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "version": APP_VERSION,
+        "staleThresholdHours": OPS_STALE_THRESHOLD_HOURS,
+        "counters": dict(sorted(ops_counters.items())),
+        "cache": {
+            "cidEntries": len(cid_cache),
+            "ghsEntries": len(ghs_cache),
+        },
+        "recentEvents": list(ops_recent_events),
     }
 
 @api_router.post("/search", response_model=List[ChemicalResult])
@@ -1358,7 +1480,7 @@ app.include_router(api_router)
 #     Wildcard (`*`) is explicitly rejected here because it is unsafe
 #     with credentials (and confusing if credentials are later enabled).
 #
-# Local development should set `CORS_ORIGINS=http://localhost:3000`
+# Local development should set `CORS_ORIGINS=http://localhost:5173`
 # (or a comma-separated list) in `.env` / Docker compose.
 _raw_cors = os.environ.get("CORS_ORIGINS", "https://ghs-frontend.zeabur.app")
 _cors_origins = [o.strip() for o in _raw_cors.split(",") if o.strip()]

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta
+      name="description"
+      content="GHS Label Quick Search for chemical lookups, CAS references, and printable GHS labels."
+    />
+    <meta property="og:title" content="GHS Label Quick Search" />
+    <meta
+      property="og:description"
+      content="Chemical GHS lookup, CAS reference, and printable label workflow."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        img-src 'self' data: https://pubchem.ncbi.nlm.nih.gov https://api.qrserver.com;
+        script-src 'self';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' http://localhost:8001 https://ghs-backend.zeabur.app ws://localhost:5173 ws://127.0.0.1:5173;
+        font-src 'self' data:;
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="preconnect" href="https://pubchem.ncbi.nlm.nih.gov" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='15' y='15' width='70' height='70' rx='4' transform='rotate(45 50 50)' fill='none' stroke='%23f59e0b' stroke-width='6'/><text x='50' y='62' text-anchor='middle' font-size='36' font-weight='bold' fill='%23f59e0b'>!</text></svg>"
+    />
+    <title>GHS Label Quick Search</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

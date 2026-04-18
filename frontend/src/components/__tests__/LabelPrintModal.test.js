@@ -6,6 +6,10 @@ jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key, options = {}) => options.defaultValue ?? key,
   }),
+  initReactI18next: {
+    type: "3rdParty",
+    init: () => {},
+  },
 }));
 
 jest.mock("sonner", () => ({
@@ -267,9 +271,10 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByText("Previewing the first selected label")).toBeInTheDocument();
-    expect(screen.getByText("Scan for SDS")).toBeInTheDocument();
-    expect(screen.getByText("Lab A")).toBeInTheDocument();
-    expect(screen.getByTestId("label-sheet-preview")).toBeInTheDocument();
+    expect(screen.getByTestId("label-sheet-preview").tagName).toBe("IFRAME");
+    expect(screen.getByTestId("label-fragment-preview").tagName).toBe("IFRAME");
+    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("qrcode-img");
+    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("Lab A");
     expect(screen.getByTestId("selected-prepared-display-64-17-5")).toBeInTheDocument();
   });
 
