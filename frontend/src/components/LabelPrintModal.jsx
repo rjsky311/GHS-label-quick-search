@@ -31,11 +31,14 @@ import {
 } from "lucide-react";
 import {
   LABEL_STOCK_PRESETS,
+  getLabelStockPresetDisplay,
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 import {
+  getLocalizedNames,
+  getLocalizedSignalWord,
   getLocalizedStatementText,
   resolveLabelContentLocale,
 } from "@/utils/ghsText";
@@ -160,12 +163,19 @@ function resolveLayoutProfile(labelConfig) {
   return resolvePrintLayoutConfig(labelConfig);
 }
 
-function buildDisplayNames(chem, nameDisplay) {
+function buildDisplayNames(chem, nameDisplay, languageLike = "en") {
   if (!chem) return [];
 
   const preparedName = chem.isPreparedSolution ? formatPreparedDisplayName(chem) : null;
-  const englishName = preparedName || chem.name_en || chem.name || chem.cas_number;
-  const chineseName = chem.name_zh || chem.name_zh_tw || "";
+  const localizedNames = getLocalizedNames(chem, languageLike);
+  const englishName =
+    preparedName ||
+    chem.name_en ||
+    chem.name ||
+    localizedNames.primary ||
+    chem.cas_number;
+  const chineseName =
+    chem.name_zh || chem.name_zh_tw || localizedNames.secondary || "";
 
   if (nameDisplay === "en") return [englishName].filter(Boolean);
   if (nameDisplay === "zh") return [chineseName || englishName].filter(Boolean);
@@ -302,7 +312,7 @@ export default function LabelPrintModal({
   onClearRecentPrints,
   onClose,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dialogRef = useRef(null);
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -325,13 +335,22 @@ export default function LabelPrintModal({
 
   const layoutProfile = resolveLayoutProfile(labelConfig);
   const previewChem = selectedForLabel[0] ?? null;
+  const currentLocale = i18n.language;
   const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
   const totalLabels = selectedForLabel.reduce(
     (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1),
     0
   );
   const estimatedPages = totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
-  const displayNames = buildDisplayNames(previewChem, labelConfig.nameDisplay);
+  const displayNames = buildDisplayNames(
+    previewChem,
+    labelConfig.nameDisplay,
+    currentLocale
+  );
+  const stockPresetDisplay = getLabelStockPresetDisplay(
+    layoutProfile.stockPreset,
+    t
+  );
   const previewRisks = buildPreviewRisks({
     previewChem,
     labelConfig,
@@ -467,7 +486,7 @@ export default function LabelPrintModal({
       </span>
       {previewChem?.signal_word && (
         <span className="rounded-full bg-rose-500/15 px-2 py-1 font-medium text-rose-200">
-          {previewChem.signal_word}
+          {getLocalizedSignalWord(previewChem, currentLocale)}
         </span>
       )}
       {(previewChem?.ghs_pictograms?.length || 0) > 0 && (
@@ -658,7 +677,16 @@ export default function LabelPrintModal({
               {visibleRecentPrints.map((job) => {
                 const firstItem = job.items?.[0];
                 const remaining = Math.max(0, (job.totalChemicals || job.items?.length || 1) - 1);
-                const primaryLabel = firstItem?.name_en || firstItem?.cas_number || tx("label.recentPrintUnknown", "Saved job");
+                const primaryLabel =
+                  (firstItem && getLocalizedNames(firstItem, currentLocale).primary) ||
+                  firstItem?.cas_number ||
+                  tx("label.recentPrintUnknown", "Saved job");
+                const templateLabel = getOptionLabel(
+                  TEMPLATE_OPTIONS,
+                  job.labelConfig?.template,
+                  t,
+                  job.labelConfig?.template || "standard"
+                );
 
                 return (
                   <div
@@ -672,8 +700,12 @@ export default function LabelPrintModal({
                       </div>
                       <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-400">
                         <span>{formatPrintTimestamp(job.createdAt)}</span>
-                        <span>{job.totalLabels || 0} {tx("label.recentPrintLabels", "labels")}</span>
-                        <span>{job.labelConfig?.template || "standard"}</span>
+                        <span>
+                          {tx("label.recentPrintLabels", "{{count}} labels", {
+                            count: job.totalLabels || 0,
+                          })}
+                        </span>
+                        <span>{templateLabel}</span>
                       </div>
                     </div>
                     <button
@@ -747,7 +779,7 @@ export default function LabelPrintModal({
                 <span className="text-xs text-slate-500">
                   {layoutProfile.stockPreset === "custom"
                     ? tx("label.stockPresetCustom", "Custom tuning")
-                    : layoutProfile.stockPresetName}
+                    : stockPresetDisplay.name || layoutProfile.stockPresetName}
                 </span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
@@ -769,12 +801,16 @@ export default function LabelPrintModal({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className={`font-medium ${selected ? "text-amber-300" : "text-white"}`}>
-                            {preset.name}
+                            {getLabelStockPresetDisplay(preset, t).name}
                           </div>
-                          <div className="mt-1 text-xs text-slate-400">{preset.note}</div>
+                          <div className="mt-1 text-xs text-slate-400">
+                            {getLabelStockPresetDisplay(preset, t).note}
+                          </div>
                         </div>
                         <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
-                          {preset.perPage}/page
+                          {tx("label.previewPerPage", "{{count}}/page", {
+                            count: preset.perPage,
+                          })}
                         </span>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
@@ -1044,6 +1080,7 @@ export default function LabelPrintModal({
                   selectedForLabel.map((chem, index) => {
                     const quantity = labelQuantities?.[chem.cas_number] || 1;
                     const derivedPreparedName = chem.isPreparedSolution ? formatPreparedDisplayName(chem) : null;
+                    const localizedNames = getLocalizedNames(chem, currentLocale);
 
                     return (
                       <div
@@ -1058,7 +1095,12 @@ export default function LabelPrintModal({
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-sm text-amber-400">{chem.cas_number}</span>
-                            <span className="truncate text-sm text-white">{chem.name_en}</span>
+                            <span className="truncate text-sm text-white">{localizedNames.primary}</span>
+                            {localizedNames.secondary && !chem.isPreparedSolution && (
+                              <span className="truncate text-xs text-slate-500">
+                                {localizedNames.secondary}
+                              </span>
+                            )}
                             {(chem.ghs_pictograms?.length || 0) > 0 && (
                               <span className="text-xs text-slate-500">
                                 {t("label.pictogramCount", { count: chem.ghs_pictograms.length })}
@@ -1196,7 +1238,9 @@ export default function LabelPrintModal({
                     </p>
                   </div>
                   <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
-                    {layoutProfile.stockPresetName}
+                    {layoutProfile.stockPreset === "custom"
+                      ? tx("label.stockPresetCustom", "Custom tuning")
+                      : stockPresetDisplay.name || layoutProfile.stockPresetName}
                   </span>
                 </div>
 
@@ -1229,8 +1273,18 @@ export default function LabelPrintModal({
 
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
                     <span>{layoutProfile.widthMm} x {layoutProfile.heightMm} mm</span>
-                    <span>{layoutProfile.perPage}/page</span>
-                    {estimatedPages > 0 && <span>{estimatedPages} page(s)</span>}
+                    <span>
+                      {tx("label.previewPerPage", "{{count}}/page", {
+                        count: layoutProfile.perPage,
+                      })}
+                    </span>
+                    {estimatedPages > 0 && (
+                      <span>
+                        {tx("label.previewPageCount", "{{count}} page(s)", {
+                          count: estimatedPages,
+                        })}
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
@@ -1280,6 +1334,7 @@ export default function LabelPrintModal({
                       "This preview now reuses the same HTML fragment that gets written into the print document."
                     )}
                   </div>
+                  {previewChem && <div className="mt-3">{renderPreviewMeta()}</div>}
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
                     {labelPreviewBundle ? (

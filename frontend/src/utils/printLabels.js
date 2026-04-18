@@ -249,6 +249,49 @@ const renderSupportChips = (
     .join("")}</div>`;
 };
 
+const renderMetaChip = (label, value, className = "") => {
+  const labelHtml = label
+    ? `<span class="meta-chip-label">${escapeHtml(label)}</span>`
+    : "";
+  const valueHtml = value
+    ? `<span class="meta-chip-value">${escapeHtml(value)}</span>`
+    : "";
+  return `<span class="meta-chip${className ? ` ${className}` : ""}">${labelHtml}${valueHtml}</span>`;
+};
+
+const renderMetaRibbon = (
+  effectiveChem,
+  model,
+  { includeCas = true, includePrepared = true, preparedDetailLimit = 2 } = {}
+) => {
+  const chips = [];
+
+  if (includeCas && effectiveChem.cas_number) {
+    chips.push(renderMetaChip("CAS", effectiveChem.cas_number, "meta-chip-cas"));
+  }
+
+  if (includePrepared && isPrepared(effectiveChem)) {
+    const meta = effectiveChem.preparedSolution || {};
+    chips.push(renderMetaChip("", model.t("print.preparedShort"), "meta-chip-prepared"));
+
+    const preparedDetails = [];
+    if (meta.concentration) {
+      preparedDetails.push([model.t("print.concentrationShort"), meta.concentration]);
+    }
+    if (meta.solvent) {
+      preparedDetails.push([model.t("print.solventShort"), meta.solvent]);
+    }
+
+    preparedDetails.slice(0, preparedDetailLimit).forEach(([label, value]) => {
+      chips.push(renderMetaChip(label, value, "meta-chip-prepared-detail"));
+    });
+  }
+
+  if (chips.length === 0) return "";
+
+  return `<div class="meta-ribbon">${chips.join("")}</div>`;
+};
+
 const renderNameSection = (effectiveChem, model, options = {}) => {
   const {
     compactProfile = false,
@@ -256,6 +299,8 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
     showCustomFields = true,
     compactNames = false,
     supportHtml = "",
+    showCasLine = true,
+    metaRibbonHtml = "",
   } = options;
   const nameDisplay = model.layout.nameDisplay || "both";
   const collapseCompactBilingual =
@@ -283,7 +328,8 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
 
   return `<div class="name-section${compactNames ? " name-section-compact" : ""}">
     ${nameHtml}
-    <div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>
+    ${showCasLine ? `<div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>` : ""}
+    ${metaRibbonHtml}
     ${supportHtml}
     ${showProfile ? renderProfileFields(model, { compact: compactProfile }) : ""}
     ${showCustomFields ? renderCustomFields(model) : ""}
@@ -434,7 +480,6 @@ const renderIconTemplate = (chemical, model) => {
           compactNames: true,
           showProfile: false,
           showCustomFields: false,
-          supportHtml: renderSupportChips(model),
         })}
         ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
       </div>
@@ -459,33 +504,27 @@ const renderStandardTemplate = (chemical, model) => {
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
-  const precautions = effectiveChem.precautionary_statements || [];
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
   const primaryHazards = hazards.slice(0, budgets.primaryHazards);
-  const secondaryHazards = hazards.slice(
-    budgets.primaryHazards,
-    budgets.primaryHazards + budgets.secondaryHazards
-  );
-  const hiddenHazards = hazards.length - primaryHazards.length - secondaryHazards.length;
+  const hiddenHazards = hazards.length - primaryHazards.length;
   const prepared = isPrepared(effectiveChem);
 
   return `
     <div class="label label-standard${prepared ? " label-prepared" : ""}">
       <div class="label-top label-top-standard">
         ${renderNameSection(effectiveChem, model, {
-          compactNames: true,
+          compactNames: model.layout.size !== "large",
           showProfile: false,
           showCustomFields: false,
-          supportHtml: renderSupportChips(model),
+          showCasLine: false,
+          metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
+            includeCas: true,
+            includePrepared: true,
+            preparedDetailLimit: model.layout.size === "small" ? 1 : 2,
+          }),
         })}
-        ${
-          prepared
-            ? renderPreparedBadge(model) +
-              renderPreparedMeta(effectiveChem, model)
-            : ""
-        }
       </div>
       <div class="label-middle label-middle-standard">
         <div class="standard-grid${pictograms.length === 0 ? " standard-grid-no-pics" : ""}">
@@ -512,40 +551,20 @@ const renderStandardTemplate = (chemical, model) => {
                         model
                       )
                     ).join("")}
-                  </div>`
-                : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
-            }
-            ${
-              secondaryHazards.length > 0 || hiddenHazards > 0
-                ? `<div class="hazard-secondary-list">
-                    ${secondaryHazards.map((hazard) =>
-                      renderHazardStatement(
-                        hazard,
-                        "hazard-item hazard-secondary-item",
-                        model
-                      )
-                    ).join("")}
                     ${
                       hiddenHazards > 0
-                        ? `<div class="hazard-more">+ ${escapeHtml(
-                            model.t("print.totalItems", { count: hazards.length })
+                        ? `<div class="hazard-more">${escapeHtml(
+                            model.t("print.moreHazardsShort", {
+                              count: hiddenHazards,
+                            })
                           )}</div>`
                         : ""
                     }
                   </div>`
-                : ""
+                : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
           </div>
         </div>
-      </div>
-      <div class="label-bottom hazards-section standard-footer">
-        ${
-          hazards.length === 0
-            ? `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
-            : ""
-        }
-        ${renderCompactPrecautions(precautions, budgets.precautions, model)}
-        ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
       </div>
     </div>
   `;
@@ -644,9 +663,13 @@ const renderQRCodeTemplate = (chemical, model) => {
             compactNames: true,
             showProfile: false,
             showCustomFields: false,
-            supportHtml: renderSupportChips(model),
+            showCasLine: false,
+            metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
+              includeCas: true,
+              includePrepared: true,
+              preparedDetailLimit: 2,
+            }),
           })}
-          ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
         </div>
         <div class="qr-priority-block">
           ${signalWord ? renderSignal(signalWord, signalClass, "qr-signal") : ""}
@@ -854,6 +877,54 @@ const buildStyles = (model) => {
       color: #475569;
       margin-top: 0.8mm;
     }
+    .meta-ribbon {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8mm;
+      margin-top: 0.9mm;
+      align-items: center;
+    }
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7mm;
+      min-width: 0;
+      max-width: 100%;
+      padding: 0.45mm 1.15mm;
+      border-radius: 999px;
+      border: 1px solid #dbe4ef;
+      background: #f8fafc;
+      color: #334155;
+      font-size: calc(${layout.typography.fontSize} - 3px);
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meta-chip-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+    .meta-chip-value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meta-chip-cas .meta-chip-value {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      letter-spacing: 0.02em;
+    }
+    .meta-chip-prepared {
+      background: #dbeafe;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+    .meta-chip-prepared-detail {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1e3a8a;
+    }
     .support-chips {
       display: flex;
       flex-wrap: wrap;
@@ -1048,8 +1119,8 @@ const buildStyles = (model) => {
     }
     .standard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 19mm) minmax(0, 1fr);
-      gap: 2mm;
+      grid-template-columns: minmax(0, 17mm) minmax(0, 1fr);
+      gap: 2.4mm;
       width: 100%;
       min-height: 0;
     }
@@ -1059,30 +1130,33 @@ const buildStyles = (model) => {
     .standard-rail {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1mm;
-      padding-right: 1.2mm;
-      border-right: 1px dashed #cbd5e1;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 1.2mm;
+      padding-right: 1.4mm;
+      border-right: 1px solid #dbe4ef;
       min-width: 0;
     }
     .standard-hazard-board {
       display: flex;
       flex-direction: column;
-      gap: 1.1mm;
+      justify-content: center;
+      gap: 1.2mm;
       min-width: 0;
     }
     .hazard-primary-list {
       display: flex;
       flex-direction: column;
-      gap: 0.8mm;
+      gap: 1mm;
     }
     .hazard-primary-item {
-      padding: 0.8mm 1mm;
-      border-radius: 1mm;
-      background: #fff7ed;
+      padding: 0.9mm 1.2mm;
+      border-radius: 1.2mm;
+      background: #fffaf5;
       border: 1px solid #fed7aa;
       color: #7c2d12;
       font-weight: 600;
+      line-height: 1.25;
     }
     .hazard-secondary-list {
       display: flex;
@@ -1116,9 +1190,14 @@ const buildStyles = (model) => {
       color: #222;
     }
     .hazard-more {
-      color: #64748b;
-      font-style: italic;
+      display: inline-flex;
+      align-self: flex-start;
+      padding: 0.4mm 1mm;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: #475569;
       font-size: calc(${layout.typography.hazardSize} - 1px);
+      font-weight: 600;
     }
     .no-hazard {
       color: #166534;
@@ -1181,11 +1260,11 @@ const buildStyles = (model) => {
     .qr-priority-block {
       display: flex;
       flex-direction: column;
-      gap: 0.8mm;
-      padding: 1.1mm 1.3mm;
-      border: 1px solid #fde68a;
+      gap: 0.9mm;
+      padding: 1.2mm 1.4mm;
+      border: 1px solid #e2e8f0;
       border-radius: 1.2mm;
-      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
     }
     .qr-hazard-list {
       display: flex;
@@ -1193,14 +1272,21 @@ const buildStyles = (model) => {
       gap: 0.7mm;
     }
     .qr-hazard-chip {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
       font-size: calc(${layout.typography.hazardSize} - 1px);
       line-height: 1.2;
       color: #7c2d12;
       font-weight: 600;
+      padding: 0.7mm 0.9mm;
+      border-radius: 999px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
     }
     .qr-hazard-summary {
       display: inline;
-      margin-left: 0.9mm;
+      margin-left: 0.7mm;
       color: #92400e;
       font-weight: 500;
     }
@@ -1211,6 +1297,8 @@ const buildStyles = (model) => {
       display: flex;
       align-items: center;
       min-height: calc(${layout.typography.imgSize} - 6px);
+      padding-top: 0.7mm;
+      border-top: 1px dotted #dbe4ef;
     }
     .qr-right {
       width: ${layout.typography.qrBox};

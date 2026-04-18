@@ -45,16 +45,16 @@ const TYPOGRAPHY_BY_SIZE = {
 
 const TEMPLATE_BUDGETS_BY_SIZE = {
   small: {
-    standard: { pictograms: 2, primaryHazards: 1, secondaryHazards: 0, precautions: 2 },
+    standard: { pictograms: 2, primaryHazards: 1, secondaryHazards: 0, precautions: 0 },
     qrcode: { pictograms: 1, hazardTeasers: 1 },
   },
   medium: {
-    standard: { pictograms: 3, primaryHazards: 2, secondaryHazards: 1, precautions: 2 },
-    qrcode: { pictograms: 2, hazardTeasers: 1 },
+    standard: { pictograms: 2, primaryHazards: 2, secondaryHazards: 0, precautions: 0 },
+    qrcode: { pictograms: 1, hazardTeasers: 1 },
   },
   large: {
-    standard: { pictograms: 4, primaryHazards: 3, secondaryHazards: 2, precautions: 4 },
-    qrcode: { pictograms: 3, hazardTeasers: 2 },
+    standard: { pictograms: 3, primaryHazards: 2, secondaryHazards: 0, precautions: 0 },
+    qrcode: { pictograms: 2, hazardTeasers: 1 },
   },
 };
 
@@ -64,6 +64,8 @@ const STOCK_PRESETS = [
     aliases: ["small-landscape"],
     name: "Vial Strip",
     note: "Compact landscape stock for tubes and narrow bottles.",
+    nameKey: "label.stockPresetSmallStrip",
+    noteKey: "label.stockPresetSmallStripNote",
     size: "small",
     orientation: "landscape",
     columns: 4,
@@ -81,6 +83,8 @@ const STOCK_PRESETS = [
     aliases: ["small"],
     name: "Bench Rack",
     note: "Portrait stock with more rows for bench-side secondary labels.",
+    nameKey: "label.stockPresetSmallRack",
+    noteKey: "label.stockPresetSmallRackNote",
     size: "small",
     orientation: "portrait",
     columns: 3,
@@ -98,6 +102,8 @@ const STOCK_PRESETS = [
     aliases: ["medium"],
     name: "Bottle Primary",
     note: "Balanced default for common bottle labels.",
+    nameKey: "label.stockPresetMediumBottle",
+    noteKey: "label.stockPresetMediumBottleNote",
     size: "medium",
     orientation: "portrait",
     columns: 2,
@@ -115,6 +121,8 @@ const STOCK_PRESETS = [
     aliases: ["medium-landscape"],
     name: "Rack Landscape",
     note: "Wider labels for trays, boxes, and shallow containers.",
+    nameKey: "label.stockPresetMediumRack",
+    noteKey: "label.stockPresetMediumRackNote",
     size: "medium",
     orientation: "landscape",
     columns: 3,
@@ -132,6 +140,8 @@ const STOCK_PRESETS = [
     aliases: ["large"],
     name: "Large Primary",
     note: "Roomiest preset when the full hazard hierarchy needs to breathe.",
+    nameKey: "label.stockPresetLargePrimary",
+    noteKey: "label.stockPresetLargePrimaryNote",
     size: "large",
     orientation: "portrait",
     columns: 1,
@@ -156,6 +166,21 @@ const PRESET_INDEX = STOCK_PRESETS.reduce((acc, preset) => {
 
 export const LABEL_STOCK_PRESETS = STOCK_PRESETS;
 export const DEFAULT_LABEL_STOCK_ID = "medium-bottle";
+
+export function getLabelStockPresetDisplay(presetOrId, t = (key, options = {}) => options.defaultValue ?? key) {
+  const preset =
+    typeof presetOrId === "string" ? PRESET_INDEX[presetOrId] : presetOrId;
+  if (!preset) {
+    return { name: "", note: "" };
+  }
+
+  return {
+    name: t(preset.nameKey || preset.id, { defaultValue: preset.name }),
+    note: t(preset.noteKey || `${preset.id}.note`, {
+      defaultValue: preset.note,
+    }),
+  };
+}
 
 const DEFAULT_PRESET = PRESET_INDEX[DEFAULT_LABEL_STOCK_ID];
 

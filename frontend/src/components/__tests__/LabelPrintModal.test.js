@@ -5,6 +5,10 @@ import LabelPrintModal from "../LabelPrintModal";
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key, options = {}) => options.defaultValue ?? key,
+    i18n: {
+      language: "en",
+      changeLanguage: jest.fn(),
+    },
   }),
   initReactI18next: {
     type: "3rdParty",
@@ -296,7 +300,8 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-sheet-preview").tagName).toBe("IFRAME");
     expect(screen.getByTestId("label-fragment-preview").tagName).toBe("IFRAME");
     expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("qrcode-img");
-    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("Lab A");
+    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("70%");
+    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).not.toContain("Lab A");
     expect(screen.getByTestId("selected-prepared-display-64-17-5")).toBeInTheDocument();
   });
 

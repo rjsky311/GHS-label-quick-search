@@ -306,6 +306,7 @@ describe('printLabels', () => {
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('Ethanol');
     expect(html).toContain('64-17-5');
+    expect(html).toContain('meta-ribbon');
     expect(html).toContain('乙醇');
   });
 
@@ -517,7 +518,7 @@ describe('printLabels', () => {
 
   describe('custom label fields', () => {
     const fields = { labName: 'Lab A', date: '2026-02-12', batchNumber: 'B-001' };
-    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+    const config = { size: 'medium', template: 'full', orientation: 'portrait' };
 
     it('renders print-job fields and legacy lab name fallback in generated HTML', () => {
       printLabels([mockChemical], config, {}, fields);
@@ -545,16 +546,17 @@ describe('printLabels', () => {
       expect(html).not.toContain('B-001');
     });
 
-    it('renders date/batch fields and legacy lab name fallback in all 4 templates', () => {
-      ['icon', 'standard', 'full', 'qrcode'].forEach((template) => {
+    it('compact templates omit date, batch, and profile fallbacks', () => {
+      ['icon', 'standard', 'qrcode'].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
         getByIdSpy.mockReturnValue(null);
 
         printLabels([mockChemical], { ...config, template }, {}, fields);
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toContain('Lab A');
-        expect(html).toContain('2026-02-12');
+        expect(html).not.toContain('Lab A');
+        expect(html).not.toContain('2026-02-12');
+        expect(html).not.toContain('B-001');
       });
     });
 
@@ -574,24 +576,24 @@ describe('printLabels', () => {
   });
 
   describe('lab profile rendering', () => {
-    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+    const config = { size: 'medium', template: 'full', orientation: 'portrait' };
     const profile = {
       organization: 'Materials Lab',
       phone: '+886-2-1234-5678',
       address: 'Taipei',
     };
 
-    it('renders compact organization metadata on standard labels', () => {
+    it('full labels render the complete lab profile block', () => {
       printLabels([mockChemical], config, {}, { date: '', batchNumber: '' }, {}, profile);
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('support-chips');
+      expect(html).toContain('profile-block');
       expect(html).toContain('Materials Lab');
-      expect(html).not.toContain('+886-2-1234-5678');
-      expect(html).not.toContain('Taipei');
+      expect(html).toContain('+886-2-1234-5678');
+      expect(html).toContain('Taipei');
     });
 
-    it('renders compact organization metadata without phone or address on icon/qrcode templates', () => {
-      ['icon', 'qrcode'].forEach((template) => {
+    it('compact templates hide lab profile metadata entirely', () => {
+      ['icon', 'standard', 'qrcode'].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
         getByIdSpy.mockReturnValue(null);
@@ -605,14 +607,15 @@ describe('printLabels', () => {
           profile,
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toContain('support-chips');
-        expect(html).toContain('Materials Lab');
+        expect(html).not.toMatch(/<div\s+class="support-chips"/);
+        expect(html).not.toMatch(/<div\s+class="profile-block/);
+        expect(html).not.toContain('Materials Lab');
         expect(html).not.toContain('+886-2-1234-5678');
         expect(html).not.toContain('Taipei');
       });
     });
 
-    it('falls back to legacy customLabelFields.labName when labProfile is empty', () => {
+    it('full labels fall back to legacy customLabelFields.labName when labProfile is empty', () => {
       printLabels(
         [mockChemical],
         config,
@@ -675,14 +678,14 @@ describe('printLabels', () => {
       printLabels([mockChemical], config, {}, {}, quantities);
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Should contain 3 label divs for the same chemical
-      const matches = html.match(/CAS: 64-17-5/g);
+      const matches = html.match(/64-17-5/g);
       expect(matches).toHaveLength(3);
     });
 
     it('defaults to quantity 1 when not specified', () => {
       printLabels([mockChemical], config, {}, {}, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      const matches = html.match(/CAS: 64-17-5/g);
+      const matches = html.match(/64-17-5/g);
       expect(matches).toHaveLength(1);
     });
 
@@ -690,8 +693,8 @@ describe('printLabels', () => {
       const quantities = { '64-17-5': 2, '7732-18-5': 3 };
       printLabels([mockChemical, mockChemicalNoGHS], config, {}, {}, quantities);
       const html = mockIframeDoc.write.mock.calls[0][0];
-      const ethanolMatches = html.match(/CAS: 64-17-5/g);
-      const waterMatches = html.match(/CAS: 7732-18-5/g);
+      const ethanolMatches = html.match(/64-17-5/g);
+      const waterMatches = html.match(/7732-18-5/g);
       expect(ethanolMatches).toHaveLength(2);
       expect(waterMatches).toHaveLength(3);
     });
@@ -831,37 +834,16 @@ describe('printLabels', () => {
       expect(html).toContain('precautions-divider');
     });
 
-    it('standard template renders P-codes as compact code-only pills', () => {
+    it('standard template omits P-codes so the primary hazard block stays readable', () => {
       printLabels([chemWithP], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Look for actual element markup, not the CSS class definition
-      expect(html).toMatch(/<div\s+class="precautions-compact"/);
-      expect(html).toMatch(/<span\s+class="precaution-code"/);
-      expect(html).toContain('P210');
+      expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).not.toMatch(/<span\s+class="precaution-code"/);
+      expect(html).not.toContain('P210');
       expect(html).not.toContain('P301+P310');
       // In compact view we do NOT inline the long Chinese text
       expect(html).not.toContain('如誤吞食：立即呼叫毒物中心。');
-    });
-
-    it('standard template shows overflow marker when P-codes exceed size budget', () => {
-      const chemManyP = {
-        ...mockChemical,
-        precautionary_statements: Array.from({ length: 12 }, (_, i) => ({
-          code: `P${200 + i}`,
-          text_en: 'x',
-          text_zh: 'x',
-        })),
-      };
-      // small => budget is 3
-      printLabels([chemManyP], { size: 'small', template: 'standard', orientation: 'portrait' }, {});
-      const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('precaution-more');
-      // First 2 codes should appear for the small stock preset
-      expect(html).toContain('P200');
-      expect(html).toContain('P201');
-      expect(html).not.toContain('P202');
-      // Later codes should NOT appear inline (they're in the overflow)
-      expect(html).not.toContain('>P210<');
     });
 
     it('standard template omits P-code section when no P-codes', () => {
@@ -958,7 +940,7 @@ describe('printLabels', () => {
       };
       printLabels(
         [mockChemical],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        { size: 'medium', template: 'full', orientation: 'portrait' },
         {},
         customFields,
       );
@@ -1208,7 +1190,7 @@ describe('prepared solution print rendering', () => {
   });
 
   describe('full template', () => {
-    it('renders prepared badge, meta rows, and note', () => {
+    it('renders prepared badge, meta rows, and the full note', () => {
       printLabels(
         [makePrepared()],
         { size: 'medium', template: 'full', orientation: 'portrait' },
@@ -1258,16 +1240,18 @@ describe('prepared solution print rendering', () => {
   });
 
   describe('standard template', () => {
-    it('renders prepared badge, meta rows, and note', () => {
+    it('renders a compact prepared meta ribbon without the long note', () => {
       printLabels(
         [makePrepared()],
         { size: 'medium', template: 'standard', orientation: 'portrait' },
         {}
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toMatch(/<div\s+class="prepared-meta"/);
-      expect(html).toMatch(/<div\s+class="prepared-note"/);
+      expect(html).toMatch(/<div\s+class="meta-ribbon"/);
+      expect(html).toContain('print.preparedShort');
+      expect(html).toContain('10% (v/v)');
+      expect(html).toContain('Water');
+      expect(html).not.toMatch(/<div\s+class="prepared-note"/);
     });
 
     it('parent pictograms and hazards still render', () => {
@@ -1322,15 +1306,15 @@ describe('prepared solution print rendering', () => {
   });
 
   describe('qrcode template', () => {
-    it('renders compact prepared badge and meta rows in left column', () => {
+    it('renders a compact prepared meta ribbon in the left column', () => {
       printLabels(
         [makePrepared()],
         { size: 'medium', template: 'qrcode', orientation: 'portrait' },
         {}
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toMatch(/<div\s+class="meta-ribbon"/);
+      expect(html).toContain('print.preparedShort');
       expect(html).toContain('10% (v/v)');
       expect(html).toContain('Water');
     });
@@ -1591,8 +1575,8 @@ describe('prepared solution print rendering', () => {
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
       expect(html).not.toContain('A. Chen');
       // Tier 1 prepared identity stays intact on qrcode template.
-      expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).toMatch(/<div\s+class="meta-ribbon"/);
+      expect(html).toContain('print.preparedShort');
     });
 
     it('renders only the filled-in subset of operational fields', () => {
