@@ -1,9 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   buildPrintJobRecord,
   mergeRecentPrints,
   normalizePrintJob,
 } from "@/utils/printStorage";
+import {
+  fetchWorkspaceDocument,
+  saveWorkspaceDocument,
+} from "@/utils/workspaceDocuments";
 
 const RECENT_PRINTS_KEY = "ghs_recent_print_jobs";
 export const MAX_RECENT_PRINTS = 10;
@@ -31,6 +35,39 @@ function persist(list) {
 export default function usePrintRecents() {
   const [recentPrints, setRecentPrints] = useState(() => loadFromStorage());
 
+  useEffect(() => {
+    let cancelled = false;
+    const localSnapshot = loadFromStorage();
+
+    async function syncFromBackend() {
+      try {
+        const remote = await fetchWorkspaceDocument("print_recents");
+        const remotePayload = Array.isArray(remote?.payload)
+          ? remote.payload.map(normalizePrintJob).filter(Boolean)
+          : [];
+
+        if (remotePayload.length > 0) {
+          if (!cancelled) {
+            setRecentPrints(remotePayload);
+            persist(remotePayload);
+          }
+          return;
+        }
+
+        if (localSnapshot.length > 0) {
+          await saveWorkspaceDocument("print_recents", localSnapshot);
+        }
+      } catch {
+        // Local fallback remains authoritative when backend sync fails.
+      }
+    }
+
+    syncFromBackend();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const addRecentPrint = useCallback((payload) => {
     const record = buildPrintJobRecord(payload);
     if (!record) return null;
@@ -38,6 +75,7 @@ export default function usePrintRecents() {
     setRecentPrints((prev) => {
       const next = mergeRecentPrints(prev, record, MAX_RECENT_PRINTS);
       persist(next);
+      void saveWorkspaceDocument("print_recents", next).catch(() => {});
       return next;
     });
 
@@ -47,6 +85,7 @@ export default function usePrintRecents() {
   const clearRecentPrints = useCallback(() => {
     setRecentPrints([]);
     persist([]);
+    void saveWorkspaceDocument("print_recents", []).catch(() => {});
   }, []);
 
   return {

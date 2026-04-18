@@ -160,3 +160,72 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
     assert any(item["alias_text"] == "pilot solvent x" for item in aliases.json()["items"])
     assert links.status_code == 200
     assert links.json()["items"][0]["label"] == "Vendor SDS"
+
+
+async def test_workspace_endpoints_support_print_persistence_docs(temp_store):
+    recent_job = {
+        "schemaVersion": 1,
+        "id": "print-1",
+        "createdAt": "2026-04-18T00:00:00+00:00",
+        "items": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": "Ethanol",
+                "name_zh": "Ethanol",
+                "cid": 702,
+                "found": True,
+                "signal_word": "Warning",
+                "signal_word_zh": "Warning",
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+                "customNote": "",
+                "isPreparedSolution": False,
+            }
+        ],
+        "labelConfig": {
+            "template": "standard",
+            "size": "medium",
+            "orientation": "portrait",
+        },
+        "customLabelFields": {
+            "date": "2026-04-18",
+            "batchNumber": "B-1",
+        },
+        "labProfile": {
+            "organization": "Materials Lab",
+            "phone": "02-1234",
+            "address": "Taipei",
+        },
+        "labelQuantities": {
+            "64-17-5": 1,
+        },
+        "totalChemicals": 1,
+        "totalLabels": 1,
+    }
+    custom_fields = {
+        "date": "2026-04-18",
+        "batchNumber": "B-1",
+    }
+
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        recent_put = await ac.put(
+            "/api/workspace/print_recents",
+            json={"payload": [recent_job]},
+        )
+        fields_put = await ac.put(
+            "/api/workspace/print_custom_label_fields",
+            json={"payload": custom_fields},
+        )
+        recent_get = await ac.get("/api/workspace/print_recents")
+        fields_get = await ac.get("/api/workspace/print_custom_label_fields")
+
+    assert recent_put.status_code == 200
+    assert recent_put.json()["payload"][0]["id"] == "print-1"
+    assert fields_put.status_code == 200
+    assert fields_put.json()["payload"]["batchNumber"] == "B-1"
+    assert recent_get.status_code == 200
+    assert recent_get.json()["payload"][0]["items"][0]["cas_number"] == "64-17-5"
+    assert fields_get.status_code == 200
+    assert fields_get.json()["payload"]["date"] == "2026-04-18"

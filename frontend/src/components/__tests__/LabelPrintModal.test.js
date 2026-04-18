@@ -195,6 +195,28 @@ describe("LabelPrintModal", () => {
     }
   });
 
+  it("loads and clears recent print jobs from the queue", () => {
+    const recentJob = {
+      id: "print-1",
+      createdAt: "2026-04-18T08:30:00.000Z",
+      items: [makeChem()],
+      totalChemicals: 1,
+      totalLabels: 2,
+      labelConfig: { ...baseConfig, template: "qrcode" },
+    };
+    const { props } = renderModal({
+      recentPrints: [recentJob],
+      onLoadRecentPrint: jest.fn(),
+      onClearRecentPrints: jest.fn(),
+    });
+
+    fireEvent.click(screen.getByText("Load"));
+    expect(props.onLoadRecentPrint).toHaveBeenCalledWith(recentJob);
+
+    fireEvent.click(screen.getByText("Clear"));
+    expect(props.onClearRecentPrints).toHaveBeenCalledTimes(1);
+  });
+
   it("saves the current template and lets Escape close only the inline input", () => {
     const onSaveTemplate = jest.fn(() => true);
     const { props } = renderModal({ onSaveTemplate });

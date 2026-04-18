@@ -40,6 +40,8 @@ load_dotenv(ROOT_DIR / '.env')
 APP_VERSION = "1.9.0"
 WORKSPACE_DOC_TYPES = {
     "lab_profile",
+    "print_custom_label_fields",
+    "print_recents",
     "print_templates",
     "prepared_recents",
     "prepared_presets",
