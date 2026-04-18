@@ -36,13 +36,9 @@ export default function ResultsTable({
 }) {
   const { t } = useTranslation();
 
-  // v1.8 M2 PR-B: `printAllWithGhsCount` is computed in App.js from
-  // the RAW search results (pre-filter, pre-sort). Don't recompute
-  // here — the `results` prop is `sortedResults`, which is already
-  // filtered, and using it would silently couple the shortcut to
-  // whatever filter is currently visible on screen. That contradicts
-  // the "acts on the full search result set" contract we agreed on
-  // in the plan. Consume the prop as-is.
+  // `printAllWithGhsCount` is computed in App.js from the same filtered
+  // and sorted subset the table is currently rendering. Don't recompute
+  // here — the parent owns the action scope and count together.
 
   const SortIcon = ({ columnKey }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="w-3 h-3 text-slate-500 ml-1 inline" />;
@@ -74,10 +70,8 @@ export default function ResultsTable({
               </span>
             )}
           </button>
-          {/* v1.8 M2 PR-B: precise shortcut — opens the modal with
-              ONLY rows that have GHS data (no-GHS rows excluded).
-              Button name matches the action exactly. Acts on the full
-              search result set, independent of current filter state. */}
+          {/* Precise shortcut — opens the modal with ONLY visible rows
+              that have GHS data (no-GHS rows excluded). */}
           {printAllWithGhsCount > 0 && (
             <button
               onClick={onPrintAllWithGhs}

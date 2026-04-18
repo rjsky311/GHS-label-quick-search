@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { preparedPresetKey } from "@/utils/preparedSolution";
 import {
   fetchWorkspaceDocument,
@@ -8,9 +8,9 @@ import {
 /**
  * usePreparedPresets — Tier 2 PR-2B.
  *
- * A localStorage-only store of **saved** prepared-solution recipe
- * inputs (`parentCas` + `concentration` + `solvent` + parent name
- * labels). Complementary to `usePreparedRecents` but with a
+ * A local-first, backend-synced store of **saved** prepared-solution
+ * recipe inputs (`parentCas` + `concentration` + `solvent` + parent
+ * name labels). Complementary to `usePreparedRecents` but with a
  * DELIBERATELY MORE RESTRICTIVE shape:
  *
  *   - Presets store ONLY the reusable recipe inputs.
@@ -39,7 +39,6 @@ import {
  *     PR-2B is save + read + prefill only; manage UI is out of
  *     scope. If evidence later shows cleanup is actually needed,
  *     it can go in a follow-up without changing the storage shape.
- *   - No backend sync.
  *   - No cross-tab sync (no `storage` event listener).
  */
 
@@ -69,6 +68,11 @@ function persist(list) {
 
 export default function usePreparedPresets() {
   const [presets, setPresets] = useState(() => loadFromStorage());
+  const presetsRef = useRef(presets);
+
+  useEffect(() => {
+    presetsRef.current = presets;
+  }, [presets]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,19 +108,30 @@ export default function usePreparedPresets() {
   }, []);
 
   const addPreset = useCallback((record) => {
-    if (!record) return;
+    if (!record) return { saved: false, deduped: false, reason: "invalid" };
     // Recipe minimum: parent identity + both required inputs. Without
     // these the preset is not reusable and the dedup key collapses
     // several records into one.
-    if (!record.parentCas || !record.concentration || !record.solvent) return;
+    if (!record.parentCas || !record.concentration || !record.solvent) {
+      return { saved: false, deduped: false, reason: "invalid" };
+    }
     const key = preparedPresetKey(record);
-    setPresets((prev) => {
-      const filtered = prev.filter((r) => preparedPresetKey(r) !== key);
-      const next = [record, ...filtered].slice(0, MAX_PREPARED_PRESETS);
-      persist(next);
-      void saveWorkspaceDocument("prepared_presets", next).catch(() => {});
-      return next;
-    });
+    const previous = presetsRef.current;
+    const filtered = previous.filter((r) => preparedPresetKey(r) !== key);
+    const deduped = filtered.length !== previous.length;
+    const next = [record, ...filtered].slice(0, MAX_PREPARED_PRESETS);
+
+    presetsRef.current = next;
+    setPresets(next);
+    persist(next);
+    void saveWorkspaceDocument("prepared_presets", next).catch(() => {});
+
+    return {
+      saved: true,
+      deduped,
+      reason: deduped ? "updated" : "created",
+      record,
+    };
   }, []);
 
   return {

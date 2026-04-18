@@ -831,6 +831,47 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     ).toBeInTheDocument();
   });
 
+  it("saving the same preset twice reports an update instead of a second silent create", async () => {
+    // eslint-disable-next-line global-require
+    const { toast } = require("sonner");
+    render(<App />);
+    await runBatchSearch({
+      casInputs: ["64-17-5"],
+      mockResponses: [ethanolResult],
+    });
+    await enterPrepareFlowFor(ethanolResult);
+
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+        target: { value: "10%" },
+      })
+    );
+    await act(async () =>
+      fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+        target: { value: "Water" },
+      })
+    );
+
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"))
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("prepare-solution-save-preset-btn"))
+    );
+
+    expect(toast.success).toHaveBeenNthCalledWith(
+      1,
+      "prepared.savePresetSuccessNamed"
+    );
+    expect(toast.success).toHaveBeenNthCalledWith(
+      2,
+      "prepared.savePresetUpdatedNamed"
+    );
+    expect(
+      JSON.parse(localStorage.getItem("ghs_prepared_presets"))
+    ).toHaveLength(1);
+  });
+
   it("prepared sidebar can reprint a saved recent after app restart by refetching the parent chemical", async () => {
     localStorage.setItem(
       "ghs_prepared_recents",

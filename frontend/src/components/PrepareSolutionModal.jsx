@@ -6,6 +6,44 @@ import {
   todayDateString,
 } from "@/utils/preparedSolution";
 
+function toDayIndex(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((value || "").trim());
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return Math.floor(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)) / 86400000
+  );
+}
+
+function getRecentExpiryStatus(expiryDate) {
+  const expiryIndex = toDayIndex(expiryDate);
+  const todayIndex = toDayIndex(todayDateString());
+  if (expiryIndex == null || todayIndex == null) return null;
+
+  const daysUntilExpiry = expiryIndex - todayIndex;
+  if (daysUntilExpiry < 0) {
+    return {
+      tone: "expired",
+      labelKey: "prepared.expiryExpired",
+      chipClass:
+        "bg-red-500/15 text-red-200 border border-red-400/30",
+      cardClass:
+        "border-red-500/35 bg-red-950/20 hover:border-red-400/50",
+    };
+  }
+  if (daysUntilExpiry <= 7) {
+    return {
+      tone: "warning",
+      labelKey: "prepared.expiryExpiringSoon",
+      chipClass:
+        "bg-amber-500/15 text-amber-200 border border-amber-400/30",
+      cardClass:
+        "border-amber-500/35 bg-amber-950/15 hover:border-amber-400/50",
+    };
+  }
+  return null;
+}
+
 /**
  * Prepare-solution / dilution workflow modal (v1.9 M3 Tier 1).
  *
@@ -282,12 +320,17 @@ export default function PrepareSolutionModal({
               label. See handlePrefillFromPreset. */}
           {parentPresets.length > 0 && (
             <div
-              className="bg-slate-900/40 border border-slate-700 rounded-lg p-3 space-y-2"
+              className="rounded-lg border border-purple-500/20 bg-purple-950/20 p-3 space-y-2"
               data-testid="prepare-solution-preset-section"
             >
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Bookmark className="w-3.5 h-3.5 text-purple-400" />
-                <span>{t("prepared.presetHeading")}</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-purple-200">
+                  <Bookmark className="w-3.5 h-3.5 text-purple-300" />
+                  <span>{t("prepared.presetHeading")}</span>
+                </div>
+                <p className="text-xs text-purple-200/70">
+                  {t("prepared.presetHint")}
+                </p>
               </div>
               <ul
                 className="space-y-1"
@@ -305,16 +348,25 @@ export default function PrepareSolutionModal({
                       <button
                         type="button"
                         onClick={() => handlePrefillFromPreset(p)}
-                        className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-purple-500 transition-colors"
+                        className="w-full rounded border border-purple-500/15 bg-slate-900/90 px-3 py-2 text-left transition-colors hover:border-purple-400 hover:bg-slate-800"
                         data-testid={`prepare-solution-preset-item-${idx}`}
                       >
-                        <div className="text-sm text-white">
-                          {p.name ||
-                            display ||
-                            t("prepared.labelMeta", {
-                              concentration: p.concentration || "",
-                              solvent: p.solvent || "",
-                            })}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-300">
+                              <span data-testid={`prepare-solution-preset-badge-${idx}`}>
+                                {t("prepared.presetBadge")}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-sm text-white">
+                              {p.name ||
+                                display ||
+                                t("prepared.labelMeta", {
+                                  concentration: p.concentration || "",
+                                  solvent: p.solvent || "",
+                                })}
+                            </div>
+                          </div>
                         </div>
                         {p.name && display && p.name !== display && (
                           <div className="text-xs text-slate-400 mt-0.5">
@@ -336,12 +388,17 @@ export default function PrepareSolutionModal({
               sourced from here — see handlePrefillFromRecent. */}
           {parentRecents.length > 0 && (
             <div
-              className="bg-slate-900/40 border border-slate-700 rounded-lg p-3 space-y-2"
+              className="rounded-lg border border-blue-500/20 bg-blue-950/20 p-3 space-y-2"
               data-testid="prepare-solution-recent-section"
             >
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Clock className="w-3.5 h-3.5 text-blue-400" />
-                <span>{t("prepared.recentHeading")}</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-blue-200">
+                  <Clock className="w-3.5 h-3.5 text-blue-300" />
+                  <span>{t("prepared.recentHeading")}</span>
+                </div>
+                <p className="text-xs text-blue-200/70">
+                  {t("prepared.recentHint")}
+                </p>
               </div>
               <ul className="space-y-1" data-testid="prepare-solution-recent-list">
                 {parentRecents.map((r, idx) => {
@@ -351,24 +408,45 @@ export default function PrepareSolutionModal({
                   // user can see who/when at a glance without needing
                   // to click-to-prefill.
                   const display = formatPreparedDisplayName(r);
+                  const expiryStatus = getRecentExpiryStatus(r.expiryDate);
                   return (
-                  <li key={`${r.createdAt || "noTs"}-${idx}`}>
-                    <button
-                      type="button"
-                      onClick={() => handlePrefillFromRecent(r)}
-                      className="w-full text-left px-2 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-blue-500 transition-colors"
-                      data-testid={`prepare-solution-recent-item-${idx}`}
-                    >
-                      <div className="text-sm text-white">
-                        {display ||
-                          t("prepared.labelMeta", {
-                            concentration: r.concentration || "",
-                            solvent: r.solvent || "",
-                          })}
-                      </div>
-                      {(r.preparedBy || r.preparedDate || r.expiryDate) && (
-                        <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
-                          {r.preparedBy && (
+                   <li key={`${r.createdAt || "noTs"}-${idx}`}>
+                     <button
+                       type="button"
+                       onClick={() => handlePrefillFromRecent(r)}
+                       className={`w-full rounded border px-3 py-2 text-left transition-colors ${
+                         expiryStatus?.cardClass ||
+                         "border-blue-500/15 bg-slate-900/90 hover:border-blue-400 hover:bg-slate-800"
+                       }`}
+                       data-testid={`prepare-solution-recent-item-${idx}`}
+                     >
+                       <div className="flex items-start justify-between gap-3">
+                         <div className="min-w-0">
+                           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-300">
+                             <span data-testid={`prepare-solution-recent-badge-${idx}`}>
+                               {t("prepared.recentBadge")}
+                             </span>
+                           </div>
+                           <div className="mt-1 text-sm text-white">
+                             {display ||
+                               t("prepared.labelMeta", {
+                                 concentration: r.concentration || "",
+                                 solvent: r.solvent || "",
+                               })}
+                           </div>
+                         </div>
+                         {expiryStatus && (
+                           <span
+                             className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${expiryStatus.chipClass}`}
+                             data-testid={`prepare-solution-recent-expiry-status-${idx}`}
+                           >
+                             {t(expiryStatus.labelKey)}
+                           </span>
+                         )}
+                       </div>
+                       {(r.preparedBy || r.preparedDate || r.expiryDate) && (
+                         <div className="text-xs text-slate-400 flex flex-wrap gap-x-3 mt-0.5">
+                           {r.preparedBy && (
                             <span>
                               {t("prepared.preparedByShort")}: {r.preparedBy}
                             </span>

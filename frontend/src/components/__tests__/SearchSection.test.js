@@ -175,6 +175,20 @@ describe('SearchSection', () => {
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
 
+    it('uses the real completion percentage for progress width', () => {
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchProgress={{ current: 3, total: 10 }}
+        />
+      );
+
+      const progressbar = screen.getByRole('progressbar');
+      expect(progressbar).toHaveStyle({ width: '30%' });
+      expect(progressbar).toHaveAttribute('aria-valuetext', '30%');
+    });
+
     it('shows done text when current equals total', () => {
       render(
         <SearchSection

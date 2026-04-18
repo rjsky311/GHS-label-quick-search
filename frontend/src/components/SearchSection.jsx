@@ -21,6 +21,16 @@ export default function SearchSection({
   batchProgress,
 }) {
   const { t } = useTranslation();
+  const progressPercent =
+    batchProgress && batchProgress.total > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round((batchProgress.current / batchProgress.total) * 100)
+          )
+        )
+      : 0;
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 mb-6">
@@ -84,7 +94,8 @@ export default function SearchSection({
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                {t("search.inputHint")}　<kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">/</kbd>
+                {t("search.inputHint")}{" "}
+                <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">/</kbd>
               </p>
             </div>
           </div>
@@ -170,11 +181,12 @@ export default function SearchSection({
                         ? "bg-green-500"
                         : "bg-amber-500 progress-bar-animated"
                     }`}
-                    style={{ width: batchProgress.current === batchProgress.total ? "100%" : "85%" }}
+                    style={{ width: `${progressPercent}%` }}
                     role="progressbar"
                     aria-valuenow={batchProgress.current}
                     aria-valuemin={0}
                     aria-valuemax={batchProgress.total}
+                    aria-valuetext={`${progressPercent}%`}
                   />
                 </div>
               </div>

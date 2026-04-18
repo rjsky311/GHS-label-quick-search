@@ -180,15 +180,17 @@ function App() {
         explicitPresetName && record.name !== explicitPresetName
           ? { ...record, name: explicitPresetName }
           : record;
-      addPreparedPreset(normalizedRecord);
-      // UX cleanup: success feedback. Without this, the Save-as-preset
-      // button looked like a no-op — there was no visible signal that
-      // the preset had been written. Matches the existing pattern used
-      // by LabelPrintModal's print-templates flow.
+      const outcome = addPreparedPreset(normalizedRecord);
+      if (!outcome?.saved) return;
+
       toast.success(
-        t("prepared.savePresetSuccessNamed", {
-          name: normalizedRecord.name || "",
-        })
+        outcome.deduped
+          ? t("prepared.savePresetUpdatedNamed", {
+              name: normalizedRecord.name || "",
+            })
+          : t("prepared.savePresetSuccessNamed", {
+              name: normalizedRecord.name || "",
+            })
       );
     },
     [prepareSolutionParent, addPreparedPreset, t]
@@ -276,6 +278,15 @@ function App() {
     }));
   };
 
+  const replaceResultsView = useCallback(
+    (nextResults) => {
+      clearLabelSelection();
+      setExpandedOtherClassifications({});
+      setResults(Array.isArray(nextResults) ? nextResults : []);
+    },
+    [clearLabelSelection]
+  );
+
   const logUnresolvedSearch = useCallback(
     (query, queryType, result, meta = {}) => {
       if (!result || result.found) return;
@@ -304,7 +315,7 @@ function App() {
         `${API}/search/${encodeURIComponent(query)}`
       );
       const result = response.data;
-      setResults([result]);
+      replaceResultsView([result]);
       saveToHistory([result]);
       logUnresolvedSearch(query, "single", result, { activeTab: "single" });
     } catch (e) {
@@ -357,7 +368,7 @@ function App() {
       });
       const batchResults = Array.isArray(response.data) ? response.data : [];
       setBatchProgress({ current: casNumbers.length, total: casNumbers.length });
-      setResults(batchResults);
+      replaceResultsView(batchResults);
       saveToHistory(batchResults);
       batchResults.forEach((result, index) => {
         logUnresolvedSearch(casNumbers[index] || result?.cas_number || "", "batch", result, {
@@ -404,46 +415,30 @@ function App() {
 
   const handleOpenLabelModal = useCallback(() => {
     if (selectedForLabel.length === 0) {
-      selectAllForLabel(results);
+      selectAllForLabel(sortedResults);
     }
     setShowLabelModal(true);
-  }, [selectedForLabel.length, selectAllForLabel, results]);
+  }, [selectedForLabel.length, selectAllForLabel, sortedResults]);
 
-  // v1.8 M2 PR-B: "Print all with GHS data" shortcut.
-  //
-  // Deliberately bypasses handleOpenLabelModal. That handler contains
-  // a legacy fallback — "if selectedForLabel.length === 0, select all
-  // found rows" — designed for the purple Print-label button's
-  // implicit auto-select behaviour. React state updates are batched,
-  // so inside a single event tick handleOpenLabelModal would still
-  // see the pre-set `selectedForLabel` length (stale closure) and
-  // overwrite the printable subset we just computed.
-  //
-  // The fix is not to delegate. Set both pieces of state here in the
-  // same tick, on our own terms. The existing purple button's path is
-  // unchanged — it still auto-selects all found rows when invoked
-  // with an empty selection, which is its documented behaviour.
+  // Pilot refinement: table-context bulk actions now follow the
+  // filtered/sorted view the user is actually looking at, not the raw
+  // hidden result set behind it.
   const handlePrintAllWithGhs = useCallback(() => {
-    const printable = results.filter(
+    const printable = sortedResults.filter(
       (r) => r.found && hasGhsData(getEffectiveClassification(r))
     );
     setSelectedForLabel(printable);
     setShowLabelModal(true);
-  }, [results, getEffectiveClassification, setSelectedForLabel]);
+  }, [sortedResults, getEffectiveClassification, setSelectedForLabel]);
 
-  // v1.8 M2 PR-B post-review fix: the shortcut must reflect the FULL
-  // search result set, not whatever filter/sort is currently applied.
-  // Compute the count here — where `results` is the raw search array
-  // — and pass it down. Previously ResultsTable computed this from
-  // its `results` prop, which is `sortedResults` (post-filter), so a
-  // filter that hid all GHS-bearing rows would have made the button
-  // disappear or mis-count.
+  // Pilot refinement: count the same visible subset that the shortcut
+  // will act on, so the button reflects the current table scope.
   const printableWithGhsCount = useMemo(
     () =>
-      results.filter(
+      sortedResults.filter(
         (r) => r.found && hasGhsData(getEffectiveClassification(r))
       ).length,
-    [results, getEffectiveClassification]
+    [sortedResults, getEffectiveClassification]
   );
 
   const pilotAttentionCount = useMemo(() => {
@@ -724,10 +719,10 @@ function App() {
               onOpenLabelModal={handleOpenLabelModal}
               onPrintAllWithGhs={handlePrintAllWithGhs}
               printAllWithGhsCount={printableWithGhsCount}
-              onExportToExcel={() => exportToExcel(results)}
-              onExportToCSV={() => exportToCSV(results)}
-              onSelectAllForLabel={() => selectAllForLabel(results)}
-              onClearLabelSelection={clearLabelSelection}
+               onExportToExcel={() => exportToExcel(sortedResults)}
+               onExportToCSV={() => exportToCSV(sortedResults)}
+               onSelectAllForLabel={() => selectAllForLabel(sortedResults)}
+               onClearLabelSelection={clearLabelSelection}
               onToggleSelectForLabel={toggleSelectForLabel}
               isSelectedForLabel={isSelectedForLabel}
               onToggleFavorite={toggleFavorite}

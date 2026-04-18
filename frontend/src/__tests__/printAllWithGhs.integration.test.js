@@ -6,7 +6,7 @@
  * found fallback that runs when `selectedForLabel.length === 0`. Because
  * React state updates are batched, a delegating implementation would
  * read the pre-set length (stale closure), trigger the fallback, and
- * overwrite the GHS-filtered subset with EVERY found row.
+ * overwrite the intended subset with every found row in the current view.
  *
  * This test renders the real `<App />` with mocked network/IO and
  * proves that clicking the new shortcut:
@@ -274,19 +274,16 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     expect(dialogText).not.toContain('7732-18-5');
   });
 
-  it('filter-independence: the shortcut count reflects RAW results, not the currently visible filter set', async () => {
-    // Post-review fix verification: the shortcut acts on the RAW
-    // results array, not on whatever is currently visible in the
-    // filtered table view. If the count had been computed from
-    // filter-visible rows (the pre-fix bug), applying a filter that
-    // hides some rows would make the count drop below the true total.
+  it('filtered-view mode: the shortcut count and selection reflect the currently visible filtered rows', async () => {
+    // Pilot refinement: table-context bulk actions now follow the
+    // filtered view the user is actually looking at.
     //
     // Scenario:
     //   - Batch returns 2 rows that both have GHS data, one with
     //     signal_word="Danger" and one with signal_word="Warning"
     //   - Apply the "Danger" filter → only 1 row visible in the table
-    //   - The shortcut badge must still say "2" (both raw-eligible rows)
-    //   - Clicking must open the modal with BOTH rows selected
+    //   - The shortcut badge must now say "1"
+    //   - Clicking must open the modal with ONLY that visible row
     const dangerRow = {
       cas_number: '64-17-5',
       cid: 702,
@@ -336,16 +333,12 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     // by looking for that key.
     expect(screen.getByText('filter.showing')).toBeInTheDocument();
 
-    // CRITICAL: the shortcut badge must still say "2" because the
-    // count reflects RAW results (pre-filter). Before the post-review
-    // fix, this would have been "1" — one visible Danger row.
+    // The shortcut now follows the visible filtered subset.
     btn = screen.getByTestId('print-all-with-ghs-btn');
     expect(btn).toBeInTheDocument();
-    expect(btn.textContent).toContain('2');
+    expect(btn.textContent).toContain('1');
 
-    // Clicking it opens the modal with BOTH rows selected, proving
-    // the handler (already on raw results) and the count (now also
-    // on raw results) are in sync.
+    // Clicking it opens the modal with ONLY the visible filtered row.
     await act(async () => {
       fireEvent.click(btn);
     });
@@ -356,8 +349,65 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     const selectedCasSpans = dialog.querySelectorAll(
       'span.font-mono.text-amber-400.text-sm'
     );
-    expect(selectedCasSpans).toHaveLength(2);
-    const selectedCasValues = Array.from(selectedCasSpans).map((n) => n.textContent);
-    expect(selectedCasValues).toEqual(expect.arrayContaining(['64-17-5', '67-64-1']));
+    expect(selectedCasSpans).toHaveLength(1);
+    expect(selectedCasSpans[0].textContent).toBe('64-17-5');
+  });
+
+  it('clears stale label selection when a new search replaces the current results', async () => {
+    const firstChem = {
+      cas_number: '64-17-5',
+      name_en: 'Ethanol',
+      name_zh: '乙醇',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02', name_zh: '易燃' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      signal_word_zh: '危險',
+      other_classifications: [],
+    };
+    const secondChem = {
+      cas_number: '67-56-1',
+      name_en: 'Methanol',
+      name_zh: '甲醇',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02', name_zh: '易燃' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      signal_word_zh: '危險',
+      other_classifications: [],
+    };
+
+    render(<App />);
+
+    await runBatchSearch({
+      casInputs: ['64-17-5'],
+      mockResponses: [firstChem],
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('checkbox'));
+    });
+
+    await runBatchSearch({
+      casInputs: ['67-56-1'],
+      mockResponses: [secondChem],
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('print-label-btn'));
+    });
+
+    await waitFor(() =>
+      expect(screen.getAllByText('label.title').length).toBeGreaterThan(0)
+    );
+
+    const dialog = screen.getByRole('dialog', { name: /label\.title/i });
+    const selectedCasSpans = dialog.querySelectorAll(
+      'span.font-mono.text-amber-400.text-sm'
+    );
+    expect(selectedCasSpans).toHaveLength(1);
+    expect(selectedCasSpans[0].textContent).toBe('67-56-1');
   });
 });

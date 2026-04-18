@@ -55,9 +55,13 @@ describe("usePreparedPresets", () => {
 
   it("addPreset prepends a new record and persists it", () => {
     const { result } = renderHook(() => usePreparedPresets());
+    let outcome;
     act(() => {
-      result.current.addPreset(makePreset({ concentration: "1 N" }));
+      outcome = result.current.addPreset(makePreset({ concentration: "1 N" }));
     });
+    expect(outcome).toEqual(
+      expect.objectContaining({ saved: true, deduped: false, reason: "created" })
+    );
     expect(result.current.presets).toHaveLength(1);
     expect(result.current.presets[0].concentration).toBe("1 N");
     const persisted = JSON.parse(localStorage.getItem(PRESETS_KEY));
@@ -92,8 +96,9 @@ describe("usePreparedPresets", () => {
         makePreset({ concentration: "A", name: "First name" })
       );
     });
+    let outcome;
     act(() => {
-      result.current.addPreset(
+      outcome = result.current.addPreset(
         makePreset({
           concentration: "A",
           createdAt: "later",
@@ -102,6 +107,9 @@ describe("usePreparedPresets", () => {
       );
     });
 
+    expect(outcome).toEqual(
+      expect.objectContaining({ saved: true, deduped: true, reason: "updated" })
+    );
     expect(result.current.presets).toHaveLength(1);
     expect(result.current.presets[0].name).toBe("Second name");
     expect(result.current.presets[0].createdAt).toBe("later");

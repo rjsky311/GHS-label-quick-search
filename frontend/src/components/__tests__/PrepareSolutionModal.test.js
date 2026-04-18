@@ -424,6 +424,26 @@ describe("PrepareSolutionModal", () => {
     expect(screen.getByTestId("prepare-solution-recent-item-0")).toHaveTextContent(
       "A. Chen"
     );
+    expect(screen.getByTestId("prepare-solution-recent-badge-0")).toBeInTheDocument();
+  });
+
+  it("shows an expiry status badge when a recent entry is expired", () => {
+    const expiredRecent = {
+      ...baseRecent,
+      expiryDate: "2020-01-01",
+    };
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[expiredRecent]}
+      />
+    );
+
+    expect(
+      screen.getByTestId("prepare-solution-recent-expiry-status-0")
+    ).toBeInTheDocument();
   });
 
   it("clicking a recent item prefills the form without auto-submitting", () => {
@@ -744,6 +764,7 @@ describe("PrepareSolutionModal", () => {
     expect(
       screen.getByTestId("prepare-solution-preset-item-0")
     ).toBeInTheDocument();
+    expect(screen.getByTestId("prepare-solution-preset-badge-0")).toBeInTheDocument();
   });
 
   it("clicking a preset prefills concentration + solvent ONLY", () => {
