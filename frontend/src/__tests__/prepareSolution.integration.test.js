@@ -890,11 +890,14 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
         },
       ])
     );
-    axios.get.mockImplementation(async (url) => {
-      if (url.endsWith("/api/search/64-17-5")) {
+    axios.get.mockImplementation(async (url, config) => {
+      if (
+        url.endsWith("/api/search-single") &&
+        config?.params?.q === "64-17-5"
+      ) {
         return { data: ethanolResult };
       }
-      return { data: { results: [] } };
+      return { data: { payload: [] } };
     });
 
     render(<App />);
@@ -914,7 +917,10 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     expect(axios.get).toHaveBeenCalledWith(
-      expect.stringContaining("/api/search/64-17-5")
+      expect.stringContaining("/api/search-single"),
+      expect.objectContaining({
+        params: { q: "64-17-5" },
+      })
     );
     expect(
       screen.getByTestId(`selected-prepared-${ethanolResult.cas_number}`)

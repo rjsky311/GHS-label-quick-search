@@ -3,6 +3,11 @@ import { saveAs } from "file-saver";
 import { toast } from "sonner";
 import { API } from "@/constants/ghs";
 import i18n from "@/i18n";
+import {
+  getLocalizedPictogramName,
+  getLocalizedSignalWord,
+  getLocalizedStatementText,
+} from "@/utils/ghsText";
 
 // The `xlsx` package (SheetJS) has unpatched vulnerabilities in the
 // 0.18.x line shipped via npm. We previously used it as a client-side
@@ -39,6 +44,7 @@ export function escapeCsvCell(value) {
 }
 
 function buildCsvRows(results, t) {
+  const displayLocale = i18n.language;
   const rows = [
     [
       t("export.cas"),
@@ -53,16 +59,22 @@ function buildCsvRows(results, t) {
   for (const r of results) {
     const ghsText =
       r.ghs_pictograms && r.ghs_pictograms.length
-        ? r.ghs_pictograms.map((p) => `${p.code} (${p.name_zh})`).join(", ")
+        ? r.ghs_pictograms
+            .map((p) => `${p.code} (${getLocalizedPictogramName(p, displayLocale)})`)
+            .join(", ")
         : t("export.none");
-    const signal = r.signal_word_zh || r.signal_word || "-";
+    const signal = getLocalizedSignalWord(r, displayLocale) || "-";
     const hazardText =
       r.hazard_statements && r.hazard_statements.length
-        ? r.hazard_statements.map((s) => `${s.code}: ${s.text_zh}`).join("; ")
+        ? r.hazard_statements
+            .map((s) => `${s.code}: ${getLocalizedStatementText(s, displayLocale)}`)
+            .join("; ")
         : t("export.noHazard");
     const precautionText =
       r.precautionary_statements && r.precautionary_statements.length
-        ? r.precautionary_statements.map((p) => `${p.code}: ${p.text_zh}`).join("; ")
+        ? r.precautionary_statements
+            .map((p) => `${p.code}: ${getLocalizedStatementText(p, displayLocale)}`)
+            .join("; ")
         : t("export.noPrecautionary");
     rows.push([
       r.cas_number || "",

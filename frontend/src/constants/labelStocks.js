@@ -45,16 +45,16 @@ const TYPOGRAPHY_BY_SIZE = {
 
 const TEMPLATE_BUDGETS_BY_SIZE = {
   small: {
-    standard: { primaryHazards: 1, secondaryHazards: 1, precautions: 2 },
-    qrcode: { pictograms: 2, hazardTeasers: 1 },
+    standard: { pictograms: 2, primaryHazards: 1, secondaryHazards: 0, precautions: 2 },
+    qrcode: { pictograms: 1, hazardTeasers: 1 },
   },
   medium: {
-    standard: { primaryHazards: 2, secondaryHazards: 2, precautions: 4 },
-    qrcode: { pictograms: 3, hazardTeasers: 2 },
+    standard: { pictograms: 3, primaryHazards: 2, secondaryHazards: 1, precautions: 2 },
+    qrcode: { pictograms: 2, hazardTeasers: 1 },
   },
   large: {
-    standard: { primaryHazards: 3, secondaryHazards: 3, precautions: 6 },
-    qrcode: { pictograms: 4, hazardTeasers: 2 },
+    standard: { pictograms: 4, primaryHazards: 3, secondaryHazards: 2, precautions: 4 },
+    qrcode: { pictograms: 3, hazardTeasers: 2 },
   },
 };
 

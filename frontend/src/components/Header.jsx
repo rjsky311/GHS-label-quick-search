@@ -5,6 +5,7 @@ import {
   ClipboardList,
   Globe,
   FlaskConical,
+  LockKeyhole,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -15,8 +16,8 @@ export default function Header({
   opsEventCount = 0,
   pilotAttentionCount = 0,
   showPilotDashboard = false,
-  showFavorites,
-  showHistory,
+  showPilotDashboardButton = false,
+  pilotAdminUnlocked = false,
   onTogglePilotDashboard,
   onToggleFavorites,
   onToggleHistory,
@@ -31,93 +32,97 @@ export default function Header({
   };
 
   return (
-    <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+    <header className="sticky top-0 z-40 border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-500 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-red-500">
+              <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">
-                {t("header.title")}
-              </h1>
+              <h1 className="text-xl font-bold text-white">{t("header.title")}</h1>
               <p className="text-xs text-slate-400">{t("header.subtitle")}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={onTogglePilotDashboard}
-              className={`relative px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                showPilotDashboard
-                  ? "bg-emerald-600 text-white"
-                  : "bg-emerald-700 hover:bg-emerald-600 text-white"
-              }`}
-              data-testid="pilot-dashboard-toggle-btn"
-              title={t("header.opsReportTitle", {
-                defaultValue: "Open pilot dashboard",
-              })}
-            >
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {t("header.opsReport", { defaultValue: "Pilot" })}
-              </span>
-              {(pilotAttentionCount > 0 || opsEventCount > 0) && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-emerald-950 text-emerald-200 text-xs rounded-full flex items-center justify-center font-semibold">
-                  {pilotAttentionCount > 0 ? pilotAttentionCount : opsEventCount}
+            {showPilotDashboardButton ? (
+              <button
+                onClick={onTogglePilotDashboard}
+                className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-white transition-colors ${
+                  showPilotDashboard
+                    ? "bg-emerald-600"
+                    : "bg-emerald-700 hover:bg-emerald-600"
+                }`}
+                data-testid="pilot-dashboard-toggle-btn"
+                title={t("header.adminToolsTitle", {
+                  defaultValue: pilotAdminUnlocked
+                    ? "Open admin tools"
+                    : "Unlock admin tools",
+                })}
+              >
+                {pilotAdminUnlocked ? (
+                  <Activity className="h-4 w-4" />
+                ) : (
+                  <LockKeyhole className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {t("header.adminTools", { defaultValue: "Admin" })}
                 </span>
-              )}
-            </button>
-            {/* Language Toggle */}
+                {pilotAdminUnlocked && (pilotAttentionCount > 0 || opsEventCount > 0) ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-950 px-1 text-xs font-semibold text-emerald-200">
+                    {pilotAttentionCount > 0 ? pilotAttentionCount : opsEventCount}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
             <button
               onClick={toggleLanguage}
-              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors flex items-center gap-1.5 text-sm"
-              title={i18n.language === "zh-TW" ? "Switch to English" : "切換至中文"}
+              className="flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+              title={
+                i18n.language === "zh-TW" ? "Switch to English" : "切換至中文"
+              }
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">{t("header.langToggle")}</span>
             </button>
-            {/* Favorites Button */}
             <button
               onClick={onToggleFavorites}
-              className="relative px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              className="relative flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-white transition-colors hover:bg-amber-700"
               data-testid="favorites-toggle-btn"
             >
-              <Star className="w-4 h-4" />
+              <Star className="h-4 w-4" />
               <span className="hidden sm:inline">{t("header.favorites")}</span>
-              {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              {favorites.length > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                   {favorites.length}
                 </span>
-              )}
+              ) : null}
             </button>
-            {/* Prepared / reprint workflow */}
             <button
               onClick={onTogglePrepared}
-              className="relative px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2"
+              className="relative flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-white transition-colors hover:bg-blue-600"
               data-testid="prepared-toggle-btn"
             >
-              <FlaskConical className="w-4 h-4" />
+              <FlaskConical className="h-4 w-4" />
               <span className="hidden sm:inline">{t("header.prepared")}</span>
-              {preparedCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-cyan-500 text-slate-900 text-xs rounded-full flex items-center justify-center font-semibold">
+              {preparedCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500 px-1 text-xs font-semibold text-slate-900">
                   {preparedCount}
                 </span>
-              )}
+              ) : null}
             </button>
-            {/* History Button */}
             <button
               onClick={onToggleHistory}
-              className="relative px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors flex items-center gap-2"
+              className="relative flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-slate-300 transition-colors hover:bg-slate-600"
               data-testid="history-toggle-btn"
             >
-              <ClipboardList className="w-4 h-4" />
+              <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">{t("header.history")}</span>
-              {history.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center">
+              {history.length > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs text-white">
                   {history.length}
                 </span>
-              )}
+              ) : null}
             </button>
           </div>
         </div>

@@ -73,10 +73,10 @@ describe('SearchSection', () => {
       expect(screen.getByTestId('single-search-btn')).toBeInTheDocument();
     });
 
-    it('clicking search button calls onSearchSingle', () => {
+    it('clicking search button calls onSearchSingle without forwarding the click event', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       fireEvent.click(screen.getByTestId('single-search-btn'));
-      expect(defaultProps.onSearchSingle).toHaveBeenCalled();
+      expect(defaultProps.onSearchSingle).toHaveBeenCalledWith();
     });
 
     it('shows loading text when loading=true', () => {

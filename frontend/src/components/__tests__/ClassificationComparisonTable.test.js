@@ -102,7 +102,7 @@ describe("ClassificationComparisonTable", () => {
       expect(screen.getByTestId("absent-GHS02-1")).toBeInTheDocument();
     });
 
-    it("renders signal words with correct text", () => {
+    it("renders signal words with the current UI locale", () => {
       const columns = makeColumns([cls1, cls2], "same-chemical");
       render(
         <ClassificationComparisonTable
@@ -112,8 +112,8 @@ describe("ClassificationComparisonTable", () => {
           onSelectClassification={jest.fn()}
         />
       );
-      expect(screen.getByTestId("signal-word-0")).toHaveTextContent("危險");
-      expect(screen.getByTestId("signal-word-1")).toHaveTextContent("警告");
+      expect(screen.getByTestId("signal-word-0")).toHaveTextContent("Danger");
+      expect(screen.getByTestId("signal-word-1")).toHaveTextContent("Warning");
     });
 
     it("highlights differing signal words with background tint", () => {
@@ -331,8 +331,8 @@ describe("ClassificationComparisonTable", () => {
       );
       expect(screen.getByText("P210")).toBeInTheDocument();
       expect(screen.getByText("P301+P310")).toBeInTheDocument();
-      // Chinese text wins over English via `stmt?.text_zh || stmt?.text_en`
-      expect(screen.getByText("遠離熱源。")).toBeInTheDocument();
+      // The default test locale is English, so localized text resolves to English.
+      expect(screen.getByText("Keep away from heat.")).toBeInTheDocument();
     });
 
     it("renders compare.noPrecautions for the column missing P-codes", () => {

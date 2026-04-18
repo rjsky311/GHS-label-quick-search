@@ -483,7 +483,8 @@ describe('printLabels', () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain('qr-priority-block');
       expect(html).toContain('qr-code-shell');
-      expect(html).toContain('qr-cas');
+      expect(html).toContain('qr-hint');
+      expect(html).not.toContain('qr-cas');
     });
   });
 
@@ -580,16 +581,16 @@ describe('printLabels', () => {
       address: 'Taipei',
     };
 
-    it('renders organization, phone, and address on standard labels', () => {
+    it('renders compact organization metadata on standard labels', () => {
       printLabels([mockChemical], config, {}, { date: '', batchNumber: '' }, {}, profile);
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('profile-block');
+      expect(html).toContain('support-chips');
       expect(html).toContain('Materials Lab');
-      expect(html).toContain('+886-2-1234-5678');
-      expect(html).toContain('Taipei');
+      expect(html).not.toContain('+886-2-1234-5678');
+      expect(html).not.toContain('Taipei');
     });
 
-    it('renders compact profile blocks without address on icon/qrcode templates', () => {
+    it('renders compact organization metadata without phone or address on icon/qrcode templates', () => {
       ['icon', 'qrcode'].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
@@ -604,9 +605,9 @@ describe('printLabels', () => {
           profile,
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toContain('profile-block-compact');
+        expect(html).toContain('support-chips');
         expect(html).toContain('Materials Lab');
-        expect(html).toContain('+886-2-1234-5678');
+        expect(html).not.toContain('+886-2-1234-5678');
         expect(html).not.toContain('Taipei');
       });
     });
@@ -837,7 +838,7 @@ describe('printLabels', () => {
       expect(html).toMatch(/<div\s+class="precautions-compact"/);
       expect(html).toMatch(/<span\s+class="precaution-code"/);
       expect(html).toContain('P210');
-      expect(html).toContain('P301+P310');
+      expect(html).not.toContain('P301+P310');
       // In compact view we do NOT inline the long Chinese text
       expect(html).not.toContain('如誤吞食：立即呼叫毒物中心。');
     });
@@ -1553,17 +1554,17 @@ describe('prepared solution print rendering', () => {
       expect(html).toContain('2026-10-16');
     });
 
-    it('standard template renders operational fields when present', () => {
+    it('standard template hides operational fields when present', () => {
       printLabels(
         [makePreparedWithOps()],
         { size: 'medium', template: 'standard', orientation: 'portrait' },
         {}
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).toContain('A. Chen');
-      expect(html).toContain('2026-04-16');
-      expect(html).toContain('2026-10-16');
+      expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
+      expect(html).not.toContain('A. Chen');
+      expect(html).not.toContain('2026-04-16');
+      expect(html).not.toContain('2026-10-16');
     });
 
     it('icon template does NOT render operational fields (space-constrained)', () => {

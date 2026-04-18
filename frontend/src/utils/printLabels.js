@@ -3,6 +3,11 @@ import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import i18n from "@/i18n";
 import { recordObservabilityEvent } from "@/utils/observability";
 import { getPreferredQrTarget } from "@/utils/sdsLinks";
+import {
+  getLocalizedSignalWord,
+  getLocalizedStatementText,
+  resolveLabelContentLocale,
+} from "@/utils/ghsText";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
 
@@ -74,11 +79,23 @@ const chunk = (items, size) => {
   return chunks;
 };
 
-const getLocalizedText = (statement) =>
-  statement?.text_zh || statement?.text_en || statement?.text || "";
-
 const normalizeTemplate = (template) =>
   ALLOWED_TEMPLATES.has(template) ? template : "standard";
+
+const resolveModelContentLocale = (model) =>
+  resolveLabelContentLocale(model.layout?.nameDisplay, i18n.language);
+
+const getLocalizedTextForModel = (statement, model) =>
+  getLocalizedStatementText(statement, resolveModelContentLocale(model));
+
+const getSignalWordForModel = (classification, model) =>
+  getLocalizedSignalWord(classification, resolveModelContentLocale(model));
+
+const truncateText = (value, maxLength) => {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+};
 
 export const resolveEffectiveChemicalForPrint = (chemical, customGHSSettings) => {
   const customSetting = customGHSSettings?.[chemical.cas_number];
@@ -204,14 +221,49 @@ const renderProfileFields = (model, { compact = false } = {}) => {
   }">${rows.join("")}</div>`;
 };
 
+const renderSupportChips = (
+  model,
+  {
+    includeOrganization = true,
+    includeDate = true,
+    includeBatch = true,
+  } = {}
+) => {
+  const chips = [];
+  if (includeOrganization && model.resolvedLabProfile?.organization) {
+    chips.push(escapeHtml(model.resolvedLabProfile.organization));
+  }
+  if (includeDate && model.customLabelFields?.date) {
+    chips.push(escapeHtml(model.customLabelFields.date));
+  }
+  if (includeBatch && model.customLabelFields?.batchNumber) {
+    chips.push(
+      `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(
+        model.customLabelFields.batchNumber
+      )}`
+    );
+  }
+  if (chips.length === 0) return "";
+  return `<div class="support-chips">${chips
+    .map((chip) => `<span class="support-chip">${chip}</span>`)
+    .join("")}</div>`;
+};
+
 const renderNameSection = (effectiveChem, model, options = {}) => {
   const {
     compactProfile = false,
     showProfile = true,
     showCustomFields = true,
     compactNames = false,
+    supportHtml = "",
   } = options;
   const nameDisplay = model.layout.nameDisplay || "both";
+  const collapseCompactBilingual =
+    compactNames &&
+    nameDisplay === "both" &&
+    (model.layout.size === "small" ||
+      model.layout.template === "icon" ||
+      model.layout.template === "qrcode");
   let nameHtml = "";
 
   if (nameDisplay === "en" || nameDisplay === "both") {
@@ -221,13 +273,18 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   if (nameDisplay === "zh") {
     const displayName = effectiveChem.name_zh || effectiveChem.name_en || "";
     nameHtml += `<div class="name-en">${escapeHtml(displayName)}</div>`;
-  } else if (nameDisplay === "both" && effectiveChem.name_zh) {
+  } else if (
+    nameDisplay === "both" &&
+    effectiveChem.name_zh &&
+    !collapseCompactBilingual
+  ) {
     nameHtml += `<div class="name-zh">${escapeHtml(effectiveChem.name_zh)}</div>`;
   }
 
   return `<div class="name-section${compactNames ? " name-section-compact" : ""}">
     ${nameHtml}
     <div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>
+    ${supportHtml}
     ${showProfile ? renderProfileFields(model, { compact: compactProfile }) : ""}
     ${showCustomFields ? renderCustomFields(model) : ""}
   </div>`;
@@ -333,13 +390,13 @@ const renderSignal = (signalWord, signalClass, className = "") => {
   )}</div>`;
 };
 
-const renderHazardStatement = (statement, className) =>
+const renderHazardStatement = (statement, className, model) =>
   `<div class="${className}">${escapeHtml(statement.code)} ${escapeHtml(
-    getLocalizedText(statement)
+    getLocalizedTextForModel(statement, model)
   )}</div>`;
 
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
-  if (!precautions.length) return "";
+  if (!precautions.length || maxPrecautions <= 0) return "";
   return `<div class="precautions-compact">
     ${precautions
       .slice(0, maxPrecautions)
@@ -366,7 +423,7 @@ const renderIconTemplate = (chemical, model) => {
     model.customGHSSettings
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
-  const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+  const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
 
@@ -374,8 +431,10 @@ const renderIconTemplate = (chemical, model) => {
     <div class="label label-icon${prepared ? " label-prepared" : ""}">
       <div class="label-top">
         ${renderNameSection(effectiveChem, model, {
-          compactProfile: true,
           compactNames: true,
+          showProfile: false,
+          showCustomFields: false,
+          supportHtml: renderSupportChips(model),
         })}
         ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
       </div>
@@ -401,7 +460,7 @@ const renderStandardTemplate = (chemical, model) => {
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const precautions = effectiveChem.precautionary_statements || [];
-  const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+  const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
   const primaryHazards = hazards.slice(0, budgets.primaryHazards);
@@ -415,12 +474,16 @@ const renderStandardTemplate = (chemical, model) => {
   return `
     <div class="label label-standard${prepared ? " label-prepared" : ""}">
       <div class="label-top label-top-standard">
-        ${renderNameSection(effectiveChem, model)}
+        ${renderNameSection(effectiveChem, model, {
+          compactNames: true,
+          showProfile: false,
+          showCustomFields: false,
+          supportHtml: renderSupportChips(model),
+        })}
         ${
           prepared
             ? renderPreparedBadge(model) +
-              renderPreparedMeta(effectiveChem, model) +
-              renderPreparedOperational(effectiveChem, model)
+              renderPreparedMeta(effectiveChem, model)
             : ""
         }
       </div>
@@ -429,7 +492,11 @@ const renderStandardTemplate = (chemical, model) => {
           ${
             pictograms.length > 0
               ? `<div class="standard-rail">
-                  ${renderPictograms(pictograms, "pictograms-standard")}
+                  ${renderPictograms(
+                    pictograms,
+                    "pictograms-standard",
+                    budgets.pictograms || pictograms.length
+                  )}
                   ${renderSignal(signalWord, signalClass, "signal-stack")}
                 </div>`
               : ""
@@ -438,18 +505,26 @@ const renderStandardTemplate = (chemical, model) => {
             ${
               primaryHazards.length > 0
                 ? `<div class="hazard-primary-list">
-                    ${primaryHazards
-                      .map((hazard) => renderHazardStatement(hazard, "hazard-item hazard-primary-item"))
-                      .join("")}
+                    ${primaryHazards.map((hazard) =>
+                      renderHazardStatement(
+                        hazard,
+                        "hazard-item hazard-primary-item",
+                        model
+                      )
+                    ).join("")}
                   </div>`
                 : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
             ${
               secondaryHazards.length > 0 || hiddenHazards > 0
                 ? `<div class="hazard-secondary-list">
-                    ${secondaryHazards
-                      .map((hazard) => renderHazardStatement(hazard, "hazard-item hazard-secondary-item"))
-                      .join("")}
+                    ${secondaryHazards.map((hazard) =>
+                      renderHazardStatement(
+                        hazard,
+                        "hazard-item hazard-secondary-item",
+                        model
+                      )
+                    ).join("")}
                     ${
                       hiddenHazards > 0
                         ? `<div class="hazard-more">+ ${escapeHtml(
@@ -484,7 +559,7 @@ const renderFullTemplate = (chemical, model) => {
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const precautions = effectiveChem.precautionary_statements || [];
-  const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+  const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const hazardTier = getHazardFontTier(
     hazards.length + precautions.length,
@@ -518,7 +593,7 @@ const renderFullTemplate = (chemical, model) => {
                   (hazard) =>
                     `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
                       hazard.code
-                    )} ${escapeHtml(getLocalizedText(hazard))}</div>`
+                    )} ${escapeHtml(getLocalizedTextForModel(hazard, model))}</div>`
                 )
                 .join("")
             : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
@@ -530,7 +605,7 @@ const renderFullTemplate = (chemical, model) => {
                   (precaution) =>
                     `<div class="precaution-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
                       precaution.code
-                    )} ${escapeHtml(getLocalizedText(precaution))}</div>`
+                    )} ${escapeHtml(getLocalizedTextForModel(precaution, model))}</div>`
                 )
                 .join("")}`
             : ""
@@ -548,7 +623,7 @@ const renderQRCodeTemplate = (chemical, model) => {
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
-  const signalWord = effectiveChem.signal_word_zh || effectiveChem.signal_word || "";
+  const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
   const qrTarget =
@@ -566,8 +641,10 @@ const renderQRCodeTemplate = (chemical, model) => {
       <div class="qr-left qr-left-scan">
         <div class="qr-identity">
           ${renderNameSection(effectiveChem, model, {
-            compactProfile: true,
             compactNames: true,
+            showProfile: false,
+            showCustomFields: false,
+            supportHtml: renderSupportChips(model),
           })}
           ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
         </div>
@@ -579,9 +656,16 @@ const renderQRCodeTemplate = (chemical, model) => {
                   ${hazardTeasers
                     .map(
                       (hazard) =>
-                        `<div class="qr-hazard-chip">${escapeHtml(hazard.code)} ${escapeHtml(
-                          getLocalizedText(hazard)
-                        )}</div>`
+                        `<div class="qr-hazard-chip">${escapeHtml(hazard.code)}${
+                          getLocalizedTextForModel(hazard, model)
+                            ? `<span class="qr-hazard-summary">${escapeHtml(
+                                truncateText(
+                                  getLocalizedTextForModel(hazard, model),
+                                  model.layout.size === "small" ? 18 : 28
+                                )
+                              )}</span>`
+                            : ""
+                        }</div>`
                     )
                     .join("")}
                   ${
@@ -612,7 +696,6 @@ const renderQRCodeTemplate = (chemical, model) => {
           <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" />
         </div>
         <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
-        <div class="qr-cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>
       </div>
     </div>
   `;
@@ -770,6 +853,27 @@ const buildStyles = (model) => {
       font-size: calc(${layout.typography.fontSize} - 1px);
       color: #475569;
       margin-top: 0.8mm;
+    }
+    .support-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7mm;
+      margin-top: 0.8mm;
+    }
+    .support-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      padding: 0.3mm 1.2mm;
+      font-size: calc(${layout.typography.fontSize} - 3px);
+      color: #475569;
+      line-height: 1.2;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .custom-fields {
       font-size: calc(${layout.typography.fontSize} - 2px);
@@ -1094,6 +1198,12 @@ const buildStyles = (model) => {
       color: #7c2d12;
       font-weight: 600;
     }
+    .qr-hazard-summary {
+      display: inline;
+      margin-left: 0.9mm;
+      color: #92400e;
+      font-weight: 500;
+    }
     .qr-no-hazard {
       font-size: calc(${layout.typography.hazardSize} - 1px);
     }
@@ -1137,12 +1247,6 @@ const buildStyles = (model) => {
       font-weight: 600;
       line-height: 1.2;
     }
-    .qr-cas {
-      font-family: "Consolas", "Monaco", "Courier New", monospace;
-      font-size: calc(${layout.typography.fontSize} - 3px);
-      color: #64748b;
-    }
-
     ${
       layout.colorMode === "bw"
         ? `.pictograms img {

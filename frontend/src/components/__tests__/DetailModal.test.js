@@ -142,7 +142,7 @@ describe('DetailModal', () => {
       expect(screen.getByText(/64-17-5/)).toBeInTheDocument();
     });
 
-    it('renders signal word with Danger styling', () => {
+    it('renders signal word with locale-aware Danger styling', () => {
       // Use single-classification result so standalone signal word section shows
       const singleClassResult = {
         ...mockFoundResult,
@@ -152,7 +152,7 @@ describe('DetailModal', () => {
       render(
         <DetailModal {...defaultProps} result={singleClassResult} />
       );
-      const dangerElements = screen.getAllByText('危險');
+      const dangerElements = screen.getAllByText('Danger');
       expect(dangerElements.length).toBeGreaterThanOrEqual(1);
     });
 

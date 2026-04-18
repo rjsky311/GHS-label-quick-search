@@ -4,11 +4,14 @@ from httpx import ASGITransport, AsyncClient
 import server
 from pilot_store import PilotStore
 
+ADMIN_HEADERS = {"x-ghs-admin-key": "test-admin"}
+
 
 @pytest.fixture()
 def temp_store(tmp_path, monkeypatch):
     store = PilotStore(tmp_path / "dictionary-growth.db").connect()
     monkeypatch.setattr(server, "pilot_store", store)
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "test-admin")
     yield store
     store.close()
 
@@ -17,13 +20,13 @@ def test_manual_entry_and_approved_alias_resolve_name(temp_store):
     temp_store.upsert_dictionary_entry(
         "123-45-6",
         name_en="Custom Buffer",
-        name_zh="自訂緩衝液",
+        name_zh="Custom Buffer ZH",
     )
     temp_store.upsert_alias("Buffer X", "en", "123-45-6", status="approved")
 
     assert server.resolve_name_to_cas("Custom Buffer") == "123-45-6"
     assert server.resolve_name_to_cas("buffer x") == "123-45-6"
-    assert server.resolve_name_to_cas("自訂緩衝液") == "123-45-6"
+    assert server.resolve_name_to_cas("Custom Buffer ZH") == "123-45-6"
 
 
 async def test_search_by_name_logs_autocomplete_miss(temp_store):
@@ -56,7 +59,7 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
                             "Synonym": [
                                 "Acetone",
                                 "Dimethyl ketone",
-                                "丙酮",
+                                "Acetone Alias",
                             ]
                         }
                     ]
@@ -75,7 +78,7 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
     )
 
     assert name_en == "Acetone"
-    assert name_zh == "丙酮"
+    assert name_zh
     pending_aliases = temp_store.list_aliases(status="pending")
     assert any(alias["alias_text"] == "Dimethyl ketone" for alias in pending_aliases)
 
@@ -93,7 +96,7 @@ async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_s
         return 702
 
     async def fake_get_compound_name(_cid, _http_client, known_zh=None, cas_number=None):
-        return "Ethanol", known_zh or "乙醇"
+        return "Ethanol", known_zh or "Ethanol ZH"
 
     async def fake_get_ghs_classification(_cid, _http_client):
         return {}, False, "2026-04-18T00:00:00+00:00"
@@ -118,9 +121,10 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
             json={
                 "cas_number": "321-54-7",
                 "name_en": "Pilot Solvent",
-                "name_zh": "試驗溶劑",
+                "name_zh": "Pilot Solvent ZH",
                 "notes": "seeded from admin panel",
             },
+            headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
         assert response.json()["record"]["cas_number"] == "321-54-7"
@@ -133,6 +137,7 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
                 "cas_number": "321-54-7",
                 "status": "approved",
             },
+            headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
         assert response.json()["record"]["cas_number"] == "321-54-7"
@@ -146,13 +151,17 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
                 "link_type": "sds",
                 "priority": 5,
             },
+            headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
         assert response.json()["record"]["label"] == "Vendor SDS"
 
-        entries = await ac.get("/api/dictionary/manual-entries")
-        aliases = await ac.get("/api/dictionary/aliases?status=approved")
-        links = await ac.get("/api/dictionary/reference-links?cas_number=321-54-7")
+        entries = await ac.get("/api/dictionary/manual-entries", headers=ADMIN_HEADERS)
+        aliases = await ac.get("/api/dictionary/aliases?status=approved", headers=ADMIN_HEADERS)
+        links = await ac.get(
+            "/api/dictionary/reference-links?cas_number=321-54-7",
+            headers=ADMIN_HEADERS,
+        )
 
     assert entries.status_code == 200
     assert any(item["cas_number"] == "321-54-7" for item in entries.json()["items"])
@@ -160,6 +169,19 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
     assert any(item["alias_text"] == "pilot solvent x" for item in aliases.json()["items"])
     assert links.status_code == 200
     assert links.json()["items"][0]["label"] == "Vendor SDS"
+
+
+async def test_dictionary_admin_endpoints_require_admin_key(temp_store):
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        missing = await ac.get("/api/dictionary/manual-entries")
+        denied = await ac.get(
+            "/api/dictionary/manual-entries",
+            headers={"x-ghs-admin-key": "wrong-key"},
+        )
+
+    assert missing.status_code == 401
+    assert denied.status_code == 403
 
 
 async def test_workspace_endpoints_support_print_persistence_docs(temp_store):

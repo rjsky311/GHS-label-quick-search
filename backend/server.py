@@ -8,6 +8,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import os
+import secrets
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -37,7 +38,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 
-APP_VERSION = "1.9.0"
+APP_VERSION = "1.10.0"
 WORKSPACE_DOC_TYPES = {
     "lab_profile",
     "print_custom_label_fields",
@@ -48,6 +49,7 @@ WORKSPACE_DOC_TYPES = {
 }
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
+ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None
@@ -139,6 +141,21 @@ def _record_upstream_failure(kind: str, url: str, attempt: int, **payload: Any) 
         url=url,
         **payload,
     )
+
+
+def _require_admin(request: Request) -> None:
+    if not ADMIN_API_TOKEN:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin API is not configured on this server.",
+        )
+
+    supplied_token = (request.headers.get("x-ghs-admin-key") or "").strip()
+    if not supplied_token:
+        raise HTTPException(status_code=401, detail="Admin key required.")
+
+    if not secrets.compare_digest(supplied_token, ADMIN_API_TOKEN):
+        raise HTTPException(status_code=403, detail="Invalid admin key.")
 
 
 def _ensure_workspace_doc_type(doc_type: str) -> str:
@@ -1475,7 +1492,8 @@ async def health_check():
 
 
 @api_router.get("/ops/report")
-async def ops_report():
+async def ops_report(request: Request):
+    _require_admin(request)
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
@@ -1491,7 +1509,8 @@ async def ops_report():
 
 
 @api_router.get("/dictionary/report")
-async def dictionary_report():
+async def dictionary_report(request: Request):
+    _require_admin(request)
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
@@ -1500,7 +1519,8 @@ async def dictionary_report():
 
 
 @api_router.get("/dictionary/manual-entries")
-async def dictionary_manual_entries():
+async def dictionary_manual_entries(request: Request):
+    _require_admin(request)
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "items": pilot_store.list_manual_entries(),
@@ -1508,7 +1528,8 @@ async def dictionary_manual_entries():
 
 
 @api_router.post("/dictionary/manual-entries")
-async def upsert_dictionary_manual_entry(payload: DictionaryManualEntryPayload):
+async def upsert_dictionary_manual_entry(request: Request, payload: DictionaryManualEntryPayload):
+    _require_admin(request)
     record = pilot_store.upsert_dictionary_entry(
         payload.cas_number,
         name_en=payload.name_en,
@@ -1521,10 +1542,12 @@ async def upsert_dictionary_manual_entry(payload: DictionaryManualEntryPayload):
 
 @api_router.get("/dictionary/aliases")
 async def dictionary_aliases(
+    request: Request,
     status: Optional[str] = None,
     locale: Optional[str] = None,
     cas_number: Optional[str] = None,
 ):
+    _require_admin(request)
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "items": pilot_store.list_aliases(
@@ -1536,7 +1559,8 @@ async def dictionary_aliases(
 
 
 @api_router.post("/dictionary/aliases")
-async def upsert_dictionary_alias(payload: DictionaryAliasPayload):
+async def upsert_dictionary_alias(request: Request, payload: DictionaryAliasPayload):
+    _require_admin(request)
     record = pilot_store.upsert_alias(
         payload.alias_text,
         payload.locale,
@@ -1551,9 +1575,11 @@ async def upsert_dictionary_alias(payload: DictionaryAliasPayload):
 
 @api_router.get("/dictionary/reference-links")
 async def dictionary_reference_links(
+    request: Request,
     cas_number: Optional[str] = None,
     include_inactive: bool = False,
 ):
+    _require_admin(request)
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "items": pilot_store.list_reference_links(
@@ -1564,7 +1590,11 @@ async def dictionary_reference_links(
 
 
 @api_router.post("/dictionary/reference-links")
-async def upsert_dictionary_reference_link(payload: DictionaryReferenceLinkPayload):
+async def upsert_dictionary_reference_link(
+    request: Request,
+    payload: DictionaryReferenceLinkPayload,
+):
+    _require_admin(request)
     record = pilot_store.upsert_reference_link(
         payload.cas_number,
         label=payload.label,
@@ -1714,12 +1744,10 @@ async def search_by_name(request: Request, query: str):
     return {"results": results, "query": q}
 
 
-@api_router.get("/search/{cas_number}", response_model=ChemicalResult)
-@limiter.limit("30/minute")
-async def search_single_chemical(request: Request, cas_number: str):
-    """Search by CAS number or chemical name.
-    Auto-detects whether input is a CAS number or name."""
-    query = cas_number.strip()
+async def _search_single_query(query: str) -> ChemicalResult:
+    query = (query or "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Query is required.")
 
     # Check if it looks like a CAS number (digits and hyphens only)
     if re.match(r'^[\d-]+$', query):
@@ -1745,6 +1773,20 @@ async def search_single_chemical(request: Request, cas_number: str):
         found=False,
         error=f"No chemical found for name: {query}"
     )
+
+
+@api_router.get("/search-single", response_model=ChemicalResult)
+@limiter.limit("30/minute")
+async def search_single_chemical_query(request: Request, q: str):
+    return await _search_single_query(q)
+
+
+@api_router.get("/search/{cas_number}", response_model=ChemicalResult)
+@limiter.limit("30/minute")
+async def search_single_chemical(request: Request, cas_number: str):
+    """Search by CAS number or chemical name.
+    Auto-detects whether input is a CAS number or name."""
+    return await _search_single_query(cas_number)
 
 
 @api_router.post("/export/xlsx")

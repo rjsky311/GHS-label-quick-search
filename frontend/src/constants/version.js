@@ -9,4 +9,4 @@
  * follow-up can wire this to the package.json version at build time
  * once we actually need that indirection.
  */
-export const APP_VERSION = "1.9.0";
+export const APP_VERSION = "1.10.0";

@@ -29,8 +29,15 @@ import {
   buildPresetRecord,
   buildRecentRecord,
 } from "@/utils/preparedSolution";
+import {
+  clearPilotAdminKey,
+  loadPilotAdminKey,
+  persistPilotAdminKey,
+  PILOT_ADMIN_ENABLED,
+} from "@/constants/admin";
 
 // Components
+import AdminAccessDialog from "@/components/AdminAccessDialog";
 import Header from "@/components/Header";
 import FavoritesSidebar from "@/components/FavoritesSidebar";
 import HistorySidebar from "@/components/HistorySidebar";
@@ -59,8 +66,11 @@ function App() {
   const [activeTab, setActiveTab] = useState("single");
   const [showHistory, setShowHistory] = useState(false);
   const [showPilotDashboard, setShowPilotDashboard] = useState(false);
+  const [showPilotAdminDialog, setShowPilotAdminDialog] = useState(false);
   const [showPrepared, setShowPrepared] = useState(false);
   const [error, setError] = useState("");
+  const [pilotAdminError, setPilotAdminError] = useState("");
+  const [pilotAdminKey, setPilotAdminKey] = useState(() => loadPilotAdminKey());
   const [selectedResult, setSelectedResult] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -105,11 +115,15 @@ function App() {
     loading: pilotLoading,
     saving: pilotSaving,
     error: pilotError,
+    authError: pilotAuthError,
     refresh: refreshPilotDashboard,
     saveManualEntry: savePilotManualEntry,
     saveAlias: savePilotAlias,
     saveReferenceLink: savePilotReferenceLink,
-  } = usePilotDashboard(showPilotDashboard);
+  } = usePilotDashboard({
+    enabled: showPilotDashboard && PILOT_ADMIN_ENABLED && Boolean(pilotAdminKey),
+    adminKey: pilotAdminKey,
+  });
   const {
     customGHSSettings,
     getEffectiveClassification,
@@ -303,7 +317,8 @@ function App() {
   );
 
   const searchSingle = async (directCas) => {
-    const query = (directCas || singleCas).trim();
+    const query =
+      typeof directCas === "string" ? directCas.trim() : singleCas.trim();
     if (!query) {
       setError(t("search.errorEmpty"));
       return;
@@ -311,9 +326,9 @@ function App() {
     setError("");
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${API}/search/${encodeURIComponent(query)}`
-      );
+      const response = await axios.get(`${API}/search-single`, {
+        params: { q: query },
+      });
       const result = response.data;
       replaceResultsView([result]);
       saveToHistory([result]);
@@ -397,6 +412,16 @@ function App() {
     setShowHistory(false);
   }, []);
 
+  useEffect(() => {
+    if (!pilotAuthError) return;
+
+    clearPilotAdminKey();
+    setPilotAdminKey("");
+    setShowPilotDashboard(false);
+    setPilotAdminError(pilotAuthError);
+    setShowPilotAdminDialog(true);
+  }, [pilotAuthError]);
+
   const handleViewDetailFromFavorites = useCallback((item) => {
     setSelectedResult(item);
     setShowFavorites(false);
@@ -412,6 +437,41 @@ function App() {
     setSelectedForLabel([item]);
     setShowLabelModal(true);
   }, [setSelectedForLabel]);
+
+  const handleTogglePilotDashboard = useCallback(() => {
+    if (!PILOT_ADMIN_ENABLED) return;
+    if (showPilotDashboard) {
+      setShowPilotDashboard(false);
+      return;
+    }
+    if (!pilotAdminKey) {
+      setPilotAdminError("");
+      setShowPilotAdminDialog(true);
+      return;
+    }
+    setShowPilotDashboard(true);
+  }, [pilotAdminKey, showPilotDashboard]);
+
+  const handleSubmitPilotAdminKey = useCallback(
+    (value) => {
+      const normalized = typeof value === "string" ? value.trim() : "";
+      if (!normalized) {
+        setPilotAdminError(
+          t("pilot.adminKeyRequired", {
+            defaultValue: "Enter an admin key to unlock admin tools.",
+          })
+        );
+        return;
+      }
+
+      persistPilotAdminKey(normalized);
+      setPilotAdminKey(normalized);
+      setPilotAdminError("");
+      setShowPilotAdminDialog(false);
+      setShowPilotDashboard(true);
+    },
+    [t]
+  );
 
   const handleOpenLabelModal = useCallback(() => {
     if (selectedForLabel.length === 0) {
@@ -512,9 +572,9 @@ function App() {
       const activeId = recordId || record.createdAt || `recent-${record.parentCas}`;
       setPreparedReprintingId(activeId);
       try {
-        const response = await axios.get(
-          `${API}/search/${encodeURIComponent(record.parentCas)}`
-        );
+        const response = await axios.get(`${API}/search-single`, {
+          params: { q: record.parentCas },
+        });
         const parent = response.data;
         if (!parent?.found) {
           toast.error(t("prepared.reprintParentUnavailable"));
@@ -621,14 +681,25 @@ function App() {
         preparedCount={preparedRecents.length}
         opsEventCount={observabilityEventCount}
         pilotAttentionCount={pilotAttentionCount}
+        showPilotDashboardButton={PILOT_ADMIN_ENABLED}
+        pilotAdminUnlocked={Boolean(pilotAdminKey)}
         showFavorites={showFavorites}
         showHistory={showHistory}
         showPilotDashboard={showPilotDashboard}
-        onTogglePilotDashboard={() => setShowPilotDashboard(!showPilotDashboard)}
+        onTogglePilotDashboard={handleTogglePilotDashboard}
         onToggleFavorites={() => setShowFavorites(!showFavorites)}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}
       />
+
+      {showPilotAdminDialog && (
+        <AdminAccessDialog
+          error={pilotAdminError}
+          initialValue={pilotAdminKey}
+          onClose={() => setShowPilotAdminDialog(false)}
+          onSubmit={handleSubmitPilotAdminKey}
+        />
+      )}
 
       {showPilotDashboard && (
         <PilotDashboardSidebar

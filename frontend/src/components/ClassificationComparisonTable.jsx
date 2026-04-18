@@ -2,6 +2,11 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, CircleDot } from "lucide-react";
 import GHSImage from "@/components/GHSImage";
+import {
+  getLocalizedPictogramName,
+  getLocalizedSignalWord,
+  getLocalizedStatementText,
+} from "@/utils/ghsText";
 
 /**
  * Shared comparison table for GHS classifications.
@@ -21,7 +26,8 @@ export default function ClassificationComparisonTable({
   selectedIndex = null,
   onSelectClassification = null,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayLocale = i18n.language;
   const isSameChemical = mode === "same-chemical";
 
   // ── Compute union sets for difference highlighting ──
@@ -177,7 +183,7 @@ export default function ClassificationComparisonTable({
                             <div key={code} className="text-center">
                               <GHSImage
                                 code={code}
-                                name={pic?.name_zh || pic?.name}
+                                name={getLocalizedPictogramName(pic, displayLocale)}
                                 className="w-12 h-12"
                               />
                               <p className="text-[10px] text-slate-500 mt-0.5">{code}</p>
@@ -216,7 +222,6 @@ export default function ClassificationComparisonTable({
             </td>
             {columns.map((col, colIdx) => {
               const sw = col.classification?.signal_word;
-              const swZh = col.classification?.signal_word_zh;
               const isSelected = isSameChemical && selectedIndex === col.index;
               const isDanger = sw === "Danger";
               const isWarning = sw === "Warning";
@@ -238,7 +243,7 @@ export default function ClassificationComparisonTable({
                       }`}
                       data-testid={`signal-word-${colIdx}`}
                     >
-                      {swZh || sw}
+                      {getLocalizedSignalWord(col.classification, displayLocale)}
                     </span>
                   ) : (
                     <span className="text-slate-500">{t("compare.noSignalWord")}</span>
@@ -283,7 +288,7 @@ export default function ClassificationComparisonTable({
                               {code}
                             </span>
                             <span className="text-slate-300">
-                              {stmt?.text_zh || stmt?.text_en || ""}
+                              {getLocalizedStatementText(stmt, displayLocale)}
                             </span>
                             {isUnique && (
                               <span className="shrink-0 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] rounded">
@@ -332,7 +337,7 @@ export default function ClassificationComparisonTable({
                                 {code}
                               </span>
                               <span className="text-slate-300">
-                                {stmt?.text_zh || stmt?.text_en || ""}
+                                {getLocalizedStatementText(stmt, displayLocale)}
                               </span>
                             </div>
                           );

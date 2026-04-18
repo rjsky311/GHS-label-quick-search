@@ -2,6 +2,7 @@ import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+import server
 from server import (
     PubChemError,
     _record_ops_counter,
@@ -26,13 +27,17 @@ def reset_observability_state():
     ghs_cache.clear()
 
 
-async def test_ops_report_endpoint_returns_current_counters():
+async def test_ops_report_endpoint_returns_current_counters(monkeypatch):
     _record_ops_counter("cache.ghs.hit")
     _record_ops_event("cache_stale_hit", cid=123, age_hours=18.5)
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "test-admin")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-      response = await ac.get("/api/ops/report")
+      response = await ac.get(
+          "/api/ops/report",
+          headers={"x-ghs-admin-key": "test-admin"},
+      )
 
     assert response.status_code == 200
     data = response.json()

@@ -35,6 +35,10 @@ import {
 } from "@/constants/labelStocks";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import {
+  getLocalizedStatementText,
+  resolveLabelContentLocale,
+} from "@/utils/ghsText";
 
 const TEMPLATE_OPTIONS = [
   {
@@ -169,7 +173,7 @@ function buildDisplayNames(chem, nameDisplay) {
   return [englishName, chineseName].filter(Boolean);
 }
 
-function buildHazardPreview(chem, template, tx) {
+function buildHazardPreview(chem, template, tx, contentLocale) {
   if (!chem) {
     return [tx("label.previewHazardPlaceholder", "Signal word, pictograms, and hazards will appear here.")];
   }
@@ -186,7 +190,7 @@ function buildHazardPreview(chem, template, tx) {
   const statements = (chem.hazard_statements || [])
     .slice(0, limit)
     .map((statement) => {
-      const text = statement.text_zh || statement.text_en || "";
+      const text = getLocalizedStatementText(statement, contentLocale);
       return text ? `${statement.code}: ${text}` : statement.code;
     })
     .filter(Boolean);
@@ -216,6 +220,33 @@ function buildPreviewRisks({ previewChem, labelConfig, layoutProfile, labProfile
 
   if (previewChem.isPreparedSolution && (labelConfig.template === "icon" || layoutProfile.size === "small")) {
     risks.push(tx("label.previewRiskPrepared", "Prepared-solution metadata is likely to feel tight in compact templates."));
+  }
+
+  if (
+    (labelConfig.template === "standard" || labelConfig.template === "qrcode") &&
+    (hasProfile || previewChem.isPreparedSolution)
+  ) {
+    risks.push(
+      tx(
+        "label.previewRiskCompactHidden",
+        "Compact templates now hide profile and prep-operational fields so the hazard hierarchy stays readable."
+      )
+    );
+  }
+
+  if (
+    labelConfig.nameDisplay === "both" &&
+    layoutProfile.size !== "large" &&
+    (labelConfig.template === "standard" ||
+      labelConfig.template === "qrcode" ||
+      labelConfig.template === "icon")
+  ) {
+    risks.push(
+      tx(
+        "label.previewRiskCompactNames",
+        "Compact labels collapse bilingual names to a single primary line."
+      )
+    );
   }
 
   if (!hasProfile && labelConfig.template !== "icon") {
@@ -294,6 +325,7 @@ export default function LabelPrintModal({
 
   const layoutProfile = resolveLayoutProfile(labelConfig);
   const previewChem = selectedForLabel[0] ?? null;
+  const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
   const totalLabels = selectedForLabel.reduce(
     (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1),
     0

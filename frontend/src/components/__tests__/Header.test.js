@@ -6,6 +6,8 @@ const defaultProps = {
   history: [],
   preparedCount: 0,
   pilotAttentionCount: 0,
+  showPilotDashboardButton: true,
+  pilotAdminUnlocked: true,
   showFavorites: false,
   showHistory: false,
   showPilotDashboard: false,
@@ -60,10 +62,15 @@ describe('Header', () => {
     expect(defaultProps.onToggleFavorites).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking pilot dashboard button calls onTogglePilotDashboard', () => {
+  it('clicking admin button calls onTogglePilotDashboard when enabled', () => {
     render(<Header {...defaultProps} />);
     fireEvent.click(screen.getByTestId('pilot-dashboard-toggle-btn'));
     expect(defaultProps.onTogglePilotDashboard).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides admin button when admin tools are disabled', () => {
+    render(<Header {...defaultProps} showPilotDashboardButton={false} />);
+    expect(screen.queryByTestId('pilot-dashboard-toggle-btn')).not.toBeInTheDocument();
   });
 
   it('clicking history button calls onToggleHistory', () => {

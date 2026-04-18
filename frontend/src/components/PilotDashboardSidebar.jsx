@@ -217,13 +217,13 @@ export default function PilotDashboardSidebar(props) {
               <div className="flex items-center gap-2 text-white">
                 <Activity className="h-5 w-5 text-emerald-300" />
                 <h2 className="text-lg font-semibold">
-                  {t("pilot.sidebarTitle", { defaultValue: "Pilot dashboard" })}
+                  {t("pilot.sidebarTitle", { defaultValue: "Admin dashboard" })}
                 </h2>
               </div>
               <p className="mt-1 text-sm text-slate-400">
                 {t("pilot.sidebarSubtitle", {
                   defaultValue:
-                    "Review pilot health, unresolved lookups, and dictionary growth tasks.",
+                    "Review pilot health, unresolved lookups, and dictionary growth tasks. This surface is for admin-only curation.",
                 })}
               </p>
             </div>
@@ -258,7 +258,7 @@ export default function PilotDashboardSidebar(props) {
           <div className="flex gap-2 px-4 pb-4">
             {[
               ["overview", t("pilot.overview", { defaultValue: "Overview" })],
-              ["dictionary", t("pilot.dictionary", { defaultValue: "Dictionary" })],
+              ["dictionary", t("pilot.dictionary", { defaultValue: "Curation" })],
             ].map(([tab, label]) => (
               <button
                 key={tab}
@@ -437,24 +437,31 @@ export default function PilotDashboardSidebar(props) {
                     })}
                   </p>
                 ) : (
-                  <div className="space-y-2">
-                    {recentEvents.slice(0, 8).map((item, index) => (
-                      <div
-                        key={`${item.ts}-${item.type}-${index}`}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-700 bg-slate-800/80 p-3 text-sm"
-                      >
-                        <div>
-                          <div className="font-medium text-white">{item.type}</div>
-                          <div className="mt-1 text-xs text-slate-400">
-                            {JSON.stringify(item)}
+                  <details className="rounded-xl border border-slate-700 bg-slate-800/80 p-3">
+                    <summary className="cursor-pointer text-sm font-medium text-white">
+                      {t("pilot.recentOpsSummary", {
+                        defaultValue: "Show raw backend events",
+                      })}
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      {recentEvents.slice(0, 8).map((item, index) => (
+                        <div
+                          key={`${item.ts}-${item.type}-${index}`}
+                          className="flex items-start justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/80 p-3 text-sm"
+                        >
+                          <div>
+                            <div className="font-medium text-white">{item.type}</div>
+                            <div className="mt-1 text-xs text-slate-400">
+                              {JSON.stringify(item)}
+                            </div>
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {formatRelativeTime(item.ts)}
                           </div>
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {formatRelativeTime(item.ts)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
               </section>
             </>

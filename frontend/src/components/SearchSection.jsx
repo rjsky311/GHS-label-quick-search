@@ -77,7 +77,7 @@ export default function SearchSection({
                   loading={loading}
                 />
                 <button
-                  onClick={onSearchSingle}
+                  onClick={() => onSearchSingle()}
                   disabled={loading}
                   className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   data-testid="single-search-btn"

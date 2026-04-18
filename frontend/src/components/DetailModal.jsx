@@ -9,6 +9,12 @@ import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { FlaskConical } from "lucide-react";
+import {
+  getLocalizedNames,
+  getLocalizedPictogramName,
+  getLocalizedSignalWord,
+  getLocalizedStatementText,
+} from "@/utils/ghsText";
 
 export default function DetailModal({
   result,
@@ -34,8 +40,9 @@ export default function DetailModal({
   // state for when the user cancels back to it).
   suppressed = false,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dialogRef = useRef(null);
+  const displayLocale = i18n.language;
 
   const copyCAS = useCallback((cas) => {
     navigator.clipboard.writeText(cas).then(() => {
@@ -78,6 +85,7 @@ export default function DetailModal({
     ...(result.other_classifications || [])
   ];
   const referenceLinks = getReferenceLinks(result);
+  const displayNames = getLocalizedNames(result, displayLocale);
 
   const getReferenceLinkClassName = (linkType) => {
     if (linkType === "sds") {
@@ -114,10 +122,10 @@ export default function DetailModal({
         <div className="p-6 border-b border-slate-700 flex items-start justify-between">
           <div>
             <h2 id="detail-modal-title" className="text-xl font-bold text-white">
-              {result.name_en}
+              {displayNames.primary}
             </h2>
-            {result.name_zh && (
-              <p className="text-slate-400">{result.name_zh}</p>
+            {displayNames.secondary && (
+              <p className="text-slate-400">{displayNames.secondary}</p>
             )}
             <p className="text-amber-400 font-mono mt-1 flex items-center gap-2">
               CAS: {result.cas_number}
@@ -199,7 +207,7 @@ export default function DetailModal({
                     : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
                 }`}
               >
-                {effective.signal_word_zh || effective.signal_word}
+                {getLocalizedSignalWord(effective, displayLocale)}
               </span>
             </div>
           )}
@@ -243,7 +251,7 @@ export default function DetailModal({
                   <div key={pIdx} className="text-center">
                     <GHSImage
                       code={pic.code}
-                      name={pic.name_zh}
+                      name={getLocalizedPictogramName(pic, displayLocale)}
                       className="w-14 h-14"
                     />
                     <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
@@ -269,7 +277,9 @@ export default function DetailModal({
                     <span className="text-amber-400 font-mono font-medium shrink-0">
                       {stmt.code}
                     </span>
-                    <span className="text-white">{stmt.text_zh}</span>
+                    <span className="text-white">
+                      {getLocalizedStatementText(stmt, displayLocale)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -291,7 +301,9 @@ export default function DetailModal({
                     <span className="text-blue-400 font-mono font-medium shrink-0">
                       {stmt.code}
                     </span>
-                    <span className="text-white">{stmt.text_zh}</span>
+                    <span className="text-white">
+                      {getLocalizedStatementText(stmt, displayLocale)}
+                    </span>
                   </div>
                 ))}
               </div>

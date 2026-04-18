@@ -4,6 +4,11 @@ import GHSImage from "@/components/GHSImage";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData, hasRenderableGhsVisual } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
+import {
+  getLocalizedNames,
+  getLocalizedPictogramName,
+  getLocalizedSignalWord,
+} from "@/utils/ghsText";
 
 export default function ResultsTable({
   results,
@@ -34,7 +39,8 @@ export default function ResultsTable({
   onViewDetail,
   onOpenComparison,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayLocale = i18n.language;
 
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
@@ -288,13 +294,16 @@ export default function ResultsTable({
                 </td>
                 <td className="px-4 py-4">
                   {result.found ? (
-                    <div>
+                    (() => {
+                      const displayNames = getLocalizedNames(result, displayLocale);
+                      return (
+                        <div>
                       <div className="text-white font-medium break-words">
-                        {result.name_en || t("results.loadingName")}
+                        {displayNames.primary || t("results.loadingName")}
                       </div>
-                      {result.name_zh && (
+                      {displayNames.secondary && (
                         <div className="text-slate-400 text-sm">
-                          {result.name_zh}
+                          {displayNames.secondary}
                         </div>
                       )}
                       {/* Provenance chips (v1.8 M1). Compact, glanceable.
@@ -342,6 +351,8 @@ export default function ResultsTable({
                         </div>
                       )}
                     </div>
+                      );
+                    })()
                   ) : (
                     <span className="text-red-400">{result.error}</span>
                   )}
@@ -401,7 +412,7 @@ export default function ResultsTable({
                                 <GHSImage
                                   key={pIdx}
                                   code={pic.code}
-                                  name={pic.name_zh}
+                                  name={getLocalizedPictogramName(pic, displayLocale)}
                                   className="w-10 h-10"
                                   showTooltip
                                 />
@@ -446,7 +457,10 @@ export default function ResultsTable({
                                             <GHSImage
                                               key={pIdx}
                                               code={pic.code}
-                                              name={pic.name_zh}
+                                              name={getLocalizedPictogramName(
+                                                pic,
+                                                displayLocale
+                                              )}
                                               className="w-8 h-8 opacity-70"
                                             />
                                           ))}
@@ -483,7 +497,7 @@ export default function ResultsTable({
                               : "bg-amber-500/20 text-amber-400"
                           }`}
                         >
-                          {effective.signal_word_zh || effective.signal_word}
+                          {getLocalizedSignalWord(effective, displayLocale)}
                         </span>
                       ) : (
                         <span className="text-slate-500">-</span>
