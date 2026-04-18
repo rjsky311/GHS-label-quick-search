@@ -508,7 +508,6 @@ const renderStandardTemplate = (chemical, model) => {
   const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
   const primaryHazards = hazards.slice(0, budgets.primaryHazards);
-  const hiddenHazards = hazards.length - primaryHazards.length;
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -536,11 +535,12 @@ const renderStandardTemplate = (chemical, model) => {
                     "pictograms-standard",
                     budgets.pictograms || pictograms.length
                   )}
-                  ${renderSignal(signalWord, signalClass, "signal-stack")}
                 </div>`
               : ""
           }
-          <div class="standard-hazard-board">
+          <div class="standard-main">
+            ${signalWord ? `<div class="standard-signal-row">${renderSignal(signalWord, signalClass, "signal-inline")}</div>` : ""}
+            <div class="standard-hazard-board">
             ${
               primaryHazards.length > 0
                 ? `<div class="hazard-primary-list">
@@ -551,18 +551,10 @@ const renderStandardTemplate = (chemical, model) => {
                         model
                       )
                     ).join("")}
-                    ${
-                      hiddenHazards > 0
-                        ? `<div class="hazard-more">${escapeHtml(
-                            model.t("print.moreHazardsShort", {
-                              count: hiddenHazards,
-                            })
-                          )}</div>`
-                        : ""
-                    }
                   </div>`
                 : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
+            </div>
           </div>
         </div>
       </div>
@@ -691,13 +683,6 @@ const renderQRCodeTemplate = (chemical, model) => {
                         }</div>`
                     )
                     .join("")}
-                  ${
-                    hazards.length > hazardTeasers.length
-                      ? `<div class="hazard-more">+ ${escapeHtml(
-                          model.t("print.totalItems", { count: hazards.length })
-                        )}</div>`
-                      : ""
-                  }
                 </div>`
               : `<div class="no-hazard-text qr-no-hazard">${escapeHtml(
                   model.t("print.noHazardStatement")
@@ -1093,6 +1078,13 @@ const buildStyles = (model) => {
       font-size: calc(${layout.typography.signalSize} - 2px);
       padding: 0.8mm 2.2mm;
     }
+    .signal.signal-inline {
+      margin: 0;
+      width: fit-content;
+      font-size: calc(${layout.typography.signalSize} - 3px);
+      padding: 0.55mm 1.8mm;
+      border-radius: 999px;
+    }
     .signal.danger {
       background: #fecaca;
       color: #b91c1c;
@@ -1119,8 +1111,8 @@ const buildStyles = (model) => {
     }
     .standard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 17mm) minmax(0, 1fr);
-      gap: 2.4mm;
+      grid-template-columns: minmax(0, 14mm) minmax(0, 1fr);
+      gap: 2mm;
       width: 100%;
       min-height: 0;
     }
@@ -1132,31 +1124,43 @@ const buildStyles = (model) => {
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      gap: 1.2mm;
-      padding-right: 1.4mm;
+      gap: 0.8mm;
+      padding-right: 1.1mm;
       border-right: 1px solid #dbe4ef;
       min-width: 0;
+    }
+    .standard-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9mm;
+      min-width: 0;
+    }
+    .standard-signal-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 0;
     }
     .standard-hazard-board {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      gap: 1.2mm;
+      justify-content: flex-start;
+      gap: 0.9mm;
       min-width: 0;
     }
     .hazard-primary-list {
       display: flex;
       flex-direction: column;
-      gap: 1mm;
+      gap: 0.8mm;
     }
     .hazard-primary-item {
-      padding: 0.9mm 1.2mm;
+      padding: 0.75mm 1mm;
       border-radius: 1.2mm;
       background: #fffaf5;
       border: 1px solid #fed7aa;
       color: #7c2d12;
       font-weight: 600;
-      line-height: 1.25;
+      line-height: 1.18;
     }
     .hazard-secondary-list {
       display: flex;
@@ -1188,16 +1192,6 @@ const buildStyles = (model) => {
     }
     .hazard-item-full {
       color: #222;
-    }
-    .hazard-more {
-      display: inline-flex;
-      align-self: flex-start;
-      padding: 0.4mm 1mm;
-      border-radius: 999px;
-      background: #f8fafc;
-      color: #475569;
-      font-size: calc(${layout.typography.hazardSize} - 1px);
-      font-weight: 600;
     }
     .no-hazard {
       color: #166534;

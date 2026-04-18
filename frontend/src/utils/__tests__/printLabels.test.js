@@ -476,7 +476,10 @@ describe('printLabels', () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain('standard-grid');
       expect(html).toContain('standard-rail');
+      expect(html).toContain('standard-main');
+      expect(html).toContain('standard-signal-row');
       expect(html).toContain('hazard-primary-item');
+      expect(html).not.toContain('hazard-more');
     });
 
     it('qrcode template uses the scan-first hierarchy blocks', () => {

@@ -842,6 +842,12 @@ export default function LabelPrintModal({
             <div className="grid gap-6 xl:grid-cols-2">
               <section className="space-y-3">
                 <h3 className="text-sm font-medium text-slate-300">{t("label.labelSize")}</h3>
+                <p className="text-xs text-slate-500">
+                  {tx(
+                    "label.densityHint",
+                    "This controls content density, not the physical stock dimensions."
+                  )}
+                </p>
                 {renderConfigButtons(
                   SIZE_OPTIONS,
                   labelConfig.size,
@@ -1334,7 +1340,6 @@ export default function LabelPrintModal({
                       "This preview now reuses the same HTML fragment that gets written into the print document."
                     )}
                   </div>
-                  {previewChem && <div className="mt-3">{renderPreviewMeta()}</div>}
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
                     {labelPreviewBundle ? (
