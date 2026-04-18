@@ -1,7 +1,0 @@
-{
-  "app_dir": "frontend",
-  "output_dir": "build",
-  "dockerfile": {
-    "name": "ghs-frontend"
-  }
-}
