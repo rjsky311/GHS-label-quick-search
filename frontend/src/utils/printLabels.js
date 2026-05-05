@@ -109,7 +109,17 @@ const isFullPagePrimaryLayout = (layout = {}) =>
   layout.template === "full" &&
   (layout.stockId === "a4-primary" ||
     layout.stockPreset === "a4-primary" ||
+    layout.stockId === "letter-primary" ||
+    layout.stockPreset === "letter-primary" ||
     (layout.widthMm >= 170 && layout.heightMm >= 200));
+
+const getFullPagePrimaryClass = (layout = {}) => {
+  if (!isFullPagePrimaryLayout(layout)) return "";
+  if (layout.stockId === "letter-primary" || layout.stockPreset === "letter-primary") {
+    return " label-full-page-primary label-letter-primary";
+  }
+  return " label-full-page-primary label-a4-primary";
+};
 
 const resolveLabProfile = (customLabelFields, labProfile) => ({
   organization:
@@ -638,10 +648,10 @@ const renderFullTemplate = (chemical, model) => {
   );
   const prepared = isPrepared(effectiveChem);
   const purposeNotice = renderPurposeNotice(model);
-  const isFullPagePrimary = isFullPagePrimaryLayout(model.layout);
+  const fullPageClass = getFullPagePrimaryClass(model.layout);
 
   return `
-    <div class="label label-full label-compliance label-purpose-${escapeHtml(model.layout.labelPurpose)}${isFullPagePrimary ? " label-a4-primary" : ""}${prepared ? " label-prepared" : ""}">
+    <div class="label label-full label-compliance label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${prepared ? " label-prepared" : ""}">
       <div class="compliance-header">
         ${renderNameSection(effectiveChem, model)}
         ${
@@ -784,14 +794,7 @@ const buildStyles = (model) => {
   const { layout } = model;
   const isLandscape = layout.orientation === "landscape";
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
-  const compliancePictogramSize =
-    isFullPagePrimary
-      ? "34mm"
-      : layout.size === "large"
-        ? "20mm"
-        : layout.size === "medium"
-          ? "16mm"
-          : "12mm";
+  const compliancePictogramSize = layout.typography.compliancePictogramSize;
   const complianceAlertColumn =
     isFullPagePrimary
       ? "minmax(82mm, 88mm)"
@@ -803,7 +806,7 @@ const buildStyles = (model) => {
 
   return `
     @page {
-      size: A4${isLandscape ? " landscape" : ""};
+      size: ${layout.page.size || "A4"}${isLandscape ? " landscape" : ""};
       margin: ${layout.page.margin};
     }
     * {
@@ -879,7 +882,7 @@ const buildStyles = (model) => {
       padding: calc(${layout.label.padding} + 0.3mm);
       min-height: 0;
     }
-    .label-a4-primary {
+    .label-full-page-primary {
       display: grid;
       grid-template-rows: auto auto 1fr auto;
       gap: 2.4mm;
@@ -935,7 +938,7 @@ const buildStyles = (model) => {
       padding-bottom: 1mm;
       min-width: 0;
     }
-    .label-a4-primary .compliance-header {
+    .label-full-page-primary .compliance-header {
       padding-bottom: 2mm;
     }
     .compliance-header .profile-block,
@@ -965,7 +968,7 @@ const buildStyles = (model) => {
       align-items: stretch;
       min-width: 0;
     }
-    .label-a4-primary .compliance-alert-panel {
+    .label-full-page-primary .compliance-alert-panel {
       border: 0.25mm solid #dbe4ef;
       border-radius: 1.2mm;
       padding: 3mm;
@@ -1048,14 +1051,14 @@ const buildStyles = (model) => {
     .compliance-footer .custom-fields {
       margin-top: 0.7mm;
     }
-    .label-a4-primary .compliance-footer {
+    .label-full-page-primary .compliance-footer {
       margin-top: 0;
       padding-top: 1.6mm;
     }
-    .label-a4-primary .compliance-footer .profile-block {
+    .label-full-page-primary .compliance-footer .profile-block {
       padding: 1mm 1.2mm;
     }
-    .label-a4-primary .compliance-footer .profile-row {
+    .label-full-page-primary .compliance-footer .profile-row {
       font-size: 10px;
       line-height: 1.25;
     }
@@ -1063,14 +1066,14 @@ const buildStyles = (model) => {
       width: 18mm;
       text-align: center;
     }
-    .label-a4-primary .compliance-qr {
+    .label-full-page-primary .compliance-qr {
       width: 24mm;
     }
     .qrcode-img-small {
       width: 15mm;
       height: 15mm;
     }
-    .label-a4-primary .qrcode-img-small {
+    .label-full-page-primary .qrcode-img-small {
       width: 20mm;
       height: 20mm;
     }
@@ -1099,7 +1102,7 @@ const buildStyles = (model) => {
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .label-a4-primary .name-en {
+    .label-full-page-primary .name-en {
       font-size: 24px;
       line-height: 1.1;
       -webkit-line-clamp: 1;
@@ -1109,7 +1112,7 @@ const buildStyles = (model) => {
       color: #334155;
       margin-top: 0.5mm;
     }
-    .label-a4-primary .name-zh {
+    .label-full-page-primary .name-zh {
       font-size: 18px;
       line-height: 1.15;
     }
@@ -1119,7 +1122,7 @@ const buildStyles = (model) => {
       color: #475569;
       margin-top: 0.8mm;
     }
-    .label-a4-primary .cas {
+    .label-full-page-primary .cas {
       font-size: 15px;
       margin-top: 1.1mm;
     }
@@ -1319,8 +1322,8 @@ const buildStyles = (model) => {
       justify-items: center;
       align-items: center;
     }
-    .label-a4-primary .pictograms.compliance-pictograms {
-      grid-template-columns: repeat(2, 34mm);
+    .label-full-page-primary .pictograms.compliance-pictograms {
+      grid-template-columns: repeat(2, ${compliancePictogramSize});
       justify-content: center;
       gap: 4mm;
     }
@@ -1363,8 +1366,8 @@ const buildStyles = (model) => {
       font-size: ${layout.typography.signalSize};
       line-height: 1.1;
     }
-    .label-a4-primary .signal.compliance-signal {
-      font-size: 20px;
+    .label-full-page-primary .signal.compliance-signal {
+      font-size: ${layout.typography.signalSize};
       padding: 2mm 2.4mm;
     }
     .signal.danger {
@@ -1465,34 +1468,34 @@ const buildStyles = (model) => {
       padding-top: 0.8mm;
       line-height: 1.35;
     }
-    .label-a4-primary .compliance-core {
+    .label-full-page-primary .compliance-core {
       grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
       gap: 5mm;
     }
-    .label-a4-primary .compliance-hazard-panel,
-    .label-a4-primary .compliance-precaution-panel {
-      font-size: 9px !important;
-      line-height: 1.18 !important;
+    .label-full-page-primary .compliance-hazard-panel,
+    .label-full-page-primary .compliance-precaution-panel {
+      font-size: ${layout.typography.complianceStatementSize} !important;
+      line-height: ${layout.typography.complianceLineHeight} !important;
     }
-    .label-a4-primary .section-label {
+    .label-full-page-primary .section-label {
       font-size: 10px;
       margin-bottom: 1mm;
       letter-spacing: 0;
     }
-    .label-a4-primary .compliance-hazard-list {
+    .label-full-page-primary .compliance-hazard-list {
       gap: 0.8mm;
     }
-    .label-a4-primary .compliance-precaution-list {
+    .label-full-page-primary .compliance-precaution-list {
       display: block;
-      column-count: 2;
+      column-count: ${layout.typography.complianceColumns};
       column-gap: 5mm;
     }
-    .label-a4-primary .compliance-statement {
+    .label-full-page-primary .compliance-statement {
       break-inside: avoid;
       page-break-inside: avoid;
       margin-bottom: 0.65mm;
     }
-    .label-a4-primary .compliance-precaution-list .compliance-statement {
+    .label-full-page-primary .compliance-precaution-list .compliance-statement {
       display: grid;
       grid-template-columns: minmax(20mm, 27mm) minmax(0, 1fr);
       gap: 1.2mm;
@@ -1719,8 +1722,8 @@ export function buildPrintDocument(
 
 function buildPreviewStyles(mode, model) {
   const isLandscape = model.layout.orientation === "landscape";
-  const pageWidthMm = isLandscape ? 297 : 210;
-  const pageHeightMm = isLandscape ? 210 : 297;
+  const pageWidthMm = model.layout.page.widthMm || (isLandscape ? 297 : 210);
+  const pageHeightMm = model.layout.page.heightMm || (isLandscape ? 210 : 297);
   const sheetScale = isLandscape ? 0.28 : 0.24;
   const mmToPx = 3.78;
   const rawLabelWidthPx = model.layout.widthMm * mmToPx;

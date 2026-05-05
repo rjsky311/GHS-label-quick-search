@@ -4,6 +4,7 @@ import {
   countResponsibleProfileFields,
   hasResponsibleProfile,
 } from "@/utils/printContentModel";
+import { isFullPagePrimaryStockId } from "@/constants/labelStocks";
 
 export const PRINT_READINESS_STATE = Object.freeze({
   PENDING_SELECTION: "pending_selection",
@@ -18,6 +19,7 @@ export const PRINT_READINESS_STATE = Object.freeze({
 export const PRINT_RECOMMENDED_ACTION = Object.freeze({
   PRINT: "print",
   USE_A4_PRIMARY: "use_a4_primary",
+  USE_FULL_PAGE_PRIMARY: "use_full_page_primary",
   ADD_PROFILE: "add_profile",
   CREATE_CONTINUATION: "create_continuation",
   REVIEW_SUPPLEMENTAL: "review_supplemental",
@@ -34,9 +36,9 @@ export const getMaxCompleteStatementCount = (layout) => {
 const isCompletePrimaryLayout = (layout = {}) =>
   layout.labelPurpose === "shipping" && layout.template === "full";
 
-const isA4PrimaryLayout = (layout = {}) =>
-  layout.stockId === "a4-primary" ||
-  layout.stockPreset === "a4-primary" ||
+const isFullPagePrimaryLayout = (layout = {}) =>
+  isFullPagePrimaryStockId(layout.stockId) ||
+  isFullPagePrimaryStockId(layout.stockPreset) ||
   (layout.widthMm >= 170 && layout.heightMm >= 200);
 
 const buildContentOptions = (model) => ({
@@ -125,7 +127,7 @@ export function evaluatePrintReadiness({
   );
   const isCompletePrimary = isCompletePrimaryLayout(layout);
   const isDense = isCompletePrimary && maxStatementCount > maxStatements;
-  const isA4Primary = isA4PrimaryLayout(layout);
+  const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const elementSummary = summarizeElements(
     contents,
     resolvedLabProfile,
@@ -157,11 +159,11 @@ export function evaluatePrintReadiness({
     issues.push({ type: "responsible-profile-missing" });
   }
 
-  if (isDense && !isA4Primary) {
+  if (isDense && !isFullPagePrimary) {
     return {
       state: PRINT_READINESS_STATE.TOO_DENSE_AUTO_UPGRADE,
       canPrint: false,
-      recommendedAction: PRINT_RECOMMENDED_ACTION.USE_A4_PRIMARY,
+      recommendedAction: PRINT_RECOMMENDED_ACTION.USE_FULL_PAGE_PRIMARY,
       contents,
       elementSummary,
       maxStatements,
@@ -170,7 +172,7 @@ export function evaluatePrintReadiness({
     };
   }
 
-  if (isDense && isA4Primary) {
+  if (isDense && isFullPagePrimary) {
     return {
       state: PRINT_READINESS_STATE.NEEDS_CONTINUATION,
       canPrint: false,

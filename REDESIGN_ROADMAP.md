@@ -96,6 +96,8 @@ Acceptance:
 
 Goal: make label printing feel like a confident workflow.
 
+Detailed print-workflow refactor scope is tracked in `PRINT_OUTPUT_REFACTOR_PLAN.md`. That document is the implementation guide for the output planner, A4/Letter primary labels, curated stock presets, typography scaling, supplemental-label rules, and browser QA matrix.
+
 Scope:
 
 - `LabelPrintModal.jsx` hierarchy.

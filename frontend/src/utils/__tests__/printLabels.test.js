@@ -852,6 +852,27 @@ describe("printLabels", () => {
       expect(preview.html).toContain("transform: scale(0.");
     });
 
+    it("Letter primary uses its own full-page class and paper size", () => {
+      const preview = buildPrintPreviewDocument(
+        [mockChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "letter-primary",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-letter-primary");
+      expect(preview.html).toContain("size: Letter");
+      expect(preview.html).toContain("width: 32mm");
+      expect(preview.html).toContain("preview-label-scaler");
+    });
+
     it("qrcode template uses the scan-first hierarchy blocks", () => {
       printLabels(
         [mockChemical],

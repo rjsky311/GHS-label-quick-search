@@ -366,6 +366,7 @@ curl https://ghs-backend.zeabur.app/api/health
 - [DESIGN.md](./DESIGN.md)：定義 `GHS Quick Safety Workspace` 的 light-first 視覺系統、元件方向與安全邊界。
 - [BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)：定義免費工具如何導流、哪些地方可放 CTA、哪些 GHS/安全內容不得放廣告。
 - [REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)：把後續改版拆成文件同步、light-first app shell、results workspace、detail safety summary、print workflow polish、soft brand surfaces 與驗證階段。
+- [PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md)：定義列印 output planner、A4/Letter 主標、小標籤補充定位、字體縮放與 Browser QA 矩陣。
 
 ### 回應格式
 
@@ -438,7 +439,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success（513 referenced keys / 560 zh-TW keys / 560 en keys）；`npm test -- --runInBand` → 44 suites / 697 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- 最近前端驗證：`npm run test:i18n` → success（542 referenced keys / 595 zh-TW keys / 595 en keys）；`npm test -- --runInBand` → 45 suites / 704 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
 - backend 最近基準：`python -m pytest -v` → 126 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)

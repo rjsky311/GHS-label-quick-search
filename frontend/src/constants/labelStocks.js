@@ -1,6 +1,17 @@
 const PAGE_MARGIN_MM = 5;
 const FOOTER_RESERVE_RIGHT_MM = 30;
 
+const PAGE_SIZE_DIMENSIONS_MM = {
+  A4: {
+    portrait: { width: 210, height: 297 },
+    landscape: { width: 297, height: 210 },
+  },
+  Letter: {
+    portrait: { width: 216, height: 279 },
+    landscape: { width: 279, height: 216 },
+  },
+};
+
 const TYPOGRAPHY_BY_SIZE = {
   small: {
     fontPx: 10,
@@ -92,6 +103,8 @@ const STOCK_PRESETS = [
     rowGapMm: 3,
     offsetXmm: 0,
     offsetYmm: 0,
+    outputRole: "supplemental",
+    pickerPriority: 50,
   },
   {
     id: "small-rack",
@@ -111,6 +124,9 @@ const STOCK_PRESETS = [
     rowGapMm: 3,
     offsetXmm: 0,
     offsetYmm: 0,
+    outputRole: "supplemental",
+    pickerPriority: 60,
+    hiddenFromPrimaryPicker: true,
   },
   {
     id: "medium-bottle",
@@ -130,6 +146,73 @@ const STOCK_PRESETS = [
     rowGapMm: 4,
     offsetXmm: 0,
     offsetYmm: 0,
+    outputRole: "primary-candidate",
+    pickerPriority: 30,
+  },
+  {
+    id: "avery-5163",
+    aliases: ["2x4-inch", "avery-2x4"],
+    name: "2 x 4 in Bottle",
+    note: "Common Letter-sheet bottle label size for North American office printers.",
+    nameKey: "label.stockPresetAvery5163",
+    noteKey: "label.stockPresetAvery5163Note",
+    size: "medium",
+    orientation: "landscape",
+    pageSize: "Letter",
+    columns: 2,
+    rows: 5,
+    labelWidthMm: 101.6,
+    labelHeightMm: 50.8,
+    pagePaddingMm: 7,
+    columnGapMm: 4,
+    rowGapMm: 0,
+    offsetXmm: 0,
+    offsetYmm: 0,
+    outputRole: "primary-candidate",
+    pickerPriority: 35,
+  },
+  {
+    id: "avery-5164",
+    aliases: ["3.333x4-inch", "avery-large"],
+    name: "3-1/3 x 4 in Large",
+    note: "Roomier Letter-sheet label for dense bottle or container content.",
+    nameKey: "label.stockPresetAvery5164",
+    noteKey: "label.stockPresetAvery5164Note",
+    size: "large",
+    orientation: "portrait",
+    pageSize: "Letter",
+    columns: 2,
+    rows: 3,
+    labelWidthMm: 84.7,
+    labelHeightMm: 101.6,
+    pagePaddingMm: 7,
+    columnGapMm: 4,
+    rowGapMm: 0,
+    offsetXmm: 0,
+    offsetYmm: 0,
+    outputRole: "primary-candidate",
+    pickerPriority: 36,
+  },
+  {
+    id: "brother-62mm-continuous",
+    aliases: ["dk-2205", "62mm-continuous"],
+    name: "62 mm Continuous",
+    note: "Common Brother/DK-style continuous roll width for supplemental bench labels.",
+    nameKey: "label.stockPresetBrother62",
+    noteKey: "label.stockPresetBrother62Note",
+    size: "small",
+    orientation: "landscape",
+    columns: 3,
+    rows: 4,
+    labelWidthMm: 62,
+    labelHeightMm: 40,
+    pagePaddingMm: 8,
+    columnGapMm: 4,
+    rowGapMm: 4,
+    offsetXmm: 0,
+    offsetYmm: 0,
+    outputRole: "supplemental",
+    pickerPriority: 55,
   },
   {
     id: "medium-rack",
@@ -149,6 +232,9 @@ const STOCK_PRESETS = [
     rowGapMm: 4,
     offsetXmm: 0,
     offsetYmm: 0,
+    outputRole: "supplemental",
+    pickerPriority: 70,
+    hiddenFromPrimaryPicker: true,
   },
   {
     id: "large-primary",
@@ -168,6 +254,8 @@ const STOCK_PRESETS = [
     rowGapMm: 6,
     offsetXmm: 0,
     offsetYmm: 0,
+    outputRole: "primary-candidate",
+    pickerPriority: 20,
   },
   {
     id: "a4-primary",
@@ -187,6 +275,31 @@ const STOCK_PRESETS = [
     rowGapMm: 0,
     offsetXmm: 0,
     offsetYmm: 0,
+    pageSize: "A4",
+    outputRole: "full-page-primary",
+    pickerPriority: 10,
+  },
+  {
+    id: "letter-primary",
+    aliases: ["letter-full-page-primary", "us-letter-primary"],
+    name: "Letter Primary",
+    note: "Single US Letter primary label for dense content and North American printers.",
+    nameKey: "label.stockPresetLetterPrimary",
+    noteKey: "label.stockPresetLetterPrimaryNote",
+    size: "large",
+    orientation: "portrait",
+    columns: 1,
+    rows: 1,
+    labelWidthMm: 186,
+    labelHeightMm: 236,
+    pagePaddingMm: 8,
+    columnGapMm: 0,
+    rowGapMm: 0,
+    offsetXmm: 0,
+    offsetYmm: 0,
+    pageSize: "Letter",
+    outputRole: "full-page-primary",
+    pickerPriority: 11,
   },
 ];
 
@@ -199,7 +312,14 @@ const PRESET_INDEX = STOCK_PRESETS.reduce((acc, preset) => {
 }, {});
 
 export const LABEL_STOCK_PRESETS = STOCK_PRESETS;
+export const LABEL_STOCK_PICKER_PRESETS = STOCK_PRESETS.filter(
+  (preset) => !preset.hiddenFromPrimaryPicker,
+).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
 export const DEFAULT_LABEL_STOCK_ID = "large-primary";
+export const FULL_PAGE_PRIMARY_STOCK_IDS = Object.freeze([
+  "a4-primary",
+  "letter-primary",
+]);
 
 export function getLabelStockPresetDisplay(
   presetOrId,
@@ -226,8 +346,14 @@ const VALID_LABEL_PURPOSES = new Set(["shipping", "qrSupplement", "quickId"]);
 const VALID_ORIENTATIONS = new Set(["portrait", "landscape"]);
 const VALID_NAME_DISPLAYS = new Set(["both", "en", "zh"]);
 const VALID_COLOR_MODES = new Set(["color", "bw"]);
+const VALID_PAGE_SIZES = new Set(["A4", "Letter"]);
 
 const formatMm = (value) => `${value}mm`;
+const roundTo = (value, places = 1) => {
+  const factor = 10 ** places;
+  return Math.round(value * factor) / factor;
+};
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const coerceNumber = (
   value,
@@ -250,12 +376,20 @@ function getPreset(source) {
   return PRESET_INDEX[source] || DEFAULT_PRESET;
 }
 
+export function isFullPagePrimaryStockId(stockId) {
+  return FULL_PAGE_PRIMARY_STOCK_IDS.includes(stockId);
+}
+
 function getBaseLayout(size = "medium", orientation = "portrait") {
+  const exactMatches = STOCK_PRESETS.filter(
+    (preset) => preset.size === size && preset.orientation === orientation,
+  );
+  const sizeMatches = STOCK_PRESETS.filter((preset) => preset.size === size);
   const fallback =
-    STOCK_PRESETS.find(
-      (preset) => preset.size === size && preset.orientation === orientation,
-    ) ||
-    STOCK_PRESETS.find((preset) => preset.size === size) ||
+    exactMatches.find((preset) => !preset.pageSize || preset.pageSize === "A4") ||
+    exactMatches[0] ||
+    sizeMatches.find((preset) => !preset.pageSize || preset.pageSize === "A4") ||
+    sizeMatches[0] ||
     DEFAULT_PRESET;
 
   return fallback;
@@ -293,9 +427,58 @@ const inferLabelPurpose = (template) => {
 
 const getDefaultPresetForPurpose = (purpose) => {
   if (purpose === "qrSupplement") return PRESET_INDEX["small-strip"];
-  if (purpose === "quickId") return PRESET_INDEX["small-rack"];
+  if (purpose === "quickId") return PRESET_INDEX["brother-62mm-continuous"];
   return DEFAULT_PRESET;
 };
+
+function resolveTypographyMetrics(normalized) {
+  const base = TYPOGRAPHY_BY_SIZE[normalized.size] || TYPOGRAPHY_BY_SIZE.medium;
+  const shortSide = Math.min(normalized.labelWidthMm, normalized.labelHeightMm);
+  const area = normalized.labelWidthMm * normalized.labelHeightMm;
+  const areaScale = Math.sqrt(area / (95 * 50));
+  const isFullPage =
+    normalized.labelPurpose === "shipping" &&
+    normalized.template === "full" &&
+    (isFullPagePrimaryStockId(normalized.stockPreset) ||
+      (normalized.labelWidthMm >= 170 && normalized.labelHeightMm >= 200));
+
+  if (isFullPage) {
+    return {
+      ...base,
+      fontPx: 15,
+      titlePx: 24,
+      pictogramPx: 48,
+      qrBoxMm: 44,
+      signalPx: 20,
+      hazardPx: 10,
+      compliancePictogramMm: normalized.stockPreset === "letter-primary" ? 32 : 34,
+      complianceStatementPx: 9,
+      complianceLineHeight: 1.18,
+      complianceColumns: 2,
+    };
+  }
+
+  const fontPx = clamp(roundTo(9.4 * areaScale, 0), 8, 14);
+  const titlePx = clamp(roundTo(fontPx + 2.5, 0), 10, 18);
+  const signalPx = clamp(roundTo(fontPx + 1, 0), 9, 16);
+  const hazardPx = clamp(roundTo(fontPx - 2.2, 0), 6, 11);
+  const pictogramPx = clamp(roundTo(shortSide * 1.05, 0), 24, 44);
+  const compliancePictogramMm = clamp(roundTo(shortSide * 0.28, 1), 10, 28);
+  const complianceStatementPx = clamp(roundTo(fontPx - 2.5, 1), 5.5, 10);
+
+  return {
+    ...base,
+    fontPx,
+    titlePx,
+    pictogramPx,
+    signalPx,
+    hazardPx,
+    compliancePictogramMm,
+    complianceStatementPx,
+    complianceLineHeight: areaScale > 1.4 ? 1.16 : 1.1,
+    complianceColumns: area > 9000 ? 2 : 1,
+  };
+}
 
 export function normalizePrintLabelConfig(labelConfig = {}) {
   const calibration = labelConfig.calibration || {};
@@ -363,16 +546,21 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       explicitPreset === "custom"
         ? labelConfig.stockPresetName || "Custom Tuning"
         : preset?.name || base.name,
+    pageSize: coerceEnum(
+      labelConfig.pageSize || preset?.pageSize || base.pageSize,
+      VALID_PAGE_SIZES,
+      "A4",
+    ),
     columns,
     rows,
     perPage: columns * rows,
     labelWidthMm: coerceNumber(labelConfig.labelWidthMm, base.labelWidthMm, {
       min: 24,
-      max: 180,
+      max: 200,
     }),
     labelHeightMm: coerceNumber(labelConfig.labelHeightMm, base.labelHeightMm, {
       min: 18,
-      max: 250,
+      max: 260,
     }),
     pageMarginMm: coerceNumber(
       labelConfig.pageMarginMm ?? calibration.pageMarginMm,
@@ -443,6 +631,8 @@ export function getLabelStockPreset(labelConfig = {}) {
         rowGapMm: normalized.rowGapMm,
         offsetXmm: normalized.offsetXmm,
         offsetYmm: normalized.offsetYmm,
+        pageSize: normalized.pageSize,
+        outputRole: "custom",
       }
     : getPreset(normalized.stockPreset);
 }
@@ -450,11 +640,21 @@ export function getLabelStockPreset(labelConfig = {}) {
 export function resolvePrintLayoutConfig(labelConfig = {}) {
   const normalized = normalizePrintLabelConfig(labelConfig);
   const stock = getLabelStockPreset(normalized);
-  const metrics =
-    TYPOGRAPHY_BY_SIZE[normalized.size] || TYPOGRAPHY_BY_SIZE.medium;
+  const metrics = resolveTypographyMetrics(normalized);
   const budgets =
     TEMPLATE_BUDGETS_BY_SIZE[normalized.size] ||
     TEMPLATE_BUDGETS_BY_SIZE.medium;
+  const pageSize = normalized.pageSize || stock.pageSize || "A4";
+  const pageDimensions =
+    PAGE_SIZE_DIMENSIONS_MM[pageSize]?.[normalized.orientation] ||
+    PAGE_SIZE_DIMENSIONS_MM.A4[normalized.orientation] ||
+    PAGE_SIZE_DIMENSIONS_MM.A4.portrait;
+  const pageMinHeightMm =
+    pageSize === "Letter"
+      ? pageDimensions.height - 20
+      : normalized.orientation === "landscape"
+        ? metrics.minHeightLandscapeMm
+        : metrics.minHeightPortraitMm;
 
   return {
     ...normalized,
@@ -462,6 +662,8 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
     heightMm: normalized.labelHeightMm,
     stockId: normalized.stockPreset,
     stock,
+    pageSize,
+    outputRole: stock.outputRole || null,
     note: stock.note || null,
     label: {
       widthMm: normalized.labelWidthMm,
@@ -479,8 +681,15 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       qrBox: formatMm(metrics.qrBoxMm),
       signalSize: `${metrics.signalPx}px`,
       hazardSize: `${metrics.hazardPx}px`,
+      compliancePictogramSize: formatMm(metrics.compliancePictogramMm),
+      complianceStatementSize: `${metrics.complianceStatementPx}px`,
+      complianceLineHeight: String(metrics.complianceLineHeight),
+      complianceColumns: metrics.complianceColumns,
     },
     page: {
+      size: pageSize,
+      widthMm: pageDimensions.width,
+      heightMm: pageDimensions.height,
       cols: normalized.columns,
       rows: normalized.rows,
       perPage: normalized.perPage,
@@ -495,9 +704,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       gapMm: normalized.columnGapMm,
       gap: formatMm(normalized.columnGapMm),
       minHeight: formatMm(
-        normalized.orientation === "landscape"
-          ? metrics.minHeightLandscapeMm
-          : metrics.minHeightPortraitMm,
+        pageMinHeightMm,
       ),
       footerReserveRightMm: FOOTER_RESERVE_RIGHT_MM,
       footerReserveRight: formatMm(FOOTER_RESERVE_RIGHT_MM),

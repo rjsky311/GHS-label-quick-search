@@ -124,6 +124,7 @@ describe("LabelPrintModal", () => {
   it("keeps minor print controls in collapsed advanced sections", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
+    expect(screen.getByTestId("core-output-controls")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls").tagName).toBe("DETAILS");
     expect(screen.getByTestId("advanced-layout-controls").tagName).toBe(
       "DETAILS",
@@ -167,7 +168,7 @@ describe("LabelPrintModal", () => {
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
   });
 
-  it("routes dense shipped-container labels to A4 Primary instead of a print dead end", () => {
+  it("routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -209,15 +210,16 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("required-output-responsible-profile"),
     ).toHaveTextContent("0/3");
-    expect(screen.getByTestId("use-a4-primary-footer")).toBeEnabled();
+    expect(screen.getByTestId("use-full-page-primary-footer")).toBeEnabled();
 
-    fireEvent.click(screen.getByTestId("use-a4-primary-footer"));
+    fireEvent.click(screen.getByTestId("use-full-page-primary-footer"));
     expect(props.onPrintLabels).not.toHaveBeenCalled();
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        stockPreset: "a4-primary",
-        labelWidthMm: 180,
-        labelHeightMm: 250,
+        stockPreset: "letter-primary",
+        labelWidthMm: 186,
+        labelHeightMm: 236,
+        pageSize: "Letter",
         perPage: 1,
         template: "full",
         labelPurpose: "shipping",
@@ -447,6 +449,27 @@ describe("LabelPrintModal", () => {
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
         offsetXmm: 2,
+        stockPreset: "custom",
+      }),
+    );
+  });
+
+  it("marks custom stock size changes as custom tuning", () => {
+    const { props } = renderModal({
+      labelConfig: {
+        ...baseConfig,
+        stockPreset: "medium-bottle",
+        labelWidthMm: 95,
+      },
+    });
+
+    fireEvent.change(screen.getByLabelText("Label width (mm)"), {
+      target: { value: "88" },
+    });
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelWidthMm: 88,
         stockPreset: "custom",
       }),
     );

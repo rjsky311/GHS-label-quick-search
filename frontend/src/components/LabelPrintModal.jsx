@@ -30,15 +30,15 @@ import {
   X,
 } from "lucide-react";
 import {
+  LABEL_STOCK_PICKER_PRESETS,
   LABEL_STOCK_PRESETS,
   getLabelStockPresetDisplay,
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
 import {
-  PRINT_READINESS_STATE,
-  PRINT_RECOMMENDED_ACTION,
-  evaluatePrintReadiness,
-} from "@/utils/printFitEngine";
+  PRINT_OUTPUT_PLAN_STATE,
+  buildPrintOutputPlan,
+} from "@/utils/printOutputPlanner";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 import {
@@ -156,7 +156,7 @@ const PURPOSE_OPTIONS = [
     descKey: "label.purposeQuickIdDesc",
     tipKey: "label.purposeQuickIdTip",
     icon: Target,
-    presetId: "small-rack",
+    presetId: "brother-62mm-continuous",
     template: "icon",
   },
 ];
@@ -165,9 +165,16 @@ const READINESS_TONE_CLASSES = {
   ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
   neutral: "border-slate-200 bg-white text-slate-700",
   caution: "border-amber-200 bg-amber-50 text-amber-900",
+  danger: "border-red-200 bg-red-50 text-red-900",
 };
 
-const STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
+const STOCK_PRESETS = LABEL_STOCK_PICKER_PRESETS.map((preset) => ({
+  ...preset,
+  perPage: preset.columns * preset.rows,
+  widthMm: preset.labelWidthMm,
+  heightMm: preset.labelHeightMm,
+}));
+const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   ...preset,
   perPage: preset.columns * preset.rows,
   widthMm: preset.labelWidthMm,
@@ -389,12 +396,12 @@ function buildPreviewRisks({
 
     if (
       hazardCount + precautionCount > 18 &&
-      layoutProfile.stockPreset !== "a4-primary"
+      layoutProfile.outputRole !== "full-page-primary"
     ) {
       risks.push(
         tx(
           "label.previewRiskShippingBlockedDensity",
-          "This content is too dense for the current complete-label stock. Use A4 Primary stock or switch to QR supplement before printing.",
+          "This content is too dense for the current complete-label stock. Use a full-page primary stock or switch to QR supplement before printing.",
         ),
       );
     } else if (hazardCount + precautionCount > 14) {
@@ -618,9 +625,6 @@ export default function LabelPrintModal({
     tx,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
-  const a4PrimaryPreset = STOCK_PRESETS.find(
-    (preset) => preset.id === "a4-primary",
-  );
   const templateSummaryLabel = getOptionLabel(
     TEMPLATE_OPTIONS,
     labelConfig.template,
@@ -647,12 +651,50 @@ export default function LabelPrintModal({
     "label.previewRiskReady",
     "This combination looks balanced for the current content load.",
   );
-  const printReadiness = evaluatePrintReadiness({
+  const outputPlan = buildPrintOutputPlan({
     selectedForLabel,
     layout: layoutProfile,
     customGHSSettings,
     resolvedLabProfile: resolvedResponsibleProfile,
+    locale: currentLocale,
   });
+  const printReadiness = outputPlan.readiness;
+  const recommendedFullPagePreset = ALL_STOCK_PRESETS.find(
+    (preset) => preset.id === outputPlan.recommendedFullPageStockId,
+  );
+  const recommendedFullPageLabel = recommendedFullPagePreset
+    ? getLabelStockPresetDisplay(recommendedFullPagePreset, t).name
+    : tx("label.fullPagePrimaryFallback", "full-page primary");
+  const plannerPreviewRisk =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+      ? tx(
+          "label.outputPlanRecommendFullPage",
+          "This stock cannot carry the complete primary label clearly. Use {{stock}} and keep this smaller label as supplemental if needed.",
+          { stock: recommendedFullPageLabel },
+        )
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+        ? tx(
+            "label.outputPlanMissingProfile",
+            "Complete primary labels need responsible lab or supplier name, phone, and address before printing.",
+          )
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+          ? tx(
+              "label.outputPlanSupplementalNotice",
+              "This output is printable as a supplemental label, not a complete primary container label.",
+            )
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            ? tx(
+                "label.outputPlanMissingHazardData",
+                "This item does not have enough GHS hazard content to produce a hazard label.",
+              )
+            : "";
+  const visiblePreviewRisks =
+    plannerPreviewRisk && plannerPreviewRisk !== readyPreviewMessage
+      ? [
+          plannerPreviewRisk,
+          ...previewRisks.filter((risk) => risk !== readyPreviewMessage),
+        ]
+      : previewRisks;
   const outputNotApplicableLabel = tx(
     "label.outputNotApplicable",
     "Not applicable",
@@ -699,31 +741,78 @@ export default function LabelPrintModal({
       tone: getOutputTone(printReadiness.elementSummary.responsibleProfile),
     },
   ];
-  const hasPreviewWarnings = previewRisks.some(
+  const hasPreviewWarnings = visiblePreviewRisks.some(
     (risk) => risk !== readyPreviewMessage,
   );
   const isPrintFitBlocked =
-    selectedForLabel.length > 0 && !printReadiness.canPrint;
+    selectedForLabel.length > 0 && !outputPlan.canPrint;
   const isProfileBlocked =
-    printReadiness.state === PRINT_READINESS_STATE.NEEDS_PROFILE;
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const printBlockedLabel = isProfileBlocked
     ? tx("label.printFixProfileRequired", "Add lab/supplier profile first")
-    : printReadiness.state === PRINT_READINESS_STATE.NEEDS_CONTINUATION
+    : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
       ? tx("label.printFixContinuationRequired", "Create a continuation plan first")
       : tx("label.printFixRequired", "Choose a printable stock first");
-  const canUseA4Primary =
-    printReadiness.recommendedAction ===
-      PRINT_RECOMMENDED_ACTION.USE_A4_PRIMARY &&
-    Boolean(a4PrimaryPreset) &&
-    layoutProfile.stockPreset !== "a4-primary";
+  const canUseFullPagePrimary =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
+    Boolean(recommendedFullPagePreset) &&
+    layoutProfile.stockPreset !== recommendedFullPagePreset.id;
   const blockedDensityMessage = tx(
     "label.previewRiskShippingBlockedDensity",
-    "This content is too dense for the current complete-label stock. Use A4 Primary stock for a complete label; QR supplement is only a secondary option.",
+    "This content is too dense for the current complete-label stock. Use a full-page primary stock for a complete label; QR supplement is only a secondary option.",
   );
   const primaryPreviewRisk =
-    previewRisks.find((risk) => risk === blockedDensityMessage) ||
-    previewRisks.find((risk) => risk !== readyPreviewMessage) ||
+    plannerPreviewRisk ||
+    visiblePreviewRisks.find((risk) => risk === blockedDensityMessage) ||
+    visiblePreviewRisks.find((risk) => risk !== readyPreviewMessage) ||
     "";
+  const outputPlanTone =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? "ready"
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? "caution"
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
+            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+          ? "danger"
+          : "caution";
+  const outputPlanTitle =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? tx("label.outputPlanReadyTitle", "Complete output ready")
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? tx("label.outputPlanSupplementalTitle", "Supplemental output")
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+          ? tx("label.outputPlanFullPageTitle", "Use a full-page primary label")
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+            ? tx("label.outputPlanProfileTitle", "Responsible profile required")
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+              ? tx("label.outputPlanHazardTitle", "Hazard data required")
+              : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+                ? tx("label.outputPlanInvalidTitle", "Needs a larger output")
+                : tx("label.outputPlanPendingTitle", "Output plan pending");
+  const outputPlanBody =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? tx(
+          "label.outputPlanReadyBody",
+          "The selected stock can print the current output without hiding safety-critical content.",
+        )
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? plannerPreviewRisk
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+          ? plannerPreviewRisk
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+            ? plannerPreviewRisk
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+              ? plannerPreviewRisk
+              : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+                ? tx(
+                    "label.outputPlanInvalidBody",
+                    "Even this complete stock is too dense for one label. Use a continuation workflow before printing.",
+                  )
+                : tx(
+                    "label.outputPlanPendingBody",
+                    "Select at least one chemical to let the app choose a safe printable output.",
+                  );
   const printReadinessItems = [
     {
       key: "selection",
@@ -761,10 +850,12 @@ export default function LabelPrintModal({
       icon: previewChem && !hasPreviewWarnings ? CheckCircle2 : AlertTriangle,
       label: tx("label.readinessCompliance", "Label fit"),
       value: previewChem
-        ? printReadiness.state === PRINT_READINESS_STATE.NEEDS_CONTINUATION
+        ? outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
           ? tx("label.readinessComplianceContinuation", "Needs continuation")
-          : printReadiness.state === PRINT_READINESS_STATE.NEEDS_PROFILE
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
             ? tx("label.readinessComplianceProfile", "Missing profile")
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+            ? tx("label.readinessComplianceBlocked", "Too dense")
           : isPrintFitBlocked
             ? tx("label.readinessComplianceBlocked", "Too dense")
             : hasPreviewWarnings
@@ -859,17 +950,18 @@ export default function LabelPrintModal({
       rowGapMm: preset.rowGapMm,
       offsetXmm: preset.offsetXmm,
       offsetYmm: preset.offsetYmm,
+      pageSize: preset.pageSize || "A4",
     });
   };
 
-  const handleUseA4Primary = () => {
-    if (!a4PrimaryPreset) return;
-    applyStockPreset(a4PrimaryPreset);
+  const handleUseFullPagePrimary = () => {
+    if (!recommendedFullPagePreset) return;
+    applyStockPreset(recommendedFullPagePreset);
   };
 
   const applyPurpose = (purpose) => {
     const option = PURPOSE_OPTIONS.find((item) => item.value === purpose);
-    const preset = STOCK_PRESETS.find((item) => item.id === option?.presetId);
+    const preset = ALL_STOCK_PRESETS.find((item) => item.id === option?.presetId);
 
     if (!option || !preset) return;
 
@@ -890,6 +982,7 @@ export default function LabelPrintModal({
       rowGapMm: preset.rowGapMm,
       offsetXmm: preset.offsetXmm,
       offsetYmm: preset.offsetYmm,
+      pageSize: preset.pageSize || "A4",
     });
   };
 
@@ -1043,6 +1136,42 @@ export default function LabelPrintModal({
                       </div>
                     );
                   })}
+                </div>
+              </section>
+
+              <section
+                className={`rounded-lg border p-4 ${
+                  READINESS_TONE_CLASSES[outputPlanTone] ||
+                  READINESS_TONE_CLASSES.neutral
+                }`}
+                data-testid="print-output-plan"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <ClipboardList className="h-4 w-4 shrink-0" />
+                      {tx("label.outputPlanTitle", "Recommended output")}
+                    </div>
+                    <div className="mt-2 text-base font-semibold">
+                      {outputPlanTitle}
+                    </div>
+                    <p className="mt-1 text-sm leading-5 opacity-90">
+                      {outputPlanBody}
+                    </p>
+                  </div>
+                  {canUseFullPagePrimary && (
+                    <button
+                      type="button"
+                      onClick={handleUseFullPagePrimary}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
+                      data-testid="use-full-page-primary-plan"
+                    >
+                      <FileText className="h-4 w-4" />
+                      {tx("label.useFullPagePrimaryShort", "Use {{stock}}", {
+                        stock: recommendedFullPageLabel,
+                      })}
+                    </button>
+                  )}
                 </div>
               </section>
 
@@ -1343,6 +1472,48 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
+              <section
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="core-output-controls"
+              >
+                <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                  <Languages className="h-4 w-4 text-blue-600" />
+                  {tx("label.outputBasicsTitle", "Language and print mode")}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {tx(
+                    "label.outputBasicsHint",
+                    "These choices directly affect the printed label and preview.",
+                  )}
+                </p>
+                <div className="mt-4 grid gap-6 xl:grid-cols-2">
+                  <section className="space-y-3">
+                    <h4 className="text-sm font-medium text-slate-800">
+                      {t("label.nameDisplay")}
+                    </h4>
+                    {renderConfigButtons(
+                      NAME_DISPLAY_OPTIONS,
+                      labelConfig.nameDisplay,
+                      (nameDisplay) => updateVisualConfig({ nameDisplay }),
+                      "border-emerald-500 bg-emerald-50 text-emerald-800",
+                    )}
+                  </section>
+
+                  <section className="space-y-3">
+                    <h4 className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <Palette className="h-4 w-4 text-emerald-600" />
+                      {t("label.colorMode")}
+                    </h4>
+                    {renderConfigButtons(
+                      COLOR_OPTIONS,
+                      labelConfig.colorMode,
+                      (colorMode) => updateVisualConfig({ colorMode }),
+                      "border-emerald-500 bg-emerald-50 text-emerald-800",
+                    )}
+                  </section>
+                </div>
+              </section>
+
               <details
                 className="rounded-lg border border-slate-200 bg-white p-4"
                 data-testid="advanced-template-controls"
@@ -1516,32 +1687,85 @@ export default function LabelPrintModal({
                 </section>
               </div>
 
-              <div className="grid gap-6 xl:grid-cols-2">
-                <section className="space-y-3">
-                  <h3 className="text-sm font-medium text-slate-800">
-                    {t("label.nameDisplay")}
-                  </h3>
-                  {renderConfigButtons(
-                    NAME_DISPLAY_OPTIONS,
-                    labelConfig.nameDisplay,
-                    (nameDisplay) => updateVisualConfig({ nameDisplay }),
-                    "border-emerald-500 bg-emerald-50 text-emerald-800",
-                  )}
-                </section>
-
-                <section className="space-y-3">
-                  <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <Palette className="h-4 w-4 text-emerald-600" />
-                    {t("label.colorMode")}
-                  </h3>
-                  {renderConfigButtons(
-                    COLOR_OPTIONS,
-                    labelConfig.colorMode,
-                    (colorMode) => updateVisualConfig({ colorMode }),
-                    "border-emerald-500 bg-emerald-50 text-emerald-800",
-                  )}
-                </section>
-              </div>
+              <section
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="custom-stock-size-controls"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-800">
+                      {tx("label.customStockSizeTitle", "Custom stock size")}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {tx(
+                        "label.customStockSizeHint",
+                        "Enter the real label size only when the curated presets do not match your label roll or sheet.",
+                      )}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    {tx("label.stockPresetCustom", "Custom tuning")}
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {[
+                    {
+                      key: "labelWidthMm",
+                      label: tx("label.customStockWidth", "Label width (mm)"),
+                      value: layoutProfile.widthMm,
+                      min: 24,
+                      max: 200,
+                      step: 0.5,
+                    },
+                    {
+                      key: "labelHeightMm",
+                      label: tx("label.customStockHeight", "Label height (mm)"),
+                      value: layoutProfile.heightMm,
+                      min: 18,
+                      max: 260,
+                      step: 0.5,
+                    },
+                    {
+                      key: "columns",
+                      label: tx("label.customStockColumns", "Columns"),
+                      value: layoutProfile.columns,
+                      min: 1,
+                      max: 6,
+                      step: 1,
+                    },
+                    {
+                      key: "rows",
+                      label: tx("label.customStockRows", "Rows"),
+                      value: layoutProfile.rows,
+                      min: 1,
+                      max: 12,
+                      step: 1,
+                    },
+                  ].map((field) => (
+                    <label key={field.key} className="block">
+                      <span className="mb-1 block text-xs text-slate-500">
+                        {field.label}
+                      </span>
+                      <input
+                        type="number"
+                        value={field.value}
+                        min={field.min}
+                        max={field.max}
+                        step={field.step}
+                        onChange={(event) =>
+                          updateLayoutConfig({
+                            [field.key]:
+                              event.target.value === ""
+                                ? field.min
+                                : Number(event.target.value),
+                          })
+                        }
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </section>
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between gap-3">
@@ -2062,21 +2286,23 @@ export default function LabelPrintModal({
                           <div className="mt-1 leading-5">
                             {primaryPreviewRisk}
                           </div>
-                          {canUseA4Primary && (
+                          {canUseFullPagePrimary && (
                             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                               <button
                                 type="button"
-                                onClick={handleUseA4Primary}
+                                onClick={handleUseFullPagePrimary}
                                 className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
-                                data-testid="use-a4-primary-banner"
+                                data-testid="use-full-page-primary-banner"
                               >
                                 <FileText className="h-4 w-4" />
-                                {tx("label.useA4Primary", "Use A4 Primary")}
+                                {tx("label.useFullPagePrimary", "Use {{stock}}", {
+                                  stock: recommendedFullPageLabel,
+                                })}
                               </button>
                               <span className="text-xs leading-5 text-red-800">
                                 {tx(
-                                  "label.useA4PrimaryHint",
-                                  "Keeps all pictograms and complete statements on one full-page primary label.",
+                                  "label.useFullPagePrimaryHint",
+                                  "Keeps all pictograms and complete statements on a complete full-page primary label.",
                                 )}
                               </span>
                             </div>
@@ -2103,8 +2329,8 @@ export default function LabelPrintModal({
                         </div>
                       </div>
                       <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                        {printReadiness.state ===
-                        PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY
+                        {outputPlan.state ===
+                        PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
                           ? tx("label.outputSupplemental", "Supplemental")
                           : tx("label.outputPrimary", "Primary")}
                       </span>
@@ -2176,7 +2402,7 @@ export default function LabelPrintModal({
 
                   <section className="rounded-lg border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      {previewRisks[0] ===
+                      {visiblePreviewRisks[0] ===
                       tx(
                         "label.previewRiskReady",
                         "This combination looks balanced for the current content load.",
@@ -2188,7 +2414,7 @@ export default function LabelPrintModal({
                       {tx("label.previewChecklistTitle", "Preview checklist")}
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-slate-700">
-                      {previewRisks.map((risk) => (
+                      {visiblePreviewRisks.map((risk) => (
                         <div
                           key={risk}
                           className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
@@ -2287,15 +2513,17 @@ export default function LabelPrintModal({
           className="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-5"
           data-testid="label-modal-footer"
         >
-          {canUseA4Primary ? (
+          {canUseFullPagePrimary ? (
             <button
               type="button"
-              onClick={handleUseA4Primary}
+              onClick={handleUseFullPagePrimary}
               className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800"
-              data-testid="use-a4-primary-footer"
+              data-testid="use-full-page-primary-footer"
             >
               <FileText className="h-4 w-4" />
-              {tx("label.useA4Primary", "Use A4 Primary")}
+              {tx("label.useFullPagePrimary", "Use {{stock}}", {
+                stock: recommendedFullPageLabel,
+              })}
             </button>
           ) : (
             <button
