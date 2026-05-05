@@ -35,6 +35,27 @@ describe('Header', () => {
     expect(screen.getByText('header.subtitle')).toBeInTheDocument();
   });
 
+  it('keeps header action buttons in stable icon slots across translations', () => {
+    render(<Header {...defaultProps} />);
+
+    [
+      'pilot-dashboard-toggle-btn',
+      'language-toggle-btn',
+      'favorites-toggle-btn',
+      'prepared-toggle-btn',
+      'history-toggle-btn',
+    ].forEach((testId) => {
+      const button = screen.getByTestId(testId);
+      expect(button).toHaveClass('h-10', 'w-10', 'shrink-0', 'sm:w-28');
+      expect(button.querySelector('svg')).toHaveClass('shrink-0');
+    });
+
+    expect(screen.getByTestId('language-toggle-btn')).toHaveAttribute(
+      'aria-label',
+      'header.switchToChinese'
+    );
+  });
+
   it('shows favorites count badge when favorites exist', () => {
     render(<Header {...defaultProps} favorites={[{ cas_number: '64-17-5' }, { cas_number: '7732-18-5' }]} />);
     expect(screen.getByText('2')).toBeInTheDocument();

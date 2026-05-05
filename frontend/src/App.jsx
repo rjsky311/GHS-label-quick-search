@@ -58,7 +58,7 @@ import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // ── State ──
   const [singleCas, setSingleCas] = useState("");
@@ -99,6 +99,10 @@ function App() {
   const [resultFilter, setResultFilter] = useState("all");
   const [advancedFilter, setAdvancedFilter] = useState({ minPictograms: 0, hCodeSearch: "" });
   const [preparedReprintingId, setPreparedReprintingId] = useState(null);
+
+  useEffect(() => {
+    document.title = t("header.title");
+  }, [t, i18n.language]);
 
   // ── Refs ──
   const searchInputRef = useRef(null);

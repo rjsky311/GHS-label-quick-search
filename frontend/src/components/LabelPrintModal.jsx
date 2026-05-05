@@ -457,6 +457,7 @@ export default function LabelPrintModal({
             key={option.value}
             type="button"
             onClick={() => onSelect(option.value)}
+            data-testid={`label-config-option-${option.value}`}
             className={`rounded-md border p-3 text-left transition-colors ${
               selected
                 ? activeClasses
@@ -464,12 +465,17 @@ export default function LabelPrintModal({
             }`}
           >
             <div className="flex items-center gap-2">
-              {Icon ? (
-                <Icon className="h-4 w-4 shrink-0" />
-              ) : (
-                <span className="text-xs font-semibold tracking-[0.2em]">{option.iconLabel}</span>
-              )}
-              <span className="font-medium">{t(option.labelKey)}</span>
+              <span
+                className="inline-flex h-6 w-8 shrink-0 items-center justify-center text-current"
+                data-testid="label-config-icon-slot"
+              >
+                {Icon ? (
+                  <Icon className="h-4 w-4 shrink-0" />
+                ) : (
+                  <span className="text-xs font-semibold tracking-[0.12em]">{option.iconLabel}</span>
+                )}
+              </span>
+              <span className="min-w-0 font-medium">{t(option.labelKey)}</span>
             </div>
             {option.descKey && <div className="mt-1 text-xs text-slate-500">{t(option.descKey)}</div>}
             {option.tipKey && <div className="mt-1 text-xs text-slate-500">{t(option.tipKey)}</div>}

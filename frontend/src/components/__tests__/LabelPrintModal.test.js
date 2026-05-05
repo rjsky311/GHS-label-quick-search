@@ -327,4 +327,16 @@ describe("LabelPrintModal", () => {
       expect.objectContaining({ colorMode: "bw" })
     );
   });
+
+  it("renders template and abbreviation controls with fixed icon slots", () => {
+    renderModal();
+
+    const slots = screen.getAllByTestId("label-config-icon-slot");
+    expect(slots.length).toBeGreaterThanOrEqual(10);
+    slots.forEach((slot) => {
+      expect(slot).toHaveClass("h-6", "w-8", "shrink-0");
+    });
+    expect(slots.some((slot) => slot.querySelector("svg")?.classList.contains("shrink-0"))).toBe(true);
+    expect(slots.some((slot) => slot.textContent === "ZH")).toBe(true);
+  });
 });
