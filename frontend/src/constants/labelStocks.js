@@ -169,6 +169,25 @@ const STOCK_PRESETS = [
     offsetXmm: 0,
     offsetYmm: 0,
   },
+  {
+    id: "a4-primary",
+    aliases: ["full-page-primary"],
+    name: "A4 Primary",
+    note: "Single full-page primary label for dense shipped-container content and proofing.",
+    nameKey: "label.stockPresetA4Primary",
+    noteKey: "label.stockPresetA4PrimaryNote",
+    size: "large",
+    orientation: "portrait",
+    columns: 1,
+    rows: 1,
+    labelWidthMm: 180,
+    labelHeightMm: 250,
+    pagePaddingMm: 8,
+    columnGapMm: 0,
+    rowGapMm: 0,
+    offsetXmm: 0,
+    offsetYmm: 0,
+  },
 ];
 
 const PRESET_INDEX = STOCK_PRESETS.reduce((acc, preset) => {

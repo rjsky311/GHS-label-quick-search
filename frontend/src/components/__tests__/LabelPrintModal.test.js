@@ -88,7 +88,9 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel")).toBeInTheDocument();
     expect(screen.getByText("Live preview")).toBeInTheDocument();
     expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
-      "md:sticky",
+      "order-first",
+      "lg:order-none",
+      "lg:overflow-y-auto",
     );
   });
 
@@ -110,11 +112,29 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("label-modal-scroll-body")).toHaveClass(
       "overflow-y-auto",
+      "lg:overflow-hidden",
+      "lg:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)]",
     );
-    expect(
-      screen.getByTestId("label-modal-scroll-body").firstElementChild,
-    ).toHaveClass("md:grid-cols-[minmax(0,1fr)_22rem]");
+    expect(screen.getByTestId("label-settings-column")).toHaveClass(
+      "lg:overflow-y-auto",
+    );
     expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
+  });
+
+  it("keeps minor print controls in collapsed advanced sections", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("saved-print-controls").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("advanced-layout-controls").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByTestId("advanced-template-controls").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByTestId("advanced-custom-fields").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByText("Advanced layout controls")).toBeInTheDocument();
   });
 
   it("clicking the backdrop calls onClose but clicking inside does not", () => {
@@ -145,6 +165,38 @@ describe("LabelPrintModal", () => {
 
     fireEvent.click(printButton);
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks dense shipped-container labels until a roomier stock is selected", () => {
+    const denseChem = makeChem({
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 18 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    });
+
+    renderModal({
+      selectedForLabel: [denseChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        size: "large",
+        stockPreset: "large-primary",
+      },
+    });
+
+    expect(screen.getByTestId("preview-warning-banner")).toHaveTextContent(
+      "Printing blocked for this stock",
+    );
+    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
+      "Too dense",
+    );
+    expect(screen.getByText("label.printBtn").closest("button")).toBeDisabled();
   });
 
   it("updates quantity controls within the valid range", () => {

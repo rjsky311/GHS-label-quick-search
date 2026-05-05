@@ -372,20 +372,30 @@ function buildPreviewRisks({
       );
     }
 
+    if (
+      hazardCount + precautionCount > 18 &&
+      layoutProfile.stockPreset !== "a4-primary"
+    ) {
+      risks.push(
+        tx(
+          "label.previewRiskShippingBlockedDensity",
+          "This content is too dense for the current complete-label stock. Use A4 Primary stock or switch to QR supplement before printing.",
+        ),
+      );
+    } else if (hazardCount + precautionCount > 14) {
+      risks.push(
+        tx(
+          "label.previewRiskShippingDensity",
+          "This chemical has a high H/P statement load; use the largest stock and verify the browser print preview before applying labels.",
+        ),
+      );
+    }
+
     if (!hasProfile) {
       risks.push(
         tx(
           "label.previewRiskShippingProfile",
           "Supplier or lab name, phone, and address are still missing, so this is not ready as a complete shipped-container label.",
-        ),
-      );
-    }
-
-    if (hazardCount + precautionCount > 14) {
-      risks.push(
-        tx(
-          "label.previewRiskShippingDensity",
-          "This chemical has a high H/P statement load; use the largest stock and verify the browser print preview before applying labels.",
         ),
       );
     }
@@ -498,6 +508,20 @@ function getDensityLabel(labelConfig, layoutProfile, previewChem, tx) {
   }
 
   return tx("label.previewDensityBalanced", "Balanced");
+}
+
+function getMaxCompleteStatementCount(layoutProfile) {
+  if (layoutProfile.widthMm >= 170 && layoutProfile.heightMm >= 200) return 36;
+  if (layoutProfile.size === "large") return 18;
+  if (layoutProfile.size === "medium") return 10;
+  return 6;
+}
+
+function countStatements(chemical) {
+  return (
+    (chemical?.hazard_statements || []).length +
+    (chemical?.precautionary_statements || []).length
+  );
 }
 
 function getOptionLabel(options, value, t, fallback) {
@@ -613,6 +637,24 @@ export default function LabelPrintModal({
   const hasPreviewWarnings = previewRisks.some(
     (risk) => risk !== readyPreviewMessage,
   );
+  const maxCompleteStatements = getMaxCompleteStatementCount(layoutProfile);
+  const maxSelectedStatementCount = selectedForLabel.reduce(
+    (max, chemical) => Math.max(max, countStatements(chemical)),
+    0,
+  );
+  const isPrintFitBlocked =
+    selectedForLabel.length > 0 &&
+    labelPurpose === "shipping" &&
+    labelConfig.template === "full" &&
+    maxSelectedStatementCount > maxCompleteStatements;
+  const blockedDensityMessage = tx(
+    "label.previewRiskShippingBlockedDensity",
+    "This content is too dense for the current complete-label stock. Use A4 Primary stock or switch to QR supplement before printing.",
+  );
+  const primaryPreviewRisk =
+    previewRisks.find((risk) => risk === blockedDensityMessage) ||
+    previewRisks.find((risk) => risk !== readyPreviewMessage) ||
+    "";
   const printReadinessItems = [
     {
       key: "selection",
@@ -650,11 +692,16 @@ export default function LabelPrintModal({
       icon: previewChem && !hasPreviewWarnings ? CheckCircle2 : AlertTriangle,
       label: tx("label.readinessCompliance", "Label fit"),
       value: previewChem
-        ? hasPreviewWarnings
-          ? tx("label.readinessComplianceReview", "Needs review")
-          : tx("label.readinessComplianceReady", "Looks ready")
+        ? isPrintFitBlocked
+          ? tx("label.readinessComplianceBlocked", "Too dense")
+          : hasPreviewWarnings
+            ? tx("label.readinessComplianceReview", "Needs review")
+            : tx("label.readinessComplianceReady", "Looks ready")
         : tx("label.readinessPreviewPending", "Waiting for selection"),
-      tone: previewChem && !hasPreviewWarnings ? "ready" : "caution",
+      tone:
+        previewChem && !hasPreviewWarnings && !isPrintFitBlocked
+          ? "ready"
+          : "caution",
     },
   ];
   const sheetPreviewBundle = useMemo(
@@ -880,36 +927,38 @@ export default function LabelPrintModal({
         </div>
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto"
+          className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)] lg:overflow-hidden"
           data-testid="label-modal-scroll-body"
         >
-          <div className="grid gap-6 px-6 py-6 md:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_23rem]">
-            <div className="space-y-6">
+            <div
+              className="space-y-6 px-6 py-6 lg:min-h-0 lg:overflow-y-auto"
+              data-testid="label-settings-column"
+            >
               <section
-                className="rounded-lg border border-slate-200 bg-slate-50/80 p-4"
+                className="rounded-lg border border-slate-200 bg-white p-3"
                 data-testid="print-readiness-strip"
               >
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-wrap gap-2">
                   {printReadinessItems.map((item) => {
                     const Icon = item.icon;
 
                     return (
                       <div
                         key={item.key}
-                        className={`flex min-h-20 items-center gap-3 rounded-md border px-3 py-3 ${
+                        className={`flex min-w-0 items-center gap-2 rounded-md border px-3 py-2 ${
                           READINESS_TONE_CLASSES[item.tone] ||
                           READINESS_TONE_CLASSES.neutral
                         }`}
                         data-testid={`print-readiness-${item.key}`}
                       >
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/70">
+                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70">
                           <Icon className="h-4 w-4 shrink-0" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-xs font-medium uppercase opacity-70">
+                          <span className="block text-[11px] font-medium uppercase leading-none opacity-70">
                             {item.label}
                           </span>
-                          <span className="mt-1 block truncate text-sm font-semibold">
+                          <span className="mt-1 block max-w-44 truncate text-sm font-semibold">
                             {item.value}
                           </span>
                         </span>
@@ -919,7 +968,16 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="saved-print-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
+                  <Bookmark className="h-4 w-4 text-blue-600" />
+                  {tx("label.savedPrintControlsTitle", "Saved jobs and presets")}
+                </summary>
+                <div className="mt-4 space-y-4">
+              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Bookmark className="h-4 w-4 text-blue-600" />
                   {t("label.quickTemplates")}
@@ -1141,6 +1199,8 @@ export default function LabelPrintModal({
                   </div>
                 )}
               </section>
+                </div>
+              </details>
 
               <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
@@ -1205,10 +1265,20 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
-              <section className="space-y-3">
-                <h3 className="text-sm font-medium text-slate-800">
-                  {t("label.selectTemplate")}
-                </h3>
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="advanced-template-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  {tx("label.templateOverrideTitle", "Template override")}
+                </summary>
+                <p className="mt-2 text-xs text-slate-500">
+                  {tx(
+                    "label.templateOverrideHint",
+                    "Purpose presets choose the recommended template automatically; override only for a special label job.",
+                  )}
+                </p>
                 <div className="grid gap-3 md:grid-cols-2">
                   {TEMPLATE_OPTIONS.map((template) => {
                     const Icon = template.icon;
@@ -1247,7 +1317,7 @@ export default function LabelPrintModal({
                     );
                   })}
                 </div>
-              </section>
+              </details>
 
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -1321,6 +1391,21 @@ export default function LabelPrintModal({
                 </p>
               </section>
 
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="advanced-layout-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
+                  <Settings2 className="h-4 w-4 text-blue-600" />
+                  {tx("label.advancedLayoutTitle", "Advanced layout controls")}
+                </summary>
+                <p className="mt-2 text-xs text-slate-500">
+                  {tx(
+                    "label.advancedLayoutHint",
+                    "Use these only when the core purpose and stock preset need extra tuning.",
+                  )}
+                </p>
+                <div className="mt-4 space-y-6">
               <div className="grid gap-6 xl:grid-cols-2">
                 <section className="space-y-3">
                   <h3 className="text-sm font-medium text-slate-800">
@@ -1465,6 +1550,8 @@ export default function LabelPrintModal({
                   ))}
                 </div>
               </section>
+                </div>
+              </details>
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -1529,10 +1616,14 @@ export default function LabelPrintModal({
                 </p>
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <h3 className="text-sm font-medium text-slate-800">
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="advanced-custom-fields"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
+                  <CalendarDays className="h-4 w-4 text-blue-600" />
                   {t("label.customFields")}
-                </h3>
+                </summary>
                 <div className="mt-3 grid gap-2">
                   {[
                     {
@@ -1571,7 +1662,7 @@ export default function LabelPrintModal({
                 <p className="mt-3 text-xs text-slate-500">
                   {t("label.customFieldsHint")}
                 </p>
-              </section>
+              </details>
 
               {selectedForLabel.length > 0 && (
                 <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -1779,7 +1870,7 @@ export default function LabelPrintModal({
               </section>
             </div>
 
-            <aside className="self-start md:sticky md:top-6">
+            <aside className="order-first border-b border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
               <div
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
                 data-testid="label-preview-panel"
@@ -1860,19 +1951,128 @@ export default function LabelPrintModal({
                   </div>
                 </div>
 
-                <div className="space-y-4 px-5 py-4">
-                  <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="space-y-4 px-4 py-4">
+                  {previewChem && hasPreviewWarnings && primaryPreviewRisk && (
+                    <section
+                      className={`rounded-lg border p-3 text-sm ${
+                        isPrintFitBlocked
+                          ? "border-red-200 bg-red-50 text-red-900"
+                          : "border-amber-200 bg-amber-50 text-amber-900"
+                      }`}
+                      data-testid="preview-warning-banner"
+                    >
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${
+                            isPrintFitBlocked
+                              ? "text-red-600"
+                              : "text-amber-500"
+                          }`}
+                        />
+                        <div>
+                          <div className="font-semibold">
+                            {isPrintFitBlocked
+                              ? tx(
+                                  "label.previewBlockingTitle",
+                                  "Printing blocked for this stock",
+                                )
+                              : tx(
+                                  "label.previewReviewTitle",
+                                  "Review before printing",
+                                )}
+                          </div>
+                          <div className="mt-1 leading-5">
+                            {primaryPreviewRisk}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="rounded-lg border border-slate-200 bg-white p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                        <LayoutPanelTop className="h-4 w-4 text-blue-600" />
-                        {tx("label.previewSheetTitle", "Sheet layout")}
+                      <div className="text-sm font-medium text-slate-800">
+                        {tx("label.previewLabelTitle", "Primary label preview")}
                       </div>
                       <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                        {layoutProfile.columns} x {layoutProfile.rows}
+                        {densityLabel}
                       </span>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+                    <div className="mt-3 text-xs text-slate-400">
+                      {tx(
+                        "label.previewRealFragmentHint",
+                        "This preview now reuses the same HTML fragment that gets written into the print document.",
+                      )}
+                    </div>
+
+                    <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+                      {labelPreviewBundle ? (
+                        <iframe
+                          title={tx(
+                            "label.previewLabelTitle",
+                            "Primary label preview",
+                          )}
+                          srcDoc={labelPreviewBundle.html}
+                          data-testid="label-fragment-preview"
+                          className="w-full bg-white"
+                          style={{
+                            height:
+                              labelConfig.template === "qrcode"
+                                ? "22rem"
+                                : layoutProfile.orientation === "portrait"
+                                  ? "28rem"
+                                  : "22rem",
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
+                          {tx(
+                            "label.previewFocusEmptyBody",
+                            "Select at least one chemical to preview real content density.",
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      {previewRisks[0] ===
+                      tx(
+                        "label.previewRiskReady",
+                        "This combination looks balanced for the current content load.",
+                      ) ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      )}
+                      {tx("label.previewChecklistTitle", "Preview checklist")}
+                    </div>
+                    <div className="mt-3 space-y-2 text-sm text-slate-700">
+                      {previewRisks.map((risk) => (
+                        <div
+                          key={risk}
+                          className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
+                        >
+                          {risk}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <details className="rounded-lg border border-slate-200 bg-white p-4">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
+                      <span className="flex items-center gap-2">
+                        <LayoutPanelTop className="h-4 w-4 text-blue-600" />
+                        {tx("label.previewSheetTitle", "Sheet layout")}
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                        {layoutProfile.columns} x {layoutProfile.rows}
+                      </span>
+                    </summary>
+
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
                       <span>
                         {layoutProfile.widthMm} x {layoutProfile.heightMm} mm
                       </span>
@@ -1915,96 +2115,24 @@ export default function LabelPrintModal({
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
-                      <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
+                      <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
                         {tx("label.previewPadding", "Padding")}:{" "}
                         {layoutProfile.pagePaddingMm} mm
                       </div>
-                      <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
+                      <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
                         {tx("label.previewGap", "Gap")}:{" "}
                         {layoutProfile.columnGapMm}/{layoutProfile.rowGapMm} mm
                       </div>
-                      <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
+                      <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
                         {tx("label.previewOffsetX", "Offset X")}:{" "}
                         {layoutProfile.offsetXmm} mm
                       </div>
-                      <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
+                      <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
                         {tx("label.previewOffsetY", "Offset Y")}:{" "}
                         {layoutProfile.offsetYmm} mm
                       </div>
                     </div>
-                  </section>
-
-                  <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-medium text-slate-800">
-                        {tx("label.previewLabelTitle", "Primary label preview")}
-                      </div>
-                      <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                        {densityLabel}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 text-xs text-slate-400">
-                      {tx(
-                        "label.previewRealFragmentHint",
-                        "This preview now reuses the same HTML fragment that gets written into the print document.",
-                      )}
-                    </div>
-
-                    <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
-                      {labelPreviewBundle ? (
-                        <iframe
-                          title={tx(
-                            "label.previewLabelTitle",
-                            "Primary label preview",
-                          )}
-                          srcDoc={labelPreviewBundle.html}
-                          data-testid="label-fragment-preview"
-                          className="w-full bg-white"
-                          style={{
-                            height:
-                              labelConfig.template === "qrcode"
-                                ? "20rem"
-                                : layoutProfile.orientation === "portrait"
-                                  ? "24rem"
-                                  : "18rem",
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
-                          {tx(
-                            "label.previewFocusEmptyBody",
-                            "Select at least one chemical to preview real content density.",
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </section>
-
-                  <section className="rounded-lg border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      {previewRisks[0] ===
-                      tx(
-                        "label.previewRiskReady",
-                        "This combination looks balanced for the current content load.",
-                      ) ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-amber-400" />
-                      )}
-                      {tx("label.previewChecklistTitle", "Preview checklist")}
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-700">
-                      {previewRisks.map((risk) => (
-                        <div
-                          key={risk}
-                          className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
-                        >
-                          {risk}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
+                  </details>
 
                   <section className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
                     <div className="flex items-start gap-2">
@@ -2016,7 +2144,6 @@ export default function LabelPrintModal({
               </div>
             </aside>
           </div>
-        </div>
 
         <div
           className="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-5"
@@ -2025,7 +2152,7 @@ export default function LabelPrintModal({
           <button
             type="button"
             onClick={onPrintLabels}
-            disabled={selectedForLabel.length === 0}
+            disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
             className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Printer className="h-4 w-4" />

@@ -17,6 +17,8 @@ import {
   buildPrintDocument,
   buildPrintDocumentModel,
   buildPrintPreviewDocument,
+  inspectPrintContentFit,
+  inspectPrintLayoutDocument,
   printLabels,
   getQRCodeUrl,
   getHazardFontTier,
@@ -152,6 +154,87 @@ describe("getHazardFontTier", () => {
   });
 });
 
+describe("inspectPrintLayoutDocument", () => {
+  it("reports label, footer, and statement-code overflow before printing", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label">
+        <div class="compliance-footer"></div>
+        <span class="statement-code">P301+P330+P331</span>
+      </div>
+    `;
+
+    const label = root.querySelector(".label");
+    const footer = root.querySelector(".compliance-footer");
+    const code = root.querySelector(".statement-code");
+
+    Object.defineProperties(label, {
+      clientHeight: { value: 100, configurable: true },
+      scrollHeight: { value: 108, configurable: true },
+      clientWidth: { value: 200, configurable: true },
+      scrollWidth: { value: 200, configurable: true },
+    });
+    Object.defineProperties(footer, {
+      offsetTop: { value: 94, configurable: true },
+      offsetHeight: { value: 10, configurable: true },
+    });
+    Object.defineProperties(code, {
+      clientHeight: { value: 10, configurable: true },
+      scrollHeight: { value: 10, configurable: true },
+      clientWidth: { value: 60, configurable: true },
+      scrollWidth: { value: 72, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root).map((issue) => issue.type)).toEqual(
+      [
+        "label-overflow",
+        "compliance-footer-clipped",
+        "statement-code-overflow",
+      ],
+    );
+  });
+});
+
+describe("inspectPrintContentFit", () => {
+  const denseChemical = {
+    ...mockChemical,
+    hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+      code: `H${300 + index}`,
+      text_en: `Hazard ${index}`,
+    })),
+    precautionary_statements: Array.from({ length: 18 }, (_, index) => ({
+      code: `P${300 + index}`,
+      text_en: `Precaution ${index}`,
+    })),
+  };
+
+  it("blocks dense shipped-container labels on regular large stock", () => {
+    const model = buildPrintDocumentModel(
+      [denseChemical],
+      { labelPurpose: "shipping", template: "full", stockPreset: "large-primary" },
+      {},
+    );
+
+    expect(inspectPrintContentFit(model)).toEqual([
+      expect.objectContaining({
+        type: "content-too-dense",
+        statementCount: 24,
+        maxStatements: 18,
+      }),
+    ]);
+  });
+
+  it("allows the same dense content on A4 primary stock", () => {
+    const model = buildPrintDocumentModel(
+      [denseChemical],
+      { labelPurpose: "shipping", template: "full", stockPreset: "a4-primary" },
+      {},
+    );
+
+    expect(inspectPrintContentFit(model)).toEqual([]);
+  });
+});
+
 describe("print layout model", () => {
   it("defaults to a shipped-container purpose on large full labels", () => {
     const layout = resolvePrintLayoutConfig({});
@@ -182,6 +265,15 @@ describe("print layout model", () => {
     expect(layout.stockId).toBe("small-rack");
     expect(layout.label.width).toBe("54mm");
     expect(layout.page.perPage).toBe(15);
+  });
+
+  it("supports A4 primary stock for dense complete labels", () => {
+    const layout = resolvePrintLayoutConfig({ stockPreset: "a4-primary" });
+
+    expect(layout.stockId).toBe("a4-primary");
+    expect(layout.label.width).toBe("180mm");
+    expect(layout.label.height).toBe("250mm");
+    expect(layout.page.perPage).toBe(1);
   });
 
   it("accepts calibration nudges and sheet overrides", () => {
@@ -613,6 +705,36 @@ describe("printLabels", () => {
       expect(html).toContain("compliance-footer");
       expect(html).toContain("print.hazardStatementsLabel");
       expect(html).not.toContain("hazards-full");
+    });
+
+    it("full template keeps pictograms prominent and wraps long statement codes", () => {
+      const denseChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS07" },
+        ],
+        precautionary_statements: [
+          {
+            code: "P301+P330+P331",
+            text_en: "IF SWALLOWED: rinse mouth. Do NOT induce vomiting.",
+          },
+        ],
+      };
+
+      printLabels(
+        [denseChemical],
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("statement-code statement-code-long");
+      expect(html).toContain(
+        "grid-template-columns: minmax(20mm, 28mm) minmax(0, 1fr)",
+      );
+      expect(html).toContain("width: 18mm");
+      expect(html).toContain("height: 18mm");
     });
 
     it("qrcode template uses the scan-first hierarchy blocks", () => {

@@ -468,6 +468,9 @@ const renderPurposeNotice = (model) => {
   return `<div class="purpose-notice">${escapeHtml(model.t(key))}</div>`;
 };
 
+const getStatementCodeClass = (code) =>
+  String(code || "").length > 8 ? " statement-code-long" : "";
+
 const renderComplianceStatements = (statements, className, model) => {
   if (!statements.length) return "";
 
@@ -475,7 +478,9 @@ const renderComplianceStatements = (statements, className, model) => {
     ${statements
       .map(
         (statement) =>
-          `<div class="compliance-statement"><span class="statement-code">${escapeHtml(
+          `<div class="compliance-statement"><span class="statement-code${getStatementCodeClass(
+            statement.code,
+          )}">${escapeHtml(
             statement.code,
           )}</span><span class="statement-text">${escapeHtml(
             getLocalizedTextForModel(statement, model),
@@ -815,6 +820,23 @@ const TEMPLATE_RENDERERS = {
 const buildStyles = (model) => {
   const { layout } = model;
   const isLandscape = layout.orientation === "landscape";
+  const isFullPagePrimary = layout.widthMm >= 170 && layout.heightMm >= 200;
+  const compliancePictogramSize =
+    isFullPagePrimary
+      ? "24mm"
+      : layout.size === "large"
+        ? "18mm"
+        : layout.size === "medium"
+          ? "14mm"
+          : "10mm";
+  const complianceAlertColumn =
+    isFullPagePrimary
+      ? "minmax(52mm, 58mm)"
+      : layout.size === "large"
+      ? "minmax(38mm, 43mm)"
+      : layout.size === "medium"
+        ? "minmax(28mm, 34mm)"
+        : "minmax(20mm, 24mm)";
 
   return `
     @page {
@@ -885,13 +907,14 @@ const buildStyles = (model) => {
       box-shadow: none;
     }
     .label-full {
-      display: grid;
-      grid-auto-rows: max-content;
-      gap: 1.3mm;
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
       max-height: ${layout.label.height};
       border-width: 0.65mm;
       border-radius: 1mm;
       padding: calc(${layout.label.padding} + 0.3mm);
+      min-height: 0;
     }
     .label-qr {
       flex-direction: row;
@@ -955,8 +978,8 @@ const buildStyles = (model) => {
     }
     .compliance-core {
       display: grid;
-      grid-template-columns: minmax(22mm, 30mm) minmax(0, 1fr);
-      gap: 2mm;
+      grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
+      gap: 2.2mm;
       align-items: start;
       min-height: 0;
     }
@@ -970,11 +993,11 @@ const buildStyles = (model) => {
     .compliance-hazard-panel,
     .compliance-precaution-panel {
       min-width: 0;
-      overflow: hidden;
+      overflow: visible;
     }
     .compliance-precaution-panel {
       border-top: 0.25mm solid #cbd5e1;
-      padding-top: 1mm;
+      padding-top: 0.8mm;
     }
     .section-label {
       color: #475569;
@@ -987,23 +1010,34 @@ const buildStyles = (model) => {
     .compliance-precaution-list {
       display: flex;
       flex-direction: column;
-      gap: 0.55mm;
+      gap: 0.45mm;
     }
     .compliance-statement {
       display: grid;
-      grid-template-columns: 11mm minmax(0, 1fr);
-      gap: 1mm;
+      grid-template-columns: minmax(13mm, max-content) minmax(0, 1fr);
+      gap: 1.1mm;
       break-inside: avoid;
+      align-items: start;
+    }
+    .compliance-precaution-list .compliance-statement {
+      grid-template-columns: minmax(20mm, 28mm) minmax(0, 1fr);
     }
     .statement-code {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
       font-weight: 800;
       color: #111827;
       white-space: nowrap;
+      line-height: 1.05;
+    }
+    .statement-code-long {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .statement-text {
       color: #222;
       overflow-wrap: anywhere;
+      min-width: 0;
     }
     .compliance-footer {
       display: grid;
@@ -1013,6 +1047,7 @@ const buildStyles = (model) => {
       border-top: 0.25mm solid #cbd5e1;
       padding-top: 1mm;
       min-width: 0;
+      margin-top: auto;
     }
     .compliance-supplier {
       min-width: 0;
@@ -1266,14 +1301,14 @@ const buildStyles = (model) => {
     }
     .pictograms.compliance-pictograms {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.1mm;
+      grid-template-columns: repeat(2, minmax(16mm, 1fr));
+      gap: 1.4mm;
       justify-items: center;
       align-items: center;
     }
     .pictograms.compliance-pictograms img {
-      width: min(14mm, ${layout.typography.imgSize});
-      height: min(14mm, ${layout.typography.imgSize});
+      width: ${compliancePictogramSize};
+      height: ${compliancePictogramSize};
     }
     .more-pics {
       font-size: calc(${layout.typography.fontSize} - 2px);
@@ -1313,8 +1348,8 @@ const buildStyles = (model) => {
       width: 100%;
       margin: 0;
       border-radius: 0.8mm;
-      padding: 1.1mm 1.4mm;
-      font-size: calc(${layout.typography.signalSize} + 1px);
+      padding: 0.9mm 1.2mm;
+      font-size: ${layout.typography.signalSize};
       line-height: 1.1;
     }
     .signal.danger {
@@ -1802,6 +1837,92 @@ export function buildPrintPreviewDocument(
   };
 }
 
+const elementOverflows = (element, tolerancePx = 1) => {
+  if (!element) return false;
+  const scrollHeight = Math.ceil(element.scrollHeight || 0);
+  const clientHeight = Math.ceil(element.clientHeight || 0);
+  const scrollWidth = Math.ceil(element.scrollWidth || 0);
+  const clientWidth = Math.ceil(element.clientWidth || 0);
+
+  if (clientHeight > 0 && scrollHeight > clientHeight + tolerancePx) {
+    return true;
+  }
+
+  return clientWidth > 0 && scrollWidth > clientWidth + tolerancePx;
+};
+
+export function inspectPrintLayoutDocument(documentLike) {
+  const root = documentLike?.body || documentLike;
+  if (!root?.querySelectorAll) return [];
+
+  const issues = [];
+  const labels = Array.from(
+    root.querySelectorAll(".label:not(.label-placeholder)"),
+  ).filter((element) => typeof element.querySelector === "function");
+
+  labels.forEach((label, index) => {
+    if (elementOverflows(label, 2)) {
+      issues.push({ type: "label-overflow", index });
+    }
+
+    const footer = label.querySelector(".compliance-footer");
+    if (
+      footer &&
+      label.clientHeight > 0 &&
+      footer.offsetTop + footer.offsetHeight > label.clientHeight + 2
+    ) {
+      issues.push({ type: "compliance-footer-clipped", index });
+    }
+  });
+
+  Array.from(root.querySelectorAll(".statement-code"))
+    .filter((element) => "scrollWidth" in element || "scrollHeight" in element)
+    .forEach((code, index) => {
+      if (elementOverflows(code, 1)) {
+        issues.push({ type: "statement-code-overflow", index });
+      }
+    });
+
+  return issues;
+}
+
+const getMaxCompleteStatementCount = (layout) => {
+  if (layout.widthMm >= 170 && layout.heightMm >= 200) return 36;
+  if (layout.size === "large") return 18;
+  if (layout.size === "medium") return 10;
+  return 6;
+};
+
+export function inspectPrintContentFit(model) {
+  if (!model?.expandedLabels?.length) return [];
+  const { layout } = model;
+  if (layout.labelPurpose !== "shipping" || layout.template !== "full") {
+    return [];
+  }
+
+  const maxStatements = getMaxCompleteStatementCount(layout);
+  return model.expandedLabels.flatMap((chemical, index) => {
+    const effectiveChem = resolveEffectiveChemicalForPrint(
+      chemical,
+      model.customGHSSettings,
+    );
+    const statementCount =
+      (effectiveChem.hazard_statements || []).length +
+      (effectiveChem.precautionary_statements || []).length;
+
+    if (statementCount <= maxStatements) return [];
+
+    return [
+      {
+        type: "content-too-dense",
+        index,
+        statementCount,
+        maxStatements,
+      },
+    ];
+  });
+}
+
 function buildPrintLifecycleMeta(documentBundle) {
   const model = documentBundle?.model;
   if (!model) return {};
@@ -1856,6 +1977,33 @@ export function printLabels(
   const total = images.length;
 
   const triggerPrint = () => {
+    const preflightIssues = [
+      ...inspectPrintContentFit(documentBundle.model),
+      ...inspectPrintLayoutDocument(iframeDoc),
+    ];
+    if (preflightIssues.length > 0) {
+      const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+      recordObservabilityEvent("print_blocked", {
+        status: "blocked",
+        count: lifecycleMeta.totalLabels || 1,
+        meta: {
+          ...lifecycleMeta,
+          issueCount: preflightIssues.length,
+          issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
+        },
+      });
+      if (typeof window !== "undefined" && typeof window.alert === "function") {
+        window.alert(
+          i18n.t("print.layoutBlocked", {
+            defaultValue:
+              "This label content is overflowing or clipped. Choose a larger stock, reduce optional fields, or use a QR supplement before printing.",
+          }),
+        );
+      }
+      iframe.remove();
+      return;
+    }
+
     setTimeout(() => {
       iframe.contentWindow.focus();
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
