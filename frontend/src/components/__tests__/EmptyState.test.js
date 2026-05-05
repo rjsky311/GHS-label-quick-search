@@ -10,8 +10,15 @@ describe('EmptyState', () => {
 
   it('renders title and subtitle translation keys', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
+    expect(screen.getByText('empty.kicker')).toBeInTheDocument();
     expect(screen.getByText('empty.title')).toBeInTheDocument();
     expect(screen.getByText('empty.subtitle')).toBeInTheDocument();
+  });
+
+  it('renders the generated workflow visual asset', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+    expect(screen.getByTestId('empty-visual-asset')).toBeInTheDocument();
+    expect(screen.getByText('empty.visualBadge')).toBeInTheDocument();
   });
 
   it('renders 3 quick example buttons with correct CAS numbers', () => {
@@ -29,6 +36,9 @@ describe('EmptyState', () => {
 
   it('renders 4 feature cards', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
+    expect(screen.getByText('empty.workflowSearch')).toBeInTheDocument();
+    expect(screen.getByText('empty.workflowReview')).toBeInTheDocument();
+    expect(screen.getByText('empty.workflowUse')).toBeInTheDocument();
     expect(screen.getByText('empty.featureBatch')).toBeInTheDocument();
     expect(screen.getByText('empty.featurePrint')).toBeInTheDocument();
     expect(screen.getByText('empty.featureExcel')).toBeInTheDocument();
