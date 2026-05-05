@@ -200,6 +200,20 @@ describe('DetailModal', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText('detail.viewPubChem')).toBeInTheDocument();
     });
+
+    it('renders the trust summary strip before the detailed sections', () => {
+      render(<DetailModal {...defaultProps} />);
+
+      expect(screen.getByTestId('detail-trust-strip')).toBeInTheDocument();
+      expect(screen.getByTestId('detail-trust-source')).toHaveTextContent('detail.trustSource');
+      expect(screen.getByTestId('detail-trust-source')).toHaveTextContent('results.sourceEcha');
+      expect(screen.getByTestId('detail-trust-classification')).toHaveTextContent('detail.trustReportCount');
+      expect(screen.getByTestId('detail-trust-references')).toHaveTextContent('detail.trustReferenceCount');
+      expect(screen.getByTestId('detail-trust-retrieved')).toHaveAttribute(
+        'title',
+        '2026-04-16T11:55:00Z'
+      );
+    });
   });
 
   describe('Closing behavior', () => {
