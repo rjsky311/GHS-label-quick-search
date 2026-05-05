@@ -102,8 +102,11 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-readiness-stock")).toHaveTextContent(
       "Bottle Primary",
     );
-    expect(screen.getByTestId("print-readiness-preview")).toHaveTextContent(
-      "Preview ready",
+    expect(screen.getByTestId("print-readiness-purpose")).toHaveTextContent(
+      "label.purposeShipping",
+    );
+    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
+      "Needs review",
     );
     expect(screen.getByTestId("label-modal-scroll-body")).toHaveClass(
       "overflow-y-auto",
@@ -299,6 +302,25 @@ describe("LabelPrintModal", () => {
         perPage: 8,
         labelWidthMm: 95,
         labelHeightMm: 50,
+      }),
+    );
+  });
+
+  it("selects a print purpose and applies its recommended template and stock", () => {
+    const { props } = renderModal();
+
+    fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "small-strip",
+        size: "small",
+        orientation: "landscape",
+        columns: 4,
+        rows: 4,
+        perPage: 16,
       }),
     );
   });

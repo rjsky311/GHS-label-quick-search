@@ -153,6 +153,25 @@ describe("getHazardFontTier", () => {
 });
 
 describe("print layout model", () => {
+  it("defaults to a shipped-container purpose on large full labels", () => {
+    const layout = resolvePrintLayoutConfig({});
+
+    expect(layout.labelPurpose).toBe("shipping");
+    expect(layout.template).toBe("full");
+    expect(layout.stockId).toBe("large-primary");
+    expect(layout.size).toBe("large");
+    expect(layout.page.perPage).toBe(3);
+  });
+
+  it("infers supplemental purposes for legacy compact template configs", () => {
+    expect(resolvePrintLayoutConfig({ template: "qrcode" }).labelPurpose).toBe(
+      "qrSupplement",
+    );
+    expect(resolvePrintLayoutConfig({ template: "icon" }).labelPurpose).toBe(
+      "quickId",
+    );
+  });
+
   it("resolves legacy size selection into a stock preset config", () => {
     const layout = resolvePrintLayoutConfig({
       size: "small",
@@ -578,6 +597,24 @@ describe("printLabels", () => {
       expect(html).toContain("print.moreHazardsShort");
     });
 
+    it("full template uses a compliance-style fixed hierarchy", () => {
+      printLabels(
+        [mockChemical],
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("label-compliance");
+      expect(html).toContain("label-purpose-shipping");
+      expect(html).toContain("compliance-alert-panel");
+      expect(html).toContain("compliance-pictograms");
+      expect(html).toContain("compliance-hazard-panel");
+      expect(html).toContain("compliance-precaution-panel");
+      expect(html).toContain("compliance-footer");
+      expect(html).toContain("print.hazardStatementsLabel");
+      expect(html).not.toContain("hazards-full");
+    });
+
     it("qrcode template uses the scan-first hierarchy blocks", () => {
       printLabels(
         [mockChemical],
@@ -607,6 +644,37 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="hazard-more qr-hazard-more"/);
       expect(html).toContain("print.moreHazardsShort");
+    });
+
+    it("supplemental templates print a purpose notice", () => {
+      printLabels(
+        [mockChemical],
+        {
+          labelPurpose: "qrSupplement",
+          size: "small",
+          template: "qrcode",
+          orientation: "landscape",
+        },
+        {},
+      );
+      const qrHtml = mockIframeDoc.write.mock.calls[0][0];
+      expect(qrHtml).toContain("purpose-notice");
+      expect(qrHtml).toContain("print.qrSupplementNotice");
+
+      mockIframeDoc.write.mockClear();
+      printLabels(
+        [mockChemical],
+        {
+          labelPurpose: "quickId",
+          size: "small",
+          template: "icon",
+          orientation: "portrait",
+        },
+        {},
+      );
+      const iconHtml = mockIframeDoc.write.mock.calls[0][0];
+      expect(iconHtml).toContain("purpose-notice");
+      expect(iconHtml).toContain("print.quickIdNotice");
     });
   });
 
@@ -684,7 +752,8 @@ describe("printLabels", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toContain('<div class="custom-fields">');
-      expect(html).not.toMatch(/<div\s+class="profile-block/);
+      expect(html).toContain("profile-block-missing");
+      expect(html).toContain("print.supplierMissing");
     });
 
     it("renders only non-empty fields", () => {
@@ -1134,14 +1203,16 @@ describe("printLabels", () => {
       expect(html).toContain("如誤吞食：立即呼叫毒物中心。");
     });
 
-    it("full template inserts a visual divider between H-codes and P-codes", () => {
+    it("full template separates H-codes and P-codes into compliance panels", () => {
       printLabels(
         [chemWithP],
         { size: "large", template: "full", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain("precautions-divider");
+      expect(html).toContain("compliance-hazard-panel");
+      expect(html).toContain("compliance-precaution-panel");
+      expect(html).toContain("print.precautionaryStatementsLabel");
     });
 
     it("standard template renders compact P-code summary when the stock budget allows it", () => {
@@ -1192,8 +1263,8 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      // Divider and per-item markup should not render (CSS class definitions don't count)
-      expect(html).not.toMatch(/<div\s+class="precautions-divider"/);
+      expect(html).toContain("compliance-precaution-panel");
+      expect(html).toContain("print.noPrecautionaryStatement");
       expect(html).not.toMatch(/<div\s+class="precaution-item-full/);
     });
 
@@ -1567,7 +1638,9 @@ describe("prepared solution print rendering", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/class="label\s+label-full\s+label-prepared"/);
+      expect(html).toMatch(
+        /class="label\s+label-full\s+label-compliance\s+label-purpose-shipping\s+label-prepared"/,
+      );
     });
 
     it("parent pictograms / hazards / precautions are still rendered", () => {

@@ -159,11 +159,14 @@ Detail view should be a hazard summary, not a raw data dump:
 
 Print configuration should behave like a workflow:
 
-1. Stock preset.
-2. Template / content density.
-3. Label fields and lab profile.
-4. Live preview.
-5. Print / save / recent reload.
+1. Print purpose: shipped-container style primary label, QR supplement, or quick ID.
+2. Stock preset.
+3. Template / content density.
+4. Label fields and lab profile.
+5. Live preview and readiness warnings.
+6. Print / save / recent reload.
+
+The default path is safety-conservative: primary labels use the roomy full template and keep product identifier, signal word, pictograms, H-statements, P-statements, and responsible lab/supplier information in one label hierarchy. Compact QR and quick-ID labels may be useful, but must be visibly treated as supplemental rather than complete shipped-container labels.
 
 The print output itself must never include ads or unrelated brand promotion in compliance-critical label content.
 

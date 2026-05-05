@@ -15,7 +15,7 @@ As of the v1.10 codebase:
 
 - Frontend is React 19, Vite 6, Tailwind 3.4, Radix/shadcn primitives.
 - Runtime version is `1.10.0`.
-- Print workflow includes stock presets, QR template, live preview, recent print reload, lab profile, template save/load, and calibration controls.
+- Print workflow includes purpose-first label modes, stock presets, QR supplement labels, live preview, recent print reload, lab profile, template save/load, and calibration controls.
 - Admin/pilot surfaces exist behind configuration.
 - Current redesign pass has moved the main app to a light-first utility shell, added trust/feedback surfaces, fixed local Vite CORS for browser QA, split Vite vendor bundles, and started the generated visual asset system with a first-use workflow illustration. Remaining work is deeper workflow polish and deployment QA.
 
@@ -99,15 +99,17 @@ Goal: make label printing feel like a confident workflow.
 Scope:
 
 - `LabelPrintModal.jsx` hierarchy.
+- Print purpose selection before stock/template choices.
 - Stock preset selection.
 - Template/content density language.
 - Live preview sizing and warnings.
 - Recent print/template/lab profile surfaces.
-- Printed `standard` and `qrcode` label hierarchy if owner feedback still rejects current output.
+- Printed full primary-label hierarchy plus compact `standard` / `qrcode` supplemental label hierarchy.
 
 Acceptance:
 
-- Users can choose stock/template without guessing.
+- Users can choose purpose/stock/template without guessing.
+- Shipped-container style labels keep product identifier, pictograms, signal word, H/P statements, and responsible contact together.
 - Compact labels do not pretend to carry full hazard detail.
 - QR labels make scan behavior obvious.
 - Printed labels remain free of ads and unrelated brand content.

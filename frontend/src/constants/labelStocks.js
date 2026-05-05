@@ -180,7 +180,7 @@ const PRESET_INDEX = STOCK_PRESETS.reduce((acc, preset) => {
 }, {});
 
 export const LABEL_STOCK_PRESETS = STOCK_PRESETS;
-export const DEFAULT_LABEL_STOCK_ID = "medium-bottle";
+export const DEFAULT_LABEL_STOCK_ID = "large-primary";
 
 export function getLabelStockPresetDisplay(
   presetOrId,
@@ -203,6 +203,7 @@ export function getLabelStockPresetDisplay(
 const DEFAULT_PRESET = PRESET_INDEX[DEFAULT_LABEL_STOCK_ID];
 
 const VALID_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
+const VALID_LABEL_PURPOSES = new Set(["shipping", "qrSupplement", "quickId"]);
 const VALID_ORIENTATIONS = new Set(["portrait", "landscape"]);
 const VALID_NAME_DISPLAYS = new Set(["both", "en", "zh"]);
 const VALID_COLOR_MODES = new Set(["color", "bw"]);
@@ -243,30 +244,52 @@ function getBaseLayout(size = "medium", orientation = "portrait") {
 
 export const DEFAULT_LABEL_CONFIG = Object.freeze({
   schemaVersion: 2,
-  template: "standard",
-  size: DEFAULT_PRESET.size,
-  orientation: DEFAULT_PRESET.orientation,
+  labelPurpose: "shipping",
+  template: "full",
+  size: PRESET_INDEX["large-primary"].size,
+  orientation: PRESET_INDEX["large-primary"].orientation,
   nameDisplay: "both",
   colorMode: "color",
-  stockPreset: DEFAULT_PRESET.id,
-  stockPresetName: DEFAULT_PRESET.name,
-  columns: DEFAULT_PRESET.columns,
-  rows: DEFAULT_PRESET.rows,
-  perPage: DEFAULT_PRESET.columns * DEFAULT_PRESET.rows,
-  labelWidthMm: DEFAULT_PRESET.labelWidthMm,
-  labelHeightMm: DEFAULT_PRESET.labelHeightMm,
+  stockPreset: PRESET_INDEX["large-primary"].id,
+  stockPresetName: PRESET_INDEX["large-primary"].name,
+  columns: PRESET_INDEX["large-primary"].columns,
+  rows: PRESET_INDEX["large-primary"].rows,
+  perPage:
+    PRESET_INDEX["large-primary"].columns * PRESET_INDEX["large-primary"].rows,
+  labelWidthMm: PRESET_INDEX["large-primary"].labelWidthMm,
+  labelHeightMm: PRESET_INDEX["large-primary"].labelHeightMm,
   pageMarginMm: PAGE_MARGIN_MM,
-  pagePaddingMm: DEFAULT_PRESET.pagePaddingMm,
-  columnGapMm: DEFAULT_PRESET.columnGapMm,
-  rowGapMm: DEFAULT_PRESET.rowGapMm,
-  offsetXmm: DEFAULT_PRESET.offsetXmm,
-  offsetYmm: DEFAULT_PRESET.offsetYmm,
+  pagePaddingMm: PRESET_INDEX["large-primary"].pagePaddingMm,
+  columnGapMm: PRESET_INDEX["large-primary"].columnGapMm,
+  rowGapMm: PRESET_INDEX["large-primary"].rowGapMm,
+  offsetXmm: PRESET_INDEX["large-primary"].offsetXmm,
+  offsetYmm: PRESET_INDEX["large-primary"].offsetYmm,
 });
+
+const inferLabelPurpose = (template) => {
+  if (template === "qrcode") return "qrSupplement";
+  if (template === "icon") return "quickId";
+  return DEFAULT_LABEL_CONFIG.labelPurpose;
+};
+
+const getDefaultPresetForPurpose = (purpose) => {
+  if (purpose === "qrSupplement") return PRESET_INDEX["small-strip"];
+  if (purpose === "quickId") return PRESET_INDEX["small-rack"];
+  return DEFAULT_PRESET;
+};
 
 export function normalizePrintLabelConfig(labelConfig = {}) {
   const calibration = labelConfig.calibration || {};
   const explicitPreset =
     labelConfig.stockPreset || labelConfig.stockId || labelConfig.stock || null;
+  const labelPurpose = coerceEnum(
+    labelConfig.labelPurpose ||
+      labelConfig.purpose ||
+      inferLabelPurpose(labelConfig.template),
+    VALID_LABEL_PURPOSES,
+    DEFAULT_LABEL_CONFIG.labelPurpose,
+  );
+  const purposePreset = getDefaultPresetForPurpose(labelPurpose);
   const preset =
     explicitPreset === "custom"
       ? null
@@ -274,7 +297,11 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
         ? getPreset(explicitPreset)
         : null;
   const base =
-    preset || getBaseLayout(labelConfig.size, labelConfig.orientation);
+    preset ||
+    getBaseLayout(
+      labelConfig.size || purposePreset.size,
+      labelConfig.orientation || purposePreset.orientation,
+    );
   const size = labelConfig.size || base.size;
   const orientation = coerceEnum(
     labelConfig.orientation || base.orientation,
@@ -293,6 +320,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
 
   return {
     schemaVersion: 2,
+    labelPurpose,
     template: coerceEnum(
       labelConfig.template,
       VALID_TEMPLATES,

@@ -1,6 +1,7 @@
 # GHS Label Quick Search — Project Context
 
 ## Project Overview
+
 - **Purpose**: Chemical GHS hazard label quick search system
 - **Stack**: React 19 + Tailwind CSS + Radix UI (frontend) / FastAPI + Python 3.11 (backend)
 - **Data Source**: PubChem REST API + local chemical dictionary (1,707 CAS entries)
@@ -11,6 +12,7 @@
 - **Backend URL**: https://ghs-backend.zeabur.app
 
 ## Zeabur Infrastructure IDs
+
 - Project ID: `696262d991818d5fd97058b3`
 - Environment ID: `696262d9a7aaff0c1152b3d6`
 - Frontend service ID: `69626873d9479ab33ad4590e`
@@ -38,69 +40,74 @@ User Browser
 ## Frontend Architecture (20+ components + 15+ hooks + shared utils)
 
 ### Components (`src/components/`)
-| File | Purpose |
-|------|---------|
-| `Header.jsx` | App header, favorites/history toggles, language switch |
-| `SearchSection.jsx` | Single/batch search tabs with autocomplete |
-| `SearchAutocomplete.jsx` | Autocomplete dropdown (history + favorites) |
-| `ResultsTable.jsx` | Results table with sort, filter, export, SDS, print |
-| `DetailModal.jsx` | Full chemical detail (GHS classification, SDS links) |
-| `LabelPrintModal.jsx` | Label printing config (4 templates, 3 sizes, saved presets); renders prepared-solution rows with blue tint + "Prepared" badge + concentration/solvent meta |
-| `PrepareSolutionModal.jsx` | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1 |
-| `PreparedSidebar.jsx` | Recent prepared-solution reprint sidebar |
-| `PilotDashboardSidebar.jsx` | Admin-gated pilot dashboard for observability, dictionary growth, aliases, manual entries, and reference links |
-| `AdminAccessDialog.jsx` | Admin unlock dialog for pilot dashboard |
-| `AuthoritativeSourceNote.jsx` | Persistent SDS/supplier/local-regulation authority note |
-| `UpstreamErrorBanner.jsx` | PubChem transient-error warning banner |
-| `FavoritesSidebar.jsx` | Favorites management sidebar |
-| `HistorySidebar.jsx` | Search history sidebar |
-| `EmptyState.jsx` | Landing page with quick-start buttons |
-| `Footer.jsx` | Version display + disclaimer |
-| `ErrorBoundary.jsx` | React error boundary |
-| `SkeletonTable.jsx` | Loading skeleton |
-| `ClassificationComparisonTable.jsx` | Shared GHS comparison table (same-chemical & cross-chemical modes) |
-| `ComparisonModal.jsx` | Cross-chemical GHS classification comparison modal |
-| `GHSImage.jsx` | GHS pictogram image display |
+
+| File                                | Purpose                                                                                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Header.jsx`                        | App header, favorites/history toggles, language switch                                                                                                                                                                                           |
+| `SearchSection.jsx`                 | Single/batch search tabs with autocomplete                                                                                                                                                                                                       |
+| `SearchAutocomplete.jsx`            | Autocomplete dropdown (history + favorites)                                                                                                                                                                                                      |
+| `ResultsTable.jsx`                  | Results table with sort, filter, export, SDS, print                                                                                                                                                                                              |
+| `DetailModal.jsx`                   | Full chemical detail (GHS classification, SDS links)                                                                                                                                                                                             |
+| `LabelPrintModal.jsx`               | Purpose-first label printing config (shipped-container style primary label / QR supplement / quick ID, stock presets, 4 templates, saved presets); renders prepared-solution rows with blue tint + "Prepared" badge + concentration/solvent meta |
+| `PrepareSolutionModal.jsx`          | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1                                                                                                                   |
+| `PreparedSidebar.jsx`               | Recent prepared-solution reprint sidebar                                                                                                                                                                                                         |
+| `PilotDashboardSidebar.jsx`         | Admin-gated pilot dashboard for observability, dictionary growth, aliases, manual entries, and reference links                                                                                                                                   |
+| `AdminAccessDialog.jsx`             | Admin unlock dialog for pilot dashboard                                                                                                                                                                                                          |
+| `AuthoritativeSourceNote.jsx`       | Persistent SDS/supplier/local-regulation authority note                                                                                                                                                                                          |
+| `UpstreamErrorBanner.jsx`           | PubChem transient-error warning banner                                                                                                                                                                                                           |
+| `FavoritesSidebar.jsx`              | Favorites management sidebar                                                                                                                                                                                                                     |
+| `HistorySidebar.jsx`                | Search history sidebar                                                                                                                                                                                                                           |
+| `EmptyState.jsx`                    | Landing page with quick-start buttons                                                                                                                                                                                                            |
+| `Footer.jsx`                        | Version display + disclaimer                                                                                                                                                                                                                     |
+| `ErrorBoundary.jsx`                 | React error boundary                                                                                                                                                                                                                             |
+| `SkeletonTable.jsx`                 | Loading skeleton                                                                                                                                                                                                                                 |
+| `ClassificationComparisonTable.jsx` | Shared GHS comparison table (same-chemical & cross-chemical modes)                                                                                                                                                                               |
+| `ComparisonModal.jsx`               | Cross-chemical GHS classification comparison modal                                                                                                                                                                                               |
+| `GHSImage.jsx`                      | GHS pictogram image display                                                                                                                                                                                                                      |
 
 ### Hooks (`src/hooks/`)
-| File | Purpose |
-|------|---------|
-| `useSearchHistory.js` | Search history in localStorage (max 50) |
-| `useFavorites.js` | Favorites in localStorage |
-| `useCustomGHS.js` | Custom GHS classification overrides |
-| `useLabelSelection.js` | Tracks selected chemicals for printing |
-| `useResultSort.js` | Table sort state (4 columns) |
-| `usePrintTemplates.js` | Save/load/delete print setting presets (max 10) |
-| `usePrintWorkspace.js` | Local-first print templates, custom label fields, lab profile, and recent print wiring; optional workspace sync when explicitly enabled |
-| `usePrintRecents.js` | Recent print storage and reload helpers |
-| `useLabProfile.js` | Lab profile persistence |
-| `useObservability.js` | Pilot observability event logging/report export |
-| `usePilotDashboard.js` | Admin-gated pilot dashboard data loading and saves |
-| `usePreparedRecents.js` | Prepared-solution recent workflow inputs (localStorage, schemaVersion:1, max 10, dedup+prepend); v1.9 M3 Tier 2 |
+
+| File                    | Purpose                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `useSearchHistory.js`   | Search history in localStorage (max 50)                                                                                                   |
+| `useFavorites.js`       | Favorites in localStorage                                                                                                                 |
+| `useCustomGHS.js`       | Custom GHS classification overrides                                                                                                       |
+| `useLabelSelection.js`  | Tracks selected chemicals for printing                                                                                                    |
+| `useResultSort.js`      | Table sort state (4 columns)                                                                                                              |
+| `usePrintTemplates.js`  | Save/load/delete print setting presets (max 10)                                                                                           |
+| `usePrintWorkspace.js`  | Local-first print templates, custom label fields, lab profile, and recent print wiring; optional workspace sync when explicitly enabled   |
+| `usePrintRecents.js`    | Recent print storage and reload helpers                                                                                                   |
+| `useLabProfile.js`      | Lab profile persistence                                                                                                                   |
+| `useObservability.js`   | Pilot observability event logging/report export                                                                                           |
+| `usePilotDashboard.js`  | Admin-gated pilot dashboard data loading and saves                                                                                        |
+| `usePreparedRecents.js` | Prepared-solution recent workflow inputs (localStorage, schemaVersion:1, max 10, dedup+prepend); v1.9 M3 Tier 2                           |
 | `usePreparedPresets.js` | Prepared-solution saved recipe presets (localStorage, schemaVersion:1, max 10, recipe-only: parent+concentration+solvent); v1.9 M3 Tier 2 |
-| `useFocusTrap.js` | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap) |
-| `use-toast.js` | shadcn toast hook |
+| `useFocusTrap.js`       | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap)           |
+| `use-toast.js`          | shadcn toast hook                                                                                                                         |
 
 ### Utils (`src/utils/`)
-| File | Purpose |
-|------|---------|
-| `exportData.js` | Excel/CSV export (backend-only; no client-side fallback after Phase 3) |
-| `printLabels.js` | Label printing engine (4 templates, iframe with HTML escaping + afterprint cleanup + 60s fallback); prepared-solution rendering branch keyed on `isPreparedSolution` |
-| `preparedSolution.js` | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only — drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
-| `sdsLinks.js` | PubChem Safety + ECHA CHEM search URL builders |
-| `formatDate.js` | i18n-aware date formatting |
-| `printStorage.js` | Versioned print template/job/lab-profile normalization and recent print merge helpers |
-| `workspaceDocuments.js` | Optional admin-gated workspace document helpers; public builds default to local-only no-op sync |
-| `ghsAvailability.js` | Distinguishes unavailable GHS data from renderable GHS visuals |
-| `ghsText.js` | Localized GHS name/signal/statement text helpers |
+
+| File                    | Purpose                                                                                                                                                                                                                                                                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exportData.js`         | Excel/CSV export (backend-only; no client-side fallback after Phase 3)                                                                                                                                                                                                                                                                 |
+| `printLabels.js`        | Label printing engine (purpose-aware full primary labels plus compact supplemental templates, iframe with HTML escaping + afterprint cleanup + 60s fallback); prepared-solution rendering branch keyed on `isPreparedSolution`                                                                                                         |
+| `preparedSolution.js`   | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only — drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
+| `sdsLinks.js`           | PubChem Safety + ECHA CHEM search URL builders                                                                                                                                                                                                                                                                                         |
+| `formatDate.js`         | i18n-aware date formatting                                                                                                                                                                                                                                                                                                             |
+| `printStorage.js`       | Versioned print template/job/lab-profile normalization and recent print merge helpers                                                                                                                                                                                                                                                  |
+| `workspaceDocuments.js` | Optional admin-gated workspace document helpers; public builds default to local-only no-op sync                                                                                                                                                                                                                                        |
+| `ghsAvailability.js`    | Distinguishes unavailable GHS data from renderable GHS visuals                                                                                                                                                                                                                                                                         |
+| `ghsText.js`            | Localized GHS name/signal/statement text helpers                                                                                                                                                                                                                                                                                       |
 
 ### i18n (`src/i18n/`)
+
 - `index.js` — i18next init with LanguageDetector, fallback zh-TW
 - `locales/zh-TW.json` — Traditional Chinese (grew across v1.8 M0–M2 and v1.9 M3 Tier 1; keep additions tagged to their milestone in PRs)
 - `locales/en.json` — English (same growth pattern as zh-TW)
 - Language stored in localStorage key `ghs_language`
 
 ### Build
+
 - Vite 6 + `@vitejs/plugin-react`
 - `@` alias → `src/` via `frontend/vite.config.js`
 - Tailwind CSS 3.4 + shadcn/ui (46 primitives)
@@ -109,24 +116,26 @@ User Browser
 ## Backend Architecture (`backend/server.py`)
 
 ### API Endpoints (all under `/api`)
-| Endpoint | Method | Rate limit (per IP) | Description |
-|----------|--------|--------|-------------|
-| `/api/health` | GET | — | Health check; unlimited so LB/uptime monitors don't trip |
-| `/api/ops/report` | GET | admin-gated | Pilot observability/admin report |
-| `/api/dictionary/report` | GET | admin-gated | Pilot dictionary growth report |
-| `/api/dictionary/manual-entries` | GET/POST | admin-gated | Manual dictionary entries |
-| `/api/dictionary/aliases` | GET/POST | admin-gated | Alias curation |
-| `/api/dictionary/reference-links` | GET/POST | admin-gated | Reference/SDS link curation |
-| `/api/dictionary/miss-query` | POST | — | Optional search miss telemetry; no-op unless `CAPTURE_DICTIONARY_MISSES=true` |
-| `/api/workspace/{doc_type}` | GET/PUT | admin-gated | Optional shared workspace persistence for prepared/print/lab-profile docs; public frontend defaults to local-only |
-| `/api/search-by-name/{query}` | GET | 60/min | Name search (EN/ZH substring + aliases, max 20) |
-| `/api/search/{query}` | GET | 30/min | Single CAS or name search (auto-detect) |
-| `/api/search` | POST | 10/min | Batch CAS search (Pydantic `max_length=100` → 422 on overflow) |
-| `/api/export/xlsx` | POST | 10/min | Export to Excel (Pydantic `max_length=500`, formula-injection safe) |
-| `/api/export/csv` | POST | 10/min | Export to CSV (same limits) |
-| `/api/ghs-pictograms` | GET | — | GHS pictogram metadata (static) |
+
+| Endpoint                          | Method   | Rate limit (per IP) | Description                                                                                                       |
+| --------------------------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/api/health`                     | GET      | —                   | Health check; unlimited so LB/uptime monitors don't trip                                                          |
+| `/api/ops/report`                 | GET      | admin-gated         | Pilot observability/admin report                                                                                  |
+| `/api/dictionary/report`          | GET      | admin-gated         | Pilot dictionary growth report                                                                                    |
+| `/api/dictionary/manual-entries`  | GET/POST | admin-gated         | Manual dictionary entries                                                                                         |
+| `/api/dictionary/aliases`         | GET/POST | admin-gated         | Alias curation                                                                                                    |
+| `/api/dictionary/reference-links` | GET/POST | admin-gated         | Reference/SDS link curation                                                                                       |
+| `/api/dictionary/miss-query`      | POST     | —                   | Optional search miss telemetry; no-op unless `CAPTURE_DICTIONARY_MISSES=true`                                     |
+| `/api/workspace/{doc_type}`       | GET/PUT  | admin-gated         | Optional shared workspace persistence for prepared/print/lab-profile docs; public frontend defaults to local-only |
+| `/api/search-by-name/{query}`     | GET      | 60/min              | Name search (EN/ZH substring + aliases, max 20)                                                                   |
+| `/api/search/{query}`             | GET      | 30/min              | Single CAS or name search (auto-detect)                                                                           |
+| `/api/search`                     | POST     | 10/min              | Batch CAS search (Pydantic `max_length=100` → 422 on overflow)                                                    |
+| `/api/export/xlsx`                | POST     | 10/min              | Export to Excel (Pydantic `max_length=500`, formula-injection safe)                                               |
+| `/api/export/csv`                 | POST     | 10/min              | Export to CSV (same limits)                                                                                       |
+| `/api/ghs-pictograms`             | GET      | —                   | GHS pictogram metadata (static)                                                                                   |
 
 ### Key Functions
+
 - `normalize_cas()` — CAS format normalization (strips non-digits except hyphens)
 - `resolve_name_to_cas()` — 4-tier name→CAS resolution (exact ZH → exact EN → word-boundary regex → prefix)
 - `pubchem_get_json()` — Retry helper: exponential backoff with jitter, honours `Retry-After`, raises `PubChemError` on exhausted transient failures; gated by `_pubchem_semaphore` (outbound concurrency cap, default 8)
@@ -140,6 +149,7 @@ User Browser
 - `_client_ip()` — Reads leftmost `X-Forwarded-For` for rate-limit bucketing behind Zeabur's proxy (disable via `TRUST_FORWARDED_HEADERS=0`)
 
 ### Chemical Dictionaries (`backend/chemical_dict.py`)
+
 - `CAS_TO_EN` — 1,707 CAS→English name entries
 - `CAS_TO_ZH` — 1,707 CAS→Chinese name entries
 - `CHEMICAL_NAMES_ZH_EXPANDED` — 1,816 English→Chinese expanded dictionary
@@ -147,6 +157,7 @@ User Browser
 - `ZH_TO_CAS` — Chinese name→CAS reverse lookup
 
 ### Backend Tests (`backend/test_name_search.py`)
+
 - 99 tests covering: name resolution, reverse dictionaries, aliases, API endpoints,
   GHS classification dedup/ranking, export formula injection + size limits,
   PubChem retry helper (429/5xx/timeout/Retry-After), `search_chemical` upstream_error
@@ -157,44 +168,53 @@ User Browser
 ## Critical Lessons (from previous sessions)
 
 ### Zeabur Dockerfile Mismatch
+
 - Older Zeabur setup used its own frontend Dockerfile and missed repo-local npm config.
 - Current frontend deploy is Vite/npm based. `frontend/Dockerfile` uses Node 22; `zeabur.yaml` runs `npm ci && npm run build` and passes `VITE_BACKEND_URL`.
 - Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*` config unless explicitly asked.
 - Current i18n packages remain intentionally conservative: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x.
 
 ### SearchAutocomplete Event Conflict
+
 - `mousedown` document listener fires before button `click` event
 - Solution: `requestAnimationFrame()` delay in outside-click handler
 - Symptom: search button "doesn't work on first click"
 
 ### useFavorites Incomplete Fields
+
 - Must save `found`, `other_classifications`, `has_multiple_classifications` to localStorage
 - `DetailModal` needs null fallback for `getEffectiveClassification()` result
 - Symptom: clicking "detail" from favorites sidebar crashes app
 
 ### i18n Package Versions
+
 - react-i18next 16.x / i18next 25.x previously created peer-dependency pressure during CRA/CRACO builds.
 - Even after the Vite migration, keep i18next 23.x / react-i18next 14.x / language detector 7.x unless there is an explicit dependency-refresh task.
 
 ### PubChem Silent Degradation (Phase 1 fix)
+
 - Prior `get_ghs_classification` returned `{}` on any exception → `search_chemical` emitted `found=True` with empty hazards. For a safety tool, that is indistinguishable from "no hazards" — the worst failure mode this app can have
 - Fix: classify transient (429/5xx/timeout) vs definitive (404) in `pubchem_get_json`; surface via `upstream_error: true`; UI shows "PubChem 暫時無法回應" rather than "no data"
 - Partial-transient note: if ANY CID-lookup method raised `PubChemError` and no method found a CID, `get_cid_from_cas` raises — we must not trust a not-found conclusion based on a partial outage
 
 ### GHS Dedup by Pictogram Only (Phase 1 fix)
+
 - Old dedup key `frozenset(p['code'])` dropped reports with same icons but different H-codes / signal word
 - New signature `(pic_set, signal_word, sorted(h_codes), source)`; primary selected by deterministic rank (report_count → ECHA → hazard count → source order)
 
 ### printLabels Was an XSS Vector (Phase 1 fix)
+
 - `iframeDoc.write(...)` with template-string interpolation bypassed React's auto-escaping
 - Custom fields from localStorage, CAS input, PubChem text all flowed in raw
 - Fix: `escapeHtml()` applied to every interpolated text and attribute value
 
 ### CSV/XLSX Formula Injection (Phase 1 fix)
+
 - Values starting with `=`, `+`, `-`, `@`, `\t`, `\r` execute as formulas in Excel/Sheets/Calc when the export is opened
 - `spreadsheet_safe()` prefixes with `'`; applied to every cell in both export endpoints
 
 ### useFocusTrap onClose Identity (Phase 2 post-review fix)
+
 - Initial implementation had `useEffect(…, [onClose])`
 - App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
 - Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
@@ -209,7 +229,9 @@ an explicit ask.
 v1.10 moved the frontend from `react-scripts + CRACO` to Vite/npm and
 added print-workflow productization: label stock presets, QR labels, live
 sheet/label preview, recent print reload, lab profile, template save/load,
-and calibration controls. It also added admin-gated pilot persistence and
+and calibration controls. The current print default is safety-conservative:
+shipped-container style primary labels use the roomy full template, while QR
+and quick-ID labels are explicitly supplemental. It also added admin-gated pilot persistence and
 optional workspace documents. Public builds keep prepared/print/lab-profile
 state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
@@ -221,6 +243,7 @@ refresh, backend health/search, the trust panel, detail workflow, and label
 print modal entry.
 
 ### Git History (key commits)
+
 ```
 6b67061 Merge pull request #23 - Productize utility workflow
 a9bdebd feat: productize utility workflow
@@ -269,6 +292,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 ```
 
 ### Test Results (latest known v1.10 baseline)
+
 - **Frontend**: 664 tests across 42 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
@@ -279,15 +303,17 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
   actions use v6 / Node 24-compatible runtimes
 
 ### CI/CD (`.github/workflows/ci.yml`)
+
 - **Frontend job**: `npm ci` → `npm run test:i18n` → `npm test -- --runInBand` → `npm run build`
 - **Backend job**: `pip install -r requirements.txt` → `py_compile server.py` → `pytest -v`
 - Triggers: push to main, pull requests
 
 ### Environment Variables
-| Service | Variable | Local | Production |
-|---------|----------|-------|------------|
-| Backend | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | `https://ghs-frontend.zeabur.app` |
-| Frontend | `VITE_BACKEND_URL` | `http://localhost:8001` | `https://ghs-backend.zeabur.app` |
+
+| Service  | Variable           | Local                                         | Production                        |
+| -------- | ------------------ | --------------------------------------------- | --------------------------------- |
+| Backend  | `CORS_ORIGINS`     | `http://localhost:5173,http://127.0.0.1:5173` | `https://ghs-frontend.zeabur.app` |
+| Frontend | `VITE_BACKEND_URL` | `http://localhost:8001`                       | `https://ghs-backend.zeabur.app`  |
 
 ## Completed Milestones
 
@@ -336,13 +362,14 @@ See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the histo
 ## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 
 ### 🟢 Low Priority — Nice to Have
-| # | Feature | Description | Difficulty |
-|---|---------|-------------|------------|
-| 1 | **Export preview** | Preview Excel/CSV data before downloading | Medium |
-| 2 | **First-time user tutorial** | Interactive onboarding walkthrough for new users | Medium |
-| 3 | **Zeabur Dockerfile sync** | Make Zeabur use repo's Dockerfile instead of stored one | Low |
-| 4 | **PWA support** | Offline usage with service worker | High |
-| 5 | **Dark/light theme toggle** | Theme switcher | Medium |
-| 6 | **Performance monitoring** | Sentry / LogRocket integration | Medium |
-| 7 | **Mobile-optimized label printing** | Responsive print layout for mobile | Medium |
-| 8 | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low |
+
+| #   | Feature                               | Description                                                | Difficulty |
+| --- | ------------------------------------- | ---------------------------------------------------------- | ---------- |
+| 1   | **Export preview**                    | Preview Excel/CSV data before downloading                  | Medium     |
+| 2   | **First-time user tutorial**          | Interactive onboarding walkthrough for new users           | Medium     |
+| 3   | **Zeabur Dockerfile sync**            | Make Zeabur use repo's Dockerfile instead of stored one    | Low        |
+| 4   | **PWA support**                       | Offline usage with service worker                          | High       |
+| 5   | **Dark/light theme toggle**           | Theme switcher                                             | Medium     |
+| 6   | **Performance monitoring**            | Sentry / LogRocket integration                             | Medium     |
+| 7   | **Mobile-optimized label printing**   | Responsive print layout for mobile                         | Medium     |
+| 8   | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low        |

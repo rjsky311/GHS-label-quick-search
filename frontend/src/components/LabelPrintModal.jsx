@@ -126,6 +126,36 @@ const COLOR_OPTIONS = [
   { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
 ];
 
+const PURPOSE_OPTIONS = [
+  {
+    value: "shipping",
+    labelKey: "label.purposeShipping",
+    descKey: "label.purposeShippingDesc",
+    tipKey: "label.purposeShippingTip",
+    icon: Package2,
+    presetId: "large-primary",
+    template: "full",
+  },
+  {
+    value: "qrSupplement",
+    labelKey: "label.purposeQrSupplement",
+    descKey: "label.purposeQrSupplementDesc",
+    tipKey: "label.purposeQrSupplementTip",
+    icon: ScanLine,
+    presetId: "small-strip",
+    template: "qrcode",
+  },
+  {
+    value: "quickId",
+    labelKey: "label.purposeQuickId",
+    descKey: "label.purposeQuickIdDesc",
+    tipKey: "label.purposeQuickIdTip",
+    icon: Target,
+    presetId: "small-rack",
+    template: "icon",
+  },
+];
+
 const READINESS_TONE_CLASSES = {
   ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
   neutral: "border-slate-200 bg-white text-slate-700",
@@ -268,6 +298,13 @@ function buildHazardPreview(chem, template, tx, contentLocale) {
       ];
 }
 
+function getLabelPurposeForConfig(labelConfig = {}) {
+  if (labelConfig.labelPurpose) return labelConfig.labelPurpose;
+  if (labelConfig.template === "qrcode") return "qrSupplement";
+  if (labelConfig.template === "icon") return "quickId";
+  return "shipping";
+}
+
 function buildPreviewRisks({
   previewChem,
   labelConfig,
@@ -291,9 +328,68 @@ function buildPreviewRisks({
     0,
   );
   const pictogramCount = previewChem.ghs_pictograms?.length || 0;
+  const hazardCount = previewChem.hazard_statements?.length || 0;
+  const precautionCount = previewChem.precautionary_statements?.length || 0;
+  const labelPurpose = getLabelPurposeForConfig(labelConfig);
   const hasProfile = Boolean(
     labProfile.organization || labProfile.phone || labProfile.address,
   );
+
+  if (labelPurpose === "qrSupplement") {
+    risks.push(
+      tx(
+        "label.previewRiskQrSupplement",
+        "QR supplement mode is useful for small containers, but it is not a complete shipped-container label.",
+      ),
+    );
+  }
+
+  if (labelPurpose === "quickId") {
+    risks.push(
+      tx(
+        "label.previewRiskQuickId",
+        "Quick ID mode is for internal bench use only; it should not be treated as a complete hazard label.",
+      ),
+    );
+  }
+
+  if (labelPurpose === "shipping") {
+    if (labelConfig.template !== "full") {
+      risks.push(
+        tx(
+          "label.previewRiskShippingTemplate",
+          "Complete shipped-label mode should use the Full template so H/P statements, pictograms, and signal word stay together.",
+        ),
+      );
+    }
+
+    if (layoutProfile.size !== "large") {
+      risks.push(
+        tx(
+          "label.previewRiskShippingStock",
+          "Complete shipped-label mode is safest on Large Primary stock; smaller stock should be treated as QR supplement or internal ID.",
+        ),
+      );
+    }
+
+    if (!hasProfile) {
+      risks.push(
+        tx(
+          "label.previewRiskShippingProfile",
+          "Supplier or lab name, phone, and address are still missing, so this is not ready as a complete shipped-container label.",
+        ),
+      );
+    }
+
+    if (hazardCount + precautionCount > 14) {
+      risks.push(
+        tx(
+          "label.previewRiskShippingDensity",
+          "This chemical has a high H/P statement load; use the largest stock and verify the browser print preview before applying labels.",
+        ),
+      );
+    }
+  }
 
   if (longestName > 28 && layoutProfile.size === "small") {
     risks.push(
@@ -356,7 +452,11 @@ function buildPreviewRisks({
     );
   }
 
-  if (!hasProfile && labelConfig.template !== "icon") {
+  if (
+    !hasProfile &&
+    labelConfig.template !== "icon" &&
+    labelPurpose !== "shipping"
+  ) {
     risks.push(
       tx(
         "label.previewRiskProfile",
@@ -450,6 +550,7 @@ export default function LabelPrintModal({
   }, [onClose]);
 
   const layoutProfile = resolveLayoutProfile(labelConfig);
+  const labelPurpose = getLabelPurposeForConfig(labelConfig);
   const previewChem = selectedForLabel[0] ?? null;
   const currentLocale = i18n.language;
   const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
@@ -499,6 +600,19 @@ export default function LabelPrintModal({
     layoutProfile.stockPreset === "custom"
       ? tx("label.stockPresetCustom", "Custom tuning")
       : stockPresetDisplay.name || layoutProfile.stockPresetName;
+  const purposeSummaryLabel = getOptionLabel(
+    PURPOSE_OPTIONS,
+    labelPurpose,
+    t,
+    "Shipped container",
+  );
+  const readyPreviewMessage = tx(
+    "label.previewRiskReady",
+    "This combination looks balanced for the current content load.",
+  );
+  const hasPreviewWarnings = previewRisks.some(
+    (risk) => risk !== readyPreviewMessage,
+  );
   const printReadinessItems = [
     {
       key: "selection",
@@ -509,6 +623,13 @@ export default function LabelPrintModal({
           ? `${selectedForLabel.length} ${tx("label.readinessSelectedSuffix", "selected")}`
           : tx("label.readinessNoSelection", "Nothing selected"),
       tone: selectedForLabel.length > 0 ? "ready" : "caution",
+    },
+    {
+      key: "purpose",
+      icon: Package2,
+      label: tx("label.readinessPurpose", "Purpose"),
+      value: purposeSummaryLabel,
+      tone: labelPurpose === "shipping" ? "ready" : "neutral",
     },
     {
       key: "stock",
@@ -525,13 +646,15 @@ export default function LabelPrintModal({
       tone: "neutral",
     },
     {
-      key: "preview",
-      icon: ScanLine,
-      label: tx("label.readinessPreview", "Preview"),
+      key: "compliance",
+      icon: previewChem && !hasPreviewWarnings ? CheckCircle2 : AlertTriangle,
+      label: tx("label.readinessCompliance", "Label fit"),
       value: previewChem
-        ? tx("label.readinessPreviewReady", "Preview ready")
+        ? hasPreviewWarnings
+          ? tx("label.readinessComplianceReview", "Needs review")
+          : tx("label.readinessComplianceReady", "Looks ready")
         : tx("label.readinessPreviewPending", "Waiting for selection"),
-      tone: previewChem ? "ready" : "caution",
+      tone: previewChem && !hasPreviewWarnings ? "ready" : "caution",
     },
   ];
   const sheetPreviewBundle = useMemo(
@@ -603,6 +726,32 @@ export default function LabelPrintModal({
   const applyStockPreset = (preset) => {
     onLabelConfigChange({
       ...labelConfig,
+      stockPreset: preset.id,
+      size: preset.size,
+      orientation: preset.orientation,
+      columns: preset.columns,
+      rows: preset.rows,
+      perPage: preset.perPage,
+      labelWidthMm: preset.widthMm,
+      labelHeightMm: preset.heightMm,
+      pagePaddingMm: preset.pagePaddingMm,
+      columnGapMm: preset.columnGapMm,
+      rowGapMm: preset.rowGapMm,
+      offsetXmm: preset.offsetXmm,
+      offsetYmm: preset.offsetYmm,
+    });
+  };
+
+  const applyPurpose = (purpose) => {
+    const option = PURPOSE_OPTIONS.find((item) => item.value === purpose);
+    const preset = STOCK_PRESETS.find((item) => item.id === option?.presetId);
+
+    if (!option || !preset) return;
+
+    onLabelConfigChange({
+      ...labelConfig,
+      labelPurpose: option.value,
+      template: option.template,
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
@@ -1004,6 +1153,56 @@ export default function LabelPrintModal({
                     "Use stock presets for a fast starting point, then fine-tune spacing and nudges without leaving the modal.",
                   )}
                 </p>
+              </section>
+
+              <section className="space-y-3">
+                <div>
+                  <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <Package2 className="h-4 w-4 text-blue-600" />
+                    {tx("label.printPurposeTitle", "Print purpose")}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {tx(
+                      "label.printPurposeBody",
+                      "Choose the real-world job first. Shipped-container labels keep the full hazard hierarchy; smaller QR or quick-ID labels are clearly marked as supplemental.",
+                    )}
+                  </p>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-3">
+                  {PURPOSE_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const selected = labelPurpose === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => applyPurpose(option.value)}
+                        data-testid={`label-purpose-${option.value}`}
+                        className={`rounded-lg border p-4 text-left transition-colors ${
+                          selected
+                            ? "border-blue-500 bg-blue-50 text-blue-900"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
+                            <Icon className="h-4 w-4 shrink-0" />
+                          </span>
+                          <span className="font-medium">
+                            {t(option.labelKey)}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-500">
+                          {t(option.descKey)}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          {t(option.tipKey)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </section>
 
               <section className="space-y-3">
@@ -1624,6 +1823,7 @@ export default function LabelPrintModal({
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {[
+                      purposeSummaryLabel,
                       getOptionLabel(
                         TEMPLATE_OPTIONS,
                         labelConfig.template,

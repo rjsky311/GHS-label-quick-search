@@ -458,6 +458,63 @@ const renderMoreHazards = (count, model, className = "") => {
   )}</div>`;
 };
 
+const renderPurposeNotice = (model) => {
+  if (model.layout.labelPurpose === "shipping") return "";
+
+  const key =
+    model.layout.labelPurpose === "qrSupplement"
+      ? "print.qrSupplementNotice"
+      : "print.quickIdNotice";
+  return `<div class="purpose-notice">${escapeHtml(model.t(key))}</div>`;
+};
+
+const renderComplianceStatements = (statements, className, model) => {
+  if (!statements.length) return "";
+
+  return `<div class="${className}">
+    ${statements
+      .map(
+        (statement) =>
+          `<div class="compliance-statement"><span class="statement-code">${escapeHtml(
+            statement.code,
+          )}</span><span class="statement-text">${escapeHtml(
+            getLocalizedTextForModel(statement, model),
+          )}</span></div>`,
+      )
+      .join("")}
+  </div>`;
+};
+
+const renderComplianceFooter = (effectiveChem, model) => {
+  const qrTarget =
+    getPreferredQrTarget(
+      effectiveChem.cid,
+      effectiveChem.cas_number,
+      effectiveChem.reference_links,
+    ) || "https://pubchem.ncbi.nlm.nih.gov/";
+  const hasProfile =
+    model.resolvedLabProfile.organization ||
+    model.resolvedLabProfile.phone ||
+    model.resolvedLabProfile.address;
+
+  return `<div class="compliance-footer">
+    <div class="compliance-supplier">
+      ${
+        hasProfile
+          ? renderProfileFields(model)
+          : `<div class="profile-block profile-block-missing">${escapeHtml(
+              model.t("print.supplierMissing"),
+            )}</div>`
+      }
+      ${renderCustomFields(model)}
+    </div>
+    <div class="compliance-qr">
+      <img class="qrcode-img qrcode-img-small" src="${getQRCodeUrl(qrTarget, 120)}" alt="QR" />
+      <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
+    </div>
+  </div>`;
+};
+
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   if (!precautions.length || maxPrecautions <= 0) return "";
   return `<div class="precautions-compact">
@@ -493,6 +550,7 @@ const renderIconTemplate = (chemical, model) => {
 
   return `
     <div class="label label-icon${prepared ? " label-prepared" : ""}">
+      ${renderPurposeNotice(model)}
       <div class="label-top">
         ${renderNameSection(effectiveChem, model, {
           compactNames: true,
@@ -607,10 +665,11 @@ const renderFullTemplate = (chemical, model) => {
     model.layout.size,
   );
   const prepared = isPrepared(effectiveChem);
+  const purposeNotice = renderPurposeNotice(model);
 
   return `
-    <div class="label label-full${prepared ? " label-prepared" : ""}">
-      <div class="label-top">
+    <div class="label label-full label-compliance label-purpose-${escapeHtml(model.layout.labelPurpose)}${prepared ? " label-prepared" : ""}">
+      <div class="compliance-header">
         ${renderNameSection(effectiveChem, model)}
         ${
           prepared
@@ -620,39 +679,43 @@ const renderFullTemplate = (chemical, model) => {
             : ""
         }
       </div>
-      <div class="label-middle compact">
-        <div class="middle-row">
-          ${pictograms.length > 0 ? renderPictograms(pictograms, "compact") : ""}
-          ${signalWord ? renderSignal(signalWord, signalClass, "compact") : ""}
+      ${purposeNotice}
+      <div class="compliance-core">
+        <div class="compliance-alert-panel">
+          ${signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
+          ${
+            pictograms.length > 0
+              ? renderPictograms(pictograms, "compliance-pictograms")
+              : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
+          }
+        </div>
+        <div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+          <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
+          ${
+            hazards.length > 0
+              ? renderComplianceStatements(
+                  hazards,
+                  "compliance-hazard-list",
+                  model,
+                )
+              : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
+          }
         </div>
       </div>
-      <div class="label-bottom hazards-full" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
-        ${
-          hazards.length > 0
-            ? hazards
-                .map(
-                  (hazard) =>
-                    `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
-                      hazard.code,
-                    )} ${escapeHtml(getLocalizedTextForModel(hazard, model))}</div>`,
-                )
-                .join("")
-            : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
-        }
+      <div class="compliance-precaution-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+        <div class="section-label">${escapeHtml(model.t("print.precautionaryStatementsLabel"))}</div>
         ${
           precautions.length > 0
-            ? `<div class="precautions-divider"></div>${precautions
-                .map(
-                  (precaution) =>
-                    `<div class="precaution-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
-                      precaution.code,
-                    )} ${escapeHtml(getLocalizedTextForModel(precaution, model))}</div>`,
-                )
-                .join("")}`
-            : ""
+            ? renderComplianceStatements(
+                precautions,
+                "compliance-precaution-list",
+                model,
+              )
+            : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
         }
         ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
       </div>
+      ${renderComplianceFooter(effectiveChem, model)}
     </div>
   `;
 };
@@ -681,6 +744,7 @@ const renderQRCodeTemplate = (chemical, model) => {
   return `
     <div class="label label-qr${prepared ? " label-prepared" : ""}">
       <div class="qr-left qr-left-scan">
+        ${renderPurposeNotice(model)}
         <div class="qr-identity">
           ${renderNameSection(effectiveChem, model, {
             compactNames: true,
@@ -818,10 +882,16 @@ const buildStyles = (model) => {
       background: #fff;
       overflow: hidden;
       font-size: ${layout.typography.fontSize};
-      box-shadow: inset 0 0 0 0.1mm rgba(15, 23, 42, 0.04);
+      box-shadow: none;
     }
     .label-full {
+      display: grid;
+      grid-auto-rows: max-content;
+      gap: 1.3mm;
       max-height: ${layout.label.height};
+      border-width: 0.65mm;
+      border-radius: 1mm;
+      padding: calc(${layout.label.padding} + 0.3mm);
     }
     .label-qr {
       flex-direction: row;
@@ -863,6 +933,111 @@ const buildStyles = (model) => {
       flex: 1;
       min-height: 0;
       margin-top: 0;
+    }
+
+    .compliance-header {
+      border-bottom: 0.35mm solid #111827;
+      padding-bottom: 1mm;
+      min-width: 0;
+    }
+    .compliance-header .profile-block,
+    .compliance-header .custom-fields {
+      display: none;
+    }
+    .purpose-notice {
+      border: 0.25mm solid #94a3b8;
+      background: #f8fafc;
+      color: #334155;
+      font-size: calc(${layout.typography.fontSize} - 3px);
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 0.65mm 0.9mm;
+    }
+    .compliance-core {
+      display: grid;
+      grid-template-columns: minmax(22mm, 30mm) minmax(0, 1fr);
+      gap: 2mm;
+      align-items: start;
+      min-height: 0;
+    }
+    .compliance-alert-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2mm;
+      align-items: stretch;
+      min-width: 0;
+    }
+    .compliance-hazard-panel,
+    .compliance-precaution-panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .compliance-precaution-panel {
+      border-top: 0.25mm solid #cbd5e1;
+      padding-top: 1mm;
+    }
+    .section-label {
+      color: #475569;
+      font-size: calc(${layout.typography.fontSize} - 4px);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 0.7mm;
+    }
+    .compliance-hazard-list,
+    .compliance-precaution-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55mm;
+    }
+    .compliance-statement {
+      display: grid;
+      grid-template-columns: 11mm minmax(0, 1fr);
+      gap: 1mm;
+      break-inside: avoid;
+    }
+    .statement-code {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-weight: 800;
+      color: #111827;
+      white-space: nowrap;
+    }
+    .statement-text {
+      color: #222;
+      overflow-wrap: anywhere;
+    }
+    .compliance-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1.5mm;
+      align-items: end;
+      border-top: 0.25mm solid #cbd5e1;
+      padding-top: 1mm;
+      min-width: 0;
+    }
+    .compliance-supplier {
+      min-width: 0;
+    }
+    .compliance-footer .profile-block {
+      margin-top: 0;
+      border-radius: 0;
+      background: #fff;
+    }
+    .profile-block-missing {
+      border-style: dashed;
+      color: #92400e;
+      background: #fffbeb;
+      font-weight: 700;
+    }
+    .compliance-footer .custom-fields {
+      margin-top: 0.7mm;
+    }
+    .compliance-qr {
+      width: 18mm;
+      text-align: center;
+    }
+    .qrcode-img-small {
+      width: 15mm;
+      height: 15mm;
     }
 
     .name-section {
@@ -1068,9 +1243,10 @@ const buildStyles = (model) => {
     .pictograms img {
       width: ${layout.typography.imgSize};
       height: ${layout.typography.imgSize};
+      object-fit: contain;
       background: #fff;
-      border: 1px solid #cbd5e1;
-      border-radius: 1mm;
+      border: 0;
+      border-radius: 0;
     }
     .pictograms.compact img {
       width: calc(${layout.typography.imgSize} - 4px);
@@ -1087,6 +1263,17 @@ const buildStyles = (model) => {
     .pictograms.qr-pics img {
       width: calc(${layout.typography.imgSize} - 6px);
       height: calc(${layout.typography.imgSize} - 6px);
+    }
+    .pictograms.compliance-pictograms {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.1mm;
+      justify-items: center;
+      align-items: center;
+    }
+    .pictograms.compliance-pictograms img {
+      width: min(14mm, ${layout.typography.imgSize});
+      height: min(14mm, ${layout.typography.imgSize});
     }
     .more-pics {
       font-size: calc(${layout.typography.fontSize} - 2px);
@@ -1121,6 +1308,15 @@ const buildStyles = (model) => {
       padding: 0.55mm 1.8mm;
       border-radius: 999px;
     }
+    .signal.compliance-signal {
+      display: block;
+      width: 100%;
+      margin: 0;
+      border-radius: 0.8mm;
+      padding: 1.1mm 1.4mm;
+      font-size: calc(${layout.typography.signalSize} + 1px);
+      line-height: 1.1;
+    }
     .signal.danger {
       background: #fecaca;
       color: #b91c1c;
@@ -1138,13 +1334,6 @@ const buildStyles = (model) => {
       margin-top: 1.2mm;
     }
 
-    .middle-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3mm;
-      flex-wrap: wrap;
-    }
     .standard-grid {
       display: grid;
       grid-template-columns: minmax(0, 14mm) minmax(0, 1fr);
@@ -1208,36 +1397,8 @@ const buildStyles = (model) => {
       font-weight: 600;
       line-height: 1.2;
     }
-    .hazard-secondary-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.7mm;
-      padding-top: 1mm;
-      border-top: 1px dotted #cbd5e1;
-    }
-    .hazard-secondary-item {
-      color: #334155;
-    }
-    .hazards-section {
-      border-top: 1px dashed #94a3b8;
-      padding-top: 1.2mm;
-      font-size: ${layout.typography.hazardSize};
-      line-height: 1.28;
-    }
-    .hazards-full {
-      border-top: 1px dashed #94a3b8;
-      padding-top: 1.2mm;
-      font-size: calc(${layout.typography.hazardSize} - 1px);
-      line-height: 1.2;
-      overflow: hidden;
-      flex: 1;
-      min-height: 0;
-    }
     .hazard-item {
       margin-bottom: 0;
-    }
-    .hazard-item-full {
-      color: #222;
     }
     .no-hazard {
       color: #166534;
@@ -1248,19 +1409,6 @@ const buildStyles = (model) => {
     .no-hazard-text {
       color: #64748b;
       font-style: italic;
-    }
-    .standard-footer {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8mm;
-    }
-
-    .precaution-item-full {
-      color: #1e3a8a;
-    }
-    .precautions-divider {
-      border-top: 1px dotted #94a3b8;
-      margin: 1mm 0;
     }
     .precautions-compact {
       border-top: 1px dotted #cbd5e1;
@@ -1402,6 +1550,8 @@ const buildStyles = (model) => {
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
           body.print-bw .qr-hazard-chip,
+          body.print-bw .purpose-notice,
+          body.print-bw .profile-block-missing,
           body.print-bw .signal {
             background: #ffffff !important;
             border-color: #111827 !important;
@@ -1468,7 +1618,11 @@ export function buildPrintDocument(
     .join("");
 
   const styles = buildStyles(model);
-  const bodyClass = `print-body print-${model.layout.colorMode === "bw" ? "bw" : "color"}`;
+  const bodyClass = [
+    "print-body",
+    `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
+    `print-purpose-${model.layout.labelPurpose}`,
+  ].join(" ");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
     model.t("print.title"),
   )}</title><style>${styles}</style></head><body class="${bodyClass}">${pagesHtml}</body></html>`;
@@ -1634,6 +1788,7 @@ export function buildPrintPreviewDocument(
     "preview-body",
     `preview-body-${mode}`,
     `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
+    `print-purpose-${model.layout.labelPurpose}`,
   ].join(" ");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
     model.t("print.title"),
@@ -1653,6 +1808,7 @@ function buildPrintLifecycleMeta(documentBundle) {
 
   return {
     template: model.layout.template,
+    labelPurpose: model.layout.labelPurpose,
     stockPreset: model.layout.stockId || model.layout.stockPresetName,
     orientation: model.layout.orientation,
     size: model.layout.size,
