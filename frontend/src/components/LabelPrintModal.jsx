@@ -608,6 +608,9 @@ export default function LabelPrintModal({
     tx,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
+  const a4PrimaryPreset = STOCK_PRESETS.find(
+    (preset) => preset.id === "a4-primary",
+  );
   const templateSummaryLabel = getOptionLabel(
     TEMPLATE_OPTIONS,
     labelConfig.template,
@@ -647,9 +650,13 @@ export default function LabelPrintModal({
     labelPurpose === "shipping" &&
     labelConfig.template === "full" &&
     maxSelectedStatementCount > maxCompleteStatements;
+  const canUseA4Primary =
+    isPrintFitBlocked &&
+    Boolean(a4PrimaryPreset) &&
+    layoutProfile.stockPreset !== "a4-primary";
   const blockedDensityMessage = tx(
     "label.previewRiskShippingBlockedDensity",
-    "This content is too dense for the current complete-label stock. Use A4 Primary stock or switch to QR supplement before printing.",
+    "This content is too dense for the current complete-label stock. Use A4 Primary stock for a complete label; QR supplement is only a secondary option.",
   );
   const primaryPreviewRisk =
     previewRisks.find((risk) => risk === blockedDensityMessage) ||
@@ -787,6 +794,11 @@ export default function LabelPrintModal({
       offsetXmm: preset.offsetXmm,
       offsetYmm: preset.offsetYmm,
     });
+  };
+
+  const handleUseA4Primary = () => {
+    if (!a4PrimaryPreset) return;
+    applyStockPreset(a4PrimaryPreset);
   };
 
   const applyPurpose = (purpose) => {
@@ -1984,6 +1996,25 @@ export default function LabelPrintModal({
                           <div className="mt-1 leading-5">
                             {primaryPreviewRisk}
                           </div>
+                          {canUseA4Primary && (
+                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                              <button
+                                type="button"
+                                onClick={handleUseA4Primary}
+                                className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
+                                data-testid="use-a4-primary-banner"
+                              >
+                                <FileText className="h-4 w-4" />
+                                {tx("label.useA4Primary", "Use A4 Primary")}
+                              </button>
+                              <span className="text-xs leading-5 text-red-800">
+                                {tx(
+                                  "label.useA4PrimaryHint",
+                                  "Keeps all pictograms and complete statements on one full-page primary label.",
+                                )}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </section>
@@ -2149,15 +2180,29 @@ export default function LabelPrintModal({
           className="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-5"
           data-testid="label-modal-footer"
         >
-          <button
-            type="button"
-            onClick={onPrintLabels}
-            disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
-            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Printer className="h-4 w-4" />
-            {t("label.printBtn", { count: totalLabels })}
-          </button>
+          {canUseA4Primary ? (
+            <button
+              type="button"
+              onClick={handleUseA4Primary}
+              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800"
+              data-testid="use-a4-primary-footer"
+            >
+              <FileText className="h-4 w-4" />
+              {tx("label.useA4Primary", "Use A4 Primary")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onPrintLabels}
+              disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
+              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Printer className="h-4 w-4" />
+              {isPrintFitBlocked
+                ? tx("label.printFixRequired", "Choose a printable stock first")
+                : t("label.printBtn", { count: totalLabels })}
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

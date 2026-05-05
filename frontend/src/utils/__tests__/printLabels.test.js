@@ -6,6 +6,9 @@ jest.mock("@/constants/ghs", () => ({
   GHS_IMAGES: {
     GHS01: "https://example.com/GHS01.svg",
     GHS02: "https://example.com/GHS02.svg",
+    GHS03: "https://example.com/GHS03.svg",
+    GHS05: "https://example.com/GHS05.svg",
+    GHS06: "https://example.com/GHS06.svg",
     GHS07: "https://example.com/GHS07.svg",
   },
 }));
@@ -358,7 +361,7 @@ describe("print layout model", () => {
 
 describe("printLabels", () => {
   let mockIframe, mockIframeDoc, mockIframeWindow;
-  let createElementSpy, appendChildSpy, getByIdSpy;
+  let createElementSpy, appendChildSpy, getByIdSpy, alertSpy;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -379,6 +382,7 @@ describe("printLabels", () => {
       .spyOn(document.body, "appendChild")
       .mockImplementation(() => {});
     getByIdSpy = jest.spyOn(document, "getElementById").mockReturnValue(null);
+    alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
     jest.useFakeTimers();
   });
 
@@ -386,6 +390,7 @@ describe("printLabels", () => {
     createElementSpy.mockRestore();
     appendChildSpy.mockRestore();
     getByIdSpy.mockRestore();
+    alertSpy.mockRestore();
     jest.useRealTimers();
   });
 
@@ -644,6 +649,34 @@ describe("printLabels", () => {
         expect(html).toContain('class="label');
       });
     });
+
+    it.each(["icon", "standard", "full", "qrcode"])(
+      "%s template renders every GHS pictogram without a +N summary",
+      (template) => {
+        const multiPictogramChemical = {
+          ...mockChemical,
+          ghs_pictograms: [
+            { code: "GHS01" },
+            { code: "GHS02" },
+            { code: "GHS05" },
+            { code: "GHS06" },
+            { code: "GHS07" },
+          ],
+        };
+
+        printLabels(
+          [multiPictogramChemical],
+          { size: "medium", template, orientation: "portrait" },
+          {},
+        );
+        const html = mockIframeDoc.write.mock.calls[0][0];
+
+        ["GHS01", "GHS02", "GHS05", "GHS06", "GHS07"].forEach((code) => {
+          expect(html).toContain(`alt="${code}"`);
+        });
+        expect(html).not.toContain("more-pics");
+      },
+    );
 
     it("qrcode template includes QR code image", () => {
       printLabels(

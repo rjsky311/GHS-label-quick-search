@@ -427,6 +427,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 - 新增用途優先的主要容器 / QR 補充 / 快速識別列印模式、label stock presets、live sheet preview、real print HTML label-fragment preview。
 - 新增 recent print reload、lab profile、template save/load、校正/偏移控制。
 - 重整 `full` 主要標籤與 compact `standard` / `qrcode` 補充標籤資訊階層，讓 signal word、pictograms、H/P statements、QR scan 目標更清楚。
+- `PRINT_LABEL_CONTRACT.md` 現在固定列印契約：只要有 GHS pictogram 資料，列印標籤不能用 `+N` 摘要、不能藏在 QR 後面、也不能靜默省略。
 
 **Pilot / workspace**
 
@@ -435,7 +436,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand --watchAll=false` → 42 suites / 664 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand --watchAll=false` → 42 suites / 686 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
 - backend 最近基準：`python -m pytest -v` → 126 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)

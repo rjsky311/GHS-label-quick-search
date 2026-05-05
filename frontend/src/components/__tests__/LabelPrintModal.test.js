@@ -167,7 +167,7 @@ describe("LabelPrintModal", () => {
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
   });
 
-  it("blocks dense shipped-container labels until a roomier stock is selected", () => {
+  it("routes dense shipped-container labels to A4 Primary instead of a print dead end", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -179,7 +179,7 @@ describe("LabelPrintModal", () => {
       })),
     });
 
-    renderModal({
+    const { props } = renderModal({
       selectedForLabel: [denseChem],
       labelConfig: {
         ...baseConfig,
@@ -196,7 +196,20 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
       "Too dense",
     );
-    expect(screen.getByText("label.printBtn").closest("button")).toBeDisabled();
+    expect(screen.getByTestId("use-a4-primary-footer")).toBeEnabled();
+
+    fireEvent.click(screen.getByTestId("use-a4-primary-footer"));
+    expect(props.onPrintLabels).not.toHaveBeenCalled();
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stockPreset: "a4-primary",
+        labelWidthMm: 180,
+        labelHeightMm: 250,
+        perPage: 1,
+        template: "full",
+        labelPurpose: "shipping",
+      }),
+    );
   });
 
   it("updates quantity controls within the valid range", () => {

@@ -168,6 +168,8 @@ Print configuration should behave like a workflow:
 
 The default path is safety-conservative: primary labels use the roomy full template and keep product identifier, signal word, pictograms, H-statements, P-statements, and responsible lab/supplier information in one label hierarchy. Compact QR and quick-ID labels may be useful, but must be visibly treated as supplemental rather than complete shipped-container labels.
 
+GHS pictograms are non-negotiable output: if pictogram data exists, printed hazard labels must render every pictogram. Do not replace pictograms with `+N`, hide them behind QR, or silently omit them to make a compact layout fit.
+
 The print output itself must never include ads or unrelated brand promotion in compliance-critical label content.
 
 ### EmptyState
@@ -214,3 +216,4 @@ A redesign pass is acceptable only when:
 - Keyboard and focus behavior remain intact.
 - Unit tests and build pass.
 - Print label safety boundaries remain unchanged.
+- `PRINT_LABEL_CONTRACT.md` remains true for any print-workflow change.

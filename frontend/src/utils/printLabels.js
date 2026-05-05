@@ -413,15 +413,10 @@ const renderPreparedOperational = (chemical, model) => {
   )}</div>`;
 };
 
-const renderPictograms = (
-  pictograms,
-  className = "",
-  limit = pictograms.length,
-) => {
+const renderPictograms = (pictograms, className = "") => {
   if (!pictograms.length) return "";
-  const shown = pictograms.slice(0, limit);
   return `<div class="pictograms${className ? ` ${className}` : ""}">
-    ${shown
+    ${pictograms
       .map(
         (pictogram) =>
           `<img src="${escapeHtml(GHS_IMAGES[pictogram.code] || "")}" alt="${escapeHtml(
@@ -429,11 +424,6 @@ const renderPictograms = (
           )}" />`,
       )
       .join("")}
-    ${
-      pictograms.length > shown.length
-        ? `<span class="more-pics">+${pictograms.length - shown.length}</span>`
-        : ""
-    }
   </div>`;
 };
 
@@ -567,7 +557,7 @@ const renderIconTemplate = (chemical, model) => {
       <div class="label-middle">
         ${
           pictograms.length > 0
-            ? renderPictograms(pictograms, "", pictograms.length)
+            ? renderPictograms(pictograms)
             : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
         }
       </div>
@@ -614,11 +604,7 @@ const renderStandardTemplate = (chemical, model) => {
           ${
             pictograms.length > 0
               ? `<div class="standard-rail">
-                  ${renderPictograms(
-                    pictograms,
-                    "pictograms-standard",
-                    budgets.pictograms || pictograms.length,
-                  )}
+                  ${renderPictograms(pictograms, "pictograms-standard")}
                 </div>`
               : ""
           }
@@ -792,11 +778,7 @@ const renderQRCodeTemplate = (chemical, model) => {
         </div>
         ${
           pictograms.length > 0
-            ? `<div class="qr-support-row">${renderPictograms(
-                pictograms,
-                "qr-pics",
-                budgets.pictograms,
-              )}</div>`
+            ? `<div class="qr-support-row">${renderPictograms(pictograms, "qr-pics")}</div>`
             : ""
         }
       </div>
@@ -1310,13 +1292,6 @@ const buildStyles = (model) => {
       width: ${compliancePictogramSize};
       height: ${compliancePictogramSize};
     }
-    .more-pics {
-      font-size: calc(${layout.typography.fontSize} - 2px);
-      color: #64748b;
-      display: flex;
-      align-items: center;
-    }
-
     .signal {
       display: inline-block;
       font-weight: bold;

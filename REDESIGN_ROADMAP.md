@@ -105,11 +105,13 @@ Scope:
 - Live preview sizing and warnings.
 - Recent print/template/lab profile surfaces.
 - Printed full primary-label hierarchy plus compact `standard` / `qrcode` supplemental label hierarchy.
+- Print behavior pinned by `PRINT_LABEL_CONTRACT.md`.
 
 Acceptance:
 
 - Users can choose purpose/stock/template without guessing.
 - Shipped-container style labels keep product identifier, pictograms, signal word, H/P statements, and responsible contact together.
+- Printed hazard labels never summarize or omit available GHS pictograms.
 - Compact labels do not pretend to carry full hazard detail.
 - QR labels make scan behavior obvious.
 - Printed labels remain free of ads and unrelated brand content.

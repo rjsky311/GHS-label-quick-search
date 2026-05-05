@@ -231,7 +231,10 @@ added print-workflow productization: label stock presets, QR labels, live
 sheet/label preview, recent print reload, lab profile, template save/load,
 and calibration controls. The current print default is safety-conservative:
 shipped-container style primary labels use the roomy full template, while QR
-and quick-ID labels are explicitly supplemental. It also added admin-gated pilot persistence and
+and quick-ID labels are explicitly supplemental. `PRINT_LABEL_CONTRACT.md`
+now pins the print safety contract: available GHS pictograms must never be
+summarized as `+N`, hidden behind QR, or silently omitted from printed hazard
+labels. It also added admin-gated pilot persistence and
 optional workspace documents. Public builds keep prepared/print/lab-profile
 state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
@@ -293,7 +296,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 664 tests across 42 suites; 0 known React `act(...)` warnings
+- **Frontend**: 686 tests across 42 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
