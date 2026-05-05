@@ -315,7 +315,7 @@
   "label.previewRiskPictograms": "This chemical carries enough pictograms that compact templates may feel crowded.",
   "label.previewRiskPrepared": "Prepared-solution metadata will compete with hazard content on compact templates.",
   "label.previewRiskCompactHidden": "Compact templates intentionally hide secondary information so the main hazards stay readable.",
-  "label.previewRiskCompactNames": "Compact templates compress bilingual identity to protect hazard readability.",
+  "label.previewRiskCompactNames": "Compact labels keep bilingual names to one line each, so long names may still feel tight.",
   "label.previewRiskProfile": "No lab or supplier profile is set, so the print will stay generic.",
   "label.previewRiskQr": "QR layouts work best when the left side stays short and the QR block remains dominant.",
   "label.previewHazardPlaceholder": "Signal word, pictograms, and hazards will appear here.",

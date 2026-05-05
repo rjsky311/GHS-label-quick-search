@@ -30,7 +30,9 @@ const makeChem = (overrides = {}) => ({
   name_en: "Ethanol",
   name_zh: "Ethanol ZH",
   ghs_pictograms: [{ code: "GHS02" }, { code: "GHS07" }],
-  hazard_statements: [{ code: "H225", text_en: "Highly flammable liquid and vapor." }],
+  hazard_statements: [
+    { code: "H225", text_en: "Highly flammable liquid and vapor." },
+  ],
   signal_word: "Danger",
   ...overrides,
 });
@@ -85,16 +87,31 @@ describe("LabelPrintModal", () => {
     expect(dialog).toHaveAttribute("aria-labelledby", "label-modal-title");
     expect(screen.getByTestId("label-preview-panel")).toBeInTheDocument();
     expect(screen.getByText("Live preview")).toBeInTheDocument();
+    expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
+      "md:sticky",
+    );
   });
 
   it("shows print readiness at a glance and keeps actions sticky", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("print-readiness-strip")).toBeInTheDocument();
-    expect(screen.getByTestId("print-readiness-selection")).toHaveTextContent("1 selected");
-    expect(screen.getByTestId("print-readiness-stock")).toHaveTextContent("Bottle Primary");
-    expect(screen.getByTestId("print-readiness-preview")).toHaveTextContent("Preview ready");
-    expect(screen.getByTestId("label-modal-footer")).toHaveClass("sticky", "bottom-0");
+    expect(screen.getByTestId("print-readiness-selection")).toHaveTextContent(
+      "1 selected",
+    );
+    expect(screen.getByTestId("print-readiness-stock")).toHaveTextContent(
+      "Bottle Primary",
+    );
+    expect(screen.getByTestId("print-readiness-preview")).toHaveTextContent(
+      "Preview ready",
+    );
+    expect(screen.getByTestId("label-modal-scroll-body")).toHaveClass(
+      "overflow-y-auto",
+    );
+    expect(
+      screen.getByTestId("label-modal-scroll-body").firstElementChild,
+    ).toHaveClass("md:grid-cols-[minmax(0,1fr)_22rem]");
+    expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
   });
 
   it("clicking the backdrop calls onClose but clicking inside does not", () => {
@@ -149,7 +166,7 @@ describe("LabelPrintModal", () => {
         {...props}
         selectedForLabel={[chem]}
         labelQuantities={{ [chem.cas_number]: 20 }}
-      />
+      />,
     );
     expect(screen.getByText("+").closest("button")).toBeDisabled();
   });
@@ -160,18 +177,24 @@ describe("LabelPrintModal", () => {
       customLabelFields: { labName: "", date: "2026-04-15", batchNumber: "B1" },
     });
 
-    fireEvent.change(screen.getByPlaceholderText("label.profileOrganizationPlaceholder"), {
-      target: { value: "Lab A" },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("label.profileOrganizationPlaceholder"),
+      {
+        target: { value: "Lab A" },
+      },
+    );
     expect(props.onLabProfileChange).toHaveBeenCalledWith({
       organization: "Lab A",
       phone: "02-1234",
       address: "Lab 1",
     });
 
-    fireEvent.change(screen.getByPlaceholderText("label.printDatePlaceholder"), {
-      target: { value: "2026-04-17" },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("label.printDatePlaceholder"),
+      {
+        target: { value: "2026-04-17" },
+      },
+    );
     expect(props.onCustomLabelFieldsChange).toHaveBeenCalledWith({
       labName: "",
       date: "2026-04-17",
@@ -189,7 +212,12 @@ describe("LabelPrintModal", () => {
   });
 
   it("loads and deletes saved templates", () => {
-    const template = { id: "tpl-1", name: "Storage", labelConfig: baseConfig, customLabelFields: baseFields };
+    const template = {
+      id: "tpl-1",
+      name: "Storage",
+      labelConfig: baseConfig,
+      customLabelFields: baseFields,
+    };
     const { props } = renderModal({ printTemplates: [template] });
 
     fireEvent.click(screen.getByText("Storage"));
@@ -244,11 +272,15 @@ describe("LabelPrintModal", () => {
     expect(toast.success).toHaveBeenCalled();
 
     fireEvent.click(screen.getByText("label.saveCurrentBtn"));
-    const secondInput = screen.getByPlaceholderText("label.templateNamePlaceholder");
+    const secondInput = screen.getByPlaceholderText(
+      "label.templateNamePlaceholder",
+    );
     fireEvent.change(secondInput, { target: { value: "Draft" } });
     fireEvent.keyDown(secondInput, { key: "Escape" });
 
-    expect(screen.queryByPlaceholderText("label.templateNamePlaceholder")).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText("label.templateNamePlaceholder"),
+    ).not.toBeInTheDocument();
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
@@ -267,13 +299,17 @@ describe("LabelPrintModal", () => {
         perPage: 8,
         labelWidthMm: 95,
         labelHeightMm: 50,
-      })
+      }),
     );
   });
 
   it("marks layout calibration changes as custom tuning", () => {
     const { props } = renderModal({
-      labelConfig: { ...baseConfig, stockPreset: "medium-bottle", offsetXmm: 0 },
+      labelConfig: {
+        ...baseConfig,
+        stockPreset: "medium-bottle",
+        offsetXmm: 0,
+      },
     });
 
     fireEvent.change(screen.getByLabelText("Offset X (mm)"), {
@@ -284,7 +320,7 @@ describe("LabelPrintModal", () => {
       expect.objectContaining({
         offsetXmm: 2,
         stockPreset: "custom",
-      })
+      }),
     );
   });
 
@@ -301,24 +337,61 @@ describe("LabelPrintModal", () => {
           },
         }),
       ],
-      customLabelFields: { labName: "", date: "2026-04-18", batchNumber: "B-7" },
-      labProfile: { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      customLabelFields: {
+        labName: "",
+        date: "2026-04-18",
+        batchNumber: "B-7",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
       labelConfig: { ...baseConfig, template: "qrcode" },
     });
 
-    expect(screen.getByText("Previewing the first selected label")).toBeInTheDocument();
+    expect(
+      screen.getByText("Previewing the first selected label"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("label-sheet-preview").tagName).toBe("IFRAME");
     expect(screen.getByTestId("label-fragment-preview").tagName).toBe("IFRAME");
-    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("qrcode-img");
-    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).toContain("70%");
-    expect(screen.getByTestId("label-fragment-preview").getAttribute("srcdoc")).not.toContain("Lab A");
-    expect(screen.getByTestId("selected-prepared-display-64-17-5")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).toContain("qrcode-img");
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).toContain("70%");
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).not.toContain("Lab A");
+    expect(
+      screen.getByTestId("selected-prepared-display-64-17-5"),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the sheet preview as a scaled page with orientation-aware source", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: { ...baseConfig, orientation: "landscape", colorMode: "bw" },
+    });
+
+    const srcdoc = screen
+      .getByTestId("label-sheet-preview")
+      .getAttribute("srcdoc");
+    expect(srcdoc).toContain("preview-sheet-viewport");
+    expect(srcdoc).toContain("preview-page");
+    expect(srcdoc).toContain("size: A4 landscape");
+    expect(srcdoc).toContain("print-bw");
   });
 
   it("shows a preview risk prompt when nothing is selected", () => {
     renderModal();
 
-    expect(screen.getByText("Select a chemical to see live density and scan balance.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Select a chemical to see live density and scan balance.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("label.noneSelected")).toBeInTheDocument();
   });
 
@@ -330,11 +403,11 @@ describe("LabelPrintModal", () => {
 
     expect(props.onLabelConfigChange).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({ template: "icon" })
+      expect.objectContaining({ template: "icon" }),
     );
     expect(props.onLabelConfigChange).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ colorMode: "bw" })
+      expect.objectContaining({ colorMode: "bw" }),
     );
   });
 
@@ -346,7 +419,11 @@ describe("LabelPrintModal", () => {
     slots.forEach((slot) => {
       expect(slot).toHaveClass("h-6", "w-8", "shrink-0");
     });
-    expect(slots.some((slot) => slot.querySelector("svg")?.classList.contains("shrink-0"))).toBe(true);
+    expect(
+      slots.some((slot) =>
+        slot.querySelector("svg")?.classList.contains("shrink-0"),
+      ),
+    ).toBe(true);
     expect(slots.some((slot) => slot.textContent === "ZH")).toBe(true);
   });
 });

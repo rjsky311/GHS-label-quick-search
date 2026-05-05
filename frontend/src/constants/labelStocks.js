@@ -45,15 +45,30 @@ const TYPOGRAPHY_BY_SIZE = {
 
 const TEMPLATE_BUDGETS_BY_SIZE = {
   small: {
-    standard: { pictograms: 2, primaryHazards: 1, secondaryHazards: 0, precautions: 0 },
+    standard: {
+      pictograms: 2,
+      primaryHazards: 1,
+      secondaryHazards: 0,
+      precautions: 0,
+    },
     qrcode: { pictograms: 1, hazardTeasers: 1 },
   },
   medium: {
-    standard: { pictograms: 2, primaryHazards: 2, secondaryHazards: 0, precautions: 0 },
+    standard: {
+      pictograms: 2,
+      primaryHazards: 2,
+      secondaryHazards: 0,
+      precautions: 2,
+    },
     qrcode: { pictograms: 1, hazardTeasers: 1 },
   },
   large: {
-    standard: { pictograms: 3, primaryHazards: 2, secondaryHazards: 0, precautions: 0 },
+    standard: {
+      pictograms: 3,
+      primaryHazards: 3,
+      secondaryHazards: 0,
+      precautions: 3,
+    },
     qrcode: { pictograms: 2, hazardTeasers: 1 },
   },
 };
@@ -167,7 +182,10 @@ const PRESET_INDEX = STOCK_PRESETS.reduce((acc, preset) => {
 export const LABEL_STOCK_PRESETS = STOCK_PRESETS;
 export const DEFAULT_LABEL_STOCK_ID = "medium-bottle";
 
-export function getLabelStockPresetDisplay(presetOrId, t = (key, options = {}) => options.defaultValue ?? key) {
+export function getLabelStockPresetDisplay(
+  presetOrId,
+  t = (key, options = {}) => options.defaultValue ?? key,
+) {
   const preset =
     typeof presetOrId === "string" ? PRESET_INDEX[presetOrId] : presetOrId;
   if (!preset) {
@@ -191,7 +209,11 @@ const VALID_COLOR_MODES = new Set(["color", "bw"]);
 
 const formatMm = (value) => `${value}mm`;
 
-const coerceNumber = (value, fallback, { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY } = {}) => {
+const coerceNumber = (
+  value,
+  fallback,
+  { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY } = {},
+) => {
   if (value === "" || value == null) return fallback;
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -200,7 +222,8 @@ const coerceNumber = (value, fallback, { min = Number.NEGATIVE_INFINITY, max = N
   return parsed;
 };
 
-const coerceEnum = (value, valid, fallback) => (valid.has(value) ? value : fallback);
+const coerceEnum = (value, valid, fallback) =>
+  valid.has(value) ? value : fallback;
 
 function getPreset(source) {
   if (!source) return DEFAULT_PRESET;
@@ -209,7 +232,9 @@ function getPreset(source) {
 
 function getBaseLayout(size = "medium", orientation = "portrait") {
   const fallback =
-    STOCK_PRESETS.find((preset) => preset.size === size && preset.orientation === orientation) ||
+    STOCK_PRESETS.find(
+      (preset) => preset.size === size && preset.orientation === orientation,
+    ) ||
     STOCK_PRESETS.find((preset) => preset.size === size) ||
     DEFAULT_PRESET;
 
@@ -242,13 +267,19 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
   const calibration = labelConfig.calibration || {};
   const explicitPreset =
     labelConfig.stockPreset || labelConfig.stockId || labelConfig.stock || null;
-  const preset = explicitPreset === "custom" ? null : explicitPreset ? getPreset(explicitPreset) : null;
-  const base = preset || getBaseLayout(labelConfig.size, labelConfig.orientation);
+  const preset =
+    explicitPreset === "custom"
+      ? null
+      : explicitPreset
+        ? getPreset(explicitPreset)
+        : null;
+  const base =
+    preset || getBaseLayout(labelConfig.size, labelConfig.orientation);
   const size = labelConfig.size || base.size;
   const orientation = coerceEnum(
     labelConfig.orientation || base.orientation,
     VALID_ORIENTATIONS,
-    base.orientation
+    base.orientation,
   );
 
   const columns = coerceNumber(labelConfig.columns, base.columns, {
@@ -262,15 +293,23 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
 
   return {
     schemaVersion: 2,
-    template: coerceEnum(labelConfig.template, VALID_TEMPLATES, DEFAULT_LABEL_CONFIG.template),
+    template: coerceEnum(
+      labelConfig.template,
+      VALID_TEMPLATES,
+      DEFAULT_LABEL_CONFIG.template,
+    ),
     size,
     orientation,
     nameDisplay: coerceEnum(
       labelConfig.nameDisplay,
       VALID_NAME_DISPLAYS,
-      DEFAULT_LABEL_CONFIG.nameDisplay
+      DEFAULT_LABEL_CONFIG.nameDisplay,
     ),
-    colorMode: coerceEnum(labelConfig.colorMode, VALID_COLOR_MODES, DEFAULT_LABEL_CONFIG.colorMode),
+    colorMode: coerceEnum(
+      labelConfig.colorMode,
+      VALID_COLOR_MODES,
+      DEFAULT_LABEL_CONFIG.colorMode,
+    ),
     stockPreset:
       explicitPreset === "custom" ? "custom" : preset ? preset.id : base.id,
     stockPresetName:
@@ -294,7 +333,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: 0,
         max: 25,
-      }
+      },
     ),
     pagePaddingMm: coerceNumber(
       labelConfig.pagePaddingMm ?? calibration.pagePaddingMm,
@@ -302,7 +341,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: 0,
         max: 25,
-      }
+      },
     ),
     columnGapMm: coerceNumber(
       labelConfig.columnGapMm ?? calibration.gapMm,
@@ -310,7 +349,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: 0,
         max: 20,
-      }
+      },
     ),
     rowGapMm: coerceNumber(
       labelConfig.rowGapMm ?? calibration.gapMm,
@@ -318,7 +357,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: 0,
         max: 20,
-      }
+      },
     ),
     offsetXmm: coerceNumber(
       labelConfig.offsetXmm ?? calibration.offsetXmm ?? calibration.nudgeXmm,
@@ -326,7 +365,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: -12,
         max: 12,
-      }
+      },
     ),
     offsetYmm: coerceNumber(
       labelConfig.offsetYmm ?? calibration.offsetYmm ?? calibration.nudgeYmm,
@@ -334,7 +373,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       {
         min: -12,
         max: 12,
-      }
+      },
     ),
   };
 }
@@ -364,8 +403,11 @@ export function getLabelStockPreset(labelConfig = {}) {
 export function resolvePrintLayoutConfig(labelConfig = {}) {
   const normalized = normalizePrintLabelConfig(labelConfig);
   const stock = getLabelStockPreset(normalized);
-  const metrics = TYPOGRAPHY_BY_SIZE[normalized.size] || TYPOGRAPHY_BY_SIZE.medium;
-  const budgets = TEMPLATE_BUDGETS_BY_SIZE[normalized.size] || TEMPLATE_BUDGETS_BY_SIZE.medium;
+  const metrics =
+    TYPOGRAPHY_BY_SIZE[normalized.size] || TYPOGRAPHY_BY_SIZE.medium;
+  const budgets =
+    TEMPLATE_BUDGETS_BY_SIZE[normalized.size] ||
+    TEMPLATE_BUDGETS_BY_SIZE.medium;
 
   return {
     ...normalized,
@@ -408,7 +450,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       minHeight: formatMm(
         normalized.orientation === "landscape"
           ? metrics.minHeightLandscapeMm
-          : metrics.minHeightPortraitMm
+          : metrics.minHeightPortraitMm,
       ),
       footerReserveRightMm: FOOTER_RESERVE_RIGHT_MM,
       footerReserveRight: formatMm(FOOTER_RESERVE_RIGHT_MM),

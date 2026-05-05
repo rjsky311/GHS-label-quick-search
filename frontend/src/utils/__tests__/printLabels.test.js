@@ -1,15 +1,15 @@
-jest.mock('@/i18n', () => ({
+jest.mock("@/i18n", () => ({
   t: Object.assign((key) => key, { bind: () => (key) => key }),
-  language: 'en',
+  language: "en",
 }));
-jest.mock('@/constants/ghs', () => ({
+jest.mock("@/constants/ghs", () => ({
   GHS_IMAGES: {
-    GHS01: 'https://example.com/GHS01.svg',
-    GHS02: 'https://example.com/GHS02.svg',
-    GHS07: 'https://example.com/GHS07.svg',
+    GHS01: "https://example.com/GHS01.svg",
+    GHS02: "https://example.com/GHS02.svg",
+    GHS07: "https://example.com/GHS07.svg",
   },
 }));
-jest.mock('@/utils/observability', () => ({
+jest.mock("@/utils/observability", () => ({
   recordObservabilityEvent: jest.fn(),
 }));
 
@@ -21,36 +21,36 @@ import {
   getQRCodeUrl,
   getHazardFontTier,
   escapeHtml,
-} from '../printLabels';
-import { resolvePrintLayoutConfig } from '@/constants/labelStocks';
-import { recordObservabilityEvent } from '@/utils/observability';
+} from "../printLabels";
+import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
+import { recordObservabilityEvent } from "@/utils/observability";
 
 // ── Mock chemical fixtures ──
 const mockChemical = {
-  cas_number: '64-17-5',
-  name_en: 'Ethanol',
-  name_zh: '乙醇',
+  cas_number: "64-17-5",
+  name_en: "Ethanol",
+  name_zh: "乙醇",
   cid: 702,
   ghs_pictograms: [
-    { code: 'GHS02', name_zh: '易燃' },
-    { code: 'GHS07', name_zh: '驚嘆號' },
+    { code: "GHS02", name_zh: "易燃" },
+    { code: "GHS07", name_zh: "驚嘆號" },
   ],
   hazard_statements: [
-    { code: 'H225', text_zh: '高度易燃液體和蒸氣' },
-    { code: 'H319', text_zh: '造成嚴重眼睛刺激' },
+    { code: "H225", text_zh: "高度易燃液體和蒸氣" },
+    { code: "H319", text_zh: "造成嚴重眼睛刺激" },
   ],
-  signal_word: 'Danger',
-  signal_word_zh: '危險',
+  signal_word: "Danger",
+  signal_word_zh: "危險",
 };
 
 const mockChemicalNoGHS = {
-  cas_number: '7732-18-5',
-  name_en: 'Water',
-  name_zh: '水',
+  cas_number: "7732-18-5",
+  name_en: "Water",
+  name_zh: "水",
   ghs_pictograms: [],
   hazard_statements: [],
-  signal_word: '',
-  signal_word_zh: '',
+  signal_word: "",
+  signal_word_zh: "",
 };
 
 // ── Helper to create mock iframe ──
@@ -71,7 +71,7 @@ function createMockIframe() {
     print: jest.fn(),
     document: mockIframeDoc,
     addEventListener: jest.fn((event, cb) => {
-      if (event === 'afterprint') afterPrintListeners.push(cb);
+      if (event === "afterprint") afterPrintListeners.push(cb);
     }),
     dispatchAfterPrint() {
       // Drain listeners (emulates { once: true } behaviour).
@@ -80,8 +80,8 @@ function createMockIframe() {
     },
   };
   const mockIframe = {
-    id: '',
-    style: { cssText: '' },
+    id: "",
+    style: { cssText: "" },
     contentDocument: mockIframeDoc,
     contentWindow: mockIframeWindow,
     remove: jest.fn(),
@@ -91,85 +91,85 @@ function createMockIframe() {
 
 // ── Tests ──
 
-describe('getQRCodeUrl', () => {
-  it('generates correct QR code URL with default size', () => {
-    const url = getQRCodeUrl('https://example.com');
+describe("getQRCodeUrl", () => {
+  it("generates correct QR code URL with default size", () => {
+    const url = getQRCodeUrl("https://example.com");
     expect(url).toBe(
-      'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fexample.com'
+      "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fexample.com",
     );
   });
 
-  it('generates correct QR code URL with custom size', () => {
-    const url = getQRCodeUrl('https://example.com', 200);
-    expect(url).toContain('size=200x200');
+  it("generates correct QR code URL with custom size", () => {
+    const url = getQRCodeUrl("https://example.com", 200);
+    expect(url).toContain("size=200x200");
   });
 
-  it('encodes special characters in data URL', () => {
-    const url = getQRCodeUrl('https://example.com?a=1&b=2');
-    expect(url).toContain('data=https%3A%2F%2Fexample.com%3Fa%3D1%26b%3D2');
+  it("encodes special characters in data URL", () => {
+    const url = getQRCodeUrl("https://example.com?a=1&b=2");
+    expect(url).toContain("data=https%3A%2F%2Fexample.com%3Fa%3D1%26b%3D2");
   });
 });
 
-describe('getHazardFontTier', () => {
-  it('returns default tier for 1-5 hazards (medium)', () => {
-    const tier = getHazardFontTier(3, 'medium');
-    expect(tier.fontSize).toBe('8px');
-    expect(tier.lineHeight).toBe('1.2');
-    expect(tier.marginBottom).toBe('0.8mm');
+describe("getHazardFontTier", () => {
+  it("returns default tier for 1-5 hazards (medium)", () => {
+    const tier = getHazardFontTier(3, "medium");
+    expect(tier.fontSize).toBe("8px");
+    expect(tier.lineHeight).toBe("1.2");
+    expect(tier.marginBottom).toBe("0.8mm");
   });
 
-  it('returns reduced tier for 6-8 hazards (medium)', () => {
-    const tier = getHazardFontTier(6, 'medium');
-    expect(tier.fontSize).toBe('7px');
-    expect(tier.lineHeight).toBe('1.15');
+  it("returns reduced tier for 6-8 hazards (medium)", () => {
+    const tier = getHazardFontTier(6, "medium");
+    expect(tier.fontSize).toBe("7px");
+    expect(tier.lineHeight).toBe("1.15");
   });
 
-  it('returns small tier for 9-12 hazards (medium)', () => {
-    const tier = getHazardFontTier(10, 'medium');
-    expect(tier.fontSize).toBe('6px');
-    expect(tier.lineHeight).toBe('1.1');
+  it("returns small tier for 9-12 hazards (medium)", () => {
+    const tier = getHazardFontTier(10, "medium");
+    expect(tier.fontSize).toBe("6px");
+    expect(tier.lineHeight).toBe("1.1");
   });
 
-  it('returns tiny tier for 13+ hazards (medium)', () => {
-    const tier = getHazardFontTier(15, 'medium');
-    expect(tier.fontSize).toBe('5.5px');
-    expect(tier.lineHeight).toBe('1.05');
+  it("returns tiny tier for 13+ hazards (medium)", () => {
+    const tier = getHazardFontTier(15, "medium");
+    expect(tier.fontSize).toBe("5.5px");
+    expect(tier.lineHeight).toBe("1.05");
   });
 
-  it('scales appropriately for small labels', () => {
-    const tier = getHazardFontTier(10, 'small');
-    expect(tier.fontSize).toBe('5.5px');
+  it("scales appropriately for small labels", () => {
+    const tier = getHazardFontTier(10, "small");
+    expect(tier.fontSize).toBe("5.5px");
   });
 
-  it('scales appropriately for large labels', () => {
-    const tier = getHazardFontTier(10, 'large');
-    expect(tier.fontSize).toBe('7.5px');
+  it("scales appropriately for large labels", () => {
+    const tier = getHazardFontTier(10, "large");
+    expect(tier.fontSize).toBe("7.5px");
   });
 
-  it('defaults to medium when size is undefined', () => {
+  it("defaults to medium when size is undefined", () => {
     const tier = getHazardFontTier(3, undefined);
-    expect(tier.fontSize).toBe('8px');
+    expect(tier.fontSize).toBe("8px");
   });
 });
 
-describe('print layout model', () => {
-  it('resolves legacy size selection into a stock preset config', () => {
+describe("print layout model", () => {
+  it("resolves legacy size selection into a stock preset config", () => {
     const layout = resolvePrintLayoutConfig({
-      size: 'small',
-      template: 'standard',
-      orientation: 'portrait',
+      size: "small",
+      template: "standard",
+      orientation: "portrait",
     });
 
-    expect(layout.stockId).toBe('small-rack');
-    expect(layout.label.width).toBe('54mm');
+    expect(layout.stockId).toBe("small-rack");
+    expect(layout.label.width).toBe("54mm");
     expect(layout.page.perPage).toBe(15);
   });
 
-  it('accepts calibration nudges and sheet overrides', () => {
+  it("accepts calibration nudges and sheet overrides", () => {
     const layout = resolvePrintLayoutConfig({
-      size: 'medium',
-      template: 'qrcode',
-      orientation: 'landscape',
+      size: "medium",
+      template: "qrcode",
+      orientation: "landscape",
       calibration: {
         nudgeXmm: 1.5,
         nudgeYmm: -2,
@@ -178,20 +178,20 @@ describe('print layout model', () => {
       },
     });
 
-    expect(layout.page.nudgeX).toBe('1.5mm');
-    expect(layout.page.nudgeY).toBe('-2mm');
-    expect(layout.page.gap).toBe('4mm');
-    expect(layout.page.margin).toBe('6mm');
+    expect(layout.page.nudgeX).toBe("1.5mm");
+    expect(layout.page.nudgeY).toBe("-2mm");
+    expect(layout.page.gap).toBe("4mm");
+    expect(layout.page.margin).toBe("6mm");
     expect(layout.page.perPage).toBe(9);
   });
 
-  it('buildPrintDocumentModel expands quantities and paginates via the resolved stock preset', () => {
+  it("buildPrintDocumentModel expands quantities and paginates via the resolved stock preset", () => {
     const model = buildPrintDocumentModel(
       [mockChemical, mockChemicalNoGHS],
-      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      { size: "medium", template: "standard", orientation: "portrait" },
       {},
       {},
-      { '64-17-5': 3, '7732-18-5': 6 }
+      { "64-17-5": 3, "7732-18-5": 6 },
     );
 
     expect(model.expandedLabels).toHaveLength(9);
@@ -199,51 +199,53 @@ describe('print layout model', () => {
     expect(model.layout.page.perPage).toBe(8);
   });
 
-  it('buildPrintDocument returns shared HTML that can be reused for preview and print', () => {
+  it("buildPrintDocument returns shared HTML that can be reused for preview and print", () => {
     const documentBundle = buildPrintDocument(
       [mockChemical],
       {
-        size: 'medium',
-        template: 'standard',
-        orientation: 'portrait',
+        size: "medium",
+        template: "standard",
+        orientation: "portrait",
         calibration: { nudgeXmm: 2, nudgeYmm: 1 },
       },
-      {}
+      {},
     );
 
     expect(documentBundle.html).toContain('class="page-grid"');
-    expect(documentBundle.html).toContain('transform: translate(2mm, 1mm)');
-    expect(documentBundle.model.layout.stockId).toBe('medium-bottle');
+    expect(documentBundle.html).toContain("transform: translate(2mm, 1mm)");
+    expect(documentBundle.model.layout.stockId).toBe("medium-bottle");
   });
 
-  it('buildPrintPreviewDocument reuses the shared renderer for label and sheet previews', () => {
+  it("buildPrintPreviewDocument reuses the shared renderer for label and sheet previews", () => {
     const labelPreview = buildPrintPreviewDocument(
       [mockChemical],
-      { size: 'medium', template: 'qrcode', orientation: 'portrait' },
+      { size: "medium", template: "qrcode", orientation: "portrait" },
       {},
       {},
-      { '64-17-5': 1 },
+      { "64-17-5": 1 },
       {},
-      { mode: 'label' }
+      { mode: "label" },
     );
     const sheetPreview = buildPrintPreviewDocument(
       [mockChemical, mockChemicalNoGHS],
-      { size: 'medium', template: 'standard', orientation: 'portrait' },
+      { size: "medium", template: "standard", orientation: "portrait" },
       {},
       {},
-      { '64-17-5': 1, '7732-18-5': 1 },
+      { "64-17-5": 1, "7732-18-5": 1 },
       {},
-      { mode: 'sheet' }
+      { mode: "sheet" },
     );
 
-    expect(labelPreview.html).toContain('preview-body-label');
-    expect(labelPreview.html).toContain('label label-qr');
-    expect(sheetPreview.html).toContain('preview-grid-scaler');
-    expect(sheetPreview.html).toContain('label-placeholder');
+    expect(labelPreview.html).toContain("preview-body-label");
+    expect(labelPreview.html).toContain("label label-qr");
+    expect(sheetPreview.html).toContain("preview-grid-scaler");
+    expect(sheetPreview.html).toContain("preview-sheet-viewport");
+    expect(sheetPreview.html).toContain("preview-page");
+    expect(sheetPreview.html).toContain("label-placeholder");
   });
 });
 
-describe('printLabels', () => {
+describe("printLabels", () => {
   let mockIframe, mockIframeDoc, mockIframeWindow;
   let createElementSpy, appendChildSpy, getByIdSpy;
 
@@ -254,14 +256,18 @@ describe('printLabels', () => {
     mockIframeDoc = mocks.mockIframeDoc;
     mockIframeWindow = mocks.mockIframeWindow;
 
-    createElementSpy = jest.spyOn(document, 'createElement').mockImplementation((tag) => {
-      if (tag === 'iframe') return mockIframe;
-      return document.createElement.wrappedMethod
-        ? document.createElement.wrappedMethod(tag)
-        : {};
-    });
-    appendChildSpy = jest.spyOn(document.body, 'appendChild').mockImplementation(() => {});
-    getByIdSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null);
+    createElementSpy = jest
+      .spyOn(document, "createElement")
+      .mockImplementation((tag) => {
+        if (tag === "iframe") return mockIframe;
+        return document.createElement.wrappedMethod
+          ? document.createElement.wrappedMethod(tag)
+          : {};
+      });
+    appendChildSpy = jest
+      .spyOn(document.body, "appendChild")
+      .mockImplementation(() => {});
+    getByIdSpy = jest.spyOn(document, "getElementById").mockReturnValue(null);
     jest.useFakeTimers();
   });
 
@@ -272,46 +278,70 @@ describe('printLabels', () => {
     jest.useRealTimers();
   });
 
-  it('returns immediately for empty selection', () => {
-    printLabels([], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
-    expect(createElementSpy).not.toHaveBeenCalledWith('iframe');
+  it("returns immediately for empty selection", () => {
+    printLabels(
+      [],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
+    expect(createElementSpy).not.toHaveBeenCalledWith("iframe");
   });
 
-  it('creates a hidden iframe element', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
-    expect(createElementSpy).toHaveBeenCalledWith('iframe');
-    expect(mockIframe.id).toBe('ghs-print-frame');
+  it("creates a hidden iframe element", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
+    expect(createElementSpy).toHaveBeenCalledWith("iframe");
+    expect(mockIframe.id).toBe("ghs-print-frame");
   });
 
-  it('sets iframe to invisible with correct styles', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
-    expect(mockIframe.style.cssText).toContain('position:fixed');
-    expect(mockIframe.style.cssText).toContain('width:0');
-    expect(mockIframe.style.cssText).toContain('height:0');
-    expect(mockIframe.style.cssText).toContain('opacity:0');
+  it("sets iframe to invisible with correct styles", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
+    expect(mockIframe.style.cssText).toContain("position:fixed");
+    expect(mockIframe.style.cssText).toContain("width:0");
+    expect(mockIframe.style.cssText).toContain("height:0");
+    expect(mockIframe.style.cssText).toContain("opacity:0");
   });
 
-  it('appends iframe to document.body', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("appends iframe to document.body", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     expect(appendChildSpy).toHaveBeenCalledWith(mockIframe);
   });
 
-  it('writes HTML document to iframe', () => {
-    printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("writes HTML document to iframe", () => {
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     expect(mockIframeDoc.open).toHaveBeenCalled();
     expect(mockIframeDoc.write).toHaveBeenCalledTimes(1);
     expect(mockIframeDoc.close).toHaveBeenCalled();
 
     const html = mockIframeDoc.write.mock.calls[0][0];
-    expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('Ethanol');
-    expect(html).toContain('64-17-5');
-    expect(html).toContain('meta-ribbon');
-    expect(html).toContain('乙醇');
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("Ethanol");
+    expect(html).toContain("64-17-5");
+    expect(html).toContain("meta-ribbon");
+    expect(html).toContain("乙醇");
   });
 
-  it('writes the same shared document HTML returned by buildPrintDocument', () => {
-    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+  it("writes the same shared document HTML returned by buildPrintDocument", () => {
+    const config = {
+      size: "medium",
+      template: "standard",
+      orientation: "portrait",
+    };
     const documentBundle = buildPrintDocument([mockChemical], config, {});
 
     printLabels([mockChemical], config, {});
@@ -319,9 +349,13 @@ describe('printLabels', () => {
     expect(mockIframeDoc.write.mock.calls[0][0]).toBe(documentBundle.html);
   });
 
-  it('calls print immediately when no images (300ms delay)', () => {
+  it("calls print immediately when no images (300ms delay)", () => {
     // mockIframeDoc.querySelectorAll returns [] by default (no images)
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
 
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     jest.advanceTimersByTime(300);
@@ -329,12 +363,16 @@ describe('printLabels', () => {
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
-  it('calls print after all images load', () => {
+  it("calls print after all images load", () => {
     const img1 = { complete: false, onload: null, onerror: null };
     const img2 = { complete: false, onload: null, onerror: null };
     mockIframeDoc.querySelectorAll.mockReturnValue([img1, img2]);
 
-    printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
 
     // Not printed yet (images still loading)
     jest.advanceTimersByTime(300);
@@ -351,66 +389,86 @@ describe('printLabels', () => {
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
-  it('handles images that are already complete', () => {
+  it("handles images that are already complete", () => {
     const img1 = { complete: true };
     const img2 = { complete: true };
     mockIframeDoc.querySelectorAll.mockReturnValue([img1, img2]);
 
-    printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
 
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
-  it('removes existing print iframe before creating new one', () => {
+  it("removes existing print iframe before creating new one", () => {
     const oldIframe = { remove: jest.fn() };
     getByIdSpy.mockReturnValue(oldIframe);
 
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     expect(oldIframe.remove).toHaveBeenCalled();
   });
 
-  it('registers an afterprint listener on the iframe window', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("registers an afterprint listener on the iframe window", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     jest.advanceTimersByTime(300);
 
     expect(mockIframeWindow.print).toHaveBeenCalled();
     expect(mockIframeWindow.addEventListener).toHaveBeenCalledWith(
-      'afterprint',
+      "afterprint",
       expect.any(Function),
-      expect.objectContaining({ once: true })
+      expect.objectContaining({ once: true }),
     );
   });
 
-  it('records print lifecycle events for observability', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("records print lifecycle events for observability", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     jest.advanceTimersByTime(300);
 
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
-      'print_start',
+      "print_start",
       expect.objectContaining({
-        status: 'started',
+        status: "started",
         meta: expect.objectContaining({
-          template: 'standard',
+          template: "standard",
           totalLabels: 1,
         }),
-      })
+      }),
     );
 
     mockIframeWindow.dispatchAfterPrint();
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
-      'print_complete',
+      "print_complete",
       expect.objectContaining({
-        status: 'afterprint',
+        status: "afterprint",
         meta: expect.objectContaining({
-          completionReason: 'afterprint',
+          completionReason: "afterprint",
         }),
-      })
+      }),
     );
   });
 
-  it('cleans up iframe when afterprint fires (dialog closed)', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("cleans up iframe when afterprint fires (dialog closed)", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     jest.advanceTimersByTime(300);
 
     expect(mockIframeWindow.print).toHaveBeenCalled();
@@ -421,8 +479,12 @@ describe('printLabels', () => {
     expect(mockIframe.remove).toHaveBeenCalled();
   });
 
-  it('does not leak iframe even if afterprint never fires (fallback)', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("does not leak iframe even if afterprint never fires (fallback)", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframe.remove).not.toHaveBeenCalled();
 
@@ -433,8 +495,12 @@ describe('printLabels', () => {
     expect(mockIframe.remove).toHaveBeenCalled();
   });
 
-  it('does not double-remove iframe when afterprint and fallback both fire', () => {
-    printLabels([mockChemicalNoGHS], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+  it("does not double-remove iframe when afterprint and fallback both fire", () => {
+    printLabels(
+      [mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
     jest.advanceTimersByTime(300);
 
     mockIframeWindow.dispatchAfterPrint();
@@ -446,238 +512,418 @@ describe('printLabels', () => {
     expect(mockIframe.remove).toHaveBeenCalledTimes(1);
   });
 
-  describe('templates', () => {
+  describe("templates", () => {
     const configs = [
-      { template: 'icon', label: 'icon template' },
-      { template: 'standard', label: 'standard template' },
-      { template: 'full', label: 'full template' },
-      { template: 'qrcode', label: 'qrcode template' },
+      { template: "icon", label: "icon template" },
+      { template: "standard", label: "standard template" },
+      { template: "full", label: "full template" },
+      { template: "qrcode", label: "qrcode template" },
     ];
 
     configs.forEach(({ template, label }) => {
       it(`generates valid HTML for ${label}`, () => {
-        printLabels([mockChemical], { size: 'medium', template, orientation: 'portrait' }, {});
+        printLabels(
+          [mockChemical],
+          { size: "medium", template, orientation: "portrait" },
+          {},
+        );
         const html = mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toContain('Ethanol');
-        expect(html).toContain('64-17-5');
+        expect(html).toContain("Ethanol");
+        expect(html).toContain("64-17-5");
         expect(html).toContain('class="label');
       });
     });
 
-    it('qrcode template includes QR code image', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'qrcode', orientation: 'portrait' }, {});
+    it("qrcode template includes QR code image", () => {
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('qrcode-img');
-      expect(html).toContain('api.qrserver.com');
+      expect(html).toContain("qrcode-img");
+      expect(html).toContain("api.qrserver.com");
     });
 
-    it('standard template uses the new hierarchy blocks for rail + hazard board', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    it("standard template uses the new hierarchy blocks for rail + hazard board", () => {
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('standard-grid');
-      expect(html).toContain('standard-rail');
-      expect(html).toContain('standard-main');
-      expect(html).toContain('standard-signal-row');
-      expect(html).toContain('hazard-primary-item');
-      expect(html).not.toContain('hazard-more');
+      expect(html).toContain("standard-grid");
+      expect(html).toContain("standard-rail");
+      expect(html).toContain("standard-main");
+      expect(html).toContain("standard-signal-row");
+      expect(html).toContain("hazard-primary-item");
+      expect(html).not.toMatch(/<div\s+class="hazard-more"/);
     });
 
-    it('qrcode template uses the scan-first hierarchy blocks', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'qrcode', orientation: 'portrait' }, {});
+    it("standard template calls out omitted hazards instead of silently dropping them", () => {
+      const manyHazards = {
+        ...mockChemical,
+        hazard_statements: Array.from({ length: 5 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_en: `Hazard ${i + 1}`,
+        })),
+      };
+      printLabels(
+        [manyHazards],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('qr-priority-block');
-      expect(html).toContain('qr-code-shell');
-      expect(html).toContain('qr-hint');
-      expect(html).not.toContain('qr-cas');
+      expect(html).toContain("hazard-more");
+      expect(html).toContain("print.moreHazardsShort");
+    });
+
+    it("qrcode template uses the scan-first hierarchy blocks", () => {
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("qr-priority-block");
+      expect(html).toContain("qr-code-shell");
+      expect(html).toContain("qr-hint");
+      expect(html).not.toContain("qr-cas");
+    });
+
+    it("qrcode template flags additional hazards behind the scan path", () => {
+      const manyHazards = {
+        ...mockChemical,
+        hazard_statements: Array.from({ length: 4 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_en: `Hazard ${i + 1}`,
+        })),
+      };
+      printLabels(
+        [manyHazards],
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toMatch(/<div\s+class="hazard-more qr-hazard-more"/);
+      expect(html).toContain("print.moreHazardsShort");
     });
   });
 
-  describe('sizes and orientations', () => {
-    it('handles small size', () => {
-      printLabels([mockChemical], { size: 'small', template: 'standard', orientation: 'portrait' }, {});
+  describe("sizes and orientations", () => {
+    it("handles small size", () => {
+      printLabels(
+        [mockChemical],
+        { size: "small", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('54mm');
+      expect(html).toContain("54mm");
     });
 
-    it('handles large size', () => {
-      printLabels([mockChemical], { size: 'large', template: 'standard', orientation: 'portrait' }, {});
+    it("handles large size", () => {
+      printLabels(
+        [mockChemical],
+        { size: "large", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('140mm');
+      expect(html).toContain("140mm");
     });
 
-    it('handles landscape orientation', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'landscape' }, {});
+    it("handles landscape orientation", () => {
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "standard", orientation: "landscape" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('A4 landscape');
+      expect(html).toContain("A4 landscape");
     });
 
-    it('portrait does not include landscape keyword in @page', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    it("portrait does not include landscape keyword in @page", () => {
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('A4 landscape');
-      expect(html).toContain('size: A4');
+      expect(html).not.toContain("A4 landscape");
+      expect(html).toContain("size: A4");
     });
   });
 
-  describe('custom label fields', () => {
-    const fields = { labName: 'Lab A', date: '2026-02-12', batchNumber: 'B-001' };
-    const config = { size: 'medium', template: 'full', orientation: 'portrait' };
+  describe("custom label fields", () => {
+    const fields = {
+      labName: "Lab A",
+      date: "2026-02-12",
+      batchNumber: "B-001",
+    };
+    const config = {
+      size: "medium",
+      template: "full",
+      orientation: "portrait",
+    };
 
-    it('renders print-job fields and legacy lab name fallback in generated HTML', () => {
+    it("renders print-job fields and legacy lab name fallback in generated HTML", () => {
       printLabels([mockChemical], config, {}, fields);
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Lab A');
-      expect(html).toContain('2026-02-12');
-      expect(html).toContain('B-001');
-      expect(html).toContain('custom-fields');
-      expect(html).toContain('profile-block');
+      expect(html).toContain("Lab A");
+      expect(html).toContain("2026-02-12");
+      expect(html).toContain("B-001");
+      expect(html).toContain("custom-fields");
+      expect(html).toContain("profile-block");
     });
 
-    it('does not render custom fields section when all empty', () => {
-      printLabels([mockChemical], config, {}, { labName: '', date: '', batchNumber: '' });
+    it("does not render custom fields section when all empty", () => {
+      printLabels(
+        [mockChemical],
+        config,
+        {},
+        { labName: "", date: "", batchNumber: "" },
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toContain('<div class="custom-fields">');
       expect(html).not.toMatch(/<div\s+class="profile-block/);
     });
 
-    it('renders only non-empty fields', () => {
-      printLabels([mockChemical], config, {}, { labName: 'Lab B', date: '', batchNumber: '' });
+    it("renders only non-empty fields", () => {
+      printLabels(
+        [mockChemical],
+        config,
+        {},
+        { labName: "Lab B", date: "", batchNumber: "" },
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Lab B');
-      expect(html).toContain('profile-block');
+      expect(html).toContain("Lab B");
+      expect(html).toContain("profile-block");
       expect(html).not.toContain('<div class="custom-fields">');
-      expect(html).not.toContain('B-001');
+      expect(html).not.toContain("B-001");
     });
 
-    it('compact templates omit date, batch, and profile fallbacks', () => {
-      ['icon', 'standard', 'qrcode'].forEach((template) => {
+    it("compact templates omit date, batch, and profile fallbacks", () => {
+      ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
-        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
         getByIdSpy.mockReturnValue(null);
 
         printLabels([mockChemical], { ...config, template }, {}, fields);
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).not.toContain('Lab A');
-        expect(html).not.toContain('2026-02-12');
-        expect(html).not.toContain('B-001');
+        expect(html).not.toContain("Lab A");
+        expect(html).not.toContain("2026-02-12");
+        expect(html).not.toContain("B-001");
       });
     });
 
-    it('renders custom fields with default empty object', () => {
+    it("renders custom fields with default empty object", () => {
       // No customLabelFields argument → uses default {}
       printLabels([mockChemical], config, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toContain('<div class="custom-fields">');
     });
 
-    it('batch number includes prefix label', () => {
-      printLabels([mockChemical], config, {}, { labName: '', date: '', batchNumber: 'X-99' });
+    it("batch number includes prefix label", () => {
+      printLabels(
+        [mockChemical],
+        config,
+        {},
+        { labName: "", date: "", batchNumber: "X-99" },
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('print.batch');
-      expect(html).toContain('X-99');
+      expect(html).toContain("print.batch");
+      expect(html).toContain("X-99");
     });
   });
 
-  describe('lab profile rendering', () => {
-    const config = { size: 'medium', template: 'full', orientation: 'portrait' };
+  describe("lab profile rendering", () => {
+    const config = {
+      size: "medium",
+      template: "full",
+      orientation: "portrait",
+    };
     const profile = {
-      organization: 'Materials Lab',
-      phone: '+886-2-1234-5678',
-      address: 'Taipei',
+      organization: "Materials Lab",
+      phone: "+886-2-1234-5678",
+      address: "Taipei",
     };
 
-    it('full labels render the complete lab profile block', () => {
-      printLabels([mockChemical], config, {}, { date: '', batchNumber: '' }, {}, profile);
+    it("full labels render the complete lab profile block", () => {
+      printLabels(
+        [mockChemical],
+        config,
+        {},
+        { date: "", batchNumber: "" },
+        {},
+        profile,
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('profile-block');
-      expect(html).toContain('Materials Lab');
-      expect(html).toContain('+886-2-1234-5678');
-      expect(html).toContain('Taipei');
+      expect(html).toContain("profile-block");
+      expect(html).toContain("Materials Lab");
+      expect(html).toContain("+886-2-1234-5678");
+      expect(html).toContain("Taipei");
     });
 
-    it('compact templates hide lab profile metadata entirely', () => {
-      ['icon', 'standard', 'qrcode'].forEach((template) => {
+    it("compact templates hide lab profile metadata entirely", () => {
+      ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
-        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
         getByIdSpy.mockReturnValue(null);
 
         printLabels(
           [mockChemical],
           { ...config, template },
           {},
-          { date: '', batchNumber: '' },
+          { date: "", batchNumber: "" },
           {},
           profile,
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).not.toMatch(/<div\s+class="support-chips"/);
         expect(html).not.toMatch(/<div\s+class="profile-block/);
-        expect(html).not.toContain('Materials Lab');
-        expect(html).not.toContain('+886-2-1234-5678');
-        expect(html).not.toContain('Taipei');
+        expect(html).not.toContain("Materials Lab");
+        expect(html).not.toContain("+886-2-1234-5678");
+        expect(html).not.toContain("Taipei");
       });
     });
 
-    it('full labels fall back to legacy customLabelFields.labName when labProfile is empty', () => {
+    it("full labels fall back to legacy customLabelFields.labName when labProfile is empty", () => {
       printLabels(
         [mockChemical],
         config,
         {},
-        { labName: 'Legacy Lab', date: '', batchNumber: '' },
+        { labName: "Legacy Lab", date: "", batchNumber: "" },
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Legacy Lab');
+      expect(html).toContain("Legacy Lab");
     });
   });
 
-  describe('name display modes', () => {
+  describe("name display modes", () => {
     it('shows both names by default (nameDisplay: "both")', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'both' }, {});
+      printLabels(
+        [mockChemical],
+        {
+          size: "medium",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "both",
+        },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Ethanol');
-      expect(html).toContain('乙醇');
+      expect(html).toContain("Ethanol");
+      expect(html).toContain("乙醇");
     });
 
     it('shows only English name when nameDisplay is "en"', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'en' }, {});
+      printLabels(
+        [mockChemical],
+        {
+          size: "medium",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "en",
+        },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Ethanol');
-      expect(html).not.toContain('乙醇');
+      expect(html).toContain("Ethanol");
+      expect(html).not.toContain("乙醇");
     });
 
     it('shows only Chinese name when nameDisplay is "zh"', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'zh' }, {});
+      printLabels(
+        [mockChemical],
+        {
+          size: "medium",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('乙醇');
-      expect(html).not.toContain('Ethanol');
+      expect(html).toContain("乙醇");
+      expect(html).not.toContain("Ethanol");
     });
 
     it('falls back to English when nameDisplay is "zh" but no Chinese name', () => {
-      const enOnlyChem = { ...mockChemical, name_zh: '' };
-      printLabels([enOnlyChem], { size: 'medium', template: 'standard', orientation: 'portrait', nameDisplay: 'zh' }, {});
+      const enOnlyChem = { ...mockChemical, name_zh: "" };
+      printLabels(
+        [enOnlyChem],
+        {
+          size: "medium",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('Ethanol');
+      expect(html).toContain("Ethanol");
     });
 
-    it('respects nameDisplay across all 4 templates', () => {
-      ['icon', 'standard', 'full', 'qrcode'].forEach((template) => {
+    it("respects nameDisplay across all 4 templates", () => {
+      ["icon", "standard", "full", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
-        createElementSpy.mockImplementation((tag) => tag === 'iframe' ? mocks.mockIframe : {});
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
         getByIdSpy.mockReturnValue(null);
 
-        printLabels([mockChemical], { size: 'medium', template, orientation: 'portrait', nameDisplay: 'en' }, {});
+        printLabels(
+          [mockChemical],
+          {
+            size: "medium",
+            template,
+            orientation: "portrait",
+            nameDisplay: "en",
+          },
+          {},
+        );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toContain('Ethanol');
-        expect(html).not.toContain('乙醇');
+        expect(html).toContain("Ethanol");
+        expect(html).not.toContain("乙醇");
+      });
+    });
+    it('keeps both names across all 4 templates when nameDisplay is "both"', () => {
+      ["icon", "standard", "full", "qrcode"].forEach((template) => {
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
+        getByIdSpy.mockReturnValue(null);
+
+        printLabels(
+          [mockChemical],
+          {
+            size: "small",
+            template,
+            orientation: "portrait",
+            nameDisplay: "both",
+          },
+          {},
+        );
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain("Ethanol");
+        expect(html).toContain(mockChemical.name_zh);
       });
     });
   });
 
-  describe('label quantities', () => {
-    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+  describe("label quantities", () => {
+    const config = {
+      size: "medium",
+      template: "standard",
+      orientation: "portrait",
+    };
 
-    it('prints multiple copies when quantity > 1', () => {
-      const quantities = { '64-17-5': 3 };
+    it("prints multiple copies when quantity > 1", () => {
+      const quantities = { "64-17-5": 3 };
       printLabels([mockChemical], config, {}, {}, quantities);
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Should contain 3 label divs for the same chemical
@@ -685,16 +931,22 @@ describe('printLabels', () => {
       expect(matches).toHaveLength(3);
     });
 
-    it('defaults to quantity 1 when not specified', () => {
+    it("defaults to quantity 1 when not specified", () => {
       printLabels([mockChemical], config, {}, {}, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
       const matches = html.match(/64-17-5/g);
       expect(matches).toHaveLength(1);
     });
 
-    it('respects different quantities for different chemicals', () => {
-      const quantities = { '64-17-5': 2, '7732-18-5': 3 };
-      printLabels([mockChemical, mockChemicalNoGHS], config, {}, {}, quantities);
+    it("respects different quantities for different chemicals", () => {
+      const quantities = { "64-17-5": 2, "7732-18-5": 3 };
+      printLabels(
+        [mockChemical, mockChemicalNoGHS],
+        config,
+        {},
+        {},
+        quantities,
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       const ethanolMatches = html.match(/64-17-5/g);
       const waterMatches = html.match(/7732-18-5/g);
@@ -702,26 +954,36 @@ describe('printLabels', () => {
       expect(waterMatches).toHaveLength(3);
     });
 
-    it('paginates correctly with expanded quantities', () => {
+    it("paginates correctly with expanded quantities", () => {
       // perPage for medium+portrait = 8 labels per page
       // 5 copies of ethanol + 5 copies of water = 10 total → 2 pages
-      const quantities = { '64-17-5': 5, '7732-18-5': 5 };
-      printLabels([mockChemical, mockChemicalNoGHS], config, {}, {}, quantities);
+      const quantities = { "64-17-5": 5, "7732-18-5": 5 };
+      printLabels(
+        [mockChemical, mockChemicalNoGHS],
+        config,
+        {},
+        {},
+        quantities,
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       const pageMatches = html.match(/class="page"/g);
       expect(pageMatches).toHaveLength(2);
     });
   });
 
-  describe('full template font auto-sizing', () => {
-    it('applies default font size for few hazards (tier 1)', () => {
+  describe("full template font auto-sizing", () => {
+    it("applies default font size for few hazards (tier 1)", () => {
       // mockChemical has 2 hazards → tier 1
-      printLabels([mockChemical], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('font-size:8px');
+      expect(html).toContain("font-size:8px");
     });
 
-    it('applies reduced font size for many hazards (tier 3)', () => {
+    it("applies reduced font size for many hazards (tier 3)", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 10 }, (_, i) => ({
@@ -729,12 +991,16 @@ describe('printLabels', () => {
           text_zh: `危害說明 ${i + 1}`,
         })),
       };
-      printLabels([manyHazards], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      printLabels(
+        [manyHazards],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('font-size:6px');
+      expect(html).toContain("font-size:6px");
     });
 
-    it('applies tiny font size for very many hazards (tier 4)', () => {
+    it("applies tiny font size for very many hazards (tier 4)", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 15 }, (_, i) => ({
@@ -742,12 +1008,16 @@ describe('printLabels', () => {
           text_zh: `危害說明 ${i + 1}`,
         })),
       };
-      printLabels([manyHazards], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      printLabels(
+        [manyHazards],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('font-size:5.5px');
+      expect(html).toContain("font-size:5.5px");
     });
 
-    it('does not apply auto-sizing inline styles to standard template', () => {
+    it("does not apply auto-sizing inline styles to standard template", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 15 }, (_, i) => ({
@@ -755,103 +1025,160 @@ describe('printLabels', () => {
           text_zh: `危害說明 ${i + 1}`,
         })),
       };
-      printLabels([manyHazards], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+      printLabels(
+        [manyHazards],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Standard template truncates hazards, does not use auto-sizing inline styles
-      expect(html).not.toContain('font-size:5.5px');
+      expect(html).not.toContain("font-size:5.5px");
     });
   });
 
-  describe('color mode (B&W / Color)', () => {
-    const config = { size: 'medium', template: 'standard', orientation: 'portrait' };
+  describe("color mode (B&W / Color)", () => {
+    const config = {
+      size: "medium",
+      template: "standard",
+      orientation: "portrait",
+    };
 
     it('does not include grayscale filter when colorMode is "color"', () => {
-      printLabels([mockChemical], { ...config, colorMode: 'color' }, {});
+      printLabels([mockChemical], { ...config, colorMode: "color" }, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('grayscale');
+      expect(html).not.toContain("grayscale");
+      expect(html).toContain("print-color");
+      expect(html).not.toContain("print-bw");
     });
 
     it('includes grayscale filter when colorMode is "bw"', () => {
-      printLabels([mockChemical], { ...config, colorMode: 'bw' }, {});
+      printLabels([mockChemical], { ...config, colorMode: "bw" }, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('grayscale(1)');
-      expect(html).toContain('contrast(1.2)');
+      expect(html).toContain("print-bw");
+      expect(html).toContain("grayscale(1)");
+      expect(html).toContain("contrast(1.35)");
+      expect(html).toContain("body.print-bw .label");
+      expect(html).toContain("body.print-bw .signal");
     });
 
-    it('does not include grayscale filter when colorMode is not set (default)', () => {
+    it("does not include grayscale filter when colorMode is not set (default)", () => {
       printLabels([mockChemical], config, {});
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('grayscale');
+      expect(html).not.toContain("grayscale");
     });
   });
 
-  describe('custom GHS settings', () => {
-    it('uses alternate classification when customGHSSettings specifies index', () => {
+  describe("custom GHS settings", () => {
+    it("uses alternate classification when customGHSSettings specifies index", () => {
       const chemWithAlternate = {
         ...mockChemical,
         other_classifications: [
           {
-            pictograms: [{ code: 'GHS01', name_zh: '爆炸物' }],
-            hazard_statements: [{ code: 'H200', text_zh: '不穩定炸藥' }],
-            signal_word: 'Danger',
-            signal_word_zh: '危險',
+            pictograms: [{ code: "GHS01", name_zh: "爆炸物" }],
+            hazard_statements: [{ code: "H200", text_zh: "不穩定炸藥" }],
+            signal_word: "Danger",
+            signal_word_zh: "危險",
           },
         ],
       };
       const customSettings = {
-        '64-17-5': { selectedIndex: 1, note: 'Use alternate' },
+        "64-17-5": { selectedIndex: 1, note: "Use alternate" },
       };
 
-      printLabels([chemWithAlternate], { size: 'medium', template: 'standard', orientation: 'portrait' }, customSettings);
+      printLabels(
+        [chemWithAlternate],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        customSettings,
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('GHS01');
-      expect(html).toContain('H200');
+      expect(html).toContain("GHS01");
+      expect(html).toContain("H200");
     });
   });
 
   // ── Precautionary Statements (v1.8 M0 PR-C) ──
-  describe('precautionary statements', () => {
+  describe("precautionary statements", () => {
     const chemWithP = {
       ...mockChemical,
       precautionary_statements: [
-        { code: 'P210', text_en: 'Keep away from heat.', text_zh: '遠離熱源。' },
-        { code: 'P233', text_en: 'Keep container closed.', text_zh: '保持容器密閉。' },
-        { code: 'P301+P310', text_en: 'IF SWALLOWED: Call POISON CENTER.', text_zh: '如誤吞食：立即呼叫毒物中心。' },
+        {
+          code: "P210",
+          text_en: "Keep away from heat.",
+          text_zh: "遠離熱源。",
+        },
+        {
+          code: "P233",
+          text_en: "Keep container closed.",
+          text_zh: "保持容器密閉。",
+        },
+        {
+          code: "P301+P310",
+          text_en: "IF SWALLOWED: Call POISON CENTER.",
+          text_zh: "如誤吞食：立即呼叫毒物中心。",
+        },
       ],
     };
 
-    it('full template renders P-codes with localized text', () => {
-      printLabels([chemWithP], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+    it("full template renders P-codes with localized text", () => {
+      printLabels(
+        [chemWithP],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('P210');
-      expect(html).toContain('P233');
-      expect(html).toContain('P301+P310');
+      expect(html).toContain("P210");
+      expect(html).toContain("P233");
+      expect(html).toContain("P301+P310");
       // Full Chinese text present
-      expect(html).toContain('遠離熱源。');
-      expect(html).toContain('如誤吞食：立即呼叫毒物中心。');
+      expect(html).toContain("遠離熱源。");
+      expect(html).toContain("如誤吞食：立即呼叫毒物中心。");
     });
 
-    it('full template inserts a visual divider between H-codes and P-codes', () => {
-      printLabels([chemWithP], { size: 'large', template: 'full', orientation: 'portrait' }, {});
+    it("full template inserts a visual divider between H-codes and P-codes", () => {
+      printLabels(
+        [chemWithP],
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('precautions-divider');
+      expect(html).toContain("precautions-divider");
     });
 
-    it('standard template omits P-codes so the primary hazard block stays readable', () => {
-      printLabels([chemWithP], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+    it("standard template renders compact P-code summary when the stock budget allows it", () => {
+      printLabels(
+        [chemWithP],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Look for actual element markup, not the CSS class definition
-      expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
-      expect(html).not.toMatch(/<span\s+class="precaution-code"/);
-      expect(html).not.toContain('P210');
-      expect(html).not.toContain('P301+P310');
+      expect(html).toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).toMatch(/<span\s+class="precaution-code"/);
+      expect(html).toContain("P210");
+      expect(html).toContain("P233");
+      expect(html).not.toContain("P301+P310");
       // In compact view we do NOT inline the long Chinese text
-      expect(html).not.toContain('如誤吞食：立即呼叫毒物中心。');
+      expect(html).not.toContain("如誤吞食：立即呼叫毒物中心。");
     });
 
-    it('standard template omits P-code section when no P-codes', () => {
+    it("small standard labels still omit P-codes to avoid unusable micro text", () => {
+      printLabels(
+        [chemWithP],
+        { size: "small", template: "standard", orientation: "portrait" },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).not.toContain("P210");
+    });
+
+    it("standard template omits P-code section when no P-codes", () => {
       // mockChemical has no precautionary_statements field
-      printLabels([mockChemical], { size: 'medium', template: 'standard', orientation: 'portrait' }, {});
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // CSS class definitions still live in <style>; check for actual element usage
       expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
@@ -859,73 +1186,97 @@ describe('printLabels', () => {
     });
 
     it('full template renders "no precautionary" state without crashing when P-codes empty', () => {
-      printLabels([mockChemical], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      printLabels(
+        [mockChemical],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Divider and per-item markup should not render (CSS class definitions don't count)
       expect(html).not.toMatch(/<div\s+class="precautions-divider"/);
       expect(html).not.toMatch(/<div\s+class="precaution-item-full/);
     });
 
-    it('icon and qrcode templates do not render full P-code content (compact by design)', () => {
-      printLabels([chemWithP], { size: 'medium', template: 'icon', orientation: 'portrait' }, {});
+    it("icon and qrcode templates do not render full P-code content (compact by design)", () => {
+      printLabels(
+        [chemWithP],
+        { size: "medium", template: "icon", orientation: "portrait" },
+        {},
+      );
       const iconHtml = mockIframeDoc.write.mock.calls[0][0];
       // Check for actual div elements using the classes, not the CSS block
       expect(iconHtml).not.toMatch(/<div\s+class="precaution-item-full/);
       expect(iconHtml).not.toMatch(/<div\s+class="precautions-compact"/);
       // And no P-code values appear in the body
-      expect(iconHtml).not.toContain('P210');
-      expect(iconHtml).not.toContain('P301+P310');
+      expect(iconHtml).not.toContain("P210");
+      expect(iconHtml).not.toContain("P301+P310");
 
       mockIframeDoc.write.mockClear();
-      printLabels([chemWithP], { size: 'medium', template: 'qrcode', orientation: 'portrait' }, {});
+      printLabels(
+        [chemWithP],
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
+      );
       const qrHtml = mockIframeDoc.write.mock.calls[0][0];
       expect(qrHtml).not.toMatch(/<div\s+class="precaution-item-full/);
       expect(qrHtml).not.toMatch(/<div\s+class="precautions-compact"/);
-      expect(qrHtml).not.toContain('P210');
+      expect(qrHtml).not.toContain("P210");
     });
 
-    it('custom GHS override swaps to alternate classification P-codes', () => {
+    it("custom GHS override swaps to alternate classification P-codes", () => {
       const chemWithAlt = {
         ...chemWithP,
         other_classifications: [
           {
-            pictograms: [{ code: 'GHS07', name_zh: '感嘆號' }],
-            hazard_statements: [{ code: 'H302', text_zh: '吞食有害' }],
+            pictograms: [{ code: "GHS07", name_zh: "感嘆號" }],
+            hazard_statements: [{ code: "H302", text_zh: "吞食有害" }],
             precautionary_statements: [
-              { code: 'P264', text_en: 'Wash after use.', text_zh: '處理後洗手。' },
+              {
+                code: "P264",
+                text_en: "Wash after use.",
+                text_zh: "處理後洗手。",
+              },
             ],
-            signal_word: 'Warning',
-            signal_word_zh: '警告',
+            signal_word: "Warning",
+            signal_word_zh: "警告",
           },
         ],
       };
-      const customSettings = { '64-17-5': { selectedIndex: 1, note: 'alt' } };
-      printLabels([chemWithAlt], { size: 'medium', template: 'full', orientation: 'portrait' }, customSettings);
+      const customSettings = { "64-17-5": { selectedIndex: 1, note: "alt" } };
+      printLabels(
+        [chemWithAlt],
+        { size: "medium", template: "full", orientation: "portrait" },
+        customSettings,
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Alternate's P-code must appear
-      expect(html).toContain('P264');
-      expect(html).toContain('處理後洗手。');
+      expect(html).toContain("P264");
+      expect(html).toContain("處理後洗手。");
       // Primary P-codes must NOT appear (swapped out)
-      expect(html).not.toContain('P301+P310');
+      expect(html).not.toContain("P301+P310");
     });
 
-    it('P-code text is HTML-escaped like other interpolated values', () => {
+    it("P-code text is HTML-escaped like other interpolated values", () => {
       const chemHostile = {
         ...mockChemical,
         precautionary_statements: [
           {
-            code: 'P<img src=x onerror=alert(1)>',
-            text_en: '<script>alert(1)</script>',
+            code: "P<img src=x onerror=alert(1)>",
+            text_en: "<script>alert(1)</script>",
             text_zh: '"></div><script>evil</script>',
           },
         ],
       };
-      printLabels([chemHostile], { size: 'medium', template: 'full', orientation: 'portrait' }, {});
+      printLabels(
+        [chemHostile],
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
+      );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('<script>evil</script>');
+      expect(html).not.toContain("<script>evil</script>");
       expect(html).not.toMatch(/<img\s+src=x\s+onerror/);
       // Escaped forms must be present
-      expect(html).toContain('&lt;script&gt;evil&lt;/script&gt;');
+      expect(html).toContain("&lt;script&gt;evil&lt;/script&gt;");
     });
   });
 
@@ -934,132 +1285,134 @@ describe('printLabels', () => {
   // chemical names/CAS from PubChem or user input, hazard statement text)
   // are HTML-escaped before being written into the print iframe. The iframe
   // is same-origin, so unescaped interpolation would be a real XSS vector.
-  describe('HTML injection safety', () => {
-    it('escapes <script> tags in custom label fields', () => {
+  describe("HTML injection safety", () => {
+    it("escapes <script> tags in custom label fields", () => {
       const customFields = {
         labName: '<script>alert("xss")</script>',
-        date: '2026-01-01',
-        batchNumber: 'B001',
+        date: "2026-01-01",
+        batchNumber: "B001",
       };
       printLabels(
         [mockChemical],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
+        { size: "medium", template: "full", orientation: "portrait" },
         {},
         customFields,
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('<script>alert');
-      expect(html).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+      expect(html).not.toContain("<script>alert");
+      expect(html).toContain(
+        "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;",
+      );
     });
 
-    it('escapes onerror-style image injection in chemical name', () => {
+    it("escapes onerror-style image injection in chemical name", () => {
       const malicious = {
         ...mockChemical,
-        name_en: '<img src=x onerror=alert(1)>',
+        name_en: "<img src=x onerror=alert(1)>",
       };
       printLabels(
         [malicious],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        { size: "medium", template: "icon", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Must NOT contain a functional injected <img> tag from the name
       expect(html).not.toMatch(/<img[^>]*onerror/i);
-      expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+      expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
     });
 
-    it('escapes ampersands, angle brackets and quotes in hazard text', () => {
+    it("escapes ampersands, angle brackets and quotes in hazard text", () => {
       const chem = {
         ...mockChemical,
         hazard_statements: [
-          { code: 'H<200>', text_zh: 'Fire & "explosion" <hazard>' },
+          { code: "H<200>", text_zh: 'Fire & "explosion" <hazard>' },
         ],
       };
       printLabels(
         [chem],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        { size: "medium", template: "standard", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('H&lt;200&gt;');
-      expect(html).toContain('Fire &amp; &quot;explosion&quot; &lt;hazard&gt;');
+      expect(html).toContain("H&lt;200&gt;");
+      expect(html).toContain("Fire &amp; &quot;explosion&quot; &lt;hazard&gt;");
       expect(html).not.toContain('Fire & "explosion" <hazard>');
     });
 
-    it('escapes quote characters in CAS number to prevent attribute break-out', () => {
+    it("escapes quote characters in CAS number to prevent attribute break-out", () => {
       const chem = {
         ...mockChemical,
         cas_number: '64-17-5"><script>alert(1)</script>',
       };
       printLabels(
         [chem],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        { size: "medium", template: "icon", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('><script>alert(1)');
-      expect(html).toContain('&quot;&gt;&lt;script&gt;');
+      expect(html).not.toContain("><script>alert(1)");
+      expect(html).toContain("&quot;&gt;&lt;script&gt;");
     });
 
-    it('escapes signal word to prevent injection into class-adjacent content', () => {
+    it("escapes signal word to prevent injection into class-adjacent content", () => {
       const chem = {
         ...mockChemical,
-        signal_word_zh: '危險</div><script>alert(1)</script>',
-        signal_word: 'Danger',
+        signal_word_zh: "危險</div><script>alert(1)</script>",
+        signal_word: "Danger",
       };
       printLabels(
         [chem],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
+        { size: "medium", template: "icon", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).not.toContain('</div><script>alert(1)');
-      expect(html).toContain('&lt;/div&gt;&lt;script&gt;');
+      expect(html).not.toContain("</div><script>alert(1)");
+      expect(html).toContain("&lt;/div&gt;&lt;script&gt;");
     });
 
-    it('escapes pictogram code used in alt attribute', () => {
+    it("escapes pictogram code used in alt attribute", () => {
       const chem = {
         ...mockChemical,
-        ghs_pictograms: [{ code: 'GHS02" onerror="alert(1)', name_zh: 'x' }],
+        ghs_pictograms: [{ code: 'GHS02" onerror="alert(1)', name_zh: "x" }],
       };
       printLabels(
         [chem],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
+        { size: "medium", template: "standard", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/alt="GHS02" onerror="alert/);
-      expect(html).toContain('&quot; onerror=&quot;alert(1)');
+      expect(html).toContain("&quot; onerror=&quot;alert(1)");
     });
   });
 });
 
 // ── escapeHtml unit tests ──
-describe('escapeHtml', () => {
-  it('returns empty string for null/undefined', () => {
-    expect(escapeHtml(null)).toBe('');
-    expect(escapeHtml(undefined)).toBe('');
+describe("escapeHtml", () => {
+  it("returns empty string for null/undefined", () => {
+    expect(escapeHtml(null)).toBe("");
+    expect(escapeHtml(undefined)).toBe("");
   });
 
-  it('escapes all five dangerous HTML characters', () => {
-    expect(escapeHtml('<script>')).toBe('&lt;script&gt;');
-    expect(escapeHtml('a & b')).toBe('a &amp; b');
-    expect(escapeHtml('"q"')).toBe('&quot;q&quot;');
-    expect(escapeHtml("'s")).toBe('&#39;s');
+  it("escapes all five dangerous HTML characters", () => {
+    expect(escapeHtml("<script>")).toBe("&lt;script&gt;");
+    expect(escapeHtml("a & b")).toBe("a &amp; b");
+    expect(escapeHtml('"q"')).toBe("&quot;q&quot;");
+    expect(escapeHtml("'s")).toBe("&#39;s");
   });
 
-  it('coerces non-string values to string', () => {
-    expect(escapeHtml(42)).toBe('42');
-    expect(escapeHtml(true)).toBe('true');
+  it("coerces non-string values to string", () => {
+    expect(escapeHtml(42)).toBe("42");
+    expect(escapeHtml(true)).toBe("true");
   });
 
-  it('leaves safe strings unchanged', () => {
-    expect(escapeHtml('Ethanol 乙醇')).toBe('Ethanol 乙醇');
+  it("leaves safe strings unchanged", () => {
+    expect(escapeHtml("Ethanol 乙醇")).toBe("Ethanol 乙醇");
   });
 });
 
 // ── Page-level trust-boundary footer (v1.8 M1 PR-C) ──
-describe('print page footer disclaimer', () => {
+describe("print page footer disclaimer", () => {
   let mockIframe, mockIframeDoc, mockIframeWindow;
   let createElementSpy, appendChildSpy, getByIdSpy;
 
@@ -1071,17 +1424,17 @@ describe('print page footer disclaimer', () => {
     mockIframeWindow = mocks.mockIframeWindow;
 
     createElementSpy = jest
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === 'iframe') return mockIframe;
+        if (tag === "iframe") return mockIframe;
         return document.createElement.wrappedMethod
           ? document.createElement.wrappedMethod(tag)
           : {};
       });
     appendChildSpy = jest
-      .spyOn(document.body, 'appendChild')
+      .spyOn(document.body, "appendChild")
       .mockImplementation(() => {});
-    getByIdSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null);
+    getByIdSpy = jest.spyOn(document, "getElementById").mockReturnValue(null);
     jest.useFakeTimers();
   });
 
@@ -1092,19 +1445,19 @@ describe('print page footer disclaimer', () => {
     jest.useRealTimers();
   });
 
-  it('renders a page-footer-note element on every page', () => {
+  it("renders a page-footer-note element on every page", () => {
     printLabels(
       [mockChemical],
-      { size: 'medium', template: 'standard', orientation: 'portrait' },
-      {}
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
     );
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toMatch(/<div\s+class="page-footer-note">/);
     // The i18n key is rendered (mock returns it verbatim)
-    expect(html).toContain('trust.printFooter');
+    expect(html).toContain("trust.printFooter");
   });
 
-  it('footer note is emitted once per page', () => {
+  it("footer note is emitted once per page", () => {
     // 12 labels + medium size + portrait => perPage=8 => 2 pages
     const many = Array.from({ length: 12 }, (_, i) => ({
       ...mockChemical,
@@ -1112,25 +1465,25 @@ describe('print page footer disclaimer', () => {
     }));
     printLabels(
       many,
-      { size: 'medium', template: 'standard', orientation: 'portrait' },
-      {}
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
     );
     const html = mockIframeDoc.write.mock.calls[0][0];
     const matches = html.match(/<div\s+class="page-footer-note">/g) || [];
     expect(matches.length).toBe(2);
   });
 
-  it('footer note text is HTML-escaped (defence-in-depth)', () => {
+  it("footer note text is HTML-escaped (defence-in-depth)", () => {
     // Even though t() returns a safe string, the renderer still runs it
     // through escapeHtml(); confirm no raw "<" survives.
     printLabels(
       [mockChemical],
-      { size: 'medium', template: 'standard', orientation: 'portrait' },
-      {}
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
     );
     const html = mockIframeDoc.write.mock.calls[0][0];
     const footerMatch = html.match(
-      /<div\s+class="page-footer-note">([^<]*)<\/div>/
+      /<div\s+class="page-footer-note">([^<]*)<\/div>/,
     );
     expect(footerMatch).not.toBeNull();
     // The content between the tags is the escaped i18n key; no `<` inside
@@ -1144,7 +1497,7 @@ describe('print page footer disclaimer', () => {
 // a derived prepared-solution item (`isPreparedSolution: true`)
 // correctly across all four templates. PR-A will build the UI flow
 // that produces such items; these tests construct them directly.
-describe('prepared solution print rendering', () => {
+describe("prepared solution print rendering", () => {
   let mockIframe, mockIframeDoc, mockIframeWindow;
   let createElementSpy, appendChildSpy, getByIdSpy;
 
@@ -1156,17 +1509,17 @@ describe('prepared solution print rendering', () => {
     mockIframeWindow = mocks.mockIframeWindow;
 
     createElementSpy = jest
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === 'iframe') return mockIframe;
+        if (tag === "iframe") return mockIframe;
         return document.createElement.wrappedMethod
           ? document.createElement.wrappedMethod(tag)
           : {};
       });
     appendChildSpy = jest
-      .spyOn(document.body, 'appendChild')
+      .spyOn(document.body, "appendChild")
       .mockImplementation(() => {});
-    getByIdSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null);
+    getByIdSpy = jest.spyOn(document, "getElementById").mockReturnValue(null);
     jest.useFakeTimers();
   });
 
@@ -1183,8 +1536,8 @@ describe('prepared solution print rendering', () => {
     ...mockChemical,
     isPreparedSolution: true,
     preparedSolution: {
-      concentration: '10% (v/v)',
-      solvent: 'Water',
+      concentration: "10% (v/v)",
+      solvent: "Water",
       parentCas: mockChemical.cas_number,
       parentNameEn: mockChemical.name_en,
       parentNameZh: mockChemical.name_zh,
@@ -1192,242 +1545,246 @@ describe('prepared solution print rendering', () => {
     ...overrides,
   });
 
-  describe('full template', () => {
-    it('renders prepared badge, meta rows, and the full note', () => {
+  describe("full template", () => {
+    it("renders prepared badge, meta rows, and the full note", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
       expect(html).toMatch(/<div\s+class="prepared-meta"/);
       expect(html).toMatch(/<div\s+class="prepared-note"/);
-      expect(html).toContain('10% (v/v)');
-      expect(html).toContain('Water');
+      expect(html).toContain("10% (v/v)");
+      expect(html).toContain("Water");
     });
 
-    it('applies label-prepared class so CSS scoping is possible', () => {
+    it("applies label-prepared class so CSS scoping is possible", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/class="label\s+label-full\s+label-prepared"/);
     });
 
-    it('parent pictograms / hazards / precautions are still rendered', () => {
+    it("parent pictograms / hazards / precautions are still rendered", () => {
       const prepared = {
         ...makePrepared(),
         precautionary_statements: [
-          { code: 'P210', text_en: 'Keep away from heat.', text_zh: '遠離熱源。' },
+          {
+            code: "P210",
+            text_en: "Keep away from heat.",
+            text_zh: "遠離熱源。",
+          },
         ],
       };
       printLabels(
         [prepared],
-        { size: 'large', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Parent pictograms
-      expect(html).toContain('GHS02');
-      expect(html).toContain('GHS07');
+      expect(html).toContain("GHS02");
+      expect(html).toContain("GHS07");
       // Parent hazards
-      expect(html).toContain('H225');
+      expect(html).toContain("H225");
       // Parent precautions (from the override above)
-      expect(html).toContain('P210');
+      expect(html).toContain("P210");
       // Parent signal word
-      expect(html).toContain('危險');
+      expect(html).toContain("危險");
     });
   });
 
-  describe('standard template', () => {
-    it('renders a compact prepared meta ribbon without the long note', () => {
+  describe("standard template", () => {
+    it("renders a compact prepared meta ribbon without the long note", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain('print.preparedShort');
-      expect(html).toContain('10% (v/v)');
-      expect(html).toContain('Water');
+      expect(html).toContain("print.preparedShort");
+      expect(html).toContain("10% (v/v)");
+      expect(html).toContain("Water");
       expect(html).not.toMatch(/<div\s+class="prepared-note"/);
     });
 
-    it('parent pictograms and hazards still render', () => {
+    it("parent pictograms and hazards still render", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('GHS02');
-      expect(html).toContain('H225');
+      expect(html).toContain("GHS02");
+      expect(html).toContain("H225");
     });
   });
 
-  describe('icon template', () => {
+  describe("icon template", () => {
     // Space-constrained template. Must preserve prepared identity
     // via the compact badge + meta rows, but does NOT render the
     // full prepared note (no room).
-    it('renders compact prepared badge and meta rows', () => {
+    it("renders compact prepared badge and meta rows", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "icon", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
       expect(html).toMatch(/<div\s+class="prepared-meta"/);
-      expect(html).toContain('10% (v/v)');
-      expect(html).toContain('Water');
+      expect(html).toContain("10% (v/v)");
+      expect(html).toContain("Water");
     });
 
-    it('does NOT render the full prepared-note on icon template (space)', () => {
+    it("does NOT render the full prepared-note on icon template (space)", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "icon", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-note"/);
     });
 
-    it('parent pictograms still render', () => {
+    it("parent pictograms still render", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "icon", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain('GHS02');
-      expect(html).toContain('GHS07');
+      expect(html).toContain("GHS02");
+      expect(html).toContain("GHS07");
     });
   });
 
-  describe('qrcode template', () => {
-    it('renders a compact prepared meta ribbon in the left column', () => {
+  describe("qrcode template", () => {
+    it("renders a compact prepared meta ribbon in the left column", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain('print.preparedShort');
-      expect(html).toContain('10% (v/v)');
-      expect(html).toContain('Water');
+      expect(html).toContain("print.preparedShort");
+      expect(html).toContain("10% (v/v)");
+      expect(html).toContain("Water");
     });
 
-    it('does NOT render the full prepared-note on qrcode template (space)', () => {
+    it("does NOT render the full prepared-note on qrcode template (space)", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-note"/);
     });
 
-    it('parent QR code is still generated (not replaced)', () => {
+    it("parent QR code is still generated (not replaced)", () => {
       printLabels(
         [makePrepared()],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<img\s+class="qrcode-img"/);
     });
 
-    it('uses the PubChem SDS target in the QR payload when CID is available', () => {
+    it("uses the PubChem SDS target in the QR payload when CID is available", () => {
       printLabels(
         [mockChemical],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        'data=https%3A%2F%2Fpubchem.ncbi.nlm.nih.gov%2Fcompound%2F702%23section%3DSafety-and-Hazards'
+        "data=https%3A%2F%2Fpubchem.ncbi.nlm.nih.gov%2Fcompound%2F702%23section%3DSafety-and-Hazards",
       );
     });
 
-    it('falls back to the ECHA search target in the QR payload when CID is missing', () => {
+    it("falls back to the ECHA search target in the QR payload when CID is missing", () => {
       printLabels(
         [{ ...mockChemical, cid: null }],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        'data=https%3A%2F%2Fchem.echa.europa.eu%2Fsubstance-search%3FsearchText%3D64-17-5'
+        "data=https%3A%2F%2Fchem.echa.europa.eu%2Fsubstance-search%3FsearchText%3D64-17-5",
       );
     });
   });
 
-  describe('HTML injection safety', () => {
-    it('concentration and solvent values are HTML-escaped', () => {
+  describe("HTML injection safety", () => {
+    it("concentration and solvent values are HTML-escaped", () => {
       const hostile = {
         ...mockChemical,
         isPreparedSolution: true,
         preparedSolution: {
-          concentration: '<script>alert(1)</script>',
+          concentration: "<script>alert(1)</script>",
           solvent: '"><img src=x onerror=alert(2)>',
         },
       };
       printLabels(
         [hostile],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // No raw script tag or injected onerror image should survive
       expect(html).not.toMatch(/<script>alert\(1\)/);
       expect(html).not.toMatch(/<img\s+src=x\s+onerror=alert\(2\)/);
       // Escaped forms must be present
-      expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
-      expect(html).toContain('&quot;&gt;&lt;img src=x onerror=alert(2)&gt;');
+      expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+      expect(html).toContain("&quot;&gt;&lt;img src=x onerror=alert(2)&gt;");
     });
   });
 
-  describe('custom GHS override', () => {
-    it('prepared item still receives the custom override selection', () => {
+  describe("custom GHS override", () => {
+    it("prepared item still receives the custom override selection", () => {
       const prepared = {
         ...makePrepared(),
         other_classifications: [
           {
-            pictograms: [{ code: 'GHS06', name_zh: '劇毒' }],
-            hazard_statements: [{ code: 'H301', text_zh: '吞食有毒' }],
-            signal_word: 'Danger',
-            signal_word_zh: '危險',
+            pictograms: [{ code: "GHS06", name_zh: "劇毒" }],
+            hazard_statements: [{ code: "H301", text_zh: "吞食有毒" }],
+            signal_word: "Danger",
+            signal_word_zh: "危險",
           },
         ],
       };
       const customSettings = {
-        [prepared.cas_number]: { selectedIndex: 1, note: 'use alt' },
+        [prepared.cas_number]: { selectedIndex: 1, note: "use alt" },
       };
       printLabels(
         [prepared],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        customSettings
+        { size: "medium", template: "full", orientation: "portrait" },
+        customSettings,
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Alternate classification's pictogram/hazard should be used
-      expect(html).toContain('GHS06');
-      expect(html).toContain('H301');
+      expect(html).toContain("GHS06");
+      expect(html).toContain("H301");
       // Prepared identity still preserved
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
     });
   });
 
-  describe('non-prepared regression', () => {
-    it('a normal chemical (isPreparedSolution not set) renders no prepared markers', () => {
+  describe("non-prepared regression", () => {
+    it("a normal chemical (isPreparedSolution not set) renders no prepared markers", () => {
       printLabels(
         [mockChemical], // no isPreparedSolution flag
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // None of the prepared element classes should appear as elements
@@ -1438,11 +1795,11 @@ describe('prepared solution print rendering', () => {
       expect(html).not.toMatch(/class="label[^"]*\blabel-prepared\b/);
     });
 
-    it('a normal chemical + standard template is unaffected', () => {
+    it("a normal chemical + standard template is unaffected", () => {
       printLabels(
         [mockChemical],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
@@ -1450,51 +1807,51 @@ describe('prepared solution print rendering', () => {
       expect(html).not.toMatch(/<div\s+class="prepared-note"/);
     });
 
-    it('isPreparedSolution=false explicitly also renders no markers', () => {
+    it("isPreparedSolution=false explicitly also renders no markers", () => {
       printLabels(
         [{ ...mockChemical, isPreparedSolution: false }],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
     });
   });
 
-  describe('meta-only edge cases', () => {
-    it('handles missing concentration (only solvent provided)', () => {
+  describe("meta-only edge cases", () => {
+    it("handles missing concentration (only solvent provided)", () => {
       const prepared = {
         ...mockChemical,
         isPreparedSolution: true,
-        preparedSolution: { solvent: 'Water' },
+        preparedSolution: { solvent: "Water" },
       };
       printLabels(
         [prepared],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Badge and note still present
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
       expect(html).toMatch(/<div\s+class="prepared-note"/);
       // Solvent row appears, concentration row does not
-      expect(html).toContain('Water');
+      expect(html).toContain("Water");
     });
 
-    it('handles missing solvent (only concentration provided)', () => {
+    it("handles missing solvent (only concentration provided)", () => {
       const prepared = {
         ...mockChemical,
         isPreparedSolution: true,
-        preparedSolution: { concentration: '1 N' },
+        preparedSolution: { concentration: "1 N" },
       };
       printLabels(
         [prepared],
-        { size: 'medium', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toContain('1 N');
+      expect(html).toContain("1 N");
     });
   });
 
@@ -1515,74 +1872,74 @@ describe('prepared solution print rendering', () => {
     ...mockChemical,
     isPreparedSolution: true,
     preparedSolution: {
-      concentration: '10% (v/v)',
-      solvent: 'Water',
+      concentration: "10% (v/v)",
+      solvent: "Water",
       parentCas: mockChemical.cas_number,
       parentNameEn: mockChemical.name_en,
       parentNameZh: mockChemical.name_zh,
-      preparedBy: 'A. Chen',
-      preparedDate: '2026-04-16',
-      expiryDate: '2026-10-16',
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
       ...opsOverrides,
     },
   });
 
-  describe('operational metadata (Tier 2 PR-1)', () => {
-    it('full template renders operational fields when all three are present', () => {
+  describe("operational metadata (Tier 2 PR-1)", () => {
+    it("full template renders operational fields when all three are present", () => {
       printLabels(
         [makePreparedWithOps()],
-        { size: 'large', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).toContain('A. Chen');
-      expect(html).toContain('2026-04-16');
-      expect(html).toContain('2026-10-16');
+      expect(html).toContain("A. Chen");
+      expect(html).toContain("2026-04-16");
+      expect(html).toContain("2026-10-16");
     });
 
-    it('standard template hides operational fields when present', () => {
+    it("standard template hides operational fields when present", () => {
       printLabels(
         [makePreparedWithOps()],
-        { size: 'medium', template: 'standard', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "standard", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).not.toContain('A. Chen');
-      expect(html).not.toContain('2026-04-16');
-      expect(html).not.toContain('2026-10-16');
+      expect(html).not.toContain("A. Chen");
+      expect(html).not.toContain("2026-04-16");
+      expect(html).not.toContain("2026-10-16");
     });
 
-    it('icon template does NOT render operational fields (space-constrained)', () => {
+    it("icon template does NOT render operational fields (space-constrained)", () => {
       printLabels(
         [makePreparedWithOps()],
-        { size: 'medium', template: 'icon', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "icon", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).not.toContain('A. Chen');
+      expect(html).not.toContain("A. Chen");
       // Tier 1 prepared identity stays intact on icon template.
       expect(html).toMatch(/<div\s+class="prepared-badge"/);
       expect(html).toMatch(/<div\s+class="prepared-meta"/);
     });
 
-    it('qrcode template does NOT render operational fields (space-constrained)', () => {
+    it("qrcode template does NOT render operational fields (space-constrained)", () => {
       printLabels(
         [makePreparedWithOps()],
-        { size: 'medium', template: 'qrcode', orientation: 'portrait' },
-        {}
+        { size: "medium", template: "qrcode", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).not.toContain('A. Chen');
+      expect(html).not.toContain("A. Chen");
       // Tier 1 prepared identity stays intact on qrcode template.
       expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain('print.preparedShort');
+      expect(html).toContain("print.preparedShort");
     });
 
-    it('renders only the filled-in subset of operational fields', () => {
+    it("renders only the filled-in subset of operational fields", () => {
       printLabels(
         [
           makePreparedWithOps({
@@ -1590,60 +1947,60 @@ describe('prepared solution print rendering', () => {
             expiryDate: null,
           }),
         ],
-        { size: 'large', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="prepared-operational"/);
-      expect(html).toContain('A. Chen');
+      expect(html).toContain("A. Chen");
       // Dates absent → their rows must not appear
-      expect(html).not.toContain('2026-04-16');
-      expect(html).not.toContain('2026-10-16');
+      expect(html).not.toContain("2026-04-16");
+      expect(html).not.toContain("2026-10-16");
     });
 
-    it('emits no .prepared-operational block when all three fields are absent (Tier 1 shape)', () => {
+    it("emits no .prepared-operational block when all three fields are absent (Tier 1 shape)", () => {
       // A Tier 1-style prepared item with no operational metadata at
       // all must not cause an empty block to appear anywhere.
       const tier1Shape = {
         ...mockChemical,
         isPreparedSolution: true,
         preparedSolution: {
-          concentration: '10% (v/v)',
-          solvent: 'Water',
+          concentration: "10% (v/v)",
+          solvent: "Water",
         },
       };
       printLabels(
         [tier1Shape],
-        { size: 'large', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
       // Tier 1 behaviour still works — concentration + solvent still
       // render in the main prepared-meta block.
-      expect(html).toContain('10% (v/v)');
-      expect(html).toContain('Water');
+      expect(html).toContain("10% (v/v)");
+      expect(html).toContain("Water");
     });
 
-    it('escapes HTML in operational fields', () => {
+    it("escapes HTML in operational fields", () => {
       printLabels(
         [
           makePreparedWithOps({
-            preparedBy: '<img src=x onerror=alert(9)>',
+            preparedBy: "<img src=x onerror=alert(9)>",
             preparedDate: '"><script>1</script>',
-            expiryDate: '& already ampersanded',
+            expiryDate: "& already ampersanded",
           }),
         ],
-        { size: 'large', template: 'full', orientation: 'portrait' },
-        {}
+        { size: "large", template: "full", orientation: "portrait" },
+        {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       // Raw attack payloads must not survive
       expect(html).not.toMatch(/<img\s+src=x\s+onerror=alert\(9\)/);
       expect(html).not.toMatch(/"><script>1<\/script>/);
       // Escaped equivalents must be present
-      expect(html).toContain('&lt;img src=x onerror=alert(9)&gt;');
-      expect(html).toContain('&amp; already ampersanded');
+      expect(html).toContain("&lt;img src=x onerror=alert(9)&gt;");
+      expect(html).toContain("&amp; already ampersanded");
     });
   });
 });
