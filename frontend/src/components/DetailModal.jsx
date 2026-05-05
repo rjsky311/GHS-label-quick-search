@@ -1,5 +1,18 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Star, X, Copy, LayoutGrid, Lightbulb, Tag, ExternalLink, ShieldCheck, Clock, Database, Info } from "lucide-react";
+import {
+  Star,
+  X,
+  Copy,
+  LayoutGrid,
+  Lightbulb,
+  Tag,
+  ExternalLink,
+  ShieldCheck,
+  Clock,
+  Database,
+  Info,
+  FlaskConical,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSImage from "@/components/GHSImage";
@@ -8,13 +21,25 @@ import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
-import { FlaskConical } from "lucide-react";
 import {
   getLocalizedNames,
   getLocalizedPictogramName,
   getLocalizedSignalWord,
   getLocalizedStatementText,
 } from "@/utils/ghsText";
+
+const getSourceSummary = (source, t) => {
+  if (!source) return t("detail.trustSourceUnknown");
+  if (source.toLowerCase().includes("echa")) return t("results.sourceEcha");
+  return source;
+};
+
+const getClassificationSummary = (effective, reportCount, t) => {
+  if (effective?.isCustom) return t("detail.trustCustomOverride");
+  if (!hasGhsData(effective)) return t("detail.trustNoGhs");
+  if (reportCount) return t("detail.trustReportCount", { count: reportCount });
+  return t("detail.trustSourceUnknown");
+};
 
 export default function DetailModal({
   result,
@@ -86,6 +111,38 @@ export default function DetailModal({
   ];
   const referenceLinks = getReferenceLinks(result);
   const displayNames = getLocalizedNames(result, displayLocale);
+  const trustSummaryItems = [
+    {
+      key: "source",
+      icon: Database,
+      label: t("detail.trustSource"),
+      value: getSourceSummary(result.primary_source, t),
+    },
+    {
+      key: "retrieved",
+      icon: Clock,
+      label: t("detail.trustRetrieved"),
+      value: result.retrieved_at
+        ? formatRelativeTime(result.retrieved_at)
+        : t("detail.trustRetrievedUnknown"),
+      title: result.retrieved_at || undefined,
+    },
+    {
+      key: "classification",
+      icon: ShieldCheck,
+      label: t("detail.trustClassification"),
+      value: getClassificationSummary(effective, result.primary_report_count, t),
+    },
+    {
+      key: "references",
+      icon: ExternalLink,
+      label: t("detail.trustReferences"),
+      value:
+        referenceLinks.length > 0
+          ? t("detail.trustReferenceCount", { count: referenceLinks.length })
+          : t("detail.trustNoReferences"),
+    },
+  ];
 
   const getReferenceLinkClassName = (linkType) => {
     if (linkType === "sds") {
@@ -157,6 +214,37 @@ export default function DetailModal({
             >
               <X className="w-6 h-6" />
             </button>
+          </div>
+        </div>
+
+        <div
+          className="border-b border-slate-200 bg-slate-50/80 px-6 py-4"
+          data-testid="detail-trust-strip"
+        >
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {trustSummaryItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className="flex min-w-0 items-start gap-3 rounded-md border border-slate-200 bg-white px-3 py-3"
+                  data-testid={`detail-trust-${item.key}`}
+                  title={item.title || item.value}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-700">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium uppercase text-slate-500">
+                      {item.label}
+                    </span>
+                    <span className="block truncate text-sm font-semibold text-slate-900">
+                      {item.value}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
