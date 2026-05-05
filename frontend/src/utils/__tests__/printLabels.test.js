@@ -222,7 +222,7 @@ describe("inspectPrintContentFit", () => {
       expect.objectContaining({
         type: "content-too-dense",
         statementCount: 24,
-        maxStatements: 18,
+        maxStatements: 12,
       }),
     ]);
   });
@@ -933,6 +933,21 @@ describe("printLabels", () => {
       const iconHtml = mockIframeDoc.write.mock.calls[0][0];
       expect(iconHtml).toContain("purpose-notice");
       expect(iconHtml).toContain("print.quickIdNotice");
+
+      mockIframeDoc.write.mockClear();
+      printLabels(
+        [mockChemical],
+        {
+          labelPurpose: "shipping",
+          size: "small",
+          template: "standard",
+          orientation: "portrait",
+        },
+        {},
+      );
+      const standardHtml = mockIframeDoc.write.mock.calls[0][0];
+      expect(standardHtml).toContain("purpose-notice");
+      expect(standardHtml).toContain("print.supplementalHazardNotice");
     });
   });
 
@@ -1239,6 +1254,46 @@ describe("printLabels", () => {
         expect(html).toContain("Ethanol");
         expect(html).toContain(mockChemical.name_zh);
       });
+    });
+
+    it('prints bilingual signal and statements when nameDisplay is "both"', () => {
+      const bilingualChemical = {
+        ...mockChemical,
+        signal_word: "Danger",
+        signal_word_zh: "危險",
+        hazard_statements: [
+          {
+            code: "H225",
+            text_en: "Highly flammable liquid and vapor",
+            text_zh: "高度易燃液體和蒸氣",
+          },
+        ],
+        precautionary_statements: [
+          {
+            code: "P210",
+            text_en: "Keep away from heat",
+            text_zh: "遠離熱源",
+          },
+        ],
+      };
+
+      printLabels(
+        [bilingualChemical],
+        {
+          size: "large",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "both",
+        },
+        {},
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("危險 / Danger");
+      expect(html).toContain("H225");
+      expect(html).toContain("高度易燃液體和蒸氣 / Highly flammable liquid and vapor");
+      expect(html).toContain("P210");
+      expect(html).toContain("遠離熱源 / Keep away from heat");
     });
   });
 

@@ -493,6 +493,7 @@
   "print.scanForDetail": "Scan for details",
   "print.qrSupplementNotice": "Supplemental QR label - verify against SDS / primary label before use.",
   "print.quickIdNotice": "Quick-ID label only - not a complete shipped-container label.",
+  "print.supplementalHazardNotice": "Supplemental hazard label - not a complete primary container label.",
   "print.supplierMissing": "Responsible lab / supplier information missing",
   "print.layoutBlocked": "This label content is overflowing or clipped. Choose A4 Primary or another larger complete-label stock before printing. QR supplement is not a substitute for a complete primary label.",
   "print.totalItems": "{{count}} item(s)",

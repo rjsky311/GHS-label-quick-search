@@ -148,7 +148,7 @@ describe("printFitEngine", () => {
       expect.objectContaining({
         type: "content-too-dense",
         statementCount: 24,
-        maxStatements: 18,
+        maxStatements: 12,
       }),
     ]);
   });

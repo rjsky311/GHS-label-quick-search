@@ -103,6 +103,37 @@ describe("printOutputPlanner", () => {
     expect(plan.canPrint).toBe(true);
   });
 
+  it("treats bilingual complete labels as denser before recommending stock", () => {
+    const englishPlan = buildPrintOutputPlan({
+      selectedForLabel: [makeChemical(14)],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "large-primary",
+        nameDisplay: "en",
+      }),
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+    const bilingualPlan = buildPrintOutputPlan({
+      selectedForLabel: [makeChemical(14)],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "large-primary",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+
+    expect(englishPlan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY);
+    expect(bilingualPlan.state).toBe(
+      PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE,
+    );
+    expect(bilingualPlan.recommendedFullPageStockId).toBe("letter-primary");
+  });
+
   it("keeps compact QR output printable but marks it as supplemental", () => {
     const plan = buildPrintOutputPlan({
       selectedForLabel: [makeChemical(8)],

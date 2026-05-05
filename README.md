@@ -439,7 +439,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success（542 referenced keys / 595 zh-TW keys / 595 en keys）；`npm test -- --runInBand` → 45 suites / 704 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- 最近前端驗證：`npm run test:i18n` → success（542 referenced keys / 596 zh-TW keys / 596 en keys）；`npm test -- --runInBand` → 45 suites / 706 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
 - backend 最近基準：`python -m pytest -v` → 126 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)

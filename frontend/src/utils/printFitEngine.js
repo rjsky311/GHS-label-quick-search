@@ -27,10 +27,20 @@ export const PRINT_RECOMMENDED_ACTION = Object.freeze({
 });
 
 export const getMaxCompleteStatementCount = (layout) => {
-  if (layout.widthMm >= 170 && layout.heightMm >= 200) return 36;
-  if (layout.size === "large") return 18;
-  if (layout.size === "medium") return 10;
-  return 6;
+  let maxStatements;
+  if (layout.widthMm >= 170 && layout.heightMm >= 200) maxStatements = 36;
+  else if (layout.size === "large") maxStatements = 18;
+  else if (layout.size === "medium") maxStatements = 10;
+  else maxStatements = 6;
+
+  if (
+    layout.nameDisplay === "both" &&
+    !(layout.widthMm >= 170 && layout.heightMm >= 200)
+  ) {
+    return Math.max(4, Math.floor(maxStatements * 0.72));
+  }
+
+  return maxStatements;
 };
 
 const isCompletePrimaryLayout = (layout = {}) =>

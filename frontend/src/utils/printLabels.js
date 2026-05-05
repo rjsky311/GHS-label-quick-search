@@ -92,11 +92,33 @@ const normalizeTemplate = (template) =>
 const resolveModelContentLocale = (model) =>
   resolveLabelContentLocale(model.layout?.nameDisplay, i18n.language);
 
-const getLocalizedTextForModel = (statement, model) =>
-  getLocalizedStatementText(statement, resolveModelContentLocale(model));
+const joinLocalizedParts = (...parts) => {
+  const uniqueParts = parts
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .filter((part, index, allParts) => allParts.indexOf(part) === index);
+  return uniqueParts.join(" / ");
+};
 
-const getSignalWordForModel = (classification, model) =>
-  getLocalizedSignalWord(classification, resolveModelContentLocale(model));
+const getLocalizedTextForModel = (statement, model) => {
+  if (model.layout?.nameDisplay === "both") {
+    return joinLocalizedParts(
+      getLocalizedStatementText(statement, "zh"),
+      getLocalizedStatementText(statement, "en"),
+    );
+  }
+  return getLocalizedStatementText(statement, resolveModelContentLocale(model));
+};
+
+const getSignalWordForModel = (classification, model) => {
+  if (model.layout?.nameDisplay === "both") {
+    return joinLocalizedParts(
+      getLocalizedSignalWord(classification, "zh"),
+      getLocalizedSignalWord(classification, "en"),
+    );
+  }
+  return getLocalizedSignalWord(classification, resolveModelContentLocale(model));
+};
 
 const truncateText = (value, maxLength) => {
   const normalized = String(value || "").trim();
@@ -112,6 +134,15 @@ const isFullPagePrimaryLayout = (layout = {}) =>
     layout.stockId === "letter-primary" ||
     layout.stockPreset === "letter-primary" ||
     (layout.widthMm >= 170 && layout.heightMm >= 200));
+
+const isCompletePrimaryTemplate = (layout = {}) =>
+  layout.labelPurpose === "shipping" && layout.template === "full";
+
+const isQrSupplementLayout = (layout = {}) =>
+  layout.labelPurpose === "qrSupplement" || layout.template === "qrcode";
+
+const isQuickIdLayout = (layout = {}) =>
+  layout.labelPurpose === "quickId" || layout.template === "icon";
 
 const getFullPagePrimaryClass = (layout = {}) => {
   if (!isFullPagePrimaryLayout(layout)) return "";
@@ -436,12 +467,13 @@ const renderMoreHazards = (count, model, className = "") => {
 };
 
 const renderPurposeNotice = (model) => {
-  if (model.layout.labelPurpose === "shipping") return "";
+  if (isCompletePrimaryTemplate(model.layout)) return "";
 
-  const key =
-    model.layout.labelPurpose === "qrSupplement"
-      ? "print.qrSupplementNotice"
-      : "print.quickIdNotice";
+  const key = isQrSupplementLayout(model.layout)
+    ? "print.qrSupplementNotice"
+    : isQuickIdLayout(model.layout)
+      ? "print.quickIdNotice"
+      : "print.supplementalHazardNotice";
   return `<div class="purpose-notice">${escapeHtml(model.t(key))}</div>`;
 };
 
@@ -578,6 +610,7 @@ const renderStandardTemplate = (chemical, model) => {
 
   return `
     <div class="label label-standard${prepared ? " label-prepared" : ""}">
+      ${renderPurposeNotice(model)}
       <div class="label-top label-top-standard">
         ${renderNameSection(effectiveChem, model, {
           compactNames: model.layout.size !== "large",

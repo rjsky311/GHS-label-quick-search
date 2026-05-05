@@ -352,6 +352,7 @@
   "print.scanForDetail": "掃碼查看詳情",
   "print.qrSupplementNotice": "QR 補充標籤 — 使用前請對照 SDS / 主要標籤確認。",
   "print.quickIdNotice": "快速識別標籤 — 不是完整主要容器標籤。",
+  "print.supplementalHazardNotice": "補充危害標籤 — 不是完整主要容器標籤。",
   "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
   "print.layoutBlocked": "這張標籤內容已超出或被裁切。列印前請改用 A4 主標或其他更大的完整主標籤紙材；QR 補充標籤不能取代完整主標籤。",
   "print.totalItems": "共 {{count}} 項",

@@ -54,6 +54,8 @@ The first refactor slice has landed:
 - Added a recommended-output panel in `LabelPrintModal`.
 - Moved language and color mode into first-level output controls.
 - Moved custom physical size fields into Advanced, where they mark the config as custom tuning.
+- Added explicit supplemental hazard notices to non-primary print fragments so compact `standard`, quick-ID, and QR outputs do not imply complete primary-label status.
+- Made `nameDisplay: both` print bilingual signal words plus H/P statement text, with non-full-page bilingual outputs treated as denser during fit checks.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
