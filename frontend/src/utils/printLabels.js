@@ -1710,7 +1710,6 @@ const buildStyles = (model) => {
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
           body.print-bw .qr-hazard-chip,
-          body.print-bw .purpose-notice,
           body.print-bw .profile-block-missing,
           body.print-bw .signal {
             background: #ffffff !important;
