@@ -33,7 +33,7 @@ export function escapeHtml(value) {
 
 export function getQRCodeUrl(text, size = 100) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-    text
+    text,
   )}`;
 }
 
@@ -94,10 +94,13 @@ const getSignalWordForModel = (classification, model) =>
 const truncateText = (value, maxLength) => {
   const normalized = String(value || "").trim();
   if (!normalized || normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
 };
 
-export const resolveEffectiveChemicalForPrint = (chemical, customGHSSettings) => {
+export const resolveEffectiveChemicalForPrint = (
+  chemical,
+  customGHSSettings,
+) => {
   const customSetting = customGHSSettings?.[chemical.cas_number];
 
   if (customSetting && customSetting.selectedIndex !== undefined) {
@@ -113,12 +116,14 @@ export const resolveEffectiveChemicalForPrint = (chemical, customGHSSettings) =>
     ];
 
     if (customSetting.selectedIndex < allClassifications.length) {
-      const selectedClassification = allClassifications[customSetting.selectedIndex];
+      const selectedClassification =
+        allClassifications[customSetting.selectedIndex];
       return {
         ...chemical,
         ghs_pictograms: selectedClassification.pictograms || [],
         hazard_statements: selectedClassification.hazard_statements || [],
-        precautionary_statements: selectedClassification.precautionary_statements || [],
+        precautionary_statements:
+          selectedClassification.precautionary_statements || [],
         signal_word: selectedClassification.signal_word,
         signal_word_zh: selectedClassification.signal_word_zh,
         customNote: customSetting.note,
@@ -131,7 +136,8 @@ export const resolveEffectiveChemicalForPrint = (chemical, customGHSSettings) =>
 
 const resolveLabProfile = (customLabelFields, labProfile) => ({
   organization:
-    (labProfile?.organization || "").trim() || (customLabelFields?.labName || "").trim(),
+    (labProfile?.organization || "").trim() ||
+    (customLabelFields?.labName || "").trim(),
   phone: (labProfile?.phone || "").trim(),
   address: (labProfile?.address || "").trim(),
 });
@@ -153,7 +159,7 @@ export function buildPrintDocumentModel(
   customGHSSettings,
   customLabelFields = {},
   labelQuantities = {},
-  labProfile = {}
+  labProfile = {},
 ) {
   if (!Array.isArray(selectedForLabel) || selectedForLabel.length === 0) {
     return null;
@@ -164,7 +170,10 @@ export function buildPrintDocumentModel(
     ...labelConfig,
     template: normalizeTemplate(labelConfig?.template),
   });
-  const expandedLabels = expandLabelsByQuantity(selectedForLabel, labelQuantities);
+  const expandedLabels = expandLabelsByQuantity(
+    selectedForLabel,
+    labelQuantities,
+  );
   const pages = chunk(expandedLabels, layout.page.perPage);
 
   return {
@@ -188,7 +197,7 @@ const renderCustomFields = (model) => {
   }
   if (model.customLabelFields?.batchNumber) {
     fields.push(
-      `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(model.customLabelFields.batchNumber)}`
+      `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(model.customLabelFields.batchNumber)}`,
     );
   }
   if (fields.length === 0) return "";
@@ -203,17 +212,21 @@ const renderProfileFields = (model, { compact = false } = {}) => {
 
   const rows = [];
   if (profile.organization) {
-    rows.push(`<div class="profile-row profile-org">${escapeHtml(profile.organization)}</div>`);
+    rows.push(
+      `<div class="profile-row profile-org">${escapeHtml(profile.organization)}</div>`,
+    );
   }
   if (profile.phone) {
     rows.push(
       `<div class="profile-row"><span class="profile-label">${escapeHtml(
-        model.t("print.profilePhone")
-      )}:</span> <span class="profile-value">${escapeHtml(profile.phone)}</span></div>`
+        model.t("print.profilePhone"),
+      )}:</span> <span class="profile-value">${escapeHtml(profile.phone)}</span></div>`,
     );
   }
   if (!compact && profile.address) {
-    rows.push(`<div class="profile-row profile-address">${escapeHtml(profile.address)}</div>`);
+    rows.push(
+      `<div class="profile-row profile-address">${escapeHtml(profile.address)}</div>`,
+    );
   }
 
   return `<div class="profile-block${
@@ -223,11 +236,7 @@ const renderProfileFields = (model, { compact = false } = {}) => {
 
 const renderSupportChips = (
   model,
-  {
-    includeOrganization = true,
-    includeDate = true,
-    includeBatch = true,
-  } = {}
+  { includeOrganization = true, includeDate = true, includeBatch = true } = {},
 ) => {
   const chips = [];
   if (includeOrganization && model.resolvedLabProfile?.organization) {
@@ -239,8 +248,8 @@ const renderSupportChips = (
   if (includeBatch && model.customLabelFields?.batchNumber) {
     chips.push(
       `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(
-        model.customLabelFields.batchNumber
-      )}`
+        model.customLabelFields.batchNumber,
+      )}`,
     );
   }
   if (chips.length === 0) return "";
@@ -262,21 +271,28 @@ const renderMetaChip = (label, value, className = "") => {
 const renderMetaRibbon = (
   effectiveChem,
   model,
-  { includeCas = true, includePrepared = true, preparedDetailLimit = 2 } = {}
+  { includeCas = true, includePrepared = true, preparedDetailLimit = 2 } = {},
 ) => {
   const chips = [];
 
   if (includeCas && effectiveChem.cas_number) {
-    chips.push(renderMetaChip("CAS", effectiveChem.cas_number, "meta-chip-cas"));
+    chips.push(
+      renderMetaChip("CAS", effectiveChem.cas_number, "meta-chip-cas"),
+    );
   }
 
   if (includePrepared && isPrepared(effectiveChem)) {
     const meta = effectiveChem.preparedSolution || {};
-    chips.push(renderMetaChip("", model.t("print.preparedShort"), "meta-chip-prepared"));
+    chips.push(
+      renderMetaChip("", model.t("print.preparedShort"), "meta-chip-prepared"),
+    );
 
     const preparedDetails = [];
     if (meta.concentration) {
-      preparedDetails.push([model.t("print.concentrationShort"), meta.concentration]);
+      preparedDetails.push([
+        model.t("print.concentrationShort"),
+        meta.concentration,
+      ]);
     }
     if (meta.solvent) {
       preparedDetails.push([model.t("print.solventShort"), meta.solvent]);
@@ -303,12 +319,6 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
     metaRibbonHtml = "",
   } = options;
   const nameDisplay = model.layout.nameDisplay || "both";
-  const collapseCompactBilingual =
-    compactNames &&
-    nameDisplay === "both" &&
-    (model.layout.size === "small" ||
-      model.layout.template === "icon" ||
-      model.layout.template === "qrcode");
   let nameHtml = "";
 
   if (nameDisplay === "en" || nameDisplay === "both") {
@@ -318,11 +328,7 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   if (nameDisplay === "zh") {
     const displayName = effectiveChem.name_zh || effectiveChem.name_en || "";
     nameHtml += `<div class="name-en">${escapeHtml(displayName)}</div>`;
-  } else if (
-    nameDisplay === "both" &&
-    effectiveChem.name_zh &&
-    !collapseCompactBilingual
-  ) {
+  } else if (nameDisplay === "both" && effectiveChem.name_zh) {
     nameHtml += `<div class="name-zh">${escapeHtml(effectiveChem.name_zh)}</div>`;
   }
 
@@ -340,7 +346,7 @@ const isPrepared = (chemical) => Boolean(chemical?.isPreparedSolution);
 
 const renderPreparedBadge = (model) =>
   `<div class="prepared-badge" data-testid="prepared-badge">${escapeHtml(
-    model.t("print.preparedShort")
+    model.t("print.preparedShort"),
   )}</div>`;
 
 const renderPreparedMeta = (chemical, model) => {
@@ -350,15 +356,15 @@ const renderPreparedMeta = (chemical, model) => {
   if (meta.concentration) {
     rows.push(
       `<div class="prepared-meta-row"><span class="prepared-label">${escapeHtml(
-        model.t("print.concentration")
-      )}:</span> <span class="prepared-value">${escapeHtml(meta.concentration)}</span></div>`
+        model.t("print.concentration"),
+      )}:</span> <span class="prepared-value">${escapeHtml(meta.concentration)}</span></div>`,
     );
   }
   if (meta.solvent) {
     rows.push(
       `<div class="prepared-meta-row"><span class="prepared-label">${escapeHtml(
-        model.t("print.solvent")
-      )}:</span> <span class="prepared-value">${escapeHtml(meta.solvent)}</span></div>`
+        model.t("print.solvent"),
+      )}:</span> <span class="prepared-value">${escapeHtml(meta.solvent)}</span></div>`,
     );
   }
   if (rows.length === 0) return "";
@@ -368,7 +374,7 @@ const renderPreparedMeta = (chemical, model) => {
 const renderPreparedNote = (chemical, model) => {
   if (!isPrepared(chemical)) return "";
   return `<div class="prepared-note" data-testid="prepared-note">${escapeHtml(
-    model.t("print.preparedNote")
+    model.t("print.preparedNote"),
   )}</div>`;
 };
 
@@ -380,34 +386,38 @@ const renderPreparedOperational = (chemical, model) => {
   if (meta.preparedBy) {
     rows.push(
       `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(
-        model.t("print.preparedBy")
-      )}:</span> <span class="prepared-operational-value">${escapeHtml(meta.preparedBy)}</span></div>`
+        model.t("print.preparedBy"),
+      )}:</span> <span class="prepared-operational-value">${escapeHtml(meta.preparedBy)}</span></div>`,
     );
   }
   if (meta.preparedDate) {
     rows.push(
       `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(
-        model.t("print.preparedDate")
+        model.t("print.preparedDate"),
       )}:</span> <span class="prepared-operational-value">${escapeHtml(
-        meta.preparedDate
-      )}</span></div>`
+        meta.preparedDate,
+      )}</span></div>`,
     );
   }
   if (meta.expiryDate) {
     rows.push(
       `<div class="prepared-operational-row"><span class="prepared-operational-label">${escapeHtml(
-        model.t("print.expiryDate")
-      )}:</span> <span class="prepared-operational-value">${escapeHtml(meta.expiryDate)}</span></div>`
+        model.t("print.expiryDate"),
+      )}:</span> <span class="prepared-operational-value">${escapeHtml(meta.expiryDate)}</span></div>`,
     );
   }
 
   if (rows.length === 0) return "";
   return `<div class="prepared-operational" data-testid="prepared-operational">${rows.join(
-    ""
+    "",
   )}</div>`;
 };
 
-const renderPictograms = (pictograms, className = "", limit = pictograms.length) => {
+const renderPictograms = (
+  pictograms,
+  className = "",
+  limit = pictograms.length,
+) => {
   if (!pictograms.length) return "";
   const shown = pictograms.slice(0, limit);
   return `<div class="pictograms${className ? ` ${className}` : ""}">
@@ -415,8 +425,8 @@ const renderPictograms = (pictograms, className = "", limit = pictograms.length)
       .map(
         (pictogram) =>
           `<img src="${escapeHtml(GHS_IMAGES[pictogram.code] || "")}" alt="${escapeHtml(
-            pictogram.code
-          )}" />`
+            pictogram.code,
+          )}" />`,
       )
       .join("")}
     ${
@@ -432,14 +442,21 @@ const renderSignal = (signalWord, signalClass, className = "") => {
     return '<div class="signal-placeholder"></div>';
   }
   return `<div class="signal ${signalClass}${className ? ` ${className}` : ""}">${escapeHtml(
-    signalWord
+    signalWord,
   )}</div>`;
 };
 
 const renderHazardStatement = (statement, className, model) =>
   `<div class="${className}">${escapeHtml(statement.code)} ${escapeHtml(
-    getLocalizedTextForModel(statement, model)
+    getLocalizedTextForModel(statement, model),
   )}</div>`;
+
+const renderMoreHazards = (count, model, className = "") => {
+  if (count <= 0) return "";
+  return `<div class="hazard-more${className ? ` ${className}` : ""}">${escapeHtml(
+    model.t("print.moreHazardsShort", { count }),
+  )}</div>`;
+};
 
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   if (!precautions.length || maxPrecautions <= 0) return "";
@@ -448,7 +465,7 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
       .slice(0, maxPrecautions)
       .map(
         (precaution) =>
-          `<span class="precaution-code">${escapeHtml(precaution.code)}</span>`
+          `<span class="precaution-code">${escapeHtml(precaution.code)}</span>`,
       )
       .join(" ")}
     ${
@@ -456,7 +473,7 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
         ? `<span class="precaution-more">+ ${escapeHtml(
             model.t("print.morePrecautionary", {
               count: precautions.length - maxPrecautions,
-            })
+            }),
           )}</span>`
         : ""
     }
@@ -466,11 +483,12 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
 const renderIconTemplate = (chemical, model) => {
   const effectiveChem = resolveEffectiveChemicalForPrint(
     chemical,
-    model.customGHSSettings
+    model.customGHSSettings,
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+  const signalClass =
+    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -500,14 +518,17 @@ const renderIconTemplate = (chemical, model) => {
 const renderStandardTemplate = (chemical, model) => {
   const effectiveChem = resolveEffectiveChemicalForPrint(
     chemical,
-    model.customGHSSettings
+    model.customGHSSettings,
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+  const signalClass =
+    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
   const primaryHazards = hazards.slice(0, budgets.primaryHazards);
+  const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
+  const precautions = effectiveChem.precautionary_statements || [];
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -533,7 +554,7 @@ const renderStandardTemplate = (chemical, model) => {
                   ${renderPictograms(
                     pictograms,
                     "pictograms-standard",
-                    budgets.pictograms || pictograms.length
+                    budgets.pictograms || pictograms.length,
                   )}
                 </div>`
               : ""
@@ -544,16 +565,24 @@ const renderStandardTemplate = (chemical, model) => {
             ${
               primaryHazards.length > 0
                 ? `<div class="hazard-primary-list">
-                    ${primaryHazards.map((hazard) =>
-                      renderHazardStatement(
-                        hazard,
-                        "hazard-item hazard-primary-item",
-                        model
+                    ${primaryHazards
+                      .map((hazard) =>
+                        renderHazardStatement(
+                          hazard,
+                          "hazard-item hazard-primary-item",
+                          model,
+                        ),
                       )
-                    ).join("")}
+                      .join("")}
+                    ${renderMoreHazards(omittedHazards, model)}
                   </div>`
                 : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
+            ${renderCompactPrecautions(
+              precautions,
+              budgets.precautions || 0,
+              model,
+            )}
             </div>
           </div>
         </div>
@@ -565,16 +594,17 @@ const renderStandardTemplate = (chemical, model) => {
 const renderFullTemplate = (chemical, model) => {
   const effectiveChem = resolveEffectiveChemicalForPrint(
     chemical,
-    model.customGHSSettings
+    model.customGHSSettings,
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const precautions = effectiveChem.precautionary_statements || [];
   const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+  const signalClass =
+    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const hazardTier = getHazardFontTier(
     hazards.length + precautions.length,
-    model.layout.size
+    model.layout.size,
   );
   const prepared = isPrepared(effectiveChem);
 
@@ -603,8 +633,8 @@ const renderFullTemplate = (chemical, model) => {
                 .map(
                   (hazard) =>
                     `<div class="hazard-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
-                      hazard.code
-                    )} ${escapeHtml(getLocalizedTextForModel(hazard, model))}</div>`
+                      hazard.code,
+                    )} ${escapeHtml(getLocalizedTextForModel(hazard, model))}</div>`,
                 )
                 .join("")
             : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
@@ -615,8 +645,8 @@ const renderFullTemplate = (chemical, model) => {
                 .map(
                   (precaution) =>
                     `<div class="precaution-item-full" style="margin-bottom:${hazardTier.marginBottom}">${escapeHtml(
-                      precaution.code
-                    )} ${escapeHtml(getLocalizedTextForModel(precaution, model))}</div>`
+                      precaution.code,
+                    )} ${escapeHtml(getLocalizedTextForModel(precaution, model))}</div>`,
                 )
                 .join("")}`
             : ""
@@ -630,22 +660,23 @@ const renderFullTemplate = (chemical, model) => {
 const renderQRCodeTemplate = (chemical, model) => {
   const effectiveChem = resolveEffectiveChemicalForPrint(
     chemical,
-    model.customGHSSettings
+    model.customGHSSettings,
   );
   const pictograms = effectiveChem.ghs_pictograms || [];
   const hazards = effectiveChem.hazard_statements || [];
   const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass = effectiveChem.signal_word === "Danger" ? "danger" : "warning";
+  const signalClass =
+    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
   const qrTarget =
     getPreferredQrTarget(
       effectiveChem.cid,
       effectiveChem.cas_number,
-      effectiveChem.reference_links
-    ) ||
-    "https://pubchem.ncbi.nlm.nih.gov/";
+      effectiveChem.reference_links,
+    ) || "https://pubchem.ncbi.nlm.nih.gov/";
   const budgets = model.layout.templateBudgets.qrcode;
   const hazardTeasers = hazards.slice(0, budgets.hazardTeasers);
+  const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `
     <div class="label label-qr${prepared ? " label-prepared" : ""}">
@@ -676,16 +707,17 @@ const renderQRCodeTemplate = (chemical, model) => {
                             ? `<span class="qr-hazard-summary">${escapeHtml(
                                 truncateText(
                                   getLocalizedTextForModel(hazard, model),
-                                  model.layout.size === "small" ? 18 : 28
-                                )
+                                  model.layout.size === "small" ? 18 : 28,
+                                ),
                               )}</span>`
                             : ""
-                        }</div>`
+                        }</div>`,
                     )
                     .join("")}
+                  ${renderMoreHazards(omittedHazards, model, "qr-hazard-more")}
                 </div>`
               : `<div class="no-hazard-text qr-no-hazard">${escapeHtml(
-                  model.t("print.noHazardStatement")
+                  model.t("print.noHazardStatement"),
                 )}</div>`
           }
         </div>
@@ -694,7 +726,7 @@ const renderQRCodeTemplate = (chemical, model) => {
             ? `<div class="qr-support-row">${renderPictograms(
                 pictograms,
                 "qr-pics",
-                budgets.pictograms
+                budgets.pictograms,
               )}</div>`
             : ""
         }
@@ -839,6 +871,12 @@ const buildStyles = (model) => {
     .name-section-compact .name-en {
       -webkit-line-clamp: 1;
     }
+    .name-section-compact .name-zh {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .name-en {
       font-weight: bold;
       font-size: ${layout.typography.titleSize};
@@ -897,7 +935,6 @@ const buildStyles = (model) => {
     }
     .meta-chip-cas .meta-chip-value {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
-      letter-spacing: 0.02em;
     }
     .meta-chip-prepared {
       background: #dbeafe;
@@ -975,7 +1012,6 @@ const buildStyles = (model) => {
       border-radius: 1.5mm;
       padding: 0.3mm 1.5mm;
       margin-top: 0.8mm;
-      letter-spacing: 0.2mm;
     }
     .prepared-meta {
       margin-top: 0.8mm;
@@ -1162,6 +1198,16 @@ const buildStyles = (model) => {
       font-weight: 600;
       line-height: 1.18;
     }
+    .hazard-more {
+      padding: 0.55mm 0.9mm;
+      border-radius: 1.2mm;
+      border: 1px dashed #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      font-size: calc(${layout.typography.hazardSize} - 1px);
+      font-weight: 600;
+      line-height: 1.2;
+    }
     .hazard-secondary-list {
       display: flex;
       flex-direction: column;
@@ -1284,6 +1330,11 @@ const buildStyles = (model) => {
       color: #92400e;
       font-weight: 500;
     }
+    .qr-hazard-more {
+      width: fit-content;
+      border-color: #dbe4ef;
+      background: #ffffff;
+    }
     .qr-no-hazard {
       font-size: calc(${layout.typography.hazardSize} - 1px);
     }
@@ -1331,8 +1382,33 @@ const buildStyles = (model) => {
     }
     ${
       layout.colorMode === "bw"
-        ? `.pictograms img {
-            filter: grayscale(1) contrast(1.2);
+        ? `body.print-bw .label,
+          body.print-bw .label * {
+            color: #111827 !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+          body.print-bw .label {
+            background: #ffffff !important;
+            border-color: #111827 !important;
+          }
+          body.print-bw .label-top-standard,
+          body.print-bw .qr-priority-block,
+          body.print-bw .profile-block,
+          body.print-bw .support-chip,
+          body.print-bw .meta-chip,
+          body.print-bw .prepared-badge,
+          body.print-bw .prepared-note,
+          body.print-bw .hazard-primary-item,
+          body.print-bw .hazard-more,
+          body.print-bw .qr-hazard-chip,
+          body.print-bw .signal {
+            background: #ffffff !important;
+            border-color: #111827 !important;
+          }
+          body.print-bw .pictograms img,
+          body.print-bw .qrcode-img {
+            filter: grayscale(1) contrast(1.35);
           }`
         : ""
     }
@@ -1356,7 +1432,7 @@ export function buildPrintDocument(
   customGHSSettings,
   customLabelFields = {},
   labelQuantities = {},
-  labProfile = {}
+  labProfile = {},
 ) {
   const model = buildPrintDocumentModel(
     selectedForLabel,
@@ -1364,15 +1440,18 @@ export function buildPrintDocument(
     customGHSSettings,
     customLabelFields,
     labelQuantities,
-    labProfile
+    labProfile,
   );
 
   if (!model) return null;
 
-  const renderer = TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
+  const renderer =
+    TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
   const pagesHtml = model.pages
     .map((pageLabels, pageIndex) => {
-      const labelsHtml = pageLabels.map((chemical) => renderer(chemical, model)).join("");
+      const labelsHtml = pageLabels
+        .map((chemical) => renderer(chemical, model))
+        .join("");
       return `
         <div class="page">
           <div class="page-grid">${labelsHtml}</div>
@@ -1381,7 +1460,7 @@ export function buildPrintDocument(
             model.t("print.pageNumber", {
               current: pageIndex + 1,
               total: model.totalPages,
-            })
+            }),
           )}</div>
         </div>
       `;
@@ -1389,9 +1468,10 @@ export function buildPrintDocument(
     .join("");
 
   const styles = buildStyles(model);
+  const bodyClass = `print-body print-${model.layout.colorMode === "bw" ? "bw" : "color"}`;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
-    model.t("print.title")
-  )}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`;
+    model.t("print.title"),
+  )}</title><style>${styles}</style></head><body class="${bodyClass}">${pagesHtml}</body></html>`;
 
   return {
     html,
@@ -1401,12 +1481,20 @@ export function buildPrintDocument(
   };
 }
 
-function buildPreviewStyles(mode) {
+function buildPreviewStyles(mode, model) {
+  const isLandscape = model.layout.orientation === "landscape";
+  const pageWidthMm = isLandscape ? 297 : 210;
+  const pageHeightMm = isLandscape ? 210 : 297;
+  const sheetScale = isLandscape ? 0.28 : 0.24;
+  const mmToPx = 3.78;
+  const viewportWidthPx = Math.round(pageWidthMm * mmToPx * sheetScale);
+  const viewportHeightPx = Math.round(pageHeightMm * mmToPx * sheetScale);
+
   return `
     body.preview-body {
       margin: 0;
       min-height: 100vh;
-      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      background: #f8fafc;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1421,7 +1509,7 @@ function buildPreviewStyles(mode) {
     .preview-card {
       background: #ffffff;
       border-radius: 5mm;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.32);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
       overflow: hidden;
     }
     .preview-card-label {
@@ -1431,14 +1519,29 @@ function buildPreviewStyles(mode) {
       padding: 4mm;
       max-width: 100%;
     }
+    .preview-sheet-viewport {
+      width: ${viewportWidthPx}px;
+      height: ${viewportHeightPx}px;
+      max-width: 100%;
+      overflow: hidden;
+      background: #ffffff;
+      border: 1px solid #dbe4ef;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+    }
     .preview-grid-scaler {
-      transform: scale(0.42);
+      transform: scale(${sheetScale});
       transform-origin: top left;
-      width: max-content;
+      width: ${pageWidthMm}mm;
+      height: ${pageHeightMm}mm;
     }
     .preview-grid-shell {
       overflow: hidden;
       max-width: 100%;
+    }
+    .preview-page {
+      width: ${pageWidthMm}mm;
+      min-height: ${pageHeightMm}mm;
+      page-break-after: auto;
     }
     .label-placeholder {
       border-style: dashed;
@@ -1469,7 +1572,7 @@ export function buildPrintPreviewDocument(
   customLabelFields = {},
   labelQuantities = {},
   labProfile = {},
-  options = {}
+  options = {},
 ) {
   const mode = options.mode === "label" ? "label" : "sheet";
   const model = buildPrintDocumentModel(
@@ -1478,13 +1581,14 @@ export function buildPrintPreviewDocument(
     customGHSSettings,
     customLabelFields,
     labelQuantities,
-    labProfile
+    labProfile,
   );
 
   if (!model) return null;
 
-  const renderer = TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
-  const previewStyles = buildPreviewStyles(mode);
+  const renderer =
+    TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
+  const previewStyles = buildPreviewStyles(mode, model);
   const sharedStyles = buildStyles(model);
 
   let fragmentHtml = "";
@@ -1492,24 +1596,48 @@ export function buildPrintPreviewDocument(
     fragmentHtml = renderer(model.expandedLabels[0], model);
   } else {
     const firstPage = model.pages[0] || [];
-    const labelMarkup = firstPage.map((chemical) => renderer(chemical, model)).join("");
-    const placeholderCount = Math.max(model.layout.page.perPage - firstPage.length, 0);
-    const placeholders = Array.from({ length: placeholderCount }, (_, index) => {
-      return `<div class="label label-placeholder" aria-hidden="true" data-placeholder-index="${index}"></div>`;
-    }).join("");
+    const labelMarkup = firstPage
+      .map((chemical) => renderer(chemical, model))
+      .join("");
+    const placeholderCount = Math.max(
+      model.layout.page.perPage - firstPage.length,
+      0,
+    );
+    const placeholders = Array.from(
+      { length: placeholderCount },
+      (_, index) => {
+        return `<div class="label label-placeholder" aria-hidden="true" data-placeholder-index="${index}"></div>`;
+      },
+    ).join("");
 
     fragmentHtml = `
       <div class="preview-grid-shell">
-        <div class="preview-grid-scaler">
-          <div class="page-grid">${labelMarkup}${placeholders}</div>
+        <div class="preview-sheet-viewport">
+          <div class="preview-grid-scaler">
+            <div class="page preview-page">
+              <div class="page-grid">${labelMarkup}${placeholders}</div>
+              <div class="page-footer-note">${escapeHtml(model.t("trust.printFooter"))}</div>
+              <div class="page-number">${escapeHtml(
+                model.t("print.pageNumber", {
+                  current: 1,
+                  total: model.totalPages || 1,
+                }),
+              )}</div>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }
 
+  const bodyClass = [
+    "preview-body",
+    `preview-body-${mode}`,
+    `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
+  ].join(" ");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
-    model.t("print.title")
-  )}</title><style>${sharedStyles}${previewStyles}</style></head><body class="preview-body preview-body-${mode}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
+    model.t("print.title"),
+  )}</title><style>${sharedStyles}${previewStyles}</style></head><body class="${bodyClass}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
 
   return {
     html,
@@ -1540,7 +1668,7 @@ export function printLabels(
   customGHSSettings,
   customLabelFields = {},
   labelQuantities = {},
-  labProfile = {}
+  labProfile = {},
 ) {
   const documentBundle = buildPrintDocument(
     selectedForLabel,
@@ -1548,7 +1676,7 @@ export function printLabels(
     customGHSSettings,
     customLabelFields,
     labelQuantities,
-    labProfile
+    labProfile,
   );
 
   if (!documentBundle) return;
@@ -1597,9 +1725,13 @@ export function printLabels(
       };
 
       try {
-        iframe.contentWindow.addEventListener("afterprint", () => cleanup("afterprint"), {
-          once: true,
-        });
+        iframe.contentWindow.addEventListener(
+          "afterprint",
+          () => cleanup("afterprint"),
+          {
+            once: true,
+          },
+        );
       } catch (_) {
         // Embedded webviews may not support afterprint on iframe windows.
       }

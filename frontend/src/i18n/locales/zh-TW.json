@@ -421,7 +421,7 @@
   "label.previewRiskPictograms": "這個化學品的圖示較多，緊湊模板會更容易擁擠。",
   "label.previewRiskPrepared": "配製資訊會和危害內容競爭空間，緊湊模板要更保守。",
   "label.previewRiskCompactHidden": "緊湊模板會刻意隱藏次要資訊，讓主危害保持可讀。",
-  "label.previewRiskCompactNames": "緊湊模板會壓縮雙語名稱，替主危害保留空間。",
+  "label.previewRiskCompactNames": "緊湊標籤會保留雙語名稱，但每行只顯示一行，長名稱仍可能偏擠。",
   "label.previewRiskProfile": "尚未設定實驗室或供應商資訊，因此列印會維持通用樣式。",
   "label.previewRiskQr": "QR 版型最適合讓左側保持精簡，並讓 QR 區塊成為主體。",
   "label.previewDensityTight": "緊湊",
