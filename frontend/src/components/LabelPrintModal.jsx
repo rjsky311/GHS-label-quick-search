@@ -34,6 +34,11 @@ import {
   getLabelStockPresetDisplay,
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
+import {
+  PRINT_READINESS_STATE,
+  PRINT_RECOMMENDED_ACTION,
+  evaluatePrintReadiness,
+} from "@/utils/printFitEngine";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 import {
@@ -305,6 +310,16 @@ function getLabelPurposeForConfig(labelConfig = {}) {
   return "shipping";
 }
 
+function resolveResponsibleProfile(customLabelFields = {}, labProfile = {}) {
+  return {
+    organization:
+      (labProfile.organization || "").trim() ||
+      (customLabelFields.labName || "").trim(),
+    phone: (labProfile.phone || "").trim(),
+    address: (labProfile.address || "").trim(),
+  };
+}
+
 function buildPreviewRisks({
   previewChem,
   labelConfig,
@@ -510,23 +525,14 @@ function getDensityLabel(labelConfig, layoutProfile, previewChem, tx) {
   return tx("label.previewDensityBalanced", "Balanced");
 }
 
-function getMaxCompleteStatementCount(layoutProfile) {
-  if (layoutProfile.widthMm >= 170 && layoutProfile.heightMm >= 200) return 36;
-  if (layoutProfile.size === "large") return 18;
-  if (layoutProfile.size === "medium") return 10;
-  return 6;
-}
-
-function countStatements(chemical) {
-  return (
-    (chemical?.hazard_statements || []).length +
-    (chemical?.precautionary_statements || []).length
-  );
-}
-
 function getOptionLabel(options, value, t, fallback) {
   const option = options.find((item) => item.value === value);
   return option ? t(option.labelKey) : fallback;
+}
+
+function getOutputTone(summary) {
+  if (!summary || summary.expected === 0) return "neutral";
+  return summary.present >= summary.expected ? "ready" : "caution";
 }
 
 export default function LabelPrintModal({
@@ -589,6 +595,10 @@ export default function LabelPrintModal({
     labelConfig.nameDisplay,
     currentLocale,
   );
+  const resolvedResponsibleProfile = resolveResponsibleProfile(
+    customLabelFields,
+    labProfile,
+  );
   const stockPresetDisplay = getLabelStockPresetDisplay(
     layoutProfile.stockPreset,
     t,
@@ -597,7 +607,7 @@ export default function LabelPrintModal({
     previewChem,
     labelConfig,
     layoutProfile,
-    labProfile,
+    labProfile: resolvedResponsibleProfile,
     displayNames,
     tx,
   });
@@ -637,21 +647,73 @@ export default function LabelPrintModal({
     "label.previewRiskReady",
     "This combination looks balanced for the current content load.",
   );
+  const printReadiness = evaluatePrintReadiness({
+    selectedForLabel,
+    layout: layoutProfile,
+    customGHSSettings,
+    resolvedLabProfile: resolvedResponsibleProfile,
+  });
+  const outputNotApplicableLabel = tx(
+    "label.outputNotApplicable",
+    "Not applicable",
+  );
+  const formatOutputCount = (summary) =>
+    summary.expected > 0
+      ? `${summary.present}/${summary.expected}`
+      : outputNotApplicableLabel;
+  const outputChecklistItems = [
+    {
+      key: "pictograms",
+      label: tx("label.outputPictograms", "GHS pictograms"),
+      value: formatOutputCount(printReadiness.elementSummary.pictograms),
+      tone: getOutputTone(printReadiness.elementSummary.pictograms),
+    },
+    {
+      key: "hazard-statements",
+      label: tx("label.outputHazards", "H statements"),
+      value: formatOutputCount(printReadiness.elementSummary.hazardStatements),
+      tone: getOutputTone(printReadiness.elementSummary.hazardStatements),
+    },
+    {
+      key: "precautionary-statements",
+      label: tx("label.outputPrecautions", "P statements"),
+      value: formatOutputCount(
+        printReadiness.elementSummary.precautionaryStatements,
+      ),
+      tone: getOutputTone(
+        printReadiness.elementSummary.precautionaryStatements,
+      ),
+    },
+    {
+      key: "signal-word",
+      label: tx("label.outputSignalWord", "Signal word"),
+      value: formatOutputCount(printReadiness.elementSummary.signalWord),
+      tone: getOutputTone(printReadiness.elementSummary.signalWord),
+    },
+    {
+      key: "responsible-profile",
+      label: tx("label.outputResponsibleProfile", "Responsible profile"),
+      value: formatOutputCount(
+        printReadiness.elementSummary.responsibleProfile,
+      ),
+      tone: getOutputTone(printReadiness.elementSummary.responsibleProfile),
+    },
+  ];
   const hasPreviewWarnings = previewRisks.some(
     (risk) => risk !== readyPreviewMessage,
   );
-  const maxCompleteStatements = getMaxCompleteStatementCount(layoutProfile);
-  const maxSelectedStatementCount = selectedForLabel.reduce(
-    (max, chemical) => Math.max(max, countStatements(chemical)),
-    0,
-  );
   const isPrintFitBlocked =
-    selectedForLabel.length > 0 &&
-    labelPurpose === "shipping" &&
-    labelConfig.template === "full" &&
-    maxSelectedStatementCount > maxCompleteStatements;
+    selectedForLabel.length > 0 && !printReadiness.canPrint;
+  const isProfileBlocked =
+    printReadiness.state === PRINT_READINESS_STATE.NEEDS_PROFILE;
+  const printBlockedLabel = isProfileBlocked
+    ? tx("label.printFixProfileRequired", "Add lab/supplier profile first")
+    : printReadiness.state === PRINT_READINESS_STATE.NEEDS_CONTINUATION
+      ? tx("label.printFixContinuationRequired", "Create a continuation plan first")
+      : tx("label.printFixRequired", "Choose a printable stock first");
   const canUseA4Primary =
-    isPrintFitBlocked &&
+    printReadiness.recommendedAction ===
+      PRINT_RECOMMENDED_ACTION.USE_A4_PRIMARY &&
     Boolean(a4PrimaryPreset) &&
     layoutProfile.stockPreset !== "a4-primary";
   const blockedDensityMessage = tx(
@@ -699,9 +761,13 @@ export default function LabelPrintModal({
       icon: previewChem && !hasPreviewWarnings ? CheckCircle2 : AlertTriangle,
       label: tx("label.readinessCompliance", "Label fit"),
       value: previewChem
-        ? isPrintFitBlocked
-          ? tx("label.readinessComplianceBlocked", "Too dense")
-          : hasPreviewWarnings
+        ? printReadiness.state === PRINT_READINESS_STATE.NEEDS_CONTINUATION
+          ? tx("label.readinessComplianceContinuation", "Needs continuation")
+          : printReadiness.state === PRINT_READINESS_STATE.NEEDS_PROFILE
+            ? tx("label.readinessComplianceProfile", "Missing profile")
+          : isPrintFitBlocked
+            ? tx("label.readinessComplianceBlocked", "Too dense")
+            : hasPreviewWarnings
             ? tx("label.readinessComplianceReview", "Needs review")
             : tx("label.readinessComplianceReady", "Looks ready")
         : tx("label.readinessPreviewPending", "Waiting for selection"),
@@ -1986,7 +2052,7 @@ export default function LabelPrintModal({
                             {isPrintFitBlocked
                               ? tx(
                                   "label.previewBlockingTitle",
-                                  "Printing blocked for this stock",
+                                  "Printing blocked",
                                 )
                               : tx(
                                   "label.previewReviewTitle",
@@ -2019,6 +2085,47 @@ export default function LabelPrintModal({
                       </div>
                     </section>
                   )}
+
+                  <section
+                    className="rounded-lg border border-slate-200 bg-white p-3"
+                    data-testid="required-output-checklist"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium text-slate-800">
+                          {tx("label.outputChecklistTitle", "Required output")}
+                        </div>
+                        <div className="mt-1 text-xs leading-5 text-slate-500">
+                          {tx(
+                            "label.outputChecklistHint",
+                            "Counts come from the same content model used by print preflight.",
+                          )}
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                        {printReadiness.state ===
+                        PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY
+                          ? tx("label.outputSupplemental", "Supplemental")
+                          : tx("label.outputPrimary", "Primary")}
+                      </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {outputChecklistItems.map((item) => (
+                        <div
+                          key={item.key}
+                          className={`rounded-md border px-3 py-2 ${READINESS_TONE_CLASSES[item.tone]}`}
+                          data-testid={`required-output-${item.key}`}
+                        >
+                          <div className="text-xs font-medium">
+                            {item.label}
+                          </div>
+                          <div className="mt-1 text-sm font-semibold">
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
 
                   <section className="rounded-lg border border-slate-200 bg-white p-3">
                     <div className="flex items-center justify-between gap-3">
@@ -2199,7 +2306,7 @@ export default function LabelPrintModal({
             >
               <Printer className="h-4 w-4" />
               {isPrintFitBlocked
-                ? tx("label.printFixRequired", "Choose a printable stock first")
+                ? printBlockedLabel
                 : t("label.printBtn", { count: totalLabels })}
             </button>
           )}

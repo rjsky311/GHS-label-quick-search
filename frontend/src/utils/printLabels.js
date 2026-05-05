@@ -2,6 +2,10 @@ import { GHS_IMAGES } from "@/constants/ghs";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import i18n from "@/i18n";
 import { recordObservabilityEvent } from "@/utils/observability";
+import {
+  buildPrintLabelContent,
+} from "@/utils/printContentModel";
+import { inspectPrintContentFit } from "@/utils/printFitEngine";
 import { getPreferredQrTarget } from "@/utils/sdsLinks";
 import {
   getLocalizedSignalWord,
@@ -10,6 +14,9 @@ import {
 } from "@/utils/ghsText";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
+
+export { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
+export { inspectPrintContentFit } from "@/utils/printFitEngine";
 
 /**
  * HTML escape helper for safe interpolation into the print iframe.
@@ -95,43 +102,6 @@ const truncateText = (value, maxLength) => {
   const normalized = String(value || "").trim();
   if (!normalized || normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
-};
-
-export const resolveEffectiveChemicalForPrint = (
-  chemical,
-  customGHSSettings,
-) => {
-  const customSetting = customGHSSettings?.[chemical.cas_number];
-
-  if (customSetting && customSetting.selectedIndex !== undefined) {
-    const allClassifications = [
-      {
-        pictograms: chemical.ghs_pictograms || [],
-        hazard_statements: chemical.hazard_statements || [],
-        precautionary_statements: chemical.precautionary_statements || [],
-        signal_word: chemical.signal_word,
-        signal_word_zh: chemical.signal_word_zh,
-      },
-      ...(chemical.other_classifications || []),
-    ];
-
-    if (customSetting.selectedIndex < allClassifications.length) {
-      const selectedClassification =
-        allClassifications[customSetting.selectedIndex];
-      return {
-        ...chemical,
-        ghs_pictograms: selectedClassification.pictograms || [],
-        hazard_statements: selectedClassification.hazard_statements || [],
-        precautionary_statements:
-          selectedClassification.precautionary_statements || [],
-        signal_word: selectedClassification.signal_word,
-        signal_word_zh: selectedClassification.signal_word_zh,
-        customNote: customSetting.note,
-      };
-    }
-  }
-
-  return chemical;
 };
 
 const resolveLabProfile = (customLabelFields, labProfile) => ({
@@ -532,12 +502,18 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   </div>`;
 };
 
+const getLabelContentForRender = (chemical, model) =>
+  buildPrintLabelContent(chemical, {
+    customGHSSettings: model.customGHSSettings,
+    resolvedLabProfile: model.resolvedLabProfile,
+    layout: model.layout,
+  });
+
 const renderIconTemplate = (chemical, model) => {
-  const effectiveChem = resolveEffectiveChemicalForPrint(
-    chemical,
-    model.customGHSSettings,
-  );
-  const pictograms = effectiveChem.ghs_pictograms || [];
+  const {
+    effectiveChemical: effectiveChem,
+    pictograms,
+  } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
@@ -569,19 +545,18 @@ const renderIconTemplate = (chemical, model) => {
 };
 
 const renderStandardTemplate = (chemical, model) => {
-  const effectiveChem = resolveEffectiveChemicalForPrint(
-    chemical,
-    model.customGHSSettings,
-  );
-  const pictograms = effectiveChem.ghs_pictograms || [];
-  const hazards = effectiveChem.hazard_statements || [];
+  const {
+    effectiveChemical: effectiveChem,
+    pictograms,
+    hazardStatements: hazards,
+    precautionaryStatements: precautions,
+  } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
   const primaryHazards = hazards.slice(0, budgets.primaryHazards);
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
-  const precautions = effectiveChem.precautionary_statements || [];
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -641,13 +616,12 @@ const renderStandardTemplate = (chemical, model) => {
 };
 
 const renderFullTemplate = (chemical, model) => {
-  const effectiveChem = resolveEffectiveChemicalForPrint(
-    chemical,
-    model.customGHSSettings,
-  );
-  const pictograms = effectiveChem.ghs_pictograms || [];
-  const hazards = effectiveChem.hazard_statements || [];
-  const precautions = effectiveChem.precautionary_statements || [];
+  const {
+    effectiveChemical: effectiveChem,
+    pictograms,
+    hazardStatements: hazards,
+    precautionaryStatements: precautions,
+  } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
@@ -712,12 +686,11 @@ const renderFullTemplate = (chemical, model) => {
 };
 
 const renderQRCodeTemplate = (chemical, model) => {
-  const effectiveChem = resolveEffectiveChemicalForPrint(
-    chemical,
-    model.customGHSSettings,
-  );
-  const pictograms = effectiveChem.ghs_pictograms || [];
-  const hazards = effectiveChem.hazard_statements || [];
+  const {
+    effectiveChemical: effectiveChem,
+    pictograms,
+    hazardStatements: hazards,
+  } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
@@ -1859,43 +1832,6 @@ export function inspectPrintLayoutDocument(documentLike) {
     });
 
   return issues;
-}
-
-const getMaxCompleteStatementCount = (layout) => {
-  if (layout.widthMm >= 170 && layout.heightMm >= 200) return 36;
-  if (layout.size === "large") return 18;
-  if (layout.size === "medium") return 10;
-  return 6;
-};
-
-export function inspectPrintContentFit(model) {
-  if (!model?.expandedLabels?.length) return [];
-  const { layout } = model;
-  if (layout.labelPurpose !== "shipping" || layout.template !== "full") {
-    return [];
-  }
-
-  const maxStatements = getMaxCompleteStatementCount(layout);
-  return model.expandedLabels.flatMap((chemical, index) => {
-    const effectiveChem = resolveEffectiveChemicalForPrint(
-      chemical,
-      model.customGHSSettings,
-    );
-    const statementCount =
-      (effectiveChem.hazard_statements || []).length +
-      (effectiveChem.precautionary_statements || []).length;
-
-    if (statementCount <= maxStatements) return [];
-
-    return [
-      {
-        type: "content-too-dense",
-        index,
-        statementCount,
-        maxStatements,
-      },
-    ];
-  });
 }
 
 function buildPrintLifecycleMeta(documentBundle) {

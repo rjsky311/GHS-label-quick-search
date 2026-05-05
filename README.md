@@ -164,9 +164,11 @@ GHS-label-quick-search/
 │   │   │   ├── usePrintTemplates.js  # 列印設定 preset（localStorage，上限 10 組）
 │   │   │   ├── useFocusTrap.js       # Modal/Sidebar focus trap + 焦點還原
 │   │   │   └── use-toast.js          # Toast 通知（sonner）
-│   │   ├── utils/             # 4 個工具函式
+│   │   ├── utils/             # shared workflow utilities
 │   │   │   ├── exportData.js         # Excel/CSV 匯出（呼叫後端）
-│   │   │   ├── printLabels.js        # 標籤列印引擎（4 版型 + HTML escape + afterprint 清理）
+│   │   │   ├── printContentModel.js  # 列印內容契約與必要輸出計數
+│   │   │   ├── printFitEngine.js     # 列印 preflight / A4 主標 / profile gate
+│   │   │   ├── printLabels.js        # 標籤列印引擎（HTML escape + afterprint 清理）
 │   │   │   ├── sdsLinks.js           # SDS 安全資料連結產生器
 │   │   │   └── formatDate.js         # 日期格式化
 │   │   ├── i18n/              # 國際化
@@ -436,7 +438,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand --watchAll=false` → 42 suites / 686 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- 最近前端驗證：`npm run test:i18n` → success（513 referenced keys / 560 zh-TW keys / 560 en keys）；`npm test -- --runInBand` → 44 suites / 695 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
 - backend 最近基準：`python -m pytest -v` → 126 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)

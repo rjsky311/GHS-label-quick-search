@@ -90,6 +90,8 @@ User Browser
 | File                    | Purpose                                                                                                                                                                                                                                                                                                                                |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exportData.js`         | Excel/CSV export (backend-only; no client-side fallback after Phase 3)                                                                                                                                                                                                                                                                 |
+| `printContentModel.js`  | Shared print content contract: resolves effective GHS classification, counts required pictograms/H/P statements/signal/profile fields, and marks complete-primary vs supplemental label policy                                                                                                                                         |
+| `printFitEngine.js`     | Shared print preflight/readiness engine for dense-content routing, A4 primary upgrade decisions, responsible-profile gating, and UI/renderer fit inspection                                                                                                                                                                             |
 | `printLabels.js`        | Label printing engine (purpose-aware full primary labels plus compact supplemental templates, iframe with HTML escaping + afterprint cleanup + 60s fallback); prepared-solution rendering branch keyed on `isPreparedSolution`                                                                                                         |
 | `preparedSolution.js`   | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only — drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
 | `sdsLinks.js`           | PubChem Safety + ECHA CHEM search URL builders                                                                                                                                                                                                                                                                                         |
@@ -296,7 +298,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 686 tests across 42 suites; 0 known React `act(...)` warnings
+- **Frontend**: 695 tests across 44 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error

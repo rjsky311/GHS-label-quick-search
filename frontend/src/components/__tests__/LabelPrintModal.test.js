@@ -191,11 +191,24 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("preview-warning-banner")).toHaveTextContent(
-      "Printing blocked for this stock",
+      "Printing blocked",
     );
     expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
       "Too dense",
     );
+    expect(screen.getByTestId("required-output-checklist")).toBeInTheDocument();
+    expect(screen.getByTestId("required-output-pictograms")).toHaveTextContent(
+      "2/2",
+    );
+    expect(screen.getByTestId("required-output-hazard-statements")).toHaveTextContent(
+      "6/6",
+    );
+    expect(
+      screen.getByTestId("required-output-precautionary-statements"),
+    ).toHaveTextContent("18/18");
+    expect(
+      screen.getByTestId("required-output-responsible-profile"),
+    ).toHaveTextContent("0/3");
     expect(screen.getByTestId("use-a4-primary-footer")).toBeEnabled();
 
     fireEvent.click(screen.getByTestId("use-a4-primary-footer"));
@@ -210,6 +223,34 @@ describe("LabelPrintModal", () => {
         labelPurpose: "shipping",
       }),
     );
+  });
+
+  it("blocks complete primary printing until the responsible profile is complete", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        size: "large",
+        stockPreset: "a4-primary",
+        labelWidthMm: 180,
+        labelHeightMm: 250,
+        perPage: 1,
+      },
+      labProfile: { organization: "Lab A", phone: "02-1234", address: "" },
+    });
+
+    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
+      "Missing profile",
+    );
+    expect(
+      screen.getByTestId("required-output-responsible-profile"),
+    ).toHaveTextContent("2/3");
+    const printButton = screen
+      .getByText("Add lab/supplier profile first")
+      .closest("button");
+    expect(printButton).toBeDisabled();
   });
 
   it("updates quantity controls within the valid range", () => {
