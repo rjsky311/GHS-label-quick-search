@@ -48,6 +48,15 @@ describe('SearchSection', () => {
       expect(screen.getByTestId('batch-search-tab')).toBeInTheDocument();
     });
 
+    it('keeps tab icons aligned in fixed inline-flex rows', () => {
+      render(<SearchSection {...defaultProps} />);
+
+      [screen.getByTestId('single-search-tab'), screen.getByTestId('batch-search-tab')].forEach((tab) => {
+        expect(tab).toHaveClass('inline-flex', 'items-center', 'justify-center', 'gap-2');
+        expect(tab.querySelector('svg')).toHaveClass('shrink-0');
+      });
+    });
+
     it('single tab has highlighted styling when activeTab=single', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       const singleTab = screen.getByTestId('single-search-tab');
@@ -71,6 +80,13 @@ describe('SearchSection', () => {
     it('renders search button with data-testid', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       expect(screen.getByTestId('single-search-btn')).toBeInTheDocument();
+    });
+
+    it('keeps the single search button width stable across translated labels', () => {
+      render(<SearchSection {...defaultProps} activeTab="single" />);
+      const button = screen.getByTestId('single-search-btn');
+      expect(button).toHaveClass('inline-flex', 'w-28', 'shrink-0', 'sm:w-32');
+      expect(button.querySelector('svg')).toHaveClass('shrink-0');
     });
 
     it('clicking search button calls onSearchSingle without forwarding the click event', () => {

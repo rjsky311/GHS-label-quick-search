@@ -37,25 +37,27 @@ export default function SearchSection({
       <div className="flex border-b border-slate-200">
         <button
           onClick={() => onSetActiveTab("single")}
-          className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+          className={`inline-flex flex-1 items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "single"
               ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
           }`}
           data-testid="single-search-tab"
         >
-          <Search className="w-4 h-4 mr-2 inline" /> {t("search.singleTab")}
+          <Search className="h-4 w-4 shrink-0" />
+          <span>{t("search.singleTab")}</span>
         </button>
         <button
           onClick={() => onSetActiveTab("batch")}
-          className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+          className={`inline-flex flex-1 items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "batch"
               ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
           }`}
           data-testid="batch-search-tab"
         >
-          <ClipboardList className="w-4 h-4 mr-2 inline" /> {t("search.batchTab")}
+          <ClipboardList className="h-4 w-4 shrink-0" />
+          <span>{t("search.batchTab")}</span>
         </button>
       </div>
 
@@ -79,16 +81,18 @@ export default function SearchSection({
                 <button
                   onClick={() => onSearchSingle()}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex w-28 shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-32"
                   data-testid="single-search-btn"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> {t("search.searching")}
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                      <span className="truncate">{t("search.searching")}</span>
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4" /> {t("search.searchBtn")}
+                      <Search className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{t("search.searchBtn")}</span>
                     </>
                   )}
                 </button>
@@ -150,11 +154,13 @@ export default function SearchSection({
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> {t("search.searching")}
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    <span>{t("search.searching")}</span>
                   </>
                 ) : (
                   <>
-                    <Search className="w-4 h-4" /> {t("search.batchSearchBtn")}
+                    <Search className="h-4 w-4 shrink-0" />
+                    <span>{t("search.batchSearchBtn")}</span>
                   </>
                 )}
               </button>
