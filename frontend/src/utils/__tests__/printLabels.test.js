@@ -465,6 +465,47 @@ describe("printLabels", () => {
     expect(mockIframeDoc.write.mock.calls[0][0]).toBe(documentBundle.html);
   });
 
+  it("prints dense A4 primary labels instead of blocking after the automatic upgrade", () => {
+    const denseChemical = {
+      ...mockChemical,
+      ghs_pictograms: [
+        { code: "GHS02" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS07" },
+      ],
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 22 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    };
+
+    printLabels(
+      [denseChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+    );
+
+    const html = mockIframeDoc.write.mock.calls[0][0];
+    expect(html).toContain("label-a4-primary");
+    expect(html).toContain("width: 34mm");
+    expect(html).toContain("column-count: 2");
+    expect(alertSpy).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+  });
+
   it("calls print immediately when no images (300ms delay)", () => {
     // mockIframeDoc.querySelectorAll returns [] by default (no images)
     printLabels(
@@ -766,8 +807,49 @@ describe("printLabels", () => {
       expect(html).toContain(
         "grid-template-columns: minmax(20mm, 28mm) minmax(0, 1fr)",
       );
-      expect(html).toContain("width: 18mm");
-      expect(html).toContain("height: 18mm");
+      expect(html).toContain("width: 20mm");
+      expect(html).toContain("height: 20mm");
+    });
+
+    it("A4 primary uses a dedicated full-page label layout and scaled preview", () => {
+      const denseChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en: `Hazard ${index}`,
+        })),
+        precautionary_statements: Array.from({ length: 22 }, (_, index) => ({
+          code: `P${300 + index}`,
+          text_en: `Precaution ${index}`,
+        })),
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-a4-primary");
+      expect(preview.html).toContain("width: 34mm");
+      expect(preview.html).toContain("height: 34mm");
+      expect(preview.html).toContain("column-count: 2");
+      expect(preview.html).toContain("preview-label-scaler");
+      expect(preview.html).toContain("transform: scale(0.");
     });
 
     it("qrcode template uses the scan-first hierarchy blocks", () => {

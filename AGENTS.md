@@ -298,7 +298,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 695 tests across 44 suites; 0 known React `act(...)` warnings
+- **Frontend**: 697 tests across 44 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
