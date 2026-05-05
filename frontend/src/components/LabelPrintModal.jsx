@@ -576,6 +576,7 @@ export default function LabelPrintModal({
   const { t, i18n } = useTranslation();
   const dialogRef = useRef(null);
   const autoAppliedOutputRef = useRef("");
+  const userSelectedStockRef = useRef(false);
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
@@ -685,8 +686,15 @@ export default function LabelPrintModal({
                 "This item does not have enough GHS hazard content to produce a hazard label.",
               )
             : "";
+  const previewPurposeSummaryLabel =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      ? tx("label.outputSupplemental", "Supplemental")
+      : purposeSummaryLabel;
   const visiblePreviewRisks =
-    plannerPreviewRisk && plannerPreviewRisk !== readyPreviewMessage
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+    plannerPreviewRisk
+      ? [plannerPreviewRisk]
+      : plannerPreviewRisk && plannerPreviewRisk !== readyPreviewMessage
       ? [
           plannerPreviewRisk,
           ...previewRisks.filter((risk) => risk !== readyPreviewMessage),
@@ -858,7 +866,11 @@ export default function LabelPrintModal({
   ]);
 
   useEffect(() => {
-    if (!canUseFullPagePrimary || !outputPlan.recommendedFullPagePatch) {
+    if (
+      userSelectedStockRef.current ||
+      !canUseFullPagePrimary ||
+      !outputPlan.recommendedFullPagePatch
+    ) {
       autoAppliedOutputRef.current = "";
       return;
     }
@@ -905,7 +917,9 @@ export default function LabelPrintModal({
   };
 
   const applyStockPreset = (preset) => {
-    onLabelConfigChange({
+    userSelectedStockRef.current = true;
+
+    const nextConfig = {
       ...labelConfig,
       stockPreset: preset.id,
       size: preset.size,
@@ -921,7 +935,26 @@ export default function LabelPrintModal({
       offsetXmm: preset.offsetXmm,
       offsetYmm: preset.offsetYmm,
       pageSize: preset.pageSize || "A4",
+    };
+    const nextLayout = resolveLayoutProfile(nextConfig);
+    const nextPlan = buildPrintOutputPlan({
+      selectedForLabel,
+      layout: nextLayout,
+      customGHSSettings,
+      resolvedLabProfile: resolvedResponsibleProfile,
+      locale: currentLocale,
     });
+
+    if (
+      labelPurpose === "shipping" &&
+      nextConfig.template === "full" &&
+      preset.outputRole === "primary-candidate" &&
+      nextPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+    ) {
+      nextConfig.template = "standard";
+    }
+
+    onLabelConfigChange(nextConfig);
   };
 
   const handleUseFullPagePrimary = () => {
@@ -930,6 +963,7 @@ export default function LabelPrintModal({
   };
 
   const applyPurpose = (purpose) => {
+    userSelectedStockRef.current = false;
     const option = PURPOSE_OPTIONS.find((item) => item.value === purpose);
     const preset = ALL_STOCK_PRESETS.find((item) => item.id === option?.presetId);
 
@@ -2275,7 +2309,7 @@ export default function LabelPrintModal({
 
                   <div className="mt-3 flex flex-wrap gap-2">
                     {[
-                      purposeSummaryLabel,
+                      previewPurposeSummaryLabel,
                       getOptionLabel(
                         TEMPLATE_OPTIONS,
                         labelConfig.template,
