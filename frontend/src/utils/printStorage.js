@@ -1,6 +1,4 @@
-import {
-  normalizePrintLabelConfig,
-} from "@/constants/labelStocks";
+import { normalizePrintLabelConfig } from "@/constants/labelStocks";
 
 export const PRINT_TEMPLATE_SCHEMA = 2;
 export const PRINT_JOB_SCHEMA = 1;
@@ -81,12 +79,18 @@ export function sanitizeChemicalForPrintRecord(chemical) {
     hazard_statements: Array.isArray(chemical?.hazard_statements)
       ? chemical.hazard_statements
           .map(sanitizeStatement)
-          .filter((statement) => statement.code || statement.text_zh || statement.text_en)
+          .filter(
+            (statement) =>
+              statement.code || statement.text_zh || statement.text_en,
+          )
       : [],
     precautionary_statements: Array.isArray(chemical?.precautionary_statements)
       ? chemical.precautionary_statements
           .map(sanitizeStatement)
-          .filter((statement) => statement.code || statement.text_zh || statement.text_en)
+          .filter(
+            (statement) =>
+              statement.code || statement.text_zh || statement.text_en,
+          )
       : [],
     customNote: sanitizeString(chemical?.customNote),
     isPreparedSolution: Boolean(chemical?.isPreparedSolution),
@@ -147,6 +151,7 @@ function recentPrintKey(record) {
   const fields = normalizeCustomLabelFields(record?.customLabelFields);
   return [
     casKey,
+    config.labelPurpose,
     config.template,
     config.stockPreset,
     config.orientation,
@@ -174,10 +179,13 @@ export function buildPrintJobRecord({
   const normalizedConfig = normalizePrintLabelConfig(labelConfig);
   const normalizedFields = normalizeCustomLabelFields(customLabelFields);
   const normalizedProfile = normalizeLabProfile(labProfile);
-  const normalizedQuantities = normalizeLabelQuantities(labelQuantities, sanitizedItems);
+  const normalizedQuantities = normalizeLabelQuantities(
+    labelQuantities,
+    sanitizedItems,
+  );
   const totalLabels = sanitizedItems.reduce(
     (sum, item) => sum + (normalizedQuantities[item.cas_number] || 1),
-    0
+    0,
   );
 
   return {
@@ -217,8 +225,9 @@ export function normalizePrintJob(record) {
     totalLabels:
       Number(record.totalLabels) ||
       items.reduce(
-        (sum, item) => sum + (Number(record?.labelQuantities?.[item.cas_number]) || 1),
-        0
+        (sum, item) =>
+          sum + (Number(record?.labelQuantities?.[item.cas_number]) || 1),
+        0,
       ),
   };
 }
@@ -227,8 +236,8 @@ export function mergeRecentPrints(records, nextRecord, limit = 10) {
   if (!nextRecord) return Array.isArray(records) ? records : [];
   const previous = Array.isArray(records) ? records : [];
   const dedupKey = recentPrintKey(nextRecord);
-  return [nextRecord, ...previous.filter((record) => recentPrintKey(record) !== dedupKey)].slice(
-    0,
-    limit
-  );
+  return [
+    nextRecord,
+    ...previous.filter((record) => recentPrintKey(record) !== dedupKey),
+  ].slice(0, limit);
 }
