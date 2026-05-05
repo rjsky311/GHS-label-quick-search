@@ -15,13 +15,13 @@ import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import { formatRelativeTime } from "@/utils/formatDate";
 
-function SummaryCard({ label, value, accent = "text-amber-300", testId }) {
+function SummaryCard({ label, value, accent = "text-blue-700", testId }) {
   return (
     <div
-      className="rounded-xl border border-slate-700 bg-slate-900/70 p-3"
+      className="rounded-lg border border-slate-200 bg-white p-3"
       data-testid={testId}
     >
-      <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
       <div className={`mt-2 text-2xl font-semibold ${accent}`}>{value}</div>
     </div>
   );
@@ -30,11 +30,11 @@ function SummaryCard({ label, value, accent = "text-amber-300", testId }) {
 function SectionHeading({ icon: Icon, title, subtitle }) {
   return (
     <div className="mb-3">
-      <div className="flex items-center gap-2 text-white">
-        <Icon className="h-4 w-4 text-cyan-300" />
+      <div className="flex items-center gap-2 text-slate-900">
+        <Icon className="h-4 w-4 text-blue-600" />
         <h3 className="text-sm font-semibold uppercase tracking-wide">{title}</h3>
       </div>
-      {subtitle ? <p className="mt-1 text-xs text-slate-400">{subtitle}</p> : null}
+      {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
     </div>
   );
 }
@@ -208,19 +208,19 @@ export default function PilotDashboardSidebar(props) {
     >
       <div
         ref={panelRef}
-        className="absolute right-0 top-0 h-full w-full max-w-3xl overflow-y-auto bg-slate-800 shadow-xl"
+        className="absolute right-0 top-0 h-full w-full max-w-3xl overflow-y-auto bg-slate-50 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 border-b border-slate-700 bg-slate-800/95 backdrop-blur">
+        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="flex items-start justify-between gap-3 p-4">
             <div>
-              <div className="flex items-center gap-2 text-white">
-                <Activity className="h-5 w-5 text-emerald-300" />
+              <div className="flex items-center gap-2 text-slate-950">
+                <Activity className="h-5 w-5 text-blue-600" />
                 <h2 className="text-lg font-semibold">
                   {t("pilot.sidebarTitle", { defaultValue: "Admin dashboard" })}
                 </h2>
               </div>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-600">
                 {t("pilot.sidebarSubtitle", {
                   defaultValue:
                     "Review pilot health, unresolved lookups, and dictionary growth tasks. This surface is for admin-only curation.",
@@ -231,7 +231,7 @@ export default function PilotDashboardSidebar(props) {
               <button
                 type="button"
                 onClick={onRefresh}
-                className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-100 transition-colors hover:bg-slate-600"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                 data-testid="pilot-refresh-btn"
               >
                 <RefreshCw className="mr-1 inline h-4 w-4" />
@@ -240,7 +240,7 @@ export default function PilotDashboardSidebar(props) {
               <button
                 type="button"
                 onClick={onExportObservabilityReport}
-                className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white transition-colors hover:bg-emerald-600"
+                className="rounded-md bg-blue-700 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-800"
                 data-testid="pilot-export-report-btn"
               >
                 {t("pilot.export", { defaultValue: "Export report" })}
@@ -248,7 +248,7 @@ export default function PilotDashboardSidebar(props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
                 data-testid="close-pilot-dashboard-btn"
               >
                 <X className="h-5 w-5" />
@@ -266,8 +266,8 @@ export default function PilotDashboardSidebar(props) {
                 onClick={() => setActiveTab(tab)}
                 className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
                   activeTab === tab
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    ? "bg-blue-700 text-white"
+                    : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
                 }`}
                 data-testid={`pilot-tab-${tab}`}
               >
@@ -279,13 +279,13 @@ export default function PilotDashboardSidebar(props) {
 
         <div className="space-y-6 p-4">
           {loading ? (
-            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-6 text-slate-300">
+            <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-700">
               {t("pilot.loading", { defaultValue: "Loading pilot dashboard..." })}
             </div>
           ) : null}
 
           {!loading && error ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-200">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -296,25 +296,25 @@ export default function PilotDashboardSidebar(props) {
                 <SummaryCard
                   label={t("pilot.pendingAliases", { defaultValue: "Pending aliases" })}
                   value={dictionary.pendingAliasCount || 0}
-                  accent="text-cyan-300"
+                  accent="text-blue-700"
                   testId="pilot-summary-pending-aliases"
                 />
                 <SummaryCard
                   label={t("pilot.openMissQueries", { defaultValue: "Open miss queries" })}
                   value={dictionary.openMissQueryCount || 0}
-                  accent="text-amber-300"
+                  accent="text-amber-700"
                   testId="pilot-summary-open-miss-queries"
                 />
                 <SummaryCard
                   label={t("pilot.manualEntries", { defaultValue: "Manual entries" })}
                   value={dictionary.manualEntryCount || 0}
-                  accent="text-emerald-300"
+                  accent="text-emerald-700"
                   testId="pilot-summary-manual-entries"
                 />
                 <SummaryCard
                   label={t("pilot.referenceLinks", { defaultValue: "Reference links" })}
                   value={dictionary.referenceLinkCount || 0}
-                  accent="text-fuchsia-300"
+                  accent="text-violet-700"
                   testId="pilot-summary-reference-links"
                 />
                 <SummaryCard
@@ -325,12 +325,12 @@ export default function PilotDashboardSidebar(props) {
                 <SummaryCard
                   label={t("pilot.upstreamErrors", { defaultValue: "Upstream errors" })}
                   value={counters["upstream.total"] || 0}
-                  accent="text-rose-300"
+                  accent="text-red-700"
                   testId="pilot-summary-upstream-errors"
                 />
               </div>
 
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={ShieldAlert}
                   title={t("pilot.missQueries", { defaultValue: "Top miss queries" })}
@@ -340,7 +340,7 @@ export default function PilotDashboardSidebar(props) {
                   })}
                 />
                 {missQueries.length === 0 ? (
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-500">
                     {t("pilot.noMissQueries", {
                       defaultValue: "No unresolved queries recorded yet.",
                     })}
@@ -350,12 +350,12 @@ export default function PilotDashboardSidebar(props) {
                     {missQueries.map((item, index) => (
                       <div
                         key={`${item.query_text}-${index}`}
-                        className="rounded-xl border border-slate-700 bg-slate-800/80 p-3"
+                        className="rounded-lg border border-slate-200 bg-slate-50 p-3"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="font-medium text-white">{item.query_text}</div>
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="font-medium text-slate-900">{item.query_text}</div>
+                            <div className="mt-1 text-xs text-slate-500">
                               {item.query_kind} | {item.endpoint} | {item.hit_count}x
                             </div>
                           </div>
@@ -369,7 +369,7 @@ export default function PilotDashboardSidebar(props) {
                 )}
               </section>
 
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={Tags}
                   title={t("pilot.pendingAliasReview", { defaultValue: "Pending alias review" })}
@@ -379,7 +379,7 @@ export default function PilotDashboardSidebar(props) {
                   })}
                 />
                 {pendingAliases.length === 0 ? (
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-500">
                     {t("pilot.noPendingAliases", {
                       defaultValue: "No pending aliases right now.",
                     })}
@@ -389,12 +389,12 @@ export default function PilotDashboardSidebar(props) {
                     {pendingAliases.map((alias) => (
                       <div
                         key={`${alias.locale}-${alias.alias_text}-${alias.cas_number}`}
-                        className="rounded-xl border border-slate-700 bg-slate-800/80 p-3"
+                        className="rounded-lg border border-slate-200 bg-slate-50 p-3"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="font-medium text-white">{alias.alias_text}</div>
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="font-medium text-slate-900">{alias.alias_text}</div>
+                            <div className="mt-1 text-xs text-slate-500">
                               {alias.cas_number} | {alias.locale} | {alias.hit_count}x
                             </div>
                           </div>
@@ -403,7 +403,7 @@ export default function PilotDashboardSidebar(props) {
                               type="button"
                               onClick={() => handlePendingAliasDecision(alias, "approved")}
                               disabled={saving}
-                              className="rounded bg-emerald-600 px-3 py-1 text-xs text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-600/40"
+                              className="rounded bg-emerald-700 px-3 py-1 text-xs text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
                               data-testid={`approve-alias-${alias.alias_text}`}
                             >
                               {t("pilot.approve", { defaultValue: "Approve" })}
@@ -412,7 +412,7 @@ export default function PilotDashboardSidebar(props) {
                               type="button"
                               onClick={() => handlePendingAliasDecision(alias, "rejected")}
                               disabled={saving}
-                              className="rounded bg-red-700 px-3 py-1 text-xs text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-red-700/40"
+                              className="rounded bg-red-700 px-3 py-1 text-xs text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-40"
                               data-testid={`reject-alias-${alias.alias_text}`}
                             >
                               {t("pilot.reject", { defaultValue: "Reject" })}
@@ -425,20 +425,20 @@ export default function PilotDashboardSidebar(props) {
                 )}
               </section>
 
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={Database}
                   title={t("pilot.recentOps", { defaultValue: "Recent backend events" })}
                 />
                 {recentEvents.length === 0 ? (
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-500">
                     {t("pilot.noRecentOps", {
                       defaultValue: "No backend events recorded yet.",
                     })}
                   </p>
                 ) : (
-                  <details className="rounded-xl border border-slate-700 bg-slate-800/80 p-3">
-                    <summary className="cursor-pointer text-sm font-medium text-white">
+                  <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <summary className="cursor-pointer text-sm font-medium text-slate-900">
                       {t("pilot.recentOpsSummary", {
                         defaultValue: "Show raw backend events",
                       })}
@@ -447,11 +447,11 @@ export default function PilotDashboardSidebar(props) {
                       {recentEvents.slice(0, 8).map((item, index) => (
                         <div
                           key={`${item.ts}-${item.type}-${index}`}
-                          className="flex items-start justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/80 p-3 text-sm"
+                          className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3 text-sm"
                         >
                           <div>
-                            <div className="font-medium text-white">{item.type}</div>
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="font-medium text-slate-900">{item.type}</div>
+                            <div className="mt-1 text-xs text-slate-500">
                               {JSON.stringify(item)}
                             </div>
                           </div>
@@ -469,7 +469,7 @@ export default function PilotDashboardSidebar(props) {
 
           {!loading && activeTab === "dictionary" ? (
             <>
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={BookPlus}
                   title={t("pilot.addManualEntry", { defaultValue: "Add manual entry" })}
@@ -485,7 +485,7 @@ export default function PilotDashboardSidebar(props) {
                       setManualEntryForm((prev) => ({ ...prev, cas_number: event.target.value }))
                     }
                     placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     required
                     data-testid="manual-entry-cas-input"
                   />
@@ -495,7 +495,7 @@ export default function PilotDashboardSidebar(props) {
                       setManualEntryForm((prev) => ({ ...prev, name_en: event.target.value }))
                     }
                     placeholder={t("pilot.englishNamePlaceholder", { defaultValue: "English name" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     data-testid="manual-entry-name-en-input"
                   />
                   <input
@@ -504,7 +504,7 @@ export default function PilotDashboardSidebar(props) {
                       setManualEntryForm((prev) => ({ ...prev, name_zh: event.target.value }))
                     }
                     placeholder={t("pilot.chineseNamePlaceholder", { defaultValue: "Chinese name" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     data-testid="manual-entry-name-zh-input"
                   />
                   <input
@@ -513,14 +513,14 @@ export default function PilotDashboardSidebar(props) {
                       setManualEntryForm((prev) => ({ ...prev, notes: event.target.value }))
                     }
                     placeholder={t("pilot.notesPlaceholder", { defaultValue: "Notes" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     data-testid="manual-entry-notes-input"
                   />
                   <div className="md:col-span-2">
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-emerald-700/40"
+                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                       data-testid="manual-entry-submit-btn"
                     >
                       {t("pilot.saveEntry", { defaultValue: "Save manual entry" })}
@@ -529,7 +529,7 @@ export default function PilotDashboardSidebar(props) {
                 </form>
               </section>
 
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={Tags}
                   title={t("pilot.addAlias", { defaultValue: "Add or approve alias" })}
@@ -541,7 +541,7 @@ export default function PilotDashboardSidebar(props) {
                       setAliasForm((prev) => ({ ...prev, alias_text: event.target.value }))
                     }
                     placeholder={t("pilot.aliasPlaceholder", { defaultValue: "Alias text" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     required
                   />
                   <input
@@ -550,7 +550,7 @@ export default function PilotDashboardSidebar(props) {
                       setAliasForm((prev) => ({ ...prev, cas_number: event.target.value }))
                     }
                     placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     required
                   />
                   <select
@@ -558,7 +558,7 @@ export default function PilotDashboardSidebar(props) {
                     onChange={(event) =>
                       setAliasForm((prev) => ({ ...prev, locale: event.target.value }))
                     }
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   >
                     <option value="en">English</option>
                     <option value="zh">Chinese</option>
@@ -568,7 +568,7 @@ export default function PilotDashboardSidebar(props) {
                     onChange={(event) =>
                       setAliasForm((prev) => ({ ...prev, status: event.target.value }))
                     }
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   >
                     <option value="approved">approved</option>
                     <option value="pending">pending</option>
@@ -580,13 +580,13 @@ export default function PilotDashboardSidebar(props) {
                       setAliasForm((prev) => ({ ...prev, notes: event.target.value }))
                     }
                     placeholder={t("pilot.notesPlaceholder", { defaultValue: "Notes" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white md:col-span-2"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:col-span-2"
                   />
                   <div className="md:col-span-2">
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-lg bg-cyan-700 px-4 py-2 text-sm text-white transition-colors hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-cyan-700/40"
+                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {t("pilot.saveAlias", { defaultValue: "Save alias" })}
                     </button>
@@ -594,7 +594,7 @@ export default function PilotDashboardSidebar(props) {
                 </form>
               </section>
 
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={Link2}
                   title={t("pilot.addReference", { defaultValue: "Add reference link" })}
@@ -606,7 +606,7 @@ export default function PilotDashboardSidebar(props) {
                       setReferenceForm((prev) => ({ ...prev, cas_number: event.target.value }))
                     }
                     placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     required
                   />
                   <input
@@ -615,7 +615,7 @@ export default function PilotDashboardSidebar(props) {
                       setReferenceForm((prev) => ({ ...prev, label: event.target.value }))
                     }
                     placeholder={t("pilot.referenceLabelPlaceholder", { defaultValue: "Link label" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     required
                   />
                   <input
@@ -624,7 +624,7 @@ export default function PilotDashboardSidebar(props) {
                       setReferenceForm((prev) => ({ ...prev, url: event.target.value }))
                     }
                     placeholder="https://..."
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white md:col-span-2"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:col-span-2"
                     required
                   />
                   <select
@@ -632,7 +632,7 @@ export default function PilotDashboardSidebar(props) {
                     onChange={(event) =>
                       setReferenceForm((prev) => ({ ...prev, link_type: event.target.value }))
                     }
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   >
                     <option value="reference">reference</option>
                     <option value="sds">sds</option>
@@ -646,13 +646,13 @@ export default function PilotDashboardSidebar(props) {
                     }
                     inputMode="numeric"
                     placeholder={t("pilot.priorityPlaceholder", { defaultValue: "Priority" })}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                   />
                   <div className="md:col-span-2">
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-lg bg-fuchsia-700 px-4 py-2 text-sm text-white transition-colors hover:bg-fuchsia-600 disabled:cursor-not-allowed disabled:bg-fuchsia-700/40"
+                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {t("pilot.saveReference", { defaultValue: "Save reference link" })}
                     </button>
@@ -661,13 +661,13 @@ export default function PilotDashboardSidebar(props) {
               </section>
 
               <section className="grid gap-4 xl:grid-cols-3">
-                <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
                   <SectionHeading
                     icon={Tags}
                     title={t("pilot.aliasList", { defaultValue: "Recent aliases" })}
                   />
                   {recentAliases.length === 0 ? (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-500">
                       {t("pilot.noAliases", { defaultValue: "No aliases yet." })}
                     </p>
                   ) : (
@@ -675,11 +675,11 @@ export default function PilotDashboardSidebar(props) {
                       {recentAliases.map((alias) => (
                         <div
                           key={`${alias.id || alias.alias_text}-${alias.locale}-${alias.cas_number}`}
-                          className="rounded-xl border border-slate-700 bg-slate-800/80 p-3 text-sm"
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
                         >
-                          <div className="font-medium text-white">{alias.alias_text}</div>
-                          <div className="mt-1 font-mono text-amber-300">{alias.cas_number}</div>
-                          <div className="mt-1 text-xs text-slate-400">
+                          <div className="font-medium text-slate-900">{alias.alias_text}</div>
+                          <div className="mt-1 font-mono text-blue-700">{alias.cas_number}</div>
+                          <div className="mt-1 text-xs text-slate-500">
                             {alias.locale} | {alias.status}
                           </div>
                         </div>
@@ -688,13 +688,13 @@ export default function PilotDashboardSidebar(props) {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
                   <SectionHeading
                     icon={Database}
                     title={t("pilot.manualEntryList", { defaultValue: "Recent manual entries" })}
                   />
                   {recentManualEntries.length === 0 ? (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-500">
                       {t("pilot.noManualEntries", { defaultValue: "No manual entries yet." })}
                     </p>
                   ) : (
@@ -702,14 +702,14 @@ export default function PilotDashboardSidebar(props) {
                       {recentManualEntries.map((entry) => (
                         <div
                           key={entry.cas_number}
-                          className="rounded-xl border border-slate-700 bg-slate-800/80 p-3 text-sm"
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
                         >
-                          <div className="font-mono text-amber-300">{entry.cas_number}</div>
-                          <div className="mt-1 text-white">
+                          <div className="font-mono text-blue-700">{entry.cas_number}</div>
+                          <div className="mt-1 text-slate-900">
                             {entry.name_en ||
                               t("pilot.noEnglishName", { defaultValue: "No English name" })}
                           </div>
-                          <div className="text-slate-400">
+                          <div className="text-slate-500">
                             {entry.name_zh ||
                               t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
                           </div>
@@ -719,13 +719,13 @@ export default function PilotDashboardSidebar(props) {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
                   <SectionHeading
                     icon={ExternalLink}
                     title={t("pilot.referenceList", { defaultValue: "Recent reference links" })}
                   />
                   {recentReferenceLinks.length === 0 ? (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-500">
                       {t("pilot.noReferenceLinks", {
                         defaultValue: "No custom reference links yet.",
                       })}
@@ -735,11 +735,11 @@ export default function PilotDashboardSidebar(props) {
                       {recentReferenceLinks.map((link) => (
                         <div
                           key={`${link.casNumber}-${link.url}`}
-                          className="rounded-xl border border-slate-700 bg-slate-800/80 p-3 text-sm"
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
                         >
-                          <div className="font-mono text-amber-300">{link.casNumber}</div>
-                          <div className="mt-1 text-white">{link.label}</div>
-                          <div className="text-xs text-slate-400">
+                          <div className="font-mono text-blue-700">{link.casNumber}</div>
+                          <div className="mt-1 text-slate-900">{link.label}</div>
+                          <div className="text-xs text-slate-500">
                             {link.linkType} | priority {link.priority}
                           </div>
                         </div>

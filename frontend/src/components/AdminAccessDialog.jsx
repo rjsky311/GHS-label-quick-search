@@ -20,7 +20,7 @@ export default function AdminAccessDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -31,20 +31,20 @@ export default function AdminAccessDialog({
     >
       <div
         ref={dialogRef}
-        className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-800 shadow-xl"
+        className="w-full max-w-md rounded-lg border border-slate-200 bg-white shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-700 p-5">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-5">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-white">
-              <ShieldAlert className="h-5 w-5 text-emerald-300" />
+            <div className="flex items-center gap-2 text-slate-950">
+              <ShieldAlert className="h-5 w-5 text-emerald-700" />
               <h2 className="text-lg font-semibold">
                 {t("pilot.adminAccessTitle", {
                   defaultValue: "Admin access",
                 })}
               </h2>
             </div>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-600">
               {t("pilot.adminAccessHint", {
                 defaultValue:
                   "Dictionary curation and pilot telemetry are now admin-only. Enter the server admin key for this session.",
@@ -54,7 +54,7 @@ export default function AdminAccessDialog({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 transition-colors hover:text-white"
+            className="text-slate-500 transition-colors hover:text-slate-900"
             data-testid="close-pilot-admin-dialog-btn"
           >
             <X className="h-5 w-5" />
@@ -62,7 +62,7 @@ export default function AdminAccessDialog({
         </div>
 
         <form className="space-y-4 p-5" onSubmit={handleSubmit}>
-          <label className="block text-sm text-slate-300" htmlFor="pilot-admin-key">
+          <label className="block text-sm text-slate-700" htmlFor="pilot-admin-key">
             {t("pilot.adminKeyLabel", {
               defaultValue: "Admin key",
             })}
@@ -75,7 +75,7 @@ export default function AdminAccessDialog({
               value={adminKey}
               onChange={(event) => setAdminKey(event.target.value)}
               autoComplete="current-password"
-              className="w-full rounded-xl border border-slate-600 bg-slate-900 py-3 pl-10 pr-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-md border border-slate-300 bg-white py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               placeholder={t("pilot.adminKeyPlaceholder", {
                 defaultValue: "Enter admin key",
               })}
@@ -84,7 +84,7 @@ export default function AdminAccessDialog({
           </div>
 
           {error ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-950/30 px-3 py-2 text-sm text-red-200">
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -93,13 +93,13 @@ export default function AdminAccessDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-600"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             >
               {t("common.cancel", { defaultValue: "Cancel" })}
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white transition-colors hover:bg-emerald-600"
+              className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800"
               data-testid="pilot-admin-submit-btn"
             >
               {t("pilot.unlockAdmin", { defaultValue: "Unlock admin" })}

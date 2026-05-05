@@ -202,12 +202,11 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     // selected-count header inside the modal.
     expect(screen.getByText('label.selectedCount')).toBeInTheDocument();
     // The i18n mock returns keys, but we can count rendered rows:
-    // the modal's list uses `<span class="font-mono text-amber-400 text-sm">{cas}</span>`
-    // for each selected chemical. We assert exactly one such span
-    // inside the dialog.
+    // the modal marks each selected CAS with a stable test id. We assert
+    // exactly one such span inside the dialog.
     const dialog = screen.getByRole('dialog', { name: /label\.title/i });
     const selectedCasSpans = dialog.querySelectorAll(
-      'span.font-mono.text-amber-400.text-sm'
+      '[data-testid="selected-label-cas"]'
     );
     expect(selectedCasSpans).toHaveLength(1);
     expect(selectedCasSpans[0].textContent).toBe('64-17-5');
@@ -264,7 +263,7 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
 
     const dialog = screen.getByRole('dialog', { name: /label\.title/i });
     const selectedCasSpans = dialog.querySelectorAll(
-      'span.font-mono.text-amber-400.text-sm'
+      '[data-testid="selected-label-cas"]'
     );
     // If delegation had clobbered the subset, this would be 2.
     expect(selectedCasSpans).toHaveLength(1);
@@ -347,7 +346,7 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     );
     const dialog = screen.getByRole('dialog', { name: /label\.title/i });
     const selectedCasSpans = dialog.querySelectorAll(
-      'span.font-mono.text-amber-400.text-sm'
+      '[data-testid="selected-label-cas"]'
     );
     expect(selectedCasSpans).toHaveLength(1);
     expect(selectedCasSpans[0].textContent).toBe('64-17-5');
@@ -405,9 +404,51 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
 
     const dialog = screen.getByRole('dialog', { name: /label\.title/i });
     const selectedCasSpans = dialog.querySelectorAll(
-      'span.font-mono.text-amber-400.text-sm'
+      '[data-testid="selected-label-cas"]'
     );
     expect(selectedCasSpans).toHaveLength(1);
     expect(selectedCasSpans[0].textContent).toBe('67-56-1');
+  });
+
+  it('printing from DetailModal closes the detail layer before opening LabelPrintModal', async () => {
+    const foundWithGhs = {
+      cas_number: '64-17-5',
+      cid: 702,
+      name_en: 'Ethanol',
+      name_zh: 'Ethanol',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02', name_zh: 'Flammable' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'Highly flammable' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      signal_word_zh: 'Danger',
+      other_classifications: [],
+    };
+
+    render(<App />);
+
+    await runBatchSearch({
+      casInputs: ['64-17-5'],
+      mockResponses: [foundWithGhs],
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('detail-btn-0'));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText('detail.printLabel')).toBeInTheDocument()
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('detail.printLabel'));
+    });
+
+    await waitFor(() =>
+      expect(screen.getAllByText('label.title').length).toBeGreaterThan(0)
+    );
+
+    expect(screen.queryByText('detail.prepareSolution')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
   });
 });

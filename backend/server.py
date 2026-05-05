@@ -50,6 +50,10 @@ WORKSPACE_DOC_TYPES = {
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
+CAPTURE_DICTIONARY_MISSES = (
+    (os.environ.get("CAPTURE_DICTIONARY_MISSES") or "").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None
@@ -290,6 +294,9 @@ def _build_reference_links(
 
 
 def _record_dictionary_miss(query: str, query_kind: str, endpoint: str, *, context: Optional[Dict[str, Any]] = None) -> None:
+    if not CAPTURE_DICTIONARY_MISSES:
+        return
+
     try:
         pilot_store.record_miss_query(
             query,
@@ -1610,6 +1617,13 @@ async def upsert_dictionary_reference_link(
 
 @api_router.post("/dictionary/miss-query")
 async def dictionary_miss_query(payload: DictionaryMissQueryPayload):
+    if not CAPTURE_DICTIONARY_MISSES:
+        return {
+            "ok": False,
+            "skipped": True,
+            "reason": "dictionary miss capture is disabled",
+        }
+
     return {
         "ok": True,
         "record": pilot_store.record_miss_query(
@@ -1622,7 +1636,8 @@ async def dictionary_miss_query(payload: DictionaryMissQueryPayload):
 
 
 @api_router.get("/workspace/{doc_type}")
-async def get_workspace_document(doc_type: str):
+async def get_workspace_document(request: Request, doc_type: str):
+    _require_admin(request)
     doc_type = _ensure_workspace_doc_type(doc_type)
     document = pilot_store.get_document(doc_type)
     if document is None:
@@ -1639,7 +1654,12 @@ async def get_workspace_document(doc_type: str):
 
 
 @api_router.put("/workspace/{doc_type}")
-async def put_workspace_document(doc_type: str, payload: WorkspaceDocumentPayload):
+async def put_workspace_document(
+    request: Request,
+    doc_type: str,
+    payload: WorkspaceDocumentPayload,
+):
+    _require_admin(request)
     doc_type = _ensure_workspace_doc_type(doc_type)
     document = pilot_store.put_document(doc_type, payload.payload)
     return {

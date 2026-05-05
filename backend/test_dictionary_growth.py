@@ -12,6 +12,7 @@ def temp_store(tmp_path, monkeypatch):
     store = PilotStore(tmp_path / "dictionary-growth.db").connect()
     monkeypatch.setattr(server, "pilot_store", store)
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "test-admin")
+    monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", True)
     yield store
     store.close()
 
@@ -235,13 +236,18 @@ async def test_workspace_endpoints_support_print_persistence_docs(temp_store):
         recent_put = await ac.put(
             "/api/workspace/print_recents",
             json={"payload": [recent_job]},
+            headers=ADMIN_HEADERS,
         )
         fields_put = await ac.put(
             "/api/workspace/print_custom_label_fields",
             json={"payload": custom_fields},
+            headers=ADMIN_HEADERS,
         )
-        recent_get = await ac.get("/api/workspace/print_recents")
-        fields_get = await ac.get("/api/workspace/print_custom_label_fields")
+        recent_get = await ac.get("/api/workspace/print_recents", headers=ADMIN_HEADERS)
+        fields_get = await ac.get(
+            "/api/workspace/print_custom_label_fields",
+            headers=ADMIN_HEADERS,
+        )
 
     assert recent_put.status_code == 200
     assert recent_put.json()["payload"][0]["id"] == "print-1"

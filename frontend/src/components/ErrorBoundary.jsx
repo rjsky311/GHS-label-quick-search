@@ -23,17 +23,17 @@ class ErrorBoundary extends React.Component {
 
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8">
-          <div className="bg-slate-800 border border-red-500/30 rounded-xl p-8 max-w-md text-center">
-            <h2 className="text-xl font-bold text-red-400 mb-4">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
+          <div className="max-w-md rounded-lg border border-red-200 bg-white p-8 text-center shadow-sm">
+            <h2 className="mb-4 text-xl font-bold text-red-700">
               {t("error.title")}
             </h2>
-            <p className="text-slate-300 mb-6">
+            <p className="mb-6 text-slate-600">
               {t("error.message")}
             </p>
             <button
               onClick={onReload}
-              className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition-colors"
+              className="rounded-md bg-blue-700 px-6 py-2 text-white transition-colors hover:bg-blue-800"
             >
               {t("error.reload")}
             </button>

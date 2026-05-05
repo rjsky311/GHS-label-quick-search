@@ -1031,7 +1031,7 @@ At that point, the roadmap has moved from planning into concrete product expansi
 
 ---
 
-## v1.8 Milestone Status (2026-04-16)
+## v1.8 / v1.10 Milestone Status (updated 2026-05-04)
 
 | Milestone | Status | Merged PRs |
 |-----------|--------|-----------|
@@ -1040,10 +1040,14 @@ At that point, the roadmap has moved from planning into concrete product expansi
 | M2 — Secondary-container disclaimer + no-GHS warning + Print-all-with-GHS shortcut | **done** | #10 / #11 |
 | M3 Tier 1 — Prepared-solution workflow (single-parent, concentration + solvent) | **done** | #13 (print path) / #14 (UI flow + lifecycle fixes); merge SHA `70b35f6` |
 | M3 Tier 2 — Operational Prepared Workflow | **done** | #15 (PR-1 operational fields) / #16 (PR-2A recent) / #17 (PR-2B saved presets) / #19 (PR-3 derived preview, Option A); final merge SHA `456e376` |
-| M4 — Print workflow (supplier profile, label-stock presets, small-container mode, QR/SDS convenience) | proposed, not yet scoped into PRs |
-| S-level / N-level items | proposed, unchanged |
+| M4-style Print workflow — supplier/lab profile, label-stock presets, small-container/compact modes, QR/SDS convenience, live preview, recent print reload | **substantially landed in v1.10** | `42f77b8`, `7657a1a`, `1888964`, `31c8a18`, `51cdb11` |
+| Pilot/workspace persistence — admin dashboard, dictionary growth, aliases, reference links, optional prepared/print/lab-profile workspace documents | **landed in v1.10; public builds are local-only by default, workspace sync and dictionary miss capture are opt-in** | `1e11586`, `0b68579`, `7807b84`, `395273e`, `55dbcd4` |
+| Productized free-tool redesign — light-first UI, brand utility strategy, soft CTA boundaries | **new active direction** | see `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, `REDESIGN_ROADMAP.md` |
+| S-level / N-level items | proposed, to be re-triaged after redesign | |
 
-Runtime is now `1.9.0` after the v1.9 release sync — `frontend/package.json`, `frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`, the Footer test pin, and the README health-check example are all aligned.
+Runtime is now `1.10.0`. `frontend/package.json`, `frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`, and the Footer test pin are aligned. The frontend is Vite/npm based; use `npm test -- --runInBand` and `npm run build`, not CRACO commands.
+
+The roadmap's next question has changed. The project no longer needs to decide whether real print workflow belongs in scope; that work has largely landed. The current productization question is how to make the free public tool feel trustworthy, beautiful, and useful enough for daily adoption while preserving a restrained brand/monetization surface.
 
 ---
 
@@ -1162,7 +1166,7 @@ Tier 2 is done when, and only when, **all** of the following hold:
 8. Runtime baseline after the full Tier 2 implementation:
    - backend tests unchanged (Tier 2 adds no backend code)
    - frontend tests grow with the new stores + surfaces, 0 `act(...)` warnings
-   - `craco build` OK
+   - current frontend build command OK (`npm run build` on v1.10+)
 
 ### 6. Suggested Implementation Slicing (planning only)
 

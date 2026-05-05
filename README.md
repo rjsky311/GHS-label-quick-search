@@ -12,11 +12,14 @@
 - [字典維護指南](#字典維護指南)
 - [GHS 危害圖示說明](#ghs-危害圖示說明)
 - [API 文件](#api-文件)
+- [產品化設計文件](#產品化設計文件)
 - [版本更新紀錄](#版本更新紀錄)
 
 ---
 
 ## 功能特色
+
+> 目前 runtime 版本：`1.10.0`。前端已由 CRA/CRACO 遷移至 Vite，並新增列印 stock presets、QR 標籤、live preview、recent print reload、lab profile、pilot admin，以及預設 local-only、可選 admin-gated workspace sync 的 v1.10 功能。後續產品化與視覺改版方向見 [DESIGN.md](./DESIGN.md)、[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)、[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)。
 
 ### 🔍 單一查詢
 - 輸入單個 CAS 號碼（如 `64-17-5`）
@@ -50,8 +53,8 @@
 
 ### 🏷️ 標籤列印
 - 多種標籤版型（圖示版、標準版、完整版、QR Code 版）
-- 可調整標籤尺寸（小、中、大）
-- 支援批次列印
+- 支援真實使用情境的 label stock presets、內容密度、直向／橫向、校正偏移與 live preview
+- 支援批次列印、recent print reload、列印模板保存與 lab profile
 
 ### 🔧 自訂 GHS 分類
 - 當化學品有多種 GHS 分類時，可選擇適用的分類
@@ -92,9 +95,9 @@
 | 層級 | 技術 | 說明 |
 |------|------|------|
 | 前端 | React 19 + Tailwind CSS 3.4 + Radix UI | 響應式使用者介面 |
-| UI 元件 | 15 自訂元件 + 46 個 shadcn/ui 原件 | lucide-react 圖示 |
-| React 自訂 Hooks | 8 個 | localStorage 狀態、排序、列印模板、focus trap |
-| 建置工具 | CRACO 7.1.0 (wrapping CRA) | `@` alias, ESLint |
+| UI 元件 | 20+ 自訂元件 + 46 個 shadcn/ui 原件 | lucide-react 圖示 |
+| React 自訂 Hooks | 15+ 個 | localStorage-first 狀態、可選 workspace sync、排序、列印模板、focus trap、pilot observability |
+| 建置工具 | Vite 6 + `@vitejs/plugin-react` | `@` alias、Jest、ESLint |
 | 國際化 | react-i18next 14.x + i18next 23.x | 210 keys × 2 語言 |
 | 後端 | FastAPI (Python 3.11) | RESTful API 服務 |
 | 資料來源 | PubChem API | GHS 危害標示資料；含重試 / 退避 / 出站 semaphore |
@@ -120,9 +123,9 @@ GHS-label-quick-search/
 │   └── .env.example           # 環境變數範本
 ├── frontend/
 │   ├── src/
-│   │   ├── App.js             # React 主元件（所有 state hub）
-│   │   ├── index.js           # 進入點 (ErrorBoundary + i18n)
-│   │   ├── components/        # 15 個自訂元件
+│   │   ├── App.jsx            # React 主元件（state hub；新行為優先拆 hook/util）
+│   │   ├── main.jsx           # 進入點 (ErrorBoundary + i18n)
+│   │   ├── components/        # 20+ 個自訂元件
 │   │   │   ├── Header.jsx                       # 頂部列（收藏／紀錄／語言切換）
 │   │   │   ├── SearchSection.jsx                # 搜尋區塊（單一／批次 tab，batch>100 alert）
 │   │   │   ├── SearchAutocomplete.jsx           # 自動完成下拉（含 abort race guard）
@@ -160,10 +163,9 @@ GHS-label-quick-search/
 │   │   ├── constants/
 │   │   │   └── ghs.js               # BACKEND_URL, API, GHS_IMAGES, BATCH_SEARCH_LIMIT
 │   │   └── components/ui/    # 46 個 shadcn/ui 元件
-│   ├── craco.config.js        # CRACO 設定 (@ alias, ESLint)
+│   ├── vite.config.js         # Vite 設定 (@ alias, dev health routes)
 │   ├── tailwind.config.js     # Tailwind CSS 設定
 │   ├── package.json           # Node.js 依賴套件
-│   ├── .npmrc                 # npm legacy-peer-deps
 │   └── .env.example           # 前端環境變數範本
 ├── .github/workflows/ci.yml   # GitHub Actions（frontend + backend 測試）
 ├── CLAUDE.md                  # Claude Code 專案上下文
@@ -177,7 +179,7 @@ GHS-label-quick-search/
 
 ### 環境需求
 - Python 3.9+
-- Node.js 18+
+- Node.js 18+（CI 使用 Node 22；Zeabur Dockerfile 使用 Node 22，Vite 6 仍支援 Node 18 線）
 
 ### 後端安裝
 
@@ -195,7 +197,7 @@ cp .env.example .env
 
 ```bash
 cd frontend
-yarn install
+npm ci
 
 # 建立環境變數
 cp .env.example .env
@@ -208,10 +210,14 @@ cp .env.example .env
 cd backend
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 
-# 前端 (預設 port 3000)
+# 前端 (Vite 預設 port 5173)
 cd frontend
-yarn start
+npm run dev
 ```
+
+本機瀏覽器驗證需讓 backend CORS 允許 Vite 來源；`backend/.env.example`
+已預設為 `http://localhost:5173,http://127.0.0.1:5173`。若改用其他
+前端 port，請同步更新 `CORS_ORIGINS`。
 
 ---
 
@@ -330,8 +336,18 @@ curl -X POST https://ghs-backend.zeabur.app/api/search \
 
 ```bash
 curl https://ghs-backend.zeabur.app/api/health
-# {"status": "healthy", "timestamp": "...", "version": "1.9.0"}
+# {"status": "healthy", "timestamp": "...", "version": "1.10.0"}
 ```
+
+---
+
+## 產品化設計文件
+
+目前產品化方向已拆成三份文件：
+
+- [DESIGN.md](./DESIGN.md)：定義 `GHS Quick Safety Workspace` 的 light-first 視覺系統、元件方向與安全邊界。
+- [BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)：定義免費工具如何導流、哪些地方可放 CTA、哪些 GHS/安全內容不得放廣告。
+- [REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)：把後續改版拆成文件同步、light-first app shell、results workspace、detail safety summary、print workflow polish、soft brand surfaces 與驗證階段。
 
 ### 回應格式
 
@@ -379,6 +395,28 @@ curl https://ghs-backend.zeabur.app/api/health
 ---
 
 ## 版本更新紀錄
+
+### v1.10.0 (2026-04)
+
+v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab workspace 的狀態。
+
+**Build / deploy**
+- 前端由 `react-scripts + CRACO` 遷移到 Vite，scripts 改為 `npm test` / `npm run build` / `npm run dev`。
+- CI 使用 Node 22 + `npm ci`；Zeabur frontend 透過 Dockerfile/`zeabur.yaml` 使用 npm build。
+- runtime 版本已同步到 `frontend/package.json`、`frontend/src/constants/version.js`、`backend/server.py` 與 Footer test。
+
+**Print workflow**
+- 新增 label stock presets、QR Code 版型、live sheet preview、real print HTML label-fragment preview。
+- 新增 recent print reload、lab profile、template save/load、校正/偏移控制。
+- 重整 compact `standard` / `qrcode` 標籤資訊階層，讓 signal word、pictograms、QR scan 目標更清楚。
+
+**Pilot / workspace**
+- 新增 gated pilot admin dashboard。
+- backend 新增 SQLite-backed dictionary/pilot persistence；workspace documents 現在預設不由 public frontend 同步，只有 `VITE_ENABLE_WORKSPACE_SYNC=true` 且提供 admin key 時才會同步 prepared recents/presets、print templates、lab profile、print recents、自訂 label fields。manual entries、aliases、reference links 仍屬 admin-gated pilot surfaces；no-result dictionary miss capture 也預設關閉，需 `CAPTURE_DICTIONARY_MISSES=true` 才會收集。
+
+**Verification baseline**
+- 最近前端驗證：`npm test -- --runInBand --watchAll=false` → 41 suites / 652 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- backend 最近基準：`python -m pytest -v` → 141 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)
 

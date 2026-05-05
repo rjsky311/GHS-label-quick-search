@@ -25,14 +25,14 @@ export default function UpstreamErrorBanner({ count }) {
     <div
       role="alert"
       data-testid="upstream-error-banner"
-      className="mb-4 p-4 bg-amber-900/20 border border-amber-600/40 rounded-xl text-amber-200 flex items-start gap-3"
+      className="mb-4 flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900"
     >
-      <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
       <div className="flex-1">
         <div className="font-medium">
           {t("upstream.bannerTitle", { count })}
         </div>
-        <div className="text-sm text-amber-300/80 mt-1">
+        <div className="mt-1 text-sm text-amber-800">
           {t("upstream.bannerBody")}
         </div>
       </div>

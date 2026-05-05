@@ -186,9 +186,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
 
     // Exactly one selected chemical in the label modal, marked prepared
     const dialog = screen.getByRole("dialog", { name: /label\.title/i });
-    const casSpans = dialog.querySelectorAll(
-      "span.font-mono.text-amber-400.text-sm"
-    );
+    const casSpans = dialog.querySelectorAll('[data-testid="selected-label-cas"]');
     expect(casSpans).toHaveLength(1);
     expect(casSpans[0].textContent).toBe("64-17-5");
     // Prepared marker visible in the selection row
@@ -240,10 +238,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     const dialog = screen.getByRole("dialog", { name: /label\.title/i });
-    // The quantity span is `<span class="w-6 text-center text-sm text-white">{n}</span>`.
-    const qtySpans = dialog.querySelectorAll(
-      "span.w-6.text-center.text-sm.text-white"
-    );
+    const qtySpans = dialog.querySelectorAll('[data-testid="selected-label-quantity"]');
     expect(qtySpans).toHaveLength(1);
     expect(qtySpans[0].textContent).toBe("1");
   });
@@ -316,9 +311,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     const dialog = screen.getByRole("dialog", { name: /label\.title/i });
-    const casSpans = dialog.querySelectorAll(
-      "span.font-mono.text-amber-400.text-sm"
-    );
+    const casSpans = dialog.querySelectorAll('[data-testid="selected-label-cas"]');
     expect(casSpans.length).toBeGreaterThanOrEqual(1);
     // No prepared marker
     expect(screen.queryAllByTestId(/^selected-prepared-/)).toHaveLength(0);
@@ -412,9 +405,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     const preparedRow = screen.getByTestId(
       `selected-prepared-${ethanolResult.cas_number}`
     );
-    const removeBtn = preparedRow.querySelector(
-      'button[class*="hover:text-red-400"]'
-    );
+    const removeBtn = preparedRow.querySelector('[data-testid="selected-label-remove"]');
     expect(removeBtn).not.toBeNull();
     await act(async () => fireEvent.click(removeBtn));
 
@@ -435,9 +426,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     const dialog = screen.getByRole("dialog", { name: /label\.title/i });
-    const qtySpans = dialog.querySelectorAll(
-      "span.w-6.text-center.text-sm.text-white"
-    );
+    const qtySpans = dialog.querySelectorAll('[data-testid="selected-label-quantity"]');
     expect(qtySpans).toHaveLength(1);
     expect(qtySpans[0].textContent).toBe("1");
     // And no prepared marker — we're in a pure normal flow now.
@@ -780,9 +769,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
 
     // …and the canonical parent CAS + name header row is still rendered.
     const dialog = screen.getByRole("dialog", { name: /label\.title/i });
-    const casSpans = dialog.querySelectorAll(
-      "span.font-mono.text-amber-400.text-sm"
-    );
+    const casSpans = dialog.querySelectorAll('[data-testid="selected-label-cas"]');
     expect(casSpans).toHaveLength(1);
     expect(casSpans[0].textContent).toBe("64-17-5");
   });

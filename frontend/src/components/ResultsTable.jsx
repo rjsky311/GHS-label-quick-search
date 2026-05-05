@@ -47,31 +47,31 @@ export default function ResultsTable({
   // here — the parent owns the action scope and count together.
 
   const SortIcon = ({ columnKey }) => {
-    if (sortConfig.key !== columnKey) return <ArrowUpDown className="w-3 h-3 text-slate-500 ml-1 inline" />;
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-slate-400" />;
     return sortConfig.direction === "asc"
-      ? <ArrowUp className="w-3 h-3 text-amber-400 ml-1 inline" />
-      : <ArrowDown className="w-3 h-3 text-amber-400 ml-1 inline" />;
+      ? <ArrowUp className="ml-1 inline h-3 w-3 text-blue-700" />
+      : <ArrowDown className="ml-1 inline h-3 w-3 text-blue-700" />;
   };
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       {/* Results Header */}
-      <div className="p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-3">
-        <div className="text-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
+        <div className="text-slate-950">
           <span className="font-semibold">{t("results.title")}</span>
-          <span className="text-slate-400 ml-2">
+          <span className="ml-2 text-slate-500">
             {t("results.summary", { total: totalCount, found: results.filter((r) => r.found).length })}
           </span>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={onOpenLabelModal}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
             data-testid="print-label-btn"
           >
             <Tag className="w-4 h-4" /> {t("results.printLabel")}
             {selectedForLabel.length > 0 && (
-              <span className="bg-purple-800 px-2 py-0.5 rounded-full text-xs">
+              <span className="rounded-full bg-blue-900 px-2 py-0.5 text-xs">
                 {selectedForLabel.length}
               </span>
             )}
@@ -81,12 +81,12 @@ export default function ResultsTable({
           {printAllWithGhsCount > 0 && (
             <button
               onClick={onPrintAllWithGhs}
-              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+              className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
               data-testid="print-all-with-ghs-btn"
             >
               <Printer className="w-4 h-4" />
               {t("results.printAllWithGhs")}
-              <span className="bg-emerald-900 px-2 py-0.5 rounded-full text-xs">
+              <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs text-white">
                 {printAllWithGhsCount}
               </span>
             </button>
@@ -99,7 +99,7 @@ export default function ResultsTable({
               <button
                 onClick={onOpenComparison}
                 disabled={comparableCount > 5}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                 data-testid="compare-btn"
                 title={
                   comparableCount > 5
@@ -108,7 +108,7 @@ export default function ResultsTable({
                 }
               >
                 <LayoutGrid className="w-4 h-4" /> {t("compare.btn")}
-                <span className="bg-blue-800 px-2 py-0.5 rounded-full text-xs">
+                <span className="rounded-full bg-blue-700 px-2 py-0.5 text-xs text-white">
                   {comparableCount}
                 </span>
               </button>
@@ -116,14 +116,14 @@ export default function ResultsTable({
           })()}
           <button
             onClick={onExportToExcel}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             data-testid="export-xlsx-btn"
           >
             <FileSpreadsheet className="w-4 h-4" /> {t("results.exportExcel")}
           </button>
           <button
             onClick={onExportToCSV}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             data-testid="export-csv-btn"
           >
             <FileText className="w-4 h-4" /> {t("results.exportCSV")}
@@ -133,17 +133,17 @@ export default function ResultsTable({
 
       {/* Selection controls */}
       {results.filter((r) => r.found).length > 0 && (
-        <div className="px-4 py-2 bg-slate-900/30 border-b border-slate-700 flex items-center gap-4 text-sm flex-wrap">
-          <span className="text-slate-400">{t("results.labelSelect")}</span>
+        <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm">
+          <span className="text-slate-600">{t("results.labelSelect")}</span>
           <button
             onClick={onSelectAllForLabel}
-            className="text-amber-400 hover:text-amber-300"
+            className="font-medium text-blue-700 hover:text-blue-900"
           >
             {t("results.selectAll")}
           </button>
           <button
             onClick={onClearLabelSelection}
-            className="text-slate-400 hover:text-slate-300"
+            className="font-medium text-slate-600 hover:text-slate-900"
           >
             {t("results.deselectAll")}
           </button>
@@ -155,8 +155,8 @@ export default function ResultsTable({
 
       {/* Filter Toolbar */}
       {totalCount > 1 && (
-        <div className="px-4 py-2 bg-slate-900/20 border-b border-slate-700 flex items-center gap-2 text-sm flex-wrap">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-4 py-2 text-sm">
+          <Filter className="h-4 w-4 shrink-0 text-slate-500" />
           {[
             { value: "all", labelKey: "filter.all" },
             { value: "danger", labelKey: "filter.danger", color: "red" },
@@ -168,42 +168,42 @@ export default function ResultsTable({
               onClick={() => onSetResultFilter(f.value)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 resultFilter === f.value
-                  ? f.color === "red" ? "bg-red-500/30 text-red-300 ring-1 ring-red-500/50"
-                  : f.color === "amber" ? "bg-amber-500/30 text-amber-300 ring-1 ring-amber-500/50"
-                  : "bg-slate-600 text-white ring-1 ring-slate-500"
-                  : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                  ? f.color === "red" ? "bg-red-50 text-red-700 ring-1 ring-red-200"
+                  : f.color === "amber" ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                  : "bg-slate-100 text-slate-900 ring-1 ring-slate-300"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               {t(f.labelKey)}
             </button>
           ))}
           {/* Advanced Filters */}
-          <span className="text-slate-600 mx-1">|</span>
+          <span className="mx-1 text-slate-300">|</span>
           {[1, 2, 3].map((n) => (
             <button
               key={n}
               onClick={() => onSetAdvancedFilter({ ...advancedFilter, minPictograms: advancedFilter.minPictograms === n ? 0 : n })}
               className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                 advancedFilter.minPictograms === n
-                  ? "bg-blue-500/30 text-blue-300 ring-1 ring-blue-500/50"
-                  : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                  ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               {t("filter.pictogramCount", { count: n })}
             </button>
           ))}
           <div className="relative ml-1">
-            <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={advancedFilter.hCodeSearch}
               onChange={(e) => onSetAdvancedFilter({ ...advancedFilter, hCodeSearch: e.target.value })}
               placeholder={t("filter.hCodePlaceholder")}
-              className="w-24 pl-6 pr-2 py-1 bg-slate-800 border border-slate-600 rounded-full text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-24 rounded-full border border-slate-300 bg-white py-1 pl-6 pr-2 text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           {(resultFilter !== "all" || advancedFilter.minPictograms > 0 || advancedFilter.hCodeSearch) && (
-            <span className="text-slate-500 ml-2">
+            <span className="ml-2 text-slate-500">
               {t("filter.showing", { shown: results.length, total: totalCount })}
             </span>
           )}
@@ -215,49 +215,49 @@ export default function ResultsTable({
         <table className="w-full min-w-[900px]" data-testid="results-table">
           <caption className="sr-only">{t("results.tableCaption")}</caption>
           <thead>
-            <tr className="bg-slate-900/50">
-              <th className="px-2 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
+            <tr className="bg-slate-50">
+              <th className="w-12 px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colSelect")}
               </th>
-              <th className="px-2 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
+              <th className="w-12 px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colFavorite")}
               </th>
               <th
-                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-28 cursor-pointer hover:text-white select-none"
+                className="w-28 cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
                 onClick={() => onRequestSort("cas_number")}
                 title={t("sort.tooltip")}
               >
                 {t("results.colCAS")} <SortIcon columnKey="cas_number" />
               </th>
               <th
-                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider min-w-[200px] cursor-pointer hover:text-white select-none"
+                className="min-w-[200px] cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
                 onClick={() => onRequestSort("name")}
                 title={t("sort.tooltip")}
               >
                 {t("results.colName")} <SortIcon columnKey="name" />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-48">
+              <th className="w-48 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colGHS")}
               </th>
               <th
-                className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white select-none"
+                className="w-20 cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
                 onClick={() => onRequestSort("signal_word")}
                 title={t("sort.tooltip")}
               >
                 {t("results.colSignalWord")} <SortIcon columnKey="signal_word" />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-24">
+              <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colAction")}
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-700">
+          <tbody className="divide-y divide-slate-200">
             {results.map((result, idx) => (
               <tr
                 key={idx}
-                className={`hover:bg-slate-700/30 transition-colors ${
+                className={`transition-colors hover:bg-blue-50/60 ${
                   !result.found ? "opacity-60" : ""
-                } ${isSelectedForLabel(result.cas_number) ? "bg-purple-900/20" : ""}`}
+                } ${isSelectedForLabel(result.cas_number) ? "bg-blue-50" : ""}`}
                 data-testid={`result-row-${idx}`}
               >
                 <td className="px-2 py-4 text-center">
@@ -267,7 +267,7 @@ export default function ResultsTable({
                       checked={isSelectedForLabel(result.cas_number)}
                       onChange={() => onToggleSelectForLabel(result)}
                       aria-label={t("results.selectForLabel", { cas: result.cas_number })}
-                      className="w-4 h-4 rounded border-slate-500 text-purple-500 focus:ring-purple-500 bg-slate-700"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500"
                     />
                   )}
                 </td>
@@ -278,7 +278,7 @@ export default function ResultsTable({
                       className={`transition-colors ${
                         isFavorited(result.cas_number)
                           ? "text-amber-400 hover:text-amber-300"
-                          : "text-slate-600 hover:text-amber-400"
+                          : "text-slate-300 hover:text-amber-500"
                       }`}
                       title={isFavorited(result.cas_number) ? t("favorites.removeFavorite") : t("favorites.addFavorite")}
                       data-testid={`favorite-btn-${idx}`}
@@ -288,7 +288,7 @@ export default function ResultsTable({
                   )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <span className="font-mono text-amber-400">
+                  <span className="font-mono text-blue-700">
                     {result.cas_number}
                   </span>
                 </td>
@@ -298,11 +298,11 @@ export default function ResultsTable({
                       const displayNames = getLocalizedNames(result, displayLocale);
                       return (
                         <div>
-                      <div className="text-white font-medium break-words">
+                      <div className="break-words font-medium text-slate-950">
                         {displayNames.primary || t("results.loadingName")}
                       </div>
                       {displayNames.secondary && (
-                        <div className="text-slate-400 text-sm">
+                        <div className="text-sm text-slate-500">
                           {displayNames.secondary}
                         </div>
                       )}
@@ -315,7 +315,7 @@ export default function ResultsTable({
                           {result.primary_source &&
                             /echa/i.test(result.primary_source) && (
                               <span
-                                className="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40"
+                                className="inline-flex items-center rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-700"
                                 title={result.primary_source}
                                 data-testid={`source-badge-echa-${result.cas_number}`}
                               >
@@ -324,7 +324,7 @@ export default function ResultsTable({
                             )}
                           {result.primary_report_count && (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300"
+                              className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"
                               title={t("detail.provenanceReportCountTooltip", {
                                 count: result.primary_report_count,
                               })}
@@ -336,7 +336,7 @@ export default function ResultsTable({
                           )}
                           {result.cache_hit && (
                             <span
-                              className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-300 border border-amber-700/40"
+                              className="inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-amber-700"
                               title={
                                 result.retrieved_at
                                   ? t("detail.provenanceCacheTooltipWithAge", {
@@ -354,7 +354,7 @@ export default function ResultsTable({
                       );
                     })()
                   ) : (
-                    <span className="text-red-400">{result.error}</span>
+                    <span className="text-red-700">{result.error}</span>
                   )}
                 </td>
                 <td className="px-4 py-4">
@@ -372,10 +372,10 @@ export default function ResultsTable({
                           className="space-y-1"
                           data-testid={`no-ghs-data-${result.cas_number}`}
                         >
-                          <div className="text-slate-400 text-sm">
+                          <div className="text-sm text-slate-600">
                             {t("results.noGhsDataAvailable")}
                           </div>
-                          <div className="text-slate-500 text-xs">
+                          <div className="text-xs text-slate-500">
                             {t("results.noGhsDataHint")}
                           </div>
                         </div>
@@ -391,22 +391,22 @@ export default function ResultsTable({
                         {(() => {
                           const effective = getEffectiveClassification(result);
                           const allClassifications = [
-                          {
-                            pictograms: result.ghs_pictograms || [],
-                            hazard_statements: result.hazard_statements || [],
-                            signal_word: result.signal_word,
-                            signal_word_zh: result.signal_word_zh,
-                          },
-                          ...(result.other_classifications || [])
-                        ];
+                            {
+                              pictograms: result.ghs_pictograms || [],
+                              hazard_statements: result.hazard_statements || [],
+                              signal_word: result.signal_word,
+                              signal_word_zh: result.signal_word_zh,
+                            },
+                            ...(result.other_classifications || [])
+                          ];
 
                         return (
                           <>
                             <div className="flex gap-1 flex-wrap items-center">
                               {effective.isCustom ? (
-                                <span className="text-xs text-purple-400 mr-1" title={t("results.customMarker")}>★</span>
+                                <span className="mr-1 text-xs text-blue-700" title={t("results.customMarker")}>{"\u2605"}</span>
                               ) : (
-                                <span className="text-xs text-emerald-400 mr-1" title={t("results.defaultMarker")}>●</span>
+                                <span className="mr-1 text-xs text-emerald-600" title={t("results.defaultMarker")}>{"\u25cf"}</span>
                               )}
                               {effective.pictograms?.map((pic, pIdx) => (
                                 <GHSImage
@@ -420,15 +420,15 @@ export default function ResultsTable({
                               {effective.isCustom && (
                                 <button
                                   onClick={() => onClearCustomClassification(result.cas_number)}
-                                  className="ml-2 text-xs text-slate-500 hover:text-red-400"
+                                  className="ml-2 text-xs text-slate-400 hover:text-red-600"
                                   title={t("results.restoreDefault")}
                                 >
-                                  <X className="w-3 h-3 inline" />
+                                  <X className="inline h-3 w-3" />
                                 </button>
                               )}
                             </div>
                             {effective.note && (
-                              <div className="text-xs text-purple-300 flex items-center gap-1"><PenLine className="w-3 h-3" /> {effective.note}</div>
+                              <div className="flex items-center gap-1 text-xs text-blue-700"><PenLine className="h-3 w-3" /> {effective.note}</div>
                             )}
 
                             {/* Other Classifications Toggle */}
@@ -436,7 +436,7 @@ export default function ResultsTable({
                               <div>
                                 <button
                                   onClick={() => onToggleOtherClassifications(result.cas_number)}
-                                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                                  className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
                                   aria-expanded={!!expandedOtherClassifications[result.cas_number]}
                                 >
                                   <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
@@ -445,14 +445,14 @@ export default function ResultsTable({
 
                                 {/* Expanded Other Classifications */}
                                 {expandedOtherClassifications[result.cas_number] && (
-                                  <div className="mt-2 space-y-2 pl-2 border-l-2 border-slate-600">
+                                  <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-2">
                                     {allClassifications.map((cls, clsIdx) => {
                                       const isSelected = effective.customIndex === clsIdx;
                                       if (isSelected) return null;
 
                                       return (
-                                        <div key={clsIdx} className="flex gap-1 flex-wrap items-center group/item">
-                                          <span className="text-xs text-slate-500 mr-1">○</span>
+                                        <div key={clsIdx} className="group/item flex flex-wrap items-center gap-1">
+                                          <span className="mr-1 text-xs text-slate-500">○</span>
                                           {cls.pictograms?.map((pic, pIdx) => (
                                             <GHSImage
                                               key={pIdx}
@@ -466,7 +466,7 @@ export default function ResultsTable({
                                           ))}
                                           <button
                                             onClick={() => onSetCustomClassification(result.cas_number, clsIdx)}
-                                            className="ml-2 text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                            className="ml-2 text-xs text-blue-700 opacity-0 transition-opacity hover:text-blue-900 group-hover/item:opacity-100"
                                             title={t("detail.setAsMain")}
                                           >
                                             {t("results.setAsPrimary")}
@@ -493,8 +493,8 @@ export default function ResultsTable({
                         <span
                           className={`px-2 py-1 rounded text-sm font-medium ${
                             effective.signal_word === "Danger"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-amber-500/20 text-amber-400"
+                              ? "bg-red-50 text-red-700 ring-1 ring-red-200"
+                              : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                           }`}
                         >
                           {getLocalizedSignalWord(effective, displayLocale)}
@@ -512,7 +512,7 @@ export default function ResultsTable({
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => onViewDetail(result)}
-                        className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded transition-colors"
+                        className="rounded border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                         data-testid={`detail-btn-${idx}`}
                       >
                         {t("results.detail")}
@@ -522,7 +522,7 @@ export default function ResultsTable({
                           href={getPubChemSDSUrl(result.cid)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2 py-1 bg-emerald-700/60 hover:bg-emerald-600 text-emerald-200 text-sm rounded transition-colors flex items-center gap-1"
+                          className="flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
                           title={t("sds.viewSDS")}
                           data-testid={`sds-btn-${idx}`}
                         >

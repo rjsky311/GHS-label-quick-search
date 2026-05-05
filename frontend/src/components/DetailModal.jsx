@@ -89,17 +89,17 @@ export default function DetailModal({
 
   const getReferenceLinkClassName = (linkType) => {
     if (linkType === "sds") {
-      return "px-4 py-2 bg-emerald-700/40 hover:bg-emerald-600/60 text-emerald-200 border border-emerald-600/40 rounded-lg flex items-center gap-2 transition-colors";
+      return "flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-800 transition-colors hover:bg-emerald-100";
     }
     if (linkType === "regulatory") {
-      return "px-4 py-2 bg-blue-700/40 hover:bg-blue-600/60 text-blue-200 border border-blue-600/40 rounded-lg flex items-center gap-2 transition-colors";
+      return "flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-blue-800 transition-colors hover:bg-blue-100";
     }
-    return "px-4 py-2 bg-slate-700/60 hover:bg-slate-600/70 text-slate-100 border border-slate-600 rounded-lg flex items-center gap-2 transition-colors";
+    return "flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50";
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={suppressed ? undefined : onClose}
       role="dialog"
       aria-modal={suppressed ? undefined : "true"}
@@ -114,24 +114,24 @@ export default function DetailModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`bg-slate-800 rounded-2xl w-full max-h-[90vh] overflow-y-auto outline-none ${
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-lg bg-white shadow-2xl outline-none ${
           allClassifications.length > 1 ? "max-w-3xl" : "max-w-2xl"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-700 flex items-start justify-between">
+        <div className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
-            <h2 id="detail-modal-title" className="text-xl font-bold text-white">
+            <h2 id="detail-modal-title" className="text-xl font-semibold text-slate-950">
               {displayNames.primary}
             </h2>
             {displayNames.secondary && (
-              <p className="text-slate-400">{displayNames.secondary}</p>
+              <p className="text-slate-500">{displayNames.secondary}</p>
             )}
-            <p className="text-amber-400 font-mono mt-1 flex items-center gap-2">
+            <p className="mt-1 flex items-center gap-2 font-mono text-blue-700">
               CAS: {result.cas_number}
               <button
                 onClick={() => copyCAS(result.cas_number)}
-                className="text-slate-500 hover:text-amber-400 transition-colors"
+                className="text-slate-400 transition-colors hover:text-blue-700"
                 title={t("detail.copyCAS", { cas: result.cas_number })}
               >
                 <Copy className="w-4 h-4" />
@@ -143,8 +143,8 @@ export default function DetailModal({
               onClick={() => onToggleFavorite(result)}
               className={`transition-colors ${
                 isFavorited(result.cas_number)
-                  ? "text-amber-400 hover:text-amber-300"
-                  : "text-slate-600 hover:text-amber-400"
+                  ? "text-amber-500 hover:text-amber-600"
+                  : "text-slate-300 hover:text-amber-500"
               }`}
               title={isFavorited(result.cas_number) ? t("favorites.removeFavorite") : t("favorites.addFavorite")}
             >
@@ -152,7 +152,7 @@ export default function DetailModal({
             </button>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-400 hover:text-slate-700"
               data-testid="close-modal-btn"
             >
               <X className="w-6 h-6" />
@@ -163,11 +163,11 @@ export default function DetailModal({
         <div className="p-6 space-y-6">
           {/* Custom Classification Note Input */}
           {(result.has_multiple_classifications || result.other_classifications?.length > 0) && (
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-purple-300 mb-2 flex items-center gap-2">
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-800">
                 <LayoutGrid className="w-4 h-4" /> {t("detail.customSettings")}
               </h3>
-              <p className="text-xs text-slate-400 mb-3">
+              <p className="mb-3 text-xs text-slate-600">
                 {t("detail.customSettingsHint")}
               </p>
               <div className="flex gap-2 items-center">
@@ -179,12 +179,12 @@ export default function DetailModal({
                     const currentIndex = customGHSSettings[result.cas_number]?.selectedIndex || 0;
                     onSetCustomClassification(result.cas_number, currentIndex, e.target.value);
                   }}
-                  className="flex-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500"
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
                 {hasCustomClassification(result.cas_number) && (
                   <button
                     onClick={() => onClearCustomClassification(result.cas_number)}
-                    className="px-3 py-2 bg-slate-700 hover:bg-red-600/50 text-slate-300 text-sm rounded-lg transition-colors"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700"
                     title={t("detail.restoreDefault")}
                   >
                     {t("detail.restoreDefault")}
@@ -197,14 +197,14 @@ export default function DetailModal({
           {/* Signal Word — only for single classification */}
           {allClassifications.length <= 1 && effective?.signal_word && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-2">
+              <h3 className="mb-2 text-sm font-medium text-slate-600">
                 {t("detail.signalWord")}
               </h3>
               <span
                 className={`inline-block px-4 py-2 rounded-lg text-lg font-bold ${
                   effective.signal_word === "Danger"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/50"
-                    : "bg-amber-500/20 text-amber-400 border border-amber-500/50"
+                    ? "border border-red-200 bg-red-50 text-red-700"
+                    : "border border-amber-200 bg-amber-50 text-amber-700"
                 }`}
               >
                 {getLocalizedSignalWord(effective, displayLocale)}
@@ -216,9 +216,9 @@ export default function DetailModal({
           {allClassifications.length > 1 && allClassifications[0].pictograms?.length > 0 ? (
             /* Multiple classifications — comparison table */
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="mb-3 text-sm font-medium text-slate-600">
                 {t("detail.ghsClassification")}
-                <span className="text-blue-400 ml-2">{t("detail.classificationCount", { count: allClassifications.length })}</span>
+                <span className="ml-2 text-blue-700">{t("detail.classificationCount", { count: allClassifications.length })}</span>
               </h3>
               <ClassificationComparisonTable
                 mode="same-chemical"
@@ -236,14 +236,14 @@ export default function DetailModal({
                   )
                 }
               />
-              <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                <Lightbulb className="w-3 h-3 text-amber-400 shrink-0" /> {t("detail.classificationHint")}
+              <p className="mt-3 flex items-center gap-1 text-xs text-slate-500">
+                <Lightbulb className="h-3 w-3 shrink-0 text-amber-600" /> {t("detail.classificationHint")}
               </p>
             </div>
           ) : allClassifications.length === 1 && allClassifications[0].pictograms?.length > 0 ? (
             /* Single classification — simple pictogram display */
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="mb-3 text-sm font-medium text-slate-600">
                 {t("detail.ghsClassification")}
               </h3>
               <div className="flex gap-3 flex-wrap">
@@ -254,7 +254,7 @@ export default function DetailModal({
                       name={getLocalizedPictogramName(pic, displayLocale)}
                       className="w-14 h-14"
                     />
-                    <p className="text-xs text-slate-400 mt-1">{pic.code}</p>
+                    <p className="mt-1 text-xs text-slate-500">{pic.code}</p>
                   </div>
                 ))}
               </div>
@@ -264,20 +264,22 @@ export default function DetailModal({
           {/* Hazard Statements */}
           {effective?.hazard_statements?.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="mb-3 text-sm font-medium text-slate-600">
                 {t("detail.hazardStatements")}
-                {effective.isCustom && <span className="text-purple-400 ml-2">{t("detail.customHazardNote")}</span>}
+                {effective.isCustom && (
+                  <span className="ml-2 text-blue-700">{t("detail.customHazardNote")}</span>
+                )}
               </h3>
               <div className="space-y-2">
                 {effective.hazard_statements.map((stmt, idx) => (
                   <div
                     key={idx}
-                    className="bg-slate-900 rounded-lg p-3 flex gap-3"
+                    className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
                   >
-                    <span className="text-amber-400 font-mono font-medium shrink-0">
+                    <span className="shrink-0 font-mono font-medium text-red-700">
                       {stmt.code}
                     </span>
-                    <span className="text-white">
+                    <span className="text-slate-800">
                       {getLocalizedStatementText(stmt, displayLocale)}
                     </span>
                   </div>
@@ -289,19 +291,19 @@ export default function DetailModal({
           {/* Precautionary Statements */}
           {effective?.precautionary_statements?.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="mb-3 text-sm font-medium text-slate-600">
                 {t("detail.precautionaryStatements")}
               </h3>
               <div className="space-y-2">
                 {effective.precautionary_statements.map((stmt, idx) => (
                   <div
                     key={idx}
-                    className="bg-slate-900 rounded-lg p-3 flex gap-3"
+                    className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
                   >
-                    <span className="text-blue-400 font-mono font-medium shrink-0">
+                    <span className="shrink-0 font-mono font-medium text-blue-700">
                       {stmt.code}
                     </span>
-                    <span className="text-white">
+                    <span className="text-slate-800">
                       {getLocalizedStatementText(stmt, displayLocale)}
                     </span>
                   </div>
@@ -313,8 +315,8 @@ export default function DetailModal({
           {/* Reference Links */}
           {referenceLinks.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" /> {t("sds.section")}
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {t("sds.section")}
               </h3>
               <div className="flex gap-3 flex-wrap">
                 {referenceLinks.map((link) => (
@@ -342,9 +344,9 @@ export default function DetailModal({
             <div
               role="note"
               data-testid="detail-no-ghs-data-banner"
-              className="p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-slate-300 text-sm flex items-start gap-2"
+              className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
             >
-              <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
               <span>{t("detail.noGhsDataBanner")}</span>
             </div>
           )}
@@ -352,19 +354,19 @@ export default function DetailModal({
           {/* Data Provenance (v1.8 M1) */}
           {(result.primary_source || result.retrieved_at) && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
-                <Info className="w-4 h-4 text-slate-400" /> {t("detail.provenance")}
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <Info className="h-4 w-4 text-slate-500" /> {t("detail.provenance")}
               </h3>
-              <div className="bg-slate-900 rounded-lg p-3 space-y-2 text-sm">
+              <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
                 {result.primary_source && (
                   <div className="flex items-start gap-2">
-                    <Database className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                    <Database className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                     <div className="flex-1">
-                      <span className="text-slate-500 mr-2">{t("detail.provenanceSource")}:</span>
-                      <span className="text-slate-200">{result.primary_source}</span>
+                      <span className="mr-2 text-slate-500">{t("detail.provenanceSource")}:</span>
+                      <span className="text-slate-800">{result.primary_source}</span>
                       {result.primary_report_count && (
                         <span
-                          className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 text-xs"
+                          className="ml-2 inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700"
                           title={t("detail.provenanceReportCountTooltip", {
                             count: result.primary_report_count,
                           })}
@@ -380,11 +382,11 @@ export default function DetailModal({
                 )}
                 {result.retrieved_at && (
                   <div className="flex items-start gap-2">
-                    <Clock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                     <div className="flex-1">
-                      <span className="text-slate-500 mr-2">{t("detail.provenanceRetrieved")}:</span>
+                      <span className="mr-2 text-slate-500">{t("detail.provenanceRetrieved")}:</span>
                       <span
-                        className="text-slate-200"
+                        className="text-slate-800"
                         title={result.retrieved_at}
                         data-testid="provenance-retrieved-at"
                       >
@@ -392,7 +394,7 @@ export default function DetailModal({
                       </span>
                       {result.cache_hit && (
                         <span
-                          className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-900/30 text-amber-300 border border-amber-700/40 text-xs"
+                          className="ml-2 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700"
                           title={
                             result.retrieved_at
                               ? t("detail.provenanceCacheTooltipWithAge", {
@@ -416,10 +418,10 @@ export default function DetailModal({
           {result.found && <AuthoritativeSourceNote variant="detail" />}
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
             <button
               onClick={() => onPrintLabel(result)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2"
+              className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800"
             >
               <Tag className="w-4 h-4" /> {t("detail.printLabel")}
             </button>
@@ -430,7 +432,7 @@ export default function DetailModal({
             {result.found && onPrepareSolution && (
               <button
                 onClick={() => onPrepareSolution(result)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+                className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 font-medium text-blue-800 hover:bg-blue-100"
                 data-testid="prepare-solution-btn"
               >
                 <FlaskConical className="w-4 h-4" /> {t("detail.prepareSolution")}
@@ -441,7 +443,7 @@ export default function DetailModal({
                 href={`https://pubchem.ncbi.nlm.nih.gov/compound/${result.cid}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg flex items-center gap-2"
+                className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
               >
                 <ExternalLink className="w-4 h-4" /> {t("detail.viewPubChem")}
               </a>

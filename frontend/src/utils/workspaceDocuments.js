@@ -1,15 +1,58 @@
 import axios from "axios";
 import { API } from "@/constants/ghs";
+import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
+
+const readEnv = (key) =>
+  typeof process !== "undefined" && process.env ? process.env[key] || "" : "";
+
+const readDefinedWorkspaceSyncFlag = () =>
+  typeof globalThis.__APP_WORKSPACE_SYNC_ENABLED__ === "boolean"
+    ? globalThis.__APP_WORKSPACE_SYNC_ENABLED__
+    : null;
+
+export const WORKSPACE_SYNC_ENABLED =
+  readDefinedWorkspaceSyncFlag() ??
+  (readEnv("VITE_ENABLE_WORKSPACE_SYNC").trim().toLowerCase() === "true");
+
+function localOnlyResponse(docType, payload = null) {
+  return {
+    docType,
+    payload,
+    updatedAt: null,
+    localOnly: true,
+  };
+}
+
+function workspaceRequestConfig() {
+  return {
+    headers: buildPilotAdminHeaders(loadPilotAdminKey()),
+  };
+}
 
 export async function fetchWorkspaceDocument(docType) {
-  const response = await axios.get(`${API}/workspace/${docType}`);
+  if (!WORKSPACE_SYNC_ENABLED) {
+    return localOnlyResponse(docType);
+  }
+
+  const response = await axios.get(
+    `${API}/workspace/${docType}`,
+    workspaceRequestConfig()
+  );
   return response.data;
 }
 
 export async function saveWorkspaceDocument(docType, payload) {
-  const response = await axios.put(`${API}/workspace/${docType}`, {
-    payload,
-  });
+  if (!WORKSPACE_SYNC_ENABLED) {
+    return localOnlyResponse(docType, payload);
+  }
+
+  const response = await axios.put(
+    `${API}/workspace/${docType}`,
+    {
+      payload,
+    },
+    workspaceRequestConfig()
+  );
   return response.data;
 }
 

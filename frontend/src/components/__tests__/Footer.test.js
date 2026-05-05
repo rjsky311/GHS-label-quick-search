@@ -33,6 +33,15 @@ describe('Footer', () => {
     );
   });
 
+  it('renders the low-pressure workflow request link', () => {
+    render(<Footer />);
+    const link = screen.getByText('footer.workflowRequest');
+    expect(link).toHaveAttribute(
+      'href',
+      'https://github.com/rjsky311/GHS-label-quick-search/issues'
+    );
+  });
+
   it('all external links open in new tab securely', () => {
     render(<Footer />);
     const links = screen.getAllByRole('link');

@@ -126,9 +126,9 @@ describe("ClassificationComparisonTable", () => {
           onSelectClassification={jest.fn()}
         />
       );
-      // Danger cell should have bg-red-900/10 when signals differ
+      // Danger cell should have the light danger tint when signals differ
       const dangerBadge = screen.getByTestId("signal-word-0");
-      expect(dangerBadge.closest("td").className).toContain("bg-red-900/10");
+      expect(dangerBadge.closest("td").className).toContain("bg-red-50");
     });
 
     it("marks unique hazard statements with blue border", () => {

@@ -33,14 +33,14 @@ export default function SearchSection({
       : 0;
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 mb-6">
-      <div className="flex border-b border-slate-700 rounded-t-2xl overflow-hidden">
+    <div className="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="flex border-b border-slate-200">
         <button
           onClick={() => onSetActiveTab("single")}
           className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "single"
-              ? "bg-slate-700/50 text-amber-400 border-b-2 border-amber-400"
-              : "text-slate-400 hover:text-white hover:bg-slate-700/30"
+              ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
           }`}
           data-testid="single-search-tab"
         >
@@ -50,8 +50,8 @@ export default function SearchSection({
           onClick={() => onSetActiveTab("batch")}
           className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "batch"
-              ? "bg-slate-700/50 text-amber-400 border-b-2 border-amber-400"
-              : "text-slate-400 hover:text-white hover:bg-slate-700/30"
+              ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
           }`}
           data-testid="batch-search-tab"
         >
@@ -63,7 +63,7 @@ export default function SearchSection({
         {activeTab === "single" ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 {t("search.inputLabel")}
               </label>
               <div className="flex gap-3">
@@ -79,7 +79,7 @@ export default function SearchSection({
                 <button
                   onClick={() => onSearchSingle()}
                   disabled={loading}
-                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="single-search-btn"
                 >
                   {loading ? (
@@ -93,23 +93,23 @@ export default function SearchSection({
                   )}
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="mt-2 text-xs text-slate-500">
                 {t("search.inputHint")}{" "}
-                <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs text-slate-400">/</kbd>
+                <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-xs text-slate-600">/</kbd>
               </p>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 {t("search.batchInputLabel")}
               </label>
               <textarea
                 value={batchCas}
                 onChange={(e) => onSetBatchCas(e.target.value)}
                 placeholder={t("search.batchPlaceholder")}
-                className="w-full h-40 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono resize-none"
+                className="h-40 w-full resize-none rounded-md border border-slate-300 bg-white px-4 py-3 font-mono text-slate-950 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 data-testid="batch-cas-input"
               />
               <div className="flex justify-between items-center mt-2">
@@ -117,7 +117,7 @@ export default function SearchSection({
                   {t("search.batchHint")}
                 </p>
                 {batchCount > 0 && (
-                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-400" : "text-amber-400"}`}>
+                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-600" : "text-blue-700"}`}>
                     {batchCount > BATCH_SEARCH_LIMIT
                       ? t("search.batchOverLimit", { count: batchCount, limit: BATCH_SEARCH_LIMIT })
                       : t("search.batchDetected", { count: batchCount })}
@@ -126,7 +126,7 @@ export default function SearchSection({
               </div>
               {batchCount > BATCH_SEARCH_LIMIT && (
                 <div
-                  className="mt-3 p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-300 flex items-start gap-2"
+                  className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-red-700"
                   role="alert"
                   data-testid="batch-over-limit-alert"
                 >
@@ -145,7 +145,7 @@ export default function SearchSection({
               <button
                 onClick={onSearchBatch}
                 disabled={loading || batchCount > BATCH_SEARCH_LIMIT}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                 data-testid="batch-search-btn"
               >
                 {loading ? (
@@ -160,7 +160,7 @@ export default function SearchSection({
               </button>
               <button
                 onClick={() => onSetBatchCas("")}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl transition-colors"
+                className="rounded-md border border-slate-300 bg-white px-6 py-3 text-slate-700 transition-colors hover:bg-slate-50"
                 data-testid="clear-batch-btn"
               >
                 {t("search.clear")}
@@ -170,16 +170,16 @@ export default function SearchSection({
             {/* Batch Progress Bar */}
             {batchProgress && (
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                <div className="mb-1 flex justify-between text-xs text-slate-500">
                   <span>{t("search.progress")}</span>
                   <span>{batchProgress.current === batchProgress.total ? t("search.progressDone") : t("search.progressProcessing")} ({batchProgress.current}/{batchProgress.total})</span>
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       batchProgress.current === batchProgress.total
-                        ? "bg-green-500"
-                        : "bg-amber-500 progress-bar-animated"
+                        ? "bg-emerald-500"
+                        : "bg-blue-600 progress-bar-animated"
                     }`}
                     style={{ width: `${progressPercent}%` }}
                     role="progressbar"
@@ -196,7 +196,7 @@ export default function SearchSection({
 
         {error && (
           <div
-            className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 flex items-center gap-2"
+            className="mt-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-4 text-red-700"
             data-testid="error-message"
           >
             <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
