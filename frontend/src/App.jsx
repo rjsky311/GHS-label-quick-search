@@ -53,6 +53,7 @@ import DetailModal from "@/components/DetailModal";
 import ComparisonModal from "@/components/ComparisonModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
 import PrepareSolutionModal from "@/components/PrepareSolutionModal";
+import ExportPreviewModal from "@/components/ExportPreviewModal";
 import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
 
@@ -91,6 +92,8 @@ function App() {
   const [preparedFlowActive, setPreparedFlowActive] = useState(false);
   const [preparedPresetNameDraft, setPreparedPresetNameDraft] = useState("");
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [showExportPreview, setShowExportPreview] = useState(false);
+  const [exportPreviewFormat, setExportPreviewFormat] = useState("xlsx");
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
@@ -503,6 +506,22 @@ function App() {
     [sortedResults, getEffectiveClassification]
   );
 
+  const handleOpenExportPreview = useCallback((format) => {
+    setExportPreviewFormat(format);
+    setShowExportPreview(true);
+  }, []);
+
+  const handleConfirmExport = useCallback(
+    async (format) => {
+      if (format === "csv") {
+        await exportToCSV(sortedResults);
+        return;
+      }
+      await exportToExcel(sortedResults);
+    },
+    [sortedResults]
+  );
+
   const pilotAttentionCount = useMemo(() => {
     const dictionary = pilotReport?.dictionary || {};
     return (dictionary.pendingAliasCount || 0) + (dictionary.openMissQueryCount || 0);
@@ -751,6 +770,15 @@ function App() {
         />
       )}
 
+      {showExportPreview && (
+        <ExportPreviewModal
+          results={sortedResults}
+          initialFormat={exportPreviewFormat}
+          onClose={() => setShowExportPreview(false)}
+          onConfirm={handleConfirmExport}
+        />
+      )}
+
       <main id="main-content" className="max-w-7xl mx-auto px-4 py-6">
         <SearchSection
           activeTab={activeTab}
@@ -792,10 +820,10 @@ function App() {
               onOpenLabelModal={handleOpenLabelModal}
               onPrintAllWithGhs={handlePrintAllWithGhs}
               printAllWithGhsCount={printableWithGhsCount}
-               onExportToExcel={() => exportToExcel(sortedResults)}
-               onExportToCSV={() => exportToCSV(sortedResults)}
-               onSelectAllForLabel={() => selectAllForLabel(sortedResults)}
-               onClearLabelSelection={clearLabelSelection}
+              onExportToExcel={() => handleOpenExportPreview("xlsx")}
+              onExportToCSV={() => handleOpenExportPreview("csv")}
+              onSelectAllForLabel={() => selectAllForLabel(sortedResults)}
+              onClearLabelSelection={clearLabelSelection}
               onToggleSelectForLabel={toggleSelectForLabel}
               isSelectedForLabel={isSelectedForLabel}
               onToggleFavorite={toggleFavorite}

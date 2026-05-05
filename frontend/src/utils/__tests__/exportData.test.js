@@ -21,7 +21,7 @@ jest.mock('@/constants/ghs', () => ({
   API: 'http://test-api',
 }));
 
-import { exportToExcel, exportToCSV, escapeCsvCell } from '../exportData';
+import { exportToExcel, exportToCSV, escapeCsvCell, buildExportPreview } from '../exportData';
 
 const mockResult = {
   cas_number: '64-17-5',
@@ -81,6 +81,45 @@ describe('escapeCsvCell', () => {
   it('coerces non-string values to string', () => {
     expect(escapeCsvCell(42)).toBe('42');
     expect(escapeCsvCell(true)).toBe('true');
+  });
+});
+
+describe('buildExportPreview', () => {
+  it('builds localized headers and preview rows without exporting a file', () => {
+    const preview = buildExportPreview([mockResult], { t: (key) => key });
+
+    expect(preview.headers).toEqual([
+      'export.cas',
+      'export.nameEn',
+      'export.nameZh',
+      'export.ghs',
+      'export.signalWord',
+      'export.hazardStatements',
+      'export.precautionaryStatements',
+    ]);
+    expect(preview.totalRows).toBe(1);
+    expect(preview.previewRows).toBe(1);
+    expect(preview.hiddenRows).toBe(0);
+    expect(preview.rows[0].id).toBe('64-17-5-0');
+    expect(preview.rows[0].cells[0]).toBe('64-17-5');
+    expect(preview.rows[0].cells[1]).toBe('Ethanol');
+  });
+
+  it('limits preview rows and reports hidden rows', () => {
+    const results = Array.from({ length: 7 }, (_, index) => ({
+      ...mockResult,
+      cas_number: `64-17-${index}`,
+    }));
+
+    const preview = buildExportPreview(results, {
+      t: (key) => key,
+      maxRows: 5,
+    });
+
+    expect(preview.totalRows).toBe(7);
+    expect(preview.previewRows).toBe(5);
+    expect(preview.hiddenRows).toBe(2);
+    expect(preview.rows).toHaveLength(5);
   });
 });
 
