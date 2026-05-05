@@ -27,18 +27,18 @@ export default function FavoritesSidebar({
     >
       <div
         ref={panelRef}
-        className="absolute right-0 top-0 h-full w-96 bg-slate-800 shadow-xl overflow-y-auto"
+        className="absolute right-0 top-0 h-full w-96 overflow-y-auto bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Star className="w-5 h-5 text-amber-400" /> {t("favorites.title")}
+        <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-4">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-950">
+            <Star className="h-5 w-5 text-amber-500" /> {t("favorites.title")}
           </h2>
           <div className="flex gap-2">
             {favorites.length > 0 && (
               <button
                 onClick={onClearFavorites}
-                className="text-sm text-red-400 hover:text-red-300"
+                className="text-sm font-medium text-red-600 hover:text-red-700"
                 data-testid="clear-favorites-btn"
               >
                 {t("favorites.clearAll")}
@@ -46,7 +46,7 @@ export default function FavoritesSidebar({
             )}
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-400 hover:text-slate-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -54,7 +54,7 @@ export default function FavoritesSidebar({
         </div>
         {favorites.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
-            <Star className="w-12 h-12 mx-auto mb-4 text-slate-600" />
+            <Star className="mx-auto mb-4 h-12 w-12 text-slate-300" />
             <p>{t("favorites.empty")}</p>
             <p className="text-sm mt-2">{t("favorites.emptyHint")}</p>
           </div>
@@ -63,18 +63,18 @@ export default function FavoritesSidebar({
             {favorites.map((item, idx) => (
               <div
                 key={idx}
-                className="p-3 hover:bg-slate-700 rounded-lg transition-colors mb-2 border border-slate-600"
+                className="mb-2 rounded-md border border-slate-200 p-3 transition-colors hover:bg-slate-50"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="font-mono text-amber-400 text-sm">
+                    <div className="font-mono text-sm text-blue-700">
                       {item.cas_number}
                     </div>
-                    <div className="text-white font-medium">
+                    <div className="font-medium text-slate-950">
                       {item.name_en}
                     </div>
                     {item.name_zh && (
-                      <div className="text-slate-400 text-sm">
+                      <div className="text-sm text-slate-500">
                         {item.name_zh}
                       </div>
                     )}
@@ -93,7 +93,7 @@ export default function FavoritesSidebar({
                   </div>
                   <button
                     onClick={() => onToggleFavorite(item)}
-                    className="text-amber-400 hover:text-amber-300"
+                    className="text-amber-500 hover:text-amber-600"
                     title={t("favorites.removeFavorite")}
                   >
                     <Star className="w-5 h-5 fill-current" />
@@ -102,13 +102,13 @@ export default function FavoritesSidebar({
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => onViewDetail(item)}
-                    className="text-xs px-2 py-1 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded"
+                    className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   >
                     {t("favorites.detail")}
                   </button>
                   <button
                     onClick={() => onPrintLabel(item)}
-                    className="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded"
+                    className="rounded bg-blue-700 px-2 py-1 text-xs font-medium text-white hover:bg-blue-800"
                   >
                     {t("favorites.printLabel")}
                   </button>

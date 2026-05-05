@@ -1,9 +1,15 @@
 const readEnv = (key) =>
   typeof process !== "undefined" && process.env ? process.env[key] || "" : "";
 
+const readDefinedPilotAdminFlag = () =>
+  typeof globalThis.__APP_PILOT_ADMIN_ENABLED__ === "boolean"
+    ? globalThis.__APP_PILOT_ADMIN_ENABLED__
+    : null;
+
 export const PILOT_ADMIN_SESSION_KEY = "ghs.pilotAdminKey";
 export const PILOT_ADMIN_ENABLED =
-  readEnv("VITE_ENABLE_PILOT_ADMIN").trim().toLowerCase() === "true";
+  readDefinedPilotAdminFlag() ??
+  (readEnv("VITE_ENABLE_PILOT_ADMIN").trim().toLowerCase() === "true");
 
 export function loadPilotAdminKey() {
   if (typeof window === "undefined") return "";

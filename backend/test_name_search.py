@@ -7,6 +7,7 @@ Tests for name search functionality:
 - /api/search/{query} auto-detect (local only tests)
 """
 import pytest
+import server
 from httpx import AsyncClient, ASGITransport
 from server import (
     app,
@@ -118,6 +119,53 @@ async def test_search_by_name_ethanol():
     assert "results" in data
     cas_numbers = [r["cas_number"] for r in data["results"]]
     assert "64-17-5" in cas_numbers
+
+
+async def test_workspace_documents_require_admin_token(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        get_response = await ac.get("/api/workspace/lab_profile")
+        put_response = await ac.put(
+            "/api/workspace/lab_profile",
+            json={"payload": {"organization": "Lab A"}},
+        )
+
+    assert get_response.status_code == 401
+    assert put_response.status_code == 401
+
+
+async def test_workspace_documents_are_unavailable_without_admin_config(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/workspace/lab_profile")
+
+    assert response.status_code == 503
+
+
+async def test_dictionary_miss_query_capture_is_opt_in(monkeypatch):
+    monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", False)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-query",
+            json={
+                "query": "private pilot solvent",
+                "query_kind": "name",
+                "endpoint": "frontend",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": False,
+        "skipped": True,
+        "reason": "dictionary miss capture is disabled",
+    }
 
 
 async def test_search_by_name_chinese():

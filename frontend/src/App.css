@@ -23,11 +23,11 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(241, 245, 249, 0.9);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.5);
+  background: rgba(148, 163, 184, 0.65);
   border-radius: 4px;
 }
 
@@ -64,9 +64,9 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(51, 65, 85, 0.4) 25%,
-    rgba(71, 85, 105, 0.6) 50%,
-    rgba(51, 65, 85, 0.4) 75%
+    rgba(226, 232, 240, 0.9) 25%,
+    rgba(248, 250, 252, 1) 50%,
+    rgba(226, 232, 240, 0.9) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;

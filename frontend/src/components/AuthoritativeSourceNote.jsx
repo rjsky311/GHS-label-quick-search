@@ -22,8 +22,8 @@ export default function AuthoritativeSourceNote({ variant = "results" }) {
 
   const wrapperClass =
     variant === "detail"
-      ? "mt-2 p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-slate-400 text-xs flex items-start gap-2"
-      : "mt-4 p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-slate-400 text-xs flex items-start gap-2";
+      ? "mt-2 flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600"
+      : "mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600";
 
   return (
     <div
@@ -31,7 +31,7 @@ export default function AuthoritativeSourceNote({ variant = "results" }) {
       data-testid={`authoritative-source-note-${variant}`}
       className={wrapperClass}
     >
-      <ShieldAlert className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
       <span>{t("trust.authoritativeNote")}</span>
     </div>
   );

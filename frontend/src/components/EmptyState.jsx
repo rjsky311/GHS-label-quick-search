@@ -5,19 +5,19 @@ export default function EmptyState({ onQuickSearch }) {
   const { t } = useTranslation();
 
   return (
-    <div className="text-center py-12">
-      <FlaskConical className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-      <h2 className="text-xl font-semibold text-white mb-2">
+    <div className="py-12 text-center">
+      <FlaskConical className="mx-auto mb-4 h-16 w-16 text-blue-700" />
+      <h2 className="mb-2 text-xl font-semibold text-slate-950">
         {t("empty.title")}
       </h2>
-      <p className="text-slate-400 max-w-md mx-auto mb-6">
+      <p className="mx-auto mb-6 max-w-md text-slate-600">
         {t("empty.subtitle")}
       </p>
 
       {/* Quick Examples */}
       <div className="mb-8">
-        <p className="text-sm text-slate-500 mb-3">{t("empty.tryThese")}</p>
-        <div className="flex gap-3 justify-center flex-wrap">
+        <p className="mb-3 text-sm text-slate-500">{t("empty.tryThese")}</p>
+        <div className="flex flex-wrap justify-center gap-3">
           {[
             { cas: "64-17-5", nameKey: "empty.ethanol" },
             { cas: "7732-18-5", nameKey: "empty.water" },
@@ -26,9 +26,9 @@ export default function EmptyState({ onQuickSearch }) {
             <button
               key={ex.cas}
               onClick={() => onQuickSearch(ex.cas)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-amber-500/50 text-slate-300 rounded-lg transition-all text-sm"
+              className="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50"
             >
-              <span className="font-mono text-amber-400">{ex.cas}</span>
+              <span className="font-mono text-blue-700">{ex.cas}</span>
               <span className="ml-2 text-slate-500">{t(ex.nameKey)}</span>
             </button>
           ))}
@@ -36,16 +36,16 @@ export default function EmptyState({ onQuickSearch }) {
       </div>
 
       {/* Feature Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
+      <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-4">
         {[
           { icon: <ClipboardList className="w-6 h-6" />, titleKey: "empty.featureBatch", descKey: "empty.featureBatchDesc" },
           { icon: <Printer className="w-6 h-6" />, titleKey: "empty.featurePrint", descKey: "empty.featurePrintDesc" },
           { icon: <FileSpreadsheet className="w-6 h-6" />, titleKey: "empty.featureExcel", descKey: "empty.featureExcelDesc" },
           { icon: <Star className="w-6 h-6" />, titleKey: "empty.featureFavorite", descKey: "empty.featureFavoriteDesc" },
         ].map((feat, i) => (
-          <div key={i} className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl text-left">
-            <div className="text-amber-400 mb-2">{feat.icon}</div>
-            <h3 className="text-sm font-medium text-white mb-1">{t(feat.titleKey)}</h3>
+          <div key={i} className="rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm">
+            <div className="mb-2 text-blue-700">{feat.icon}</div>
+            <h3 className="mb-1 text-sm font-medium text-slate-950">{t(feat.titleKey)}</h3>
             <p className="text-xs text-slate-500">{t(feat.descKey)}</p>
           </div>
         ))}

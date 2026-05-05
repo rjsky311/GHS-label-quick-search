@@ -4,7 +4,7 @@
 - **Purpose**: Chemical GHS hazard label quick search system
 - **Stack**: React 19 + Tailwind CSS + Radix UI (frontend) / FastAPI + Python 3.11 (backend)
 - **Data Source**: PubChem REST API + local chemical dictionary (1,707 CAS entries)
-- **Current Version**: v1.9.0
+- **Current Version**: v1.10.0
 - **GitHub**: `rjsky311/GHS-label-quick-search` (private)
 - **Deployment**: Zeabur auto-deploy on push to main
 - **Frontend URL**: https://ghs-frontend.zeabur.app
@@ -21,8 +21,8 @@
 User Browser
    |
    v
-[React 19 + Tailwind + Radix UI]  (Zeabur static hosting)
-   |  axios HTTP calls to ${REACT_APP_BACKEND_URL}/api
+[React 19 + Tailwind + Radix UI + Vite]  (Zeabur static hosting)
+   |  axios HTTP calls to ${VITE_BACKEND_URL}/api
    v
 [FastAPI (Python 3.11)]            (Zeabur Docker, port 8001)
    |  httpx async calls
@@ -32,10 +32,10 @@ User Browser
 [chemical_dict.py]                 (1,707 CAS↔ZH, 1,707 CAS↔EN, 1,816 EN→ZH, reverse lookup dicts)
 ```
 
-**State management**: top-level state lives in `App.js` via `useState`; persistence, selection, sort, and modal-workflow behaviour are factored out into custom hooks (`src/hooks/`) and workflow helpers (`src/utils/`). Prefer adding new behaviour as a hook/util rather than widening `App.js` further.
+**State management**: top-level state lives in `App.jsx` via `useState`; persistence, selection, sort, and modal-workflow behaviour are factored out into custom hooks (`src/hooks/`) and workflow helpers (`src/utils/`). Prefer adding new behaviour as a hook/util rather than widening `App.jsx` further.
 **Caching**: Server-side 24hr TTL in-memory (cachetools, max 5000). Client-side localStorage.
 
-## Frontend Architecture (16 components + 10 hooks + 5 utils)
+## Frontend Architecture (20+ components + 15+ hooks + shared utils)
 
 ### Components (`src/components/`)
 | File | Purpose |
@@ -47,6 +47,11 @@ User Browser
 | `DetailModal.jsx` | Full chemical detail (GHS classification, SDS links) |
 | `LabelPrintModal.jsx` | Label printing config (4 templates, 3 sizes, saved presets); renders prepared-solution rows with blue tint + "Prepared" badge + concentration/solvent meta |
 | `PrepareSolutionModal.jsx` | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1 |
+| `PreparedSidebar.jsx` | Recent prepared-solution reprint sidebar |
+| `PilotDashboardSidebar.jsx` | Admin-gated pilot dashboard for observability, dictionary growth, aliases, manual entries, and reference links |
+| `AdminAccessDialog.jsx` | Admin unlock dialog for pilot dashboard |
+| `AuthoritativeSourceNote.jsx` | Persistent SDS/supplier/local-regulation authority note |
+| `UpstreamErrorBanner.jsx` | PubChem transient-error warning banner |
 | `FavoritesSidebar.jsx` | Favorites management sidebar |
 | `HistorySidebar.jsx` | Search history sidebar |
 | `EmptyState.jsx` | Landing page with quick-start buttons |
@@ -66,6 +71,11 @@ User Browser
 | `useLabelSelection.js` | Tracks selected chemicals for printing |
 | `useResultSort.js` | Table sort state (4 columns) |
 | `usePrintTemplates.js` | Save/load/delete print setting presets (max 10) |
+| `usePrintWorkspace.js` | Local-first print templates, custom label fields, lab profile, and recent print wiring; optional workspace sync when explicitly enabled |
+| `usePrintRecents.js` | Recent print storage and reload helpers |
+| `useLabProfile.js` | Lab profile persistence |
+| `useObservability.js` | Pilot observability event logging/report export |
+| `usePilotDashboard.js` | Admin-gated pilot dashboard data loading and saves |
 | `usePreparedRecents.js` | Prepared-solution recent workflow inputs (localStorage, schemaVersion:1, max 10, dedup+prepend); v1.9 M3 Tier 2 |
 | `usePreparedPresets.js` | Prepared-solution saved recipe presets (localStorage, schemaVersion:1, max 10, recipe-only: parent+concentration+solvent); v1.9 M3 Tier 2 |
 | `useFocusTrap.js` | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap) |
@@ -79,6 +89,10 @@ User Browser
 | `preparedSolution.js` | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only — drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
 | `sdsLinks.js` | PubChem Safety + ECHA CHEM search URL builders |
 | `formatDate.js` | i18n-aware date formatting |
+| `printStorage.js` | Versioned print template/job/lab-profile normalization and recent print merge helpers |
+| `workspaceDocuments.js` | Optional admin-gated workspace document helpers; public builds default to local-only no-op sync |
+| `ghsAvailability.js` | Distinguishes unavailable GHS data from renderable GHS visuals |
+| `ghsText.js` | Localized GHS name/signal/statement text helpers |
 
 ### i18n (`src/i18n/`)
 - `index.js` — i18next init with LanguageDetector, fallback zh-TW
@@ -87,9 +101,10 @@ User Browser
 - Language stored in localStorage key `ghs_language`
 
 ### Build
-- CRACO 7.1.0 (wraps react-scripts 5.0.1)
-- `@` alias → `src/`
+- Vite 6 + `@vitejs/plugin-react`
+- `@` alias → `src/` via `frontend/vite.config.js`
 - Tailwind CSS 3.4 + shadcn/ui (46 primitives)
+- Test runner: Jest 30 + jsdom. Run frontend tests with `npm test -- --runInBand`.
 
 ## Backend Architecture (`backend/server.py`)
 
@@ -97,6 +112,13 @@ User Browser
 | Endpoint | Method | Rate limit (per IP) | Description |
 |----------|--------|--------|-------------|
 | `/api/health` | GET | — | Health check; unlimited so LB/uptime monitors don't trip |
+| `/api/ops/report` | GET | admin-gated | Pilot observability/admin report |
+| `/api/dictionary/report` | GET | admin-gated | Pilot dictionary growth report |
+| `/api/dictionary/manual-entries` | GET/POST | admin-gated | Manual dictionary entries |
+| `/api/dictionary/aliases` | GET/POST | admin-gated | Alias curation |
+| `/api/dictionary/reference-links` | GET/POST | admin-gated | Reference/SDS link curation |
+| `/api/dictionary/miss-query` | POST | — | Optional search miss telemetry; no-op unless `CAPTURE_DICTIONARY_MISSES=true` |
+| `/api/workspace/{doc_type}` | GET/PUT | admin-gated | Optional shared workspace persistence for prepared/print/lab-profile docs; public frontend defaults to local-only |
 | `/api/search-by-name/{query}` | GET | 60/min | Name search (EN/ZH substring + aliases, max 20) |
 | `/api/search/{query}` | GET | 30/min | Single CAS or name search (auto-detect) |
 | `/api/search` | POST | 10/min | Batch CAS search (Pydantic `max_length=100` → 422 on overflow) |
@@ -135,10 +157,10 @@ User Browser
 ## Critical Lessons (from previous sessions)
 
 ### Zeabur Dockerfile Mismatch
-- Zeabur stores its OWN Dockerfile for frontend, uses `npm install` (not yarn)
-- Only copies `package.json`, NOT `.npmrc` or `yarn.lock`
-- npm peer dep conflicts must be fixed at package level (downgrade packages)
-- Current i18n packages: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x
+- Older Zeabur setup used its own frontend Dockerfile and missed repo-local npm config.
+- Current frontend deploy is Vite/npm based. `frontend/Dockerfile` uses Node 22; `zeabur.yaml` runs `npm ci && npm run build` and passes `VITE_BACKEND_URL`.
+- Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*` config unless explicitly asked.
+- Current i18n packages remain intentionally conservative: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x.
 
 ### SearchAutocomplete Event Conflict
 - `mousedown` document listener fires before button `click` event
@@ -151,9 +173,8 @@ User Browser
 - Symptom: clicking "detail" from favorites sidebar crashes app
 
 ### i18n Package Versions
-- react-i18next 16.x / i18next 25.x require typescript@^5 (peerOptional)
-- react-scripts 5.0.1 wants typescript@^3||^4
-- Downgraded to 14.x / 23.x / 7.x (identical API, no typescript peer dep)
+- react-i18next 16.x / i18next 25.x previously created peer-dependency pressure during CRA/CRACO builds.
+- Even after the Vite migration, keep i18next 23.x / react-i18next 14.x / language detector 7.x unless there is an explicit dependency-refresh task.
 
 ### PubChem Silent Degradation (Phase 1 fix)
 - Prior `get_ghs_classification` returned `{}` on any exception → `search_chemical` emitted `found=True` with empty hazards. For a safety tool, that is indistinguishable from "no hazards" — the worst failure mode this app can have
@@ -178,16 +199,39 @@ User Browser
 - App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity → effect tore down and rebuilt → focus bounced from user's current position back to the opener and then to the panel's first focusable
 - Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
 
-## Current State (runtime v1.9.0)
+## Current State (runtime v1.10.0)
 
-Runtime version label is `1.9.0` as of the v1.9 release bump. All
-prior v1.9-* branches (M3 Tier 1, M3 Tier 2, debt cleanup, UX cleanup)
-are merged. `frontend/package.json`, `frontend/src/constants/version.js`,
-`backend/server.py` `APP_VERSION`, and the Footer test pin are all
-aligned. Do not version-bump further without an explicit ask.
+Runtime/code version is `1.10.0`. `frontend/package.json`,
+`frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`,
+and the Footer test pin are aligned. Do not version-bump further without
+an explicit ask.
+
+v1.10 moved the frontend from `react-scripts + CRACO` to Vite/npm and
+added print-workflow productization: label stock presets, QR labels, live
+sheet/label preview, recent print reload, lab profile, template save/load,
+and calibration controls. It also added admin-gated pilot persistence and
+optional workspace documents. Public builds keep prepared/print/lab-profile
+state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
+provided. Dictionary miss capture is also opt-in via
+`CAPTURE_DICTIONARY_MISSES=true`.
 
 ### Git History (key commits)
 ```
+51cdb11 Polish label print copy and hierarchy
+31c8a18 Refine label preview hierarchy
+55dbcd4 Harden admin tools and simplify label output
+395273e Refine pilot search and prepared workflows
+7807b84 Persist print recents in workspace backend
+0b68579 Add pilot dashboard admin sidebar
+1e11586 Add pilot dictionary growth and shared workspace persistence
+7d10d07 Downgrade Vite to support Zeabur Node 18 builds
+d67f6c5 Use Zeabur frontend Dockerfile with Node 22
+065b00c Pin frontend Node runtime for CI and Zeabur
+5f6f056 Migrate frontend to Vite and add observability report
+1888964 Finish print preset workflow and preview wiring
+7657a1a Refactor print layout model and template hierarchy
+42f77b8 Add prepared reprint sidebar and lab profile printing
+348dceb Merge pull request #22 — v1.9 version sync
 6c846c5 Merge pull request #21 — UX cleanup from pilot dogfood (toast + today default + recent no-stale-date)
 e1f0a3b Merge pull request #20 — Tier 2 debt cleanup (dead helper + stacked aria-modal)
 456e376 Merge pull request #19 — M3 Tier 2 PR-3 derived preview name + trust copy refresh (Option A app-only)
@@ -217,24 +261,24 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 25c719f v1.4.0: Architecture refactoring — split monolithic App.js into 15 modules
 ```
 
-### Test Results (as of v1.9.0 release, runtime v1.9.0)
-- **Frontend**: 597 tests across 34 suites; 0 React `act(...)` warnings
-- **Backend**: 123 tests covering name resolution, reverse dicts, aliases, API endpoints,
+### Test Results (latest known v1.10 baseline)
+- **Frontend**: 652 tests across 41 suites; 0 known React `act(...)` warnings
+- **Backend**: 141 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
-- **Build**: `npx craco build` → OK (~142 kB gzip main bundle)
+- **Build**: `npm run build` → OK; Vite vendor chunks split via `manualChunks`
 - **CI**: GitHub Actions runs both on every push to main and on PRs
 
 ### CI/CD (`.github/workflows/ci.yml`)
-- **Frontend job**: `npm install` → `npx craco test --watchAll=false` → `npx craco build`
-- **Backend job**: `pip install -r requirements.txt` → `py_compile server.py` → `pytest test_name_search.py -v`
+- **Frontend job**: `npm ci` → `npm test -- --runInBand` → `npm run build`
+- **Backend job**: `pip install -r requirements.txt` → `py_compile server.py` → `pytest -v`
 - Triggers: push to main, pull requests
 
 ### Environment Variables
 | Service | Variable | Local | Production |
 |---------|----------|-------|------------|
-| Backend | `CORS_ORIGINS` | `http://localhost:3000` | `https://ghs-frontend.zeabur.app` |
-| Frontend | `REACT_APP_BACKEND_URL` | `http://localhost:8001` | `https://ghs-backend.zeabur.app` |
+| Backend | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | `https://ghs-frontend.zeabur.app` |
+| Frontend | `VITE_BACKEND_URL` | `http://localhost:8001` | `https://ghs-backend.zeabur.app` |
 
 ## Completed Milestones
 
@@ -271,10 +315,14 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 - [x] **v1.9 Tier 2 debt cleanup** (#20, merge SHA `e1f0a3b`) — removed dead `selectionHasPreparedItem` helper; closed stacked `aria-modal` a11y debt via `suppressed` prop on DetailModal (`inert` + `aria-hidden` + `aria-modal` drop + Escape / backdrop gates)
 - [x] **v1.9 prepared-solution UX cleanup** (#21, merge SHA `6c846c5`) — pilot-dogfood-driven: Save-as-preset toast, `preparedDate` defaults to today (local TZ via `todayDateString`), Recent prefill no longer silently carries yesterday's date, Preset prefill same rule
 - [x] **v1.9 version sync** — runtime/docs aligned to `1.9.0`
+- [x] **v1.10 frontend/build migration** — Vite/npm migration, CI/Zeabur npm build alignment, frontend runtime `1.10.0`
+- [x] **v1.10 print workflow productization** — label stock presets, QR template, live sheet/label preview, lab profile, recent print reload, template save/load, calibration controls
+- [x] **v1.10 pilot/workspace persistence** — admin dashboard, admin-gated workspace documents, manual entries, aliases, reference links; public print/prepared/lab-profile state remains local-only by default
+- [x] **Productized redesign planning** — see `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`
 
 ## v1.8 Roadmap
 
-See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the full product-oriented roadmap based on real-world chemical community pain points. M0–M3 Tier 1 + M3 Tier 2 + Tier 2 debt cleanup + pilot-dogfood UX cleanup have all landed; runtime is now `1.9.0`. Next decision-points are **M4 print workflow** (supplier profile / real label-stock presets / small-container mode / QR→SDS), the deferred **Option B** (derived preview on printed label), or another short pilot round to drive further prioritization. This is a shared planning document between Claude Code and Codex — editable, not frozen.
+See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the historical product roadmap. M0–M3 and the v1.10 M4-style print-workflow expansion have now landed. The current next product decision is no longer "should we add real print workflow?" but "how do we make the full free tool feel productized, trustworthy, and pleasant enough for daily use?" The current design contract lives in **[DESIGN.md](./DESIGN.md)**, **[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)**, and **[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)**.
 
 ## Roadmap / Pending Work (Legacy — see v1.8 roadmap above)
 

@@ -1,8 +1,8 @@
 export default function SkeletonTable({ rows = 5 }) {
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden animate-fadeIn">
+    <div className="animate-fadeIn overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       {/* Header */}
-      <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-slate-200 p-4">
         <div className="flex items-center gap-3">
           <div className="skeleton w-20 h-5 rounded" />
           <div className="skeleton w-32 h-4 rounded" />
@@ -18,7 +18,7 @@ export default function SkeletonTable({ rows = 5 }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead>
-            <tr className="bg-slate-900/50">
+            <tr className="bg-slate-50">
               {["w-12", "w-12", "w-28", "min-w-[200px]", "w-48", "w-20", "w-24"].map((w, i) => (
                 <th key={i} className={`px-4 py-3 ${w}`}>
                   <div className="skeleton w-full h-3 rounded" />
@@ -26,9 +26,9 @@ export default function SkeletonTable({ rows = 5 }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-700">
+          <tbody className="divide-y divide-slate-200">
             {Array.from({ length: rows }).map((_, idx) => (
-              <tr key={idx} className="hover:bg-slate-700/30">
+              <tr key={idx} className="hover:bg-blue-50/50">
                 {/* Checkbox */}
                 <td className="px-2 py-4 text-center">
                   <div className="skeleton w-4 h-4 rounded mx-auto" />

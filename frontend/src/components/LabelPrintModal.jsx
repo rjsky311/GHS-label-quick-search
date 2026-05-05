@@ -457,10 +457,10 @@ export default function LabelPrintModal({
             key={option.value}
             type="button"
             onClick={() => onSelect(option.value)}
-            className={`rounded-xl border p-3 text-left transition-colors ${
+            className={`rounded-md border p-3 text-left transition-colors ${
               selected
                 ? activeClasses
-                : "border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500"
+                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -471,7 +471,7 @@ export default function LabelPrintModal({
               )}
               <span className="font-medium">{t(option.labelKey)}</span>
             </div>
-            {option.descKey && <div className="mt-1 text-xs text-slate-400">{t(option.descKey)}</div>}
+            {option.descKey && <div className="mt-1 text-xs text-slate-500">{t(option.descKey)}</div>}
             {option.tipKey && <div className="mt-1 text-xs text-slate-500">{t(option.tipKey)}</div>}
           </button>
         );
@@ -480,22 +480,22 @@ export default function LabelPrintModal({
   );
 
   const renderPreviewMeta = () => (
-    <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-      <span className="rounded-full bg-slate-900/80 px-2 py-1 font-mono text-amber-300">
+    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+      <span className="rounded-full bg-blue-50 px-2 py-1 font-mono text-blue-700">
         {previewChem?.cas_number || "CAS"}
       </span>
       {previewChem?.signal_word && (
-        <span className="rounded-full bg-rose-500/15 px-2 py-1 font-medium text-rose-200">
+        <span className="rounded-full bg-red-50 px-2 py-1 font-medium text-red-700">
           {getLocalizedSignalWord(previewChem, currentLocale)}
         </span>
       )}
       {(previewChem?.ghs_pictograms?.length || 0) > 0 && (
-        <span className="rounded-full bg-slate-900/80 px-2 py-1 text-slate-200">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">
           {tx("label.previewPictograms", "Pictograms")}: {previewChem.ghs_pictograms.length}
         </span>
       )}
       {previewChem?.isPreparedSolution && (
-        <span className="rounded-full bg-blue-500/15 px-2 py-1 text-blue-200">
+        <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
           {t("print.preparedShort")}
         </span>
       )}
@@ -504,7 +504,7 @@ export default function LabelPrintModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -513,29 +513,29 @@ export default function LabelPrintModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-3xl bg-slate-800 outline-none"
+        className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-700 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <div>
-            <h2 id="label-modal-title" className="flex items-center gap-2 text-xl font-bold text-white">
-              <Tag className="h-5 w-5 text-purple-400" /> {t("label.title")}
+            <h2 id="label-modal-title" className="flex items-center gap-2 text-xl font-bold text-slate-950">
+              <Tag className="h-5 w-5 text-blue-600" /> {t("label.title")}
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-600">
               {tx(
                 "label.settingsPreviewIntro",
                 "Tune the label layout on the left and watch the preview react immediately on the right."
               )}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="text-slate-400 transition-colors hover:text-white">
+          <button type="button" onClick={onClose} className="text-slate-500 transition-colors hover:text-slate-900">
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="border-b border-slate-700 px-6 py-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-            <Bookmark className="h-4 w-4 text-purple-400" />
+        <div className="border-b border-slate-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Bookmark className="h-4 w-4 text-blue-600" />
             {t("label.quickTemplates")}
           </div>
           <div className="mt-3">
@@ -546,7 +546,7 @@ export default function LabelPrintModal({
                 {printTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="group flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-purple-500"
+                    className="group flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
                   >
                     <button
                       type="button"
@@ -566,7 +566,7 @@ export default function LabelPrintModal({
                           toast.success(t("label.deleteTemplateSuccess"));
                         }
                       }}
-                      className="ml-1 text-slate-500 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+                      className="ml-1 text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -582,7 +582,7 @@ export default function LabelPrintModal({
                 <button
                   type="button"
                   onClick={() => setShowSaveInput(true)}
-                  className="flex items-center gap-1 text-xs text-purple-400 transition-colors hover:text-purple-300"
+                  className="flex items-center gap-1 text-xs font-medium text-blue-700 transition-colors hover:text-blue-800"
                 >
                   <Plus className="h-3 w-3" /> {t("label.saveCurrentBtn")}
                 </button>
@@ -596,7 +596,7 @@ export default function LabelPrintModal({
                   value={templateName}
                   onChange={(event) => setTemplateName(event.target.value.slice(0, 30))}
                   placeholder={t("label.templateNamePlaceholder")}
-                  className="flex-1 rounded-md border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
                   autoFocus
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && templateName.trim()) {
@@ -630,7 +630,7 @@ export default function LabelPrintModal({
                       setShowSaveInput(false);
                     }
                   }}
-                  className="rounded bg-purple-500 p-1.5 text-white transition-colors hover:bg-purple-600"
+                  className="rounded bg-blue-700 p-1.5 text-white transition-colors hover:bg-blue-800"
                 >
                   <Check className="h-3.5 w-3.5" />
                 </button>
@@ -640,7 +640,7 @@ export default function LabelPrintModal({
                     setTemplateName("");
                     setShowSaveInput(false);
                   }}
-                  className="rounded bg-slate-700 p-1.5 text-slate-300 transition-colors hover:bg-slate-600"
+                  className="rounded bg-slate-100 p-1.5 text-slate-600 transition-colors hover:bg-slate-200"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -649,17 +649,17 @@ export default function LabelPrintModal({
           </div>
         </div>
 
-        <div className="border-b border-slate-700 px-6 py-4">
+        <div className="border-b border-slate-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <LayoutPanelTop className="h-4 w-4 text-blue-400" />
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <LayoutPanelTop className="h-4 w-4 text-blue-600" />
               {tx("label.recentPrintsTitle", "Recent print queue")}
             </div>
             {visibleRecentPrints.length > 0 && typeof onClearRecentPrints === "function" && (
               <button
                 type="button"
                 onClick={onClearRecentPrints}
-                className="text-xs text-slate-400 transition-colors hover:text-white"
+                className="text-xs text-slate-500 transition-colors hover:text-slate-900"
               >
                 {tx("label.recentPrintsClear", "Clear")}
               </button>
@@ -691,14 +691,14 @@ export default function LabelPrintModal({
                 return (
                   <div
                     key={job.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-white">
+                      <div className="truncate text-sm font-medium text-slate-900">
                         {primaryLabel}
                         {remaining > 0 ? ` +${remaining}` : ""}
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-400">
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
                         <span>{formatPrintTimestamp(job.createdAt)}</span>
                         <span>
                           {tx("label.recentPrintLabels", "{{count}} labels", {
@@ -711,7 +711,7 @@ export default function LabelPrintModal({
                     <button
                       type="button"
                       onClick={() => onLoadRecentPrint?.(job)}
-                      className="rounded-lg bg-blue-500/15 px-3 py-1.5 text-xs font-medium text-blue-200 transition-colors hover:bg-blue-500/25"
+                      className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
                     >
                       {tx("label.recentPrintLoad", "Load")}
                     </button>
@@ -724,12 +724,12 @@ export default function LabelPrintModal({
 
         <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
           <div className="space-y-6">
-            <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-                <Settings2 className="h-4 w-4 text-purple-400" />
+            <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                <Settings2 className="h-4 w-4 text-blue-600" />
                 {tx("label.settingsTitle", "Print setup")}
               </div>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-600">
                 {tx(
                   "label.settingsBody",
                   "Use stock presets for a fast starting point, then fine-tune spacing and nudges without leaving the modal."
@@ -738,7 +738,7 @@ export default function LabelPrintModal({
             </section>
 
             <section className="space-y-3">
-              <h3 className="text-sm font-medium text-slate-300">{t("label.selectTemplate")}</h3>
+              <h3 className="text-sm font-medium text-slate-800">{t("label.selectTemplate")}</h3>
               <div className="grid gap-3 md:grid-cols-2">
                 {TEMPLATE_OPTIONS.map((template) => {
                   const Icon = template.icon;
@@ -749,17 +749,17 @@ export default function LabelPrintModal({
                       key={template.value}
                       type="button"
                       onClick={() => updateVisualConfig({ template: template.value })}
-                      className={`rounded-2xl border p-4 text-left transition-colors ${
+                      className={`rounded-lg border p-4 text-left transition-colors ${
                         selected
-                          ? "border-purple-500 bg-purple-500/10"
-                          : "border-slate-700 bg-slate-900/80 hover:border-slate-500"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="rounded-lg bg-slate-800 p-2 text-purple-300">
+                        <span className="rounded-md bg-blue-50 p-2 text-blue-700">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <span className={`font-medium ${selected ? "text-purple-300" : "text-white"}`}>
+                        <span className={`font-medium ${selected ? "text-blue-800" : "text-slate-900"}`}>
                           {t(template.labelKey)}
                         </span>
                       </div>
@@ -773,7 +773,7 @@ export default function LabelPrintModal({
 
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-300">
+                <h3 className="text-sm font-medium text-slate-800">
                   {tx("label.stockPresetsTitle", "Label stock presets")}
                 </h3>
                 <span className="text-xs text-slate-500">
@@ -792,35 +792,35 @@ export default function LabelPrintModal({
                       type="button"
                       onClick={() => applyStockPreset(preset)}
                       data-testid={`stock-preset-${preset.id}`}
-                      className={`rounded-2xl border p-4 text-left transition-colors ${
+                      className={`rounded-lg border p-4 text-left transition-colors ${
                         selected
-                          ? "border-amber-500 bg-amber-500/10"
-                          : "border-slate-700 bg-slate-900/80 hover:border-slate-500"
+                          ? "border-amber-500 bg-amber-50"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className={`font-medium ${selected ? "text-amber-300" : "text-white"}`}>
+                          <div className={`font-medium ${selected ? "text-amber-800" : "text-slate-900"}`}>
                             {getLabelStockPresetDisplay(preset, t).name}
                           </div>
                           <div className="mt-1 text-xs text-slate-400">
                             {getLabelStockPresetDisplay(preset, t).note}
                           </div>
                         </div>
-                        <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
                           {tx("label.previewPerPage", "{{count}}/page", {
                             count: preset.perPage,
                           })}
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
-                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                        <span className="rounded-full bg-slate-100 px-2 py-1">
                           {preset.widthMm} x {preset.heightMm} mm
                         </span>
-                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                        <span className="rounded-full bg-slate-100 px-2 py-1">
                           {preset.columns} x {preset.rows}
                         </span>
-                        <span className="rounded-full bg-slate-800 px-2 py-1">
+                        <span className="rounded-full bg-slate-100 px-2 py-1">
                           {t(
                             ORIENTATION_OPTIONS.find((item) => item.value === preset.orientation)?.labelKey ||
                               "label.portrait"
@@ -841,7 +841,7 @@ export default function LabelPrintModal({
 
             <div className="grid gap-6 xl:grid-cols-2">
               <section className="space-y-3">
-                <h3 className="text-sm font-medium text-slate-300">{t("label.labelSize")}</h3>
+                <h3 className="text-sm font-medium text-slate-800">{t("label.labelSize")}</h3>
                 <p className="text-xs text-slate-500">
                   {tx(
                     "label.densityHint",
@@ -852,50 +852,50 @@ export default function LabelPrintModal({
                   SIZE_OPTIONS,
                   labelConfig.size,
                   (size) => updateLayoutConfig({ size }),
-                  "border-amber-500 bg-amber-500/10 text-amber-300"
+                  "border-amber-500 bg-amber-50 text-amber-800"
                 )}
               </section>
 
               <section className="space-y-3">
-                <h3 className="text-sm font-medium text-slate-300">{t("label.orientation")}</h3>
+                <h3 className="text-sm font-medium text-slate-800">{t("label.orientation")}</h3>
                 {renderConfigButtons(
                   ORIENTATION_OPTIONS,
                   labelConfig.orientation,
                   (orientation) => updateLayoutConfig({ orientation }),
-                  "border-blue-500 bg-blue-500/10 text-blue-300"
+                  "border-blue-500 bg-blue-50 text-blue-800"
                 )}
               </section>
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
               <section className="space-y-3">
-                <h3 className="text-sm font-medium text-slate-300">{t("label.nameDisplay")}</h3>
+                <h3 className="text-sm font-medium text-slate-800">{t("label.nameDisplay")}</h3>
                 {renderConfigButtons(
                   NAME_DISPLAY_OPTIONS,
                   labelConfig.nameDisplay,
                   (nameDisplay) => updateVisualConfig({ nameDisplay }),
-                  "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                  "border-emerald-500 bg-emerald-50 text-emerald-800"
                 )}
               </section>
 
               <section className="space-y-3">
-                <h3 className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                  <Palette className="h-4 w-4 text-emerald-400" />
+                <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                  <Palette className="h-4 w-4 text-emerald-600" />
                   {t("label.colorMode")}
                 </h3>
                 {renderConfigButtons(
                   COLOR_OPTIONS,
                   labelConfig.colorMode,
                   (colorMode) => updateVisualConfig({ colorMode }),
-                  "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                  "border-emerald-500 bg-emerald-50 text-emerald-800"
                 )}
               </section>
             </div>
 
-            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+            <section className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-200">
+                  <h3 className="text-sm font-medium text-slate-800">
                     {tx("label.calibrationTitle", "Fine-tune layout")}
                   </h3>
                   <p className="mt-1 text-xs text-slate-500">
@@ -905,7 +905,7 @@ export default function LabelPrintModal({
                     )}
                   </p>
                 </div>
-                <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
                   {layoutProfile.widthMm} x {layoutProfile.heightMm} mm
                 </span>
               </div>
@@ -954,7 +954,7 @@ export default function LabelPrintModal({
                   },
                 ].map((field) => (
                   <label key={field.key} className="block">
-                    <span className="mb-1 block text-xs text-slate-400">{field.label}</span>
+                    <span className="mb-1 block text-xs text-slate-500">{field.label}</span>
                     <input
                       type="number"
                       value={field.value}
@@ -966,22 +966,22 @@ export default function LabelPrintModal({
                           [field.key]: event.target.value === "" ? 0 : Number(event.target.value),
                         })
                       }
-                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
                     />
                   </label>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+            <section className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-200">{t("label.profileTitle")}</h3>
+                <h3 className="text-sm font-medium text-slate-800">{t("label.profileTitle")}</h3>
                 {(labProfile.organization || labProfile.phone || labProfile.address) &&
                   typeof onClearLabProfile === "function" && (
                     <button
                       type="button"
                       onClick={onClearLabProfile}
-                      className="text-xs text-red-400 transition-colors hover:text-red-300"
+                      className="text-xs text-red-600 transition-colors hover:text-red-700"
                     >
                       {t("label.profileClear")}
                     </button>
@@ -1017,7 +1017,7 @@ export default function LabelPrintModal({
                         })
                       }
                       placeholder={t(field.placeholderKey)}
-                      className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                      className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 ))}
@@ -1025,8 +1025,8 @@ export default function LabelPrintModal({
               <p className="mt-3 text-xs text-slate-500">{t("label.profileHint")}</p>
             </section>
 
-            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
-              <h3 className="text-sm font-medium text-slate-200">{t("label.customFields")}</h3>
+            <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <h3 className="text-sm font-medium text-slate-800">{t("label.customFields")}</h3>
               <div className="mt-3 grid gap-2">
                 {[
                   { key: "date", labelKey: "label.printDate", placeholderKey: "label.printDatePlaceholder" },
@@ -1048,7 +1048,7 @@ export default function LabelPrintModal({
                         })
                       }
                       placeholder={t(field.placeholderKey)}
-                      className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                      className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 ))}
@@ -1057,12 +1057,12 @@ export default function LabelPrintModal({
             </section>
 
             {selectedForLabel.length > 0 && (
-              <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
-                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
-                  <FileSpreadsheet className="h-4 w-4 text-blue-400" />
+              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+                  <FileSpreadsheet className="h-4 w-4 text-blue-600" />
                   <span>{t("label.estPages", { pages: estimatedPages, perPage: layoutProfile.perPage })}</span>
                   {totalLabels !== selectedForLabel.length && (
-                    <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-400">
+                    <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
                       {t("label.totalLabels", { count: totalLabels })}
                     </span>
                   )}
@@ -1073,13 +1073,13 @@ export default function LabelPrintModal({
               </section>
             )}
 
-            <section className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
-              <h3 className="text-sm font-medium text-slate-200">
+            <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <h3 className="text-sm font-medium text-slate-800">
                 {t("label.selectedCount", { count: selectedForLabel.length })}
               </h3>
               <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
                 {selectedForLabel.length === 0 ? (
-                  <p className="rounded-xl bg-slate-950 px-4 py-6 text-center text-slate-500">
+                  <p className="rounded-md bg-slate-50 px-4 py-6 text-center text-slate-500">
                     {t("label.noneSelected")}
                   </p>
                 ) : (
@@ -1093,15 +1093,17 @@ export default function LabelPrintModal({
                         key={`${chem.cas_number}-${index}`}
                         className={`flex items-start justify-between gap-3 rounded-xl border p-3 ${
                           chem.isPreparedSolution
-                            ? "border-blue-700/50 bg-blue-900/20"
-                            : "border-slate-700 bg-slate-950"
+                            ? "border-blue-200 bg-blue-50"
+                            : "border-slate-200 bg-slate-50"
                         }`}
                         data-testid={chem.isPreparedSolution ? `selected-prepared-${chem.cas_number}` : undefined}
                       >
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-sm text-amber-400">{chem.cas_number}</span>
-                            <span className="truncate text-sm text-white">{localizedNames.primary}</span>
+                            <span className="font-mono text-sm text-blue-700" data-testid="selected-label-cas">
+                              {chem.cas_number}
+                            </span>
+                            <span className="truncate text-sm text-slate-900">{localizedNames.primary}</span>
                             {localizedNames.secondary && !chem.isPreparedSolution && (
                               <span className="truncate text-xs text-slate-500">
                                 {localizedNames.secondary}
@@ -1113,7 +1115,7 @@ export default function LabelPrintModal({
                               </span>
                             )}
                             {chem.isPreparedSolution && (
-                              <span className="rounded bg-blue-800 px-1.5 py-0.5 text-xs font-medium text-blue-100">
+                              <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
                                 {t("print.preparedShort")}
                               </span>
                             )}
@@ -1121,7 +1123,7 @@ export default function LabelPrintModal({
 
                           {chem.isPreparedSolution && derivedPreparedName && (
                             <div
-                              className="text-sm text-blue-200"
+                              className="text-sm text-blue-700"
                               data-testid={`selected-prepared-display-${chem.cas_number}`}
                             >
                               {derivedPreparedName}
@@ -1130,7 +1132,7 @@ export default function LabelPrintModal({
 
                           {chem.isPreparedSolution && chem.preparedSolution && (
                             <div
-                              className="text-xs text-blue-300"
+                              className="text-xs text-blue-700"
                               data-testid={`selected-prepared-meta-${chem.cas_number}`}
                             >
                               {t("prepared.labelMeta", {
@@ -1146,24 +1148,24 @@ export default function LabelPrintModal({
                               chem.preparedSolution.preparedDate ||
                               chem.preparedSolution.expiryDate) && (
                               <div
-                                className="flex flex-wrap gap-x-3 text-xs text-blue-300/80"
+                                className="flex flex-wrap gap-x-3 text-xs text-blue-600"
                                 data-testid={`selected-prepared-operational-${chem.cas_number}`}
                               >
                                 {chem.preparedSolution.preparedBy && (
                                   <span>
-                                    <span className="text-blue-400/70">{t("prepared.preparedByShort")}: </span>
+                                    <span className="text-blue-500">{t("prepared.preparedByShort")}: </span>
                                     {chem.preparedSolution.preparedBy}
                                   </span>
                                 )}
                                 {chem.preparedSolution.preparedDate && (
                                   <span>
-                                    <span className="text-blue-400/70">{t("prepared.preparedDateShort")}: </span>
+                                    <span className="text-blue-500">{t("prepared.preparedDateShort")}: </span>
                                     {chem.preparedSolution.preparedDate}
                                   </span>
                                 )}
                                 {chem.preparedSolution.expiryDate && (
                                   <span>
-                                    <span className="text-blue-400/70">{t("prepared.expiryDateShort")}: </span>
+                                    <span className="text-blue-500">{t("prepared.expiryDateShort")}: </span>
                                     {chem.preparedSolution.expiryDate}
                                   </span>
                                 )}
@@ -1184,11 +1186,13 @@ export default function LabelPrintModal({
                                 }
                               }}
                               disabled={quantity <= 1}
-                              className="flex h-6 w-6 items-center justify-center rounded bg-slate-700 text-xs text-slate-300 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                              className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white text-xs text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
                             >
                               -
                             </button>
-                            <span className="w-6 text-center text-sm text-white">{quantity}</span>
+                            <span className="w-6 text-center text-sm text-slate-900" data-testid="selected-label-quantity">
+                              {quantity}
+                            </span>
                             <button
                               type="button"
                               onClick={() => {
@@ -1200,7 +1204,7 @@ export default function LabelPrintModal({
                                 }
                               }}
                               disabled={quantity >= 20}
-                              className="flex h-6 w-6 items-center justify-center rounded bg-slate-700 text-xs text-slate-300 transition-colors hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                              className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 bg-white text-xs text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
                             >
                               +
                             </button>
@@ -1208,7 +1212,8 @@ export default function LabelPrintModal({
                           <button
                             type="button"
                             onClick={() => onToggleSelectForLabel(chem)}
-                            className="px-2 text-slate-400 transition-colors hover:text-red-400"
+                            className="px-2 text-slate-400 transition-colors hover:text-red-600"
+                            data-testid="selected-label-remove"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -1223,27 +1228,27 @@ export default function LabelPrintModal({
 
           <aside className="self-start lg:sticky lg:top-6">
             <div
-              className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/70"
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               data-testid="label-preview-panel"
             >
-              <div className="border-b border-slate-700 px-5 py-4">
+              <div className="border-b border-slate-200 px-5 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                       {tx("label.previewTitle", "Live preview")}
                     </div>
-                    <h3 className="mt-1 text-lg font-semibold text-white">
+                    <h3 className="mt-1 text-lg font-semibold text-slate-950">
                       {previewChem
                         ? tx("label.previewFocusFilled", "Previewing the first selected label")
                         : tx("label.previewFocusEmptyTitle", "No chemical selected yet")}
                     </h3>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-slate-600">
                       {previewChem
                         ? tx("label.previewFocusBody", "This pane reflects the current template, stock preset, and fields.")
                         : tx("label.previewFocusEmptyBody", "Select at least one chemical to preview real content density.")}
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
                     {layoutProfile.stockPreset === "custom"
                       ? tx("label.stockPresetCustom", "Custom tuning")
                       : stockPresetDisplay.name || layoutProfile.stockPresetName}
@@ -1258,7 +1263,7 @@ export default function LabelPrintModal({
                     getOptionLabel(NAME_DISPLAY_OPTIONS, labelConfig.nameDisplay, t, "Names"),
                     getOptionLabel(COLOR_OPTIONS, labelConfig.colorMode, t, "Color"),
                   ].map((label) => (
-                    <span key={label} className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">
+                    <span key={label} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
                       {label}
                     </span>
                   ))}
@@ -1266,13 +1271,13 @@ export default function LabelPrintModal({
               </div>
 
               <div className="space-y-4 px-5 py-4">
-                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-                      <LayoutPanelTop className="h-4 w-4 text-blue-400" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <LayoutPanelTop className="h-4 w-4 text-blue-600" />
                       {tx("label.previewSheetTitle", "Sheet layout")}
                     </div>
-                    <span className="rounded-full bg-slate-900 px-2 py-1 text-xs text-slate-400">
+                    <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
                       {layoutProfile.columns} x {layoutProfile.rows}
                     </span>
                   </div>
@@ -1293,13 +1298,13 @@ export default function LabelPrintModal({
                     )}
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
+                  <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
                     {sheetPreviewBundle ? (
                       <iframe
                         title={tx("label.previewSheetTitle", "Sheet layout")}
                         srcDoc={sheetPreviewBundle.html}
                         data-testid="label-sheet-preview"
-                        className="h-60 w-full bg-slate-950"
+                        className="h-60 w-full bg-white"
                       />
                     ) : (
                       <div className="flex h-60 items-center justify-center px-4 text-sm text-slate-500">
@@ -1308,28 +1313,28 @@ export default function LabelPrintModal({
                     )}
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-400">
-                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
                       {tx("label.previewPadding", "Padding")}: {layoutProfile.pagePaddingMm} mm
                     </div>
-                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                    <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
                       {tx("label.previewGap", "Gap")}: {layoutProfile.columnGapMm}/{layoutProfile.rowGapMm} mm
                     </div>
-                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                    <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
                       {tx("label.previewOffsetX", "Offset X")}: {layoutProfile.offsetXmm} mm
                     </div>
-                    <div className="rounded-xl bg-slate-900 px-3 py-2">
+                    <div className="rounded-md bg-white px-3 py-2 ring-1 ring-slate-200">
                       {tx("label.previewOffsetY", "Offset Y")}: {layoutProfile.offsetYmm} mm
                     </div>
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-medium text-slate-200">
+                    <div className="text-sm font-medium text-slate-800">
                       {tx("label.previewLabelTitle", "Primary label preview")}
                     </div>
-                    <span className="rounded-full bg-slate-900 px-2 py-1 text-xs text-slate-400">
+                    <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
                       {densityLabel}
                     </span>
                   </div>
@@ -1341,13 +1346,13 @@ export default function LabelPrintModal({
                     )}
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-inner">
+                  <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
                     {labelPreviewBundle ? (
                       <iframe
                         title={tx("label.previewLabelTitle", "Primary label preview")}
                         srcDoc={labelPreviewBundle.html}
                         data-testid="label-fragment-preview"
-                        className="w-full bg-slate-950"
+                        className="w-full bg-white"
                         style={{
                           height:
                             labelConfig.template === "qrcode"
@@ -1365,25 +1370,25 @@ export default function LabelPrintModal({
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                <section className="rounded-lg border border-slate-200 bg-white p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
                     {previewRisks[0] === tx("label.previewRiskReady", "This combination looks balanced for the current content load.") ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     ) : (
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                     )}
                     {tx("label.previewChecklistTitle", "Preview checklist")}
                   </div>
-                  <div className="mt-3 space-y-2 text-sm text-slate-300">
+                  <div className="mt-3 space-y-2 text-sm text-slate-700">
                     {previewRisks.map((risk) => (
-                      <div key={risk} className="rounded-xl bg-slate-900 px-3 py-2">
+                      <div key={risk} className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
                         {risk}
                       </div>
                     ))}
                   </div>
                 </section>
 
-                <section className="rounded-2xl bg-slate-900/50 p-4 text-sm text-slate-400">
+                <section className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
                   <div className="flex items-start gap-2">
                     <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                     <span>{t("label.previewHint")}</span>
@@ -1394,12 +1399,12 @@ export default function LabelPrintModal({
           </aside>
         </div>
 
-        <div className="flex gap-3 border-t border-slate-700 px-6 py-5">
+        <div className="flex gap-3 border-t border-slate-200 px-6 py-5">
           <button
             type="button"
             onClick={onPrintLabels}
             disabled={selectedForLabel.length === 0}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-3 font-medium text-white transition-all hover:from-purple-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Printer className="h-4 w-4" />
             {t("label.printBtn", { count: totalLabels })}
@@ -1407,7 +1412,7 @@ export default function LabelPrintModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-slate-700 px-6 py-3 text-slate-300 transition-colors hover:bg-slate-600"
+            className="rounded-md border border-slate-300 bg-white px-6 py-3 text-slate-700 transition-colors hover:bg-slate-50"
           >
             {t("label.cancel")}
           </button>

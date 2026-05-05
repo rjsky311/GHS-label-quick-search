@@ -95,12 +95,12 @@ export default function ClassificationComparisonTable({
     (col.classification?.precautionary_statements || []).find((s) => s.code === code);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-700" data-testid="comparison-table">
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white" data-testid="comparison-table">
       <table className="w-full border-collapse text-sm">
         {/* ── Header Row: Column labels ── */}
         <thead>
           <tr>
-            <th className="sticky left-0 z-10 bg-slate-800 border-b border-r border-slate-700 p-3 text-left text-slate-400 font-medium min-w-[100px]">
+            <th className="sticky left-0 z-10 min-w-[100px] border-b border-r border-slate-200 bg-slate-50 p-3 text-left font-medium text-slate-500">
               &nbsp;
             </th>
             {columns.map((col, colIdx) => {
@@ -108,10 +108,10 @@ export default function ClassificationComparisonTable({
               return (
                 <th
                   key={colIdx}
-                  className={`border-b border-slate-700 p-3 text-left min-w-[160px] ${
+                  className={`min-w-[160px] border-b border-slate-200 p-3 text-left ${
                     isSelected
-                      ? "bg-purple-900/30 border-t-2 border-t-purple-500"
-                      : "bg-slate-900/50"
+                      ? "border-t-2 border-t-blue-600 bg-blue-50"
+                      : "bg-white"
                   }`}
                   data-testid={`col-header-${colIdx}`}
                 >
@@ -119,21 +119,21 @@ export default function ClassificationComparisonTable({
                     <div className="flex items-center gap-2">
                       {isSameChemical && (
                         isSelected ? (
-                          <Star className="w-4 h-4 text-purple-400 fill-current shrink-0" />
+                           <Star className="w-4 h-4 text-blue-600 fill-current shrink-0" />
                         ) : (
                           <CircleDot className="w-4 h-4 text-slate-500 shrink-0" />
                         )
                       )}
-                      <span className={`font-medium ${isSelected ? "text-purple-300" : "text-white"}`}>
+                      <span className={`font-medium ${isSelected ? "text-blue-800" : "text-slate-900"}`}>
                         {col.label}
                       </span>
                     </div>
                     {col.sublabel && (
-                      <span className="text-xs text-amber-400 font-mono">{col.sublabel}</span>
+                      <span className="text-xs text-blue-700 font-mono">{col.sublabel}</span>
                     )}
                     {isSameChemical && (
                       isSelected ? (
-                        <span className="inline-flex w-fit px-2 py-0.5 bg-purple-500/30 text-purple-300 text-xs rounded">
+                        <span className="inline-flex w-fit rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
                           {t("compare.currentBadge")}
                         </span>
                       ) : (
@@ -142,7 +142,7 @@ export default function ClassificationComparisonTable({
                             e.stopPropagation();
                             onSelectClassification?.(col.index);
                           }}
-                          className="inline-flex w-fit px-2 py-0.5 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
+                          className="inline-flex w-fit rounded px-2 py-0.5 text-xs text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800"
                           data-testid={`set-primary-${colIdx}`}
                         >
                           {t("compare.setAsPrimary")}
@@ -159,7 +159,7 @@ export default function ClassificationComparisonTable({
         <tbody>
           {/* ── Row: Pictograms ── */}
           <tr>
-            <td className="sticky left-0 z-10 bg-slate-800 border-r border-b border-slate-700 p-3 text-slate-400 font-medium align-top">
+            <td className="sticky left-0 z-10 border-r border-b border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-top">
               {t("compare.rowPictograms")}
             </td>
             {columns.map((col, colIdx) => {
@@ -168,8 +168,8 @@ export default function ClassificationComparisonTable({
               return (
                 <td
                   key={colIdx}
-                  className={`border-b border-slate-700 p-3 align-top ${
-                    isSelected ? "bg-purple-900/20" : ""
+                  className={`border-b border-slate-200 p-3 align-top ${
+                    isSelected ? "bg-blue-50/70" : ""
                   }`}
                 >
                   {allPictogramCodes.length > 0 ? (
@@ -196,8 +196,8 @@ export default function ClassificationComparisonTable({
                               className="text-center"
                               data-testid={`absent-${code}-${colIdx}`}
                             >
-                              <div className="w-12 h-12 border-2 border-dashed border-slate-600 rounded bg-slate-900/50 flex items-center justify-center">
-                                <span className="text-[9px] text-slate-600">{code}</span>
+                              <div className="w-12 h-12 border-2 border-dashed border-slate-300 rounded bg-slate-50 flex items-center justify-center">
+                                <span className="text-[9px] text-slate-400">{code}</span>
                               </div>
                               <p className="text-[10px] text-slate-600 mt-0.5">
                                 {t("compare.absent")}
@@ -217,7 +217,7 @@ export default function ClassificationComparisonTable({
 
           {/* ── Row: Signal Word ── */}
           <tr>
-            <td className="sticky left-0 z-10 bg-slate-800 border-r border-b border-slate-700 p-3 text-slate-400 font-medium align-middle">
+            <td className="sticky left-0 z-10 border-r border-b border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-middle">
               {t("compare.rowSignalWord")}
             </td>
             {columns.map((col, colIdx) => {
@@ -228,18 +228,18 @@ export default function ClassificationComparisonTable({
               return (
                 <td
                   key={colIdx}
-                  className={`border-b border-slate-700 p-3 align-middle ${
-                    isSelected ? "bg-purple-900/20" : ""
-                  } ${signalWordsDiffer && sw ? (isDanger ? "bg-red-900/10" : "bg-amber-900/10") : ""}`}
+                  className={`border-b border-slate-200 p-3 align-middle ${
+                    isSelected ? "bg-blue-50/70" : ""
+                  } ${signalWordsDiffer && sw ? (isDanger ? "bg-red-50" : "bg-amber-50") : ""}`}
                 >
                   {sw ? (
                     <span
                       className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${
                         isDanger
-                          ? "bg-red-500/20 text-red-400 border border-red-500/50"
+                          ? "bg-red-50 text-red-700 border border-red-200"
                           : isWarning
-                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/50"
-                          : "text-slate-300"
+                          ? "bg-amber-50 text-amber-800 border border-amber-200"
+                          : "text-slate-700"
                       }`}
                       data-testid={`signal-word-${colIdx}`}
                     >
@@ -255,7 +255,7 @@ export default function ClassificationComparisonTable({
 
           {/* ── Row: Hazard Statements ── */}
           <tr>
-            <td className="sticky left-0 z-10 bg-slate-800 border-r border-b border-slate-700 p-3 text-slate-400 font-medium align-top">
+            <td className="sticky left-0 z-10 border-r border-b border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-top">
               {t("compare.rowHazards")}
             </td>
             {columns.map((col, colIdx) => {
@@ -264,8 +264,8 @@ export default function ClassificationComparisonTable({
               return (
                 <td
                   key={colIdx}
-                  className={`border-b border-slate-700 p-3 align-top ${
-                    isSelected ? "bg-purple-900/20" : ""
+                  className={`border-b border-slate-200 p-3 align-top ${
+                    isSelected ? "bg-blue-50/70" : ""
                   }`}
                 >
                   {colHCodes.size > 0 ? (
@@ -279,19 +279,19 @@ export default function ClassificationComparisonTable({
                             key={code}
                             className={`flex gap-2 items-start text-xs rounded px-2 py-1 ${
                               isUnique
-                                ? "border-l-2 border-l-blue-500 bg-blue-500/5"
-                                : "bg-slate-900/50"
+                                ? "border-l-2 border-l-blue-600 bg-blue-50"
+                                : "bg-slate-50"
                             }`}
                             data-testid={isUnique ? `unique-${code}-${colIdx}` : undefined}
                           >
-                            <span className="text-amber-400 font-mono font-medium shrink-0">
+                            <span className="text-blue-700 font-mono font-medium shrink-0">
                               {code}
                             </span>
-                            <span className="text-slate-300">
+                            <span className="text-slate-700">
                               {getLocalizedStatementText(stmt, displayLocale)}
                             </span>
                             {isUnique && (
-                              <span className="shrink-0 px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] rounded">
+                              <span className="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700">
                                 {t("compare.uniqueToThis")}
                               </span>
                             )}
@@ -310,7 +310,7 @@ export default function ClassificationComparisonTable({
           {/* ── Row: Precautionary Statements ── */}
           {allPCodes.length > 0 && (
             <tr>
-              <td className="sticky left-0 z-10 bg-slate-800 border-r border-b border-slate-700 p-3 text-slate-400 font-medium align-top">
+              <td className="sticky left-0 z-10 border-r border-b border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-top">
                 {t("compare.rowPrecautions")}
               </td>
               {columns.map((col, colIdx) => {
@@ -319,8 +319,8 @@ export default function ClassificationComparisonTable({
                 return (
                   <td
                     key={colIdx}
-                    className={`border-b border-slate-700 p-3 align-top ${
-                      isSelected ? "bg-purple-900/20" : ""
+                    className={`border-b border-slate-200 p-3 align-top ${
+                      isSelected ? "bg-blue-50/70" : ""
                     }`}
                   >
                     {colPCodes.size > 0 ? (
@@ -331,12 +331,12 @@ export default function ClassificationComparisonTable({
                           return (
                             <div
                               key={code}
-                              className="flex gap-2 items-start text-xs rounded px-2 py-1 bg-slate-900/50"
+                              className="flex gap-2 items-start text-xs rounded bg-slate-50 px-2 py-1"
                             >
-                              <span className="text-blue-400 font-mono font-medium shrink-0">
+                              <span className="text-blue-700 font-mono font-medium shrink-0">
                                 {code}
                               </span>
-                              <span className="text-slate-300">
+                              <span className="text-slate-700">
                                 {getLocalizedStatementText(stmt, displayLocale)}
                               </span>
                             </div>
@@ -355,7 +355,7 @@ export default function ClassificationComparisonTable({
           {/* ── Row: Source (same-chemical only) ── */}
           {isSameChemical && (
             <tr>
-              <td className="sticky left-0 z-10 bg-slate-800 border-r border-slate-700 p-3 text-slate-400 font-medium align-top">
+              <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-top">
                 {t("compare.rowSource")}
               </td>
               {columns.map((col, colIdx) => {
@@ -364,8 +364,8 @@ export default function ClassificationComparisonTable({
                 return (
                   <td
                     key={colIdx}
-                    className={`border-slate-700 p-3 align-top ${
-                      isSelected ? "bg-purple-900/20" : ""
+                    className={`border-slate-200 p-3 align-top ${
+                      isSelected ? "bg-blue-50/70" : ""
                     }`}
                   >
                     {source ? (

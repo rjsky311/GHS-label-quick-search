@@ -46,6 +46,7 @@ import PreparedSidebar from "@/components/PreparedSidebar";
 import SearchSection from "@/components/SearchSection";
 import ResultsTable from "@/components/ResultsTable";
 import EmptyState from "@/components/EmptyState";
+import ProductTrustPanel from "@/components/ProductTrustPanel";
 import UpstreamErrorBanner from "@/components/UpstreamErrorBanner";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import DetailModal from "@/components/DetailModal";
@@ -435,6 +436,7 @@ function App() {
 
   const handlePrintLabelFromDetail = useCallback((item) => {
     setSelectedForLabel([item]);
+    setSelectedResult(null);
     setShowLabelModal(true);
   }, [setSelectedForLabel]);
 
@@ -669,11 +671,11 @@ function App() {
 
   // ── Render ──
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-amber-500 focus:text-white focus:rounded-lg">
+    <div className="min-h-screen bg-slate-50 text-slate-950">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-blue-700 focus:text-white focus:rounded-md">
         {t("a11y.skipToContent")}
       </a>
-      <Toaster position="top-right" theme="dark" richColors />
+      <Toaster position="top-right" theme="light" richColors />
 
       <Header
         favorites={favorites}
@@ -807,11 +809,15 @@ function App() {
             />
             {/* v1.8 M1: trust-boundary disclaimer */}
             <AuthoritativeSourceNote variant="results" />
+            <ProductTrustPanel variant="results" />
           </>
         )}
 
         {results.length === 0 && !loading && (
-          <EmptyState onQuickSearch={handleQuickSearch} />
+          <>
+            <EmptyState onQuickSearch={handleQuickSearch} />
+            <ProductTrustPanel variant="empty" />
+          </>
         )}
       </main>
 

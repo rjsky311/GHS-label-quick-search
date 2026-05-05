@@ -25,16 +25,16 @@ export default function HistorySidebar({
     >
       <div
         ref={panelRef}
-        className="absolute right-0 top-0 h-full w-80 bg-slate-800 shadow-xl overflow-y-auto"
+        className="absolute right-0 top-0 h-full w-80 overflow-y-auto bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
-          <h2 className="text-lg font-semibold text-white">{t("history.title")}</h2>
+        <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-4">
+          <h2 className="text-lg font-semibold text-slate-950">{t("history.title")}</h2>
           <div className="flex gap-2">
             {history.length > 0 && (
               <button
                 onClick={onClearHistory}
-                className="text-sm text-red-400 hover:text-red-300"
+                className="text-sm font-medium text-red-600 hover:text-red-700"
                 data-testid="clear-history-btn"
               >
                 {t("history.clearAll")}
@@ -42,7 +42,7 @@ export default function HistorySidebar({
             )}
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-400 hover:text-slate-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -58,21 +58,21 @@ export default function HistorySidebar({
               <button
                 key={idx}
                 onClick={() => onSelectHistoryItem(item.cas_number)}
-                className="w-full p-3 text-left hover:bg-slate-700 rounded-lg transition-colors mb-1"
+                className="mb-1 w-full rounded-md p-3 text-left transition-colors hover:bg-slate-50"
                 data-testid={`history-item-${idx}`}
               >
-                <div className="font-mono text-amber-400 text-sm">
+                <div className="font-mono text-sm text-blue-700">
                   {item.cas_number}
                 </div>
-                <div className="text-white text-sm truncate">
+                <div className="truncate text-sm text-slate-950">
                   {item.name_en}
                 </div>
                 {item.name_zh && (
-                  <div className="text-slate-400 text-xs truncate">
+                  <div className="truncate text-xs text-slate-500">
                     {item.name_zh}
                   </div>
                 )}
-                <div className="text-slate-500 text-xs mt-1">
+                <div className="mt-1 text-xs text-slate-500">
                   {formatDate(item.timestamp)}
                 </div>
               </button>

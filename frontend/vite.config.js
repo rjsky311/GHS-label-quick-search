@@ -263,6 +263,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const backendUrl =
     (env.VITE_BACKEND_URL || env.REACT_APP_BACKEND_URL || "").trim();
+  const pilotAdminEnabled =
+    (env.VITE_ENABLE_PILOT_ADMIN || "").trim().toLowerCase() === "true";
+  const workspaceSyncEnabled =
+    (env.VITE_ENABLE_WORKSPACE_SYNC || "").trim().toLowerCase() === "true";
 
   return {
     plugins: [
@@ -276,10 +280,24 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: "build",
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return undefined;
+            if (id.includes("react") || id.includes("scheduler")) return "vendor-react";
+            if (id.includes("lucide-react")) return "vendor-icons";
+            if (id.includes("i18next")) return "vendor-i18n";
+            if (id.includes("axios") || id.includes("sonner")) return "vendor-app";
+            return "vendor";
+          },
+        },
+      },
     },
     envPrefix: ["VITE_", "REACT_APP_"],
     define: {
       "globalThis.__APP_BACKEND_URL__": JSON.stringify(backendUrl),
+      "globalThis.__APP_PILOT_ADMIN_ENABLED__": JSON.stringify(pilotAdminEnabled),
+      "globalThis.__APP_WORKSPACE_SYNC_ENABLED__": JSON.stringify(workspaceSyncEnabled),
     },
   };
 });

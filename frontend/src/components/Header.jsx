@@ -24,6 +24,10 @@ export default function Header({
   onTogglePrepared,
 }) {
   const { t, i18n } = useTranslation();
+  const buttonBase =
+    "relative inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  const activeButton =
+    "relative inline-flex items-center gap-2 rounded-md border border-blue-700 bg-blue-700 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
 
   const toggleLanguage = () => {
     const lang = i18n.language === "zh-TW" ? "en" : "zh-TW";
@@ -32,27 +36,23 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-red-500">
-              <AlertTriangle className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-red-50">
+              <AlertTriangle className="h-5 w-5 text-red-700" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">{t("header.title")}</h1>
-              <p className="text-xs text-slate-400">{t("header.subtitle")}</p>
+              <h1 className="text-xl font-semibold text-slate-950">{t("header.title")}</h1>
+              <p className="text-xs text-slate-500">{t("header.subtitle")}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {showPilotDashboardButton ? (
               <button
                 onClick={onTogglePilotDashboard}
-                className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-white transition-colors ${
-                  showPilotDashboard
-                    ? "bg-emerald-600"
-                    : "bg-emerald-700 hover:bg-emerald-600"
-                }`}
+                className={showPilotDashboard ? activeButton : buttonBase}
                 data-testid="pilot-dashboard-toggle-btn"
                 title={t("header.adminToolsTitle", {
                   defaultValue: pilotAdminUnlocked
@@ -69,7 +69,7 @@ export default function Header({
                   {t("header.adminTools", { defaultValue: "Admin" })}
                 </span>
                 {pilotAdminUnlocked && (pilotAttentionCount > 0 || opsEventCount > 0) ? (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-950 px-1 text-xs font-semibold text-emerald-200">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-100 px-1 text-xs font-semibold text-blue-800 ring-1 ring-blue-200">
                     {pilotAttentionCount > 0 ? pilotAttentionCount : opsEventCount}
                   </span>
                 ) : null}
@@ -77,9 +77,9 @@ export default function Header({
             ) : null}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+              className={buttonBase}
               title={
-                i18n.language === "zh-TW" ? "Switch to English" : "切換至中文"
+                i18n.language === "zh-TW" ? "Switch to English" : "切換為繁體中文"
               }
             >
               <Globe className="h-4 w-4" />
@@ -87,10 +87,10 @@ export default function Header({
             </button>
             <button
               onClick={onToggleFavorites}
-              className="relative flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-white transition-colors hover:bg-amber-700"
+              className={buttonBase}
               data-testid="favorites-toggle-btn"
             >
-              <Star className="h-4 w-4" />
+              <Star className="h-4 w-4 text-amber-500" />
               <span className="hidden sm:inline">{t("header.favorites")}</span>
               {favorites.length > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
@@ -100,10 +100,10 @@ export default function Header({
             </button>
             <button
               onClick={onTogglePrepared}
-              className="relative flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-white transition-colors hover:bg-blue-600"
+              className={buttonBase}
               data-testid="prepared-toggle-btn"
             >
-              <FlaskConical className="h-4 w-4" />
+              <FlaskConical className="h-4 w-4 text-blue-700" />
               <span className="hidden sm:inline">{t("header.prepared")}</span>
               {preparedCount > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500 px-1 text-xs font-semibold text-slate-900">
@@ -113,10 +113,10 @@ export default function Header({
             </button>
             <button
               onClick={onToggleHistory}
-              className="relative flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-slate-300 transition-colors hover:bg-slate-600"
+              className={buttonBase}
               data-testid="history-toggle-btn"
             >
-              <ClipboardList className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4 text-slate-600" />
               <span className="hidden sm:inline">{t("header.history")}</span>
               {history.length > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs text-white">

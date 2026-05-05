@@ -51,7 +51,7 @@ describe('SearchSection', () => {
     it('single tab has highlighted styling when activeTab=single', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       const singleTab = screen.getByTestId('single-search-tab');
-      expect(singleTab.className).toContain('text-amber-400');
+      expect(singleTab.className).toContain('text-blue-700');
     });
 
     it('clicking batch tab calls onSetActiveTab("batch")', () => {
@@ -105,7 +105,7 @@ describe('SearchSection', () => {
     it('shows red warning text when batchCount > 100', () => {
       render(<SearchSection {...defaultProps} activeTab="batch" batchCount={150} />);
       const warning = screen.getByText('search.batchOverLimit');
-      expect(warning.className).toContain('text-red-400');
+      expect(warning.className).toContain('text-red-600');
     });
 
     it('batch search button disabled when batchCount > 100', () => {
