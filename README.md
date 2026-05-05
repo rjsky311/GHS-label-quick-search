@@ -402,7 +402,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Build / deploy**
 - 前端由 `react-scripts + CRACO` 遷移到 Vite，scripts 改為 `npm test` / `npm run build` / `npm run dev`。
-- CI 使用 Node 22 + `npm ci`；Zeabur frontend 透過 Dockerfile/`zeabur.yaml` 使用 npm build。
+- CI 使用 Node 22 + `npm ci`，並在 unit tests 前執行 `npm run test:i18n`；Zeabur frontend 透過 Dockerfile/`zeabur.yaml` 使用 npm build。
 - runtime 版本已同步到 `frontend/package.json`、`frontend/src/constants/version.js`、`backend/server.py` 與 Footer test。
 
 **Print workflow**
@@ -415,8 +415,8 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 - backend 新增 SQLite-backed dictionary/pilot persistence；workspace documents 現在預設不由 public frontend 同步，只有 `VITE_ENABLE_WORKSPACE_SYNC=true` 且提供 admin key 時才會同步 prepared recents/presets、print templates、lab profile、print recents、自訂 label fields。manual entries、aliases、reference links 仍屬 admin-gated pilot surfaces；no-result dictionary miss capture 也預設關閉，需 `CAPTURE_DICTIONARY_MISSES=true` 才會收集。
 
 **Verification baseline**
-- 最近前端驗證：`npm test -- --runInBand --watchAll=false` → 41 suites / 652 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
-- backend 最近基準：`python -m pytest -v` → 141 passed；若修改 backend 行為需重跑。
+- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand --watchAll=false` → 42 suites / 664 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- backend 最近基準：`python -m pytest -v` → 126 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)
 

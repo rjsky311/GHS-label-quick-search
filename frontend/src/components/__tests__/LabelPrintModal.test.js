@@ -87,6 +87,16 @@ describe("LabelPrintModal", () => {
     expect(screen.getByText("Live preview")).toBeInTheDocument();
   });
 
+  it("shows print readiness at a glance and keeps actions sticky", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("print-readiness-strip")).toBeInTheDocument();
+    expect(screen.getByTestId("print-readiness-selection")).toHaveTextContent("1 selected");
+    expect(screen.getByTestId("print-readiness-stock")).toHaveTextContent("Bottle Primary");
+    expect(screen.getByTestId("print-readiness-preview")).toHaveTextContent("Preview ready");
+    expect(screen.getByTestId("label-modal-footer")).toHaveClass("sticky", "bottom-0");
+  });
+
   it("clicking the backdrop calls onClose but clicking inside does not", () => {
     const { props } = renderModal({ selectedForLabel: [makeChem()] });
 
