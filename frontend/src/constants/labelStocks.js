@@ -443,17 +443,18 @@ function resolveTypographyMetrics(normalized) {
       (normalized.labelWidthMm >= 170 && normalized.labelHeightMm >= 200));
 
   if (isFullPage) {
+    const fullPagePictogramMm = clamp(roundTo(shortSide * 0.12, 1), 26, 30);
     return {
       ...base,
-      fontPx: 15,
-      titlePx: 24,
-      pictogramPx: 48,
-      qrBoxMm: 44,
-      signalPx: 20,
-      hazardPx: 10,
-      compliancePictogramMm: normalized.stockPreset === "letter-primary" ? 32 : 34,
-      complianceStatementPx: 9,
-      complianceLineHeight: 1.18,
+      fontPx: 13,
+      titlePx: 22,
+      pictogramPx: 44,
+      qrBoxMm: 36,
+      signalPx: 17,
+      hazardPx: 9,
+      compliancePictogramMm: fullPagePictogramMm,
+      complianceStatementPx: 7,
+      complianceLineHeight: 1.08,
       complianceColumns: 2,
     };
   }

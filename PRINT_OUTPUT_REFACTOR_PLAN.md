@@ -60,6 +60,8 @@ The first refactor slice has landed:
 - The modal first level now starts with the recommended output, A4/Letter primary size, purpose, language, and color. Readiness summary cards and the generic print-setup explainer were removed from the first screen.
 - The live preview panel now shows the actual label fragment before warnings/checklists, uses the same renderer as print output, and scales full-page primary previews down so the whole label is easier to inspect.
 - Saved jobs, stock presets, template override, layout tuning, custom stock size, and custom fields are collapsed behind secondary/advanced sections.
+- The first-level print modal now exposes curated physical output sizes for the current purpose. Shipped-container output shows container label stocks plus A4/Letter full-page stocks; QR/quick-ID output shows only supplemental small stocks.
+- Full-page primary rendering now keeps pictograms and H/P statements in one shared body grid, uses density-tier typography before routing or continuation, and no longer overrides dense text with a fixed 9px statement size.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

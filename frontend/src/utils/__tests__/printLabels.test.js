@@ -279,6 +279,33 @@ describe("print layout model", () => {
     expect(layout.page.perPage).toBe(1);
   });
 
+  it("scales label typography and GHS pictogram size from physical stock dimensions", () => {
+    const small = resolvePrintLayoutConfig({
+      stockPreset: "small-strip",
+      template: "standard",
+    });
+    const medium = resolvePrintLayoutConfig({
+      stockPreset: "medium-bottle",
+      template: "standard",
+    });
+    const large = resolvePrintLayoutConfig({
+      stockPreset: "large-primary",
+      template: "full",
+    });
+    const a4Primary = resolvePrintLayoutConfig({
+      stockPreset: "a4-primary",
+      template: "full",
+    });
+
+    expect(small.typography.fontSize).toBe("8px");
+    expect(medium.typography.fontSize).toBe("9px");
+    expect(large.typography.fontSize).toBe("14px");
+    expect(small.typography.compliancePictogramSize).toBe("10mm");
+    expect(medium.typography.compliancePictogramSize).toBe("14mm");
+    expect(large.typography.compliancePictogramSize).toBe("24.6mm");
+    expect(a4Primary.typography.compliancePictogramSize).toBe("26mm");
+  });
+
   it("accepts calibration nudges and sheet overrides", () => {
     const layout = resolvePrintLayoutConfig({
       size: "medium",
@@ -499,8 +526,11 @@ describe("printLabels", () => {
 
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
-    expect(html).toContain("width: 34mm");
+    expect(html).toContain("width: 26mm");
     expect(html).toContain("column-count: 2");
+    expect(html).toContain("compliance-statements-panel");
+    expect(html).toContain("font-size:6.5px");
+    expect(html).not.toContain("font-size: 9px !important");
     expect(alertSpy).not.toHaveBeenCalled();
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).toHaveBeenCalled();
@@ -774,11 +804,18 @@ describe("printLabels", () => {
       expect(html).toContain("label-purpose-shipping");
       expect(html).toContain("compliance-alert-panel");
       expect(html).toContain("compliance-pictograms");
+      expect(html).toContain("compliance-statements-panel");
       expect(html).toContain("compliance-hazard-panel");
       expect(html).toContain("compliance-precaution-panel");
       expect(html).toContain("compliance-footer");
       expect(html).toContain("print.hazardStatementsLabel");
       expect(html).not.toContain("hazards-full");
+      expect(html.indexOf("compliance-alert-panel")).toBeLessThan(
+        html.indexOf("compliance-statements-panel"),
+      );
+      expect(html.indexOf("compliance-precaution-panel")).toBeLessThan(
+        html.indexOf("compliance-footer"),
+      );
     });
 
     it("full template keeps pictograms prominent and wraps long statement codes", () => {
@@ -845,9 +882,12 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-a4-primary");
-      expect(preview.html).toContain("width: 34mm");
-      expect(preview.html).toContain("height: 34mm");
+      expect(preview.html).toContain("width: 26mm");
+      expect(preview.html).toContain("height: 26mm");
       expect(preview.html).toContain("column-count: 2");
+      expect(preview.html).toContain("compliance-statements-panel");
+      expect(preview.html).toContain("font-size:6.5px");
+      expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
       expect(preview.html).toContain("height: 344px");
@@ -870,7 +910,7 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
-      expect(preview.html).toContain("width: 32mm");
+      expect(preview.html).toContain("width: 26mm");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("height: 344px");
     });

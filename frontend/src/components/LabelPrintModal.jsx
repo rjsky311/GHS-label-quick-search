@@ -180,9 +180,14 @@ const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   widthMm: preset.labelWidthMm,
   heightMm: preset.labelHeightMm,
 }));
-const FULL_PAGE_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter((preset) =>
-  FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id),
-);
+const SHIPPING_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter(
+  (preset) =>
+    preset.outputRole === "primary-candidate" ||
+    FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id),
+).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
+const SUPPLEMENTAL_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
+  (preset) => preset.outputRole === "supplemental",
+).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
 
 const GRID_MAP = {
   portrait: { small: 15, medium: 8, large: 3 },
@@ -653,6 +658,10 @@ export default function LabelPrintModal({
   const recommendedFullPageLabel = recommendedFullPagePreset
     ? getLabelStockPresetDisplay(recommendedFullPagePreset, t).name
     : tx("label.fullPagePrimaryFallback", "full-page primary");
+  const visibleStockChoices =
+    labelPurpose === "shipping"
+      ? SHIPPING_PRIMARY_PRESETS
+      : SUPPLEMENTAL_STOCK_PRESETS;
   const plannerPreviewRisk =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
       ? tx(
@@ -1268,7 +1277,7 @@ export default function LabelPrintModal({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-medium text-slate-800">
-          {tx("label.previewLabelTitle", "Primary label preview")}
+          {tx("label.previewLabelTitle", "Label preview")}
         </div>
         <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
           {densityLabel}
@@ -1285,7 +1294,7 @@ export default function LabelPrintModal({
       <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
         {labelPreviewBundle ? (
           <iframe
-            title={tx("label.previewLabelTitle", "Primary label preview")}
+            title={tx("label.previewLabelTitle", "Label preview")}
             srcDoc={labelPreviewBundle.html}
             data-testid="label-fragment-preview"
             className="w-full bg-white"
@@ -1385,60 +1394,87 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
-              {labelPurpose === "shipping" && (
-                <section
-                  className="rounded-lg border border-slate-200 bg-white p-4"
-                  data-testid="primary-output-size-controls"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-800">
-                        {tx("label.primaryOutputSizeTitle", "Primary label size")}
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {tx(
-                          "label.primaryOutputSizeHint",
-                          "Choose the paper size people actually load into the printer. Dense labels use one full page.",
-                        )}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                      {layoutProfile.pageSize || "A4"}
-                    </span>
+              <section
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="primary-output-size-controls"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-800">
+                      {tx("label.primaryOutputSizeTitle", "Physical output size")}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {labelPurpose === "shipping"
+                        ? tx(
+                            "label.primaryOutputSizeHint",
+                            "Choose the actual label or paper size first. The app scales text and pictograms for that stock, then routes dense content to A4 or Letter only when needed.",
+                          )
+                        : tx(
+                            "label.supplementalOutputSizeHint",
+                            "Choose the small stock you will actually apply. These outputs stay supplemental and keep pictograms visible.",
+                          )}
+                    </p>
                   </div>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {FULL_PAGE_PRIMARY_PRESETS.map((preset) => {
-                      const selected = layoutProfile.stockPreset === preset.id;
-                      const display = getLabelStockPresetDisplay(preset, t);
+                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                    {layoutProfile.stockPreset === "custom"
+                      ? tx("label.stockPresetCustom", "Custom tuning")
+                      : stockPresetDisplay.name || layoutProfile.stockPresetName}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {visibleStockChoices.map((preset) => {
+                    const selected = layoutProfile.stockPreset === preset.id;
+                    const display = getLabelStockPresetDisplay(preset, t);
+                    const isFullPage = FULL_PAGE_PRIMARY_STOCK_IDS.includes(
+                      preset.id,
+                    );
 
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => applyStockPreset(preset)}
-                          data-testid={`primary-output-size-${preset.id}`}
-                          className={`rounded-md border p-3 text-left transition-colors ${
-                            selected
-                              ? "border-blue-600 bg-blue-50 text-blue-900"
-                              : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium">{display.name}</span>
-                            {selected && <Check className="h-4 w-4" />}
-                          </div>
-                          <div className="mt-1 text-xs text-slate-500">
-                            {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
-                            {tx("label.previewPerPage", "{{count}}/page", {
-                              count: 1,
-                            })}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              )}
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyStockPreset(preset)}
+                        data-testid={`primary-output-size-${preset.id}`}
+                        className={`rounded-md border p-3 text-left transition-colors ${
+                          selected
+                            ? "border-blue-600 bg-blue-50 text-blue-900"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{display.name}</span>
+                          {selected && <Check className="h-4 w-4" />}
+                        </div>
+                        <div className="mt-1 text-xs leading-5 text-slate-500">
+                          {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
+                          {tx("label.previewPerPage", "{{count}}/page", {
+                            count: preset.perPage,
+                          })}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-slate-500">
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+                            {preset.pageSize || "A4"}
+                          </span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+                            {t(
+                              ORIENTATION_OPTIONS.find(
+                                (item) => item.value === preset.orientation,
+                              )?.labelKey || "label.portrait",
+                            )}
+                          </span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+                            {isFullPage
+                              ? tx("label.completePrimaryStock", "complete")
+                              : labelPurpose === "shipping"
+                                ? tx("label.containerStock", "container")
+                                : tx("label.supplementalStock", "supplemental")}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
 
               <section className="space-y-3">
                 <div>

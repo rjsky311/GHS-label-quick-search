@@ -23,6 +23,7 @@ The best path is a complete primary label that a lab user can print without gues
 - A4 Primary is a distinct full-page rendering path, not just a larger paper option. It must scale the live preview to show the whole label, enlarge GHS pictograms, and use statement layout rules that can actually carry dense H/P content.
 - Letter Primary must be supported alongside A4 Primary for North American users. Both are complete primary-label outputs, not supplemental templates.
 - The print workflow should use an output planner: scale typography, reflow layout, and combine/deduplicate safe statement text before routing to a larger stock or supplemental output.
+- A4 and Letter are complete primary outputs, not the only valid physical label sizes. Container label stocks may be selected first; the app must scale text and pictograms for that stock, then recommend A4/Letter only when the selected stock cannot truthfully carry the complete primary label.
 - Print preview and print output must use the same renderer for the label fragment.
 - Color / black-and-white, bilingual name mode, orientation, and stock preset choices must be reflected in preview and print output.
 - Safety-critical printed label content must not contain ads, sponsor copy, or unrelated brand promotion.

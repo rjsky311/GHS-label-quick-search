@@ -705,31 +705,33 @@ const renderFullTemplate = (chemical, model) => {
               : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
           }
         </div>
-        <div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
-          <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
-          ${
-            hazards.length > 0
-              ? renderComplianceStatements(
-                  hazards,
-                  "compliance-hazard-list",
-                  model,
-                )
-              : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
-          }
+        <div class="compliance-statements-panel">
+          <div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+            <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
+            ${
+              hazards.length > 0
+                ? renderComplianceStatements(
+                    hazards,
+                    "compliance-hazard-list",
+                    model,
+                  )
+                : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
+            }
+          </div>
+          <div class="compliance-precaution-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+            <div class="section-label">${escapeHtml(model.t("print.precautionaryStatementsLabel"))}</div>
+            ${
+              precautions.length > 0
+                ? renderComplianceStatements(
+                    precautions,
+                    "compliance-precaution-list",
+                    model,
+                  )
+                : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
+            }
+            ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
+          </div>
         </div>
-      </div>
-      <div class="compliance-precaution-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
-        <div class="section-label">${escapeHtml(model.t("print.precautionaryStatementsLabel"))}</div>
-        ${
-          precautions.length > 0
-            ? renderComplianceStatements(
-                precautions,
-                "compliance-precaution-list",
-                model,
-              )
-            : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
-        }
-        ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
       </div>
       ${renderComplianceFooter(effectiveChem, model)}
     </div>
@@ -830,7 +832,7 @@ const buildStyles = (model) => {
   const compliancePictogramSize = layout.typography.compliancePictogramSize;
   const complianceAlertColumn =
     isFullPagePrimary
-      ? "minmax(82mm, 88mm)"
+      ? "minmax(64mm, 68mm)"
       : layout.size === "large"
       ? "minmax(38mm, 43mm)"
       : layout.size === "medium"
@@ -917,7 +919,7 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary {
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
       gap: 2.4mm;
       padding: 6mm;
       border-width: 0.8mm;
@@ -991,8 +993,9 @@ const buildStyles = (model) => {
       display: grid;
       grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
       gap: 2.2mm;
-      align-items: start;
+      align-items: stretch;
       min-height: 0;
+      overflow: hidden;
     }
     .compliance-alert-panel {
       display: flex;
@@ -1004,14 +1007,24 @@ const buildStyles = (model) => {
     .label-full-page-primary .compliance-alert-panel {
       border: 0.25mm solid #dbe4ef;
       border-radius: 1.2mm;
-      padding: 3mm;
+      padding: 2.4mm;
       background: #f8fafc;
-      gap: 3mm;
+      gap: 2.2mm;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+    .compliance-statements-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 1.4mm;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
     }
     .compliance-hazard-panel,
     .compliance-precaution-panel {
       min-width: 0;
-      overflow: visible;
+      overflow: hidden;
     }
     .compliance-precaution-panel {
       border-top: 0.25mm solid #cbd5e1;
@@ -1358,7 +1371,7 @@ const buildStyles = (model) => {
     .label-full-page-primary .pictograms.compliance-pictograms {
       grid-template-columns: repeat(2, ${compliancePictogramSize});
       justify-content: center;
-      gap: 4mm;
+      gap: 2.8mm;
     }
     .pictograms.compliance-pictograms img {
       width: ${compliancePictogramSize};
@@ -1401,7 +1414,7 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .signal.compliance-signal {
       font-size: ${layout.typography.signalSize};
-      padding: 2mm 2.4mm;
+      padding: 1.4mm 2mm;
     }
     .signal.danger {
       background: #fecaca;
@@ -1503,35 +1516,31 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .compliance-core {
       grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
-      gap: 5mm;
-    }
-    .label-full-page-primary .compliance-hazard-panel,
-    .label-full-page-primary .compliance-precaution-panel {
-      font-size: ${layout.typography.complianceStatementSize} !important;
-      line-height: ${layout.typography.complianceLineHeight} !important;
+      gap: 3.6mm;
+      min-height: 0;
     }
     .label-full-page-primary .section-label {
-      font-size: 10px;
-      margin-bottom: 1mm;
+      font-size: 9px;
+      margin-bottom: 0.7mm;
       letter-spacing: 0;
     }
     .label-full-page-primary .compliance-hazard-list {
-      gap: 0.8mm;
+      gap: 0.45mm;
     }
     .label-full-page-primary .compliance-precaution-list {
       display: block;
       column-count: ${layout.typography.complianceColumns};
-      column-gap: 5mm;
+      column-gap: 3.5mm;
     }
     .label-full-page-primary .compliance-statement {
       break-inside: avoid;
       page-break-inside: avoid;
-      margin-bottom: 0.65mm;
+      margin-bottom: 0.42mm;
     }
     .label-full-page-primary .compliance-precaution-list .compliance-statement {
       display: grid;
-      grid-template-columns: minmax(20mm, 27mm) minmax(0, 1fr);
-      gap: 1.2mm;
+      grid-template-columns: minmax(15mm, 21mm) minmax(0, 1fr);
+      gap: 0.8mm;
     }
     .precaution-code {
       display: inline-block;

@@ -278,7 +278,7 @@ describe("LabelPrintModal", () => {
     ).toBeTruthy();
   });
 
-  it("shows A4 and Letter as the primary paper-size choice", () => {
+  it("shows curated physical output sizes instead of only A4 and Letter", () => {
     renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
@@ -291,6 +291,12 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("primary-output-size-large-primary"),
+    ).toHaveTextContent("Large Primary");
+    expect(
+      screen.getByTestId("primary-output-size-medium-bottle"),
+    ).toHaveTextContent("Bottle Primary");
     expect(screen.getByTestId("primary-output-size-a4-primary")).toHaveTextContent(
       "A4 Primary",
     );
@@ -300,6 +306,29 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-fragment-preview")).toHaveStyle({
       height: "24rem",
     });
+  });
+
+  it("shows supplemental physical stock choices for QR supplement output", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        size: "small",
+        stockPreset: "small-strip",
+      },
+    });
+
+    expect(
+      screen.getByTestId("primary-output-size-small-strip"),
+    ).toHaveTextContent("Vial Strip");
+    expect(
+      screen.getByTestId("primary-output-size-brother-62mm-continuous"),
+    ).toHaveTextContent("62 mm Continuous");
+    expect(
+      screen.queryByTestId("primary-output-size-a4-primary"),
+    ).not.toBeInTheDocument();
   });
 
   it("blocks complete primary printing until the responsible profile is complete", () => {
