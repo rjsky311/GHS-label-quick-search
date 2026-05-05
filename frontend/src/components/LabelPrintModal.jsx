@@ -96,6 +96,12 @@ const COLOR_OPTIONS = [
   { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
 ];
 
+const READINESS_TONE_CLASSES = {
+  ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  neutral: "border-slate-200 bg-white text-slate-700",
+  caution: "border-amber-200 bg-amber-50 text-amber-900",
+};
+
 const STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   ...preset,
   perPage: preset.columns * preset.rows,
@@ -361,6 +367,52 @@ export default function LabelPrintModal({
   });
   const densityLabel = getDensityLabel(labelConfig, layoutProfile, previewChem, tx);
   const visibleRecentPrints = recentPrints.slice(0, 5);
+  const templateSummaryLabel = getOptionLabel(
+    TEMPLATE_OPTIONS,
+    labelConfig.template,
+    t,
+    "Template"
+  );
+  const sizeSummaryLabel = getOptionLabel(SIZE_OPTIONS, labelConfig.size, t, "Size");
+  const stockSummaryLabel =
+    layoutProfile.stockPreset === "custom"
+      ? tx("label.stockPresetCustom", "Custom tuning")
+      : stockPresetDisplay.name || layoutProfile.stockPresetName;
+  const printReadinessItems = [
+    {
+      key: "selection",
+      icon: FlaskConical,
+      label: tx("label.readinessSelection", "Selection"),
+      value:
+        selectedForLabel.length > 0
+          ? `${selectedForLabel.length} ${tx("label.readinessSelectedSuffix", "selected")}`
+          : tx("label.readinessNoSelection", "Nothing selected"),
+      tone: selectedForLabel.length > 0 ? "ready" : "caution",
+    },
+    {
+      key: "stock",
+      icon: Package2,
+      label: tx("label.readinessStock", "Stock"),
+      value: stockSummaryLabel,
+      tone: layoutProfile.stockPreset === "custom" ? "neutral" : "ready",
+    },
+    {
+      key: "layout",
+      icon: Settings2,
+      label: tx("label.readinessLayout", "Layout"),
+      value: `${templateSummaryLabel} / ${sizeSummaryLabel}`,
+      tone: "neutral",
+    },
+    {
+      key: "preview",
+      icon: ScanLine,
+      label: tx("label.readinessPreview", "Preview"),
+      value: previewChem
+        ? tx("label.readinessPreviewReady", "Preview ready")
+        : tx("label.readinessPreviewPending", "Waiting for selection"),
+      tone: previewChem ? "ready" : "caution",
+    },
+  ];
   const sheetPreviewBundle = useMemo(
     () =>
       buildPrintPreviewDocument(
@@ -522,7 +574,7 @@ export default function LabelPrintModal({
         className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
           <div>
             <h2 id="label-modal-title" className="flex items-center gap-2 text-xl font-bold text-slate-950">
               <Tag className="h-5 w-5 text-blue-600" /> {t("label.title")}
@@ -537,6 +589,36 @@ export default function LabelPrintModal({
           <button type="button" onClick={onClose} className="text-slate-500 transition-colors hover:text-slate-900">
             <X className="h-6 w-6" />
           </button>
+        </div>
+
+        <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-4" data-testid="print-readiness-strip">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {printReadinessItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.key}
+                  className={`flex min-h-20 items-center gap-3 rounded-md border px-3 py-3 ${
+                    READINESS_TONE_CLASSES[item.tone] || READINESS_TONE_CLASSES.neutral
+                  }`}
+                  data-testid={`print-readiness-${item.key}`}
+                >
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/70">
+                    <Icon className="h-4 w-4 shrink-0" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium uppercase tracking-[0.12em] opacity-70">
+                      {item.label}
+                    </span>
+                    <span className="mt-1 block truncate text-sm font-semibold">
+                      {item.value}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="border-b border-slate-200 px-6 py-4">
@@ -1405,7 +1487,7 @@ export default function LabelPrintModal({
           </aside>
         </div>
 
-        <div className="flex gap-3 border-t border-slate-200 px-6 py-5">
+        <div className="sticky bottom-0 z-20 flex gap-3 border-t border-slate-200 bg-white px-6 py-5" data-testid="label-modal-footer">
           <button
             type="button"
             onClick={onPrintLabels}

@@ -104,7 +104,7 @@ User Browser
 - Vite 6 + `@vitejs/plugin-react`
 - `@` alias → `src/` via `frontend/vite.config.js`
 - Tailwind CSS 3.4 + shadcn/ui (46 primitives)
-- Test runner: Jest 30 + jsdom. Run frontend tests with `npm test -- --runInBand`.
+- Test runner: Jest 30 + jsdom. Run frontend tests with `npm test -- --runInBand`; run locale parity with `npm run test:i18n`.
 
 ## Backend Architecture (`backend/server.py`)
 
@@ -269,8 +269,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 ```
 
 ### Test Results (latest known v1.10 baseline)
-- **Frontend**: 652 tests across 41 suites; 0 known React `act(...)` warnings
-- **Backend**: 141 tests covering name resolution, reverse dicts, aliases, API endpoints,
+- **Frontend**: 664 tests across 42 suites; 0 known React `act(...)` warnings
+- **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
+- **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
 - **Build**: `npm run build` → OK; Vite vendor chunks split via `manualChunks`
@@ -278,7 +279,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
   actions use v6 / Node 24-compatible runtimes
 
 ### CI/CD (`.github/workflows/ci.yml`)
-- **Frontend job**: `npm ci` → `npm test -- --runInBand` → `npm run build`
+- **Frontend job**: `npm ci` → `npm run test:i18n` → `npm test -- --runInBand` → `npm run build`
 - **Backend job**: `pip install -r requirements.txt` → `py_compile server.py` → `pytest -v`
 - Triggers: push to main, pull requests
 
