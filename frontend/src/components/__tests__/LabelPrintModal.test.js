@@ -94,23 +94,40 @@ describe("LabelPrintModal", () => {
     );
   });
 
-  it("shows print readiness at a glance and keeps actions sticky", () => {
+  it("starts with the recommended output and keeps actions sticky", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
-    expect(screen.getByTestId("print-readiness-strip")).toBeInTheDocument();
-    expect(screen.getByTestId("print-readiness-selection")).toHaveTextContent(
-      "1 selected",
+    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
+      "Recommended output",
     );
-    expect(screen.getByTestId("print-readiness-stock")).toHaveTextContent(
-      "Bottle Primary",
-    );
-    expect(screen.getByTestId("print-readiness-purpose")).toHaveTextContent(
-      "label.purposeShipping",
-    );
-    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
-      "Needs review",
-    );
-    expect(screen.getByTestId("label-modal-scroll-body")).toHaveClass(
+    expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
+    expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("saved-print-controls")).toBeInTheDocument();
+    expect(
+      screen
+        .getByTestId("print-output-plan")
+        .compareDocumentPosition(screen.getByTestId("saved-print-controls")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("primary-output-size-controls")
+        .compareDocumentPosition(screen.getByTestId("saved-print-controls")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("core-output-controls")
+        .compareDocumentPosition(screen.getByTestId("saved-print-controls")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("saved-print-controls").tagName,
+    ).toBe("DETAILS");
+    expect(
+      screen.getByTestId("label-modal-scroll-body"),
+    ).toHaveClass(
       "overflow-y-auto",
       "lg:overflow-hidden",
       "lg:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)]",
@@ -130,6 +147,9 @@ describe("LabelPrintModal", () => {
       "DETAILS",
     );
     expect(screen.getByTestId("advanced-template-controls").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByTestId("advanced-stock-controls").tagName).toBe(
       "DETAILS",
     );
     expect(screen.getByTestId("advanced-custom-fields").tagName).toBe(
@@ -168,7 +188,7 @@ describe("LabelPrintModal", () => {
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
   });
 
-  it("routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
+  it("auto-routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -191,11 +211,19 @@ describe("LabelPrintModal", () => {
       },
     });
 
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stockPreset: "letter-primary",
+        labelWidthMm: 186,
+        labelHeightMm: 236,
+        pageSize: "Letter",
+        perPage: 1,
+        template: "full",
+        labelPurpose: "shipping",
+      }),
+    );
     expect(screen.getByTestId("preview-warning-banner")).toHaveTextContent(
       "Printing blocked",
-    );
-    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
-      "Too dense",
     );
     expect(screen.getByTestId("required-output-checklist")).toBeInTheDocument();
     expect(screen.getByTestId("required-output-pictograms")).toHaveTextContent(
@@ -210,21 +238,68 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("required-output-responsible-profile"),
     ).toHaveTextContent("0/3");
-    expect(screen.getByTestId("use-full-page-primary-footer")).toBeEnabled();
-
-    fireEvent.click(screen.getByTestId("use-full-page-primary-footer"));
     expect(props.onPrintLabels).not.toHaveBeenCalled();
-    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stockPreset: "letter-primary",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
-        pageSize: "Letter",
-        perPage: 1,
-        template: "full",
+  });
+
+  it("keeps the actual label fragment before warnings and output diagnostics", () => {
+    const denseChem = makeChem({
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 18 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    });
+
+    renderModal({
+      selectedForLabel: [denseChem],
+      labelConfig: {
+        ...baseConfig,
         labelPurpose: "shipping",
-      }),
+        template: "full",
+        size: "large",
+        stockPreset: "large-primary",
+      },
+    });
+
+    const labelPreview = screen.getByTestId("primary-label-preview-section");
+    const warning = screen.getByTestId("preview-warning-banner");
+    const requiredOutput = screen.getByTestId("required-output-checklist");
+
+    expect(
+      labelPreview.compareDocumentPosition(warning) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      labelPreview.compareDocumentPosition(requiredOutput) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("shows A4 and Letter as the primary paper-size choice", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        size: "large",
+        stockPreset: "a4-primary",
+      },
+    });
+
+    expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-a4-primary")).toHaveTextContent(
+      "A4 Primary",
     );
+    expect(
+      screen.getByTestId("primary-output-size-letter-primary"),
+    ).toHaveTextContent("Letter Primary");
+    expect(screen.getByTestId("label-fragment-preview")).toHaveStyle({
+      height: "24rem",
+    });
   });
 
   it("blocks complete primary printing until the responsible profile is complete", () => {
@@ -243,8 +318,8 @@ describe("LabelPrintModal", () => {
       labProfile: { organization: "Lab A", phone: "02-1234", address: "" },
     });
 
-    expect(screen.getByTestId("print-readiness-compliance")).toHaveTextContent(
-      "Missing profile",
+    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
+      "Responsible profile required",
     );
     expect(
       screen.getByTestId("required-output-responsible-profile"),

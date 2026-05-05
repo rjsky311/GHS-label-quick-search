@@ -1761,9 +1761,17 @@ function buildPreviewStyles(mode, model) {
   const mmToPx = 3.78;
   const rawLabelWidthPx = model.layout.widthMm * mmToPx;
   const rawLabelHeightPx = model.layout.heightMm * mmToPx;
+  const isFullPageLabelPreview =
+    mode === "label" && isFullPagePrimaryLayout(model.layout);
+  const maxLabelPreviewWidthPx = isFullPageLabelPreview ? 520 : 620;
+  const maxLabelPreviewHeightPx = isFullPageLabelPreview ? 320 : 390;
   const labelPreviewScale =
     mode === "label"
-      ? Math.min(1, 620 / rawLabelWidthPx, 390 / rawLabelHeightPx)
+      ? Math.min(
+          1,
+          maxLabelPreviewWidthPx / rawLabelWidthPx,
+          maxLabelPreviewHeightPx / rawLabelHeightPx,
+        )
       : 1;
   const labelPreviewWidthPx = Math.ceil(
     rawLabelWidthPx * labelPreviewScale + 24,

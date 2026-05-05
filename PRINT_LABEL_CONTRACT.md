@@ -33,7 +33,7 @@ Automated tests should pin these behaviors:
 
 - Every template (`icon`, `standard`, `full`, `qrcode`) renders every available GHS pictogram code and does not emit `.more-pics`.
 - Full primary labels render all H/P statements, or preflight blocks before opening print if the chosen stock cannot fit them.
-- Dense shipped-container labels on regular large stock show a clear full-page primary action instead of leaving the user at a disabled print dead end.
+- Dense shipped-container labels on regular large stock auto-route to a viable A4 or Letter primary output when the planner can produce one, instead of leaving the user at a disabled print dead end.
 - A4 Primary allows dense complete labels within the documented statement threshold and does not open the overflow/blocking alert for the HCl-style dense path.
 - Complete primary labels block print when responsible lab/supplier name, phone, or address is missing; the required-output checklist reports the missing profile fields.
 - Supplemental templates keep purpose notices visible.
@@ -43,8 +43,8 @@ Automated tests should pin these behaviors:
 
 Run these in Browser Use after meaningful print-workflow changes:
 
-- Hydrochloric acid, shipped-container / full / Large Primary: warning appears and the main action offers A4 Primary.
-- Hydrochloric acid after switching to A4 Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
+- Hydrochloric acid, shipped-container / full / Large Primary: the modal auto-applies A4 or Letter Primary, the print action is available when required profile data is complete, and all pictograms remain visible.
+- Hydrochloric acid on A4 or Letter Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
 - Hydrochloric acid after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
 - A4 Primary preview shows the full label scaled inside the preview pane rather than cropping the top of the full-page label.
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.

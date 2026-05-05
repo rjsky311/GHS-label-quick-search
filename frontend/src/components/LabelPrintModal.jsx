@@ -12,7 +12,6 @@ import {
   ClipboardList,
   FileSpreadsheet,
   FileText,
-  FlaskConical,
   Languages,
   LayoutPanelTop,
   Lightbulb,
@@ -30,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  FULL_PAGE_PRIMARY_STOCK_IDS,
   LABEL_STOCK_PICKER_PRESETS,
   LABEL_STOCK_PRESETS,
   getLabelStockPresetDisplay,
@@ -180,6 +180,9 @@ const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   widthMm: preset.labelWidthMm,
   heightMm: preset.labelHeightMm,
 }));
+const FULL_PAGE_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter((preset) =>
+  FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id),
+);
 
 const GRID_MAP = {
   portrait: { small: 15, medium: 8, large: 3 },
@@ -567,6 +570,7 @@ export default function LabelPrintModal({
 }) {
   const { t, i18n } = useTranslation();
   const dialogRef = useRef(null);
+  const autoAppliedOutputRef = useRef("");
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
 
@@ -625,22 +629,6 @@ export default function LabelPrintModal({
     tx,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
-  const templateSummaryLabel = getOptionLabel(
-    TEMPLATE_OPTIONS,
-    labelConfig.template,
-    t,
-    "Template",
-  );
-  const sizeSummaryLabel = getOptionLabel(
-    SIZE_OPTIONS,
-    labelConfig.size,
-    t,
-    "Size",
-  );
-  const stockSummaryLabel =
-    layoutProfile.stockPreset === "custom"
-      ? tx("label.stockPresetCustom", "Custom tuning")
-      : stockPresetDisplay.name || layoutProfile.stockPresetName;
   const purposeSummaryLabel = getOptionLabel(
     PURPOSE_OPTIONS,
     labelPurpose,
@@ -757,6 +745,13 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
     Boolean(recommendedFullPagePreset) &&
     layoutProfile.stockPreset !== recommendedFullPagePreset.id;
+  const autoApplyFullPageKey = [
+    selectedForLabel.map((chem) => chem.cas_number).join("|"),
+    layoutProfile.stockPreset,
+    outputPlan.recommendedFullPageStockId,
+    labelPurpose,
+    labelConfig.nameDisplay,
+  ].join(":");
   const blockedDensityMessage = tx(
     "label.previewRiskShippingBlockedDensity",
     "This content is too dense for the current complete-label stock. Use a full-page primary stock for a complete label; QR supplement is only a secondary option.",
@@ -813,61 +808,6 @@ export default function LabelPrintModal({
                     "label.outputPlanPendingBody",
                     "Select at least one chemical to let the app choose a safe printable output.",
                   );
-  const printReadinessItems = [
-    {
-      key: "selection",
-      icon: FlaskConical,
-      label: tx("label.readinessSelection", "Selection"),
-      value:
-        selectedForLabel.length > 0
-          ? `${selectedForLabel.length} ${tx("label.readinessSelectedSuffix", "selected")}`
-          : tx("label.readinessNoSelection", "Nothing selected"),
-      tone: selectedForLabel.length > 0 ? "ready" : "caution",
-    },
-    {
-      key: "purpose",
-      icon: Package2,
-      label: tx("label.readinessPurpose", "Purpose"),
-      value: purposeSummaryLabel,
-      tone: labelPurpose === "shipping" ? "ready" : "neutral",
-    },
-    {
-      key: "stock",
-      icon: Package2,
-      label: tx("label.readinessStock", "Stock"),
-      value: stockSummaryLabel,
-      tone: layoutProfile.stockPreset === "custom" ? "neutral" : "ready",
-    },
-    {
-      key: "layout",
-      icon: Settings2,
-      label: tx("label.readinessLayout", "Layout"),
-      value: `${templateSummaryLabel} / ${sizeSummaryLabel}`,
-      tone: "neutral",
-    },
-    {
-      key: "compliance",
-      icon: previewChem && !hasPreviewWarnings ? CheckCircle2 : AlertTriangle,
-      label: tx("label.readinessCompliance", "Label fit"),
-      value: previewChem
-        ? outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
-          ? tx("label.readinessComplianceContinuation", "Needs continuation")
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
-            ? tx("label.readinessComplianceProfile", "Missing profile")
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
-            ? tx("label.readinessComplianceBlocked", "Too dense")
-          : isPrintFitBlocked
-            ? tx("label.readinessComplianceBlocked", "Too dense")
-            : hasPreviewWarnings
-            ? tx("label.readinessComplianceReview", "Needs review")
-            : tx("label.readinessComplianceReady", "Looks ready")
-        : tx("label.readinessPreviewPending", "Waiting for selection"),
-      tone:
-        previewChem && !hasPreviewWarnings && !isPrintFitBlocked
-          ? "ready"
-          : "caution",
-    },
-  ];
   const sheetPreviewBundle = useMemo(
     () =>
       buildPrintPreviewDocument(
@@ -906,6 +846,27 @@ export default function LabelPrintModal({
     customGHSSettings,
     customLabelFields,
     labProfile,
+  ]);
+
+  useEffect(() => {
+    if (!canUseFullPagePrimary || !outputPlan.recommendedFullPagePatch) {
+      autoAppliedOutputRef.current = "";
+      return;
+    }
+
+    if (autoAppliedOutputRef.current === autoApplyFullPageKey) return;
+    autoAppliedOutputRef.current = autoApplyFullPageKey;
+
+    onLabelConfigChange({
+      ...labelConfig,
+      ...outputPlan.recommendedFullPagePatch,
+    });
+  }, [
+    autoApplyFullPageKey,
+    canUseFullPagePrimary,
+    labelConfig,
+    onLabelConfigChange,
+    outputPlan.recommendedFullPagePatch,
   ]);
 
   const formatPrintTimestamp = (value) => {
@@ -1059,6 +1020,289 @@ export default function LabelPrintModal({
     </div>
   );
 
+  const isFullPagePrimaryPreview =
+    labelConfig.template === "full" &&
+    FULL_PAGE_PRIMARY_STOCK_IDS.includes(layoutProfile.stockPreset);
+  const labelFragmentPreviewHeight =
+    labelConfig.template === "qrcode"
+      ? "20rem"
+      : isFullPagePrimaryPreview
+        ? "24rem"
+        : layoutProfile.orientation === "portrait"
+          ? "34rem"
+          : "22rem";
+
+  const renderSavedPrintControls = () => (
+    <details
+      className="rounded-lg border border-slate-200 bg-white p-4"
+      data-testid="saved-print-controls"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
+        <Bookmark className="h-4 w-4 text-blue-600" />
+        {tx("label.savedPrintControlsTitle", "Saved jobs and presets")}
+      </summary>
+      <div className="mt-4 space-y-4">
+        <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Bookmark className="h-4 w-4 text-blue-600" />
+            {t("label.quickTemplates")}
+          </div>
+          <div className="mt-3">
+            {printTemplates.length === 0 && !showSaveInput ? (
+              <p className="text-xs text-slate-500">{t("label.noTemplates")}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {printTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="group flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLoadTemplate(template);
+                        toast.success(
+                          t("label.loadTemplateSuccess", {
+                            name: template.name,
+                          }),
+                        );
+                      }}
+                    >
+                      {template.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (
+                          window.confirm(
+                            t("label.deleteTemplateConfirm", {
+                              name: template.name,
+                            }),
+                          )
+                        ) {
+                          onDeleteTemplate(template.id);
+                          toast.success(t("label.deleteTemplateSuccess"));
+                        }
+                      }}
+                      className="ml-1 text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3">
+            {!showSaveInput ? (
+              printTemplates.length < 10 ? (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveInput(true)}
+                  className="flex items-center gap-1 text-xs font-medium text-blue-700 transition-colors hover:text-blue-800"
+                >
+                  <Plus className="h-3 w-3" /> {t("label.saveCurrentBtn")}
+                </button>
+              ) : (
+                <p className="text-xs text-amber-500">
+                  {t("label.templateLimitHint")}
+                </p>
+              )
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(event) =>
+                    setTemplateName(event.target.value.slice(0, 30))
+                  }
+                  placeholder={t("label.templateNamePlaceholder")}
+                  className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                  autoFocus
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && templateName.trim()) {
+                      const success = onSaveTemplate(templateName.trim());
+                      if (success) {
+                        toast.success(
+                          t("label.saveTemplateSuccess", {
+                            name: templateName.trim(),
+                          }),
+                        );
+                        setTemplateName("");
+                        setShowSaveInput(false);
+                      }
+                    }
+
+                    if (event.key === "Escape") {
+                      event.stopPropagation();
+                      setTemplateName("");
+                      setShowSaveInput(false);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!templateName.trim()) {
+                      toast.error(t("label.templateNameRequired"));
+                      return;
+                    }
+
+                    const success = onSaveTemplate(templateName.trim());
+                    if (success) {
+                      toast.success(
+                        t("label.saveTemplateSuccess", {
+                          name: templateName.trim(),
+                        }),
+                      );
+                      setTemplateName("");
+                      setShowSaveInput(false);
+                    }
+                  }}
+                  className="rounded bg-blue-700 p-1.5 text-white transition-colors hover:bg-blue-800"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTemplateName("");
+                    setShowSaveInput(false);
+                  }}
+                  className="rounded bg-slate-100 p-1.5 text-slate-600 transition-colors hover:bg-slate-200"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <LayoutPanelTop className="h-4 w-4 text-blue-600" />
+              {tx("label.recentPrintsTitle", "Recent print queue")}
+            </div>
+            {visibleRecentPrints.length > 0 &&
+              typeof onClearRecentPrints === "function" && (
+                <button
+                  type="button"
+                  onClick={onClearRecentPrints}
+                  className="text-xs text-slate-500 transition-colors hover:text-slate-900"
+                >
+                  {tx("label.recentPrintsClear", "Clear")}
+                </button>
+              )}
+          </div>
+          {visibleRecentPrints.length === 0 ? (
+            <p className="mt-3 text-xs text-slate-500">
+              {tx(
+                "label.recentPrintsEmpty",
+                "Recent print jobs will appear here so you can reload a label set in one click.",
+              )}
+            </p>
+          ) : (
+            <div className="mt-3 grid gap-2">
+              {visibleRecentPrints.map((job) => {
+                const firstItem = job.items?.[0];
+                const remaining = Math.max(
+                  0,
+                  (job.totalChemicals || job.items?.length || 1) - 1,
+                );
+                const primaryLabel =
+                  (firstItem &&
+                    getLocalizedNames(firstItem, currentLocale).primary) ||
+                  firstItem?.cas_number ||
+                  tx("label.recentPrintUnknown", "Saved job");
+                const templateLabel = getOptionLabel(
+                  TEMPLATE_OPTIONS,
+                  job.labelConfig?.template,
+                  t,
+                  job.labelConfig?.template || "standard",
+                );
+
+                return (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-slate-900">
+                        {primaryLabel}
+                        {remaining > 0 ? ` +${remaining}` : ""}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
+                        <span>{formatPrintTimestamp(job.createdAt)}</span>
+                        <span>
+                          {tx("label.recentPrintLabels", "{{count}} labels", {
+                            count: job.totalLabels || 0,
+                          })}
+                        </span>
+                        <span>{templateLabel}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onLoadRecentPrint?.(job)}
+                      className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+                    >
+                      {tx("label.recentPrintLoad", "Load")}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
+    </details>
+  );
+
+  const renderLabelPreviewSection = () => (
+    <section
+      className="rounded-lg border border-slate-200 bg-white p-3"
+      data-testid="primary-label-preview-section"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm font-medium text-slate-800">
+          {tx("label.previewLabelTitle", "Primary label preview")}
+        </div>
+        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
+          {densityLabel}
+        </span>
+      </div>
+
+      <div className="sr-only">
+        {tx(
+          "label.previewRealFragmentHint",
+          "This preview now reuses the same HTML fragment that gets written into the print document.",
+        )}
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+        {labelPreviewBundle ? (
+          <iframe
+            title={tx("label.previewLabelTitle", "Primary label preview")}
+            srcDoc={labelPreviewBundle.html}
+            data-testid="label-fragment-preview"
+            className="w-full bg-white"
+            style={{ height: labelFragmentPreviewHeight }}
+          />
+        ) : (
+          <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
+            {tx(
+              "label.previewFocusEmptyBody",
+              "Select at least one chemical to preview real content density.",
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -1073,7 +1317,7 @@ export default function LabelPrintModal({
         className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <div>
             <h2
               id="label-modal-title"
@@ -1084,7 +1328,7 @@ export default function LabelPrintModal({
             <p className="mt-1 text-sm text-slate-600">
               {tx(
                 "label.settingsPreviewIntro",
-                "Tune the label layout on the left and watch the preview react immediately on the right.",
+                "The app chooses a printable output first. Adjust only when the preview needs a different physical stock.",
               )}
             </p>
           </div>
@@ -1105,40 +1349,6 @@ export default function LabelPrintModal({
               className="space-y-6 px-6 py-6 lg:min-h-0 lg:overflow-y-auto"
               data-testid="label-settings-column"
             >
-              <section
-                className="rounded-lg border border-slate-200 bg-white p-3"
-                data-testid="print-readiness-strip"
-              >
-                <div className="flex flex-wrap gap-2">
-                  {printReadinessItems.map((item) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <div
-                        key={item.key}
-                        className={`flex min-w-0 items-center gap-2 rounded-md border px-3 py-2 ${
-                          READINESS_TONE_CLASSES[item.tone] ||
-                          READINESS_TONE_CLASSES.neutral
-                        }`}
-                        data-testid={`print-readiness-${item.key}`}
-                      >
-                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70">
-                          <Icon className="h-4 w-4 shrink-0" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-[11px] font-medium uppercase leading-none opacity-70">
-                            {item.label}
-                          </span>
-                          <span className="mt-1 block max-w-44 truncate text-sm font-semibold">
-                            {item.value}
-                          </span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
               <section
                 className={`rounded-lg border p-4 ${
                   READINESS_TONE_CLASSES[outputPlanTone] ||
@@ -1175,252 +1385,60 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
-              <details
-                className="rounded-lg border border-slate-200 bg-white p-4"
-                data-testid="saved-print-controls"
-              >
-                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
-                  <Bookmark className="h-4 w-4 text-blue-600" />
-                  {tx("label.savedPrintControlsTitle", "Saved jobs and presets")}
-                </summary>
-                <div className="mt-4 space-y-4">
-              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Bookmark className="h-4 w-4 text-blue-600" />
-                  {t("label.quickTemplates")}
-                </div>
-                <div className="mt-3">
-                  {printTemplates.length === 0 && !showSaveInput ? (
-                    <p className="text-xs text-slate-500">
-                      {t("label.noTemplates")}
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {printTemplates.map((template) => (
-                        <div
-                          key={template.id}
-                          className="group flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onLoadTemplate(template);
-                              toast.success(
-                                t("label.loadTemplateSuccess", {
-                                  name: template.name,
-                                }),
-                              );
-                            }}
-                          >
-                            {template.name}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (
-                                window.confirm(
-                                  t("label.deleteTemplateConfirm", {
-                                    name: template.name,
-                                  }),
-                                )
-                              ) {
-                                onDeleteTemplate(template.id);
-                                toast.success(t("label.deleteTemplateSuccess"));
-                              }
-                            }}
-                            className="ml-1 text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-3">
-                  {!showSaveInput ? (
-                    printTemplates.length < 10 ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowSaveInput(true)}
-                        className="flex items-center gap-1 text-xs font-medium text-blue-700 transition-colors hover:text-blue-800"
-                      >
-                        <Plus className="h-3 w-3" /> {t("label.saveCurrentBtn")}
-                      </button>
-                    ) : (
-                      <p className="text-xs text-amber-500">
-                        {t("label.templateLimitHint")}
+              {labelPurpose === "shipping" && (
+                <section
+                  className="rounded-lg border border-slate-200 bg-white p-4"
+                  data-testid="primary-output-size-controls"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-800">
+                        {tx("label.primaryOutputSizeTitle", "Primary label size")}
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {tx(
+                          "label.primaryOutputSizeHint",
+                          "Choose the paper size people actually load into the printer. Dense labels use one full page.",
+                        )}
                       </p>
-                    )
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={templateName}
-                        onChange={(event) =>
-                          setTemplateName(event.target.value.slice(0, 30))
-                        }
-                        placeholder={t("label.templateNamePlaceholder")}
-                        className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
-                        autoFocus
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" && templateName.trim()) {
-                            const success = onSaveTemplate(templateName.trim());
-                            if (success) {
-                              toast.success(
-                                t("label.saveTemplateSuccess", {
-                                  name: templateName.trim(),
-                                }),
-                              );
-                              setTemplateName("");
-                              setShowSaveInput(false);
-                            }
-                          }
-
-                          if (event.key === "Escape") {
-                            event.stopPropagation();
-                            setTemplateName("");
-                            setShowSaveInput(false);
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!templateName.trim()) {
-                            toast.error(t("label.templateNameRequired"));
-                            return;
-                          }
-
-                          const success = onSaveTemplate(templateName.trim());
-                          if (success) {
-                            toast.success(
-                              t("label.saveTemplateSuccess", {
-                                name: templateName.trim(),
-                              }),
-                            );
-                            setTemplateName("");
-                            setShowSaveInput(false);
-                          }
-                        }}
-                        className="rounded bg-blue-700 p-1.5 text-white transition-colors hover:bg-blue-800"
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTemplateName("");
-                          setShowSaveInput(false);
-                        }}
-                        className="rounded bg-slate-100 p-1.5 text-slate-600 transition-colors hover:bg-slate-200"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
                     </div>
-                  )}
-                </div>
-              </section>
-
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <LayoutPanelTop className="h-4 w-4 text-blue-600" />
-                    {tx("label.recentPrintsTitle", "Recent print queue")}
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                      {layoutProfile.pageSize || "A4"}
+                    </span>
                   </div>
-                  {visibleRecentPrints.length > 0 &&
-                    typeof onClearRecentPrints === "function" && (
-                      <button
-                        type="button"
-                        onClick={onClearRecentPrints}
-                        className="text-xs text-slate-500 transition-colors hover:text-slate-900"
-                      >
-                        {tx("label.recentPrintsClear", "Clear")}
-                      </button>
-                    )}
-                </div>
-                {visibleRecentPrints.length === 0 ? (
-                  <p className="mt-3 text-xs text-slate-500">
-                    {tx(
-                      "label.recentPrintsEmpty",
-                      "Recent print jobs will appear here so you can reload a label set in one click.",
-                    )}
-                  </p>
-                ) : (
-                  <div className="mt-3 grid gap-2">
-                    {visibleRecentPrints.map((job) => {
-                      const firstItem = job.items?.[0];
-                      const remaining = Math.max(
-                        0,
-                        (job.totalChemicals || job.items?.length || 1) - 1,
-                      );
-                      const primaryLabel =
-                        (firstItem &&
-                          getLocalizedNames(firstItem, currentLocale)
-                            .primary) ||
-                        firstItem?.cas_number ||
-                        tx("label.recentPrintUnknown", "Saved job");
-                      const templateLabel = getOptionLabel(
-                        TEMPLATE_OPTIONS,
-                        job.labelConfig?.template,
-                        t,
-                        job.labelConfig?.template || "standard",
-                      );
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {FULL_PAGE_PRIMARY_PRESETS.map((preset) => {
+                      const selected = layoutProfile.stockPreset === preset.id;
+                      const display = getLabelStockPresetDisplay(preset, t);
 
                       return (
-                        <div
-                          key={job.id}
-                          className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => applyStockPreset(preset)}
+                          data-testid={`primary-output-size-${preset.id}`}
+                          className={`rounded-md border p-3 text-left transition-colors ${
+                            selected
+                              ? "border-blue-600 bg-blue-50 text-blue-900"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                          }`}
                         >
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-slate-900">
-                              {primaryLabel}
-                              {remaining > 0 ? ` +${remaining}` : ""}
-                            </div>
-                            <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-                              <span>{formatPrintTimestamp(job.createdAt)}</span>
-                              <span>
-                                {tx(
-                                  "label.recentPrintLabels",
-                                  "{{count}} labels",
-                                  {
-                                    count: job.totalLabels || 0,
-                                  },
-                                )}
-                              </span>
-                              <span>{templateLabel}</span>
-                            </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">{display.name}</span>
+                            {selected && <Check className="h-4 w-4" />}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => onLoadRecentPrint?.(job)}
-                            className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
-                          >
-                            {tx("label.recentPrintLoad", "Load")}
-                          </button>
-                        </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
+                            {tx("label.previewPerPage", "{{count}}/page", {
+                              count: 1,
+                            })}
+                          </div>
+                        </button>
                       );
                     })}
                   </div>
-                )}
-              </section>
-                </div>
-              </details>
-
-              <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                  <Settings2 className="h-4 w-4 text-blue-600" />
-                  {tx("label.settingsTitle", "Print setup")}
-                </div>
-                <p className="mt-2 text-sm text-slate-600">
-                  {tx(
-                    "label.settingsBody",
-                    "Use stock presets for a fast starting point, then fine-tune spacing and nudges without leaving the modal.",
-                  )}
-                </p>
-              </section>
+                </section>
+              )}
 
               <section className="space-y-3">
                 <div>
@@ -1568,19 +1586,22 @@ export default function LabelPrintModal({
                 </div>
               </details>
 
-              <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-slate-800">
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="advanced-stock-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
+                  <span>
                     {tx("label.stockPresetsTitle", "Label stock presets")}
-                  </h3>
+                  </span>
                   <span className="text-xs text-slate-500">
                     {layoutProfile.stockPreset === "custom"
                       ? tx("label.stockPresetCustom", "Custom tuning")
                       : stockPresetDisplay.name ||
                         layoutProfile.stockPresetName}
                   </span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
+                </summary>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {STOCK_PRESETS.map((preset) => {
                     const selected = layoutProfile.stockPreset === preset.id;
 
@@ -1638,7 +1659,7 @@ export default function LabelPrintModal({
                     "Presets are a starting point. Any manual spacing or nudge change switches the modal into custom tuning.",
                   )}
                 </p>
-              </section>
+              </details>
 
               <details
                 className="rounded-lg border border-slate-200 bg-white p-4"
@@ -2170,6 +2191,8 @@ export default function LabelPrintModal({
                   )}
                 </div>
               </section>
+
+              {renderSavedPrintControls()}
             </div>
 
             <aside className="order-first border-b border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
@@ -2177,13 +2200,13 @@ export default function LabelPrintModal({
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
                 data-testid="label-preview-panel"
               >
-                <div className="border-b border-slate-200 px-5 py-4">
+                <div className="border-b border-slate-200 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-xs font-semibold uppercase text-slate-500">
                         {tx("label.previewTitle", "Live preview")}
                       </div>
-                      <h3 className="mt-1 text-lg font-semibold text-slate-950">
+                      <h3 className="mt-1 text-base font-semibold text-slate-950">
                         {previewChem
                           ? tx(
                               "label.previewFocusFilled",
@@ -2194,11 +2217,11 @@ export default function LabelPrintModal({
                               "No chemical selected yet",
                             )}
                       </h3>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-xs text-slate-600">
                         {previewChem
                           ? tx(
                               "label.previewFocusBody",
-                              "This pane reflects the current template, stock preset, and fields.",
+                              "This is the label fragment that will be printed.",
                             )
                           : tx(
                               "label.previewFocusEmptyBody",
@@ -2214,7 +2237,7 @@ export default function LabelPrintModal({
                     </span>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {[
                       purposeSummaryLabel,
                       getOptionLabel(
@@ -2254,6 +2277,8 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="space-y-4 px-4 py-4">
+                  {renderLabelPreviewSection()}
+
                   {previewChem && hasPreviewWarnings && primaryPreviewRisk && (
                     <section
                       className={`rounded-lg border p-3 text-sm ${
@@ -2350,53 +2375,6 @@ export default function LabelPrintModal({
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </section>
-
-                  <section className="rounded-lg border border-slate-200 bg-white p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-medium text-slate-800">
-                        {tx("label.previewLabelTitle", "Primary label preview")}
-                      </div>
-                      <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                        {densityLabel}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 text-xs text-slate-400">
-                      {tx(
-                        "label.previewRealFragmentHint",
-                        "This preview now reuses the same HTML fragment that gets written into the print document.",
-                      )}
-                    </div>
-
-                    <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
-                      {labelPreviewBundle ? (
-                        <iframe
-                          title={tx(
-                            "label.previewLabelTitle",
-                            "Primary label preview",
-                          )}
-                          srcDoc={labelPreviewBundle.html}
-                          data-testid="label-fragment-preview"
-                          className="w-full bg-white"
-                          style={{
-                            height:
-                              labelConfig.template === "qrcode"
-                                ? "22rem"
-                                : layoutProfile.orientation === "portrait"
-                                  ? "28rem"
-                                  : "22rem",
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
-                          {tx(
-                            "label.previewFocusEmptyBody",
-                            "Select at least one chemical to preview real content density.",
-                          )}
-                        </div>
-                      )}
                     </div>
                   </section>
 

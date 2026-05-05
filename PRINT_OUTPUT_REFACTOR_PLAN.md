@@ -56,6 +56,10 @@ The first refactor slice has landed:
 - Moved custom physical size fields into Advanced, where they mark the config as custom tuning.
 - Added explicit supplemental hazard notices to non-primary print fragments so compact `standard`, quick-ID, and QR outputs do not imply complete primary-label status.
 - Made `nameDisplay: both` print bilingual signal words plus H/P statement text, with non-full-page bilingual outputs treated as denser during fit checks.
+- `LabelPrintModal` now auto-applies the planner's A4/Letter full-page primary recommendation for dense shipped-container labels instead of opening on a blocked stock and asking the user to recover.
+- The modal first level now starts with the recommended output, A4/Letter primary size, purpose, language, and color. Readiness summary cards and the generic print-setup explainer were removed from the first screen.
+- The live preview panel now shows the actual label fragment before warnings/checklists, uses the same renderer as print output, and scales full-page primary previews down so the whole label is easier to inspect.
+- Saved jobs, stock presets, template override, layout tuning, custom stock size, and custom fields are collapsed behind secondary/advanced sections.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
@@ -282,6 +286,7 @@ Add or update tests so this behavior is pinned:
 - A4 Primary and Letter Primary both exist and render as complete primary labels.
 - Full-page primary preview scales the whole label without clipping.
 - Large dense chemicals route to full-page primary instead of a dead disabled print button.
+- Dense shipped-container labels auto-apply a viable A4 or Letter primary recommendation when the planner can produce one.
 - Small stocks become supplemental when complete content cannot fit.
 - Small supplemental labels do not claim to be complete primary labels.
 - All available pictograms render on printed hazard labels.

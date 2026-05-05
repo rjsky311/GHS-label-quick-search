@@ -850,6 +850,7 @@ describe("printLabels", () => {
       expect(preview.html).toContain("column-count: 2");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
+      expect(preview.html).toContain("height: 344px");
     });
 
     it("Letter primary uses its own full-page class and paper size", () => {
@@ -871,6 +872,7 @@ describe("printLabels", () => {
       expect(preview.html).toContain("size: Letter");
       expect(preview.html).toContain("width: 32mm");
       expect(preview.html).toContain("preview-label-scaler");
+      expect(preview.html).toContain("height: 344px");
     });
 
     it("qrcode template uses the scan-first hierarchy blocks", () => {
