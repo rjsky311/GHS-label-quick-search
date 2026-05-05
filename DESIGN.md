@@ -87,6 +87,15 @@ CAS numbers, H-codes, P-codes, and technical identifiers use monospace. This hel
 
 Do not use gradient hero sections, bokeh/orb backgrounds, or glassmorphism. The app should look trustworthy and operational, not promotional.
 
+### Generated Visual Assets
+
+Generated bitmap assets can support onboarding, empty states, and workflow explanation when they make the tool feel clearer and more pleasant. They must stay secondary to the working interface:
+
+- Use generated visuals for workflow context, not safety interpretation.
+- Keep them light, lab-utility oriented, and free of fake labels, fake GHS pictograms, or readable regulatory text.
+- Store project-bound generated assets under `frontend/src/assets/generated/` with local post-processing notes.
+- Prefer optimized transparent WebP/PNG assets and verify the first viewport in browser QA.
+
 ## Core Screen Direction
 
 The first screen is the product, not a landing page.
@@ -160,7 +169,7 @@ The print output itself must never include ads or unrelated brand promotion in c
 
 ### EmptyState
 
-The empty state should invite action with example CAS searches and show capability hints. It should not become a landing page or a long tutorial.
+The empty state should invite action with example CAS searches, show a short search-review-output workflow, and use generated visual assets only when they clarify the product. It should not become a landing page or a long tutorial.
 
 ## Brand / Monetization Boundaries
 

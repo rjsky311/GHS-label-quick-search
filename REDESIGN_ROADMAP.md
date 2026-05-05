@@ -17,7 +17,7 @@ As of the v1.10 codebase:
 - Runtime version is `1.10.0`.
 - Print workflow includes stock presets, QR template, live preview, recent print reload, lab profile, template save/load, and calibration controls.
 - Admin/pilot surfaces exist behind configuration.
-- Current redesign pass has moved the main app to a light-first utility shell, added trust/feedback surfaces, fixed local Vite CORS for browser QA, and split Vite vendor bundles. Remaining work is deeper workflow polish and deployment QA.
+- Current redesign pass has moved the main app to a light-first utility shell, added trust/feedback surfaces, fixed local Vite CORS for browser QA, split Vite vendor bundles, and started the generated visual asset system with a first-use workflow illustration. Remaining work is deeper workflow polish and deployment QA.
 
 ## Phase 1: Documentation And Design Contract
 
@@ -116,7 +116,7 @@ Acceptance:
 
 Goal: add brand utility paths only after the core workflow is strong.
 
-Status: first pass landed.
+Status: first pass landed; generated visual onboarding pass in progress.
 
 Scope:
 
@@ -126,6 +126,7 @@ Scope:
 - Post-print or post-export suggestions.
 - Optional label stock guide.
 - Optional SDS/label review CTA.
+- Generated onboarding/workflow visuals that stay outside safety-critical content.
 
 Acceptance:
 
@@ -145,6 +146,7 @@ For visual QA:
 
 - Desktop first viewport.
 - Mobile first viewport.
+- Generated empty-state asset with transparent background and no fake GHS symbols.
 - Results table with multiple hazards.
 - Detail modal.
 - Label print modal.

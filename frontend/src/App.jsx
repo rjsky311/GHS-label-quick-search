@@ -408,7 +408,8 @@ function App() {
   const handleQuickSearch = useCallback((cas) => {
     setSingleCas(cas);
     setActiveTab("single");
-  }, []);
+    searchSingle(cas);
+  }, [searchSingle]);
 
   const handleSelectHistoryItem = useCallback((cas) => {
     setSingleCas(cas);
