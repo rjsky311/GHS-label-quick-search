@@ -166,7 +166,7 @@ Print configuration should behave like a workflow:
 5. Live preview and readiness warnings.
 6. Print / save / recent reload.
 
-The default path is safety-conservative: primary labels use the roomy full template and keep product identifier, signal word, pictograms, H-statements, P-statements, and responsible lab/supplier information in one label hierarchy. Compact QR and quick-ID labels may be useful, but must be visibly treated as supplemental rather than complete shipped-container labels.
+The default path is safety-conservative: primary labels use the roomy full template and keep product identifier, signal word, pictograms, H-statements, P-statements, and responsible lab/supplier information in one label hierarchy. Compact QR and quick-ID labels may be useful, but must be visibly treated as supplemental in the workflow rather than complete shipped-container labels. The printed compact label itself should reserve space for hazard content instead of verbose explanatory copy.
 
 GHS pictograms are non-negotiable output: if pictogram data exists, printed hazard labels must render every pictogram. Do not replace pictograms with `+N`, hide them behind QR, or silently omit them to make a compact layout fit.
 

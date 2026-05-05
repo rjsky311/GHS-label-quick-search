@@ -54,7 +54,7 @@ The first refactor slice has landed:
 - Added a recommended-output panel in `LabelPrintModal`.
 - Moved language and color mode into first-level output controls.
 - Moved custom physical size fields into Advanced, where they mark the config as custom tuning.
-- Added explicit supplemental hazard notices to non-primary print fragments so compact `standard`, quick-ID, and QR outputs do not imply complete primary-label status.
+- Kept supplemental warnings in the modal/preview workflow while removing verbose purpose copy from compact physical labels, so scarce label area is reserved for identity, pictograms, signal word, and hazard content.
 - Made `nameDisplay: both` print bilingual signal words plus H/P statement text, with non-full-page bilingual outputs treated as denser during fit checks.
 - `LabelPrintModal` now auto-applies the planner's A4/Letter full-page primary recommendation for dense shipped-container labels instead of opening on a blocked stock and asking the user to recover.
 - The modal first level now starts with the recommended output, A4/Letter primary size, purpose, language, and color. Readiness summary cards and the generic print-setup explainer were removed from the first screen.
@@ -108,7 +108,7 @@ Use when the physical label is too small for complete primary content.
 
 Required behavior:
 
-- Must be visibly described as supplemental.
+- Must be visibly described as supplemental in the print workflow.
 - Must not claim to be a complete primary label.
 - Must keep all available GHS pictograms when used as a printed hazard label.
 - Should include product identifier, CAS, signal word, and the highest-priority hazard summary.
@@ -124,7 +124,7 @@ Required behavior:
 
 - QR is the dominant feature.
 - The label includes enough identity and pictogram context to avoid orphaned QR-only labels.
-- It is clearly supplemental.
+- It is clearly supplemental in the print workflow.
 - It never replaces a complete primary label when a complete primary label is required.
 
 ### Custom Saved Stock
@@ -353,7 +353,7 @@ Required scenarios:
 
 ### Phase 4: Supplemental Label Clarity
 
-- Add clear supplemental label copy and visual treatment.
+- Add clear supplemental status in the workflow and compact visual treatment in printed labels.
 - Ensure small labels do not imply complete primary-label status.
 - Keep QR supplemental behavior clear.
 

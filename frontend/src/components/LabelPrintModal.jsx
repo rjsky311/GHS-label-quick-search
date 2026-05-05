@@ -936,22 +936,27 @@ export default function LabelPrintModal({
       offsetYmm: preset.offsetYmm,
       pageSize: preset.pageSize || "A4",
     };
-    const nextLayout = resolveLayoutProfile(nextConfig);
-    const nextPlan = buildPrintOutputPlan({
-      selectedForLabel,
-      layout: nextLayout,
-      customGHSSettings,
-      resolvedLabProfile: resolvedResponsibleProfile,
-      locale: currentLocale,
-    });
 
-    if (
-      labelPurpose === "shipping" &&
-      nextConfig.template === "full" &&
-      preset.outputRole === "primary-candidate" &&
-      nextPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
-    ) {
-      nextConfig.template = "standard";
+    if (labelPurpose === "shipping") {
+      const completePrimaryConfig = {
+        ...nextConfig,
+        labelPurpose: "shipping",
+        template: "full",
+      };
+      const completePrimaryPlan = buildPrintOutputPlan({
+        selectedForLabel,
+        layout: resolveLayoutProfile(completePrimaryConfig),
+        customGHSSettings,
+        resolvedLabProfile: resolvedResponsibleProfile,
+        locale: currentLocale,
+      });
+
+      nextConfig.labelPurpose = "shipping";
+      nextConfig.template =
+        preset.outputRole === "primary-candidate" &&
+        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+          ? "standard"
+          : "full";
     }
 
     onLabelConfigChange(nextConfig);

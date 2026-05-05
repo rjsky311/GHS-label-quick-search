@@ -536,6 +536,79 @@ describe("printLabels", () => {
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
+  it("does not block printable supplemental labels on generic layout overflow", () => {
+    const overflowLabel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 80,
+      scrollWidth: 80,
+      querySelector: jest.fn(() => null),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (String(selector).includes(".label")) return [overflowLabel];
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "standard",
+        stockPreset: "medium-bottle",
+      },
+      {},
+    );
+
+    expect(alertSpy).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(recordObservabilityEvent).not.toHaveBeenCalledWith(
+      "print_blocked",
+      expect.anything(),
+    );
+  });
+
+  it("still blocks complete primary labels when the rendered layout clips", () => {
+    const overflowLabel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 80,
+      scrollWidth: 80,
+      querySelector: jest.fn(() => null),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (String(selector).includes(".label")) return [overflowLabel];
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+    );
+
+    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlocked");
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_blocked",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          issueTypes: ["label-overflow"],
+        }),
+      }),
+    );
+  });
+
   it("calls print immediately when no images (300ms delay)", () => {
     // mockIframeDoc.querySelectorAll returns [] by default (no images)
     printLabels(
@@ -772,6 +845,12 @@ describe("printLabels", () => {
       expect(html).toContain("standard-main");
       expect(html).toContain("standard-signal-row");
       expect(html).toContain("hazard-primary-item");
+      expect(html).toContain(
+        "grid-template-columns: minmax(0, 24.5mm) minmax(0, 1fr)",
+      );
+      expect(html).toContain("grid-template-columns: repeat(2, 10.5mm)");
+      expect(html).toContain("width: 10.5mm");
+      expect(html).toContain(".label-standard .name-en");
       expect(html).not.toMatch(/<div\s+class="hazard-more"/);
     });
 
@@ -946,7 +1025,7 @@ describe("printLabels", () => {
       expect(html).toContain("print.moreHazardsShort");
     });
 
-    it("supplemental templates print a purpose notice", () => {
+    it("keeps supplemental workflow notices out of the printed label body", () => {
       printLabels(
         [mockChemical],
         {
@@ -958,8 +1037,8 @@ describe("printLabels", () => {
         {},
       );
       const qrHtml = mockIframeDoc.write.mock.calls[0][0];
-      expect(qrHtml).toContain("purpose-notice");
-      expect(qrHtml).toContain("print.qrSupplementNotice");
+      expect(qrHtml).not.toContain("purpose-notice");
+      expect(qrHtml).not.toContain("print.qrSupplementNotice");
 
       mockIframeDoc.write.mockClear();
       printLabels(
@@ -973,8 +1052,8 @@ describe("printLabels", () => {
         {},
       );
       const iconHtml = mockIframeDoc.write.mock.calls[0][0];
-      expect(iconHtml).toContain("purpose-notice");
-      expect(iconHtml).toContain("print.quickIdNotice");
+      expect(iconHtml).not.toContain("purpose-notice");
+      expect(iconHtml).not.toContain("print.quickIdNotice");
 
       mockIframeDoc.write.mockClear();
       printLabels(
@@ -988,8 +1067,8 @@ describe("printLabels", () => {
         {},
       );
       const standardHtml = mockIframeDoc.write.mock.calls[0][0];
-      expect(standardHtml).toContain("purpose-notice");
-      expect(standardHtml).toContain("print.supplementalHazardNotice");
+      expect(standardHtml).not.toContain("purpose-notice");
+      expect(standardHtml).not.toContain("print.supplementalHazardNotice");
     });
   });
 

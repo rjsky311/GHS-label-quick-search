@@ -18,7 +18,7 @@ The best path is a complete primary label that a lab user can print without gues
 
 - GHS pictograms are never summarized, hidden behind `+N`, replaced by QR, or omitted from any printed hazard label when pictogram data exists.
 - A complete primary label includes product identifier, CAS, signal word, all GHS pictograms, H-statements, P-statements, complete responsible lab/supplier information (name, phone, and address), trust footer, and optional QR support.
-- QR supplement and quick-ID labels are visibly supplemental. They must not imply that they replace the complete primary label.
+- QR supplement and quick-ID labels are visibly supplemental in the print workflow. The physical label must not waste scarce label area on verbose purpose copy, and must not imply that it replaces the complete primary label.
 - Dense content must route users to a larger complete-label stock first, especially A4 Primary or Letter Primary. Complete primary labels must block print until required content can be rendered and the responsible lab/supplier profile is complete.
 - A4 Primary is a distinct full-page rendering path, not just a larger paper option. It must scale the live preview to show the whole label, enlarge GHS pictograms, and use statement layout rules that can actually carry dense H/P content.
 - Letter Primary must be supported alongside A4 Primary for North American users. Both are complete primary-label outputs, not supplemental templates.
@@ -38,8 +38,8 @@ Automated tests should pin these behaviors:
 - Dense shipped-container labels on regular large stock auto-route to a viable A4 or Letter primary output when the planner can produce one, instead of leaving the user at a disabled print dead end.
 - A4 Primary allows dense complete labels within the documented statement threshold and does not open the overflow/blocking alert for the HCl-style dense path.
 - Complete primary labels block print when responsible lab/supplier name, phone, or address is missing; the required-output checklist reports the missing profile fields.
-- Supplemental templates keep purpose notices visible.
-- Layout preflight rejects overflow, footer clipping, and statement-code overflow before printing.
+- Supplemental template warnings stay visible in the modal/preview workflow, not as verbose text inside the physical label.
+- Layout preflight rejects overflow, footer clipping, and statement-code overflow before printing complete primary labels. Supplemental labels should adapt typography/reflow and remain printable unless safety-critical pictograms or identity are missing.
 
 ## Browser QA Scenarios
 
@@ -50,6 +50,6 @@ Run these in Browser Use after meaningful print-workflow changes:
 - Hydrochloric acid after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
 - A4 Primary preview shows the full label scaled inside the preview pane rather than cropping the top of the full-page label.
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.
-- QR supplement: QR remains dominant, purpose notice is visible, and all pictograms still render.
+- QR supplement: QR remains dominant, the workflow clearly marks it as supplemental, and all pictograms still render.
 - Black-and-white mode: pictograms and QR are grayscale in preview.
 - English / Chinese / bilingual name modes: preview text changes while icon positions remain stable.

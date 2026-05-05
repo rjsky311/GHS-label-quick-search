@@ -467,14 +467,9 @@ const renderMoreHazards = (count, model, className = "") => {
 };
 
 const renderPurposeNotice = (model) => {
-  if (isCompletePrimaryTemplate(model.layout)) return "";
-
-  const key = isQrSupplementLayout(model.layout)
-    ? "print.qrSupplementNotice"
-    : isQuickIdLayout(model.layout)
-      ? "print.quickIdNotice"
-      : "print.supplementalHazardNotice";
-  return `<div class="purpose-notice">${escapeHtml(model.t(key))}</div>`;
+  // Purpose warnings live in the print modal. The physical label keeps its
+  // limited area for identity, pictograms, signal word, and hazard content.
+  return "";
 };
 
 const getStatementCodeClass = (code) =>
@@ -830,6 +825,18 @@ const buildStyles = (model) => {
   const isLandscape = layout.orientation === "landscape";
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const compliancePictogramSize = layout.typography.compliancePictogramSize;
+  const standardPictogramSize =
+    layout.size === "small"
+      ? "8.5mm"
+      : layout.size === "medium"
+        ? "10.5mm"
+        : "13mm";
+  const standardRailColumn =
+    layout.size === "small"
+      ? "19mm"
+      : layout.size === "medium"
+        ? "24.5mm"
+        : "30mm";
   const complianceAlertColumn =
     isFullPagePrimary
       ? "minmax(64mm, 68mm)"
@@ -942,6 +949,10 @@ const buildStyles = (model) => {
       padding: 0.6mm 0.6mm 1.2mm 0.6mm;
       border-radius: 1.4mm 1.4mm 0 0;
     }
+    .label-standard .label-top-standard {
+      margin: calc(${layout.label.padding} * -0.4) calc(${layout.label.padding} * -0.4) 0.8mm calc(${layout.label.padding} * -0.4);
+      padding: 0.45mm 0.65mm 0.75mm 0.65mm;
+    }
     .label-middle {
       flex: 1;
       display: flex;
@@ -979,15 +990,6 @@ const buildStyles = (model) => {
     .compliance-header .profile-block,
     .compliance-header .custom-fields {
       display: none;
-    }
-    .purpose-notice {
-      border: 0.25mm solid #94a3b8;
-      background: #f8fafc;
-      color: #334155;
-      font-size: calc(${layout.typography.fontSize} - 3px);
-      font-weight: 700;
-      line-height: 1.2;
-      padding: 0.65mm 0.9mm;
     }
     .compliance-core {
       display: grid;
@@ -1162,6 +1164,19 @@ const buildStyles = (model) => {
       font-size: 18px;
       line-height: 1.15;
     }
+    .label-standard .name-en {
+      font-size: calc(${layout.typography.titleSize} - 1px);
+      line-height: 1.05;
+      -webkit-line-clamp: 1;
+    }
+    .label-standard .name-zh {
+      font-size: calc(${layout.typography.fontSize} - 1px);
+      line-height: 1.05;
+      margin-top: 0.25mm;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .cas {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
       font-size: calc(${layout.typography.fontSize} - 1px);
@@ -1179,6 +1194,12 @@ const buildStyles = (model) => {
       margin-top: 0.9mm;
       align-items: center;
     }
+    .label-standard .meta-ribbon {
+      gap: 0.45mm;
+      margin-top: 0.45mm;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
     .meta-chip {
       display: inline-flex;
       align-items: center;
@@ -1195,6 +1216,12 @@ const buildStyles = (model) => {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .label-standard .meta-chip {
+      gap: 0.45mm;
+      padding: 0.25mm 0.65mm;
+      font-size: max(5.5px, calc(${layout.typography.fontSize} - 3px));
+      line-height: 1.05;
     }
     .meta-chip-label {
       color: #64748b;
@@ -1350,8 +1377,15 @@ const buildStyles = (model) => {
       height: calc(${layout.typography.imgSize} - 4px);
     }
     .pictograms-standard {
-      justify-content: flex-start;
-      gap: 1.3mm;
+      display: grid;
+      grid-template-columns: repeat(2, ${standardPictogramSize});
+      justify-content: center;
+      align-items: center;
+      gap: 0.8mm;
+    }
+    .pictograms-standard img {
+      width: ${standardPictogramSize};
+      height: ${standardPictogramSize};
     }
     .pictograms.qr-pics {
       justify-content: flex-start;
@@ -1435,8 +1469,8 @@ const buildStyles = (model) => {
 
     .standard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 14mm) minmax(0, 1fr);
-      gap: 2mm;
+      grid-template-columns: minmax(0, ${standardRailColumn}) minmax(0, 1fr);
+      gap: 1.35mm;
       width: 100%;
       min-height: 0;
     }
@@ -1444,19 +1478,16 @@ const buildStyles = (model) => {
       grid-template-columns: minmax(0, 1fr);
     }
     .standard-rail {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 0.8mm;
-      padding-right: 1.1mm;
+      display: block;
+      align-self: start;
+      padding-right: 0.9mm;
       border-right: 1px solid #dbe4ef;
       min-width: 0;
     }
     .standard-main {
       display: flex;
       flex-direction: column;
-      gap: 0.9mm;
+      gap: 0.6mm;
       min-width: 0;
     }
     .standard-signal-row {
@@ -1469,32 +1500,33 @@ const buildStyles = (model) => {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 0.9mm;
+      gap: 0.55mm;
       min-width: 0;
     }
     .hazard-primary-list {
       display: flex;
       flex-direction: column;
-      gap: 0.8mm;
+      gap: 0.5mm;
     }
     .hazard-primary-item {
-      padding: 0.75mm 1mm;
-      border-radius: 1.2mm;
+      padding: 0.45mm 0.7mm;
+      border-radius: 0.9mm;
       background: #fffaf5;
       border: 1px solid #fed7aa;
       color: #7c2d12;
       font-weight: 600;
-      line-height: 1.18;
+      font-size: max(5.5px, calc(${layout.typography.hazardSize} - 1px));
+      line-height: 1.08;
     }
     .hazard-more {
-      padding: 0.55mm 0.9mm;
-      border-radius: 1.2mm;
+      padding: 0.35mm 0.6mm;
+      border-radius: 0.9mm;
       border: 1px dashed #cbd5e1;
       background: #f8fafc;
       color: #475569;
-      font-size: calc(${layout.typography.hazardSize} - 1px);
+      font-size: max(5px, calc(${layout.typography.hazardSize} - 1.5px));
       font-weight: 600;
-      line-height: 1.2;
+      line-height: 1.05;
     }
     .hazard-item {
       margin-bottom: 0;
@@ -1511,8 +1543,9 @@ const buildStyles = (model) => {
     }
     .precautions-compact {
       border-top: 1px dotted #cbd5e1;
-      padding-top: 0.8mm;
-      line-height: 1.35;
+      padding-top: 0.45mm;
+      font-size: max(5px, calc(${layout.typography.hazardSize} - 1.5px));
+      line-height: 1.08;
     }
     .label-full-page-primary .compliance-core {
       grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
@@ -2071,10 +2104,14 @@ export function printLabels(
   const total = images.length;
 
   const triggerPrint = () => {
-    const preflightIssues = [
-      ...inspectPrintContentFit(documentBundle.model),
-      ...inspectPrintLayoutDocument(iframeDoc),
-    ];
+    const contentIssues = inspectPrintContentFit(documentBundle.model);
+    const layoutIssues = inspectPrintLayoutDocument(iframeDoc);
+    const blockingLayoutIssues = isCompletePrimaryTemplate(
+      documentBundle.model.layout,
+    )
+      ? layoutIssues
+      : [];
+    const preflightIssues = [...contentIssues, ...blockingLayoutIssues];
     if (preflightIssues.length > 0) {
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
       recordObservabilityEvent("print_blocked", {

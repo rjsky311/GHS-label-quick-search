@@ -381,6 +381,56 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("restores the complete full template when switching from supplemental bottle stock back to A4 primary", () => {
+    const denseChem = makeChem({
+      ghs_pictograms: [
+        { code: "GHS04" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS07" },
+      ],
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 22 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    });
+    const { props } = renderModal({
+      selectedForLabel: [denseChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "standard",
+        size: "medium",
+        stockPreset: "medium-bottle",
+        labelWidthMm: 95,
+        labelHeightMm: 50,
+        perPage: 8,
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    fireEvent.click(screen.getByTestId("primary-output-size-a4-primary"));
+
+    expect(props.onLabelConfigChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stockPreset: "a4-primary",
+        labelWidthMm: 180,
+        labelHeightMm: 250,
+        perPage: 1,
+        template: "full",
+        labelPurpose: "shipping",
+      }),
+    );
+  });
+
   it("blocks complete primary printing until the responsible profile is complete", () => {
     renderModal({
       selectedForLabel: [makeChem()],
