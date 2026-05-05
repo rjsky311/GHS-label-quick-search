@@ -89,6 +89,23 @@ function buildCsvRows(results, t) {
   return rows;
 }
 
+export function buildExportPreview(results, options = {}) {
+  const t = options.t || i18n.t.bind(i18n);
+  const maxRows = Math.max(0, options.maxRows ?? 5);
+  const [headers, ...dataRows] = buildCsvRows(results, t);
+
+  return {
+    headers,
+    rows: dataRows.slice(0, maxRows).map((cells, index) => ({
+      id: `${results[index]?.cas_number || "row"}-${index}`,
+      cells,
+    })),
+    totalRows: dataRows.length,
+    previewRows: Math.min(maxRows, dataRows.length),
+    hiddenRows: Math.max(0, dataRows.length - maxRows),
+  };
+}
+
 /**
  * Export results as .xlsx. Backend-only; no client-side fallback.
  * On server error, surface a toast error and return — do NOT emit an
