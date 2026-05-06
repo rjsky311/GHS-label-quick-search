@@ -167,6 +167,7 @@ const PRINT_TARGET_OPTIONS = [
     purpose: "shipping",
     labelKey: "label.targetMainContainer",
     descKey: "label.targetMainContainerDesc",
+    fallbackLabel: "Main container",
     icon: Package2,
     presetId: "large-primary",
     template: "full",
@@ -176,6 +177,7 @@ const PRINT_TARGET_OPTIONS = [
     purpose: "shipping",
     labelKey: "label.targetBottle",
     descKey: "label.targetBottleDesc",
+    fallbackLabel: "Bottle label",
     icon: Tag,
     presetId: "medium-bottle",
     template: "full",
@@ -185,6 +187,7 @@ const PRINT_TARGET_OPTIONS = [
     purpose: "quickId",
     labelKey: "label.targetVial",
     descKey: "label.targetVialDesc",
+    fallbackLabel: "Tube / vial",
     icon: Target,
     presetId: "small-strip",
     template: "icon",
@@ -194,6 +197,7 @@ const PRINT_TARGET_OPTIONS = [
     purpose: "qrSupplement",
     labelKey: "label.targetQrSupplement",
     descKey: "label.targetQrSupplementDesc",
+    fallbackLabel: "QR supplement",
     icon: ScanLine,
     presetId: "small-strip",
     template: "qrcode",
@@ -675,6 +679,15 @@ export default function LabelPrintModal({
   const layoutProfile = resolveLayoutProfile(labelConfig);
   const labelPurpose = getLabelPurposeForConfig(labelConfig);
   const printTarget = getPrintTargetForConfig(labelPurpose, layoutProfile);
+  const selectedPrintTargetOption =
+    PRINT_TARGET_OPTIONS.find((option) => option.value === printTarget) ||
+    PRINT_TARGET_OPTIONS[0];
+  const printTargetLabel = selectedPrintTargetOption
+    ? tx(
+        selectedPrintTargetOption.labelKey,
+        selectedPrintTargetOption.fallbackLabel,
+      )
+    : tx("label.targetMainContainer", "Main container");
   const previewChem = selectedForLabel[0] ?? null;
   const currentLocale = i18n.language;
   const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
@@ -1013,6 +1026,119 @@ export default function LabelPrintModal({
                     "label.outputPlanPendingBody",
                     "Select at least one chemical to let the app choose a safe printable output.",
                   );
+  const isQrSupplementOutput =
+    labelPurpose === "qrSupplement" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
+  const isSupplementalOutput =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
+  const outputOutcomeTone =
+    selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
+  const outputOutcomeTitle =
+    selectedForLabel.length === 0
+      ? tx("label.outputOutcomePendingTitle", "Choose a chemical to plan output")
+      : canUseFullPagePrimary
+        ? tx(
+            "label.outputOutcomeUseFullPageTitle",
+            "Use {{stock}} for a complete primary label",
+            { stock: recommendedFullPageLabel },
+          )
+        : isProfileBlocked
+          ? tx(
+              "label.outputOutcomeProfileTitle",
+              "Add lab/supplier profile before printing",
+            )
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            ? tx(
+                "label.outputOutcomeHazardsTitle",
+                "Verify hazard data before printing",
+              )
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+              ? tx("label.outputOutcomeInvalidTitle", "Choose a larger output")
+              : isQrSupplementOutput
+                ? tx("label.outputOutcomeQrTitle", "QR supplement is printable")
+                : isSupplementalOutput
+                  ? tx(
+                      "label.outputOutcomeSupplementalTitle",
+                      "{{target}} is printable as a supplement",
+                      { target: printTargetLabel },
+                    )
+                  : tx(
+                      "label.outputOutcomeCompleteTitle",
+                      "Complete primary label is printable",
+                    );
+  const outputOutcomeBody =
+    selectedForLabel.length === 0
+      ? tx(
+          "label.outputOutcomePendingBody",
+          "Select a result and the app will choose the safest printable output for the target size.",
+        )
+      : canUseFullPagePrimary
+        ? tx(
+            "label.outputOutcomeUseFullPageBody",
+            "The current target is too small for complete content. Switch to {{stock}} for the full label, then print a smaller supplemental label only if needed.",
+            { stock: recommendedFullPageLabel },
+          )
+        : isProfileBlocked
+          ? tx(
+              "label.outputOutcomeProfileBody",
+              "Complete primary labels need responsible lab or supplier name, phone, and address. Supplemental labels can stay secondary.",
+            )
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            ? plannerPreviewRisk ||
+              tx(
+                "label.outputOutcomeHazardsBody",
+                "The app will not print a hazard label when source GHS data is unavailable or unverified.",
+              )
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+              ? tx(
+                  "label.outputOutcomeInvalidBody",
+                  "This stock cannot produce a truthful label. Use a larger primary label or create a continuation plan.",
+                )
+              : isQrSupplementOutput
+                ? tx(
+                    "label.outputOutcomeQrBody",
+                    "This prints a scan-first supplement with identity, QR, and all available pictograms. It does not replace a complete primary label.",
+                  )
+                : isSupplementalOutput
+                  ? tx(
+                      "label.outputOutcomeSupplementalBody",
+                      "This prints on {{stock}} with identity, signal word, every available pictogram, and priority H/P text. It is not a complete primary label.",
+                      { stock: currentStockName },
+                    )
+                  : tx(
+                      "label.outputOutcomeCompleteBody",
+                      "This prints on {{stock}} with all available pictograms and full H/P text for the selected content.",
+                      { stock: currentStockName },
+                    );
+  const printActionLabel =
+    selectedForLabel.length === 0
+      ? t("label.printBtn", { count: totalLabels })
+      : isPrintFitBlocked
+        ? printBlockedLabel
+        : isQrSupplementOutput
+          ? tx(
+              "label.printQrSupplementAction",
+              "Print QR supplement ({{count}})",
+              {
+                count: totalLabels,
+              },
+            )
+          : isSupplementalOutput
+            ? tx(
+                "label.printSupplementalAction",
+                "Print {{target}} (supplemental, {{count}})",
+                { target: printTargetLabel, count: totalLabels },
+              )
+            : tx(
+                "label.printCompletePrimaryAction",
+                "Print complete primary label ({{count}})",
+                { count: totalLabels },
+              );
+  const useFullPagePrimaryLabel = tx(
+    "label.useFullPagePrimaryForComplete",
+    "Use {{stock}} for complete label",
+    { stock: recommendedFullPageLabel },
+  );
   const sheetPreviewBundle = useMemo(
     () =>
       buildPrintPreviewDocument(
@@ -1914,6 +2040,51 @@ export default function LabelPrintModal({
     </details>
   );
 
+  const renderOutputOutcomeSection = () => {
+    const OutcomeIcon =
+      outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
+
+    return (
+      <section
+        className={`rounded-lg border p-3 ${
+          READINESS_TONE_CLASSES[outputOutcomeTone] ||
+          READINESS_TONE_CLASSES.neutral
+        }`}
+        data-testid="print-outcome-summary"
+      >
+        <div className="flex items-start gap-2">
+          <OutcomeIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="min-w-0">
+            <div
+              className="text-sm font-semibold"
+              data-testid="print-outcome-title"
+            >
+              {outputOutcomeTitle}
+            </div>
+            <p className="mt-1 text-sm leading-5 opacity-90">
+              {outputOutcomeBody}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+          {[
+            currentStockName,
+            outputRoleSummary,
+            pictogramSummary,
+            statementSummary,
+          ].map((item, index) => (
+            <span
+              key={`${item}-${index}`}
+              className="rounded-md bg-white/70 px-2 py-1 font-medium ring-1 ring-current/10"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   const renderLabelPreviewSection = () => (
     <section
       className="rounded-lg border border-slate-200 bg-white p-3"
@@ -2030,9 +2201,7 @@ export default function LabelPrintModal({
                       data-testid="use-full-page-primary-plan"
                     >
                       <FileText className="h-4 w-4" />
-                      {tx("label.useFullPagePrimaryShort", "Use {{stock}}", {
-                        stock: recommendedFullPageLabel,
-                      })}
+                      {useFullPagePrimaryLabel}
                     </button>
                   )}
                 </div>
@@ -2669,6 +2838,8 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="space-y-4 px-4 py-4">
+                  {renderOutputOutcomeSection()}
+
                   {renderLabelPreviewSection()}
 
                   {previewChem && hasPreviewWarnings && primaryPreviewRisk && (
@@ -2712,9 +2883,7 @@ export default function LabelPrintModal({
                                 data-testid="use-full-page-primary-banner"
                               >
                                 <FileText className="h-4 w-4" />
-                                {tx("label.useFullPagePrimary", "Use {{stock}}", {
-                                  stock: recommendedFullPageLabel,
-                                })}
+                                {useFullPagePrimaryLabel}
                               </button>
                               <span className="text-xs leading-5 text-red-800">
                                 {tx(
@@ -2891,9 +3060,7 @@ export default function LabelPrintModal({
               data-testid="use-full-page-primary-footer"
             >
               <FileText className="h-4 w-4" />
-              {tx("label.useFullPagePrimary", "Use {{stock}}", {
-                stock: recommendedFullPageLabel,
-              })}
+              {useFullPagePrimaryLabel}
             </button>
           ) : (
             <button
@@ -2901,11 +3068,10 @@ export default function LabelPrintModal({
               onClick={onPrintLabels}
               disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
               className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+              data-testid="print-label-action"
             >
               <Printer className="h-4 w-4" />
-              {isPrintFitBlocked
-                ? printBlockedLabel
-                : t("label.printBtn", { count: totalLabels })}
+              {printActionLabel}
             </button>
           )}
           <button

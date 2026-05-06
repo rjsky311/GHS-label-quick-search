@@ -43,15 +43,19 @@ fragment; only click print when intentionally testing the native dialog path.
    - Output role: complete primary.
    - GHS icons: all pictograms kept.
    - Hazard text: full H/P text.
-7. Confirm `selected-stock-summary` shows the current physical target size and
+7. Confirm `print-outcome-summary` states the printable outcome in plain
+   language before the lower-level checklist.
+8. Confirm the footer print action uses the same outcome language, for example
+   complete primary, supplemental bottle/tube, or QR supplement.
+9. Confirm `selected-stock-summary` shows the current physical target size and
    `stock-size-picker` is collapsed until the user chooses to change stock.
-8. Confirm the first-level target selector is task-based (`Main container`,
+10. Confirm the first-level target selector is task-based (`Main container`,
    `Bottle label`, `Tube / vial`, `QR supplement`) rather than a template list.
-9. Choose `Bottle label` and confirm it routes to the bottle stock and the
+11. Choose `Bottle label` and confirm it routes to the bottle stock and the
    planner changes dense content to supplemental rather than hiding pictograms.
-10. Expand `stock-size-picker`, choose another stock, and confirm the selected
+12. Expand `stock-size-picker`, choose another stock, and confirm the selected
    stock summary plus preview update.
-11. Confirm the responsible profile section is collapsed when profile data is
+13. Confirm the responsible profile section is collapsed when profile data is
    complete and expands automatically when profile data is missing.
 
 ## Full-Page Primary Outputs

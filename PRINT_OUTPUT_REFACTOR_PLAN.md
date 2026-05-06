@@ -77,6 +77,7 @@ The first refactor slice has landed:
 - Physical stock selection is now summarized as the selected target size on the first level; changing paper or label-roll size is a secondary details control. This keeps the modal task-first while still allowing A4, Letter, bottle, strip, and custom stock changes when needed.
 - On narrow/mobile modal layouts, task settings now appear before the live preview. Desktop keeps the two-column settings/preview layout, but smaller viewports no longer force users to scroll past the preview before choosing the target.
 - The first-level target selector now uses real tasks: main container, bottle label, tube/vial, and QR supplement. Each task applies the appropriate purpose, stock preset, and template before the planner decides whether the result is complete primary or supplemental.
+- The preview column now starts with an output outcome summary and an outcome-aware print action. Users can see whether the selected target will print as a complete primary label, supplemental bottle/tube label, QR supplement, or must switch to A4/Letter before reading lower-level diagnostics.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

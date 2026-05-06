@@ -108,6 +108,9 @@ describe("LabelPrintModal", () => {
       "All pictograms kept",
     );
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "print",
+    );
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
@@ -251,11 +254,53 @@ describe("LabelPrintModal", () => {
     first.unmount();
 
     const { props } = renderModal({ selectedForLabel: [makeChem()] });
-    const printButton = screen.getByText("label.printBtn").closest("button");
+    const printButton = screen.getByTestId("print-label-action");
     expect(printButton).not.toBeDisabled();
+    expect(printButton).toHaveTextContent("Print");
 
     fireEvent.click(printButton);
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
+  });
+
+  it("states the printable outcome before users inspect diagnostics", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "standard",
+        stockPreset: "medium-bottle",
+      },
+    });
+
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "Bottle label is printable as a supplement",
+    );
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "All pictograms kept",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print Bottle label (supplemental, 1)",
+    );
+  });
+
+  it("uses QR-specific outcome and print action text for QR supplements", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "small-strip",
+      },
+    });
+
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "QR supplement is printable",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print QR supplement (1)",
+    );
   });
 
   it("auto-routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
