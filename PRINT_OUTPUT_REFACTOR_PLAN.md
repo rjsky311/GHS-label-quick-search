@@ -66,6 +66,9 @@ The first refactor slice has landed:
 - Phase 3 modal simplification now has one secondary `Advanced print options` area for template overrides, density, calibration, custom fields, saved presets, and recent print jobs. The first-level workflow is limited to recommended output, physical size/purpose, language/color, responsible profile, selected quantity, preview, and print action.
 - Supplemental bottle, strip, and QR outputs now derive pictogram size, QR box size, and visible H/P-code budget from the physical label dimensions. Small labels keep every available GHS pictogram, shrink/reflow the label first, and only summarize text after the icon/signal/identity hierarchy is preserved.
 - Added `PRINT_ACCEPTANCE_STANDARD.md` as the product acceptance contract for complete primary, supplemental, QR, quick-ID, readability, and Browser QA matrix gates.
+- Added code-level print acceptance matrix tests for A4 Primary, Letter Primary, standard bottle, vial strip, QR supplement, lower-density ethanol, no-GHS data, and upstream-error cases.
+- Compact supplemental labels now prioritize severe H-statements and response/PPE P-codes before summarizing lower-priority text, while complete primary labels still print the full H/P content without summaries.
+- Print planning now distinguishes transient upstream GHS lookup failure from confirmed no-GHS content, so the UI blocks hazard-label printing with a data-verification message instead of implying the chemical has no hazard data.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

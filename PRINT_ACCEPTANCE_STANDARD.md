@@ -80,6 +80,7 @@ These are acceptance targets for the renderer and Browser QA:
 - Preview and print use the same rendered HTML fragment.
 - A4 and Letter primary labels show the whole label in preview without clipping.
 - Small labels reflow and scale before content is summarized.
+- Compact summaries prioritize severe H-statements and response/PPE P-codes before lower-priority storage/disposal text.
 - GHS pictograms are never hidden behind QR, summarized as `+N`, or omitted.
 - Strip-style labels place pictograms in a horizontal row when that preserves recognizability better than a tall rail.
 - Color mode and black-and-white mode both preserve pictogram recognizability.
@@ -110,4 +111,6 @@ Unit tests should keep these invariants pinned:
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
 - Small QR labels keep QR plus every expected pictogram in the printed body.
 - Strip labels use a four-pictogram row for dense multi-pictogram chemicals.
+- Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
+- No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.

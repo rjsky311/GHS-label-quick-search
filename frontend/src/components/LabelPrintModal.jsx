@@ -652,6 +652,9 @@ export default function LabelPrintModal({
   const recommendedFullPageLabel = recommendedFullPagePreset
     ? getLabelStockPresetDisplay(recommendedFullPagePreset, t).name
     : tx("label.fullPagePrimaryFallback", "full-page primary");
+  const outputPlanHasUpstreamError = outputPlan.issues.some(
+    (issue) => issue.type === "upstream-error",
+  );
   const visibleStockChoices =
     labelPurpose === "shipping"
       ? SHIPPING_PRIMARY_PRESETS
@@ -674,10 +677,15 @@ export default function LabelPrintModal({
               "This output is printable as a supplemental label, not a complete primary container label.",
             )
           : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
-            ? tx(
-                "label.outputPlanMissingHazardData",
-                "This item does not have enough GHS hazard content to produce a hazard label.",
-              )
+            ? outputPlanHasUpstreamError
+              ? tx(
+                  "label.outputPlanUpstreamHazardData",
+                  "PubChem hazard data could not be verified right now, so the app will not print a hazard label from incomplete data.",
+                )
+              : tx(
+                  "label.outputPlanMissingHazardData",
+                  "This item does not have enough GHS hazard content to produce a hazard label.",
+                )
             : "";
   const previewPurposeSummaryLabel =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
@@ -748,6 +756,8 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const printBlockedLabel = isProfileBlocked
     ? tx("label.printFixProfileRequired", "Add lab/supplier profile first")
+    : outputPlanHasUpstreamError
+      ? tx("label.printFixVerifyHazards", "Verify hazard data first")
     : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
       ? tx("label.printFixContinuationRequired", "Create a continuation plan first")
       : tx("label.printFixRequired", "Choose a printable stock first");

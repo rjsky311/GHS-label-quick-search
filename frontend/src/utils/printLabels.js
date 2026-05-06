@@ -120,6 +120,59 @@ const getSignalWordForModel = (classification, model) => {
   return getLocalizedSignalWord(classification, resolveModelContentLocale(model));
 };
 
+const getStatementCodes = (statement) =>
+  String(statement?.code || "")
+    .split("+")
+    .map((code) => code.trim().toUpperCase())
+    .filter(Boolean);
+
+const scoreStatementCodes = (statement, scoreCode) => {
+  const codes = getStatementCodes(statement);
+  if (codes.length === 0) return 0;
+  return Math.max(...codes.map(scoreCode));
+};
+
+const scoreHazardCode = (code) => {
+  if (/^H3(00|01|04|10|11|14|18|30|31)\b/.test(code)) return 100;
+  if (/^H2(00|01|02|03|20|21|22|23|24|25|26|27|28)\b/.test(code)) {
+    return 90;
+  }
+  if (/^H2(80|90)\b/.test(code)) return 80;
+  if (/^H3(15|17|19|35|36|37)\b/.test(code)) return 50;
+  return 10;
+};
+
+const scorePrecautionCode = (code) => {
+  if (/^P3(01|02|03|04|05|06|08|10|11|12|13|14|15|20|21|30|31)\b/.test(code)) {
+    return 100;
+  }
+  if (/^P2(60|61|64|71|80|84)\b/.test(code)) return 90;
+  if (/^P3/.test(code)) return 80;
+  if (/^P4/.test(code)) return 50;
+  if (/^P5/.test(code)) return 30;
+  return 10;
+};
+
+const prioritizeHazardStatements = (statements) =>
+  [...statements]
+    .map((statement, index) => ({
+      statement,
+      index,
+      score: scoreStatementCodes(statement, scoreHazardCode),
+    }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ statement }) => statement);
+
+const prioritizePrecautionaryStatements = (statements) =>
+  [...statements]
+    .map((statement, index) => ({
+      statement,
+      index,
+      score: scoreStatementCodes(statement, scorePrecautionCode),
+    }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ statement }) => statement);
+
 const truncateText = (value, maxLength) => {
   const normalized = String(value || "").trim();
   if (!normalized || normalized.length <= maxLength) return normalized;
@@ -541,8 +594,10 @@ const renderComplianceFooter = (_effectiveChem, model) => {
 
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   if (!precautions.length || maxPrecautions <= 0) return "";
+  const prioritizedPrecautions =
+    prioritizePrecautionaryStatements(precautions);
   return `<div class="precautions-compact">
-    ${precautions
+    ${prioritizedPrecautions
       .slice(0, maxPrecautions)
       .map(
         (precaution) =>
@@ -614,7 +669,8 @@ const renderStandardTemplate = (chemical, model) => {
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
-  const primaryHazards = hazards.slice(0, budgets.primaryHazards);
+  const prioritizedHazards = prioritizeHazardStatements(hazards);
+  const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
   const prepared = isPrepared(effectiveChem);
 
@@ -765,7 +821,8 @@ const renderQRCodeTemplate = (chemical, model) => {
       effectiveChem.reference_links,
     ) || "https://pubchem.ncbi.nlm.nih.gov/";
   const budgets = model.layout.templateBudgets.qrcode;
-  const hazardTeasers = hazards.slice(0, budgets.hazardTeasers);
+  const prioritizedHazards = prioritizeHazardStatements(hazards);
+  const hazardTeasers = prioritizedHazards.slice(0, budgets.hazardTeasers);
   const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `

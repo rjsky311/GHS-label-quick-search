@@ -86,6 +86,9 @@ const hasHazardContent = (readiness) =>
       Boolean(content.signalWord),
   );
 
+const hasUpstreamError = (readiness) =>
+  readiness.contents.some((content) => content.effectiveChemical?.upstream_error);
+
 const resolveOutputKind = (layout = {}) => {
   if (layout.labelPurpose === "qrSupplement" || layout.template === "qrcode") {
     return PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
@@ -141,6 +144,9 @@ export function buildPrintOutputPlan({
   }
 
   if (!hasHazardContent(readiness)) {
+    if (hasUpstreamError(readiness)) {
+      issues.push({ type: "upstream-error" });
+    }
     issues.push({ type: "missing-hazard-data" });
     return {
       state: PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA,

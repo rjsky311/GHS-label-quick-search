@@ -7,6 +7,7 @@ jest.mock("@/constants/ghs", () => ({
     GHS01: "https://example.com/GHS01.svg",
     GHS02: "https://example.com/GHS02.svg",
     GHS03: "https://example.com/GHS03.svg",
+    GHS04: "https://example.com/GHS04.svg",
     GHS05: "https://example.com/GHS05.svg",
     GHS06: "https://example.com/GHS06.svg",
     GHS07: "https://example.com/GHS07.svg",
@@ -1025,6 +1026,120 @@ describe("printLabels", () => {
       expect(html).toContain("print.moreHazardsShort");
     });
 
+    it("prioritizes severe H statements before summarizing compact standard labels", () => {
+      const mixedHazards = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        hazard_statements: [
+          { code: "H335", text_en: "May cause respiratory irritation" },
+          { code: "H319", text_en: "Causes serious eye irritation" },
+          { code: "H314", text_en: "Causes severe skin burns and eye damage" },
+          { code: "H330", text_en: "Fatal if inhaled" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [mixedHazards],
+        {
+          labelPurpose: "shipping",
+          template: "standard",
+          stockPreset: "small-strip",
+          nameDisplay: "en",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-kind-supplemental");
+      expect(preview.fragmentHtml).toContain("H314");
+      expect(preview.fragmentHtml).not.toContain("H335 May cause");
+      expect(preview.fragmentHtml).toContain("hazard-more");
+    });
+
+    it("prioritizes response and PPE P codes before storage or disposal on compact labels", () => {
+      const mixedPrecautions = {
+        ...mockChemical,
+        hazard_statements: [{ code: "H314", text_en: "Corrosive" }],
+        precautionary_statements: [
+          { code: "P501", text_en: "Dispose contents" },
+          { code: "P403+P233", text_en: "Store in a well-ventilated place" },
+          { code: "P280", text_en: "Wear protective gloves" },
+          { code: "P301+P330+P331", text_en: "IF SWALLOWED" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [mixedPrecautions],
+        {
+          labelPurpose: "shipping",
+          template: "standard",
+          stockPreset: "medium-bottle",
+          nameDisplay: "en",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      const p301Index = preview.fragmentHtml.indexOf("P301+P330+P331");
+      const p280Index = preview.fragmentHtml.indexOf("P280");
+      const p501Index = preview.fragmentHtml.indexOf("P501");
+
+      expect(p301Index).toBeGreaterThan(-1);
+      expect(p280Index).toBeGreaterThan(-1);
+      expect(p501Index).toBe(-1);
+      expect(p301Index).toBeLessThan(p280Index);
+      expect(preview.fragmentHtml).toContain("precaution-more");
+    });
+
+    it("prioritizes the most severe QR hazard teaser while keeping every pictogram", () => {
+      const mixedHazards = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        hazard_statements: [
+          { code: "H335", text_en: "May cause respiratory irritation" },
+          { code: "H319", text_en: "Causes serious eye irritation" },
+          { code: "H330", text_en: "Fatal if inhaled" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [mixedHazards],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "small-strip",
+          nameDisplay: "en",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
+      expect(preview.fragmentHtml).toContain("H330");
+      expect(preview.fragmentHtml).not.toContain("H335<span");
+      expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(4);
+      expect(preview.fragmentHtml).not.toContain("more-pics");
+    });
+
     it("full template uses a compliance-style fixed hierarchy", () => {
       printLabels(
         [mockChemical],
@@ -1819,9 +1934,9 @@ describe("printLabels", () => {
       // Look for actual element markup, not the CSS class definition
       expect(html).toMatch(/<div\s+class="precautions-compact"/);
       expect(html).toMatch(/<span\s+class="precaution-code"/);
+      expect(html).toContain("P301+P310");
       expect(html).toContain("P210");
-      expect(html).toContain("P233");
-      expect(html).not.toContain("P301+P310");
+      expect(html).not.toContain("P233");
       // In compact view we do NOT inline the long Chinese text
       expect(html).not.toContain("如誤吞食：立即呼叫毒物中心。");
     });
