@@ -1344,11 +1344,19 @@ export default function LabelPrintModal({
         locale: currentLocale,
       });
 
-      nextConfig.template =
-        preset.outputRole === "primary-candidate" &&
-        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
-          ? "standard"
-          : "full";
+      if (
+        option.value === "mainContainer" &&
+        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
+        completePrimaryPlan.recommendedFullPagePatch
+      ) {
+        Object.assign(nextConfig, completePrimaryPlan.recommendedFullPagePatch);
+      } else {
+        nextConfig.template =
+          preset.outputRole === "primary-candidate" &&
+          completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+            ? "standard"
+            : "full";
+      }
     }
 
     onLabelConfigChange(nextConfig);

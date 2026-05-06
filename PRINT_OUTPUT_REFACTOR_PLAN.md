@@ -80,6 +80,15 @@ The first refactor slice has landed:
 - The preview column now starts with an output outcome summary and an outcome-aware print action. Users can see whether the selected target will print as a complete primary label, supplemental bottle/tube label, QR supplement, or must switch to A4/Letter before reading lower-level diagnostics.
 - A print handoff QA mode (`qaPrintHandoff=1`) now lets Browser Use click the print action without opening the native print dialog. It still builds the print iframe, runs preflight, records lifecycle events, and exposes `print-qa-status`, so deployment QA can prove the button reaches the print handoff path.
 - Tube/vial output is now represented as a distinct quick-ID supplement outcome instead of being collapsed into generic supplemental copy. This keeps the UI honest: quick-ID labels are printable bench-side identifiers, not complete primary labels and not QR supplements.
+- `PRINT_NINE_SEGMENT_COMPLETION.md` now maps the nine productization segments
+  to concrete implementation, tests, and Browser QA evidence so the refactor can
+  be checked against user goals instead of a loose task list.
+- Print handoff QA status now reports unique pictogram codes, QR state,
+  template, and stock preset as machine-readable DOM data attributes.
+- The task-first `Main container` target now preserves the complete-primary
+  intent. If dense content cannot fit the roomy container stock, it applies the
+  planner's A4/Letter primary recommendation instead of downgrading the main
+  container target into a supplemental label.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

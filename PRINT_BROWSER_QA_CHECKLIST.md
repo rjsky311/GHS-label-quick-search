@@ -34,6 +34,8 @@ Record these outputs in the final implementation note:
   B/W state, language state, and `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs.
 - `print-qa-status` after clicking the print action in QA handoff mode.
+  Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
+  `data-template`, and `data-stock-preset` attributes when available.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview
@@ -100,6 +102,18 @@ For both A4 Primary and Letter Primary:
 8. Confirm Chinese body text for the chemical is absent in English mode.
 9. Confirm all expected pictogram codes are still present.
 10. Confirm `more-pics` is absent.
+
+## Quick-ID Tube / Vial Output
+
+1. Select `Tube / vial`.
+2. Confirm the decision summary says quick-ID supplemental output.
+3. Confirm `label-kind-quick-id` is present.
+4. Confirm `<img class="qrcode-img">` is absent.
+5. Confirm all expected GHS pictogram codes are present.
+6. Confirm `more-pics` is absent.
+7. Click the print action with `qaPrintHandoff=1` and confirm
+   `print-qa-status` reports `data-label-kind="quick-id"` plus all expected
+   pictograms.
 
 ## Missing Profile Gate
 

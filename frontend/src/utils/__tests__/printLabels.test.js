@@ -393,7 +393,7 @@ describe("print layout model", () => {
 });
 
 describe("printLabels", () => {
-  let mockIframe, mockIframeDoc, mockIframeWindow;
+  let mockIframe, mockIframeDoc, mockIframeWindow, mockImages;
   let createElementSpy, appendChildSpy, getByIdSpy, alertSpy;
 
   beforeEach(() => {
@@ -402,6 +402,7 @@ describe("printLabels", () => {
     mockIframe = mocks.mockIframe;
     mockIframeDoc = mocks.mockIframeDoc;
     mockIframeWindow = mocks.mockIframeWindow;
+    mockImages = mocks.mockImages;
 
     createElementSpy = jest
       .spyOn(document, "createElement")
@@ -744,6 +745,30 @@ describe("printLabels", () => {
 
   it("supports QA print handoff without opening the native print dialog", () => {
     window.history.replaceState({}, "", "/?qaPrintHandoff=1");
+    createElementSpy.mockImplementation((tag) => {
+      if (tag === "iframe") return mockIframe;
+      if (tag === "div") {
+        return {
+          id: "",
+          style: { cssText: "" },
+          dataset: {},
+          setAttribute: jest.fn(),
+        };
+      }
+      return document.createElement.wrappedMethod
+        ? document.createElement.wrappedMethod(tag)
+        : {};
+    });
+    mockImages.push(
+      { complete: true, getAttribute: () => "GHS02" },
+      { complete: true, getAttribute: () => "GHS07" },
+      { complete: true, getAttribute: () => "GHS02" },
+      { complete: true, getAttribute: () => "QR" },
+    );
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return mockImages;
+      return [];
+    });
 
     printLabels(
       [mockChemical],
@@ -764,6 +789,26 @@ describe("printLabels", () => {
         status: "qa_handoff",
         labelKind: "qr-supplement",
         totalLabels: 1,
+        pictogramCodes: ["GHS02", "GHS07"],
+        hasQr: true,
+      }),
+    );
+    const statusElement = appendChildSpy.mock.calls
+      .map(([node]) => node)
+      .find((node) => node?.id === "ghs-print-qa-status");
+    expect(statusElement).toEqual(
+      expect.objectContaining({
+        textContent: "Print handoff ready: qr-supplement; GHS02,GHS07",
+      }),
+    );
+    expect(statusElement.dataset).toEqual(
+      expect.objectContaining({
+        status: "qa_handoff",
+        labelKind: "qr-supplement",
+        pictograms: "GHS02,GHS07",
+        hasQr: "true",
+        template: "qrcode",
+        stockPreset: "small-strip",
       }),
     );
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -772,6 +817,8 @@ describe("printLabels", () => {
         status: "qa_handoff",
         meta: expect.objectContaining({
           labelKind: "qr-supplement",
+          pictogramCodes: ["GHS02", "GHS07"],
+          hasQr: true,
         }),
       }),
     );

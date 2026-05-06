@@ -2245,7 +2245,9 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
   const imageAlts = Array.from(iframeDoc.querySelectorAll("img"))
     .map((img) => img.getAttribute?.("alt") || img.alt || "")
     .filter(Boolean);
-  const pictogramCodes = imageAlts.filter((alt) => /^GHS\d{2}$/.test(alt));
+  const pictogramCodes = [
+    ...new Set(imageAlts.filter((alt) => /^GHS\d{2}$/.test(alt))),
+  ];
   const status = {
     status: "qa_handoff",
     template: lifecycleMeta.template,
@@ -2287,6 +2289,10 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
       statusElement.dataset.status = status.status;
       statusElement.dataset.labelKind = status.labelKind;
       statusElement.dataset.pictograms = pictogramCodes.join(",");
+      statusElement.dataset.hasQr = String(status.hasQr);
+      statusElement.dataset.totalLabels = String(status.totalLabels);
+      statusElement.dataset.template = status.template || "";
+      statusElement.dataset.stockPreset = status.stockPreset || "";
     }
     statusElement.textContent = `Print handoff ready: ${status.labelKind}; ${pictogramCodes.join(",")}`;
   }

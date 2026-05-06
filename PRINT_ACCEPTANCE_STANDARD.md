@@ -101,10 +101,12 @@ Run this matrix before shipping print-workflow changes:
 | --- | --- | --- | --- | --- |
 | Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary, no QR body, no H/P summaries, all pictograms |
 | Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary, Letter page, no QR body, all pictograms |
+| Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
 | Hydrochloric Acid | Large Primary | Bilingual | Color | Complete primary when the content fits, all pictograms, no H/P summaries |
 | Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
 | Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
+| Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
 | Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
 | Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
@@ -118,6 +120,8 @@ Unit tests should keep these invariants pinned:
 - Complete primary bodies do not contain `qrcode-img`, `hazard-more`, or `precaution-more`.
 - Every expected pictogram code appears in the printed body.
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
+- Quick-ID labels carry `label-kind-quick-id`, planner output kind `QUICK_ID`,
+  every expected pictogram, and no QR body.
 - Small QR labels keep QR plus every expected pictogram in the printed body.
 - Strip labels use a four-pictogram row for dense multi-pictogram chemicals.
 - Pictogram dimensions and visible H/P budgets increase with available physical label area.
@@ -126,4 +130,7 @@ Unit tests should keep these invariants pinned:
 - Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
 - No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.
+- Browser Use print-action checks should use `qaPrintHandoff=1` and verify
+  `print-qa-status` data attributes for label kind, pictogram codes, QR state,
+  template, and stock preset.
 - Targeted local print contract checks are available with `npm run test:print-contract` from `frontend/`.

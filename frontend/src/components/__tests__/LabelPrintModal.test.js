@@ -851,6 +851,40 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
   });
 
+  it("routes dense main-container target to a full-page primary instead of a supplemental fallback", () => {
+    const denseChem = makeChem({
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 18 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    });
+    const { props } = renderModal({
+      selectedForLabel: [denseChem],
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    fireEvent.click(screen.getByTestId("label-purpose-mainContainer"));
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "letter-primary",
+        labelWidthMm: 186,
+        labelHeightMm: 236,
+        perPage: 1,
+      }),
+    );
+  });
+
   it("shows live preview details for the first selected chemical", () => {
     renderModal({
       selectedForLabel: [

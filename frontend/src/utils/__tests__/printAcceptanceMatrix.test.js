@@ -14,7 +14,11 @@ jest.mock("@/constants/ghs", () => ({
 }));
 
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
-import { buildPrintOutputPlan, PRINT_OUTPUT_PLAN_STATE } from "../printOutputPlanner";
+import {
+  buildPrintOutputPlan,
+  PRINT_OUTPUT_KIND,
+  PRINT_OUTPUT_PLAN_STATE,
+} from "../printOutputPlanner";
 import { buildPrintPreviewDocument } from "../printLabels";
 
 const completeProfile = {
@@ -241,6 +245,36 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-kind-supplemental");
     expect(preview.fragmentHtml).toContain("label-form-strip");
     expect(preview.html).toContain("grid-template-columns: repeat(4, 9.1mm)");
+    expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+  });
+
+  it("renders tube and vial quick-ID output as a distinct printable supplement", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+    });
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [hydrochloricAcid],
+      layout,
+      resolvedLabProfile: {},
+      locale: "zh-TW",
+    });
+    const preview = previewLabel(hydrochloricAcid, {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+    }, {});
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
+    expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QUICK_ID);
+    expect(plan.canPrint).toBe(true);
+    expect(preview.fragmentHtml).toContain("label-kind-quick-id");
+    expect(preview.fragmentHtml).toContain("label-form-strip");
+    expect(preview.fragmentHtml).not.toContain("qrcode-img");
+    expect(preview.fragmentHtml).not.toContain("more-pics");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
   });
 
