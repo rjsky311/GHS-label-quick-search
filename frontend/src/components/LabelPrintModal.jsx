@@ -161,6 +161,45 @@ const PURPOSE_OPTIONS = [
   },
 ];
 
+const PRINT_TARGET_OPTIONS = [
+  {
+    value: "mainContainer",
+    purpose: "shipping",
+    labelKey: "label.targetMainContainer",
+    descKey: "label.targetMainContainerDesc",
+    icon: Package2,
+    presetId: "large-primary",
+    template: "full",
+  },
+  {
+    value: "bottle",
+    purpose: "shipping",
+    labelKey: "label.targetBottle",
+    descKey: "label.targetBottleDesc",
+    icon: Tag,
+    presetId: "medium-bottle",
+    template: "full",
+  },
+  {
+    value: "vial",
+    purpose: "quickId",
+    labelKey: "label.targetVial",
+    descKey: "label.targetVialDesc",
+    icon: Target,
+    presetId: "small-strip",
+    template: "icon",
+  },
+  {
+    value: "qrSupplement",
+    purpose: "qrSupplement",
+    labelKey: "label.targetQrSupplement",
+    descKey: "label.targetQrSupplementDesc",
+    icon: ScanLine,
+    presetId: "small-strip",
+    template: "qrcode",
+  },
+];
+
 const READINESS_TONE_CLASSES = {
   ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
   neutral: "border-slate-200 bg-white text-slate-700",
@@ -323,6 +362,20 @@ function getLabelPurposeForConfig(labelConfig = {}) {
   if (labelConfig.template === "qrcode") return "qrSupplement";
   if (labelConfig.template === "icon") return "quickId";
   return "shipping";
+}
+
+function getPrintTargetForConfig(labelPurpose, layoutProfile = {}) {
+  if (labelPurpose === "qrSupplement") return "qrSupplement";
+  if (labelPurpose === "quickId") return "vial";
+  if (
+    ["medium-bottle", "avery-5163", "avery-5164"].includes(
+      layoutProfile.stockPreset,
+    ) ||
+    layoutProfile.size === "medium"
+  ) {
+    return "bottle";
+  }
+  return "mainContainer";
 }
 
 function resolveResponsibleProfile(customLabelFields = {}, labProfile = {}) {
@@ -621,6 +674,7 @@ export default function LabelPrintModal({
 
   const layoutProfile = resolveLayoutProfile(labelConfig);
   const labelPurpose = getLabelPurposeForConfig(labelConfig);
+  const printTarget = getPrintTargetForConfig(labelPurpose, layoutProfile);
   const previewChem = selectedForLabel[0] ?? null;
   const currentLocale = i18n.language;
   const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
@@ -1101,16 +1155,16 @@ export default function LabelPrintModal({
     applyStockPreset(recommendedFullPagePreset);
   };
 
-  const applyPurpose = (purpose) => {
+  const applyPrintTarget = (targetValue) => {
     userSelectedStockRef.current = false;
-    const option = PURPOSE_OPTIONS.find((item) => item.value === purpose);
+    const option = PRINT_TARGET_OPTIONS.find((item) => item.value === targetValue);
     const preset = ALL_STOCK_PRESETS.find((item) => item.id === option?.presetId);
 
     if (!option || !preset) return;
 
-    onLabelConfigChange({
+    const nextConfig = {
       ...labelConfig,
-      labelPurpose: option.value,
+      labelPurpose: option.purpose,
       template: option.template,
       stockPreset: preset.id,
       size: preset.size,
@@ -1126,7 +1180,29 @@ export default function LabelPrintModal({
       offsetXmm: preset.offsetXmm,
       offsetYmm: preset.offsetYmm,
       pageSize: preset.pageSize || "A4",
-    });
+    };
+
+    if (option.purpose === "shipping") {
+      const completePrimaryConfig = {
+        ...nextConfig,
+        template: "full",
+      };
+      const completePrimaryPlan = buildPrintOutputPlan({
+        selectedForLabel,
+        layout: resolveLayoutProfile(completePrimaryConfig),
+        customGHSSettings,
+        resolvedLabProfile: resolvedResponsibleProfile,
+        locale: currentLocale,
+      });
+
+      nextConfig.template =
+        preset.outputRole === "primary-candidate" &&
+        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+          ? "standard"
+          : "full";
+    }
+
+    onLabelConfigChange(nextConfig);
   };
 
   const renderConfigButtons = (options, value, onSelect, activeClasses) => (
@@ -2012,18 +2088,18 @@ export default function LabelPrintModal({
                     {tx("label.outputGoalTitle", "Label target")}
                   </div>
                   <div
-                    className="mt-2 grid grid-cols-3 gap-2"
+                    className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"
                     data-testid="output-goal-controls"
                   >
-                    {PURPOSE_OPTIONS.map((option) => {
+                    {PRINT_TARGET_OPTIONS.map((option) => {
                       const Icon = option.icon;
-                      const selected = labelPurpose === option.value;
+                      const selected = printTarget === option.value;
 
                       return (
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => applyPurpose(option.value)}
+                          onClick={() => applyPrintTarget(option.value)}
                           data-testid={`label-purpose-${option.value}`}
                           className={`rounded-md border p-2 text-left transition-colors ${
                             selected

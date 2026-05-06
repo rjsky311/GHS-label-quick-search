@@ -706,7 +706,7 @@ describe("LabelPrintModal", () => {
     );
   });
 
-  it("selects a print purpose and applies its recommended template and stock", () => {
+  it("selects a print target and applies its recommended template and stock", () => {
     const { props } = renderModal();
 
     fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
@@ -765,6 +765,23 @@ describe("LabelPrintModal", () => {
         stockPreset: "custom",
       }),
     );
+  });
+
+  it("selects the bottle task as a physical target without exposing stock tuning first", () => {
+    const { props } = renderModal({ selectedForLabel: [makeChem()] });
+
+    fireEvent.click(screen.getByTestId("label-purpose-bottle"));
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "shipping",
+        stockPreset: "medium-bottle",
+        labelWidthMm: 95,
+        labelHeightMm: 50,
+        perPage: 8,
+      }),
+    );
+    expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
   });
 
   it("shows live preview details for the first selected chemical", () => {
