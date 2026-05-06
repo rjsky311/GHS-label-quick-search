@@ -2205,62 +2205,6 @@ export default function LabelPrintModal({
               data-testid="label-settings-column"
             >
               <section
-                className={`rounded-lg border p-4 ${
-                  READINESS_TONE_CLASSES[outputPlanTone] ||
-                  READINESS_TONE_CLASSES.neutral
-                }`}
-                data-testid="print-output-plan"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <ClipboardList className="h-4 w-4 shrink-0" />
-                      {tx("label.outputPlanTitle", "Recommended output")}
-                    </div>
-                    <div className="mt-2 text-base font-semibold">
-                      {outputPlanTitle}
-                    </div>
-                    <p className="mt-1 text-sm leading-5 opacity-90">
-                      {outputPlanBody}
-                    </p>
-                  </div>
-                  {canUseFullPagePrimary && (
-                    <button
-                      type="button"
-                      onClick={handleUseFullPagePrimary}
-                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
-                      data-testid="use-full-page-primary-plan"
-                    >
-                      <FileText className="h-4 w-4" />
-                      {useFullPagePrimaryLabel}
-                    </button>
-                  )}
-                </div>
-                <div
-                  className="mt-4 grid gap-2 sm:grid-cols-3"
-                  data-testid="print-decision-summary"
-                >
-                  {decisionSummaryItems.map((item) => (
-                    <div
-                      key={item.key}
-                      className={`rounded-md border px-3 py-2 ${
-                        READINESS_TONE_CLASSES[item.tone] ||
-                        READINESS_TONE_CLASSES.neutral
-                      }`}
-                      data-testid={`print-decision-${item.key}`}
-                    >
-                      <div className="text-xs font-medium opacity-80">
-                        {item.label}
-                      </div>
-                      <div className="mt-1 text-sm font-semibold">
-                        {item.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section
                 className="rounded-lg border border-slate-200 bg-white p-4"
                 data-testid="primary-output-size-controls"
               >
@@ -2269,13 +2213,13 @@ export default function LabelPrintModal({
                     <h3 className="text-sm font-medium text-slate-800">
                       {tx(
                         "label.outputGoalSizeTitle",
-                        "Where will this label be used?",
+                        "Choose label target",
                       )}
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
                       {tx(
                         "label.outputGoalSizeHint",
-                        "Choose the real target. The app picks the printable strategy for that size, then recommends A4 or Letter only when a complete primary label is needed.",
+                        "Pick where this will be attached. The app chooses complete primary, supplemental, quick-ID, or QR output for that target.",
                       )}
                     </p>
                   </div>
@@ -2325,8 +2269,64 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="mt-4">
+                  <section
+                    className={`rounded-md border p-3 ${
+                      READINESS_TONE_CLASSES[outputPlanTone] ||
+                      READINESS_TONE_CLASSES.neutral
+                    }`}
+                    data-testid="print-output-plan"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-normal opacity-80">
+                          <ClipboardList className="h-4 w-4 shrink-0" />
+                          {tx("label.outputPlanTitle", "App decision")}
+                        </div>
+                        <div className="mt-1 text-sm font-semibold">
+                          {outputPlanTitle}
+                        </div>
+                        <p className="mt-1 text-xs leading-5 opacity-90">
+                          {outputPlanBody}
+                        </p>
+                      </div>
+                      {canUseFullPagePrimary && (
+                        <button
+                          type="button"
+                          onClick={handleUseFullPagePrimary}
+                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-800"
+                          data-testid="use-full-page-primary-plan"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {useFullPagePrimaryLabel}
+                        </button>
+                      )}
+                    </div>
+                    <div
+                      className="mt-3 grid gap-2 sm:grid-cols-3"
+                      data-testid="print-decision-summary"
+                    >
+                      {decisionSummaryItems.map((item) => (
+                        <div
+                          key={item.key}
+                          className={`rounded-md border px-3 py-2 ${
+                            READINESS_TONE_CLASSES[item.tone] ||
+                            READINESS_TONE_CLASSES.neutral
+                          }`}
+                          data-testid={`print-decision-${item.key}`}
+                        >
+                          <div className="text-xs font-medium opacity-80">
+                            {item.label}
+                          </div>
+                          <div className="mt-1 text-sm font-semibold">
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
                   <div
-                    className="rounded-md border border-blue-100 bg-blue-50/70 p-3"
+                    className="mt-3 rounded-md border border-blue-100 bg-blue-50/70 p-3"
                     data-testid="selected-stock-summary"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -2556,30 +2556,6 @@ export default function LabelPrintModal({
                 </div>
               </details>
 
-              {selectedForLabel.length > 0 && (
-                <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-                    <FileSpreadsheet className="h-4 w-4 text-blue-600" />
-                    <span>
-                      {t("label.estPages", {
-                        pages: estimatedPages,
-                        perPage: layoutProfile.perPage,
-                      })}
-                    </span>
-                    {totalLabels !== selectedForLabel.length && (
-                      <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                        {t("label.totalLabels", { count: totalLabels })}
-                      </span>
-                    )}
-                    {layoutProfile.size === "small" && (
-                      <span className="text-xs text-slate-500">
-                        {t("label.smallSizeHint")}
-                      </span>
-                    )}
-                  </div>
-                </section>
-              )}
-
               <details
                 className="rounded-lg border border-slate-200 bg-white p-4"
                 data-testid="selected-labels-controls"
@@ -2594,10 +2570,19 @@ export default function LabelPrintModal({
                         })}
                       </span>
                       <span className="mt-0.5 block text-xs text-slate-500">
-                        {tx(
-                          "label.selectedLabelsSummary",
-                          "Adjust quantities only when you need multiple copies.",
-                        )}
+                        {estimatedPages > 0
+                          ? tx(
+                              "label.selectedLabelsWithPagesSummary",
+                              "{{labels}} label(s), about {{pages}} page(s). Adjust copies only when needed.",
+                              {
+                                labels: totalLabels,
+                                pages: estimatedPages,
+                              },
+                            )
+                          : tx(
+                              "label.selectedLabelsSummary",
+                              "Adjust quantities only when you need multiple copies.",
+                            )}
                       </span>
                     </span>
                   </span>

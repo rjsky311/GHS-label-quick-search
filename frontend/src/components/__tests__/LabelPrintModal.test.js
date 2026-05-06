@@ -95,11 +95,18 @@ describe("LabelPrintModal", () => {
     );
   });
 
-  it("starts with the recommended output and keeps actions sticky", () => {
+  it("starts with task-first target choice and keeps actions sticky", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
+    expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Choose label target",
+    );
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Label target",
+    );
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
-      "Recommended output",
+      "App decision",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Output role",
@@ -112,13 +119,6 @@ describe("LabelPrintModal", () => {
       "print",
     );
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
-    expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
-    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
-      "Where will this label be used?",
-    );
-    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
-      "Label target",
-    );
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
     );
@@ -133,6 +133,12 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("advanced-print-options")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls")).toBeInTheDocument();
+    expect(
+      screen
+        .getByTestId("primary-output-size-controls")
+        .compareDocumentPosition(screen.getByTestId("print-output-plan")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(
       screen
         .getByTestId("print-output-plan")
@@ -183,7 +189,7 @@ describe("LabelPrintModal", () => {
       "1 label(s) total",
     );
     expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
-      "Adjust quantities only when you need multiple copies.",
+      "1 label(s), about 1 page(s). Adjust copies only when needed.",
     );
   });
 

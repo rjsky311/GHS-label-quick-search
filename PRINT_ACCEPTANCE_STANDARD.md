@@ -89,6 +89,10 @@ These are acceptance targets for the renderer and Browser QA:
 - Chinese, English, and bilingual modes all update the preview and printed HTML.
 - The print button is disabled only when the app lacks required data or cannot produce a truthful printable output.
 - The first-level print workflow shows a concise decision summary before stock details: output role, GHS icon handling, and H/P text handling.
+- The first-level print workflow starts with the physical use target, not a
+  generic template or tuning panel.
+- Page count and copy quantity are summarized inside the selected-label details,
+  not as a separate first-level diagnostic block.
 - Less common stock sizes remain available but are collapsed behind a secondary control so the main workflow does not read like a template catalog.
 - Responsible lab/supplier fields are collapsed unless the selected complete-primary output is blocked by missing profile data.
 - Custom stock size controls remain advanced and must still pass the same planner rules as curated stock.

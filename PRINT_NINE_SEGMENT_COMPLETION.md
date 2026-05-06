@@ -27,6 +27,9 @@ Current evidence:
 - Dense `Main container` target selection applies the planner's A4/Letter
   complete-primary recommendation instead of downgrading the main target into a
   supplemental label.
+- The first-level modal now starts with the task target. The planner's decision
+  is shown inside that target block as an app decision, while the exact outcome
+  stays with the live label preview.
 - Browser QA checklist requires target switching before shipping print changes.
 
 ## Segment 2: Output Planner Over Template Picker

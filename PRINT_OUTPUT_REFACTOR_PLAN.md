@@ -89,6 +89,10 @@ The first refactor slice has landed:
   intent. If dense content cannot fit the roomy container stock, it applies the
   planner's A4/Letter primary recommendation instead of downgrading the main
   container target into a supplemental label.
+- The first-level modal has been tightened around the real user task: choose the
+  label target first, see the app decision in that same target block, then verify
+  the exact printable output in the live preview. Standalone page-count noise is
+  folded into the selected-label summary.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
