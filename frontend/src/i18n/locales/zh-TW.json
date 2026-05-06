@@ -604,8 +604,8 @@
   "pilot.adminKeyPlaceholder": "輸入管理金鑰",
   "pilot.adminKeyRequired": "請輸入管理金鑰。",
   "pilot.unlockAdmin": "解鎖管理",
-  "label.outputGoalSizeTitle": "輸出目標與實際尺寸",
-  "label.outputGoalSizeHint": "先選實際用途與要列印的紙材。系統會依照該尺寸縮放標籤，只有在內容無法清楚承載時才建議改用 A4 或 Letter。",
-  "label.outputGoalTitle": "輸出目標",
-  "label.outputStockTitle": "紙材或標籤"
+  "label.outputGoalSizeTitle": "這張標籤要貼在哪裡？",
+  "label.outputGoalSizeHint": "先選實際貼標情境。系統會依尺寸自動選擇可列印策略；只有需要完整主標時才建議 A4 或 Letter。",
+  "label.outputGoalTitle": "貼標情境",
+  "label.outputStockTitle": "實際尺寸"
 }

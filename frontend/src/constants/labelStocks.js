@@ -479,10 +479,10 @@ function resolveTypographyMetrics(normalized) {
     normalized.size === "large" ? 42 : 36,
   );
   const standardPictogramRatio =
-    normalized.size === "large" ? 0.27 : isCompactStrip ? 0.31 : 0.3;
+    normalized.size === "large" ? 0.27 : isCompactStrip ? 0.38 : 0.3;
   const standardPictogramMm = clamp(
     roundTo(shortSide * standardPictogramRatio, 1),
-    isCompactStrip ? 7 : 8,
+    isCompactStrip ? 9 : 8,
     normalized.size === "large" ? 24 : normalized.size === "medium" ? 18 : 13,
   );
   const standardPictogramGapMm = isCompactStrip
@@ -501,8 +501,8 @@ function resolveTypographyMetrics(normalized) {
     Math.min(roundTo(normalized.labelWidthMm * 0.42, 1), 56),
   );
   const qrPictogramMm = clamp(
-    roundTo(shortSide * (isCompactStrip ? 0.27 : 0.23), 1),
-    6.5,
+    roundTo(shortSide * (isCompactStrip ? 0.32 : 0.23), 1),
+    7.5,
     normalized.size === "large" ? 13 : 10.5,
   );
 

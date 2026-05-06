@@ -103,6 +103,15 @@ describe("LabelPrintModal", () => {
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Where will this label be used?",
+    );
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Label target",
+    );
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Target size",
+    );
     expect(screen.getByTestId("advanced-print-options")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls")).toBeInTheDocument();
     expect(

@@ -603,8 +603,8 @@
   "pilot.adminKeyPlaceholder": "Enter admin key",
   "pilot.adminKeyRequired": "Admin key is required.",
   "pilot.unlockAdmin": "Unlock admin",
-  "label.outputGoalSizeTitle": "Output goal and physical size",
-  "label.outputGoalSizeHint": "Pick the real-world job and the stock you will actually print. The app scales the label for that stock and recommends A4 or Letter only when the content cannot fit truthfully.",
-  "label.outputGoalTitle": "Output goal",
-  "label.outputStockTitle": "Paper or label stock"
+  "label.outputGoalSizeTitle": "Where will this label be used?",
+  "label.outputGoalSizeHint": "Choose the real target. The app picks the printable strategy for that size, then recommends A4 or Letter only when a complete primary label is needed.",
+  "label.outputGoalTitle": "Label target",
+  "label.outputStockTitle": "Target size"
 }

@@ -301,6 +301,8 @@ describe("print layout model", () => {
     expect(medium.typography.fontSize).toBe("9px");
     expect(large.typography.fontSize).toBe("14px");
     expect(small.typography.qrBox).toBe("15.8mm");
+    expect(small.typography.standardPictogramSize).toBe("9.1mm");
+    expect(small.typography.qrPictogramSize).toBe("7.7mm");
     expect(medium.typography.standardPictogramSize).toBe("15mm");
     expect(large.typography.standardPictogramSize).toBe("23.8mm");
     expect(small.typography.compliancePictogramSize).toBe("10mm");
@@ -874,8 +876,9 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-qr");
       expect(preview.fragmentHtml).toContain("label-form-strip");
+      expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
       expect(preview.html).toContain("width: 15.8mm");
-      expect(preview.html).toContain("width: 6.5mm");
+      expect(preview.html).toContain("width: 7.7mm");
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(preview.fragmentHtml).not.toContain("more-pics");
@@ -906,6 +909,7 @@ describe("printLabels", () => {
       const bodyHtml = html.slice(html.indexOf("<body"));
       expect(bodyHtml).toContain("label-qr");
       expect(bodyHtml).toContain("label-form-strip");
+      expect(bodyHtml).toContain("label-kind-qr-supplement");
       expect(bodyHtml).toContain("qrcode-img");
       expect(bodyHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(bodyHtml).not.toContain("more-pics");
@@ -978,16 +982,19 @@ describe("printLabels", () => {
       );
 
       expect(smallPreview.fragmentHtml).toContain("label-form-strip");
+      expect(smallPreview.fragmentHtml).toContain("label-kind-supplemental");
       expect(smallPreview.html).toContain(
-        "grid-template-columns: repeat(2, 7.4mm)",
+        "grid-template-columns: repeat(4, 9.1mm)",
       );
-      expect(smallPreview.html).toContain("width: 7.4mm");
+      expect(smallPreview.html).toContain("width: 9.1mm");
+      expect(smallPreview.html).toContain("border-bottom: 1px solid #dbe4ef");
       expect(smallPreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
       );
       expect(smallPreview.fragmentHtml).toContain("hazard-more");
 
       expect(bottlePreview.fragmentHtml).toContain("label-form-bottle");
+      expect(bottlePreview.fragmentHtml).toContain("label-kind-supplemental");
       expect(bottlePreview.html).toContain(
         "grid-template-columns: repeat(2, 15mm)",
       );

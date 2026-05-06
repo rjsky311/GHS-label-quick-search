@@ -1780,13 +1780,13 @@ export default function LabelPrintModal({
                     <h3 className="text-sm font-medium text-slate-800">
                       {tx(
                         "label.outputGoalSizeTitle",
-                        "Output goal and physical size",
+                        "Where will this label be used?",
                       )}
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
                       {tx(
                         "label.outputGoalSizeHint",
-                        "Pick the real-world job and the stock you will actually print. The app scales the label for that stock and recommends A4 or Letter only when the content cannot fit truthfully.",
+                        "Choose the real target. The app picks the printable strategy for that size, then recommends A4 or Letter only when a complete primary label is needed.",
                       )}
                     </p>
                   </div>
@@ -1798,7 +1798,7 @@ export default function LabelPrintModal({
                 </div>
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
-                    {tx("label.outputGoalTitle", "Output goal")}
+                    {tx("label.outputGoalTitle", "Label target")}
                   </div>
                   <div
                     className="mt-2 grid gap-2 sm:grid-cols-3"
@@ -1839,7 +1839,7 @@ export default function LabelPrintModal({
 
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
-                    {tx("label.outputStockTitle", "Paper or label stock")}
+                    {tx("label.outputStockTitle", "Target size")}
                   </div>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {visibleStockChoices.map((preset) => {

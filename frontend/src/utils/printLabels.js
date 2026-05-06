@@ -163,6 +163,13 @@ const getPhysicalLabelClasses = (layout = {}) =>
     `label-stock-${toClassToken(layout.stockId || layout.stockPreset)}`,
     `label-size-${toClassToken(layout.size)}`,
     `label-form-${toClassToken(layout.formFactor)}`,
+    isCompletePrimaryTemplate(layout)
+      ? "label-kind-complete-primary"
+      : isQrSupplementLayout(layout)
+        ? "label-kind-qr-supplement"
+        : isQuickIdLayout(layout)
+          ? "label-kind-quick-id"
+          : "label-kind-supplemental",
     layout.outputRole
       ? `label-output-${toClassToken(layout.outputRole)}`
       : "",
@@ -1700,10 +1707,19 @@ const buildStyles = (model) => {
       padding: 0.35mm 0.45mm 0.5mm 0.45mm;
     }
     .label-standard.label-form-strip .standard-grid {
+      display: flex;
+      flex-direction: column;
       gap: 0.85mm;
     }
     .label-standard.label-form-strip .standard-rail {
-      padding-right: 0.55mm;
+      padding: 0 0 0.45mm 0;
+      border-right: 0;
+      border-bottom: 1px solid #dbe4ef;
+    }
+    .label-standard.label-form-strip .pictograms-standard {
+      grid-template-columns: repeat(4, ${standardPictogramSize});
+      justify-content: flex-start;
+      gap: 0.45mm;
     }
     .label-standard.label-form-strip .standard-main {
       gap: 0.38mm;

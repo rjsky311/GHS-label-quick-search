@@ -1,6 +1,6 @@
 # Print Output Refactor Plan
 
-This document is the implementation guide for the next print-workflow refactor. It turns the recent product decisions into a stable plan so future work does not drift back into one-off template fixes.
+This document is the implementation guide for the next print-workflow refactor. It turns the recent product decisions into a stable plan so future work does not drift back into one-off template fixes. Concrete ship/no-ship gates live in `PRINT_ACCEPTANCE_STANDARD.md`; use that file as the acceptance contract before merging print changes.
 
 This is a product and engineering plan, not legal advice. Final use still requires SDS, supplier label, and local regulation review.
 
@@ -65,6 +65,7 @@ The first refactor slice has landed:
 - Manual container-stock selection is respected. If dense content cannot fit as a complete primary label on a bottle/container stock, the modal keeps that physical stock selected and switches the output to a printable supplemental/standard label instead of silently bouncing back to A4 or Letter.
 - Phase 3 modal simplification now has one secondary `Advanced print options` area for template overrides, density, calibration, custom fields, saved presets, and recent print jobs. The first-level workflow is limited to recommended output, physical size/purpose, language/color, responsible profile, selected quantity, preview, and print action.
 - Supplemental bottle, strip, and QR outputs now derive pictogram size, QR box size, and visible H/P-code budget from the physical label dimensions. Small labels keep every available GHS pictogram, shrink/reflow the label first, and only summarize text after the icon/signal/identity hierarchy is preserved.
+- Added `PRINT_ACCEPTANCE_STANDARD.md` as the product acceptance contract for complete primary, supplemental, QR, quick-ID, readability, and Browser QA matrix gates.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
