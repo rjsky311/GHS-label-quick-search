@@ -436,6 +436,9 @@ function resolveTypographyMetrics(normalized) {
   const shortSide = Math.min(normalized.labelWidthMm, normalized.labelHeightMm);
   const area = normalized.labelWidthMm * normalized.labelHeightMm;
   const areaScale = Math.sqrt(area / (95 * 50));
+  const isCompactStrip =
+    normalized.size === "small" &&
+    (normalized.labelHeightMm <= 32 || normalized.labelWidthMm <= 54);
   const isFullPage =
     normalized.labelPurpose === "shipping" &&
     normalized.template === "full" &&
@@ -456,6 +459,10 @@ function resolveTypographyMetrics(normalized) {
       complianceStatementPx: 7,
       complianceLineHeight: 1.08,
       complianceColumns: 2,
+      standardPictogramMm: 30,
+      standardRailColumnMm: 66,
+      standardPictogramGapMm: 2,
+      qrPictogramMm: 14,
     };
   }
 
@@ -466,19 +473,123 @@ function resolveTypographyMetrics(normalized) {
   const pictogramPx = clamp(roundTo(shortSide * 1.05, 0), 24, 44);
   const compliancePictogramMm = clamp(roundTo(shortSide * 0.28, 1), 10, 28);
   const complianceStatementPx = clamp(roundTo(fontPx - 2.5, 1), 5.5, 10);
+  const qrBoxMm = clamp(
+    roundTo(shortSide * (isCompactStrip ? 0.66 : 0.72), 1),
+    isCompactStrip ? 14 : 16,
+    normalized.size === "large" ? 42 : 36,
+  );
+  const standardPictogramRatio =
+    normalized.size === "large" ? 0.27 : isCompactStrip ? 0.31 : 0.3;
+  const standardPictogramMm = clamp(
+    roundTo(shortSide * standardPictogramRatio, 1),
+    isCompactStrip ? 7 : 8,
+    normalized.size === "large" ? 24 : normalized.size === "medium" ? 18 : 13,
+  );
+  const standardPictogramGapMm = isCompactStrip
+    ? 0.55
+    : normalized.size === "large"
+      ? 1.1
+      : 0.8;
+  const railInsetMm = isCompactStrip
+    ? 1.3
+    : normalized.size === "large"
+      ? 3
+      : 2.1;
+  const standardRailColumnMm = clamp(
+    roundTo(standardPictogramMm * 2 + standardPictogramGapMm + railInsetMm, 1),
+    14,
+    Math.min(roundTo(normalized.labelWidthMm * 0.42, 1), 56),
+  );
+  const qrPictogramMm = clamp(
+    roundTo(shortSide * (isCompactStrip ? 0.27 : 0.23), 1),
+    6.5,
+    normalized.size === "large" ? 13 : 10.5,
+  );
 
   return {
     ...base,
     fontPx,
     titlePx,
     pictogramPx,
+    qrBoxMm,
     signalPx,
     hazardPx,
     compliancePictogramMm,
     complianceStatementPx,
     complianceLineHeight: areaScale > 1.4 ? 1.16 : 1.1,
     complianceColumns: area > 9000 ? 2 : 1,
+    standardPictogramMm,
+    standardRailColumnMm,
+    standardPictogramGapMm,
+    qrPictogramMm,
   };
+}
+
+function resolveTemplateBudgets(normalized) {
+  const base =
+    TEMPLATE_BUDGETS_BY_SIZE[normalized.size] ||
+    TEMPLATE_BUDGETS_BY_SIZE.medium;
+  const area = normalized.labelWidthMm * normalized.labelHeightMm;
+  const shortSide = Math.min(normalized.labelWidthMm, normalized.labelHeightMm);
+  const isBilingual = normalized.nameDisplay === "both";
+  const compactPenalty = isBilingual && area < 3200 ? 1 : 0;
+
+  let primaryHazards = 1;
+  let precautions = 0;
+
+  if (area >= 11000 || shortSide >= 80) {
+    primaryHazards = 5;
+    precautions = 4;
+  } else if (area >= 4500 || shortSide >= 48) {
+    primaryHazards = 3;
+    precautions = 2;
+  } else if (area >= 2400 || shortSide >= 38) {
+    primaryHazards = 2;
+    precautions = 1;
+  }
+
+  primaryHazards = Math.max(1, primaryHazards - compactPenalty);
+  precautions = Math.max(0, precautions - compactPenalty);
+
+  return {
+    ...base,
+    standard: {
+      ...base.standard,
+      primaryHazards,
+      precautions,
+    },
+    qrcode: {
+      ...base.qrcode,
+      hazardTeasers: area >= 4500 ? 2 : 1,
+    },
+  };
+}
+
+function resolveLabelFormFactor(normalized, stock) {
+  if (
+    isFullPagePrimaryStockId(normalized.stockPreset) ||
+    (normalized.labelWidthMm >= 170 && normalized.labelHeightMm >= 200)
+  ) {
+    return "full-page";
+  }
+
+  const area = normalized.labelWidthMm * normalized.labelHeightMm;
+  if (
+    normalized.size === "small" &&
+    (normalized.labelHeightMm <= 32 || normalized.labelWidthMm <= 54)
+  ) {
+    return "strip";
+  }
+
+  if (area < 3200 || stock?.outputRole === "supplemental") {
+    return "compact";
+  }
+
+  if (area >= 10000 || normalized.labelWidthMm >= 120 || normalized.labelHeightMm >= 80) {
+    return "roomy";
+  }
+
+  return "bottle";
 }
 
 export function normalizePrintLabelConfig(labelConfig = {}) {
@@ -642,9 +753,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
   const normalized = normalizePrintLabelConfig(labelConfig);
   const stock = getLabelStockPreset(normalized);
   const metrics = resolveTypographyMetrics(normalized);
-  const budgets =
-    TEMPLATE_BUDGETS_BY_SIZE[normalized.size] ||
-    TEMPLATE_BUDGETS_BY_SIZE.medium;
+  const budgets = resolveTemplateBudgets(normalized);
   const pageSize = normalized.pageSize || stock.pageSize || "A4";
   const pageDimensions =
     PAGE_SIZE_DIMENSIONS_MM[pageSize]?.[normalized.orientation] ||
@@ -665,6 +774,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
     stock,
     pageSize,
     outputRole: stock.outputRole || null,
+    formFactor: resolveLabelFormFactor(normalized, stock),
     note: stock.note || null,
     label: {
       widthMm: normalized.labelWidthMm,
@@ -686,6 +796,10 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       complianceStatementSize: `${metrics.complianceStatementPx}px`,
       complianceLineHeight: String(metrics.complianceLineHeight),
       complianceColumns: metrics.complianceColumns,
+      standardPictogramSize: formatMm(metrics.standardPictogramMm),
+      standardRailColumn: formatMm(metrics.standardRailColumnMm),
+      standardPictogramGap: formatMm(metrics.standardPictogramGapMm),
+      qrPictogramSize: formatMm(metrics.qrPictogramMm),
     },
     page: {
       size: pageSize,

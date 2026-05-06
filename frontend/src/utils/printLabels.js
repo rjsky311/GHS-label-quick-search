@@ -152,6 +152,24 @@ const getFullPagePrimaryClass = (layout = {}) => {
   return " label-full-page-primary label-a4-primary";
 };
 
+const toClassToken = (value, fallback = "unknown") =>
+  String(value || fallback)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || fallback;
+
+const getPhysicalLabelClasses = (layout = {}) =>
+  [
+    `label-stock-${toClassToken(layout.stockId || layout.stockPreset)}`,
+    `label-size-${toClassToken(layout.size)}`,
+    `label-form-${toClassToken(layout.formFactor)}`,
+    layout.outputRole
+      ? `label-output-${toClassToken(layout.outputRole)}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
 const resolveLabProfile = (customLabelFields, labProfile) => ({
   organization:
     (labProfile?.organization || "").trim() ||
@@ -554,7 +572,7 @@ const renderIconTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-icon${prepared ? " label-prepared" : ""}">
+    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
       ${renderPurposeNotice(model)}
       <div class="label-top">
         ${renderNameSection(effectiveChem, model, {
@@ -594,7 +612,7 @@ const renderStandardTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-standard${prepared ? " label-prepared" : ""}">
+    <div class="label label-standard ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
       ${renderPurposeNotice(model)}
       <div class="label-top label-top-standard">
         ${renderNameSection(effectiveChem, model, {
@@ -669,7 +687,7 @@ const renderFullTemplate = (chemical, model) => {
   const fullPageClass = getFullPagePrimaryClass(model.layout);
 
   return `
-    <div class="label label-full label-compliance label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${prepared ? " label-prepared" : ""}">
+    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${prepared ? " label-prepared" : ""}">
       <div class="compliance-header">
         ${renderNameSection(effectiveChem, model)}
         ${
@@ -744,7 +762,7 @@ const renderQRCodeTemplate = (chemical, model) => {
   const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `
-    <div class="label label-qr${prepared ? " label-prepared" : ""}">
+    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
       <div class="qr-left qr-left-scan">
         ${renderPurposeNotice(model)}
         <div class="qr-identity">
@@ -816,17 +834,24 @@ const buildStyles = (model) => {
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const compliancePictogramSize = layout.typography.compliancePictogramSize;
   const standardPictogramSize =
-    layout.size === "small"
+    layout.typography.standardPictogramSize ||
+    (layout.size === "small"
       ? "8.5mm"
       : layout.size === "medium"
         ? "10.5mm"
-        : "13mm";
+        : "13mm");
   const standardRailColumn =
-    layout.size === "small"
+    layout.typography.standardRailColumn ||
+    (layout.size === "small"
       ? "19mm"
       : layout.size === "medium"
         ? "24.5mm"
-        : "30mm";
+        : "30mm");
+  const standardPictogramGap =
+    layout.typography.standardPictogramGap || "0.8mm";
+  const qrPictogramSize =
+    layout.typography.qrPictogramSize ||
+    (layout.size === "small" ? "6.5mm" : "9mm");
   const complianceAlertColumn =
     isFullPagePrimary
       ? "minmax(64mm, 68mm)"
@@ -926,6 +951,7 @@ const buildStyles = (model) => {
     .label-qr {
       flex-direction: row;
       gap: 2mm;
+      overflow: hidden;
     }
     .label-top {
       flex-shrink: 0;
@@ -1358,7 +1384,7 @@ const buildStyles = (model) => {
       grid-template-columns: repeat(2, ${standardPictogramSize});
       justify-content: center;
       align-items: center;
-      gap: 0.8mm;
+      gap: ${standardPictogramGap};
     }
     .pictograms-standard img {
       width: ${standardPictogramSize};
@@ -1366,11 +1392,11 @@ const buildStyles = (model) => {
     }
     .pictograms.qr-pics {
       justify-content: flex-start;
-      gap: 1.2mm;
+      gap: 0.85mm;
     }
     .pictograms.qr-pics img {
-      width: calc(${layout.typography.imgSize} - 6px);
-      height: calc(${layout.typography.imgSize} - 6px);
+      width: ${qrPictogramSize};
+      height: ${qrPictogramSize};
     }
     .pictograms.compliance-pictograms {
       display: grid;
@@ -1450,6 +1476,7 @@ const buildStyles = (model) => {
       gap: 1.35mm;
       width: 100%;
       min-height: 0;
+      align-items: start;
     }
     .standard-grid-no-pics {
       grid-template-columns: minmax(0, 1fr);
@@ -1664,6 +1691,92 @@ const buildStyles = (model) => {
       color: #475569;
       font-weight: 600;
       line-height: 1.2;
+    }
+    .label-standard.label-form-strip {
+      padding: 1.6mm;
+    }
+    .label-standard.label-form-strip .label-top-standard {
+      margin: -0.45mm -0.45mm 0.5mm -0.45mm;
+      padding: 0.35mm 0.45mm 0.5mm 0.45mm;
+    }
+    .label-standard.label-form-strip .standard-grid {
+      gap: 0.85mm;
+    }
+    .label-standard.label-form-strip .standard-rail {
+      padding-right: 0.55mm;
+    }
+    .label-standard.label-form-strip .standard-main {
+      gap: 0.38mm;
+    }
+    .label-standard.label-form-strip .standard-hazard-board,
+    .label-standard.label-form-strip .hazard-primary-list {
+      gap: 0.32mm;
+    }
+    .label-standard.label-form-strip .hazard-primary-item {
+      padding: 0.28mm 0.45mm;
+      font-size: 5.5px;
+      line-height: 1.02;
+    }
+    .label-standard.label-form-strip .hazard-more,
+    .label-standard.label-form-strip .precautions-compact,
+    .label-standard.label-form-strip .precaution-more {
+      font-size: 5px;
+      line-height: 1.02;
+    }
+    .label-standard.label-form-strip .signal.signal-inline {
+      font-size: 6px;
+      padding: 0.35mm 1.2mm;
+    }
+    .label-standard.label-form-roomy .standard-grid {
+      gap: 2mm;
+    }
+    .label-standard.label-form-roomy .hazard-primary-item {
+      font-size: max(8px, calc(${layout.typography.hazardSize} - 0.5px));
+      line-height: 1.12;
+    }
+    .label-qr.label-form-strip {
+      gap: 1mm;
+      padding: 1.5mm;
+    }
+    .label-qr.label-form-strip .qr-left-scan {
+      gap: 0.55mm;
+      padding-right: 0.8mm;
+    }
+    .label-qr.label-form-strip .qr-priority-block {
+      gap: 0.35mm;
+      padding: 0.45mm 0.55mm;
+      border-radius: 0.7mm;
+    }
+    .label-qr.label-form-strip .qr-hazard-chip {
+      font-size: 5.5px;
+      line-height: 1.05;
+      padding: 0.25mm 0.55mm;
+    }
+    .label-qr.label-form-strip .qr-hazard-summary {
+      display: none;
+    }
+    .label-qr.label-form-strip .qr-support-row {
+      min-height: ${qrPictogramSize};
+      padding-top: 0.35mm;
+    }
+    .label-qr.label-form-strip .qr-panel {
+      gap: 0.45mm;
+      padding-left: 0;
+    }
+    .label-qr.label-form-strip .qr-code-shell {
+      padding: 1mm;
+      border-radius: 1.2mm;
+    }
+    .label-qr.label-form-strip .qrcode-img {
+      width: calc(${layout.typography.qrBox} - 2mm);
+      height: calc(${layout.typography.qrBox} - 2mm);
+    }
+    .label-qr.label-form-strip .qr-hint {
+      font-size: 5.5px;
+      line-height: 1.05;
+    }
+    .label-qr.label-form-compact .qr-priority-block {
+      padding: 0.8mm 1mm;
     }
     ${
       layout.colorMode === "bw"

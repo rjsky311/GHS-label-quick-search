@@ -64,6 +64,7 @@ The first refactor slice has landed:
 - Full-page primary rendering now keeps pictograms and H/P statements in one shared body grid, uses density-tier typography before routing or continuation, and no longer overrides dense text with a fixed 9px statement size.
 - Manual container-stock selection is respected. If dense content cannot fit as a complete primary label on a bottle/container stock, the modal keeps that physical stock selected and switches the output to a printable supplemental/standard label instead of silently bouncing back to A4 or Letter.
 - Phase 3 modal simplification now has one secondary `Advanced print options` area for template overrides, density, calibration, custom fields, saved presets, and recent print jobs. The first-level workflow is limited to recommended output, physical size/purpose, language/color, responsible profile, selected quantity, preview, and print action.
+- Supplemental bottle, strip, and QR outputs now derive pictogram size, QR box size, and visible H/P-code budget from the physical label dimensions. Small labels keep every available GHS pictogram, shrink/reflow the label first, and only summarize text after the icon/signal/identity hierarchy is preserved.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

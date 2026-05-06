@@ -300,6 +300,9 @@ describe("print layout model", () => {
     expect(small.typography.fontSize).toBe("8px");
     expect(medium.typography.fontSize).toBe("9px");
     expect(large.typography.fontSize).toBe("14px");
+    expect(small.typography.qrBox).toBe("15.8mm");
+    expect(medium.typography.standardPictogramSize).toBe("15mm");
+    expect(large.typography.standardPictogramSize).toBe("23.8mm");
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
     expect(large.typography.compliancePictogramSize).toBe("24.6mm");
@@ -844,6 +847,73 @@ describe("printLabels", () => {
       expect(html).toContain("api.qrserver.com");
     });
 
+    it("qrcode supplemental labels fit the QR box to small stock and keep all pictograms", () => {
+      const multiPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [multiPictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "small-strip",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-qr");
+      expect(preview.fragmentHtml).toContain("label-form-strip");
+      expect(preview.html).toContain("width: 15.8mm");
+      expect(preview.html).toContain("width: 6.5mm");
+      expect(preview.fragmentHtml).toContain("qrcode-img");
+      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(preview.fragmentHtml).not.toContain("more-pics");
+    });
+
+    it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {
+      const multiPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+      };
+
+      printLabels(
+        [multiPictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "small-strip",
+        },
+        {},
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      const bodyHtml = html.slice(html.indexOf("<body"));
+      expect(bodyHtml).toContain("label-qr");
+      expect(bodyHtml).toContain("label-form-strip");
+      expect(bodyHtml).toContain("qrcode-img");
+      expect(bodyHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(bodyHtml).not.toContain("more-pics");
+      expect(alertSpy).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(300);
+      expect(mockIframeWindow.print).toHaveBeenCalled();
+    });
+
     it("standard template uses the new hierarchy blocks for rail + hazard board", () => {
       printLabels(
         [mockChemical],
@@ -857,12 +927,77 @@ describe("printLabels", () => {
       expect(html).toContain("standard-signal-row");
       expect(html).toContain("hazard-primary-item");
       expect(html).toContain(
-        "grid-template-columns: minmax(0, 24.5mm) minmax(0, 1fr)",
+        "grid-template-columns: minmax(0, 32.9mm) minmax(0, 1fr)",
       );
-      expect(html).toContain("grid-template-columns: repeat(2, 10.5mm)");
-      expect(html).toContain("width: 10.5mm");
+      expect(html).toContain("grid-template-columns: repeat(2, 15mm)");
+      expect(html).toContain("width: 15mm");
       expect(html).toContain(".label-standard .name-en");
       expect(html).not.toMatch(/<div\s+class="hazard-more"/);
+    });
+
+    it("scales standard pictograms and content capacity by physical stock", () => {
+      const manyHazards = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        hazard_statements: Array.from({ length: 5 }, (_, i) => ({
+          code: `H${300 + i}`,
+          text_en: `Hazard ${i + 1}`,
+        })),
+      };
+
+      const smallPreview = buildPrintPreviewDocument(
+        [manyHazards],
+        {
+          labelPurpose: "shipping",
+          template: "standard",
+          stockPreset: "small-strip",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+      const bottlePreview = buildPrintPreviewDocument(
+        [manyHazards],
+        {
+          labelPurpose: "shipping",
+          template: "standard",
+          stockPreset: "medium-bottle",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(smallPreview.fragmentHtml).toContain("label-form-strip");
+      expect(smallPreview.html).toContain(
+        "grid-template-columns: repeat(2, 7.4mm)",
+      );
+      expect(smallPreview.html).toContain("width: 7.4mm");
+      expect(smallPreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
+        4,
+      );
+      expect(smallPreview.fragmentHtml).toContain("hazard-more");
+
+      expect(bottlePreview.fragmentHtml).toContain("label-form-bottle");
+      expect(bottlePreview.html).toContain(
+        "grid-template-columns: repeat(2, 15mm)",
+      );
+      expect(bottlePreview.html).toContain("width: 15mm");
+      expect(bottlePreview.fragmentHtml.match(/hazard-primary-item/g)).toHaveLength(
+        3,
+      );
+      expect(bottlePreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
+        4,
+      );
     });
 
     it("standard template calls out omitted hazards instead of silently dropping them", () => {
@@ -2091,7 +2226,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(
-        /class="label\s+label-full\s+label-compliance\s+label-purpose-shipping\s+label-prepared"/,
+        /class="[^"]*label-full[^"]*label-compliance[^"]*label-purpose-shipping[^"]*label-prepared"/,
       );
     });
 
