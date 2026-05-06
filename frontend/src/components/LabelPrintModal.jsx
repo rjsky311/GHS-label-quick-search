@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import {
   FULL_PAGE_PRIMARY_STOCK_IDS,
-  LABEL_STOCK_PICKER_PRESETS,
   LABEL_STOCK_PRESETS,
   getLabelStockPresetDisplay,
   resolvePrintLayoutConfig,
@@ -168,12 +167,6 @@ const READINESS_TONE_CLASSES = {
   danger: "border-red-200 bg-red-50 text-red-900",
 };
 
-const STOCK_PRESETS = LABEL_STOCK_PICKER_PRESETS.map((preset) => ({
-  ...preset,
-  perPage: preset.columns * preset.rows,
-  widthMm: preset.labelWidthMm,
-  heightMm: preset.labelHeightMm,
-}));
 const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   ...preset,
   perPage: preset.columns * preset.rows,
@@ -1440,18 +1433,16 @@ export default function LabelPrintModal({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-medium text-slate-800">
-                      {tx("label.primaryOutputSizeTitle", "Physical output size")}
+                      {tx(
+                        "label.outputGoalSizeTitle",
+                        "Output goal and physical size",
+                      )}
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
-                      {labelPurpose === "shipping"
-                        ? tx(
-                            "label.primaryOutputSizeHint",
-                            "Choose the actual label or paper size first. The app scales text and pictograms for that stock, then routes dense content to A4 or Letter only when needed.",
-                          )
-                        : tx(
-                            "label.supplementalOutputSizeHint",
-                            "Choose the small stock you will actually apply. These outputs stay supplemental and keep pictograms visible.",
-                          )}
+                      {tx(
+                        "label.outputGoalSizeHint",
+                        "Pick the real-world job and the stock you will actually print. The app scales the label for that stock and recommends A4 or Letter only when the content cannot fit truthfully.",
+                      )}
                     </p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
@@ -1460,7 +1451,52 @@ export default function LabelPrintModal({
                       : stockPresetDisplay.name || layoutProfile.stockPresetName}
                   </span>
                 </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-4">
+                  <div className="text-xs font-semibold text-slate-500">
+                    {tx("label.outputGoalTitle", "Output goal")}
+                  </div>
+                  <div
+                    className="mt-2 grid gap-2 sm:grid-cols-3"
+                    data-testid="output-goal-controls"
+                  >
+                    {PURPOSE_OPTIONS.map((option) => {
+                      const Icon = option.icon;
+                      const selected = labelPurpose === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => applyPurpose(option.value)}
+                          data-testid={`label-purpose-${option.value}`}
+                          className={`rounded-md border p-3 text-left transition-colors ${
+                            selected
+                              ? "border-blue-500 bg-blue-50 text-blue-900"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
+                              <Icon className="h-4 w-4 shrink-0" />
+                            </span>
+                            <span className="text-sm font-medium">
+                              {t(option.labelKey)}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-xs leading-5 text-slate-500">
+                            {t(option.descKey)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold text-slate-500">
+                    {tx("label.outputStockTitle", "Paper or label stock")}
+                  </div>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {visibleStockChoices.map((preset) => {
                     const selected = layoutProfile.stockPreset === preset.id;
                     const display = getLabelStockPresetDisplay(preset, t);
@@ -1512,56 +1548,7 @@ export default function LabelPrintModal({
                       </button>
                     );
                   })}
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <div>
-                  <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <Package2 className="h-4 w-4 text-blue-600" />
-                    {tx("label.printPurposeTitle", "Print purpose")}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {tx(
-                      "label.printPurposeBody",
-                      "Choose the real-world job first. Shipped-container labels keep the full hazard hierarchy; smaller QR or quick-ID labels are clearly marked as supplemental.",
-                    )}
-                  </p>
-                </div>
-                <div className="grid gap-3 lg:grid-cols-3">
-                  {PURPOSE_OPTIONS.map((option) => {
-                    const Icon = option.icon;
-                    const selected = labelPurpose === option.value;
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => applyPurpose(option.value)}
-                        data-testid={`label-purpose-${option.value}`}
-                        className={`rounded-lg border p-4 text-left transition-colors ${
-                          selected
-                            ? "border-blue-500 bg-blue-50 text-blue-900"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
-                            <Icon className="h-4 w-4 shrink-0" />
-                          </span>
-                          <span className="font-medium">
-                            {t(option.labelKey)}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-sm text-slate-500">
-                          {t(option.descKey)}
-                        </div>
-                        <div className="mt-2 text-xs text-slate-500">
-                          {t(option.tipKey)}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  </div>
                 </div>
               </section>
 
@@ -1659,81 +1646,6 @@ export default function LabelPrintModal({
                     );
                   })}
                 </div>
-              </details>
-
-              <details
-                className="rounded-lg border border-slate-200 bg-white p-4"
-                data-testid="advanced-stock-controls"
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
-                  <span>
-                    {tx("label.stockPresetsTitle", "Label stock presets")}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {layoutProfile.stockPreset === "custom"
-                      ? tx("label.stockPresetCustom", "Custom tuning")
-                      : stockPresetDisplay.name ||
-                        layoutProfile.stockPresetName}
-                  </span>
-                </summary>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {STOCK_PRESETS.map((preset) => {
-                    const selected = layoutProfile.stockPreset === preset.id;
-
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => applyStockPreset(preset)}
-                        data-testid={`stock-preset-${preset.id}`}
-                        className={`rounded-lg border p-4 text-left transition-colors ${
-                          selected
-                            ? "border-amber-500 bg-amber-50"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div
-                              className={`font-medium ${selected ? "text-amber-800" : "text-slate-900"}`}
-                            >
-                              {getLabelStockPresetDisplay(preset, t).name}
-                            </div>
-                            <div className="mt-1 text-xs text-slate-400">
-                              {getLabelStockPresetDisplay(preset, t).note}
-                            </div>
-                          </div>
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                            {tx("label.previewPerPage", "{{count}}/page", {
-                              count: preset.perPage,
-                            })}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                          <span className="rounded-full bg-slate-100 px-2 py-1">
-                            {preset.widthMm} x {preset.heightMm} mm
-                          </span>
-                          <span className="rounded-full bg-slate-100 px-2 py-1">
-                            {preset.columns} x {preset.rows}
-                          </span>
-                          <span className="rounded-full bg-slate-100 px-2 py-1">
-                            {t(
-                              ORIENTATION_OPTIONS.find(
-                                (item) => item.value === preset.orientation,
-                              )?.labelKey || "label.portrait",
-                            )}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-slate-500">
-                  {tx(
-                    "label.stockPresetsHint",
-                    "Presets are a starting point. Any manual spacing or nudge change switches the modal into custom tuning.",
-                  )}
-                </p>
               </details>
 
               <details

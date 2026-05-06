@@ -17,7 +17,7 @@ The best path is a complete primary label that a lab user can print without gues
 ## Non-Negotiable Rules
 
 - GHS pictograms are never summarized, hidden behind `+N`, replaced by QR, or omitted from any printed hazard label when pictogram data exists.
-- A complete primary label includes product identifier, CAS, signal word, all GHS pictograms, H-statements, P-statements, complete responsible lab/supplier information (name, phone, and address), trust footer, and optional QR support.
+- A complete primary label includes product identifier, CAS, signal word, all GHS pictograms, H-statements, P-statements, complete responsible lab/supplier information (name, phone, and address), and trust footer. QR support belongs in a separate supplemental output unless a future fit check proves it does not compromise the primary layout.
 - QR supplement and quick-ID labels are visibly supplemental in the print workflow. The physical label must not waste scarce label area on verbose purpose copy, and must not imply that it replaces the complete primary label.
 - Dense content must route users to a larger complete-label stock first, especially A4 Primary or Letter Primary. Complete primary labels must block print until required content can be rendered and the responsible lab/supplier profile is complete.
 - A4 Primary is a distinct full-page rendering path, not just a larger paper option. It must scale the live preview to show the whole label, enlarge GHS pictograms, and use statement layout rules that can actually carry dense H/P content.

@@ -923,8 +923,8 @@ describe("printLabels", () => {
       expect(html).toContain(
         "grid-template-columns: minmax(20mm, 28mm) minmax(0, 1fr)",
       );
-      expect(html).toContain("width: 20mm");
-      expect(html).toContain("height: 20mm");
+      expect(html).toContain("width: 24.6mm");
+      expect(html).toContain("height: 24.6mm");
     });
 
     it("A4 primary uses a dedicated full-page label layout and scaled preview", () => {
@@ -965,8 +965,13 @@ describe("printLabels", () => {
       expect(preview.html).toContain("height: 26mm");
       expect(preview.html).toContain("column-count: 2");
       expect(preview.html).toContain("compliance-statements-panel");
+      expect(preview.html).toContain(
+        "grid-template-rows: auto minmax(0, 1fr) auto",
+      );
       expect(preview.html).toContain("font-size:6.5px");
       expect(preview.html).not.toContain("font-size: 9px !important");
+      expect(preview.html).not.toContain("compliance-qr");
+      expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
       expect(preview.html).toContain("height: 344px");
@@ -990,6 +995,8 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
       expect(preview.html).toContain("width: 26mm");
+      expect(preview.html).not.toContain("compliance-qr");
+      expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("height: 344px");
     });

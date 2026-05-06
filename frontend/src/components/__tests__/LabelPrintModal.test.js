@@ -142,14 +142,12 @@ describe("LabelPrintModal", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("core-output-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("output-goal-controls")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls").tagName).toBe("DETAILS");
     expect(screen.getByTestId("advanced-layout-controls").tagName).toBe(
       "DETAILS",
     );
     expect(screen.getByTestId("advanced-template-controls").tagName).toBe(
-      "DETAILS",
-    );
-    expect(screen.getByTestId("advanced-stock-controls").tagName).toBe(
       "DETAILS",
     );
     expect(screen.getByTestId("advanced-custom-fields").tagName).toBe(
@@ -602,7 +600,7 @@ describe("LabelPrintModal", () => {
   it("selects a stock preset and pushes its layout values to labelConfig", () => {
     const { props } = renderModal();
 
-    fireEvent.click(screen.getByTestId("stock-preset-medium-bottle"));
+    fireEvent.click(screen.getByTestId("primary-output-size-medium-bottle"));
 
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({

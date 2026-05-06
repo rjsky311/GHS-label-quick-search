@@ -93,7 +93,7 @@ Required content:
 - P-statements.
 - Responsible lab/supplier name, phone, and address.
 - Trust/provenance footer.
-- Optional QR support, as secondary content only.
+- Optional QR support as a separate supplemental label by default; inline QR should not return to A4/Letter primary output unless the fit checker proves it cannot compromise the required layout.
 
 Primary label stocks:
 

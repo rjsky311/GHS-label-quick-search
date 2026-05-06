@@ -494,19 +494,13 @@ const renderComplianceStatements = (statements, className, model) => {
   </div>`;
 };
 
-const renderComplianceFooter = (effectiveChem, model) => {
-  const qrTarget =
-    getPreferredQrTarget(
-      effectiveChem.cid,
-      effectiveChem.cas_number,
-      effectiveChem.reference_links,
-    ) || "https://pubchem.ncbi.nlm.nih.gov/";
+const renderComplianceFooter = (_effectiveChem, model) => {
   const hasProfile =
     model.resolvedLabProfile.organization ||
     model.resolvedLabProfile.phone ||
     model.resolvedLabProfile.address;
 
-  return `<div class="compliance-footer">
+  return `<div class="compliance-footer compliance-footer-no-qr">
     <div class="compliance-supplier">
       ${
         hasProfile
@@ -516,10 +510,6 @@ const renderComplianceFooter = (effectiveChem, model) => {
             )}</div>`
       }
       ${renderCustomFields(model)}
-    </div>
-    <div class="compliance-qr">
-      <img class="qrcode-img qrcode-img-small" src="${getQRCodeUrl(qrTarget, 120)}" alt="QR" />
-      <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
     </div>
   </div>`;
 };
@@ -926,7 +916,7 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary {
       display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 2.4mm;
       padding: 6mm;
       border-width: 0.8mm;
@@ -1082,6 +1072,9 @@ const buildStyles = (model) => {
       min-width: 0;
       margin-top: auto;
     }
+    .compliance-footer-no-qr {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .compliance-supplier {
       min-width: 0;
     }
@@ -1110,22 +1103,6 @@ const buildStyles = (model) => {
       font-size: 10px;
       line-height: 1.25;
     }
-    .compliance-qr {
-      width: 18mm;
-      text-align: center;
-    }
-    .label-full-page-primary .compliance-qr {
-      width: 24mm;
-    }
-    .qrcode-img-small {
-      width: 15mm;
-      height: 15mm;
-    }
-    .label-full-page-primary .qrcode-img-small {
-      width: 20mm;
-      height: 20mm;
-    }
-
     .name-section {
       text-align: left;
     }
