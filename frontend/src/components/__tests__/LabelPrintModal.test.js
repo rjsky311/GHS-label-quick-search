@@ -88,9 +88,10 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel")).toBeInTheDocument();
     expect(screen.getByText("Live preview")).toBeInTheDocument();
     expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
-      "order-first",
-      "lg:order-none",
       "lg:overflow-y-auto",
+    );
+    expect(screen.getByTestId("label-preview-panel").parentElement).not.toHaveClass(
+      "order-first",
     );
   });
 
@@ -117,6 +118,15 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
+    );
+    expect(screen.getByTestId("selected-stock-summary")).toBeInTheDocument();
+    expect(screen.getByTestId("selected-stock-summary")).toHaveTextContent(
+      "Bottle Primary",
+    );
+    expect(screen.getByTestId("stock-size-picker").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("stock-size-picker")).toHaveTextContent(
+      "Change target size",
     );
     expect(screen.getByTestId("advanced-print-options")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls")).toBeInTheDocument();

@@ -74,6 +74,8 @@ The first refactor slice has landed:
 - The code-level acceptance matrix now covers large primary, 2 x 4 in stock routing, custom tiny stock routing, custom supplemental output, orientation/page-size rendering, and physical-size-based pictogram/H/P budget scaling.
 - Selected labels and quantity controls are now summarized behind a first-level details control, so users can adjust copies without the modal reading like a data table by default.
 - Added `PRINT_BROWSER_QA_CHECKLIST.md` plus `npm run test:print-contract` to make deployment QA and print-contract checks repeatable instead of relying on memory.
+- Physical stock selection is now summarized as the selected target size on the first level; changing paper or label-roll size is a secondary details control. This keeps the modal task-first while still allowing A4, Letter, bottle, strip, and custom stock changes when needed.
+- On narrow/mobile modal layouts, task settings now appear before the live preview. Desktop keeps the two-column settings/preview layout, but smaller viewports no longer force users to scroll past the preview before choosing the target.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

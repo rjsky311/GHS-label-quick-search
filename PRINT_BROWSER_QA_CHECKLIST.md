@@ -43,7 +43,11 @@ fragment; only click print when intentionally testing the native dialog path.
    - Output role: complete primary.
    - GHS icons: all pictograms kept.
    - Hazard text: full H/P text.
-7. Confirm the responsible profile section is collapsed when profile data is
+7. Confirm `selected-stock-summary` shows the current physical target size and
+   `stock-size-picker` is collapsed until the user chooses to change stock.
+8. Expand `stock-size-picker`, choose another stock, and confirm the selected
+   stock summary plus preview update.
+9. Confirm the responsible profile section is collapsed when profile data is
    complete and expands automatically when profile data is missing.
 
 ## Full-Page Primary Outputs

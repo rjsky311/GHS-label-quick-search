@@ -694,6 +694,23 @@ export default function LabelPrintModal({
     layoutProfile.stockPreset,
     labelPurpose,
   );
+  const currentStockName =
+    layoutProfile.stockPreset === "custom"
+      ? tx("label.stockPresetCustom", "Custom tuning")
+      : stockPresetDisplay.name || layoutProfile.stockPresetName;
+  const currentStockRole = FULL_PAGE_PRIMARY_STOCK_IDS.includes(
+    layoutProfile.stockPreset,
+  )
+    ? tx("label.completePrimaryStock", "complete")
+    : labelPurpose === "shipping"
+      ? tx("label.containerStock", "container")
+      : tx("label.supplementalStock", "supplemental");
+  const currentStockOrientation = t(
+    ORIENTATION_OPTIONS.find((item) => item.value === layoutProfile.orientation)
+      ?.labelKey || "label.portrait",
+  );
+  const selectableStockCount =
+    primaryStockChoices.length + secondaryStockChoices.length;
   const plannerPreviewRisk =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
       ? tx(
@@ -1987,9 +2004,7 @@ export default function LabelPrintModal({
                     </p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                    {layoutProfile.stockPreset === "custom"
-                      ? tx("label.stockPresetCustom", "Custom tuning")
-                      : stockPresetDisplay.name || layoutProfile.stockPresetName}
+                    {currentStockName}
                   </span>
                 </div>
                 <div className="mt-4">
@@ -1997,7 +2012,7 @@ export default function LabelPrintModal({
                     {tx("label.outputGoalTitle", "Label target")}
                   </div>
                   <div
-                    className="mt-2 grid gap-2 sm:grid-cols-3"
+                    className="mt-2 grid grid-cols-3 gap-2"
                     data-testid="output-goal-controls"
                   >
                     {PURPOSE_OPTIONS.map((option) => {
@@ -2010,21 +2025,21 @@ export default function LabelPrintModal({
                           type="button"
                           onClick={() => applyPurpose(option.value)}
                           data-testid={`label-purpose-${option.value}`}
-                          className={`rounded-md border p-3 text-left transition-colors ${
+                          className={`rounded-md border p-2 text-left transition-colors ${
                             selected
                               ? "border-blue-500 bg-blue-50 text-blue-900"
                               : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
                               <Icon className="h-4 w-4 shrink-0" />
                             </span>
-                            <span className="text-sm font-medium">
+                            <span className="text-xs font-semibold leading-4 sm:text-sm">
                               {t(option.labelKey)}
                             </span>
                           </div>
-                          <div className="mt-1 text-xs leading-5 text-slate-500">
+                          <div className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">
                             {t(option.descKey)}
                           </div>
                         </button>
@@ -2034,39 +2049,86 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="mt-4">
-                  <div className="text-xs font-semibold text-slate-500">
-                    {tx("label.outputStockTitle", "Target size")}
-                  </div>
-                  <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {primaryStockChoices.map(renderStockChoiceButton)}
-                  </div>
-                  {secondaryStockChoices.length > 0 && (
-                    <details
-                      className="mt-3 rounded-md border border-slate-200 bg-slate-50/80 p-3"
-                      data-testid="secondary-output-size-controls"
-                    >
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
-                        <span>
+                  <div
+                    className="rounded-md border border-blue-100 bg-blue-50/70 p-3"
+                    data-testid="selected-stock-summary"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-blue-700">
+                          {tx("label.outputStockTitle", "Target size")}
+                        </div>
+                        <div className="mt-1 text-base font-semibold text-slate-900">
+                          {currentStockName}
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">
                           {tx(
-                            "label.moreStockChoicesTitle",
-                            "More common stock sizes",
+                            "label.selectedStockSummary",
+                            "{{width}} x {{height}} mm · {{perPage}}/page · {{orientation}}",
+                            {
+                              width: layoutProfile.widthMm,
+                              height: layoutProfile.heightMm,
+                              perPage: layoutProfile.perPage,
+                              orientation: currentStockOrientation,
+                            },
                           )}
-                        </span>
-                        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
-                          {secondaryStockChoices.length}
-                        </span>
-                      </summary>
-                      <p className="mt-2 text-xs leading-5 text-slate-500">
-                        {tx(
-                          "label.moreStockChoicesHint",
-                          "Use these when your printer stock matches them. The same planner and preview checks still apply.",
-                        )}
-                      </p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {secondaryStockChoices.map(renderStockChoiceButton)}
+                        </p>
                       </div>
-                    </details>
-                  )}
+                      <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100">
+                        {currentStockRole}
+                      </span>
+                    </div>
+                  </div>
+
+                  <details
+                    className="mt-3 rounded-md border border-slate-200 bg-slate-50/80 p-3"
+                    data-testid="stock-size-picker"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
+                      <span>
+                        {tx("label.changeStockTitle", "Change target size")}
+                      </span>
+                      <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+                        {selectableStockCount}
+                      </span>
+                    </summary>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      {tx(
+                        "label.changeStockHint",
+                        "Use this only when the physical paper or label roll is different. The preview and planner will update immediately.",
+                      )}
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {primaryStockChoices.map(renderStockChoiceButton)}
+                    </div>
+                    {secondaryStockChoices.length > 0 && (
+                      <details
+                        className="mt-3 rounded-md border border-slate-200 bg-white p-3"
+                        data-testid="secondary-output-size-controls"
+                      >
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
+                          <span>
+                            {tx(
+                              "label.moreStockChoicesTitle",
+                              "More common stock sizes",
+                            )}
+                          </span>
+                          <span className="rounded-full bg-slate-50 px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+                            {secondaryStockChoices.length}
+                          </span>
+                        </summary>
+                        <p className="mt-2 text-xs leading-5 text-slate-500">
+                          {tx(
+                            "label.moreStockChoicesHint",
+                            "Use these when your printer stock matches them. The same planner and preview checks still apply.",
+                          )}
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {secondaryStockChoices.map(renderStockChoiceButton)}
+                        </div>
+                      </details>
+                    )}
+                  </details>
                 </div>
               </section>
 
@@ -2449,7 +2511,7 @@ export default function LabelPrintModal({
               {renderAdvancedPrintOptions()}
             </div>
 
-            <aside className="order-first border-b border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-l">
+            <aside className="border-t border-slate-200 bg-slate-50/70 lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
               <div
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
                 data-testid="label-preview-panel"
