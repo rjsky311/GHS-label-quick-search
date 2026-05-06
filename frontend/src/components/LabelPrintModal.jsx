@@ -565,6 +565,8 @@ function splitStockChoices(stockChoices, selectedStockId, purpose) {
   };
 }
 
+const RESPONSIBLE_PROFILE_FIELDS = ["organization", "phone", "address"];
+
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
@@ -808,6 +810,23 @@ export default function LabelPrintModal({
             : "ready",
     },
   ];
+  const responsibleProfilePresentCount = RESPONSIBLE_PROFILE_FIELDS.filter(
+    (field) => Boolean(resolvedResponsibleProfile[field]),
+  ).length;
+  const responsibleProfileRequired =
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY;
+  const responsibleProfileMissing =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
+  const responsibleProfileTone = responsibleProfileMissing
+    ? "danger"
+    : responsibleProfileRequired
+      ? "ready"
+      : "neutral";
+  const responsibleProfileStatus = responsibleProfileRequired
+    ? responsibleProfilePresentCount === RESPONSIBLE_PROFILE_FIELDS.length
+      ? tx("label.profileStatusComplete", "Ready for complete primary")
+      : tx("label.profileStatusMissing", "Required for complete primary")
+    : tx("label.profileStatusOptional", "Optional for this output");
   const outputChecklistItems = [
     {
       key: "pictograms",
@@ -2087,68 +2106,111 @@ export default function LabelPrintModal({
                 </div>
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-slate-800">
-                    {t("label.profileTitle")}
-                  </h3>
-                  {(labProfile.organization ||
-                    labProfile.phone ||
-                    labProfile.address) &&
-                    typeof onClearLabProfile === "function" && (
-                      <button
-                        type="button"
-                        onClick={onClearLabProfile}
-                        className="text-xs text-red-600 transition-colors hover:text-red-700"
+              <details
+                open={responsibleProfileMissing}
+                className={`rounded-lg border p-4 ${
+                  READINESS_TONE_CLASSES[responsibleProfileTone] ||
+                  READINESS_TONE_CLASSES.neutral
+                }`}
+                data-testid="responsible-profile-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Building2 className="h-4 w-4 shrink-0 text-current" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">
+                        {t("label.profileTitle")}
+                      </span>
+                      <span
+                        className="mt-0.5 block text-xs opacity-80"
+                        data-testid="responsible-profile-status"
                       >
-                        {t("label.profileClear")}
-                      </button>
-                    )}
+                        {responsibleProfileStatus}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-white/70 px-2 py-1 text-xs font-semibold ring-1 ring-current/10">
+                    {responsibleProfilePresentCount}/
+                    {RESPONSIBLE_PROFILE_FIELDS.length}
+                  </span>
+                </summary>
+
+                <div className="mt-4 border-t border-current/10 pt-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-xs leading-5 opacity-80">
+                      {responsibleProfileRequired
+                        ? tx(
+                            "label.profileRequiredHint",
+                            "Complete primary labels need this identity before printing.",
+                          )
+                        : tx(
+                            "label.profileOptionalHint",
+                            "Supplemental labels can print without this, but you can keep it saved for primary labels.",
+                          )}
+                    </p>
+                    {(labProfile.organization ||
+                      labProfile.phone ||
+                      labProfile.address) &&
+                      typeof onClearLabProfile === "function" && (
+                        <button
+                          type="button"
+                          onClick={onClearLabProfile}
+                          className="shrink-0 text-xs text-red-600 transition-colors hover:text-red-700"
+                        >
+                          {t("label.profileClear")}
+                        </button>
+                      )}
+                  </div>
+                  <div className="grid gap-2">
+                    {[
+                      {
+                        key: "organization",
+                        labelKey: "label.profileOrganization",
+                        placeholderKey: "label.profileOrganizationPlaceholder",
+                        icon: Building2,
+                      },
+                      {
+                        key: "phone",
+                        labelKey: "label.profilePhone",
+                        placeholderKey: "label.profilePhonePlaceholder",
+                        icon: Phone,
+                      },
+                      {
+                        key: "address",
+                        labelKey: "label.profileAddress",
+                        placeholderKey: "label.profileAddressPlaceholder",
+                        icon: MapPin,
+                      },
+                    ].map((field) => {
+                      const FieldIcon = field.icon;
+
+                      return (
+                        <div
+                          key={field.key}
+                          className="grid gap-1 sm:grid-cols-[6rem_minmax(0,1fr)] sm:items-center"
+                        >
+                          <label className="flex items-center gap-1.5 text-xs opacity-80">
+                            <FieldIcon className="h-3.5 w-3.5" />
+                            {t(field.labelKey)}
+                          </label>
+                          <input
+                            type="text"
+                            value={labProfile[field.key] || ""}
+                            onChange={(event) =>
+                              onLabProfileChange?.({
+                                ...labProfile,
+                                [field.key]: event.target.value,
+                              })
+                            }
+                            placeholder={t(field.placeholderKey)}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  {[
-                    {
-                      key: "organization",
-                      labelKey: "label.profileOrganization",
-                      placeholderKey: "label.profileOrganizationPlaceholder",
-                    },
-                    {
-                      key: "phone",
-                      labelKey: "label.profilePhone",
-                      placeholderKey: "label.profilePhonePlaceholder",
-                    },
-                    {
-                      key: "address",
-                      labelKey: "label.profileAddress",
-                      placeholderKey: "label.profileAddressPlaceholder",
-                    },
-                  ].map((field) => (
-                    <div
-                      key={field.key}
-                      className="grid gap-1 sm:grid-cols-[6rem_minmax(0,1fr)] sm:items-center"
-                    >
-                      <label className="text-xs text-slate-500">
-                        {t(field.labelKey)}
-                      </label>
-                      <input
-                        type="text"
-                        value={labProfile[field.key] || ""}
-                        onChange={(event) =>
-                          onLabProfileChange?.({
-                            ...labProfile,
-                            [field.key]: event.target.value,
-                          })
-                        }
-                        placeholder={t(field.placeholderKey)}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-slate-500">
-                  {t("label.profileHint")}
-                </p>
-              </section>
+              </details>
 
               {selectedForLabel.length > 0 && (
                 <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">

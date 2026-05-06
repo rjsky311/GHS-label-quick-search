@@ -88,6 +88,8 @@ These are acceptance targets for the renderer and Browser QA:
 - The print button is disabled only when the app lacks required data or cannot produce a truthful printable output.
 - The first-level print workflow shows a concise decision summary before stock details: output role, GHS icon handling, and H/P text handling.
 - Less common stock sizes remain available but are collapsed behind a secondary control so the main workflow does not read like a template catalog.
+- Responsible lab/supplier fields are collapsed unless the selected complete-primary output is blocked by missing profile data.
+- Custom stock size controls remain advanced and must still pass the same planner rules as curated stock.
 
 ## Required QA Matrix
 
@@ -98,8 +100,11 @@ Run this matrix before shipping print-workflow changes:
 | Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary, no QR body, no H/P summaries, all pictograms |
 | Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary, Letter page, no QR body, all pictograms |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
+| Hydrochloric Acid | Large Primary | Bilingual | Color | Complete primary when the content fits, all pictograms, no H/P summaries |
+| Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
 | Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
 | Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
+| Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
 | Water / no GHS | Any hazard label | Any | Any | Does not present false hazard data |
 | Upstream error | Results and print entry | Any | Any | Does not present missing data as no hazard |
@@ -113,6 +118,9 @@ Unit tests should keep these invariants pinned:
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
 - Small QR labels keep QR plus every expected pictogram in the printed body.
 - Strip labels use a four-pictogram row for dense multi-pictogram chemicals.
+- Pictogram dimensions and visible H/P budgets increase with available physical label area.
+- Custom tiny complete-primary configs route to A4/Letter instead of enabling an invalid primary label.
+- Custom supplemental configs keep every pictogram and print as supplemental, not complete primary.
 - Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
 - No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.

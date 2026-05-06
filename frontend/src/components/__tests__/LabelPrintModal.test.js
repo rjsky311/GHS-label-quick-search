@@ -157,6 +157,17 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
   });
 
+  it("keeps the responsible profile collapsed when the selected output does not require it", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("responsible-profile-controls")).not.toHaveAttribute(
+      "open",
+    );
+    expect(screen.getByTestId("responsible-profile-status")).toHaveTextContent(
+      "Optional for this output",
+    );
+  });
+
   it("keeps minor print controls in collapsed advanced sections", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
@@ -493,6 +504,12 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
       "Responsible profile required",
+    );
+    expect(screen.getByTestId("responsible-profile-controls")).toHaveAttribute(
+      "open",
+    );
+    expect(screen.getByTestId("responsible-profile-status")).toHaveTextContent(
+      "Required for complete primary",
     );
     expect(
       screen.getByTestId("required-output-responsible-profile"),

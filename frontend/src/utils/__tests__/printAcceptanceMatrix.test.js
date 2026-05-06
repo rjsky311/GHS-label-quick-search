@@ -106,6 +106,8 @@ const expectEveryPictogram = (html, codes) => {
   });
 };
 
+const mmValue = (value) => Number.parseFloat(String(value).replace("mm", ""));
+
 describe("print acceptance matrix", () => {
   it("renders complete A4 primary labels without QR or H/P summaries", () => {
     const preview = previewLabel(hydrochloricAcid, {
@@ -173,6 +175,61 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
+  it("allows a roomy large primary stock to stay complete for a dense common chemical", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "large-primary",
+      nameDisplay: "both",
+    });
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [hydrochloricAcid],
+      layout,
+      resolvedLabProfile: completeProfile,
+      locale: "zh-TW",
+    });
+    const preview = previewLabel(hydrochloricAcid, {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "large-primary",
+      nameDisplay: "both",
+    });
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY);
+    expect(plan.canPrint).toBe(true);
+    expect(preview.fragmentHtml).toContain("label-kind-complete-primary");
+    expect(preview.fragmentHtml).not.toContain("hazard-more");
+    expect(preview.fragmentHtml).not.toContain("precaution-more");
+    expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+  });
+
+  it("routes dense medium sheet stock to a printable supplemental label instead of pretending it is complete", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "avery-5163",
+      nameDisplay: "both",
+    });
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [hydrochloricAcid],
+      layout,
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+    const supplementalPreview = previewLabel(hydrochloricAcid, {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "avery-5163",
+      nameDisplay: "both",
+    }, {});
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE);
+    expect(plan.recommendedFullPageStockId).toBe("letter-primary");
+    expect(supplementalPreview.fragmentHtml).toContain("label-kind-supplemental");
+    expect(supplementalPreview.fragmentHtml).not.toContain("label-kind-complete-primary");
+    expectEveryPictogram(supplementalPreview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+  });
+
   it("uses a strip pictogram row for small supplemental stock", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "shipping",
@@ -185,6 +242,77 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-form-strip");
     expect(preview.html).toContain("grid-template-columns: repeat(4, 9.1mm)");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+  });
+
+  it("scales pictogram and text budgets by physical stock size before content is summarized", () => {
+    const strip = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+    });
+    const bottle = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "medium-bottle",
+      nameDisplay: "both",
+    });
+    const large = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "large-primary",
+      nameDisplay: "both",
+    });
+
+    expect(mmValue(strip.typography.standardPictogramSize)).toBeLessThan(
+      mmValue(bottle.typography.standardPictogramSize),
+    );
+    expect(mmValue(bottle.typography.standardPictogramSize)).toBeLessThan(
+      mmValue(large.typography.standardPictogramSize),
+    );
+    expect(strip.templateBudgets.standard.primaryHazards).toBeLessThan(
+      bottle.templateBudgets.standard.primaryHazards,
+    );
+    expect(bottle.templateBudgets.standard.primaryHazards).toBeLessThanOrEqual(
+      large.templateBudgets.standard.primaryHazards,
+    );
+  });
+
+  it("keeps custom tiny shipping stock from bypassing the full-page-primary recommendation", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "custom",
+      labelWidthMm: 45,
+      labelHeightMm: 28,
+      nameDisplay: "both",
+    });
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [hydrochloricAcid],
+      layout,
+      resolvedLabProfile: completeProfile,
+      locale: "zh-TW",
+    });
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE);
+    expect(plan.canPrint).toBe(false);
+    expect(plan.recommendedFullPageStockId).toBe("a4-primary");
+  });
+
+  it("still lets custom supplemental stock print an honest compact hazard label with every pictogram", () => {
+    const preview = previewLabel(hydrochloricAcid, {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "custom",
+      labelWidthMm: 45,
+      labelHeightMm: 28,
+      nameDisplay: "both",
+    }, {});
+
+    expect(preview.fragmentHtml).toContain("label-kind-supplemental");
+    expect(preview.fragmentHtml).not.toContain("label-kind-complete-primary");
+    expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+    expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
   it("renders English black-and-white QR supplement with QR and all pictograms", () => {
@@ -202,6 +330,26 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("鹽酸");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
     expect(preview.fragmentHtml).not.toContain("more-pics");
+  });
+
+  it("makes orientation and page-size changes visible in preview and print HTML", () => {
+    const strip = previewLabel(hydrochloricAcid, {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "small-strip",
+      nameDisplay: "en",
+    }, {});
+    const letter = previewLabel(hydrochloricAcid, {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "letter-primary",
+      nameDisplay: "en",
+    });
+
+    expect(strip.html).toContain("size: A4 landscape");
+    expect(strip.model.layout.orientation).toBe("landscape");
+    expect(letter.html).toContain("size: Letter");
+    expect(letter.model.layout.page.size).toBe("Letter");
   });
 
   it("keeps lower-density ethanol bottle output readable and printable", () => {
