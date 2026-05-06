@@ -235,6 +235,7 @@
   "label.estPages": "Estimated {{pages}} page(s) ({{perPage}} labels per page)",
   "label.smallSizeHint": "Tight density works best with shorter names and simpler hazard sets",
   "label.selectedCount": "{{count}} chemical(s) selected",
+  "label.selectedLabelsSummary": "Adjust quantities only when you need multiple copies.",
   "label.noneSelected": "No chemicals selected",
   "label.pictogramCount": "({{count}} pictograms)",
   "label.totalLabels": "{{count}} label(s) total",

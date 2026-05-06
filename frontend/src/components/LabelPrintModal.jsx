@@ -567,6 +567,12 @@ function splitStockChoices(stockChoices, selectedStockId, purpose) {
 
 const RESPONSIBLE_PROFILE_FIELDS = ["organization", "phone", "address"];
 
+function interpolateText(value, options = {}) {
+  return String(value).replace(/\{\{(\w+)\}\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(options, key) ? options[key] : match,
+  );
+}
+
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
@@ -599,7 +605,7 @@ export default function LabelPrintModal({
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
-    return translated === key ? fallback : translated;
+    return interpolateText(translated === key ? fallback : translated, options);
   };
 
   useEffect(() => {
@@ -2236,11 +2242,34 @@ export default function LabelPrintModal({
                 </section>
               )}
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <h3 className="text-sm font-medium text-slate-800">
-                  {t("label.selectedCount", { count: selectedForLabel.length })}
-                </h3>
-                <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+              <details
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-testid="selected-labels-controls"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Tag className="h-4 w-4 shrink-0 text-blue-600" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-slate-800">
+                        {tx("label.selectedCount", "{{count}} chemical(s) selected", {
+                          count: selectedForLabel.length,
+                        })}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500">
+                        {tx(
+                          "label.selectedLabelsSummary",
+                          "Adjust quantities only when you need multiple copies.",
+                        )}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                    {tx("label.totalLabels", "{{count}} label(s) total", {
+                      count: totalLabels,
+                    })}
+                  </span>
+                </summary>
+                <div className="mt-3 max-h-64 space-y-2 overflow-y-auto border-t border-slate-100 pt-3">
                   {selectedForLabel.length === 0 ? (
                     <p className="rounded-md bg-slate-50 px-4 py-6 text-center text-slate-500">
                       {t("label.noneSelected")}
@@ -2415,7 +2444,7 @@ export default function LabelPrintModal({
                     })
                   )}
                 </div>
-              </section>
+              </details>
 
               {renderAdvancedPrintOptions()}
             </div>

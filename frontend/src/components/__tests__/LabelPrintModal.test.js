@@ -157,6 +157,23 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
   });
 
+  it("summarizes selected labels and keeps quantity controls secondary", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("selected-labels-controls").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).not.toHaveAttribute(
+      "open",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
+      "1 label(s) total",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
+      "Adjust quantities only when you need multiple copies.",
+    );
+  });
+
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 

@@ -72,6 +72,8 @@ The first refactor slice has landed:
 - The print modal now exposes a compact decision summary for output role, GHS icon handling, and hazard-text handling before users adjust stock. First-level stock choices are limited to the most common targets, with secondary stock sizes collapsed under "More common stock sizes."
 - Responsible lab/supplier fields now behave as an output-dependent profile gate: they open automatically only when a complete-primary label is blocked by missing profile data, and stay collapsed for supplemental/QR outputs.
 - The code-level acceptance matrix now covers large primary, 2 x 4 in stock routing, custom tiny stock routing, custom supplemental output, orientation/page-size rendering, and physical-size-based pictogram/H/P budget scaling.
+- Selected labels and quantity controls are now summarized behind a first-level details control, so users can adjust copies without the modal reading like a data table by default.
+- Added `PRINT_BROWSER_QA_CHECKLIST.md` plus `npm run test:print-contract` to make deployment QA and print-contract checks repeatable instead of relying on memory.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

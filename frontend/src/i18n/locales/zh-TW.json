@@ -235,6 +235,7 @@
   "label.estPages": "預計列印 {{pages}} 頁（每頁 {{perPage}} 張標籤）",
   "label.smallSizeHint": "緊湊密度較適合短名稱與較少危害內容",
   "label.selectedCount": "已選擇 {{count}} 個化學品",
+  "label.selectedLabelsSummary": "只有需要多張時才調整數量。",
   "label.noneSelected": "尚未選擇任何化學品",
   "label.pictogramCount": "({{count}} 個圖示)",
   "label.nameDisplay": "名稱顯示",

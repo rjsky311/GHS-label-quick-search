@@ -2,6 +2,8 @@
 
 This document defines the product acceptance bar for GHS label output. It is a product and engineering standard, not legal advice. Final use still requires the official SDS, supplier label, and local regulations.
 
+Deployment and Browser Use verification steps live in `PRINT_BROWSER_QA_CHECKLIST.md`.
+
 ## Grounding References
 
 - OSHA HazCom Appendix C: product identifier, responsible party information, signal word, hazard statements, pictograms, and precautionary statements are the core shipped/container label elements.
@@ -124,3 +126,4 @@ Unit tests should keep these invariants pinned:
 - Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
 - No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.
+- Targeted local print contract checks are available with `npm run test:print-contract` from `frontend/`.

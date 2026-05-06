@@ -199,9 +199,12 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     // Water (found-but-no-GHS) and the not-found CAS must not leak in.
     // They DO appear in the underlying ResultsTable rows behind the
     // modal, so querying globally is ambiguous. Instead, check the
-    // selected-count header inside the modal.
-    expect(screen.getByText('label.selectedCount')).toBeInTheDocument();
-    // The i18n mock returns keys, but we can count rendered rows:
+    // selected-labels summary inside the modal.
+    const selectedControls = screen.getByTestId('selected-labels-controls');
+    expect(selectedControls.tagName).toBe('DETAILS');
+    expect(selectedControls).toHaveTextContent('1 chemical(s) selected');
+    expect(selectedControls).toHaveTextContent('1 label(s) total');
+    // We can count rendered rows:
     // the modal marks each selected CAS with a stable test id. We assert
     // exactly one such span inside the dialog.
     const dialog = screen.getByRole('dialog', { name: /label\.title/i });
