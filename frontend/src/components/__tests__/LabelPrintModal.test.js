@@ -103,6 +103,7 @@ describe("LabelPrintModal", () => {
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("advanced-print-options")).toBeInTheDocument();
     expect(screen.getByTestId("saved-print-controls")).toBeInTheDocument();
     expect(
       screen
@@ -126,6 +127,9 @@ describe("LabelPrintModal", () => {
       screen.getByTestId("saved-print-controls").tagName,
     ).toBe("DETAILS");
     expect(
+      screen.getByTestId("advanced-print-options").tagName,
+    ).toBe("DETAILS");
+    expect(
       screen.getByTestId("label-modal-scroll-body"),
     ).toHaveClass(
       "overflow-y-auto",
@@ -143,6 +147,8 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("core-output-controls")).toBeInTheDocument();
     expect(screen.getByTestId("output-goal-controls")).toBeInTheDocument();
+    const advancedOptions = screen.getByTestId("advanced-print-options");
+    expect(advancedOptions.tagName).toBe("DETAILS");
     expect(screen.getByTestId("saved-print-controls").tagName).toBe("DETAILS");
     expect(screen.getByTestId("advanced-layout-controls").tagName).toBe(
       "DETAILS",
@@ -153,6 +159,19 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("advanced-custom-fields").tagName).toBe(
       "DETAILS",
     );
+    expect(advancedOptions).toContainElement(
+      screen.getByTestId("saved-print-controls"),
+    );
+    expect(advancedOptions).toContainElement(
+      screen.getByTestId("advanced-layout-controls"),
+    );
+    expect(advancedOptions).toContainElement(
+      screen.getByTestId("advanced-template-controls"),
+    );
+    expect(advancedOptions).toContainElement(
+      screen.getByTestId("advanced-custom-fields"),
+    );
+    expect(screen.getByText("Advanced print options")).toBeInTheDocument();
     expect(screen.getByText("Advanced layout controls")).toBeInTheDocument();
   });
 

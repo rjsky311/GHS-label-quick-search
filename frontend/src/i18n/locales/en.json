@@ -280,6 +280,8 @@
   "label.settingsPreviewIntro": "The app chooses a printable output first. Adjust only when the preview needs a different physical stock.",
   "label.settingsTitle": "Print setup",
   "label.settingsBody": "Start with a stock preset, then fine-tune spacing and nudges without leaving the modal.",
+  "label.advancedPrintOptionsTitle": "Advanced print options",
+  "label.advancedPrintOptionsHint": "Template overrides, density, calibration, custom fields, and saved jobs are kept here so the main workflow stays focused on choosing and printing the right label.",
   "label.savedPrintControlsTitle": "Saved jobs and presets",
   "label.templateOverrideTitle": "Template override",
   "label.templateOverrideHint": "Purpose presets choose the recommended template automatically; override only for a special label job.",

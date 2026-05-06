@@ -531,6 +531,17 @@ describe("printLabels", () => {
     expect(html).toContain("compliance-statements-panel");
     expect(html).toContain("font-size:6.5px");
     expect(html).not.toContain("font-size: 9px !important");
+    const bodyHtml = html.slice(html.indexOf("<body"));
+    expect(bodyHtml).not.toContain('class="qrcode-img"');
+    expect(bodyHtml).not.toContain("hazard-more");
+    expect(bodyHtml).not.toContain("precaution-more");
+    expect((bodyHtml.match(/<img/g) || [])).toHaveLength(4);
+    denseChemical.hazard_statements.forEach((statement) => {
+      expect(bodyHtml).toContain(`>${statement.code}</span>`);
+    });
+    denseChemical.precautionary_statements.forEach((statement) => {
+      expect(bodyHtml).toContain(`>${statement.code}</span>`);
+    });
     expect(alertSpy).not.toHaveBeenCalled();
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).toHaveBeenCalled();

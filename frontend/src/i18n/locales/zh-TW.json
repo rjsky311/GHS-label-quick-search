@@ -394,6 +394,8 @@
   "label.settingsPreviewIntro": "系統會先選出可列印的輸出；只有預覽需要不同實體紙材時，才需要手動調整。",
   "label.settingsTitle": "列印設定",
   "label.settingsBody": "先用標籤紙預設當起點，再微調間距與位移，不必離開這個視窗反覆試印。",
+  "label.advancedPrintOptionsTitle": "進階列印選項",
+  "label.advancedPrintOptionsHint": "模板覆寫、密度、校準、自訂欄位與已儲存工作都收在這裡，讓主要流程專注在選對標籤並列印。",
   "label.savedPrintControlsTitle": "已儲存的列印與預設",
   "label.templateOverrideTitle": "模板覆寫",
   "label.templateOverrideHint": "用途預設會自動選好建議模板；只有特殊列印任務才需要覆寫。",
