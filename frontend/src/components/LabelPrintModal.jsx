@@ -843,11 +843,14 @@ export default function LabelPrintModal({
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
+    : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+        outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
+      ? tx("label.decisionRoleQrSupplement", "QR supplement")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
-          outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
-        ? tx("label.decisionRoleQrSupplement", "QR supplement")
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-          ? tx("label.decisionRoleSupplemental", "Supplemental label")
+          outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
+        ? tx("label.decisionRoleQuickId", "Quick-ID supplement")
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? tx("label.decisionRoleSupplemental", "Supplemental label")
           : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
             ? tx("label.decisionRoleUseFullPage", "Use full-page primary")
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
@@ -1029,6 +1032,9 @@ export default function LabelPrintModal({
   const isQrSupplementOutput =
     labelPurpose === "qrSupplement" ||
     outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
+  const isQuickIdOutput =
+    labelPurpose === "quickId" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
   const isSupplementalOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
   const outputOutcomeTone =
@@ -1056,7 +1062,13 @@ export default function LabelPrintModal({
               ? tx("label.outputOutcomeInvalidTitle", "Choose a larger output")
               : isQrSupplementOutput
                 ? tx("label.outputOutcomeQrTitle", "QR supplement is printable")
-                : isSupplementalOutput
+                : isQuickIdOutput
+                  ? tx(
+                      "label.outputOutcomeQuickIdTitle",
+                      "{{target}} quick-ID label is printable",
+                      { target: printTargetLabel },
+                    )
+                  : isSupplementalOutput
                   ? tx(
                       "label.outputOutcomeSupplementalTitle",
                       "{{target}} is printable as a supplement",
@@ -1099,7 +1111,12 @@ export default function LabelPrintModal({
                     "label.outputOutcomeQrBody",
                     "This prints a scan-first supplement with identity, QR, and all available pictograms. It does not replace a complete primary label.",
                   )
-                : isSupplementalOutput
+                : isQuickIdOutput
+                  ? tx(
+                      "label.outputOutcomeQuickIdBody",
+                      "This prints a bench-side quick-ID supplement with identity, signal word, and every available pictogram. It does not replace a complete primary label.",
+                    )
+                  : isSupplementalOutput
                   ? tx(
                       "label.outputOutcomeSupplementalBody",
                       "This prints on {{stock}} with identity, signal word, every available pictogram, and priority H/P text. It is not a complete primary label.",
@@ -1123,6 +1140,12 @@ export default function LabelPrintModal({
                 count: totalLabels,
               },
             )
+          : isQuickIdOutput
+            ? tx(
+                "label.printQuickIdAction",
+                "Print {{target}} quick-ID label ({{count}})",
+                { target: printTargetLabel, count: totalLabels },
+              )
           : isSupplementalOutput
             ? tx(
                 "label.printSupplementalAction",

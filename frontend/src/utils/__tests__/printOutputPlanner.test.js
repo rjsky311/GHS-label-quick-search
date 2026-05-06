@@ -1,5 +1,6 @@
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import {
+  PRINT_OUTPUT_KIND,
   PRINT_OUTPUT_PLAN_STATE,
   buildFullPagePrimaryPatch,
   buildPrintOutputPlan,
@@ -147,6 +148,24 @@ describe("printOutputPlanner", () => {
     });
 
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
+    expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QR_SUPPLEMENT);
+    expect(plan.canPrint).toBe(true);
+  });
+
+  it("keeps tube/vial quick-ID output printable but distinct from QR", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeChemical(8)],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      }),
+      resolvedLabProfile: {},
+      locale: "zh-TW",
+    });
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
+    expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QUICK_ID);
     expect(plan.canPrint).toBe(true);
   });
 });

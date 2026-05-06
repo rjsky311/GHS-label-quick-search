@@ -424,6 +424,8 @@ describe("printLabels", () => {
     appendChildSpy.mockRestore();
     getByIdSpy.mockRestore();
     alertSpy.mockRestore();
+    window.history.replaceState({}, "", "/");
+    delete window.__GHS_PRINT_QA_LAST_HANDOFF__;
     jest.useRealTimers();
   });
 
@@ -735,6 +737,50 @@ describe("printLabels", () => {
         status: "afterprint",
         meta: expect.objectContaining({
           completionReason: "afterprint",
+        }),
+      }),
+    );
+  });
+
+  it("supports QA print handoff without opening the native print dialog", () => {
+    window.history.replaceState({}, "", "/?qaPrintHandoff=1");
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "small-strip",
+      },
+      {},
+    );
+    jest.advanceTimersByTime(300);
+
+    expect(mockIframeWindow.focus).toHaveBeenCalled();
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(mockIframe.remove).toHaveBeenCalled();
+    expect(window.__GHS_PRINT_QA_LAST_HANDOFF__).toEqual(
+      expect.objectContaining({
+        status: "qa_handoff",
+        labelKind: "qr-supplement",
+        totalLabels: 1,
+      }),
+    );
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_handoff_qa",
+      expect.objectContaining({
+        status: "qa_handoff",
+        meta: expect.objectContaining({
+          labelKind: "qr-supplement",
+        }),
+      }),
+    );
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_complete",
+      expect.objectContaining({
+        status: "qa_handoff",
+        meta: expect.objectContaining({
+          completionReason: "qa_handoff",
         }),
       }),
     );

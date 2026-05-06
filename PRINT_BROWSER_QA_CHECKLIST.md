@@ -14,6 +14,12 @@ Before using production, verify the deployed bundle contains the expected new
 strings or behavior from the commit being tested. This catches stale Zeabur
 assets before doing visual QA.
 
+For automated click-through checks that must press the print action, append
+`?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
+app still builds the print iframe, runs preflight, records lifecycle events, and
+publishes `print-qa-status`, but it does not open the native print dialog. Do
+not use this parameter for a normal manual print attempt.
+
 ## Required Evidence
 
 Record these outputs in the final implementation note:
@@ -27,6 +33,7 @@ Record these outputs in the final implementation note:
 - Preview `srcdoc` checks for label-kind class, pictogram codes, QR presence,
   B/W state, language state, and `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs.
+- `print-qa-status` after clicking the print action in QA handoff mode.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview

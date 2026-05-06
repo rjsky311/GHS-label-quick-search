@@ -303,6 +303,28 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("uses quick-ID outcome text for tube and vial labels", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+    });
+
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "Tube / vial quick-ID label is printable",
+    );
+    expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
+      "Quick-ID supplement",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print Tube / vial quick-ID label (1)",
+    );
+  });
+
   it("auto-routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({

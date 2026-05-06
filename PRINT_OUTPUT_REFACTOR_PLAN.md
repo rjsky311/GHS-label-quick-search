@@ -78,6 +78,8 @@ The first refactor slice has landed:
 - On narrow/mobile modal layouts, task settings now appear before the live preview. Desktop keeps the two-column settings/preview layout, but smaller viewports no longer force users to scroll past the preview before choosing the target.
 - The first-level target selector now uses real tasks: main container, bottle label, tube/vial, and QR supplement. Each task applies the appropriate purpose, stock preset, and template before the planner decides whether the result is complete primary or supplemental.
 - The preview column now starts with an output outcome summary and an outcome-aware print action. Users can see whether the selected target will print as a complete primary label, supplemental bottle/tube label, QR supplement, or must switch to A4/Letter before reading lower-level diagnostics.
+- A print handoff QA mode (`qaPrintHandoff=1`) now lets Browser Use click the print action without opening the native print dialog. It still builds the print iframe, runs preflight, records lifecycle events, and exposes `print-qa-status`, so deployment QA can prove the button reaches the print handoff path.
+- Tube/vial output is now represented as a distinct quick-ID supplement outcome instead of being collapsed into generic supplemental copy. This keeps the UI honest: quick-ID labels are printable bench-side identifiers, not complete primary labels and not QR supplements.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

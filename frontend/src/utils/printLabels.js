@@ -14,6 +14,7 @@ import {
 } from "@/utils/ghsText";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
+const PRINT_QA_HANDOFF_PARAM = "qaPrintHandoff";
 
 export { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
 export { inspectPrintContentFit } from "@/utils/printFitEngine";
@@ -2228,6 +2229,71 @@ function buildPrintLifecycleMeta(documentBundle) {
   };
 }
 
+function isPrintHandoffQaMode() {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      new URLSearchParams(window.location.search).get(PRINT_QA_HANDOFF_PARAM) ===
+      "1"
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
+  const imageAlts = Array.from(iframeDoc.querySelectorAll("img"))
+    .map((img) => img.getAttribute?.("alt") || img.alt || "")
+    .filter(Boolean);
+  const pictogramCodes = imageAlts.filter((alt) => /^GHS\d{2}$/.test(alt));
+  const status = {
+    status: "qa_handoff",
+    template: lifecycleMeta.template,
+    labelPurpose: lifecycleMeta.labelPurpose,
+    stockPreset: lifecycleMeta.stockPreset,
+    orientation: lifecycleMeta.orientation,
+    totalLabels: lifecycleMeta.totalLabels || 1,
+    labelKind: isCompletePrimaryTemplate(documentBundle.model.layout)
+      ? "complete-primary"
+      : isQrSupplementLayout(documentBundle.model.layout)
+        ? "qr-supplement"
+        : isQuickIdLayout(documentBundle.model.layout)
+          ? "quick-id"
+          : "supplemental",
+    pictogramCodes,
+    hasQr: imageAlts.some((alt) => /qr/i.test(alt)),
+  };
+
+  if (typeof window !== "undefined") {
+    window.__GHS_PRINT_QA_LAST_HANDOFF__ = status;
+  }
+
+  if (typeof document !== "undefined") {
+    let statusElement = document.getElementById("ghs-print-qa-status");
+    if (!statusElement) {
+      statusElement = document.createElement("div");
+      statusElement.id = "ghs-print-qa-status";
+      if (typeof statusElement.setAttribute === "function") {
+        statusElement.setAttribute("data-testid", "print-qa-status");
+        statusElement.setAttribute("aria-live", "polite");
+      }
+      if (statusElement.style) {
+        statusElement.style.cssText =
+          "position:fixed;left:0;bottom:0;z-index:2147483647;width:1px;height:1px;overflow:hidden;opacity:0.01;pointer-events:none;";
+      }
+      document.body.appendChild(statusElement);
+    }
+    if (statusElement.dataset) {
+      statusElement.dataset.status = status.status;
+      statusElement.dataset.labelKind = status.labelKind;
+      statusElement.dataset.pictograms = pictogramCodes.join(",");
+    }
+    statusElement.textContent = `Print handoff ready: ${status.labelKind}; ${pictogramCodes.join(",")}`;
+  }
+
+  return status;
+}
+
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -2331,6 +2397,26 @@ export function printLabels(
         );
       } catch (_) {
         // Embedded webviews may not support afterprint on iframe windows.
+      }
+
+      if (isPrintHandoffQaMode()) {
+        const qaStatus = publishPrintHandoffQaStatus(
+          documentBundle,
+          iframeDoc,
+          lifecycleMeta,
+        );
+        recordObservabilityEvent("print_handoff_qa", {
+          status: "qa_handoff",
+          count: lifecycleMeta.totalLabels || 1,
+          meta: {
+            ...lifecycleMeta,
+            labelKind: qaStatus.labelKind,
+            pictogramCodes: qaStatus.pictogramCodes,
+            hasQr: qaStatus.hasQr,
+          },
+        });
+        cleanup("qa_handoff");
+        return;
       }
 
       setTimeout(() => cleanup("cleanup_timeout"), 60000);

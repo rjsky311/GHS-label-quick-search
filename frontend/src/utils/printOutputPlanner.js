@@ -20,6 +20,7 @@ export const PRINT_OUTPUT_PLAN_STATE = Object.freeze({
 export const PRINT_OUTPUT_KIND = Object.freeze({
   COMPLETE_PRIMARY: "complete_primary",
   SUPPLEMENTAL: "supplemental",
+  QUICK_ID: "quick_id",
   QR_SUPPLEMENT: "qr_supplement",
 });
 
@@ -92,6 +93,10 @@ const hasUpstreamError = (readiness) =>
 const resolveOutputKind = (layout = {}) => {
   if (layout.labelPurpose === "qrSupplement" || layout.template === "qrcode") {
     return PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
+  }
+
+  if (layout.labelPurpose === "quickId" || layout.template === "icon") {
+    return PRINT_OUTPUT_KIND.QUICK_ID;
   }
 
   if (layout.labelPurpose !== "shipping" || layout.template !== "full") {
