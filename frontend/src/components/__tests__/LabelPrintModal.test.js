@@ -100,6 +100,12 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
       "Recommended output",
     );
+    expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
+      "Output role",
+    );
+    expect(screen.getByTestId("print-decision-icons")).toHaveTextContent(
+      "All pictograms kept",
+    );
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
@@ -329,6 +335,15 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("primary-output-size-letter-primary"),
     ).toHaveTextContent("Letter Primary");
+    expect(screen.getByTestId("secondary-output-size-controls").tagName).toBe(
+      "DETAILS",
+    );
+    expect(screen.getByTestId("secondary-output-size-controls")).toHaveTextContent(
+      "More common stock sizes",
+    );
+    expect(
+      screen.getByTestId("primary-output-size-avery-5163"),
+    ).toHaveTextContent("2 x 4 in Bottle");
     expect(screen.getByTestId("label-fragment-preview")).toHaveStyle({
       height: "24rem",
     });
@@ -352,6 +367,9 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("primary-output-size-brother-62mm-continuous"),
     ).toHaveTextContent("62 mm Continuous");
+    expect(screen.getByTestId("secondary-output-size-controls")).toHaveTextContent(
+      "More common stock sizes",
+    );
     expect(
       screen.queryByTestId("primary-output-size-a4-primary"),
     ).not.toBeInTheDocument();

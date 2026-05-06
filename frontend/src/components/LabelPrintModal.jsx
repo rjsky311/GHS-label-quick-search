@@ -35,6 +35,7 @@ import {
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
 import {
+  PRINT_OUTPUT_KIND,
   PRINT_OUTPUT_PLAN_STATE,
   buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
@@ -181,6 +182,12 @@ const SHIPPING_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter(
 const SUPPLEMENTAL_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
   (preset) => preset.outputRole === "supplemental",
 ).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
+
+const CORE_STOCK_IDS_BY_PURPOSE = {
+  shipping: ["a4-primary", "letter-primary", "medium-bottle", "large-primary"],
+  qrSupplement: ["small-strip", "brother-62mm-continuous"],
+  quickId: ["brother-62mm-continuous", "small-strip"],
+};
 
 const GRID_MAP = {
   portrait: { small: 15, medium: 8, large: 3 },
@@ -543,6 +550,21 @@ function getOutputTone(summary) {
   return summary.present >= summary.expected ? "ready" : "caution";
 }
 
+function splitStockChoices(stockChoices, selectedStockId, purpose) {
+  const coreIds = CORE_STOCK_IDS_BY_PURPOSE[purpose] || [];
+  const primary = stockChoices.filter(
+    (preset) => coreIds.includes(preset.id) || preset.id === selectedStockId,
+  );
+  const primaryIds = new Set(primary.map((preset) => preset.id));
+
+  return {
+    primaryStockChoices: primary,
+    secondaryStockChoices: stockChoices.filter(
+      (preset) => !primaryIds.has(preset.id),
+    ),
+  };
+}
+
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
@@ -659,6 +681,11 @@ export default function LabelPrintModal({
     labelPurpose === "shipping"
       ? SHIPPING_PRIMARY_PRESETS
       : SUPPLEMENTAL_STOCK_PRESETS;
+  const { primaryStockChoices, secondaryStockChoices } = splitStockChoices(
+    visibleStockChoices,
+    layoutProfile.stockPreset,
+    labelPurpose,
+  );
   const plannerPreviewRisk =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
       ? tx(
@@ -709,6 +736,78 @@ export default function LabelPrintModal({
     summary.expected > 0
       ? `${summary.present}/${summary.expected}`
       : outputNotApplicableLabel;
+  const outputPlanTone =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? "ready"
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? "caution"
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
+            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+          ? "danger"
+          : "caution";
+  const hasAnyPictograms =
+    printReadiness.elementSummary.pictograms.expected > 0;
+  const outputRoleSummary =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? tx("label.decisionRoleComplete", "Complete primary")
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+          outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
+        ? tx("label.decisionRoleQrSupplement", "QR supplement")
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+          ? tx("label.decisionRoleSupplemental", "Supplemental label")
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+            ? tx("label.decisionRoleUseFullPage", "Use full-page primary")
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+              ? tx("label.decisionRoleBlockedHazards", "Hazard label blocked")
+              : outputPlan.state ===
+                  PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+                ? tx("label.decisionRoleBlockedProfile", "Profile required")
+                : tx("label.decisionRolePending", "Select content");
+  const pictogramSummary =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+      ? tx("label.decisionIconsNeedData", "Need verified hazard data")
+      : hasAnyPictograms
+        ? tx("label.decisionIconsAllKept", "All pictograms kept")
+        : tx("label.decisionIconsNotAvailable", "No pictograms available");
+  const statementSummary =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+      ? tx("label.decisionTextComplete", "Full H/P text")
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? tx("label.decisionTextPriority", "Priority H/P summary")
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          ? tx("label.decisionTextBlocked", "Do not print yet")
+          : tx("label.decisionTextCheck", "Check requirements");
+  const decisionSummaryItems = [
+    {
+      key: "role",
+      label: tx("label.decisionRoleLabel", "Output role"),
+      value: outputRoleSummary,
+      tone: outputPlanTone,
+    },
+    {
+      key: "icons",
+      label: tx("label.decisionIconsLabel", "GHS icons"),
+      value: pictogramSummary,
+      tone:
+        outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          ? "danger"
+          : hasAnyPictograms
+            ? "ready"
+            : "neutral",
+    },
+    {
+      key: "text",
+      label: tx("label.decisionTextLabel", "Hazard text"),
+      value: statementSummary,
+      tone:
+        outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          ? "danger"
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+            ? "caution"
+            : "ready",
+    },
+  ];
   const outputChecklistItems = [
     {
       key: "pictograms",
@@ -781,16 +880,6 @@ export default function LabelPrintModal({
     visiblePreviewRisks.find((risk) => risk === blockedDensityMessage) ||
     visiblePreviewRisks.find((risk) => risk !== readyPreviewMessage) ||
     "";
-  const outputPlanTone =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
-      ? "ready"
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-        ? "caution"
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
-            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
-          ? "danger"
-          : "caution";
   const outputPlanTitle =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.outputPlanReadyTitle", "Complete output ready")
@@ -1046,6 +1135,56 @@ export default function LabelPrintModal({
       })}
     </div>
   );
+
+  const renderStockChoiceButton = (preset) => {
+    const selected = layoutProfile.stockPreset === preset.id;
+    const display = getLabelStockPresetDisplay(preset, t);
+    const isFullPage = FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id);
+
+    return (
+      <button
+        key={preset.id}
+        type="button"
+        onClick={() => applyStockPreset(preset)}
+        data-testid={`primary-output-size-${preset.id}`}
+        className={`rounded-md border p-3 text-left transition-colors ${
+          selected
+            ? "border-blue-600 bg-blue-50 text-blue-900"
+            : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium">{display.name}</span>
+          {selected && <Check className="h-4 w-4" />}
+        </div>
+        <div className="mt-1 text-xs leading-5 text-slate-500">
+          {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
+          {tx("label.previewPerPage", "{{count}}/page", {
+            count: preset.perPage,
+          })}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+            {preset.pageSize || "A4"}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+            {t(
+              ORIENTATION_OPTIONS.find(
+                (item) => item.value === preset.orientation,
+              )?.labelKey || "label.portrait",
+            )}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5">
+            {isFullPage
+              ? tx("label.completePrimaryStock", "complete")
+              : labelPurpose === "shipping"
+                ? tx("label.containerStock", "container")
+                : tx("label.supplementalStock", "supplemental")}
+          </span>
+        </div>
+      </button>
+    );
+  };
 
   const renderPreviewMeta = () => (
     <div className="flex flex-wrap gap-2 text-xs text-slate-600">
@@ -1779,6 +1918,28 @@ export default function LabelPrintModal({
                     </button>
                   )}
                 </div>
+                <div
+                  className="mt-4 grid gap-2 sm:grid-cols-3"
+                  data-testid="print-decision-summary"
+                >
+                  {decisionSummaryItems.map((item) => (
+                    <div
+                      key={item.key}
+                      className={`rounded-md border px-3 py-2 ${
+                        READINESS_TONE_CLASSES[item.tone] ||
+                        READINESS_TONE_CLASSES.neutral
+                      }`}
+                      data-testid={`print-decision-${item.key}`}
+                    >
+                      <div className="text-xs font-medium opacity-80">
+                        {item.label}
+                      </div>
+                      <div className="mt-1 text-sm font-semibold">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </section>
 
               <section
@@ -1852,58 +2013,35 @@ export default function LabelPrintModal({
                     {tx("label.outputStockTitle", "Target size")}
                   </div>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {visibleStockChoices.map((preset) => {
-                    const selected = layoutProfile.stockPreset === preset.id;
-                    const display = getLabelStockPresetDisplay(preset, t);
-                    const isFullPage = FULL_PAGE_PRIMARY_STOCK_IDS.includes(
-                      preset.id,
-                    );
-
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => applyStockPreset(preset)}
-                        data-testid={`primary-output-size-${preset.id}`}
-                        className={`rounded-md border p-3 text-left transition-colors ${
-                          selected
-                            ? "border-blue-600 bg-blue-50 text-blue-900"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium">{display.name}</span>
-                          {selected && <Check className="h-4 w-4" />}
-                        </div>
-                        <div className="mt-1 text-xs leading-5 text-slate-500">
-                          {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
-                          {tx("label.previewPerPage", "{{count}}/page", {
-                            count: preset.perPage,
-                          })}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-slate-500">
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
-                            {preset.pageSize || "A4"}
-                          </span>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
-                            {t(
-                              ORIENTATION_OPTIONS.find(
-                                (item) => item.value === preset.orientation,
-                              )?.labelKey || "label.portrait",
-                            )}
-                          </span>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5">
-                            {isFullPage
-                              ? tx("label.completePrimaryStock", "complete")
-                              : labelPurpose === "shipping"
-                                ? tx("label.containerStock", "container")
-                                : tx("label.supplementalStock", "supplemental")}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                    {primaryStockChoices.map(renderStockChoiceButton)}
                   </div>
+                  {secondaryStockChoices.length > 0 && (
+                    <details
+                      className="mt-3 rounded-md border border-slate-200 bg-slate-50/80 p-3"
+                      data-testid="secondary-output-size-controls"
+                    >
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
+                        <span>
+                          {tx(
+                            "label.moreStockChoicesTitle",
+                            "More common stock sizes",
+                          )}
+                        </span>
+                        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+                          {secondaryStockChoices.length}
+                        </span>
+                      </summary>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                        {tx(
+                          "label.moreStockChoicesHint",
+                          "Use these when your printer stock matches them. The same planner and preview checks still apply.",
+                        )}
+                      </p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {secondaryStockChoices.map(renderStockChoiceButton)}
+                      </div>
+                    </details>
+                  )}
                 </div>
               </section>
 

@@ -86,6 +86,8 @@ These are acceptance targets for the renderer and Browser QA:
 - Color mode and black-and-white mode both preserve pictogram recognizability.
 - Chinese, English, and bilingual modes all update the preview and printed HTML.
 - The print button is disabled only when the app lacks required data or cannot produce a truthful printable output.
+- The first-level print workflow shows a concise decision summary before stock details: output role, GHS icon handling, and H/P text handling.
+- Less common stock sizes remain available but are collapsed behind a secondary control so the main workflow does not read like a template catalog.
 
 ## Required QA Matrix
 

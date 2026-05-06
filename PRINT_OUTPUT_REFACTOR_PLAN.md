@@ -69,6 +69,7 @@ The first refactor slice has landed:
 - Added code-level print acceptance matrix tests for A4 Primary, Letter Primary, standard bottle, vial strip, QR supplement, lower-density ethanol, no-GHS data, and upstream-error cases.
 - Compact supplemental labels now prioritize severe H-statements and response/PPE P-codes before summarizing lower-priority text, while complete primary labels still print the full H/P content without summaries.
 - Print planning now distinguishes transient upstream GHS lookup failure from confirmed no-GHS content, so the UI blocks hazard-label printing with a data-verification message instead of implying the chemical has no hazard data.
+- The print modal now exposes a compact decision summary for output role, GHS icon handling, and hazard-text handling before users adjust stock. First-level stock choices are limited to the most common targets, with secondary stock sizes collapsed under "More common stock sizes."
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
