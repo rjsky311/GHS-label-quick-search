@@ -1,6 +1,7 @@
 import { GHS_IMAGES } from "@/constants/ghs";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import i18n from "@/i18n";
+import qrcode from "qrcode-generator";
 import { recordObservabilityEvent } from "@/utils/observability";
 import {
   buildPrintLabelContent,
@@ -43,9 +44,12 @@ export function escapeHtml(value) {
 }
 
 export function getQRCodeUrl(text, size = 100) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-    text,
-  )}`;
+  const qr = qrcode(0, "M");
+  qr.addData(String(text || ""));
+  qr.make();
+  const moduleCount = qr.getModuleCount();
+  const cellSize = Math.max(2, Math.ceil(size / Math.max(moduleCount, 1)));
+  return qr.createDataURL(cellSize, 0);
 }
 
 export function getHazardFontTier(hazardCount, labelSize) {
@@ -924,7 +928,7 @@ const renderQRCodeTemplate = (chemical, model) => {
       </div>
       <div class="qr-right qr-panel">
         <div class="qr-code-shell">
-          <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" data-required-print-image="qr-code" />
+          <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" data-required-print-image="qr-code" data-qr-target="${escapeHtml(qrTarget)}" />
         </div>
         <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
       </div>

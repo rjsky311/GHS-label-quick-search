@@ -98,21 +98,21 @@ function createMockIframe() {
 // ── Tests ──
 
 describe("getQRCodeUrl", () => {
-  it("generates correct QR code URL with default size", () => {
+  it("generates a local QR data URI with default size", () => {
     const url = getQRCodeUrl("https://example.com");
-    expect(url).toBe(
-      "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fexample.com",
-    );
+    expect(url).toMatch(/^data:image\/gif;base64,/);
   });
 
-  it("generates correct QR code URL with custom size", () => {
+  it("generates a larger local QR data URI with custom size", () => {
+    const small = getQRCodeUrl("https://example.com", 100);
     const url = getQRCodeUrl("https://example.com", 200);
-    expect(url).toContain("size=200x200");
+    expect(url.length).toBeGreaterThan(small.length);
   });
 
-  it("encodes special characters in data URL", () => {
+  it("generates distinct QR payloads for special-character targets", () => {
     const url = getQRCodeUrl("https://example.com?a=1&b=2");
-    expect(url).toContain("data=https%3A%2F%2Fexample.com%3Fa%3D1%26b%3D2");
+    expect(url).toMatch(/^data:image\/gif;base64,/);
+    expect(url).not.toBe(getQRCodeUrl("https://example.com"));
   });
 });
 
@@ -1156,7 +1156,7 @@ describe("printLabels", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("qrcode-img");
-      expect(html).toContain("api.qrserver.com");
+      expect(html).toContain("data:image/gif;base64");
     });
 
     it("qrcode supplemental labels fit the QR box to small stock and keep all pictograms", () => {
@@ -2879,7 +2879,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data=https%3A%2F%2Fpubchem.ncbi.nlm.nih.gov%2Fcompound%2F702%23section%3DSafety-and-Hazards",
+        "data-qr-target=\"https://pubchem.ncbi.nlm.nih.gov/compound/702#section=Safety-and-Hazards\"",
       );
     });
 
@@ -2891,7 +2891,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data=https%3A%2F%2Fchem.echa.europa.eu%2Fsubstance-search%3FsearchText%3D64-17-5",
+        "data-qr-target=\"https://chem.echa.europa.eu/substance-search?searchText=64-17-5\"",
       );
     });
   });
