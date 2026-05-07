@@ -308,10 +308,17 @@ const estimateSupplementalPrintContentTextWeight = (
     0,
     standardBudget.precautions || 0,
   );
+  const compactStandardHazards =
+    layout.labelPurpose === "shipping" &&
+    layout.template === "standard" &&
+    layout.formFactor === "bottle";
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
-      statementTextWeight(renderedHazards, layout, { locale }) +
+      statementTextWeight(renderedHazards, layout, {
+        codeOnly: compactStandardHazards,
+        locale,
+      }) +
       statementTextWeight(renderedPrecautions, layout, {
         codeOnly: true,
         locale,

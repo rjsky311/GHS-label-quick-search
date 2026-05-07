@@ -1309,8 +1309,9 @@ describe("printLabels", () => {
         "grid-template-columns: repeat(2, 15mm)",
       );
       expect(bottlePreview.html).toContain("width: 15mm");
+      expect(bottlePreview.fragmentHtml).toContain("hazard-code-list");
       expect(bottlePreview.fragmentHtml.match(/hazard-primary-item/g)).toHaveLength(
-        3,
+        2,
       );
       expect(bottlePreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
@@ -1380,7 +1381,9 @@ describe("printLabels", () => {
         precautionary_statements: [
           { code: "P501", text_en: "Dispose contents" },
           { code: "P403+P233", text_en: "Store in a well-ventilated place" },
+          { code: "P271", text_en: "Use outdoors or in a well-ventilated area" },
           { code: "P280", text_en: "Wear protective gloves" },
+          { code: "P305+P351+P338", text_en: "IF IN EYES" },
           { code: "P301+P330+P331", text_en: "IF SWALLOWED" },
         ],
       };
@@ -1390,7 +1393,7 @@ describe("printLabels", () => {
         {
           labelPurpose: "shipping",
           template: "standard",
-          stockPreset: "medium-bottle",
+          stockPreset: "large-primary",
           nameDisplay: "en",
         },
         {},
@@ -2274,7 +2277,12 @@ describe("printLabels", () => {
     it("standard template renders compact P-code summary when the stock budget allows it", () => {
       printLabels(
         [chemWithP],
-        { size: "medium", template: "standard", orientation: "portrait" },
+        {
+          size: "large",
+          template: "standard",
+          orientation: "portrait",
+          stockPreset: "large-primary",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2283,7 +2291,7 @@ describe("printLabels", () => {
       expect(html).toMatch(/<span\s+class="precaution-code"/);
       expect(html).toContain("P301+P310");
       expect(html).toContain("P210");
-      expect(html).not.toContain("P233");
+      expect(html).toContain("P233");
       // In compact view we do NOT inline the long Chinese text
       expect(html).not.toContain("如誤吞食：立即呼叫毒物中心。");
     });
@@ -2482,7 +2490,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [chem],
-        { size: "medium", template: "standard", orientation: "portrait" },
+        {
+          size: "large",
+          template: "standard",
+          orientation: "portrait",
+          stockPreset: "large-primary",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];

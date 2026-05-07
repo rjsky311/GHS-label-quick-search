@@ -80,6 +80,52 @@ const makeDenseSupplementalChemical = () => ({
   ],
 });
 
+const makeHydrochloricAcid = () => ({
+  ...makeChemical(28),
+  name_en: "Hydrochloric Acid",
+  ghs_pictograms: [
+    { code: "GHS04" },
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+  ],
+  hazard_statements: [
+    {
+      code: "H280",
+      text_en:
+        "Contains gas under pressure; may explode if heated [Warning Gases under pressure]",
+    },
+    {
+      code: "H290",
+      text_en: "May be corrosive to metals [Warning Corrosive to Metals]",
+    },
+    {
+      code: "H314",
+      text_en:
+        "Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]",
+    },
+    {
+      code: "H318",
+      text_en:
+        "Causes serious eye damage [Danger Serious eye damage/eye irritation]",
+    },
+    {
+      code: "H331",
+      text_en: "Toxic if inhaled [Danger Acute toxicity, inhalation]",
+    },
+    {
+      code: "H335",
+      text_en:
+        "May cause respiratory irritation [Warning Specific target organ toxicity, single exposure]",
+    },
+  ],
+  precautionary_statements: Array.from({ length: 22 }, (_, index) => ({
+    code: `P${260 + index}`,
+    text_en:
+      "Use appropriate protective controls and follow official SDS handling instructions.",
+  })),
+});
+
 describe("printFitEngine", () => {
   it("routes dense complete labels to A4 primary before printing", () => {
     const readiness = evaluatePrintReadiness({
@@ -215,6 +261,27 @@ describe("printFitEngine", () => {
         resolvedLabProfile: {},
       }),
     ).toEqual([]);
+  });
+
+  it("keeps dense bottle labels printable by trimming supplemental text before blocking", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "medium-bottle",
+      nameDisplay: "both",
+    });
+    const readiness = evaluatePrintReadiness({
+      selectedForLabel: [makeHydrochloricAcid()],
+      layout,
+      resolvedLabProfile: {},
+      locale: "en",
+    });
+
+    expect(layout.templateBudgets.standard.primaryHazards).toBe(2);
+    expect(layout.templateBudgets.standard.precautions).toBe(0);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY);
+    expect(readiness.canPrint).toBe(true);
+    expect(readiness.issues).toEqual([]);
   });
 
   it("derives supplemental fit capacity from resolved renderer metrics", () => {

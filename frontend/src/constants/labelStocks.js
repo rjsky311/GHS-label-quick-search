@@ -567,6 +567,16 @@ function resolveTemplateBudgets(normalized) {
   primaryHazards = Math.max(1, primaryHazards - compactPenalty);
   precautions = Math.max(0, precautions - compactPenalty);
 
+  const isBottleSupplementalFallback =
+    normalized.labelPurpose === "shipping" &&
+    normalized.template === "standard" &&
+    area < 5600;
+
+  if (isBottleSupplementalFallback) {
+    primaryHazards = Math.min(primaryHazards, 2);
+    precautions = 0;
+  }
+
   return {
     ...base,
     standard: {

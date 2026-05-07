@@ -570,6 +570,11 @@ const renderHazardStatement = (statement, className, model) =>
     getLocalizedTextForModel(statement, model),
   )}</div>`;
 
+const renderHazardCode = (statement, className) =>
+  `<div class="${className} hazard-code-only">${escapeHtml(
+    statement.code,
+  )}</div>`;
+
 const renderMoreHazards = (count, model, className = "") => {
   if (count <= 0) return "";
   return `<div class="hazard-more${className ? ` ${className}` : ""}">${escapeHtml(
@@ -705,6 +710,10 @@ const renderStandardTemplate = (chemical, model) => {
   const prioritizedHazards = prioritizeHazardStatements(hazards);
   const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
+  const compactHazardCodes =
+    model.layout.labelPurpose === "shipping" &&
+    model.layout.template === "standard" &&
+    model.layout.formFactor === "bottle";
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -737,14 +746,19 @@ const renderStandardTemplate = (chemical, model) => {
             <div class="standard-hazard-board">
             ${
               primaryHazards.length > 0
-                ? `<div class="hazard-primary-list">
+                ? `<div class="hazard-primary-list${compactHazardCodes ? " hazard-code-list" : ""}">
                     ${primaryHazards
                       .map((hazard) =>
-                        renderHazardStatement(
-                          hazard,
-                          "hazard-item hazard-primary-item",
-                          model,
-                        ),
+                        compactHazardCodes
+                          ? renderHazardCode(
+                              hazard,
+                              "hazard-item hazard-primary-item",
+                            )
+                          : renderHazardStatement(
+                              hazard,
+                              "hazard-item hazard-primary-item",
+                              model,
+                            ),
                       )
                       .join("")}
                     ${renderMoreHazards(omittedHazards, model)}
@@ -1614,6 +1628,12 @@ const buildStyles = (model) => {
       flex-direction: column;
       gap: 0.5mm;
     }
+    .hazard-code-list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45mm;
+    }
     .hazard-primary-item {
       padding: 0.45mm 0.7mm;
       border-radius: 0.9mm;
@@ -1636,6 +1656,13 @@ const buildStyles = (model) => {
     }
     .hazard-item {
       margin-bottom: 0;
+    }
+    .hazard-code-only {
+      min-width: 8mm;
+      text-align: center;
+      font-size: max(6.5px, calc(${layout.typography.hazardSize} - 0.5px));
+      line-height: 1;
+      padding: 0.45mm 0.9mm;
     }
     .no-hazard {
       color: #166534;
