@@ -110,9 +110,117 @@ const expectEveryPictogram = (html, codes) => {
   });
 };
 
+const hydrochloricPictogramCodes = ["GHS04", "GHS05", "GHS06", "GHS07"];
+
 const mmValue = (value) => Number.parseFloat(String(value).replace("mm", ""));
 
+const hydrochloricTargetMatrix = [
+  {
+    id: "main-container",
+    labelPurpose: "shipping",
+    template: "full",
+    stockPreset: "letter-primary",
+    expectedKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+    expectedClass: "label-kind-complete-primary",
+    expectsQr: false,
+  },
+  {
+    id: "bottle-label",
+    labelPurpose: "shipping",
+    template: "standard",
+    stockPreset: "medium-bottle",
+    expectedKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+    expectedClass: "label-kind-supplemental",
+    expectsQr: false,
+  },
+  {
+    id: "tube-vial",
+    labelPurpose: "quickId",
+    template: "icon",
+    stockPreset: "small-strip",
+    expectedKind: PRINT_OUTPUT_KIND.QUICK_ID,
+    expectedClass: "label-kind-quick-id",
+    expectsQr: false,
+  },
+  {
+    id: "qr-supplement",
+    labelPurpose: "qrSupplement",
+    template: "qrcode",
+    stockPreset: "small-strip",
+    expectedKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
+    expectedClass: "label-kind-qr-supplement",
+    expectsQr: true,
+  },
+];
+
+const nameDisplayMatrix = ["both", "en", "zh"];
+const colorModeMatrix = ["color", "bw"];
+
 describe("print acceptance matrix", () => {
+  it.each(
+    hydrochloricTargetMatrix.flatMap((target) =>
+      nameDisplayMatrix.flatMap((nameDisplay) =>
+        colorModeMatrix.map((colorMode) => ({
+          ...target,
+          nameDisplay,
+          colorMode,
+          caseName: `${target.id} / ${nameDisplay} / ${colorMode}`,
+        })),
+      ),
+    ),
+  )(
+    "keeps hydrochloric acid printable across the production target matrix: $caseName",
+    ({
+      labelPurpose,
+      template,
+      stockPreset,
+      expectedKind,
+      expectedClass,
+      expectsQr,
+      nameDisplay,
+      colorMode,
+    }) => {
+      const labelConfig = {
+        labelPurpose,
+        template,
+        stockPreset,
+        nameDisplay,
+        colorMode,
+      };
+      const layout = resolvePrintLayoutConfig(labelConfig);
+      const profile =
+        expectedKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY
+          ? completeProfile
+          : {};
+      const plan = buildPrintOutputPlan({
+        selectedForLabel: [hydrochloricAcid],
+        layout,
+        resolvedLabProfile: profile,
+        locale: nameDisplay === "en" ? "en-US" : "zh-TW",
+      });
+      const preview = previewLabel(hydrochloricAcid, labelConfig, profile);
+
+      expect(plan.canPrint).toBe(true);
+      expect(plan.outputKind).toBe(expectedKind);
+      expect(preview.fragmentHtml).toContain(expectedClass);
+      expect(preview.html).toContain(
+        colorMode === "bw" ? "print-bw" : "print-color",
+      );
+      expect(preview.fragmentHtml).not.toContain("more-pics");
+      expectEveryPictogram(preview.fragmentHtml, hydrochloricPictogramCodes);
+
+      if (expectsQr) {
+        expect(preview.fragmentHtml).toContain("qrcode-img");
+        expect(preview.fragmentHtml).toContain("data:image/gif;base64");
+        expect(preview.fragmentHtml).toContain(
+          "data-qr-target=\"https://pubchem.ncbi.nlm.nih.gov/compound/313#section=Safety-and-Hazards\"",
+        );
+      } else {
+        expect(preview.fragmentHtml).not.toContain("qrcode-img");
+      }
+    },
+  );
+
   it("renders complete A4 primary labels without QR or H/P summaries", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "shipping",

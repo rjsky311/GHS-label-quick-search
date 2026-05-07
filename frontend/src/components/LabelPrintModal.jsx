@@ -219,7 +219,14 @@ const getPreviewFrameHeight = (metrics, fallbackHeight) => {
     return fallbackHeight;
   }
 
-  return `${Math.ceil(Math.max(220, numericHeight))}px`;
+  const maxHeight = metrics?.previewZoom === "inspect" ? 560 : 420;
+  return `${Math.ceil(Math.min(maxHeight, Math.max(220, numericHeight)))}px`;
+};
+
+const formatMmValue = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "0";
+  return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1);
 };
 
 const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
@@ -670,6 +677,7 @@ export default function LabelPrintModal({
   const userSelectedStockRef = useRef(false);
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [previewZoomMode, setPreviewZoomMode] = useState("fit");
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
@@ -1222,7 +1230,7 @@ export default function LabelPrintModal({
       customLabelFields,
       { [previewChem.cas_number]: 1 },
       labProfile,
-      { mode: "label" },
+      { mode: "label", previewZoom: previewZoomMode },
     );
   }, [
     previewChem,
@@ -1230,6 +1238,7 @@ export default function LabelPrintModal({
     customGHSSettings,
     customLabelFields,
     labProfile,
+    previewZoomMode,
   ]);
 
   useEffect(() => {
@@ -1534,6 +1543,27 @@ export default function LabelPrintModal({
     sheetPreviewBundle?.previewMetrics,
     layoutProfile.orientation === "landscape" ? "18rem" : "20rem",
   );
+  const previewScalePercent = labelPreviewBundle?.previewMetrics
+    ?.labelPreviewScale
+    ? Math.round(labelPreviewBundle.previewMetrics.labelPreviewScale * 100)
+    : null;
+  const previewScaleLabel = previewScalePercent
+    ? tx("label.previewScaleValue", "{{scale}}% scale", {
+        scale: previewScalePercent,
+      })
+    : tx("label.previewScalePending", "Scale pending");
+  const previewFitLabel =
+    previewZoomMode === "inspect"
+      ? tx("label.previewInspectMode", "Detail inspect mode")
+      : tx("label.previewFitMode", "Whole label visible");
+  const previewPhysicalSizeLabel = `${formatMmValue(
+    layoutProfile.widthMm,
+  )} x ${formatMmValue(layoutProfile.heightMm)} mm`;
+  const previewPageLabel = `${layoutProfile.page?.size || "A4"} · ${currentStockOrientation} · ${tx(
+    "label.previewPerPageValue",
+    "{{count}}/page",
+    { count: layoutProfile.perPage },
+  )}`;
 
   const renderSavedPrintControls = () => (
     <details
@@ -2159,13 +2189,47 @@ export default function LabelPrintModal({
       className="rounded-lg border border-slate-200 bg-white p-3"
       data-testid="primary-label-preview-section"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-sm font-medium text-slate-800">
-          {tx("label.previewLabelTitle", "Label preview")}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-sm font-medium text-slate-800">
+            {tx("label.previewLabelTitle", "Label preview")}
+          </div>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {tx(
+              "label.previewInspectionHint",
+              "Fit shows the whole label first; inspect mode enlarges details for checking before printing.",
+            )}
+          </p>
         </div>
-        <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-          {densityLabel}
-        </span>
+        <div
+          className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1"
+          data-testid="preview-zoom-controls"
+        >
+          {[
+            {
+              value: "fit",
+              label: tx("label.previewZoomFit", "Fit"),
+            },
+            {
+              value: "inspect",
+              label: tx("label.previewZoomInspect", "Inspect"),
+            },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={previewZoomMode === option.value}
+              onClick={() => setPreviewZoomMode(option.value)}
+              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                previewZoomMode === option.value
+                  ? "bg-white text-blue-700 shadow-sm ring-1 ring-blue-200"
+                  : "text-slate-600 hover:bg-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="sr-only">
@@ -2175,12 +2239,49 @@ export default function LabelPrintModal({
         )}
       </div>
 
+      <div
+        className="mt-3 grid gap-2 text-xs sm:grid-cols-2"
+        data-testid="preview-inspection-strip"
+      >
+        {[
+          {
+            label: tx("label.previewFitStatus", "View"),
+            value: previewFitLabel,
+          },
+          {
+            label: tx("label.previewPhysicalSize", "Label size"),
+            value: previewPhysicalSizeLabel,
+          },
+          {
+            label: tx("label.previewScale", "Preview scale"),
+            value: previewScaleLabel,
+          },
+          {
+            label: tx("label.previewPaper", "Sheet"),
+            value: previewPageLabel,
+          },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
+          >
+            <div className="font-semibold uppercase text-slate-500">
+              {item.label}
+            </div>
+            <div className="mt-0.5 font-medium text-slate-800">
+              {item.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
         {labelPreviewBundle ? (
           <iframe
             title={tx("label.previewLabelTitle", "Label preview")}
             srcDoc={labelPreviewBundle.html}
             data-testid="label-fragment-preview"
+            data-preview-mode={previewZoomMode}
             className="w-full bg-white"
             style={{ height: labelFragmentPreviewHeight }}
           />

@@ -1033,6 +1033,47 @@ describe("LabelPrintModal", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a fit-first inspection strip and can switch to detail preview", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "letter-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    const strip = screen.getByTestId("preview-inspection-strip");
+    const preview = screen.getByTestId("label-fragment-preview");
+
+    expect(strip).toHaveTextContent("Whole label visible");
+    expect(strip).toHaveTextContent("186 x 236 mm");
+    expect(strip).toHaveTextContent("scale");
+    expect(strip).toHaveTextContent("Letter");
+    expect(preview).toHaveAttribute("data-preview-mode", "fit");
+    expect(preview.getAttribute("srcdoc")).toContain("preview-zoom-fit");
+
+    fireEvent.click(screen.getByText("Inspect"));
+
+    const inspectPreview = screen.getByTestId("label-fragment-preview");
+    expect(screen.getByTestId("preview-inspection-strip")).toHaveTextContent(
+      "Detail inspect mode",
+    );
+    expect(inspectPreview).toHaveAttribute("data-preview-mode", "inspect");
+    expect(inspectPreview.getAttribute("srcdoc")).toContain(
+      "preview-zoom-inspect",
+    );
+    expect(
+      Number.parseInt(inspectPreview.style.height, 10),
+    ).toBeGreaterThanOrEqual(Number.parseInt(preview.style.height, 10));
+  });
+
   it("renders the sheet preview as a scaled page with orientation-aware source", () => {
     renderModal({
       selectedForLabel: [makeChem()],

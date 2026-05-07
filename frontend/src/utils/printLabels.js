@@ -2036,7 +2036,7 @@ export function buildPrintDocument(
   };
 }
 
-function buildPreviewStyles(mode, model) {
+function buildPreviewStyles(mode, model, options = {}) {
   const isLandscape = model.layout.orientation === "landscape";
   const pageWidthMm = model.layout.page.widthMm || (isLandscape ? 297 : 210);
   const pageHeightMm = model.layout.page.heightMm || (isLandscape ? 210 : 297);
@@ -2046,8 +2046,11 @@ function buildPreviewStyles(mode, model) {
   const rawLabelHeightPx = model.layout.heightMm * mmToPx;
   const isFullPageLabelPreview =
     mode === "label" && isFullPagePrimaryLayout(model.layout);
-  const maxLabelPreviewWidthPx = isFullPageLabelPreview ? 400 : 420;
-  const maxLabelPreviewHeightPx = isFullPageLabelPreview ? 320 : 340;
+  const previewZoom = options.previewZoom === "inspect" ? "inspect" : "fit";
+  const maxLabelPreviewWidthPx =
+    previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 400 : 420;
+  const maxLabelPreviewHeightPx =
+    previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 320 : 340;
   const labelPreviewScale =
     mode === "label"
       ? Math.min(
@@ -2082,7 +2085,7 @@ function buildPreviewStyles(mode, model) {
       padding: 8px;
     }
     body.preview-body-label {
-      overflow: hidden;
+      overflow: ${previewZoom === "inspect" ? "auto" : "hidden"};
     }
     body.preview-body-sheet {
       overflow: auto;
@@ -2171,6 +2174,7 @@ function buildPreviewStyles(mode, model) {
     css,
     metrics: {
       mode,
+      previewZoom,
       cardWidthPx,
       cardHeightPx,
       frameWidthPx,
@@ -2210,7 +2214,7 @@ export function buildPrintPreviewDocument(
 
   const renderer =
     TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
-  const previewStyles = buildPreviewStyles(mode, model);
+  const previewStyles = buildPreviewStyles(mode, model, options);
   const sharedStyles = buildStyles(model);
 
   let fragmentHtml = "";
@@ -2258,6 +2262,7 @@ export function buildPrintPreviewDocument(
   const bodyClass = [
     "preview-body",
     `preview-body-${mode}`,
+    `preview-zoom-${previewStyles.metrics.previewZoom}`,
     `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
     `print-purpose-${model.layout.labelPurpose}`,
   ].join(" ");
