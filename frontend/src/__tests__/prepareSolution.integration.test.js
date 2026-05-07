@@ -161,6 +161,21 @@ async function submitPreparedForm({ concentration, solvent }) {
   );
 }
 
+async function closeLabelModalWithFocusedEscape() {
+  const dialog = screen.getByRole("dialog", { name: /label\.title/i });
+  const focusTarget =
+    dialog.querySelector("button:not([disabled])") ||
+    dialog.querySelector("input:not([disabled])") ||
+    dialog;
+
+  focusTarget.focus();
+  expect(dialog.contains(document.activeElement)).toBe(true);
+
+  await act(async () =>
+    fireEvent.keyDown(document.activeElement, { key: "Escape" })
+  );
+}
+
 describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () => {
   it("submit opens LabelPrintModal with exactly one prepared item", async () => {
     render(<App />);
@@ -220,11 +235,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     }
     // Close the label modal (no cancel cleanup triggers because
     // selection is non-prepared).
-    const closeBtn = screen.getAllByRole("button").find((b) =>
-      b.querySelector('svg[class*="lucide-x"]')
-    );
-    // Simpler: press Escape to close.
-    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await closeLabelModalWithFocusedEscape();
     await waitFor(() =>
       expect(screen.queryAllByText("label.title").length).toBe(0)
     );
@@ -256,7 +267,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     // Close via Escape (equivalent to cancel / backdrop close in our lifecycle).
-    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await closeLabelModalWithFocusedEscape();
     await waitFor(() =>
       expect(screen.queryAllByText("label.title").length).toBe(0)
     );
@@ -298,7 +309,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
     // Close via Escape.
-    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await closeLabelModalWithFocusedEscape();
     await waitFor(() =>
       expect(screen.queryAllByText("label.title").length).toBe(0)
     );
@@ -411,7 +422,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
 
     // Selection is now empty BUT the prepared-flow session is still
     // active. Close the modal via Escape.
-    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await closeLabelModalWithFocusedEscape();
     await waitFor(() =>
       expect(screen.queryAllByText("label.title").length).toBe(0)
     );
@@ -555,7 +566,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     await waitFor(() =>
       expect(screen.getAllByText("label.title").length).toBeGreaterThan(0)
     );
-    await act(async () => fireEvent.keyDown(window, { key: "Escape" }));
+    await closeLabelModalWithFocusedEscape();
     await waitFor(() =>
       expect(screen.queryAllByText("label.title").length).toBe(0)
     );

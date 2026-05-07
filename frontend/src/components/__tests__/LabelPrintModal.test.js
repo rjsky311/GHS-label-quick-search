@@ -168,7 +168,7 @@ describe("LabelPrintModal", () => {
     ).toHaveClass(
       "overflow-y-auto",
       "lg:overflow-hidden",
-      "lg:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)]",
+      "lg:grid-cols-[minmax(0,1fr)_minmax(27rem,34rem)]",
     );
     expect(screen.getByTestId("label-settings-column")).toHaveClass(
       "lg:overflow-y-auto",
@@ -250,8 +250,28 @@ describe("LabelPrintModal", () => {
   it("Escape closes the modal", () => {
     const { props } = renderModal();
 
-    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.keyDown(document, { key: "Escape" });
     expect(props.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("traps Tab focus inside the modal panel", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    const panel = screen.getByRole("dialog").firstElementChild;
+    const focusables = panel.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    expect(document.activeElement).toBe(first);
+
+    last.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
   });
 
   it("disables printing with no selection and enables it when chemicals exist", () => {
@@ -458,7 +478,8 @@ describe("LabelPrintModal", () => {
     const previewHeight = screen.getByTestId("label-fragment-preview").style
       .height;
     expect(previewHeight).toMatch(/px$/);
-    expect(Number.parseInt(previewHeight, 10)).toBeGreaterThan(340);
+    expect(Number.parseInt(previewHeight, 10)).toBeGreaterThan(220);
+    expect(Number.parseInt(previewHeight, 10)).toBeLessThanOrEqual(400);
   });
 
   it("shows supplemental physical stock choices for QR supplement output", () => {
@@ -796,6 +817,81 @@ describe("LabelPrintModal", () => {
         rows: 4,
         perPage: 16,
       }),
+    );
+  });
+
+  it("keeps an explicit QR target selected instead of auto-upgrading back to a full-page primary", () => {
+    const denseChem = makeChem({
+      ghs_pictograms: [
+        { code: "GHS04" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS07" },
+      ],
+      hazard_statements: Array.from({ length: 6 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Hazard ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 22 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Precaution ${index}`,
+      })),
+    });
+
+    function StatefulModal() {
+      const [config, setConfig] = React.useState({
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "letter-primary",
+        labelWidthMm: 186,
+        labelHeightMm: 236,
+        pageSize: "Letter",
+        perPage: 1,
+      });
+
+      return (
+        <LabelPrintModal
+          selectedForLabel={[denseChem]}
+          labelConfig={config}
+          customGHSSettings={{}}
+          onLabelConfigChange={setConfig}
+          customLabelFields={baseFields}
+          onCustomLabelFieldsChange={jest.fn()}
+          labProfile={{
+            organization: "Lab A",
+            phone: "02-1234",
+            address: "Taipei",
+          }}
+          onLabProfileChange={jest.fn()}
+          onClearLabProfile={jest.fn()}
+          labelQuantities={{}}
+          onLabelQuantitiesChange={jest.fn()}
+          onPrintLabels={jest.fn()}
+          onToggleSelectForLabel={jest.fn()}
+          printTemplates={[]}
+          onSaveTemplate={jest.fn()}
+          onLoadTemplate={jest.fn()}
+          onDeleteTemplate={jest.fn()}
+          recentPrints={[]}
+          onLoadRecentPrint={jest.fn()}
+          onClearRecentPrints={jest.fn()}
+          onClose={jest.fn()}
+        />
+      );
+    }
+
+    render(<StatefulModal />);
+    fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
+
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "QR supplement is printable",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print QR supplement (1)",
+    );
+    expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
+      "Vial Strip",
     );
   });
 

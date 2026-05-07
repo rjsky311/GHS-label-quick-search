@@ -352,12 +352,12 @@ describe("print layout model", () => {
       template: "full",
     });
 
-    expect(small.typography.fontSize).toBe("8px");
+    expect(small.typography.fontSize).toBe("6.8px");
     expect(medium.typography.fontSize).toBe("9px");
     expect(large.typography.fontSize).toBe("14px");
     expect(small.typography.qrBox).toBe("15.8mm");
     expect(small.typography.standardPictogramSize).toBe("9.1mm");
-    expect(small.typography.qrPictogramSize).toBe("7.7mm");
+    expect(small.typography.qrPictogramSize).toBe("8.6mm");
     expect(medium.typography.standardPictogramSize).toBe("15mm");
     expect(large.typography.standardPictogramSize).toBe("23.8mm");
     expect(small.typography.compliancePictogramSize).toBe("10mm");
@@ -580,7 +580,7 @@ describe("printLabels", () => {
     expect(html).toContain("Ethanol");
     expect(html).toContain("64-17-5");
     expect(html).toContain("meta-ribbon");
-    expect(html).toContain("乙醇");
+    expect(html).not.toContain("乙醇");
   });
 
   it("writes the same shared document HTML returned by buildPrintDocument", () => {
@@ -651,7 +651,7 @@ describe("printLabels", () => {
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
-  it("does not block printable supplemental labels on generic layout overflow", () => {
+  it("blocks supplemental labels when the rendered layout clips", () => {
     const overflowLabel = {
       clientHeight: 20,
       scrollHeight: 34,
@@ -675,12 +675,16 @@ describe("printLabels", () => {
       {},
     );
 
-    expect(alertSpy).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlocked");
     jest.advanceTimersByTime(300);
-    expect(mockIframeWindow.print).toHaveBeenCalled();
-    expect(recordObservabilityEvent).not.toHaveBeenCalledWith(
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
       "print_blocked",
-      expect.anything(),
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          issueTypes: ["label-overflow"],
+        }),
+      }),
     );
   });
 
@@ -762,6 +766,111 @@ describe("printLabels", () => {
     img2.onload();
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).toHaveBeenCalled();
+  });
+
+  it("blocks printing when a required GHS pictogram fails to load", () => {
+    const brokenPictogram = {
+      complete: false,
+      onload: null,
+      onerror: null,
+      getAttribute: jest.fn((name) => {
+        if (name === "data-required-print-image") return "ghs-pictogram";
+        if (name === "alt") return "GHS02";
+        if (name === "src") return "https://example.com/GHS02.svg";
+        return "";
+      }),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [brokenPictogram];
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
+
+    brokenPictogram.onerror();
+
+    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_blocked",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          issueTypes: ["required-image-failed"],
+        }),
+      }),
+    );
+  });
+
+  it("blocks printing when a required image never resolves before timeout", () => {
+    const stalledPictogram = {
+      complete: false,
+      onload: null,
+      onerror: null,
+      getAttribute: jest.fn((name) => {
+        if (name === "data-required-print-image") return "ghs-pictogram";
+        if (name === "alt") return "GHS05";
+        if (name === "src") return "https://example.com/GHS05.svg";
+        return "";
+      }),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [stalledPictogram];
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+    );
+
+    jest.advanceTimersByTime(9999);
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(1);
+
+    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(mockIframe.remove).toHaveBeenCalled();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_blocked",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          issueTypes: ["required-image-failed"],
+        }),
+      }),
+    );
+  });
+
+  it("blocks printing when a completed required image has no rendered pixels", () => {
+    const brokenQr = {
+      complete: true,
+      naturalWidth: 0,
+      getAttribute: jest.fn((name) => {
+        if (name === "data-required-print-image") return "qr-code";
+        if (name === "alt") return "QR";
+        if (name === "src") return "https://example.com/qr.png";
+        return "";
+      }),
+    };
+    mockIframeDoc.querySelectorAll.mockReturnValue([brokenQr]);
+
+    printLabels(
+      [mockChemical],
+      { size: "medium", template: "qrcode", orientation: "portrait" },
+      {},
+    );
+
+    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    jest.advanceTimersByTime(300);
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
   });
 
   it("handles images that are already complete", () => {
@@ -864,6 +973,7 @@ describe("printLabels", () => {
       if (selector === "img") return mockImages;
       return [];
     });
+    const onPrintHandoff = jest.fn();
 
     printLabels(
       [mockChemical],
@@ -873,6 +983,10 @@ describe("printLabels", () => {
         stockPreset: "small-strip",
       },
       {},
+      {},
+      {},
+      {},
+      { onPrintHandoff },
     );
     jest.advanceTimersByTime(300);
 
@@ -915,6 +1029,13 @@ describe("printLabels", () => {
           pictogramCodes: ["GHS02", "GHS07"],
           hasQr: true,
         }),
+      }),
+    );
+    expect(onPrintHandoff).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        totalLabels: 1,
       }),
     );
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -1067,7 +1188,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-form-strip");
       expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
       expect(preview.html).toContain("width: 15.8mm");
-      expect(preview.html).toContain("width: 7.7mm");
+      expect(preview.html).toContain("width: 8.6mm");
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(preview.fragmentHtml).not.toContain("more-pics");
@@ -1729,12 +1850,14 @@ describe("printLabels", () => {
   });
 
   describe("name display modes", () => {
-    it('shows both names by default (nameDisplay: "both")', () => {
+    it('shows both names on roomy complete labels when nameDisplay is "both"', () => {
       printLabels(
         [mockChemical],
         {
-          size: "medium",
-          template: "standard",
+          labelPurpose: "shipping",
+          stockPreset: "large-primary",
+          size: "large",
+          template: "full",
           orientation: "portrait",
           nameDisplay: "both",
         },
@@ -1759,6 +1882,22 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("Ethanol");
       expect(html).not.toContain("乙醇");
+    });
+
+    it('auto-fits compact nameDisplay "both" to the current UI language', () => {
+      printLabels(
+        [mockChemical],
+        {
+          size: "medium",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "both",
+        },
+        {},
+      );
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("Ethanol");
+      expect(html).not.toContain(mockChemical.name_zh);
     });
 
     it('shows only Chinese name when nameDisplay is "zh"', () => {
@@ -1816,8 +1955,8 @@ describe("printLabels", () => {
         expect(html).not.toContain("乙醇");
       });
     });
-    it('keeps both names across all 4 templates when nameDisplay is "both"', () => {
-      ["icon", "standard", "full", "qrcode"].forEach((template) => {
+    it('auto-fits compact templates when nameDisplay is "both"', () => {
+      ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
           tag === "iframe" ? mocks.mockIframe : {},
@@ -1836,7 +1975,7 @@ describe("printLabels", () => {
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).toContain("Ethanol");
-        expect(html).toContain(mockChemical.name_zh);
+        expect(html).not.toContain(mockChemical.name_zh);
       });
     });
 
@@ -1942,7 +2081,12 @@ describe("printLabels", () => {
       // mockChemical has 2 hazards → tier 1
       printLabels(
         [mockChemical],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "en",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -1959,7 +2103,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [manyHazards],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -1976,7 +2125,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [manyHazards],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2088,7 +2242,12 @@ describe("printLabels", () => {
     it("full template renders P-codes with localized text", () => {
       printLabels(
         [chemWithP],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2156,7 +2315,12 @@ describe("printLabels", () => {
     it('full template renders "no precautionary" state without crashing when P-codes empty', () => {
       printLabels(
         [mockChemical],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2168,7 +2332,12 @@ describe("printLabels", () => {
     it("icon and qrcode templates do not render full P-code content (compact by design)", () => {
       printLabels(
         [chemWithP],
-        { size: "medium", template: "icon", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "icon",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const iconHtml = mockIframeDoc.write.mock.calls[0][0];
@@ -2213,7 +2382,12 @@ describe("printLabels", () => {
       const customSettings = { "64-17-5": { selectedIndex: 1, note: "alt" } };
       printLabels(
         [chemWithAlt],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         customSettings,
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2237,7 +2411,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [chemHostile],
-        { size: "medium", template: "full", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2280,7 +2459,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [malicious],
-        { size: "medium", template: "icon", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "icon",
+          orientation: "portrait",
+          nameDisplay: "en",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
@@ -2330,7 +2514,12 @@ describe("printLabels", () => {
       };
       printLabels(
         [chem],
-        { size: "medium", template: "icon", orientation: "portrait" },
+        {
+          size: "medium",
+          template: "icon",
+          orientation: "portrait",
+          nameDisplay: "zh",
+        },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];

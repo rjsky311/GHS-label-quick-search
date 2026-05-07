@@ -537,21 +537,24 @@ function App() {
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
     );
 
-    addRecentPrint({
-      items: printableSelection,
-      labelConfig,
-      customLabelFields,
-      labelQuantities,
-      labProfile,
-    });
-
     printLabels(
       printableSelection,
       labelConfig,
       {},
       customLabelFields,
       labelQuantities,
-      labProfile
+      labProfile,
+      {
+        onPrintHandoff: () => {
+          addRecentPrint({
+            items: printableSelection,
+            labelConfig,
+            customLabelFields,
+            labelQuantities,
+            labProfile,
+          });
+        },
+      }
     );
   }, [
     selectedForLabel,

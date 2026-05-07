@@ -22,6 +22,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import axios from 'axios';
 import App from '@/App';
+import { printLabels } from '@/utils/printLabels';
 
 jest.mock('axios');
 
@@ -213,6 +214,65 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     );
     expect(selectedCasSpans).toHaveLength(1);
     expect(selectedCasSpans[0].textContent).toBe('64-17-5');
+  });
+
+  it('records recent print jobs only after print preflight handoff', async () => {
+    const foundWithGhs = {
+      cas_number: '64-17-5',
+      cid: 702,
+      name_en: 'Ethanol',
+      name_zh: '銋?',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02', name_zh: '??' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      signal_word_zh: null,
+      other_classifications: [],
+    };
+
+    render(<App />);
+
+    await runBatchSearch({
+      casInputs: ['64-17-5'],
+      mockResponses: [foundWithGhs],
+    });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByTestId('print-all-with-ghs-btn'));
+    });
+    await waitFor(() =>
+      expect(screen.getAllByText('label.title').length).toBeGreaterThan(0)
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('label-purpose-qrSupplement'));
+    });
+
+    const printButton = screen.getByTestId('print-label-action');
+    expect(printButton).not.toBeDisabled();
+
+    await act(async () => {
+      fireEvent.click(printButton);
+    });
+
+    expect(printLabels).toHaveBeenCalled();
+    expect(localStorage.getItem('ghs_recent_print_jobs')).toBeNull();
+
+    const lifecycleCallbacks = printLabels.mock.calls.at(-1)[6];
+    expect(lifecycleCallbacks).toEqual(
+      expect.objectContaining({
+        onPrintHandoff: expect.any(Function),
+      })
+    );
+
+    await act(async () => {
+      lifecycleCallbacks.onPrintHandoff({});
+    });
+
+    const recentJobs = JSON.parse(localStorage.getItem('ghs_recent_print_jobs'));
+    expect(recentJobs).toHaveLength(1);
+    expect(recentJobs[0].items[0].cas_number).toBe('64-17-5');
   });
 
   it('regression guard: the found-but-no-GHS row is NOT in the modal selection even though handleOpenLabelModal would have included it', async () => {

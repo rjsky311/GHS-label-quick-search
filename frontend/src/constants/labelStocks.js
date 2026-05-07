@@ -466,10 +466,26 @@ function resolveTypographyMetrics(normalized) {
     };
   }
 
-  const fontPx = clamp(roundTo(9.4 * areaScale, 0), 8, 14);
-  const titlePx = clamp(roundTo(fontPx + 2.5, 0), 10, 18);
-  const signalPx = clamp(roundTo(fontPx + 1, 0), 9, 16);
-  const hazardPx = clamp(roundTo(fontPx - 2.2, 0), 6, 11);
+  const fontPx = clamp(
+    roundTo(9.4 * areaScale, 0),
+    isCompactStrip ? 6.8 : 7.5,
+    14,
+  );
+  const titlePx = clamp(
+    roundTo(fontPx + 2.5, 0),
+    isCompactStrip ? 8.8 : 10,
+    18,
+  );
+  const signalPx = clamp(
+    roundTo(fontPx + 1, 0),
+    isCompactStrip ? 7.8 : 9,
+    16,
+  );
+  const hazardPx = clamp(
+    roundTo(fontPx - 2.2, 0),
+    isCompactStrip ? 5.2 : 6,
+    11,
+  );
   const pictogramPx = clamp(roundTo(shortSide * 1.05, 0), 24, 44);
   const compliancePictogramMm = clamp(roundTo(shortSide * 0.28, 1), 10, 28);
   const complianceStatementPx = clamp(roundTo(fontPx - 2.5, 1), 5.5, 10);
@@ -501,9 +517,9 @@ function resolveTypographyMetrics(normalized) {
     Math.min(roundTo(normalized.labelWidthMm * 0.42, 1), 56),
   );
   const qrPictogramMm = clamp(
-    roundTo(shortSide * (isCompactStrip ? 0.32 : 0.23), 1),
-    7.5,
-    normalized.size === "large" ? 13 : 10.5,
+    roundTo(shortSide * (isCompactStrip ? 0.36 : 0.26), 1),
+    8.5,
+    normalized.size === "large" ? 15 : 12.5,
   );
 
   return {

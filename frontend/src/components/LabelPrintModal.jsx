@@ -41,11 +41,13 @@ import {
 } from "@/utils/printOutputPlanner";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   getLocalizedNames,
   getLocalizedSignalWord,
   getLocalizedStatementText,
-  resolveLabelContentLocale,
+  resolveEffectiveLabelContentLocale,
+  resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
 
 const TEMPLATE_OPTIONS = [
@@ -553,7 +555,7 @@ function buildPreviewRisks({
     risks.push(
       tx(
         "label.previewRiskCompactNames",
-        "Compact labels keep bilingual names to one line each, so long names may still feel tight.",
+        "Compact labels automatically use the current UI language first so hazard icons and identity stay readable.",
       ),
     );
   }
@@ -663,7 +665,7 @@ export default function LabelPrintModal({
   onClose,
 }) {
   const { t, i18n } = useTranslation();
-  const dialogRef = useRef(null);
+  const dialogRef = useFocusTrap(onClose);
   const autoAppliedOutputRef = useRef("");
   const userSelectedStockRef = useRef(false);
   const [showSaveInput, setShowSaveInput] = useState(false);
@@ -673,17 +675,6 @@ export default function LabelPrintModal({
     const translated = t(key, { ...options, defaultValue: fallback });
     return interpolateText(translated === key ? fallback : translated, options);
   };
-
-  useEffect(() => {
-    dialogRef.current?.focus();
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   const layoutProfile = resolveLayoutProfile(labelConfig);
   const labelPurpose = getLabelPurposeForConfig(labelConfig);
@@ -699,7 +690,14 @@ export default function LabelPrintModal({
     : tx("label.targetMainContainer", "Main container");
   const previewChem = selectedForLabel[0] ?? null;
   const currentLocale = i18n.language;
-  const contentLocale = resolveLabelContentLocale(labelConfig.nameDisplay);
+  const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
+    layoutProfile,
+    currentLocale,
+  );
+  const contentLocale = resolveEffectiveLabelContentLocale(
+    layoutProfile,
+    currentLocale,
+  );
   const totalLabels = selectedForLabel.reduce(
     (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1),
     0,
@@ -708,7 +706,7 @@ export default function LabelPrintModal({
     totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
   const displayNames = buildDisplayNames(
     previewChem,
-    labelConfig.nameDisplay,
+    effectiveNameDisplay,
     currentLocale,
   );
   const resolvedResponsibleProfile = resolveResponsibleProfile(
@@ -785,6 +783,29 @@ export default function LabelPrintModal({
     ORIENTATION_OPTIONS.find((item) => item.value === layoutProfile.orientation)
       ?.labelKey || "label.portrait",
   );
+  const configuredNameDisplayLabel = getOptionLabel(
+    NAME_DISPLAY_OPTIONS,
+    labelConfig.nameDisplay,
+    t,
+    "Names",
+  );
+  const effectiveNameDisplayLabel = getOptionLabel(
+    NAME_DISPLAY_OPTIONS,
+    effectiveNameDisplay,
+    t,
+    configuredNameDisplayLabel,
+  );
+  const previewNameDisplayLabel =
+    labelConfig.nameDisplay === "both" && effectiveNameDisplay !== "both"
+      ? tx(
+          "label.autoNameDisplayChip",
+          "{{configured}} -> {{effective}} auto fit",
+          {
+            configured: configuredNameDisplayLabel,
+            effective: effectiveNameDisplayLabel,
+          },
+        )
+      : configuredNameDisplayLabel;
   const selectableStockCount =
     primaryStockChoices.length + secondaryStockChoices.length;
   const plannerPreviewRisk =
@@ -1314,7 +1335,7 @@ export default function LabelPrintModal({
   };
 
   const applyPrintTarget = (targetValue) => {
-    userSelectedStockRef.current = false;
+    userSelectedStockRef.current = true;
     const option = PRINT_TARGET_OPTIONS.find((item) => item.value === targetValue);
     const preset = ALL_STOCK_PRESETS.find((item) => item.id === option?.presetId);
 
@@ -2154,7 +2175,7 @@ export default function LabelPrintModal({
         )}
       </div>
 
-      <div className="mt-3 overflow-auto rounded-lg border border-slate-200 bg-white shadow-inner">
+      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
         {labelPreviewBundle ? (
           <iframe
             title={tx("label.previewLabelTitle", "Label preview")}
@@ -2186,7 +2207,7 @@ export default function LabelPrintModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl outline-none"
+        className="flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
@@ -2214,7 +2235,7 @@ export default function LabelPrintModal({
         </div>
 
         <div
-          className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(24rem,30rem)] lg:overflow-hidden"
+          className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(27rem,34rem)] lg:overflow-hidden"
           data-testid="label-modal-scroll-body"
         >
             <div
@@ -2450,6 +2471,19 @@ export default function LabelPrintModal({
                       (nameDisplay) => updateVisualConfig({ nameDisplay }),
                       "border-emerald-500 bg-emerald-50 text-emerald-800",
                     )}
+                    {labelConfig.nameDisplay === "both" &&
+                      effectiveNameDisplay !== "both" && (
+                        <p
+                          className="rounded-md bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800"
+                          data-testid="effective-name-display-hint"
+                        >
+                          {tx(
+                            "label.effectiveNameDisplayHint",
+                            "This smaller stock will print in {{effective}} first so the label stays readable. Use A4 or Letter primary labels for full bilingual text.",
+                            { effective: effectiveNameDisplayLabel },
+                          )}
+                        </p>
+                      )}
                   </section>
 
                   <section className="space-y-3">
@@ -2847,12 +2881,7 @@ export default function LabelPrintModal({
                         t,
                         "Orientation",
                       ),
-                      getOptionLabel(
-                        NAME_DISPLAY_OPTIONS,
-                        labelConfig.nameDisplay,
-                        t,
-                        "Names",
-                      ),
+                      previewNameDisplayLabel,
                       getOptionLabel(
                         COLOR_OPTIONS,
                         labelConfig.colorMode,

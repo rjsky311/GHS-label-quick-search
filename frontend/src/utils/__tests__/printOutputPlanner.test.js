@@ -45,6 +45,34 @@ const makeChemical = (statementCount = 4) => ({
   signal_word: "Danger",
 });
 
+const makeSimpleSupplementalChemical = () => ({
+  ...makeChemical(2),
+  ghs_pictograms: [{ code: "GHS05" }],
+  hazard_statements: [{ code: "H290", text_en: "May be corrosive to metals." }],
+  precautionary_statements: [],
+});
+
+const makeDenseSupplementalChemical = () => ({
+  ...makeChemical(4),
+  name_en:
+    "Hydrochloric Acid Concentrated Laboratory Reagent Secondary Bottle",
+  name_zh: "濃鹽酸實驗室試藥分裝瓶",
+  hazard_statements: [
+    {
+      code: "H280",
+      text_en:
+        "Contains gas under pressure; may explode if heated during storage or transfer.",
+      text_zh: "內含高壓氣體；遇熱可能爆炸，分裝或儲存時需保持警戒。",
+    },
+    {
+      code: "H314",
+      text_en:
+        "Causes severe skin burns and eye damage under routine handling conditions.",
+      text_zh: "在例行操作條件下可能造成嚴重皮膚灼傷和眼睛損傷。",
+    },
+  ],
+});
+
 describe("printOutputPlanner", () => {
   it("prefers Letter for English/North American contexts and A4 otherwise", () => {
     expect(getPreferredFullPageStockId("en-US")).toBe("letter-primary");
@@ -137,7 +165,7 @@ describe("printOutputPlanner", () => {
 
   it("keeps compact QR output printable but marks it as supplemental", () => {
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [makeChemical(8)],
+      selectedForLabel: [makeSimpleSupplementalChemical()],
       layout: resolvePrintLayoutConfig({
         labelPurpose: "qrSupplement",
         template: "qrcode",
@@ -152,9 +180,28 @@ describe("printOutputPlanner", () => {
     expect(plan.canPrint).toBe(true);
   });
 
+  it("keeps dense compact QR output printable as a supplemental label after text compaction", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeDenseSupplementalChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "small-strip",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: {},
+      locale: "zh-TW",
+    });
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
+    expect(plan.canPrint).toBe(true);
+    expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QR_SUPPLEMENT);
+    expect(plan.issues).toEqual([]);
+  });
+
   it("keeps tube/vial quick-ID output printable but distinct from QR", () => {
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [makeChemical(8)],
+      selectedForLabel: [makeSimpleSupplementalChemical()],
       layout: resolvePrintLayoutConfig({
         labelPurpose: "quickId",
         template: "icon",

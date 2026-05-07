@@ -57,6 +57,27 @@ describe("normalizeReferenceLink", () => {
       priority: 5,
     });
   });
+
+  it("rejects unsafe or non-web URL schemes", () => {
+    expect(
+      normalizeReferenceLink({
+        label: "Unsafe",
+        url: "javascript:alert(1)",
+      })
+    ).toBeNull();
+    expect(
+      normalizeReferenceLink({
+        label: "Data URL",
+        url: "data:text/html,<script>alert(1)</script>",
+      })
+    ).toBeNull();
+    expect(
+      normalizeReferenceLink({
+        label: "Relative",
+        url: "/local/sds",
+      })
+    ).toBeNull();
+  });
 });
 
 describe("getFallbackReferenceLinks", () => {
@@ -98,6 +119,24 @@ describe("getReferenceLinks", () => {
       true
     );
   });
+
+  it("drops unsafe backend-enriched links while keeping fallbacks", () => {
+    const links = getReferenceLinks({
+      cid: 702,
+      cas_number: "64-17-5",
+      reference_links: [
+        {
+          label: "Unsafe SDS",
+          url: "javascript:alert(1)",
+          link_type: "sds",
+          priority: 1,
+        },
+      ],
+    });
+
+    expect(links.some((link) => link.label === "Unsafe SDS")).toBe(false);
+    expect(links[0].label).toBe("PubChem Safety & Hazards");
+  });
 });
 
 describe("getPreferredQrTarget", () => {
@@ -112,6 +151,19 @@ describe("getPreferredQrTarget", () => {
         },
       ])
     ).toBe("https://example.com/manual-sds");
+  });
+
+  it("does not prefer unsafe QR targets", () => {
+    expect(
+      getPreferredQrTarget(702, "64-17-5", [
+        {
+          label: "Unsafe SDS",
+          url: "javascript:alert(1)",
+          link_type: "sds",
+          priority: 1,
+        },
+      ])
+    ).toBe(getPubChemSDSUrl(702));
   });
 
   it("falls back to PubChem SDS when no custom links exist", () => {

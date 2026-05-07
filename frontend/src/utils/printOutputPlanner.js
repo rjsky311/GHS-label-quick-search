@@ -123,6 +123,7 @@ export function buildPrintOutputPlan({
     layout,
     customGHSSettings,
     resolvedLabProfile,
+    locale,
   });
   const outputKind = resolveOutputKind(layout);
   const recommendedFullPageStockId = getPreferredFullPageStockId(
@@ -178,6 +179,7 @@ export function buildPrintOutputPlan({
 
   if (
     readiness.state === PRINT_READINESS_STATE.TOO_DENSE_AUTO_UPGRADE ||
+    readiness.state === PRINT_READINESS_STATE.BLOCKED_INVALID ||
     (outputKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY &&
       isSmallSupplementalStock(layout))
   ) {

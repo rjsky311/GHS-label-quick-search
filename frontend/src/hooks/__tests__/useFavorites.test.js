@@ -106,4 +106,14 @@ describe('useFavorites', () => {
 
     consoleSpy.mockRestore();
   });
+
+  it('resets non-array localStorage payloads', () => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify({ cas_number: '64-17-5' }));
+
+    const { result } = renderHook(() => useFavorites());
+
+    expect(result.current.favorites).toEqual([]);
+    expect(localStorage.getItem(FAVORITES_KEY)).toBeNull();
+    expect(result.current.isFavorited('64-17-5')).toBe(false);
+  });
 });

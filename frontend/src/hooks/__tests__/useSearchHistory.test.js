@@ -98,4 +98,13 @@ describe('useSearchHistory', () => {
 
     consoleSpy.mockRestore();
   });
+
+  it('resets non-array localStorage payloads', () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify({ cas_number: '64-17-5' }));
+
+    const { result } = renderHook(() => useSearchHistory());
+
+    expect(result.current.history).toEqual([]);
+    expect(localStorage.getItem(HISTORY_KEY)).toBeNull();
+  });
 });

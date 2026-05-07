@@ -168,6 +168,79 @@ async def test_dictionary_miss_query_capture_is_opt_in(monkeypatch):
     }
 
 
+async def test_dictionary_miss_query_rejects_oversized_payload(monkeypatch):
+    monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", True)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        long_query_response = await ac.post(
+            "/api/dictionary/miss-query",
+            json={
+                "query": "x" * (server.MAX_MISS_QUERY_LENGTH + 1),
+                "query_kind": "name",
+                "endpoint": "frontend",
+            },
+        )
+        large_context_response = await ac.post(
+            "/api/dictionary/miss-query",
+            json={
+                "query": "unknown solvent",
+                "query_kind": "name",
+                "endpoint": "frontend",
+                "context": {"blob": "x" * (server.MAX_MISS_CONTEXT_JSON_CHARS + 1)},
+            },
+        )
+
+    assert long_query_response.status_code == 422
+    assert large_context_response.status_code == 422
+
+
+async def test_reference_link_rejects_non_http_url(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/reference-links",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "cas_number": "64-17-5",
+                "label": "Unsafe SDS",
+                "url": "javascript:alert(1)",
+                "link_type": "sds",
+            },
+        )
+
+    assert response.status_code == 422
+
+
+def test_build_reference_links_skips_unsafe_manual_urls(monkeypatch):
+    def fake_reference_links(_cas_number):
+        return [
+            {
+                "label": "Unsafe SDS",
+                "url": "javascript:alert(1)",
+                "linkType": "sds",
+                "source": "manual",
+                "priority": 1,
+            },
+            {
+                "label": "Tenant SDS",
+                "url": "https://example.com/sds",
+                "linkType": "sds",
+                "source": "manual",
+                "priority": 2,
+            },
+        ]
+
+    monkeypatch.setattr(server.pilot_store, "list_reference_links", fake_reference_links)
+
+    links = server._build_reference_links("64-17-5", None, "Ethanol")
+
+    assert all(link["url"] != "javascript:alert(1)" for link in links)
+    assert any(link["url"] == "https://example.com/sds" for link in links)
+
+
 async def test_search_by_name_chinese():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -1101,6 +1174,31 @@ async def test_cors_preflight_echoes_configured_origin_exactly():
     allowed = response.headers.get("access-control-allow-origin")
     assert allowed == configured
     assert allowed != "*"
+
+
+async def test_cors_preflight_allows_admin_workspace_put_headers():
+    """Workspace/admin browser requests must pass CORS preflight before auth."""
+    configured = _configured_cors_origins[0]
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.options(
+            "/api/workspace/lab_profile",
+            headers={
+                "Origin": configured,
+                "Access-Control-Request-Method": "PUT",
+                "Access-Control-Request-Headers": "x-ghs-admin-key,content-type",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == configured
+    assert "PUT" in response.headers.get("access-control-allow-methods", "")
+    allowed_headers = response.headers.get(
+        "access-control-allow-headers",
+        "",
+    ).lower()
+    assert "x-ghs-admin-key" in allowed_headers
+    assert "content-type" in allowed_headers
 
 
 async def test_cors_rejects_disallowed_origin():

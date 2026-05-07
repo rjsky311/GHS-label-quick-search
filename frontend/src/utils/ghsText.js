@@ -8,6 +8,74 @@ export function resolveLabelContentLocale(nameDisplay, fallbackLanguage = "zh") 
   return resolveDisplayLocale(fallbackLanguage);
 }
 
+export function resolveEffectiveLabelNameDisplay(
+  layoutOrNameDisplay,
+  fallbackLanguage = "zh",
+) {
+  const layout =
+    layoutOrNameDisplay && typeof layoutOrNameDisplay === "object"
+      ? layoutOrNameDisplay
+      : null;
+  const requested = layout ? layout.nameDisplay : layoutOrNameDisplay;
+
+  if (requested === "en" || requested === "zh") return requested;
+  if (requested !== "both") return resolveDisplayLocale(fallbackLanguage);
+  if (!layout) return "both";
+
+  const widthMm = Number(layout.widthMm || layout.labelWidthMm || 0);
+  const heightMm = Number(layout.heightMm || layout.labelHeightMm || 0);
+  const area = widthMm * heightMm;
+  const isCompletePrimary =
+    layout.labelPurpose === "shipping" && layout.template === "full";
+  const isFullPagePrimary =
+    layout.stockId === "a4-primary" ||
+    layout.stockPreset === "a4-primary" ||
+    layout.stockId === "letter-primary" ||
+    layout.stockPreset === "letter-primary" ||
+    (widthMm >= 170 && heightMm >= 200);
+
+  if (
+    isCompletePrimary &&
+    (isFullPagePrimary || layout.size === "large" || area >= 9000)
+  ) {
+    return "both";
+  }
+
+  const isCompactPhysicalLabel =
+    layout.labelPurpose !== "shipping" ||
+    layout.template === "icon" ||
+    layout.template === "qrcode" ||
+    layout.outputRole === "supplemental" ||
+    layout.formFactor === "strip" ||
+    layout.formFactor === "compact" ||
+    layout.size === "small" ||
+    area < 5200;
+
+  return isCompactPhysicalLabel
+    ? resolveDisplayLocale(fallbackLanguage)
+    : "both";
+}
+
+export function resolveEffectiveLabelContentLocale(
+  layoutOrNameDisplay,
+  fallbackLanguage = "zh",
+) {
+  return resolveLabelContentLocale(
+    resolveEffectiveLabelNameDisplay(layoutOrNameDisplay, fallbackLanguage),
+    fallbackLanguage,
+  );
+}
+
+export function shouldRenderBilingualLabelText(
+  layoutOrNameDisplay,
+  fallbackLanguage = "zh",
+) {
+  return (
+    resolveEffectiveLabelNameDisplay(layoutOrNameDisplay, fallbackLanguage) ===
+    "both"
+  );
+}
+
 export function getLocalizedStatementText(statement, languageLike = "zh") {
   const locale = resolveDisplayLocale(languageLike);
   if (locale === "en") {

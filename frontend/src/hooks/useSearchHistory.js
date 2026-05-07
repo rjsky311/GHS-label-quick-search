@@ -11,7 +11,12 @@ export default function useSearchHistory() {
     const saved = localStorage.getItem(HISTORY_KEY);
     if (saved) {
       try {
-        setHistory(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        } else {
+          localStorage.removeItem(HISTORY_KEY);
+        }
       } catch (e) {
         console.error("Failed to parse history", e);
       }

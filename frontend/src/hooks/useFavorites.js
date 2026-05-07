@@ -10,7 +10,12 @@ export default function useFavorites() {
     const saved = localStorage.getItem(FAVORITES_KEY);
     if (saved) {
       try {
-        setFavorites(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setFavorites(parsed);
+        } else {
+          localStorage.removeItem(FAVORITES_KEY);
+        }
       } catch (e) {
         console.error("Failed to parse favorites", e);
       }

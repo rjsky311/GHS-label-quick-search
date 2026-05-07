@@ -8,13 +8,16 @@ import {
 import { inspectPrintContentFit } from "@/utils/printFitEngine";
 import { getPreferredQrTarget } from "@/utils/sdsLinks";
 import {
+  resolveEffectiveLabelContentLocale,
+  resolveEffectiveLabelNameDisplay,
   getLocalizedSignalWord,
   getLocalizedStatementText,
-  resolveLabelContentLocale,
+  shouldRenderBilingualLabelText,
 } from "@/utils/ghsText";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
 const PRINT_QA_HANDOFF_PARAM = "qaPrintHandoff";
+const REQUIRED_PRINT_IMAGE_TIMEOUT_MS = 10000;
 
 export { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
 export { inspectPrintContentFit } from "@/utils/printFitEngine";
@@ -90,8 +93,11 @@ const chunk = (items, size) => {
 const normalizeTemplate = (template) =>
   ALLOWED_TEMPLATES.has(template) ? template : "standard";
 
+const resolveModelNameDisplay = (model) =>
+  resolveEffectiveLabelNameDisplay(model.layout, i18n.language);
+
 const resolveModelContentLocale = (model) =>
-  resolveLabelContentLocale(model.layout?.nameDisplay, i18n.language);
+  resolveEffectiveLabelContentLocale(model.layout, i18n.language);
 
 const joinLocalizedParts = (...parts) => {
   const uniqueParts = parts
@@ -102,7 +108,7 @@ const joinLocalizedParts = (...parts) => {
 };
 
 const getLocalizedTextForModel = (statement, model) => {
-  if (model.layout?.nameDisplay === "both") {
+  if (shouldRenderBilingualLabelText(model.layout, i18n.language)) {
     return joinLocalizedParts(
       getLocalizedStatementText(statement, "zh"),
       getLocalizedStatementText(statement, "en"),
@@ -112,7 +118,7 @@ const getLocalizedTextForModel = (statement, model) => {
 };
 
 const getSignalWordForModel = (classification, model) => {
-  if (model.layout?.nameDisplay === "both") {
+  if (shouldRenderBilingualLabelText(model.layout, i18n.language)) {
     return joinLocalizedParts(
       getLocalizedSignalWord(classification, "zh"),
       getLocalizedSignalWord(classification, "en"),
@@ -275,6 +281,7 @@ export function buildPrintDocumentModel(
 
   return {
     t,
+    locale: i18n.language,
     layout,
     selectedForLabel,
     customGHSSettings,
@@ -415,7 +422,7 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
     showCasLine = true,
     metaRibbonHtml = "",
   } = options;
-  const nameDisplay = model.layout.nameDisplay || "both";
+  const nameDisplay = resolveModelNameDisplay(model);
   let nameHtml = "";
 
   if (nameDisplay === "en" || nameDisplay === "both") {
@@ -518,11 +525,36 @@ const renderPictograms = (pictograms, className = "") => {
         (pictogram) =>
           `<img src="${escapeHtml(GHS_IMAGES[pictogram.code] || "")}" alt="${escapeHtml(
             pictogram.code,
+          )}" data-required-print-image="ghs-pictogram" data-ghs-code="${escapeHtml(
+            pictogram.code,
           )}" />`,
       )
       .join("")}
   </div>`;
 };
+
+const getRequiredPrintImageKind = (img) => {
+  const requiredKind = img.getAttribute?.("data-required-print-image");
+  if (requiredKind) return requiredKind;
+
+  const alt = img.getAttribute?.("alt") || img.alt || "";
+  if (/^GHS\d{2}$/.test(alt)) return "ghs-pictogram";
+  if (/qr/i.test(alt)) return "qr-code";
+  if (img.classList?.contains?.("qrcode-img")) return "qr-code";
+
+  return "";
+};
+
+const isImageLoadFailure = (img) =>
+  "naturalWidth" in img && img.naturalWidth === 0;
+
+const buildRequiredImageIssue = (img, reason) => ({
+  type: "required-image-failed",
+  imageKind: getRequiredPrintImageKind(img),
+  alt: img.getAttribute?.("alt") || img.alt || "",
+  src: img.getAttribute?.("src") || img.src || "",
+  reason,
+});
 
 const renderSignal = (signalWord, signalClass, className = "") => {
   if (!signalWord) {
@@ -843,6 +875,11 @@ const renderQRCodeTemplate = (chemical, model) => {
             }),
           })}
         </div>
+        ${
+          pictograms.length > 0
+            ? `<div class="qr-support-row qr-support-row-primary">${renderPictograms(pictograms, "qr-pics")}</div>`
+            : ""
+        }
         <div class="qr-priority-block">
           ${signalWord ? renderSignal(signalWord, signalClass, "qr-signal") : ""}
           ${
@@ -868,17 +905,12 @@ const renderQRCodeTemplate = (chemical, model) => {
               : `<div class="no-hazard-text qr-no-hazard">${escapeHtml(
                   model.t("print.noHazardStatement"),
                 )}</div>`
-          }
+            }
         </div>
-        ${
-          pictograms.length > 0
-            ? `<div class="qr-support-row">${renderPictograms(pictograms, "qr-pics")}</div>`
-            : ""
-        }
       </div>
       <div class="qr-right qr-panel">
         <div class="qr-code-shell">
-          <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" />
+          <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" data-required-print-image="qr-code" />
         </div>
         <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
       </div>
@@ -1196,6 +1228,11 @@ const buildStyles = (model) => {
     }
     .name-section {
       text-align: left;
+      min-width: 0;
+    }
+    .name-section-compact {
+      display: grid;
+      gap: 0.25mm;
     }
     .name-section-compact .name-en {
       -webkit-line-clamp: 1;
@@ -1207,9 +1244,9 @@ const buildStyles = (model) => {
       overflow: hidden;
     }
     .name-en {
-      font-weight: bold;
+      font-weight: 800;
       font-size: ${layout.typography.titleSize};
-      line-height: 1.2;
+      line-height: 1.08;
       color: #0f172a;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -1219,7 +1256,7 @@ const buildStyles = (model) => {
       overflow: hidden;
     }
     .label-full-page-primary .name-en {
-      font-size: 24px;
+      font-size: 26px;
       line-height: 1.1;
       -webkit-line-clamp: 1;
     }
@@ -1233,12 +1270,12 @@ const buildStyles = (model) => {
       line-height: 1.15;
     }
     .label-standard .name-en {
-      font-size: calc(${layout.typography.titleSize} - 1px);
+      font-size: max(${layout.typography.titleSize}, calc(${layout.typography.fontSize} + 2px));
       line-height: 1.05;
       -webkit-line-clamp: 1;
     }
     .label-standard .name-zh {
-      font-size: calc(${layout.typography.fontSize} - 1px);
+      font-size: max(6px, calc(${layout.typography.fontSize} - 0.5px));
       line-height: 1.05;
       margin-top: 0.25mm;
       white-space: nowrap;
@@ -1247,9 +1284,9 @@ const buildStyles = (model) => {
     }
     .cas {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
-      font-size: calc(${layout.typography.fontSize} - 1px);
+      font-size: max(6px, calc(${layout.typography.fontSize} - 0.8px));
       color: #475569;
-      margin-top: 0.8mm;
+      margin-top: 0.65mm;
     }
     .label-full-page-primary .cas {
       font-size: 15px;
@@ -1764,6 +1801,16 @@ const buildStyles = (model) => {
       margin: -0.45mm -0.45mm 0.5mm -0.45mm;
       padding: 0.35mm 0.45mm 0.5mm 0.45mm;
     }
+    .label-standard.label-form-strip .name-en {
+      font-size: max(7px, calc(${layout.typography.fontSize} + 0.8px));
+      line-height: 1;
+    }
+    .label-standard.label-form-strip .cas,
+    .label-qr.label-form-strip .cas {
+      font-size: 6px;
+      line-height: 1;
+      margin-top: 0.25mm;
+    }
     .label-standard.label-form-strip .standard-grid {
       display: flex;
       flex-direction: column;
@@ -1968,8 +2015,8 @@ function buildPreviewStyles(mode, model) {
   const rawLabelHeightPx = model.layout.heightMm * mmToPx;
   const isFullPageLabelPreview =
     mode === "label" && isFullPagePrimaryLayout(model.layout);
-  const maxLabelPreviewWidthPx = isFullPageLabelPreview ? 520 : 620;
-  const maxLabelPreviewHeightPx = isFullPageLabelPreview ? 320 : 390;
+  const maxLabelPreviewWidthPx = isFullPageLabelPreview ? 400 : 420;
+  const maxLabelPreviewHeightPx = isFullPageLabelPreview ? 320 : 340;
   const labelPreviewScale =
     mode === "label"
       ? Math.min(
@@ -2001,7 +2048,12 @@ function buildPreviewStyles(mode, model) {
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 10px;
+      padding: 8px;
+    }
+    body.preview-body-label {
+      overflow: hidden;
+    }
+    body.preview-body-sheet {
       overflow: auto;
     }
     .preview-shell {
@@ -2017,7 +2069,7 @@ function buildPreviewStyles(mode, model) {
       overflow: visible;
     }
     .preview-card-label {
-      padding: 3mm;
+      padding: 2.5mm;
       width: ${labelPreviewWidthPx}px;
       height: ${labelPreviewHeightPx}px;
       max-width: 100%;
@@ -2348,6 +2400,7 @@ export function printLabels(
   customLabelFields = {},
   labelQuantities = {},
   labProfile = {},
+  lifecycleCallbacks = {},
 ) {
   const documentBundle = buildPrintDocument(
     selectedForLabel,
@@ -2377,16 +2430,43 @@ export function printLabels(
   const images = iframeDoc.querySelectorAll("img");
   let loaded = 0;
   const total = images.length;
+  const imageLoadIssues = [];
+  const handledImages = new Set();
+  let imageLoadTimeout = null;
+  let preflightTriggered = false;
+  let handoffNotified = false;
+
+  const notifyPrintHandoff = (lifecycleMeta) => {
+    if (
+      handoffNotified ||
+      !lifecycleCallbacks ||
+      typeof lifecycleCallbacks.onPrintHandoff !== "function"
+    ) {
+      return;
+    }
+    handoffNotified = true;
+    try {
+      lifecycleCallbacks.onPrintHandoff(lifecycleMeta);
+    } catch (_) {
+      // Print handoff must not fail because recent-job persistence failed.
+    }
+  };
 
   const triggerPrint = () => {
+    if (preflightTriggered) return;
+    preflightTriggered = true;
+    if (imageLoadTimeout) {
+      clearTimeout(imageLoadTimeout);
+      imageLoadTimeout = null;
+    }
+
     const contentIssues = inspectPrintContentFit(documentBundle.model);
     const layoutIssues = inspectPrintLayoutDocument(iframeDoc);
-    const blockingLayoutIssues = isCompletePrimaryTemplate(
-      documentBundle.model.layout,
-    )
-      ? layoutIssues
-      : [];
-    const preflightIssues = [...contentIssues, ...blockingLayoutIssues];
+    const preflightIssues = [
+      ...contentIssues,
+      ...layoutIssues,
+      ...imageLoadIssues,
+    ];
     if (preflightIssues.length > 0) {
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
       recordObservabilityEvent("print_blocked", {
@@ -2399,11 +2479,19 @@ export function printLabels(
         },
       });
       if (typeof window !== "undefined" && typeof window.alert === "function") {
+        const hasRequiredImageFailure = preflightIssues.some(
+          (issue) => issue.type === "required-image-failed",
+        );
         window.alert(
-          i18n.t("print.layoutBlocked", {
-            defaultValue:
-              "This label content is overflowing or clipped. Choose a larger stock, reduce optional fields, or use a QR supplement before printing.",
-          }),
+          hasRequiredImageFailure
+            ? i18n.t("print.imageBlocked", {
+                defaultValue:
+                  "Required label images did not load. Check your network and try again before printing.",
+              })
+            : i18n.t("print.layoutBlocked", {
+                defaultValue:
+                  "This label content is overflowing or clipped. Choose a larger stock, reduce optional fields, or use a QR supplement before printing.",
+              }),
         );
       }
       iframe.remove();
@@ -2418,6 +2506,7 @@ export function printLabels(
         count: lifecycleMeta.totalLabels || 1,
         meta: lifecycleMeta,
       });
+      notifyPrintHandoff(lifecycleMeta);
 
       let removed = false;
       const cleanup = (reason = "afterprint") => {
@@ -2476,15 +2565,33 @@ export function printLabels(
     return;
   }
 
+  const finishImage = (img, reason) => {
+    if (handledImages.has(img)) return;
+    handledImages.add(img);
+
+    if (reason || isImageLoadFailure(img)) {
+      const imageKind = getRequiredPrintImageKind(img);
+      if (imageKind) {
+        imageLoadIssues.push(
+          buildRequiredImageIssue(img, reason || "natural-width-zero"),
+        );
+      }
+    }
+
+    loaded += 1;
+    if (loaded === total) triggerPrint();
+  };
+
+  imageLoadTimeout = setTimeout(() => {
+    images.forEach((img) => finishImage(img, "load-timeout"));
+  }, REQUIRED_PRINT_IMAGE_TIMEOUT_MS);
+
   images.forEach((img) => {
     if (img.complete) {
-      loaded += 1;
-      if (loaded === total) triggerPrint();
+      finishImage(img, "");
     } else {
-      img.onload = img.onerror = () => {
-        loaded += 1;
-        if (loaded === total) triggerPrint();
-      };
+      img.onload = () => finishImage(img, "");
+      img.onerror = () => finishImage(img, "load-error");
     }
   });
 }

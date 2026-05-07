@@ -20,12 +20,22 @@ export function getNioshPocketGuideUrl() {
   return "https://www.cdc.gov/niosh/npg/default.html";
 }
 
+function isSafeReferenceUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeReferenceLink(raw) {
   if (!raw || typeof raw !== "object") return null;
   const label =
     typeof raw.label === "string" && raw.label.trim() ? raw.label.trim() : "";
   const url = typeof raw.url === "string" && raw.url.trim() ? raw.url.trim() : "";
-  if (!label || !url) return null;
+  if (!label || !url || !isSafeReferenceUrl(url)) return null;
   return {
     label,
     url,

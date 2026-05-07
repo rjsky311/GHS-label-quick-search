@@ -7,14 +7,16 @@ from starlette.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+import json
 import os
 import secrets
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 import httpx
 import asyncio
 from io import BytesIO
@@ -47,6 +49,12 @@ WORKSPACE_DOC_TYPES = {
     "prepared_recents",
     "prepared_presets",
 }
+ALLOWED_REFERENCE_URL_SCHEMES = {"http", "https"}
+MAX_MISS_QUERY_LENGTH = 160
+MAX_MISS_QUERY_KIND_LENGTH = 40
+MAX_MISS_ENDPOINT_LENGTH = 80
+MAX_MISS_CONTEXT_ITEMS = 20
+MAX_MISS_CONTEXT_JSON_CHARS = 2000
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -145,6 +153,11 @@ def _record_upstream_failure(kind: str, url: str, attempt: int, **payload: Any) 
         url=url,
         **payload,
     )
+
+
+def _is_safe_reference_url(value: str) -> bool:
+    parsed = urlparse((value or "").strip())
+    return parsed.scheme.lower() in ALLOWED_REFERENCE_URL_SCHEMES and bool(parsed.netloc)
 
 
 def _require_admin(request: Request) -> None:
@@ -274,10 +287,13 @@ def _build_reference_links(
 
     if cas_number:
         for link in pilot_store.list_reference_links(cas_number):
+            url = link["url"]
+            if not _is_safe_reference_url(url):
+                continue
             links.append(
                 {
                     "label": link["label"],
-                    "url": link["url"],
+                    "url": url,
                     "link_type": link["linkType"],
                     "source": link["source"],
                     "priority": link["priority"],
@@ -553,10 +569,39 @@ class WorkspaceDocumentPayload(BaseModel):
 
 
 class DictionaryMissQueryPayload(BaseModel):
-    query: str
-    query_kind: str = "name"
-    endpoint: str = "frontend"
-    context: Dict[str, Any] = Field(default_factory=dict)
+    query: str = Field(..., min_length=1, max_length=MAX_MISS_QUERY_LENGTH)
+    query_kind: str = Field(
+        "name",
+        min_length=1,
+        max_length=MAX_MISS_QUERY_KIND_LENGTH,
+        pattern=r"^[A-Za-z0-9_.:-]+$",
+    )
+    endpoint: str = Field(
+        "frontend",
+        min_length=1,
+        max_length=MAX_MISS_ENDPOINT_LENGTH,
+        pattern=r"^[A-Za-z0-9_.:-]+$",
+    )
+    context: Dict[str, Any] = Field(
+        default_factory=dict,
+        max_length=MAX_MISS_CONTEXT_ITEMS,
+    )
+
+    @field_validator("query")
+    @classmethod
+    def query_must_not_be_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("query must not be blank")
+        return value
+
+    @field_validator("context")
+    @classmethod
+    def context_must_stay_small(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
+        if len(encoded) > MAX_MISS_CONTEXT_JSON_CHARS:
+            raise ValueError("context payload is too large")
+        return value
 
 
 class DictionaryManualEntryPayload(BaseModel):
@@ -580,12 +625,20 @@ class DictionaryAliasPayload(BaseModel):
 class DictionaryReferenceLinkPayload(BaseModel):
     cas_number: str
     label: str
-    url: str
+    url: str = Field(..., max_length=2048)
     link_type: str = "reference"
     source: str = "manual"
     priority: int = 50
     status: str = "active"
     cid: Optional[int] = None
+
+    @field_validator("url")
+    @classmethod
+    def url_must_be_http_or_https(cls, value: str) -> str:
+        value = value.strip()
+        if not _is_safe_reference_url(value):
+            raise ValueError("reference link URL must use http or https")
+        return value
 
 
 # Characters that Excel / Google Sheets / LibreOffice Calc treat as the
@@ -1616,7 +1669,8 @@ async def upsert_dictionary_reference_link(
 
 
 @api_router.post("/dictionary/miss-query")
-async def dictionary_miss_query(payload: DictionaryMissQueryPayload):
+@limiter.limit("30/minute")
+async def dictionary_miss_query(request: Request, payload: DictionaryMissQueryPayload):
     if not CAPTURE_DICTIONARY_MISSES:
         return {
             "ok": False,
@@ -1978,8 +2032,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=False,
     allow_origins=_cors_origins,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept"],
+    allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept", "X-GHS-Admin-Key"],
 )
 
 
