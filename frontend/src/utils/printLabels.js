@@ -2402,26 +2402,32 @@ function upsertPrintQaStatusElement() {
 }
 
 function publishPrintQaStatus(status, message) {
+  const nextStatus = {
+    ...status,
+    updatedAt: new Date().toISOString(),
+  };
+
   if (typeof window !== "undefined") {
-    window.__GHS_PRINT_QA_LAST_HANDOFF__ = status;
+    window.__GHS_PRINT_QA_LAST_HANDOFF__ = nextStatus;
   }
 
   const statusElement = upsertPrintQaStatusElement();
-  if (!statusElement) return status;
+  if (!statusElement) return nextStatus;
 
   if (statusElement.dataset) {
-    statusElement.dataset.status = status.status || "";
-    statusElement.dataset.labelKind = status.labelKind || "";
-    statusElement.dataset.pictograms = (status.pictogramCodes || []).join(",");
-    statusElement.dataset.hasQr = String(Boolean(status.hasQr));
-    statusElement.dataset.totalLabels = String(status.totalLabels || 0);
-    statusElement.dataset.template = status.template || "";
-    statusElement.dataset.stockPreset = status.stockPreset || "";
-    statusElement.dataset.issueTypes = (status.issueTypes || []).join(",");
+    statusElement.dataset.status = nextStatus.status || "";
+    statusElement.dataset.labelKind = nextStatus.labelKind || "";
+    statusElement.dataset.pictograms = (nextStatus.pictogramCodes || []).join(",");
+    statusElement.dataset.hasQr = String(Boolean(nextStatus.hasQr));
+    statusElement.dataset.totalLabels = String(nextStatus.totalLabels || 0);
+    statusElement.dataset.template = nextStatus.template || "";
+    statusElement.dataset.stockPreset = nextStatus.stockPreset || "";
+    statusElement.dataset.issueTypes = (nextStatus.issueTypes || []).join(",");
+    statusElement.dataset.updatedAt = nextStatus.updatedAt;
   }
   statusElement.textContent = message;
 
-  return status;
+  return nextStatus;
 }
 
 function publishPrintPendingQaStatus(documentBundle) {
