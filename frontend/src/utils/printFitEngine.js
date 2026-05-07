@@ -292,6 +292,11 @@ const estimateSupplementalPrintContentTextWeight = (
       layout.formFactor === "strip" ||
       layout.size === "small" ||
       layout.heightMm <= 32;
+    if (compactQrCodeOnly) {
+      return Math.round(
+        identityTextWeight(content, layout, locale) + pictogramReserve,
+      );
+    }
     return Math.round(
       identityTextWeight(content, layout, locale) +
         statementTextWeight(hazards.slice(0, hazardTeasers), layout, {

@@ -873,7 +873,13 @@ const renderQRCodeTemplate = (chemical, model) => {
     ) || "https://pubchem.ncbi.nlm.nih.gov/";
   const budgets = model.layout.templateBudgets.qrcode;
   const prioritizedHazards = prioritizeHazardStatements(hazards);
-  const hazardTeasers = prioritizedHazards.slice(0, budgets.hazardTeasers);
+  const compactQrSupplement =
+    model.layout.formFactor === "strip" ||
+    model.layout.size === "small" ||
+    model.layout.heightMm <= 32;
+  const hazardTeasers = compactQrSupplement
+    ? []
+    : prioritizedHazards.slice(0, budgets.hazardTeasers);
   const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `
@@ -901,7 +907,9 @@ const renderQRCodeTemplate = (chemical, model) => {
         <div class="qr-priority-block">
           ${signalWord ? renderSignal(signalWord, signalClass, "qr-signal") : ""}
           ${
-            hazardTeasers.length > 0
+            compactQrSupplement
+              ? ""
+              : hazardTeasers.length > 0
               ? `<div class="qr-hazard-list">
                   ${hazardTeasers
                     .map(

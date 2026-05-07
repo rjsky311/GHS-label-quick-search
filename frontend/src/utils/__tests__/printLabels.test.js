@@ -1415,7 +1415,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("precaution-more");
     });
 
-    it("prioritizes the most severe QR hazard teaser while keeping every pictogram", () => {
+    it("keeps QR strip supplements focused on identity, QR, signal, and pictograms", () => {
       const mixedHazards = {
         ...mockChemical,
         ghs_pictograms: [
@@ -1447,8 +1447,9 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
-      expect(preview.fragmentHtml).toContain("H330");
-      expect(preview.fragmentHtml).not.toContain("H335<span");
+      expect(preview.fragmentHtml).not.toContain("qr-hazard-chip");
+      expect(preview.fragmentHtml).not.toContain("H330");
+      expect(preview.fragmentHtml).toContain("Danger");
       expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(4);
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });
