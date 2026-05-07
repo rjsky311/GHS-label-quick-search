@@ -1002,9 +1002,10 @@ describe("printLabels", () => {
         hasQr: true,
       }),
     );
-    const statusElement = appendChildSpy.mock.calls
+    const statusElements = appendChildSpy.mock.calls
       .map(([node]) => node)
-      .find((node) => node?.id === "ghs-print-qa-status");
+      .filter((node) => node?.id === "ghs-print-qa-status");
+    const statusElement = statusElements[statusElements.length - 1];
     expect(statusElement).toEqual(
       expect.objectContaining({
         textContent: "Print handoff ready: qr-supplement; GHS02,GHS07",

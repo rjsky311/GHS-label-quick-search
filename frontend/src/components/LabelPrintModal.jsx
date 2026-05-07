@@ -3223,7 +3223,7 @@ export default function LabelPrintModal({
           ) : (
             <button
               type="button"
-              onClick={onPrintLabels}
+              onClick={() => onPrintLabels(labelConfig)}
               disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
               className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
               data-testid="print-label-action"

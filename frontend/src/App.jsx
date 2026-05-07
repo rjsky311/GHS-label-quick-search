@@ -532,14 +532,15 @@ function App() {
     return (dictionary.pendingAliasCount || 0) + (dictionary.openMissQueryCount || 0);
   }, [pilotReport]);
 
-  const handlePrintLabels = useCallback(() => {
+  const handlePrintLabels = useCallback((configOverride) => {
+    const effectiveLabelConfig = configOverride || labelConfig;
     const printableSelection = selectedForLabel.map((chemical) =>
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
     );
 
     printLabels(
       printableSelection,
-      labelConfig,
+      effectiveLabelConfig,
       {},
       customLabelFields,
       labelQuantities,
@@ -548,7 +549,7 @@ function App() {
         onPrintHandoff: () => {
           addRecentPrint({
             items: printableSelection,
-            labelConfig,
+            labelConfig: effectiveLabelConfig,
             customLabelFields,
             labelQuantities,
             labProfile,

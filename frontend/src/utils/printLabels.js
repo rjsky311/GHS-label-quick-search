@@ -2370,6 +2370,100 @@ function isPrintHandoffQaMode() {
   }
 }
 
+function resolvePrintQaLabelKind(layout) {
+  return isCompletePrimaryTemplate(layout)
+    ? "complete-primary"
+    : isQrSupplementLayout(layout)
+      ? "qr-supplement"
+      : isQuickIdLayout(layout)
+        ? "quick-id"
+        : "supplemental";
+}
+
+function upsertPrintQaStatusElement() {
+  if (typeof document === "undefined") return null;
+
+  let statusElement = document.getElementById("ghs-print-qa-status");
+  if (!statusElement) {
+    statusElement = document.createElement("div");
+    statusElement.id = "ghs-print-qa-status";
+    if (typeof statusElement.setAttribute === "function") {
+      statusElement.setAttribute("data-testid", "print-qa-status");
+      statusElement.setAttribute("aria-live", "polite");
+    }
+    if (statusElement.style) {
+      statusElement.style.cssText =
+        "position:fixed;left:0;bottom:0;z-index:2147483647;width:1px;height:1px;overflow:hidden;opacity:0.01;pointer-events:none;";
+    }
+    document.body.appendChild(statusElement);
+  }
+
+  return statusElement;
+}
+
+function publishPrintQaStatus(status, message) {
+  if (typeof window !== "undefined") {
+    window.__GHS_PRINT_QA_LAST_HANDOFF__ = status;
+  }
+
+  const statusElement = upsertPrintQaStatusElement();
+  if (!statusElement) return status;
+
+  if (statusElement.dataset) {
+    statusElement.dataset.status = status.status || "";
+    statusElement.dataset.labelKind = status.labelKind || "";
+    statusElement.dataset.pictograms = (status.pictogramCodes || []).join(",");
+    statusElement.dataset.hasQr = String(Boolean(status.hasQr));
+    statusElement.dataset.totalLabels = String(status.totalLabels || 0);
+    statusElement.dataset.template = status.template || "";
+    statusElement.dataset.stockPreset = status.stockPreset || "";
+    statusElement.dataset.issueTypes = (status.issueTypes || []).join(",");
+  }
+  statusElement.textContent = message;
+
+  return status;
+}
+
+function publishPrintPendingQaStatus(documentBundle) {
+  const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+  return publishPrintQaStatus(
+    {
+      status: "pending",
+      template: lifecycleMeta.template,
+      labelPurpose: lifecycleMeta.labelPurpose,
+      stockPreset: lifecycleMeta.stockPreset,
+      orientation: lifecycleMeta.orientation,
+      totalLabels: lifecycleMeta.totalLabels || 1,
+      labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
+      pictogramCodes: [],
+      hasQr: false,
+    },
+    "Print handoff pending",
+  );
+}
+
+function publishPrintBlockedQaStatus(documentBundle, preflightIssues) {
+  const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+  const issueTypes = [
+    ...new Set(preflightIssues.map((issue) => issue.type).filter(Boolean)),
+  ];
+  return publishPrintQaStatus(
+    {
+      status: "blocked",
+      template: lifecycleMeta.template,
+      labelPurpose: lifecycleMeta.labelPurpose,
+      stockPreset: lifecycleMeta.stockPreset,
+      orientation: lifecycleMeta.orientation,
+      totalLabels: lifecycleMeta.totalLabels || 1,
+      labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
+      pictogramCodes: [],
+      hasQr: false,
+      issueTypes,
+    },
+    `Print handoff blocked: ${issueTypes.join(",")}`,
+  );
+}
+
 function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
   const imageAlts = Array.from(iframeDoc.querySelectorAll("img"))
     .map((img) => img.getAttribute?.("alt") || img.alt || "")
@@ -2384,49 +2478,15 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
     stockPreset: lifecycleMeta.stockPreset,
     orientation: lifecycleMeta.orientation,
     totalLabels: lifecycleMeta.totalLabels || 1,
-    labelKind: isCompletePrimaryTemplate(documentBundle.model.layout)
-      ? "complete-primary"
-      : isQrSupplementLayout(documentBundle.model.layout)
-        ? "qr-supplement"
-        : isQuickIdLayout(documentBundle.model.layout)
-          ? "quick-id"
-          : "supplemental",
+    labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
     pictogramCodes,
     hasQr: imageAlts.some((alt) => /qr/i.test(alt)),
   };
 
-  if (typeof window !== "undefined") {
-    window.__GHS_PRINT_QA_LAST_HANDOFF__ = status;
-  }
-
-  if (typeof document !== "undefined") {
-    let statusElement = document.getElementById("ghs-print-qa-status");
-    if (!statusElement) {
-      statusElement = document.createElement("div");
-      statusElement.id = "ghs-print-qa-status";
-      if (typeof statusElement.setAttribute === "function") {
-        statusElement.setAttribute("data-testid", "print-qa-status");
-        statusElement.setAttribute("aria-live", "polite");
-      }
-      if (statusElement.style) {
-        statusElement.style.cssText =
-          "position:fixed;left:0;bottom:0;z-index:2147483647;width:1px;height:1px;overflow:hidden;opacity:0.01;pointer-events:none;";
-      }
-      document.body.appendChild(statusElement);
-    }
-    if (statusElement.dataset) {
-      statusElement.dataset.status = status.status;
-      statusElement.dataset.labelKind = status.labelKind;
-      statusElement.dataset.pictograms = pictogramCodes.join(",");
-      statusElement.dataset.hasQr = String(status.hasQr);
-      statusElement.dataset.totalLabels = String(status.totalLabels);
-      statusElement.dataset.template = status.template || "";
-      statusElement.dataset.stockPreset = status.stockPreset || "";
-    }
-    statusElement.textContent = `Print handoff ready: ${status.labelKind}; ${pictogramCodes.join(",")}`;
-  }
-
-  return status;
+  return publishPrintQaStatus(
+    status,
+    `Print handoff ready: ${status.labelKind}; ${pictogramCodes.join(",")}`,
+  );
 }
 
 export function printLabels(
@@ -2448,6 +2508,9 @@ export function printLabels(
   );
 
   if (!documentBundle) return;
+  if (isPrintHandoffQaMode()) {
+    publishPrintPendingQaStatus(documentBundle);
+  }
 
   const existingFrame = document.getElementById("ghs-print-frame");
   if (existingFrame) existingFrame.remove();
@@ -2505,6 +2568,9 @@ export function printLabels(
     ];
     if (preflightIssues.length > 0) {
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+      if (isPrintHandoffQaMode()) {
+        publishPrintBlockedQaStatus(documentBundle, preflightIssues);
+      }
       recordObservabilityEvent("print_blocked", {
         status: "blocked",
         count: lifecycleMeta.totalLabels || 1,

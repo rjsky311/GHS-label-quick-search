@@ -286,6 +286,7 @@ describe("LabelPrintModal", () => {
 
     fireEvent.click(printButton);
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
+    expect(props.onPrintLabels).toHaveBeenCalledWith(props.labelConfig);
   });
 
   it("states the printable outcome before users inspect diagnostics", () => {
