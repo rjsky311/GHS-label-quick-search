@@ -1986,28 +1986,35 @@ function buildPreviewStyles(mode, model) {
   );
   const viewportWidthPx = Math.round(pageWidthMm * mmToPx * sheetScale);
   const viewportHeightPx = Math.round(pageHeightMm * mmToPx * sheetScale);
+  const cardWidthPx =
+    mode === "label" ? labelPreviewWidthPx : viewportWidthPx + 32;
+  const cardHeightPx =
+    mode === "label" ? labelPreviewHeightPx : viewportHeightPx + 40;
+  const frameWidthPx = Math.ceil(cardWidthPx + 28);
+  const frameHeightPx = Math.ceil(cardHeightPx + 32);
 
-  return `
+  const css = `
     body.preview-body {
       margin: 0;
-      min-height: 100vh;
+      min-height: 0;
       background: #f8fafc;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 10px;
+      overflow: auto;
     }
     .preview-shell {
       width: 100%;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
     }
     .preview-card {
       background: #ffffff;
       border-radius: 5mm;
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
-      overflow: hidden;
+      overflow: visible;
     }
     .preview-card-label {
       padding: 3mm;
@@ -2076,6 +2083,25 @@ function buildPreviewStyles(mode, model) {
         : ""
     }
   `;
+
+  return {
+    css,
+    metrics: {
+      mode,
+      cardWidthPx,
+      cardHeightPx,
+      frameWidthPx,
+      frameHeightPx,
+      labelPreviewScale,
+      labelPreviewWidthPx,
+      labelPreviewHeightPx,
+      rawLabelWidthPx,
+      rawLabelHeightPx,
+      sheetScale,
+      viewportWidthPx,
+      viewportHeightPx,
+    },
+  };
 }
 
 export function buildPrintPreviewDocument(
@@ -2154,13 +2180,14 @@ export function buildPrintPreviewDocument(
   ].join(" ");
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
     model.t("print.title"),
-  )}</title><style>${sharedStyles}${previewStyles}</style></head><body class="${bodyClass}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
+  )}</title><style>${sharedStyles}${previewStyles.css}</style></head><body class="${bodyClass}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
 
   return {
     html,
     fragmentHtml,
     model,
     mode,
+    previewMetrics: previewStyles.metrics,
   };
 }
 
@@ -2191,6 +2218,20 @@ export function inspectPrintLayoutDocument(documentLike) {
     if (elementOverflows(label, 2)) {
       issues.push({ type: "label-overflow", index });
     }
+
+    [
+      [".compliance-core", "compliance-core-overflow"],
+      [".compliance-alert-panel", "compliance-alert-overflow"],
+      [".compliance-statements-panel", "compliance-statements-overflow"],
+      [".compliance-hazard-panel", "compliance-hazards-overflow"],
+      [".compliance-precaution-panel", "compliance-precautions-overflow"],
+      [".pictograms.compliance-pictograms", "compliance-pictograms-overflow"],
+    ].forEach(([selector, type]) => {
+      const element = label.querySelector(selector);
+      if (elementOverflows(element, 2)) {
+        issues.push({ type, index });
+      }
+    });
 
     const footer = label.querySelector(".compliance-footer");
     if (

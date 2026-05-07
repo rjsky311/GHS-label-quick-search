@@ -211,6 +211,15 @@ const READINESS_TONE_CLASSES = {
   danger: "border-red-200 bg-red-50 text-red-900",
 };
 
+const getPreviewFrameHeight = (metrics, fallbackHeight) => {
+  const numericHeight = Number(metrics?.frameHeightPx);
+  if (!Number.isFinite(numericHeight) || numericHeight <= 0) {
+    return fallbackHeight;
+  }
+
+  return `${Math.ceil(Math.max(220, numericHeight))}px`;
+};
+
 const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   ...preset,
   perPage: preset.columns * preset.rows,
@@ -1488,7 +1497,7 @@ export default function LabelPrintModal({
   const isFullPagePrimaryPreview =
     labelConfig.template === "full" &&
     FULL_PAGE_PRIMARY_STOCK_IDS.includes(layoutProfile.stockPreset);
-  const labelFragmentPreviewHeight =
+  const fallbackLabelFragmentPreviewHeight =
     labelConfig.template === "qrcode"
       ? "20rem"
       : isFullPagePrimaryPreview
@@ -1496,6 +1505,14 @@ export default function LabelPrintModal({
         : layoutProfile.orientation === "portrait"
           ? "34rem"
           : "22rem";
+  const labelFragmentPreviewHeight = getPreviewFrameHeight(
+    labelPreviewBundle?.previewMetrics,
+    fallbackLabelFragmentPreviewHeight,
+  );
+  const sheetPreviewHeight = getPreviewFrameHeight(
+    sheetPreviewBundle?.previewMetrics,
+    layoutProfile.orientation === "landscape" ? "18rem" : "20rem",
+  );
 
   const renderSavedPrintControls = () => (
     <details
@@ -2137,7 +2154,7 @@ export default function LabelPrintModal({
         )}
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+      <div className="mt-3 overflow-auto rounded-lg border border-slate-200 bg-white shadow-inner">
         {labelPreviewBundle ? (
           <iframe
             title={tx("label.previewLabelTitle", "Label preview")}
@@ -3009,19 +3026,14 @@ export default function LabelPrintModal({
                       )}
                     </div>
 
-                    <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+                    <div className="mt-4 overflow-auto rounded-lg border border-slate-200 bg-white shadow-inner">
                       {sheetPreviewBundle ? (
                         <iframe
                           title={tx("label.previewSheetTitle", "Sheet layout")}
                           srcDoc={sheetPreviewBundle.html}
                           data-testid="label-sheet-preview"
                           className="w-full bg-white"
-                          style={{
-                            height:
-                              layoutProfile.orientation === "landscape"
-                                ? "18rem"
-                                : "20rem",
-                          }}
+                          style={{ height: sheetPreviewHeight }}
                         />
                       ) : (
                         <div className="flex h-60 items-center justify-center px-4 text-sm text-slate-500">

@@ -197,6 +197,60 @@ describe("inspectPrintLayoutDocument", () => {
       ],
     );
   });
+
+  it("reports clipped full-label inner panels before printing", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label label-full">
+        <div class="compliance-core"></div>
+        <div class="compliance-alert-panel"></div>
+        <div class="compliance-statements-panel"></div>
+        <div class="compliance-hazard-panel"></div>
+        <div class="compliance-precaution-panel"></div>
+        <div class="pictograms compliance-pictograms"></div>
+      </div>
+    `;
+
+    const setOverflow = (selector, axis = "height") => {
+      const element = root.querySelector(selector);
+      Object.defineProperties(element, {
+        clientHeight: {
+          value: axis === "height" ? 40 : 100,
+          configurable: true,
+        },
+        scrollHeight: {
+          value: axis === "height" ? 50 : 100,
+          configurable: true,
+        },
+        clientWidth: {
+          value: axis === "width" ? 40 : 100,
+          configurable: true,
+        },
+        scrollWidth: {
+          value: axis === "width" ? 50 : 100,
+          configurable: true,
+        },
+      });
+    };
+
+    setOverflow(".compliance-core");
+    setOverflow(".compliance-alert-panel");
+    setOverflow(".compliance-statements-panel");
+    setOverflow(".compliance-hazard-panel");
+    setOverflow(".compliance-precaution-panel");
+    setOverflow(".pictograms.compliance-pictograms", "width");
+
+    expect(inspectPrintLayoutDocument(root).map((issue) => issue.type)).toEqual(
+      [
+        "compliance-core-overflow",
+        "compliance-alert-overflow",
+        "compliance-statements-overflow",
+        "compliance-hazards-overflow",
+        "compliance-precautions-overflow",
+        "compliance-pictograms-overflow",
+      ],
+    );
+  });
 });
 
 describe("inspectPrintContentFit", () => {
@@ -385,10 +439,51 @@ describe("print layout model", () => {
 
     expect(labelPreview.html).toContain("preview-body-label");
     expect(labelPreview.html).toContain("label label-qr");
+    expect(labelPreview.html).toContain("min-height: 0");
+    expect(labelPreview.html).toContain("align-items: flex-start");
+    expect(labelPreview.html).toContain("overflow: visible");
+    expect(labelPreview.previewMetrics.frameHeightPx).toBeGreaterThanOrEqual(
+      labelPreview.previewMetrics.cardHeightPx,
+    );
     expect(sheetPreview.html).toContain("preview-grid-scaler");
     expect(sheetPreview.html).toContain("preview-sheet-viewport");
     expect(sheetPreview.html).toContain("preview-page");
     expect(sheetPreview.html).toContain("label-placeholder");
+    expect(sheetPreview.previewMetrics.frameHeightPx).toBeGreaterThanOrEqual(
+      sheetPreview.previewMetrics.cardHeightPx,
+    );
+  });
+
+  it("sizes standalone label previews from generated metrics across curated stocks", () => {
+    [
+      ["A4 primary", "a4-primary", "full", "shipping"],
+      ["Letter primary", "letter-primary", "full", "shipping"],
+      ["Large primary", "large-primary", "standard", "shipping"],
+      ["Bottle primary", "medium-bottle", "standard", "shipping"],
+      ["Avery 5163", "avery-5163", "standard", "shipping"],
+      ["Avery 5164", "avery-5164", "standard", "shipping"],
+      ["Vial strip", "small-strip", "icon", "quickId"],
+      ["62 mm continuous", "brother-62mm-continuous", "qrcode", "qrSupplement"],
+    ].forEach(([, stockPreset, template, labelPurpose]) => {
+      const preview = buildPrintPreviewDocument(
+        [mockChemical],
+        { stockPreset, template, labelPurpose },
+        {},
+        {},
+        { "64-17-5": 1 },
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.previewMetrics.frameHeightPx).toBeGreaterThanOrEqual(
+        preview.previewMetrics.cardHeightPx,
+      );
+      expect(preview.previewMetrics.frameWidthPx).toBeGreaterThanOrEqual(
+        preview.previewMetrics.cardWidthPx,
+      );
+      expect(preview.previewMetrics.labelPreviewScale).toBeGreaterThan(0);
+      expect(preview.html.includes("min-height: 100vh")).toBe(false);
+    });
   });
 });
 

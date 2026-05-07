@@ -455,9 +455,10 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("primary-output-size-avery-5163"),
     ).toHaveTextContent("2 x 4 in Bottle");
-    expect(screen.getByTestId("label-fragment-preview")).toHaveStyle({
-      height: "24rem",
-    });
+    const previewHeight = screen.getByTestId("label-fragment-preview").style
+      .height;
+    expect(previewHeight).toMatch(/px$/);
+    expect(Number.parseInt(previewHeight, 10)).toBeGreaterThan(340);
   });
 
   it("shows supplemental physical stock choices for QR supplement output", () => {
