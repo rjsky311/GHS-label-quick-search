@@ -878,6 +878,14 @@ export default function LabelPrintModal({
           : "caution";
   const hasAnyPictograms =
     printReadiness.elementSummary.pictograms.expected > 0;
+  const isQrSupplementOutput =
+    labelPurpose === "qrSupplement" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
+  const isQuickIdOutput =
+    labelPurpose === "quickId" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
+  const isSupplementalOutput =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
@@ -906,8 +914,12 @@ export default function LabelPrintModal({
   const statementSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionTextComplete", "Full H/P text")
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-        ? tx("label.decisionTextPriority", "Priority H/P summary")
+      : isQrSupplementOutput
+        ? tx("label.decisionTextQrScan", "Details via QR/SDS")
+        : isQuickIdOutput
+          ? tx("label.decisionTextIdentityOnly", "No full H/P text")
+          : isSupplementalOutput
+            ? tx("label.decisionTextSummaryOnly", "Short hazard summary")
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
           ? tx("label.decisionTextBlocked", "Do not print yet")
           : tx("label.decisionTextCheck", "Check requirements");
@@ -958,7 +970,105 @@ export default function LabelPrintModal({
       ? tx("label.profileStatusComplete", "Ready for complete primary")
       : tx("label.profileStatusMissing", "Required for complete primary")
     : tx("label.profileStatusOptional", "Optional for this output");
-  const outputChecklistItems = [
+  const printedLabelValue = tx("label.outputPrinted", "Printed");
+  const optionalLabelValue = tx("label.outputOptional", "Optional");
+  const outputChecklistTitle = isSupplementalOutput
+    ? tx("label.outputPrintedChecklistTitle", "This label prints")
+    : tx("label.outputChecklistTitle", "Required output");
+  const outputChecklistHint = isSupplementalOutput
+    ? tx(
+        "label.outputPrintedChecklistHint",
+        "This describes the current physical label only. Complete H/P detail belongs on the primary label or SDS/QR path.",
+      )
+    : tx(
+        "label.outputChecklistHint",
+        "Counts come from the same content model used by print preflight.",
+      );
+  const outputChecklistBadge = isSupplementalOutput
+    ? tx("label.outputSupplemental", "Supplemental")
+    : tx("label.outputPrimary", "Primary");
+  const supplementalHazardOutputItem = isQrSupplementOutput
+    ? {
+        key: "hazard-reference",
+        label: tx("label.outputHazardReference", "Detailed hazard text"),
+        value: tx("label.outputQrScanPath", "Via QR/SDS"),
+        tone: "neutral",
+        description: tx(
+          "label.outputQrScanPathHint",
+          "The small QR label does not print full H/P text.",
+        ),
+      }
+    : isQuickIdOutput
+      ? {
+          key: "hazard-reference",
+          label: tx("label.outputHazardReference", "Detailed hazard text"),
+          value: tx("label.outputNotOnSmallLabel", "Not on small label"),
+          tone: "neutral",
+          description: tx(
+            "label.outputNotOnSmallLabelHint",
+            "Quick-ID labels keep identity and pictograms readable.",
+          ),
+        }
+      : {
+          key: "hazard-statements",
+          label: tx("label.outputHazardSummary", "Hazard summary"),
+          value: tx("label.outputSummaryOnly", "Summary only"),
+          tone: "caution",
+          description: tx(
+            "label.outputSummaryOnlyHint",
+            "Bottle labels may show selected H-code summaries, not full H/P text.",
+          ),
+        };
+  const supplementalChecklistItems = [
+    {
+      key: "identity",
+      label: tx("label.outputIdentity", "Identity"),
+      value: printedLabelValue,
+      tone: "ready",
+      description: tx("label.outputIdentityHint", "Name and CAS stay visible."),
+    },
+    {
+      key: "pictograms",
+      label: tx("label.outputPictograms", "GHS pictograms"),
+      value: formatOutputCount(printReadiness.elementSummary.pictograms),
+      tone: getOutputTone(printReadiness.elementSummary.pictograms),
+      description: tx(
+        "label.outputPictogramsHint",
+        "Available pictograms must stay on the label.",
+      ),
+    },
+    {
+      key: "signal-word",
+      label: tx("label.outputSignalWord", "Signal word"),
+      value: formatOutputCount(printReadiness.elementSummary.signalWord),
+      tone: getOutputTone(printReadiness.elementSummary.signalWord),
+    },
+    ...(isQrSupplementOutput
+      ? [
+          {
+            key: "qr-code",
+            label: tx("label.outputQrCode", "QR code"),
+            value: printedLabelValue,
+            tone: "ready",
+            description: tx(
+              "label.outputQrCodeHint",
+              "Scan path carries supporting detail.",
+            ),
+          },
+        ]
+      : []),
+    supplementalHazardOutputItem,
+    {
+      key: "responsible-profile",
+      label: tx("label.outputResponsibleProfile", "Responsible profile"),
+      value:
+        responsibleProfilePresentCount > 0
+          ? printedLabelValue
+          : optionalLabelValue,
+      tone: responsibleProfilePresentCount > 0 ? "ready" : "neutral",
+    },
+  ];
+  const primaryChecklistItems = [
     {
       key: "pictograms",
       label: tx("label.outputPictograms", "GHS pictograms"),
@@ -996,6 +1106,9 @@ export default function LabelPrintModal({
       tone: getOutputTone(printReadiness.elementSummary.responsibleProfile),
     },
   ];
+  const outputChecklistItems = isSupplementalOutput
+    ? supplementalChecklistItems
+    : primaryChecklistItems;
   const hasPreviewWarnings = visiblePreviewRisks.some(
     (risk) => risk !== readyPreviewMessage,
   );
@@ -1067,14 +1180,6 @@ export default function LabelPrintModal({
                     "label.outputPlanPendingBody",
                     "Select at least one chemical to let the app choose a safe printable output.",
                   );
-  const isQrSupplementOutput =
-    labelPurpose === "qrSupplement" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
-  const isQuickIdOutput =
-    labelPurpose === "quickId" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
-  const isSupplementalOutput =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
   const outputOutcomeTone =
     selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
   const outputOutcomeTitle =
@@ -1155,16 +1260,16 @@ export default function LabelPrintModal({
                       "This prints a bench-side quick-ID supplement with identity, signal word, and every available pictogram. It does not replace a complete primary label.",
                     )
                   : isSupplementalOutput
-                  ? tx(
-                      "label.outputOutcomeSupplementalBody",
-                      "This prints on {{stock}} with identity, signal word, every available pictogram, and priority H/P text. It is not a complete primary label.",
-                      { stock: currentStockName },
-                    )
-                  : tx(
-                      "label.outputOutcomeCompleteBody",
-                      "This prints on {{stock}} with all available pictograms and full H/P text for the selected content.",
-                      { stock: currentStockName },
-                    );
+                    ? tx(
+                        "label.outputOutcomeSupplementalBody",
+                        "This prints on {{stock}} with identity, signal word, every available pictogram, and only the hazard detail that fits this label. It is not a complete primary label.",
+                        { stock: currentStockName },
+                      )
+                    : tx(
+                        "label.outputOutcomeCompleteBody",
+                        "This prints on {{stock}} with all available pictograms and full H/P text for the selected content.",
+                        { stock: currentStockName },
+                      );
   const printActionLabel =
     selectedForLabel.length === 0
       ? t("label.printBtn", { count: totalLabels })
@@ -1341,6 +1446,15 @@ export default function LabelPrintModal({
   const handleUseFullPagePrimary = () => {
     if (!recommendedFullPagePreset) return;
     applyStockPreset(recommendedFullPagePreset);
+  };
+
+  const handleFocusResponsibleProfile = () => {
+    const profilePanel = document.querySelector(
+      '[data-testid="responsible-profile-controls"]',
+    );
+    const firstInput = profilePanel?.querySelector("input");
+    profilePanel?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    firstInput?.focus?.();
   };
 
   const applyPrintTarget = (targetValue) => {
@@ -2163,6 +2277,32 @@ export default function LabelPrintModal({
             <p className="mt-1 text-sm leading-5 opacity-90">
               {outputOutcomeBody}
             </p>
+            {isProfileBlocked && (
+              <div
+                className="mt-3 flex flex-col gap-2 sm:flex-row"
+                data-testid="profile-blocked-actions"
+              >
+                <button
+                  type="button"
+                  onClick={handleFocusResponsibleProfile}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+                >
+                  <Building2 className="h-4 w-4" />
+                  {tx("label.profileCompleteAction", "Fill profile now")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPrintTarget("bottle")}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white/80 px-3 py-2 text-xs font-semibold ring-1 ring-current/15 transition-colors hover:bg-white"
+                >
+                  <Tag className="h-4 w-4" />
+                  {tx(
+                    "label.profileUseSupplementAction",
+                    "Print a supplemental label instead",
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
@@ -2924,7 +3064,7 @@ export default function LabelPrintModal({
               {renderAdvancedPrintOptions()}
             </div>
 
-            <aside className="border-t border-slate-200 bg-slate-50/70 lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
+            <aside className="order-first border-t border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
               <div
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
                 data-testid="label-preview-panel"
@@ -3068,20 +3208,14 @@ export default function LabelPrintModal({
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="text-sm font-medium text-slate-800">
-                          {tx("label.outputChecklistTitle", "Required output")}
+                          {outputChecklistTitle}
                         </div>
                         <div className="mt-1 text-xs leading-5 text-slate-500">
-                          {tx(
-                            "label.outputChecklistHint",
-                            "Counts come from the same content model used by print preflight.",
-                          )}
+                          {outputChecklistHint}
                         </div>
                       </div>
                       <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                        {outputPlan.state ===
-                        PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-                          ? tx("label.outputSupplemental", "Supplemental")
-                          : tx("label.outputPrimary", "Primary")}
+                        {outputChecklistBadge}
                       </span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
@@ -3097,6 +3231,11 @@ export default function LabelPrintModal({
                           <div className="mt-1 text-sm font-semibold">
                             {item.value}
                           </div>
+                          {item.description && (
+                            <div className="mt-1 text-xs leading-4 opacity-80">
+                              {item.description}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

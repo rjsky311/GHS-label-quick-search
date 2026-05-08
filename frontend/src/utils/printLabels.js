@@ -1902,10 +1902,38 @@ const buildStyles = (model) => {
       gap: 0.55mm;
       padding-right: 0.8mm;
     }
+    .label-qr.label-form-strip .qr-identity,
+    .label-qr.label-form-strip .name-section-compact {
+      gap: 0.12mm;
+    }
+    .label-qr.label-form-strip .name-en {
+      font-size: 7px;
+      line-height: 1;
+      -webkit-line-clamp: 1;
+    }
+    .label-qr.label-form-strip .name-zh {
+      font-size: 6.4px;
+      line-height: 1;
+      margin-top: 0;
+    }
+    .label-qr.label-form-strip .meta-ribbon {
+      margin-top: 0.2mm;
+      gap: 0.25mm;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    .label-qr.label-form-strip .meta-chip {
+      gap: 0.25mm;
+      padding: 0.12mm 0.45mm;
+      font-size: 5.2px;
+      line-height: 1;
+    }
     .label-qr.label-form-strip .qr-priority-block {
-      gap: 0.35mm;
-      padding: 0.45mm 0.55mm;
-      border-radius: 0.7mm;
+      gap: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
     }
     .label-qr.label-form-strip .qr-hazard-chip {
       font-size: 5.5px;
@@ -1922,6 +1950,13 @@ const buildStyles = (model) => {
     .label-qr.label-form-strip .qr-panel {
       gap: 0.45mm;
       padding-left: 0;
+    }
+    .label-qr.label-form-strip .signal.qr-signal {
+      margin: 0;
+      padding: 0.25mm 1mm;
+      border-radius: 0.6mm;
+      font-size: 5.6px;
+      line-height: 1;
     }
     .label-qr.label-form-strip .qr-code-shell {
       padding: 1mm;

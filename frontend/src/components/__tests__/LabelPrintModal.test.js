@@ -90,7 +90,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
       "lg:overflow-y-auto",
     );
-    expect(screen.getByTestId("label-preview-panel").parentElement).not.toHaveClass(
+    expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
       "order-first",
     );
   });
@@ -306,6 +306,14 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
       "All pictograms kept",
     );
+    const supplementalChecklist = screen.getByTestId(
+      "required-output-checklist",
+    );
+    expect(supplementalChecklist).toHaveTextContent("This label prints");
+    expect(supplementalChecklist).toHaveTextContent("Identity");
+    expect(supplementalChecklist).toHaveTextContent("Hazard summary");
+    expect(supplementalChecklist).toHaveTextContent("Summary only");
+    expect(supplementalChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Print Bottle label (supplemental, 1)",
     );
@@ -325,6 +333,16 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
       "QR supplement is printable",
     );
+    expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
+      "Details via QR/SDS",
+    );
+    const qrChecklist = screen.getByTestId("required-output-checklist");
+    expect(qrChecklist).toHaveTextContent("This label prints");
+    expect(qrChecklist).toHaveTextContent("QR code");
+    expect(qrChecklist).toHaveTextContent("Detailed hazard text");
+    expect(qrChecklist).toHaveTextContent("Via QR/SDS");
+    expect(qrChecklist).not.toHaveTextContent("H statements");
+    expect(qrChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Print QR supplement (1)",
     );
