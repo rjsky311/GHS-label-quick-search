@@ -1347,6 +1347,20 @@ export default function LabelPrintModal({
   ]);
 
   useEffect(() => {
+    setPreviewZoomMode("fit");
+  }, [
+    labelConfig.colorMode,
+    labelConfig.labelHeightMm,
+    labelConfig.labelPurpose,
+    labelConfig.labelWidthMm,
+    labelConfig.nameDisplay,
+    labelConfig.orientation,
+    labelConfig.size,
+    labelConfig.stockPreset,
+    labelConfig.template,
+  ]);
+
+  useEffect(() => {
     if (
       userSelectedStockRef.current ||
       !canUseFullPagePrimary ||
@@ -3201,70 +3215,97 @@ export default function LabelPrintModal({
                     </section>
                   )}
 
-                  <section
-                    className="rounded-lg border border-slate-200 bg-white p-3"
-                    data-testid="required-output-checklist"
+                  <details
+                    className="rounded-lg border border-slate-200 bg-white p-4"
+                    data-testid="preview-diagnostics"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-medium text-slate-800">
-                          {outputChecklistTitle}
-                        </div>
-                        <div className="mt-1 text-xs leading-5 text-slate-500">
-                          {outputChecklistHint}
-                        </div>
-                      </div>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
+                      <span className="flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-blue-600" />
+                        {tx("label.previewDiagnosticsTitle", "Output checks")}
+                      </span>
                       <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
                         {outputChecklistBadge}
                       </span>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {outputChecklistItems.map((item) => (
-                        <div
-                          key={item.key}
-                          className={`rounded-md border px-3 py-2 ${READINESS_TONE_CLASSES[item.tone]}`}
-                          data-testid={`required-output-${item.key}`}
-                        >
-                          <div className="text-xs font-medium">
-                            {item.label}
-                          </div>
-                          <div className="mt-1 text-sm font-semibold">
-                            {item.value}
-                          </div>
-                          {item.description && (
-                            <div className="mt-1 text-xs leading-4 opacity-80">
-                              {item.description}
+                    </summary>
+
+                    <div className="mt-3 space-y-3">
+                      <section
+                        className="rounded-lg border border-slate-200 bg-white p-3"
+                        data-testid="required-output-checklist"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-medium text-slate-800">
+                              {outputChecklistTitle}
                             </div>
+                            <div className="mt-1 text-xs leading-5 text-slate-500">
+                              {outputChecklistHint}
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                            {outputChecklistBadge}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          {outputChecklistItems.map((item) => (
+                            <div
+                              key={item.key}
+                              className={`rounded-md border px-3 py-2 ${READINESS_TONE_CLASSES[item.tone]}`}
+                              data-testid={`required-output-${item.key}`}
+                            >
+                              <div className="text-xs font-medium">
+                                {item.label}
+                              </div>
+                              <div className="mt-1 text-sm font-semibold">
+                                {item.value}
+                              </div>
+                              {item.description && (
+                                <div className="mt-1 text-xs leading-4 opacity-80">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="rounded-lg border border-slate-200 bg-white p-4">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                          {visiblePreviewRisks[0] ===
+                          tx(
+                            "label.previewRiskReady",
+                            "This combination looks balanced for the current content load.",
+                          ) ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <AlertTriangle className="h-4 w-4 text-amber-400" />
+                          )}
+                          {tx(
+                            "label.previewChecklistTitle",
+                            "Preview checklist",
                           )}
                         </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="rounded-lg border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      {visiblePreviewRisks[0] ===
-                      tx(
-                        "label.previewRiskReady",
-                        "This combination looks balanced for the current content load.",
-                      ) ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-amber-400" />
-                      )}
-                      {tx("label.previewChecklistTitle", "Preview checklist")}
-                    </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-700">
-                      {visiblePreviewRisks.map((risk) => (
-                        <div
-                          key={risk}
-                          className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
-                        >
-                          {risk}
+                        <div className="mt-3 space-y-2 text-sm text-slate-700">
+                          {visiblePreviewRisks.map((risk) => (
+                            <div
+                              key={risk}
+                              className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
+                            >
+                              {risk}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </section>
+
+                      <section className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+                        <div className="flex items-start gap-2">
+                          <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                          <span>{t("label.previewHint")}</span>
+                        </div>
+                      </section>
                     </div>
-                  </section>
+                  </details>
 
                   <details className="rounded-lg border border-slate-200 bg-white p-4">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
@@ -3334,12 +3375,6 @@ export default function LabelPrintModal({
                     </div>
                   </details>
 
-                  <section className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
-                    <div className="flex items-start gap-2">
-                      <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                      <span>{t("label.previewHint")}</span>
-                    </div>
-                  </section>
                 </div>
               </div>
             </aside>

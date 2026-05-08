@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import LabelPrintModal from "../LabelPrintModal";
 
 jest.mock("react-i18next", () => ({
@@ -308,6 +308,10 @@ describe("LabelPrintModal", () => {
     );
     const supplementalChecklist = screen.getByTestId(
       "required-output-checklist",
+    );
+    expect(screen.getByTestId("preview-diagnostics").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("preview-diagnostics")).not.toHaveAttribute(
+      "open",
     );
     expect(supplementalChecklist).toHaveTextContent("This label prints");
     expect(supplementalChecklist).toHaveTextContent("Identity");
@@ -1052,8 +1056,8 @@ describe("LabelPrintModal", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows a fit-first inspection strip and can switch to detail preview", () => {
-    renderModal({
+  it("shows a fit-first inspection strip, can inspect details, and resets to fit after stock changes", async () => {
+    const { rerender, props } = renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
         ...baseConfig,
@@ -1091,6 +1095,28 @@ describe("LabelPrintModal", () => {
     expect(
       Number.parseInt(inspectPreview.style.height, 10),
     ).toBeGreaterThanOrEqual(Number.parseInt(preview.style.height, 10));
+
+    rerender(
+      <LabelPrintModal
+        {...props}
+        labelConfig={{
+          ...props.labelConfig,
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("label-fragment-preview")).toHaveAttribute(
+        "data-preview-mode",
+        "fit",
+      );
+    });
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).toContain("preview-zoom-fit");
   });
 
   it("renders the sheet preview as a scaled page with orientation-aware source", () => {

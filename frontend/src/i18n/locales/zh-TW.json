@@ -531,6 +531,7 @@
   "label.previewScalePending": "縮放待計算",
   "label.previewPaper": "紙張",
   "label.previewRealFragmentHint": "這裡直接使用實際列印時會寫入文件的同一份 HTML 片段。",
+  "label.previewDiagnosticsTitle": "輸出檢查",
   "label.previewChecklistTitle": "可讀性檢查",
   "label.outputChecklistTitle": "必要輸出",
   "label.outputChecklistHint": "數量來自與列印 preflight 相同的內容模型。",

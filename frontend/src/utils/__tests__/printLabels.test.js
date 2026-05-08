@@ -363,7 +363,7 @@ describe("print layout model", () => {
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
     expect(large.typography.compliancePictogramSize).toBe("24.6mm");
-    expect(a4Primary.typography.compliancePictogramSize).toBe("26mm");
+    expect(a4Primary.typography.compliancePictogramSize).toBe("28mm");
   });
 
   it("accepts calibration nudges and sheet overrides", () => {
@@ -630,7 +630,7 @@ describe("printLabels", () => {
 
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
-    expect(html).toContain("width: 26mm");
+    expect(html).toContain("width: 28mm");
     expect(html).toContain("column-count: 2");
     expect(html).toContain("compliance-statements-panel");
     expect(html).toContain("font-size:6.5px");
@@ -1543,8 +1543,8 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-a4-primary");
-      expect(preview.html).toContain("width: 26mm");
-      expect(preview.html).toContain("height: 26mm");
+      expect(preview.html).toContain("width: 28mm");
+      expect(preview.html).toContain("height: 28mm");
       expect(preview.html).toContain("column-count: 2");
       expect(preview.html).toContain("compliance-statements-panel");
       expect(preview.html).toContain(
@@ -1576,7 +1576,7 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
-      expect(preview.html).toContain("width: 26mm");
+      expect(preview.html).toContain("width: 28mm");
       expect(preview.html).not.toContain("compliance-qr");
       expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");

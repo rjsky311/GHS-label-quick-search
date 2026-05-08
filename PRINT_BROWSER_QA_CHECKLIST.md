@@ -30,6 +30,8 @@ Record these outputs in the final implementation note:
 - Browser target URL.
 - Search term and selected chemical.
 - Decision summary text for each tested output.
+- Preview mode state: `Fit` should be the default whole-label view, and changing
+  target or stock after using `Inspect` should return the preview to `Fit`.
 - Preview `srcdoc` checks for label-kind class, pictogram codes, QR presence,
   B/W state, language state, and `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs.
@@ -54,17 +56,19 @@ fragment; only click print when intentionally testing the native dialog path.
    - Hazard text: full H/P text.
 7. Confirm `print-outcome-summary` states the printable outcome in plain
    language before the lower-level checklist.
-8. Confirm the footer print action uses the same outcome language, for example
+8. Confirm output/readability diagnostics are collapsed below the live label
+   preview unless the user opens them.
+9. Confirm the footer print action uses the same outcome language, for example
    complete primary, supplemental bottle/tube, or QR supplement.
-9. Confirm `selected-stock-summary` shows the current physical target size and
+10. Confirm `selected-stock-summary` shows the current physical target size and
    `stock-size-picker` is collapsed until the user chooses to change stock.
-10. Confirm the first-level target selector is task-based (`Main container`,
+11. Confirm the first-level target selector is task-based (`Main container`,
    `Bottle label`, `Tube / vial`, `QR supplement`) rather than a template list.
-11. Choose `Bottle label` and confirm it routes to the bottle stock and the
+12. Choose `Bottle label` and confirm it routes to the bottle stock and the
    planner changes dense content to supplemental rather than hiding pictograms.
-12. Expand `stock-size-picker`, choose another stock, and confirm the selected
+13. Expand `stock-size-picker`, choose another stock, and confirm the selected
    stock summary plus preview update.
-13. Confirm the responsible profile section is collapsed when profile data is
+14. Confirm the responsible profile section is collapsed when profile data is
    complete and expands automatically when profile data is missing.
 
 ## Full-Page Primary Outputs

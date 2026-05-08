@@ -446,11 +446,11 @@ function resolveTypographyMetrics(normalized) {
       (normalized.labelWidthMm >= 170 && normalized.labelHeightMm >= 200));
 
   if (isFullPage) {
-    const fullPagePictogramMm = clamp(roundTo(shortSide * 0.12, 1), 26, 30);
+    const fullPagePictogramMm = clamp(roundTo(shortSide * 0.15, 1), 28, 30);
     return {
       ...base,
       fontPx: 13,
-      titlePx: 22,
+      titlePx: 24,
       pictogramPx: 44,
       qrBoxMm: 36,
       signalPx: 17,

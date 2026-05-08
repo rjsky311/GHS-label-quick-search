@@ -87,6 +87,8 @@ Current evidence:
   size, all pictograms, no QR body, and no H/P summaries.
 - `printLabels.test.js` verifies dense A4 primary output does not block and does
   not inject QR into the primary body.
+- Full-page primary typography now emphasizes the chemical identity and uses
+  larger 28 mm compliance pictograms in the A4/Letter layout.
 
 ## Segment 5: Honest Supplemental Outputs
 
@@ -160,6 +162,8 @@ Current evidence:
   metadata, orientation, and B/W mode.
 - `printLabels.test.js` verifies complete-primary clipping is blocked while
   supplemental output is allowed.
+- The modal resets preview to whole-label `Fit` mode after target/stock changes,
+  and lower-level diagnostics stay collapsed below the exact label preview.
 
 ## Segment 9: Repeatable Browser And Deployment QA
 

@@ -416,6 +416,7 @@
   "label.previewScalePending": "Scale pending",
   "label.previewPaper": "Sheet",
   "label.previewRealFragmentHint": "This preview reuses the same HTML fragment that gets written into the print document.",
+  "label.previewDiagnosticsTitle": "Output checks",
   "label.previewChecklistTitle": "Readability check",
   "label.outputChecklistTitle": "Required output",
   "label.outputChecklistHint": "Counts come from the same content model used by print preflight.",

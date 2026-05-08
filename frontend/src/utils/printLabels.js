@@ -977,7 +977,7 @@ const buildStyles = (model) => {
     (layout.size === "small" ? "6.5mm" : "9mm");
   const complianceAlertColumn =
     isFullPagePrimary
-      ? "minmax(64mm, 68mm)"
+      ? "minmax(66mm, 70mm)"
       : layout.size === "large"
       ? "minmax(38mm, 43mm)"
       : layout.size === "medium"
@@ -1282,7 +1282,7 @@ const buildStyles = (model) => {
       overflow: hidden;
     }
     .label-full-page-primary .name-en {
-      font-size: 26px;
+      font-size: 30px;
       line-height: 1.1;
       -webkit-line-clamp: 1;
     }
@@ -1292,7 +1292,7 @@ const buildStyles = (model) => {
       margin-top: 0.5mm;
     }
     .label-full-page-primary .name-zh {
-      font-size: 18px;
+      font-size: 21px;
       line-height: 1.15;
     }
     .label-standard .name-en {
@@ -1315,7 +1315,7 @@ const buildStyles = (model) => {
       margin-top: 0.65mm;
     }
     .label-full-page-primary .cas {
-      font-size: 15px;
+      font-size: 16px;
       margin-top: 1.1mm;
     }
     .meta-ribbon {
@@ -2138,6 +2138,9 @@ function buildPreviewStyles(mode, model, options = {}) {
       display: flex;
       align-items: flex-start;
       justify-content: center;
+    }
+    body.preview-zoom-inspect .preview-shell {
+      justify-content: flex-start;
     }
     .preview-card {
       background: #ffffff;
