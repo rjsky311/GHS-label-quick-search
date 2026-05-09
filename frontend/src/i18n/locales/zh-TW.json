@@ -362,6 +362,7 @@
   "print.supplementalHazardNotice": "補充危害標籤 — 不是完整主要容器標籤。",
   "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
   "print.layoutBlocked": "這張標籤內容已超出或被裁切。列印前請改用 A4 主標或其他更大的完整主標籤紙材；QR 補充標籤不能取代完整主標籤。",
+  "print.layoutBlockedDetailed": "這張標籤在 {{stock}}（{{size}}）上仍有內容超出或被裁切。GHS 圖示與 CAS 不能被省略；列印前請改用 A4/Letter 主標或其他更大的可讀紙材。QR 補充標籤不能取代完整主標籤。檢查項目：{{issueTypes}}",
   "print.imageBlocked": "必要的 GHS 圖示或 QR 圖片尚未載入完成。請確認網路連線後再重新列印，避免輸出缺少安全資訊。",
   "print.totalItems": "共 {{count}} 項",
   "print.morePrecautionary": "另有 {{count}} 項",

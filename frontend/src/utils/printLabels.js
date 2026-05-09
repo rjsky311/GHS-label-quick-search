@@ -460,6 +460,13 @@ const renderSupportChips = (
     .join("")}</div>`;
 };
 
+const renderCriticalIdentityChips = (model) =>
+  renderSupportChips(model, {
+    includeOrganization: false,
+    includeDate: false,
+    includeBatch: true,
+  });
+
 const renderMetaChip = (label, value, className = "") => {
   const labelHtml = label
     ? `<span class="meta-chip-label">${escapeHtml(label)}</span>`
@@ -777,6 +784,7 @@ const renderIconTemplate = (chemical, model) => {
           compactNames: true,
           showProfile: false,
           showCustomFields: false,
+          supportHtml: renderCriticalIdentityChips(model),
         })}
         ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
       </div>
@@ -825,6 +833,7 @@ const renderStandardTemplate = (chemical, model) => {
             includePrepared: true,
             preparedDetailLimit: model.layout.size === "small" ? 1 : 2,
           }),
+          supportHtml: renderCriticalIdentityChips(model),
         })}
       </div>
       <div class="label-middle label-middle-standard">
@@ -995,6 +1004,7 @@ const renderQRCodeTemplate = (chemical, model) => {
               includePrepared: true,
               preparedDetailLimit: 2,
             }),
+            supportHtml: renderCriticalIdentityChips(model),
           })}
         </div>
         ${
@@ -1479,6 +1489,8 @@ const buildStyles = (model) => {
     }
     .meta-chip-cas .meta-chip-value {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
+      overflow: visible;
+      text-overflow: clip;
     }
     .meta-chip-prepared {
       background: #dbeafe;
@@ -2152,6 +2164,27 @@ const buildStyles = (model) => {
     .label-qr.label-form-strip .meta-chip-cas {
       flex: 0 0 auto;
       max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .label-standard.label-form-strip .meta-ribbon {
+      flex-wrap: wrap;
+      overflow: visible;
+      gap: 0.25mm;
+    }
+    .label-form-strip .support-chips {
+      gap: 0.25mm;
+      margin-top: 0.2mm;
+      overflow: visible;
+    }
+    .label-form-strip .support-chip {
+      padding: 0.12mm 0.45mm;
+      font-size: 5.1px;
+      line-height: 1;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
     }
     .label-qr.label-form-strip .qr-priority-block {
       gap: 0;
@@ -2587,6 +2620,11 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".compliance-hazard-panel", "compliance-hazards-overflow"],
       [".compliance-precaution-panel", "compliance-precautions-overflow"],
       [".pictograms.compliance-pictograms", "compliance-pictograms-overflow"],
+      [".cas", "cas-overflow"],
+      [".meta-chip-cas", "cas-chip-overflow"],
+      [".meta-chip-cas .meta-chip-value", "cas-value-overflow"],
+      [".support-chip", "support-chip-overflow"],
+      [".custom-fields", "custom-fields-overflow"],
     ].forEach(([selector, type]) => {
       const element = label.querySelector(selector);
       if (elementOverflows(element, 2)) {
@@ -2618,13 +2656,28 @@ export function inspectPrintLayoutDocument(documentLike) {
 function buildPrintLifecycleMeta(documentBundle) {
   const model = documentBundle?.model;
   if (!model) return {};
+  const layout = model.layout || {};
+  const casNumbers = [
+    ...new Set(
+      (model.selectedForLabel || model.expandedLabels || [])
+        .map((chemical) => chemical?.cas_number)
+        .filter(Boolean),
+    ),
+  ];
 
   return {
-    template: model.layout.template,
-    labelPurpose: model.layout.labelPurpose,
-    stockPreset: model.layout.stockId || model.layout.stockPresetName,
-    orientation: model.layout.orientation,
-    size: model.layout.size,
+    template: layout.template,
+    labelPurpose: layout.labelPurpose,
+    stockPreset: layout.stockId || layout.stockPresetName,
+    stockPresetName: layout.stockPresetName || layout.stock?.name,
+    orientation: layout.orientation,
+    size: layout.size,
+    pageSize: layout.pageSize || layout.page?.size,
+    labelWidthMm: layout.widthMm || layout.labelWidthMm,
+    labelHeightMm: layout.heightMm || layout.labelHeightMm,
+    colorMode: layout.colorMode,
+    nameDisplay: layout.nameDisplay,
+    casNumbers,
     totalLabels: model.expandedLabels.length,
     totalPages: model.totalPages,
     totalChemicals: model.selectedForLabel.length,
@@ -2692,6 +2745,15 @@ function publishPrintQaStatus(status, message) {
     statusElement.dataset.labelKind = nextStatus.labelKind || "";
     statusElement.dataset.pictograms = (nextStatus.pictogramCodes || []).join(",");
     statusElement.dataset.hasQr = String(Boolean(nextStatus.hasQr));
+    statusElement.dataset.casNumbers = (nextStatus.casNumbers || []).join(",");
+    statusElement.dataset.hasCas = String(Boolean(nextStatus.hasCas));
+    statusElement.dataset.labelWidthMm =
+      nextStatus.labelWidthMm == null ? "" : String(nextStatus.labelWidthMm);
+    statusElement.dataset.labelHeightMm =
+      nextStatus.labelHeightMm == null ? "" : String(nextStatus.labelHeightMm);
+    statusElement.dataset.pageSize = nextStatus.pageSize || "";
+    statusElement.dataset.colorMode = nextStatus.colorMode || "";
+    statusElement.dataset.nameDisplay = nextStatus.nameDisplay || "";
     statusElement.dataset.totalLabels = String(nextStatus.totalLabels || 0);
     statusElement.dataset.template = nextStatus.template || "";
     statusElement.dataset.stockPreset = nextStatus.stockPreset || "";
@@ -2707,15 +2769,12 @@ function publishPrintPendingQaStatus(documentBundle) {
   const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
   return publishPrintQaStatus(
     {
+      ...lifecycleMeta,
       status: "pending",
-      template: lifecycleMeta.template,
-      labelPurpose: lifecycleMeta.labelPurpose,
-      stockPreset: lifecycleMeta.stockPreset,
-      orientation: lifecycleMeta.orientation,
-      totalLabels: lifecycleMeta.totalLabels || 1,
       labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
       pictogramCodes: [],
       hasQr: false,
+      hasCas: false,
     },
     "Print handoff pending",
   );
@@ -2728,19 +2787,48 @@ function publishPrintBlockedQaStatus(documentBundle, preflightIssues) {
   ];
   return publishPrintQaStatus(
     {
+      ...lifecycleMeta,
       status: "blocked",
-      template: lifecycleMeta.template,
-      labelPurpose: lifecycleMeta.labelPurpose,
-      stockPreset: lifecycleMeta.stockPreset,
-      orientation: lifecycleMeta.orientation,
-      totalLabels: lifecycleMeta.totalLabels || 1,
       labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
       pictogramCodes: [],
       hasQr: false,
+      hasCas: false,
       issueTypes,
     },
     `Print handoff blocked: ${issueTypes.join(",")}`,
   );
+}
+
+function getPrintQaDocumentText(documentBundle, iframeDoc) {
+  return [
+    iframeDoc?.body?.innerText,
+    iframeDoc?.body?.textContent,
+    iframeDoc?.documentElement?.textContent,
+    documentBundle?.pagesHtml,
+    documentBundle?.html,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildLayoutBlockedAlert(lifecycleMeta, preflightIssues) {
+  const stock =
+    lifecycleMeta.stockPresetName || lifecycleMeta.stockPreset || "current stock";
+  const size =
+    lifecycleMeta.labelWidthMm && lifecycleMeta.labelHeightMm
+      ? `${lifecycleMeta.labelWidthMm} x ${lifecycleMeta.labelHeightMm} mm`
+      : "";
+  const issueTypes = [
+    ...new Set(preflightIssues.map((issue) => issue.type).filter(Boolean)),
+  ].join(", ");
+
+  return i18n.t("print.layoutBlockedDetailed", {
+    stock,
+    size,
+    issueTypes,
+    defaultValue:
+      "This label content is overflowing or clipped on {{stock}} ({{size}}). Keep GHS pictograms and CAS visible; choose A4/Letter Primary or a larger truthful stock before printing. QR supplement is not a substitute for a complete primary label. Layout check: {{issueTypes}}",
+  });
 }
 
 function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
@@ -2750,16 +2838,18 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
   const pictogramCodes = [
     ...new Set(imageAlts.filter((alt) => /^GHS\d{2}$/.test(alt))),
   ];
+  const documentText = getPrintQaDocumentText(documentBundle, iframeDoc);
+  const casNumbers = lifecycleMeta.casNumbers || [];
+  const hasCas =
+    casNumbers.length === 0 ||
+    casNumbers.every((casNumber) => documentText.includes(casNumber));
   const status = {
+    ...lifecycleMeta,
     status: "qa_handoff",
-    template: lifecycleMeta.template,
-    labelPurpose: lifecycleMeta.labelPurpose,
-    stockPreset: lifecycleMeta.stockPreset,
-    orientation: lifecycleMeta.orientation,
-    totalLabels: lifecycleMeta.totalLabels || 1,
     labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
     pictogramCodes,
     hasQr: imageAlts.some((alt) => /qr/i.test(alt)),
+    hasCas,
   };
 
   return publishPrintQaStatus(
@@ -2869,10 +2959,7 @@ export function printLabels(
                 defaultValue:
                   "Required label images did not load. Check your network and try again before printing.",
               })
-            : i18n.t("print.layoutBlocked", {
-                defaultValue:
-                  "This label content is overflowing or clipped. Choose a larger stock, reduce optional fields, or use a QR supplement before printing.",
-              }),
+            : buildLayoutBlockedAlert(lifecycleMeta, preflightIssues),
         );
       }
       iframe.remove();
@@ -2930,6 +3017,8 @@ export function printLabels(
             labelKind: qaStatus.labelKind,
             pictogramCodes: qaStatus.pictogramCodes,
             hasQr: qaStatus.hasQr,
+            casNumbers: qaStatus.casNumbers,
+            hasCas: qaStatus.hasCas,
           },
         });
         cleanup("qa_handoff");

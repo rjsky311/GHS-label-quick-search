@@ -883,6 +883,12 @@ export function buildPrintQaCaseResult({
       hasQr: actual.hasQr,
       template: actual.template,
       stockPreset: actual.stockPreset,
+      casNumbers: selectedChemical.cas_number ? [selectedChemical.cas_number] : [],
+      labelWidthMm: printDocument?.model?.layout?.widthMm,
+      labelHeightMm: printDocument?.model?.layout?.heightMm,
+      pageSize: printDocument?.model?.layout?.pageSize,
+      colorMode: printDocument?.model?.layout?.colorMode,
+      nameDisplay: printDocument?.model?.layout?.nameDisplay,
     },
     passed: failures.length === 0,
     failures,
@@ -891,19 +897,55 @@ export function buildPrintQaCaseResult({
 
 const PRODUCTION_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
 
+const resolveProductionTargetValue = (testCase = {}) => {
+  const config = testCase.labelConfig || {};
+  if (config.labelPurpose === "quickId") return "vial";
+  if (config.labelPurpose === "qrSupplement") return "qrSupplement";
+  if (
+    config.stockPreset === "medium-bottle" ||
+    config.stockPreset === "avery-5163" ||
+    config.stockPreset === "avery-5164" ||
+    config.stockPreset === "medium-rack"
+  ) {
+    return "bottle";
+  }
+  return "mainContainer";
+};
+
 const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   id: testCase.id,
   label: testCase.label,
   searchTerm: caseResult.chemical.cas,
   targetUrl: PRODUCTION_FRONTEND_URL,
   qaHandoffUrl: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1`,
+  targetOption: resolveProductionTargetValue(testCase),
+  stockPreset: caseResult.handoffExpectation.stockPreset,
   expectedStatus: "qa_handoff",
   expectedLabelKind: caseResult.handoffExpectation.labelKind,
   expectedStockPreset: caseResult.handoffExpectation.stockPreset,
   expectedTemplate: caseResult.handoffExpectation.template,
   expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
   expectedHasQr: caseResult.handoffExpectation.hasQr,
+  expectedCasNumbers: caseResult.handoffExpectation.casNumbers,
+  expectedLabelWidthMm: caseResult.handoffExpectation.labelWidthMm,
+  expectedLabelHeightMm: caseResult.handoffExpectation.labelHeightMm,
+  expectedPageSize: caseResult.handoffExpectation.pageSize,
+  expectedColorMode: caseResult.handoffExpectation.colorMode,
+  expectedNameDisplay: caseResult.handoffExpectation.nameDisplay,
   mustContainCas: Boolean(caseResult.chemical.cas),
+  steps: [
+    { action: "open", url: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1` },
+    { action: "search", value: caseResult.chemical.cas },
+    { action: "selectFirstResult" },
+    { action: "openPrintModal" },
+    { action: "selectTarget", value: resolveProductionTargetValue(testCase) },
+    {
+      action: "selectStock",
+      value: caseResult.handoffExpectation.stockPreset,
+    },
+    { action: "clickPrint" },
+    { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
+  ],
 });
 
 export function buildPrintQaMatrixReport({
@@ -963,6 +1005,13 @@ export function buildPrintQaMatrixReport({
         "data-label-kind",
         "data-pictograms",
         "data-has-qr",
+        "data-cas-numbers",
+        "data-has-cas",
+        "data-label-width-mm",
+        "data-label-height-mm",
+        "data-page-size",
+        "data-color-mode",
+        "data-name-display",
         "data-template",
         "data-stock-preset",
         "data-issue-types",

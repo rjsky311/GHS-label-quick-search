@@ -122,6 +122,13 @@ describe("print QA matrix report", () => {
         "data-label-kind",
         "data-pictograms",
         "data-has-qr",
+        "data-cas-numbers",
+        "data-has-cas",
+        "data-label-width-mm",
+        "data-label-height-mm",
+        "data-page-size",
+        "data-color-mode",
+        "data-name-display",
         "data-stock-preset",
       ]),
     );
@@ -143,6 +150,12 @@ describe("print QA matrix report", () => {
       stockPreset: "a4-primary",
       template: "full",
       hasQr: false,
+      casNumbers: ["7647-01-0"],
+      labelWidthMm: 188,
+      labelHeightMm: 268,
+      pageSize: "A4",
+      colorMode: "color",
+      nameDisplay: "both",
     });
     expect(byId["a4-primary"].actual.hasFullPagePictograms).toBe(true);
     expect(byId["a4-primary"].actual.hasSummaries).toBe(false);
@@ -153,6 +166,10 @@ describe("print QA matrix report", () => {
       stockPreset: "letter-primary",
       template: "full",
       hasQr: false,
+      casNumbers: ["7647-01-0"],
+      labelWidthMm: 196,
+      labelHeightMm: 250,
+      pageSize: "Letter",
     });
     expect(byId["letter-primary"].actual.hasFullPagePictograms).toBe(true);
 
@@ -214,7 +231,19 @@ describe("print QA matrix report", () => {
       searchTerm: "QA-LONG-001",
       expectedLabelKind: "quick-id",
       expectedStockPreset: "small-strip",
+      expectedCasNumbers: ["QA-LONG-001"],
+      expectedLabelWidthMm: 70,
+      expectedLabelHeightMm: 24,
+      expectedPageSize: "A4",
+      targetOption: "vial",
       mustContainCas: true,
     });
+    expect(browserCaseById["long-name-tube-quick-id"].steps).toEqual(
+      expect.arrayContaining([
+        { action: "selectTarget", value: "vial" },
+        { action: "selectStock", value: "small-strip" },
+        { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
+      ]),
+    );
   });
 });

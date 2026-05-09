@@ -37,7 +37,9 @@ Record these outputs in the final implementation note:
 - Print button enabled/disabled state for allowed and blocked outputs.
 - `print-qa-status` after clicking the print action in QA handoff mode.
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
-  `data-template`, and `data-stock-preset` attributes when available.
+  `data-cas-numbers`, `data-has-cas`, `data-label-width-mm`,
+  `data-label-height-mm`, `data-page-size`, `data-template`, and
+  `data-stock-preset` attributes when available.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview
@@ -209,7 +211,19 @@ case:
   `qr-supplement`.
 - `data-pictograms` contains every expected GHS code for the chemical.
 - `data-has-qr` is `true` only for QR supplemental labels.
+- `data-cas-numbers` contains the selected chemical's CAS number and
+  `data-has-cas="true"` so small-label identity fields cannot disappear
+  silently.
+- `data-label-width-mm`, `data-label-height-mm`, and `data-page-size` match the
+  selected stock. This is the production check for "the user selected this
+  physical label, not just some printable fallback."
 - `data-template` and `data-stock-preset` match the selected target.
+- If production blocks a print, the alert must name the current stock and
+  physical size. A blocked job is only acceptable when the message tells the
+  user how to get a truthful output instead of merely refusing the print.
+- When batch/case-style custom identity data is filled in, compact supplemental
+  labels must keep it as an identity chip while still keeping CAS and every GHS
+  pictogram visible.
 
 The full shipping gate is still:
 

@@ -716,7 +716,7 @@ describe("printLabels", () => {
       {},
     );
 
-    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlocked");
+    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -756,7 +756,7 @@ describe("printLabels", () => {
       { organization: "Lab A", phone: "02-1234", address: "Taipei" },
     );
 
-    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlocked");
+    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -1041,6 +1041,13 @@ describe("printLabels", () => {
         totalLabels: 1,
         pictogramCodes: ["GHS02", "GHS07"],
         hasQr: true,
+        casNumbers: ["64-17-5"],
+        hasCas: true,
+        labelWidthMm: 70,
+        labelHeightMm: 24,
+        pageSize: "A4",
+        colorMode: "color",
+        nameDisplay: "both",
       }),
     );
     const statusElements = appendChildSpy.mock.calls
@@ -1058,6 +1065,13 @@ describe("printLabels", () => {
         labelKind: "qr-supplement",
         pictograms: "GHS02,GHS07",
         hasQr: "true",
+        casNumbers: "64-17-5",
+        hasCas: "true",
+        labelWidthMm: "70",
+        labelHeightMm: "24",
+        pageSize: "A4",
+        colorMode: "color",
+        nameDisplay: "both",
         template: "qrcode",
         stockPreset: "small-strip",
       }),
@@ -1070,6 +1084,8 @@ describe("printLabels", () => {
           labelKind: "qr-supplement",
           pictogramCodes: ["GHS02", "GHS07"],
           hasQr: true,
+          casNumbers: ["64-17-5"],
+          hasCas: true,
         }),
       }),
     );
@@ -1856,7 +1872,7 @@ describe("printLabels", () => {
       expect(html).not.toContain("B-001");
     });
 
-    it("compact templates omit date, batch, and profile fallbacks", () => {
+    it("compact templates omit date and profile fallbacks but keep batch identity", () => {
       ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
@@ -1868,7 +1884,8 @@ describe("printLabels", () => {
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).not.toContain("Lab A");
         expect(html).not.toContain("2026-02-12");
-        expect(html).not.toContain("B-001");
+        expect(html).toContain("B-001");
+        expect(html).toMatch(/<div\s+class="support-chips"/);
       });
     });
 
@@ -1889,6 +1906,34 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("print.batch");
       expect(html).toContain("X-99");
+    });
+
+    it("keeps batch identity chips on compact supplemental templates", () => {
+      ["icon", "standard", "qrcode"].forEach((template) => {
+        mockIframeDoc.write.mockClear();
+        printLabels(
+          [mockChemical],
+          {
+            labelPurpose:
+              template === "qrcode"
+                ? "qrSupplement"
+                : template === "standard"
+                  ? "shipping"
+                  : "quickId",
+            template,
+            stockPreset: "small-strip",
+            nameDisplay: "both",
+          },
+          {},
+          { labName: "", date: "", batchNumber: "CASE-2026-0007" },
+        );
+        const html = mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toMatch(/<div\s+class="support-chips"/);
+        expect(html).toMatch(/<span\s+class="support-chip"/);
+        expect(html).toContain("CASE-2026-0007");
+        expect(html).toContain("CAS");
+        expect(html).toContain(mockChemical.cas_number);
+      });
     });
   });
 

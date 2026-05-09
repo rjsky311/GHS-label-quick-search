@@ -572,6 +572,7 @@
   "print.supplementalHazardNotice": "Supplemental hazard label - not a complete primary container label.",
   "print.supplierMissing": "Responsible lab / supplier information missing",
   "print.layoutBlocked": "This label content is overflowing or clipped. Choose A4 Primary or another larger complete-label stock before printing. QR supplement is not a substitute for a complete primary label.",
+  "print.layoutBlockedDetailed": "This label is still overflowing or clipped on {{stock}} ({{size}}). GHS pictograms and CAS must remain visible; choose A4/Letter Primary or another larger readable stock before printing. QR supplement is not a substitute for a complete primary label. Check: {{issueTypes}}",
   "print.imageBlocked": "Required GHS pictograms or QR images have not loaded. Check the network and print again so the output does not miss safety information.",
   "print.totalItems": "{{count}} item(s)",
   "print.moreHazardsShort": "{{count}} more hazard(s)",
