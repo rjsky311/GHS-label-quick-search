@@ -598,6 +598,35 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("treats rack landscape as a printable supplemental container stock", () => {
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        size: "medium",
+        stockPreset: "medium-bottle",
+        labelWidthMm: 95,
+        labelHeightMm: 50,
+        perPage: 8,
+      },
+    });
+
+    fireEvent.click(screen.getByTestId("primary-output-size-medium-rack"));
+
+    expect(props.onLabelConfigChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stockPreset: "medium-rack",
+        labelWidthMm: 90,
+        labelHeightMm: 38,
+        perPage: 9,
+        template: "standard",
+        labelPurpose: "shipping",
+      }),
+    );
+  });
+
   it("restores the complete full template when switching from supplemental bottle stock back to A4 primary", () => {
     const denseChem = makeChem({
       ghs_pictograms: [

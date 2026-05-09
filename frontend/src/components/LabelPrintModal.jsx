@@ -1457,8 +1457,9 @@ export default function LabelPrintModal({
 
       nextConfig.labelPurpose = "shipping";
       nextConfig.template =
-        preset.outputRole === "primary-candidate" &&
-        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+        preset.outputRole === "supplemental" ||
+        (preset.outputRole === "primary-candidate" &&
+          completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE)
           ? "standard"
           : "full";
     }
