@@ -2949,7 +2949,11 @@ export function printLabels(
           issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
         },
       });
-      if (typeof window !== "undefined" && typeof window.alert === "function") {
+      if (
+        !isPrintHandoffQaMode() &&
+        typeof window !== "undefined" &&
+        typeof window.alert === "function"
+      ) {
         const hasRequiredImageFailure = preflightIssues.some(
           (issue) => issue.type === "required-image-failed",
         );

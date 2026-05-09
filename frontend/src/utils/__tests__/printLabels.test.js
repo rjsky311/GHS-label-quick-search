@@ -1107,6 +1107,71 @@ describe("printLabels", () => {
     );
   });
 
+  it("reports blocked QA handoff without opening a blocking alert", () => {
+    window.history.replaceState({}, "", "/?qaPrintHandoff=1");
+    createElementSpy.mockImplementation((tag) => {
+      if (tag === "iframe") return mockIframe;
+      if (tag === "div") {
+        return {
+          id: "",
+          style: { cssText: "" },
+          dataset: {},
+          setAttribute: jest.fn(),
+        };
+      }
+      return document.createElement.wrappedMethod
+        ? document.createElement.wrappedMethod(tag)
+        : {};
+    });
+    const overflowLabel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 80,
+      scrollWidth: 80,
+      querySelector: jest.fn(() => null),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (String(selector).includes(".label")) return [overflowLabel];
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+    );
+
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(mockIframe.remove).toHaveBeenCalled();
+    expect(window.__GHS_PRINT_QA_LAST_HANDOFF__).toEqual(
+      expect.objectContaining({
+        status: "blocked",
+        labelKind: "complete-primary",
+        issueTypes: ["label-overflow"],
+      }),
+    );
+    const statusElements = appendChildSpy.mock.calls
+      .map(([node]) => node)
+      .filter((node) => node?.id === "ghs-print-qa-status");
+    const statusElement = statusElements[statusElements.length - 1];
+    expect(statusElement.dataset).toEqual(
+      expect.objectContaining({
+        status: "blocked",
+        labelKind: "complete-primary",
+        issueTypes: "label-overflow",
+      }),
+    );
+  });
+
   it("cleans up iframe when afterprint fires (dialog closed)", () => {
     printLabels(
       [mockChemicalNoGHS],
