@@ -1057,7 +1057,7 @@ const buildStyles = (model) => {
     (layout.size === "small" ? "6.5mm" : "9mm");
   const complianceAlertColumn =
     isFullPagePrimary
-      ? "minmax(58mm, 62mm)"
+      ? "minmax(64mm, 66mm)"
       : layout.size === "large"
       ? "minmax(38mm, 43mm)"
       : layout.size === "medium"
