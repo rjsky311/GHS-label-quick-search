@@ -135,8 +135,8 @@ describe("printOutputPlanner", () => {
         template: "full",
         stockPreset: "letter-primary",
         pageSize: "Letter",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
         perPage: 1,
       }),
     );

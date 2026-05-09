@@ -86,6 +86,63 @@ export function getHazardFontTier(hazardCount, labelSize) {
   return tiers[tiers.length - 1][size] || tiers[tiers.length - 1].medium;
 }
 
+const getStatementTextLoad = (statements = [], model) =>
+  statements.reduce(
+    (total, statement) =>
+      total +
+      String(statement?.code || "").length * 2 +
+      getLocalizedTextForModel(statement, model).length,
+    0,
+  );
+
+const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
+  const statementCount = hazards.length + precautions.length;
+  const textLoad =
+    getStatementTextLoad(hazards, model) +
+    getStatementTextLoad(precautions, model);
+
+  if (statementCount >= 28 || textLoad > 3000) {
+    return {
+      fontSize: "5.1px",
+      lineHeight: "1.02",
+      marginBottom: "0.14mm",
+      codeGap: "0.45mm",
+      hazardCodeMin: "8.5mm",
+      hazardCodeMax: "11mm",
+      precautionCodeMin: "12mm",
+      precautionCodeMax: "16mm",
+    };
+  }
+
+  if (statementCount >= 22 || textLoad > 2400) {
+    return {
+      fontSize: "5.5px",
+      lineHeight: "1.03",
+      marginBottom: "0.18mm",
+      codeGap: "0.55mm",
+      hazardCodeMin: "9.5mm",
+      hazardCodeMax: "12mm",
+      precautionCodeMin: "13mm",
+      precautionCodeMax: "17mm",
+    };
+  }
+
+  if (statementCount >= 16 || textLoad > 1800) {
+    return {
+      fontSize: "5.9px",
+      lineHeight: "1.04",
+      marginBottom: "0.24mm",
+      codeGap: "0.65mm",
+      hazardCodeMin: "10mm",
+      hazardCodeMax: "13mm",
+      precautionCodeMin: "14mm",
+      precautionCodeMax: "18.5mm",
+    };
+  }
+
+  return getHazardFontTier(statementCount, model.layout.size);
+};
+
 const chunk = (items, size) => {
   const chunks = [];
   for (let index = 0; index < items.length; index += size) {
@@ -801,13 +858,20 @@ const renderFullTemplate = (chemical, model) => {
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
-  const hazardTier = getHazardFontTier(
-    hazards.length + precautions.length,
-    model.layout.size,
-  );
+  const hazardTier = isFullPagePrimaryLayout(model.layout)
+    ? getFullPageStatementTier(hazards, precautions, model)
+    : getHazardFontTier(hazards.length + precautions.length, model.layout.size);
   const prepared = isPrepared(effectiveChem);
   const purposeNotice = renderPurposeNotice(model);
   const fullPageClass = getFullPagePrimaryClass(model.layout);
+  const statementPanelStyle = [
+    `--compliance-statement-gap:${hazardTier.marginBottom}`,
+    `--compliance-code-gap:${hazardTier.codeGap || "1.1mm"}`,
+    `--hazard-code-min:${hazardTier.hazardCodeMin || "10mm"}`,
+    `--hazard-code-max:${hazardTier.hazardCodeMax || "14mm"}`,
+    `--precaution-code-min:${hazardTier.precautionCodeMin || "15mm"}`,
+    `--precaution-code-max:${hazardTier.precautionCodeMax || "21mm"}`,
+  ].join(";");
 
   return `
     <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${prepared ? " label-prepared" : ""}">
@@ -831,7 +895,7 @@ const renderFullTemplate = (chemical, model) => {
               : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
           }
         </div>
-        <div class="compliance-statements-panel">
+        <div class="compliance-statements-panel" style="${statementPanelStyle}">
           <div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
             <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
             ${
@@ -993,7 +1057,7 @@ const buildStyles = (model) => {
     (layout.size === "small" ? "6.5mm" : "9mm");
   const complianceAlertColumn =
     isFullPagePrimary
-      ? "minmax(66mm, 70mm)"
+      ? "minmax(58mm, 62mm)"
       : layout.size === "large"
       ? "minmax(38mm, 43mm)"
       : layout.size === "medium"
@@ -1081,8 +1145,8 @@ const buildStyles = (model) => {
     .label-full-page-primary {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
-      gap: 2.4mm;
-      padding: 6mm;
+      gap: 1.6mm;
+      padding: 4.5mm;
       border-width: 0.8mm;
       border-radius: 1.2mm;
       overflow: hidden;
@@ -1140,7 +1204,7 @@ const buildStyles = (model) => {
       min-width: 0;
     }
     .label-full-page-primary .compliance-header {
-      padding-bottom: 2mm;
+      padding-bottom: 1.4mm;
     }
     .compliance-header .profile-block,
     .compliance-header .custom-fields {
@@ -1164,9 +1228,9 @@ const buildStyles = (model) => {
     .label-full-page-primary .compliance-alert-panel {
       border: 0.25mm solid #dbe4ef;
       border-radius: 1.2mm;
-      padding: 2.4mm;
+      padding: 1.5mm;
       background: #f8fafc;
-      gap: 2.2mm;
+      gap: 1.3mm;
       justify-content: flex-start;
       overflow: hidden;
     }
@@ -1203,7 +1267,7 @@ const buildStyles = (model) => {
     .compliance-statement {
       display: grid;
       grid-template-columns: minmax(13mm, max-content) minmax(0, 1fr);
-      gap: 1.1mm;
+      gap: var(--compliance-code-gap, 1.1mm);
       break-inside: avoid;
       align-items: start;
     }
@@ -1259,14 +1323,14 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .compliance-footer {
       margin-top: 0;
-      padding-top: 1.6mm;
+      padding-top: 1.1mm;
     }
     .label-full-page-primary .compliance-footer .profile-block {
-      padding: 1mm 1.2mm;
+      padding: 0.8mm 1mm;
     }
     .label-full-page-primary .compliance-footer .profile-row {
-      font-size: 10px;
-      line-height: 1.25;
+      font-size: 9px;
+      line-height: 1.18;
     }
     .name-section {
       text-align: left;
@@ -1298,7 +1362,7 @@ const buildStyles = (model) => {
       overflow: hidden;
     }
     .label-full-page-primary .name-en {
-      font-size: 30px;
+      font-size: 28px;
       line-height: 1.1;
       -webkit-line-clamp: 1;
     }
@@ -1308,7 +1372,7 @@ const buildStyles = (model) => {
       margin-top: 0.5mm;
     }
     .label-full-page-primary .name-zh {
-      font-size: 21px;
+      font-size: 19px;
       line-height: 1.15;
     }
     .label-standard .name-en {
@@ -1337,6 +1401,7 @@ const buildStyles = (model) => {
       font-size: max(6px, calc(${layout.typography.fontSize} - 0.8px));
       color: #475569;
       margin-top: 0.65mm;
+      white-space: nowrap;
     }
     .label-full-page-primary .cas {
       font-size: 16px;
@@ -1729,16 +1794,16 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .compliance-core {
       grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
-      gap: 3.6mm;
+      gap: 2.4mm;
       min-height: 0;
     }
     .label-full-page-primary .section-label {
-      font-size: 9px;
-      margin-bottom: 0.7mm;
+      font-size: 7.6px;
+      margin-bottom: 0.45mm;
       letter-spacing: 0;
     }
     .label-full-page-primary .compliance-hazard-list {
-      gap: 0.45mm;
+      gap: 0.3mm;
     }
     .label-full-page-primary .compliance-precaution-list {
       display: block;
@@ -1748,12 +1813,15 @@ const buildStyles = (model) => {
     .label-full-page-primary .compliance-statement {
       break-inside: avoid;
       page-break-inside: avoid;
-      margin-bottom: 0.42mm;
+      margin-bottom: var(--compliance-statement-gap, 0.42mm);
+    }
+    .label-full-page-primary .compliance-hazard-list .compliance-statement {
+      grid-template-columns: minmax(var(--hazard-code-min, 10mm), var(--hazard-code-max, 14mm)) minmax(0, 1fr);
     }
     .label-full-page-primary .compliance-precaution-list .compliance-statement {
       display: grid;
-      grid-template-columns: minmax(15mm, 21mm) minmax(0, 1fr);
-      gap: 0.8mm;
+      grid-template-columns: minmax(var(--precaution-code-min, 15mm), var(--precaution-code-max, 21mm)) minmax(0, 1fr);
+      gap: var(--compliance-code-gap, 0.8mm);
     }
     .precaution-code {
       display: inline-block;
@@ -1884,6 +1952,9 @@ const buildStyles = (model) => {
       font-size: 6px;
       line-height: 1;
       margin-top: 0.25mm;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
     }
     .label-standard.label-form-strip .standard-grid {
       display: flex;
@@ -1931,7 +2002,7 @@ const buildStyles = (model) => {
       margin-bottom: 0.35mm;
     }
     .label-icon.label-form-strip .name-section-compact {
-      gap: 0.05mm;
+      gap: 0.12mm;
     }
     .label-icon.label-form-strip .name-en {
       font-size: 7.2px;
@@ -1944,7 +2015,13 @@ const buildStyles = (model) => {
       margin-top: 0;
     }
     .label-icon.label-form-strip .cas {
-      display: none;
+      display: block;
+      font-size: 5.6px;
+      line-height: 1;
+      margin-top: 0;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
     }
     .label-icon.label-form-strip .label-middle {
       flex: 1 1 auto;
@@ -2005,14 +2082,19 @@ const buildStyles = (model) => {
     .label-qr.label-form-strip .meta-ribbon {
       margin-top: 0.2mm;
       gap: 0.25mm;
-      flex-wrap: nowrap;
-      overflow: hidden;
+      flex-wrap: wrap;
+      overflow: visible;
     }
     .label-qr.label-form-strip .meta-chip {
       gap: 0.25mm;
       padding: 0.12mm 0.45mm;
       font-size: 5.2px;
       line-height: 1;
+    }
+    .label-standard.label-form-strip .meta-chip-cas,
+    .label-qr.label-form-strip .meta-chip-cas {
+      flex: 0 0 auto;
+      max-width: none;
     }
     .label-qr.label-form-strip .qr-priority-block {
       gap: 0;

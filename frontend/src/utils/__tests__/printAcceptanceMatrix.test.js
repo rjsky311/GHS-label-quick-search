@@ -381,6 +381,7 @@ describe("print acceptance matrix", () => {
     expect(plan.canPrint).toBe(true);
     expect(preview.fragmentHtml).toContain("label-kind-quick-id");
     expect(preview.fragmentHtml).toContain("label-form-strip");
+    expect(preview.fragmentHtml).toContain("CAS: 7647-01-0");
     expect(preview.fragmentHtml).not.toContain("qrcode-img");
     expect(preview.fragmentHtml).not.toContain("more-pics");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);

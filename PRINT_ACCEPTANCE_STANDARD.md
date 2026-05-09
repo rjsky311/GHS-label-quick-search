@@ -71,6 +71,7 @@ Use for bench-side identification where the label is not expected to carry full 
 Acceptance gates:
 
 - Product identity is present.
+- CAS is present when available.
 - Every available GHS pictogram is printed.
 - Signal word is present when available.
 - The workflow makes clear this is identification/supplemental output.

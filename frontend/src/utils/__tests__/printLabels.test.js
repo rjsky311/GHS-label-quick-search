@@ -329,8 +329,8 @@ describe("print layout model", () => {
     const layout = resolvePrintLayoutConfig({ stockPreset: "a4-primary" });
 
     expect(layout.stockId).toBe("a4-primary");
-    expect(layout.label.width).toBe("180mm");
-    expect(layout.label.height).toBe("250mm");
+    expect(layout.label.width).toBe("188mm");
+    expect(layout.label.height).toBe("268mm");
     expect(layout.page.perPage).toBe(1);
   });
 
@@ -365,7 +365,7 @@ describe("print layout model", () => {
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
     expect(large.typography.compliancePictogramSize).toBe("24.6mm");
-    expect(a4Primary.typography.compliancePictogramSize).toBe("28mm");
+    expect(a4Primary.typography.compliancePictogramSize).toBe("28.2mm");
   });
 
   it("accepts calibration nudges and sheet overrides", () => {
@@ -654,10 +654,10 @@ describe("printLabels", () => {
 
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
-    expect(html).toContain("width: 28mm");
+    expect(html).toContain("width: 28.2mm");
     expect(html).toContain("column-count: 2");
     expect(html).toContain("compliance-statements-panel");
-    expect(html).toContain("font-size:6.5px");
+    expect(html).toContain("font-size:5.1px");
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
     expect(bodyHtml).not.toContain('class="qrcode-img"');
@@ -1215,8 +1215,34 @@ describe("printLabels", () => {
       expect(preview.html).toContain("width: 15.8mm");
       expect(preview.html).toContain("width: 8.6mm");
       expect(preview.fragmentHtml).toContain("qrcode-img");
+      expect(preview.fragmentHtml).toContain("64-17-5");
+      expect(preview.html).toContain(".label-qr.label-form-strip .meta-chip-cas");
       expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(preview.fragmentHtml).not.toContain("more-pics");
+    });
+
+    it("keeps CAS visible on strip quick-ID labels", () => {
+      const preview = buildPrintPreviewDocument(
+        [mockChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-kind-quick-id");
+      expect(preview.fragmentHtml).toContain("label-form-strip");
+      expect(preview.fragmentHtml).toContain("CAS: 64-17-5");
+      expect(preview.html).not.toContain(
+        ".label-icon.label-form-strip .cas {\n      display: none;",
+      );
     });
 
     it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {
@@ -1567,14 +1593,15 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-a4-primary");
-      expect(preview.html).toContain("width: 28mm");
-      expect(preview.html).toContain("height: 28mm");
+      expect(preview.html).toContain("width: 28.2mm");
+      expect(preview.html).toContain("height: 28.2mm");
       expect(preview.html).toContain("column-count: 2");
       expect(preview.html).toContain("compliance-statements-panel");
       expect(preview.html).toContain(
         "grid-template-rows: auto minmax(0, 1fr) auto",
       );
-      expect(preview.html).toContain("font-size:6.5px");
+      expect(preview.html).toContain("font-size:5.1px");
+      expect(preview.html).toContain("--precaution-code-max:16mm");
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).not.toContain("compliance-qr");
       expect(preview.html).not.toContain("qrcode-img-small");
@@ -1601,7 +1628,7 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
-      expect(preview.html).toContain("width: 28mm");
+      expect(preview.html).toContain("width: 29.4mm");
       expect(preview.html).not.toContain("compliance-qr");
       expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");

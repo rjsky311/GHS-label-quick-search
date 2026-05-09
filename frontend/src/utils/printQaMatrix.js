@@ -32,75 +32,148 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   hazard_statements: [
     {
       code: "H280",
-      text_en: "Contains gas under pressure; may explode if heated",
-      text_zh: "Contains gas under pressure ZH",
+      text_en:
+        "H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]",
+      text_zh: "內含高壓氣體；遇熱可能爆炸",
     },
     {
       code: "H290",
-      text_en: "May be corrosive to metals",
-      text_zh: "May be corrosive to metals ZH",
+      text_en: "H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]",
+      text_zh: "可能腐蝕金屬",
     },
     {
       code: "H314",
-      text_en: "Causes severe skin burns and eye damage",
-      text_zh: "Causes severe skin burns and eye damage ZH",
+      text_en:
+        "H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]",
+      text_zh: "造成嚴重皮膚灼傷和眼睛損傷",
     },
     {
       code: "H318",
-      text_en: "Causes serious eye damage",
-      text_zh: "Causes serious eye damage ZH",
+      text_en: "H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]",
+      text_zh: "造成嚴重眼睛損傷",
     },
     {
       code: "H331",
-      text_en: "Toxic if inhaled",
-      text_zh: "Toxic if inhaled ZH",
+      text_en: "H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]",
+      text_zh: "吸入有毒",
     },
     {
       code: "H335",
-      text_en: "May cause respiratory irritation",
-      text_zh: "May cause respiratory irritation ZH",
+      text_en:
+        "H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]",
+      text_zh: "可能造成呼吸道刺激",
     },
   ],
   precautionary_statements: [
     {
       code: "P234",
-      text_en: "Keep only in original packaging",
-      text_zh: "Keep only in original packaging ZH",
+      text_en: "Keep only in original packaging.",
+      text_zh: "僅保存在原容器中。",
     },
     {
       code: "P260",
-      text_en: "Do not breathe dust, fume, gas, mist, vapours or spray",
-      text_zh: "Do not breathe dust, fume, gas, mist, vapours or spray ZH",
+      text_en: "Do not breathe dust, fume, gas, mist, vapours or spray.",
+      text_zh: "切勿吸入粉塵、煙霧、氣體、霧滴、蒸氣或噴霧。",
+    },
+    {
+      code: "P261",
+      text_en: "Avoid breathing dust, fume, gas, mist, vapours or spray.",
+      text_zh: "避免吸入粉塵、煙霧、氣體、霧滴、蒸氣或噴霧。",
+    },
+    {
+      code: "P264",
+      text_en: "Wash hands thoroughly after handling.",
+      text_zh: "操作後徹底清洗雙手。",
+    },
+    {
+      code: "P264+P265",
+      text_en: "Wash all exposed body parts thoroughly after handling.",
+      text_zh: "操作後徹底清洗所有接觸部位。",
+    },
+    {
+      code: "P271",
+      text_en: "Use only outdoors or in a well-ventilated area.",
+      text_zh: "僅於室外或通風良好處使用。",
     },
     {
       code: "P280",
-      text_en: "Wear protective gloves, eye protection and face protection",
-      text_zh: "Wear protective gloves, eye protection and face protection ZH",
+      text_en: "Wear protective gloves, protective clothing, eye protection and face protection.",
+      text_zh: "佩戴防護手套、防護衣物、護眼用具及護面用具。",
     },
     {
       code: "P301+P330+P331",
-      text_en: "IF SWALLOWED: rinse mouth. Do NOT induce vomiting.",
-      text_zh: "IF SWALLOWED ZH",
+      text_en: "IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.",
+      text_zh: "若吞食：漱口。請勿催吐。",
+    },
+    {
+      code: "P302+P361+P354",
+      text_en: "P302+P361+P354",
+      text_zh: "P302+P361+P354",
     },
     {
       code: "P304+P340",
-      text_en: "IF INHALED: remove person to fresh air",
-      text_zh: "IF INHALED ZH",
+      text_en: "IF INHALED: Remove person to fresh air and keep comfortable for breathing.",
+      text_zh: "若吸入：將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。",
     },
     {
-      code: "P305+P351+P338",
-      text_en: "IF IN EYES: rinse cautiously with water",
-      text_zh: "IF IN EYES ZH",
+      code: "P305+P354+P338",
+      text_en: "P305+P354+P338",
+      text_zh: "P305+P354+P338",
+    },
+    {
+      code: "P316",
+      text_en: "P316",
+      text_zh: "P316",
+    },
+    {
+      code: "P317",
+      text_en: "Get emergency medical help.",
+      text_zh: "立即尋求緊急醫療協助。",
+    },
+    {
+      code: "P319",
+      text_en: "P319",
+      text_zh: "P319",
+    },
+    {
+      code: "P321",
+      text_en: "Specific treatment (see on this label).",
+      text_zh: "需要進行特定治療（見本標示上的說明）。",
+    },
+    {
+      code: "P363",
+      text_en: "Wash contaminated clothing before reuse.",
+      text_zh: "清洗受污染的衣物後方可重新使用。",
+    },
+    {
+      code: "P390",
+      text_en: "Absorb spillage to prevent material damage.",
+      text_zh: "吸收溢出物，防止材料損壞。",
     },
     {
       code: "P403+P233",
       text_en: "Store in a well-ventilated place. Keep container tightly closed.",
-      text_zh: "Store in a well-ventilated place ZH",
+      text_zh: "儲存於通風良好處。保持容器密閉。",
+    },
+    {
+      code: "P405",
+      text_en: "Store locked up.",
+      text_zh: "存放於加鎖處。",
+    },
+    {
+      code: "P406",
+      text_en: "Store in a corrosion-resistant container with a resistant inner liner.",
+      text_zh: "儲存於耐腐蝕容器中，容器內襯需耐腐蝕。",
+    },
+    {
+      code: "P410+P403",
+      text_en: "Protect from sunlight. Store in a well-ventilated place.",
+      text_zh: "防止陽光照射。儲存於通風良好處。",
     },
     {
       code: "P501",
       text_en: "Dispose of contents and container in accordance with local regulations",
-      text_zh: "Dispose of contents ZH",
+      text_zh: "依照地方、區域、國家及國際法規處置內容物及容器。",
     },
   ],
 });
@@ -561,6 +634,14 @@ const hasSummaries = (fragmentHtml = "") =>
   fragmentHtml.includes("precaution-more") ||
   fragmentHtml.includes("more-pics");
 
+const hasFullPagePictogramSize = (html = "") => {
+  if (!html.includes("label-full-page-primary")) return false;
+  const sizeMatches = [...html.matchAll(/width:\s*([0-9.]+)mm/g)].map((match) =>
+    Number.parseFloat(match[1]),
+  );
+  return sizeMatches.some((size) => size >= 28 && size <= 30);
+};
+
 const resolveLabelKind = (fragmentHtml = "") => {
   const found = Object.entries(LABEL_KIND_CLASSES).find(([, className]) =>
     fragmentHtml.includes(className),
@@ -667,6 +748,12 @@ export function buildPrintQaCaseResult({
     ),
     hasQr: hasActualQrImage(fragmentHtml),
     printHasQr: hasActualQrImage(printHtml),
+    hasCas: selectedChemical.cas_number
+      ? fragmentHtml.includes(selectedChemical.cas_number)
+      : true,
+    printHasCas: selectedChemical.cas_number
+      ? printHtml.includes(selectedChemical.cas_number)
+      : true,
     hasSummaries: hasSummaries(fragmentHtml),
     printHasSummaries: hasSummaries(printHtml),
     hasIconPictogramClass: fragmentHtml.includes("pictograms-icon"),
@@ -677,10 +764,9 @@ export function buildPrintQaCaseResult({
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
     printTotalLabels: printDocument?.model?.expandedLabels?.length || 0,
-    hasFullPagePictograms: Boolean(
-      fitPreview?.html?.includes("width: 28mm") &&
-        fitPreview?.html?.includes("height: 28mm"),
-    ),
+    hasFullPagePictograms:
+      fragmentHtml.includes("label-full-page-primary") &&
+      hasFullPagePictogramSize(fitPreview?.html || ""),
   };
 
   const expected = testCase.expected || {};
@@ -699,6 +785,8 @@ export function buildPrintQaCaseResult({
     ],
     ["pictograms", actual.hasEveryPictogram],
     ["printPictograms", actual.printHasEveryPictogram],
+    ["casVisible", actual.hasCas],
+    ["printCasVisible", actual.printHasCas],
     ["printRequiredImages", actual.printHasRequiredPictogramImages],
     ["qrState", actual.hasQr === expected.hasQr],
     ["printQrState", actual.printHasQr === expected.hasQr],

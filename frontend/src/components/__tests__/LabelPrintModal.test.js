@@ -400,8 +400,8 @@ describe("LabelPrintModal", () => {
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
         stockPreset: "letter-primary",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
         pageSize: "Letter",
         perPage: 1,
         template: "full",
@@ -556,8 +556,8 @@ describe("LabelPrintModal", () => {
         template: "full",
         size: "large",
         stockPreset: "letter-primary",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
         perPage: 1,
       },
       labProfile: {
@@ -622,8 +622,8 @@ describe("LabelPrintModal", () => {
     expect(props.onLabelConfigChange).toHaveBeenLastCalledWith(
       expect.objectContaining({
         stockPreset: "a4-primary",
-        labelWidthMm: 180,
-        labelHeightMm: 250,
+        labelWidthMm: 188,
+        labelHeightMm: 268,
         perPage: 1,
         template: "full",
         labelPurpose: "shipping",
@@ -640,8 +640,8 @@ describe("LabelPrintModal", () => {
         template: "full",
         size: "large",
         stockPreset: "a4-primary",
-        labelWidthMm: 180,
-        labelHeightMm: 250,
+        labelWidthMm: 188,
+        labelHeightMm: 268,
         perPage: 1,
       },
       labProfile: { organization: "Lab A", phone: "02-1234", address: "" },
@@ -867,8 +867,8 @@ describe("LabelPrintModal", () => {
         labelPurpose: "shipping",
         template: "full",
         stockPreset: "letter-primary",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
         pageSize: "Letter",
         perPage: 1,
       });
@@ -1004,8 +1004,8 @@ describe("LabelPrintModal", () => {
         labelPurpose: "shipping",
         template: "full",
         stockPreset: "letter-primary",
-        labelWidthMm: 186,
-        labelHeightMm: 236,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
         perPage: 1,
       }),
     );
@@ -1076,7 +1076,7 @@ describe("LabelPrintModal", () => {
     const preview = screen.getByTestId("label-fragment-preview");
 
     expect(strip).toHaveTextContent("Whole label visible");
-    expect(strip).toHaveTextContent("186 x 236 mm");
+    expect(strip).toHaveTextContent("196 x 250 mm");
     expect(strip).toHaveTextContent("scale");
     expect(strip).toHaveTextContent("Letter");
     expect(preview).toHaveAttribute("data-preview-mode", "fit");
