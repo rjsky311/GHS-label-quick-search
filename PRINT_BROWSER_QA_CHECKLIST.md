@@ -154,6 +154,27 @@ cd frontend
 npm run test:print-contract
 ```
 
+To generate a machine-readable print QA matrix report for the core
+Hydrochloric Acid outputs, run:
+
+```bash
+cd frontend
+PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:print-report
+```
+
+On Windows PowerShell:
+
+```powershell
+cd frontend
+$env:PRINT_QA_REPORT_PATH='build/print-qa-report.json'; npm run qa:print-report
+```
+
+The report records the expected `qa_handoff` attributes for A4 Primary, Letter
+Primary, bottle supplemental, tube/vial quick-ID, and QR supplement. Use it as a
+code-level gate before doing production Browser QA; it does not replace clicking
+the deployed app because it cannot verify Zeabur freshness or extension/browser
+behavior.
+
 The full shipping gate is still:
 
 ```bash

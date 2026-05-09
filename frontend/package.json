@@ -64,7 +64,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:i18n": "node scripts/check-i18n-parity.mjs",
-    "test:print-contract": "jest --runInBand printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printLabels.test.js",
+    "test:print-contract": "jest --runInBand printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printLabels.test.js printQaMatrixReport.test.js",
+    "qa:print-report": "jest --runInBand printQaMatrixReport.test.js --silent=false",
     "test": "jest"
   },
   "browserslist": {

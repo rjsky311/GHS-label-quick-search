@@ -87,6 +87,8 @@ The first refactor slice has landed:
   be checked against user goals instead of a loose task list.
 - Print handoff QA status now reports unique pictogram codes, QR state,
   template, and stock preset as machine-readable DOM data attributes.
+- A code-level print QA matrix report now exercises the same core HCl outputs
+  and records expected `qa_handoff` attributes before Browser/production QA.
 - The task-first `Main container` target now preserves the complete-primary
   intent. If dense content cannot fit the roomy container stock, it applies the
   planner's A4/Letter primary recommendation instead of downgrading the main

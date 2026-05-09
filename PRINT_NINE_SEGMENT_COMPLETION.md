@@ -184,12 +184,17 @@ Current evidence:
 - `printLabels.test.js` verifies QA handoff status includes label kind, unique
   pictogram codes, QR state, template, and stock preset without opening the
   native print dialog.
+- `printQaMatrix.js` and `npm run qa:print-report` generate a machine-readable
+  code-level report for the core HCl A4, Letter, bottle, tube/vial, and QR
+  outputs, including expected handoff attributes and Fit/Inspect preview state.
 
 ## Done Definition
 
 A print-workflow change is not done until:
 
 - `npm run test:print-contract` passes.
+- `npm run qa:print-report` passes when the change touches matrix-level print
+  behavior, and the generated report has zero failed cases.
 - `npm test -- --runInBand` passes.
 - `npm run build` passes.
 - Backend tests pass when the change touches shared workflow or deployment.
