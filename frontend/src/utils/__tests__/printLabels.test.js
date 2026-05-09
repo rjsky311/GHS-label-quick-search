@@ -334,6 +334,23 @@ describe("print layout model", () => {
     expect(layout.page.perPage).toBe(1);
   });
 
+  it("refreshes fixed preset geometry from current stock definitions", () => {
+    const layout = resolvePrintLayoutConfig({
+      stockPreset: "a4-primary",
+      pageSize: "Letter",
+      columns: 2,
+      rows: 3,
+      labelWidthMm: 188,
+      labelHeightMm: 260,
+    });
+
+    expect(layout.stockId).toBe("a4-primary");
+    expect(layout.page.size).toBe("A4");
+    expect(layout.label.width).toBe("188mm");
+    expect(layout.label.height).toBe("268mm");
+    expect(layout.page.perPage).toBe(1);
+  });
+
   it("scales label typography and GHS pictogram size from physical stock dimensions", () => {
     const small = resolvePrintLayoutConfig({
       stockPreset: "small-strip",
