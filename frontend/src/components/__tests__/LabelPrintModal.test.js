@@ -105,9 +105,19 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Label target",
     );
-    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
-      "App decision",
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "Recommended next step",
     );
+    expect(screen.getByTestId("recommended-output-role")).toHaveTextContent(
+      "Output role",
+    );
+    expect(screen.getByTestId("recommended-output-statements")).toHaveTextContent(
+      "Hazard text",
+    );
+    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
+      "Why this output was chosen",
+    );
+    expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Output role",
     );

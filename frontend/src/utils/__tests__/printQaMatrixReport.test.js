@@ -111,9 +111,30 @@ describe("print QA matrix report", () => {
       passed: PRINT_QA_MATRIX.length,
       failed: 0,
     });
+    expect(report.productionBrowserQa).toMatchObject({
+      targetUrl: "https://ghs-frontend.zeabur.app/",
+      qaHandoffUrl: "https://ghs-frontend.zeabur.app/?qaPrintHandoff=1",
+      requiredStatusElement: "ghs-print-qa-status",
+    });
+    expect(report.productionBrowserQa.requiredAttributes).toEqual(
+      expect.arrayContaining([
+        "data-status",
+        "data-label-kind",
+        "data-pictograms",
+        "data-has-qr",
+        "data-stock-preset",
+      ]),
+    );
+    expect(report.productionBrowserQa.cases).toHaveLength(PRINT_QA_MATRIX.length);
 
     const byId = Object.fromEntries(
       report.cases.map((testCase) => [testCase.id, testCase]),
+    );
+    const browserCaseById = Object.fromEntries(
+      report.productionBrowserQa.cases.map((testCase) => [
+        testCase.id,
+        testCase,
+      ]),
     );
 
     expect(byId["a4-primary"].handoffExpectation).toMatchObject({
@@ -186,5 +207,14 @@ describe("print QA matrix report", () => {
     expect(byId["long-name-bottle-supplemental"].actual.printHasEveryPictogram).toBe(
       true,
     );
+    expect(byId["long-name-tube-quick-id"].actual.identityDensityClass).toBe(
+      "identity-density-high",
+    );
+    expect(browserCaseById["long-name-tube-quick-id"]).toMatchObject({
+      searchTerm: "QA-LONG-001",
+      expectedLabelKind: "quick-id",
+      expectedStockPreset: "small-strip",
+      mustContainCas: true,
+    });
   });
 });

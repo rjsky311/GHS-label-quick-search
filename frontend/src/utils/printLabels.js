@@ -168,6 +168,31 @@ const joinLocalizedParts = (...parts) => {
   return uniqueParts.join(" / ");
 };
 
+const getIdentityDensityClass = (chemical, model) => {
+  const nameDisplay = resolveModelNameDisplay(model);
+  const names = [];
+  if (nameDisplay === "en" || nameDisplay === "both") {
+    names.push(chemical?.name_en || "");
+  }
+  if (nameDisplay === "zh") {
+    names.push(chemical?.name_zh || chemical?.name_en || "");
+  } else if (nameDisplay === "both") {
+    names.push(chemical?.name_zh || "");
+  }
+
+  const longestName = Math.max(
+    0,
+    ...names.map((name) => String(name || "").trim().length),
+  );
+  const casLoad = Math.max(0, String(chemical?.cas_number || "").length - 10);
+  const bilingualLoad = nameDisplay === "both" ? 8 : 0;
+  const densityScore = longestName + casLoad * 1.5 + bilingualLoad;
+
+  if (densityScore >= 48) return " identity-density-high";
+  if (densityScore >= 32) return " identity-density-medium";
+  return "";
+};
+
 const getLocalizedTextForModel = (statement, model) => {
   if (shouldRenderBilingualLabelText(model.layout, i18n.language)) {
     return joinLocalizedParts(
@@ -509,7 +534,7 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
     nameHtml += `<div class="name-zh">${escapeHtml(effectiveChem.name_zh)}</div>`;
   }
 
-  return `<div class="name-section${compactNames ? " name-section-compact" : ""}">
+  return `<div class="name-section${compactNames ? " name-section-compact" : ""}${getIdentityDensityClass(effectiveChem, model)}">
     ${nameHtml}
     ${showCasLine ? `<div class="cas">CAS: ${escapeHtml(effectiveChem.cas_number)}</div>` : ""}
     ${metaRibbonHtml}
@@ -1947,6 +1972,12 @@ const buildStyles = (model) => {
       font-size: max(7px, calc(${layout.typography.fontSize} + 0.8px));
       line-height: 1;
     }
+    .label-standard.label-form-strip .identity-density-medium .name-en {
+      font-size: 6.5px;
+    }
+    .label-standard.label-form-strip .identity-density-high .name-en {
+      font-size: 5.9px;
+    }
     .label-standard.label-form-strip .cas,
     .label-qr.label-form-strip .cas {
       font-size: 6px;
@@ -2009,10 +2040,22 @@ const buildStyles = (model) => {
       line-height: 1;
       -webkit-line-clamp: 1;
     }
+    .label-icon.label-form-strip .identity-density-medium .name-en {
+      font-size: 6.5px;
+    }
+    .label-icon.label-form-strip .identity-density-high .name-en {
+      font-size: 5.9px;
+    }
     .label-icon.label-form-strip .name-zh {
       font-size: 6px;
       line-height: 1;
       margin-top: 0;
+    }
+    .label-icon.label-form-strip .identity-density-medium .name-zh {
+      font-size: 5.5px;
+    }
+    .label-icon.label-form-strip .identity-density-high .name-zh {
+      font-size: 5px;
     }
     .label-icon.label-form-strip .cas {
       display: block;
@@ -2022,6 +2065,10 @@ const buildStyles = (model) => {
       white-space: nowrap;
       overflow: visible;
       text-overflow: clip;
+    }
+    .label-icon.label-form-strip .identity-density-medium .cas,
+    .label-icon.label-form-strip .identity-density-high .cas {
+      font-size: 5.2px;
     }
     .label-icon.label-form-strip .label-middle {
       flex: 1 1 auto;
@@ -2074,10 +2121,20 @@ const buildStyles = (model) => {
       line-height: 1;
       -webkit-line-clamp: 1;
     }
+    .label-qr.label-form-strip .identity-density-medium .name-en {
+      font-size: 6.4px;
+    }
+    .label-qr.label-form-strip .identity-density-high .name-en {
+      font-size: 5.8px;
+    }
     .label-qr.label-form-strip .name-zh {
       font-size: 6.4px;
       line-height: 1;
       margin-top: 0;
+    }
+    .label-qr.label-form-strip .identity-density-medium .name-zh,
+    .label-qr.label-form-strip .identity-density-high .name-zh {
+      font-size: 5.4px;
     }
     .label-qr.label-form-strip .meta-ribbon {
       margin-top: 0.2mm;

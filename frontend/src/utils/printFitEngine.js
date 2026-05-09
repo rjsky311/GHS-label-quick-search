@@ -170,7 +170,7 @@ export const getMaxSupplementalTextWeight = (layout = {}) => {
     layout.template === "qrcode"
       ? Math.round(140 + renderedPictogramMm * 7)
       : layout.template === "icon"
-        ? Math.round(130 + renderedPictogramMm * 5)
+        ? Math.round(180 + renderedPictogramMm * 6)
         : Math.round(140 + renderedSlots * 38 + renderedPictogramMm * 2);
   const baseCapacity = Math.round(
     rendererCapacity * 0.55 + slotCapacity * 0.35 + pictogramCapacity * 0.1,

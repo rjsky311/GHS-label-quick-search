@@ -186,13 +186,16 @@ directory. These artifacts reuse the same preview renderer as the app and now
 cover A4 Primary, Letter Primary, bottle supplemental, Avery 5163, Avery 5164,
 rack landscape, tube/vial quick-ID, Brother 62 mm quick-ID, QR supplement, and
 Brother 62 mm QR supplement for Hydrochloric Acid, plus lower-density Ethanol,
-single-pictogram Sodium Hydroxide, and a long-name corrosive test fixture.
+single-pictogram Sodium Hydroxide, and long-name corrosive bottle and tube
+fixtures that verify identity shrink rules keep CAS visible.
 
-The report records the expected `qa_handoff` attributes, preview scale, and
-actual print-document HTML checks for the matrix. Use it as a code-level and
-renderer-level gate before doing production Browser QA; it does not replace
-clicking the deployed app because it cannot verify Zeabur freshness or
-extension/browser behavior.
+The report records the expected `qa_handoff` attributes, preview scale, actual
+print-document HTML checks, and a `productionBrowserQa` section listing the
+production URL, QA handoff URL, required `print-qa-status` attributes, search
+term, expected label kind, expected stock, expected QR state, and required
+pictograms for each matrix case. Use it as a code-level and renderer-level gate
+before doing production Browser QA; it does not replace clicking the deployed
+app because it cannot verify Zeabur freshness or extension/browser behavior.
 
 For production Chrome or Browser QA, append `?qaPrintHandoff=1` to the deployed
 frontend URL before clicking the print action. In that mode the app performs the

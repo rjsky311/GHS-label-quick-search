@@ -1262,6 +1262,39 @@ describe("printLabels", () => {
       );
     });
 
+    it("adds identity density classes so long small-label names shrink before CAS is lost", () => {
+      const longNameChemical = {
+        ...mockChemical,
+        cas_number: "123456-78-9",
+        name_en: "N,N-Dimethyl-4-nitrosoaniline hydrochloride analytical reference",
+        name_zh: "長名稱測試化學品",
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [longNameChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("identity-density-high");
+      expect(preview.fragmentHtml).toContain("CAS: 123456-78-9");
+      expect(preview.html).toContain(
+        ".label-icon.label-form-strip .identity-density-high .name-en",
+      );
+      expect(preview.html).toContain(
+        ".label-icon.label-form-strip .identity-density-medium .cas",
+      );
+    });
+
     it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {
       const multiPictogramChemical = {
         ...mockChemical,

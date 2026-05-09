@@ -2267,6 +2267,91 @@ export default function LabelPrintModal({
     </details>
   );
 
+  const renderRecommendedOutputSection = () => {
+    const RecommendationIcon =
+      outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
+
+    return (
+      <section
+        className={`rounded-lg border p-3 ${
+          READINESS_TONE_CLASSES[outputOutcomeTone] ||
+          READINESS_TONE_CLASSES.neutral
+        }`}
+        data-testid="recommended-output-summary"
+        aria-live="polite"
+      >
+        <div className="flex items-start gap-2">
+          <RecommendationIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-normal opacity-80">
+              {tx("label.recommendedOutputTitle", "Recommended next step")}
+            </div>
+            <div className="mt-1 text-sm font-semibold">
+              {outputOutcomeTitle}
+            </div>
+            <p className="mt-1 text-xs leading-5 opacity-90">
+              {outputOutcomeBody}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+          {[
+            {
+              key: "stock",
+              label: tx("label.outputStockTitle", "Target size"),
+              value: currentStockName,
+            },
+            {
+              key: "role",
+              label: tx("label.outputRole", "Output role"),
+              value: outputRoleSummary,
+            },
+            {
+              key: "statements",
+              label: tx("label.outputHazardText", "Hazard text"),
+              value: statementSummary,
+            },
+          ].map((item) => (
+            <div
+              key={item.key}
+              className="rounded-md bg-white/70 px-2.5 py-2 ring-1 ring-current/10"
+              data-testid={`recommended-output-${item.key}`}
+            >
+              <div className="font-medium opacity-70">{item.label}</div>
+              <div className="mt-0.5 font-semibold">{item.value}</div>
+            </div>
+          ))}
+        </div>
+        {(canUseFullPagePrimary || isProfileBlocked) && (
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            {canUseFullPagePrimary && (
+              <button
+                type="button"
+                onClick={handleUseFullPagePrimary}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+                data-testid="recommended-use-full-page-primary"
+              >
+                <FileText className="h-4 w-4" />
+                {useFullPagePrimaryLabel}
+              </button>
+            )}
+            {isProfileBlocked && (
+              <button
+                type="button"
+                onClick={handleFocusResponsibleProfile}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+                data-testid="recommended-fill-profile"
+              >
+                <Building2 className="h-4 w-4" />
+                {tx("label.profileCompleteAction", "Fill profile now")}
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+    );
+  };
+
   const renderOutputOutcomeSection = () => {
     const OutcomeIcon =
       outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
@@ -2520,6 +2605,7 @@ export default function LabelPrintModal({
                     {currentStockName}
                   </span>
                 </div>
+                <div className="mt-4">{renderRecommendedOutputSection()}</div>
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
                     {tx("label.outputGoalTitle", "Label target")}
@@ -2562,22 +2648,33 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="mt-4">
-                  <section
+                  <details
+                    open={outputPlanTone !== "ready"}
                     className={`rounded-md border p-3 ${
                       READINESS_TONE_CLASSES[outputPlanTone] ||
                       READINESS_TONE_CLASSES.neutral
                     }`}
                     data-testid="print-output-plan"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-normal opacity-80">
                           <ClipboardList className="h-4 w-4 shrink-0" />
-                          {tx("label.outputPlanTitle", "App decision")}
+                          {tx(
+                            "label.outputPlanDetailsTitle",
+                            "Why this output was chosen",
+                          )}
                         </div>
                         <div className="mt-1 text-sm font-semibold">
                           {outputPlanTitle}
                         </div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white/70 px-2 py-1 text-xs font-medium ring-1 ring-current/10">
+                        {outputRoleSummary}
+                      </span>
+                    </summary>
+                    <div className="mt-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="mt-1 text-xs leading-5 opacity-90">
                           {outputPlanBody}
                         </p>
@@ -2616,7 +2713,7 @@ export default function LabelPrintModal({
                         </div>
                       ))}
                     </div>
-                  </section>
+                  </details>
 
                   <div
                     className="mt-3 rounded-md border border-blue-100 bg-blue-50/70 p-3"

@@ -608,6 +608,30 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasFullPagePictograms: false,
     },
   },
+  {
+    id: "long-name-tube-quick-id",
+    label: "Long-name tube quick-ID",
+    chemicalId: "longNameCorrosive",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "small-strip",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+      identityDensityClass: "identity-density-high",
+    },
+  },
 ]);
 
 const LABEL_KIND_CLASSES = Object.freeze({
@@ -640,6 +664,16 @@ const hasFullPagePictogramSize = (html = "") => {
     Number.parseFloat(match[1]),
   );
   return sizeMatches.some((size) => size >= 28 && size <= 30);
+};
+
+const resolveIdentityDensityClass = (fragmentHtml = "") => {
+  if (fragmentHtml.includes("identity-density-high")) {
+    return "identity-density-high";
+  }
+  if (fragmentHtml.includes("identity-density-medium")) {
+    return "identity-density-medium";
+  }
+  return "";
 };
 
 const resolveLabelKind = (fragmentHtml = "") => {
@@ -764,6 +798,7 @@ export function buildPrintQaCaseResult({
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
     printTotalLabels: printDocument?.model?.expandedLabels?.length || 0,
+    identityDensityClass: resolveIdentityDensityClass(fragmentHtml),
     hasFullPagePictograms:
       fragmentHtml.includes("label-full-page-primary") &&
       hasFullPagePictogramSize(fitPreview?.html || ""),
@@ -818,6 +853,13 @@ export function buildPrintQaCaseResult({
     ]);
   }
 
+  if (expected.identityDensityClass) {
+    checks.push([
+      "identityDensityClass",
+      actual.identityDensityClass === expected.identityDensityClass,
+    ]);
+  }
+
   const failures = checks
     .filter(([, passed]) => !passed)
     .map(([name]) => name);
@@ -846,6 +888,23 @@ export function buildPrintQaCaseResult({
     failures,
   };
 }
+
+const PRODUCTION_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
+
+const buildProductionBrowserQaCase = (testCase, caseResult) => ({
+  id: testCase.id,
+  label: testCase.label,
+  searchTerm: caseResult.chemical.cas,
+  targetUrl: PRODUCTION_FRONTEND_URL,
+  qaHandoffUrl: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1`,
+  expectedStatus: "qa_handoff",
+  expectedLabelKind: caseResult.handoffExpectation.labelKind,
+  expectedStockPreset: caseResult.handoffExpectation.stockPreset,
+  expectedTemplate: caseResult.handoffExpectation.template,
+  expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
+  expectedHasQr: caseResult.handoffExpectation.hasQr,
+  mustContainCas: Boolean(caseResult.chemical.cas),
+});
 
 export function buildPrintQaMatrixReport({
   chemical,
@@ -894,6 +953,26 @@ export function buildPrintQaMatrixReport({
       total: cases.length,
       passed: cases.length - failedCases.length,
       failed: failedCases.length,
+    },
+    productionBrowserQa: {
+      targetUrl: PRODUCTION_FRONTEND_URL,
+      qaHandoffUrl: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1`,
+      requiredStatusElement: "ghs-print-qa-status",
+      requiredAttributes: [
+        "data-status",
+        "data-label-kind",
+        "data-pictograms",
+        "data-has-qr",
+        "data-template",
+        "data-stock-preset",
+        "data-issue-types",
+      ],
+      cases: cases.map((caseResult) =>
+        buildProductionBrowserQaCase(
+          matrix.find((testCase) => testCase.id === caseResult.id) || {},
+          caseResult,
+        ),
+      ),
     },
     cases,
   };
