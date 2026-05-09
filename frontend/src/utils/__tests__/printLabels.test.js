@@ -1580,7 +1580,8 @@ describe("printLabels", () => {
       expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
-      expect(preview.html).toContain("height: 344px");
+      expect(preview.html).toContain("height: 264px");
+      expect(preview.previewMetrics.frameHeightPx).toBeLessThanOrEqual(300);
     });
 
     it("Letter primary uses its own full-page class and paper size", () => {
@@ -1604,7 +1605,8 @@ describe("printLabels", () => {
       expect(preview.html).not.toContain("compliance-qr");
       expect(preview.html).not.toContain("qrcode-img-small");
       expect(preview.html).toContain("preview-label-scaler");
-      expect(preview.html).toContain("height: 344px");
+      expect(preview.html).toContain("height: 264px");
+      expect(preview.previewMetrics.frameHeightPx).toBeLessThanOrEqual(300);
     });
 
     it("qrcode template uses the scan-first hierarchy blocks", () => {

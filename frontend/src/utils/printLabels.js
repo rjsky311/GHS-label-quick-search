@@ -2169,9 +2169,9 @@ function buildPreviewStyles(mode, model, options = {}) {
     mode === "label" && isFullPagePrimaryLayout(model.layout);
   const previewZoom = options.previewZoom === "inspect" ? "inspect" : "fit";
   const maxLabelPreviewWidthPx =
-    previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 400 : 420;
+    previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 300 : 420;
   const maxLabelPreviewHeightPx =
-    previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 320 : 340;
+    previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 240 : 340;
   const maxLabelPreviewScale =
     previewZoom === "inspect" || isFullPageLabelPreview ? 1 : 2.2;
   const labelPreviewScale =

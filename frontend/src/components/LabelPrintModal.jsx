@@ -2393,6 +2393,26 @@ export default function LabelPrintModal({
         )}
       </div>
 
+      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+        {labelPreviewBundle ? (
+          <iframe
+            title={tx("label.previewLabelTitle", "Label preview")}
+            srcDoc={labelPreviewBundle.html}
+            data-testid="label-fragment-preview"
+            data-preview-mode={previewZoomMode}
+            className="w-full bg-white"
+            style={{ height: labelFragmentPreviewHeight }}
+          />
+        ) : (
+          <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
+            {tx(
+              "label.previewFocusEmptyBody",
+              "Select at least one chemical to preview real content density.",
+            )}
+          </div>
+        )}
+      </div>
+
       <div
         className="mt-3 grid gap-2 text-xs sm:grid-cols-2"
         data-testid="preview-inspection-strip"
@@ -2427,26 +2447,6 @@ export default function LabelPrintModal({
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
-        {labelPreviewBundle ? (
-          <iframe
-            title={tx("label.previewLabelTitle", "Label preview")}
-            srcDoc={labelPreviewBundle.html}
-            data-testid="label-fragment-preview"
-            data-preview-mode={previewZoomMode}
-            className="w-full bg-white"
-            style={{ height: labelFragmentPreviewHeight }}
-          />
-        ) : (
-          <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
-            {tx(
-              "label.previewFocusEmptyBody",
-              "Select at least one chemical to preview real content density.",
-            )}
-          </div>
-        )}
       </div>
     </section>
   );
