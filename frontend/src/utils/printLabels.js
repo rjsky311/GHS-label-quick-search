@@ -1316,6 +1316,14 @@ const buildStyles = (model) => {
       line-height: 1.05;
       -webkit-line-clamp: 1;
     }
+    .label-standard.label-form-bottle .name-en,
+    .label-standard.label-form-roomy .name-en {
+      font-size: max(7.5px, calc(${layout.typography.titleSize} - 1px));
+      line-height: 1.04;
+      -webkit-line-clamp: 2;
+      word-break: break-word;
+      hyphens: auto;
+    }
     .label-standard .name-zh {
       font-size: max(6px, calc(${layout.typography.fontSize} - 0.5px));
       line-height: 1.05;

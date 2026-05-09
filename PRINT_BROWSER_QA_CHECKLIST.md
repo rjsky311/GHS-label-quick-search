@@ -154,8 +154,8 @@ cd frontend
 npm run test:print-contract
 ```
 
-To generate a machine-readable print QA matrix report for the core
-Hydrochloric Acid outputs, run:
+To generate a machine-readable print QA matrix report for the core production
+outputs, run:
 
 ```bash
 cd frontend
@@ -185,12 +185,28 @@ long-lived visual inspection so Vite can freely clean the production build
 directory. These artifacts reuse the same preview renderer as the app and now
 cover A4 Primary, Letter Primary, bottle supplemental, Avery 5163, Avery 5164,
 rack landscape, tube/vial quick-ID, Brother 62 mm quick-ID, QR supplement, and
-Brother 62 mm QR supplement.
+Brother 62 mm QR supplement for Hydrochloric Acid, plus lower-density Ethanol,
+single-pictogram Sodium Hydroxide, and a long-name corrosive test fixture.
 
-The report records the expected `qa_handoff` attributes and preview scale for
-the matrix. Use it as a code-level and renderer-level gate before doing
-production Browser QA; it does not replace clicking the deployed app because it
-cannot verify Zeabur freshness or extension/browser behavior.
+The report records the expected `qa_handoff` attributes, preview scale, and
+actual print-document HTML checks for the matrix. Use it as a code-level and
+renderer-level gate before doing production Browser QA; it does not replace
+clicking the deployed app because it cannot verify Zeabur freshness or
+extension/browser behavior.
+
+For production Chrome or Browser QA, append `?qaPrintHandoff=1` to the deployed
+frontend URL before clicking the print action. In that mode the app performs the
+same image and layout preflight, publishes a hidden `print-qa-status` element,
+and avoids opening the native print dialog. Verify these attributes after each
+case:
+
+- `data-status="qa_handoff"` for printable output, or `data-status="blocked"`
+  with `data-issue-types` for blocked output.
+- `data-label-kind` matches `complete-primary`, `supplemental`, `quick-id`, or
+  `qr-supplement`.
+- `data-pictograms` contains every expected GHS code for the chemical.
+- `data-has-qr` is `true` only for QR supplemental labels.
+- `data-template` and `data-stock-preset` match the selected target.
 
 The full shipping gate is still:
 

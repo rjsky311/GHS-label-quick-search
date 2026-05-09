@@ -14,6 +14,7 @@ jest.mock("@/constants/ghs", () => {
 
   return {
     GHS_IMAGES: {
+      GHS02: image("GHS02"),
       GHS04: image("GHS04"),
       GHS05: image("GHS05"),
       GHS06: image("GHS06"),
@@ -26,9 +27,9 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   PRINT_QA_MATRIX,
-  PRINT_QA_HYDROCHLORIC_ACID,
   PRINT_QA_PROFILE,
   buildPrintQaMatrixReport,
+  resolvePrintQaCaseChemical,
 } from "@/utils/printQaMatrix";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 
@@ -52,12 +53,13 @@ const maybeWritePreviewArtifacts = () => {
   fs.mkdirSync(absoluteDir, { recursive: true });
 
   PRINT_QA_MATRIX.forEach((testCase) => {
+    const chemical = resolvePrintQaCaseChemical(testCase);
     const preview = buildPrintPreviewDocument(
-      [PRINT_QA_HYDROCHLORIC_ACID],
+      [chemical],
       testCase.labelConfig,
       {},
       {},
-      { [PRINT_QA_HYDROCHLORIC_ACID.cas_number]: 1 },
+      { [chemical.cas_number]: 1 },
       PRINT_QA_PROFILE,
       { mode: "label", previewZoom: "fit" },
     );
@@ -70,6 +72,7 @@ const maybeWritePreviewArtifacts = () => {
       PRINT_QA_MATRIX.map((testCase) => ({
         id: testCase.id,
         label: testCase.label,
+        chemical: resolvePrintQaCaseChemical(testCase).cas_number,
         file: `${testCase.id}.html`,
       })),
       null,
@@ -95,6 +98,14 @@ describe("print QA matrix report", () => {
 
     expect(report.schemaVersion).toBe(1);
     expect(report.generatedAt).toEqual(expect.any(String));
+    expect(report.chemicals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "hydrochloricAcid", cas: "7647-01-0" }),
+        expect.objectContaining({ id: "ethanol", cas: "64-17-5" }),
+        expect.objectContaining({ id: "sodiumHydroxide", cas: "1310-73-2" }),
+        expect.objectContaining({ id: "longNameCorrosive", cas: "QA-LONG-001" }),
+      ]),
+    );
     expect(report.summary).toEqual({
       total: PRINT_QA_MATRIX.length,
       passed: PRINT_QA_MATRIX.length,
@@ -155,12 +166,25 @@ describe("print QA matrix report", () => {
       expect(testCase.actual.inspectPreviewZoom).toBe("inspect");
       expect(testCase.actual.inspectStartsAtLeft).toBe(true);
       expect(testCase.actual.hasEveryPictogram).toBe(true);
-      expect(testCase.handoffExpectation.pictogramCodes).toEqual([
-        "GHS04",
-        "GHS05",
-        "GHS06",
-        "GHS07",
-      ]);
+      expect(testCase.actual.printHasEveryPictogram).toBe(true);
+      expect(testCase.actual.printLabelKind).toBe(testCase.expected.labelKind);
+      expect(testCase.actual.printTemplate).toBe(testCase.expected.template);
+      expect(testCase.actual.printStockPreset).toBe(
+        testCase.expected.stockPreset,
+      );
+      expect(testCase.handoffExpectation.pictogramCodes).toEqual(
+        testCase.chemical.expectedPictograms,
+      );
     });
+
+    expect(byId["ethanol-bottle-supplemental"].chemical).toMatchObject({
+      cas: "64-17-5",
+      expectedPictograms: ["GHS02", "GHS07"],
+    });
+    expect(byId["ethanol-bottle-supplemental"].actual.hasSummaries).toBe(false);
+    expect(byId["sodium-hydroxide-qr-supplement"].actual.hasQr).toBe(true);
+    expect(byId["long-name-bottle-supplemental"].actual.printHasEveryPictogram).toBe(
+      true,
+    );
   });
 });

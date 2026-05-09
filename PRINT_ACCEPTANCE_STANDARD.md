@@ -114,6 +114,9 @@ Run this matrix before shipping print-workflow changes:
 | Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
 | Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
+| Ethanol | Tube/Vial Quick ID | English | B/W | Compact ID output keeps both pictograms and remains readable |
+| Sodium Hydroxide | QR Supplement | Bilingual | Color | Single-pictogram corrosive QR output keeps QR and the pictogram |
+| Long-name corrosive fixture | Standard Bottle | English | Color | Long product name does not hide identity or pictograms |
 | Water / no GHS | Any hazard label | Any | Any | Does not present false hazard data |
 | Upstream error | Results and print entry | Any | Any | Does not present missing data as no hazard |
 
@@ -137,4 +140,6 @@ Unit tests should keep these invariants pinned:
 - Browser Use print-action checks should use `qaPrintHandoff=1` and verify
   `print-qa-status` data attributes for label kind, pictogram codes, QR state,
   template, and stock preset.
+- `qa:print-report` must inspect both preview fragments and the actual print
+  document body so a preview-only pass cannot mask missing print output.
 - Targeted local print contract checks are available with `npm run test:print-contract` from `frontend/`.
