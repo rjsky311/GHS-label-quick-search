@@ -1010,8 +1010,13 @@ describe("printLabels", () => {
       { complete: true, getAttribute: () => "GHS02" },
       { complete: true, getAttribute: () => "QR" },
     );
+    const supportChips = [
+      { textContent: "Batch: CASE-2026-0007" },
+      { textContent: "Demo Safety Lab" },
+    ];
     mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
       if (selector === "img") return mockImages;
+      if (selector === ".support-chip") return supportChips;
       return [];
     });
     const onPrintHandoff = jest.fn();
@@ -1074,6 +1079,7 @@ describe("printLabels", () => {
         nameDisplay: "both",
         template: "qrcode",
         stockPreset: "small-strip",
+        supportChips: "Batch: CASE-2026-0007|Demo Safety Lab",
       }),
     );
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -1083,6 +1089,7 @@ describe("printLabels", () => {
         meta: expect.objectContaining({
           labelKind: "qr-supplement",
           pictogramCodes: ["GHS02", "GHS07"],
+          supportChipTexts: ["Batch: CASE-2026-0007", "Demo Safety Lab"],
           hasQr: true,
           casNumbers: ["64-17-5"],
           hasCas: true,

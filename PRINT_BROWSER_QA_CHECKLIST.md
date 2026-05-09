@@ -51,8 +51,8 @@ Record these outputs in the final implementation note:
 - `print-qa-status` after clicking the print action in QA handoff mode.
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
   `data-cas-numbers`, `data-has-cas`, `data-label-width-mm`,
-  `data-label-height-mm`, `data-page-size`, `data-template`, and
-  `data-stock-preset` attributes when available.
+  `data-label-height-mm`, `data-page-size`, `data-template`,
+  `data-stock-preset`, and `data-support-chips` attributes when available.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview

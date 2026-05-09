@@ -2758,6 +2758,9 @@ function publishPrintQaStatus(status, message) {
     statusElement.dataset.template = nextStatus.template || "";
     statusElement.dataset.stockPreset = nextStatus.stockPreset || "";
     statusElement.dataset.issueTypes = (nextStatus.issueTypes || []).join(",");
+    statusElement.dataset.supportChips = (
+      nextStatus.supportChipTexts || []
+    ).join("|");
     statusElement.dataset.updatedAt = nextStatus.updatedAt;
   }
   statusElement.textContent = message;
@@ -2839,6 +2842,11 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
     ...new Set(imageAlts.filter((alt) => /^GHS\d{2}$/.test(alt))),
   ];
   const documentText = getPrintQaDocumentText(documentBundle, iframeDoc);
+  const supportChipTexts = Array.from(
+    iframeDoc.querySelectorAll(".support-chip"),
+  )
+    .map((chip) => (chip.textContent || "").trim())
+    .filter(Boolean);
   const casNumbers = lifecycleMeta.casNumbers || [];
   const hasCas =
     casNumbers.length === 0 ||
@@ -2848,6 +2856,7 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
     status: "qa_handoff",
     labelKind: resolvePrintQaLabelKind(documentBundle.model.layout),
     pictogramCodes,
+    supportChipTexts,
     hasQr: imageAlts.some((alt) => /qr/i.test(alt)),
     hasCas,
   };
@@ -3020,6 +3029,7 @@ export function printLabels(
             ...lifecycleMeta,
             labelKind: qaStatus.labelKind,
             pictogramCodes: qaStatus.pictogramCodes,
+            supportChipTexts: qaStatus.supportChipTexts,
             hasQr: qaStatus.hasQr,
             casNumbers: qaStatus.casNumbers,
             hasCas: qaStatus.hasCas,

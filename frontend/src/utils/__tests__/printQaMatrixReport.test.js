@@ -130,6 +130,7 @@ describe("print QA matrix report", () => {
         "data-color-mode",
         "data-name-display",
         "data-stock-preset",
+        "data-support-chips",
       ]),
     );
     expect(report.productionBrowserQa.cases).toHaveLength(PRINT_QA_MATRIX.length);

@@ -1092,6 +1092,7 @@ export function buildPrintQaMatrixReport({
         "data-template",
         "data-stock-preset",
         "data-issue-types",
+        "data-support-chips",
       ],
       cases: cases.map((caseResult) =>
         buildProductionBrowserQaCase(

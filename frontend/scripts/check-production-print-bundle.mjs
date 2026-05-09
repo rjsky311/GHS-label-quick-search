@@ -5,6 +5,7 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "casNumbers",
   "labelWidthMm",
   "support-chip",
+  "supportChips",
   "custom-label-field-",
   "ghs-print-qa-status",
 ];
