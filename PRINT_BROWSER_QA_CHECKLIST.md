@@ -14,6 +14,19 @@ Before using production, verify the deployed bundle contains the expected new
 strings or behavior from the commit being tested. This catches stale Zeabur
 assets before doing visual QA.
 
+For print-workflow changes, run the bundle freshness check after Zeabur deploys:
+
+```bash
+cd frontend
+npm run qa:production-bundle
+```
+
+The script fetches the production HTML, resolves the active `assets/index-*.js`
+bundle, and verifies that the bundle contains the current print QA handoff,
+layout-blocked, CAS/size, and compact identity markers. It does not replace
+Chrome click-through QA; it only confirms that production is serving the code
+you are about to test.
+
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
 app still builds the print iframe, runs preflight, records lifecycle events, and
@@ -195,9 +208,12 @@ The report records the expected `qa_handoff` attributes, preview scale, actual
 print-document HTML checks, and a `productionBrowserQa` section listing the
 production URL, QA handoff URL, required `print-qa-status` attributes, search
 term, expected label kind, expected stock, expected QR state, and required
-pictograms for each matrix case. Use it as a code-level and renderer-level gate
-before doing production Browser QA; it does not replace clicking the deployed
-app because it cannot verify Zeabur freshness or extension/browser behavior.
+pictograms for each matrix case. It also includes stable selectors and
+case/custom-field steps so production Chrome QA can be repeated without
+re-inventing the workflow each time. Use it as a code-level and renderer-level
+gate before doing production Browser QA; it does not replace clicking the
+deployed app because it cannot verify Zeabur freshness or extension/browser
+behavior.
 
 For production Chrome or Browser QA, append `?qaPrintHandoff=1` to the deployed
 frontend URL before clicking the print action. In that mode the app performs the
@@ -224,6 +240,9 @@ case:
 - When batch/case-style custom identity data is filled in, compact supplemental
   labels must keep it as an identity chip while still keeping CAS and every GHS
   pictogram visible.
+- The QA matrix includes a compact quick-ID case with
+  `CASE-2026-0007`; that case must keep the case identity in both preview and
+  generated print HTML.
 
 The full shipping gate is still:
 

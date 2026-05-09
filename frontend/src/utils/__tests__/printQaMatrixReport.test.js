@@ -227,6 +227,34 @@ describe("print QA matrix report", () => {
     expect(byId["long-name-tube-quick-id"].actual.identityDensityClass).toBe(
       "identity-density-high",
     );
+    expect(byId["tube-vial-quick-id-with-case"].actual).toMatchObject({
+      hasRequiredIdentityText: true,
+      printHasRequiredIdentityText: true,
+      hasSupportChip: true,
+      printHasSupportChip: true,
+    });
+    expect(browserCaseById["tube-vial-quick-id-with-case"]).toMatchObject({
+      expectedLabelKind: "quick-id",
+      expectedStockPreset: "small-strip",
+      expectedRequiredIdentityText: "CASE-2026-0007",
+      customLabelFields: { batchNumber: "CASE-2026-0007" },
+      selectors: expect.objectContaining({
+        printAllButtonTestId: "print-all-with-ghs-btn",
+        stockButtonTestId: "primary-output-size-small-strip",
+        customFieldPrefixTestId: "custom-label-field-",
+        qaStatusElementId: "ghs-print-qa-status",
+      }),
+    });
+    expect(browserCaseById["tube-vial-quick-id-with-case"].steps).toEqual(
+      expect.arrayContaining([
+        {
+          action: "setCustomField",
+          key: "batchNumber",
+          value: "CASE-2026-0007",
+          testId: "custom-label-field-batchNumber",
+        },
+      ]),
+    );
     expect(browserCaseById["long-name-tube-quick-id"]).toMatchObject({
       searchTerm: "QA-LONG-001",
       expectedLabelKind: "quick-id",

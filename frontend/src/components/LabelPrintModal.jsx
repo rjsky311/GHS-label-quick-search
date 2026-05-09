@@ -2224,6 +2224,7 @@ export default function LabelPrintModal({
             </label>
             <input
               type="text"
+              data-testid={`custom-label-field-${field.key}`}
               value={customLabelFields[field.key]}
               onChange={(event) =>
                 onCustomLabelFieldsChange({

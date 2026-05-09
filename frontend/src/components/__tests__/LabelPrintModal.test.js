@@ -243,6 +243,10 @@ describe("LabelPrintModal", () => {
     expect(advancedOptions).toContainElement(
       screen.getByTestId("advanced-custom-fields"),
     );
+    expect(screen.getByTestId("custom-label-field-date")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("custom-label-field-batchNumber"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Advanced print options")).toBeInTheDocument();
     expect(screen.getByText("Advanced layout controls")).toBeInTheDocument();
   });

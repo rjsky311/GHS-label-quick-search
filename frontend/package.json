@@ -66,6 +66,7 @@
     "test:i18n": "node scripts/check-i18n-parity.mjs",
     "test:print-contract": "jest --runInBand printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printLabels.test.js printQaMatrixReport.test.js",
     "qa:print-report": "jest --runInBand printQaMatrixReport.test.js --silent=false",
+    "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
     "test": "jest"
   },
   "browserslist": {

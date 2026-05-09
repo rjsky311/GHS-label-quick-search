@@ -97,6 +97,14 @@ The first refactor slice has landed:
   label target first, see the app decision in that same target block, then verify
   the exact printable output in the live preview. Standalone page-count noise is
   folded into the selected-label summary.
+- Print QA now records CAS presence, physical label dimensions, page size,
+  color mode, name display, template, stock, and issue types in the handoff DOM
+  status. The matrix also includes a compact quick-ID case with a case/batch
+  identity chip, so small-label refactors cannot accidentally drop CAS or
+  case-style identity while preserving pictograms.
+- Production deployment freshness has a dedicated `npm run qa:production-bundle`
+  check that confirms Zeabur is serving a bundle with the current print QA and
+  compact identity markers before Chrome click-through QA starts.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

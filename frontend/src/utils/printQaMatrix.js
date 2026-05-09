@@ -21,6 +21,10 @@ export const PRINT_QA_PROFILE = Object.freeze({
   address: "1 Lab Road, Taipei",
 });
 
+export const PRINT_QA_CASE_FIELDS = Object.freeze({
+  batchNumber: "CASE-2026-0007",
+});
+
 export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   cas_number: "7647-01-0",
   name_en: "Hydrochloric Acid",
@@ -452,6 +456,30 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
+    id: "tube-vial-quick-id-with-case",
+    label: "Tube/vial quick-ID with case identity",
+    locale: "zh-TW",
+    customLabelFields: PRINT_QA_CASE_FIELDS,
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "small-strip",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+      requiredIdentityText: PRINT_QA_CASE_FIELDS.batchNumber,
+    },
+  },
+  {
     id: "brother-62mm-quick-id",
     label: "Brother 62 mm quick-ID",
     locale: "zh-TW",
@@ -686,6 +714,7 @@ const resolveLabelKind = (fragmentHtml = "") => {
 const buildPreview = ({
   chemical,
   labelConfig,
+  customLabelFields = {},
   labProfile,
   previewZoom = "fit",
 }) =>
@@ -693,18 +722,23 @@ const buildPreview = ({
     [chemical],
     labelConfig,
     {},
-    {},
+    customLabelFields,
     { [chemical.cas_number]: 1 },
     labProfile,
     { mode: "label", previewZoom },
   );
 
-const buildDocument = ({ chemical, labelConfig, labProfile }) =>
+const buildDocument = ({
+  chemical,
+  labelConfig,
+  customLabelFields = {},
+  labProfile,
+}) =>
   buildPrintDocument(
     [chemical],
     labelConfig,
     {},
-    {},
+    customLabelFields,
     { [chemical.cas_number]: 1 },
     labProfile,
   );
@@ -741,24 +775,28 @@ export function buildPrintQaCaseResult({
   const fitPreview = buildPreview({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
+    customLabelFields: testCase.customLabelFields,
     labProfile,
     previewZoom: "fit",
   });
   const inspectPreview = buildPreview({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
+    customLabelFields: testCase.customLabelFields,
     labProfile,
     previewZoom: "inspect",
   });
   const printDocument = buildDocument({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
+    customLabelFields: testCase.customLabelFields,
     labProfile,
   });
   const fragmentHtml = fitPreview?.fragmentHtml || "";
   const printHtml = printDocument?.pagesHtml || "";
   const printPictogramCodes = extractPictogramCodes(printHtml);
   const pictogramCodes = extractPictogramCodes(fragmentHtml);
+  const expected = testCase.expected || {};
   const actual = {
     canPrint: plan.canPrint,
     outputKind: plan.outputKind,
@@ -794,6 +832,14 @@ export function buildPrintQaCaseResult({
     printHasRequiredPictogramImages:
       expectedPictograms.length === 0 ||
       printHtml.includes('data-required-print-image="ghs-pictogram"'),
+    hasSupportChip: fragmentHtml.includes('class="support-chips"'),
+    printHasSupportChip: printHtml.includes('class="support-chips"'),
+    hasRequiredIdentityText: expected.requiredIdentityText
+      ? fragmentHtml.includes(expected.requiredIdentityText)
+      : true,
+    printHasRequiredIdentityText: expected.requiredIdentityText
+      ? printHtml.includes(expected.requiredIdentityText)
+      : true,
     printLabelKind: resolveLabelKind(printHtml),
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
@@ -804,7 +850,6 @@ export function buildPrintQaCaseResult({
       hasFullPagePictogramSize(fitPreview?.html || ""),
   };
 
-  const expected = testCase.expected || {};
   const checks = [
     ["canPrint", actual.canPrint === expected.canPrint],
     ["outputKind", actual.outputKind === expected.outputKind],
@@ -860,6 +905,16 @@ export function buildPrintQaCaseResult({
     ]);
   }
 
+  if (expected.requiredIdentityText) {
+    checks.push(["requiredIdentityText", actual.hasRequiredIdentityText]);
+    checks.push([
+      "printRequiredIdentityText",
+      actual.printHasRequiredIdentityText,
+    ]);
+    checks.push(["supportChip", actual.hasSupportChip]);
+    checks.push(["printSupportChip", actual.printHasSupportChip]);
+  }
+
   const failures = checks
     .filter(([, passed]) => !passed)
     .map(([name]) => name);
@@ -889,6 +944,7 @@ export function buildPrintQaCaseResult({
       pageSize: printDocument?.model?.layout?.pageSize,
       colorMode: printDocument?.model?.layout?.colorMode,
       nameDisplay: printDocument?.model?.layout?.nameDisplay,
+      requiredIdentityText: expected.requiredIdentityText || "",
     },
     passed: failures.length === 0,
     failures,
@@ -932,7 +988,22 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedPageSize: caseResult.handoffExpectation.pageSize,
   expectedColorMode: caseResult.handoffExpectation.colorMode,
   expectedNameDisplay: caseResult.handoffExpectation.nameDisplay,
+  expectedRequiredIdentityText:
+    caseResult.handoffExpectation.requiredIdentityText || "",
+  customLabelFields: testCase.customLabelFields || {},
   mustContainCas: Boolean(caseResult.chemical.cas),
+  selectors: {
+    searchInputPlaceholder: "例如: 64-17-5 或 Ethanol 或 乙醇",
+    firstResultCheckbox: 'input[type="checkbox"]',
+    printAllButtonTestId: "print-all-with-ghs-btn",
+    targetButtonName: resolveProductionTargetValue(testCase),
+    stockPickerTestId: "stock-size-picker",
+    stockButtonTestId: `primary-output-size-${caseResult.handoffExpectation.stockPreset}`,
+    advancedOptionsTestId: "advanced-print-options",
+    customFieldPrefixTestId: "custom-label-field-",
+    printButtonTestId: "print-label-action",
+    qaStatusElementId: "ghs-print-qa-status",
+  },
   steps: [
     { action: "open", url: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1` },
     { action: "search", value: caseResult.chemical.cas },
@@ -943,6 +1014,12 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
       action: "selectStock",
       value: caseResult.handoffExpectation.stockPreset,
     },
+    ...(Object.entries(testCase.customLabelFields || {}).map(([key, value]) => ({
+      action: "setCustomField",
+      key,
+      value,
+      testId: `custom-label-field-${key}`,
+    }))),
     { action: "clickPrint" },
     { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
   ],
