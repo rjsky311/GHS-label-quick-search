@@ -208,6 +208,18 @@ const isQrSupplementLayout = (layout = {}) =>
 const isQuickIdLayout = (layout = {}) =>
   layout.labelPurpose === "quickId" || layout.template === "icon";
 
+const shouldUseCompactStandardHazards = (layout = {}) => {
+  const area = (layout.widthMm || 0) * (layout.heightMm || 0);
+  return (
+    layout.labelPurpose === "shipping" &&
+    layout.template === "standard" &&
+    (layout.formFactor === "bottle" ||
+      (layout.nameDisplay === "both" &&
+        layout.outputRole === "primary-candidate" &&
+        area < 9500))
+  );
+};
+
 const getFullPagePrimaryClass = (layout = {}) => {
   if (!isFullPagePrimaryLayout(layout)) return "";
   if (layout.stockId === "letter-primary" || layout.stockPreset === "letter-primary") {
@@ -689,7 +701,7 @@ const renderIconTemplate = (chemical, model) => {
       <div class="label-middle">
         ${
           pictograms.length > 0
-            ? renderPictograms(pictograms)
+            ? renderPictograms(pictograms, "pictograms-icon")
             : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
         }
       </div>
@@ -714,10 +726,7 @@ const renderStandardTemplate = (chemical, model) => {
   const prioritizedHazards = prioritizeHazardStatements(hazards);
   const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
-  const compactHazardCodes =
-    model.layout.labelPurpose === "shipping" &&
-    model.layout.template === "standard" &&
-    model.layout.formFactor === "bottle";
+  const compactHazardCodes = shouldUseCompactStandardHazards(model.layout);
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -972,6 +981,13 @@ const buildStyles = (model) => {
         : "30mm");
   const standardPictogramGap =
     layout.typography.standardPictogramGap || "0.8mm";
+  const iconPictogramSize =
+    layout.typography.iconPictogramSize ||
+    (layout.size === "small"
+      ? "9.5mm"
+      : layout.size === "medium"
+        ? "13mm"
+        : "18mm");
   const qrPictogramSize =
     layout.typography.qrPictogramSize ||
     (layout.size === "small" ? "6.5mm" : "9mm");
@@ -1507,6 +1523,17 @@ const buildStyles = (model) => {
       width: calc(${layout.typography.imgSize} - 4px);
       height: calc(${layout.typography.imgSize} - 4px);
     }
+    .pictograms-icon {
+      display: grid;
+      grid-template-columns: repeat(2, ${iconPictogramSize});
+      justify-content: center;
+      align-items: center;
+      gap: 0.9mm;
+    }
+    .pictograms-icon img {
+      width: ${iconPictogramSize};
+      height: ${iconPictogramSize};
+    }
     .pictograms-standard {
       display: grid;
       grid-template-columns: repeat(2, ${standardPictogramSize});
@@ -1887,6 +1914,57 @@ const buildStyles = (model) => {
       font-size: 6px;
       padding: 0.35mm 1.2mm;
     }
+    .label-icon.label-form-strip {
+      padding: 1.25mm;
+      gap: 0.3mm;
+    }
+    .label-icon.label-form-strip .label-top {
+      padding-bottom: 0.35mm;
+      margin-bottom: 0.35mm;
+    }
+    .label-icon.label-form-strip .name-section-compact {
+      gap: 0.05mm;
+    }
+    .label-icon.label-form-strip .name-en {
+      font-size: 7.2px;
+      line-height: 1;
+      -webkit-line-clamp: 1;
+    }
+    .label-icon.label-form-strip .name-zh {
+      font-size: 6px;
+      line-height: 1;
+      margin-top: 0;
+    }
+    .label-icon.label-form-strip .cas {
+      display: none;
+    }
+    .label-icon.label-form-strip .label-middle {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    .label-icon.label-form-strip .pictograms-icon {
+      grid-template-columns: repeat(4, ${iconPictogramSize});
+      gap: 0.45mm;
+    }
+    .label-icon.label-form-strip .signal {
+      margin: 0;
+      padding: 0.25mm 1mm;
+      border-radius: 0.6mm;
+      font-size: 5.8px;
+      line-height: 1;
+    }
+    .label-icon.label-form-compact .label-top {
+      padding-bottom: 0.6mm;
+      margin-bottom: 0.6mm;
+    }
+    .label-icon.label-form-compact .pictograms-icon {
+      gap: 0.75mm;
+    }
+    .label-icon.label-form-compact .signal {
+      margin-top: 0.5mm;
+      padding: 0.45mm 1.4mm;
+      font-size: max(6.2px, calc(${layout.typography.signalSize} - 4px));
+    }
     .label-standard.label-form-roomy .standard-grid {
       gap: 2mm;
     }
@@ -2094,10 +2172,12 @@ function buildPreviewStyles(mode, model, options = {}) {
     previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 400 : 420;
   const maxLabelPreviewHeightPx =
     previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 320 : 340;
+  const maxLabelPreviewScale =
+    previewZoom === "inspect" || isFullPageLabelPreview ? 1 : 2.2;
   const labelPreviewScale =
     mode === "label"
       ? Math.min(
-          1,
+          maxLabelPreviewScale,
           maxLabelPreviewWidthPx / rawLabelWidthPx,
           maxLabelPreviewHeightPx / rawLabelHeightPx,
         )

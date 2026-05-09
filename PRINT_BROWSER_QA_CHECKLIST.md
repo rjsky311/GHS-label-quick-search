@@ -169,11 +169,28 @@ cd frontend
 $env:PRINT_QA_REPORT_PATH='build/print-qa-report.json'; npm run qa:print-report
 ```
 
-The report records the expected `qa_handoff` attributes for A4 Primary, Letter
-Primary, bottle supplemental, tube/vial quick-ID, and QR supplement. Use it as a
-code-level gate before doing production Browser QA; it does not replace clicking
-the deployed app because it cannot verify Zeabur freshness or extension/browser
-behavior.
+When a visual browser pass is needed but the app backend is not the thing under
+test, also emit preview HTML artifacts:
+
+```powershell
+cd frontend
+$env:PRINT_QA_REPORT_PATH='build/print-qa-report.json'
+$env:PRINT_QA_PREVIEW_DIR="$env:TEMP\ghs-print-qa-previews"
+npm run qa:print-report
+```
+
+Serve that directory with a local static server and inspect the individual
+HTML files in Browser Use. Prefer a temp directory rather than `build/` for
+long-lived visual inspection so Vite can freely clean the production build
+directory. These artifacts reuse the same preview renderer as the app and now
+cover A4 Primary, Letter Primary, bottle supplemental, Avery 5163, Avery 5164,
+rack landscape, tube/vial quick-ID, Brother 62 mm quick-ID, QR supplement, and
+Brother 62 mm QR supplement.
+
+The report records the expected `qa_handoff` attributes and preview scale for
+the matrix. Use it as a code-level and renderer-level gate before doing
+production Browser QA; it does not replace clicking the deployed app because it
+cannot verify Zeabur freshness or extension/browser behavior.
 
 The full shipping gate is still:
 

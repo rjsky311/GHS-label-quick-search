@@ -3,21 +3,34 @@ jest.mock("@/i18n", () => ({
   language: "en",
 }));
 
-jest.mock("@/constants/ghs", () => ({
-  GHS_IMAGES: {
-    GHS04: "https://example.com/GHS04.svg",
-    GHS05: "https://example.com/GHS05.svg",
-    GHS06: "https://example.com/GHS06.svg",
-    GHS07: "https://example.com/GHS07.svg",
-  },
-}));
+jest.mock("@/constants/ghs", () => {
+  const image = (code) =>
+    `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect x="18" y="18" width="64" height="64" fill="#fff" stroke="#ef2b2d" stroke-width="9" transform="rotate(45 50 50)"/>
+        <text x="50" y="56" text-anchor="middle" font-size="18" font-family="Arial" font-weight="700">${code}</text>
+      </svg>`,
+    )}`;
+
+  return {
+    GHS_IMAGES: {
+      GHS04: image("GHS04"),
+      GHS05: image("GHS05"),
+      GHS06: image("GHS06"),
+      GHS07: image("GHS07"),
+    },
+  };
+});
 
 import fs from "node:fs";
 import path from "node:path";
 import {
   PRINT_QA_MATRIX,
+  PRINT_QA_HYDROCHLORIC_ACID,
+  PRINT_QA_PROFILE,
   buildPrintQaMatrixReport,
 } from "@/utils/printQaMatrix";
+import { buildPrintPreviewDocument } from "@/utils/printLabels";
 
 const maybeWriteReport = (report) => {
   const outputPath = process.env.PRINT_QA_REPORT_PATH;
@@ -31,6 +44,44 @@ const maybeWriteReport = (report) => {
   console.log(`Print QA report written to ${absolutePath}`);
 };
 
+const maybeWritePreviewArtifacts = () => {
+  const outputDir = process.env.PRINT_QA_PREVIEW_DIR;
+  if (!outputDir) return;
+
+  const absoluteDir = path.resolve(process.cwd(), outputDir);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+
+  PRINT_QA_MATRIX.forEach((testCase) => {
+    const preview = buildPrintPreviewDocument(
+      [PRINT_QA_HYDROCHLORIC_ACID],
+      testCase.labelConfig,
+      {},
+      {},
+      { [PRINT_QA_HYDROCHLORIC_ACID.cas_number]: 1 },
+      PRINT_QA_PROFILE,
+      { mode: "label", previewZoom: "fit" },
+    );
+    fs.writeFileSync(path.join(absoluteDir, `${testCase.id}.html`), preview.html);
+  });
+
+  fs.writeFileSync(
+    path.join(absoluteDir, "index.json"),
+    `${JSON.stringify(
+      PRINT_QA_MATRIX.map((testCase) => ({
+        id: testCase.id,
+        label: testCase.label,
+        file: `${testCase.id}.html`,
+      })),
+      null,
+      2,
+    )}\n`,
+  );
+
+  // Keep this visible when running `npm run qa:print-report`.
+  // eslint-disable-next-line no-console
+  console.log(`Print QA previews written to ${absoluteDir}`);
+};
+
 describe("print QA matrix report", () => {
   it("generates a passing machine-readable report for the core HCl print matrix", () => {
     const report = buildPrintQaMatrixReport({
@@ -40,6 +91,7 @@ describe("print QA matrix report", () => {
     });
 
     maybeWriteReport(report);
+    maybeWritePreviewArtifacts();
 
     expect(report.schemaVersion).toBe(1);
     expect(report.generatedAt).toEqual(expect.any(String));

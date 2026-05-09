@@ -462,6 +462,7 @@ function resolveTypographyMetrics(normalized) {
       standardPictogramMm: 30,
       standardRailColumnMm: 66,
       standardPictogramGapMm: 2,
+      iconPictogramMm: 30,
       qrPictogramMm: 14,
     };
   }
@@ -521,6 +522,11 @@ function resolveTypographyMetrics(normalized) {
     8.5,
     normalized.size === "large" ? 15 : 12.5,
   );
+  const iconPictogramMm = clamp(
+    roundTo(shortSide * (isCompactStrip ? 0.41 : 0.31), 1),
+    isCompactStrip ? 9.5 : 9,
+    normalized.size === "large" ? 26 : normalized.size === "medium" ? 19 : 14,
+  );
 
   return {
     ...base,
@@ -537,6 +543,7 @@ function resolveTypographyMetrics(normalized) {
     standardPictogramMm,
     standardRailColumnMm,
     standardPictogramGapMm,
+    iconPictogramMm,
     qrPictogramMm,
   };
 }
@@ -570,7 +577,10 @@ function resolveTemplateBudgets(normalized) {
   const isBottleSupplementalFallback =
     normalized.labelPurpose === "shipping" &&
     normalized.template === "standard" &&
-    area < 5600;
+    (area < 5600 ||
+      (normalized.nameDisplay === "both" &&
+        area < 9500 &&
+        normalized.stockPreset !== "large-primary"));
 
   if (isBottleSupplementalFallback) {
     primaryHazards = Math.min(primaryHazards, 2);
@@ -825,6 +835,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       standardPictogramSize: formatMm(metrics.standardPictogramMm),
       standardRailColumn: formatMm(metrics.standardRailColumnMm),
       standardPictogramGap: formatMm(metrics.standardPictogramGapMm),
+      iconPictogramSize: formatMm(metrics.iconPictogramMm),
       qrPictogramSize: formatMm(metrics.qrPictogramMm),
     },
     page: {

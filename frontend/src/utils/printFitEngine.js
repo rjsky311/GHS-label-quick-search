@@ -183,6 +183,27 @@ export const getMaxSupplementalTextWeight = (layout = {}) => {
   return Math.max(rendererFloor, maxCapacity);
 };
 
+export const getMaxSupplementalPictogramCount = (layout = {}) => {
+  const area = layoutAreaMm(layout);
+  const isStrip = layout.formFactor === "strip" || layout.heightMm <= 32;
+  const isCompact = isStrip || layout.formFactor === "compact";
+
+  if (layout.template === "qrcode") {
+    if (isStrip) return 4;
+    if (layout.size === "small" || area < 3200) return 4;
+    return layout.size === "large" ? 6 : 5;
+  }
+
+  if (layout.template === "icon") {
+    if (isStrip) return 4;
+    if (isCompact || layout.size === "small") return 4;
+    return layout.size === "large" ? 8 : 6;
+  }
+
+  if (isStrip || layout.size === "small") return 4;
+  return layout.size === "large" || area >= 9000 ? 6 : 4;
+};
+
 const stringLength = (value) => String(value || "").trim().length;
 
 const joinUniqueText = (...parts) => {
@@ -246,6 +267,14 @@ const identityTextWeight = (content, layout = {}, locale = "zh") =>
   ) * 1.4 +
   stringLength(content.cas) * 1.1 +
   stringLength(content.signalWord) * 2;
+
+const shouldUseCompactStandardHazards = (layout = {}) =>
+  layout.labelPurpose === "shipping" &&
+  layout.template === "standard" &&
+  (layout.formFactor === "bottle" ||
+    (layout.nameDisplay === "both" &&
+      layout.outputRole === "primary-candidate" &&
+      layoutAreaMm(layout) < 9500));
 
 export const estimatePrintContentTextWeight = (
   content,
@@ -313,10 +342,7 @@ const estimateSupplementalPrintContentTextWeight = (
     0,
     standardBudget.precautions || 0,
   );
-  const compactStandardHazards =
-    layout.labelPurpose === "shipping" &&
-    layout.template === "standard" &&
-    layout.formFactor === "bottle";
+  const compactStandardHazards = shouldUseCompactStandardHazards(layout);
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
@@ -352,16 +378,28 @@ const inspectSupplementalContentFitForContents = (
   locale = "zh",
 ) => {
   const maxTextWeight = getMaxSupplementalTextWeight(layout);
+  const maxPictograms = getMaxSupplementalPictogramCount(layout);
   return contents.flatMap((content) => {
+    const issues = [];
+    if ((content.counts?.pictograms || 0) > maxPictograms) {
+      issues.push({
+        type: "too-many-pictograms-for-stock",
+        index: content.index,
+        pictogramCount: content.counts.pictograms,
+        maxPictograms,
+      });
+    }
+
     const textWeight = estimateSupplementalPrintContentTextWeight(
       content,
       layout,
       locale,
     );
 
-    if (textWeight <= maxTextWeight) return [];
+    if (textWeight <= maxTextWeight) return issues;
 
     return [
+      ...issues,
       {
         type: "supplemental-content-too-dense",
         index: content.index,

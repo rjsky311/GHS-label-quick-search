@@ -166,6 +166,71 @@ export const PRINT_QA_MATRIX = Object.freeze([
       template: "standard",
       hasQr: false,
       hasFullPagePictograms: false,
+      minPreviewScale: 1,
+    },
+  },
+  {
+    id: "avery-5163-bottle-supplemental",
+    label: "Letter 2 x 4 bottle supplemental",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "avery-5163",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "avery-5163",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+    },
+  },
+  {
+    id: "avery-5164-large-supplemental",
+    label: "Letter large supplemental",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "avery-5164",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "avery-5164",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+    },
+  },
+  {
+    id: "rack-landscape-supplemental",
+    label: "Rack landscape supplemental",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "medium-rack",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "medium-rack",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1,
     },
   },
   {
@@ -187,6 +252,29 @@ export const PRINT_QA_MATRIX = Object.freeze([
       template: "icon",
       hasQr: false,
       hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "brother-62mm-quick-id",
+    label: "Brother 62 mm quick-ID",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "brother-62mm-continuous",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "brother-62mm-continuous",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
     },
   },
   {
@@ -208,6 +296,29 @@ export const PRINT_QA_MATRIX = Object.freeze([
       template: "qrcode",
       hasQr: true,
       hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "brother-62mm-qr-supplement",
+    label: "Brother 62 mm QR supplement",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+      stockPreset: "brother-62mm-continuous",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
+      labelKind: "qr-supplement",
+      stockPreset: "brother-62mm-continuous",
+      template: "qrcode",
+      hasQr: true,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
     },
   },
 ]);
@@ -304,6 +415,7 @@ export function buildPrintQaCaseResult({
     hasEveryPictogram: includesEvery(pictogramCodes, expectedPictograms),
     hasQr: hasActualQrImage(fragmentHtml),
     hasSummaries: hasSummaries(fragmentHtml),
+    hasIconPictogramClass: fragmentHtml.includes("pictograms-icon"),
     hasFullPagePictograms: Boolean(
       fitPreview?.html?.includes("width: 28mm") &&
         fitPreview?.html?.includes("height: 28mm"),
@@ -320,10 +432,20 @@ export function buildPrintQaCaseResult({
     ["previewZoom", actual.previewZoom === "fit"],
     ["inspectPreviewZoom", actual.inspectPreviewZoom === "inspect"],
     ["inspectStartsAtLeft", actual.inspectStartsAtLeft],
-    ["previewScale", actual.labelPreviewScale > 0 && actual.labelPreviewScale <= 1],
+    [
+      "previewScale",
+      actual.labelPreviewScale > 0 && actual.labelPreviewScale <= 2.2,
+    ],
     ["pictograms", actual.hasEveryPictogram],
     ["qrState", actual.hasQr === expected.hasQr],
   ];
+
+  if (Number.isFinite(expected.minPreviewScale)) {
+    checks.push([
+      "minimumPreviewScale",
+      actual.labelPreviewScale >= expected.minPreviewScale,
+    ]);
+  }
 
   if (typeof expected.hasSummaries === "boolean") {
     checks.push(["summaryState", actual.hasSummaries === expected.hasSummaries]);

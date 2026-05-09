@@ -1,6 +1,7 @@
 import {
   PRINT_READINESS_STATE,
   evaluatePrintReadiness,
+  getMaxSupplementalPictogramCount,
   getMaxSupplementalTextWeight,
   inspectPrintContentFit,
 } from "../printFitEngine";
@@ -301,6 +302,41 @@ describe("printFitEngine", () => {
     expect(getMaxSupplementalTextWeight(roomy)).toBeGreaterThan(
       getMaxSupplementalTextWeight(compact),
     );
+  });
+
+  it("blocks supplemental stocks that cannot physically keep every pictogram", () => {
+    const layout = resolvePrintLayoutConfig({
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+    });
+    const chemical = {
+      ...makeSimpleSupplementalChemical(),
+      ghs_pictograms: [
+        { code: "GHS01" },
+        { code: "GHS02" },
+        { code: "GHS03" },
+        { code: "GHS04" },
+        { code: "GHS05" },
+      ],
+    };
+    const readiness = evaluatePrintReadiness({
+      selectedForLabel: [chemical],
+      layout,
+      resolvedLabProfile: {},
+    });
+
+    expect(getMaxSupplementalPictogramCount(layout)).toBe(4);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.BLOCKED_INVALID);
+    expect(readiness.canPrint).toBe(false);
+    expect(readiness.issues).toEqual([
+      expect.objectContaining({
+        type: "too-many-pictograms-for-stock",
+        pictogramCount: 5,
+        maxPictograms: 4,
+      }),
+    ]);
   });
 
   it("blocks complete primary labels until responsible profile is complete", () => {

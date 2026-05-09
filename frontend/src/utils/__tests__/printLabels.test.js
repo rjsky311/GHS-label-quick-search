@@ -357,8 +357,10 @@ describe("print layout model", () => {
     expect(large.typography.fontSize).toBe("14px");
     expect(small.typography.qrBox).toBe("15.8mm");
     expect(small.typography.standardPictogramSize).toBe("9.1mm");
+    expect(small.typography.iconPictogramSize).toBe("9.8mm");
     expect(small.typography.qrPictogramSize).toBe("8.6mm");
     expect(medium.typography.standardPictogramSize).toBe("15mm");
+    expect(medium.typography.iconPictogramSize).toBe("15.5mm");
     expect(large.typography.standardPictogramSize).toBe("23.8mm");
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
@@ -484,6 +486,28 @@ describe("print layout model", () => {
       expect(preview.previewMetrics.labelPreviewScale).toBeGreaterThan(0);
       expect(preview.html.includes("min-height: 100vh")).toBe(false);
     });
+  });
+
+  it("upscales small preview-only labels while keeping the physical print size unchanged", () => {
+    const preview = buildPrintPreviewDocument(
+      [mockChemical],
+      {
+        stockPreset: "small-strip",
+        template: "icon",
+        labelPurpose: "quickId",
+      },
+      {},
+      {},
+      { "64-17-5": 1 },
+      {},
+      { mode: "label" },
+    );
+
+    expect(preview.fragmentHtml).toContain("pictograms-icon");
+    expect(preview.html).toContain("width: 9.8mm");
+    expect(preview.previewMetrics.labelPreviewScale).toBeGreaterThan(1);
+    expect(preview.model.layout.label.width).toBe("70mm");
+    expect(preview.model.layout.label.height).toBe("24mm");
   });
 });
 
