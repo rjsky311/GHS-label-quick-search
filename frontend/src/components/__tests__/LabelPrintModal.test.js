@@ -512,6 +512,9 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("primary-output-size-avery-5163"),
     ).toHaveTextContent("2 x 4 in Bottle");
+    expect(
+      screen.getByTestId("primary-output-size-medium-rack"),
+    ).toHaveTextContent("Rack Landscape");
     const previewHeight = screen.getByTestId("label-fragment-preview").style
       .height;
     expect(previewHeight).toMatch(/px$/);

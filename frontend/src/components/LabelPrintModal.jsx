@@ -240,6 +240,15 @@ const SHIPPING_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter(
     preset.outputRole === "primary-candidate" ||
     FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id),
 ).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
+const SHIPPING_PRIMARY_STOCK_IDS = new Set(
+  SHIPPING_PRIMARY_PRESETS.map((preset) => preset.id),
+);
+const SHIPPING_SECONDARY_STOCK_IDS = new Set(["medium-rack"]);
+const SHIPPING_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
+  (preset) =>
+    SHIPPING_PRIMARY_STOCK_IDS.has(preset.id) ||
+    SHIPPING_SECONDARY_STOCK_IDS.has(preset.id),
+).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
 const SUPPLEMENTAL_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
   (preset) => preset.outputRole === "supplemental",
 ).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
@@ -769,7 +778,7 @@ export default function LabelPrintModal({
   );
   const visibleStockChoices =
     labelPurpose === "shipping"
-      ? SHIPPING_PRIMARY_PRESETS
+      ? SHIPPING_STOCK_PRESETS
       : SUPPLEMENTAL_STOCK_PRESETS;
   const { primaryStockChoices, secondaryStockChoices } = splitStockChoices(
     visibleStockChoices,
