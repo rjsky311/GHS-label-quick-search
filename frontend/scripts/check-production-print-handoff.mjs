@@ -38,6 +38,7 @@ const screenshotDir = env.PRINT_QA_SCREENSHOT_DIR
 const outputPath = env.PRINT_QA_HANDOFF_REPORT_PATH
   ? path.resolve(process.cwd(), env.PRINT_QA_HANDOFF_REPORT_PATH)
   : path.resolve(process.cwd(), DEFAULT_HANDOFF_REPORT_PATH);
+const verboseConsole = env.PRINT_QA_VERBOSE === "1";
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 
@@ -142,6 +143,15 @@ const sameNumber = (actual, expected) => {
   );
 };
 
+const sameMembers = (left = [], right = []) => {
+  const leftSet = new Set(left);
+  const rightSet = new Set(right);
+  return (
+    leftSet.size === rightSet.size &&
+    [...leftSet].every((item) => rightSet.has(item))
+  );
+};
+
 const normalizeBool = (value) => String(Boolean(value));
 
 const getAttributeMap = async (locator, attributes) => {
@@ -190,6 +200,19 @@ const setTargetAndStock = async (page, testCase) => {
   await sleep(500);
 };
 
+const setVisualConfig = async (page, testCase) => {
+  const desiredNameDisplay = testCase.expectedNameDisplay;
+  const desiredColorMode = testCase.expectedColorMode;
+  if (desiredNameDisplay) {
+    await page.getByTestId(`label-config-option-${desiredNameDisplay}`).click();
+    await sleep(150);
+  }
+  if (desiredColorMode) {
+    await page.getByTestId(`label-config-option-${desiredColorMode}`).click();
+    await sleep(150);
+  }
+};
+
 const setCustomFields = async (page, testCase) => {
   const entries = Object.entries(testCase.customLabelFields || {});
   if (entries.length === 0) return;
@@ -230,6 +253,7 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedPictograms,
       expectedHasQr,
       expectedHasSignalWord,
+      expectedIdentityTexts,
       expectedRequiredIdentityText,
       geometryTolerancePx,
     }) => {
@@ -351,6 +375,16 @@ const inspectPreviewFrame = async (page, testCase) => {
             : labelClass.includes("label-kind-supplemental")
               ? "supplemental"
               : "";
+      const pictogramRects = pictogramImages.map(({ element }) =>
+        rectToObject(element.getBoundingClientRect()),
+      );
+      const qrRects = qrImages.map(({ element }) =>
+        rectToObject(element.getBoundingClientRect()),
+      );
+      const minSide = (rects) => {
+        if (rects.length === 0) return 0;
+        return Math.min(...rects.map((rect) => Math.min(rect.width, rect.height)));
+      };
 
       return {
         labelKind,
@@ -364,6 +398,9 @@ const inspectPreviewFrame = async (page, testCase) => {
           !expectedHasSignalWord ||
           signalNodes.some(({ element }) => visibleText(element).length > 0),
         hasCas: expectedCasNumbers.every((cas) => frameText.includes(cas)),
+        hasExpectedIdentityText:
+          expectedIdentityTexts.length === 0 ||
+          expectedIdentityTexts.some((text) => frameText.includes(text)),
         hasRequiredIdentityText:
           !expectedRequiredIdentityText ||
           frameText.includes(expectedRequiredIdentityText),
@@ -382,7 +419,11 @@ const inspectPreviewFrame = async (page, testCase) => {
         geometry: {
           viewport: rectToObject(viewportRect),
           label: labelRect ? rectToObject(labelRect) : null,
+          pictograms: pictogramRects,
+          qrImages: qrRects,
         },
+        minPictogramSidePx: round(minSide(pictogramRects)),
+        minQrSidePx: round(minSide(qrRects)),
         counts: {
           pictograms: pictogramImages.length,
           qrImages: qrImages.length,
@@ -397,6 +438,7 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedPictograms: testCase.expectedPictograms || [],
       expectedHasQr: Boolean(testCase.expectedHasQr),
       expectedHasSignalWord: Boolean(testCase.expectedHasSignalWord),
+      expectedIdentityTexts: testCase.expectedIdentityTexts || [],
       expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
       geometryTolerancePx: PREVIEW_GEOMETRY_TOLERANCE_PX,
     },
@@ -434,7 +476,18 @@ const readPrintStatus = async (page, testCase) => {
   await page.evaluate(() => {
     document.getElementById("ghs-print-qa-status")?.remove();
   });
-  await page.getByTestId(testCase.selectors.printButtonTestId).click();
+  const printButton = page.getByTestId(testCase.selectors.printButtonTestId);
+  const printButtonEnabled = !(await printButton.isDisabled());
+  if (!printButtonEnabled) {
+    return {
+      printButtonEnabled,
+      attributes: Object.fromEntries(
+        STATUS_ATTRIBUTES.map((attribute) => [attribute, null]),
+      ),
+      text: "",
+    };
+  }
+  await printButton.click();
   const status = page.locator(`#${testCase.selectors.qaStatusElementId}`);
   await status.waitFor({ state: "attached", timeout: 15000 });
   await page.waitForFunction(
@@ -447,6 +500,7 @@ const readPrintStatus = async (page, testCase) => {
     { timeout: 15000 },
   );
   return {
+    printButtonEnabled,
     attributes: await getAttributeMap(status, STATUS_ATTRIBUTES),
     text: (await status.textContent()) || "",
   };
@@ -470,6 +524,7 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   };
 
   assert("status", attrs["data-status"] === testCase.expectedStatus);
+  assert("print-button-enabled", status.printButtonEnabled === true);
   assert("label-kind", attrs["data-label-kind"] === testCase.expectedLabelKind);
   assert("stock-preset", attrs["data-stock-preset"] === testCase.expectedStockPreset);
   assert("template", attrs["data-template"] === testCase.expectedTemplate);
@@ -484,6 +539,11 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   assert(
     "pictograms",
     (testCase.expectedPictograms || []).every((code) => pictograms.has(code)),
+  );
+  assert(
+    "pictograms-exact",
+    (testCase.expectedPictograms || []).length === 0 ||
+      sameMembers([...pictograms], testCase.expectedPictograms || []),
   );
   assert(
     "preview-label-kind",
@@ -506,6 +566,11 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     ),
   );
   assert(
+    "preview-pictograms-exact",
+    (testCase.expectedPictograms || []).length === 0 ||
+      sameMembers([...previewPictograms], testCase.expectedPictograms || []),
+  );
+  assert(
     "preview-pictograms-match-handoff",
     pictograms.size === previewPictograms.size &&
       [...pictograms].every((code) => previewPictograms.has(code)),
@@ -515,6 +580,24 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     !testCase.expectedHasSignalWord ||
       previewInspection.hasSignalWord === true,
   );
+  assert(
+    "preview-identity-text",
+    previewInspection.hasExpectedIdentityText === true,
+  );
+  if (Number(testCase.expectedMinPictogramSidePx) > 0) {
+    assert(
+      "preview-pictogram-min-size",
+      Number(previewInspection.minPictogramSidePx) >=
+        Number(testCase.expectedMinPictogramSidePx),
+    );
+  }
+  if (Number(testCase.expectedMinQrSidePx) > 0) {
+    assert(
+      "preview-qr-min-size",
+      Number(previewInspection.minQrSidePx) >=
+        Number(testCase.expectedMinQrSidePx),
+    );
+  }
   assert(
     "preview-no-scroll-overflow",
     previewInspection.documentHasScrollOverflow === false,
@@ -538,6 +621,14 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     sameNumber(attrs["data-label-height-mm"], testCase.expectedLabelHeightMm),
   );
   assert("page-size", attrs["data-page-size"] === testCase.expectedPageSize);
+  assert(
+    "color-mode",
+    attrs["data-color-mode"] === testCase.expectedColorMode,
+  );
+  assert(
+    "name-display",
+    attrs["data-name-display"] === testCase.expectedNameDisplay,
+  );
   assert("issue-types", !(attrs["data-issue-types"] || ""));
   if (testCase.expectedRequiredIdentityText) {
     assert("required-identity-preview", evidence.requiredIdentityTextInPreview);
@@ -567,6 +658,7 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
     await openPrintModal(page);
     await fillResponsibleProfile(page, responsibleProfile);
     await setTargetAndStock(page, testCase);
+    await setVisualConfig(page, testCase);
     await setCustomFields(page, testCase);
     const evidence = await capturePreviewEvidence(page, testCase);
     const status = await readPrintStatus(page, testCase);
@@ -631,6 +723,7 @@ const result = {
   finishedAt: new Date().toISOString(),
   productionUrl: baseUrl,
   reportPath,
+  handoffReportPath: outputPath,
   executablePath,
   headless,
   selectedCases: cases.map((testCase) => testCase.id),
@@ -647,7 +740,19 @@ if (outputPath) {
   fs.writeFileSync(outputPath, `${maybeJson(result)}${os.EOL}`);
 }
 
-console.log(maybeJson(result));
+const consoleResult = verboseConsole
+  ? result
+  : {
+      ok: result.ok,
+      productionUrl: result.productionUrl,
+      reportPath: result.reportPath,
+      handoffReportPath: result.handoffReportPath,
+      summary: result.summary,
+      selectedCases: result.selectedCases,
+      failedCases: failed.map(({ id, failures }) => ({ id, failures })),
+    };
+
+console.log(maybeJson(consoleResult));
 
 if (!result.ok) {
   process.exitCode = 1;

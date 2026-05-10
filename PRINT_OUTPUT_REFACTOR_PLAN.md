@@ -124,9 +124,19 @@ The first refactor slice has landed:
   Hydroxide paths by default, verifies preview/print pictogram parity, and treats
   the signal word as a critical visible element alongside CAS, pictograms, QR,
   and identity support chips.
+- Production handoff QA now checks exact pictogram-set parity, requires at least
+  one chemical identity name in the preview, and records/enforces minimum visible
+  GHS pictogram and QR dimensions for compact-label regressions.
+- Production handoff QA now actively clicks name-display and color-mode controls
+  and asserts `data-name-display` / `data-color-mode`, so English-only and B/W
+  matrix rows are real interaction coverage rather than local-only assumptions.
+- Each printable production handoff case now records and asserts that the print
+  button is enabled before click, so accidental UI gating is reported as a direct
+  product failure instead of a generic runner timeout.
 - Production handoff QA now writes `build/production-print-handoff-report.json`
   by default so each post-deploy run leaves a structured audit trail without
-  relying on terminal scrollback.
+  relying on terminal scrollback. Terminal output is concise by default, with
+  `PRINT_QA_VERBOSE=1` available for full JSON output.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

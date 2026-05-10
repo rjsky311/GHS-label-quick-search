@@ -28,7 +28,7 @@ export const PRINT_QA_CASE_FIELDS = Object.freeze({
 export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   cas_number: "7647-01-0",
   name_en: "Hydrochloric Acid",
-  name_zh: "Hydrochloric Acid ZH",
+  name_zh: "鹽酸",
   cid: 313,
   ghs_pictograms: PRINT_QA_PICTOGRAMS.map((code) => ({ code })),
   signal_word: "Danger",
@@ -185,7 +185,7 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
 export const PRINT_QA_ETHANOL = Object.freeze({
   cas_number: "64-17-5",
   name_en: "Ethanol",
-  name_zh: "Ethanol ZH",
+  name_zh: "乙醇",
   cid: 702,
   ghs_pictograms: [{ code: "GHS02" }, { code: "GHS07" }],
   signal_word: "Danger",
@@ -219,9 +219,9 @@ export const PRINT_QA_ETHANOL = Object.freeze({
 export const PRINT_QA_SODIUM_HYDROXIDE = Object.freeze({
   cas_number: "1310-73-2",
   name_en: "Sodium Hydroxide",
-  name_zh: "Sodium Hydroxide ZH",
+  name_zh: "氫氧化鈉",
   cid: 14798,
-  ghs_pictograms: [{ code: "GHS05" }],
+  ghs_pictograms: [{ code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Danger",
   signal_word_zh: "Danger ZH",
   hazard_statements: [
@@ -234,6 +234,21 @@ export const PRINT_QA_SODIUM_HYDROXIDE = Object.freeze({
       code: "H314",
       text_en: "Causes severe skin burns and eye damage",
       text_zh: "Causes severe skin burns and eye damage ZH",
+    },
+    {
+      code: "H315",
+      text_en: "Causes skin irritation",
+      text_zh: "Causes skin irritation ZH",
+    },
+    {
+      code: "H319",
+      text_en: "Causes serious eye irritation",
+      text_zh: "Causes serious eye irritation ZH",
+    },
+    {
+      code: "H335",
+      text_en: "May cause respiratory irritation",
+      text_zh: "May cause respiratory irritation ZH",
     },
   ],
   precautionary_statements: [
@@ -698,6 +713,18 @@ const sameMembers = (left = [], right = []) => {
   );
 };
 
+const expectedIdentityTextsForChemical = (chemical = {}) =>
+  [
+    chemical.name_zh,
+    chemical.name_en,
+    chemical.name,
+    chemical.cas_number,
+  ].filter(Boolean);
+
+const hasAnyText = (html = "", candidates = []) =>
+  candidates.length === 0 ||
+  candidates.some((candidate) => html.includes(candidate));
+
 const hasFullPagePictogramSize = (html = "") => {
   if (!html.includes("label-full-page-primary")) return false;
   const sizeMatches = [...html.matchAll(/width:\s*([0-9.]+)mm/g)].map((match) =>
@@ -812,6 +839,9 @@ export function buildPrintQaCaseResult({
   const expectedHasSignalWord = Boolean(
     selectedChemical.signal_word || selectedChemical.signal_word_zh,
   );
+  const expectedIdentityTexts = expectedIdentityTextsForChemical(
+    selectedChemical,
+  );
   const actual = {
     canPrint: plan.canPrint,
     outputKind: plan.outputKind,
@@ -831,6 +861,11 @@ export function buildPrintQaCaseResult({
     previewPrintPictogramParity: sameMembers(
       pictogramCodes,
       printPictogramCodes,
+    ),
+    hasExactPictogramSet: sameMembers(pictogramCodes, expectedPictograms),
+    printHasExactPictogramSet: sameMembers(
+      printPictogramCodes,
+      expectedPictograms,
     ),
     hasEveryPictogram: includesEvery(pictogramCodes, expectedPictograms),
     printHasEveryPictogram: includesEvery(
@@ -861,6 +896,8 @@ export function buildPrintQaCaseResult({
     printHasRequiredIdentityText: expected.requiredIdentityText
       ? printHtml.includes(expected.requiredIdentityText)
       : true,
+    hasAnyIdentityText: hasAnyText(fragmentHtml, expectedIdentityTexts),
+    printHasAnyIdentityText: hasAnyText(printHtml, expectedIdentityTexts),
     printLabelKind: resolveLabelKind(printHtml),
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
@@ -886,9 +923,13 @@ export function buildPrintQaCaseResult({
     ],
     ["pictograms", actual.hasEveryPictogram],
     ["printPictograms", actual.printHasEveryPictogram],
+    ["exactPictograms", actual.hasExactPictogramSet],
+    ["printExactPictograms", actual.printHasExactPictogramSet],
     ["previewPrintPictogramParity", actual.previewPrintPictogramParity],
     ["casVisible", actual.hasCas],
     ["printCasVisible", actual.printHasCas],
+    ["identityTextVisible", actual.hasAnyIdentityText],
+    ["printIdentityTextVisible", actual.printHasAnyIdentityText],
     ["printRequiredImages", actual.printHasRequiredPictogramImages],
     ["qrState", actual.hasQr === expected.hasQr],
     ["printQrState", actual.printHasQr === expected.hasQr],
@@ -954,6 +995,7 @@ export function buildPrintQaCaseResult({
       cas: selectedChemical.cas_number,
       name: selectedChemical.name_en || selectedChemical.name_zh,
       expectedPictograms,
+      expectedIdentityTexts,
       hasSignalWord: Boolean(
         selectedChemical.signal_word || selectedChemical.signal_word_zh,
       ),
@@ -1013,6 +1055,16 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
   expectedHasQr: caseResult.handoffExpectation.hasQr,
   expectedHasSignalWord: Boolean(caseResult.chemical.hasSignalWord),
+  expectedIdentityTexts: caseResult.chemical.expectedIdentityTexts || [],
+  expectedMinPictogramSidePx:
+    caseResult.handoffExpectation.labelKind === "complete-primary"
+      ? 18
+      : caseResult.handoffExpectation.labelKind === "qr-supplement"
+        ? 18
+        : caseResult.handoffExpectation.labelKind === "quick-id"
+          ? 26
+          : 24,
+  expectedMinQrSidePx: caseResult.handoffExpectation.hasQr ? 30 : 0,
   expectedCasNumbers: caseResult.handoffExpectation.casNumbers,
   expectedLabelWidthMm: caseResult.handoffExpectation.labelWidthMm,
   expectedLabelHeightMm: caseResult.handoffExpectation.labelHeightMm,

@@ -46,15 +46,23 @@ Hydrochloric Acid, Ethanol, and Sodium Hydroxide outputs, while skipping local
 fixture-only `QA-*` cases. In addition to the handoff status attributes, it
 inspects the preview iframe geometry and fails when required identity text, CAS,
 GHS pictograms, signal word, QR, or support chips are hidden or clipped before
-print handoff. Use `PRINT_QA_SEARCH_TERM=7647-01-0` for the older
-Hydrochloric-Acid-only pass, `PRINT_QA_CASES=tube-vial-quick-id-with-case` for
-one high-risk compact case, or `PRINT_QA_CASES=all` to explicitly request the
-same real production-searchable default set.
+print handoff. It also verifies the exact GHS pictogram set, at least one
+chemical identity name, and minimum visible GHS/QR image sizes so compact labels
+cannot silently regress into unreadable output. Use
+`PRINT_QA_SEARCH_TERM=7647-01-0` for the older Hydrochloric-Acid-only pass,
+`PRINT_QA_CASES=tube-vial-quick-id-with-case` for one high-risk compact case, or
+`PRINT_QA_CASES=all` to explicitly request the same real production-searchable
+default set.
+The script actively clicks the target, stock, name-display, color-mode, custom
+field, and print controls before reading the QA handoff status; do not treat the
+report as a static preview-only check.
 Set `PRINT_QA_SCREENSHOT_DIR` to save preview iframe screenshots for visual
 review. The script writes `build/production-print-handoff-report.json` by
 default; set `PRINT_QA_HANDOFF_REPORT_PATH` only when a different report path is
-needed. The script uses `playwright-core` with the local Chrome/Edge executable;
-if discovery fails, set `PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
+needed. Console output is concise by default; set `PRINT_QA_VERBOSE=1` when the
+full JSON report is needed in terminal output. The script uses `playwright-core`
+with the local Chrome/Edge executable; if discovery fails, set
+`PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
 
 ## Required Evidence
 
@@ -70,10 +78,13 @@ Record these outputs in the final implementation note:
 - Preview mode state: `Fit` should be the default whole-label view, and changing
   target or stock after using `Inspect` should return the preview to `Fit`.
 - Preview `srcdoc` and geometry checks for label-kind class, pictogram codes,
-  signal-word visibility, QR presence, CAS/support-chip visibility, B/W state,
-  language state, critical-element clipping, preview/print handoff pictogram
-  parity, and `more-pics` absence.
-- Print button enabled/disabled state for allowed and blocked outputs.
+  exact pictogram-set parity, signal-word visibility, chemical identity-name
+  visibility, QR presence, minimum visible GHS/QR image size, CAS/support-chip
+  visibility, B/W state, language state, critical-element clipping,
+  preview/print handoff pictogram parity, and `more-pics` absence.
+- Print button enabled/disabled state for allowed and blocked outputs. Every
+  printable matrix case must prove that the print button is enabled before the
+  QA handoff click.
 - `print-qa-status` after clicking the print action in QA handoff mode.
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
   `data-cas-numbers`, `data-has-cas`, `data-label-width-mm`,
