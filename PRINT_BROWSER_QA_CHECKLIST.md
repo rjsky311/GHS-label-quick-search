@@ -42,12 +42,13 @@ PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:production-handoff
 ```
 
 By default this runs every real production-searchable case in the matrix:
-Hydrochloric Acid, Ethanol, and Sodium Hydroxide outputs, while skipping local
-fixture-only `QA-*` cases. In addition to the handoff status attributes, it
-inspects the preview iframe geometry and fails when required identity text, CAS,
-GHS pictograms, signal word, QR, or support chips are hidden or clipped before
-print handoff. It also verifies the exact GHS pictogram set, at least one
-chemical identity name, and minimum visible GHS/QR image sizes so compact labels
+Hydrochloric Acid, Ethanol, Sodium Hydroxide, Methanol, and Hydrogen Peroxide
+outputs, while skipping local fixture-only `QA-*` cases. In addition to the
+handoff status attributes, it inspects the preview iframe geometry and fails
+when required identity text, CAS, GHS pictograms, signal word, QR, or support
+chips are hidden or clipped before print handoff. It also verifies the exact GHS
+pictogram set, the required/forbidden language-specific identity names, actual
+B/W image filtering, and minimum visible GHS/QR image sizes so compact labels
 cannot silently regress into unreadable output. Use
 `PRINT_QA_SEARCH_TERM=7647-01-0` for the older Hydrochloric-Acid-only pass,
 `PRINT_QA_CASES=tube-vial-quick-id-with-case` for one high-risk compact case, or
@@ -60,8 +61,10 @@ Set `PRINT_QA_SCREENSHOT_DIR` to save preview iframe screenshots for visual
 review. The script writes `build/production-print-handoff-report.json` by
 default; set `PRINT_QA_HANDOFF_REPORT_PATH` only when a different report path is
 needed. Console output is concise by default; set `PRINT_QA_VERBOSE=1` when the
-full JSON report is needed in terminal output. The script uses `playwright-core`
-with the local Chrome/Edge executable; if discovery fails, set
+full JSON report is needed in terminal output. Failure summaries include the
+case id, search term, print-button state, preview label kind, and preview text
+sample so blocked output is diagnosable without opening the full JSON first.
+The script uses `playwright-core` with the local Chrome/Edge executable; if discovery fails, set
 `PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
 
 ## Required Evidence
@@ -79,9 +82,10 @@ Record these outputs in the final implementation note:
   target or stock after using `Inspect` should return the preview to `Fit`.
 - Preview `srcdoc` and geometry checks for label-kind class, pictogram codes,
   exact pictogram-set parity, signal-word visibility, chemical identity-name
-  visibility, QR presence, minimum visible GHS/QR image size, CAS/support-chip
-  visibility, B/W state, language state, critical-element clipping,
-  preview/print handoff pictogram parity, and `more-pics` absence.
+  visibility, required/forbidden language state, QR presence, minimum visible
+  GHS/QR image size, CAS/support-chip visibility, actual B/W image filtering,
+  critical-element clipping, preview/print handoff pictogram parity, and
+  `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs. Every
   printable matrix case must prove that the print button is enabled before the
   QA handoff click.

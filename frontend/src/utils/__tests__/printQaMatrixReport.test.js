@@ -214,6 +214,10 @@ describe("print QA matrix report", () => {
       expect(testCase.actual.printHasSignalWord).toBe(true);
       expect(testCase.actual.hasAnyIdentityText).toBe(true);
       expect(testCase.actual.printHasAnyIdentityText).toBe(true);
+      expect(testCase.actual.hasRequiredIdentityTexts).toBe(true);
+      expect(testCase.actual.printHasRequiredIdentityTexts).toBe(true);
+      expect(testCase.actual.hasNoForbiddenIdentityText).toBe(true);
+      expect(testCase.actual.printHasNoForbiddenIdentityText).toBe(true);
       expect(testCase.actual.printLabelKind).toBe(testCase.expected.labelKind);
       expect(testCase.actual.printTemplate).toBe(testCase.expected.template);
       expect(testCase.actual.printStockPreset).toBe(
@@ -231,6 +235,18 @@ describe("print QA matrix report", () => {
       hasSignalWord: true,
     });
     expect(byId["ethanol-bottle-supplemental"].actual.hasSummaries).toBe(false);
+    expect(
+      byId["ethanol-bottle-supplemental"].chemical.expectedRequiredIdentityTexts,
+    ).toEqual([]);
+    expect(
+      byId["ethanol-bottle-supplemental"].chemical.expectedForbiddenIdentityTexts,
+    ).toEqual([]);
+    expect(
+      byId["ethanol-tube-quick-id"].chemical.expectedRequiredIdentityTexts,
+    ).toEqual(["Ethanol"]);
+    expect(
+      byId["ethanol-tube-quick-id"].chemical.expectedForbiddenIdentityTexts,
+    ).toHaveLength(1);
     expect(byId["sodium-hydroxide-qr-supplement"].chemical).toMatchObject({
       cas: "1310-73-2",
       expectedPictograms: ["GHS05", "GHS07"],
@@ -240,6 +256,20 @@ describe("print QA matrix report", () => {
       ]),
     });
     expect(byId["sodium-hydroxide-qr-supplement"].actual.hasQr).toBe(true);
+    expect(byId["methanol-brother-quick-id-bw"].chemical).toMatchObject({
+      cas: "67-56-1",
+      expectedPictograms: ["GHS02", "GHS06", "GHS08"],
+    });
+    expect(browserCaseById["methanol-brother-quick-id-bw"]).toMatchObject({
+      expectedNameDisplay: "en",
+      expectedColorMode: "bw",
+      expectedRequiredIdentityTexts: ["Methanol"],
+      expectedMinPictogramSidePx: 26,
+    });
+    expect(byId["hydrogen-peroxide-qr-supplement-en"].chemical).toMatchObject({
+      cas: "7722-84-1",
+      expectedPictograms: ["GHS03", "GHS05", "GHS07"],
+    });
     expect(byId["long-name-bottle-supplemental"].actual.printHasEveryPictogram).toBe(
       true,
     );
@@ -274,6 +304,12 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["qr-supplement"]).toMatchObject({
       expectedMinPictogramSidePx: 18,
       expectedMinQrSidePx: 30,
+    });
+    expect(browserCaseById["ethanol-tube-quick-id"]).toMatchObject({
+      expectedNameDisplay: "en",
+      expectedColorMode: "bw",
+      expectedRequiredIdentityTexts: ["Ethanol"],
+      expectedForbiddenIdentityTexts: expect.any(Array),
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"].steps).toEqual(
       expect.arrayContaining([

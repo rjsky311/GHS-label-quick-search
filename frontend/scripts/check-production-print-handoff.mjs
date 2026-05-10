@@ -254,6 +254,9 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedHasQr,
       expectedHasSignalWord,
       expectedIdentityTexts,
+      expectedRequiredIdentityTexts,
+      expectedForbiddenIdentityTexts,
+      expectedColorMode,
       expectedRequiredIdentityText,
       geometryTolerancePx,
     }) => {
@@ -385,6 +388,11 @@ const inspectPreviewFrame = async (page, testCase) => {
         if (rects.length === 0) return 0;
         return Math.min(...rects.map((rect) => Math.min(rect.width, rect.height)));
       };
+      const criticalImageFilters = [...pictogramImages, ...qrImages].map(
+        ({ element }) => window.getComputedStyle(element).filter || "",
+      );
+      const expectedColorClass =
+        expectedColorMode === "bw" ? "print-bw" : "print-color";
 
       return {
         labelKind,
@@ -401,9 +409,25 @@ const inspectPreviewFrame = async (page, testCase) => {
         hasExpectedIdentityText:
           expectedIdentityTexts.length === 0 ||
           expectedIdentityTexts.some((text) => frameText.includes(text)),
+        hasRequiredIdentityTexts: expectedRequiredIdentityTexts.every((text) =>
+          frameText.includes(text),
+        ),
+        hasNoForbiddenIdentityText: expectedForbiddenIdentityTexts.every(
+          (text) => !frameText.includes(text),
+        ),
         hasRequiredIdentityText:
           !expectedRequiredIdentityText ||
           frameText.includes(expectedRequiredIdentityText),
+        hasExpectedColorClass:
+          !expectedColorMode ||
+          document.body.classList.contains(expectedColorClass),
+        hasExpectedImageColorMode:
+          !expectedColorMode ||
+          criticalImageFilters.length === 0 ||
+          (expectedColorMode === "bw"
+            ? criticalImageFilters.every((filter) => filter.includes("grayscale"))
+            : criticalImageFilters.every((filter) => !filter.includes("grayscale"))),
+        imageFilters: criticalImageFilters,
         expectedHasQr,
         expectedPictograms,
         labelVisible: Boolean(labelRect && hasVisibleArea(labelRect)),
@@ -439,6 +463,11 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedHasQr: Boolean(testCase.expectedHasQr),
       expectedHasSignalWord: Boolean(testCase.expectedHasSignalWord),
       expectedIdentityTexts: testCase.expectedIdentityTexts || [],
+      expectedRequiredIdentityTexts:
+        testCase.expectedRequiredIdentityTexts || [],
+      expectedForbiddenIdentityTexts:
+        testCase.expectedForbiddenIdentityTexts || [],
+      expectedColorMode: testCase.expectedColorMode || "",
       expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
       geometryTolerancePx: PREVIEW_GEOMETRY_TOLERANCE_PX,
     },
@@ -584,6 +613,22 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     "preview-identity-text",
     previewInspection.hasExpectedIdentityText === true,
   );
+  assert(
+    "preview-required-identity-texts",
+    previewInspection.hasRequiredIdentityTexts === true,
+  );
+  assert(
+    "preview-no-forbidden-identity-text",
+    previewInspection.hasNoForbiddenIdentityText === true,
+  );
+  assert(
+    "preview-color-class",
+    previewInspection.hasExpectedColorClass === true,
+  );
+  assert(
+    "preview-image-color-mode",
+    previewInspection.hasExpectedImageColorMode === true,
+  );
   if (Number(testCase.expectedMinPictogramSidePx) > 0) {
     assert(
       "preview-pictogram-min-size",
@@ -717,6 +762,15 @@ try {
 }
 
 const failed = results.filter((result) => !result.passed);
+const failedCaseSummary = failed.map(({ id, searchTerm, failures, status, evidence }) => ({
+  id,
+  searchTerm,
+  failures,
+  printButtonEnabled: status?.printButtonEnabled,
+  statusText: status?.text || "",
+  labelKind: evidence?.previewInspection?.labelKind || "",
+  previewText: evidence?.previewInspection?.frameTextSample || "",
+}));
 const result = {
   ok: failed.length === 0,
   startedAt,
@@ -732,6 +786,7 @@ const result = {
     passed: results.length - failed.length,
     failed: failed.length,
   },
+  failedCaseSummary,
   results,
 };
 
@@ -740,7 +795,7 @@ if (outputPath) {
   fs.writeFileSync(outputPath, `${maybeJson(result)}${os.EOL}`);
 }
 
-const consoleResult = verboseConsole
+  const consoleResult = verboseConsole
   ? result
   : {
       ok: result.ok,
@@ -749,7 +804,7 @@ const consoleResult = verboseConsole
       handoffReportPath: result.handoffReportPath,
       summary: result.summary,
       selectedCases: result.selectedCases,
-      failedCases: failed.map(({ id, failures }) => ({ id, failures })),
+      failedCases: failedCaseSummary,
     };
 
 console.log(maybeJson(consoleResult));

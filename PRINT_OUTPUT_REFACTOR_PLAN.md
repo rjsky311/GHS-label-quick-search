@@ -133,10 +133,22 @@ The first refactor slice has landed:
 - Each printable production handoff case now records and asserts that the print
   button is enabled before click, so accidental UI gating is reported as a direct
   product failure instead of a generic runner timeout.
+- The production-searchable default matrix now includes Methanol and Hydrogen
+  Peroxide, covering GHS08 health hazard, GHS03 oxidizer, English-only compact
+  output, and actual B/W pictogram filtering in addition to the original
+  Hydrochloric Acid, Ethanol, and Sodium Hydroxide paths.
 - Production handoff QA now writes `build/production-print-handoff-report.json`
   by default so each post-deploy run leaves a structured audit trail without
   relying on terminal scrollback. Terminal output is concise by default, with
   `PRINT_QA_VERBOSE=1` available for full JSON output.
+
+Newly observed gap:
+
+- Formaldehyde (`50-00-0`) is dense enough in production data that even an A4
+  complete-primary attempt is disabled. This should not be treated as a simple
+  stock-preset bug. The next product slice should define a continuation/overflow
+  workflow for complete shipped-container labels, with an explicit user path
+  instead of only blocking print.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

@@ -270,6 +270,153 @@ export const PRINT_QA_SODIUM_HYDROXIDE = Object.freeze({
   ],
 });
 
+export const PRINT_QA_METHANOL = Object.freeze({
+  cas_number: "67-56-1",
+  name_en: "Methanol",
+  name_zh: "Methanol ZH",
+  cid: 887,
+  ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }, { code: "GHS08" }],
+  signal_word: "Danger",
+  signal_word_zh: "Danger ZH",
+  hazard_statements: [
+    {
+      code: "H225",
+      text_en: "Highly flammable liquid and vapour",
+      text_zh: "Highly flammable liquid and vapour ZH",
+    },
+    {
+      code: "H301",
+      text_en: "Toxic if swallowed",
+      text_zh: "Toxic if swallowed ZH",
+    },
+    {
+      code: "H311",
+      text_en: "Toxic in contact with skin",
+      text_zh: "Toxic in contact with skin ZH",
+    },
+    {
+      code: "H331",
+      text_en: "Toxic if inhaled",
+      text_zh: "Toxic if inhaled ZH",
+    },
+    {
+      code: "H370",
+      text_en: "Causes damage to organs",
+      text_zh: "Causes damage to organs ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P210",
+      text_en: "Keep away from heat, sparks, open flames and hot surfaces",
+      text_zh: "Keep away from ignition sources ZH",
+    },
+    {
+      code: "P260",
+      text_en: "Do not breathe vapours",
+      text_zh: "Do not breathe vapours ZH",
+    },
+    {
+      code: "P280",
+      text_en: "Wear protective gloves and eye protection",
+      text_zh: "Wear protective gloves and eye protection ZH",
+    },
+  ],
+});
+
+export const PRINT_QA_FORMALDEHYDE = Object.freeze({
+  cas_number: "50-00-0",
+  name_en: "Formaldehyde",
+  name_zh: "Formaldehyde ZH",
+  cid: 712,
+  ghs_pictograms: [
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+    { code: "GHS08" },
+  ],
+  signal_word: "Danger",
+  signal_word_zh: "Danger ZH",
+  hazard_statements: [
+    {
+      code: "H301",
+      text_en: "Toxic if swallowed",
+      text_zh: "Toxic if swallowed ZH",
+    },
+    {
+      code: "H314",
+      text_en: "Causes severe skin burns and eye damage",
+      text_zh: "Causes severe skin burns and eye damage ZH",
+    },
+    {
+      code: "H317",
+      text_en: "May cause an allergic skin reaction",
+      text_zh: "May cause an allergic skin reaction ZH",
+    },
+    {
+      code: "H350",
+      text_en: "May cause cancer",
+      text_zh: "May cause cancer ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P260",
+      text_en: "Do not breathe vapours",
+      text_zh: "Do not breathe vapours ZH",
+    },
+    {
+      code: "P280",
+      text_en: "Wear protective gloves, protective clothing and eye protection",
+      text_zh: "Wear protective gloves and eye protection ZH",
+    },
+    {
+      code: "P308+P313",
+      text_en: "If exposed or concerned: get medical advice",
+      text_zh: "If exposed or concerned ZH",
+    },
+  ],
+});
+
+export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
+  cas_number: "7722-84-1",
+  name_en: "Hydrogen Peroxide",
+  name_zh: "Hydrogen Peroxide ZH",
+  cid: 784,
+  ghs_pictograms: [{ code: "GHS03" }, { code: "GHS05" }, { code: "GHS07" }],
+  signal_word: "Danger",
+  signal_word_zh: "Danger ZH",
+  hazard_statements: [
+    {
+      code: "H271",
+      text_en: "May cause fire or explosion; strong oxidizer",
+      text_zh: "May cause fire or explosion ZH",
+    },
+    {
+      code: "H302",
+      text_en: "Harmful if swallowed",
+      text_zh: "Harmful if swallowed ZH",
+    },
+    {
+      code: "H314",
+      text_en: "Causes severe skin burns and eye damage",
+      text_zh: "Causes severe skin burns and eye damage ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P220",
+      text_en: "Keep away from clothing and other combustible materials",
+      text_zh: "Keep away from combustible materials ZH",
+    },
+    {
+      code: "P280",
+      text_en: "Wear protective gloves and eye protection",
+      text_zh: "Wear protective gloves and eye protection ZH",
+    },
+  ],
+});
+
 export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   cas_number: "QA-LONG-001",
   name_en:
@@ -309,6 +456,9 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   hydrochloricAcid: PRINT_QA_HYDROCHLORIC_ACID,
   ethanol: PRINT_QA_ETHANOL,
   sodiumHydroxide: PRINT_QA_SODIUM_HYDROXIDE,
+  methanol: PRINT_QA_METHANOL,
+  formaldehyde: PRINT_QA_FORMALDEHYDE,
+  hydrogenPeroxide: PRINT_QA_HYDROGEN_PEROXIDE,
   longNameCorrosive: PRINT_QA_LONG_NAME_CORROSIVE,
 });
 
@@ -630,6 +780,52 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
+    id: "methanol-brother-quick-id-bw",
+    label: "Methanol Brother 62 mm quick-ID B/W",
+    chemicalId: "methanol",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "brother-62mm-continuous",
+      nameDisplay: "en",
+      colorMode: "bw",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "brother-62mm-continuous",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "hydrogen-peroxide-qr-supplement-en",
+    label: "Hydrogen peroxide QR supplement English",
+    chemicalId: "hydrogenPeroxide",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+      stockPreset: "small-strip",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
+      labelKind: "qr-supplement",
+      stockPreset: "small-strip",
+      template: "qrcode",
+      hasQr: true,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
     id: "long-name-bottle-supplemental",
     label: "Long-name bottle supplemental",
     chemicalId: "longNameCorrosive",
@@ -713,17 +909,47 @@ const sameMembers = (left = [], right = []) => {
   );
 };
 
-const expectedIdentityTextsForChemical = (chemical = {}) =>
-  [
-    chemical.name_zh,
-    chemical.name_en,
-    chemical.name,
-    chemical.cas_number,
-  ].filter(Boolean);
-
 const hasAnyText = (html = "", candidates = []) =>
   candidates.length === 0 ||
   candidates.some((candidate) => html.includes(candidate));
+
+const uniqueTexts = (texts = []) =>
+  [...new Set(texts.filter(Boolean))];
+
+const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expected = {}) => {
+  const english = chemical.name_en || chemical.name;
+  const chinese = chemical.name_zh || chemical.name;
+  const allNames = uniqueTexts([chinese, english, chemical.name]);
+  const completePrimary = expected.labelKind === "complete-primary";
+
+  if (labelConfig.nameDisplay === "en") {
+    return {
+      any: uniqueTexts([english, chemical.cas_number]),
+      required: uniqueTexts([english]),
+      forbidden: chinese && chinese !== english ? [chinese] : [],
+    };
+  }
+
+  if (labelConfig.nameDisplay === "zh") {
+    return {
+      any: uniqueTexts([chinese, chemical.cas_number]),
+      required: uniqueTexts([chinese]),
+      forbidden: english && english !== chinese ? [english] : [],
+    };
+  }
+
+  return {
+    any: uniqueTexts([...allNames, chemical.cas_number]),
+    required: completePrimary ? allNames : [],
+    forbidden: [],
+  };
+};
+
+const hasEveryText = (html = "", candidates = []) =>
+  candidates.every((candidate) => html.includes(candidate));
+
+const hasNoText = (html = "", candidates = []) =>
+  candidates.every((candidate) => !html.includes(candidate));
 
 const hasFullPagePictogramSize = (html = "") => {
   if (!html.includes("label-full-page-primary")) return false;
@@ -839,8 +1065,10 @@ export function buildPrintQaCaseResult({
   const expectedHasSignalWord = Boolean(
     selectedChemical.signal_word || selectedChemical.signal_word_zh,
   );
-  const expectedIdentityTexts = expectedIdentityTextsForChemical(
+  const identityTextExpectation = resolveIdentityTextExpectation(
     selectedChemical,
+    testCase.labelConfig,
+    expected,
   );
   const actual = {
     canPrint: plan.canPrint,
@@ -896,8 +1124,24 @@ export function buildPrintQaCaseResult({
     printHasRequiredIdentityText: expected.requiredIdentityText
       ? printHtml.includes(expected.requiredIdentityText)
       : true,
-    hasAnyIdentityText: hasAnyText(fragmentHtml, expectedIdentityTexts),
-    printHasAnyIdentityText: hasAnyText(printHtml, expectedIdentityTexts),
+    hasAnyIdentityText: hasAnyText(fragmentHtml, identityTextExpectation.any),
+    printHasAnyIdentityText: hasAnyText(printHtml, identityTextExpectation.any),
+    hasRequiredIdentityTexts: hasEveryText(
+      fragmentHtml,
+      identityTextExpectation.required,
+    ),
+    printHasRequiredIdentityTexts: hasEveryText(
+      printHtml,
+      identityTextExpectation.required,
+    ),
+    hasNoForbiddenIdentityText: hasNoText(
+      fragmentHtml,
+      identityTextExpectation.forbidden,
+    ),
+    printHasNoForbiddenIdentityText: hasNoText(
+      printHtml,
+      identityTextExpectation.forbidden,
+    ),
     printLabelKind: resolveLabelKind(printHtml),
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
@@ -930,6 +1174,10 @@ export function buildPrintQaCaseResult({
     ["printCasVisible", actual.printHasCas],
     ["identityTextVisible", actual.hasAnyIdentityText],
     ["printIdentityTextVisible", actual.printHasAnyIdentityText],
+    ["requiredIdentityTexts", actual.hasRequiredIdentityTexts],
+    ["printRequiredIdentityTexts", actual.printHasRequiredIdentityTexts],
+    ["noForbiddenIdentityText", actual.hasNoForbiddenIdentityText],
+    ["printNoForbiddenIdentityText", actual.printHasNoForbiddenIdentityText],
     ["printRequiredImages", actual.printHasRequiredPictogramImages],
     ["qrState", actual.hasQr === expected.hasQr],
     ["printQrState", actual.printHasQr === expected.hasQr],
@@ -995,7 +1243,9 @@ export function buildPrintQaCaseResult({
       cas: selectedChemical.cas_number,
       name: selectedChemical.name_en || selectedChemical.name_zh,
       expectedPictograms,
-      expectedIdentityTexts,
+      expectedIdentityTexts: identityTextExpectation.any,
+      expectedRequiredIdentityTexts: identityTextExpectation.required,
+      expectedForbiddenIdentityTexts: identityTextExpectation.forbidden,
       hasSignalWord: Boolean(
         selectedChemical.signal_word || selectedChemical.signal_word_zh,
       ),
@@ -1056,6 +1306,10 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedHasQr: caseResult.handoffExpectation.hasQr,
   expectedHasSignalWord: Boolean(caseResult.chemical.hasSignalWord),
   expectedIdentityTexts: caseResult.chemical.expectedIdentityTexts || [],
+  expectedRequiredIdentityTexts:
+    caseResult.chemical.expectedRequiredIdentityTexts || [],
+  expectedForbiddenIdentityTexts:
+    caseResult.chemical.expectedForbiddenIdentityTexts || [],
   expectedMinPictogramSidePx:
     caseResult.handoffExpectation.labelKind === "complete-primary"
       ? 18
