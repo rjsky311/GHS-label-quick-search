@@ -119,6 +119,14 @@ The first refactor slice has landed:
 - Standard-template pictogram sizing is capped by the actual rail column that
   can fit within each physical stock. Tall but narrow labels such as Avery 5164
   now shrink the 2x2 pictogram grid before it can bleed outside the label.
+- The default production handoff run now covers every production-searchable
+  matrix case, not just Hydrochloric Acid. It includes Ethanol and Sodium
+  Hydroxide paths by default, verifies preview/print pictogram parity, and treats
+  the signal word as a critical visible element alongside CAS, pictograms, QR,
+  and identity support chips.
+- Production handoff QA now writes `build/production-print-handoff-report.json`
+  by default so each post-deploy run leaves a structured audit trail without
+  relying on terminal scrollback.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

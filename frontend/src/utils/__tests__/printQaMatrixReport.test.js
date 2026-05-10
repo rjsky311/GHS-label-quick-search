@@ -207,6 +207,9 @@ describe("print QA matrix report", () => {
       expect(testCase.actual.inspectStartsAtLeft).toBe(true);
       expect(testCase.actual.hasEveryPictogram).toBe(true);
       expect(testCase.actual.printHasEveryPictogram).toBe(true);
+      expect(testCase.actual.previewPrintPictogramParity).toBe(true);
+      expect(testCase.actual.hasSignalWord).toBe(true);
+      expect(testCase.actual.printHasSignalWord).toBe(true);
       expect(testCase.actual.printLabelKind).toBe(testCase.expected.labelKind);
       expect(testCase.actual.printTemplate).toBe(testCase.expected.template);
       expect(testCase.actual.printStockPreset).toBe(
@@ -220,6 +223,7 @@ describe("print QA matrix report", () => {
     expect(byId["ethanol-bottle-supplemental"].chemical).toMatchObject({
       cas: "64-17-5",
       expectedPictograms: ["GHS02", "GHS07"],
+      hasSignalWord: true,
     });
     expect(byId["ethanol-bottle-supplemental"].actual.hasSummaries).toBe(false);
     expect(byId["sodium-hydroxide-qr-supplement"].actual.hasQr).toBe(true);
@@ -238,6 +242,7 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["tube-vial-quick-id-with-case"]).toMatchObject({
       expectedLabelKind: "quick-id",
       expectedStockPreset: "small-strip",
+      expectedHasSignalWord: true,
       expectedRequiredIdentityText: "CASE-2026-0007",
       customLabelFields: { batchNumber: "CASE-2026-0007" },
       selectors: expect.objectContaining({

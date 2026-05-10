@@ -686,6 +686,18 @@ const hasSummaries = (fragmentHtml = "") =>
   fragmentHtml.includes("precaution-more") ||
   fragmentHtml.includes("more-pics");
 
+const hasSignalWordElement = (fragmentHtml = "") =>
+  /class="[^"]*\bsignal\b/.test(fragmentHtml);
+
+const sameMembers = (left = [], right = []) => {
+  const leftSet = new Set(left);
+  const rightSet = new Set(right);
+  return (
+    leftSet.size === rightSet.size &&
+    [...leftSet].every((item) => rightSet.has(item))
+  );
+};
+
 const hasFullPagePictogramSize = (html = "") => {
   if (!html.includes("label-full-page-primary")) return false;
   const sizeMatches = [...html.matchAll(/width:\s*([0-9.]+)mm/g)].map((match) =>
@@ -797,6 +809,9 @@ export function buildPrintQaCaseResult({
   const printPictogramCodes = extractPictogramCodes(printHtml);
   const pictogramCodes = extractPictogramCodes(fragmentHtml);
   const expected = testCase.expected || {};
+  const expectedHasSignalWord = Boolean(
+    selectedChemical.signal_word || selectedChemical.signal_word_zh,
+  );
   const actual = {
     canPrint: plan.canPrint,
     outputKind: plan.outputKind,
@@ -813,6 +828,10 @@ export function buildPrintQaCaseResult({
     labelPreviewScale: fitPreview?.previewMetrics?.labelPreviewScale,
     pictogramCodes,
     printPictogramCodes,
+    previewPrintPictogramParity: sameMembers(
+      pictogramCodes,
+      printPictogramCodes,
+    ),
     hasEveryPictogram: includesEvery(pictogramCodes, expectedPictograms),
     printHasEveryPictogram: includesEvery(
       printPictogramCodes,
@@ -828,6 +847,8 @@ export function buildPrintQaCaseResult({
       : true,
     hasSummaries: hasSummaries(fragmentHtml),
     printHasSummaries: hasSummaries(printHtml),
+    hasSignalWord: hasSignalWordElement(fragmentHtml),
+    printHasSignalWord: hasSignalWordElement(printHtml),
     hasIconPictogramClass: fragmentHtml.includes("pictograms-icon"),
     printHasRequiredPictogramImages:
       expectedPictograms.length === 0 ||
@@ -865,6 +886,7 @@ export function buildPrintQaCaseResult({
     ],
     ["pictograms", actual.hasEveryPictogram],
     ["printPictograms", actual.printHasEveryPictogram],
+    ["previewPrintPictogramParity", actual.previewPrintPictogramParity],
     ["casVisible", actual.hasCas],
     ["printCasVisible", actual.printHasCas],
     ["printRequiredImages", actual.printHasRequiredPictogramImages],
@@ -875,6 +897,11 @@ export function buildPrintQaCaseResult({
     ["printStockPreset", actual.printStockPreset === expected.stockPreset],
     ["printTotalLabels", actual.printTotalLabels === 1],
   ];
+
+  if (expectedHasSignalWord) {
+    checks.push(["signalWordVisible", actual.hasSignalWord]);
+    checks.push(["printSignalWordVisible", actual.printHasSignalWord]);
+  }
 
   if (Number.isFinite(expected.minPreviewScale)) {
     checks.push([
@@ -927,6 +954,9 @@ export function buildPrintQaCaseResult({
       cas: selectedChemical.cas_number,
       name: selectedChemical.name_en || selectedChemical.name_zh,
       expectedPictograms,
+      hasSignalWord: Boolean(
+        selectedChemical.signal_word || selectedChemical.signal_word_zh,
+      ),
     },
     locale: testCase.locale,
     expected,
@@ -982,6 +1012,7 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedTemplate: caseResult.handoffExpectation.template,
   expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
   expectedHasQr: caseResult.handoffExpectation.hasQr,
+  expectedHasSignalWord: Boolean(caseResult.chemical.hasSignalWord),
   expectedCasNumbers: caseResult.handoffExpectation.casNumbers,
   expectedLabelWidthMm: caseResult.handoffExpectation.labelWidthMm,
   expectedLabelHeightMm: caseResult.handoffExpectation.labelHeightMm,

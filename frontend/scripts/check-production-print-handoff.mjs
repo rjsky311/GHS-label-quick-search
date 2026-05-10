@@ -4,7 +4,8 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 
 const DEFAULT_REPORT_PATH = "build/print-qa-report.json";
-const DEFAULT_SEARCH_TERM = "7647-01-0";
+const DEFAULT_HANDOFF_REPORT_PATH = "build/production-print-handoff-report.json";
+const DEFAULT_SEARCH_TERM = "";
 const PREVIEW_GEOMETRY_TOLERANCE_PX = 2;
 const STATUS_ATTRIBUTES = [
   "data-status",
@@ -36,7 +37,7 @@ const screenshotDir = env.PRINT_QA_SCREENSHOT_DIR
   : "";
 const outputPath = env.PRINT_QA_HANDOFF_REPORT_PATH
   ? path.resolve(process.cwd(), env.PRINT_QA_HANDOFF_REPORT_PATH)
-  : "";
+  : path.resolve(process.cwd(), DEFAULT_HANDOFF_REPORT_PATH);
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 
@@ -116,7 +117,10 @@ const selectCases = (cases) => {
     return cases.filter((testCase) => wanted.has(testCase.id));
   }
   const searchTerm = env.PRINT_QA_SEARCH_TERM || DEFAULT_SEARCH_TERM;
-  return cases.filter((testCase) => testCase.searchTerm === searchTerm);
+  if (searchTerm) {
+    return cases.filter((testCase) => testCase.searchTerm === searchTerm);
+  }
+  return cases.filter((testCase) => !/^QA-/.test(testCase.searchTerm || ""));
 };
 
 const withQaParam = (url) => {
@@ -225,6 +229,7 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedCasNumbers,
       expectedPictograms,
       expectedHasQr,
+      expectedHasSignalWord,
       expectedRequiredIdentityText,
       geometryTolerancePx,
     }) => {
@@ -280,6 +285,7 @@ const inspectPreviewFrame = async (page, testCase) => {
         .filter(({ alt }) => /^GHS\d{2}$/i.test(alt));
       const qrImages = selectorItems(".qrcode-img", "qr");
       const supportChips = selectorItems(".support-chip", "support-chip");
+      const signalNodes = selectorItems(".signal", "signal");
       const casNodes = Array.from(
         document.querySelectorAll(
           ".cas, .meta-chip-cas, .meta-chip-cas .meta-chip-value",
@@ -297,6 +303,7 @@ const inspectPreviewFrame = async (page, testCase) => {
         })),
         ...qrImages,
         ...supportChips,
+        ...signalNodes,
         ...casNodes.slice(0, 3).map((element, index) => ({
           element,
           type: "cas",
@@ -308,6 +315,9 @@ const inspectPreviewFrame = async (page, testCase) => {
           .map(({ element, type, key }) => {
             const rect = element.getBoundingClientRect();
             const visible = hasVisibleArea(rect);
+            const imageReady =
+              element.tagName !== "IMG" ||
+              (element.complete && element.naturalWidth > 0);
             const withinLabel = labelRect
               ? containsRect(labelRect, rect, geometryTolerancePx)
               : false;
@@ -316,13 +326,14 @@ const inspectPreviewFrame = async (page, testCase) => {
               rect,
               geometryTolerancePx,
             );
-            if (visible && withinLabel && withinViewport) {
+            if (visible && imageReady && withinLabel && withinViewport) {
               return null;
             }
             return JSON.stringify({
               type,
               key,
               visible,
+              imageReady,
               withinLabel,
               withinViewport,
               rect: rectToObject(rect),
@@ -349,6 +360,9 @@ const inspectPreviewFrame = async (page, testCase) => {
           pictogramImages.map(({ alt }) => alt.toUpperCase()),
         ).sort(),
         hasQrImage: qrImages.length > 0,
+        hasSignalWord:
+          !expectedHasSignalWord ||
+          signalNodes.some(({ element }) => visibleText(element).length > 0),
         hasCas: expectedCasNumbers.every((cas) => frameText.includes(cas)),
         hasRequiredIdentityText:
           !expectedRequiredIdentityText ||
@@ -373,6 +387,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           pictograms: pictogramImages.length,
           qrImages: qrImages.length,
           supportChips: supportChips.length,
+          signalWords: signalNodes.length,
           casNodes: casNodes.length,
         },
       };
@@ -381,6 +396,7 @@ const inspectPreviewFrame = async (page, testCase) => {
       expectedCasNumbers: testCase.expectedCasNumbers || [],
       expectedPictograms: testCase.expectedPictograms || [],
       expectedHasQr: Boolean(testCase.expectedHasQr),
+      expectedHasSignalWord: Boolean(testCase.expectedHasSignalWord),
       expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
       geometryTolerancePx: PREVIEW_GEOMETRY_TOLERANCE_PX,
     },
@@ -488,6 +504,20 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     (testCase.expectedPictograms || []).every((code) =>
       previewPictograms.has(code),
     ),
+  );
+  assert(
+    "preview-pictograms-match-handoff",
+    pictograms.size === previewPictograms.size &&
+      [...pictograms].every((code) => previewPictograms.has(code)),
+  );
+  assert(
+    "preview-signal-word",
+    !testCase.expectedHasSignalWord ||
+      previewInspection.hasSignalWord === true,
+  );
+  assert(
+    "preview-no-scroll-overflow",
+    previewInspection.documentHasScrollOverflow === false,
   );
   assert(
     `preview-critical-elements-visible${
