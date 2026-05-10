@@ -105,6 +105,12 @@ The first refactor slice has landed:
 - Production deployment freshness has a dedicated `npm run qa:production-bundle`
   check that confirms Zeabur is serving a bundle with the current print QA and
   compact identity markers before Chrome click-through QA starts.
+- Production print handoff QA now has a repeatable `npm run qa:production-handoff`
+  runner. It reads the matrix report, launches local Chrome/Edge through
+  `playwright-core`, searches the deployed app, selects stock/target, fills the
+  QA responsible profile and custom identity fields, clicks print in
+  `qaPrintHandoff=1`, and verifies `ghs-print-qa-status` plus optional preview
+  screenshots.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

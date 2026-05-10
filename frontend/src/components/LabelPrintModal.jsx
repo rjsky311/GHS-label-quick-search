@@ -2953,6 +2953,7 @@ export default function LabelPrintModal({
                           </label>
                           <input
                             type="text"
+                            data-testid={`responsible-profile-field-${field.key}`}
                             value={labProfile[field.key] || ""}
                             onChange={(event) =>
                               onLabProfileChange?.({

@@ -1077,6 +1077,7 @@ export function buildPrintQaMatrixReport({
       targetUrl: PRODUCTION_FRONTEND_URL,
       qaHandoffUrl: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1`,
       requiredStatusElement: "ghs-print-qa-status",
+      responsibleProfile: labProfile,
       requiredAttributes: [
         "data-status",
         "data-label-kind",

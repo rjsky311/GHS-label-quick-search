@@ -699,6 +699,15 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("responsible-profile-controls")).toHaveAttribute(
       "open",
     );
+    expect(
+      screen.getByTestId("responsible-profile-field-organization"),
+    ).toHaveValue("Lab A");
+    expect(screen.getByTestId("responsible-profile-field-phone")).toHaveValue(
+      "02-1234",
+    );
+    expect(screen.getByTestId("responsible-profile-field-address")).toHaveValue(
+      "",
+    );
     expect(screen.getByTestId("responsible-profile-status")).toHaveTextContent(
       "Required for complete primary",
     );

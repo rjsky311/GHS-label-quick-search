@@ -33,6 +33,21 @@ app still builds the print iframe, runs preflight, records lifecycle events, and
 publishes `print-qa-status`, but it does not open the native print dialog. Do
 not use this parameter for a normal manual print attempt.
 
+After generating `build/print-qa-report.json`, the production handoff can be
+checked with a local Chrome/Edge browser:
+
+```bash
+cd frontend
+PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:production-handoff
+```
+
+By default this runs the Hydrochloric Acid production matrix. Use
+`PRINT_QA_CASES=tube-vial-quick-id-with-case` for one high-risk compact case,
+or `PRINT_QA_CASES=all` for all real production-searchable cases in the report.
+Set `PRINT_QA_SCREENSHOT_DIR` to save preview iframe screenshots for visual
+review. The script uses `playwright-core` with the local Chrome/Edge executable;
+if discovery fails, set `PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
+
 ## Required Evidence
 
 Record these outputs in the final implementation note:

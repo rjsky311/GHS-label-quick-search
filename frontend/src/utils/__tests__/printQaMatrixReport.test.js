@@ -115,6 +115,7 @@ describe("print QA matrix report", () => {
       targetUrl: "https://ghs-frontend.zeabur.app/",
       qaHandoffUrl: "https://ghs-frontend.zeabur.app/?qaPrintHandoff=1",
       requiredStatusElement: "ghs-print-qa-status",
+      responsibleProfile: PRINT_QA_PROFILE,
     });
     expect(report.productionBrowserQa.requiredAttributes).toEqual(
       expect.arrayContaining([
