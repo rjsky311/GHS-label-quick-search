@@ -5,6 +5,7 @@ import { chromium } from "playwright-core";
 
 const DEFAULT_REPORT_PATH = "build/print-qa-report.json";
 const DEFAULT_SEARCH_TERM = "7647-01-0";
+const PREVIEW_GEOMETRY_TOLERANCE_PX = 2;
 const STATUS_ATTRIBUTES = [
   "data-status",
   "data-label-kind",
@@ -210,13 +211,193 @@ const fillResponsibleProfile = async (page, responsibleProfile = {}) => {
   await sleep(500);
 };
 
+const inspectPreviewFrame = async (page, testCase) => {
+  const iframeHandle = await page
+    .getByTestId("label-fragment-preview")
+    .elementHandle();
+  const frame = await iframeHandle?.contentFrame();
+  if (!frame) {
+    throw new Error("Could not resolve label preview iframe.");
+  }
+
+  return frame.evaluate(
+    ({
+      expectedCasNumbers,
+      expectedPictograms,
+      expectedHasQr,
+      expectedRequiredIdentityText,
+      geometryTolerancePx,
+    }) => {
+      const round = (value) => Math.round(value * 100) / 100;
+      const rectToObject = (rect) => ({
+        left: round(rect.left),
+        top: round(rect.top),
+        right: round(rect.right),
+        bottom: round(rect.bottom),
+        width: round(rect.width),
+        height: round(rect.height),
+      });
+      const hasVisibleArea = (rect) => rect.width > 0 && rect.height > 0;
+      const containsRect = (outer, inner, tolerance = 0) =>
+        inner.left >= outer.left - tolerance &&
+        inner.top >= outer.top - tolerance &&
+        inner.right <= outer.right + tolerance &&
+        inner.bottom <= outer.bottom + tolerance;
+      const unique = (values) => Array.from(new Set(values));
+      const visibleText = (node) =>
+        (node.innerText || node.textContent || "").replace(/\s+/g, " ").trim();
+      const selectorItems = (selector, type) =>
+        Array.from(document.querySelectorAll(selector)).map((element, index) => ({
+          element,
+          type,
+          key:
+            element.getAttribute("data-code") ||
+            element.getAttribute("alt") ||
+            element.textContent?.trim() ||
+            `${type}-${index + 1}`,
+        }));
+      const label = document.querySelector(".label");
+      const labelRect = label?.getBoundingClientRect();
+      const viewportWidth =
+        document.documentElement.clientWidth || window.innerWidth || 0;
+      const viewportHeight =
+        document.documentElement.clientHeight || window.innerHeight || 0;
+      const viewportRect = {
+        left: 0,
+        top: 0,
+        right: viewportWidth,
+        bottom: viewportHeight,
+        width: viewportWidth,
+        height: viewportHeight,
+      };
+      const frameText = visibleText(document.body);
+      const pictogramImages = Array.from(document.querySelectorAll("img"))
+        .map((img, index) => ({
+          element: img,
+          alt: img.getAttribute("alt") || img.alt || "",
+          key: img.getAttribute("alt") || img.alt || `pictogram-${index + 1}`,
+        }))
+        .filter(({ alt }) => /^GHS\d{2}$/i.test(alt));
+      const qrImages = selectorItems(".qrcode-img", "qr");
+      const supportChips = selectorItems(".support-chip", "support-chip");
+      const casNodes = Array.from(
+        document.querySelectorAll(
+          ".cas, .meta-chip-cas, .meta-chip-cas .meta-chip-value",
+        ),
+      ).filter(
+        (element) =>
+          visibleText(element).includes("CAS") ||
+          expectedCasNumbers.some((cas) => visibleText(element).includes(cas)),
+      );
+      const criticalItems = [
+        ...pictogramImages.map(({ element, key }) => ({
+          element,
+          type: "pictogram",
+          key,
+        })),
+        ...qrImages,
+        ...supportChips,
+        ...casNodes.slice(0, 3).map((element, index) => ({
+          element,
+          type: "cas",
+          key: `cas-${index + 1}`,
+        })),
+      ];
+      const clippedCriticalElements = unique(
+        criticalItems
+          .map(({ element, type, key }) => {
+            const rect = element.getBoundingClientRect();
+            const visible = hasVisibleArea(rect);
+            const withinLabel = labelRect
+              ? containsRect(labelRect, rect, geometryTolerancePx)
+              : false;
+            const withinViewport = containsRect(
+              viewportRect,
+              rect,
+              geometryTolerancePx,
+            );
+            if (visible && withinLabel && withinViewport) {
+              return null;
+            }
+            return JSON.stringify({
+              type,
+              key,
+              visible,
+              withinLabel,
+              withinViewport,
+              rect: rectToObject(rect),
+            });
+          })
+          .filter(Boolean),
+      ).map((item) => JSON.parse(item));
+      const labelClass = label?.className || "";
+      const labelKind = labelClass.includes("label-kind-complete-primary")
+        ? "complete-primary"
+        : labelClass.includes("label-kind-qr-supplement")
+          ? "qr-supplement"
+          : labelClass.includes("label-kind-quick-id")
+            ? "quick-id"
+            : labelClass.includes("label-kind-supplemental")
+              ? "supplemental"
+              : "";
+
+      return {
+        labelKind,
+        labelClass,
+        frameTextSample: frameText.slice(0, 500),
+        pictogramCodes: unique(
+          pictogramImages.map(({ alt }) => alt.toUpperCase()),
+        ).sort(),
+        hasQrImage: qrImages.length > 0,
+        hasCas: expectedCasNumbers.every((cas) => frameText.includes(cas)),
+        hasRequiredIdentityText:
+          !expectedRequiredIdentityText ||
+          frameText.includes(expectedRequiredIdentityText),
+        expectedHasQr,
+        expectedPictograms,
+        labelVisible: Boolean(labelRect && hasVisibleArea(labelRect)),
+        labelWithinViewport: labelRect
+          ? containsRect(viewportRect, labelRect, geometryTolerancePx)
+          : false,
+        documentHasScrollOverflow:
+          document.documentElement.scrollWidth >
+            document.documentElement.clientWidth + geometryTolerancePx ||
+          document.documentElement.scrollHeight >
+            document.documentElement.clientHeight + geometryTolerancePx,
+        clippedCriticalElements,
+        geometry: {
+          viewport: rectToObject(viewportRect),
+          label: labelRect ? rectToObject(labelRect) : null,
+        },
+        counts: {
+          pictograms: pictogramImages.length,
+          qrImages: qrImages.length,
+          supportChips: supportChips.length,
+          casNodes: casNodes.length,
+        },
+      };
+    },
+    {
+      expectedCasNumbers: testCase.expectedCasNumbers || [],
+      expectedPictograms: testCase.expectedPictograms || [],
+      expectedHasQr: Boolean(testCase.expectedHasQr),
+      expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
+      geometryTolerancePx: PREVIEW_GEOMETRY_TOLERANCE_PX,
+    },
+  );
+};
+
 const capturePreviewEvidence = async (page, testCase) => {
   const evidence = {
     requiredIdentityTextInPreview: true,
     screenshotPath: "",
   };
+  evidence.previewInspection = await inspectPreviewFrame(page, testCase);
+  evidence.requiredIdentityTextInPreview =
+    evidence.previewInspection.hasRequiredIdentityText;
   if (testCase.expectedRequiredIdentityText) {
     evidence.requiredIdentityTextInPreview =
+      evidence.requiredIdentityTextInPreview &&
       (await page
         .frameLocator('[data-testid="label-fragment-preview"]')
         .getByText(testCase.expectedRequiredIdentityText)
@@ -263,6 +444,10 @@ const evaluateCase = ({ testCase, status, evidence }) => {
       .map((value) => value.trim())
       .filter(Boolean),
   );
+  const previewInspection = evidence.previewInspection || {};
+  const previewPictograms = new Set(previewInspection.pictogramCodes || []);
+  const clippedCriticalElements =
+    previewInspection.clippedCriticalElements || [];
   const failures = [];
   const assert = (name, passed) => {
     if (!passed) failures.push(name);
@@ -283,6 +468,36 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   assert(
     "pictograms",
     (testCase.expectedPictograms || []).every((code) => pictograms.has(code)),
+  );
+  assert(
+    "preview-label-kind",
+    previewInspection.labelKind === testCase.expectedLabelKind,
+  );
+  assert("preview-label-visible", previewInspection.labelVisible === true);
+  assert(
+    "preview-label-within-viewport",
+    previewInspection.labelWithinViewport === true,
+  );
+  assert("preview-cas", previewInspection.hasCas === true);
+  assert(
+    "preview-has-qr",
+    Boolean(previewInspection.hasQrImage) === Boolean(testCase.expectedHasQr),
+  );
+  assert(
+    "preview-pictograms",
+    (testCase.expectedPictograms || []).every((code) =>
+      previewPictograms.has(code),
+    ),
+  );
+  assert(
+    `preview-critical-elements-visible${
+      clippedCriticalElements.length > 0
+        ? `:${clippedCriticalElements
+            .map((item) => `${item.type}/${item.key}`)
+            .join(",")}`
+        : ""
+    }`,
+    clippedCriticalElements.length === 0,
   );
   assert(
     "label-width",

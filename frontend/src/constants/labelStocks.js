@@ -495,13 +495,6 @@ function resolveTypographyMetrics(normalized) {
     isCompactStrip ? 14 : 16,
     normalized.size === "large" ? 42 : 36,
   );
-  const standardPictogramRatio =
-    normalized.size === "large" ? 0.27 : isCompactStrip ? 0.38 : 0.3;
-  const standardPictogramMm = clamp(
-    roundTo(shortSide * standardPictogramRatio, 1),
-    isCompactStrip ? 9 : 8,
-    normalized.size === "large" ? 24 : normalized.size === "medium" ? 18 : 13,
-  );
   const standardPictogramGapMm = isCompactStrip
     ? 0.55
     : normalized.size === "large"
@@ -512,10 +505,28 @@ function resolveTypographyMetrics(normalized) {
     : normalized.size === "large"
       ? 3
       : 2.1;
+  const standardRailMaxMm = Math.min(
+    roundTo(normalized.labelWidthMm * 0.42, 1),
+    56,
+  );
+  const standardPictogramRatio =
+    normalized.size === "large" ? 0.27 : isCompactStrip ? 0.38 : 0.3;
+  const minStandardPictogramMm = isCompactStrip ? 9 : 8;
+  const maxStandardPictogramMm =
+    normalized.size === "large" ? 24 : normalized.size === "medium" ? 18 : 13;
+  const railFitPictogramMm = Math.max(
+    minStandardPictogramMm,
+    roundTo((standardRailMaxMm - standardPictogramGapMm - railInsetMm) / 2, 1),
+  );
+  const standardPictogramMm = clamp(
+    roundTo(shortSide * standardPictogramRatio, 1),
+    minStandardPictogramMm,
+    Math.min(maxStandardPictogramMm, railFitPictogramMm),
+  );
   const standardRailColumnMm = clamp(
     roundTo(standardPictogramMm * 2 + standardPictogramGapMm + railInsetMm, 1),
     14,
-    Math.min(roundTo(normalized.labelWidthMm * 0.42, 1), 56),
+    standardRailMaxMm,
   );
   const qrPictogramMm = clamp(
     roundTo(shortSide * (isCompactStrip ? 0.36 : 0.26), 1),

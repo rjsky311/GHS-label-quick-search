@@ -41,7 +41,10 @@ cd frontend
 PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:production-handoff
 ```
 
-By default this runs the Hydrochloric Acid production matrix. Use
+By default this runs the Hydrochloric Acid production matrix. In addition to the
+handoff status attributes, it inspects the preview iframe geometry and fails
+when required identity text, CAS, GHS pictograms, QR, or support chips are
+hidden or clipped before print handoff. Use
 `PRINT_QA_CASES=tube-vial-quick-id-with-case` for one high-risk compact case,
 or `PRINT_QA_CASES=all` for all real production-searchable cases in the report.
 Set `PRINT_QA_SCREENSHOT_DIR` to save preview iframe screenshots for visual
@@ -60,8 +63,9 @@ Record these outputs in the final implementation note:
 - Decision summary text for each tested output.
 - Preview mode state: `Fit` should be the default whole-label view, and changing
   target or stock after using `Inspect` should return the preview to `Fit`.
-- Preview `srcdoc` checks for label-kind class, pictogram codes, QR presence,
-  B/W state, language state, and `more-pics` absence.
+- Preview `srcdoc` and geometry checks for label-kind class, pictogram codes,
+  QR presence, CAS/support-chip visibility, B/W state, language state,
+  critical-element clipping, and `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs.
 - `print-qa-status` after clicking the print action in QA handoff mode.
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,

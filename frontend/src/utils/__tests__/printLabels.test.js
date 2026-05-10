@@ -364,6 +364,10 @@ describe("print layout model", () => {
       stockPreset: "large-primary",
       template: "full",
     });
+    const avery5164 = resolvePrintLayoutConfig({
+      stockPreset: "avery-5164",
+      template: "standard",
+    });
     const a4Primary = resolvePrintLayoutConfig({
       stockPreset: "a4-primary",
       template: "full",
@@ -379,6 +383,8 @@ describe("print layout model", () => {
     expect(medium.typography.standardPictogramSize).toBe("15mm");
     expect(medium.typography.iconPictogramSize).toBe("15.5mm");
     expect(large.typography.standardPictogramSize).toBe("23.8mm");
+    expect(avery5164.typography.standardPictogramSize).toBe("15.8mm");
+    expect(avery5164.typography.standardRailColumn).toBe("35.6mm");
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
     expect(large.typography.compliancePictogramSize).toBe("24.6mm");

@@ -111,6 +111,14 @@ The first refactor slice has landed:
   QA responsible profile and custom identity fields, clicks print in
   `qaPrintHandoff=1`, and verifies `ghs-print-qa-status` plus optional preview
   screenshots.
+- The production handoff runner now also inspects the live preview iframe
+  geometry before clicking print. It verifies required CAS/support chips,
+  pictograms, and QR elements are present and inside the rendered label/viewport,
+  so oversized stock-specific icons cannot pass simply because the print status
+  says the handoff is ready.
+- Standard-template pictogram sizing is capped by the actual rail column that
+  can fit within each physical stock. Tall but narrow labels such as Avery 5164
+  now shrink the 2x2 pictogram grid before it can bleed outside the label.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
