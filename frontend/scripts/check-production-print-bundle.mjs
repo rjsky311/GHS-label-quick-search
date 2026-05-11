@@ -14,6 +14,8 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "autoFitLevel",
   "print_autofit_retry",
   "label-fit-level-",
+  "label-stock-small-rack",
+  "label-stock-medium-rack",
 ];
 
 const productionUrl = process.env.PRINT_QA_PRODUCTION_URL || DEFAULT_PRODUCTION_URL;
