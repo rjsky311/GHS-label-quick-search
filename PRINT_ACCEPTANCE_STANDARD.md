@@ -35,6 +35,10 @@ Acceptance gates:
 - Responsible lab/supplier name, phone, and address are present.
 - QR code is not embedded in the primary body unless a future fit check proves it cannot compromise the required layout.
 - The print action is blocked when required responsible profile fields are missing.
+- If the complete H/P text is too dense for one A4/Letter primary page, the app
+  prints a continuation set instead of clipping or silently omitting statements.
+  Each continuation page repeats product identity, CAS, signal word, all
+  available GHS pictograms, responsible profile, and a continuation marker.
 
 ### Container Supplemental
 
@@ -106,6 +110,7 @@ Run this matrix before shipping print-workflow changes:
 | --- | --- | --- | --- | --- |
 | Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary, no QR body, no H/P summaries, all pictograms |
 | Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary, Letter page, no QR body, all pictograms |
+| Formaldehyde | A4 Primary | Bilingual | Color | Complete primary continuation set, multiple pages, all pictograms repeated, no clipping |
 | Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
 | Hydrochloric Acid | Large Primary | Bilingual | Color | Complete primary when the content fits, all pictograms, no H/P summaries |
@@ -126,6 +131,8 @@ Run this matrix before shipping print-workflow changes:
 Unit tests should keep these invariants pinned:
 
 - Complete primary bodies do not contain `qrcode-img`, `hazard-more`, or `precaution-more`.
+- Dense complete primary continuation output produces multiple printed labels
+  and keeps every expected pictogram on each continuation page.
 - Every expected pictogram code appears in the printed body.
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
 - Quick-ID labels carry `label-kind-quick-id`, planner output kind `QUICK_ID`,

@@ -50,10 +50,11 @@ word, QR, or support chips are hidden or clipped before print handoff. It also
 verifies the exact GHS pictogram set, the required/forbidden language-specific
 identity names, actual B/W image filtering, and minimum visible GHS/QR image
 sizes so compact labels cannot silently regress into unreadable output. The
-Formaldehyde case is intentionally too dense for direct A4 complete-primary
-printing; it must keep the preview intact, disable the print action, and show a
-clear larger/continuation-label guidance message instead of handing off a
-clipped label. Use
+Formaldehyde case is intentionally dense enough to require continuation-page
+complete-primary output; it must keep the preview intact, keep the print action
+enabled, hand off multiple complete-primary pages, and preserve identity, CAS,
+signal word, and every pictogram on the continuation pages instead of clipping
+or hiding statements. Use
 `PRINT_QA_SEARCH_TERM=7647-01-0` for the older Hydrochloric-Acid-only pass,
 `PRINT_QA_CASES=tube-vial-quick-id-with-case` for one high-risk compact case, or
 `PRINT_QA_CASES=all` to explicitly request the same real production-searchable
@@ -92,14 +93,14 @@ Record these outputs in the final implementation note:
   `more-pics` absence.
 - Print button enabled/disabled state for allowed and blocked outputs. Every
   printable matrix case must prove that the print button is enabled before the
-  QA handoff click. Every intentionally blocked matrix case must prove that the
-  print button is disabled and the outcome text explains the required larger or
-  continuation-style output path.
+  QA handoff click. Continuation cases must also prove that
+  `data-total-labels` and `data-total-pages` are greater than one.
 - `print-qa-status` after clicking the print action in QA handoff mode.
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
   `data-cas-numbers`, `data-has-cas`, `data-label-width-mm`,
   `data-label-height-mm`, `data-page-size`, `data-template`,
-  `data-stock-preset`, and `data-support-chips` attributes when available.
+  `data-stock-preset`, `data-total-labels`, `data-total-pages`, and
+  `data-support-chips` attributes when available.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview

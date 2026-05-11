@@ -142,21 +142,24 @@ The first refactor slice has landed:
   relying on terminal scrollback. Terminal output is concise by default, with
   `PRINT_QA_VERBOSE=1` available for full JSON output.
 - The production-searchable QA matrix now includes a dense Formaldehyde
-  (`50-00-0`) A4 complete-primary case that is expected to block direct print.
+  (`50-00-0`) A4 complete-primary case that is expected to print as a
+  continuation-page set.
   This turns "too dense for the selected primary stock" into an explicit product
   contract: preview identity, CAS, signal word, and all pictograms must remain
-  visible, the print button must be disabled, and the outcome copy must guide
-  the user toward a larger or continuation-style output instead of handing off a
-  clipped label.
+  visible, the print button must stay enabled, the handoff must report multiple
+  pages, and the renderer must continue full H/P text across pages instead of
+  clipping the label or leaving the user at a dead end.
+- Dense A4/Letter complete-primary output now uses a continuation renderer when
+  the full H/P text is too large for one physical page. Each continuation page
+  repeats identity, CAS, signal word, all available GHS pictograms, responsible
+  profile, and a continuation badge; H/P statements are split across pages.
 
-Tracked continuation gap:
+Tracked continuation follow-up:
 
-- Formaldehyde (`50-00-0`) is dense enough in production data that even an A4
-  complete-primary attempt is disabled. This is now covered by the QA matrix as
-  an acceptable blocked state, but it should not remain only a blocker. The next
-  product slice should define a continuation/overflow workflow for complete
-  shipped-container labels, with an explicit user path instead of only blocking
-  print.
+- The continuation set is printable and covered by QA, but the preview currently
+  shows the first label page. A later UX slice should add simple page navigation
+  in the modal preview so users can inspect every continuation page before
+  printing.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

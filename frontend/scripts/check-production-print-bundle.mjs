@@ -7,6 +7,8 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "support-chip",
   "supportChips",
   "custom-label-field-",
+  "ready_with_continuation",
+  "continuation-badge",
   "ghs-print-qa-status",
 ];
 

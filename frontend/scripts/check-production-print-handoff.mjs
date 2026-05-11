@@ -21,6 +21,8 @@ const STATUS_ATTRIBUTES = [
   "data-name-display",
   "data-template",
   "data-stock-preset",
+  "data-total-labels",
+  "data-total-pages",
   "data-issue-types",
   "data-support-chips",
 ];
@@ -712,6 +714,16 @@ const evaluateCase = ({ testCase, status, evidence }) => {
       sameNumber(attrs["data-label-height-mm"], testCase.expectedLabelHeightMm),
     );
     assert("page-size", attrs["data-page-size"] === testCase.expectedPageSize);
+    assert(
+      "total-labels",
+      Number(attrs["data-total-labels"] || 0) >=
+        Number(testCase.expectedMinTotalLabels || 1),
+    );
+    assert(
+      "total-pages",
+      Number(attrs["data-total-pages"] || 0) >=
+        Number(testCase.expectedMinTotalPages || 1),
+    );
     assert(
       "color-mode",
       attrs["data-color-mode"] === testCase.expectedColorMode,

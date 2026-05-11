@@ -119,6 +119,33 @@ const makeHydrochloricAcid = () => ({
   })),
 });
 
+const makeVeryDenseCompleteChemical = () => ({
+  ...makeChemical(4),
+  cas_number: "50-00-0",
+  name_en: "Formaldehyde",
+  name_zh: "甲醛",
+  ghs_pictograms: [
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+    { code: "GHS08" },
+  ],
+  hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+    code: `H${300 + index}`,
+    text_en:
+      "Long hazard statement for complete shipped-container labelling with exposure, handling, and emergency details.",
+    text_zh:
+      "完整主標使用的長危害說明，包含暴露、操作與緊急應變細節。",
+  })),
+  precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+    code: `P${300 + index}`,
+    text_en:
+      "Long precautionary statement retained for printing across continuation pages without clipping critical text.",
+    text_zh:
+      "續頁列印保留的長預防措施文字，避免裁切重要安全內容。",
+  })),
+});
+
 describe("printOutputPlanner", () => {
   it("prefers Letter for English/North American contexts and A4 otherwise", () => {
     expect(getPreferredFullPageStockId("en-US")).toBe("letter-primary");
@@ -176,6 +203,24 @@ describe("printOutputPlanner", () => {
 
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY);
     expect(plan.canPrint).toBe(true);
+  });
+
+  it("prints very dense full-page primary output as a continuation set", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeVeryDenseCompleteChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: completeProfile,
+      locale: "zh-TW",
+    });
+
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION);
+    expect(plan.canPrint).toBe(true);
+    expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.COMPLETE_PRIMARY);
   });
 
   it("treats bilingual complete labels as denser before recommending stock", () => {

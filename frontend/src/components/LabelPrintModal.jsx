@@ -832,6 +832,11 @@ export default function LabelPrintModal({
           "This stock cannot carry the complete primary label clearly. Use {{stock}} and keep this smaller label as supplemental if needed.",
           { stock: recommendedFullPageLabel },
         )
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+        ? tx(
+            "label.outputPlanContinuationNotice",
+            "This content is too dense for one physical label, so the app will print it as a complete continuation set.",
+          )
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
         ? tx(
             "label.outputPlanMissingProfile",
@@ -878,6 +883,8 @@ export default function LabelPrintModal({
   const outputPlanTone =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? "ready"
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+        ? "caution"
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? "caution"
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
@@ -893,11 +900,15 @@ export default function LabelPrintModal({
   const isQuickIdOutput =
     labelPurpose === "quickId" ||
     outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
+  const isContinuationOutput =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
+    : isContinuationOutput
+      ? tx("label.decisionRoleContinuation", "Complete primary with continuation")
     : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
         outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
       ? tx("label.decisionRoleQrSupplement", "QR supplement")
@@ -923,6 +934,8 @@ export default function LabelPrintModal({
   const statementSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionTextComplete", "Full H/P text")
+      : isContinuationOutput
+        ? tx("label.decisionTextContinuation", "Full H/P text across pages")
       : isQrSupplementOutput
         ? tx("label.decisionTextQrScan", "Details via QR/SDS")
         : isQuickIdOutput
@@ -1155,6 +1168,8 @@ export default function LabelPrintModal({
   const outputPlanTitle =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.outputPlanReadyTitle", "Complete output ready")
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+        ? tx("label.outputPlanContinuationTitle", "Continuation output ready")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? tx("label.outputPlanSupplementalTitle", "Supplemental output")
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
@@ -1172,6 +1187,11 @@ export default function LabelPrintModal({
           "label.outputPlanReadyBody",
           "The selected stock can print the current output without hiding safety-critical content.",
         )
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+        ? tx(
+            "label.outputPlanContinuationBody",
+            "This complete primary label is split across continuation pages so all available pictograms and H/P text remain printable.",
+          )
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? plannerPreviewRisk
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
@@ -1212,6 +1232,11 @@ export default function LabelPrintModal({
               )
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
               ? tx("label.outputOutcomeInvalidTitle", "Choose a larger output")
+              : isContinuationOutput
+                ? tx(
+                    "label.outputOutcomeContinuationTitle",
+                    "Complete primary label will print across continuation pages",
+                  )
               : isQrSupplementOutput
                 ? tx("label.outputOutcomeQrTitle", "QR supplement is printable")
                 : isQuickIdOutput
@@ -1258,6 +1283,11 @@ export default function LabelPrintModal({
                   "label.outputOutcomeInvalidBody",
                   "This stock cannot produce a truthful label. Use a larger primary label or create a continuation plan.",
                 )
+              : isContinuationOutput
+                ? tx(
+                    "label.outputOutcomeContinuationBody",
+                    "The app will keep identity, CAS, signal word, and every GHS pictogram on each page, then continue the full H/P text over additional pages.",
+                  )
               : isQrSupplementOutput
                 ? tx(
                     "label.outputOutcomeQrBody",
@@ -1284,6 +1314,11 @@ export default function LabelPrintModal({
       ? t("label.printBtn", { count: totalLabels })
       : isPrintFitBlocked
         ? printBlockedLabel
+        : isContinuationOutput
+          ? tx(
+              "label.printContinuationAction",
+              "Print complete primary continuation set",
+            )
         : isQrSupplementOutput
           ? tx(
               "label.printQrSupplementAction",

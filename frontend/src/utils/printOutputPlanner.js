@@ -11,6 +11,7 @@ export const PRINT_OUTPUT_PLAN_STATE = Object.freeze({
   PENDING_SELECTION: "pending_selection",
   READY: "ready",
   READY_WITH_NOTICE: "ready_with_notice",
+  READY_WITH_CONTINUATION: "ready_with_continuation",
   RECOMMEND_FULL_PAGE: "recommend_full_page",
   MISSING_REQUIRED_PROFILE: "missing_required_profile",
   MISSING_HAZARD_DATA: "missing_hazard_data",
@@ -196,8 +197,8 @@ export function buildPrintOutputPlan({
 
   if (readiness.state === PRINT_READINESS_STATE.NEEDS_CONTINUATION) {
     return {
-      state: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
-      canPrint: false,
+      state: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      canPrint: true,
       outputKind,
       readiness,
       issues,

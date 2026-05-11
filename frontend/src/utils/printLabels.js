@@ -95,6 +95,10 @@ const getStatementTextLoad = (statements = [], model) =>
     0,
   );
 
+const getContinuationStatementWeight = (statement, model) =>
+  String(statement?.code || "").length * 2 +
+  getLocalizedTextForModel(statement, model).length;
+
 const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
   const statementCount = hazards.length + precautions.length;
   const textLoad =
@@ -304,7 +308,10 @@ const shouldUseCompactStandardHazards = (layout = {}) => {
 
 const getFullPagePrimaryClass = (layout = {}) => {
   if (!isFullPagePrimaryLayout(layout)) return "";
-  if (layout.stockId === "letter-primary" || layout.stockPreset === "letter-primary") {
+  if (
+    layout.stockId === "letter-primary" ||
+    layout.stockPreset === "letter-primary"
+  ) {
     return " label-full-page-primary label-letter-primary";
   }
   return " label-full-page-primary label-a4-primary";
@@ -354,6 +361,102 @@ const expandLabelsByQuantity = (selectedForLabel, labelQuantities) => {
   return expanded;
 };
 
+const getContinuationCapacity = (layout = {}) => {
+  const fullPage = isFullPagePrimaryLayout(layout);
+  if (!fullPage) {
+    return {
+      splitStatementCount: Infinity,
+      splitTextWeight: Infinity,
+      pageStatementCount: Infinity,
+      pageTextWeight: Infinity,
+    };
+  }
+  if (layout.stockId === "letter-primary" || layout.stockPreset === "letter-primary") {
+    return {
+      splitStatementCount: 32,
+      splitTextWeight: 2350,
+      pageStatementCount: 14,
+      pageTextWeight: 1150,
+    };
+  }
+  return {
+    splitStatementCount: 34,
+    splitTextWeight: 2550,
+    pageStatementCount: 15,
+    pageTextWeight: 1250,
+  };
+};
+
+const appendContinuationStatement = (pages, item, capacity, model) => {
+  const weight = getContinuationStatementWeight(item.statement, model);
+  let current = pages[pages.length - 1];
+  const wouldExceedCount =
+    current.items.length > 0 &&
+    current.items.length + 1 > capacity.pageStatementCount;
+  const wouldExceedText =
+    current.items.length > 0 &&
+    current.textWeight + weight > capacity.pageTextWeight;
+
+  if (wouldExceedCount || wouldExceedText) {
+    current = { items: [], textWeight: 0 };
+    pages.push(current);
+  }
+
+  current.items.push(item);
+  current.textWeight += weight;
+};
+
+const buildContinuationLabelsForChemical = (chemical, model) => {
+  if (!isFullPagePrimaryLayout(model.layout)) return [chemical];
+
+  const content = getLabelContentForRender(chemical, model);
+  const statements = [
+    ...content.hazardStatements.map((statement) => ({
+      kind: "hazard",
+      statement,
+    })),
+    ...content.precautionaryStatements.map((statement) => ({
+      kind: "precaution",
+      statement,
+    })),
+  ];
+  const capacity = getContinuationCapacity(model.layout);
+  const statementTextWeight = statements.reduce(
+    (total, item) =>
+      total + getContinuationStatementWeight(item.statement, model),
+    0,
+  );
+
+  if (
+    statements.length <= capacity.splitStatementCount &&
+    statementTextWeight <= capacity.splitTextWeight
+  ) {
+    return [chemical];
+  }
+
+  const pages = [{ items: [], textWeight: 0 }];
+  statements.forEach((item) =>
+    appendContinuationStatement(pages, item, capacity, model),
+  );
+  const populatedPages = pages.filter((page) => page.items.length > 0);
+  if (populatedPages.length <= 1) return [chemical];
+
+  return populatedPages.map((page, index) => ({
+    __printContinuation: true,
+    sourceChemical: chemical,
+    continuation: {
+      current: index + 1,
+      total: populatedPages.length,
+      hazardStatements: page.items
+        .filter((item) => item.kind === "hazard")
+        .map((item) => item.statement),
+      precautionaryStatements: page.items
+        .filter((item) => item.kind === "precaution")
+        .map((item) => item.statement),
+    },
+  }));
+};
+
 export function buildPrintDocumentModel(
   selectedForLabel,
   labelConfig,
@@ -375,9 +478,7 @@ export function buildPrintDocumentModel(
     selectedForLabel,
     labelQuantities,
   );
-  const pages = chunk(expandedLabels, layout.page.perPage);
-
-  return {
+  const modelBase = {
     t,
     locale: i18n.language,
     layout,
@@ -386,7 +487,16 @@ export function buildPrintDocumentModel(
     customLabelFields,
     labelQuantities,
     resolvedLabProfile: resolveLabProfile(customLabelFields, labProfile),
-    expandedLabels,
+  };
+  const printableLabels = expandedLabels.flatMap((chemical) =>
+    buildContinuationLabelsForChemical(chemical, modelBase),
+  );
+  const pages = chunk(printableLabels, layout.page.perPage);
+
+  return {
+    ...modelBase,
+    sourceExpandedLabels: expandedLabels,
+    expandedLabels: printableLabels,
     pages,
     totalPages: pages.length,
   };
@@ -735,6 +845,16 @@ const renderComplianceFooter = (_effectiveChem, model) => {
   </div>`;
 };
 
+const renderContinuationBadge = (continuation, model) => {
+  if (!continuation || continuation.total <= 1) return "";
+  return `<div class="continuation-badge" data-testid="continuation-badge">${escapeHtml(
+    model.t("print.continuationBadge", {
+      current: continuation.current,
+      total: continuation.total,
+    }),
+  )}</div>`;
+};
+
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   if (!precautions.length || maxPrecautions <= 0) return "";
   const prioritizedPrecautions =
@@ -759,12 +879,26 @@ const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
   </div>`;
 };
 
-const getLabelContentForRender = (chemical, model) =>
-  buildPrintLabelContent(chemical, {
+const getContinuationMeta = (chemical) =>
+  chemical?.__printContinuation ? chemical.continuation || null : null;
+
+const getSourceChemicalForRender = (chemical) =>
+  chemical?.__printContinuation ? chemical.sourceChemical || chemical : chemical;
+
+const getLabelContentForRender = (chemical, model) => {
+  const continuation = getContinuationMeta(chemical);
+  const content = buildPrintLabelContent(getSourceChemicalForRender(chemical), {
     customGHSSettings: model.customGHSSettings,
     resolvedLabProfile: model.resolvedLabProfile,
     layout: model.layout,
   });
+  if (!continuation) return content;
+  return {
+    ...content,
+    hazardStatements: continuation.hazardStatements || [],
+    precautionaryStatements: continuation.precautionaryStatements || [],
+  };
+};
 
 const renderIconTemplate = (chemical, model) => {
   const {
@@ -883,6 +1017,7 @@ const renderStandardTemplate = (chemical, model) => {
 };
 
 const renderFullTemplate = (chemical, model) => {
+  const continuation = getContinuationMeta(chemical);
   const {
     effectiveChemical: effectiveChem,
     pictograms,
@@ -898,6 +1033,7 @@ const renderFullTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
   const purposeNotice = renderPurposeNotice(model);
   const fullPageClass = getFullPagePrimaryClass(model.layout);
+  const continuationClass = continuation ? " label-continuation-page" : "";
   const statementPanelStyle = [
     `--compliance-statement-gap:${hazardTier.marginBottom}`,
     `--compliance-code-gap:${hazardTier.codeGap || "1.1mm"}`,
@@ -908,9 +1044,10 @@ const renderFullTemplate = (chemical, model) => {
   ].join(";");
 
   return `
-    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${prepared ? " label-prepared" : ""}">
+    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}"${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="compliance-header">
         ${renderNameSection(effectiveChem, model)}
+        ${renderContinuationBadge(continuation, model)}
         ${
           prepared
             ? renderPreparedBadge(model) +
@@ -930,31 +1067,39 @@ const renderFullTemplate = (chemical, model) => {
           }
         </div>
         <div class="compliance-statements-panel" style="${statementPanelStyle}">
-          <div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
-            <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
-            ${
-              hazards.length > 0
-                ? renderComplianceStatements(
-                    hazards,
-                    "compliance-hazard-list",
-                    model,
-                  )
-                : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
-            }
-          </div>
-          <div class="compliance-precaution-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
-            <div class="section-label">${escapeHtml(model.t("print.precautionaryStatementsLabel"))}</div>
-            ${
-              precautions.length > 0
-                ? renderComplianceStatements(
-                    precautions,
-                    "compliance-precaution-list",
-                    model,
-                  )
-                : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
-            }
-            ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
-          </div>
+          ${
+            hazards.length > 0 || !continuation
+              ? `<div class="compliance-hazard-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+                  <div class="section-label">${escapeHtml(model.t("print.hazardStatementsLabel"))}</div>
+                  ${
+                    hazards.length > 0
+                      ? renderComplianceStatements(
+                          hazards,
+                          "compliance-hazard-list",
+                          model,
+                        )
+                      : `<div class="no-hazard-text">${escapeHtml(model.t("print.noHazardStatement"))}</div>`
+                  }
+                </div>`
+              : ""
+          }
+          ${
+            precautions.length > 0 || !continuation
+              ? `<div class="compliance-precaution-panel" style="font-size:${hazardTier.fontSize};line-height:${hazardTier.lineHeight}">
+                  <div class="section-label">${escapeHtml(model.t("print.precautionaryStatementsLabel"))}</div>
+                  ${
+                    precautions.length > 0
+                      ? renderComplianceStatements(
+                          precautions,
+                          "compliance-precaution-list",
+                          model,
+                        )
+                      : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
+                  }
+                  ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
+                </div>`
+              : ""
+          }
         </div>
       </div>
       ${renderComplianceFooter(effectiveChem, model)}
@@ -1241,6 +1386,19 @@ const buildStyles = (model) => {
     .label-full-page-primary .compliance-header {
       padding-bottom: 1.4mm;
     }
+    .continuation-badge {
+      display: inline-flex;
+      width: fit-content;
+      margin-top: 0.9mm;
+      padding: 0.35mm 1.1mm;
+      border: 0.25mm solid #bfdbfe;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 8px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
     .compliance-header .profile-block,
     .compliance-header .custom-fields {
       display: none;
@@ -1285,6 +1443,13 @@ const buildStyles = (model) => {
     .compliance-precaution-panel {
       border-top: 0.25mm solid #cbd5e1;
       padding-top: 0.8mm;
+    }
+    .label-continuation-page .compliance-statements-panel {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .label-continuation-page .compliance-precaution-panel:first-child {
+      border-top: 0;
+      padding-top: 0;
     }
     .section-label {
       color: #475569;
@@ -2755,6 +2920,7 @@ function publishPrintQaStatus(status, message) {
     statusElement.dataset.colorMode = nextStatus.colorMode || "";
     statusElement.dataset.nameDisplay = nextStatus.nameDisplay || "";
     statusElement.dataset.totalLabels = String(nextStatus.totalLabels || 0);
+    statusElement.dataset.totalPages = String(nextStatus.totalPages || 0);
     statusElement.dataset.template = nextStatus.template || "";
     statusElement.dataset.stockPreset = nextStatus.stockPreset || "";
     statusElement.dataset.issueTypes = (nextStatus.issueTypes || []).join(",");

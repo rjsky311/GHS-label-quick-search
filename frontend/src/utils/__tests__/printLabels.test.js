@@ -11,6 +11,7 @@ jest.mock("@/constants/ghs", () => ({
     GHS05: "https://example.com/GHS05.svg",
     GHS06: "https://example.com/GHS06.svg",
     GHS07: "https://example.com/GHS07.svg",
+    GHS08: "https://example.com/GHS08.svg",
   },
 }));
 jest.mock("@/utils/observability", () => ({
@@ -1753,6 +1754,58 @@ describe("printLabels", () => {
       expect(preview.html).toContain("transform: scale(0.");
       expect(preview.html).toContain("height: 264px");
       expect(preview.previewMetrics.frameHeightPx).toBeLessThanOrEqual(300);
+    });
+
+    it("splits overly dense full-page primary labels into continuation pages", () => {
+      const denseChemical = {
+        ...mockChemical,
+        cas_number: "50-00-0",
+        name_en: "Formaldehyde",
+        name_zh: "Formaldehyde ZH",
+        ghs_pictograms: [
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+        ],
+        hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en:
+            "This is a long complete-primary hazard statement that must remain available on the printed shipped-container label set.",
+        })),
+        precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+          code: `P${300 + index}`,
+          text_en:
+            "This is a long precautionary statement retained for continuation-page printing so the final output does not clip content.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      expect(documentBundle.pagesHtml).toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).toContain("data-continuation-page=\"1\"");
+      expect(documentBundle.pagesHtml).toContain("print.continuationBadge");
+      expect(documentBundle.pagesHtml).toContain(">H300</span>");
+      expect(documentBundle.pagesHtml).toContain(">P315</span>");
+      expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(
+        documentBundle.model.expandedLabels.length,
+      );
+      expect(documentBundle.model.totalPages).toBe(
+        documentBundle.model.expandedLabels.length,
+      );
     });
 
     it("Letter primary uses its own full-page class and paper size", () => {

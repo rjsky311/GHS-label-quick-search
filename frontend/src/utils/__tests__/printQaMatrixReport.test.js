@@ -177,39 +177,44 @@ describe("print QA matrix report", () => {
     });
     expect(byId["letter-primary"].actual.hasFullPagePictograms).toBe(true);
 
-    expect(byId["formaldehyde-a4-primary-blocked"]).toMatchObject({
+    expect(byId["formaldehyde-a4-primary-continuation"]).toMatchObject({
       chemical: expect.objectContaining({
         cas: "50-00-0",
         expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
       }),
       expected: expect.objectContaining({
-        canPrint: false,
-        planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+        canPrint: true,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+        minPrintTotalLabels: 2,
       }),
       actual: expect.objectContaining({
-        canPrint: false,
-        planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+        canPrint: true,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
         hasFullPagePictograms: true,
       }),
       handoffExpectation: expect.objectContaining({
-        status: "blocked",
+        status: "qa_handoff",
         labelKind: "complete-primary",
         stockPreset: "a4-primary",
         template: "full",
         hasQr: false,
       }),
     });
-    expect(browserCaseById["formaldehyde-a4-primary-blocked"]).toMatchObject({
-      expectedCanPrint: false,
-      expectedPrintButtonEnabled: false,
-      expectedStatus: "blocked",
-      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
-      expectedBlockedTextPatterns: expect.arrayContaining(["continuation"]),
+    expect(
+      byId["formaldehyde-a4-primary-continuation"].actual.printTotalLabels,
+    ).toBeGreaterThanOrEqual(2);
+    expect(browserCaseById["formaldehyde-a4-primary-continuation"]).toMatchObject({
+      expectedCanPrint: true,
+      expectedPrintButtonEnabled: true,
+      expectedStatus: "qa_handoff",
+      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
       expectedLabelKind: "complete-primary",
       expectedStockPreset: "a4-primary",
       expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
       expectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
       expectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
+      expectedMinTotalLabels: 2,
+      expectedMinTotalPages: 2,
     });
 
     expect(byId["bottle-supplemental"].handoffExpectation).toMatchObject({

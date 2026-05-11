@@ -654,8 +654,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
-    id: "formaldehyde-a4-primary-blocked",
-    label: "Formaldehyde A4 complete primary requires continuation",
+    id: "formaldehyde-a4-primary-continuation",
+    label: "Formaldehyde A4 complete primary continuation",
     chemicalId: "formaldehyde",
     locale: "en-US",
     labelConfig: {
@@ -666,8 +666,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
       colorMode: "color",
     },
     expected: {
-      canPrint: false,
-      planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+      canPrint: true,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
       outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
       labelKind: "complete-primary",
       stockPreset: "a4-primary",
@@ -675,6 +675,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      minPrintTotalLabels: 2,
       productionExpectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
       productionExpectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
     },
@@ -1352,8 +1353,21 @@ export function buildPrintQaCaseResult({
     ["printLabelKind", actual.printLabelKind === expected.labelKind],
     ["printTemplate", actual.printTemplate === expected.template],
     ["printStockPreset", actual.printStockPreset === expected.stockPreset],
-    ["printTotalLabels", actual.printTotalLabels === 1],
   ];
+
+  if (Number.isFinite(expected.minPrintTotalLabels)) {
+    checks.push([
+      "printTotalLabels",
+      actual.printTotalLabels >= expected.minPrintTotalLabels,
+    ]);
+  } else if (Number.isFinite(expected.printTotalLabels)) {
+    checks.push([
+      "printTotalLabels",
+      actual.printTotalLabels === expected.printTotalLabels,
+    ]);
+  } else {
+    checks.push(["printTotalLabels", actual.printTotalLabels === 1]);
+  }
 
   if (expected.planState) {
     checks.push(["planState", actual.planState === expected.planState]);
@@ -1439,6 +1453,8 @@ export function buildPrintQaCaseResult({
       colorMode: printDocument?.model?.layout?.colorMode,
       nameDisplay: printDocument?.model?.layout?.nameDisplay,
       requiredIdentityText: expected.requiredIdentityText || "",
+      totalLabels: printDocument?.model?.expandedLabels?.length || 0,
+      totalPages: printDocument?.model?.totalPages || 0,
     },
     passed: failures.length === 0,
     failures,
@@ -1513,6 +1529,15 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedNameDisplay: caseResult.handoffExpectation.nameDisplay,
   expectedRequiredIdentityText:
     caseResult.handoffExpectation.requiredIdentityText || "",
+  expectedMinTotalLabels:
+    caseResult.expected.minPrintTotalLabels ||
+    caseResult.expected.printTotalLabels ||
+    1,
+  expectedMinTotalPages:
+    caseResult.expected.minPrintTotalPages ||
+    caseResult.expected.minPrintTotalLabels ||
+    caseResult.expected.printTotalLabels ||
+    1,
   customLabelFields: testCase.customLabelFields || {},
   mustContainCas: Boolean(caseResult.chemical.cas),
   selectors: {
@@ -1615,6 +1640,8 @@ export function buildPrintQaMatrixReport({
         "data-name-display",
         "data-template",
         "data-stock-preset",
+        "data-total-labels",
+        "data-total-pages",
         "data-issue-types",
         "data-support-chips",
       ],
