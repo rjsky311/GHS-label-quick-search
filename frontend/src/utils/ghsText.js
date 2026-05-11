@@ -70,10 +70,19 @@ export function shouldRenderBilingualLabelText(
   layoutOrNameDisplay,
   fallbackLanguage = "zh",
 ) {
-  return (
-    resolveEffectiveLabelNameDisplay(layoutOrNameDisplay, fallbackLanguage) ===
-    "both"
+  const layout =
+    layoutOrNameDisplay && typeof layoutOrNameDisplay === "object"
+      ? layoutOrNameDisplay
+      : null;
+  const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
+    layoutOrNameDisplay,
+    fallbackLanguage,
   );
+
+  if (effectiveNameDisplay !== "both") return false;
+  if (!layout) return true;
+
+  return layout.labelPurpose === "shipping" && layout.template === "full";
 }
 
 export function getLocalizedStatementText(statement, languageLike = "zh") {

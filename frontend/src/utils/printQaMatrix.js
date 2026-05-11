@@ -1285,8 +1285,14 @@ export function buildPrintQaCaseResult({
     printHasRequiredPictogramImages:
       expectedPictograms.length === 0 ||
       printHtml.includes('data-required-print-image="ghs-pictogram"'),
-    hasSupportChip: fragmentHtml.includes('class="support-chips"'),
-    printHasSupportChip: printHtml.includes('class="support-chips"'),
+    hasSupportChip:
+      fragmentHtml.includes('class="support-chips"') ||
+      fragmentHtml.includes("support-chip-batch") ||
+      fragmentHtml.includes("meta-chip-batch"),
+    printHasSupportChip:
+      printHtml.includes('class="support-chips"') ||
+      printHtml.includes("support-chip-batch") ||
+      printHtml.includes("meta-chip-batch"),
     hasRequiredIdentityText: expected.requiredIdentityText
       ? fragmentHtml.includes(expected.requiredIdentityText)
       : true,

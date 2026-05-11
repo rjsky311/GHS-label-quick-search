@@ -157,6 +157,15 @@ The first refactor slice has landed:
   outputs. The label preview and sheet preview consume the same selected
   page/label index, so users can inspect later continuation pages before
   printing instead of trusting a first-page-only preview.
+- Large physical container labels, including the 140 x 88 mm preset, are now
+  treated as front-of-container labels instead of miniaturized complete primary
+  labels. They should preserve identity, CAS, case/batch number, signal word,
+  and every available GHS pictogram, then print only a prioritized H-statement
+  summary. Full H/P text belongs on A4/Letter primary output, continuation
+  pages, SDS, QR supplement, or a back/fold-out label.
+- Case/batch identity is part of the same identity block as CAS on physical
+  labels. It should not appear as an unrelated custom footer field on one
+  template and a framed chip on another.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
@@ -164,7 +173,10 @@ Remaining work should continue from the same planner instead of adding template-
 
 - The default path is a complete primary label, not a compact label.
 - A4 Primary and Letter Primary are first-class complete-label outputs.
-- Small labels are allowed, but they may become supplemental labels when they cannot carry complete content.
+- Large, bottle, and small physical labels are allowed, but non-A4/Letter stocks
+  are front labels or supplemental labels unless the complete-primary renderer
+  can truthfully carry the full required content. The UI must not imply that a
+  140 x 88 mm label is equivalent to A4/Letter for full H/P text.
 - QR labels are supplemental and must not replace GHS pictograms, signal word, or necessary hazard text.
 - The app should reduce exposed choices and move minor tuning to Advanced.
 - The system should try scaling and layout adaptation before declaring that a label is too small.
@@ -209,6 +221,25 @@ Required behavior:
 - Should include QR or reference link to the complete label/SDS context when possible.
 
 Small supplemental labels are useful for tubes, racks, small bottles, and short-term bench-side identification. They do not replace the complete primary label.
+
+### Container Front Label
+
+Use for 140 x 88 mm, Avery 5164-style, or similar physical labels that are
+large enough for a useful front label but not large enough to carry all H/P
+text cleanly.
+
+Required behavior:
+
+- Must keep product identifier, CAS, case/batch identity when present, signal
+  word, and every available GHS pictogram visible.
+- Must not print P-statements by default.
+- Should print only the highest-priority H-statements that fit, using short
+  localized summaries. Lower-priority H-statements should be summarized as
+  "more hazards" rather than squeezing long text.
+- Must be described in the workflow as a front/container label or supplemental
+  output, not as a complete primary label.
+- Should point users to A4/Letter primary, SDS, QR supplement, or a back label
+  when complete H/P text is required.
 
 ### QR / SDS Supplement
 

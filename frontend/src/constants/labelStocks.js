@@ -239,8 +239,8 @@ const STOCK_PRESETS = [
   {
     id: "large-primary",
     aliases: ["large"],
-    name: "Large Primary",
-    note: "Roomiest preset when the full hazard hierarchy needs to breathe.",
+    name: "Large Container Front",
+    note: "Roomy front label for identity, GHS pictograms, signal word, and priority H summaries.",
     nameKey: "label.stockPresetLargePrimary",
     noteKey: "label.stockPresetLargePrimaryNote",
     size: "large",
@@ -398,7 +398,7 @@ function getBaseLayout(size = "medium", orientation = "portrait") {
 export const DEFAULT_LABEL_CONFIG = Object.freeze({
   schemaVersion: 2,
   labelPurpose: "shipping",
-  template: "full",
+  template: "standard",
   size: PRESET_INDEX["large-primary"].size,
   orientation: PRESET_INDEX["large-primary"].orientation,
   nameDisplay: "both",
@@ -585,9 +585,24 @@ function resolveTemplateBudgets(normalized) {
   primaryHazards = Math.max(1, primaryHazards - compactPenalty);
   precautions = Math.max(0, precautions - compactPenalty);
 
-  const isBottleSupplementalFallback =
+  const isShippingFrontLabel =
     normalized.labelPurpose === "shipping" &&
     normalized.template === "standard" &&
+    !isFullPagePrimaryStockId(normalized.stockPreset);
+
+  if (isShippingFrontLabel) {
+    if (area >= 9500 || shortSide >= 80) {
+      primaryHazards = Math.min(primaryHazards, 4);
+    } else if (area >= 4200 || shortSide >= 48) {
+      primaryHazards = Math.min(primaryHazards, 2);
+    } else {
+      primaryHazards = 1;
+    }
+    precautions = 0;
+  }
+
+  const isBottleSupplementalFallback =
+    isShippingFrontLabel &&
     (area < 5600 ||
       (normalized.nameDisplay === "both" &&
         area < 9500 &&

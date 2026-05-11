@@ -374,7 +374,7 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
-      "Bottle label is printable as a supplement",
+      "Bottle label is printable as a front label",
     );
     expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
       "All pictograms kept",
@@ -389,10 +389,10 @@ describe("LabelPrintModal", () => {
     expect(supplementalChecklist).toHaveTextContent("This label prints");
     expect(supplementalChecklist).toHaveTextContent("Identity");
     expect(supplementalChecklist).toHaveTextContent("Hazard summary");
-    expect(supplementalChecklist).toHaveTextContent("Summary only");
+    expect(supplementalChecklist).toHaveTextContent("Priority H only");
     expect(supplementalChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print Bottle label (supplemental, 1)",
+      "Print Bottle label (front, 1)",
     );
   });
 
@@ -552,7 +552,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
     expect(
       screen.getByTestId("primary-output-size-large-primary"),
-    ).toHaveTextContent("Large Primary");
+    ).toHaveTextContent("Large Container Front");
     expect(
       screen.getByTestId("primary-output-size-medium-bottle"),
     ).toHaveTextContent("Bottle Primary");
@@ -1091,7 +1091,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
   });
 
-  it("routes dense main-container target to a full-page primary instead of a supplemental fallback", () => {
+  it("keeps dense main-container target on a front label instead of forcing A4/Letter", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -1116,11 +1116,11 @@ describe("LabelPrintModal", () => {
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
         labelPurpose: "shipping",
-        template: "full",
-        stockPreset: "letter-primary",
-        labelWidthMm: 196,
-        labelHeightMm: 250,
-        perPage: 1,
+        template: "standard",
+        stockPreset: "large-primary",
+        labelWidthMm: 140,
+        labelHeightMm: 88,
+        perPage: 3,
       }),
     );
   });

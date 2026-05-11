@@ -287,10 +287,10 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
-  it("allows a roomy large primary stock to stay complete for a dense common chemical", () => {
+  it("renders roomy large physical stock as a container front label with priority H only", () => {
     const layout = resolvePrintLayoutConfig({
       labelPurpose: "shipping",
-      template: "full",
+      template: "standard",
       stockPreset: "large-primary",
       nameDisplay: "both",
     });
@@ -302,15 +302,19 @@ describe("print acceptance matrix", () => {
     });
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "shipping",
-      template: "full",
+      template: "standard",
       stockPreset: "large-primary",
       nameDisplay: "both",
     });
 
-    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY);
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
     expect(plan.canPrint).toBe(true);
-    expect(preview.fragmentHtml).toContain("label-kind-complete-primary");
-    expect(preview.fragmentHtml).not.toContain("hazard-more");
+    expect(preview.fragmentHtml).toContain("label-kind-supplemental");
+    expect(preview.fragmentHtml).toContain("label-form-roomy");
+    expect(preview.fragmentHtml).toContain("hazard-summary-item");
+    expect(preview.fragmentHtml).toContain("H314");
+    expect(preview.fragmentHtml).not.toContain("P234");
+    expect(preview.fragmentHtml).toContain("hazard-more");
     expect(preview.fragmentHtml).not.toContain("precaution-more");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
   });
@@ -381,7 +385,8 @@ describe("print acceptance matrix", () => {
     expect(plan.canPrint).toBe(true);
     expect(preview.fragmentHtml).toContain("label-kind-quick-id");
     expect(preview.fragmentHtml).toContain("label-form-strip");
-    expect(preview.fragmentHtml).toContain("CAS: 7647-01-0");
+    expect(preview.fragmentHtml).toContain("meta-chip-cas");
+    expect(preview.fragmentHtml).toContain("7647-01-0");
     expect(preview.fragmentHtml).not.toContain("qrcode-img");
     expect(preview.fragmentHtml).not.toContain("more-pics");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);

@@ -25,6 +25,14 @@ The best path is a complete primary label that a lab user can print without gues
 - The print workflow should use an output planner: scale typography, reflow layout, and combine/deduplicate safe statement text before routing to a larger stock or supplemental output.
 - A4 and Letter are complete primary outputs, not the only valid physical label sizes. Container label stocks may be selected first; the app must scale text and pictograms for that stock, then recommend A4/Letter only when the selected stock cannot truthfully carry the complete primary label.
 - When a user manually selects a bottle/container stock that cannot carry the complete primary label, the app must keep that selected physical size and produce a clearly marked supplemental label rather than silently changing the user's stock choice.
+- 140 x 88 mm and similar large container-front labels are not mini A4 labels.
+  They must keep identity, CAS, case/batch number, signal word, and every
+  available GHS pictogram visible, then print a prioritized H-statement summary
+  only. P-statements and full H/P text belong on A4/Letter primary output,
+  continuation pages, SDS/QR, or a back/fold-out label.
+- CAS and case/batch identifiers must use one consistent identity treatment
+  across physical label templates; they should not move between unrelated
+  custom-field footers and differently styled chips.
 - Print preview and print output must use the same renderer for the label fragment.
 - Color / black-and-white, bilingual name mode, orientation, and stock preset choices must be reflected in preview and print output.
 - Safety-critical printed label content must not contain ads, sponsor copy, or unrelated brand promotion.

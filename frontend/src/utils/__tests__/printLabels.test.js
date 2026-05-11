@@ -295,11 +295,11 @@ describe("inspectPrintContentFit", () => {
 });
 
 describe("print layout model", () => {
-  it("defaults to a shipped-container purpose on large full labels", () => {
+  it("defaults to a shipped-container front label on large physical stock", () => {
     const layout = resolvePrintLayoutConfig({});
 
     expect(layout.labelPurpose).toBe("shipping");
-    expect(layout.template).toBe("full");
+    expect(layout.template).toBe("standard");
     expect(layout.stockId).toBe("large-primary");
     expect(layout.size).toBe("large");
     expect(layout.page.perPage).toBe(3);
@@ -1351,7 +1351,8 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-kind-quick-id");
       expect(preview.fragmentHtml).toContain("label-form-strip");
-      expect(preview.fragmentHtml).toContain("CAS: 64-17-5");
+      expect(preview.fragmentHtml).toContain("meta-chip-cas");
+      expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.html).not.toContain(
         ".label-icon.label-form-strip .cas {\n      display: none;",
       );
@@ -1381,7 +1382,8 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("identity-density-high");
-      expect(preview.fragmentHtml).toContain("CAS: 123456-78-9");
+      expect(preview.fragmentHtml).toContain("meta-chip-cas");
+      expect(preview.fragmentHtml).toContain("123456-78-9");
       expect(preview.html).toContain(
         ".label-icon.label-form-strip .identity-density-high .name-en",
       );
@@ -1570,7 +1572,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("hazard-more");
     });
 
-    it("prioritizes response and PPE P codes before storage or disposal on compact labels", () => {
+    it("omits P codes from container front labels so priority H content stays readable", () => {
       const mixedPrecautions = {
         ...mockChemical,
         hazard_statements: [{ code: "H314", text_en: "Corrosive" }],
@@ -1599,15 +1601,11 @@ describe("printLabels", () => {
         { mode: "label" },
       );
 
-      const p301Index = preview.fragmentHtml.indexOf("P301+P330+P331");
-      const p280Index = preview.fragmentHtml.indexOf("P280");
-      const p501Index = preview.fragmentHtml.indexOf("P501");
-
-      expect(p301Index).toBeGreaterThan(-1);
-      expect(p280Index).toBeGreaterThan(-1);
-      expect(p501Index).toBe(-1);
-      expect(p301Index).toBeLessThan(p280Index);
-      expect(preview.fragmentHtml).toContain("precaution-more");
+      expect(preview.fragmentHtml).toContain("H314");
+      expect(preview.fragmentHtml).not.toContain("P301+P330+P331");
+      expect(preview.fragmentHtml).not.toContain("P280");
+      expect(preview.fragmentHtml).not.toContain("P501");
+      expect(preview.fragmentHtml).not.toContain("precaution-more");
     });
 
     it("keeps QR strip supplements focused on identity, QR, signal, and pictograms", () => {
@@ -2081,7 +2079,7 @@ describe("printLabels", () => {
         expect(html).not.toContain("Lab A");
         expect(html).not.toContain("2026-02-12");
         expect(html).toContain("B-001");
-        expect(html).toMatch(/<div\s+class="support-chips"/);
+        expect(html).toContain("meta-chip-batch");
       });
     });
 
@@ -2124,9 +2122,8 @@ describe("printLabels", () => {
           { labName: "", date: "", batchNumber: "CASE-2026-0007" },
         );
         const html = mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toMatch(/<div\s+class="support-chips"/);
         expect(html).toMatch(
-          /<span\s+class="support-chip support-chip-critical support-chip-batch"/,
+          /<span\s+class="meta-chip meta-chip-batch support-chip support-chip-critical support-chip-batch"/,
         );
         expect(html).toContain("CASE-2026-0007");
         expect(html).toContain("CAS");
@@ -2622,7 +2619,7 @@ describe("printLabels", () => {
       expect(html).toContain("print.precautionaryStatementsLabel");
     });
 
-    it("standard template renders compact P-code summary when the stock budget allows it", () => {
+    it("standard container-front template omits P-codes even when source content has them", () => {
       printLabels(
         [chemWithP],
         {
@@ -2634,12 +2631,11 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      // Look for actual element markup, not the CSS class definition
-      expect(html).toMatch(/<div\s+class="precautions-compact"/);
-      expect(html).toMatch(/<span\s+class="precaution-code"/);
-      expect(html).toContain("P301+P310");
-      expect(html).toContain("P210");
-      expect(html).toContain("P233");
+      expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
+      expect(html).not.toMatch(/<span\s+class="precaution-code"/);
+      expect(html).not.toContain("P301+P310");
+      expect(html).not.toContain("P210");
+      expect(html).not.toContain("P233");
       // In compact view we do NOT inline the long Chinese text
       expect(html).not.toContain("如誤吞食：立即呼叫毒物中心。");
     });

@@ -312,6 +312,26 @@ const shouldUseCompactStandardHazards = (layout = {}) => {
   );
 };
 
+const getStandardHazardRenderMode = (layout = {}) => {
+  if (shouldUseCompactStandardHazards(layout)) return "code";
+  if (layout.labelPurpose !== "shipping" || layout.template !== "standard") {
+    return "summary";
+  }
+  const area = (layout.widthMm || 0) * (layout.heightMm || 0);
+  const shortSide = Math.min(layout.widthMm || 0, layout.heightMm || 0);
+  if (layout.formFactor === "roomy" || area >= 9000 || shortSide >= 80) {
+    return "summary";
+  }
+  return "code";
+};
+
+const getStandardHazardSummaryLimit = (layout = {}) => {
+  if (layout.formFactor === "roomy") return 74;
+  if (layout.size === "large") return 64;
+  if (layout.size === "medium") return 38;
+  return 22;
+};
+
 const getFullPagePrimaryClass = (layout = {}) => {
   if (!isFullPagePrimaryLayout(layout)) return "";
   if (
@@ -513,11 +533,6 @@ const renderCustomFields = (model) => {
   if (model.customLabelFields?.date) {
     fields.push(escapeHtml(model.customLabelFields.date));
   }
-  if (model.customLabelFields?.batchNumber) {
-    fields.push(
-      `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(model.customLabelFields.batchNumber)}`,
-    );
-  }
   if (fields.length === 0) return "";
   return `<div class="custom-fields">${fields.join(" | ")}</div>`;
 };
@@ -552,47 +567,6 @@ const renderProfileFields = (model, { compact = false } = {}) => {
   }">${rows.join("")}</div>`;
 };
 
-const renderSupportChips = (
-  model,
-  { includeOrganization = true, includeDate = true, includeBatch = true } = {},
-) => {
-  const chips = [];
-  if (includeOrganization && model.resolvedLabProfile?.organization) {
-    chips.push({
-      html: escapeHtml(model.resolvedLabProfile.organization),
-      className: "",
-    });
-  }
-  if (includeDate && model.customLabelFields?.date) {
-    chips.push({
-      html: escapeHtml(model.customLabelFields.date),
-      className: "",
-    });
-  }
-  if (includeBatch && model.customLabelFields?.batchNumber) {
-    chips.push({
-      html: `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(
-        model.customLabelFields.batchNumber,
-      )}`,
-      className: "support-chip-critical support-chip-batch",
-    });
-  }
-  if (chips.length === 0) return "";
-  return `<div class="support-chips">${chips
-    .map(
-      (chip) =>
-        `<span class="support-chip${chip.className ? ` ${chip.className}` : ""}">${chip.html}</span>`,
-    )
-    .join("")}</div>`;
-};
-
-const renderCriticalIdentityChips = (model) =>
-  renderSupportChips(model, {
-    includeOrganization: false,
-    includeDate: false,
-    includeBatch: true,
-  });
-
 const renderMetaChip = (label, value, className = "") => {
   const labelHtml = label
     ? `<span class="meta-chip-label">${escapeHtml(label)}</span>`
@@ -606,13 +580,28 @@ const renderMetaChip = (label, value, className = "") => {
 const renderMetaRibbon = (
   effectiveChem,
   model,
-  { includeCas = true, includePrepared = true, preparedDetailLimit = 2 } = {},
+  {
+    includeCas = true,
+    includeBatch = true,
+    includePrepared = true,
+    preparedDetailLimit = 2,
+  } = {},
 ) => {
   const chips = [];
 
   if (includeCas && effectiveChem.cas_number) {
     chips.push(
       renderMetaChip("CAS", effectiveChem.cas_number, "meta-chip-cas"),
+    );
+  }
+
+  if (includeBatch && model.customLabelFields?.batchNumber) {
+    chips.push(
+      renderMetaChip(
+        model.t("print.batch"),
+        model.customLabelFields.batchNumber,
+        "meta-chip-batch support-chip support-chip-critical support-chip-batch",
+      ),
     );
   }
 
@@ -796,10 +785,15 @@ const renderSignal = (signalWord, signalClass, className = "") => {
   )}</div>`;
 };
 
-const renderHazardStatement = (statement, className, model) =>
-  `<div class="${className}">${escapeHtml(statement.code)} ${escapeHtml(
-    getLocalizedTextForModel(statement, model),
-  )}</div>`;
+const renderHazardSummaryStatement = (statement, className, model) =>
+  `<div class="${className} hazard-summary-item"><span class="hazard-summary-code">${escapeHtml(
+    statement.code,
+  )}</span><span class="hazard-summary-text">${escapeHtml(
+    truncateText(
+      getLocalizedTextForModel(statement, model),
+      getStandardHazardSummaryLimit(model.layout),
+    ),
+  )}</span></div>`;
 
 const renderHazardCode = (statement, className) =>
   `<div class="${className} hazard-code-only">${escapeHtml(
@@ -934,7 +928,13 @@ const renderIconTemplate = (chemical, model) => {
           compactNames: true,
           showProfile: false,
           showCustomFields: false,
-          supportHtml: renderCriticalIdentityChips(model),
+          showCasLine: false,
+          metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
+            includeCas: true,
+            includeBatch: true,
+            includePrepared: true,
+            preparedDetailLimit: 1,
+          }),
         })}
         ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
       </div>
@@ -966,7 +966,7 @@ const renderStandardTemplate = (chemical, model) => {
   const prioritizedHazards = prioritizeHazardStatements(hazards);
   const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
-  const compactHazardCodes = shouldUseCompactStandardHazards(model.layout);
+  const hazardRenderMode = getStandardHazardRenderMode(model.layout);
   const prepared = isPrepared(effectiveChem);
 
   return `
@@ -980,10 +980,10 @@ const renderStandardTemplate = (chemical, model) => {
           showCasLine: false,
           metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
             includeCas: true,
+            includeBatch: true,
             includePrepared: true,
             preparedDetailLimit: model.layout.size === "small" ? 1 : 2,
           }),
-          supportHtml: renderCriticalIdentityChips(model),
         })}
       </div>
       <div class="label-middle label-middle-standard">
@@ -1000,15 +1000,15 @@ const renderStandardTemplate = (chemical, model) => {
             <div class="standard-hazard-board">
             ${
               primaryHazards.length > 0
-                ? `<div class="hazard-primary-list${compactHazardCodes ? " hazard-code-list" : ""}">
+                ? `<div class="hazard-primary-list${hazardRenderMode === "code" ? " hazard-code-list" : ""}">
                     ${primaryHazards
                       .map((hazard) =>
-                        compactHazardCodes
+                        hazardRenderMode === "code"
                           ? renderHazardCode(
                               hazard,
                               "hazard-item hazard-primary-item",
                             )
-                          : renderHazardStatement(
+                          : renderHazardSummaryStatement(
                               hazard,
                               "hazard-item hazard-primary-item",
                               model,
@@ -1062,7 +1062,14 @@ const renderFullTemplate = (chemical, model) => {
   return `
     <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}"${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="compliance-header">
-        ${renderNameSection(effectiveChem, model)}
+        ${renderNameSection(effectiveChem, model, {
+          showCasLine: false,
+          metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
+            includeCas: true,
+            includeBatch: true,
+            includePrepared: false,
+          }),
+        })}
         ${renderContinuationBadge(continuation, model)}
         ${
           prepared
@@ -1162,10 +1169,10 @@ const renderQRCodeTemplate = (chemical, model) => {
             showCasLine: false,
             metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
               includeCas: true,
+              includeBatch: true,
               includePrepared: true,
               preparedDetailLimit: 2,
             }),
-            supportHtml: renderCriticalIdentityChips(model),
           })}
         </div>
         ${
@@ -1673,6 +1680,22 @@ const buildStyles = (model) => {
       overflow: visible;
       text-overflow: clip;
     }
+    .meta-ribbon .support-chip {
+      margin: 0;
+    }
+    .meta-chip-batch {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-weight: 800;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .meta-chip-batch .meta-chip-value {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      overflow: visible;
+      text-overflow: clip;
+    }
     .meta-chip-prepared {
       background: #dbeafe;
       border-color: #93c5fd;
@@ -1983,6 +2006,22 @@ const buildStyles = (model) => {
       font-size: max(5.5px, calc(${layout.typography.hazardSize} - 1px));
       line-height: 1.08;
     }
+    .hazard-summary-item {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 0.7mm;
+      align-items: start;
+    }
+    .hazard-summary-code {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      color: #7c2d12;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .hazard-summary-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     .hazard-more {
       padding: 0.35mm 0.6mm;
       border-radius: 0.9mm;
@@ -2272,6 +2311,25 @@ const buildStyles = (model) => {
     .label-icon.label-form-strip .identity-density-high .cas {
       font-size: 5.2px;
     }
+    .label-icon.label-form-strip .meta-ribbon {
+      margin-top: 0.2mm;
+      gap: 0.25mm;
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+    .label-icon.label-form-strip .meta-chip {
+      gap: 0.25mm;
+      padding: 0.12mm 0.45mm;
+      font-size: 5.2px;
+      line-height: 1;
+    }
+    .label-icon.label-form-strip .meta-chip-cas,
+    .label-icon.label-form-strip .meta-chip-batch {
+      flex: 0 0 auto;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+    }
     .label-icon.label-form-strip .label-middle {
       flex: 1 1 auto;
       justify-content: center;
@@ -2300,11 +2358,56 @@ const buildStyles = (model) => {
       font-size: max(6.2px, calc(${layout.typography.signalSize} - 4px));
     }
     .label-standard.label-form-roomy .standard-grid {
-      gap: 2mm;
+      grid-template-columns: minmax(0, ${standardRailColumn}) minmax(0, 1fr);
+      gap: 3mm;
+      align-items: start;
+    }
+    .label-standard.label-form-roomy .label-top-standard {
+      margin: -1mm -1mm 1.4mm -1mm;
+      padding: 0.65mm 1mm 1mm 1mm;
+      border-bottom: 0.35mm solid #111827;
+      background: #fff;
+    }
+    .label-standard.label-form-roomy .name-en {
+      font-size: max(15px, calc(${layout.typography.titleSize} + 2px));
+      line-height: 1.03;
+      -webkit-line-clamp: 1;
+    }
+    .label-standard.label-form-roomy .name-zh {
+      font-size: max(10px, calc(${layout.typography.fontSize} + 0.5px));
+      line-height: 1.04;
+    }
+    .label-standard.label-form-roomy .meta-ribbon {
+      gap: 0.65mm;
+      margin-top: 0.65mm;
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+    .label-standard.label-form-roomy .meta-chip {
+      padding: 0.35mm 0.85mm;
+      font-size: max(7px, calc(${layout.typography.fontSize} - 2px));
+      line-height: 1.05;
+    }
+    .label-standard.label-form-roomy .standard-rail {
+      padding-right: 2.1mm;
+      border-right: 1px solid #cbd5e1;
+    }
+    .label-standard.label-form-roomy .pictograms-standard {
+      gap: 1.4mm;
+    }
+    .label-standard.label-form-roomy .standard-main {
+      gap: 1mm;
+    }
+    .label-standard.label-form-roomy .hazard-primary-list {
+      gap: 0.7mm;
     }
     .label-standard.label-form-roomy .hazard-primary-item {
       font-size: max(8px, calc(${layout.typography.hazardSize} - 0.5px));
       line-height: 1.12;
+      padding: 0.55mm 0.8mm;
+    }
+    .label-standard.label-form-roomy .precautions-compact {
+      display: none;
     }
     .label-qr.label-form-strip {
       gap: 1mm;
@@ -2351,7 +2454,9 @@ const buildStyles = (model) => {
       line-height: 1;
     }
     .label-standard.label-form-strip .meta-chip-cas,
-    .label-qr.label-form-strip .meta-chip-cas {
+    .label-standard.label-form-strip .meta-chip-batch,
+    .label-qr.label-form-strip .meta-chip-cas,
+    .label-qr.label-form-strip .meta-chip-batch {
       flex: 0 0 auto;
       max-width: none;
       overflow: visible;

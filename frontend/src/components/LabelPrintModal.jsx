@@ -143,7 +143,7 @@ const PURPOSE_OPTIONS = [
     tipKey: "label.purposeShippingTip",
     icon: Package2,
     presetId: "large-primary",
-    template: "full",
+    template: "standard",
   },
   {
     value: "qrSupplement",
@@ -174,7 +174,7 @@ const PRINT_TARGET_OPTIONS = [
     fallbackLabel: "Main container",
     icon: Package2,
     presetId: "large-primary",
-    template: "full",
+    template: "standard",
   },
   {
     value: "bottle",
@@ -184,7 +184,7 @@ const PRINT_TARGET_OPTIONS = [
     fallbackLabel: "Bottle label",
     icon: Tag,
     presetId: "medium-bottle",
-    template: "full",
+    template: "standard",
   },
   {
     value: "vial",
@@ -915,6 +915,11 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
+  const isContainerFrontOutput =
+    isSupplementalOutput &&
+    labelPurpose === "shipping" &&
+    !isQrSupplementOutput &&
+    !isQuickIdOutput;
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
@@ -927,7 +932,9 @@ export default function LabelPrintModal({
           outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
         ? tx("label.decisionRoleQuickId", "Quick-ID supplement")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-        ? tx("label.decisionRoleSupplemental", "Supplemental label")
+        ? isContainerFrontOutput
+          ? tx("label.decisionRoleContainerFront", "Container front label")
+          : tx("label.decisionRoleSupplemental", "Supplemental label")
           : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
             ? tx("label.decisionRoleUseFullPage", "Use full-page primary")
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
@@ -952,7 +959,9 @@ export default function LabelPrintModal({
         : isQuickIdOutput
           ? tx("label.decisionTextIdentityOnly", "No full H/P text")
           : isSupplementalOutput
-            ? tx("label.decisionTextSummaryOnly", "Short hazard summary")
+            ? isContainerFrontOutput
+              ? tx("label.decisionTextPriorityHOnly", "Priority H only")
+              : tx("label.decisionTextSummaryOnly", "Short hazard summary")
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
           ? tx("label.decisionTextBlocked", "Do not print yet")
           : tx("label.decisionTextCheck", "Check requirements");
@@ -1045,11 +1054,13 @@ export default function LabelPrintModal({
       : {
           key: "hazard-statements",
           label: tx("label.outputHazardSummary", "Hazard summary"),
-          value: tx("label.outputSummaryOnly", "Summary only"),
+          value: isContainerFrontOutput
+            ? tx("label.outputPriorityHOnly", "Priority H only")
+            : tx("label.outputSummaryOnly", "Summary only"),
           tone: "caution",
           description: tx(
             "label.outputSummaryOnlyHint",
-            "Bottle labels may show selected H-code summaries, not full H/P text.",
+            "Container and bottle front labels print priority H summaries only. Full H/P belongs on A4/Letter, SDS/QR, or a back label.",
           ),
         };
   const supplementalChecklistItems = [
@@ -1182,7 +1193,9 @@ export default function LabelPrintModal({
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx("label.outputPlanContinuationTitle", "Continuation output ready")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-        ? tx("label.outputPlanSupplementalTitle", "Supplemental output")
+        ? isContainerFrontOutput
+          ? tx("label.outputPlanContainerFrontTitle", "Container front label ready")
+          : tx("label.outputPlanSupplementalTitle", "Supplemental output")
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
           ? tx("label.outputPlanFullPageTitle", "Use a full-page primary label")
           : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
@@ -1257,11 +1270,17 @@ export default function LabelPrintModal({
                       { target: printTargetLabel },
                     )
                   : isSupplementalOutput
-                  ? tx(
-                      "label.outputOutcomeSupplementalTitle",
-                      "{{target}} is printable as a supplement",
-                      { target: printTargetLabel },
-                    )
+                  ? isContainerFrontOutput
+                    ? tx(
+                        "label.outputOutcomeContainerFrontTitle",
+                        "{{target}} is printable as a front label",
+                        { target: printTargetLabel },
+                      )
+                    : tx(
+                        "label.outputOutcomeSupplementalTitle",
+                        "{{target}} is printable as a supplement",
+                        { target: printTargetLabel },
+                      )
                   : tx(
                       "label.outputOutcomeCompleteTitle",
                       "Complete primary label is printable",
@@ -1312,7 +1331,7 @@ export default function LabelPrintModal({
                   : isSupplementalOutput
                     ? tx(
                         "label.outputOutcomeSupplementalBody",
-                        "This prints on {{stock}} with identity, signal word, every available pictogram, and only the hazard detail that fits this label. It is not a complete primary label.",
+                        "This prints on {{stock}} as a front or supplemental label: identity, CAS/case, signal word, every available pictogram, and priority H summaries. Full H/P belongs on A4/Letter, SDS/QR, or a back label.",
                         { stock: currentStockName },
                       )
                     : tx(
@@ -1345,11 +1364,17 @@ export default function LabelPrintModal({
                 { target: printTargetLabel, count: totalLabels },
               )
           : isSupplementalOutput
-            ? tx(
-                "label.printSupplementalAction",
-                "Print {{target}} (supplemental, {{count}})",
-                { target: printTargetLabel, count: totalLabels },
-              )
+            ? isContainerFrontOutput
+              ? tx(
+                  "label.printContainerFrontAction",
+                  "Print {{target}} (front, {{count}})",
+                  { target: printTargetLabel, count: totalLabels },
+                )
+              : tx(
+                  "label.printSupplementalAction",
+                  "Print {{target}} (supplemental, {{count}})",
+                  { target: printTargetLabel, count: totalLabels },
+                )
             : tx(
                 "label.printCompletePrimaryAction",
                 "Print complete primary label ({{count}})",
@@ -1518,26 +1543,11 @@ export default function LabelPrintModal({
     };
 
     if (labelPurpose === "shipping") {
-      const completePrimaryConfig = {
-        ...nextConfig,
-        labelPurpose: "shipping",
-        template: "full",
-      };
-      const completePrimaryPlan = buildPrintOutputPlan({
-        selectedForLabel,
-        layout: resolveLayoutProfile(completePrimaryConfig),
-        customGHSSettings,
-        resolvedLabProfile: resolvedResponsibleProfile,
-        locale: currentLocale,
-      });
-
+      const isFullPageStock =
+        preset.outputRole === "full-page-primary" ||
+        FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id);
       nextConfig.labelPurpose = "shipping";
-      nextConfig.template =
-        preset.outputRole === "supplemental" ||
-        (preset.outputRole === "primary-candidate" &&
-          completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE)
-          ? "standard"
-          : "full";
+      nextConfig.template = isFullPageStock ? "full" : "standard";
     }
 
     onLabelConfigChange(nextConfig);
@@ -1585,31 +1595,12 @@ export default function LabelPrintModal({
     };
 
     if (option.purpose === "shipping") {
-      const completePrimaryConfig = {
-        ...nextConfig,
-        template: "full",
-      };
-      const completePrimaryPlan = buildPrintOutputPlan({
-        selectedForLabel,
-        layout: resolveLayoutProfile(completePrimaryConfig),
-        customGHSSettings,
-        resolvedLabProfile: resolvedResponsibleProfile,
-        locale: currentLocale,
-      });
-
-      if (
-        option.value === "mainContainer" &&
-        completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
-        completePrimaryPlan.recommendedFullPagePatch
-      ) {
-        Object.assign(nextConfig, completePrimaryPlan.recommendedFullPagePatch);
-      } else {
-        nextConfig.template =
-          preset.outputRole === "primary-candidate" &&
-          completePrimaryPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
-            ? "standard"
-            : "full";
-      }
+      const isFullPageStock =
+        preset.outputRole === "full-page-primary" ||
+        FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id);
+      nextConfig.template = isFullPageStock
+        ? "full"
+        : option.template || "standard";
     }
 
     onLabelConfigChange(nextConfig);
