@@ -284,6 +284,8 @@ const inspectPreviewFrame = async (page, testCase) => {
       const unique = (values) => Array.from(new Set(values));
       const visibleText = (node) =>
         (node.innerText || node.textContent || "").replace(/\s+/g, " ").trim();
+      const identityText = (value) =>
+        String(value || "").replace(/\s+/g, " ").trim().toLocaleLowerCase();
       const selectorItems = (selector, type) =>
         Array.from(document.querySelectorAll(selector)).map((element, index) => ({
           element,
@@ -309,6 +311,7 @@ const inspectPreviewFrame = async (page, testCase) => {
         height: viewportHeight,
       };
       const frameText = visibleText(document.body);
+      const normalizedFrameText = identityText(frameText);
       const pictogramImages = Array.from(document.querySelectorAll("img"))
         .map((img, index) => ({
           element: img,
@@ -414,16 +417,18 @@ const inspectPreviewFrame = async (page, testCase) => {
         hasCas: expectedCasNumbers.every((cas) => frameText.includes(cas)),
         hasExpectedIdentityText:
           expectedIdentityTexts.length === 0 ||
-          expectedIdentityTexts.some((text) => frameText.includes(text)),
+          expectedIdentityTexts.some((text) =>
+            normalizedFrameText.includes(identityText(text)),
+          ),
         hasRequiredIdentityTexts: expectedRequiredIdentityTexts.every((text) =>
-          frameText.includes(text),
+          normalizedFrameText.includes(identityText(text)),
         ),
         hasNoForbiddenIdentityText: expectedForbiddenIdentityTexts.every(
-          (text) => !frameText.includes(text),
+          (text) => !normalizedFrameText.includes(identityText(text)),
         ),
         hasRequiredIdentityText:
           !expectedRequiredIdentityText ||
-          frameText.includes(expectedRequiredIdentityText),
+          normalizedFrameText.includes(identityText(expectedRequiredIdentityText)),
         hasExpectedColorClass:
           !expectedColorMode ||
           document.body.classList.contains(expectedColorClass),
