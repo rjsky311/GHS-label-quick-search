@@ -27,6 +27,19 @@ layout-blocked, CAS/size, and compact identity markers. It does not replace
 Chrome click-through QA; it only confirms that production is serving the code
 you are about to test.
 
+For the normal post-deploy print gate, use the combined runner:
+
+```bash
+cd frontend
+npm run qa:production-print
+```
+
+This generates `build/print-qa-report.json`, launches the deployed site through
+the production handoff runner, writes
+`build/production-print-handoff-report.json`, and captures preview screenshots
+under `build/production-print-screenshots/`. Use the lower-level commands below
+only when debugging one part of the flow.
+
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
 app still builds the print iframe, runs preflight, records lifecycle events, and
