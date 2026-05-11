@@ -439,9 +439,17 @@ function resolveTypographyMetrics(normalized) {
   const shortSide = Math.min(normalized.labelWidthMm, normalized.labelHeightMm);
   const area = normalized.labelWidthMm * normalized.labelHeightMm;
   const areaScale = Math.sqrt(area / (95 * 50));
+  const isNarrowSupplementalRoll =
+    normalized.size === "small" &&
+    normalized.labelWidthMm <= 70 &&
+    normalized.labelHeightMm <= 42 &&
+    (normalized.stockPreset === "brother-62mm-continuous" ||
+      normalized.labelHeightMm > 32);
   const isCompactStrip =
     normalized.size === "small" &&
-    (normalized.labelHeightMm <= 32 || normalized.labelWidthMm <= 54);
+    (normalized.labelHeightMm <= 32 ||
+      normalized.labelWidthMm <= 54 ||
+      isNarrowSupplementalRoll);
   const isFullPage =
     normalized.labelPurpose === "shipping" &&
     normalized.template === "full" &&
@@ -506,9 +514,17 @@ function resolveTypographyMetrics(normalized) {
   const compliancePictogramMm = clamp(roundTo(shortSide * 0.28, 1), 10, 28);
   const complianceStatementPx = clamp(roundTo(fontPx - 2.5, 1), 5.5, 10);
   const qrBoxMm = clamp(
-    roundTo(shortSide * (isCompactStrip ? 0.66 : 0.72), 1),
-    isCompactStrip ? 14 : 16,
-    normalized.size === "large" ? 42 : 36,
+    roundTo(
+      shortSide *
+        (isNarrowSupplementalRoll ? 0.56 : isCompactStrip ? 0.66 : 0.72),
+      1,
+    ),
+    isNarrowSupplementalRoll ? 18 : isCompactStrip ? 14 : 16,
+    isNarrowSupplementalRoll
+      ? 22
+      : normalized.size === "large"
+        ? 42
+        : 36,
   );
   const standardPictogramGapMm = isCompactStrip
     ? 0.55
@@ -544,14 +560,32 @@ function resolveTypographyMetrics(normalized) {
     standardRailMaxMm,
   );
   const qrPictogramMm = clamp(
-    roundTo(shortSide * (isCompactStrip ? 0.36 : 0.26), 1),
-    8.5,
-    normalized.size === "large" ? 15 : 12.5,
+    roundTo(
+      shortSide *
+        (isNarrowSupplementalRoll ? 0.28 : isCompactStrip ? 0.36 : 0.26),
+      1,
+    ),
+    isNarrowSupplementalRoll ? 9 : 8.5,
+    isNarrowSupplementalRoll
+      ? 11
+      : normalized.size === "large"
+        ? 15
+        : 12.5,
   );
   const iconPictogramMm = clamp(
-    roundTo(shortSide * (isCompactStrip ? 0.41 : 0.31), 1),
-    isCompactStrip ? 9.5 : 9,
-    normalized.size === "large" ? 26 : normalized.size === "medium" ? 19 : 14,
+    roundTo(
+      shortSide *
+        (isNarrowSupplementalRoll ? 0.31 : isCompactStrip ? 0.41 : 0.31),
+      1,
+    ),
+    isNarrowSupplementalRoll ? 9 : isCompactStrip ? 9.5 : 9,
+    isNarrowSupplementalRoll
+      ? 12.5
+      : normalized.size === "large"
+        ? 26
+        : normalized.size === "medium"
+          ? 19
+          : 14,
   );
 
   return {
@@ -656,9 +690,18 @@ function resolveLabelFormFactor(normalized, stock) {
   }
 
   const area = normalized.labelWidthMm * normalized.labelHeightMm;
+  const isNarrowSupplementalRoll =
+    normalized.size === "small" &&
+    normalized.labelWidthMm <= 70 &&
+    normalized.labelHeightMm <= 42 &&
+    (stock?.id === "brother-62mm-continuous" ||
+      normalized.stockPreset === "brother-62mm-continuous" ||
+      normalized.labelHeightMm > 32);
   if (
     normalized.size === "small" &&
-    (normalized.labelHeightMm <= 32 || normalized.labelWidthMm <= 54)
+    (normalized.labelHeightMm <= 32 ||
+      normalized.labelWidthMm <= 54 ||
+      isNarrowSupplementalRoll)
   ) {
     return "strip";
   }

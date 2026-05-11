@@ -144,6 +144,15 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
     );
+    expect(screen.getByTestId("output-goal-controls")).toHaveClass(
+      "grid-cols-1",
+    );
+    expect(screen.getByTestId("output-goal-controls")).toHaveClass(
+      "sm:grid-cols-2",
+    );
+    expect(screen.getByTestId("output-goal-controls")).toHaveClass(
+      "2xl:grid-cols-4",
+    );
     expect(screen.getByTestId("selected-stock-summary")).toBeInTheDocument();
     expect(screen.getByTestId("selected-stock-summary")).toHaveTextContent(
       "Bottle Primary",

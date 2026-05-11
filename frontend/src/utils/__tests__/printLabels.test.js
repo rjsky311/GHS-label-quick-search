@@ -533,6 +533,44 @@ describe("print layout model", () => {
     expect(preview.model.layout.label.width).toBe("70mm");
     expect(preview.model.layout.label.height).toBe("24mm");
   });
+
+  it("uses inspect zoom as a real detail view for small labels", () => {
+    const fitPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      {
+        stockPreset: "small-strip",
+        template: "icon",
+        labelPurpose: "quickId",
+      },
+      {},
+      {},
+      { "64-17-5": 1 },
+      {},
+      { mode: "label", previewZoom: "fit" },
+    );
+    const inspectPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      {
+        stockPreset: "small-strip",
+        template: "icon",
+        labelPurpose: "quickId",
+      },
+      {},
+      {},
+      { "64-17-5": 1 },
+      {},
+      { mode: "label", previewZoom: "inspect" },
+    );
+
+    expect(inspectPreview.previewMetrics.previewZoom).toBe("inspect");
+    expect(inspectPreview.previewMetrics.labelPreviewScale).toBeGreaterThan(
+      fitPreview.previewMetrics.labelPreviewScale,
+    );
+    expect(inspectPreview.previewMetrics.labelPreviewScale).toBeGreaterThanOrEqual(
+      1.65,
+    );
+    expect(inspectPreview.html).toContain("preview-zoom-inspect");
+  });
 });
 
 describe("printLabels", () => {
@@ -1383,6 +1421,44 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.html).toContain(".label-qr.label-form-strip .meta-chip-cas");
+      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(preview.fragmentHtml).not.toContain("more-pics");
+    });
+
+    it("keeps 62mm continuous QR labels in a compact strip hierarchy", () => {
+      const multiPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [multiPictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain(
+        "label-stock-brother-62mm-continuous",
+      );
+      expect(preview.fragmentHtml).toContain("label-form-strip");
+      expect(preview.html).toContain("width: 22mm");
+      expect(preview.html).toContain("grid-template-columns: repeat(2, 11mm)");
+      expect(preview.html).toContain(
+        ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
+      );
       expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });

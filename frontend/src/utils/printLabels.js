@@ -1801,6 +1801,7 @@ const buildStyles = (model) => {
     }
     .meta-chip-cas .meta-chip-value {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
+      margin-left: 0.15mm;
       overflow: visible;
       text-overflow: clip;
     }
@@ -2442,10 +2443,13 @@ const buildStyles = (model) => {
       overflow: visible;
     }
     .label-icon.label-form-strip .meta-chip {
-      gap: 0.25mm;
-      padding: 0.12mm 0.45mm;
+      gap: 0.45mm;
+      padding: 0.12mm 0.5mm;
       font-size: 5.2px;
       line-height: 1;
+    }
+    .label-icon.label-form-strip .meta-chip-cas .meta-chip-value {
+      margin-left: 0.25mm;
     }
     .label-icon.label-form-strip .meta-chip-cas,
     .label-icon.label-form-strip .meta-chip-batch {
@@ -2572,10 +2576,13 @@ const buildStyles = (model) => {
       overflow: visible;
     }
     .label-qr.label-form-strip .meta-chip {
-      gap: 0.25mm;
-      padding: 0.12mm 0.45mm;
+      gap: 0.45mm;
+      padding: 0.12mm 0.5mm;
       font-size: 5.2px;
       line-height: 1;
+    }
+    .label-qr.label-form-strip .meta-chip-cas .meta-chip-value {
+      margin-left: 0.25mm;
     }
     .label-standard.label-form-strip .meta-chip-cas,
     .label-standard.label-form-strip .meta-chip-batch,
@@ -2654,6 +2661,34 @@ const buildStyles = (model) => {
     .label-qr.label-form-strip .qr-hint {
       font-size: 5.5px;
       line-height: 1.05;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip {
+      gap: 0.65mm;
+      padding: 1.35mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-left-scan {
+      gap: 0.45mm;
+      padding-right: 0.65mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics {
+      display: grid;
+      grid-template-columns: repeat(2, ${qrPictogramSize});
+      justify-content: center;
+      gap: 0.42mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-support-row {
+      justify-content: center;
+      min-height: auto;
+      padding-top: 0.2mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .signal.qr-signal {
+      width: 100%;
+      max-width: 17mm;
+      justify-self: center;
+      font-size: 5.4px;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-code-shell {
+      padding: 0.9mm;
     }
     .label-qr.label-form-compact .qr-priority-block {
       padding: 0.8mm 1mm;
@@ -2779,15 +2814,21 @@ function buildPreviewStyles(mode, model, options = {}) {
     previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 300 : 420;
   const maxLabelPreviewHeightPx =
     previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 240 : 340;
-  const maxLabelPreviewScale =
-    previewZoom === "inspect" || isFullPageLabelPreview ? 1 : 2.2;
+  const maxLabelPreviewScale = isFullPageLabelPreview
+    ? 1
+    : previewZoom === "inspect"
+      ? 2.4
+      : 2.2;
+  const fitLabelPreviewScale = Math.min(
+    maxLabelPreviewScale,
+    maxLabelPreviewWidthPx / rawLabelWidthPx,
+    maxLabelPreviewHeightPx / rawLabelHeightPx,
+  );
   const labelPreviewScale =
     mode === "label"
-      ? Math.min(
-          maxLabelPreviewScale,
-          maxLabelPreviewWidthPx / rawLabelWidthPx,
-          maxLabelPreviewHeightPx / rawLabelHeightPx,
-        )
+      ? previewZoom === "inspect" && !isFullPageLabelPreview
+        ? Math.min(maxLabelPreviewScale, Math.max(1.65, fitLabelPreviewScale))
+        : fitLabelPreviewScale
       : 1;
   const labelPreviewWidthPx = Math.ceil(
     rawLabelWidthPx * labelPreviewScale + 24,

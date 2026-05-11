@@ -2786,7 +2786,7 @@ export default function LabelPrintModal({
                     {tx("label.outputGoalTitle", "Label target")}
                   </div>
                   <div
-                    className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"
+                    className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4"
                     data-testid="output-goal-controls"
                   >
                     {PRINT_TARGET_OPTIONS.map((option) => {
