@@ -86,6 +86,10 @@ describe("ClassificationComparisonTable", () => {
       // Both should show GHS07 images
       const ghsImages = screen.getAllByRole("img");
       expect(ghsImages.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByTestId("present-GHS02-0")).toHaveClass(
+        "inline-flex",
+      );
+      expect(screen.getByTestId("present-GHS07-1")).toBeInTheDocument();
     });
 
     it("shows dashed placeholder for absent pictograms", () => {

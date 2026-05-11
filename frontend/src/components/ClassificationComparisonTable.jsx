@@ -173,36 +173,53 @@ export default function ClassificationComparisonTable({
                   }`}
                 >
                   {allPictogramCodes.length > 0 ? (
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex max-w-[15rem] flex-wrap gap-2">
                       {allPictogramCodes.map((code) => {
                         if (colCodes.has(code)) {
                           const pic = (col.classification?.pictograms || []).find(
                             (p) => p.code === code
                           );
                           return (
-                            <div key={code} className="text-center">
-                              <GHSImage
-                                code={code}
-                                name={getLocalizedPictogramName(pic, displayLocale)}
-                                className="w-12 h-12"
-                              />
-                              <p className="text-[10px] text-slate-500 mt-0.5">{code}</p>
-                            </div>
+                            <span
+                              key={code}
+                              className="inline-flex flex-col items-center gap-1"
+                              data-testid={`present-${code}-${colIdx}`}
+                            >
+                              <span
+                                className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border p-1.5 ${
+                                  isSelected
+                                    ? "border-blue-200 bg-blue-50/50 shadow-sm shadow-blue-100/60"
+                                    : "border-slate-200 bg-white shadow-sm shadow-slate-200/50"
+                                }`}
+                              >
+                                <GHSImage
+                                  code={code}
+                                  name={getLocalizedPictogramName(pic, displayLocale)}
+                                  className="h-9 w-9"
+                                  showTooltip
+                                />
+                              </span>
+                              <span className="font-mono text-[10px] text-slate-500">
+                                {code}
+                              </span>
+                            </span>
                           );
                         } else {
                           return (
-                            <div
+                            <span
                               key={code}
-                              className="text-center"
+                              className="inline-flex flex-col items-center gap-1"
                               data-testid={`absent-${code}-${colIdx}`}
                             >
-                              <div className="w-12 h-12 border-2 border-dashed border-slate-300 rounded bg-slate-50 flex items-center justify-center">
-                                <span className="text-[9px] text-slate-400">{code}</span>
-                              </div>
-                              <p className="text-[10px] text-slate-600 mt-0.5">
+                              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50">
+                                <span className="font-mono text-[9px] text-slate-400">
+                                  {code}
+                                </span>
+                              </span>
+                              <span className="text-[10px] text-slate-600">
                                 {t("compare.absent")}
-                              </p>
-                            </div>
+                              </span>
+                            </span>
                           );
                         }
                       })}

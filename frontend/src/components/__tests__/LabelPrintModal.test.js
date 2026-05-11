@@ -108,6 +108,18 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Recommended next step",
     );
+    expect(screen.getByTestId("print-workflow-steps")).toHaveTextContent(
+      "1. Choose target",
+    );
+    expect(screen.getByTestId("print-workflow-step-target")).toHaveTextContent(
+      "Bottle label",
+    );
+    expect(
+      screen.getByTestId("print-workflow-step-recommendation"),
+    ).toHaveTextContent("Container front label");
+    expect(screen.getByTestId("print-workflow-step-preview")).toHaveTextContent(
+      "Whole label visible",
+    );
     expect(screen.getByTestId("recommended-output-role")).toHaveTextContent(
       "Output role",
     );
@@ -146,6 +158,18 @@ describe("LabelPrintModal", () => {
     expect(
       screen
         .getByTestId("primary-output-size-controls")
+        .compareDocumentPosition(screen.getByTestId("print-workflow-steps")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("print-workflow-steps")
+        .compareDocumentPosition(screen.getByTestId("recommended-output-summary")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("recommended-output-summary")
         .compareDocumentPosition(screen.getByTestId("print-output-plan")) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();

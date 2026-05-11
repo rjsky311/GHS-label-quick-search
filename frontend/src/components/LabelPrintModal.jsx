@@ -2358,6 +2358,56 @@ export default function LabelPrintModal({
     </details>
   );
 
+  const renderPrintWorkflowSteps = () => {
+    const steps = [
+      {
+        key: "target",
+        label: tx("label.workflowStepTarget", "1. Choose target"),
+        value: printTargetLabel,
+        icon: MapPin,
+      },
+      {
+        key: "recommendation",
+        label: tx("label.workflowStepRecommendation", "2. Review recommendation"),
+        value: outputRoleSummary,
+        icon: Lightbulb,
+      },
+      {
+        key: "preview",
+        label: tx("label.workflowStepPreview", "3. Check preview"),
+        value: previewFitLabel,
+        icon: LayoutPanelTop,
+      },
+    ];
+
+    return (
+      <div
+        className="grid gap-2 text-xs sm:grid-cols-3"
+        data-testid="print-workflow-steps"
+      >
+        {steps.map((step) => {
+          const StepIcon = step.icon;
+
+          return (
+            <div
+              key={step.key}
+              className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+              data-testid={`print-workflow-step-${step.key}`}
+            >
+              <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                <StepIcon className="h-3.5 w-3.5 text-blue-600" />
+                {step.label}
+              </div>
+              <div className="mt-1 font-medium text-slate-900">
+                {step.value}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderRecommendedOutputSection = () => {
     const RecommendationIcon =
       outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
@@ -2729,7 +2779,8 @@ export default function LabelPrintModal({
                     {currentStockName}
                   </span>
                 </div>
-                <div className="mt-4">{renderRecommendedOutputSection()}</div>
+                <div className="mt-4">{renderPrintWorkflowSteps()}</div>
+                <div className="mt-3">{renderRecommendedOutputSection()}</div>
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
                     {tx("label.outputGoalTitle", "Label target")}
@@ -2741,29 +2792,30 @@ export default function LabelPrintModal({
                     {PRINT_TARGET_OPTIONS.map((option) => {
                       const Icon = option.icon;
                       const selected = printTarget === option.value;
+                      const optionLabel = t(option.labelKey);
+                      const optionDescription = t(option.descKey);
 
                       return (
                         <button
                           key={option.value}
                           type="button"
                           onClick={() => applyPrintTarget(option.value)}
+                          aria-label={`${optionLabel}. ${optionDescription}`}
+                          title={optionDescription}
                           data-testid={`label-purpose-${option.value}`}
-                          className={`rounded-md border p-2 text-left transition-colors ${
+                          className={`rounded-md border p-2.5 text-left transition-colors ${
                             selected
                               ? "border-blue-500 bg-blue-50 text-blue-900"
                               : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
                           }`}
                         >
-                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                          <div className="flex items-center gap-2">
                             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
                               <Icon className="h-4 w-4 shrink-0" />
                             </span>
-                            <span className="text-xs font-semibold leading-4 sm:text-sm">
-                              {t(option.labelKey)}
+                            <span className="text-sm font-semibold leading-5">
+                              {optionLabel}
                             </span>
-                          </div>
-                          <div className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">
-                            {t(option.descKey)}
                           </div>
                         </button>
                       );
