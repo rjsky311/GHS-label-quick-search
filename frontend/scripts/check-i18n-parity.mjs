@@ -85,6 +85,19 @@ if (englishCjk.length > 0) {
   failures.push(`en contains CJK text in ${englishCjk.length} value(s):\n${englishCjk.join("\n")}`);
 }
 
+const suspiciousQuestionMarks = Object.entries(locales)
+  .flatMap(([locale, messages]) =>
+    Object.entries(messages)
+      .filter(([, value]) => typeof value === "string" && /\?{3,}/.test(value))
+      .map(([key, value]) => `${locale}.${key}: ${value}`),
+  );
+if (suspiciousQuestionMarks.length > 0) {
+  failures.push(
+    `locale files contain suspicious question-mark fallback text in ${suspiciousQuestionMarks.length} value(s):\n` +
+      suspiciousQuestionMarks.join("\n"),
+  );
+}
+
 if (failures.length > 0) {
   console.error(failures.join("\n\n"));
   process.exit(1);
