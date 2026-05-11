@@ -227,6 +227,44 @@ describe("print QA matrix report", () => {
     });
     expect(byId["letter-primary"].actual.hasFullPagePictograms).toBe(true);
 
+    expect(byId["a4-primary-zh-bw"].handoffExpectation).toMatchObject({
+      status: "qa_handoff",
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasQr: false,
+      casNumbers: ["7647-01-0"],
+      pageSize: "A4",
+      colorMode: "bw",
+      nameDisplay: "zh",
+    });
+    expect(byId["a4-primary-zh-bw"].actual.hasFullPagePictograms).toBe(true);
+    expect(browserCaseById["a4-primary-zh-bw"]).toMatchObject({
+      expectedColorMode: "bw",
+      expectedNameDisplay: "zh",
+      expectedRequiredIdentityTexts: ["鹽酸"],
+      expectedForbiddenIdentityTexts: ["Hydrochloric Acid"],
+    });
+
+    expect(byId["letter-primary-en-bw"].handoffExpectation).toMatchObject({
+      status: "qa_handoff",
+      labelKind: "complete-primary",
+      stockPreset: "letter-primary",
+      template: "full",
+      hasQr: false,
+      casNumbers: ["7647-01-0"],
+      pageSize: "Letter",
+      colorMode: "bw",
+      nameDisplay: "en",
+    });
+    expect(byId["letter-primary-en-bw"].actual.hasFullPagePictograms).toBe(true);
+    expect(browserCaseById["letter-primary-en-bw"]).toMatchObject({
+      expectedColorMode: "bw",
+      expectedNameDisplay: "en",
+      expectedRequiredIdentityTexts: ["Hydrochloric Acid"],
+      expectedForbiddenIdentityTexts: ["鹽酸"],
+    });
+
     expect(byId["formaldehyde-a4-primary-continuation"]).toMatchObject({
       chemical: expect.objectContaining({
         cas: "50-00-0",
@@ -273,6 +311,22 @@ describe("print QA matrix report", () => {
       stockPreset: "medium-bottle",
       template: "standard",
       hasQr: false,
+    });
+    expect(byId["bottle-supplemental-with-case"].actual).toMatchObject({
+      hasRequiredIdentityText: true,
+      printHasRequiredIdentityText: true,
+      hasSupportChip: true,
+      printHasSupportChip: true,
+    });
+    expect(browserCaseById["bottle-supplemental-with-case"]).toMatchObject({
+      expectedLabelKind: "supplemental",
+      expectedStockPreset: "medium-bottle",
+      expectedRequiredIdentityText: "CASE-2026-0007",
+      customLabelFields: { batchNumber: "CASE-2026-0007" },
+      selectors: expect.objectContaining({
+        stockButtonTestId: "primary-output-size-medium-bottle",
+        customFieldPrefixTestId: "custom-label-field-",
+      }),
     });
 
     expect(byId["tube-vial-quick-id"].handoffExpectation).toMatchObject({

@@ -278,11 +278,13 @@ Serve that directory with a local static server and inspect the individual
 HTML files in Browser Use. Prefer a temp directory rather than `build/` for
 long-lived visual inspection so Vite can freely clean the production build
 directory. These artifacts reuse the same preview renderer as the app and now
-cover A4 Primary, Letter Primary, bottle supplemental, Avery 5163, Avery 5164,
-rack landscape, tube/vial quick-ID, Brother 62 mm quick-ID, QR supplement, and
-Brother 62 mm QR supplement for Hydrochloric Acid, plus lower-density Ethanol,
-single-pictogram Sodium Hydroxide, and long-name corrosive bottle and tube
-fixtures that verify identity shrink rules keep CAS visible.
+cover A4 Primary, Letter Primary, A4 Chinese/B&W, Letter English/B&W, bottle
+supplemental, bottle supplemental with case identity, Avery 5163, Avery 5164,
+rack landscape, tube/vial quick-ID, tube/vial quick-ID with case identity,
+Brother 62 mm quick-ID, QR supplement, and Brother 62 mm QR supplement for
+Hydrochloric Acid, plus lower-density Ethanol, single-pictogram Sodium
+Hydroxide, Methanol B/W, Hydrogen Peroxide English QR, and long-name corrosive
+bottle and tube fixtures that verify identity shrink rules keep CAS visible.
 
 The report records the expected `qa_handoff` attributes, preview scale, actual
 print-document HTML checks, and a `productionBrowserQa` section listing the

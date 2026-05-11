@@ -175,6 +175,13 @@ The first refactor slice has landed:
   overflow or label-boundary clipping, not only the hidden handoff status. This
   keeps the QA target aligned with the user-visible preview instead of merely
   proving that a print button was clicked.
+- The QA matrix now pins complete-primary color/language variants:
+  A4 Chinese/B&W and Letter English/B&W must preserve full-page pictogram sizing,
+  exact identity-language output, and the selected color mode in both preview
+  and print handoff.
+- The QA matrix now pins bottle supplemental output with a case/batch identity
+  field, so case numbers cannot regress back into clipped custom-field text on
+  medium labels.
 - Supplemental fit checks now include custom identity fields such as
   case/batch number. Normal case identifiers must remain printable on small
   labels, while oversized identifiers are blocked before print handoff instead
