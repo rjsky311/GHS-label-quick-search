@@ -36,6 +36,10 @@ The best path is a complete primary label that a lab user can print without gues
 - Print preview and print output must use the same renderer for the label fragment.
 - Color / black-and-white, bilingual name mode, orientation, and stock preset choices must be reflected in preview and print output.
 - Safety-critical printed label content must not contain ads, sponsor copy, or unrelated brand promotion.
+- Case/batch numbers and other identity fields must be part of fit planning for
+  supplemental labels. A normal case identifier should remain printable on
+  quick-ID and QR outputs; an oversized identifier should be rejected before
+  print handoff rather than visually clipped.
 
 ## Test Standards
 
@@ -48,6 +52,10 @@ Automated tests should pin these behaviors:
 - Complete primary labels block print when responsible lab/supplier name, phone, or address is missing; the required-output checklist reports the missing profile fields.
 - Supplemental template warnings stay visible in the modal/preview workflow, not as verbose text inside the physical label.
 - Layout preflight rejects overflow, footer clipping, and statement-code overflow before printing complete primary labels. Supplemental labels should adapt typography/reflow and remain printable unless safety-critical pictograms or identity are missing.
+- Production print QA must inspect the actual preview iframe for visible
+  overflow/clipping of critical identity, signal, QR, pictogram, and hazard
+  summary containers. A passing handoff status is not enough if the preview is
+  visibly cut off.
 
 ## Browser QA Scenarios
 

@@ -281,6 +281,17 @@ const inspectPreviewFrame = async (page, testCase) => {
         inner.top >= outer.top - tolerance &&
         inner.right <= outer.right + tolerance &&
         inner.bottom <= outer.bottom + tolerance;
+      const elementOverflows = (element, tolerance = 1) => {
+        if (!element) return false;
+        const scrollHeight = Math.ceil(element.scrollHeight || 0);
+        const clientHeight = Math.ceil(element.clientHeight || 0);
+        const scrollWidth = Math.ceil(element.scrollWidth || 0);
+        const clientWidth = Math.ceil(element.clientWidth || 0);
+        return (
+          (clientHeight > 0 && scrollHeight > clientHeight + tolerance) ||
+          (clientWidth > 0 && scrollWidth > clientWidth + tolerance)
+        );
+      };
       const unique = (values) => Array.from(new Set(values));
       const visibleText = (node) =>
         (node.innerText || node.textContent || "").replace(/\s+/g, " ").trim();
@@ -377,6 +388,58 @@ const inspectPreviewFrame = async (page, testCase) => {
           })
           .filter(Boolean),
       ).map((item) => JSON.parse(item));
+      const contentSelectors = [
+        [".title", "title"],
+        [".chemical-name", "chemical-name"],
+        [".name-section", "name-section"],
+        [".cas", "cas"],
+        [".meta-chip-cas", "cas-chip"],
+        [".meta-chip-cas .meta-chip-value", "cas-value"],
+        [".meta-chip-batch", "case-chip"],
+        [".meta-chip-batch .meta-chip-value", "case-value"],
+        [".signal", "signal"],
+        [".standard-title-area", "standard-title-area"],
+        [".standard-primary-area", "standard-primary-area"],
+        [".standard-secondary-area", "standard-secondary-area"],
+        [".standard-hazard-summary", "standard-hazard-summary"],
+        [".hazard-summary-item", "hazard-summary-item"],
+        [".hazard-code-list", "hazard-code-list"],
+        [".compact-identity", "compact-identity"],
+        [".qrcode-panel", "qrcode-panel"],
+        [".qrcode-caption", "qrcode-caption"],
+        [".custom-fields", "custom-fields"],
+        [".compliance-core", "compliance-core"],
+        [".compliance-alert-panel", "compliance-alert-panel"],
+        [".compliance-statements-panel", "compliance-statements-panel"],
+        [".compliance-hazard-panel", "compliance-hazard-panel"],
+        [".compliance-precaution-panel", "compliance-precaution-panel"],
+        [".statement-code", "statement-code"],
+        [".statement-text", "statement-text"],
+      ];
+      const clippedContentElements = unique(
+        contentSelectors.flatMap(([selector, type]) =>
+          Array.from(document.querySelectorAll(selector)).map(
+            (element, index) => {
+              const rect = element.getBoundingClientRect();
+              const visible = hasVisibleArea(rect);
+              if (!visible) return null;
+              const withinLabel = labelRect
+                ? containsRect(labelRect, rect, geometryTolerancePx)
+                : false;
+              const overflow = elementOverflows(element, geometryTolerancePx);
+              if (!overflow && withinLabel) return null;
+              return JSON.stringify({
+                type,
+                key: `${type}-${index + 1}`,
+                overflow,
+                withinLabel,
+                rect: rectToObject(rect),
+                text: visibleText(element).slice(0, 120),
+              });
+            },
+          ),
+        ).filter(Boolean),
+      ).map((item) => JSON.parse(item));
       const labelClass = label?.className || "";
       const labelKind = labelClass.includes("label-kind-complete-primary")
         ? "complete-primary"
@@ -451,6 +514,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           document.documentElement.scrollHeight >
             document.documentElement.clientHeight + geometryTolerancePx,
         clippedCriticalElements,
+        clippedContentElements,
         geometry: {
           viewport: rectToObject(viewportRect),
           label: labelRect ? rectToObject(labelRect) : null,
@@ -592,6 +656,8 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   const previewPictograms = new Set(previewInspection.pictogramCodes || []);
   const clippedCriticalElements =
     previewInspection.clippedCriticalElements || [];
+  const clippedContentElements =
+    previewInspection.clippedContentElements || [];
   const failures = [];
   const assert = (name, passed) => {
     if (!passed) failures.push(name);
@@ -757,6 +823,16 @@ const evaluateCase = ({ testCase, status, evidence }) => {
         : ""
     }`,
     clippedCriticalElements.length === 0,
+  );
+  assert(
+    `preview-content-not-clipped${
+      clippedContentElements.length > 0
+        ? `:${clippedContentElements
+            .map((item) => `${item.type}/${item.key}`)
+            .join(",")}`
+        : ""
+    }`,
+    clippedContentElements.length === 0,
   );
   if (expectedCanPrint) {
     assert(

@@ -1202,6 +1202,7 @@ export function buildPrintQaCaseResult({
   const plan = buildPrintOutputPlan({
     selectedForLabel: [selectedChemical],
     layout,
+    customLabelFields: testCase.customLabelFields,
     resolvedLabProfile: labProfile,
     locale: testCase.locale,
   });

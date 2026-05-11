@@ -774,6 +774,7 @@ export default function LabelPrintModal({
     selectedForLabel,
     layout: layoutProfile,
     customGHSSettings,
+    customLabelFields,
     resolvedLabProfile: resolvedResponsibleProfile,
     locale: currentLocale,
   });

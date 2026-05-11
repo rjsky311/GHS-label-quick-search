@@ -116,6 +116,7 @@ export function buildPrintOutputPlan({
   selectedForLabel = [],
   layout,
   customGHSSettings = {},
+  customLabelFields = {},
   resolvedLabProfile = {},
   locale,
 } = {}) {
@@ -123,6 +124,7 @@ export function buildPrintOutputPlan({
     selectedForLabel,
     layout,
     customGHSSettings,
+    customLabelFields,
     resolvedLabProfile,
     locale,
   });

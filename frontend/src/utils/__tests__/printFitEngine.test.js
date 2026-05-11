@@ -339,6 +339,50 @@ describe("printFitEngine", () => {
     ]);
   });
 
+  it("keeps normal case identity printable on small quick-ID labels", () => {
+    const readiness = evaluatePrintReadiness({
+      selectedForLabel: [makeSimpleSupplementalChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+        nameDisplay: "both",
+      }),
+      customLabelFields: { batchNumber: "CASE-2026-0007" },
+      resolvedLabProfile: {},
+    });
+
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY);
+    expect(readiness.canPrint).toBe(true);
+    expect(readiness.issues).toEqual([]);
+  });
+
+  it("blocks custom identity values that cannot fit the selected stock", () => {
+    const readiness = evaluatePrintReadiness({
+      selectedForLabel: [makeSimpleSupplementalChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+        nameDisplay: "both",
+      }),
+      customLabelFields: {
+        batchNumber: "CASE-2026-0007-EXTRA-LONG-LOCATION-SUFFIX",
+      },
+      resolvedLabProfile: {},
+    });
+
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.BLOCKED_INVALID);
+    expect(readiness.canPrint).toBe(false);
+    expect(readiness.issues).toEqual([
+      expect.objectContaining({
+        type: "custom-identity-too-long-for-stock",
+        valueLength: 41,
+        maxLength: 22,
+      }),
+    ]);
+  });
+
   it("blocks complete primary labels until responsible profile is complete", () => {
     const readiness = evaluatePrintReadiness({
       selectedForLabel: [makeChemical(6)],

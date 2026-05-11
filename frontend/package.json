@@ -68,6 +68,7 @@
     "qa:print-report": "jest --runInBand printQaMatrixReport.test.js --silent=false",
     "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
     "qa:production-handoff": "node scripts/check-production-print-handoff.mjs",
+    "qa:production-print": "node scripts/run-production-print-qa.mjs",
     "test": "jest"
   },
   "browserslist": {

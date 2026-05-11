@@ -166,6 +166,19 @@ The first refactor slice has landed:
 - Case/batch identity is part of the same identity block as CAS on physical
   labels. It should not appear as an unrelated custom footer field on one
   template and a framed chip on another.
+- Production print QA now has a single `npm run qa:production-print` command
+  that generates the matrix report, clicks the deployed app, writes the
+  handoff report, and captures preview screenshots for every default
+  production-searchable case. This is the post-deploy gate for print workflow
+  changes.
+- Production preview inspection now checks rendered content containers for
+  overflow or label-boundary clipping, not only the hidden handoff status. This
+  keeps the QA target aligned with the user-visible preview instead of merely
+  proving that a print button was clicked.
+- Supplemental fit checks now include custom identity fields such as
+  case/batch number. Normal case identifiers must remain printable on small
+  labels, while oversized identifiers are blocked before print handoff instead
+  of being clipped after the user clicks print.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

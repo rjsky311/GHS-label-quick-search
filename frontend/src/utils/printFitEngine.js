@@ -268,6 +268,47 @@ const identityTextWeight = (content, layout = {}, locale = "zh") =>
   stringLength(content.cas) * 1.1 +
   stringLength(content.signalWord) * 2;
 
+const customIdentityFields = (customLabelFields = {}) =>
+  [
+    customLabelFields.batchNumber,
+    customLabelFields.date,
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+const customIdentityTextWeight = (customLabelFields = {}) =>
+  customIdentityFields(customLabelFields).reduce(
+    (total, value) => total + stringLength(value) * 2.2,
+    0,
+  );
+
+const getMaxCustomIdentityLength = (layout = {}) => {
+  if (layout.formFactor === "strip" || layout.heightMm <= 32) return 22;
+  if (layout.size === "small" || layout.widthMm < 80) return 28;
+  if (layout.size === "medium" || layout.widthMm < 120) return 40;
+  return 64;
+};
+
+const inspectCustomIdentityFields = (
+  customLabelFields = {},
+  layout = {},
+  index = 0,
+) => {
+  const maxLength = getMaxCustomIdentityLength(layout);
+  return customIdentityFields(customLabelFields).flatMap((value) =>
+    stringLength(value) > maxLength
+      ? [
+          {
+            type: "custom-identity-too-long-for-stock",
+            index,
+            valueLength: stringLength(value),
+            maxLength,
+          },
+        ]
+      : [],
+  );
+};
+
 const shouldUseCompactStandardHazards = (layout = {}) =>
   layout.labelPurpose === "shipping" &&
   layout.template === "standard" &&
@@ -303,6 +344,7 @@ const estimateSupplementalPrintContentTextWeight = (
   content,
   layout = {},
   locale = "zh",
+  customLabelFields = {},
 ) => {
   const budgets = layout.templateBudgets || {};
   const hazards = content.hazardStatements || [];
@@ -311,7 +353,9 @@ const estimateSupplementalPrintContentTextWeight = (
 
   if (layout.template === "icon") {
     return Math.round(
-      identityTextWeight(content, layout, locale) + pictogramReserve,
+      identityTextWeight(content, layout, locale) +
+        customIdentityTextWeight(customLabelFields) +
+        pictogramReserve,
     );
   }
 
@@ -323,11 +367,14 @@ const estimateSupplementalPrintContentTextWeight = (
       layout.heightMm <= 32;
     if (compactQrCodeOnly) {
       return Math.round(
-        identityTextWeight(content, layout, locale) + pictogramReserve,
+        identityTextWeight(content, layout, locale) +
+          customIdentityTextWeight(customLabelFields) +
+          pictogramReserve,
       );
     }
     return Math.round(
       identityTextWeight(content, layout, locale) +
+        customIdentityTextWeight(customLabelFields) +
         statementTextWeight(hazards.slice(0, hazardTeasers), layout, {
           locale,
           codeOnly: compactQrCodeOnly,
@@ -346,6 +393,7 @@ const estimateSupplementalPrintContentTextWeight = (
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
+      customIdentityTextWeight(customLabelFields) +
       statementTextWeight(renderedHazards, layout, {
         codeOnly: compactStandardHazards,
         locale,
@@ -376,11 +424,14 @@ const inspectSupplementalContentFitForContents = (
   contents,
   layout = {},
   locale = "zh",
+  customLabelFields = {},
 ) => {
   const maxTextWeight = getMaxSupplementalTextWeight(layout);
   const maxPictograms = getMaxSupplementalPictogramCount(layout);
   return contents.flatMap((content) => {
-    const issues = [];
+    const issues = [
+      ...inspectCustomIdentityFields(customLabelFields, layout, content.index),
+    ];
     if ((content.counts?.pictograms || 0) > maxPictograms) {
       issues.push({
         type: "too-many-pictograms-for-stock",
@@ -394,6 +445,7 @@ const inspectSupplementalContentFitForContents = (
       content,
       layout,
       locale,
+      customLabelFields,
     );
 
     if (textWeight <= maxTextWeight) return issues;
@@ -419,7 +471,12 @@ export function inspectPrintContentFit(model) {
     buildContentOptions(model),
   );
   if (!isCompletePrimaryLayout(layout)) {
-    return inspectSupplementalContentFitForContents(contents, layout, locale);
+    return inspectSupplementalContentFitForContents(
+      contents,
+      layout,
+      locale,
+      model.customLabelFields,
+    );
   }
 
   const maxStatements = getMaxCompleteStatementCount(layout);
@@ -496,6 +553,7 @@ export function evaluatePrintReadiness({
   selectedForLabel = [],
   layout,
   customGHSSettings = {},
+  customLabelFields = {},
   resolvedLabProfile = {},
   locale = "zh",
 } = {}) {
@@ -525,7 +583,12 @@ export function evaluatePrintReadiness({
     (maxStatementCount > maxStatements || maxTextWeightScore > maxTextWeight);
   const supplementalFitIssues = isCompletePrimary
     ? []
-    : inspectSupplementalContentFitForContents(contents, layout || {}, locale);
+    : inspectSupplementalContentFitForContents(
+        contents,
+        layout || {},
+        locale,
+        customLabelFields,
+      );
   const isSupplementalDense = supplementalFitIssues.length > 0;
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const elementSummary = summarizeElements(

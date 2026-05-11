@@ -2936,8 +2936,21 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".cas", "cas-overflow"],
       [".meta-chip-cas", "cas-chip-overflow"],
       [".meta-chip-cas .meta-chip-value", "cas-value-overflow"],
+      [".meta-chip-batch", "case-chip-overflow"],
+      [".meta-chip-batch .meta-chip-value", "case-value-overflow"],
       [".support-chip", "support-chip-overflow"],
       [".custom-fields", "custom-fields-overflow"],
+      [".name-section", "name-section-overflow"],
+      [".standard-grid", "standard-grid-overflow"],
+      [".standard-rail", "standard-rail-overflow"],
+      [".standard-main", "standard-main-overflow"],
+      [".standard-hazard-board", "standard-hazard-board-overflow"],
+      [".hazard-primary-list", "hazard-list-overflow"],
+      [".hazard-summary-item", "hazard-summary-overflow"],
+      [".hazard-code-list", "hazard-code-list-overflow"],
+      [".signal", "signal-overflow"],
+      [".qrcode-panel", "qr-panel-overflow"],
+      [".qrcode-caption", "qr-caption-overflow"],
     ].forEach(([selector, type]) => {
       const element = label.querySelector(selector);
       if (elementOverflows(element, 2)) {
