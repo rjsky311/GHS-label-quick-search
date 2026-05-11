@@ -1369,6 +1369,11 @@ export default function LabelPrintModal({
       labProfile,
     ],
   );
+  const plannedPrintLabelCount =
+    sheetPreviewBundle?.model?.expandedLabels?.length || totalLabels;
+  const plannedPrintPageCount =
+    sheetPreviewBundle?.model?.totalPages || estimatedPages;
+  const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
   const labelPreviewBundle = useMemo(() => {
     if (!previewChem) return null;
 
@@ -3020,15 +3025,25 @@ export default function LabelPrintModal({
                         })}
                       </span>
                       <span className="mt-0.5 block text-xs text-slate-500">
-                        {estimatedPages > 0
-                          ? tx(
-                              "label.selectedLabelsWithPagesSummary",
-                              "{{labels}} label(s), about {{pages}} page(s). Adjust copies only when needed.",
-                              {
-                                labels: totalLabels,
-                                pages: estimatedPages,
-                              },
-                            )
+                        {plannedPrintPageCount > 0
+                          ? hasContinuationExpansion
+                            ? tx(
+                                "label.selectedLabelsContinuationSummary",
+                                "{{sourceLabels}} selected label(s) expands to {{labels}} continuation label(s), about {{pages}} page(s).",
+                                {
+                                  sourceLabels: totalLabels,
+                                  labels: plannedPrintLabelCount,
+                                  pages: plannedPrintPageCount,
+                                },
+                              )
+                            : tx(
+                                "label.selectedLabelsWithPagesSummary",
+                                "{{labels}} label(s), about {{pages}} page(s). Adjust copies only when needed.",
+                                {
+                                  labels: plannedPrintLabelCount,
+                                  pages: plannedPrintPageCount,
+                                },
+                              )
                           : tx(
                               "label.selectedLabelsSummary",
                               "Adjust quantities only when you need multiple copies.",
@@ -3037,9 +3052,13 @@ export default function LabelPrintModal({
                     </span>
                   </span>
                   <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                    {tx("label.totalLabels", "{{count}} label(s) total", {
-                      count: totalLabels,
-                    })}
+                    {hasContinuationExpansion
+                      ? tx("label.totalOutputLabels", "{{count}} output label(s)", {
+                          count: plannedPrintLabelCount,
+                        })
+                      : tx("label.totalLabels", "{{count}} label(s) total", {
+                          count: plannedPrintLabelCount,
+                        })}
                   </span>
                 </summary>
                 <div className="mt-3 max-h-64 space-y-2 overflow-y-auto border-t border-slate-100 pt-3">
@@ -3471,10 +3490,10 @@ export default function LabelPrintModal({
                           count: layoutProfile.perPage,
                         })}
                       </span>
-                      {estimatedPages > 0 && (
+                      {plannedPrintPageCount > 0 && (
                         <span>
                           {tx("label.previewPageCount", "{{count}} page(s)", {
-                            count: estimatedPages,
+                            count: plannedPrintPageCount,
                           })}
                         </span>
                       )}

@@ -203,6 +203,50 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("summarizes continuation output using the actual expanded label count", () => {
+    const denseChem = makeChem({
+      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Long hazard statement ${index} with enough explanatory text to exercise continuation page planning.`,
+      })),
+      precautionary_statements: Array.from({ length: 34 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Long precautionary statement ${index} with enough operational wording to require additional continuation pages.`,
+      })),
+    });
+
+    renderModal({
+      selectedForLabel: [denseChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
+      "Continuation output ready",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
+      "1 selected label(s) expands to",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
+      "continuation label(s)",
+    );
+    expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
+      "output label(s)",
+    );
+    expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
+      "page(s)",
+    );
+  });
+
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
