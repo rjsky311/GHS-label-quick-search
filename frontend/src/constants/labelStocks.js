@@ -445,6 +445,10 @@ function resolveTypographyMetrics(normalized) {
     normalized.labelHeightMm <= 42 &&
     (normalized.stockPreset === "brother-62mm-continuous" ||
       normalized.labelHeightMm > 32);
+  const isShallowSupplementalStrip =
+    normalized.size === "small" &&
+    normalized.labelHeightMm <= 24 &&
+    normalized.labelWidthMm >= 60;
   const isCompactStrip =
     normalized.size === "small" &&
     (normalized.labelHeightMm <= 32 ||
@@ -575,17 +579,31 @@ function resolveTypographyMetrics(normalized) {
   const iconPictogramMm = clamp(
     roundTo(
       shortSide *
-        (isNarrowSupplementalRoll ? 0.31 : isCompactStrip ? 0.41 : 0.31),
+        (isShallowSupplementalStrip
+          ? 0.35
+          : isNarrowSupplementalRoll
+            ? 0.29
+            : isCompactStrip
+              ? 0.41
+              : 0.31),
       1,
     ),
-    isNarrowSupplementalRoll ? 9 : isCompactStrip ? 9.5 : 9,
-    isNarrowSupplementalRoll
-      ? 12.5
-      : normalized.size === "large"
-        ? 26
-        : normalized.size === "medium"
-          ? 19
-          : 14,
+    isShallowSupplementalStrip
+      ? 8
+      : isNarrowSupplementalRoll
+        ? 9
+        : isCompactStrip
+          ? 9.5
+          : 9,
+    isShallowSupplementalStrip
+      ? 9.2
+      : isNarrowSupplementalRoll
+        ? 11.5
+        : normalized.size === "large"
+          ? 26
+          : normalized.size === "medium"
+            ? 19
+            : 14,
   );
 
   return {

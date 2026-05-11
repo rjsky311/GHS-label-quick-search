@@ -379,7 +379,7 @@ describe("print layout model", () => {
     expect(large.typography.fontSize).toBe("14px");
     expect(small.typography.qrBox).toBe("15.8mm");
     expect(small.typography.standardPictogramSize).toBe("9.1mm");
-    expect(small.typography.iconPictogramSize).toBe("9.8mm");
+    expect(small.typography.iconPictogramSize).toBe("8.4mm");
     expect(small.typography.qrPictogramSize).toBe("8.6mm");
     expect(medium.typography.standardPictogramSize).toBe("15mm");
     expect(medium.typography.iconPictogramSize).toBe("15.5mm");
@@ -528,7 +528,7 @@ describe("print layout model", () => {
     );
 
     expect(preview.fragmentHtml).toContain("pictograms-icon");
-    expect(preview.html).toContain("width: 9.8mm");
+    expect(preview.html).toContain("width: 8.4mm");
     expect(preview.previewMetrics.labelPreviewScale).toBeGreaterThan(1);
     expect(preview.model.layout.label.width).toBe("70mm");
     expect(preview.model.layout.label.height).toBe("24mm");
@@ -1486,6 +1486,53 @@ describe("printLabels", () => {
       expect(preview.html).not.toContain(
         ".label-icon.label-form-strip .cas {\n      display: none;",
       );
+    });
+
+    it("uses stock-specific horizontal pictogram rows for quick-ID labels", () => {
+      const multiPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+      };
+      const cases = [
+        ["small-strip", "label-stock-small-strip", "repeat(4, 8.4mm)"],
+        [
+          "brother-62mm-continuous",
+          "label-stock-brother-62mm-continuous",
+          "repeat(4, 11mm)",
+        ],
+        ["medium-rack", "label-stock-medium-rack", "repeat(4, 10.8mm)"],
+      ];
+
+      cases.forEach(([stockPreset, stockClass, gridRule]) => {
+        const preview = buildPrintPreviewDocument(
+          [multiPictogramChemical],
+          {
+            labelPurpose: "quickId",
+            template: "icon",
+            stockPreset,
+            nameDisplay: "both",
+          },
+          {},
+          {},
+          {},
+          {},
+          { mode: "label" },
+        );
+
+        expect(preview.fragmentHtml).toContain("label-kind-quick-id");
+        expect(preview.fragmentHtml).toContain(stockClass);
+        expect(preview.fragmentHtml).toContain("meta-chip-cas");
+        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+        expect(preview.html).toContain(
+          `.label-icon.${stockClass} .pictograms-icon`,
+        );
+        expect(preview.html).toContain(`grid-template-columns: ${gridRule}`);
+      });
     });
 
     it("adds identity density classes so long small-label names shrink before CAS is lost", () => {

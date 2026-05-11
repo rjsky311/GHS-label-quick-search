@@ -2458,6 +2458,12 @@ const buildStyles = (model) => {
       overflow: visible;
       text-overflow: clip;
     }
+    .label-icon.label-form-strip .meta-chip-cas {
+      padding: 0;
+      border-color: transparent;
+      background: transparent;
+      color: #475569;
+    }
     .label-icon.label-form-strip .label-middle {
       flex: 1 1 auto;
       justify-content: center;
@@ -2468,10 +2474,51 @@ const buildStyles = (model) => {
     }
     .label-icon.label-form-strip .signal {
       margin: 0;
-      padding: 0.25mm 1mm;
+      width: fit-content;
+      min-width: 10mm;
+      padding: 0.22mm 0.8mm;
       border-radius: 0.6mm;
-      font-size: 5.8px;
+      font-size: 5.3px;
       line-height: 1;
+    }
+    .label-icon.label-stock-small-strip .label-middle,
+    .label-icon.label-stock-brother-62mm-continuous .label-middle,
+    .label-icon.label-stock-medium-rack .label-middle {
+      justify-content: center;
+    }
+    .label-icon.label-stock-small-strip .pictograms-icon {
+      grid-template-columns: repeat(4, 8.4mm);
+      gap: 0.55mm;
+    }
+    .label-icon.label-stock-small-strip .pictograms-icon img {
+      width: 8.4mm;
+      height: 8.4mm;
+    }
+    .label-icon.label-stock-brother-62mm-continuous .pictograms-icon {
+      grid-template-columns: repeat(4, 11mm);
+      gap: 0.75mm;
+    }
+    .label-icon.label-stock-brother-62mm-continuous .pictograms-icon img {
+      width: 11mm;
+      height: 11mm;
+    }
+    .label-icon.label-stock-medium-rack .label-top {
+      padding-bottom: 0.55mm;
+      margin-bottom: 0.55mm;
+    }
+    .label-icon.label-stock-medium-rack .pictograms-icon {
+      grid-template-columns: repeat(4, 10.8mm);
+      gap: 0.9mm;
+    }
+    .label-icon.label-stock-medium-rack .pictograms-icon img {
+      width: 10.8mm;
+      height: 10.8mm;
+    }
+    .label-icon.label-stock-brother-62mm-continuous .signal,
+    .label-icon.label-stock-medium-rack .signal {
+      font-size: 5.8px;
+      min-width: 12mm;
+      padding: 0.28mm 0.9mm;
     }
     .label-icon.label-form-compact .label-top {
       padding-bottom: 0.6mm;
