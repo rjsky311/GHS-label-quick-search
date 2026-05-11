@@ -1167,7 +1167,12 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
         _try_cid_by_substance(cas_number, http_client),
         return_exceptions=True,
     )
-    for result in results:
+    # CAS/RN-specific endpoints are more trustworthy than treating the
+    # CAS number as a generic compound name. PubChem name lookup can
+    # return related ions/salts first for ambiguous substances (for
+    # example 7647-01-0 can surface chloride/CID 312 before the acid
+    # record), which then changes the entire GHS label.
+    for result in (results[2], results[1], results[0]):
         if isinstance(result, int):
             cid_cache[cas_number] = result
             return result

@@ -1092,6 +1092,34 @@ async def test_search_chemical_surfaces_upstream_error_on_cid_outage(monkeypatch
     assert "PubChem 暫時無法回應" in (result.error or "")
 
 
+async def test_get_cid_prefers_cas_specific_substance_result_over_name_candidate(monkeypatch):
+    """CAS-specific lookup must win over generic name lookup.
+
+    PubChem can return related candidates when a CAS number is treated
+    as a name query. For 7647-01-0, that can pick chloride/CID 312
+    instead of the acid record/CID 313, which changes the GHS label.
+    """
+    import server as srv
+
+    async def _name_candidate(*_a, **_k):
+        return 312
+
+    async def _xref_candidate(*_a, **_k):
+        return 312
+
+    async def _substance_candidate(*_a, **_k):
+        return 313
+
+    monkeypatch.setattr(srv, "_try_cid_by_name", _name_candidate)
+    monkeypatch.setattr(srv, "_try_cid_by_xref", _xref_candidate)
+    monkeypatch.setattr(srv, "_try_cid_by_substance", _substance_candidate)
+
+    cas = "7647-01-0"
+    srv.cid_cache.pop(cas, None)
+
+    assert await srv.get_cid_from_cas(cas, http_client=None) == 313
+
+
 async def test_get_cid_partial_transient_mixed_with_404_raises(monkeypatch):
     """Regression (Codex review): if one CID lookup method returns a
     clean 404 but another is transient, we cannot trust the 'not found'
