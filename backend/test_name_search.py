@@ -1042,6 +1042,37 @@ async def test_search_chemical_surfaces_upstream_error_on_ghs_outage(monkeypatch
     assert "PubChem 暫時無法回應" in (result.error or "")
 
 
+async def test_search_chemical_skips_name_lookup_when_dictionary_has_display_names(monkeypatch):
+    """Common dictionary-backed chemicals should not wait on PubChem
+    name/synonym endpoints once we already have both display names."""
+    import server as srv
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fail_get_name(*_a, **_k):  # pragma: no cover - should not run
+        raise AssertionError("dictionary-backed lookup should skip PubChem names")
+
+    async def fake_get_ghs(*_a, **_k):
+        return ({}, True, "2026-04-16T01:23:45+00:00")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fail_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: [])
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("64-17-5", _NullClient())
+
+    assert result.found is True
+    assert result.name_en == srv.get_english_name_from_cas("64-17-5")
+    assert result.name_zh == srv.get_chinese_name_from_cas("64-17-5")
+    assert result.cache_hit is True
+
+
 async def test_search_chemical_surfaces_upstream_error_on_cid_outage(monkeypatch):
     """When all CID lookup methods transient-fail, surface upstream_error."""
     import server as srv

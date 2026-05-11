@@ -1415,25 +1415,35 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             error=f"在 PubChem 資料庫中找不到 CAS {normalized_cas}，請確認號碼是否正確"
         )
     
-    # Get compound name and GHS data concurrently
-    # Pass known Chinese name to skip redundant dictionary lookups.
+    # Get compound name and GHS data. When the local dictionary already
+    # has both display names, avoid PubChem name/synonym calls entirely:
+    # the safety-critical data is the GHS payload, and waiting on best-
+    # effort synonym endpoints can make cached production lookups feel
+    # broken.
     # Critical: a transient failure of the GHS endpoint must not be
     # silently rendered as "no hazards". `get_ghs_classification()`
     # raises PubChemError for transient cases; catch it here and
     # return an upstream_error result so the UI can distinguish
     # "retry later" from "this chemical has no GHS data".
-    name_task = get_compound_name(
-        cid,
-        http_client,
-        known_zh=name_zh_from_cas,
-        cas_number=normalized_cas,
-    )
-    ghs_task = get_ghs_classification(cid, http_client)
-
     try:
-        name_result, ghs_result = await asyncio.gather(name_task, ghs_task)
-        name_en, name_zh = name_result
-        ghs_data, cache_hit, retrieved_at = ghs_result
+        if name_en_from_cas and name_zh_from_cas:
+            name_en = name_en_from_cas
+            name_zh = name_zh_from_cas
+            ghs_data, cache_hit, retrieved_at = await get_ghs_classification(
+                cid,
+                http_client,
+            )
+        else:
+            name_task = get_compound_name(
+                cid,
+                http_client,
+                known_zh=name_zh_from_cas,
+                cas_number=normalized_cas,
+            )
+            ghs_task = get_ghs_classification(cid, http_client)
+            name_result, ghs_result = await asyncio.gather(name_task, ghs_task)
+            name_en, name_zh = name_result
+            ghs_data, cache_hit, retrieved_at = ghs_result
     except PubChemError as e:
         logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
         return ChemicalResult(

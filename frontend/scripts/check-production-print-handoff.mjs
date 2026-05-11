@@ -28,6 +28,10 @@ const STATUS_ATTRIBUTES = [
 ];
 
 const env = process.env;
+const SEARCH_RESULT_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_SEARCH_TIMEOUT_MS || "60000",
+  10,
+);
 const reportPath = path.resolve(
   process.cwd(),
   env.PRINT_QA_REPORT_PATH || DEFAULT_REPORT_PATH,
@@ -179,7 +183,7 @@ const fillSearch = async (page, searchTerm) => {
   await searchButton.click();
   await page.locator('input[type="checkbox"]').first().waitFor({
     state: "visible",
-    timeout: 20000,
+    timeout: SEARCH_RESULT_TIMEOUT_MS,
   });
 };
 
