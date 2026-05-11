@@ -19,6 +19,7 @@ jest.mock("@/constants/ghs", () => {
       GHS05: image("GHS05"),
       GHS06: image("GHS06"),
       GHS07: image("GHS07"),
+      GHS08: image("GHS08"),
     },
   };
 });
@@ -31,6 +32,7 @@ import {
   buildPrintQaMatrixReport,
   resolvePrintQaCaseChemical,
 } from "@/utils/printQaMatrix";
+import { PRINT_OUTPUT_PLAN_STATE } from "@/utils/printOutputPlanner";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 
 const maybeWriteReport = (report) => {
@@ -174,6 +176,41 @@ describe("print QA matrix report", () => {
       pageSize: "Letter",
     });
     expect(byId["letter-primary"].actual.hasFullPagePictograms).toBe(true);
+
+    expect(byId["formaldehyde-a4-primary-blocked"]).toMatchObject({
+      chemical: expect.objectContaining({
+        cas: "50-00-0",
+        expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
+      }),
+      expected: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+      }),
+      actual: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+        hasFullPagePictograms: true,
+      }),
+      handoffExpectation: expect.objectContaining({
+        status: "blocked",
+        labelKind: "complete-primary",
+        stockPreset: "a4-primary",
+        template: "full",
+        hasQr: false,
+      }),
+    });
+    expect(browserCaseById["formaldehyde-a4-primary-blocked"]).toMatchObject({
+      expectedCanPrint: false,
+      expectedPrintButtonEnabled: false,
+      expectedStatus: "blocked",
+      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+      expectedBlockedTextPatterns: expect.arrayContaining(["continuation"]),
+      expectedLabelKind: "complete-primary",
+      expectedStockPreset: "a4-primary",
+      expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
+      expectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
+      expectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
+    });
 
     expect(byId["bottle-supplemental"].handoffExpectation).toMatchObject({
       status: "qa_handoff",

@@ -1,6 +1,7 @@
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import {
   PRINT_OUTPUT_KIND,
+  PRINT_OUTPUT_PLAN_STATE,
   buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
 import {
@@ -340,40 +341,180 @@ export const PRINT_QA_FORMALDEHYDE = Object.freeze({
   hazard_statements: [
     {
       code: "H301",
-      text_en: "Toxic if swallowed",
-      text_zh: "Toxic if swallowed ZH",
+      text_en:
+        "Toxic if swallowed. Acute toxicity statement retained for complete shipped-container labelling.",
+      text_zh:
+        "Toxic if swallowed ZH. Acute toxicity statement retained for complete shipped-container labelling.",
+    },
+    {
+      code: "H311",
+      text_en:
+        "Toxic in contact with skin. Avoid direct handling during transfer, sampling, and waste collection.",
+      text_zh:
+        "Toxic in contact with skin ZH. Avoid direct handling during transfer, sampling, and waste collection.",
     },
     {
       code: "H314",
-      text_en: "Causes severe skin burns and eye damage",
-      text_zh: "Causes severe skin burns and eye damage ZH",
+      text_en:
+        "Causes severe skin burns and eye damage. Immediate emergency response and eyewash access are required.",
+      text_zh:
+        "Causes severe skin burns and eye damage ZH. Immediate emergency response and eyewash access are required.",
     },
     {
       code: "H317",
-      text_en: "May cause an allergic skin reaction",
-      text_zh: "May cause an allergic skin reaction ZH",
+      text_en:
+        "May cause an allergic skin reaction after repeated or prolonged laboratory exposure.",
+      text_zh:
+        "May cause an allergic skin reaction ZH after repeated or prolonged laboratory exposure.",
+    },
+    {
+      code: "H318",
+      text_en:
+        "Causes serious eye damage. Use splash protection whenever opening the container or preparing dilutions.",
+      text_zh:
+        "Causes serious eye damage ZH. Use splash protection whenever opening the container or preparing dilutions.",
+    },
+    {
+      code: "H330",
+      text_en:
+        "Fatal if inhaled. Vapour exposure can occur during dispensing, spill response, and open-vessel work.",
+      text_zh:
+        "Fatal if inhaled ZH. Vapour exposure can occur during dispensing, spill response, and open-vessel work.",
+    },
+    {
+      code: "H341",
+      text_en:
+        "Suspected of causing genetic defects. Obtain special instructions before use and keep exposure records.",
+      text_zh:
+        "Suspected of causing genetic defects ZH. Obtain special instructions before use and keep exposure records.",
     },
     {
       code: "H350",
-      text_en: "May cause cancer",
-      text_zh: "May cause cancer ZH",
+      text_en:
+        "May cause cancer. Use only in controlled areas with documented training and exposure controls.",
+      text_zh:
+        "May cause cancer ZH. Use only in controlled areas with documented training and exposure controls.",
+    },
+    {
+      code: "H370",
+      text_en:
+        "Causes damage to organs. Do not use this label without a complete responsible-party profile.",
+      text_zh:
+        "Causes damage to organs ZH. Do not use this label without a complete responsible-party profile.",
+    },
+    {
+      code: "H372",
+      text_en:
+        "Causes damage to organs through prolonged or repeated exposure during routine laboratory handling.",
+      text_zh:
+        "Causes damage to organs through prolonged or repeated exposure ZH during routine laboratory handling.",
     },
   ],
   precautionary_statements: [
     {
+      code: "P201",
+      text_en:
+        "Obtain special instructions before use and verify the current SDS before preparing a working container.",
+      text_zh:
+        "Obtain special instructions before use ZH and verify the current SDS before preparing a working container.",
+    },
+    {
+      code: "P202",
+      text_en:
+        "Do not handle until all safety precautions have been read, understood, and communicated to the operator.",
+      text_zh:
+        "Do not handle until all safety precautions have been read ZH and communicated to the operator.",
+    },
+    {
       code: "P260",
-      text_en: "Do not breathe vapours",
-      text_zh: "Do not breathe vapours ZH",
+      text_en:
+        "Do not breathe dust, fume, gas, mist, vapours or spray generated during transfer or spill cleanup.",
+      text_zh:
+        "Do not breathe vapours ZH generated during transfer or spill cleanup.",
+    },
+    {
+      code: "P264",
+      text_en:
+        "Wash hands and all potentially exposed skin thoroughly after handling and before leaving the work area.",
+      text_zh:
+        "Wash hands and all potentially exposed skin ZH thoroughly after handling.",
+    },
+    {
+      code: "P270",
+      text_en:
+        "Do not eat, drink or smoke when using this product or while contaminated gloves are present.",
+      text_zh:
+        "Do not eat, drink or smoke ZH when using this product.",
+    },
+    {
+      code: "P271",
+      text_en:
+        "Use only outdoors or in a well-ventilated area with verified local exhaust ventilation.",
+      text_zh:
+        "Use only outdoors or in a well-ventilated area ZH with verified local exhaust ventilation.",
     },
     {
       code: "P280",
-      text_en: "Wear protective gloves, protective clothing and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_en:
+        "Wear protective gloves, protective clothing, eye protection and face protection during dispensing.",
+      text_zh:
+        "Wear protective gloves and eye protection ZH during dispensing.",
+    },
+    {
+      code: "P301+P310",
+      text_en:
+        "IF SWALLOWED: Immediately call a POISON CENTER or doctor and keep the product container available.",
+      text_zh:
+        "IF SWALLOWED ZH: Immediately call a POISON CENTER or doctor.",
+    },
+    {
+      code: "P303+P361+P353",
+      text_en:
+        "IF ON SKIN or hair: Take off immediately all contaminated clothing. Rinse skin with water.",
+      text_zh:
+        "IF ON SKIN or hair ZH: Take off immediately all contaminated clothing.",
+    },
+    {
+      code: "P304+P340",
+      text_en:
+        "IF INHALED: Remove person to fresh air and keep comfortable for breathing while awaiting help.",
+      text_zh:
+        "IF INHALED ZH: Remove person to fresh air and keep comfortable for breathing.",
+    },
+    {
+      code: "P305+P351+P338",
+      text_en:
+        "IF IN EYES: Rinse cautiously with water for several minutes and remove contact lenses if easy to do.",
+      text_zh:
+        "IF IN EYES ZH: Rinse cautiously with water for several minutes.",
     },
     {
       code: "P308+P313",
-      text_en: "If exposed or concerned: get medical advice",
-      text_zh: "If exposed or concerned ZH",
+      text_en:
+        "If exposed or concerned: Get medical advice and bring SDS or container label information.",
+      text_zh:
+        "If exposed or concerned ZH: Get medical advice and bring SDS or container label information.",
+    },
+    {
+      code: "P403+P233",
+      text_en:
+        "Store in a well-ventilated place. Keep container tightly closed and segregated from incompatibles.",
+      text_zh:
+        "Store in a well-ventilated place ZH. Keep container tightly closed.",
+    },
+    {
+      code: "P405",
+      text_en:
+        "Store locked up with access limited to trained personnel and documented inventory controls.",
+      text_zh:
+        "Store locked up ZH with access limited to trained personnel.",
+    },
+    {
+      code: "P501",
+      text_en:
+        "Dispose of contents and container in accordance with local, regional, national and international regulations.",
+      text_zh:
+        "Dispose of contents and container ZH in accordance with local regulations.",
     },
   ],
 });
@@ -510,6 +651,32 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+    },
+  },
+  {
+    id: "formaldehyde-a4-primary-blocked",
+    label: "Formaldehyde A4 complete primary requires continuation",
+    chemicalId: "formaldehyde",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK,
+      outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasQr: false,
+      hasFullPagePictograms: true,
+      hasSummaries: false,
+      productionExpectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
+      productionExpectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
     },
   },
   {
@@ -1072,6 +1239,7 @@ export function buildPrintQaCaseResult({
   );
   const actual = {
     canPrint: plan.canPrint,
+    planState: plan.state,
     outputKind: plan.outputKind,
     labelKind: resolveLabelKind(fragmentHtml),
     stockPreset: fitPreview?.model?.layout?.stockPreset,
@@ -1187,6 +1355,10 @@ export function buildPrintQaCaseResult({
     ["printTotalLabels", actual.printTotalLabels === 1],
   ];
 
+  if (expected.planState) {
+    checks.push(["planState", actual.planState === expected.planState]);
+  }
+
   if (expectedHasSignalWord) {
     checks.push(["signalWordVisible", actual.hasSignalWord]);
     checks.push(["printSignalWordVisible", actual.printHasSignalWord]);
@@ -1254,7 +1426,7 @@ export function buildPrintQaCaseResult({
     expected,
     actual,
     handoffExpectation: {
-      status: "qa_handoff",
+      status: expected.canPrint === false ? "blocked" : "qa_handoff",
       labelKind: actual.labelKind,
       pictogramCodes: actual.pictogramCodes,
       hasQr: actual.hasQr,
@@ -1298,18 +1470,32 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   qaHandoffUrl: `${PRODUCTION_FRONTEND_URL}?qaPrintHandoff=1`,
   targetOption: resolveProductionTargetValue(testCase),
   stockPreset: caseResult.handoffExpectation.stockPreset,
-  expectedStatus: "qa_handoff",
+  expectedCanPrint: caseResult.expected.canPrint !== false,
+  expectedPrintButtonEnabled: caseResult.expected.canPrint !== false,
+  expectedStatus: caseResult.handoffExpectation.status,
+  expectedPlanState: caseResult.actual.planState,
+  expectedBlockedTextPatterns:
+    caseResult.expected.canPrint === false
+      ? ["continuation", "too dense", "larger", "complete primary", "A4", "續頁", "過密", "更大", "完整主標"]
+      : [],
   expectedLabelKind: caseResult.handoffExpectation.labelKind,
   expectedStockPreset: caseResult.handoffExpectation.stockPreset,
   expectedTemplate: caseResult.handoffExpectation.template,
   expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
   expectedHasQr: caseResult.handoffExpectation.hasQr,
   expectedHasSignalWord: Boolean(caseResult.chemical.hasSignalWord),
-  expectedIdentityTexts: caseResult.chemical.expectedIdentityTexts || [],
+  expectedIdentityTexts:
+    caseResult.expected.productionExpectedIdentityTexts ||
+    caseResult.chemical.expectedIdentityTexts ||
+    [],
   expectedRequiredIdentityTexts:
-    caseResult.chemical.expectedRequiredIdentityTexts || [],
+    caseResult.expected.productionExpectedRequiredIdentityTexts ||
+    caseResult.chemical.expectedRequiredIdentityTexts ||
+    [],
   expectedForbiddenIdentityTexts:
-    caseResult.chemical.expectedForbiddenIdentityTexts || [],
+    caseResult.expected.productionExpectedForbiddenIdentityTexts ||
+    caseResult.chemical.expectedForbiddenIdentityTexts ||
+    [],
   expectedMinPictogramSidePx:
     caseResult.handoffExpectation.labelKind === "complete-primary"
       ? 18

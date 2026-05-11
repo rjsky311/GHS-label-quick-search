@@ -141,14 +141,22 @@ The first refactor slice has landed:
   by default so each post-deploy run leaves a structured audit trail without
   relying on terminal scrollback. Terminal output is concise by default, with
   `PRINT_QA_VERBOSE=1` available for full JSON output.
+- The production-searchable QA matrix now includes a dense Formaldehyde
+  (`50-00-0`) A4 complete-primary case that is expected to block direct print.
+  This turns "too dense for the selected primary stock" into an explicit product
+  contract: preview identity, CAS, signal word, and all pictograms must remain
+  visible, the print button must be disabled, and the outcome copy must guide
+  the user toward a larger or continuation-style output instead of handing off a
+  clipped label.
 
-Newly observed gap:
+Tracked continuation gap:
 
 - Formaldehyde (`50-00-0`) is dense enough in production data that even an A4
-  complete-primary attempt is disabled. This should not be treated as a simple
-  stock-preset bug. The next product slice should define a continuation/overflow
-  workflow for complete shipped-container labels, with an explicit user path
-  instead of only blocking print.
+  complete-primary attempt is disabled. This is now covered by the QA matrix as
+  an acceptable blocked state, but it should not remain only a blocker. The next
+  product slice should define a continuation/overflow workflow for complete
+  shipped-container labels, with an explicit user path instead of only blocking
+  print.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

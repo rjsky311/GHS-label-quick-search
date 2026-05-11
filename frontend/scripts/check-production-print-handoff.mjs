@@ -506,6 +506,10 @@ const readPrintStatus = async (page, testCase) => {
     document.getElementById("ghs-print-qa-status")?.remove();
   });
   const printButton = page.getByTestId(testCase.selectors.printButtonTestId);
+  const buttonText = ((await printButton.textContent().catch(() => "")) || "").trim();
+  const outcomeSummary = page.getByTestId("print-outcome-summary");
+  const outcomeText =
+    (await outcomeSummary.textContent().catch(() => ""))?.trim() || "";
   const printButtonEnabled = !(await printButton.isDisabled());
   if (!printButtonEnabled) {
     return {
@@ -513,7 +517,9 @@ const readPrintStatus = async (page, testCase) => {
       attributes: Object.fromEntries(
         STATUS_ATTRIBUTES.map((attribute) => [attribute, null]),
       ),
-      text: "",
+      text: [outcomeText, buttonText].filter(Boolean).join(" "),
+      buttonText,
+      outcomeText,
     };
   }
   await printButton.click();
@@ -532,6 +538,8 @@ const readPrintStatus = async (page, testCase) => {
     printButtonEnabled,
     attributes: await getAttributeMap(status, STATUS_ATTRIBUTES),
     text: (await status.textContent()) || "",
+    buttonText,
+    outcomeText,
   };
 };
 
@@ -551,29 +559,64 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   const assert = (name, passed) => {
     if (!passed) failures.push(name);
   };
+  const expectedCanPrint = testCase.expectedCanPrint !== false;
+  const expectedPrintButtonEnabled =
+    testCase.expectedPrintButtonEnabled ?? expectedCanPrint;
+  const blockedText = [
+    status.text,
+    status.outcomeText,
+    status.buttonText,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  assert("status", attrs["data-status"] === testCase.expectedStatus);
-  assert("print-button-enabled", status.printButtonEnabled === true);
-  assert("label-kind", attrs["data-label-kind"] === testCase.expectedLabelKind);
-  assert("stock-preset", attrs["data-stock-preset"] === testCase.expectedStockPreset);
-  assert("template", attrs["data-template"] === testCase.expectedTemplate);
-  assert("has-qr", attrs["data-has-qr"] === normalizeBool(testCase.expectedHasQr));
-  assert("has-cas", attrs["data-has-cas"] === "true");
   assert(
-    "cas-numbers",
-    (testCase.expectedCasNumbers || []).every((casNumber) =>
-      (attrs["data-cas-numbers"] || "").includes(casNumber),
-    ),
+    "print-button-enabled",
+    status.printButtonEnabled === expectedPrintButtonEnabled,
   );
-  assert(
-    "pictograms",
-    (testCase.expectedPictograms || []).every((code) => pictograms.has(code)),
-  );
-  assert(
-    "pictograms-exact",
-    (testCase.expectedPictograms || []).length === 0 ||
-      sameMembers([...pictograms], testCase.expectedPictograms || []),
-  );
+  if (expectedCanPrint) {
+    assert("status", attrs["data-status"] === testCase.expectedStatus);
+    assert("label-kind", attrs["data-label-kind"] === testCase.expectedLabelKind);
+    assert(
+      "stock-preset",
+      attrs["data-stock-preset"] === testCase.expectedStockPreset,
+    );
+    assert("template", attrs["data-template"] === testCase.expectedTemplate);
+    assert(
+      "has-qr",
+      attrs["data-has-qr"] === normalizeBool(testCase.expectedHasQr),
+    );
+    assert("has-cas", attrs["data-has-cas"] === "true");
+    assert(
+      "cas-numbers",
+      (testCase.expectedCasNumbers || []).every((casNumber) =>
+        (attrs["data-cas-numbers"] || "").includes(casNumber),
+      ),
+    );
+    assert(
+      "pictograms",
+      (testCase.expectedPictograms || []).every((code) => pictograms.has(code)),
+    );
+    assert(
+      "pictograms-exact",
+      (testCase.expectedPictograms || []).length === 0 ||
+        sameMembers([...pictograms], testCase.expectedPictograms || []),
+    );
+  } else {
+    const expectedBlockedPatterns = testCase.expectedBlockedTextPatterns || [];
+    assert(
+      "status",
+      status.printButtonEnabled === false ||
+        attrs["data-status"] === testCase.expectedStatus,
+    );
+    assert(
+      "blocked-guidance",
+      expectedBlockedPatterns.length === 0 ||
+        expectedBlockedPatterns.some((pattern) =>
+          new RegExp(pattern, "i").test(blockedText),
+        ),
+    );
+  }
   assert(
     "preview-label-kind",
     previewInspection.labelKind === testCase.expectedLabelKind,
@@ -599,11 +642,13 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     (testCase.expectedPictograms || []).length === 0 ||
       sameMembers([...previewPictograms], testCase.expectedPictograms || []),
   );
-  assert(
-    "preview-pictograms-match-handoff",
-    pictograms.size === previewPictograms.size &&
-      [...pictograms].every((code) => previewPictograms.has(code)),
-  );
+  if (expectedCanPrint) {
+    assert(
+      "preview-pictograms-match-handoff",
+      pictograms.size === previewPictograms.size &&
+        [...pictograms].every((code) => previewPictograms.has(code)),
+    );
+  }
   assert(
     "preview-signal-word",
     !testCase.expectedHasSignalWord ||
@@ -657,32 +702,36 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     }`,
     clippedCriticalElements.length === 0,
   );
-  assert(
-    "label-width",
-    sameNumber(attrs["data-label-width-mm"], testCase.expectedLabelWidthMm),
-  );
-  assert(
-    "label-height",
-    sameNumber(attrs["data-label-height-mm"], testCase.expectedLabelHeightMm),
-  );
-  assert("page-size", attrs["data-page-size"] === testCase.expectedPageSize);
-  assert(
-    "color-mode",
-    attrs["data-color-mode"] === testCase.expectedColorMode,
-  );
-  assert(
-    "name-display",
-    attrs["data-name-display"] === testCase.expectedNameDisplay,
-  );
-  assert("issue-types", !(attrs["data-issue-types"] || ""));
+  if (expectedCanPrint) {
+    assert(
+      "label-width",
+      sameNumber(attrs["data-label-width-mm"], testCase.expectedLabelWidthMm),
+    );
+    assert(
+      "label-height",
+      sameNumber(attrs["data-label-height-mm"], testCase.expectedLabelHeightMm),
+    );
+    assert("page-size", attrs["data-page-size"] === testCase.expectedPageSize);
+    assert(
+      "color-mode",
+      attrs["data-color-mode"] === testCase.expectedColorMode,
+    );
+    assert(
+      "name-display",
+      attrs["data-name-display"] === testCase.expectedNameDisplay,
+    );
+    assert("issue-types", !(attrs["data-issue-types"] || ""));
+  }
   if (testCase.expectedRequiredIdentityText) {
     assert("required-identity-preview", evidence.requiredIdentityTextInPreview);
-    assert(
-      "required-identity-handoff",
-      (attrs["data-support-chips"] || "").includes(
-        testCase.expectedRequiredIdentityText,
-      ),
-    );
+    if (expectedCanPrint) {
+      assert(
+        "required-identity-handoff",
+        (attrs["data-support-chips"] || "").includes(
+          testCase.expectedRequiredIdentityText,
+        ),
+      );
+    }
   }
 
   return {
@@ -691,6 +740,7 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     passed: failures.length === 0,
     failures,
     status: attrs,
+    statusText: status.text || "",
     evidence,
   };
 };
