@@ -2482,6 +2482,7 @@ const buildStyles = (model) => {
       line-height: 1;
     }
     .label-icon.label-stock-small-strip .label-middle,
+    .label-icon.label-stock-small-rack .label-middle,
     .label-icon.label-stock-brother-62mm-continuous .label-middle,
     .label-icon.label-stock-medium-rack .label-middle {
       justify-content: center;
@@ -2493,6 +2494,23 @@ const buildStyles = (model) => {
     .label-icon.label-stock-small-strip .pictograms-icon img {
       width: 8.4mm;
       height: 8.4mm;
+    }
+    .label-icon.label-stock-small-rack .label-top {
+      padding-bottom: 0.45mm;
+      margin-bottom: 0.45mm;
+    }
+    .label-icon.label-stock-small-rack .pictograms-icon {
+      grid-template-columns: repeat(4, 10mm);
+      gap: 0.5mm;
+    }
+    .label-icon.label-stock-small-rack .pictograms-icon img {
+      width: 10mm;
+      height: 10mm;
+    }
+    .label-icon.label-stock-small-rack .signal {
+      font-size: 5.5px;
+      min-width: 11mm;
+      padding: 0.25mm 0.85mm;
     }
     .label-icon.label-stock-brother-62mm-continuous .pictograms-icon {
       grid-template-columns: repeat(4, 11mm);
@@ -2736,6 +2754,79 @@ const buildStyles = (model) => {
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-code-shell {
       padding: 0.9mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip {
+      gap: 0.55mm;
+      padding: 1.25mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .qr-left-scan {
+      gap: 0.35mm;
+      padding-right: 0.55mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .name-en {
+      font-size: 6.4px;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .name-zh,
+    .label-stock-small-rack.label-qr.label-form-strip .cas {
+      font-size: 5.4px;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics {
+      display: grid;
+      grid-template-columns: repeat(2, 8.8mm);
+      justify-content: start;
+      gap: 0.35mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics img {
+      width: 8.8mm;
+      height: 8.8mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .qr-support-row {
+      min-height: auto;
+      padding-top: 0.2mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .signal.qr-signal {
+      width: fit-content;
+      max-width: 17mm;
+      font-size: 5.2px;
+      padding: 0.22mm 0.75mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .qr-code-shell {
+      padding: 0.75mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact {
+      gap: 1mm;
+      padding: 1.8mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .qr-left-scan {
+      gap: 0.65mm;
+      padding-right: 1mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .pictograms.qr-pics {
+      display: grid;
+      grid-template-columns: repeat(4, 9mm);
+      gap: 0.55mm;
+      justify-content: start;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .pictograms.qr-pics img {
+      width: 9mm;
+      height: 9mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .qr-priority-block {
+      padding: 0.45mm 0;
+      border: 0;
+      background: transparent;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .signal.qr-signal {
+      width: fit-content;
+      max-width: 21mm;
+      padding: 0.3mm 1mm;
+      font-size: 5.8px;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .qr-hazard-list {
+      display: none;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact .qr-code-shell {
+      padding: 1mm;
     }
     .label-qr.label-form-compact .qr-priority-block {
       padding: 0.8mm 1mm;

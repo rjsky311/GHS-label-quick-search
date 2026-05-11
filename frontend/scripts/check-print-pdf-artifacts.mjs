@@ -105,6 +105,13 @@ const inspectPrintDom = async (page, testCase) =>
         inner.top >= outer.top - tolerancePx &&
         inner.right <= outer.right + tolerancePx &&
         inner.bottom <= outer.bottom + tolerancePx;
+      const rectsOverlap = (left, right, tolerancePx = 0) =>
+        left &&
+        right &&
+        left.right > right.left + tolerancePx &&
+        left.left < right.right - tolerancePx &&
+        left.bottom > right.top + tolerancePx &&
+        left.top < right.bottom - tolerancePx;
       const unique = (values) => [...new Set(values)];
       const text = (element) =>
         (element?.innerText || element?.textContent || "")
@@ -172,6 +179,82 @@ const inspectPrintDom = async (page, testCase) =>
           ];
         }),
       );
+      const visualIssues = labels.flatMap((label, labelIndex) => {
+        const labelRect = label.getBoundingClientRect();
+        const labelClass = label.className || "";
+        const pictograms = Array.from(
+          label.querySelectorAll('img[data-required-print-image="ghs-pictogram"]'),
+        ).map((img, index) => ({
+          index,
+          rect: img.getBoundingClientRect(),
+          alt: img.getAttribute("alt") || img.alt || "",
+        }));
+        const qr = label.querySelector(".qrcode-img")?.getBoundingClientRect();
+        const cas = label
+          .querySelector(".meta-chip-cas, .cas")
+          ?.getBoundingClientRect();
+        const signal = label
+          .querySelector(".signal:not(.signal-placeholder)")
+          ?.getBoundingClientRect();
+        const nameSection = label
+          .querySelector(".name-section")
+          ?.getBoundingClientRect();
+
+        const issues = [];
+        const addIssue = (type, rect, extra = {}) => {
+          issues.push({
+            type,
+            labelIndex,
+            rect: rect ? rectToObject(rect) : null,
+            ...extra,
+          });
+        };
+
+        pictograms.forEach(({ index, rect, alt }) => {
+          if (!containsRect(labelRect, rect, tolerance)) {
+            addIssue("pictogram-outside-label", rect, { index, alt });
+          }
+        });
+        if (qr && !containsRect(labelRect, qr, tolerance)) {
+          addIssue("qr-outside-label", qr);
+        }
+        if (cas && !containsRect(labelRect, cas, tolerance)) {
+          addIssue("cas-outside-label", cas);
+        }
+        if (signal && !containsRect(labelRect, signal, tolerance)) {
+          addIssue("signal-outside-label", signal);
+        }
+
+        if (labelClass.includes("label-kind-quick-id")) {
+          pictograms.forEach(({ index, rect, alt }) => {
+            if (cas && rectsOverlap(rect, cas, -1)) {
+              addIssue("pictogram-overlaps-cas", rect, { index, alt });
+            }
+            if (signal && rectsOverlap(rect, signal, -1)) {
+              addIssue("pictogram-overlaps-signal", rect, { index, alt });
+            }
+            if (nameSection && rectsOverlap(rect, nameSection, -1)) {
+              addIssue("pictogram-overlaps-name", rect, { index, alt });
+            }
+            if (Math.min(rect.width, rect.height) < 30) {
+              addIssue("pictogram-too-small", rect, { index, alt });
+            }
+          });
+        }
+
+        if (labelClass.includes("label-kind-qr-supplement")) {
+          pictograms.forEach(({ index, rect, alt }) => {
+            if (qr && rectsOverlap(rect, qr, -1)) {
+              addIssue("pictogram-overlaps-qr", rect, { index, alt });
+            }
+          });
+          if (qr && Math.min(qr.width, qr.height) < 50) {
+            addIssue("qr-too-small", qr);
+          }
+        }
+
+        return issues;
+      });
       const pictogramCodes = unique(
         pictogramImages.map(({ alt }) => alt.toUpperCase()),
       ).sort();
@@ -195,6 +278,7 @@ const inspectPrintDom = async (page, testCase) =>
         hasMorePics: document.body.textContent.includes("more-pics"),
         imageFailures,
         clippedElements,
+        visualIssues,
         hasMinimumLabels: labels.length >= Number(expectedMinTotalLabels || 1),
       };
     },
@@ -252,6 +336,7 @@ const runCase = async ({ page, testCase }) => {
   assert("images-loaded", dom.imageFailures.length === 0);
   assert("no-more-pics", dom.hasMorePics === false);
   assert("no-clipped-elements", dom.clippedElements.length === 0);
+  assert("no-visual-overlaps", dom.visualIssues.length === 0);
 
   return {
     id: testCase.id,
@@ -300,6 +385,7 @@ const report = {
     id,
     failures,
     clippedElements: dom.clippedElements,
+    visualIssues: dom.visualIssues,
     imageFailures: dom.imageFailures,
     pdf,
   })),

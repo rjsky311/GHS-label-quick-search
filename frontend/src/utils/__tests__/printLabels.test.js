@@ -1500,6 +1500,7 @@ describe("printLabels", () => {
       };
       const cases = [
         ["small-strip", "label-stock-small-strip", "repeat(4, 8.4mm)"],
+        ["small-rack", "label-stock-small-rack", "repeat(4, 10mm)"],
         [
           "brother-62mm-continuous",
           "label-stock-brother-62mm-continuous",
@@ -1530,6 +1531,59 @@ describe("printLabels", () => {
         expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
         expect(preview.html).toContain(
           `.label-icon.${stockClass} .pictograms-icon`,
+        );
+        expect(preview.html).toContain(`grid-template-columns: ${gridRule}`);
+      });
+    });
+
+    it("uses stock-specific QR supplement geometry for secondary stock choices", () => {
+      const multiPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+      };
+      const cases = [
+        [
+          "small-rack",
+          "label-stock-small-rack",
+          "repeat(2, 8.8mm)",
+          "label-form-strip",
+        ],
+        [
+          "medium-rack",
+          "label-stock-medium-rack",
+          "repeat(4, 9mm)",
+          "label-form-compact",
+        ],
+      ];
+
+      cases.forEach(([stockPreset, stockClass, gridRule, formClass]) => {
+        const preview = buildPrintPreviewDocument(
+          [multiPictogramChemical],
+          {
+            labelPurpose: "qrSupplement",
+            template: "qrcode",
+            stockPreset,
+            nameDisplay: "both",
+          },
+          {},
+          {},
+          {},
+          {},
+          { mode: "label" },
+        );
+
+        expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
+        expect(preview.fragmentHtml).toContain(stockClass);
+        expect(preview.fragmentHtml).toContain(formClass);
+        expect(preview.fragmentHtml).toContain("qrcode-img");
+        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+        expect(preview.html).toContain(
+          `.label-stock-${stockPreset}.label-qr.${formClass} .pictograms.qr-pics`,
         );
         expect(preview.html).toContain(`grid-template-columns: ${gridRule}`);
       });
