@@ -35,10 +35,11 @@ npm run qa:production-print
 ```
 
 This generates `build/print-qa-report.json`, launches the deployed site through
-the production handoff runner, writes
-`build/production-print-handoff-report.json`, and captures preview screenshots
-under `build/production-print-screenshots/`. Use the lower-level commands below
-only when debugging one part of the flow.
+the production handoff runner, renders local print HTML artifacts into PDFs,
+writes `build/production-print-handoff-report.json` and
+`build/print-pdf-report.json`, and captures preview screenshots under
+`build/production-print-screenshots/`. Use the lower-level commands below only
+when debugging one part of the flow.
 
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
@@ -85,6 +86,19 @@ sample so blocked output is diagnosable without opening the full JSON first.
 The script uses `playwright-core` with the local Chrome/Edge executable; if discovery fails, set
 `PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
 
+After generating `build/print-html-artifacts/`, the print/PDF artifact gate can
+be run independently:
+
+```bash
+cd frontend
+PRINT_QA_PRINT_HTML_DIR=build/print-html-artifacts npm run qa:print-pdf
+```
+
+This loads each generated print document with Chrome print media, exports a PDF
+with `preferCSSPageSize`, verifies the PDF header/size, and checks the print DOM
+for loaded images, exact GHS pictogram sets, QR state, `more-pics` absence, and
+visible overflow/clipping in identity, hazard, QR, and compliance containers.
+
 ## Required Evidence
 
 Record these outputs in the final implementation note:
@@ -94,6 +108,8 @@ Record these outputs in the final implementation note:
 - Production bundle asset name.
 - Browser target URL.
 - Handoff report path.
+- PDF report path.
+- PDF artifact directory.
 - Search term and selected chemical.
 - Decision summary text for each tested output.
 - Preview mode state: `Fit` should be the default whole-label view, and changing

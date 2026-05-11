@@ -14,12 +14,15 @@ jest.mock("@/constants/ghs", () => {
 
   return {
     GHS_IMAGES: {
+      GHS01: image("GHS01"),
       GHS02: image("GHS02"),
+      GHS03: image("GHS03"),
       GHS04: image("GHS04"),
       GHS05: image("GHS05"),
       GHS06: image("GHS06"),
       GHS07: image("GHS07"),
       GHS08: image("GHS08"),
+      GHS09: image("GHS09"),
     },
   };
 });
@@ -33,7 +36,10 @@ import {
   resolvePrintQaCaseChemical,
 } from "@/utils/printQaMatrix";
 import { PRINT_OUTPUT_PLAN_STATE } from "@/utils/printOutputPlanner";
-import { buildPrintPreviewDocument } from "@/utils/printLabels";
+import {
+  buildPrintDocument,
+  buildPrintPreviewDocument,
+} from "@/utils/printLabels";
 
 const maybeWriteReport = (report) => {
   const outputPath = process.env.PRINT_QA_REPORT_PATH;
@@ -87,6 +93,49 @@ const maybeWritePreviewArtifacts = () => {
   console.log(`Print QA previews written to ${absoluteDir}`);
 };
 
+const maybeWritePrintArtifacts = () => {
+  const outputDir = process.env.PRINT_QA_PRINT_HTML_DIR;
+  if (!outputDir) return;
+
+  const absoluteDir = path.resolve(process.cwd(), outputDir);
+  fs.mkdirSync(absoluteDir, { recursive: true });
+
+  const index = PRINT_QA_MATRIX.map((testCase) => {
+    const chemical = resolvePrintQaCaseChemical(testCase);
+    const documentBundle = buildPrintDocument(
+      [chemical],
+      testCase.labelConfig,
+      {},
+      testCase.customLabelFields || {},
+      { [chemical.cas_number]: 1 },
+      PRINT_QA_PROFILE,
+    );
+    const file = `${testCase.id}.html`;
+    fs.writeFileSync(path.join(absoluteDir, file), documentBundle.html);
+    return {
+      id: testCase.id,
+      label: testCase.label,
+      chemical: chemical.cas_number,
+      file,
+      expectedLabelKind: testCase.expected?.labelKind || "",
+      expectedPictograms: (chemical.ghs_pictograms || [])
+        .map((pictogram) => pictogram.code)
+        .filter(Boolean),
+      expectedHasQr: Boolean(testCase.expected?.hasQr),
+      expectedMinTotalLabels: testCase.expected?.minPrintTotalLabels || 1,
+    };
+  });
+
+  fs.writeFileSync(
+    path.join(absoluteDir, "index.json"),
+    `${JSON.stringify(index, null, 2)}\n`,
+  );
+
+  // Keep this visible when running `npm run qa:print-report`.
+  // eslint-disable-next-line no-console
+  console.log(`Print QA print artifacts written to ${absoluteDir}`);
+};
+
 describe("print QA matrix report", () => {
   it("generates a passing machine-readable report for the core HCl print matrix", () => {
     const report = buildPrintQaMatrixReport({
@@ -97,6 +146,7 @@ describe("print QA matrix report", () => {
 
     maybeWriteReport(report);
     maybeWritePreviewArtifacts();
+    maybeWritePrintArtifacts();
 
     expect(report.schemaVersion).toBe(1);
     expect(report.generatedAt).toEqual(expect.any(String));

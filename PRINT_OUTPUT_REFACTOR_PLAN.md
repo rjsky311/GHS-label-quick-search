@@ -179,6 +179,11 @@ The first refactor slice has landed:
   case/batch number. Normal case identifiers must remain printable on small
   labels, while oversized identifiers are blocked before print handoff instead
   of being clipped after the user clicks print.
+- Print QA now emits real print HTML artifacts and renders them to PDFs through
+  Chrome print media with `preferCSSPageSize`. The PDF gate checks generated
+  PDF validity plus loaded images, exact pictogram sets, QR state, `more-pics`
+  absence, and visible overflow/clipping in identity, hazard, QR, and
+  compliance containers.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

@@ -56,6 +56,10 @@ Automated tests should pin these behaviors:
   overflow/clipping of critical identity, signal, QR, pictogram, and hazard
   summary containers. A passing handoff status is not enough if the preview is
   visibly cut off.
+- Print/PDF artifact QA must render generated print documents through Chrome
+  print media and fail when the PDF is invalid, required GHS images fail to
+  load, pictogram sets drift, QR state is wrong, `more-pics` appears, or
+  identity/hazard/QR/compliance containers visibly overflow.
 
 ## Browser QA Scenarios
 
