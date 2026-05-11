@@ -11,6 +11,9 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "continuation-badge",
   "preview-page-controls",
   "ghs-print-qa-status",
+  "autoFitLevel",
+  "print_autofit_retry",
+  "label-fit-level-",
 ];
 
 const productionUrl = process.env.PRINT_QA_PRODUCTION_URL || DEFAULT_PRODUCTION_URL;
