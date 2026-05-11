@@ -85,6 +85,9 @@ Record these outputs in the final implementation note:
 - Decision summary text for each tested output.
 - Preview mode state: `Fit` should be the default whole-label view, and changing
   target or stock after using `Inspect` should return the preview to `Fit`.
+- Multi-page and continuation outputs must show preview page controls. Use them
+  to inspect at least the second continuation page before accepting the print
+  flow.
 - Preview `srcdoc` and geometry checks for label-kind class, pictogram codes,
   exact pictogram-set parity, signal-word visibility, chemical identity-name
   visibility, required/forbidden language state, QR presence, minimum visible

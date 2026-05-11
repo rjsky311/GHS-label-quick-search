@@ -86,6 +86,8 @@ These are acceptance targets for the renderer and Browser QA:
 
 - Preview and print use the same rendered HTML fragment.
 - A4 and Letter primary labels show the whole label in preview without clipping.
+- Multi-page and continuation outputs expose preview page controls so each
+  printed page can be inspected before opening the print dialog.
 - Small labels reflow and scale before content is summarized.
 - Compact summaries prioritize severe H-statements and response/PPE P-codes before lower-priority storage/disposal text.
 - GHS pictograms are never hidden behind QR, summarized as `+N`, or omitted.
@@ -133,6 +135,8 @@ Unit tests should keep these invariants pinned:
 - Complete primary bodies do not contain `qrcode-img`, `hazard-more`, or `precaution-more`.
 - Dense complete primary continuation output produces multiple printed labels
   and keeps every expected pictogram on each continuation page.
+- Preview rendering can target later continuation pages, not only the first
+  rendered label.
 - Every expected pictogram code appears in the printed body.
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
 - Quick-ID labels carry `label-kind-quick-id`, planner output kind `QUICK_ID`,

@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileSpreadsheet,
   FileText,
@@ -687,6 +689,7 @@ export default function LabelPrintModal({
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [previewZoomMode, setPreviewZoomMode] = useState("fit");
+  const [previewPageIndex, setPreviewPageIndex] = useState(0);
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
@@ -719,6 +722,14 @@ export default function LabelPrintModal({
     (sum, chem) => sum + (labelQuantities?.[chem.cas_number] || 1),
     0,
   );
+  const previewSelectionKey = selectedForLabel
+    .map(
+      (chem) =>
+        `${chem.cas_number || chem.name_en || chem.name_zh || ""}:${
+          labelQuantities?.[chem.cas_number] || 1
+        }`,
+    )
+    .join("|");
   const estimatedPages =
     totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
   const displayNames = buildDisplayNames(
@@ -1358,7 +1369,7 @@ export default function LabelPrintModal({
         customLabelFields,
         labelQuantities,
         labProfile,
-        { mode: "sheet" },
+        { mode: "sheet", pageIndex: previewPageIndex },
       ),
     [
       selectedForLabel,
@@ -1367,36 +1378,53 @@ export default function LabelPrintModal({
       customLabelFields,
       labelQuantities,
       labProfile,
+      previewPageIndex,
     ],
   );
   const plannedPrintLabelCount =
     sheetPreviewBundle?.model?.expandedLabels?.length || totalLabels;
   const plannedPrintPageCount =
     sheetPreviewBundle?.model?.totalPages || estimatedPages;
+  const activePreviewPageIndex = sheetPreviewBundle?.previewPageIndex || 0;
+  const activePreviewLabelIndex =
+    plannedPrintLabelCount > 0
+      ? Math.min(
+          activePreviewPageIndex * Math.max(layoutProfile.perPage || 1, 1),
+          plannedPrintLabelCount - 1,
+        )
+      : 0;
+  const hasMultiplePreviewPages = plannedPrintPageCount > 1;
   const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
   const labelPreviewBundle = useMemo(() => {
-    if (!previewChem) return null;
+    if (selectedForLabel.length === 0) return null;
 
     return buildPrintPreviewDocument(
-      [previewChem],
+      selectedForLabel,
       labelConfig,
       customGHSSettings,
       customLabelFields,
-      { [previewChem.cas_number]: 1 },
+      labelQuantities,
       labProfile,
-      { mode: "label", previewZoom: previewZoomMode },
+      {
+        mode: "label",
+        previewZoom: previewZoomMode,
+        labelIndex: activePreviewLabelIndex,
+      },
     );
   }, [
-    previewChem,
+    selectedForLabel,
     labelConfig,
     customGHSSettings,
     customLabelFields,
+    labelQuantities,
     labProfile,
     previewZoomMode,
+    activePreviewLabelIndex,
   ]);
 
   useEffect(() => {
     setPreviewZoomMode("fit");
+    setPreviewPageIndex(0);
   }, [
     labelConfig.colorMode,
     labelConfig.labelHeightMm,
@@ -1407,7 +1435,15 @@ export default function LabelPrintModal({
     labelConfig.size,
     labelConfig.stockPreset,
     labelConfig.template,
+    previewSelectionKey,
   ]);
+
+  useEffect(() => {
+    const maxPageIndex = Math.max(plannedPrintPageCount - 1, 0);
+    if (previewPageIndex > maxPageIndex) {
+      setPreviewPageIndex(maxPageIndex);
+    }
+  }, [plannedPrintPageCount, previewPageIndex]);
 
   useEffect(() => {
     if (
@@ -1742,6 +1778,18 @@ export default function LabelPrintModal({
     "{{count}}/page",
     { count: layoutProfile.perPage },
   )}`;
+  const previewPagePositionLabel = tx(
+    "label.previewPagePosition",
+    "Page {{current}} / {{total}}",
+    {
+      current: activePreviewPageIndex + 1,
+      total: Math.max(plannedPrintPageCount, 1),
+    },
+  );
+  const updatePreviewPageIndex = (nextIndex) => {
+    const maxPageIndex = Math.max(plannedPrintPageCount - 1, 0);
+    setPreviewPageIndex(Math.max(0, Math.min(nextIndex, maxPageIndex)));
+  };
 
   const renderSavedPrintControls = () => (
     <details
@@ -2491,34 +2539,67 @@ export default function LabelPrintModal({
             )}
           </p>
         </div>
-        <div
-          className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1"
-          data-testid="preview-zoom-controls"
-        >
-          {[
-            {
-              value: "fit",
-              label: tx("label.previewZoomFit", "Fit"),
-            },
-            {
-              value: "inspect",
-              label: tx("label.previewZoomInspect", "Inspect"),
-            },
-          ].map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={previewZoomMode === option.value}
-              onClick={() => setPreviewZoomMode(option.value)}
-              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-                previewZoomMode === option.value
-                  ? "bg-white text-blue-700 shadow-sm ring-1 ring-blue-200"
-                  : "text-slate-600 hover:bg-white"
-              }`}
+        <div className="flex flex-wrap items-center gap-2">
+          {hasMultiplePreviewPages && (
+            <div
+              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-1"
+              data-testid="preview-page-controls"
+              aria-label={tx("label.previewPageControls", "Preview pages")}
             >
-              {option.label}
-            </button>
-          ))}
+              <button
+                type="button"
+                onClick={() => updatePreviewPageIndex(activePreviewPageIndex - 1)}
+                disabled={activePreviewPageIndex <= 0}
+                className="flex h-7 w-7 items-center justify-center rounded bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={tx("label.previewPreviousPage", "Previous preview page")}
+                data-testid="preview-page-prev"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="min-w-16 px-2 text-center text-xs font-semibold text-slate-700">
+                {previewPagePositionLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => updatePreviewPageIndex(activePreviewPageIndex + 1)}
+                disabled={activePreviewPageIndex >= plannedPrintPageCount - 1}
+                className="flex h-7 w-7 items-center justify-center rounded bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={tx("label.previewNextPage", "Next preview page")}
+                data-testid="preview-page-next"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <div
+            className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1"
+            data-testid="preview-zoom-controls"
+          >
+            {[
+              {
+                value: "fit",
+                label: tx("label.previewZoomFit", "Fit"),
+              },
+              {
+                value: "inspect",
+                label: tx("label.previewZoomInspect", "Inspect"),
+              },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={previewZoomMode === option.value}
+                onClick={() => setPreviewZoomMode(option.value)}
+                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                  previewZoomMode === option.value
+                    ? "bg-white text-blue-700 shadow-sm ring-1 ring-blue-200"
+                    : "text-slate-600 hover:bg-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

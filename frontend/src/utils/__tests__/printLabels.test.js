@@ -1808,6 +1808,71 @@ describe("printLabels", () => {
       );
     });
 
+    it("can render a selected continuation page in print preview", () => {
+      const denseChemical = {
+        ...mockChemical,
+        cas_number: "50-00-0",
+        name_en: "Formaldehyde",
+        name_zh: "Formaldehyde ZH",
+        ghs_pictograms: [
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+        ],
+        hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en:
+            "This is a long complete-primary hazard statement that must remain available on the printed shipped-container label set.",
+        })),
+        precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+          code: `P${300 + index}`,
+          text_en:
+            "This is a long precautionary statement retained for continuation-page printing so the final output does not clip content.",
+        })),
+      };
+
+      const labelPreview = buildPrintPreviewDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+        { mode: "label", labelIndex: 1 },
+      );
+      const sheetPreview = buildPrintPreviewDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+        { mode: "sheet", pageIndex: 1 },
+      );
+
+      expect(labelPreview.model.expandedLabels.length).toBeGreaterThan(1);
+      expect(labelPreview.previewLabelIndex).toBe(1);
+      expect(labelPreview.fragmentHtml).toContain(
+        'data-continuation-page="2"',
+      );
+      expect(labelPreview.fragmentHtml).not.toContain(
+        'data-continuation-page="1"',
+      );
+      expect(sheetPreview.previewPageIndex).toBe(1);
+      expect(sheetPreview.fragmentHtml).toContain('data-continuation-page="2"');
+    });
+
     it("Letter primary uses its own full-page class and paper size", () => {
       const preview = buildPrintPreviewDocument(
         [mockChemical],

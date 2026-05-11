@@ -245,6 +245,21 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
       "page(s)",
     );
+    expect(screen.getByTestId("preview-page-controls")).toHaveTextContent(
+      "Page 1 /",
+    );
+
+    const firstPreviewSrc = screen
+      .getByTestId("label-fragment-preview")
+      .getAttribute("srcdoc");
+    fireEvent.click(screen.getByTestId("preview-page-next"));
+
+    expect(screen.getByTestId("preview-page-controls")).toHaveTextContent(
+      "Page 2 /",
+    );
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).not.toEqual(firstPreviewSrc);
   });
 
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {

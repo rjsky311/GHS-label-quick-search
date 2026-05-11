@@ -9,6 +9,7 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "custom-label-field-",
   "ready_with_continuation",
   "continuation-badge",
+  "preview-page-controls",
   "ghs-print-qa-status",
 ];
 

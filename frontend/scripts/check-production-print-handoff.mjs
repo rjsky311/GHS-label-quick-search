@@ -480,6 +480,9 @@ const capturePreviewEvidence = async (page, testCase) => {
   const evidence = {
     requiredIdentityTextInPreview: true,
     screenshotPath: "",
+    previewPageControlsVisible: false,
+    nextPreviewPageChanged: true,
+    nextPreviewInspection: null,
   };
   evidence.previewInspection = await inspectPreviewFrame(page, testCase);
   evidence.requiredIdentityTextInPreview =
@@ -491,6 +494,29 @@ const capturePreviewEvidence = async (page, testCase) => {
         .frameLocator('[data-testid="label-fragment-preview"]')
         .getByText(testCase.expectedRequiredIdentityText)
         .count()) > 0;
+  }
+  if (Number(testCase.expectedMinTotalPages || 1) > 1) {
+    const pageControls = page.getByTestId("preview-page-controls");
+    evidence.previewPageControlsVisible = await pageControls
+      .isVisible()
+      .catch(() => false);
+    const previewFrame = page.getByTestId("label-fragment-preview");
+    const beforeSrcDoc = await previewFrame
+      .getAttribute("srcdoc")
+      .catch(() => "");
+    await page.getByTestId("preview-page-next").click();
+    await page.waitForFunction(
+      (previous) =>
+        document
+          .querySelector('[data-testid="label-fragment-preview"]')
+          ?.getAttribute("srcdoc") !== previous,
+      beforeSrcDoc,
+      { timeout: 10000 },
+    );
+    const afterSrcDoc = await previewFrame.getAttribute("srcdoc");
+    evidence.nextPreviewPageChanged =
+      Boolean(beforeSrcDoc) && beforeSrcDoc !== afterSrcDoc;
+    evidence.nextPreviewInspection = await inspectPreviewFrame(page, testCase);
   }
   if (screenshotDir) {
     fs.mkdirSync(screenshotDir, { recursive: true });
@@ -688,6 +714,25 @@ const evaluateCase = ({ testCase, status, evidence }) => {
       "preview-qr-min-size",
       Number(previewInspection.minQrSidePx) >=
         Number(testCase.expectedMinQrSidePx),
+    );
+  }
+  if (Number(testCase.expectedMinTotalPages || 1) > 1) {
+    const nextPreview = evidence.nextPreviewInspection || {};
+    const nextPreviewPictograms = new Set(nextPreview.pictogramCodes || []);
+    const nextClippedCriticalElements =
+      nextPreview.clippedCriticalElements || [];
+    assert("preview-page-controls", evidence.previewPageControlsVisible === true);
+    assert("preview-next-page-changes", evidence.nextPreviewPageChanged === true);
+    assert("preview-next-label-visible", nextPreview.labelVisible === true);
+    assert(
+      "preview-next-page-pictograms",
+      (testCase.expectedPictograms || []).every((code) =>
+        nextPreviewPictograms.has(code),
+      ),
+    );
+    assert(
+      "preview-next-critical-elements-visible",
+      nextClippedCriticalElements.length === 0,
     );
   }
   assert(

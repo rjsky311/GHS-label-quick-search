@@ -155,6 +155,12 @@ const chunk = (items, size) => {
   return chunks;
 };
 
+const clampIndex = (value, maxIndex) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || maxIndex <= 0) return 0;
+  return Math.max(0, Math.min(Math.trunc(numeric), maxIndex));
+};
+
 const normalizeTemplate = (template) =>
   ALLOWED_TEMPLATES.has(template) ? template : "standard";
 
@@ -2687,15 +2693,23 @@ export function buildPrintPreviewDocument(
     TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
   const previewStyles = buildPreviewStyles(mode, model, options);
   const sharedStyles = buildStyles(model);
+  const selectedPageIndex = clampIndex(
+    options.pageIndex,
+    Math.max((model.totalPages || 1) - 1, 0),
+  );
+  const selectedLabelIndex = clampIndex(
+    options.labelIndex ?? options.pageIndex,
+    Math.max((model.expandedLabels?.length || 1) - 1, 0),
+  );
 
   let fragmentHtml = "";
   if (mode === "label") {
     fragmentHtml = `<div class="preview-label-scaler">${renderer(
-      model.expandedLabels[0],
+      model.expandedLabels[selectedLabelIndex] || model.expandedLabels[0],
       model,
     )}</div>`;
   } else {
-    const firstPage = model.pages[0] || [];
+    const firstPage = model.pages[selectedPageIndex] || model.pages[0] || [];
     const labelMarkup = firstPage
       .map((chemical) => renderer(chemical, model))
       .join("");
@@ -2719,7 +2733,7 @@ export function buildPrintPreviewDocument(
               <div class="page-footer-note">${escapeHtml(model.t("trust.printFooter"))}</div>
               <div class="page-number">${escapeHtml(
                 model.t("print.pageNumber", {
-                  current: 1,
+                  current: selectedPageIndex + 1,
                   total: model.totalPages || 1,
                 }),
               )}</div>
@@ -2746,6 +2760,8 @@ export function buildPrintPreviewDocument(
     fragmentHtml,
     model,
     mode,
+    previewPageIndex: selectedPageIndex,
+    previewLabelIndex: selectedLabelIndex,
     previewMetrics: previewStyles.metrics,
   };
 }

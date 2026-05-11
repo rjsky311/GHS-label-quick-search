@@ -153,13 +153,10 @@ The first refactor slice has landed:
   the full H/P text is too large for one physical page. Each continuation page
   repeats identity, CAS, signal word, all available GHS pictograms, responsible
   profile, and a continuation badge; H/P statements are split across pages.
-
-Tracked continuation follow-up:
-
-- The continuation set is printable and covered by QA, but the preview currently
-  shows the first label page. A later UX slice should add simple page navigation
-  in the modal preview so users can inspect every continuation page before
-  printing.
+- The modal preview now exposes page navigation for multi-page and continuation
+  outputs. The label preview and sheet preview consume the same selected
+  page/label index, so users can inspect later continuation pages before
+  printing instead of trusting a first-page-only preview.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
