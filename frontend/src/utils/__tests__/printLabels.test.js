@@ -2125,7 +2125,9 @@ describe("printLabels", () => {
         );
         const html = mockIframeDoc.write.mock.calls[0][0];
         expect(html).toMatch(/<div\s+class="support-chips"/);
-        expect(html).toMatch(/<span\s+class="support-chip"/);
+        expect(html).toMatch(
+          /<span\s+class="support-chip support-chip-critical support-chip-batch"/,
+        );
         expect(html).toContain("CASE-2026-0007");
         expect(html).toContain("CAS");
         expect(html).toContain(mockChemical.cas_number);

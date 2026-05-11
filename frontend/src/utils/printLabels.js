@@ -558,21 +558,31 @@ const renderSupportChips = (
 ) => {
   const chips = [];
   if (includeOrganization && model.resolvedLabProfile?.organization) {
-    chips.push(escapeHtml(model.resolvedLabProfile.organization));
+    chips.push({
+      html: escapeHtml(model.resolvedLabProfile.organization),
+      className: "",
+    });
   }
   if (includeDate && model.customLabelFields?.date) {
-    chips.push(escapeHtml(model.customLabelFields.date));
+    chips.push({
+      html: escapeHtml(model.customLabelFields.date),
+      className: "",
+    });
   }
   if (includeBatch && model.customLabelFields?.batchNumber) {
-    chips.push(
-      `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(
+    chips.push({
+      html: `${escapeHtml(model.t("print.batch"))}: ${escapeHtml(
         model.customLabelFields.batchNumber,
       )}`,
-    );
+      className: "support-chip-critical support-chip-batch",
+    });
   }
   if (chips.length === 0) return "";
   return `<div class="support-chips">${chips
-    .map((chip) => `<span class="support-chip">${chip}</span>`)
+    .map(
+      (chip) =>
+        `<span class="support-chip${chip.className ? ` ${chip.className}` : ""}">${chip.html}</span>`,
+    )
     .join("")}</div>`;
 };
 
@@ -1695,6 +1705,15 @@ const buildStyles = (model) => {
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .support-chip-critical {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-weight: 800;
+      max-width: 100%;
+      overflow: visible;
+      text-overflow: clip;
+    }
     .custom-fields {
       font-size: calc(${layout.typography.fontSize} - 2px);
       color: #64748b;
@@ -2356,6 +2375,14 @@ const buildStyles = (model) => {
       overflow: visible;
       text-overflow: clip;
       overflow-wrap: anywhere;
+    }
+    .label-form-strip .support-chip-critical {
+      flex: 1 1 100%;
+      justify-content: flex-start;
+      font-size: 5.2px;
+      line-height: 1.02;
+      white-space: nowrap;
+      overflow-wrap: normal;
     }
     .label-qr.label-form-strip .qr-priority-block {
       gap: 0;

@@ -141,6 +141,8 @@ Unit tests should keep these invariants pinned:
 - Supplemental and QR labels carry explicit `label-kind-*` classes.
 - Quick-ID labels carry `label-kind-quick-id`, planner output kind `QUICK_ID`,
   every expected pictogram, and no QR body.
+- Compact labels preserve critical identity chips such as batch/case number
+  without ellipsis or critical-element clipping.
 - Small QR labels keep QR plus every expected pictogram in the printed body.
 - Strip labels use a four-pictogram row for dense multi-pictogram chemicals.
 - Pictogram dimensions and visible H/P budgets increase with available physical label area.
