@@ -347,6 +347,8 @@ const VALID_ORIENTATIONS = new Set(["portrait", "landscape"]);
 const VALID_NAME_DISPLAYS = new Set(["both", "en", "zh"]);
 const VALID_COLOR_MODES = new Set(["color", "bw"]);
 const VALID_PAGE_SIZES = new Set(["A4", "Letter"]);
+const MIN_AUTO_FIT_LEVEL = 0;
+const MAX_AUTO_FIT_LEVEL = 2;
 
 const formatMm = (value) => `${value}mm`;
 const roundTo = (value, places = 1) => {
@@ -405,6 +407,7 @@ export const DEFAULT_LABEL_CONFIG = Object.freeze({
   colorMode: "color",
   stockPreset: PRESET_INDEX["large-primary"].id,
   stockPresetName: PRESET_INDEX["large-primary"].name,
+  autoFitLevel: 0,
   columns: PRESET_INDEX["large-primary"].columns,
   rows: PRESET_INDEX["large-primary"].rows,
   perPage:
@@ -445,19 +448,31 @@ function resolveTypographyMetrics(normalized) {
     (isFullPagePrimaryStockId(normalized.stockPreset) ||
       (normalized.labelWidthMm >= 170 && normalized.labelHeightMm >= 200));
 
+  const autoFitLevel = clamp(
+    Math.trunc(Number(normalized.autoFitLevel) || 0),
+    MIN_AUTO_FIT_LEVEL,
+    MAX_AUTO_FIT_LEVEL,
+  );
+  const textScale = autoFitLevel === 2 ? 0.84 : autoFitLevel === 1 ? 0.92 : 1;
+  const signalScale =
+    autoFitLevel === 2 ? 0.88 : autoFitLevel === 1 ? 0.94 : 1;
+  const paddingTrimMm =
+    autoFitLevel === 2 ? 0.7 : autoFitLevel === 1 ? 0.35 : 0;
+
   if (isFullPage) {
     const fullPagePictogramMm = clamp(roundTo(shortSide * 0.15, 1), 28, 30);
     return {
       ...base,
-      fontPx: 13,
-      titlePx: 24,
+      fontPx: clamp(roundTo(13 * textScale, 1), 10.5, 13),
+      titlePx: clamp(roundTo(24 * (autoFitLevel ? 0.94 : 1), 1), 20, 24),
       pictogramPx: 44,
       qrBoxMm: 36,
-      signalPx: 17,
-      hazardPx: 9,
+      signalPx: clamp(roundTo(17 * signalScale, 1), 14, 17),
+      hazardPx: clamp(roundTo(9 * textScale, 1), 7.2, 9),
+      labelPaddingMm: clamp(base.labelPaddingMm - paddingTrimMm, 1.8, base.labelPaddingMm),
       compliancePictogramMm: fullPagePictogramMm,
-      complianceStatementPx: 5.6,
-      complianceLineHeight: 1.03,
+      complianceStatementPx: clamp(roundTo(5.6 * textScale, 1), 4.8, 5.6),
+      complianceLineHeight: autoFitLevel ? 1.01 : 1.03,
       complianceColumns: 2,
       standardPictogramMm: 30,
       standardRailColumnMm: 66,
@@ -541,12 +556,17 @@ function resolveTypographyMetrics(normalized) {
 
   return {
     ...base,
-    fontPx,
-    titlePx,
+    fontPx: clamp(roundTo(fontPx * textScale, 1), isCompactStrip ? 5.8 : 6.5, fontPx),
+    titlePx: clamp(
+      roundTo(titlePx * (autoFitLevel === 2 ? 0.88 : autoFitLevel === 1 ? 0.94 : 1), 1),
+      isCompactStrip ? 7.5 : 8.8,
+      titlePx,
+    ),
     pictogramPx,
     qrBoxMm,
-    signalPx,
-    hazardPx,
+    signalPx: clamp(roundTo(signalPx * signalScale, 1), isCompactStrip ? 6.8 : 7.8, signalPx),
+    hazardPx: clamp(roundTo(hazardPx * textScale, 1), isCompactStrip ? 4.8 : 5.4, hazardPx),
+    labelPaddingMm: clamp(base.labelPaddingMm - paddingTrimMm, 1.4, base.labelPaddingMm),
     compliancePictogramMm,
     complianceStatementPx,
     complianceLineHeight: areaScale > 1.4 ? 1.16 : 1.1,
@@ -725,6 +745,10 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       explicitPreset === "custom"
         ? labelConfig.stockPresetName || "Custom Tuning"
         : preset?.name || base.name,
+    autoFitLevel: coerceNumber(labelConfig.autoFitLevel, 0, {
+      min: MIN_AUTO_FIT_LEVEL,
+      max: MAX_AUTO_FIT_LEVEL,
+    }),
     pageSize: locksPresetGeometry
       ? base.pageSize || "A4"
       : coerceEnum(
@@ -844,6 +868,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
     widthMm: normalized.labelWidthMm,
     heightMm: normalized.labelHeightMm,
     stockId: normalized.stockPreset,
+    autoFitLevel: normalized.autoFitLevel,
     stock,
     pageSize,
     outputRole: stock.outputRole || null,

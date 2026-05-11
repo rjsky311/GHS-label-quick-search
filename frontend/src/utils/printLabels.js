@@ -354,6 +354,7 @@ const getPhysicalLabelClasses = (layout = {}) =>
     `label-stock-${toClassToken(layout.stockId || layout.stockPreset)}`,
     `label-size-${toClassToken(layout.size)}`,
     `label-form-${toClassToken(layout.formFactor)}`,
+    `label-fit-level-${Number(layout.autoFitLevel || 0)}`,
     isCompletePrimaryTemplate(layout)
       ? "label-kind-complete-primary"
       : isQrSupplementLayout(layout)
@@ -385,6 +386,112 @@ const expandLabelsByQuantity = (selectedForLabel, labelQuantities) => {
     }
   });
   return expanded;
+};
+
+const clampAutoFitLevel = (value) =>
+  Math.max(0, Math.min(2, Math.trunc(Number(value) || 0)));
+
+const getNameLoadForLayout = (chemical = {}, layout = {}) => {
+  const names = [];
+  if (layout.nameDisplay === "en" || layout.nameDisplay === "both") {
+    names.push(chemical.name_en || chemical.name || "");
+  }
+  if (layout.nameDisplay === "zh") {
+    names.push(chemical.name_zh || chemical.name_en || chemical.name || "");
+  } else if (layout.nameDisplay === "both") {
+    names.push(chemical.name_zh || "");
+  }
+  return Math.max(0, ...names.map((name) => String(name || "").trim().length));
+};
+
+const getCustomIdentityLoad = (customLabelFields = {}) =>
+  [
+    customLabelFields.batchNumber,
+    customLabelFields.date,
+  ].reduce((total, value) => total + String(value || "").trim().length, 0);
+
+const getStatementLoadForAutoFit = (statements = [], model) =>
+  statements.reduce(
+    (total, statement) =>
+      total +
+      String(statement?.code || "").length * 2 +
+      getLocalizedTextForModel(statement, model).length,
+    0,
+  );
+
+const resolveAutoFitLevelForModel = ({
+  layout,
+  expandedLabels,
+  customGHSSettings,
+  customLabelFields,
+  resolvedLabProfile,
+  t,
+  locale,
+}) => {
+  let level = clampAutoFitLevel(layout.autoFitLevel);
+  const area = (layout.widthMm || 0) * (layout.heightMm || 0);
+  const compactPhysical =
+    layout.formFactor === "strip" ||
+    layout.formFactor === "compact" ||
+    layout.size === "small" ||
+    area < 3600;
+
+  const modelForText = {
+    t,
+    locale,
+    layout,
+    customGHSSettings,
+    customLabelFields,
+    resolvedLabProfile,
+  };
+  const customIdentityLoad = getCustomIdentityLoad(customLabelFields);
+
+  expandedLabels.forEach((chemical) => {
+    const content = buildPrintLabelContent(chemical, {
+      customGHSSettings,
+      resolvedLabProfile,
+      layout,
+    });
+    const nameLoad = getNameLoadForLayout(content.effectiveChemical, layout);
+    const hazardLoad = getStatementLoadForAutoFit(
+      content.hazardStatements || [],
+      modelForText,
+    );
+    const pictogramCount = content.counts?.pictograms || 0;
+    const statementCount = content.counts?.hazardStatements || 0;
+
+    if (compactPhysical) {
+      if (
+        layout.nameDisplay === "both" ||
+        customIdentityLoad > 0 ||
+        nameLoad > 24 ||
+        pictogramCount >= 3
+      ) {
+        level = Math.max(level, 1);
+      }
+      if (nameLoad > 40 || customIdentityLoad > 22 || pictogramCount >= 4) {
+        level = Math.max(level, 2);
+      }
+      return;
+    }
+
+    if (layout.template === "standard") {
+      const budget = layout.templateBudgets?.standard?.primaryHazards || 1;
+      if (
+        layout.nameDisplay === "both" ||
+        customIdentityLoad > 18 ||
+        statementCount > budget ||
+        hazardLoad > area / 6
+      ) {
+        level = Math.max(level, 1);
+      }
+      if (nameLoad > 52 || customIdentityLoad > 36 || hazardLoad > area / 3.8) {
+        level = Math.max(level, 2);
+      }
+    }
+  });
+
+  return clampAutoFitLevel(level);
 };
 
 const getContinuationCapacity = (layout = {}) => {
@@ -496,7 +603,7 @@ export function buildPrintDocumentModel(
   }
 
   const t = i18n.t.bind(i18n);
-  const layout = resolvePrintLayoutConfig({
+  let layout = resolvePrintLayoutConfig({
     ...labelConfig,
     template: normalizeTemplate(labelConfig?.template),
   });
@@ -504,6 +611,23 @@ export function buildPrintDocumentModel(
     selectedForLabel,
     labelQuantities,
   );
+  const resolvedLabProfile = resolveLabProfile(customLabelFields, labProfile);
+  const autoFitLevel = resolveAutoFitLevelForModel({
+    layout,
+    expandedLabels,
+    customGHSSettings,
+    customLabelFields,
+    resolvedLabProfile,
+    t,
+    locale: i18n.language,
+  });
+  if (autoFitLevel > clampAutoFitLevel(layout.autoFitLevel)) {
+    layout = resolvePrintLayoutConfig({
+      ...labelConfig,
+      template: normalizeTemplate(labelConfig?.template),
+      autoFitLevel,
+    });
+  }
   const modelBase = {
     t,
     locale: i18n.language,
@@ -512,7 +636,7 @@ export function buildPrintDocumentModel(
     customGHSSettings,
     customLabelFields,
     labelQuantities,
-    resolvedLabProfile: resolveLabProfile(customLabelFields, labProfile),
+    resolvedLabProfile,
   };
   const printableLabels = expandedLabels.flatMap((chemical) =>
     buildContinuationLabelsForChemical(chemical, modelBase),
@@ -3003,6 +3127,7 @@ function buildPrintLifecycleMeta(documentBundle) {
     labelHeightMm: layout.heightMm || layout.labelHeightMm,
     colorMode: layout.colorMode,
     nameDisplay: layout.nameDisplay,
+    autoFitLevel: layout.autoFitLevel || 0,
     casNumbers,
     totalLabels: model.expandedLabels.length,
     totalPages: model.totalPages,
@@ -3080,6 +3205,7 @@ function publishPrintQaStatus(status, message) {
     statusElement.dataset.pageSize = nextStatus.pageSize || "";
     statusElement.dataset.colorMode = nextStatus.colorMode || "";
     statusElement.dataset.nameDisplay = nextStatus.nameDisplay || "";
+    statusElement.dataset.autoFitLevel = String(nextStatus.autoFitLevel || 0);
     statusElement.dataset.totalLabels = String(nextStatus.totalLabels || 0);
     statusElement.dataset.totalPages = String(nextStatus.totalPages || 0);
     statusElement.dataset.template = nextStatus.template || "";
@@ -3194,6 +3320,45 @@ function publishPrintHandoffQaStatus(documentBundle, iframeDoc, lifecycleMeta) {
   );
 }
 
+const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
+  "label-overflow",
+  "compliance-core-overflow",
+  "compliance-alert-overflow",
+  "compliance-statements-overflow",
+  "compliance-hazards-overflow",
+  "compliance-precautions-overflow",
+  "compliance-pictograms-overflow",
+  "compliance-footer-clipped",
+  "cas-overflow",
+  "cas-chip-overflow",
+  "cas-value-overflow",
+  "case-chip-overflow",
+  "case-value-overflow",
+  "support-chip-overflow",
+  "custom-fields-overflow",
+  "name-section-overflow",
+  "standard-grid-overflow",
+  "standard-rail-overflow",
+  "standard-main-overflow",
+  "standard-hazard-board-overflow",
+  "hazard-list-overflow",
+  "hazard-summary-overflow",
+  "hazard-code-list-overflow",
+  "signal-overflow",
+  "qr-panel-overflow",
+  "qr-caption-overflow",
+  "statement-code-overflow",
+  "content-text-too-dense",
+  "supplemental-content-too-dense",
+]);
+
+const shouldRetryWithAutoFit = (preflightIssues = [], layout = {}) =>
+  clampAutoFitLevel(layout.autoFitLevel) < 2 &&
+  preflightIssues.some((issue) =>
+    AUTO_FIT_RETRY_ISSUE_TYPES.has(issue?.type),
+  ) &&
+  !preflightIssues.some((issue) => issue?.type === "required-image-failed");
+
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -3273,6 +3438,33 @@ export function printLabels(
     ];
     if (preflightIssues.length > 0) {
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+      if (shouldRetryWithAutoFit(preflightIssues, documentBundle.model.layout)) {
+        const nextAutoFitLevel =
+          clampAutoFitLevel(documentBundle.model.layout.autoFitLevel) + 1;
+        recordObservabilityEvent("print_autofit_retry", {
+          status: "retry",
+          count: lifecycleMeta.totalLabels || 1,
+          meta: {
+            ...lifecycleMeta,
+            nextAutoFitLevel,
+            issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
+          },
+        });
+        iframe.remove();
+        printLabels(
+          selectedForLabel,
+          {
+            ...labelConfig,
+            autoFitLevel: nextAutoFitLevel,
+          },
+          customGHSSettings,
+          customLabelFields,
+          labelQuantities,
+          labProfile,
+          lifecycleCallbacks,
+        );
+        return;
+      }
       if (isPrintHandoffQaMode()) {
         publishPrintBlockedQaStatus(documentBundle, preflightIssues);
       }

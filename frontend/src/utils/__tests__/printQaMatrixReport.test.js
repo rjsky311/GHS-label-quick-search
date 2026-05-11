@@ -368,11 +368,13 @@ describe("print QA matrix report", () => {
     expect(byId["long-name-tube-quick-id"].actual.identityDensityClass).toBe(
       "identity-density-high",
     );
+    expect(byId["long-name-tube-quick-id"].actual.autoFitLevel).toBe(2);
     expect(byId["tube-vial-quick-id-with-case"].actual).toMatchObject({
       hasRequiredIdentityText: true,
       printHasRequiredIdentityText: true,
       hasSupportChip: true,
       printHasSupportChip: true,
+      autoFitLevel: 2,
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"]).toMatchObject({
       expectedLabelKind: "quick-id",

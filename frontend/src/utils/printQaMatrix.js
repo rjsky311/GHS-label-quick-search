@@ -1246,6 +1246,7 @@ export function buildPrintQaCaseResult({
     labelKind: resolveLabelKind(fragmentHtml),
     stockPreset: fitPreview?.model?.layout?.stockPreset,
     template: fitPreview?.model?.layout?.template,
+    autoFitLevel: fitPreview?.model?.layout?.autoFitLevel || 0,
     previewZoom: fitPreview?.previewMetrics?.previewZoom,
     inspectPreviewZoom: inspectPreview?.previewMetrics?.previewZoom,
     inspectStartsAtLeft: Boolean(
@@ -1321,6 +1322,7 @@ export function buildPrintQaCaseResult({
     printLabelKind: resolveLabelKind(printHtml),
     printTemplate: printDocument?.model?.layout?.template,
     printStockPreset: printDocument?.model?.layout?.stockPreset,
+    printAutoFitLevel: printDocument?.model?.layout?.autoFitLevel || 0,
     printTotalLabels: printDocument?.model?.expandedLabels?.length || 0,
     identityDensityClass: resolveIdentityDensityClass(fragmentHtml),
     hasFullPagePictograms:
@@ -1360,6 +1362,7 @@ export function buildPrintQaCaseResult({
     ["printLabelKind", actual.printLabelKind === expected.labelKind],
     ["printTemplate", actual.printTemplate === expected.template],
     ["printStockPreset", actual.printStockPreset === expected.stockPreset],
+    ["printAutoFitLevel", actual.printAutoFitLevel === actual.autoFitLevel],
   ];
 
   if (Number.isFinite(expected.minPrintTotalLabels)) {
@@ -1459,6 +1462,7 @@ export function buildPrintQaCaseResult({
       pageSize: printDocument?.model?.layout?.pageSize,
       colorMode: printDocument?.model?.layout?.colorMode,
       nameDisplay: printDocument?.model?.layout?.nameDisplay,
+      autoFitLevel: printDocument?.model?.layout?.autoFitLevel || 0,
       requiredIdentityText: expected.requiredIdentityText || "",
       totalLabels: printDocument?.model?.expandedLabels?.length || 0,
       totalPages: printDocument?.model?.totalPages || 0,

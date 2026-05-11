@@ -184,6 +184,12 @@ The first refactor slice has landed:
   PDF validity plus loaded images, exact pictogram sets, QR state, `more-pics`
   absence, and visible overflow/clipping in identity, hazard, QR, and
   compliance containers.
+- The first render-driven auto-fit slice is in place. Print layout resolution
+  now derives an `autoFitLevel` from actual chemical identity, case/batch
+  fields, hazard text load, and pictogram count before rendering. Print
+  preflight can also retry once or twice at a tighter fit level when it sees
+  fixable overflow, so the system shrinks/reflows first and only blocks after
+  the renderer still cannot produce a truthful label.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 

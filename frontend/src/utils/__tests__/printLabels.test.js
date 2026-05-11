@@ -699,6 +699,60 @@ describe("printLabels", () => {
     expect(mockIframeWindow.print).toHaveBeenCalled();
   });
 
+  it("rebuilds with a tighter fit level when print preflight finds fixable overflow", () => {
+    let labelQueryCount = 0;
+    const overflowingLabel = {
+      querySelector: jest.fn(() => null),
+      clientHeight: 100,
+      scrollHeight: 112,
+      clientWidth: 200,
+      scrollWidth: 200,
+    };
+    const fittingLabel = {
+      querySelector: jest.fn(() => null),
+      clientHeight: 100,
+      scrollHeight: 100,
+      clientWidth: 200,
+      scrollWidth: 200,
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (selector === ".label:not(.label-placeholder)") {
+        labelQueryCount += 1;
+        return [labelQueryCount === 1 ? overflowingLabel : fittingLabel];
+      }
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+        nameDisplay: "en",
+      },
+      {},
+    );
+    jest.advanceTimersByTime(300);
+
+    expect(mockIframeDoc.write).toHaveBeenCalledTimes(2);
+    expect(mockIframeDoc.write.mock.calls[1][0]).toContain("label-fit-level-1");
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_autofit_retry",
+      expect.objectContaining({
+        status: "retry",
+        meta: expect.objectContaining({
+          autoFitLevel: 0,
+          nextAutoFitLevel: 1,
+          issueTypes: expect.arrayContaining(["label-overflow"]),
+        }),
+      }),
+    );
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it("blocks supplemental labels when the rendered layout clips", () => {
     const overflowLabel = {
       clientHeight: 20,
@@ -1390,6 +1444,35 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         ".label-icon.label-form-strip .identity-density-medium .cas",
       );
+    });
+
+    it("auto-selects a tighter fit level for dense small-label identity", () => {
+      const longNameChemical = {
+        ...mockChemical,
+        cas_number: "123456-78-9",
+        name_en: "N,N-Dimethyl-4-nitrosoaniline hydrochloride analytical reference",
+        name_zh: "?瑕?蝔望葫閰血?摮詨?",
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [longNameChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        { batchNumber: "CASE-2026-0007" },
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.model.layout.autoFitLevel).toBe(2);
+      expect(preview.fragmentHtml).toContain("label-fit-level-2");
+      expect(preview.fragmentHtml).toContain("CASE-2026-0007");
+      expect(preview.fragmentHtml).toContain("meta-chip-cas");
     });
 
     it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {

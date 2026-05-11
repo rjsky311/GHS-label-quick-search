@@ -19,6 +19,7 @@ const STATUS_ATTRIBUTES = [
   "data-page-size",
   "data-color-mode",
   "data-name-display",
+  "data-auto-fit-level",
   "data-template",
   "data-stock-preset",
   "data-total-labels",

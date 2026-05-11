@@ -23,6 +23,10 @@ The best path is a complete primary label that a lab user can print without gues
 - A4 Primary is a distinct full-page rendering path, not just a larger paper option. It must scale the live preview to show the whole label, enlarge GHS pictograms, and use statement layout rules that can actually carry dense H/P content.
 - Letter Primary must be supported alongside A4 Primary for North American users. Both are complete primary-label outputs, not supplemental templates.
 - The print workflow should use an output planner: scale typography, reflow layout, and combine/deduplicate safe statement text before routing to a larger stock or supplemental output.
+- Fit decisions must be tied to rendered content, not only stock names or
+  statement counts. The system should derive a tighter fit level from chemical
+  name length, CAS/case identity chips, hazard text load, and pictogram count,
+  then retry fixable overflow with smaller typography before blocking print.
 - A4 and Letter are complete primary outputs, not the only valid physical label sizes. Container label stocks may be selected first; the app must scale text and pictograms for that stock, then recommend A4/Letter only when the selected stock cannot truthfully carry the complete primary label.
 - When a user manually selects a bottle/container stock that cannot carry the complete primary label, the app must keep that selected physical size and produce a clearly marked supplemental label rather than silently changing the user's stock choice.
 - 140 x 88 mm and similar large container-front labels are not mini A4 labels.
@@ -52,6 +56,10 @@ Automated tests should pin these behaviors:
 - Complete primary labels block print when responsible lab/supplier name, phone, or address is missing; the required-output checklist reports the missing profile fields.
 - Supplemental template warnings stay visible in the modal/preview workflow, not as verbose text inside the physical label.
 - Layout preflight rejects overflow, footer clipping, and statement-code overflow before printing complete primary labels. Supplemental labels should adapt typography/reflow and remain printable unless safety-critical pictograms or identity are missing.
+- Compact-label preflight must prove that the resolved auto-fit level was used
+  by both preview and print handoff. A blocked print is acceptable only after
+  the renderer has already tried the allowed tighter fit levels and still finds
+  critical clipping or missing identity/pictograms.
 - Production print QA must inspect the actual preview iframe for visible
   overflow/clipping of critical identity, signal, QR, pictogram, and hazard
   summary containers. A passing handoff status is not enough if the preview is

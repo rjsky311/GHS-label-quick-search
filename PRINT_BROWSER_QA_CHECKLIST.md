@@ -131,8 +131,8 @@ Record these outputs in the final implementation note:
   Capture its `data-label-kind`, `data-pictograms`, `data-has-qr`,
   `data-cas-numbers`, `data-has-cas`, `data-label-width-mm`,
   `data-label-height-mm`, `data-page-size`, `data-template`,
-  `data-stock-preset`, `data-total-labels`, `data-total-pages`, and
-  `data-support-chips` attributes when available.
+  `data-stock-preset`, `data-auto-fit-level`, `data-total-labels`,
+  `data-total-pages`, and `data-support-chips` attributes when available.
 
 Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview
@@ -314,6 +314,9 @@ case:
   selected stock. This is the production check for "the user selected this
   physical label, not just some printable fallback."
 - `data-template` and `data-stock-preset` match the selected target.
+- `data-auto-fit-level` is present and matches the preview/report expectation.
+  Dense compact labels should show a tighter level instead of clipping identity,
+  CAS, signal, QR, or GHS pictograms.
 - If production blocks a print, the alert must name the current stock and
   physical size. A blocked job is only acceptable when the message tells the
   user how to get a truthful output instead of merely refusing the print.
