@@ -92,9 +92,3 @@ body {
     padding: 8px 12px !important;
   }
 }
-
-/* GHS Image styles */
-img[src*="ghs"] {
-  background: white;
-  padding: 2px;
-}

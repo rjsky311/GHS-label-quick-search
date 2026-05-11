@@ -1,6 +1,6 @@
 import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import GHSImage from "@/components/GHSImage";
+import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData, hasRenderableGhsVisual } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
@@ -260,7 +260,7 @@ export default function ResultsTable({
                 } ${isSelectedForLabel(result.cas_number) ? "bg-blue-50" : ""}`}
                 data-testid={`result-row-${idx}`}
               >
-                <td className="px-2 py-4 text-center">
+                <td className="px-2 py-4 text-center align-top">
                   {result.found && (
                     <input
                       type="checkbox"
@@ -271,7 +271,7 @@ export default function ResultsTable({
                     />
                   )}
                 </td>
-                <td className="px-2 py-4 text-center">
+                <td className="px-2 py-4 text-center align-top">
                   {result.found && (
                     <button
                       onClick={() => onToggleFavorite(result)}
@@ -287,12 +287,12 @@ export default function ResultsTable({
                     </button>
                   )}
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-4 py-4 align-top">
                   <span className="font-mono text-blue-700">
                     {result.cas_number}
                   </span>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 align-top">
                   {result.found ? (
                     (() => {
                       const displayNames = getLocalizedNames(result, displayLocale);
@@ -357,7 +357,7 @@ export default function ResultsTable({
                     <span className="text-red-700">{result.error}</span>
                   )}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 align-top">
                   {(() => {
                     // v1.8 M2 three-branch decision:
                     //   1. not-found → "-"
@@ -402,25 +402,24 @@ export default function ResultsTable({
 
                         return (
                           <>
-                            <div className="flex gap-1 flex-wrap items-center">
-                              {effective.isCustom ? (
-                                <span className="mr-1 text-xs text-blue-700" title={t("results.customMarker")}>{"\u2605"}</span>
-                              ) : (
-                                <span className="mr-1 text-xs text-emerald-600" title={t("results.defaultMarker")}>{"\u25cf"}</span>
-                              )}
-                              {effective.pictograms?.map((pic, pIdx) => (
-                                <GHSImage
-                                  key={pIdx}
-                                  code={pic.code}
-                                  name={getLocalizedPictogramName(pic, displayLocale)}
-                                  className="w-10 h-10"
-                                  showTooltip
-                                />
-                              ))}
+                            <div className="flex flex-wrap items-center gap-2">
+                              <GHSPictogramStrip
+                                pictograms={effective.pictograms || []}
+                                size="md"
+                                variant={effective.isCustom ? "custom" : "primary"}
+                                markerTitle={
+                                  effective.isCustom
+                                    ? t("results.customMarker")
+                                    : t("results.defaultMarker")
+                                }
+                                getName={(pic) =>
+                                  getLocalizedPictogramName(pic, displayLocale)
+                                }
+                              />
                               {effective.isCustom && (
                                 <button
                                   onClick={() => onClearCustomClassification(result.cas_number)}
-                                  className="ml-2 text-xs text-slate-400 hover:text-red-600"
+                                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-colors hover:border-red-200 hover:text-red-600"
                                   title={t("results.restoreDefault")}
                                 >
                                   <X className="inline h-3 w-3" />
@@ -445,28 +444,33 @@ export default function ResultsTable({
 
                                 {/* Expanded Other Classifications */}
                                 {expandedOtherClassifications[result.cas_number] && (
-                                  <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-2">
+                                  <div className="mt-2 max-h-72 space-y-2 overflow-y-auto rounded-lg border border-slate-200 border-l-2 border-l-slate-300 bg-slate-50/70 p-2 pr-1">
                                     {allClassifications.map((cls, clsIdx) => {
                                       const isSelected = effective.customIndex === clsIdx;
                                       if (isSelected) return null;
 
                                       return (
-                                        <div key={clsIdx} className="group/item flex flex-wrap items-center gap-1">
-                                          <span className="mr-1 text-xs text-slate-500">○</span>
-                                          {cls.pictograms?.map((pic, pIdx) => (
-                                            <GHSImage
-                                              key={pIdx}
-                                              code={pic.code}
-                                              name={getLocalizedPictogramName(
+                                        <div
+                                          key={clsIdx}
+                                          className="group/item flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm shadow-slate-100"
+                                        >
+                                          <GHSPictogramStrip
+                                            pictograms={cls.pictograms || []}
+                                            size="sm"
+                                            variant="muted"
+                                            markerTitle={t("results.alternateClassification", {
+                                              index: clsIdx + 1,
+                                            })}
+                                            getName={(pic) =>
+                                              getLocalizedPictogramName(
                                                 pic,
                                                 displayLocale
-                                              )}
-                                              className="w-8 h-8 opacity-70"
-                                            />
-                                          ))}
+                                              )
+                                            }
+                                          />
                                           <button
                                             onClick={() => onSetCustomClassification(result.cas_number, clsIdx)}
-                                            className="ml-2 text-xs text-blue-700 opacity-0 transition-opacity hover:text-blue-900 group-hover/item:opacity-100"
+                                            className="ml-auto shrink-0 rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-200 hover:bg-blue-100 hover:text-blue-900"
                                             title={t("detail.setAsMain")}
                                           >
                                             {t("results.setAsPrimary")}
@@ -485,7 +489,7 @@ export default function ResultsTable({
                     );
                   })()}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 align-top">
                   {result.found ? (
                     (() => {
                       const effective = getEffectiveClassification(result);
@@ -507,7 +511,7 @@ export default function ResultsTable({
                     "-"
                   )}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 align-top">
                   {result.found && (
                     <div className="flex gap-1.5">
                       <button

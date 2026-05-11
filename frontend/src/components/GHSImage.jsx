@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { GHS_IMAGES } from "@/constants/ghs";
 
-export default function GHSImage({ code, name, className = "w-10 h-10", showTooltip = false }) {
+export default function GHSImage({
+  code,
+  name,
+  className = "h-10 w-10",
+  showTooltip = false,
+}) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
     return (
       <span
-        className={`inline-flex items-center justify-center bg-red-100 text-red-600 text-[10px] font-bold rounded border border-red-300 ${className}`}
+        className={`inline-flex items-center justify-center rounded border border-red-300 bg-red-100 text-[10px] font-bold text-red-600 ${className}`}
         title={name ? `${code}: ${name}` : code}
       >
         {code}
@@ -16,12 +21,12 @@ export default function GHSImage({ code, name, className = "w-10 h-10", showTool
   }
 
   return (
-    <div className={showTooltip ? "group relative" : undefined}>
+    <div className={showTooltip ? "group relative inline-flex" : "inline-flex"}>
       <img
         src={GHS_IMAGES[code]}
         alt={name || code}
         loading="lazy"
-        className={`bg-white rounded ${className}`}
+        className={`block object-contain ${className}`}
         title={name ? `${code}: ${name}` : code}
         onError={() => setHasError(true)}
       />

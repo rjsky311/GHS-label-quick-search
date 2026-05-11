@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import GHSImage from "@/components/GHSImage";
+import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
@@ -334,18 +334,12 @@ export default function DetailModal({
               <h3 className="mb-3 text-sm font-medium text-slate-600">
                 {t("detail.ghsClassification")}
               </h3>
-              <div className="flex gap-3 flex-wrap">
-                {allClassifications[0].pictograms.map((pic, pIdx) => (
-                  <div key={pIdx} className="text-center">
-                    <GHSImage
-                      code={pic.code}
-                      name={getLocalizedPictogramName(pic, displayLocale)}
-                      className="w-14 h-14"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">{pic.code}</p>
-                  </div>
-                ))}
-              </div>
+              <GHSPictogramStrip
+                pictograms={allClassifications[0].pictograms}
+                size="lg"
+                markerTitle={t("results.defaultMarker")}
+                getName={(pic) => getLocalizedPictogramName(pic, displayLocale)}
+              />
             </div>
           ) : null}
 

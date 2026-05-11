@@ -64,6 +64,7 @@
   "results.cacheBadge": "快取",
   "results.customMarker": "您選擇的分類",
   "results.defaultMarker": "主要分類（預設）",
+  "results.alternateClassification": "其他分類 {{index}}",
   "results.restoreDefault": "恢復預設分類",
   "results.otherClassifications": "{{count}} 種其他分類",
   "results.setAsPrimary": "設為主要",

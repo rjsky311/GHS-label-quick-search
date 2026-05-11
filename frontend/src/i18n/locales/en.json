@@ -64,6 +64,7 @@
   "results.cacheBadge": "Cached",
   "results.customMarker": "Your selection",
   "results.defaultMarker": "Primary (default)",
+  "results.alternateClassification": "Alternate classification {{index}}",
   "results.restoreDefault": "Restore default",
   "results.otherClassifications": "{{count}} other classification(s)",
   "results.setAsPrimary": "Set as primary",
