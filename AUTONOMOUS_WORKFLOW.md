@@ -81,8 +81,13 @@ For print workflow changes, the default validation stack is:
 - `PRINT_QA_PRINT_HTML_DIR=build/print-qa-html npm run qa:print-report`
 - `npm run qa:print-pdf`
 - `npm run qa:production-bundle` after Zeabur deploy
+- `npm run qa:production-smoke` after Zeabur deploy for routine frontend or
+  print-flow iterations; it covers complete primary, continuation,
+  case-number quick ID, 62 mm, and QR supplement handoff in production Chrome.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
-  preview, print handoff, stock presets, compact labels, or renderer CSS
+  preview, print handoff, stock presets, compact labels, renderer CSS, or when
+  closing a larger print-workflow milestone. This is the full production matrix
+  and can run longer than 15 minutes.
 
 Use narrower commands only for early iteration. A print change is not complete
 until the production-facing path has been checked when deployment is part of the
