@@ -162,8 +162,9 @@ Acceptance:
   browser-driven production-prepared path should also pass before treating
   prepared workflows as fully production-clickthrough covered.
 - `qa:production-prepared` covers the deployed search → detail →
-  prepare-solution form → print modal → handoff path for A4 primary, bottle
-  supplemental, and tube quick-ID prepared labels.
+  prepare-solution form → print modal → handoff path, plus prepared sidebar
+  reprint → print modal → handoff path, for A4 primary, bottle supplemental,
+  and tube quick-ID prepared labels.
 
 ## Immediate Next Recommended Slice
 

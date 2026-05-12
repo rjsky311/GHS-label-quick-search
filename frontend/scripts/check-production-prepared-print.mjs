@@ -90,6 +90,20 @@ const PREPARED_CASES = Object.freeze([
   },
 ]);
 
+const PREPARED_REPRINT_CASES = Object.freeze(
+  PREPARED_CASES.map((testCase) => ({
+    ...testCase,
+    id: `prepared-reprint-${testCase.id.replace(/^prepared-/, "")}`,
+    label: `${testCase.label} via recent reprint`,
+    entryMode: "reprint",
+  })),
+);
+
+const ALL_PREPARED_CASES = Object.freeze([
+  ...PREPARED_CASES,
+  ...PREPARED_REPRINT_CASES,
+]);
+
 const EXPECTED_PICTOGRAMS = Object.freeze(["GHS04", "GHS05", "GHS06", "GHS07"]);
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
@@ -206,6 +220,39 @@ const openPreparedPrintModal = async (page) => {
     state: "visible",
     timeout: 15000,
   });
+};
+
+const closePreparedPrintModal = async (page) => {
+  const footer = page.getByTestId("label-modal-footer");
+  await footer.locator("button").last().click();
+  await page.getByTestId("label-modal-footer").waitFor({
+    state: "detached",
+    timeout: 15000,
+  });
+};
+
+const createPreparedRecent = async (page) => {
+  await openPreparedPrintModal(page);
+  await closePreparedPrintModal(page);
+};
+
+const openPreparedReprintModal = async (page) => {
+  await createPreparedRecent(page);
+  await page.getByTestId("prepared-toggle-btn").click();
+  await page.getByTestId("prepared-recent-item-0").waitFor({
+    state: "visible",
+    timeout: 15000,
+  });
+  const recentText =
+    ((await page.getByTestId("prepared-recent-item-0").textContent()) || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  await page.getByTestId("prepared-reprint-btn-0").click();
+  await page.getByTestId("print-label-action").waitFor({
+    state: "visible",
+    timeout: 30000,
+  });
+  return { recentText };
 };
 
 const setTargetAndStock = async (page, testCase) => {
@@ -473,7 +520,13 @@ const readPrintStatus = async (page) => {
   };
 };
 
-const evaluateCase = ({ testCase, selectedSummary, preview, status }) => {
+const evaluateCase = ({
+  testCase,
+  selectedSummary,
+  preview,
+  status,
+  entryEvidence = {},
+}) => {
   const failures = [];
   const assert = (name, passed) => {
     if (!passed) failures.push(name);
@@ -484,7 +537,15 @@ const evaluateCase = ({ testCase, selectedSummary, preview, status }) => {
     .map((value) => value.trim())
     .filter(Boolean)
     .sort();
+  const recentText = normalizeText(entryEvidence.recentText || "");
 
+  if (testCase.entryMode === "reprint") {
+    assert("reprint-recent-concentration", recentText.includes("1 m"));
+    assert("reprint-recent-solvent", recentText.includes("water"));
+    assert("reprint-recent-prepared-by", recentText.includes("qa analyst"));
+    assert("reprint-recent-prepared-date", recentText.includes("2026-05-12"));
+    assert("reprint-recent-expiry-date", recentText.includes("2026-06-12"));
+  }
   assert("selected-prepared-display-visible", selectedSummary.displayVisible);
   assert(
     "selected-prepared-meta",
@@ -531,6 +592,8 @@ const evaluateCase = ({ testCase, selectedSummary, preview, status }) => {
     label: testCase.label,
     passed: failures.length === 0,
     failures,
+    entryMode: testCase.entryMode || "create",
+    entryEvidence,
     selectedSummary,
     preview,
     status: attrs,
@@ -546,7 +609,13 @@ const runCase = async ({ browser, testCase }) => {
       localStorage.removeItem("ghs_prepared_presets");
     });
     await page.goto(withQaParam(productionUrl), { waitUntil: "domcontentloaded" });
-    await openPreparedPrintModal(page);
+    const entryEvidence =
+      testCase.entryMode === "reprint"
+        ? await openPreparedReprintModal(page)
+        : {};
+    if (testCase.entryMode !== "reprint") {
+      await openPreparedPrintModal(page);
+    }
     await fillResponsibleProfile(page);
     await setTargetAndStock(page, testCase);
     const selectedSummary = await inspectSelectedPreparedSummary(page);
@@ -558,7 +627,13 @@ const runCase = async ({ browser, testCase }) => {
     });
     preview.screenshotPath = screenshotPath;
     const status = await readPrintStatus(page);
-    return evaluateCase({ testCase, selectedSummary, preview, status });
+    return evaluateCase({
+      testCase,
+      selectedSummary,
+      preview,
+      status,
+      entryEvidence,
+    });
   } catch (error) {
     const failure = {
       id: testCase.id,
@@ -587,7 +662,7 @@ const browser = await chromium.launch({
 
 const results = [];
 try {
-  for (const testCase of PREPARED_CASES) {
+  for (const testCase of ALL_PREPARED_CASES) {
     // eslint-disable-next-line no-console
     console.log(`Running production prepared print QA: ${testCase.id}`);
     results.push(await runCase({ browser, testCase }));

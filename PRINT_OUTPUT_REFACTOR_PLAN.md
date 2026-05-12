@@ -211,7 +211,7 @@ The first refactor slice has landed:
   regular production search handoff matrix because production cannot search for
   a derived prepared item directly; `npm run qa:production-prepared` covers the
   actual deployed creation path from detail → prepare-solution form → print
-  modal → print handoff.
+  modal → print handoff, and the deployed prepared sidebar reprint path.
 - The first render-driven auto-fit slice is in place. Print layout resolution
   now derives an `autoFitLevel` from actual chemical identity, case/batch
   fields, hazard text load, and pictogram count before rendering. Print
