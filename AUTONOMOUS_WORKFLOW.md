@@ -91,6 +91,10 @@ For print workflow changes, the default validation stack is:
   `npm run qa:production-multi-chemical` when the full production matrix is too
   slow for one pass. These run the same deployed Chrome handoff gate, but split
   it into complete-primary, compact-stock, and cross-chemical layers.
+- `npm run qa:production-prepared` after prepared-solution workflow changes.
+  This is a deployed Chrome clickthrough from search result → detail →
+  prepare-solution form → label print modal → print handoff for A4 primary,
+  bottle supplemental, and tube quick-ID prepared outputs.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix

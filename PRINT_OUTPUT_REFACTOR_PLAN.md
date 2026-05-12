@@ -207,10 +207,11 @@ The first refactor slice has landed:
   absence, and visible overflow/clipping in identity, hazard, QR, and
   compliance containers.
 - Prepared-solution A4 primary, bottle supplemental, and tube quick-ID outputs
-  are now first-class renderer/PDF QA cases. They are intentionally excluded
-  from the production search handoff matrix until a browser-driven
-  prepare-solution creation path exists, because production cannot search for a
-  derived prepared item directly.
+  are now first-class renderer/PDF QA cases. They stay excluded from the
+  regular production search handoff matrix because production cannot search for
+  a derived prepared item directly; `npm run qa:production-prepared` covers the
+  actual deployed creation path from detail → prepare-solution form → print
+  modal → print handoff.
 - The first render-driven auto-fit slice is in place. Print layout resolution
   now derives an `autoFitLevel` from actual chemical identity, case/batch
   fields, hazard text load, and pictogram count before rendering. Print

@@ -159,9 +159,11 @@ Acceptance:
 - Prepared solution print/reprint paths pass the same no-clipping, no-missing
   pictogram, and truthful-output rules as regular labels.
 - Prepared-solution renderer/PDF cases are part of the print QA matrix; a
-  future production-prepared path should add browser-driven creation from the
-  prepare-solution modal before treating prepared workflows as fully
-  production-clickthrough covered.
+  browser-driven production-prepared path should also pass before treating
+  prepared workflows as fully production-clickthrough covered.
+- `qa:production-prepared` covers the deployed search → detail →
+  prepare-solution form → print modal → handoff path for A4 primary, bottle
+  supplemental, and tube quick-ID prepared labels.
 
 ## Immediate Next Recommended Slice
 

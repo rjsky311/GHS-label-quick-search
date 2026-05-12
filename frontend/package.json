@@ -74,6 +74,7 @@
     "qa:production-primary": "node scripts/run-production-print-layer.mjs primary",
     "qa:production-compact": "node scripts/run-production-print-layer.mjs compact",
     "qa:production-multi-chemical": "node scripts/run-production-print-layer.mjs multi-chemical",
+    "qa:production-prepared": "node scripts/check-production-prepared-print.mjs",
     "qa:production-print": "node scripts/run-production-print-qa.mjs",
     "test": "jest"
   },
