@@ -5,6 +5,11 @@ import {
   buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
 import {
+  PRINT_CONTENT_ROLE,
+  PRINT_HAZARD_TEXT_MODE,
+  PRINT_PRECAUTION_TEXT_MODE,
+} from "@/utils/printContentPolicy";
+import {
   buildPrintDocument,
   buildPrintPreviewDocument,
 } from "@/utils/printLabels";
@@ -813,6 +818,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+      },
     },
   },
   {
@@ -904,6 +914,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasFullPagePictograms: true,
       hasSummaries: false,
       minPrintTotalLabels: 2,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+      },
       productionExpectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
       productionExpectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
     },
@@ -928,6 +943,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: false,
       minPreviewScale: 1,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.CONTAINER_FRONT,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
+      },
     },
   },
   {
@@ -975,6 +995,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasFullPagePictograms: false,
       minPreviewScale: 0.75,
       minProductionPictogramSidePx: 78,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.CONTAINER_FRONT,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
+      },
     },
   },
   {
@@ -1061,6 +1086,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: false,
       minPreviewScale: 1.4,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.QUICK_ID,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.OMITTED,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
+      },
     },
   },
   {
@@ -1173,6 +1203,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: true,
       hasFullPagePictograms: false,
       minPreviewScale: 1.4,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.QR_SUPPLEMENT,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.QR_REFERENCE,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
+      },
     },
   },
   {
@@ -1744,6 +1779,8 @@ export function buildPrintQaCaseResult({
   const printPictogramCodes = extractPictogramCodes(printHtml);
   const pictogramCodes = extractPictogramCodes(fragmentHtml);
   const expected = testCase.expected || {};
+  const contentPolicy =
+    plan.readiness?.contentPolicy || fitPreview?.model?.contentPolicy || {};
   const expectedHasSignalWord = Boolean(
     selectedChemical.signal_word || selectedChemical.signal_word_zh,
   );
@@ -1756,6 +1793,16 @@ export function buildPrintQaCaseResult({
     canPrint: plan.canPrint,
     planState: plan.state,
     outputKind: plan.outputKind,
+    contentPolicy: {
+      role: contentPolicy.role,
+      hazardTextMode: contentPolicy.hazardTextMode,
+      precautionTextMode: contentPolicy.precautionTextMode,
+      detailSource: contentPolicy.detailSource,
+      languageMode: contentPolicy.language?.mode,
+      effectiveNameDisplay: contentPolicy.language?.effectiveNameDisplay,
+      rendersBilingualStatements:
+        contentPolicy.language?.rendersBilingualStatements,
+    },
     labelKind: resolveLabelKind(fragmentHtml),
     stockPreset: fitPreview?.model?.layout?.stockPreset,
     template: fitPreview?.model?.layout?.template,
@@ -1929,6 +1976,15 @@ export function buildPrintQaCaseResult({
       "fullPagePictogramSize",
       actual.hasFullPagePictograms === expected.hasFullPagePictograms,
     ]);
+  }
+
+  if (expected.contentPolicy) {
+    Object.entries(expected.contentPolicy).forEach(([key, value]) => {
+      checks.push([
+        `contentPolicy.${key}`,
+        actual.contentPolicy?.[key] === value,
+      ]);
+    });
   }
 
   if (expected.identityDensityClass) {

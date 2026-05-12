@@ -151,6 +151,8 @@ Record these outputs in the final implementation note:
 - PDF artifact directory.
 - Search term and selected chemical.
 - Decision summary text for each tested output.
+- Content policy for each tested output: output role, H-text mode, P-text mode,
+  and detail source from `build/print-qa-report.json`.
 - Preview mode state: `Fit` should be the default whole-label view, and changing
   target or stock after using `Inspect` should return the preview to `Fit`.
 - Multi-page and continuation outputs must show preview page controls. Use them

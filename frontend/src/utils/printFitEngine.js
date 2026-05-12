@@ -4,6 +4,11 @@ import {
   countResponsibleProfileFields,
   hasResponsibleProfile,
 } from "@/utils/printContentModel";
+import {
+  PRINT_HAZARD_TEXT_MODE,
+  resolvePrintContentPolicy,
+  shouldUseHazardCodesOnly,
+} from "@/utils/printContentPolicy";
 import { isFullPagePrimaryStockId } from "@/constants/labelStocks";
 import {
   resolveEffectiveLabelContentLocale,
@@ -309,14 +314,6 @@ const inspectCustomIdentityFields = (
   );
 };
 
-const shouldUseCompactStandardHazards = (layout = {}) =>
-  layout.labelPurpose === "shipping" &&
-  layout.template === "standard" &&
-  (layout.formFactor === "bottle" ||
-    (layout.nameDisplay === "both" &&
-      layout.outputRole === "primary-candidate" &&
-      layoutAreaMm(layout) < 9500));
-
 export const estimatePrintContentTextWeight = (
   content,
   layout = {},
@@ -389,13 +386,15 @@ const estimateSupplementalPrintContentTextWeight = (
     0,
     standardBudget.precautions || 0,
   );
-  const compactStandardHazards = shouldUseCompactStandardHazards(layout);
+  const hazardCodeOnly =
+    content.policy?.hazardTextMode === PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY ||
+    shouldUseHazardCodesOnly(layout);
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
       customIdentityTextWeight(customLabelFields) +
       statementTextWeight(renderedHazards, layout, {
-        codeOnly: compactStandardHazards,
+        codeOnly: hazardCodeOnly,
         locale,
       }) +
       statementTextWeight(renderedPrecautions, layout, {
@@ -418,6 +417,7 @@ const buildContentOptions = (model) => ({
   customGHSSettings: model.customGHSSettings,
   resolvedLabProfile: model.resolvedLabProfile,
   layout: model.layout,
+  locale: model.locale || "zh",
 });
 
 const inspectSupplementalContentFitForContents = (
@@ -561,6 +561,7 @@ export function evaluatePrintReadiness({
     customGHSSettings,
     resolvedLabProfile,
     layout,
+    locale,
   });
   const hasProfile = hasResponsibleProfile(resolvedLabProfile);
   const maxStatements = getMaxCompleteStatementCount(layout || {});
@@ -596,6 +597,10 @@ export function evaluatePrintReadiness({
     resolvedLabProfile,
     isCompletePrimary,
   );
+  const contentPolicy = resolvePrintContentPolicy(layout || {}, {
+    locale,
+    continuation: isDense && isFullPagePrimary,
+  });
 
   if (contents.length === 0) {
     return {
@@ -603,6 +608,7 @@ export function evaluatePrintReadiness({
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.SELECT_LABELS,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -639,6 +645,7 @@ export function evaluatePrintReadiness({
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.USE_FULL_PAGE_PRIMARY,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -654,6 +661,7 @@ export function evaluatePrintReadiness({
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.CREATE_CONTINUATION,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -669,6 +677,7 @@ export function evaluatePrintReadiness({
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.USE_FULL_PAGE_PRIMARY,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -684,6 +693,7 @@ export function evaluatePrintReadiness({
       canPrint: true,
       recommendedAction: PRINT_RECOMMENDED_ACTION.REVIEW_SUPPLEMENTAL,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -699,6 +709,7 @@ export function evaluatePrintReadiness({
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.ADD_PROFILE,
       contents,
+      contentPolicy,
       elementSummary,
       maxStatements,
       maxStatementCount,
@@ -713,6 +724,7 @@ export function evaluatePrintReadiness({
     canPrint: true,
     recommendedAction: PRINT_RECOMMENDED_ACTION.PRINT,
     contents,
+    contentPolicy,
     elementSummary,
     maxStatements,
     maxStatementCount,

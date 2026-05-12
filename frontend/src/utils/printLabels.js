@@ -6,6 +6,14 @@ import { recordObservabilityEvent } from "@/utils/observability";
 import {
   buildPrintLabelContent,
 } from "@/utils/printContentModel";
+import {
+  PRINT_HAZARD_TEXT_MODE,
+  isCompletePrimaryLayout as isPolicyCompletePrimaryLayout,
+  isFullPagePrimaryLayout as isPolicyFullPagePrimaryLayout,
+  isQrSupplementLayout as isPolicyQrSupplementLayout,
+  isQuickIdLayout as isPolicyQuickIdLayout,
+  resolvePrintContentPolicy,
+} from "@/utils/printContentPolicy";
 import { inspectPrintContentFit } from "@/utils/printFitEngine";
 import { getPreferredQrTarget } from "@/utils/sdsLinks";
 import {
@@ -283,46 +291,22 @@ const truncateText = (value, maxLength) => {
 };
 
 const isFullPagePrimaryLayout = (layout = {}) =>
-  layout.labelPurpose === "shipping" &&
-  layout.template === "full" &&
-  (layout.stockId === "a4-primary" ||
-    layout.stockPreset === "a4-primary" ||
-    layout.stockId === "letter-primary" ||
-    layout.stockPreset === "letter-primary" ||
-    (layout.widthMm >= 170 && layout.heightMm >= 200));
+  isPolicyFullPagePrimaryLayout(layout);
 
 const isCompletePrimaryTemplate = (layout = {}) =>
-  layout.labelPurpose === "shipping" && layout.template === "full";
+  isPolicyCompletePrimaryLayout(layout);
 
 const isQrSupplementLayout = (layout = {}) =>
-  layout.labelPurpose === "qrSupplement" || layout.template === "qrcode";
+  isPolicyQrSupplementLayout(layout);
 
 const isQuickIdLayout = (layout = {}) =>
-  layout.labelPurpose === "quickId" || layout.template === "icon";
-
-const shouldUseCompactStandardHazards = (layout = {}) => {
-  const area = (layout.widthMm || 0) * (layout.heightMm || 0);
-  return (
-    layout.labelPurpose === "shipping" &&
-    layout.template === "standard" &&
-    (layout.formFactor === "bottle" ||
-      (layout.nameDisplay === "both" &&
-        layout.outputRole === "primary-candidate" &&
-        area < 9500))
-  );
-};
+  isPolicyQuickIdLayout(layout);
 
 const getStandardHazardRenderMode = (layout = {}) => {
-  if (shouldUseCompactStandardHazards(layout)) return "code";
-  if (layout.labelPurpose !== "shipping" || layout.template !== "standard") {
-    return "summary";
-  }
-  const area = (layout.widthMm || 0) * (layout.heightMm || 0);
-  const shortSide = Math.min(layout.widthMm || 0, layout.heightMm || 0);
-  if (layout.formFactor === "roomy" || area >= 9000 || shortSide >= 80) {
-    return "summary";
-  }
-  return "code";
+  const policy = resolvePrintContentPolicy(layout, { locale: i18n.language });
+  return policy.hazardTextMode === PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY
+    ? "code"
+    : "summary";
 };
 
 const getStandardHazardSummaryLimit = (layout = {}) => {
@@ -349,12 +333,16 @@ const toClassToken = (value, fallback = "unknown") =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || fallback;
 
-const getPhysicalLabelClasses = (layout = {}) =>
-  [
+const getPhysicalLabelClasses = (layout = {}) => {
+  const policy = resolvePrintContentPolicy(layout, { locale: i18n.language });
+  return [
     `label-stock-${toClassToken(layout.stockId || layout.stockPreset)}`,
     `label-size-${toClassToken(layout.size)}`,
     `label-form-${toClassToken(layout.formFactor)}`,
     `label-fit-level-${Number(layout.autoFitLevel || 0)}`,
+    `label-content-${toClassToken(policy.role)}`,
+    `label-hazard-mode-${toClassToken(policy.hazardTextMode)}`,
+    `label-precaution-mode-${toClassToken(policy.precautionTextMode)}`,
     isCompletePrimaryTemplate(layout)
       ? "label-kind-complete-primary"
       : isQrSupplementLayout(layout)
@@ -368,6 +356,7 @@ const getPhysicalLabelClasses = (layout = {}) =>
   ]
     .filter(Boolean)
     .join(" ");
+};
 
 const resolveLabProfile = (customLabelFields, labProfile) => ({
   organization:
@@ -451,6 +440,7 @@ const resolveAutoFitLevelForModel = ({
       customGHSSettings,
       resolvedLabProfile,
       layout,
+      locale,
     });
     const nameLoad = getNameLoadForLayout(content.effectiveChemical, layout);
     const hazardLoad = getStatementLoadForAutoFit(
@@ -632,6 +622,7 @@ export function buildPrintDocumentModel(
     t,
     locale: i18n.language,
     layout,
+    contentPolicy: resolvePrintContentPolicy(layout, { locale: i18n.language }),
     selectedForLabel,
     customGHSSettings,
     customLabelFields,
@@ -1025,6 +1016,7 @@ const getLabelContentForRender = (chemical, model) => {
     customGHSSettings: model.customGHSSettings,
     resolvedLabProfile: model.resolvedLabProfile,
     layout: model.layout,
+    locale: model.locale,
   });
   if (!continuation) return content;
   return {

@@ -237,6 +237,9 @@ describe("print QA matrix report", () => {
     });
     expect(byId["a4-primary"].actual.hasFullPagePictograms).toBe(true);
     expect(byId["a4-primary"].actual.hasSummaries).toBe(false);
+    expect(byId["a4-primary"].actual.contentPolicy).toMatchObject(
+      byId["a4-primary"].expected.contentPolicy,
+    );
 
     expect(byId["letter-primary"].handoffExpectation).toMatchObject({
       status: "qa_handoff",
@@ -336,6 +339,9 @@ describe("print QA matrix report", () => {
       template: "standard",
       hasQr: false,
     });
+    expect(byId["bottle-supplemental"].actual.contentPolicy).toMatchObject(
+      byId["bottle-supplemental"].expected.contentPolicy,
+    );
     expect(byId["bottle-supplemental-with-case"].actual).toMatchObject({
       hasRequiredIdentityText: true,
       printHasRequiredIdentityText: true,
@@ -360,6 +366,9 @@ describe("print QA matrix report", () => {
       template: "icon",
       hasQr: false,
     });
+    expect(byId["tube-vial-quick-id"].actual.contentPolicy).toMatchObject(
+      byId["tube-vial-quick-id"].expected.contentPolicy,
+    );
 
     expect(byId["qr-supplement"].handoffExpectation).toMatchObject({
       status: "qa_handoff",
@@ -368,6 +377,9 @@ describe("print QA matrix report", () => {
       template: "qrcode",
       hasQr: true,
     });
+    expect(byId["qr-supplement"].actual.contentPolicy).toMatchObject(
+      byId["qr-supplement"].expected.contentPolicy,
+    );
 
     report.cases.forEach((testCase) => {
       expect(testCase.passed).toBe(true);

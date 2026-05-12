@@ -41,6 +41,11 @@ import {
   PRINT_OUTPUT_PLAN_STATE,
   buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
+import {
+  PRINT_CONTENT_ROLE,
+  PRINT_HAZARD_TEXT_MODE,
+  resolvePrintContentPolicy,
+} from "@/utils/printContentPolicy";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 import useFocusTrap from "@/hooks/useFocusTrap";
@@ -919,11 +924,13 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
+  const contentPolicy =
+    outputPlan.readiness?.contentPolicy ||
+    printReadiness.contentPolicy ||
+    resolvePrintContentPolicy(layoutProfile, { locale: i18n.language });
   const isContainerFrontOutput =
     isSupplementalOutput &&
-    labelPurpose === "shipping" &&
-    !isQrSupplementOutput &&
-    !isQuickIdOutput;
+    contentPolicy.role === PRINT_CONTENT_ROLE.CONTAINER_FRONT;
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
@@ -954,21 +961,30 @@ export default function LabelPrintModal({
         ? tx("label.decisionIconsAllKept", "All pictograms kept")
         : tx("label.decisionIconsNotAvailable", "No pictograms available");
   const statementSummary =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
-      ? tx("label.decisionTextComplete", "Full H/P text")
-      : isContinuationOutput
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+      ? tx("label.decisionTextBlocked", "Do not print yet")
+      : isContinuationOutput ||
+          contentPolicy.hazardTextMode ===
+            PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION
         ? tx("label.decisionTextContinuation", "Full H/P text across pages")
-      : isQrSupplementOutput
-        ? tx("label.decisionTextQrScan", "Details via QR/SDS")
-        : isQuickIdOutput
-          ? tx("label.decisionTextIdentityOnly", "No full H/P text")
-          : isSupplementalOutput
-            ? isContainerFrontOutput
-              ? tx("label.decisionTextPriorityHOnly", "Priority H only")
-              : tx("label.decisionTextSummaryOnly", "Short hazard summary")
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
-          ? tx("label.decisionTextBlocked", "Do not print yet")
-          : tx("label.decisionTextCheck", "Check requirements");
+        : contentPolicy.hazardTextMode === PRINT_HAZARD_TEXT_MODE.FULL_HP
+          ? tx("label.decisionTextComplete", "Full H/P text")
+          : contentPolicy.hazardTextMode ===
+              PRINT_HAZARD_TEXT_MODE.QR_REFERENCE
+            ? tx("label.decisionTextQrScan", "Details via QR/SDS")
+            : contentPolicy.hazardTextMode ===
+                PRINT_HAZARD_TEXT_MODE.OMITTED
+              ? tx("label.decisionTextIdentityOnly", "No full H/P text")
+              : contentPolicy.hazardTextMode ===
+                  PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY
+                ? tx("label.decisionTextHCodesOnly", "H codes only")
+                : contentPolicy.hazardTextMode ===
+                    PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY
+                  ? tx("label.decisionTextPriorityHOnly", "Priority H only")
+                  : contentPolicy.hazardTextMode ===
+                      PRINT_HAZARD_TEXT_MODE.SHORT_H_SUMMARY
+                    ? tx("label.decisionTextSummaryOnly", "Short hazard summary")
+                    : tx("label.decisionTextCheck", "Check requirements");
   const decisionSummaryItems = [
     {
       key: "role",
@@ -1033,7 +1049,8 @@ export default function LabelPrintModal({
   const outputChecklistBadge = isSupplementalOutput
     ? tx("label.outputSupplemental", "Supplemental")
     : tx("label.outputPrimary", "Primary");
-  const supplementalHazardOutputItem = isQrSupplementOutput
+  const supplementalHazardOutputItem =
+    contentPolicy.hazardTextMode === PRINT_HAZARD_TEXT_MODE.QR_REFERENCE
     ? {
         key: "hazard-reference",
         label: tx("label.outputHazardReference", "Detailed hazard text"),
@@ -1044,7 +1061,7 @@ export default function LabelPrintModal({
           "The small QR label does not print full H/P text.",
         ),
       }
-    : isQuickIdOutput
+    : contentPolicy.hazardTextMode === PRINT_HAZARD_TEXT_MODE.OMITTED
       ? {
           key: "hazard-reference",
           label: tx("label.outputHazardReference", "Detailed hazard text"),
@@ -1055,10 +1072,23 @@ export default function LabelPrintModal({
             "Quick-ID labels keep identity and pictograms readable.",
           ),
         }
-      : {
+      : contentPolicy.hazardTextMode === PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY
+        ? {
+            key: "hazard-statements",
+            label: tx("label.outputHazardSummary", "Hazard summary"),
+            value: tx("label.outputHCodesOnly", "H codes only"),
+            tone: "caution",
+            description: tx(
+              "label.outputHCodesOnlyHint",
+              "Compact labels print priority H codes only; full H/P belongs on A4/Letter, SDS/QR, or a back label.",
+            ),
+          }
+        : {
           key: "hazard-statements",
           label: tx("label.outputHazardSummary", "Hazard summary"),
-          value: isContainerFrontOutput
+          value:
+            contentPolicy.hazardTextMode ===
+            PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY
             ? tx("label.outputPriorityHOnly", "Priority H only")
             : tx("label.outputSummaryOnly", "Summary only"),
           tone: "caution",

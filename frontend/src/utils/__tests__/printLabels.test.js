@@ -1862,6 +1862,13 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("H314");
+      expect(preview.fragmentHtml).toContain("label-content-container-front");
+      expect(preview.fragmentHtml).toContain(
+        "label-hazard-mode-priority-h-summary",
+      );
+      expect(preview.fragmentHtml).toContain(
+        "label-precaution-mode-omitted",
+      );
       expect(preview.fragmentHtml).not.toContain("P301+P330+P331");
       expect(preview.fragmentHtml).not.toContain("P280");
       expect(preview.fragmentHtml).not.toContain("P501");
@@ -1900,6 +1907,8 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
+      expect(preview.fragmentHtml).toContain("label-content-qr-supplement");
+      expect(preview.fragmentHtml).toContain("label-hazard-mode-qr-reference");
       expect(preview.fragmentHtml).not.toContain("qr-hazard-chip");
       expect(preview.fragmentHtml).not.toContain("H330");
       expect(preview.fragmentHtml).toContain("Danger");
@@ -2907,6 +2916,8 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("label-hazard-mode-h-codes-only");
+      expect(html).toContain("label-precaution-mode-omitted");
       expect(html).not.toMatch(/<div\s+class="precautions-compact"/);
       expect(html).not.toContain("P210");
     });

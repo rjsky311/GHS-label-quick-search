@@ -177,17 +177,19 @@ Acceptance:
 
 The next autonomous implementation slice should start from
 `NEXT_PRINT_WORKSTREAMS.md` and pick the highest-value coherent segment from
-the five workstreams. Prefer this order unless a fresh production screenshot,
-CI failure, or code review finding points elsewhere:
+the five workstreams. Prepared preset clickthrough, production print-matrix
+automation, real chemical edge-case coverage, and print content policy now have
+implementation plus QA evidence. Prefer this order unless a fresh production
+screenshot, CI failure, or code review finding points elsewhere:
 
-1. Production print-matrix automation, because deployed Chrome is where the user
-   has repeatedly found print issues that local checks missed.
-2. Print content policy, because label body decisions must stop drifting between
-   renderer tweaks and visual fixes.
-3. Real chemical edge cases, added by risk class rather than by arbitrary CAS
-   volume.
-4. UI visual/noise polish, using production screenshots to remove confusion and
+1. UI visual/noise polish, using production screenshots to remove confusion and
    prove whole-label preview quality.
-5. Prepared-solution follow-up polish only when new user-visible prepared
-   workflow issues appear; the preset clickthrough gap is now covered by
+2. Renderer/fit follow-up when production or PDF QA exposes a specific stock
+   geometry issue, especially compact labels.
+3. Prepared-solution follow-up polish only when new user-visible prepared
+   workflow issues appear; the preset clickthrough gap is already covered by
    `qa:production-prepared`.
+4. Additional real chemical edge cases only when they cover a distinct missing
+   risk class or a newly observed production failure.
+5. Trust/source/SDS flow polish after the safety-critical print path remains
+   stable across the production matrix.

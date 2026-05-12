@@ -131,6 +131,21 @@ only H summaries, the UI should make clear that the output is supplemental and
 that complete H/P content lives in A4/Letter primary, continuation pages, SDS,
 QR, or another complete source.
 
+Current status: shared content policy is now implemented in
+`frontend/src/utils/printContentPolicy.js` and wired through the content model,
+readiness planner, output planner, renderer classes, modal decision summary,
+and QA matrix report. The policy defines the output role
+(`complete_primary`, `container_front`, `quick_id`, `qr_supplement`), hazard
+text mode (`full_hp`, `full_hp_continuation`, `priority_h_summary`,
+`h_codes_only`, `qr_reference`, `omitted`), P-text mode, detail source, and
+compact bilingual fallback behavior.
+
+Acceptance evidence is covered by `printContentPolicy.test.js`,
+`printContentModel.test.js`, `printFitEngine.test.js`, `printLabels.test.js`,
+`LabelPrintModal.test.js`, and `printQaMatrixReport.test.js`. The matrix now
+asserts representative policy roles for A4 primary, continuation primary,
+bottle supplemental, large container-front, quick-ID, and QR supplement output.
+
 ## 5. UI Visual And Noise Polish
 
 The print modal must feel like a focused task workflow, not a dense control

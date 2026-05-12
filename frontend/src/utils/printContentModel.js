@@ -1,3 +1,5 @@
+import { resolvePrintContentPolicy } from "@/utils/printContentPolicy";
+
 export const PRINT_LABEL_ELEMENT_STATUS = Object.freeze({
   PRESENT: "present",
   MISSING: "missing",
@@ -74,6 +76,7 @@ export function buildPrintLabelContent(chemical, options = {}) {
     customGHSSettings = {},
     resolvedLabProfile = {},
     layout = {},
+    locale = "zh",
   } = options;
   const effectiveChemical = resolveEffectiveChemicalForPrint(
     chemical,
@@ -93,6 +96,7 @@ export function buildPrintLabelContent(chemical, options = {}) {
     "";
   const isCompletePrimary =
     layout.labelPurpose === "shipping" && layout.template === "full";
+  const policy = resolvePrintContentPolicy(layout, { locale });
   const responsibleProfilePresent = hasResponsibleProfile(resolvedLabProfile);
 
   return {
@@ -134,10 +138,8 @@ export function buildPrintLabelContent(chemical, options = {}) {
             : PRINT_LABEL_ELEMENT_STATUS.NOT_APPLICABLE,
     },
     policy: {
-      isCompletePrimary,
-      isSupplemental: layout.labelPurpose && layout.labelPurpose !== "shipping",
+      ...policy,
       pictogramsMustRender: pictograms.length > 0,
-      qrCanReplaceRequiredElements: false,
     },
   };
 }

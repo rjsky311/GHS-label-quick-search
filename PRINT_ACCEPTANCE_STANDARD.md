@@ -20,6 +20,24 @@ Reference URLs:
 
 ## Output Classes
 
+### Content Policy Matrix
+
+The renderer, planner, modal copy, and QA matrix must use the shared content
+policy in `frontend/src/utils/printContentPolicy.js`. These terms are product
+terms, not just CSS classes:
+
+| Output role | Hazard text policy | P text policy | Detail source |
+| --- | --- | --- | --- |
+| Complete primary | Full H/P on the printed label | Full P text | Printed A4/Letter or other verified complete primary |
+| Complete primary continuation | Full H/P split across pages | Full P text split across pages | Printed continuation set |
+| Container front | Priority H summaries when roomy, H codes only when compact | Omitted from the face label | A4/Letter primary, SDS/QR, or back/fold-out label |
+| Quick-ID | No full H/P text | Omitted | Complete primary or SDS |
+| QR supplement | QR/SDS reference with optional teaser only when it fits | Omitted | QR/SDS path plus complete primary when required |
+
+Bilingual labels are preferred when readable, but compact physical labels may
+fall back to the active language for names and statements. That fallback is a
+policy decision, not an ad hoc renderer deletion.
+
 ### Complete Primary
 
 Use for shipped-container style output and main container labels.
@@ -53,7 +71,9 @@ Acceptance gates:
 - Every available GHS pictogram is printed.
 - GHS pictograms are visually prioritized before H/P text summaries.
 - H-statements may be summarized only after typography and layout scaling have been attempted.
-- P-statements may be summarized before H-statements when space is limited.
+- P-statements are intentionally omitted from the front face by default; the
+  UI must state that complete H/P content belongs on A4/Letter primary,
+  continuation pages, SDS/QR, or another complete source.
 - Print must remain available when the output is truthful as supplemental.
 
 ### QR / SDS Supplemental
@@ -162,6 +182,10 @@ Unit tests should keep these invariants pinned:
 - Custom tiny complete-primary configs route to A4/Letter instead of enabling an invalid primary label.
 - Custom supplemental configs keep every pictogram and print as supplemental, not complete primary.
 - Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
+- The shared content policy is the source of truth for output role, H-text
+  mode, P-text mode, QR reference behavior, and compact bilingual fallback.
+  Planner, renderer, modal copy, and QA reports must not invent separate
+  deletion rules.
 - No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
 - Prepared-solution cases must cover direct creation, prepared-sidebar reprint,
   and preset reuse. Preset reuse must not carry stale operational fields into a

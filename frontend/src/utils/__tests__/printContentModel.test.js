@@ -3,6 +3,11 @@ import {
   buildPrintLabelContent,
   resolveEffectiveChemicalForPrint,
 } from "../printContentModel";
+import {
+  PRINT_CONTENT_ROLE,
+  PRINT_HAZARD_TEXT_MODE,
+  PRINT_PRECAUTION_TEXT_MODE,
+} from "../printContentPolicy";
 
 const baseChemical = {
   cas_number: "7647-01-0",
@@ -40,6 +45,9 @@ describe("printContentModel", () => {
     expect(content.policy).toEqual(
       expect.objectContaining({
         isCompletePrimary: true,
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
         pictogramsMustRender: true,
         qrCanReplaceRequiredElements: false,
       }),

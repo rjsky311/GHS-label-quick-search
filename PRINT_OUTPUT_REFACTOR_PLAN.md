@@ -221,6 +221,12 @@ The first refactor slice has landed:
   preflight can also retry once or twice at a tighter fit level when it sees
   fixable overflow, so the system shrinks/reflows first and only blocks after
   the renderer still cannot produce a truthful label.
+- Print content policy is now centralized in `printContentPolicy`: complete
+  primary labels print full H/P, continuation primary labels split full H/P
+  across pages, roomy container-front labels print priority H summaries,
+  compact bottle labels print H codes only, quick-ID labels omit full H/P, and
+  QR supplements use QR/SDS reference behavior. The modal decision summary,
+  renderer classes, planner output, and QA report consume those shared terms.
 - Compact stock coverage has been expanded beyond the original tube/vial cases.
   The QA matrix now includes small-rack quick-ID, small-rack QR supplement,
   medium-rack quick-ID, medium-rack QR supplement, 62 mm continuous, and large

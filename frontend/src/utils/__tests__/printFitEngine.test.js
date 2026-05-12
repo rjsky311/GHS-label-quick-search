@@ -5,6 +5,11 @@ import {
   getMaxSupplementalTextWeight,
   inspectPrintContentFit,
 } from "../printFitEngine";
+import {
+  PRINT_CONTENT_ROLE,
+  PRINT_HAZARD_TEXT_MODE,
+  PRINT_PRECAUTION_TEXT_MODE,
+} from "../printContentPolicy";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 
 jest.mock("@/i18n", () => ({
@@ -399,6 +404,11 @@ describe("printFitEngine", () => {
 
     expect(readiness.state).toBe(PRINT_READINESS_STATE.NEEDS_PROFILE);
     expect(readiness.canPrint).toBe(false);
+    expect(readiness.contentPolicy).toMatchObject({
+      role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+      hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+      precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+    });
     expect(readiness.elementSummary.responsibleProfile).toEqual({
       expected: 3,
       present: 2,

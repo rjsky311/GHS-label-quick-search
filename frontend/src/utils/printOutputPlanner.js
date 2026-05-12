@@ -6,6 +6,7 @@ import {
   PRINT_READINESS_STATE,
   evaluatePrintReadiness,
 } from "@/utils/printFitEngine";
+import { resolvePrintOutputKindFromLayout } from "@/utils/printContentPolicy";
 
 export const PRINT_OUTPUT_PLAN_STATE = Object.freeze({
   PENDING_SELECTION: "pending_selection",
@@ -91,22 +92,6 @@ const hasHazardContent = (readiness) =>
 const hasUpstreamError = (readiness) =>
   readiness.contents.some((content) => content.effectiveChemical?.upstream_error);
 
-const resolveOutputKind = (layout = {}) => {
-  if (layout.labelPurpose === "qrSupplement" || layout.template === "qrcode") {
-    return PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
-  }
-
-  if (layout.labelPurpose === "quickId" || layout.template === "icon") {
-    return PRINT_OUTPUT_KIND.QUICK_ID;
-  }
-
-  if (layout.labelPurpose !== "shipping" || layout.template !== "full") {
-    return PRINT_OUTPUT_KIND.SUPPLEMENTAL;
-  }
-
-  return PRINT_OUTPUT_KIND.COMPLETE_PRIMARY;
-};
-
 const isSmallSupplementalStock = (layout = {}) =>
   layout.outputRole === "supplemental" ||
   layout.size === "small" ||
@@ -128,7 +113,7 @@ export function buildPrintOutputPlan({
     resolvedLabProfile,
     locale,
   });
-  const outputKind = resolveOutputKind(layout);
+  const outputKind = resolvePrintOutputKindFromLayout(layout);
   const recommendedFullPageStockId = getPreferredFullPageStockId(
     locale,
     layout?.stock?.pageSize,

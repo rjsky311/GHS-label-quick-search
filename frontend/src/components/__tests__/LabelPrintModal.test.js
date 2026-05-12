@@ -410,7 +410,7 @@ describe("LabelPrintModal", () => {
     expect(supplementalChecklist).toHaveTextContent("This label prints");
     expect(supplementalChecklist).toHaveTextContent("Identity");
     expect(supplementalChecklist).toHaveTextContent("Hazard summary");
-    expect(supplementalChecklist).toHaveTextContent("Priority H only");
+    expect(supplementalChecklist).toHaveTextContent("H codes only");
     expect(supplementalChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Print Bottle label (front, 1)",
