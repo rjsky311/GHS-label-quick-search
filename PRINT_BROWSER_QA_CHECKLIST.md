@@ -28,7 +28,10 @@ Chrome click-through QA; it only confirms that production is serving the code
 you are about to test.
 When compact stock rendering changes, the freshness check must also prove that
 stock-specific markers such as `label-stock-small-rack` and
-`label-stock-medium-rack` are present in the deployed bundle.
+`label-stock-medium-rack` are present in the deployed bundle. Content-policy
+changes must also prove that policy markers such as
+`label-content-`, `label-hazard-mode-`, `h_codes_only`, and `qr_reference`
+are present.
 
 For the normal post-deploy print gate, use the combined runner:
 

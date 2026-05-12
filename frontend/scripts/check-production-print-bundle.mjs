@@ -20,6 +20,10 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "label-fit-level-",
   "label-stock-small-rack",
   "label-stock-medium-rack",
+  "label-content-",
+  "label-hazard-mode-",
+  "h_codes_only",
+  "qr_reference",
 ];
 
 const productionUrl = process.env.PRINT_QA_PRODUCTION_URL || DEFAULT_PRODUCTION_URL;
