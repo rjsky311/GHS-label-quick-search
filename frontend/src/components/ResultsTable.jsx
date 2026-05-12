@@ -1,4 +1,4 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
@@ -212,7 +212,7 @@ export default function ResultsTable({
 
       {/* Results Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px]" data-testid="results-table">
+        <table className="w-full min-w-[1050px]" data-testid="results-table">
           <caption className="sr-only">{t("results.tableCaption")}</caption>
           <thead>
             <tr className="bg-slate-50">
@@ -236,7 +236,7 @@ export default function ResultsTable({
               >
                 {t("results.colName")} <SortIcon columnKey="name" />
               </th>
-              <th className="w-48 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <th className="w-72 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colGHS")}
               </th>
               <th
@@ -292,7 +292,7 @@ export default function ResultsTable({
                     {result.cas_number}
                   </span>
                 </td>
-                <td className="px-4 py-4 align-top">
+                <td className="min-w-[18rem] px-4 py-4 align-top">
                   {result.found ? (
                     (() => {
                       const displayNames = getLocalizedNames(result, displayLocale);
@@ -402,7 +402,10 @@ export default function ResultsTable({
 
                         return (
                           <>
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div
+                              className="flex max-w-[18rem] flex-wrap items-center gap-2"
+                              data-testid={`result-ghs-visual-${result.cas_number}`}
+                            >
                               <GHSPictogramStrip
                                 pictograms={effective.pictograms || []}
                                 size="md"
@@ -435,42 +438,58 @@ export default function ResultsTable({
                               <div>
                                 <button
                                   onClick={() => onToggleOtherClassifications(result.cas_number)}
-                                  className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
+                                  className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100 transition-colors hover:bg-blue-100 hover:text-blue-900"
                                   aria-expanded={!!expandedOtherClassifications[result.cas_number]}
                                 >
-                                  <span>{expandedOtherClassifications[result.cas_number] ? '▼' : '▶'}</span>
+                                  {expandedOtherClassifications[result.cas_number] ? (
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  )}
                                   {t("results.otherClassifications", { count: allClassifications.length - 1 })}
                                 </button>
 
                                 {/* Expanded Other Classifications */}
                                 {expandedOtherClassifications[result.cas_number] && (
-                                  <div className="mt-2 max-h-72 space-y-2 overflow-y-auto rounded-lg border border-slate-200 border-l-2 border-l-slate-300 bg-slate-50/70 p-2 pr-1">
+                                  <div
+                                    className="mt-2 max-h-72 space-y-2 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-2"
+                                    data-testid={`other-classifications-${result.cas_number}`}
+                                  >
                                     {allClassifications.map((cls, clsIdx) => {
                                       const isSelected = effective.customIndex === clsIdx;
                                       if (isSelected) return null;
+                                      const classificationLabel =
+                                        clsIdx === 0
+                                          ? t("results.defaultMarker")
+                                          : t("results.alternateClassification", {
+                                              index: clsIdx + 1,
+                                            });
 
                                       return (
                                         <div
                                           key={clsIdx}
-                                          className="group/item flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm shadow-slate-100"
+                                          className="group/item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-slate-200 bg-white px-2.5 py-2 shadow-sm shadow-slate-100"
                                         >
-                                          <GHSPictogramStrip
-                                            pictograms={cls.pictograms || []}
-                                            size="sm"
-                                            variant="muted"
-                                            markerTitle={t("results.alternateClassification", {
-                                              index: clsIdx + 1,
-                                            })}
-                                            getName={(pic) =>
-                                              getLocalizedPictogramName(
-                                                pic,
-                                                displayLocale
-                                              )
-                                            }
-                                          />
+                                          <div className="min-w-0">
+                                            <div className="mb-1 text-[11px] font-medium text-slate-500">
+                                              {classificationLabel}
+                                            </div>
+                                            <GHSPictogramStrip
+                                              pictograms={cls.pictograms || []}
+                                              size="sm"
+                                              variant="muted"
+                                              markerTitle={classificationLabel}
+                                              getName={(pic) =>
+                                                getLocalizedPictogramName(
+                                                  pic,
+                                                  displayLocale
+                                                )
+                                              }
+                                            />
+                                          </div>
                                           <button
                                             onClick={() => onSetCustomClassification(result.cas_number, clsIdx)}
-                                            className="ml-auto shrink-0 rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-200 hover:bg-blue-100 hover:text-blue-900"
+                                            className="shrink-0 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:border-blue-200 hover:bg-blue-100 hover:text-blue-900"
                                             title={t("detail.setAsMain")}
                                           >
                                             {t("results.setAsPrimary")}

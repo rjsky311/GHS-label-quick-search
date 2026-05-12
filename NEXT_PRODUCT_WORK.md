@@ -87,6 +87,14 @@ Acceptance:
 Goal: search results should look like a polished safety tool, not a raw data
 dump with inconsistent icons.
 
+Current progress:
+
+- Result-table GHS pictogram strips now use clean official SVG tiles without
+  extra status dots next to the regulatory symbols.
+- The results GHS column is wide enough for the common four-icon hazard set, and
+  expanded alternate classifications render as compact cards with clear
+  chevrons and stable "set as primary" actions.
+
 Work to continue:
 
 - Review GHS pictogram presentation in the results table, expanded

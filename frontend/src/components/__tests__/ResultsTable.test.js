@@ -451,6 +451,27 @@ describe('ResultsTable', () => {
       expect(screen.getByText(/results\.otherClassifications/)).toBeInTheDocument();
     });
 
+    it('renders expanded classifications as compact cards without status-dot clutter', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          expandedOtherClassifications={{
+            [mockFoundResult.cas_number]: true,
+          }}
+        />
+      );
+
+      const expanded = screen.getByTestId(
+        `other-classifications-${mockFoundResult.cas_number}`,
+      );
+      expect(expanded).toHaveClass('rounded-md');
+      expect(expanded).not.toHaveClass('border-l-2');
+      expect(within(expanded).getByText('results.alternateClassification')).toBeInTheDocument();
+      expect(within(expanded).getByText('results.setAsPrimary')).toBeInTheDocument();
+      expect(within(expanded).getByTestId('ghs-img-GHS07')).toBeInTheDocument();
+    });
+
     it('does not show toggle when result has no other classifications', () => {
       render(<ResultsTable {...defaultProps} results={[mockWarningResult]} />);
       expect(screen.queryByText(/results\.otherClassifications/)).not.toBeInTheDocument();

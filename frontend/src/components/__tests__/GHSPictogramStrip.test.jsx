@@ -12,7 +12,7 @@ jest.mock("../GHSImage", () => {
 });
 
 describe("GHSPictogramStrip", () => {
-  it("renders pictograms in stable tiles with a status marker", () => {
+  it("renders pictograms in stable tiles with accessible classification context", () => {
     render(
       <GHSPictogramStrip
         pictograms={[{ code: "GHS02" }, { code: "GHS07" }]}
@@ -21,13 +21,16 @@ describe("GHSPictogramStrip", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Primary classification")).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Primary classification" }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("ghs-img-GHS02")).toHaveTextContent(
       "GHS02 name",
     );
     expect(screen.getByTestId("ghs-img-GHS07")).toHaveTextContent(
       "GHS07 name",
     );
+    expect(screen.getAllByTestId("ghs-pictogram-tile")).toHaveLength(2);
   });
 
   it("returns no visual wrapper when there are no pictograms", () => {
