@@ -2658,22 +2658,22 @@ const buildStyles = (model) => {
       min-height: 6.8mm;
     }
     .label-standard.label-stock-large-primary .signal.signal-inline {
-      padding: 0.75mm 2.2mm;
+      padding: 0.85mm 2.45mm;
       border-radius: 1.1mm;
-      font-size: 10px;
+      font-size: 11px;
       line-height: 1.05;
     }
     .label-standard.label-stock-large-primary .hazard-primary-list {
-      gap: 0.72mm;
+      gap: 0.78mm;
     }
     .label-standard.label-stock-large-primary .hazard-primary-item {
-      padding: 0.6mm 0.85mm;
-      font-size: 8.7px;
+      padding: 0.75mm 1mm;
+      font-size: 10px;
       line-height: 1.08;
     }
     .label-standard.label-stock-large-primary .hazard-more {
-      padding: 0.4mm 0.75mm;
-      font-size: 8px;
+      padding: 0.52mm 0.85mm;
+      font-size: 9px;
       line-height: 1.05;
     }
     .label-qr.label-form-strip {
