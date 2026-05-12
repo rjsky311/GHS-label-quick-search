@@ -394,12 +394,35 @@ const inspectSelectedPreparedSummary = async (page) => {
   };
 };
 
-const inspectPreviewFrame = async (page, testCase) => {
+const getPreviewFrame = async (page) => {
   const iframeHandle = await page
     .getByTestId("label-fragment-preview")
     .elementHandle();
   const frame = await iframeHandle?.contentFrame();
   if (!frame) throw new Error("Could not resolve prepared preview iframe.");
+  return frame;
+};
+
+const waitForPreviewImagesReady = async (frame) => {
+  await frame
+    .waitForFunction(
+      () => {
+        const ghsImages = Array.from(document.querySelectorAll("img")).filter(
+          (img) => /^GHS\d{2}$/i.test(img.getAttribute("alt") || img.alt || ""),
+        );
+        return (
+          ghsImages.length > 0 &&
+          ghsImages.every((img) => img.complete && img.naturalWidth > 0)
+        );
+      },
+      { timeout: 20000 },
+    )
+    .catch(() => {});
+};
+
+const inspectPreviewFrame = async (page, testCase) => {
+  const frame = await getPreviewFrame(page);
+  await waitForPreviewImagesReady(frame);
 
   return frame.evaluate(
     ({ expectedPreparedTexts, expectedHasQr, expectedMinPictogramSidePx }) => {
