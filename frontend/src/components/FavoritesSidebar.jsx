@@ -1,7 +1,8 @@
 import { Star, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import GHSImage from "@/components/GHSImage";
+import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import useFocusTrap from "@/hooks/useFocusTrap";
+import { getLocalizedPictogramName } from "@/utils/ghsText";
 
 export default function FavoritesSidebar({
   favorites,
@@ -11,7 +12,8 @@ export default function FavoritesSidebar({
   onViewDetail,
   onPrintLabel,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayLocale = i18n.language;
   // Handles Escape-to-close, initial focus, Tab trap, and focus
   // restore on close. Ref goes on the inner panel so the backdrop's
   // click-to-close handler doesn't fight the trap.
@@ -79,16 +81,15 @@ export default function FavoritesSidebar({
                       </div>
                     )}
                     {item.ghs_pictograms?.length > 0 && (
-                      <div className="flex gap-1 mt-2">
-                        {item.ghs_pictograms.map((pic, pIdx) => (
-                          <GHSImage
-                            key={pIdx}
-                            code={pic.code}
-                            name={pic.name_zh}
-                            className="w-8 h-8"
-                          />
-                        ))}
-                      </div>
+                      <GHSPictogramStrip
+                        pictograms={item.ghs_pictograms}
+                        size="sm"
+                        className="mt-2"
+                        markerTitle={t("results.defaultMarker")}
+                        getName={(pic) =>
+                          getLocalizedPictogramName(pic, displayLocale)
+                        }
+                      />
                     )}
                   </div>
                   <button

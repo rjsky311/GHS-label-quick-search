@@ -94,6 +94,9 @@ Current progress:
 - The results GHS column is wide enough for the common four-icon hazard set, and
   expanded alternate classifications render as compact cards with clear
   chevrons and stable "set as primary" actions.
+- Favorite/sidebar pictograms now reuse the shared tile strip, and comparison
+  table pictogram cells use the same compact tile geometry instead of a
+  separate oversized card style.
 
 Work to continue:
 

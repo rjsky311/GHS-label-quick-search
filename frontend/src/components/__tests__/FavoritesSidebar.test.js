@@ -3,7 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import FavoritesSidebar from '../FavoritesSidebar';
 
 // GHSImage makes real <img> requests — stub it out.
-jest.mock('@/components/GHSImage', () => () => null);
+jest.mock('@/components/GHSImage', () => {
+  return function MockGHSImage({ code }) {
+    return <span data-testid={`ghs-img-${code}`}>{code}</span>;
+  };
+});
 
 const makeFav = (overrides = {}) => ({
   cas_number: '64-17-5',
@@ -53,6 +57,16 @@ describe('FavoritesSidebar', () => {
     expect(screen.getByText('67-56-1')).toBeInTheDocument();
     expect(screen.getByText('Ethanol')).toBeInTheDocument();
     expect(screen.getByText('Methanol')).toBeInTheDocument();
+  });
+
+  it('renders favorite pictograms with the shared tile strip', () => {
+    render(<FavoritesSidebar {...defaultProps} favorites={[makeFav()]} />);
+
+    expect(screen.getByTestId('ghs-pictogram-strip')).toHaveAttribute(
+      'data-size',
+      'sm',
+    );
+    expect(screen.getByTestId('ghs-img-GHS02')).toBeInTheDocument();
   });
 
   it('clicking the backdrop calls onClose', () => {

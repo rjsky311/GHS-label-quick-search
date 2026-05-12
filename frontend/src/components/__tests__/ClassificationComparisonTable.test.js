@@ -89,6 +89,11 @@ describe("ClassificationComparisonTable", () => {
       expect(screen.getByTestId("present-GHS02-0")).toHaveClass(
         "inline-flex",
       );
+      expect(screen.getByTestId("present-tile-GHS02-0")).toHaveClass(
+        "h-11",
+        "w-11",
+        "rounded-md",
+      );
       expect(screen.getByTestId("present-GHS07-1")).toBeInTheDocument();
     });
 
@@ -104,6 +109,11 @@ describe("ClassificationComparisonTable", () => {
       );
       // cls2 is missing GHS02 — should see absent placeholder
       expect(screen.getByTestId("absent-GHS02-1")).toBeInTheDocument();
+      expect(screen.getByTestId("absent-tile-GHS02-1")).toHaveClass(
+        "h-11",
+        "w-11",
+        "rounded-md",
+      );
     });
 
     it("renders signal words with the current UI locale", () => {
