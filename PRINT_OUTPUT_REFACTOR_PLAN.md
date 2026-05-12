@@ -197,6 +197,21 @@ The first refactor slice has landed:
   preflight can also retry once or twice at a tighter fit level when it sees
   fixable overflow, so the system shrinks/reflows first and only blocks after
   the renderer still cannot produce a truthful label.
+- Compact stock coverage has been expanded beyond the original tube/vial cases.
+  The QA matrix now includes small-rack quick-ID, small-rack QR supplement,
+  medium-rack quick-ID, medium-rack QR supplement, 62 mm continuous, and large
+  front-label paths. The local PDF artifact gate currently covers 27 print
+  cases.
+- PDF artifact QA now checks stock-specific visual overlap classes, including
+  pictogram collision with CAS, signal word, product name, QR, and label
+  boundaries. Compact labels must be visibly usable, not merely present in the
+  DOM.
+- Production bundle freshness checks now include stock-specific print markers
+  such as `label-stock-small-rack` and `label-stock-medium-rack`, so stale
+  Zeabur assets are caught before production click-through QA.
+- The autonomous continuation rules now live in `AUTONOMOUS_WORKFLOW.md`, and
+  the product work queue lives in `NEXT_PRODUCT_WORK.md`. Use those files with
+  this refactor plan when the user asks to keep going.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.
 
@@ -313,7 +328,9 @@ Keep only common, useful presets in the first-level UI:
 - 2 x 4 inch label, Avery 5163-style.
 - 3-1/3 x 4 inch label, Avery 5164-style.
 - 62 mm continuous label, Brother DK-2205-style.
-- Small quick-ID label, supplemental only.
+- Small rack / quick-ID label, supplemental only.
+- Medium rack label, supplemental or quick-ID only unless a future renderer
+  proves a complete primary label fits truthfully.
 - Custom saved stock.
 
 Avoid offering many near-duplicate sizes by default. More choices make the workflow feel powerful but increase error and hesitation.

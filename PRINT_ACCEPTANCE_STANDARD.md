@@ -119,6 +119,11 @@ Run this matrix before shipping print-workflow changes:
 | Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
 | Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
 | Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
+| Hydrochloric Acid | Small Rack Quick ID | Bilingual | Color | 54 x 32 mm compact output, all pictograms, CAS/signal/name visible, no visual overlap |
+| Hydrochloric Acid | Small Rack QR Supplement | Bilingual | Color | 54 x 32 mm QR supplement, QR plus all pictograms, no QR/pictogram collision |
+| Hydrochloric Acid | 62 mm Continuous Quick ID | Bilingual | Color | Compact roll output, all pictograms, identity chips do not clip or collide |
+| Hydrochloric Acid | Medium Rack Quick ID | Bilingual | Color | Stock-specific compact geometry, all pictograms, CAS/case identity remains readable |
+| Hydrochloric Acid | Medium Rack QR Supplement | Bilingual | Color | QR supplement on medium stock, QR and pictograms stay separated and visible |
 | Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
 | Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
@@ -156,4 +161,9 @@ Unit tests should keep these invariants pinned:
   template, and stock preset.
 - `qa:print-report` must inspect both preview fragments and the actual print
   document body so a preview-only pass cannot mask missing print output.
+- PDF artifact QA must assert that visual issues are empty, including
+  pictogram/CAS, pictogram/signal, pictogram/name, QR/pictogram, and
+  outside-label overlap classes for compact labels.
+- Production bundle QA must check current stock-specific print markers when
+  compact stock rendering changes, including small-rack and medium-rack markers.
 - Targeted local print contract checks are available with `npm run test:print-contract` from `frontend/`.

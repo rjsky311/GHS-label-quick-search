@@ -69,6 +69,9 @@ Current evidence:
   from strip to bottle to large stock.
 - Supplemental renderer tests verify all pictograms remain present on compact
   outputs.
+- The compact QA matrix now includes small-rack, medium-rack, and 62 mm
+  continuous outputs, with PDF artifact checks for visual overlap and
+  label-boundary clipping.
 
 ## Segment 4: Complete Primary A4 And Letter
 
@@ -125,6 +128,8 @@ Current evidence:
 - `LabelPrintModal.test.js` verifies QR and quick-ID outcome/action language.
 - `printAcceptanceMatrix.test.js` verifies quick-ID uses
   `label-kind-quick-id`, all pictograms, no QR, and no `more-pics`.
+- Small-rack and medium-rack quick-ID/QR paths are explicit QA cases, so compact
+  labels cannot rely on generic stock behavior.
 
 ## Segment 7: Source And Profile Safety Gates
 
@@ -187,6 +192,12 @@ Current evidence:
 - `printQaMatrix.js` and `npm run qa:print-report` generate a machine-readable
   code-level report for the core HCl A4, Letter, bottle, tube/vial, and QR
   outputs, including expected handoff attributes and Fit/Inspect preview state.
+- `npm run qa:print-pdf` renders generated print HTML artifacts to PDF and
+  fails on missing images, pictogram-set drift, QR drift, `more-pics`, clipping,
+  and compact visual-overlap regressions.
+- `npm run qa:production-print` runs the combined production gate: matrix
+  report, deployed click-through handoff, print HTML artifact generation, PDF
+  QA, and preview screenshots.
 
 ## Done Definition
 
@@ -195,9 +206,13 @@ A print-workflow change is not done until:
 - `npm run test:print-contract` passes.
 - `npm run qa:print-report` passes when the change touches matrix-level print
   behavior, and the generated report has zero failed cases.
+- `npm run qa:print-pdf` passes when the change touches print HTML, layout CSS,
+  compact labels, QR supplements, or renderer geometry.
 - `npm test -- --runInBand` passes.
 - `npm run build` passes.
 - Backend tests pass when the change touches shared workflow or deployment.
-- Browser Use has clicked through at least the affected output targets.
+- Browser/Chrome automation has clicked through at least the affected output
+  targets.
 - Production or deploy-preview verification confirms the current bundle, not a
-  stale build.
+  stale build. For production print changes, `npm run qa:production-print`
+  should pass after Zeabur deploys.

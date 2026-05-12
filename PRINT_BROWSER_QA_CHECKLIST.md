@@ -26,6 +26,9 @@ bundle, and verifies that the bundle contains the current print QA handoff,
 layout-blocked, CAS/size, and compact identity markers. It does not replace
 Chrome click-through QA; it only confirms that production is serving the code
 you are about to test.
+When compact stock rendering changes, the freshness check must also prove that
+stock-specific markers such as `label-stock-small-rack` and
+`label-stock-medium-rack` are present in the deployed bundle.
 
 For the normal post-deploy print gate, use the combined runner:
 
@@ -98,6 +101,8 @@ This loads each generated print document with Chrome print media, exports a PDF
 with `preferCSSPageSize`, verifies the PDF header/size, and checks the print DOM
 for loaded images, exact GHS pictogram sets, QR state, `more-pics` absence, and
 visible overflow/clipping in identity, hazard, QR, and compliance containers.
+It also fails on compact visual-overlap classes such as pictogram collision
+with CAS, signal word, product name, QR, or the label boundary.
 
 ## Required Evidence
 
@@ -233,6 +238,10 @@ or renderers:
 - Ethanol `64-17-5` bottle output remains readable and printable.
 - A small stock or vial-strip output keeps every pictogram and does not claim to
   be complete primary.
+- Small-rack and medium-rack quick-ID outputs keep CAS, signal word, product
+  identity, and every pictogram visible without overlap.
+- Small-rack and medium-rack QR outputs keep QR and every pictogram visible
+  without QR/pictogram collision.
 - A no-GHS chemical does not produce a false hazard label.
 - A transient upstream-error result blocks hazard-label printing.
 - Custom tiny complete-primary stock routes to A4/Letter instead of enabling an

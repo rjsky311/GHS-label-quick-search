@@ -249,6 +249,13 @@ Use it before changing `LabelPrintModal`, `printLabels`, `printFitEngine`,
 defines the output-planner direction, A4/Letter primary labels, curated stock
 set, typography scaling, supplemental-label rules, and Browser QA matrix.
 
+Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
+live product queue is pinned in `NEXT_PRODUCT_WORK.md`. When the user asks to
+"continue" or otherwise delegates the next work round, use those docs to pick
+the highest-value product slice, implement it, verify it, push to `main` when
+stable, and track CI/Zeabur/production QA for user-facing changes. Stop only
+for the explicit stop conditions in `AUTONOMOUS_WORKFLOW.md`.
+
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
 refresh, backend health/search, the trust panel, detail workflow, and label
@@ -257,6 +264,14 @@ print modal entry.
 ### Git History (key commits)
 
 ```
+55039a6 Tighten production print bundle check
+929476c Expand compact label print coverage
+5cbdb7b Refine quick ID compact label layout
+c02295d Refine compact label preview scaling
+60de466 Expand print QA matrix coverage
+e238361 Refine print workflow and comparison icons
+7d16cae Unify GHS pictogram presentation
+f930827 Tighten production bundle marker gate
 6b67061 Merge pull request #23 - Productize utility workflow
 a9bdebd feat: productize utility workflow
 51cdb11 Polish label print copy and hierarchy
@@ -305,9 +320,12 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 708 tests across 45 suites; 0 known React `act(...)` warnings
+- **Frontend**: 814 tests across 49 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Backend**: 141 tests covering name resolution, reverse dicts, aliases, API endpoints,
+- **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
+- **Print PDF QA**: `npm run qa:print-pdf` covers 27 print cases and fails on compact visual-overlap regressions
+- **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks
+- **Backend**: 132 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
 - **Build**: `npm run build` → OK; Vite vendor chunks split via `manualChunks`

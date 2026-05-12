@@ -44,6 +44,15 @@ The best path is a complete primary label that a lab user can print without gues
   supplemental labels. A normal case identifier should remain printable on
   quick-ID and QR outputs; an oversized identifier should be rejected before
   print handoff rather than visually clipped.
+- Every selectable stock/purpose combination must have explicit renderer and QA
+  coverage, or it must be unavailable in the first-level workflow. The user
+  should not discover unsupported stock behavior by clicking print.
+- Compact outputs must pass visual geometry checks, not only DOM-content checks:
+  pictograms must not overlap CAS, case/batch identity, signal word, product
+  name, QR, or the label border.
+- The stock QA families currently include A4 Primary, Letter Primary, standard
+  bottle, large front label, small rack, medium rack, 62 mm continuous, strip,
+  QR supplement, and custom stock routing.
 
 ## Test Standards
 
@@ -68,6 +77,13 @@ Automated tests should pin these behaviors:
   print media and fail when the PDF is invalid, required GHS images fail to
   load, pictogram sets drift, QR state is wrong, `more-pics` appears, or
   identity/hazard/QR/compliance containers visibly overflow.
+- Print/PDF artifact QA must also fail on visual overlap classes such as
+  pictogram-overlaps-CAS, pictogram-overlaps-signal, pictogram-overlaps-name,
+  QR-overlaps-pictogram, or compact content outside the label boundary.
+- Production bundle freshness checks must include stock-specific markers when
+  print CSS or renderer behavior depends on stock families. A deployed bundle
+  that lacks current small-rack or medium-rack markers is stale even if the app
+  loads successfully.
 
 ## Browser QA Scenarios
 
@@ -79,5 +95,14 @@ Run these in Browser Use after meaningful print-workflow changes:
 - A4 Primary preview shows the full label scaled inside the preview pane rather than cropping the top of the full-page label.
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.
 - QR supplement: QR remains dominant, the workflow clearly marks it as supplemental, and all pictograms still render.
+- Small rack quick-ID: CAS, product identity, signal word, and all pictograms
+  remain visible without overlap; the output is marked supplemental/quick-ID.
+- Small rack QR supplement: QR and every pictogram remain visible without
+  collision; the output is marked supplemental and not a primary substitute.
+- Medium rack quick-ID and QR: stock-specific compact rules apply, and the
+  preview remains whole-label visible in Fit mode.
+- Large front label: identity, CAS, case/batch when present, signal word, all
+  pictograms, and prioritized H-statements fit without claiming full H/P
+  completeness.
 - Black-and-white mode: pictograms and QR are grayscale in preview.
 - English / Chinese / bilingual name modes: preview text changes while icon positions remain stable.
