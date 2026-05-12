@@ -180,6 +180,12 @@ The first refactor slice has landed:
   handoff report, and captures preview screenshots for every default
   production-searchable case. This is the post-deploy gate for print workflow
   changes.
+- The same production handoff matrix can now be split into
+  `npm run qa:production-primary`, `npm run qa:production-compact`, and
+  `npm run qa:production-multi-chemical`. These are not weaker checks; they use
+  the same deployed-browser runner and only narrow the selected case IDs so
+  compact-label or primary-label work can be validated without waiting for the
+  full matrix every time.
 - Production preview inspection now checks rendered content containers for
   overflow or label-boundary clipping, not only the hidden handoff status. This
   keeps the QA target aligned with the user-visible preview instead of merely
@@ -200,6 +206,11 @@ The first refactor slice has landed:
   PDF validity plus loaded images, exact pictogram sets, QR state, `more-pics`
   absence, and visible overflow/clipping in identity, hazard, QR, and
   compliance containers.
+- Prepared-solution A4 primary, bottle supplemental, and tube quick-ID outputs
+  are now first-class renderer/PDF QA cases. They are intentionally excluded
+  from the production search handoff matrix until a browser-driven
+  prepare-solution creation path exists, because production cannot search for a
+  derived prepared item directly.
 - The first render-driven auto-fit slice is in place. Print layout resolution
   now derives an `autoFitLevel` from actual chemical identity, case/batch
   fields, hazard text load, and pictogram count before rendering. Print

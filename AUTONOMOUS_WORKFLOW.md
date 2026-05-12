@@ -87,6 +87,10 @@ For print workflow changes, the default validation stack is:
   print-flow iterations; it covers complete primary, continuation,
   case-number quick ID, 62 mm, QR supplement handoff, and the search-results
   UI readability check in production Chrome.
+- `npm run qa:production-primary`, `npm run qa:production-compact`, and
+  `npm run qa:production-multi-chemical` when the full production matrix is too
+  slow for one pass. These run the same deployed Chrome handoff gate, but split
+  it into complete-primary, compact-stock, and cross-chemical layers.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix

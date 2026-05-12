@@ -156,6 +156,10 @@ describe("print QA matrix report", () => {
         expect.objectContaining({ id: "ethanol", cas: "64-17-5" }),
         expect.objectContaining({ id: "sodiumHydroxide", cas: "1310-73-2" }),
         expect.objectContaining({ id: "longNameCorrosive", cas: "QA-LONG-001" }),
+        expect.objectContaining({
+          id: "preparedHydrochloricAcid",
+          cas: "7647-01-0",
+        }),
       ]),
     );
     expect(report.summary).toEqual({
@@ -186,7 +190,10 @@ describe("print QA matrix report", () => {
         "data-support-chips",
       ]),
     );
-    expect(report.productionBrowserQa.cases).toHaveLength(PRINT_QA_MATRIX.length);
+    expect(report.productionBrowserQa.cases).toHaveLength(
+      PRINT_QA_MATRIX.filter((testCase) => testCase.productionHandoff !== false)
+        .length,
+    );
 
     const byId = Object.fromEntries(
       report.cases.map((testCase) => [testCase.id, testCase]),
@@ -416,6 +423,31 @@ describe("print QA matrix report", () => {
       cas: "7722-84-1",
       expectedPictograms: ["GHS03", "GHS05", "GHS07"],
     });
+    expect(byId["prepared-a4-primary"]).toMatchObject({
+      chemical: expect.objectContaining({
+        id: "preparedHydrochloricAcid",
+        cas: "7647-01-0",
+        expectedPictograms: ["GHS04", "GHS05", "GHS06", "GHS07"],
+      }),
+      actual: expect.objectContaining({
+        hasPreparedIdentityTexts: true,
+        printHasPreparedIdentityTexts: true,
+        hasFullPagePictograms: true,
+      }),
+    });
+    expect(byId["prepared-bottle-supplemental"].actual).toMatchObject({
+      hasPreparedIdentityTexts: true,
+      printHasPreparedIdentityTexts: true,
+      printLabelKind: "supplemental",
+    });
+    expect(byId["prepared-tube-quick-id"].actual).toMatchObject({
+      hasPreparedIdentityTexts: true,
+      printHasPreparedIdentityTexts: true,
+      printLabelKind: "quick-id",
+    });
+    expect(browserCaseById["prepared-a4-primary"]).toBeUndefined();
+    expect(browserCaseById["prepared-bottle-supplemental"]).toBeUndefined();
+    expect(browserCaseById["prepared-tube-quick-id"]).toBeUndefined();
     expect(byId["long-name-bottle-supplemental"].actual.printHasEveryPictogram).toBe(
       true,
     );

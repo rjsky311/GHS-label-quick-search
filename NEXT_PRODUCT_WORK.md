@@ -81,6 +81,10 @@ Acceptance:
   user sees the same problem in production.
 - `qa:production-print` covers each production-searchable output class and
   leaves screenshots plus structured reports for review.
+- The same deployed-browser gate can be run as
+  `qa:production-primary`, `qa:production-compact`, and
+  `qa:production-multi-chemical` so long-running print validation can continue
+  in smaller autonomous rounds without dropping coverage.
 
 ## Priority 3 - Result Table And Pictogram Visual Polish
 
@@ -154,6 +158,10 @@ Acceptance:
 
 - Prepared solution print/reprint paths pass the same no-clipping, no-missing
   pictogram, and truthful-output rules as regular labels.
+- Prepared-solution renderer/PDF cases are part of the print QA matrix; a
+  future production-prepared path should add browser-driven creation from the
+  prepare-solution modal before treating prepared workflows as fully
+  production-clickthrough covered.
 
 ## Immediate Next Recommended Slice
 

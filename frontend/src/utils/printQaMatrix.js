@@ -8,6 +8,7 @@ import {
   buildPrintDocument,
   buildPrintPreviewDocument,
 } from "@/utils/printLabels";
+import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
 
 export const PRINT_QA_PICTOGRAMS = Object.freeze([
   "GHS04",
@@ -593,6 +594,19 @@ export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   ],
 });
 
+export const PRINT_QA_PREPARED_HYDROCHLORIC_ACID = Object.freeze(
+  buildPreparedSolutionItem(
+    { ...PRINT_QA_HYDROCHLORIC_ACID, found: true },
+    {
+      concentration: "1 M",
+      solvent: "Water",
+      preparedBy: "QA Analyst",
+      preparedDate: "2026-05-12",
+      expiryDate: "2026-06-12",
+    },
+  ),
+);
+
 export const PRINT_QA_CHEMICALS = Object.freeze({
   hydrochloricAcid: PRINT_QA_HYDROCHLORIC_ACID,
   ethanol: PRINT_QA_ETHANOL,
@@ -601,6 +615,7 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   formaldehyde: PRINT_QA_FORMALDEHYDE,
   hydrogenPeroxide: PRINT_QA_HYDROGEN_PEROXIDE,
   longNameCorrosive: PRINT_QA_LONG_NAME_CORROSIVE,
+  preparedHydrochloricAcid: PRINT_QA_PREPARED_HYDROCHLORIC_ACID,
 });
 
 const getChemicalPictogramCodes = (chemical = {}) =>
@@ -1173,6 +1188,87 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
+    id: "prepared-a4-primary",
+    label: "Prepared HCl A4 complete primary",
+    chemicalId: "preparedHydrochloricAcid",
+    productionHandoff: false,
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasQr: false,
+      hasFullPagePictograms: true,
+      hasSummaries: false,
+      preparedIdentityTexts: [
+        "1 M",
+        "Water",
+        "QA Analyst",
+        "2026-05-12",
+        "2026-06-12",
+      ],
+    },
+  },
+  {
+    id: "prepared-bottle-supplemental",
+    label: "Prepared HCl bottle supplemental",
+    chemicalId: "preparedHydrochloricAcid",
+    productionHandoff: false,
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "medium-bottle",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "medium-bottle",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1,
+      preparedIdentityTexts: ["1 M", "Water"],
+    },
+  },
+  {
+    id: "prepared-tube-quick-id",
+    label: "Prepared HCl tube quick-ID",
+    chemicalId: "preparedHydrochloricAcid",
+    productionHandoff: false,
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "small-strip",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+      preparedIdentityTexts: ["1 M", "Water"],
+    },
+  },
+  {
     id: "long-name-bottle-supplemental",
     label: "Long-name bottle supplemental",
     chemicalId: "longNameCorrosive",
@@ -1480,6 +1576,14 @@ export function buildPrintQaCaseResult({
     printHasRequiredIdentityText: expected.requiredIdentityText
       ? printHtml.includes(expected.requiredIdentityText)
       : true,
+    hasPreparedIdentityTexts: hasEveryText(
+      fragmentHtml,
+      expected.preparedIdentityTexts || [],
+    ),
+    printHasPreparedIdentityTexts: hasEveryText(
+      printHtml,
+      expected.preparedIdentityTexts || [],
+    ),
     hasAnyIdentityText: hasAnyText(fragmentHtml, identityTextExpectation.any),
     printHasAnyIdentityText: hasAnyText(printHtml, identityTextExpectation.any),
     hasRequiredIdentityTexts: hasEveryText(
@@ -1604,6 +1708,14 @@ export function buildPrintQaCaseResult({
     ]);
     checks.push(["supportChip", actual.hasSupportChip]);
     checks.push(["printSupportChip", actual.printHasSupportChip]);
+  }
+
+  if ((expected.preparedIdentityTexts || []).length > 0) {
+    checks.push(["preparedIdentityTexts", actual.hasPreparedIdentityTexts]);
+    checks.push([
+      "printPreparedIdentityTexts",
+      actual.printHasPreparedIdentityTexts,
+    ]);
   }
 
   const failures = checks
@@ -1774,11 +1886,12 @@ export function buildPrintQaMatrixReport({
   const cases = matrix.map((testCase) =>
     buildPrintQaCaseResult({ testCase, chemical, chemicals, labProfile }),
   );
+  const testCaseById = new Map(matrix.map((testCase) => [testCase.id, testCase]));
   const failedCases = cases.filter((testCase) => !testCase.passed);
   const reportChemicals = [
     ...new Map(
       cases.map((testCase) => [
-        testCase.chemical.cas,
+        testCase.chemical.id,
         {
           id: testCase.chemical.id,
           cas: testCase.chemical.cas,
@@ -1836,12 +1949,17 @@ export function buildPrintQaMatrixReport({
         "data-issue-types",
         "data-support-chips",
       ],
-      cases: cases.map((caseResult) =>
-        buildProductionBrowserQaCase(
-          matrix.find((testCase) => testCase.id === caseResult.id) || {},
-          caseResult,
+      cases: cases
+        .filter((caseResult) => {
+          const sourceCase = testCaseById.get(caseResult.id) || {};
+          return sourceCase.productionHandoff !== false;
+        })
+        .map((caseResult) =>
+          buildProductionBrowserQaCase(
+            testCaseById.get(caseResult.id) || {},
+            caseResult,
+          ),
         ),
-      ),
     },
     cases,
   };
