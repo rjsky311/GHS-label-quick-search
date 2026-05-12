@@ -904,6 +904,9 @@ export default function LabelPrintModal({
             outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
           ? "danger"
           : "caution";
+  const shouldOpenOutputPlanDetails =
+    outputPlanTone === "danger" ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
   const hasAnyPictograms =
     printReadiness.elementSummary.pictograms.expected > 0;
   const isQrSupplementOutput =
@@ -1340,6 +1343,10 @@ export default function LabelPrintModal({
                         "This prints on {{stock}} with all available pictograms and full H/P text for the selected content.",
                         { stock: currentStockName },
                       );
+  const shouldShowPreviewOutcomeSummary =
+    selectedForLabel.length === 0 ||
+    outputOutcomeTone === "danger" ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
   const printActionLabel =
     selectedForLabel.length === 0
       ? t("label.printBtn", { count: totalLabels })
@@ -2358,56 +2365,6 @@ export default function LabelPrintModal({
     </details>
   );
 
-  const renderPrintWorkflowSteps = () => {
-    const steps = [
-      {
-        key: "target",
-        label: tx("label.workflowStepTarget", "1. Choose target"),
-        value: printTargetLabel,
-        icon: MapPin,
-      },
-      {
-        key: "recommendation",
-        label: tx("label.workflowStepRecommendation", "2. Review recommendation"),
-        value: outputRoleSummary,
-        icon: Lightbulb,
-      },
-      {
-        key: "preview",
-        label: tx("label.workflowStepPreview", "3. Check preview"),
-        value: previewFitLabel,
-        icon: LayoutPanelTop,
-      },
-    ];
-
-    return (
-      <div
-        className="grid gap-2 text-xs sm:grid-cols-3"
-        data-testid="print-workflow-steps"
-      >
-        {steps.map((step) => {
-          const StepIcon = step.icon;
-
-          return (
-            <div
-              key={step.key}
-              className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
-              data-testid={`print-workflow-step-${step.key}`}
-            >
-              <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                <StepIcon className="h-3.5 w-3.5 text-blue-600" />
-                {step.label}
-              </div>
-              <div className="mt-1 font-medium text-slate-900">
-                {step.value}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   const renderRecommendedOutputSection = () => {
     const RecommendationIcon =
       outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
@@ -2779,14 +2736,12 @@ export default function LabelPrintModal({
                     {currentStockName}
                   </span>
                 </div>
-                <div className="mt-4">{renderPrintWorkflowSteps()}</div>
-                <div className="mt-3">{renderRecommendedOutputSection()}</div>
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
                     {tx("label.outputGoalTitle", "Label target")}
                   </div>
                   <div
-                    className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4"
+                    className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"
                     data-testid="output-goal-controls"
                   >
                     {PRINT_TARGET_OPTIONS.map((option) => {
@@ -2803,7 +2758,7 @@ export default function LabelPrintModal({
                           aria-label={`${optionLabel}. ${optionDescription}`}
                           title={optionDescription}
                           data-testid={`label-purpose-${option.value}`}
-                          className={`rounded-md border p-2.5 text-left transition-colors ${
+                          className={`min-h-12 rounded-md border p-2.5 text-left transition-colors ${
                             selected
                               ? "border-blue-500 bg-blue-50 text-blue-900"
                               : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
@@ -2822,10 +2777,11 @@ export default function LabelPrintModal({
                     })}
                   </div>
                 </div>
+                <div className="mt-3">{renderRecommendedOutputSection()}</div>
 
                 <div className="mt-4">
                   <details
-                    open={outputPlanTone !== "ready"}
+                    open={shouldOpenOutputPlanDetails}
                     className={`rounded-md border p-3 ${
                       READINESS_TONE_CLASSES[outputPlanTone] ||
                       READINESS_TONE_CLASSES.neutral
@@ -3443,7 +3399,8 @@ export default function LabelPrintModal({
                 </div>
 
                 <div className="space-y-4 px-4 py-4">
-                  {renderOutputOutcomeSection()}
+                  {shouldShowPreviewOutcomeSummary &&
+                    renderOutputOutcomeSection()}
 
                   {renderLabelPreviewSection()}
 

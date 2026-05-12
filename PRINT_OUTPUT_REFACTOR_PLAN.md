@@ -97,6 +97,15 @@ The first refactor slice has landed:
   label target first, see the app decision in that same target block, then verify
   the exact printable output in the live preview. Standalone page-count noise is
   folded into the selected-label summary.
+- The first-level target cards are now constrained to two columns at desktop
+  widths, with the legacy process-step explainer removed. Production handoff QA
+  asserts that the target cards stay wide enough, the target choice appears
+  before recommendation/details blocks, and non-blocking output details stay
+  collapsed by default.
+- The right-side preview panel now stays focused on the real printable fragment
+  for normal printable outputs. Detailed outcome explanations live in the left
+  decision block unless the workflow is empty, blocked, or needs a full-page
+  primary upgrade.
 - Print QA now records CAS presence, physical label dimensions, page size,
   color mode, name display, template, stock, and issue types in the handoff DOM
   status. The matrix also includes a compact quick-ID case with a case/batch

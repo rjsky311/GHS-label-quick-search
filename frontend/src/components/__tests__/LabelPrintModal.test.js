@@ -108,18 +108,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Recommended next step",
     );
-    expect(screen.getByTestId("print-workflow-steps")).toHaveTextContent(
-      "1. Choose target",
-    );
-    expect(screen.getByTestId("print-workflow-step-target")).toHaveTextContent(
-      "Bottle label",
-    );
-    expect(
-      screen.getByTestId("print-workflow-step-recommendation"),
-    ).toHaveTextContent("Container front label");
-    expect(screen.getByTestId("print-workflow-step-preview")).toHaveTextContent(
-      "Whole label visible",
-    );
+    expect(screen.queryByTestId("print-workflow-steps")).not.toBeInTheDocument();
     expect(screen.getByTestId("recommended-output-role")).toHaveTextContent(
       "Output role",
     );
@@ -130,6 +119,7 @@ describe("LabelPrintModal", () => {
       "Why this output was chosen",
     );
     expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Output role",
     );
@@ -137,9 +127,7 @@ describe("LabelPrintModal", () => {
       "All pictograms kept",
     );
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
-      "print",
-    );
+    expect(screen.queryByTestId("print-outcome-summary")).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
@@ -150,7 +138,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("output-goal-controls")).toHaveClass(
       "sm:grid-cols-2",
     );
-    expect(screen.getByTestId("output-goal-controls")).toHaveClass(
+    expect(screen.getByTestId("output-goal-controls")).not.toHaveClass(
       "2xl:grid-cols-4",
     );
     expect(screen.getByTestId("selected-stock-summary")).toBeInTheDocument();
@@ -167,12 +155,12 @@ describe("LabelPrintModal", () => {
     expect(
       screen
         .getByTestId("primary-output-size-controls")
-        .compareDocumentPosition(screen.getByTestId("print-workflow-steps")) &
+        .compareDocumentPosition(screen.getByTestId("output-goal-controls")) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       screen
-        .getByTestId("print-workflow-steps")
+        .getByTestId("output-goal-controls")
         .compareDocumentPosition(screen.getByTestId("recommended-output-summary")) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -406,10 +394,10 @@ describe("LabelPrintModal", () => {
       },
     });
 
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Bottle label is printable as a front label",
     );
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+    expect(screen.getByTestId("print-decision-icons")).toHaveTextContent(
       "All pictograms kept",
     );
     const supplementalChecklist = screen.getByTestId(
@@ -440,9 +428,10 @@ describe("LabelPrintModal", () => {
       },
     });
 
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "QR supplement is printable",
     );
+    expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Details via QR/SDS",
     );
@@ -469,7 +458,7 @@ describe("LabelPrintModal", () => {
       },
     });
 
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Tube / vial quick-ID label is printable",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
@@ -788,6 +777,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
       "Responsible profile required",
     );
+    expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
     expect(screen.getByTestId("responsible-profile-controls")).toHaveAttribute(
       "open",
     );
@@ -1054,7 +1044,7 @@ describe("LabelPrintModal", () => {
     render(<StatefulModal />);
     fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
 
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "QR supplement is printable",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(

@@ -245,6 +245,90 @@ const fillResponsibleProfile = async (page, responsibleProfile = {}) => {
   await sleep(500);
 };
 
+const inspectModalShell = async (page) =>
+  page.evaluate(() => {
+    const failures = [];
+    const byTestId = (testId) =>
+      document.querySelector(`[data-testid="${testId}"]`);
+    const outputControls = byTestId("output-goal-controls");
+    const recommendation = byTestId("recommended-output-summary");
+    const outputPlan = byTestId("print-output-plan");
+    const workflowSteps = byTestId("print-workflow-steps");
+
+    if (workflowSteps) {
+      failures.push("legacy-workflow-steps-visible");
+    }
+    if (!outputControls) {
+      failures.push("missing-output-goal-controls");
+    }
+    if (!recommendation) {
+      failures.push("missing-recommended-output-summary");
+    }
+    if (!outputPlan) {
+      failures.push("missing-print-output-plan");
+    }
+    if (
+      outputControls &&
+      recommendation &&
+      !(
+        outputControls.compareDocumentPosition(recommendation) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ) {
+      failures.push("recommendation-before-target-choice");
+    }
+    if (
+      recommendation &&
+      outputPlan &&
+      !(
+        recommendation.compareDocumentPosition(outputPlan) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ) {
+      failures.push("details-before-recommendation");
+    }
+    if (outputPlan?.open) {
+      failures.push("output-plan-open-by-default");
+    }
+
+    const targetButtons = Array.from(
+      document.querySelectorAll('[data-testid^="label-purpose-"]'),
+    ).map((node) => {
+      const rect = node.getBoundingClientRect();
+      const lines = (node.innerText || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      return {
+        id: node.getAttribute("data-testid") || "",
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        lines,
+      };
+    });
+    if (targetButtons.length !== 4) {
+      failures.push("target-choice-count");
+    }
+    targetButtons.forEach((button) => {
+      if (button.width < 220) {
+        failures.push(`${button.id}-too-narrow`);
+      }
+      if (button.height > 90) {
+        failures.push(`${button.id}-too-tall`);
+      }
+      if (button.lines.length > 2) {
+        failures.push(`${button.id}-text-overwrapped`);
+      }
+    });
+
+    return {
+      failures,
+      targetButtons,
+      outputPlanOpen: Boolean(outputPlan?.open),
+      hasLegacyWorkflowSteps: Boolean(workflowSteps),
+    };
+  });
+
 const inspectPreviewFrame = async (page, testCase) => {
   const iframeHandle = await page
     .getByTestId("label-fragment-preview")
@@ -663,6 +747,9 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   const assert = (name, passed) => {
     if (!passed) failures.push(name);
   };
+  (evidence.modalShellInspection?.failures || []).forEach((failure) => {
+    failures.push(`modal-shell:${failure}`);
+  });
   const expectedCanPrint = testCase.expectedCanPrint !== false;
   const expectedPrintButtonEnabled =
     testCase.expectedPrintButtonEnabled ?? expectedCanPrint;
@@ -894,11 +981,13 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
     await page.goto(withQaParam(baseUrl), { waitUntil: "domcontentloaded" });
     await fillSearch(page, testCase.searchTerm);
     await openPrintModal(page);
+    const modalShellInspection = await inspectModalShell(page);
     await fillResponsibleProfile(page, responsibleProfile);
     await setTargetAndStock(page, testCase);
     await setVisualConfig(page, testCase);
     await setCustomFields(page, testCase);
     const evidence = await capturePreviewEvidence(page, testCase);
+    evidence.modalShellInspection = modalShellInspection;
     const status = await readPrintStatus(page, testCase);
     return evaluateCase({ testCase, status, evidence });
   } catch (error) {
