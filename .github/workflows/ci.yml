@@ -38,8 +38,11 @@ jobs:
       # dependency advisories without blocking every change while the
       # remaining transitive packages are reviewed.
       - name: Audit production dependencies (informational)
-        continue-on-error: true
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          npm audit --omit=dev --audit-level=high || {
+            echo "::notice title=Production dependency audit::Advisories found; this informational baseline is tracked separately and does not block CI."
+            exit 0
+          }
 
   backend:
     name: Backend
@@ -69,7 +72,9 @@ jobs:
       # Informational for now. Known baseline issues will be handled
       # in the FastAPI dependency refresh follow-up.
       - name: Audit Python dependencies (informational)
-        continue-on-error: true
         run: |
           pip install pip-audit
-          pip-audit -r requirements.txt
+          pip-audit -r requirements.txt || {
+            echo "::notice title=Python dependency audit::Advisories found; this informational baseline is tracked separately and does not block CI."
+            exit 0
+          }
