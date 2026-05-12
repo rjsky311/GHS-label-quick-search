@@ -193,6 +193,15 @@ describe('ResultsTable', () => {
       expect(defaultProps.onViewDetail).toHaveBeenCalledWith(mockFoundResult);
     });
 
+    it('keeps action buttons horizontally readable', () => {
+      render(<ResultsTable {...defaultProps} />);
+
+      expect(screen.getByTestId('detail-btn-0')).toHaveClass(
+        'whitespace-nowrap',
+      );
+      expect(screen.getByTestId('sds-btn-0')).toHaveClass('whitespace-nowrap');
+    });
+
     it('renders SDS link when cid is present', () => {
       render(
         <ResultsTable

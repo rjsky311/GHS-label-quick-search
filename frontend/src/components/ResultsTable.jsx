@@ -212,7 +212,7 @@ export default function ResultsTable({
 
       {/* Results Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1050px]" data-testid="results-table">
+        <table className="w-full min-w-[1120px]" data-testid="results-table">
           <caption className="sr-only">{t("results.tableCaption")}</caption>
           <thead>
             <tr className="bg-slate-50">
@@ -246,7 +246,7 @@ export default function ResultsTable({
               >
                 {t("results.colSignalWord")} <SortIcon columnKey="signal_word" />
               </th>
-              <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colAction")}
               </th>
             </tr>
@@ -530,12 +530,12 @@ export default function ResultsTable({
                     "-"
                   )}
                 </td>
-                <td className="px-4 py-4 align-top">
+                <td className="w-44 min-w-[11rem] px-4 py-4 align-top">
                   {result.found && (
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap gap-1.5">
                       <button
                         onClick={() => onViewDetail(result)}
-                        className="rounded border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                         data-testid={`detail-btn-${idx}`}
                       >
                         {t("results.detail")}
@@ -545,7 +545,7 @@ export default function ResultsTable({
                           href={getPubChemSDSUrl(result.cid)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
+                          className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
                           title={t("sds.viewSDS")}
                           data-testid={`sds-btn-${idx}`}
                         >
