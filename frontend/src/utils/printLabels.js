@@ -2602,6 +2602,80 @@ const buildStyles = (model) => {
     .label-standard.label-form-roomy .precautions-compact {
       display: none;
     }
+    .label-standard.label-stock-large-primary {
+      padding: 3.2mm 4mm;
+    }
+    .label-standard.label-stock-large-primary .label-top-standard {
+      margin: -0.4mm -0.6mm 1.7mm -0.6mm;
+      padding: 0.2mm 0.2mm 1.15mm 0.2mm;
+      border-bottom-width: 0.45mm;
+    }
+    .label-standard.label-stock-large-primary .name-en {
+      font-size: 21px;
+      line-height: 1.02;
+      -webkit-line-clamp: 1;
+    }
+    .label-standard.label-stock-large-primary .name-zh {
+      font-size: 14px;
+      line-height: 1.02;
+      margin-top: 0.2mm;
+    }
+    .label-standard.label-stock-large-primary .meta-ribbon {
+      gap: 0.65mm;
+      margin-top: 0.55mm;
+    }
+    .label-standard.label-stock-large-primary .meta-chip {
+      padding: 0.32mm 0.95mm;
+      font-size: 8.8px;
+      line-height: 1.05;
+    }
+    .label-standard.label-stock-large-primary .standard-grid {
+      grid-template-columns: minmax(0, 58mm) minmax(0, 1fr);
+      gap: 3.2mm;
+      align-items: stretch;
+      height: 100%;
+    }
+    .label-standard.label-stock-large-primary .standard-rail {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-right: 2.8mm;
+      border-right-width: 0.3mm;
+    }
+    .label-standard.label-stock-large-primary .pictograms-standard {
+      grid-template-columns: repeat(2, 27mm);
+      gap: 2.2mm;
+    }
+    .label-standard.label-stock-large-primary .pictograms-standard img {
+      width: 27mm;
+      height: 27mm;
+    }
+    .label-standard.label-stock-large-primary .standard-main {
+      gap: 1.15mm;
+      justify-content: center;
+    }
+    .label-standard.label-stock-large-primary .standard-signal-row {
+      min-height: 6.8mm;
+    }
+    .label-standard.label-stock-large-primary .signal.signal-inline {
+      padding: 0.75mm 2.2mm;
+      border-radius: 1.1mm;
+      font-size: 10px;
+      line-height: 1.05;
+    }
+    .label-standard.label-stock-large-primary .hazard-primary-list {
+      gap: 0.72mm;
+    }
+    .label-standard.label-stock-large-primary .hazard-primary-item {
+      padding: 0.6mm 0.85mm;
+      font-size: 8.7px;
+      line-height: 1.08;
+    }
+    .label-standard.label-stock-large-primary .hazard-more {
+      padding: 0.4mm 0.75mm;
+      font-size: 8px;
+      line-height: 1.05;
+    }
     .label-qr.label-form-strip {
       gap: 1mm;
       padding: 1.5mm;

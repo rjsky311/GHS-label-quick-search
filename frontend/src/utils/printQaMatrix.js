@@ -790,6 +790,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: false,
       minPreviewScale: 0.75,
+      minProductionPictogramSidePx: 78,
     },
   },
   {
@@ -1702,13 +1703,14 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
     caseResult.chemical.expectedForbiddenIdentityTexts ||
     [],
   expectedMinPictogramSidePx:
-    caseResult.handoffExpectation.labelKind === "complete-primary"
+    caseResult.expected.minProductionPictogramSidePx ??
+    (caseResult.handoffExpectation.labelKind === "complete-primary"
       ? 18
       : caseResult.handoffExpectation.labelKind === "qr-supplement"
         ? 18
         : caseResult.handoffExpectation.labelKind === "quick-id"
           ? 26
-          : 24,
+          : 24),
   expectedMinQrSidePx: caseResult.handoffExpectation.hasQr ? 30 : 0,
   expectedCasNumbers: caseResult.handoffExpectation.casNumbers,
   expectedLabelWidthMm: caseResult.handoffExpectation.labelWidthMm,

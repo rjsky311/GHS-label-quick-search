@@ -115,7 +115,7 @@ Run this matrix before shipping print-workflow changes:
 | Formaldehyde | A4 Primary | Bilingual | Color | Complete primary continuation set, multiple pages, all pictograms repeated, no clipping |
 | Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
-| Hydrochloric Acid | Large Primary | Bilingual | Color | Complete primary when the content fits, all pictograms, no H/P summaries |
+| Hydrochloric Acid | Large Primary | Bilingual | Color | Container front label when full content cannot fit; identity and pictograms are visually prominent, all pictograms, priority H summaries only |
 | Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
 | Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
 | Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
