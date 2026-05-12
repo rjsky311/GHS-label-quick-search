@@ -48,6 +48,7 @@ const run = (args) =>
   });
 
 await run(["run", "qa:production-bundle"]);
+await run(["run", "qa:production-search-ui"]);
 await run(["run", "qa:print-report"]);
 await run(["run", "qa:production-handoff"]);
 
