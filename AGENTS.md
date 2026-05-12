@@ -330,6 +330,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 - **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 30 print cases, including prepared-solution A4 primary, bottle supplemental, and tube quick-ID outputs, and fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
+- **Production print workflow**: GitHub Actions workflow `Production Print QA` can run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
 - **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs
 - **Backend**: 132 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error

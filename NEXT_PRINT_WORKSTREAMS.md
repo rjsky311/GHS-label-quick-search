@@ -45,22 +45,32 @@ can be run after pushes and before calling a print milestone complete. The gate
 should be able to run as a full matrix when time allows, and as smaller layers
 when the autonomous loop needs faster feedback.
 
-The next implementation step is to turn the existing production scripts into a
-documented and, where practical, CI-callable workflow. The matrix should keep
-the current split between primary, compact, multi-chemical, and prepared
-coverage, upload or preserve structured JSON reports and screenshots, and make
-failure summaries actionable by stock, target, chemical, label kind, and issue
-type. If full deployed-browser QA is too slow or too external for every push, it
-should still have a manual or scheduled GitHub Actions path and a clear local
-post-deploy command sequence.
+Current status: automated as both local scripts and a GitHub Actions workflow.
+`.github/workflows/production-print-qa.yml` can be run manually with
+`workflow_dispatch` modes for `smoke`, `primary`, `compact`,
+`multi-chemical`, `prepared`, `full`, and `all`. The scheduled path runs the
+smoke layer weekly so deployed-browser regressions can surface even when no one
+manually asks for a pass.
+
+The automation preserves the existing split between primary, compact,
+multi-chemical, prepared, full, and all coverage, and uploads the generated JSON
+reports, preview screenshots, print HTML artifacts, and generated PDFs as a
+GitHub artifact. `qa:production-print` now runs bundle freshness and search UI
+checks before generating the matrix, PDFs, and handoff report. Bundle freshness
+also writes `build/production-print-bundle-report.json`, and the new
+`qa:production-summary` command writes
+`build/production-print-qa-summary.json` so failures can be reviewed from one
+manifest instead of hunting through terminal output.
 
 Acceptance is that a future print change cannot be closed with only local unit
-tests when the deployed UI is affected. The evidence set should include bundle
+tests when the deployed UI is affected. The evidence set now includes bundle
 freshness, production Chrome clickthrough, preview geometry, print handoff
-status, PDF artifact checks, and screenshots for high-risk compact labels. A
-failed production case should point directly to whether the issue is stale
-deployment, UI gating, planner routing, preview clipping, print HTML, missing
-images, or PDF geometry.
+status, PDF artifact checks, screenshots for high-risk compact labels, and a
+summary manifest that preserves failure context by report, case id, search
+term, label kind, stock preset, template, issue type, and visual/PDF failure
+class. If a production case fails, the uploaded artifact should show whether
+the cause is stale deployment, UI gating, planner routing, preview clipping,
+print HTML, missing images, or PDF geometry.
 
 ## 3. Real Chemical Edge-Case Coverage
 

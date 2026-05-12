@@ -1,3 +1,7 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
 const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app/";
 
 const REQUIRED_PRINT_QA_MARKERS = [
@@ -19,6 +23,11 @@ const REQUIRED_PRINT_QA_MARKERS = [
 ];
 
 const productionUrl = process.env.PRINT_QA_PRODUCTION_URL || DEFAULT_PRODUCTION_URL;
+const outputPath = path.resolve(
+  process.cwd(),
+  process.env.PRINT_QA_BUNDLE_REPORT_PATH ||
+    "build/production-print-bundle-report.json",
+);
 const requiredMarkers = (
   process.env.PRINT_QA_BUNDLE_MARKERS || REQUIRED_PRINT_QA_MARKERS.join(",")
 )
@@ -60,11 +69,16 @@ const missingMarkers = requiredMarkers.filter(
 
 const result = {
   ok: missingMarkers.length === 0,
+  generatedAt: new Date().toISOString(),
   productionUrl,
   assetUrl,
+  reportPath: outputPath,
   requiredMarkers,
   missingMarkers,
 };
+
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+fs.writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}${os.EOL}`);
 
 console.log(JSON.stringify(result, null, 2));
 

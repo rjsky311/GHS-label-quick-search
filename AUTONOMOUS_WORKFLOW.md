@@ -103,6 +103,11 @@ For print workflow changes, the default validation stack is:
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix
   and can run longer than 15 minutes.
+- The same production QA can be run from GitHub Actions via the
+  `Production Print QA` workflow. Use `smoke`, `primary`, `compact`,
+  `multi-chemical`, `prepared`, `full`, or `all` depending on the change scope.
+  The workflow uploads JSON reports, screenshots, print HTML artifacts,
+  generated PDFs, and `production-print-qa-summary.json` for review.
 
 Use narrower commands only for early iteration. A print change is not complete
 until the production-facing path has been checked when deployment is part of the

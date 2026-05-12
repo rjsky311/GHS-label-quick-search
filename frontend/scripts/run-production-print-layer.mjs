@@ -86,6 +86,7 @@ await run(["run", "qa:production-bundle"]);
 await run(["run", "qa:production-search-ui"]);
 await run(["run", "qa:print-report"]);
 await run(["run", "qa:production-handoff"]);
+await run(["run", "qa:production-summary"]);
 
 console.log(
   JSON.stringify(
@@ -99,6 +100,11 @@ console.log(
         env.PRINT_QA_HANDOFF_REPORT_PATH,
       ),
       screenshotDir: path.resolve(process.cwd(), env.PRINT_QA_SCREENSHOT_DIR),
+      summaryPath: path.resolve(
+        process.cwd(),
+        process.env.PRINT_QA_SUMMARY_REPORT_PATH ||
+          "build/production-print-qa-summary.json",
+      ),
     },
     null,
     2,

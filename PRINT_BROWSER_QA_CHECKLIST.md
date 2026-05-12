@@ -40,9 +40,27 @@ npm run qa:production-print
 This generates `build/print-qa-report.json`, launches the deployed site through
 the production handoff runner, renders local print HTML artifacts into PDFs,
 writes `build/production-print-handoff-report.json` and
-`build/print-pdf-report.json`, and captures preview screenshots under
-`build/production-print-screenshots/`. Use the lower-level commands below only
+`build/print-pdf-report.json`, writes
+`build/production-print-qa-summary.json`, and captures preview screenshots under
+`build/production-print-screenshots/`. It also runs bundle freshness and search
+UI checks before the matrix handoff. Use the lower-level commands below only
 when debugging one part of the flow.
+
+The same deployed-browser matrix can also run in GitHub Actions through
+`Production Print QA` (`.github/workflows/production-print-qa.yml`). Trigger it
+manually with one of these modes:
+
+- `smoke`: fast high-risk deployed print path.
+- `primary`: full-page primary and continuation outputs.
+- `compact`: compact bottle/rack/QR/quick-ID outputs.
+- `multi-chemical`: cross-chemical production-searchable outputs.
+- `prepared`: prepared creation, reprint, and preset reuse.
+- `full`: local print matrix + PDF artifacts + deployed handoff.
+- `all`: `full` plus prepared workflow QA.
+
+The workflow also runs the `smoke` mode on a weekly schedule and uploads JSON
+reports, screenshots, print HTML artifacts, generated PDFs, and the summary
+manifest as a GitHub artifact.
 
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
@@ -127,6 +145,7 @@ Record these outputs in the final implementation note:
 - Production bundle asset name.
 - Browser target URL.
 - Handoff report path.
+- Production QA summary report path.
 - PDF report path.
 - PDF artifact directory.
 - Search term and selected chemical.
