@@ -48,6 +48,13 @@ const PREPARED_FORM = Object.freeze({
   expiryDate: "2026-06-12",
 });
 
+const PREPARED_PRESET_NAME = "QA HCl 1M preset";
+const STALE_PRESET_OPERATIONAL = Object.freeze({
+  preparedBy: "STALE Operator",
+  preparedDate: "2020-01-01",
+  expiryDate: "2020-07-01",
+});
+
 const PREPARED_CASES = Object.freeze([
   {
     id: "prepared-a4-primary",
@@ -99,9 +106,19 @@ const PREPARED_REPRINT_CASES = Object.freeze(
   })),
 );
 
+const PREPARED_PRESET_CASES = Object.freeze(
+  PREPARED_CASES.map((testCase) => ({
+    ...testCase,
+    id: `prepared-preset-${testCase.id.replace(/^prepared-/, "")}`,
+    label: `${testCase.label} via saved preset reuse`,
+    entryMode: "preset",
+  })),
+);
+
 const ALL_PREPARED_CASES = Object.freeze([
   ...PREPARED_CASES,
   ...PREPARED_REPRINT_CASES,
+  ...PREPARED_PRESET_CASES,
 ]);
 
 const EXPECTED_PICTOGRAMS = Object.freeze(["GHS04", "GHS05", "GHS06", "GHS07"]);
@@ -198,7 +215,7 @@ const fillSearch = async (page, searchTerm) => {
   });
 };
 
-const openPreparedPrintModal = async (page) => {
+const openPrepareSolutionForm = async (page) => {
   await fillSearch(page, PREPARED_FORM.searchTerm);
   await page.getByTestId("detail-btn-0").click();
   await page.getByTestId("prepare-solution-btn").waitFor({
@@ -210,16 +227,32 @@ const openPreparedPrintModal = async (page) => {
     state: "visible",
     timeout: 15000,
   });
-  await page.getByTestId("prepared-concentration-input").fill(PREPARED_FORM.concentration);
-  await page.getByTestId("prepared-solvent-input").fill(PREPARED_FORM.solvent);
-  await page.getByTestId("prepared-prepared-by-input").fill(PREPARED_FORM.preparedBy);
-  await page.getByTestId("prepared-prepared-date-input").fill(PREPARED_FORM.preparedDate);
-  await page.getByTestId("prepared-expiry-date-input").fill(PREPARED_FORM.expiryDate);
+};
+
+const fillPreparedRecipe = async (page, form = PREPARED_FORM) => {
+  await page.getByTestId("prepared-concentration-input").fill(form.concentration || "");
+  await page.getByTestId("prepared-solvent-input").fill(form.solvent || "");
+};
+
+const fillPreparedOperational = async (page, form = PREPARED_FORM) => {
+  await page.getByTestId("prepared-prepared-by-input").fill(form.preparedBy || "");
+  await page.getByTestId("prepared-prepared-date-input").fill(form.preparedDate || "");
+  await page.getByTestId("prepared-expiry-date-input").fill(form.expiryDate || "");
+};
+
+const submitPreparedForm = async (page) => {
   await page.getByTestId("prepare-solution-submit-btn").click();
   await page.getByTestId("print-label-action").waitFor({
     state: "visible",
     timeout: 15000,
   });
+};
+
+const openPreparedPrintModal = async (page) => {
+  await openPrepareSolutionForm(page);
+  await fillPreparedRecipe(page);
+  await fillPreparedOperational(page);
+  await submitPreparedForm(page);
 };
 
 const closePreparedPrintModal = async (page) => {
@@ -253,6 +286,77 @@ const openPreparedReprintModal = async (page) => {
     timeout: 30000,
   });
   return { recentText };
+};
+
+const readPreparedFormValues = async (page) => ({
+  concentration: await page.getByTestId("prepared-concentration-input").inputValue(),
+  solvent: await page.getByTestId("prepared-solvent-input").inputValue(),
+  preparedBy: await page.getByTestId("prepared-prepared-by-input").inputValue(),
+  preparedDate: await page.getByTestId("prepared-prepared-date-input").inputValue(),
+  expiryDate: await page.getByTestId("prepared-expiry-date-input").inputValue(),
+  presetName: await page.getByTestId("prepared-preset-name-input").inputValue(),
+});
+
+const reopenPrepareSolutionFormFromDetail = async (page) => {
+  const prepareButton = page.getByTestId("prepare-solution-btn");
+  await prepareButton.waitFor({ state: "visible", timeout: 15000 }).catch(async () => {
+    await page.getByTestId("detail-btn-0").click();
+    await prepareButton.waitFor({ state: "visible", timeout: 15000 });
+  });
+  await prepareButton.click();
+  await page.getByTestId("prepare-solution-modal").waitFor({
+    state: "visible",
+    timeout: 15000,
+  });
+};
+
+const openPreparedPresetPrintModal = async (page) => {
+  await openPrepareSolutionForm(page);
+  await fillPreparedRecipe(page);
+  await fillPreparedOperational(page, STALE_PRESET_OPERATIONAL);
+  await page.getByTestId("prepared-preset-name-input").fill(PREPARED_PRESET_NAME);
+  await page.getByTestId("prepare-solution-save-preset-btn").click();
+  await page.getByTestId("prepare-solution-preset-item-0").waitFor({
+    state: "visible",
+    timeout: 15000,
+  });
+  const savedPresetText =
+    ((await page.getByTestId("prepare-solution-preset-item-0").textContent()) || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  const printModalAfterSaveVisible = await page
+    .getByTestId("print-label-action")
+    .isVisible()
+    .catch(() => false);
+  await page.getByTestId("prepare-solution-cancel-btn").click();
+  await page.getByTestId("prepare-solution-modal").waitFor({
+    state: "detached",
+    timeout: 15000,
+  });
+
+  await reopenPrepareSolutionFormFromDetail(page);
+  await page.getByTestId("prepare-solution-preset-item-0").waitFor({
+    state: "visible",
+    timeout: 15000,
+  });
+  const reopenedPresetText =
+    ((await page.getByTestId("prepare-solution-preset-item-0").textContent()) || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  await page.getByTestId("prepare-solution-preset-item-0").click();
+  const prefillValues = await readPreparedFormValues(page);
+  await fillPreparedOperational(page, PREPARED_FORM);
+  const finalValues = await readPreparedFormValues(page);
+  await submitPreparedForm(page);
+
+  return {
+    presetName: PREPARED_PRESET_NAME,
+    savedPresetText,
+    reopenedPresetText,
+    printModalAfterSaveVisible,
+    prefillValues,
+    finalValues,
+  };
 };
 
 const setTargetAndStock = async (page, testCase) => {
@@ -546,6 +650,32 @@ const evaluateCase = ({
     assert("reprint-recent-prepared-date", recentText.includes("2026-05-12"));
     assert("reprint-recent-expiry-date", recentText.includes("2026-06-12"));
   }
+  if (testCase.entryMode === "preset") {
+    const savedPresetText = normalizeText(entryEvidence.savedPresetText || "");
+    const reopenedPresetText = normalizeText(entryEvidence.reopenedPresetText || "");
+    const prefillValues = entryEvidence.prefillValues || {};
+    const finalValues = entryEvidence.finalValues || {};
+    assert("preset-save-does-not-open-print", !entryEvidence.printModalAfterSaveVisible);
+    assert("preset-saved-name", savedPresetText.includes(normalizeText(PREPARED_PRESET_NAME)));
+    assert("preset-saved-concentration", savedPresetText.includes("1 m"));
+    assert("preset-saved-solvent", savedPresetText.includes("water"));
+    assert("preset-saved-no-stale-operator", !savedPresetText.includes("stale operator"));
+    assert("preset-saved-no-stale-date", !savedPresetText.includes("2020-01-01"));
+    assert("preset-reopened-name", reopenedPresetText.includes(normalizeText(PREPARED_PRESET_NAME)));
+    assert("preset-prefill-concentration", prefillValues.concentration === PREPARED_FORM.concentration);
+    assert("preset-prefill-solvent", prefillValues.solvent === PREPARED_FORM.solvent);
+    assert("preset-prefill-name", prefillValues.presetName === PREPARED_PRESET_NAME);
+    assert("preset-prefill-clears-prepared-by", prefillValues.preparedBy === "");
+    assert("preset-prefill-clears-expiry", prefillValues.expiryDate === "");
+    assert(
+      "preset-prefill-resets-prepared-date",
+      Boolean(prefillValues.preparedDate) &&
+        prefillValues.preparedDate !== STALE_PRESET_OPERATIONAL.preparedDate,
+    );
+    assert("preset-final-prepared-by", finalValues.preparedBy === PREPARED_FORM.preparedBy);
+    assert("preset-final-prepared-date", finalValues.preparedDate === PREPARED_FORM.preparedDate);
+    assert("preset-final-expiry-date", finalValues.expiryDate === PREPARED_FORM.expiryDate);
+  }
   assert("selected-prepared-display-visible", selectedSummary.displayVisible);
   assert(
     "selected-prepared-meta",
@@ -609,11 +739,12 @@ const runCase = async ({ browser, testCase }) => {
       localStorage.removeItem("ghs_prepared_presets");
     });
     await page.goto(withQaParam(productionUrl), { waitUntil: "domcontentloaded" });
-    const entryEvidence =
-      testCase.entryMode === "reprint"
-        ? await openPreparedReprintModal(page)
-        : {};
-    if (testCase.entryMode !== "reprint") {
+    let entryEvidence = {};
+    if (testCase.entryMode === "reprint") {
+      entryEvidence = await openPreparedReprintModal(page);
+    } else if (testCase.entryMode === "preset") {
+      entryEvidence = await openPreparedPresetPrintModal(page);
+    } else {
       await openPreparedPrintModal(page);
     }
     await fillResponsibleProfile(page);

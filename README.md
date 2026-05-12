@@ -19,7 +19,7 @@
 
 ## 功能特色
 
-> 目前 runtime 版本：`1.10.0`。前端已由 CRA/CRACO 遷移至 Vite，並新增列印用途模式、stock presets、QR 補充標籤、live preview、recent print reload、lab profile、pilot admin，以及預設 local-only、可選 admin-gated workspace sync 的 v1.10 功能。後續產品化與視覺改版方向見 [DESIGN.md](./DESIGN.md)、[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)、[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)。
+> 目前 runtime 版本：`1.10.0`。前端已由 CRA/CRACO 遷移至 Vite，並新增列印用途模式、stock presets、QR 補充標籤、live preview、recent print reload、lab profile、pilot admin，以及預設 local-only、可選 admin-gated workspace sync 的 v1.10 功能。後續產品化與視覺改版方向見 [DESIGN.md](./DESIGN.md)、[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)、[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)；列印重構標準與下一步工作見 [PRINT_ACCEPTANCE_STANDARD.md](./PRINT_ACCEPTANCE_STANDARD.md)、[PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md)、[NEXT_PRINT_WORKSTREAMS.md](./NEXT_PRINT_WORKSTREAMS.md)。
 
 ### 🔍 單一查詢
 
@@ -439,8 +439,8 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success（529 referenced keys / 598 zh-TW keys / 598 en keys）；`npm test -- --runInBand` → 45 suites / 708 passed；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
-- backend 最近基準：`python -m pytest -v` → 141 passed；若修改 backend 行為需重跑。
+- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand` → 49 suites / 814 passed；`npm run test:print-contract` → 228 focused print/planner/renderer assertions；`npm run qa:print-pdf` → 30 print cases；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。
+- backend 最近基準：`python -m pytest -v` → 132 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)
 

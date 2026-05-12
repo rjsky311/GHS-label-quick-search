@@ -11,7 +11,8 @@ When the user asks to continue, proceed under these standing approvals unless a
 stop condition below applies:
 
 - Pick the next highest-value task from `NEXT_PRODUCT_WORK.md`, the print
-  acceptance docs, recent production QA failures, or code review findings.
+  acceptance docs, `NEXT_PRINT_WORKSTREAMS.md`, recent production QA failures,
+  or code review findings.
 - Simplify the UI when doing so reduces user hesitation, avoids unsafe choices,
   or makes the print workflow more task-first.
 - Move rare controls into secondary or advanced areas when the default workflow
@@ -92,10 +93,12 @@ For print workflow changes, the default validation stack is:
   slow for one pass. These run the same deployed Chrome handoff gate, but split
   it into complete-primary, compact-stock, and cross-chemical layers.
 - `npm run qa:production-prepared` after prepared-solution workflow changes.
-  This is a deployed Chrome clickthrough from search result → detail →
-  prepare-solution form → label print modal → print handoff, plus prepared
-  sidebar reprint → label print modal → print handoff, for A4 primary, bottle
-  supplemental, and tube quick-ID prepared outputs.
+  This is a deployed Chrome clickthrough from search result to detail to
+  prepare-solution form to label print modal to print handoff, plus prepared
+  sidebar reprint to label print modal to print handoff, for A4 primary, bottle
+  supplemental, and tube quick-ID prepared outputs. It also covers prepared
+  preset creation/reuse and verifies that stale operational fields are cleared
+  before a new prepared print job is submitted.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix

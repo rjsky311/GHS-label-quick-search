@@ -126,6 +126,9 @@ Run this matrix before shipping print-workflow changes:
 | Hydrochloric Acid | Medium Rack QR Supplement | Bilingual | Color | QR supplement on medium stock, QR and pictograms stay separated and visible |
 | Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
 | Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
+| Prepared Hydrochloric Acid | A4 Primary | Bilingual | Color | Prepared identity, concentration, solvent, CAS, signal word, all pictograms, and full H/P content remain visible |
+| Prepared Hydrochloric Acid | Standard Bottle | Bilingual | Color | Prepared supplemental output keeps parent identity, concentration, solvent, CAS, signal word, all pictograms, and truthful hazard summary |
+| Prepared Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Prepared quick-ID output keeps parent identity, concentration, solvent, CAS, signal word, and all pictograms without pretending to be complete primary |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
 | Ethanol | Tube/Vial Quick ID | English | B/W | Compact ID output keeps both pictograms and remains readable |
 | Sodium Hydroxide | QR Supplement | Bilingual | Color | Single-pictogram corrosive QR output keeps QR and the pictogram |
@@ -155,6 +158,9 @@ Unit tests should keep these invariants pinned:
 - Custom supplemental configs keep every pictogram and print as supplemental, not complete primary.
 - Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
 - No-GHS and upstream-error cases are blocked from hazard-label printing with distinct planner issues.
+- Prepared-solution cases must cover direct creation, prepared-sidebar reprint,
+  and preset reuse. Preset reuse must not carry stale operational fields into a
+  new print job.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.
 - Browser Use print-action checks should use `qaPrintHandoff=1` and verify
   `print-qa-status` data attributes for label kind, pictogram codes, QR state,

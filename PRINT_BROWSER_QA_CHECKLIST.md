@@ -89,6 +89,20 @@ sample so blocked output is diagnosable without opening the full JSON first.
 The script uses `playwright-core` with the local Chrome/Edge executable; if discovery fails, set
 `PLAYWRIGHT_CHROME_EXECUTABLE_PATH`.
 
+For prepared-solution production clickthrough, run:
+
+```bash
+cd frontend
+npm run qa:production-prepared
+```
+
+This opens the deployed site in Chrome/Edge, searches Hydrochloric Acid, enters
+the detail workflow, creates a prepared solution, opens the label print modal,
+and verifies A4 primary, bottle supplemental, and tube quick-ID prepared outputs.
+It also covers prepared-sidebar reprint and prepared preset reuse for the same
+output families. The preset branch records preset prefill evidence and proves
+that stale operational fields are not carried into new prepared labels.
+
 After generating `build/print-html-artifacts/`, the print/PDF artifact gate can
 be run independently:
 

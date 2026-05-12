@@ -210,8 +210,11 @@ The first refactor slice has landed:
   are now first-class renderer/PDF QA cases. They stay excluded from the
   regular production search handoff matrix because production cannot search for
   a derived prepared item directly; `npm run qa:production-prepared` covers the
-  actual deployed creation path from detail → prepare-solution form → print
-  modal → print handoff, and the deployed prepared sidebar reprint path.
+  actual deployed creation path from detail to prepare-solution form to print
+  modal to print handoff, the deployed prepared sidebar reprint path, and the
+  prepared preset creation/reuse path. The preset branch proves that Save as
+  preset does not open print, recipe fields are restored on reuse, and stale
+  operational fields are cleared before print handoff.
 - The first render-driven auto-fit slice is in place. Print layout resolution
   now derives an `autoFitLevel` from actual chemical identity, case/batch
   fields, hazard text load, and pictogram count before rendering. Print
@@ -221,8 +224,9 @@ The first refactor slice has landed:
 - Compact stock coverage has been expanded beyond the original tube/vial cases.
   The QA matrix now includes small-rack quick-ID, small-rack QR supplement,
   medium-rack quick-ID, medium-rack QR supplement, 62 mm continuous, and large
-  front-label paths. The local PDF artifact gate currently covers 27 print
-  cases.
+  front-label paths. The local PDF artifact gate currently covers 30 print
+  cases, including prepared-solution A4 primary, bottle supplemental, and tube
+  quick-ID outputs.
 - PDF artifact QA now checks stock-specific visual overlap classes, including
   pictogram collision with CAS, signal word, product name, QR, and label
   boundaries. Compact labels must be visibly usable, not merely present in the
@@ -231,7 +235,8 @@ The first refactor slice has landed:
   such as `label-stock-small-rack` and `label-stock-medium-rack`, so stale
   Zeabur assets are caught before production click-through QA.
 - The autonomous continuation rules now live in `AUTONOMOUS_WORKFLOW.md`, and
-  the product work queue lives in `NEXT_PRODUCT_WORK.md`. Use those files with
+  the product work queue lives in `NEXT_PRODUCT_WORK.md`. The expanded five
+  print workstreams live in `NEXT_PRINT_WORKSTREAMS.md`. Use those files with
   this refactor plan when the user asks to keep going.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.

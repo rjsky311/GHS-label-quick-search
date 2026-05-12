@@ -3,6 +3,11 @@
 This is the live queue for autonomous product work. Use it with
 `AUTONOMOUS_WORKFLOW.md` when the user asks to continue.
 
+The five current print-workflow workstreams are expanded in
+`NEXT_PRINT_WORKSTREAMS.md`. Treat that file as the detailed execution map for
+prepared presets, production print automation, real chemical edge cases, print
+content policy, and UI visual/noise polish.
+
 ## Product North Star
 
 This project is a free public GHS utility that should help lab and operations
@@ -159,22 +164,30 @@ Acceptance:
 - Prepared solution print/reprint paths pass the same no-clipping, no-missing
   pictogram, and truthful-output rules as regular labels.
 - Prepared-solution renderer/PDF cases are part of the print QA matrix; a
-  browser-driven production-prepared path should also pass before treating
-  prepared workflows as fully production-clickthrough covered.
-- `qa:production-prepared` covers the deployed search → detail →
-  prepare-solution form → print modal → handoff path, plus prepared sidebar
-  reprint → print modal → handoff path, for A4 primary, bottle supplemental,
-  and tube quick-ID prepared labels.
+  browser-driven production-prepared path should also pass before treating each
+  prepared workflow as fully production-clickthrough covered.
+- `qa:production-prepared` covers the deployed search to detail to
+  prepare-solution form to print modal to handoff path, plus prepared sidebar
+  reprint to print modal to handoff path, for A4 primary, bottle supplemental,
+  and tube quick-ID prepared labels. It also covers prepared preset
+  creation/reuse and verifies that stale operational fields are not carried into
+  a new print job.
 
 ## Immediate Next Recommended Slice
 
-The next autonomous implementation slice should focus on Priority 1 and
-Priority 2 together:
+The next autonomous implementation slice should start from
+`NEXT_PRINT_WORKSTREAMS.md` and pick the highest-value coherent segment from
+the five workstreams. Prefer this order unless a fresh production screenshot,
+CI failure, or code review finding points elsewhere:
 
-1. Re-test the production print modal in Chrome for Hydrochloric Acid across the
-   common stock families.
-2. Identify which failures are UI decision-flow problems versus renderer/fit
-   problems.
-3. Fix the highest-impact failure class.
-4. Add code-level or PDF/production QA coverage that would have caught it.
-5. Push, track CI/deploy, and run production QA before calling it done.
+1. Production print-matrix automation, because deployed Chrome is where the user
+   has repeatedly found print issues that local checks missed.
+2. Print content policy, because label body decisions must stop drifting between
+   renderer tweaks and visual fixes.
+3. Real chemical edge cases, added by risk class rather than by arbitrary CAS
+   volume.
+4. UI visual/noise polish, using production screenshots to remove confusion and
+   prove whole-label preview quality.
+5. Prepared-solution follow-up polish only when new user-visible prepared
+   workflow issues appear; the preset clickthrough gap is now covered by
+   `qa:production-prepared`.

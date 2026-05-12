@@ -248,6 +248,8 @@ Use it before changing `LabelPrintModal`, `printLabels`, `printFitEngine`,
 `printContentModel`, stock presets, preview rendering, or print tests. It
 defines the output-planner direction, A4/Letter primary labels, curated stock
 set, typography scaling, supplemental-label rules, and Browser QA matrix.
+The expanded five-workstream execution map lives in
+`NEXT_PRINT_WORKSTREAMS.md`.
 
 Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
 live product queue is pinned in `NEXT_PRODUCT_WORK.md`. When the user asks to
@@ -264,6 +266,9 @@ print modal entry.
 ### Git History (key commits)
 
 ```
+67fbec3 Cover prepared reprint production QA
+09ad9e8 Add production prepared print QA
+6b273b4 Expand print QA layering and prepared coverage
 55039a6 Tighten production print bundle check
 929476c Expand compact label print coverage
 5cbdb7b Refine quick ID compact label layout
@@ -323,8 +328,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 - **Frontend**: 814 tests across 49 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
-- **Print PDF QA**: `npm run qa:print-pdf` covers 27 print cases and fails on compact visual-overlap regressions
-- **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks
+- **Print PDF QA**: `npm run qa:print-pdf` covers 30 print cases, including prepared-solution A4 primary, bottle supplemental, and tube quick-ID outputs, and fails on compact visual-overlap regressions
+- **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
+- **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs
 - **Backend**: 132 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config

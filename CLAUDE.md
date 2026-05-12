@@ -215,6 +215,11 @@ state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
 `CAPTURE_DICTIONARY_MISSES=true`.
 
+The next print-workflow refactor is pinned in
+`PRINT_OUTPUT_REFACTOR_PLAN.md`, the acceptance contract is in
+`PRINT_ACCEPTANCE_STANDARD.md`, and the expanded five-workstream execution map
+is in `NEXT_PRINT_WORKSTREAMS.md`.
+
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
 refresh, backend health/search, the trust panel, detail workflow, and label
@@ -222,6 +227,12 @@ print modal entry.
 
 ### Git History (key commits)
 ```
+67fbec3 Cover prepared reprint production QA
+09ad9e8 Add production prepared print QA
+6b273b4 Expand print QA layering and prepared coverage
+55039a6 Tighten production print bundle check
+929476c Expand compact label print coverage
+5cbdb7b Refine quick ID compact label layout
 6b67061 Merge pull request #23 - Productize utility workflow
 a9bdebd feat: productize utility workflow
 51cdb11 Polish label print copy and hierarchy
@@ -269,9 +280,13 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 ```
 
 ### Test Results (latest known v1.10 baseline)
-- **Frontend**: 664 tests across 42 suites; 0 known React `act(...)` warnings
+- **Frontend**: 814 tests across 49 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Backend**: 126 tests covering name resolution, reverse dicts, aliases, API endpoints,
+- **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
+- **Print PDF QA**: `npm run qa:print-pdf` covers 30 print cases, including prepared-solution A4 primary, bottle supplemental, and tube quick-ID outputs, and fails on compact visual-overlap regressions
+- **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
+- **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs
+- **Backend**: 132 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
 - **Build**: `npm run build` → OK; Vite vendor chunks split via `manualChunks`
