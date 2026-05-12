@@ -224,9 +224,14 @@ The first refactor slice has landed:
 - Compact stock coverage has been expanded beyond the original tube/vial cases.
   The QA matrix now includes small-rack quick-ID, small-rack QR supplement,
   medium-rack quick-ID, medium-rack QR supplement, 62 mm continuous, and large
-  front-label paths. The local PDF artifact gate currently covers 30 print
+  front-label paths. The local PDF artifact gate currently covers 33 print
   cases, including prepared-solution A4 primary, bottle supplemental, and tube
   quick-ID outputs.
+- Real chemical edge-case coverage now records a chemical coverage manifest in
+  the print QA report and includes sparse single-pictogram production cases for
+  Nitrogen (`GHS04`), Zinc Oxide (`GHS09`), and Boric Acid (`GHS08`) alongside
+  the existing dense, flammable, corrosive, oxidizer, long-name, and
+  prepared-solution paths.
 - PDF artifact QA now checks stock-specific visual overlap classes, including
   pictogram collision with CAS, signal word, product name, QR, and label
   boundaries. Compact labels must be visibly usable, not merely present in the

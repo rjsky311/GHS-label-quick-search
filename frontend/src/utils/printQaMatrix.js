@@ -559,6 +559,103 @@ export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
   ],
 });
 
+export const PRINT_QA_NITROGEN = Object.freeze({
+  cas_number: "7727-37-9",
+  name_en: "Nitrogen",
+  name_zh: "Nitrogen ZH",
+  cid: 947,
+  ghs_pictograms: [{ code: "GHS04" }],
+  signal_word: "Warning",
+  signal_word_zh: "Warning ZH",
+  hazard_statements: [
+    {
+      code: "H280",
+      text_en: "Contains gas under pressure; may explode if heated",
+      text_zh: "Contains gas under pressure ZH",
+    },
+    {
+      code: "H281",
+      text_en: "Contains refrigerated gas; may cause cryogenic burns or injury",
+      text_zh: "Contains refrigerated gas ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P403",
+      text_en: "Store in a well-ventilated place",
+      text_zh: "Store in a well-ventilated place ZH",
+    },
+  ],
+});
+
+export const PRINT_QA_ZINC_OXIDE = Object.freeze({
+  cas_number: "1314-13-2",
+  name_en: "Zinc Oxide",
+  name_zh: "Zinc Oxide ZH",
+  cid: 14806,
+  ghs_pictograms: [{ code: "GHS09" }],
+  signal_word: "Warning",
+  signal_word_zh: "Warning ZH",
+  hazard_statements: [
+    {
+      code: "H400",
+      text_en: "Very toxic to aquatic life",
+      text_zh: "Very toxic to aquatic life ZH",
+    },
+    {
+      code: "H410",
+      text_en: "Very toxic to aquatic life with long lasting effects",
+      text_zh: "Very toxic to aquatic life with long lasting effects ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P273",
+      text_en: "Avoid release to the environment",
+      text_zh: "Avoid release to the environment ZH",
+    },
+    {
+      code: "P391",
+      text_en: "Collect spillage",
+      text_zh: "Collect spillage ZH",
+    },
+  ],
+});
+
+export const PRINT_QA_BORIC_ACID = Object.freeze({
+  cas_number: "10043-35-3",
+  name_en: "Boric Acid",
+  name_zh: "Boric Acid ZH",
+  cid: 7628,
+  ghs_pictograms: [{ code: "GHS08" }],
+  signal_word: "Danger",
+  signal_word_zh: "Danger ZH",
+  hazard_statements: [
+    {
+      code: "H360",
+      text_en: "May damage fertility or the unborn child",
+      text_zh: "May damage fertility or the unborn child ZH",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P201",
+      text_en: "Obtain special instructions before use",
+      text_zh: "Obtain special instructions before use ZH",
+    },
+    {
+      code: "P280",
+      text_en: "Wear protective gloves and eye protection",
+      text_zh: "Wear protective gloves and eye protection ZH",
+    },
+    {
+      code: "P308+P313",
+      text_en: "If exposed or concerned: get medical advice",
+      text_zh: "If exposed or concerned ZH",
+    },
+  ],
+});
+
 export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   cas_number: "QA-LONG-001",
   name_en:
@@ -614,8 +711,80 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   methanol: PRINT_QA_METHANOL,
   formaldehyde: PRINT_QA_FORMALDEHYDE,
   hydrogenPeroxide: PRINT_QA_HYDROGEN_PEROXIDE,
+  nitrogen: PRINT_QA_NITROGEN,
+  zincOxide: PRINT_QA_ZINC_OXIDE,
+  boricAcid: PRINT_QA_BORIC_ACID,
   longNameCorrosive: PRINT_QA_LONG_NAME_CORROSIVE,
   preparedHydrochloricAcid: PRINT_QA_PREPARED_HYDROCHLORIC_ACID,
+});
+
+export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
+  hydrochloricAcid: {
+    source: "production",
+    riskTags: ["dense-hp", "multi-pictogram", "corrosive", "compressed-gas"],
+    rationale:
+      "Dense common acid used to prove complete-primary continuation, compact routing, and four-pictogram layouts.",
+  },
+  ethanol: {
+    source: "production",
+    riskTags: ["flammable", "lower-density", "common-lab-solvent"],
+    rationale:
+      "Common flammable solvent used to prove sparse supplemental and quick-ID paths stay readable.",
+  },
+  sodiumHydroxide: {
+    source: "production",
+    riskTags: ["corrosive", "qr-supplement", "bilingual"],
+    rationale:
+      "Common corrosive base used to prove QR supplemental output preserves corrosive identity and pictograms.",
+  },
+  methanol: {
+    source: "production",
+    riskTags: ["flammable", "acute-toxic", "health-hazard", "bw-mode"],
+    rationale:
+      "Compact B/W case with GHS02, GHS06, and GHS08 to catch health-hazard and monochrome regressions.",
+  },
+  formaldehyde: {
+    source: "production",
+    riskTags: ["dense-hp", "continuation", "multi-page", "health-hazard"],
+    rationale:
+      "Very dense complete-primary case expected to route into continuation pages without clipping.",
+  },
+  hydrogenPeroxide: {
+    source: "production",
+    riskTags: ["oxidizer", "qr-supplement", "english-mode"],
+    rationale:
+      "Oxidizer case used to keep GHS03 and English QR supplemental output covered.",
+  },
+  nitrogen: {
+    source: "production",
+    riskTags: ["single-pictogram", "compressed-gas", "sparse-layout"],
+    rationale:
+      "Single GHS04 compressed-gas case used to prove sparse compact labels do not overfit dense-chemical assumptions.",
+  },
+  zincOxide: {
+    source: "production",
+    riskTags: ["single-pictogram", "environmental", "qr-supplement"],
+    rationale:
+      "Single GHS09 environmental case used to prove environmental pictograms and QR layout are not omitted.",
+  },
+  boricAcid: {
+    source: "production",
+    riskTags: ["single-pictogram", "health-hazard", "supplemental"],
+    rationale:
+      "Single GHS08 health-hazard case used to prove reproductive-health statements fit a normal bottle label.",
+  },
+  longNameCorrosive: {
+    source: "local-fixture",
+    riskTags: ["long-name", "identity-density", "compact-autofit"],
+    rationale:
+      "Synthetic long-name fixture used to prove identity shrink rules keep CAS/name visible on compact output.",
+  },
+  preparedHydrochloricAcid: {
+    source: "local-derived",
+    riskTags: ["prepared-solution", "operational-identity", "preset-reuse"],
+    rationale:
+      "Derived prepared-solution item used to prove concentration, solvent, and operational metadata survive print paths.",
+  },
 });
 
 const getChemicalPictogramCodes = (chemical = {}) =>
@@ -1185,6 +1354,75 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: true,
       hasFullPagePictograms: false,
       minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "nitrogen-tube-quick-id-single-pictogram",
+    label: "Nitrogen tube quick-ID single pictogram",
+    chemicalId: "nitrogen",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "small-strip",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "zinc-oxide-small-qr-environmental",
+    label: "Zinc oxide QR supplement environmental",
+    chemicalId: "zincOxide",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+      stockPreset: "small-strip",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
+      labelKind: "qr-supplement",
+      stockPreset: "small-strip",
+      template: "qrcode",
+      hasQr: true,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "boric-acid-bottle-supplemental-health",
+    label: "Boric acid bottle supplemental health hazard",
+    chemicalId: "boricAcid",
+    locale: "en-US",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "medium-bottle",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "medium-bottle",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      hasSummaries: false,
     },
   },
   {
@@ -1897,6 +2135,7 @@ export function buildPrintQaMatrixReport({
           cas: testCase.chemical.cas,
           name: testCase.chemical.name,
           expectedPictograms: testCase.chemical.expectedPictograms,
+          coverage: PRINT_QA_CHEMICAL_COVERAGE[testCase.chemical.id] || null,
         },
       ]),
     ).values(),

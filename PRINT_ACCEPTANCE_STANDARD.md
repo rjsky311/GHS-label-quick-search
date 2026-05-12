@@ -131,7 +131,10 @@ Run this matrix before shipping print-workflow changes:
 | Prepared Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Prepared quick-ID output keeps parent identity, concentration, solvent, CAS, signal word, and all pictograms without pretending to be complete primary |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
 | Ethanol | Tube/Vial Quick ID | English | B/W | Compact ID output keeps both pictograms and remains readable |
-| Sodium Hydroxide | QR Supplement | Bilingual | Color | Single-pictogram corrosive QR output keeps QR and the pictogram |
+| Sodium Hydroxide | QR Supplement | Bilingual | Color | Corrosive QR output keeps QR and all pictograms |
+| Nitrogen | Tube/Vial Quick ID | English | Color | Sparse single-pictogram GHS04 compressed-gas output keeps identity, CAS, signal, and pictogram visible |
+| Zinc Oxide | QR Supplement | English | Color | Sparse single-pictogram GHS09 environmental output keeps QR and environmental pictogram visible |
+| Boric Acid | Standard Bottle | English | Color | Sparse single-pictogram GHS08 health-hazard output keeps the hazard statement readable without dense-label assumptions |
 | Long-name corrosive fixture | Standard Bottle | English | Color | Long product name does not hide identity or pictograms |
 | Water / no GHS | Any hazard label | Any | Any | Does not present false hazard data |
 | Upstream error | Results and print entry | Any | Any | Does not present missing data as no hazard |
@@ -153,6 +156,8 @@ Unit tests should keep these invariants pinned:
   without ellipsis or critical-element clipping.
 - Small QR labels keep QR plus every expected pictogram in the printed body.
 - Strip labels use a four-pictogram row for dense multi-pictogram chemicals.
+- Sparse single-pictogram labels must remain visually balanced while still
+  preserving CAS, signal word, and the one pictogram.
 - Pictogram dimensions and visible H/P budgets increase with available physical label area.
 - Custom tiny complete-primary configs route to A4/Letter instead of enabling an invalid primary label.
 - Custom supplemental configs keep every pictogram and print as supplemental, not complete primary.

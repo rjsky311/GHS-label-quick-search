@@ -77,8 +77,9 @@ PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:production-handoff
 ```
 
 By default this runs every real production-searchable case in the matrix:
-Hydrochloric Acid, Formaldehyde, Ethanol, Sodium Hydroxide, Methanol, and
-Hydrogen Peroxide outputs, while skipping local fixture-only `QA-*` cases. In
+Hydrochloric Acid, Formaldehyde, Ethanol, Sodium Hydroxide, Methanol, Hydrogen
+Peroxide, Nitrogen, Zinc Oxide, and Boric Acid outputs, while skipping local
+fixture-only `QA-*` cases. In
 addition to the handoff status attributes, it inspects the preview iframe
 geometry and fails when required identity text, CAS, GHS pictograms, signal
 word, QR, or support chips are hidden or clipped before print handoff. It also
@@ -324,9 +325,10 @@ cover A4 Primary, Letter Primary, A4 Chinese/B&W, Letter English/B&W, bottle
 supplemental, bottle supplemental with case identity, Avery 5163, Avery 5164,
 rack landscape, tube/vial quick-ID, tube/vial quick-ID with case identity,
 Brother 62 mm quick-ID, QR supplement, and Brother 62 mm QR supplement for
-Hydrochloric Acid, plus lower-density Ethanol, single-pictogram Sodium
-Hydroxide, Methanol B/W, Hydrogen Peroxide English QR, and long-name corrosive
-bottle and tube fixtures that verify identity shrink rules keep CAS visible.
+Hydrochloric Acid, plus lower-density Ethanol, Sodium Hydroxide QR, Methanol
+B/W, Hydrogen Peroxide English QR, sparse single-pictogram Nitrogen, Zinc
+Oxide, and Boric Acid outputs, and long-name corrosive bottle and tube fixtures
+that verify identity shrink rules keep CAS visible.
 
 The report records the expected `qa_handoff` attributes, preview scale, actual
 print-document HTML checks, and a `productionBrowserQa` section listing the

@@ -137,7 +137,7 @@ const maybeWritePrintArtifacts = () => {
 };
 
 describe("print QA matrix report", () => {
-  it("generates a passing machine-readable report for the core HCl print matrix", () => {
+  it("generates a passing machine-readable report for the production print matrix", () => {
     const report = buildPrintQaMatrixReport({
       ...(process.env.PRINT_QA_REPORT_GENERATED_AT
         ? { generatedAt: process.env.PRINT_QA_REPORT_GENERATED_AT }
@@ -155,6 +155,9 @@ describe("print QA matrix report", () => {
         expect.objectContaining({ id: "hydrochloricAcid", cas: "7647-01-0" }),
         expect.objectContaining({ id: "ethanol", cas: "64-17-5" }),
         expect.objectContaining({ id: "sodiumHydroxide", cas: "1310-73-2" }),
+        expect.objectContaining({ id: "nitrogen", cas: "7727-37-9" }),
+        expect.objectContaining({ id: "zincOxide", cas: "1314-13-2" }),
+        expect.objectContaining({ id: "boricAcid", cas: "10043-35-3" }),
         expect.objectContaining({ id: "longNameCorrosive", cas: "QA-LONG-001" }),
         expect.objectContaining({
           id: "preparedHydrochloricAcid",
@@ -204,6 +207,20 @@ describe("print QA matrix report", () => {
         testCase,
       ]),
     );
+    const chemicalById = Object.fromEntries(
+      report.chemicals.map((chemical) => [chemical.id, chemical]),
+    );
+
+    report.chemicals.forEach((chemical) => {
+      expect(chemical.coverage).toEqual(
+        expect.objectContaining({
+          source: expect.any(String),
+          rationale: expect.any(String),
+          riskTags: expect.any(Array),
+        }),
+      );
+      expect(chemical.coverage.riskTags.length).toBeGreaterThan(0);
+    });
 
     expect(byId["a4-primary"].handoffExpectation).toMatchObject({
       status: "qa_handoff",
@@ -423,6 +440,53 @@ describe("print QA matrix report", () => {
       cas: "7722-84-1",
       expectedPictograms: ["GHS03", "GHS05", "GHS07"],
     });
+    expect(byId["nitrogen-tube-quick-id-single-pictogram"].chemical).toMatchObject({
+      cas: "7727-37-9",
+      expectedPictograms: ["GHS04"],
+      expectedRequiredIdentityTexts: ["Nitrogen"],
+    });
+    expect(browserCaseById["nitrogen-tube-quick-id-single-pictogram"]).toMatchObject({
+      expectedNameDisplay: "en",
+      expectedLabelKind: "quick-id",
+      expectedStockPreset: "small-strip",
+      expectedPictograms: ["GHS04"],
+      expectedMinPictogramSidePx: 26,
+    });
+    expect(byId["zinc-oxide-small-qr-environmental"].chemical).toMatchObject({
+      cas: "1314-13-2",
+      expectedPictograms: ["GHS09"],
+      expectedRequiredIdentityTexts: ["Zinc Oxide"],
+    });
+    expect(browserCaseById["zinc-oxide-small-qr-environmental"]).toMatchObject({
+      expectedNameDisplay: "en",
+      expectedLabelKind: "qr-supplement",
+      expectedStockPreset: "small-strip",
+      expectedPictograms: ["GHS09"],
+      expectedMinQrSidePx: 30,
+    });
+    expect(byId["boric-acid-bottle-supplemental-health"].chemical).toMatchObject({
+      cas: "10043-35-3",
+      expectedPictograms: ["GHS08"],
+      expectedRequiredIdentityTexts: ["Boric Acid"],
+    });
+    expect(byId["boric-acid-bottle-supplemental-health"].actual.hasSummaries).toBe(
+      false,
+    );
+    expect(browserCaseById["boric-acid-bottle-supplemental-health"]).toMatchObject({
+      expectedNameDisplay: "en",
+      expectedLabelKind: "supplemental",
+      expectedStockPreset: "medium-bottle",
+      expectedPictograms: ["GHS08"],
+    });
+    expect(chemicalById.nitrogen.coverage.riskTags).toEqual(
+      expect.arrayContaining(["single-pictogram", "compressed-gas"]),
+    );
+    expect(chemicalById.zincOxide.coverage.riskTags).toEqual(
+      expect.arrayContaining(["single-pictogram", "environmental"]),
+    );
+    expect(chemicalById.boricAcid.coverage.riskTags).toEqual(
+      expect.arrayContaining(["single-pictogram", "health-hazard"]),
+    );
     expect(byId["prepared-a4-primary"]).toMatchObject({
       chemical: expect.objectContaining({
         id: "preparedHydrochloricAcid",

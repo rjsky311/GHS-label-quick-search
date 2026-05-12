@@ -35,6 +35,9 @@ const LAYERS = Object.freeze({
     "sodium-hydroxide-qr-supplement",
     "methanol-brother-quick-id-bw",
     "hydrogen-peroxide-qr-supplement-en",
+    "nitrogen-tube-quick-id-single-pictogram",
+    "zinc-oxide-small-qr-environmental",
+    "boric-acid-bottle-supplemental-health",
   ],
 });
 

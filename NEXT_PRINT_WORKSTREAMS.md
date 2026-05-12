@@ -89,12 +89,22 @@ data boundary, a language mode, or a stock-specific compact failure. Each new
 case should map to at least one output family so the matrix grows by risk, not
 by volume.
 
+Current status: the matrix now includes an explicit chemical coverage manifest
+inside `build/print-qa-report.json`. Each chemical records whether it is a
+production case, local fixture, or derived prepared item, plus risk tags and the
+rationale for keeping it in the suite. The production-searchable set now covers
+dense HCl, dense continuation Formaldehyde, Ethanol, Sodium Hydroxide,
+Methanol, Hydrogen Peroxide, and three sparse single-pictogram chemicals:
+Nitrogen (`GHS04`), Zinc Oxide (`GHS09`), and Boric Acid (`GHS08`).
+
 Acceptance is a matrix that explains why each chemical exists. Every new visual
 or production bug should become either a real production-searchable case, a
 local fixture, or a focused renderer assertion. The matrix should continue to
 prove that no-GHS and upstream-error states do not create false hazard labels,
-that common dense chemicals can route to continuation output, and that compact
-labels preserve identity and pictograms before summarizing H/P text.
+that common dense chemicals can route to continuation output, that sparse
+single-pictogram labels remain balanced instead of inheriting dense-label
+spacing assumptions, and that compact labels preserve identity and pictograms
+before summarizing H/P text.
 
 ## 4. Print Content Policy
 
