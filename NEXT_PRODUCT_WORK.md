@@ -62,6 +62,16 @@ Acceptance:
 - Production QA screenshots show no clipped controls, no hidden label preview,
   and no vertical text artifacts in target cards.
 
+Current status:
+
+- The preview panel has been reduced to one concise context strip: output role,
+  GHS pictogram preservation, and current stock. Template, density, orientation,
+  language, color, saved jobs, calibration, and custom fields stay available but
+  no longer dominate the first preview surface.
+- Production handoff QA now treats first-screen readability as a gate by
+  checking target-card width, preview-context presence, preview-panel size, and
+  the visible print action before accepting a case.
+
 ## Priority 2 - Print Renderer And Stock Fit Robustness
 
 Goal: every stock family has explicit renderer behavior, visual QA, and a

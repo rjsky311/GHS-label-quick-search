@@ -140,36 +140,6 @@ const COLOR_OPTIONS = [
   { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
 ];
 
-const PURPOSE_OPTIONS = [
-  {
-    value: "shipping",
-    labelKey: "label.purposeShipping",
-    descKey: "label.purposeShippingDesc",
-    tipKey: "label.purposeShippingTip",
-    icon: Package2,
-    presetId: "large-primary",
-    template: "standard",
-  },
-  {
-    value: "qrSupplement",
-    labelKey: "label.purposeQrSupplement",
-    descKey: "label.purposeQrSupplementDesc",
-    tipKey: "label.purposeQrSupplementTip",
-    icon: ScanLine,
-    presetId: "small-strip",
-    template: "qrcode",
-  },
-  {
-    value: "quickId",
-    labelKey: "label.purposeQuickId",
-    descKey: "label.purposeQuickIdDesc",
-    tipKey: "label.purposeQuickIdTip",
-    icon: Target,
-    presetId: "brother-62mm-continuous",
-    template: "icon",
-  },
-];
-
 const PRINT_TARGET_OPTIONS = [
   {
     value: "mainContainer",
@@ -765,12 +735,6 @@ export default function LabelPrintModal({
     tx,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
-  const purposeSummaryLabel = getOptionLabel(
-    PURPOSE_OPTIONS,
-    labelPurpose,
-    t,
-    "Shipped container",
-  );
   const readyPreviewMessage = tx(
     "label.previewRiskReady",
     "This combination looks balanced for the current content load.",
@@ -829,17 +793,6 @@ export default function LabelPrintModal({
     t,
     configuredNameDisplayLabel,
   );
-  const previewNameDisplayLabel =
-    labelConfig.nameDisplay === "both" && effectiveNameDisplay !== "both"
-      ? tx(
-          "label.autoNameDisplayChip",
-          "{{configured}} -> {{effective}} auto fit",
-          {
-            configured: configuredNameDisplayLabel,
-            effective: effectiveNameDisplayLabel,
-          },
-        )
-      : configuredNameDisplayLabel;
   const selectableStockCount =
     primaryStockChoices.length + secondaryStockChoices.length;
   const plannerPreviewRisk =
@@ -875,10 +828,6 @@ export default function LabelPrintModal({
                   "This item does not have enough GHS hazard content to produce a hazard label.",
                 )
             : "";
-  const previewPurposeSummaryLabel =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
-      ? tx("label.outputSupplemental", "Supplemental")
-      : purposeSummaryLabel;
   const visiblePreviewRisks =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
     plannerPreviewRisk
@@ -2788,17 +2737,17 @@ export default function LabelPrintModal({
                           aria-label={`${optionLabel}. ${optionDescription}`}
                           title={optionDescription}
                           data-testid={`label-purpose-${option.value}`}
-                          className={`min-h-12 rounded-md border p-2.5 text-left transition-colors ${
+                          className={`min-h-12 w-full min-w-0 overflow-hidden rounded-md border p-2.5 text-left transition-colors ${
                             selected
                               ? "border-blue-500 bg-blue-50 text-blue-900"
                               : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
                             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/70 text-current ring-1 ring-current/10">
                               <Icon className="h-4 w-4 shrink-0" />
                             </span>
-                            <span className="text-sm font-semibold leading-5">
+                            <span className="min-w-0 whitespace-normal break-words text-sm font-semibold leading-5">
                               {optionLabel}
                             </span>
                           </div>
@@ -3394,36 +3343,39 @@ export default function LabelPrintModal({
                     </span>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div
+                    className="mt-3 grid gap-2 text-xs sm:grid-cols-3"
+                    data-testid="preview-context-strip"
+                  >
                     {[
-                      previewPurposeSummaryLabel,
-                      getOptionLabel(
-                        TEMPLATE_OPTIONS,
-                        labelConfig.template,
-                        t,
-                        "Template",
-                      ),
-                      getOptionLabel(SIZE_OPTIONS, labelConfig.size, t, "Size"),
-                      getOptionLabel(
-                        ORIENTATION_OPTIONS,
-                        labelConfig.orientation,
-                        t,
-                        "Orientation",
-                      ),
-                      previewNameDisplayLabel,
-                      getOptionLabel(
-                        COLOR_OPTIONS,
-                        labelConfig.colorMode,
-                        t,
-                        "Color",
-                      ),
-                    ].map((label) => (
-                      <span
-                        key={label}
-                        className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                      {
+                        key: "role",
+                        label: tx("label.previewContextOutput", "Output"),
+                        value: outputRoleSummary,
+                      },
+                      {
+                        key: "icons",
+                        label: tx("label.previewContextIcons", "GHS icons"),
+                        value: pictogramSummary,
+                      },
+                      {
+                        key: "stock",
+                        label: tx("label.previewContextStock", "Stock"),
+                        value: currentStockName,
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.key}
+                        className="min-w-0 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
+                        data-testid={`preview-context-${item.key}`}
                       >
-                        {label}
-                      </span>
+                        <div className="font-semibold uppercase text-slate-500">
+                          {item.label}
+                        </div>
+                        <div className="mt-0.5 min-w-0 break-words font-medium leading-5 text-slate-800">
+                          {item.value}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

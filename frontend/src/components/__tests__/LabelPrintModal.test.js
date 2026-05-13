@@ -129,6 +129,18 @@ describe("LabelPrintModal", () => {
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
     expect(screen.queryByTestId("print-outcome-summary")).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
+    expect(screen.getByTestId("preview-context-strip")).toHaveTextContent(
+      "Output",
+    );
+    expect(screen.getByTestId("preview-context-role")).toHaveTextContent(
+      "Output",
+    );
+    expect(screen.getByTestId("preview-context-icons")).toHaveTextContent(
+      "All pictograms kept",
+    );
+    expect(screen.getByTestId("preview-context-stock")).toHaveTextContent(
+      "Bottle Primary",
+    );
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
     );

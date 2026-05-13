@@ -254,6 +254,10 @@ const inspectModalShell = async (page) =>
     const recommendation = byTestId("recommended-output-summary");
     const outputPlan = byTestId("print-output-plan");
     const workflowSteps = byTestId("print-workflow-steps");
+    const previewPanel = byTestId("label-preview-panel");
+    const previewContext = byTestId("preview-context-strip");
+    const printAction =
+      byTestId("print-label-action") || byTestId("use-full-page-primary-footer");
 
     if (workflowSteps) {
       failures.push("legacy-workflow-steps-visible");
@@ -290,6 +294,53 @@ const inspectModalShell = async (page) =>
     if (outputPlan?.open) {
       failures.push("output-plan-open-by-default");
     }
+    if (!previewPanel) {
+      failures.push("missing-preview-panel");
+    } else {
+      const rect = previewPanel.getBoundingClientRect();
+      if (rect.width < 360) {
+        failures.push("preview-panel-too-narrow");
+      }
+      if (rect.height < 360) {
+        failures.push("preview-panel-too-short");
+      }
+    }
+    if (!printAction) {
+      failures.push("missing-print-action");
+    } else {
+      const rect = printAction.getBoundingClientRect();
+      if (rect.width < 280 || rect.height < 44) {
+        failures.push("print-action-too-small");
+      }
+    }
+    const previewContextItems = Array.from(
+      previewContext?.querySelectorAll('[data-testid^="preview-context-"]') || [],
+    ).map((node) => {
+      const rect = node.getBoundingClientRect();
+      const lines = (node.innerText || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      return {
+        id: node.getAttribute("data-testid") || "",
+        width: Math.round(rect.width),
+        lines,
+      };
+    });
+    if (!previewContext) {
+      failures.push("missing-preview-context-strip");
+    }
+    if (previewContextItems.length !== 3) {
+      failures.push("preview-context-count");
+    }
+    previewContextItems.forEach((item) => {
+      if (item.width < 110) {
+        failures.push(`${item.id}-too-narrow`);
+      }
+      if (item.lines.length > 3) {
+        failures.push(`${item.id}-text-overwrapped`);
+      }
+    });
 
     const targetButtons = Array.from(
       document.querySelectorAll('[data-testid^="label-purpose-"]'),
@@ -324,6 +375,7 @@ const inspectModalShell = async (page) =>
     return {
       failures,
       targetButtons,
+      previewContextItems,
       outputPlanOpen: Boolean(outputPlan?.open),
       hasLegacyWorkflowSteps: Boolean(workflowSteps),
     };

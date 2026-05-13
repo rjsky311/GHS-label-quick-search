@@ -158,6 +158,10 @@ Record these outputs in the final implementation note:
   and detail source from `build/print-qa-report.json`.
 - Preview mode state: `Fit` should be the default whole-label view, and changing
   target or stock after using `Inspect` should return the preview to `Fit`.
+- First-screen visual context: `preview-context-strip` must show exactly the
+  output role, GHS pictogram preservation state, and current stock. Do not
+  accept a regression that replaces it with a long row of template, density,
+  orientation, language, and color chips on the default path.
 - Multi-page and continuation outputs must show preview page controls. Use them
   to inspect at least the second continuation page before accepting the print
   flow.
@@ -203,11 +207,14 @@ fragment; only click print when intentionally testing the native dialog path.
    `stock-size-picker` is collapsed until the user chooses to change stock.
 11. Confirm the first-level target selector is task-based (`Main container`,
    `Bottle label`, `Tube / vial`, `QR supplement`) rather than a template list.
-12. Choose `Bottle label` and confirm it routes to the bottle stock and the
+12. Confirm the preview context strip contains only output role, GHS icon
+   preservation, and current stock; full configuration details should stay in
+   the lower inspection strip or advanced controls.
+13. Choose `Bottle label` and confirm it routes to the bottle stock and the
    planner changes dense content to supplemental rather than hiding pictograms.
-13. Expand `stock-size-picker`, choose another stock, and confirm the selected
+14. Expand `stock-size-picker`, choose another stock, and confirm the selected
    stock summary plus preview update.
-14. Confirm the responsible profile section is collapsed when profile data is
+15. Confirm the responsible profile section is collapsed when profile data is
    complete and expands automatically when profile data is missing.
 
 ## Full-Page Primary Outputs

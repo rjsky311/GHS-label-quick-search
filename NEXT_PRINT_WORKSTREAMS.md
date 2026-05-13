@@ -170,3 +170,12 @@ Letter Primary, standard bottle, large front label, small rack, medium rack,
 vertical text artifacts, no clipped print controls, no hidden label body, no
 conflicting chips, no decorative clutter around GHS pictograms, and no preview
 state that makes the user think a cropped label is printable.
+
+Current status: the first-screen print modal now uses a three-item preview
+context strip instead of a long row of template/configuration chips. The strip
+keeps only output role, GHS pictogram preservation, and current physical stock
+near the live preview. Target cards are constrained to full-width, two-column
+readable rows with text wrapping protection so Traditional Chinese labels do
+not collapse into vertical artifacts. Production handoff QA now checks for the
+preview context strip, readable target cards, preview panel size, and a visible
+primary print action before it accepts a case.
