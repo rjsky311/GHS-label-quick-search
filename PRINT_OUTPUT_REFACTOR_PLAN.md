@@ -1,6 +1,10 @@
 # Print Output Refactor Plan
 
-This document is the implementation guide for the next print-workflow refactor. It turns the recent product decisions into a stable plan so future work does not drift back into one-off template fixes. Concrete ship/no-ship gates live in `PRINT_ACCEPTANCE_STANDARD.md`; use that file as the acceptance contract before merging print changes.
+This document is the implementation guide for the v1.10 print-workflow refactor
+baseline and follow-on print changes. It turns the product decisions into a
+stable plan so future work does not drift back into one-off template fixes.
+Concrete ship/no-ship gates live in `PRINT_ACCEPTANCE_STANDARD.md`; use that
+file as the acceptance contract before merging print changes.
 
 This is a product and engineering plan, not legal advice. Final use still requires SDS, supplier label, and local regulation review.
 
@@ -246,8 +250,9 @@ The first refactor slice has landed:
   such as `label-stock-small-rack` and `label-stock-medium-rack`, so stale
   Zeabur assets are caught before production click-through QA.
 - The autonomous continuation rules now live in `AUTONOMOUS_WORKFLOW.md`, and
-  the product work queue lives in `NEXT_PRODUCT_WORK.md`. The expanded five
-  print workstreams live in `NEXT_PRINT_WORKSTREAMS.md`. Use those files with
+  the product work queue lives in `NEXT_PRODUCT_WORK.md`. The completed five
+  print workstreams live in `NEXT_PRINT_WORKSTREAMS.md`; the active remaining
+  product queue lives in `NEXT_REMAINING_PRODUCT_WORK.md`. Use those files with
   this refactor plan when the user asks to keep going.
 
 Remaining work should continue from the same planner instead of adding template-specific exceptions.

@@ -215,10 +215,11 @@ state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
 `CAPTURE_DICTIONARY_MISSES=true`.
 
-The next print-workflow refactor is pinned in
+The print-workflow refactor baseline is pinned in
 `PRINT_OUTPUT_REFACTOR_PLAN.md`, the acceptance contract is in
-`PRINT_ACCEPTANCE_STANDARD.md`, and the expanded five-workstream execution map
-is in `NEXT_PRINT_WORKSTREAMS.md`.
+`PRINT_ACCEPTANCE_STANDARD.md`, and the completed five-workstream execution map
+is in `NEXT_PRINT_WORKSTREAMS.md`. The active remaining product queue now lives
+in `NEXT_REMAINING_PRODUCT_WORK.md`.
 
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
@@ -280,9 +281,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 ```
 
 ### Test Results (latest known v1.10 baseline)
-- **Frontend**: 814 tests across 49 suites; 0 known React `act(...)` warnings
+- **Frontend**: 822 tests across 50 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
+- **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 33 print cases, including prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
 - **Production print workflow**: GitHub Actions workflow `Production Print QA` can run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`

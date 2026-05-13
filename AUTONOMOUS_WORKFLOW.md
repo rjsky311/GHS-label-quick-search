@@ -11,8 +11,10 @@ When the user asks to continue, proceed under these standing approvals unless a
 stop condition below applies:
 
 - Pick the next highest-value task from `NEXT_PRODUCT_WORK.md`, the print
-  acceptance docs, `NEXT_PRINT_WORKSTREAMS.md`, recent production QA failures,
-  or code review findings.
+  acceptance docs, `NEXT_REMAINING_PRODUCT_WORK.md`,
+  `NEXT_PRINT_WORKSTREAMS.md`, recent production QA failures, or code review
+  findings. Prefer `NEXT_REMAINING_PRODUCT_WORK.md` when there is no fresh
+  regression because the original print workstreams are now the baseline.
 - Simplify the UI when doing so reduces user hesitation, avoids unsafe choices,
   or makes the print workflow more task-first.
 - Move rare controls into secondary or advanced areas when the default workflow
@@ -33,6 +35,8 @@ Use this loop when continuing autonomously:
 
 1. Check `git status` and read the relevant project docs before editing.
 2. Pick one coherent product slice with a clear user-facing acceptance goal.
+   The default order is renderer/stock fit, result-table/GHS visual unity,
+   trust/SDS flow, prepared reprint maturity, then whole-product UX polish.
 3. Break the slice into sub-problems when the path is not obvious.
 4. Research current references when the decision depends on standards, browser
    behavior, accessibility, UI patterns, print/PDF behavior, or safety workflow

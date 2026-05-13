@@ -3,10 +3,12 @@
 This is the live queue for autonomous product work. Use it with
 `AUTONOMOUS_WORKFLOW.md` when the user asks to continue.
 
-The five current print-workflow workstreams are expanded in
-`NEXT_PRINT_WORKSTREAMS.md`. Treat that file as the detailed execution map for
-prepared presets, production print automation, real chemical edge cases, print
-content policy, and UI visual/noise polish.
+The original five print-workflow workstreams are expanded in
+`NEXT_PRINT_WORKSTREAMS.md`; those are now the v1.10 baseline rather than the
+next queue. The current remaining product work is expanded in
+`NEXT_REMAINING_PRODUCT_WORK.md`. Treat that file as the detailed execution map
+for renderer robustness, result-table/GHS visual polish, trust/SDS flow,
+prepared reprint maturity, and whole-product UX convergence.
 
 ## Product North Star
 
@@ -102,6 +104,15 @@ Acceptance:
   `qa:production-multi-chemical` so long-running print validation can continue
   in smaller autonomous rounds without dropping coverage.
 
+Current status:
+
+- This is the next highest-value implementation slice. The print modal now
+  guides the user more clearly, but the renderer still needs deeper
+  stock-specific geometry gates for compact labels, QR layouts, case-number
+  chips, prepared metadata, long names, and bilingual pressure.
+- Use `NEXT_REMAINING_PRODUCT_WORK.md` section 1 as the source of truth for the
+  next renderer pass.
+
 ## Priority 3 - Result Table And Pictogram Visual Polish
 
 Goal: search results should look like a polished safety tool, not a raw data
@@ -187,20 +198,19 @@ Acceptance:
 ## Immediate Next Recommended Slice
 
 The next autonomous implementation slice should start from
-`NEXT_PRINT_WORKSTREAMS.md` and pick the highest-value coherent segment from
-the five workstreams. Prepared preset clickthrough, production print-matrix
-automation, real chemical edge-case coverage, and print content policy now have
-implementation plus QA evidence. Prefer this order unless a fresh production
-screenshot, CI failure, or code review finding points elsewhere:
+`NEXT_REMAINING_PRODUCT_WORK.md`. The previous print workstreams are complete
+enough to serve as the baseline, so do not reopen them unless a fresh
+production screenshot, CI failure, or code-review finding points there.
 
-1. UI visual/noise polish, using production screenshots to remove confusion and
-   prove whole-label preview quality.
-2. Renderer/fit follow-up when production or PDF QA exposes a specific stock
-   geometry issue, especially compact labels.
-3. Prepared-solution follow-up polish only when new user-visible prepared
-   workflow issues appear; the preset clickthrough gap is already covered by
-   `qa:production-prepared`.
-4. Additional real chemical edge cases only when they cover a distinct missing
-   risk class or a newly observed production failure.
-5. Trust/source/SDS flow polish after the safety-critical print path remains
-   stable across the production matrix.
+Prefer this order:
+
+1. Renderer/stock fit robustness, especially compact labels, QR layouts,
+   case-number chips, prepared metadata, and bilingual/long-name pressure.
+2. Result table and GHS pictogram visual unity across results, expanded rows,
+   detail, comparison, preview, and print.
+3. Trust/source/SDS flow polish after the most safety-critical print and result
+   surfaces are stable.
+4. Prepared-solution and reprint maturity when a workflow or production QA gap
+   appears beyond the current `qa:production-prepared` coverage.
+5. Whole-product UX and brand-utility convergence once the core safety path is
+   stable enough to polish end-to-end.

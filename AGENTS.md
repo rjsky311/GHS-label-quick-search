@@ -243,20 +243,22 @@ state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
 `CAPTURE_DICTIONARY_MISSES=true`.
 
-The next print-workflow refactor is pinned in `PRINT_OUTPUT_REFACTOR_PLAN.md`.
-Use it before changing `LabelPrintModal`, `printLabels`, `printFitEngine`,
-`printContentModel`, stock presets, preview rendering, or print tests. It
-defines the output-planner direction, A4/Letter primary labels, curated stock
-set, typography scaling, supplemental-label rules, and Browser QA matrix.
-The expanded five-workstream execution map lives in
-`NEXT_PRINT_WORKSTREAMS.md`.
+The print-workflow refactor baseline is pinned in
+`PRINT_OUTPUT_REFACTOR_PLAN.md`. Use it before changing `LabelPrintModal`,
+`printLabels`, `printFitEngine`, `printContentModel`, stock presets, preview
+rendering, or print tests. It defines the output-planner direction, A4/Letter
+primary labels, curated stock set, typography scaling, supplemental-label
+rules, and Browser QA matrix. The completed five-workstream execution map lives
+in `NEXT_PRINT_WORKSTREAMS.md`; the active remaining product queue lives in
+`NEXT_REMAINING_PRODUCT_WORK.md`.
 
 Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
-live product queue is pinned in `NEXT_PRODUCT_WORK.md`. When the user asks to
-"continue" or otherwise delegates the next work round, use those docs to pick
-the highest-value product slice, implement it, verify it, push to `main` when
-stable, and track CI/Zeabur/production QA for user-facing changes. Stop only
-for the explicit stop conditions in `AUTONOMOUS_WORKFLOW.md`.
+live product queue is pinned in `NEXT_PRODUCT_WORK.md` plus
+`NEXT_REMAINING_PRODUCT_WORK.md`. When the user asks to "continue" or otherwise
+delegates the next work round, use those docs to pick the highest-value product
+slice, implement it, verify it, push to `main` when stable, and track
+CI/Zeabur/production QA for user-facing changes. Stop only for the explicit
+stop conditions in `AUTONOMOUS_WORKFLOW.md`.
 
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
@@ -325,9 +327,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 814 tests across 49 suites; 0 known React `act(...)` warnings
+- **Frontend**: 822 tests across 50 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Print contract**: `npm run test:print-contract` covers 228 focused print/planner/renderer assertions
+- **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 33 print cases, including prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
 - **Production print workflow**: GitHub Actions workflow `Production Print QA` can run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`

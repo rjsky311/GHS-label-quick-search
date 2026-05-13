@@ -1,9 +1,14 @@
 # Next Print Workstreams
 
-This document expands the five current print-workflow gaps into implementation
+This document expands the original five print-workflow gaps into implementation
 workstreams. Use it with `NEXT_PRODUCT_WORK.md`,
 `PRINT_OUTPUT_REFACTOR_PLAN.md`, and `AUTONOMOUS_WORKFLOW.md` when continuing
 autonomous print work.
+
+Status note: these five workstreams are now the v1.10 print-workflow baseline.
+Do not treat them as the active next queue unless new production evidence shows
+one has regressed. The active remaining product queue now lives in
+`NEXT_REMAINING_PRODUCT_WORK.md`.
 
 The goal is not to add more controls. The goal is to make the app choose,
 preview, and print the safest truthful label for the user's physical use case,
