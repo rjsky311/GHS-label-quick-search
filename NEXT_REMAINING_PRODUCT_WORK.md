@@ -56,6 +56,25 @@ Acceptance:
 - A4/Letter primary outputs remain complete and do not overflow when QR,
   profile, bilingual names, or continuation content is present.
 
+Current status:
+
+- Implemented stock-fit contracts in the print QA matrix so every matrix case
+  now records the expected stock family, rendered label size, minimum printed
+  pictogram size, minimum printed QR size, and support-chip requirement.
+- Extended PDF artifact QA to consume those stock-fit expectations and fail on
+  label-kind mismatch, undersized pictograms/QR, missing selected identity
+  fields, forbidden language leakage, case/support chip clipping, and
+  support-chip collision with pictograms, QR, or signal word.
+- Extended production handoff QA to inspect the live preview iframe for the
+  selected case/support chip and fail if it is hidden, outside the label, outside
+  the viewport, or overlapping critical visual elements.
+- Fixed the small-rack renderer where the new stock-fit gate found undersized
+  GHS pictograms: quick-ID small-rack icons now render at 11.4 mm and
+  small-rack QR supplement icons render at 10 mm.
+- Local verification passed: `npm run test:print-contract`, generated
+  `build/print-qa-report.json`, generated `build/print-html-artifacts/`,
+  `npm run qa:print-pdf` (33/33), and `npm run build`.
+
 Suggested verification:
 
 - `npm run test:print-contract`

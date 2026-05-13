@@ -106,12 +106,15 @@ Acceptance:
 
 Current status:
 
-- This is the next highest-value implementation slice. The print modal now
-  guides the user more clearly, but the renderer still needs deeper
-  stock-specific geometry gates for compact labels, QR layouts, case-number
-  chips, prepared metadata, long names, and bilingual pressure.
-- Use `NEXT_REMAINING_PRODUCT_WORK.md` section 1 as the source of truth for the
-  next renderer pass.
+- First-pass stock-fit robustness is implemented. The QA matrix now emits
+  stock-specific rendered-size contracts, PDF artifact QA enforces those
+  contracts, and production handoff QA verifies selected case/support chips in
+  the live preview iframe.
+- The small-rack quick-ID and QR supplement renderer was corrected after the
+  new gate found undersized GHS pictograms. Use
+  `NEXT_REMAINING_PRODUCT_WORK.md` section 1 for the exact completed status and
+  continue adding new renderer cases there whenever production screenshots show
+  a new physical-stock failure pattern.
 
 ## Priority 3 - Result Table And Pictogram Visual Polish
 

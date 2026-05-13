@@ -1692,6 +1692,78 @@ const resolveLabelKind = (fragmentHtml = "") => {
   return found?.[0] || "unknown";
 };
 
+const CSS_MM_TO_PX = 96 / 25.4;
+const VISUAL_SIZE_TOLERANCE = 0.86;
+
+const cssLengthToPx = (value, fallbackPx = 0) => {
+  if (typeof value === "number") return value;
+  const source = String(value || "").trim();
+  if (!source) return fallbackPx;
+  const numeric = Number.parseFloat(source);
+  if (!Number.isFinite(numeric)) return fallbackPx;
+  if (source.endsWith("mm")) return numeric * CSS_MM_TO_PX;
+  return numeric;
+};
+
+const cssLengthToMm = (value, fallbackMm = 0) => {
+  if (typeof value === "number") return value;
+  const source = String(value || "").trim();
+  if (!source) return fallbackMm;
+  const numeric = Number.parseFloat(source);
+  if (!Number.isFinite(numeric)) return fallbackMm;
+  if (source.endsWith("px")) return numeric / CSS_MM_TO_PX;
+  return numeric;
+};
+
+const floorVisualPx = (value) =>
+  Math.max(0, Math.floor(Number(value || 0) * VISUAL_SIZE_TOLERANCE));
+
+const resolvePrintPictogramMetric = (layout = {}, labelKind = "") => {
+  const typography = layout.typography || {};
+  if (labelKind === "complete-primary") {
+    return typography.compliancePictogramSize || typography.imgSize;
+  }
+  if (labelKind === "quick-id") {
+    return typography.iconPictogramSize || typography.imgSize;
+  }
+  if (labelKind === "qr-supplement") {
+    return typography.qrPictogramSize || typography.imgSize;
+  }
+  return typography.standardPictogramSize || typography.imgSize;
+};
+
+const buildStockFitContract = ({ layout = {}, labelKind = "", expected = {} }) => {
+  const typography = layout.typography || {};
+  const pictogramPx = cssLengthToPx(resolvePrintPictogramMetric(layout, labelKind));
+  const qrBoxMm = cssLengthToMm(typography.qrBox);
+  const qrInsetMm = layout.formFactor === "strip" ? 2 : 3;
+  const qrImagePx = Math.max(0, (qrBoxMm - qrInsetMm) * CSS_MM_TO_PX);
+  const defaultPreviewMin =
+    labelKind === "quick-id"
+      ? 26
+      : labelKind === "qr-supplement"
+        ? 18
+        : labelKind === "complete-primary"
+          ? 18
+          : 20;
+
+  return {
+    stockPreset: layout.stockId || layout.stockPreset,
+    stockFamily: layout.formFactor || "",
+    labelKind,
+    labelWidthMm: layout.widthMm,
+    labelHeightMm: layout.heightMm,
+    template: layout.template,
+    expectedPrintMinPictogramSidePx: floorVisualPx(pictogramPx),
+    expectedPrintMinQrSidePx:
+      labelKind === "qr-supplement" ? floorVisualPx(qrImagePx) : 0,
+    expectedPreviewMinPictogramSidePx:
+      expected.minProductionPictogramSidePx || defaultPreviewMin,
+    expectedPreviewMinQrSidePx: labelKind === "qr-supplement" ? 30 : 0,
+    requiresSupportChip: Boolean(expected.requiredIdentityText),
+  };
+};
+
 const buildPreview = ({
   chemical,
   labelConfig,
@@ -1789,6 +1861,12 @@ export function buildPrintQaCaseResult({
     testCase.labelConfig,
     expected,
   );
+  const printLayout = printDocument?.model?.layout || {};
+  const stockFit = buildStockFitContract({
+    layout: printLayout,
+    labelKind: expected.labelKind || resolveLabelKind(fragmentHtml),
+    expected,
+  });
   const actual = {
     canPrint: plan.canPrint,
     planState: plan.state,
@@ -1893,6 +1971,7 @@ export function buildPrintQaCaseResult({
     printAutoFitLevel: printDocument?.model?.layout?.autoFitLevel || 0,
     printTotalLabels: printDocument?.model?.expandedLabels?.length || 0,
     identityDensityClass: resolveIdentityDensityClass(fragmentHtml),
+    stockFit,
     hasFullPagePictograms:
       fragmentHtml.includes("label-full-page-primary") &&
       hasFullPagePictogramSize(fitPreview?.html || ""),
@@ -2049,6 +2128,10 @@ export function buildPrintQaCaseResult({
       nameDisplay: printDocument?.model?.layout?.nameDisplay,
       autoFitLevel: printDocument?.model?.layout?.autoFitLevel || 0,
       requiredIdentityText: expected.requiredIdentityText || "",
+      expectedPrintMinPictogramSidePx:
+        stockFit.expectedPrintMinPictogramSidePx,
+      expectedPrintMinQrSidePx: stockFit.expectedPrintMinQrSidePx,
+      stockFit,
       totalLabels: printDocument?.model?.expandedLabels?.length || 0,
       totalPages: printDocument?.model?.totalPages || 0,
     },
@@ -2110,14 +2193,16 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
     [],
   expectedMinPictogramSidePx:
     caseResult.expected.minProductionPictogramSidePx ??
-    (caseResult.handoffExpectation.labelKind === "complete-primary"
-      ? 18
-      : caseResult.handoffExpectation.labelKind === "qr-supplement"
-        ? 18
-        : caseResult.handoffExpectation.labelKind === "quick-id"
-          ? 26
-          : 24),
-  expectedMinQrSidePx: caseResult.handoffExpectation.hasQr ? 30 : 0,
+    caseResult.handoffExpectation.stockFit?.expectedPreviewMinPictogramSidePx ??
+    20,
+  expectedMinQrSidePx:
+    caseResult.handoffExpectation.stockFit?.expectedPreviewMinQrSidePx ??
+    (caseResult.handoffExpectation.hasQr ? 30 : 0),
+  expectedPrintMinPictogramSidePx:
+    caseResult.handoffExpectation.expectedPrintMinPictogramSidePx || 0,
+  expectedPrintMinQrSidePx:
+    caseResult.handoffExpectation.expectedPrintMinQrSidePx || 0,
+  stockFit: caseResult.handoffExpectation.stockFit || null,
   expectedCasNumbers: caseResult.handoffExpectation.casNumbers,
   expectedLabelWidthMm: caseResult.handoffExpectation.labelWidthMm,
   expectedLabelHeightMm: caseResult.handoffExpectation.labelHeightMm,

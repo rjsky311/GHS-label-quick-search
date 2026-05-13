@@ -2492,12 +2492,12 @@ const buildStyles = (model) => {
       margin-bottom: 0.45mm;
     }
     .label-icon.label-stock-small-rack .pictograms-icon {
-      grid-template-columns: repeat(4, 10mm);
-      gap: 0.5mm;
+      grid-template-columns: repeat(4, 11.4mm);
+      gap: 0.35mm;
     }
     .label-icon.label-stock-small-rack .pictograms-icon img {
-      width: 10mm;
-      height: 10mm;
+      width: 11.4mm;
+      height: 11.4mm;
     }
     .label-icon.label-stock-small-rack .signal {
       font-size: 5.5px;
@@ -2838,13 +2838,13 @@ const buildStyles = (model) => {
     }
     .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(2, 8.8mm);
+      grid-template-columns: repeat(2, 10mm);
       justify-content: start;
-      gap: 0.35mm;
+      gap: 0.3mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics img {
-      width: 8.8mm;
-      height: 8.8mm;
+      width: 10mm;
+      height: 10mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip .qr-support-row {
       min-height: auto;

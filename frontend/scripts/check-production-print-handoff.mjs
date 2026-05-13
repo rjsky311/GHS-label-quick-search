@@ -418,6 +418,13 @@ const inspectPreviewFrame = async (page, testCase) => {
         inner.top >= outer.top - tolerance &&
         inner.right <= outer.right + tolerance &&
         inner.bottom <= outer.bottom + tolerance;
+      const rectsOverlap = (left, right, tolerance = 0) =>
+        left &&
+        right &&
+        left.right > right.left + tolerance &&
+        left.left < right.right - tolerance &&
+        left.bottom > right.top + tolerance &&
+        left.top < right.bottom - tolerance;
       const elementOverflows = (element, tolerance = 1) => {
         if (!element) return false;
         const scrollHeight = Math.ceil(element.scrollHeight || 0);
@@ -593,6 +600,65 @@ const inspectPreviewFrame = async (page, testCase) => {
       const qrRects = qrImages.map(({ element }) =>
         rectToObject(element.getBoundingClientRect()),
       );
+      const supportChipRects = supportChips.map(({ element, key }) => ({
+        key,
+        rect: rectToObject(element.getBoundingClientRect()),
+        text: visibleText(element),
+      }));
+      const requiredSupportChip = expectedRequiredIdentityText
+        ? supportChips.find(({ element }) =>
+            identityText(visibleText(element)).includes(
+              identityText(expectedRequiredIdentityText),
+            ),
+          )
+        : null;
+      const requiredSupportChipRect =
+        requiredSupportChip?.element?.getBoundingClientRect();
+      const requiredSupportChipVisible =
+        !expectedRequiredIdentityText ||
+        Boolean(
+          requiredSupportChipRect &&
+            hasVisibleArea(requiredSupportChipRect) &&
+            labelRect &&
+            containsRect(
+              labelRect,
+              requiredSupportChipRect,
+              geometryTolerancePx,
+            ) &&
+            containsRect(
+              viewportRect,
+              requiredSupportChipRect,
+              geometryTolerancePx,
+            ),
+        );
+      const overlapTargets = [
+        ...pictogramImages.map(({ element, key }) => ({
+          type: "pictogram",
+          key,
+          rect: element.getBoundingClientRect(),
+        })),
+        ...qrImages.map(({ element, key }) => ({
+          type: "qr",
+          key,
+          rect: element.getBoundingClientRect(),
+        })),
+        ...signalNodes.map(({ element, key }) => ({
+          type: "signal",
+          key,
+          rect: element.getBoundingClientRect(),
+        })),
+      ];
+      const supportChipOverlapIssues =
+        requiredSupportChip && requiredSupportChipRect
+          ? overlapTargets
+              .filter(({ rect }) => rectsOverlap(requiredSupportChipRect, rect, -1))
+              .map(({ type, key }) => ({
+                type,
+                key,
+                supportChipText: visibleText(requiredSupportChip.element),
+                supportChipRect: rectToObject(requiredSupportChipRect),
+              }))
+          : [];
       const minSide = (rects) => {
         if (rects.length === 0) return 0;
         return Math.min(...rects.map((rect) => Math.min(rect.width, rect.height)));
@@ -657,7 +723,10 @@ const inspectPreviewFrame = async (page, testCase) => {
           label: labelRect ? rectToObject(labelRect) : null,
           pictograms: pictogramRects,
           qrImages: qrRects,
+          supportChips: supportChipRects,
         },
+        requiredSupportChipVisible,
+        supportChipOverlapIssues,
         minPictogramSidePx: round(minSide(pictogramRects)),
         minQrSidePx: round(minSide(qrRects)),
         counts: {
@@ -1006,6 +1075,20 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   }
   if (testCase.expectedRequiredIdentityText) {
     assert("required-identity-preview", evidence.requiredIdentityTextInPreview);
+    assert(
+      "required-support-chip-visible",
+      previewInspection.requiredSupportChipVisible === true,
+    );
+    assert(
+      `required-support-chip-no-overlap${
+        (previewInspection.supportChipOverlapIssues || []).length > 0
+          ? `:${(previewInspection.supportChipOverlapIssues || [])
+              .map((item) => `${item.type}/${item.key}`)
+              .join(",")}`
+          : ""
+      }`,
+      (previewInspection.supportChipOverlapIssues || []).length === 0,
+    );
     if (expectedCanPrint) {
       assert(
         "required-identity-handoff",

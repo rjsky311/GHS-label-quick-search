@@ -1500,7 +1500,7 @@ describe("printLabels", () => {
       };
       const cases = [
         ["small-strip", "label-stock-small-strip", "repeat(4, 8.4mm)"],
-        ["small-rack", "label-stock-small-rack", "repeat(4, 10mm)"],
+        ["small-rack", "label-stock-small-rack", "repeat(4, 11.4mm)"],
         [
           "brother-62mm-continuous",
           "label-stock-brother-62mm-continuous",
@@ -1550,7 +1550,7 @@ describe("printLabels", () => {
         [
           "small-rack",
           "label-stock-small-rack",
-          "repeat(2, 8.8mm)",
+          "repeat(2, 10mm)",
           "label-form-strip",
         ],
         [

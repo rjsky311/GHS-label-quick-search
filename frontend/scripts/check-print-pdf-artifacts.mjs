@@ -79,7 +79,18 @@ const readIndex = () => {
 
 const inspectPrintDom = async (page, testCase) =>
   page.evaluate(
-    ({ expectedPictograms, expectedHasQr, expectedMinTotalLabels, tolerance }) => {
+    ({
+      expectedLabelKind,
+      expectedPictograms,
+      expectedHasQr,
+      expectedMinTotalLabels,
+      expectedPrintMinPictogramSidePx,
+      expectedPrintMinQrSidePx,
+      expectedRequiredIdentityText,
+      expectedRequiredIdentityTexts,
+      expectedForbiddenIdentityTexts,
+      tolerance,
+    }) => {
       const round = (value) => Math.round(value * 100) / 100;
       const rectToObject = (rect) => ({
         left: round(rect.left),
@@ -117,9 +128,13 @@ const inspectPrintDom = async (page, testCase) =>
         (element?.innerText || element?.textContent || "")
           .replace(/\s+/g, " ")
           .trim();
+      const normalizedText = (value) =>
+        String(value || "").replace(/\s+/g, " ").trim().toLocaleLowerCase();
       const labels = Array.from(
         document.querySelectorAll(".label:not(.label-placeholder)"),
       );
+      const documentText = text(document.body);
+      const normalizedDocumentText = normalizedText(documentText);
       const pictogramImages = Array.from(document.querySelectorAll("img"))
         .map((img) => ({
           img,
@@ -182,6 +197,15 @@ const inspectPrintDom = async (page, testCase) =>
       const visualIssues = labels.flatMap((label, labelIndex) => {
         const labelRect = label.getBoundingClientRect();
         const labelClass = label.className || "";
+        const labelKind = labelClass.includes("label-kind-complete-primary")
+          ? "complete-primary"
+          : labelClass.includes("label-kind-qr-supplement")
+            ? "qr-supplement"
+            : labelClass.includes("label-kind-quick-id")
+              ? "quick-id"
+              : labelClass.includes("label-kind-supplemental")
+                ? "supplemental"
+                : "";
         const pictograms = Array.from(
           label.querySelectorAll('img[data-required-print-image="ghs-pictogram"]'),
         ).map((img, index) => ({
@@ -199,6 +223,14 @@ const inspectPrintDom = async (page, testCase) =>
         const nameSection = label
           .querySelector(".name-section")
           ?.getBoundingClientRect();
+        const supportChips = Array.from(label.querySelectorAll(".support-chip"));
+        const expectedSupportChip = expectedRequiredIdentityText
+          ? supportChips.find((chip) =>
+              normalizedText(text(chip)).includes(
+                normalizedText(expectedRequiredIdentityText),
+              ),
+            )
+          : null;
 
         const issues = [];
         const addIssue = (type, rect, extra = {}) => {
@@ -210,19 +242,78 @@ const inspectPrintDom = async (page, testCase) =>
           });
         };
 
+        if (expectedLabelKind && labelKind !== expectedLabelKind) {
+          addIssue("label-kind-mismatch", labelRect, {
+            expected: expectedLabelKind,
+            actual: labelKind,
+          });
+        }
+
         pictograms.forEach(({ index, rect, alt }) => {
           if (!containsRect(labelRect, rect, tolerance)) {
             addIssue("pictogram-outside-label", rect, { index, alt });
           }
+          if (
+            Number(expectedPrintMinPictogramSidePx) > 0 &&
+            Math.min(rect.width, rect.height) <
+              Number(expectedPrintMinPictogramSidePx)
+          ) {
+            addIssue("pictogram-too-small", rect, {
+              index,
+              alt,
+              expectedMin: Number(expectedPrintMinPictogramSidePx),
+            });
+          }
         });
         if (qr && !containsRect(labelRect, qr, tolerance)) {
           addIssue("qr-outside-label", qr);
+        }
+        if (
+          qr &&
+          Number(expectedPrintMinQrSidePx) > 0 &&
+          Math.min(qr.width, qr.height) < Number(expectedPrintMinQrSidePx)
+        ) {
+          addIssue("qr-too-small", qr, {
+            expectedMin: Number(expectedPrintMinQrSidePx),
+          });
         }
         if (cas && !containsRect(labelRect, cas, tolerance)) {
           addIssue("cas-outside-label", cas);
         }
         if (signal && !containsRect(labelRect, signal, tolerance)) {
           addIssue("signal-outside-label", signal);
+        }
+        if (expectedRequiredIdentityText && !expectedSupportChip) {
+          addIssue("required-support-chip-missing", labelRect, {
+            text: expectedRequiredIdentityText,
+          });
+        }
+        if (expectedSupportChip) {
+          const supportRect = expectedSupportChip.getBoundingClientRect();
+          if (!containsRect(labelRect, supportRect, tolerance)) {
+            addIssue("required-support-chip-outside-label", supportRect, {
+              text: expectedRequiredIdentityText,
+            });
+          }
+          pictograms.forEach(({ rect, alt, index }) => {
+            if (rectsOverlap(supportRect, rect, -1)) {
+              addIssue("support-chip-overlaps-pictogram", supportRect, {
+                text: expectedRequiredIdentityText,
+                alt,
+                index,
+              });
+            }
+          });
+          if (qr && rectsOverlap(supportRect, qr, -1)) {
+            addIssue("support-chip-overlaps-qr", supportRect, {
+              text: expectedRequiredIdentityText,
+            });
+          }
+          if (signal && rectsOverlap(supportRect, signal, -1)) {
+            addIssue("support-chip-overlaps-signal", supportRect, {
+              text: expectedRequiredIdentityText,
+            });
+          }
         }
 
         if (labelClass.includes("label-kind-quick-id")) {
@@ -236,7 +327,10 @@ const inspectPrintDom = async (page, testCase) =>
             if (nameSection && rectsOverlap(rect, nameSection, -1)) {
               addIssue("pictogram-overlaps-name", rect, { index, alt });
             }
-            if (Math.min(rect.width, rect.height) < 30) {
+            if (
+              Math.min(rect.width, rect.height) <
+              Math.max(30, Number(expectedPrintMinPictogramSidePx) || 0)
+            ) {
               addIssue("pictogram-too-small", rect, { index, alt });
             }
           });
@@ -248,7 +342,11 @@ const inspectPrintDom = async (page, testCase) =>
               addIssue("pictogram-overlaps-qr", rect, { index, alt });
             }
           });
-          if (qr && Math.min(qr.width, qr.height) < 50) {
+          if (
+            qr &&
+            Math.min(qr.width, qr.height) <
+              Math.max(50, Number(expectedPrintMinQrSidePx) || 0)
+          ) {
             addIssue("qr-too-small", qr);
           }
         }
@@ -275,17 +373,58 @@ const inspectPrintDom = async (page, testCase) =>
         exactPictograms,
         hasQr: qrImages.length > 0,
         expectedHasQr: Boolean(expectedHasQr),
+        labelKinds: unique(
+          labels
+            .map((label) => {
+              const labelClass = label.className || "";
+              if (labelClass.includes("label-kind-complete-primary")) {
+                return "complete-primary";
+              }
+              if (labelClass.includes("label-kind-qr-supplement")) {
+                return "qr-supplement";
+              }
+              if (labelClass.includes("label-kind-quick-id")) {
+                return "quick-id";
+              }
+              if (labelClass.includes("label-kind-supplemental")) {
+                return "supplemental";
+              }
+              return "";
+            })
+            .filter(Boolean),
+        ),
         hasMorePics: document.body.textContent.includes("more-pics"),
         imageFailures,
         clippedElements,
         visualIssues,
+        requiredIdentityTextVisible:
+          !expectedRequiredIdentityText ||
+          normalizedDocumentText.includes(
+            normalizedText(expectedRequiredIdentityText),
+          ),
+        requiredIdentityTextsVisible: (expectedRequiredIdentityTexts || []).every(
+          (candidate) =>
+            normalizedDocumentText.includes(normalizedText(candidate)),
+        ),
+        forbiddenIdentityTextsAbsent: (expectedForbiddenIdentityTexts || []).every(
+          (candidate) =>
+            !normalizedDocumentText.includes(normalizedText(candidate)),
+        ),
         hasMinimumLabels: labels.length >= Number(expectedMinTotalLabels || 1),
       };
     },
     {
+      expectedLabelKind: testCase.expectedLabelKind || "",
       expectedPictograms: testCase.expectedPictograms || [],
       expectedHasQr: Boolean(testCase.expectedHasQr),
       expectedMinTotalLabels: testCase.expectedMinTotalLabels || 1,
+      expectedPrintMinPictogramSidePx:
+        testCase.expectedPrintMinPictogramSidePx || 0,
+      expectedPrintMinQrSidePx: testCase.expectedPrintMinQrSidePx || 0,
+      expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
+      expectedRequiredIdentityTexts: testCase.expectedRequiredIdentityTexts || [],
+      expectedForbiddenIdentityTexts:
+        testCase.expectedForbiddenIdentityTexts || [],
       tolerance: GEOMETRY_TOLERANCE_PX,
     },
   );
@@ -330,9 +469,17 @@ const runCase = async ({ page, testCase }) => {
   assert("pdf-header", pdf.hasPdfHeader);
   assert("pdf-size", pdf.bytes > 4000);
   assert("labels-rendered", dom.hasMinimumLabels);
+  assert(
+    "label-kind",
+    !testCase.expectedLabelKind ||
+      dom.labelKinds.every((labelKind) => labelKind === testCase.expectedLabelKind),
+  );
   assert("pictograms-present", dom.expectedPictogramsPresent);
   assert("pictograms-exact", dom.exactPictograms);
   assert("qr-state", dom.hasQr === dom.expectedHasQr);
+  assert("required-identity-text", dom.requiredIdentityTextVisible);
+  assert("required-identity-texts", dom.requiredIdentityTextsVisible);
+  assert("forbidden-identity-texts", dom.forbiddenIdentityTextsAbsent);
   assert("images-loaded", dom.imageFailures.length === 0);
   assert("no-more-pics", dom.hasMorePics === false);
   assert("no-clipped-elements", dom.clippedElements.length === 0);

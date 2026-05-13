@@ -32,6 +32,7 @@ import path from "node:path";
 import {
   PRINT_QA_MATRIX,
   PRINT_QA_PROFILE,
+  buildPrintQaCaseResult,
   buildPrintQaMatrixReport,
   resolvePrintQaCaseChemical,
 } from "@/utils/printQaMatrix";
@@ -110,6 +111,11 @@ const maybeWritePrintArtifacts = () => {
       { [chemical.cas_number]: 1 },
       PRINT_QA_PROFILE,
     );
+    const caseResult = buildPrintQaCaseResult({
+      testCase,
+      chemical,
+      labProfile: PRINT_QA_PROFILE,
+    });
     const file = `${testCase.id}.html`;
     fs.writeFileSync(path.join(absoluteDir, file), documentBundle.html);
     return {
@@ -123,6 +129,16 @@ const maybeWritePrintArtifacts = () => {
         .filter(Boolean),
       expectedHasQr: Boolean(testCase.expected?.hasQr),
       expectedMinTotalLabels: testCase.expected?.minPrintTotalLabels || 1,
+      expectedPrintMinPictogramSidePx:
+        caseResult.handoffExpectation.expectedPrintMinPictogramSidePx,
+      expectedPrintMinQrSidePx:
+        caseResult.handoffExpectation.expectedPrintMinQrSidePx,
+      expectedRequiredIdentityText:
+        caseResult.handoffExpectation.requiredIdentityText || "",
+      expectedRequiredIdentityTexts:
+        caseResult.chemical.expectedRequiredIdentityTexts || [],
+      expectedForbiddenIdentityTexts:
+        caseResult.chemical.expectedForbiddenIdentityTexts || [],
     };
   });
 
@@ -220,6 +236,58 @@ describe("print QA matrix report", () => {
         }),
       );
       expect(chemical.coverage.riskTags.length).toBeGreaterThan(0);
+    });
+
+    const coveredStockPresets = new Set(
+      report.cases.map((testCase) => testCase.expected.stockPreset),
+    );
+    [
+      "small-strip",
+      "small-rack",
+      "medium-rack",
+      "brother-62mm-continuous",
+      "medium-bottle",
+      "large-primary",
+      "a4-primary",
+      "letter-primary",
+    ].forEach((stockPreset) => {
+      expect(coveredStockPresets.has(stockPreset)).toBe(true);
+    });
+
+    report.cases.forEach((testCase) => {
+      expect(testCase.actual.stockFit).toEqual(
+        expect.objectContaining({
+          stockPreset: testCase.expected.stockPreset,
+          labelKind: testCase.expected.labelKind,
+          labelWidthMm: expect.any(Number),
+          labelHeightMm: expect.any(Number),
+          expectedPrintMinPictogramSidePx: expect.any(Number),
+          expectedPrintMinQrSidePx: expect.any(Number),
+        }),
+      );
+      expect(
+        testCase.handoffExpectation.expectedPrintMinPictogramSidePx,
+      ).toBe(testCase.actual.stockFit.expectedPrintMinPictogramSidePx);
+      expect(testCase.handoffExpectation.expectedPrintMinQrSidePx).toBe(
+        testCase.actual.stockFit.expectedPrintMinQrSidePx,
+      );
+      if (testCase.expected.hasQr) {
+        expect(testCase.actual.stockFit.expectedPrintMinQrSidePx).toBeGreaterThan(
+          0,
+        );
+      }
+    });
+
+    report.productionBrowserQa.cases.forEach((testCase) => {
+      expect(testCase.stockFit).toEqual(
+        expect.objectContaining({
+          stockPreset: testCase.expectedStockPreset,
+          labelKind: testCase.expectedLabelKind,
+          expectedPrintMinPictogramSidePx:
+            testCase.expectedPrintMinPictogramSidePx,
+          expectedPrintMinQrSidePx: testCase.expectedPrintMinQrSidePx,
+        }),
+      );
     });
 
     expect(byId["a4-primary"].handoffExpectation).toMatchObject({
