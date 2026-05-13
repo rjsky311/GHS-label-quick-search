@@ -70,7 +70,8 @@ Current status:
   no longer dominate the first preview surface.
 - Production handoff QA now treats first-screen readability as a gate by
   checking target-card width, preview-context presence, preview-panel size, and
-  the visible print action before accepting a case.
+  the visible print action before accepting a case. The production bundle gate
+  also requires `preview-context-strip`, so stale deploys fail before visual QA.
 
 ## Priority 2 - Print Renderer And Stock Fit Robustness
 

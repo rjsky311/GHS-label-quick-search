@@ -178,4 +178,6 @@ near the live preview. Target cards are constrained to full-width, two-column
 readable rows with text wrapping protection so Traditional Chinese labels do
 not collapse into vertical artifacts. Production handoff QA now checks for the
 preview context strip, readable target cards, preview panel size, and a visible
-primary print action before it accepts a case.
+primary print action before it accepts a case; the production bundle freshness
+gate also requires `preview-context-strip` so this UI layer cannot silently lag
+behind renderer changes.

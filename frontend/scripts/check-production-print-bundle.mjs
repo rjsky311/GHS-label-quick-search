@@ -14,6 +14,7 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "ready_with_continuation",
   "continuation-badge",
   "preview-page-controls",
+  "preview-context-strip",
   "ghs-print-qa-status",
   "autoFitLevel",
   "print_autofit_retry",
