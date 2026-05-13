@@ -33,6 +33,14 @@ const SEARCH_RESULT_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_SEARCH_TIMEOUT_MS || "60000",
   10,
 );
+const SEARCH_ATTEMPTS = Number.parseInt(
+  env.PRINT_QA_SEARCH_ATTEMPTS || "3",
+  10,
+);
+const SEARCH_RETRY_DELAY_MS = Number.parseInt(
+  env.PRINT_QA_SEARCH_RETRY_DELAY_MS || "4000",
+  10,
+);
 const PREVIEW_READY_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_PREVIEW_READY_TIMEOUT_MS || "20000",
   10,
@@ -234,14 +242,37 @@ const waitForPreviewContract = async (page, testCase) => {
 };
 
 const fillSearch = async (page, searchTerm) => {
-  const searchInput = page.locator('input[role="combobox"], input[type="text"]').first();
-  await searchInput.fill(searchTerm);
-  const searchButton = page.getByTestId("single-search-btn");
-  await searchButton.click();
-  await page.locator('input[type="checkbox"]').first().waitFor({
-    state: "visible",
-    timeout: SEARCH_RESULT_TIMEOUT_MS,
-  });
+  let lastError = null;
+  for (let attempt = 1; attempt <= SEARCH_ATTEMPTS; attempt += 1) {
+    const searchInput = page
+      .locator('input[role="combobox"], input[type="text"]')
+      .first();
+    await searchInput.fill(searchTerm);
+    await page.getByTestId("single-search-btn").click();
+    try {
+      await page.locator('input[type="checkbox"]').first().waitFor({
+        state: "visible",
+        timeout: SEARCH_RESULT_TIMEOUT_MS,
+      });
+      return attempt;
+    } catch (error) {
+      const rowText =
+        ((await page
+          .getByTestId("result-row-0")
+          .textContent()
+          .catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      lastError = new Error(
+        `Search attempt ${attempt} did not produce a selectable print result: ${rowText || error?.message || String(error)}`,
+      );
+      if (attempt < SEARCH_ATTEMPTS) {
+        await sleep(SEARCH_RETRY_DELAY_MS);
+        await page.reload({ waitUntil: "networkidle" });
+      }
+    }
+  }
+  throw lastError || new Error("Search did not produce a selectable result.");
 };
 
 const openPrintModal = async (page) => {

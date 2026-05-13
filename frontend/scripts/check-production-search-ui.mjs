@@ -16,6 +16,20 @@ const screenshotDir = path.resolve(
 );
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
 const headless = env.PRINT_QA_HEADLESS !== "0";
+const SEARCH_UI_ATTEMPTS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_ATTEMPTS || "3",
+  10,
+);
+const SEARCH_UI_TIMEOUT_MS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_TIMEOUT_MS || "60000",
+  10,
+);
+const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_RETRY_DELAY_MS || "4000",
+  10,
+);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const commonChromePaths = () => {
   if (process.platform === "win32") {
@@ -81,6 +95,39 @@ const inspectActionButton = async (page, testId) =>
 const isVerticalTextRisk = ({ text, width, height }) =>
   text.length >= 3 && height > width * 1.8 && width < 90;
 
+const searchUntilUsableResult = async (page) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
+    await page.getByTestId("single-cas-input").fill(searchTerm);
+    await page.getByTestId("single-search-btn").click();
+    await page.getByTestId("result-row-0").waitFor({
+      timeout: SEARCH_UI_TIMEOUT_MS,
+    });
+    const detailButton = page.getByTestId("detail-btn-0");
+    if (
+      (await detailButton
+        .waitFor({ state: "visible", timeout: 15000 })
+        .then(() => true)
+        .catch(() => false)) === true
+    ) {
+      return attempt;
+    }
+    const rowText =
+      ((await page.getByTestId("result-row-0").textContent().catch(() => "")) ||
+        "")
+        .replace(/\s+/g, " ")
+        .trim();
+    lastError = new Error(
+      `Search attempt ${attempt} did not produce a usable detail action: ${rowText}`,
+    );
+    if (attempt < SEARCH_UI_ATTEMPTS) {
+      await sleep(SEARCH_UI_RETRY_DELAY_MS);
+      await page.reload({ waitUntil: "networkidle" });
+    }
+  }
+  throw lastError || new Error("Search did not produce a usable result.");
+};
+
 const failures = [];
 let browser;
 
@@ -102,9 +149,7 @@ try {
   await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByTestId("single-cas-input").fill(searchTerm);
-  await page.getByTestId("single-search-btn").click();
-  await page.getByTestId("result-row-0").waitFor({ timeout: 60000 });
+  const searchAttempts = await searchUntilUsableResult(page);
 
   const screenshotPath = path.join(screenshotDir, "search-results.png");
   await page.screenshot({ path: screenshotPath, fullPage: false });
@@ -144,6 +189,7 @@ try {
     executablePath,
     screenshotPath,
     failures,
+    searchAttempts,
     metrics: {
       detailButton,
       sdsButton,

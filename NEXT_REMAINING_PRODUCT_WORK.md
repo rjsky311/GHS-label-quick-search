@@ -72,6 +72,9 @@ Current status:
   for the selected label purpose, stock card, and preview label-kind/stock
   contract before capturing evidence or pressing print. This prevents fast
   remote runners from accidentally validating the previous modal state.
+- Added bounded production-search retries for Browser QA so a single transient
+  PubChem/backend miss does not masquerade as a print-layout regression, while
+  repeated upstream failures still block the production gate.
 - Fixed the small-rack renderer where the new stock-fit gate found undersized
   GHS pictograms: quick-ID small-rack icons now render at 11.4 mm and
   small-rack QR supplement icons render at 10 mm.

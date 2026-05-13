@@ -370,6 +370,13 @@ async def lifespan(app: FastAPI):
     shared_http_client = httpx.AsyncClient(
         timeout=30.0,
         limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        headers={
+            "Accept": "application/json",
+            "User-Agent": (
+                f"GHS-label-quick-search/{APP_VERSION} "
+                "(https://github.com/rjsky311/GHS-label-quick-search)"
+            ),
+        },
     )
     yield
     # Shutdown
