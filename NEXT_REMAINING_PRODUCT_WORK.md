@@ -68,12 +68,19 @@ Current status:
 - Extended production handoff QA to inspect the live preview iframe for the
   selected case/support chip and fail if it is hidden, outside the label, outside
   the viewport, or overlapping critical visual elements.
+- Hardened production handoff sequencing so the deployed Chrome runner waits
+  for the selected label purpose, stock card, and preview label-kind/stock
+  contract before capturing evidence or pressing print. This prevents fast
+  remote runners from accidentally validating the previous modal state.
 - Fixed the small-rack renderer where the new stock-fit gate found undersized
   GHS pictograms: quick-ID small-rack icons now render at 11.4 mm and
   small-rack QR supplement icons render at 10 mm.
 - Local verification passed: `npm run test:print-contract`, generated
   `build/print-qa-report.json`, generated `build/print-html-artifacts/`,
-  `npm run qa:print-pdf` (33/33), and `npm run build`.
+  `npm run qa:print-pdf` (33/33), `npm run build`,
+  `npm test -- --runInBand` (822/822), and
+  `npm run qa:production-compact` against the deployed production URL
+  (15/15 compact handoff cases).
 
 Suggested verification:
 

@@ -1652,6 +1652,7 @@ export default function LabelPrintModal({
         key={preset.id}
         type="button"
         onClick={() => applyStockPreset(preset)}
+        aria-pressed={selected}
         data-testid={`primary-output-size-${preset.id}`}
         className={`rounded-md border p-3 text-left transition-colors ${
           selected
@@ -2734,6 +2735,7 @@ export default function LabelPrintModal({
                           key={option.value}
                           type="button"
                           onClick={() => applyPrintTarget(option.value)}
+                          aria-pressed={selected}
                           aria-label={`${optionLabel}. ${optionDescription}`}
                           title={optionDescription}
                           data-testid={`label-purpose-${option.value}`}

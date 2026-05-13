@@ -103,7 +103,10 @@ or hiding statements. Use
 default set.
 The script actively clicks the target, stock, name-display, color-mode, custom
 field, and print controls before reading the QA handoff status; do not treat the
-report as a static preview-only check.
+report as a static preview-only check. After selecting a target or stock, it
+waits until the visible selected state and preview iframe label-kind/stock
+classes match the matrix contract before taking evidence, so fast CI runners do
+not accidentally validate a stale modal state.
 Set `PRINT_QA_SCREENSHOT_DIR` to save preview iframe screenshots for visual
 review. The script writes `build/production-print-handoff-report.json` by
 default; set `PRINT_QA_HANDOFF_REPORT_PATH` only when a different report path is

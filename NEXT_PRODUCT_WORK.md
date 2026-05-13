@@ -115,6 +115,9 @@ Current status:
   `NEXT_REMAINING_PRODUCT_WORK.md` section 1 for the exact completed status and
   continue adding new renderer cases there whenever production screenshots show
   a new physical-stock failure pattern.
+- Production compact QA was tightened after a remote runner exposed a stale
+  modal-state race: the handoff runner now waits for selected purpose/stock
+  state and the preview label-kind/stock contract before it clicks print.
 
 ## Priority 3 - Result Table And Pictogram Visual Polish
 

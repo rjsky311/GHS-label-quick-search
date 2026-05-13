@@ -33,6 +33,14 @@ const SEARCH_RESULT_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_SEARCH_TIMEOUT_MS || "60000",
   10,
 );
+const PREVIEW_READY_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_PREVIEW_READY_TIMEOUT_MS || "20000",
+  10,
+);
+const PRINT_ACTION_READY_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_PRINT_ACTION_READY_TIMEOUT_MS || "20000",
+  10,
+);
 const reportPath = path.resolve(
   process.cwd(),
   env.PRINT_QA_REPORT_PATH || DEFAULT_REPORT_PATH,
@@ -161,6 +169,14 @@ const sameMembers = (left = [], right = []) => {
 
 const normalizeBool = (value) => String(Boolean(value));
 
+const LABEL_KIND_CLASSES = {
+  "complete-primary": "label-kind-complete-primary",
+  primary: "label-kind-complete-primary",
+  supplemental: "label-kind-supplemental",
+  "qr-supplement": "label-kind-qr-supplement",
+  "quick-id": "label-kind-quick-id",
+};
+
 const getAttributeMap = async (locator, attributes) => {
   const result = {};
   for (const attribute of attributes) {
@@ -175,6 +191,46 @@ const ensureDetailsOpen = async (page, testId) => {
   await details.first().evaluate((node) => {
     node.open = true;
   });
+};
+
+const waitForPressedState = async (page, testId) => {
+  await page.waitForFunction(
+    (targetTestId) => {
+      const node = document.querySelector(`[data-testid="${targetTestId}"]`);
+      return (
+        node?.getAttribute("aria-pressed") === "true" ||
+        String(node?.className || "").includes("border-blue")
+      );
+    },
+    testId,
+    { timeout: PREVIEW_READY_TIMEOUT_MS },
+  );
+};
+
+const waitForPreviewContract = async (page, testCase) => {
+  const labelKindClass = LABEL_KIND_CLASSES[testCase.expectedLabelKind] || "";
+  const stockClass = testCase.expectedStockPreset
+    ? `label-stock-${testCase.expectedStockPreset}`
+    : "";
+  await page.waitForFunction(
+    ({ expectedKindClass, expectedStockClass }) => {
+      const frame = document.querySelector(
+        '[data-testid="label-fragment-preview"]',
+      );
+      const label = frame?.contentDocument?.querySelector(".label") || null;
+      const className = label?.className || "";
+      return (
+        Boolean(label) &&
+        (!expectedKindClass || className.includes(expectedKindClass)) &&
+        (!expectedStockClass || className.includes(expectedStockClass))
+      );
+    },
+    {
+      expectedKindClass: labelKindClass,
+      expectedStockClass: stockClass,
+    },
+    { timeout: PREVIEW_READY_TIMEOUT_MS },
+  );
 };
 
 const fillSearch = async (page, searchTerm) => {
@@ -199,12 +255,14 @@ const openPrintModal = async (page) => {
 };
 
 const setTargetAndStock = async (page, testCase) => {
-  await page.getByTestId(`label-purpose-${testCase.targetOption}`).click();
-  await sleep(250);
+  const targetTestId = `label-purpose-${testCase.targetOption}`;
+  await page.getByTestId(targetTestId).click();
+  await waitForPressedState(page, targetTestId);
   await ensureDetailsOpen(page, testCase.selectors.stockPickerTestId);
   await ensureDetailsOpen(page, "secondary-output-size-controls");
   await page.getByTestId(testCase.selectors.stockButtonTestId).click();
-  await sleep(500);
+  await waitForPressedState(page, testCase.selectors.stockButtonTestId);
+  await waitForPreviewContract(page, testCase);
 };
 
 const setVisualConfig = async (page, testCase) => {
@@ -813,6 +871,30 @@ const readPrintStatus = async (page, testCase) => {
     document.getElementById("ghs-print-qa-status")?.remove();
   });
   const printButton = page.getByTestId(testCase.selectors.printButtonTestId);
+  await printButton
+    .waitFor({ state: "attached", timeout: PRINT_ACTION_READY_TIMEOUT_MS })
+    .catch(() => {});
+  if ((await printButton.count()) === 0) {
+    const fallbackAction = page.getByTestId("use-full-page-primary-footer");
+    const fallbackText =
+      ((await fallbackAction.textContent().catch(() => "")) || "").trim();
+    const outcomeText =
+      ((await page
+        .getByTestId("print-outcome-summary")
+        .textContent()
+        .catch(() => "")) || "").trim();
+    return {
+      printButtonEnabled: false,
+      attributes: Object.fromEntries(
+        STATUS_ATTRIBUTES.map((attribute) => [attribute, null]),
+      ),
+      text: [outcomeText, fallbackText, "missing print-label-action"]
+        .filter(Boolean)
+        .join(" "),
+      buttonText: fallbackText,
+      outcomeText,
+    };
+  }
   const buttonText = ((await printButton.textContent().catch(() => "")) || "").trim();
   const outcomeSummary = page.getByTestId("print-outcome-summary");
   const outcomeText =
