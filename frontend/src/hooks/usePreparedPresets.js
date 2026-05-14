@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { preparedPresetKey } from "@/utils/preparedSolution";
+import {
+  normalizePreparedPresetRecord,
+  preparedPresetKey,
+} from "@/utils/preparedSolution";
 import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
@@ -51,7 +54,7 @@ function loadFromStorage() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((r) => r && r.schemaVersion === 1);
+    return parsed.map(normalizePreparedPresetRecord).filter(Boolean);
   } catch {
     return [];
   }
@@ -82,7 +85,7 @@ export default function usePreparedPresets() {
       try {
         const remote = await fetchWorkspaceDocument("prepared_presets");
         const remotePayload = Array.isArray(remote?.payload)
-          ? remote.payload.filter((r) => r && r.schemaVersion === 1)
+          ? remote.payload.map(normalizePreparedPresetRecord).filter(Boolean)
           : [];
 
         if (remotePayload.length > 0) {
@@ -108,18 +111,18 @@ export default function usePreparedPresets() {
   }, []);
 
   const addPreset = useCallback((record) => {
-    if (!record) return { saved: false, deduped: false, reason: "invalid" };
+    const normalized = normalizePreparedPresetRecord(record);
+    if (!normalized) {
+      return { saved: false, deduped: false, reason: "invalid" };
+    }
     // Recipe minimum: parent identity + both required inputs. Without
     // these the preset is not reusable and the dedup key collapses
     // several records into one.
-    if (!record.parentCas || !record.concentration || !record.solvent) {
-      return { saved: false, deduped: false, reason: "invalid" };
-    }
-    const key = preparedPresetKey(record);
+    const key = preparedPresetKey(normalized);
     const previous = presetsRef.current;
     const filtered = previous.filter((r) => preparedPresetKey(r) !== key);
     const deduped = filtered.length !== previous.length;
-    const next = [record, ...filtered].slice(0, MAX_PREPARED_PRESETS);
+    const next = [normalized, ...filtered].slice(0, MAX_PREPARED_PRESETS);
 
     presetsRef.current = next;
     setPresets(next);
@@ -130,7 +133,7 @@ export default function usePreparedPresets() {
       saved: true,
       deduped,
       reason: deduped ? "updated" : "created",
-      record,
+      record: normalized,
     };
   }, []);
 

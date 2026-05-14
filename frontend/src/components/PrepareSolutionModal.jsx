@@ -3,25 +3,13 @@ import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   formatPreparedDisplayName,
+  getPreparedExpiryStatus,
   todayDateString,
 } from "@/utils/preparedSolution";
 
-function toDayIndex(value) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((value || "").trim());
-  if (!match) return null;
-  const [, year, month, day] = match;
-  return Math.floor(
-    Date.UTC(Number(year), Number(month) - 1, Number(day)) / 86400000
-  );
-}
-
 function getRecentExpiryStatus(expiryDate) {
-  const expiryIndex = toDayIndex(expiryDate);
-  const todayIndex = toDayIndex(todayDateString());
-  if (expiryIndex == null || todayIndex == null) return null;
-
-  const daysUntilExpiry = expiryIndex - todayIndex;
-  if (daysUntilExpiry < 0) {
+  const expiryStatus = getPreparedExpiryStatus(expiryDate);
+  if (expiryStatus === "expired") {
     return {
       tone: "expired",
       labelKey: "prepared.expiryExpired",
@@ -31,7 +19,7 @@ function getRecentExpiryStatus(expiryDate) {
         "border-red-200 bg-red-50 hover:border-red-300",
     };
   }
-  if (daysUntilExpiry <= 7) {
+  if (expiryStatus === "expiringSoon") {
     return {
       tone: "warning",
       labelKey: "prepared.expiryExpiringSoon",

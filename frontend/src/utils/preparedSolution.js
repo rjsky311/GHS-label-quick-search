@@ -185,6 +185,69 @@ export function buildRecentRecord(preparedItem) {
   };
 }
 
+function cleanPreparedString(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Normalize a persisted prepared recent record.
+ *
+ * This is intentionally stricter than the old `schemaVersion` check. Stored
+ * recents are workflow records, not hazard records, so anything outside the
+ * allowed shape is dropped on load and before persistence. That keeps old,
+ * corrupted, or workspace-synced payloads from reintroducing GHS data snapshots
+ * into the prepared workflow.
+ */
+export function normalizePreparedRecentRecord(record) {
+  if (!record || record.schemaVersion !== 1) return null;
+  const parentCas = cleanPreparedString(record.parentCas);
+  const concentration = cleanPreparedString(record.concentration);
+  const solvent = cleanPreparedString(record.solvent);
+  if (!parentCas || !concentration || !solvent) return null;
+
+  return {
+    schemaVersion: 1,
+    createdAt: cleanPreparedString(record.createdAt) || new Date().toISOString(),
+    parentCas,
+    parentNameEn: cleanPreparedString(record.parentNameEn),
+    parentNameZh: cleanPreparedString(record.parentNameZh),
+    concentration,
+    solvent,
+    preparedBy: cleanPreparedString(record.preparedBy),
+    preparedDate: cleanPreparedString(record.preparedDate),
+    expiryDate: cleanPreparedString(record.expiryDate),
+  };
+}
+
+/**
+ * Normalize a persisted prepared preset record.
+ *
+ * Presets are recipe-only. Operational fields and hazard snapshots are stripped
+ * even if they came from a stale localStorage entry or a remote workspace doc.
+ */
+export function normalizePreparedPresetRecord(record) {
+  if (!record || record.schemaVersion !== 1) return null;
+  const parentCas = cleanPreparedString(record.parentCas);
+  const concentration = cleanPreparedString(record.concentration);
+  const solvent = cleanPreparedString(record.solvent);
+  if (!parentCas || !concentration || !solvent) return null;
+
+  const normalized = {
+    schemaVersion: 1,
+    createdAt: cleanPreparedString(record.createdAt) || new Date().toISOString(),
+    parentCas,
+    parentNameEn: cleanPreparedString(record.parentNameEn),
+    parentNameZh: cleanPreparedString(record.parentNameZh),
+    concentration,
+    solvent,
+  };
+  const name = cleanPreparedString(record.name);
+  if (name) normalized.name = name;
+  return normalized;
+}
+
 /**
  * Tier 2 PR-3: derived display name for a prepared workflow entry.
  *
@@ -356,4 +419,26 @@ export function todayDateString() {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function toDayIndex(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((value || "").trim());
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return Math.floor(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)) / 86400000
+  );
+}
+
+export function getPreparedExpiryStatus(
+  expiryDate,
+  todayValue = todayDateString()
+) {
+  const expiryIndex = toDayIndex(expiryDate);
+  const todayIndex = toDayIndex(todayValue);
+  if (expiryIndex == null || todayIndex == null) return null;
+  const daysUntilExpiry = expiryIndex - todayIndex;
+  if (daysUntilExpiry < 0) return "expired";
+  if (daysUntilExpiry <= 7) return "expiringSoon";
+  return null;
 }

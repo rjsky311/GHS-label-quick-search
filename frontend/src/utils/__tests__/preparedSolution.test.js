@@ -3,7 +3,10 @@ import {
   buildPresetRecord,
   buildRecentRecord,
   formatPreparedDisplayName,
+  getPreparedExpiryStatus,
   isPreparedSolutionItem,
+  normalizePreparedPresetRecord,
+  normalizePreparedRecentRecord,
   preparedPresetKey,
   preparedRecentKey,
   todayDateString,
@@ -386,6 +389,56 @@ describe("preparedRecentKey", () => {
   });
 });
 
+describe("normalizePreparedRecentRecord", () => {
+  it("returns null for invalid schema or missing required workflow fields", () => {
+    expect(normalizePreparedRecentRecord(null)).toBeNull();
+    expect(
+      normalizePreparedRecentRecord({ schemaVersion: 99, parentCas: "64-17-5" })
+    ).toBeNull();
+    expect(
+      normalizePreparedRecentRecord({
+        schemaVersion: 1,
+        parentCas: "64-17-5",
+        concentration: "10%",
+      })
+    ).toBeNull();
+  });
+
+  it("strips hazard snapshots and trims workflow fields", () => {
+    const record = normalizePreparedRecentRecord({
+      schemaVersion: 1,
+      createdAt: "2026-04-16T10:00:00.000Z",
+      parentCas: " 64-17-5 ",
+      parentNameEn: " Ethanol ",
+      parentNameZh: " 銋? ",
+      concentration: " 10% ",
+      solvent: " Water ",
+      preparedBy: " A. Chen ",
+      preparedDate: " 2026-04-16 ",
+      expiryDate: " ",
+      ghs_pictograms: [{ code: "GHS02" }],
+      hazard_statements: [{ code: "H225" }],
+      signal_word: "Danger",
+    });
+
+    expect(record).toEqual({
+      schemaVersion: 1,
+      createdAt: "2026-04-16T10:00:00.000Z",
+      parentCas: "64-17-5",
+      parentNameEn: "Ethanol",
+      parentNameZh: "銋?",
+      concentration: "10%",
+      solvent: "Water",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: null,
+    });
+    expect(record).not.toHaveProperty("ghs_pictograms");
+    expect(record).not.toHaveProperty("hazard_statements");
+    expect(record).not.toHaveProperty("signal_word");
+  });
+});
+
 // ── Tier 2 PR-2B: buildPresetRecord / preparedPresetKey ──────────
 
 describe("buildPresetRecord", () => {
@@ -553,6 +606,58 @@ describe("preparedPresetKey", () => {
   });
 });
 
+describe("normalizePreparedPresetRecord", () => {
+  it("returns null for invalid schema or missing required recipe fields", () => {
+    expect(normalizePreparedPresetRecord(null)).toBeNull();
+    expect(
+      normalizePreparedPresetRecord({ schemaVersion: 99, parentCas: "64-17-5" })
+    ).toBeNull();
+    expect(
+      normalizePreparedPresetRecord({
+        schemaVersion: 1,
+        parentCas: "64-17-5",
+        concentration: "10%",
+      })
+    ).toBeNull();
+  });
+
+  it("keeps recipe fields but strips operational and hazard fields", () => {
+    const record = normalizePreparedPresetRecord({
+      schemaVersion: 1,
+      createdAt: "2026-04-16T10:00:00.000Z",
+      parentCas: " 64-17-5 ",
+      parentNameEn: " Ethanol ",
+      parentNameZh: " 銋? ",
+      name: " Bench spray ",
+      concentration: " 10% ",
+      solvent: " Water ",
+      preparedBy: "A. Chen",
+      preparedDate: "2026-04-16",
+      expiryDate: "2026-10-16",
+      ghs_pictograms: [{ code: "GHS02" }],
+      hazard_statements: [{ code: "H225" }],
+      signal_word: "Danger",
+    });
+
+    expect(record).toEqual({
+      schemaVersion: 1,
+      createdAt: "2026-04-16T10:00:00.000Z",
+      parentCas: "64-17-5",
+      parentNameEn: "Ethanol",
+      parentNameZh: "銋?",
+      name: "Bench spray",
+      concentration: "10%",
+      solvent: "Water",
+    });
+    expect(record).not.toHaveProperty("preparedBy");
+    expect(record).not.toHaveProperty("preparedDate");
+    expect(record).not.toHaveProperty("expiryDate");
+    expect(record).not.toHaveProperty("ghs_pictograms");
+    expect(record).not.toHaveProperty("hazard_statements");
+    expect(record).not.toHaveProperty("signal_word");
+  });
+});
+
 // ── Tier 2 PR-3: formatPreparedDisplayName ────────────────────
 
 describe("formatPreparedDisplayName", () => {
@@ -709,5 +814,19 @@ describe("todayDateString", () => {
       // Keep this block as documentation of why TZ matters.
       void utcSlice;
     }
+  });
+});
+
+describe("getPreparedExpiryStatus", () => {
+  it("returns expired, expiringSoon, or null from yyyy-mm-dd dates", () => {
+    expect(getPreparedExpiryStatus("2026-04-15", "2026-04-16")).toBe(
+      "expired"
+    );
+    expect(getPreparedExpiryStatus("2026-04-23", "2026-04-16")).toBe(
+      "expiringSoon"
+    );
+    expect(getPreparedExpiryStatus("2026-04-24", "2026-04-16")).toBeNull();
+    expect(getPreparedExpiryStatus("", "2026-04-16")).toBeNull();
+    expect(getPreparedExpiryStatus("not-a-date", "2026-04-16")).toBeNull();
   });
 });

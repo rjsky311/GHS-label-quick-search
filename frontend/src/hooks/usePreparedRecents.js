@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { preparedRecentKey } from "@/utils/preparedSolution";
+import {
+  normalizePreparedRecentRecord,
+  preparedRecentKey,
+} from "@/utils/preparedSolution";
 import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
@@ -50,10 +53,7 @@ function loadFromStorage() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Drop any entry that doesn't match the current schema. Being
-    // strict here avoids silently surfacing partially-shaped entries
-    // if a future version writes something different.
-    return parsed.filter((r) => r && r.schemaVersion === 1);
+    return parsed.map(normalizePreparedRecentRecord).filter(Boolean);
   } catch {
     return [];
   }
@@ -82,7 +82,7 @@ export default function usePreparedRecents() {
       try {
         const remote = await fetchWorkspaceDocument("prepared_recents");
         const remotePayload = Array.isArray(remote?.payload)
-          ? remote.payload.filter((r) => r && r.schemaVersion === 1)
+          ? remote.payload.map(normalizePreparedRecentRecord).filter(Boolean)
           : [];
 
         if (remotePayload.length > 0) {
@@ -110,15 +110,15 @@ export default function usePreparedRecents() {
   }, []);
 
   const addRecent = useCallback((record) => {
-    if (!record) return;
+    const normalized = normalizePreparedRecentRecord(record);
+    if (!normalized) return;
     // Minimum validity: require parentCas + concentration + solvent.
     // Without them the record can't be reused meaningfully, and
     // letting it in would pollute dedup keys.
-    if (!record.parentCas || !record.concentration || !record.solvent) return;
-    const key = preparedRecentKey(record);
+    const key = preparedRecentKey(normalized);
     setRecents((prev) => {
       const filtered = prev.filter((r) => preparedRecentKey(r) !== key);
-      const next = [record, ...filtered].slice(0, MAX_PREPARED_RECENTS);
+      const next = [normalized, ...filtered].slice(0, MAX_PREPARED_RECENTS);
       persist(next);
       void saveWorkspaceDocument("prepared_recents", next).catch(() => {});
       return next;

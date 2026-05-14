@@ -219,6 +219,16 @@ Acceptance:
   creation/reuse and verifies that stale operational fields are not carried into
   a new print job.
 
+Current progress:
+
+- Prepared recents/presets are now normalized on load and save. Recents remain
+  workflow-only, while presets remain recipe-only; stale GHS snapshots and
+  stale operational fields are stripped before state or persistence can use
+  them.
+- The prepared reprint sidebar now surfaces expired/soon-expiring operational
+  context before reprint, and reprint continues to refetch the parent chemical
+  so the label uses current hazard data and the current planner.
+
 ## Immediate Next Recommended Slice
 
 The next autonomous implementation slice should start from

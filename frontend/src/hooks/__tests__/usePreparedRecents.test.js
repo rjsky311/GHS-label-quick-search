@@ -59,6 +59,35 @@ describe("usePreparedRecents", () => {
     expect(result.current.recents[0].concentration).toBe("keep-me");
   });
 
+  it("normalizes loaded recents and strips hazard snapshots", () => {
+    localStorage.setItem(
+      RECENTS_KEY,
+      JSON.stringify([
+        makeRecord({
+          parentCas: " 64-17-5 ",
+          concentration: " 10% ",
+          solvent: " Water ",
+          ghs_pictograms: [{ code: "GHS02" }],
+          hazard_statements: [{ code: "H225" }],
+          signal_word: "Danger",
+        }),
+        makeRecord({ parentCas: "" }),
+      ])
+    );
+    const { result } = renderHook(() => usePreparedRecents());
+    expect(result.current.recents).toHaveLength(1);
+    expect(result.current.recents[0]).toEqual(
+      expect.objectContaining({
+        parentCas: "64-17-5",
+        concentration: "10%",
+        solvent: "Water",
+      })
+    );
+    expect(result.current.recents[0]).not.toHaveProperty("ghs_pictograms");
+    expect(result.current.recents[0]).not.toHaveProperty("hazard_statements");
+    expect(result.current.recents[0]).not.toHaveProperty("signal_word");
+  });
+
   it("addRecent prepends a new record and persists it", () => {
     const { result } = renderHook(() => usePreparedRecents());
     act(() => {
@@ -162,7 +191,13 @@ describe("usePreparedRecents", () => {
     // here so regression of that guard gets noticed too.
     const { result } = renderHook(() => usePreparedRecents());
     act(() => {
-      result.current.addRecent(makeRecord());
+      result.current.addRecent(
+        makeRecord({
+          ghs_pictograms: [{ code: "GHS02" }],
+          hazard_statements: [{ code: "H225" }],
+          signal_word: "Danger",
+        })
+      );
     });
     const stored = result.current.recents[0];
     expect(stored).not.toHaveProperty("ghs_pictograms");

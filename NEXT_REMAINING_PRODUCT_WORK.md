@@ -224,6 +224,20 @@ Acceptance:
 - Prepared sidebar reprint opens the current print modal and remains subject to
   current planner, image, layout, and content-policy checks.
 
+Current status:
+
+- Prepared recents and presets now normalize both localStorage and optional
+  workspace-sync payloads before hydrating state. Recents keep only workflow
+  identity plus operational fields; presets keep recipe fields only. Stale GHS
+  hazard snapshots, signal words, pictograms, and accidental operational fields
+  are stripped even if an older or corrupted payload contains them.
+- Add/update paths also normalize before persistence, so future callers cannot
+  accidentally store hazard data in workflow-only prepared records.
+- The prepared reprint sidebar now uses the same expiry-status logic as the
+  prepare modal. Expired or soon-expiring entries are visually marked before the
+  user reprints, while reprint still refetches the current parent chemical and
+  reruns the current print planner.
+
 Suggested verification:
 
 - Prepared workflow integration tests

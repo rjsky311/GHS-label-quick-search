@@ -53,6 +53,41 @@ describe("usePreparedPresets", () => {
     expect(result.current.presets[0].concentration).toBe("keep-me");
   });
 
+  it("normalizes loaded presets and strips stale operational or hazard fields", () => {
+    localStorage.setItem(
+      PRESETS_KEY,
+      JSON.stringify([
+        makePreset({
+          parentCas: " 64-17-5 ",
+          concentration: " 10% ",
+          solvent: " Water ",
+          preparedBy: "A. Chen",
+          preparedDate: "2026-04-16",
+          expiryDate: "2026-10-16",
+          ghs_pictograms: [{ code: "GHS02" }],
+          hazard_statements: [{ code: "H225" }],
+          signal_word: "Danger",
+        }),
+        makePreset({ solvent: "" }),
+      ])
+    );
+    const { result } = renderHook(() => usePreparedPresets());
+    expect(result.current.presets).toHaveLength(1);
+    expect(result.current.presets[0]).toEqual(
+      expect.objectContaining({
+        parentCas: "64-17-5",
+        concentration: "10%",
+        solvent: "Water",
+      })
+    );
+    expect(result.current.presets[0]).not.toHaveProperty("preparedBy");
+    expect(result.current.presets[0]).not.toHaveProperty("preparedDate");
+    expect(result.current.presets[0]).not.toHaveProperty("expiryDate");
+    expect(result.current.presets[0]).not.toHaveProperty("ghs_pictograms");
+    expect(result.current.presets[0]).not.toHaveProperty("hazard_statements");
+    expect(result.current.presets[0]).not.toHaveProperty("signal_word");
+  });
+
   it("addPreset prepends a new record and persists it", () => {
     const { result } = renderHook(() => usePreparedPresets());
     let outcome;
@@ -148,7 +183,16 @@ describe("usePreparedPresets", () => {
     // don't carry it.
     const { result } = renderHook(() => usePreparedPresets());
     act(() => {
-      result.current.addPreset(makePreset());
+      result.current.addPreset(
+        makePreset({
+          preparedBy: "A. Chen",
+          preparedDate: "2026-04-16",
+          expiryDate: "2026-10-16",
+          ghs_pictograms: [{ code: "GHS02" }],
+          hazard_statements: [{ code: "H225" }],
+          signal_word: "Danger",
+        })
+      );
     });
     const stored = result.current.presets[0];
     // Operational fields must NOT be on the record

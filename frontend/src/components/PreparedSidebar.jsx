@@ -1,10 +1,31 @@
 import { Clock3, FlaskConical, RotateCcw, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
-import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import {
+  formatPreparedDisplayName,
+  getPreparedExpiryStatus,
+} from "@/utils/preparedSolution";
 
 function recentRowId(record, index) {
   return record?.createdAt || `recent-${index}`;
+}
+
+function getExpiryBadgeConfig(status) {
+  if (status === "expired") {
+    return {
+      labelKey: "prepared.expiryExpired",
+      cardClass: "border-red-200 bg-red-50 hover:bg-red-50",
+      chipClass: "border-red-200 bg-red-100 text-red-700",
+    };
+  }
+  if (status === "expiringSoon") {
+    return {
+      labelKey: "prepared.expiryExpiringSoon",
+      cardClass: "border-amber-200 bg-amber-50 hover:bg-amber-50",
+      chipClass: "border-amber-200 bg-amber-100 text-amber-700",
+    };
+  }
+  return null;
 }
 
 export default function PreparedSidebar({
@@ -73,11 +94,17 @@ export default function PreparedSidebar({
                   solvent: record.solvent || "",
                 });
               const isBusy = reprintingId === rowId;
+              const expiryBadge = getExpiryBadgeConfig(
+                getPreparedExpiryStatus(record.expiryDate)
+              );
 
               return (
                 <div
                   key={rowId}
-                  className="mb-2 rounded-md border border-slate-200 p-3 transition-colors hover:bg-slate-50"
+                  className={`mb-2 rounded-md border p-3 transition-colors ${
+                    expiryBadge?.cardClass ||
+                    "border-slate-200 hover:bg-slate-50"
+                  }`}
                   data-testid={`prepared-recent-item-${index}`}
                 >
                   <div className="flex justify-between items-start gap-3">
@@ -110,6 +137,14 @@ export default function PreparedSidebar({
                         {record.expiryDate && (
                           <span>
                             {t("prepared.expiryDateShort")}: {record.expiryDate}
+                          </span>
+                        )}
+                        {expiryBadge && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 font-medium ${expiryBadge.chipClass}`}
+                            data-testid={`prepared-sidebar-expiry-status-${index}`}
+                          >
+                            {t(expiryBadge.labelKey)}
                           </span>
                         )}
                         {!record.preparedBy &&
