@@ -62,6 +62,7 @@ MAX_MISS_QUERY_KIND_LENGTH = 40
 MAX_MISS_ENDPOINT_LENGTH = 80
 MAX_MISS_CONTEXT_ITEMS = 20
 MAX_MISS_CONTEXT_JSON_CHARS = 2000
+MAX_WORKSPACE_DOCUMENT_JSON_CHARS = 200000
 MAX_ADMIN_CAS_LENGTH = 32
 MAX_ADMIN_NAME_LENGTH = 240
 MAX_ADMIN_NOTES_LENGTH = 1000
@@ -611,6 +612,14 @@ class ExportRequest(BaseModel):
 
 class WorkspaceDocumentPayload(BaseModel):
     payload: Any
+
+    @field_validator("payload")
+    @classmethod
+    def payload_must_stay_bounded(cls, value: Any) -> Any:
+        encoded = json.dumps(value, ensure_ascii=False, sort_keys=True)
+        if len(encoded) > MAX_WORKSPACE_DOCUMENT_JSON_CHARS:
+            raise ValueError("workspace document payload is too large")
+        return value
 
 
 class DictionaryMissQueryPayload(BaseModel):

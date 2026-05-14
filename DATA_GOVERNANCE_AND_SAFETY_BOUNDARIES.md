@@ -97,7 +97,8 @@ Admin-gated surfaces:
 Admin write payloads are still bounded. Manual entries, aliases, and
 reference links must trim text, reject blank required fields, cap long notes and
 names, constrain source/status/locale values, and keep priority/confidence in a
-small numeric range. Admin-gated does not mean unbounded.
+small numeric range. Workspace document writes must also cap serialized JSON
+size. Admin-gated does not mean unbounded.
 
 Telemetry:
 
@@ -120,6 +121,7 @@ Backend:
   admin values before writing to SQLite.
 - Reference-link payloads reject unsupported statuses or out-of-range
   priorities in addition to unsafe URLs and unknown roles.
+- Workspace document writes reject oversized serialized JSON payloads.
 - Search surfaces `upstream_error` for transient failures instead of pretending
   there are no hazards.
 

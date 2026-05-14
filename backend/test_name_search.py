@@ -147,6 +147,24 @@ async def test_workspace_documents_are_unavailable_without_admin_config(monkeypa
     assert response.status_code == 503
 
 
+async def test_workspace_documents_reject_oversized_payload(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.put(
+            "/api/workspace/lab_profile",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "payload": {
+                    "blob": "x" * (server.MAX_WORKSPACE_DOCUMENT_JSON_CHARS + 1),
+                },
+            },
+        )
+
+    assert response.status_code == 422
+
+
 async def test_dictionary_miss_query_capture_is_opt_in(monkeypatch):
     monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", False)
     transport = ASGITransport(app=app)
