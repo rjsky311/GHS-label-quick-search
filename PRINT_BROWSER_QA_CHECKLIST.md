@@ -147,8 +147,9 @@ This opens the deployed search page in Chrome/Edge, searches Hydrochloric Acid,
 captures `build/production-search-ui-screenshots/search-results.png`, checks
 the result-row action buttons for vertical text regressions, verifies the
 visible GHS pictogram strip uses square readable tiles, checks the deployed
-results-page trust note, source badge, product trust panel, and PubChem SDS
-link shape, expands the alternate classification drawer, captures
+results-page trust note, source badge, product trust panel, separated
+data-correction/workflow support links, and PubChem SDS link shape, expands the
+alternate classification drawer, captures
 `build/production-search-ui-screenshots/search-results-expanded-classifications.png`,
 checks each expanded classification card for a shared pictogram strip with
 readable official-symbol imagery, then opens the detail modal and captures

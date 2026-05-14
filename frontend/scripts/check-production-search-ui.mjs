@@ -28,6 +28,10 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_RETRY_DELAY_MS || "4000",
   10,
 );
+const SUPPORT_REPORT_DATA_URL =
+  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction";
+const SUPPORT_WORKFLOW_REQUEST_URL =
+  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -263,6 +267,16 @@ const inspectResultsTrustSurface = async (page) => {
       .locator("h3")
       .count()
       .catch(() => 0),
+    productTrustReportHref:
+      (await page
+        .getByTestId("product-trust-report-link-results")
+        .getAttribute("href")
+        .catch(() => "")) || "",
+    productTrustWorkflowHref:
+      (await page
+        .getByTestId("product-trust-workflow-link-results")
+        .getAttribute("href")
+        .catch(() => "")) || "",
     sourceBadges: await page
       .locator('[data-testid^="source-badge-"]')
       .evaluateAll((nodes) =>
@@ -390,6 +404,15 @@ try {
   }
   if (resultsTrustSurface.productTrustProofCount < 3) {
     failures.push("results-product-trust-proof-list-incomplete");
+  }
+  if (resultsTrustSurface.productTrustReportHref !== SUPPORT_REPORT_DATA_URL) {
+    failures.push("results-product-trust-report-link-mismatch");
+  }
+  if (
+    resultsTrustSurface.productTrustWorkflowHref !==
+    SUPPORT_WORKFLOW_REQUEST_URL
+  ) {
+    failures.push("results-product-trust-workflow-link-mismatch");
   }
   if (resultsTrustSurface.sourceBadges.length < 1) {
     failures.push("results-source-badge-missing");

@@ -11,9 +11,17 @@ describe('ProductTrustPanel', () => {
     expect(screen.getByText('productTrust.sourceTitle')).toBeInTheDocument();
     expect(screen.getByText('productTrust.noAdsTitle')).toBeInTheDocument();
     expect(screen.getByText('productTrust.feedbackTitle')).toBeInTheDocument();
+    expect(screen.getByTestId('product-trust-report-link-empty')).toHaveAttribute(
+      'href',
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction'
+    );
+    expect(screen.getByTestId('product-trust-workflow-link-empty')).toHaveAttribute(
+      'href',
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request'
+    );
   });
 
-  it('renders the compact post-result surface with a safe external feedback link', () => {
+  it('renders the compact post-result surface with separated safe external support links', () => {
     render(<ProductTrustPanel variant="results" />);
 
     expect(screen.getByTestId('product-trust-panel-results')).toBeInTheDocument();
@@ -22,12 +30,21 @@ describe('ProductTrustPanel', () => {
     expect(screen.getByTestId('product-trust-proof-list-results')).toBeInTheDocument();
     expect(screen.getByText('productTrust.resultsTitle')).toBeInTheDocument();
 
-    const link = screen.getByText('productTrust.cta').closest('a');
-    expect(link).toHaveAttribute(
+    const reportLink = screen.getByTestId('product-trust-report-link-results');
+    const workflowLink = screen.getByTestId('product-trust-workflow-link-results');
+    expect(reportLink).toHaveTextContent('productTrust.reportDataCta');
+    expect(reportLink).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction'
     );
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(workflowLink).toHaveTextContent('productTrust.requestWorkflowCta');
+    expect(workflowLink).toHaveAttribute(
+      'href',
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request'
+    );
+    for (const link of [reportLink, workflowLink]) {
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
   });
 });

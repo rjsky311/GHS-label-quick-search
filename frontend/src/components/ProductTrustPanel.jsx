@@ -6,8 +6,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
-const ISSUE_URL = "https://github.com/rjsky311/GHS-label-quick-search/issues";
+import {
+  SUPPORT_REPORT_DATA_URL,
+  SUPPORT_WORKFLOW_REQUEST_URL,
+} from "@/constants/supportLinks";
 
 export default function ProductTrustPanel({ variant = "empty" }) {
   const { t } = useTranslation();
@@ -52,15 +54,28 @@ export default function ProductTrustPanel({ variant = "empty" }) {
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {t(isCompact ? "productTrust.resultsBody" : "productTrust.body")}
           </p>
-          <a
-            href={ISSUE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
-          >
-            {t("productTrust.cta")}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={SUPPORT_REPORT_DATA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid={`product-trust-report-link-${variant}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
+            >
+              {t("productTrust.reportDataCta")}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+            <a
+              href={SUPPORT_WORKFLOW_REQUEST_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid={`product-trust-workflow-link-${variant}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            >
+              {t("productTrust.requestWorkflowCta")}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
 
         <div

@@ -319,6 +319,10 @@ Current status:
 - Brand/support positioning is now explicit in UI copy: labels and hazard
   content stay ad-free, while feedback and workflow links stay outside
   safety-critical label content.
+- Product trust and footer support links now split into two explicit paths:
+  data-correction reports and workflow requests. This keeps safety-data
+  corrections separate from brand/service-oriented workflow conversations while
+  leaving both outside printed labels and hazard content.
 
 Suggested verification:
 
