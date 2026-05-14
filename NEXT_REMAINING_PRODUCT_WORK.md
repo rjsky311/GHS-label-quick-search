@@ -266,6 +266,13 @@ Current status:
   prepare modal. Expired or soon-expiring entries are visually marked before the
   user reprints, while reprint still refetches the current parent chemical and
   reruns the current print planner.
+- The label print modal now carries that expiry-status signal into the final
+  selected prepared-solution row, so an expired or soon-expiring prepared record
+  remains visible at the last print decision point instead of only in the
+  sidebar/form.
+- Production prepared QA now uses run-relative prepared/expiry dates instead of
+  fixed calendar dates, so the deployed workflow check continues to represent a
+  fresh prepared job instead of aging into a false expired-fixture failure.
 
 Suggested verification:
 

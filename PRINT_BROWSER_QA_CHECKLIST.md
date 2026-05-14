@@ -132,7 +132,9 @@ the detail workflow, creates a prepared solution, opens the label print modal,
 and verifies A4 primary, bottle supplemental, and tube quick-ID prepared outputs.
 It also covers prepared-sidebar reprint and prepared preset reuse for the same
 output families. The preset branch records preset prefill evidence and proves
-that stale operational fields are not carried into new prepared labels.
+that stale operational fields are not carried into new prepared labels. The QA
+fixture uses run-relative prepared and expiry dates so the production check
+stays fresh over time instead of becoming a date-expired artifact.
 
 For result-table and pictogram presentation changes, run:
 

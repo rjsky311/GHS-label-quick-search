@@ -327,15 +327,15 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 836 tests across 51 suites; 0 known React `act(...)` warnings
+- **Frontend**: 841 tests across 51 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 34 print cases, including custom tiny supplemental stock, prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
 - **Production search UI QA**: `npm run qa:production-search-ui` uses deployed Chrome to search Hydrochloric Acid, inspect the result-row pictogram strip, trust note, source badge, SDS link, expand alternate classifications, and open the detail modal classification comparison/reference-link surfaces. It saves result, expanded-classification, and detail-modal screenshots and fails on unreadable/missing pictogram strips, unsafe/untyped reference links, missing trust surfaces, or vertical action-button regressions.
 - **Production print workflow**: GitHub Actions workflow `Production Print QA` can run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
-- **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs
-- **Backend**: 132 tests covering name resolution, reverse dicts, aliases, API endpoints,
+- **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs. The fixture uses run-relative prepared/expiry dates so the QA remains a fresh workflow check over time.
+- **Backend**: 149 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config
 - **Build**: `npm run build` → OK; Vite vendor chunks split via `manualChunks`

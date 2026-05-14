@@ -1226,6 +1226,30 @@ describe("LabelPrintModal", () => {
     ).toBeInTheDocument();
   });
 
+  it("surfaces expired prepared-solution status at the final print decision point", () => {
+    renderModal({
+      selectedForLabel: [
+        makeChem({
+          isPreparedSolution: true,
+          preparedSolution: {
+            concentration: "70%",
+            solvent: "Water",
+            preparedBy: "Kai",
+            preparedDate: "2020-01-01",
+            expiryDate: "2020-01-02",
+          },
+        }),
+      ],
+    });
+
+    expect(
+      screen.getByTestId("selected-prepared-operational-64-17-5"),
+    ).toHaveTextContent("2020-01-02");
+    expect(
+      screen.getByTestId("selected-prepared-expiry-status-64-17-5"),
+    ).toHaveTextContent("prepared.expiryExpired");
+  });
+
   it("shows a fit-first inspection strip, can inspect details, and resets to fit after stock changes", async () => {
     const { rerender, props } = renderModal({
       selectedForLabel: [makeChem()],

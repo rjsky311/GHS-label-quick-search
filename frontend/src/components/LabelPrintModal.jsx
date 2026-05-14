@@ -48,7 +48,10 @@ import {
 } from "@/utils/printContentPolicy";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
-import { formatPreparedDisplayName } from "@/utils/preparedSolution";
+import {
+  formatPreparedDisplayName,
+  getPreparedExpiryStatus,
+} from "@/utils/preparedSolution";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   getLocalizedNames,
@@ -88,6 +91,23 @@ const TEMPLATE_OPTIONS = [
     icon: QrCode,
   },
 ];
+
+const getPreparedExpiryBadge = (expiryDate) => {
+  const status = getPreparedExpiryStatus(expiryDate);
+  if (status === "expired") {
+    return {
+      labelKey: "prepared.expiryExpired",
+      className: "border-red-200 bg-red-50 text-red-700",
+    };
+  }
+  if (status === "expiringSoon") {
+    return {
+      labelKey: "prepared.expiryExpiringSoon",
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+    };
+  }
+  return null;
+};
 
 const SIZE_OPTIONS = [
   {
@@ -3157,6 +3177,11 @@ export default function LabelPrintModal({
                         chem,
                         currentLocale,
                       );
+                      const preparedExpiryBadge = chem.isPreparedSolution
+                        ? getPreparedExpiryBadge(
+                            chem.preparedSolution?.expiryDate,
+                          )
+                        : null;
 
                       return (
                         <div
@@ -3258,6 +3283,14 @@ export default function LabelPrintModal({
                                         {t("prepared.expiryDateShort")}:{" "}
                                       </span>
                                       {chem.preparedSolution.expiryDate}
+                                    </span>
+                                  )}
+                                  {preparedExpiryBadge && (
+                                    <span
+                                      className={`rounded-full border px-2 py-0.5 font-medium ${preparedExpiryBadge.className}`}
+                                      data-testid={`selected-prepared-expiry-status-${chem.cas_number}`}
+                                    >
+                                      {t(preparedExpiryBadge.labelKey)}
                                     </span>
                                   )}
                                 </div>

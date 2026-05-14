@@ -39,13 +39,22 @@ const screenshotDir = path.resolve(
 const headless = env.PRINT_QA_HEADLESS !== "0";
 const verboseConsole = env.PRINT_QA_VERBOSE === "1";
 
+const localDateOffset = (offsetDays) => {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const PREPARED_FORM = Object.freeze({
   searchTerm: "7647-01-0",
   concentration: "1 M",
   solvent: "Water",
   preparedBy: "QA Analyst",
-  preparedDate: "2026-05-12",
-  expiryDate: "2026-06-12",
+  preparedDate: localDateOffset(0),
+  expiryDate: localDateOffset(30),
 });
 
 const PREPARED_PRESET_NAME = "QA HCl 1M preset";
@@ -670,8 +679,14 @@ const evaluateCase = ({
     assert("reprint-recent-concentration", recentText.includes("1 m"));
     assert("reprint-recent-solvent", recentText.includes("water"));
     assert("reprint-recent-prepared-by", recentText.includes("qa analyst"));
-    assert("reprint-recent-prepared-date", recentText.includes("2026-05-12"));
-    assert("reprint-recent-expiry-date", recentText.includes("2026-06-12"));
+    assert(
+      "reprint-recent-prepared-date",
+      recentText.includes(PREPARED_FORM.preparedDate),
+    );
+    assert(
+      "reprint-recent-expiry-date",
+      recentText.includes(PREPARED_FORM.expiryDate),
+    );
   }
   if (testCase.entryMode === "preset") {
     const savedPresetText = normalizeText(entryEvidence.savedPresetText || "");
@@ -708,8 +723,12 @@ const evaluateCase = ({
   assert(
     "selected-prepared-operational",
     normalizeText(selectedSummary.operationalText).includes("qa analyst") &&
-      normalizeText(selectedSummary.operationalText).includes("2026-05-12") &&
-      normalizeText(selectedSummary.operationalText).includes("2026-06-12"),
+      normalizeText(selectedSummary.operationalText).includes(
+        PREPARED_FORM.preparedDate,
+      ) &&
+      normalizeText(selectedSummary.operationalText).includes(
+        PREPARED_FORM.expiryDate,
+      ),
   );
   assert("preview-label-kind", preview.labelKind === testCase.expectedLabelKind);
   assert("preview-label-visible", preview.labelVisible);
