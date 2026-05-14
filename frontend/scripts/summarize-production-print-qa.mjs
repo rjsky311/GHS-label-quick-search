@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 const env = process.env;
+const requireProductBlocks = env.PRINT_QA_REQUIRE_PRODUCT_BLOCKS === "1";
 const buildDir = path.resolve(process.cwd(), "build");
 const outputPath = path.resolve(
   process.cwd(),
@@ -200,15 +201,87 @@ const actionableFailures = presentReports.flatMap((report) =>
   })),
 );
 
+const isPassingReport = (report) => Boolean(report?.present && report.ok === true);
+
+const handoffReportsPassing =
+  reports.handoff.length > 0 && reports.handoff.every(isPassingReport);
+
+const buildProductBlocks = () => [
+  {
+    id: "print-renderer-stock-fit",
+    name: "Print renderer and stock fit robustness",
+    reports: [
+      reports.bundle.name,
+      reports.printQa.name,
+      ...reports.handoff.map((report) => report.name),
+    ],
+    ok:
+      isPassingReport(reports.bundle) &&
+      isPassingReport(reports.printQa) &&
+      handoffReportsPassing,
+    evidence:
+      "Production bundle freshness, print QA matrix, and deployed print handoff checks cover complete-primary and compact stock paths.",
+  },
+  {
+    id: "result-table-pictograms",
+    name: "Result table and GHS pictogram visual unity",
+    reports: [reports.searchUi.name],
+    ok: isPassingReport(reports.searchUi),
+    evidence:
+      "Production search UI QA checks result-row, expanded classification, and detail comparison pictogram geometry.",
+  },
+  {
+    id: "trust-source-sds",
+    name: "Trust, source, SDS, and safety boundaries",
+    reports: [reports.searchUi.name],
+    ok: isPassingReport(reports.searchUi),
+    evidence:
+      "Production search UI QA checks authoritative notes, source chips, safe SDS/reference links, and support-link separation.",
+  },
+  {
+    id: "prepared-solution-reprint",
+    name: "Prepared solution and reprint workflow maturity",
+    reports: [reports.prepared.name],
+    ok: isPassingReport(reports.prepared),
+    evidence:
+      "Production prepared QA covers prepared print, recent reprint, and saved preset reuse across primary, bottle, and tube outputs.",
+  },
+  {
+    id: "whole-product-ux-brand-utility",
+    name: "Whole-product UX and brand-utility convergence",
+    reports: [
+      reports.searchUi.name,
+      reports.bundle.name,
+      ...reports.handoff.map((report) => report.name),
+      reports.prepared.name,
+    ],
+    ok:
+      isPassingReport(reports.searchUi) &&
+      isPassingReport(reports.bundle) &&
+      handoffReportsPassing &&
+      isPassingReport(reports.prepared),
+    evidence:
+      "Core deployed walkthroughs keep search, detail, trust/support, print, and prepared workflows in one production gate.",
+  },
+];
+
+const productBlocks = buildProductBlocks();
+const failedProductBlocks = productBlocks.filter((block) => !block.ok);
+
 const result = {
-  ok: failedReports.length === 0,
+  ok:
+    failedReports.length === 0 &&
+    (!requireProductBlocks || failedProductBlocks.length === 0),
   generatedAt: new Date().toISOString(),
   reportPath: outputPath,
+  requireProductBlocks,
   reports,
+  productBlocks,
   summary: {
     presentReports: presentReports.length,
     failedReports: failedReports.length,
     failedReportNames: failedReports.map((report) => report.name),
+    failedProductBlocks: failedProductBlocks.map((block) => block.id),
     actionableFailures,
   },
 };
@@ -227,3 +300,7 @@ console.log(
     2,
   ),
 );
+
+if (!result.ok && requireProductBlocks) {
+  process.exitCode = 1;
+}

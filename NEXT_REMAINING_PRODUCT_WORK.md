@@ -92,6 +92,10 @@ Current status:
   `npm test -- --runInBand` (822/822), and
   `npm run qa:production-compact` against the deployed production URL
   (15/15 compact handoff cases).
+- The production summary report now maps deployed evidence back to the five
+  product work blocks. `npm run qa:production-product` requires the print
+  bundle, print matrix, deployed handoff, search UI, and prepared workflow
+  reports to pass before it marks the whole product gate as passing.
 
 Suggested verification:
 
@@ -151,6 +155,9 @@ Current status:
   state from a real `custom` override. This keeps result-row custom overrides,
   detail-modal current-classification styling, and QA metadata semantically
   separate while preserving the same calm blue selected-state treatment.
+- `npm run qa:production-product` now treats the production search UI report as
+  deployed evidence for result-table pictogram unity, so this block is part of
+  the single product-level pass/fail gate instead of a separate manual note.
 
 Suggested verification:
 
@@ -217,6 +224,10 @@ Current status:
   decision: complete outputs get verification copy, QR/quick-ID/supplemental
   outputs state that they do not replace the complete primary label, and blocked
   states tell the user not to print yet.
+- The product-level production gate uses the same search UI report as evidence
+  for trust/source/SDS boundaries, including authoritative notes, source chips,
+  safe reference-link metadata, and separated data-correction/workflow support
+  links.
 
 Suggested verification:
 
@@ -273,6 +284,9 @@ Current status:
 - Production prepared QA now uses run-relative prepared/expiry dates instead of
   fixed calendar dates, so the deployed workflow check continues to represent a
   fresh prepared job instead of aging into a false expired-fixture failure.
+- `npm run qa:production-product` includes `qa:production-prepared`, so prepared
+  print, recent reprint, and saved preset reuse are no longer optional when
+  closing a whole-product production pass.
 
 Suggested verification:
 
@@ -323,12 +337,18 @@ Current status:
   data-correction reports and workflow requests. This keeps safety-data
   corrections separate from brand/service-oriented workflow conversations while
   leaving both outside printed labels and hazard content.
+- A new product-level production QA entry point (`npm run qa:production-product`)
+  stitches together the five blocks: deployed search/detail/trust checks,
+  deployed print smoke handoff, and deployed prepared-solution workflows. The
+  generated summary exposes one pass/fail line per block so future autonomous
+  rounds can see which area is actually not done.
 
 Suggested verification:
 
 - Manual product walkthrough against production
 - `npm run qa:production-search-ui`
 - `npm run qa:production-smoke`
+- `npm run qa:production-product` when closing all five product blocks together
 - Screenshot review across desktop and narrower modal widths
 
 ## Default Next Order

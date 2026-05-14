@@ -227,6 +227,21 @@ Do not use the OS print dialog as the primary QA signal. It can block the
 browser automation session. Verify the print button state and the exact preview
 fragment; only click print when intentionally testing the native dialog path.
 
+### Product-Level Production Gate
+
+Use:
+
+```bash
+npm run qa:production-product
+```
+
+This runs the deployed print smoke gate, deployed prepared-solution gate, and
+then writes `build/production-product-qa-report.json`. The summary maps evidence
+back to the five active product blocks: print renderer/stock fit, result-table
+pictogram unity, trust/source/SDS boundaries, prepared reprints, and
+whole-product UX/support positioning. Use this gate when closing broad
+productization rounds rather than a single renderer or search-table fix.
+
 ## Baseline Scenario: Hydrochloric Acid
 
 1. Open the browser target.

@@ -103,6 +103,11 @@ For print workflow changes, the default validation stack is:
   supplemental, and tube quick-ID prepared outputs. It also covers prepared
   preset creation/reuse and verifies that stale operational fields are cleared
   before a new prepared print job is submitted.
+- `npm run qa:production-product` when closing or revalidating all five product
+  work blocks together. It runs the deployed print smoke gate, deployed prepared
+  workflow gate, and product-level summary with required block mapping for:
+  print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared
+  reprints, and whole-product UX/support positioning.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix
