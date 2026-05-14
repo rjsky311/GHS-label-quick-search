@@ -41,6 +41,9 @@ const getClassificationSummary = (effective, reportCount, t) => {
   return t("detail.trustSourceUnknown");
 };
 
+const hasPictogramData = (classification) =>
+  (classification?.pictograms || classification?.ghs_pictograms || []).length > 0;
+
 export default function DetailModal({
   result,
   onClose,
@@ -109,6 +112,10 @@ export default function DetailModal({
     },
     ...(result.other_classifications || [])
   ];
+  const effectiveHasGhsData = hasGhsData(effective);
+  const effectiveHasPictograms = hasPictogramData(effective);
+  const shouldShowClassificationComparison =
+    allClassifications.length > 1 && allClassifications.some(hasGhsData);
   const referenceLinks = getReferenceLinks(result);
   const displayNames = getLocalizedNames(result, displayLocale);
   const trustSummaryItems = [
@@ -323,7 +330,25 @@ export default function DetailModal({
           )}
 
           {/* GHS Classifications */}
-          {allClassifications.length > 1 && allClassifications[0].pictograms?.length > 0 ? (
+          {effectiveHasGhsData && !effectiveHasPictograms && (
+            <div
+              role="note"
+              data-testid="detail-ghs-text-no-pictograms-banner"
+              className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+            >
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <span>
+                <span className="block font-medium">
+                  {t("detail.ghsDataNoPictograms")}
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-amber-800">
+                  {t("detail.ghsDataNoPictogramsHint")}
+                </span>
+              </span>
+            </div>
+          )}
+
+          {shouldShowClassificationComparison ? (
             /* Multiple classifications — comparison table */
             <div>
               <h3 className="mb-3 text-sm font-medium text-slate-600">
@@ -465,7 +490,7 @@ export default function DetailModal({
               signals might suggest completeness when there's nothing
               to be complete about. Follows the effective classification
               so custom overrides flip the banner on/off correctly. */}
-          {result.found && !hasGhsData(effective) && (
+          {result.found && !effectiveHasGhsData && (
             <div
               role="note"
               data-testid="detail-no-ghs-data-banner"

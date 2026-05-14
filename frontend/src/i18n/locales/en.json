@@ -96,6 +96,8 @@
   "detail.trustReferenceCount": "{{count}} links",
   "detail.trustNoReferences": "No reference links",
   "detail.noGhsDataBanner": "PubChem lists this chemical but has no GHS classification data. This does not mean it is safe — please consult the official SDS.",
+  "detail.ghsDataNoPictograms": "GHS text found, but no pictogram is available",
+  "detail.ghsDataNoPictogramsHint": "Review the H/P statements and source links before treating this as a no-pictogram or low-risk result.",
   "detail.referenceVerificationHint": "Use these links as verification starting points. Final label text still depends on the current SDS, supplier label, and local rules.",
   "detail.referenceTypeSds": "SDS",
   "detail.referenceTypeRegulatory": "Regulatory",

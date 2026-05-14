@@ -540,6 +540,61 @@ describe('DetailModal', () => {
       ).not.toBeInTheDocument();
     });
 
+    it('renders a text-only GHS note when effective data has H-codes but no pictograms', () => {
+      const textOnlyGhs = {
+        ...mockNoHazardResult,
+        cas_number: '100-00-1',
+        hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+        signal_word: 'Warning',
+        signal_word_zh: '警告',
+      };
+
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={textOnlyGhs}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.queryByTestId('detail-no-ghs-data-banner')).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('detail-ghs-text-no-pictograms-banner')
+      ).toBeInTheDocument();
+      expect(screen.getByText('detail.ghsDataNoPictograms')).toBeInTheDocument();
+      expect(screen.getByText('detail.ghsDataNoPictogramsHint')).toBeInTheDocument();
+    });
+
+    it('keeps the classification comparison visible when the primary has no pictograms but alternates have data', () => {
+      const mixedClassifications = {
+        ...mockNoHazardResult,
+        cas_number: '200-00-2',
+        hazard_statements: [{ code: 'H302', text_zh: 'x' }],
+        signal_word: 'Warning',
+        other_classifications: [
+          {
+            pictograms: [{ code: 'GHS07' }],
+            hazard_statements: [{ code: 'H315', text_zh: 'x' }],
+            signal_word: 'Warning',
+          },
+        ],
+        has_multiple_classifications: true,
+      };
+
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={mixedClassifications}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('detail-ghs-text-no-pictograms-banner')).toBeInTheDocument();
+      expect(screen.getByTestId('comparison-table')).toBeInTheDocument();
+      expect(screen.getByTestId('comparison-col-0')).toHaveTextContent('detail.defaultClass');
+      expect(screen.getByTestId('comparison-col-1')).toHaveTextContent('detail.classN');
+    });
+
     it('cache badge uses the with-age key when retrieved_at is present', () => {
       const cached = {
         ...mockFoundResult,

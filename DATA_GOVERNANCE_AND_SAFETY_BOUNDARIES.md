@@ -134,6 +134,8 @@ Frontend:
   references.
 - Results and detail views distinguish no-GHS, GHS-text-without-pictogram, and
   renderable-GHS states.
+- Detail views keep alternate-classification comparison visible even when the
+  current primary classification has GHS text but no pictograms.
 - Print planner blocks unavailable/unverified source data from hazard-label
   output.
 

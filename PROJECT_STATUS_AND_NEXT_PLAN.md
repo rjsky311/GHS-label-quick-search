@@ -208,6 +208,9 @@ Current status:
   locale/status values, and constrain numeric priority/confidence before data
   reaches SQLite. Optional workspace document writes also reject oversized JSON
   payloads.
+- Detail views now match the result table's data-state contract: GHS text
+  without renderable pictograms is called out explicitly, and alternate
+  classifications remain inspectable even if the primary report has no icons.
 
 ### 5. User Guidance, Brand Utility, And Low-Noise UX
 

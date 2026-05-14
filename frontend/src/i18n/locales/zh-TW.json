@@ -96,6 +96,8 @@
   "detail.trustReferenceCount": "{{count}} 個連結",
   "detail.trustNoReferences": "無參考連結",
   "detail.noGhsDataBanner": "PubChem 有此化學品條目，但缺少 GHS 分類資料。不代表此化學品安全，請以官方安全資料表（SDS）為準。",
+  "detail.ghsDataNoPictograms": "已有 GHS 文字資料，但沒有可顯示的圖示",
+  "detail.ghsDataNoPictogramsHint": "請查看 H/P 敘述與來源連結，不要把它當成無圖示或低風險結果。",
   "detail.referenceVerificationHint": "這些連結是核對起點；最終標籤文字仍須以最新 SDS、供應商標示與當地法規為準。",
   "detail.referenceTypeSds": "SDS",
   "detail.referenceTypeRegulatory": "法規",
