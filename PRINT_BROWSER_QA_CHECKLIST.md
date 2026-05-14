@@ -53,6 +53,7 @@ The same deployed-browser matrix can also run in GitHub Actions through
 `Production Print QA` (`.github/workflows/production-print-qa.yml`). Trigger it
 manually with one of these modes:
 
+- `product`: default five-block closure gate for user-facing product work.
 - `smoke`: fast high-risk deployed print path.
 - `primary`: full-page primary and continuation outputs.
 - `compact`: compact bottle/rack/QR/quick-ID outputs.
@@ -61,9 +62,14 @@ manually with one of these modes:
 - `full`: local print matrix + PDF artifacts + deployed handoff.
 - `all`: `full` plus prepared workflow QA.
 
-The workflow also runs the `smoke` mode on a weekly schedule and uploads JSON
+The workflow also runs the `product` mode on a weekly schedule and uploads JSON
 reports, screenshots, print HTML artifacts, generated PDFs, and the summary
 manifest as a GitHub artifact.
+
+Physical paper/stock validation is tracked separately in
+`PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`. Use that checklist after automated
+Browser/PDF/production gates pass when a change affects real printer behavior,
+paper stock, roll labels, QR scan reliability, or physical readability.
 
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the

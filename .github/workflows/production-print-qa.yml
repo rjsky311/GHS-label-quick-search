@@ -6,9 +6,10 @@ on:
       mode:
         description: Production QA layer to run
         required: true
-        default: smoke
+        default: product
         type: choice
         options:
+          - product
           - smoke
           - primary
           - compact
@@ -28,7 +29,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-print-qa-${{ github.event_name }}-${{ github.event.inputs.mode || 'scheduled-smoke' }}
+  group: production-print-qa-${{ github.event_name }}-${{ github.event.inputs.mode || 'scheduled-product' }}
   cancel-in-progress: false
 
 jobs:
@@ -63,9 +64,12 @@ jobs:
       - name: Run selected production print QA
         run: |
           set -euo pipefail
-          MODE="${{ github.event.inputs.mode || 'smoke' }}"
+          MODE="${{ github.event.inputs.mode || 'product' }}"
           echo "Running production print QA mode: ${MODE}"
           case "${MODE}" in
+            product)
+              npm run qa:production-product
+              ;;
             smoke)
               npm run qa:production-smoke
               ;;
@@ -104,16 +108,45 @@ jobs:
       - name: Add job summary
         if: always()
         run: |
-          MODE="${{ github.event.inputs.mode || 'smoke' }}"
-          node -e "const fs=require('fs'); const p='build/production-print-qa-summary.json'; const r=fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,'utf8')) : {}; const lines=['## Production Print QA','', 'Mode: ' + process.env.MODE, 'OK: ' + String(r.ok ?? 'unknown'), 'Present reports: ' + String(r.summary?.presentReports ?? 0), 'Failed reports: ' + String(r.summary?.failedReports ?? 0), '', 'Artifact includes JSON reports, preview screenshots, print HTML artifacts, and generated PDFs when present.']; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');"
+          MODE="${{ github.event.inputs.mode || 'product' }}"
+          node <<'NODE'
+          const fs = require("fs");
+          const p = "build/production-print-qa-summary.json";
+          const r = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : {};
+          const blocks = Array.isArray(r.productBlocks) ? r.productBlocks : [];
+          const failedBlocks = Array.isArray(r.summary?.failedProductBlocks)
+            ? r.summary.failedProductBlocks
+            : [];
+          const lines = [
+            "## Production Print QA",
+            "",
+            `Mode: ${process.env.MODE}`,
+            `OK: ${String(r.ok ?? "unknown")}`,
+            `Present reports: ${String(r.summary?.presentReports ?? 0)}`,
+            `Failed reports: ${String(r.summary?.failedReports ?? 0)}`,
+            `Failed product blocks: ${failedBlocks.length ? failedBlocks.join(", ") : "none"}`,
+            "",
+          ];
+          if (blocks.length) {
+            lines.push("| Product block | Status |", "| --- | --- |");
+            for (const block of blocks) {
+              lines.push(`| ${block.name || block.id} | ${block.ok ? "pass" : "fail"} |`);
+            }
+            lines.push("");
+          }
+          lines.push(
+            "Artifact includes JSON reports, preview screenshots, print HTML artifacts, and generated PDFs when present.",
+          );
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join("\n")}\n`);
+          NODE
         env:
-          MODE: ${{ github.event.inputs.mode || 'smoke' }}
+          MODE: ${{ github.event.inputs.mode || 'product' }}
 
       - name: Upload production QA artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: production-print-qa-${{ github.event.inputs.mode || 'scheduled-smoke' }}-${{ github.run_id }}
+          name: production-print-qa-${{ github.event.inputs.mode || 'scheduled-product' }}-${{ github.run_id }}
           if-no-files-found: warn
           retention-days: 14
           path: |

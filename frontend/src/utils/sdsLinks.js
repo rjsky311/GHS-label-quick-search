@@ -11,6 +11,8 @@ const REFERENCE_LINK_TYPES = new Set([
   "reference",
 ]);
 
+const QR_TARGET_TYPE_PRIORITY = ["sds", "regulatory", "occupational", "reference"];
+
 export function getPubChemSDSUrl(cid) {
   return cid
     ? `https://pubchem.ncbi.nlm.nih.gov/compound/${cid}#section=Safety-and-Hazards`
@@ -130,9 +132,9 @@ export function getPreferredQrTarget(cid, cas, referenceLinks = []) {
     ...referenceLinks,
     ...getFallbackReferenceLinks(cid, cas),
   ]);
-  const preferred = normalizedLinks.find((link) =>
-    ["sds", "regulatory", "occupational", "reference"].includes(link.linkType)
-  );
+  const preferred = QR_TARGET_TYPE_PRIORITY.map((linkType) =>
+    normalizedLinks.find((link) => link.linkType === linkType)
+  ).find(Boolean);
   return (
     preferred?.url ||
     (cid

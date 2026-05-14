@@ -186,6 +186,19 @@ describe("getPreferredQrTarget", () => {
     ).toBe(getPubChemSDSUrl(702));
   });
 
+  it("prefers SDS or regulatory targets over generic references even when references have higher priority", () => {
+    expect(
+      getPreferredQrTarget(702, "64-17-5", [
+        {
+          label: "Generic internal note",
+          url: "https://example.com/internal-note",
+          link_type: "reference",
+          priority: 1,
+        },
+      ])
+    ).toBe(getPubChemSDSUrl(702));
+  });
+
   it("falls back to PubChem SDS when no custom links exist", () => {
     expect(getPreferredQrTarget(702, "64-17-5")).toBe(getPubChemSDSUrl(702));
   });

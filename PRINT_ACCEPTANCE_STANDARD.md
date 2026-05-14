@@ -2,7 +2,10 @@
 
 This document defines the product acceptance bar for GHS label output. It is a product and engineering standard, not legal advice. Final use still requires the official SDS, supplier label, and local regulations.
 
-Deployment and Browser Use verification steps live in `PRINT_BROWSER_QA_CHECKLIST.md`.
+Deployment and Browser Use verification steps live in
+`PRINT_BROWSER_QA_CHECKLIST.md`. Real paper, label stock, printer scaling, QR
+scan, and physical readability checks live in
+`PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`.
 
 ## Grounding References
 

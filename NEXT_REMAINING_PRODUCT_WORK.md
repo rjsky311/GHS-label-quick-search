@@ -1,9 +1,11 @@
 # Next Remaining Product Work
 
-This document captures the next product work after the v1.10 print-workflow
-baseline. Use it with `NEXT_PRODUCT_WORK.md`, `AUTONOMOUS_WORKFLOW.md`,
-`PRINT_ACCEPTANCE_STANDARD.md`, and `PRINT_BROWSER_QA_CHECKLIST.md` when the
-user asks to continue.
+This document is the detailed execution backlog after the v1.10 print-workflow
+baseline. It is not the canonical planning entry point. Start from
+`PROJECT_STATUS_AND_NEXT_PLAN.md`, use `NEXT_PRODUCT_WORK.md` as the short live
+queue, then use this file with `AUTONOMOUS_WORKFLOW.md`,
+`PRINT_ACCEPTANCE_STANDARD.md`, and `PRINT_BROWSER_QA_CHECKLIST.md` when a
+specific product block is selected.
 
 The product goal remains the same: a user should be able to search a chemical,
 understand the hazard source, choose the physical labeling situation, preview a

@@ -243,20 +243,32 @@ state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
 provided. Dictionary miss capture is also opt-in via
 `CAPTURE_DICTIONARY_MISSES=true`.
 
+The current project-level planning entry is
+`PROJECT_STATUS_AND_NEXT_PLAN.md`. Read it first when choosing the next product
+slice; it consolidates current status, should-do items, blind spots, priority
+order, and done criteria.
+
 The print-workflow refactor baseline is pinned in
 `PRINT_OUTPUT_REFACTOR_PLAN.md`. Use it before changing `LabelPrintModal`,
 `printLabels`, `printFitEngine`, `printContentModel`, stock presets, preview
 rendering, or print tests. It defines the output-planner direction, A4/Letter
 primary labels, curated stock set, typography scaling, supplemental-label
 rules, and Browser QA matrix. The completed five-workstream execution map lives
-in `NEXT_PRINT_WORKSTREAMS.md`; the active remaining product queue lives in
+in `NEXT_PRINT_WORKSTREAMS.md`; the detailed remaining product backlog lives in
 `NEXT_REMAINING_PRODUCT_WORK.md`.
 
+Data governance and safety boundaries are pinned in
+`DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`. Use it before changing source
+ranking, SDS/reference links, QR targets, manual dictionary/alias behavior,
+dictionary miss telemetry, admin-gated data paths, or upstream-error/no-GHS
+states.
+
 Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
-live product queue is pinned in `NEXT_PRODUCT_WORK.md` plus
-`NEXT_REMAINING_PRODUCT_WORK.md`. When the user asks to "continue" or otherwise
-delegates the next work round, use those docs to pick the highest-value product
-slice, implement it, verify it, push to `main` when stable, and track
+live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
+execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user
+asks to "continue" or otherwise delegates the next work round, start from
+`PROJECT_STATUS_AND_NEXT_PLAN.md`, pick the highest-value product slice,
+implement it, verify it, push to `main` when stable, and track
 CI/Zeabur/production QA for user-facing changes. Stop only for the explicit
 stop conditions in `AUTONOMOUS_WORKFLOW.md`.
 
@@ -327,15 +339,17 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 841 tests across 51 suites; 0 known React `act(...)` warnings
+- **Frontend**: 842 tests across 51 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 34 print cases, including custom tiny supplemental stock, prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
 - **Production search UI QA**: `npm run qa:production-search-ui` uses deployed Chrome to search Hydrochloric Acid, inspect the result-row pictogram strip, trust note, source badge, separated data-correction/workflow support links, SDS link, expand alternate classifications, and open the detail modal classification comparison/reference-link surfaces. It saves result, expanded-classification, and detail-modal screenshots and fails on unreadable/missing pictogram strips, unsafe/untyped reference links, missing trust surfaces, support-link regressions, or vertical action-button regressions.
-- **Production print workflow**: GitHub Actions workflow `Production Print QA` can run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
+- **Production print workflow**: GitHub Actions workflow `Production Print QA` defaults to `product` mode for the five-block closure gate, can also run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
 - **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs. The fixture uses run-relative prepared/expiry dates so the QA remains a fresh workflow check over time.
 - **Production product QA**: `npm run qa:production-product` is the five-block closure gate. It runs deployed print smoke, deployed prepared QA, and a required product-block summary so print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared workflows, and whole-product UX/support positioning are all represented in one pass/fail report.
+- **Physical print QA**: `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` covers real paper/stock, printer scaling, QR scan, and physical readability checks that automated Browser/PDF QA cannot fully prove.
+- **Data governance**: `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md` covers source roles, SDS/reference policy, QR target precedence, admin/manual data boundaries, telemetry limits, and conflict handling.
 - **Backend**: 149 tests covering name resolution, reverse dicts, aliases, API endpoints,
   GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
   surfacing (including partial-transient), CORS config, rate limiter config

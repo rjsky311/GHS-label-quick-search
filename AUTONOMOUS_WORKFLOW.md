@@ -10,11 +10,13 @@ drifting into surface-level fixes.
 When the user asks to continue, proceed under these standing approvals unless a
 stop condition below applies:
 
-- Pick the next highest-value task from `NEXT_PRODUCT_WORK.md`, the print
-  acceptance docs, `NEXT_REMAINING_PRODUCT_WORK.md`,
+- Pick the next highest-value task from `PROJECT_STATUS_AND_NEXT_PLAN.md` first.
+  Use `NEXT_PRODUCT_WORK.md` as the short live queue, then
+  `NEXT_REMAINING_PRODUCT_WORK.md`, the print acceptance docs,
   `NEXT_PRINT_WORKSTREAMS.md`, recent production QA failures, or code review
-  findings. Prefer `NEXT_REMAINING_PRODUCT_WORK.md` when there is no fresh
-  regression because the original print workstreams are now the baseline.
+  findings for the detailed work context. Prefer the canonical plan when there
+  is no fresh regression because the original print workstreams are now the
+  baseline.
 - Simplify the UI when doing so reduces user hesitation, avoids unsafe choices,
   or makes the print workflow more task-first.
 - Move rare controls into secondary or advanced areas when the default workflow
@@ -33,7 +35,8 @@ stop condition below applies:
 
 Use this loop when continuing autonomously:
 
-1. Check `git status` and read the relevant project docs before editing.
+1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
+   the relevant project docs before editing.
 2. Pick one coherent product slice with a clear user-facing acceptance goal.
    The default order is renderer/stock fit, result-table/GHS visual unity,
    trust/SDS flow, prepared reprint maturity, then whole-product UX polish.
@@ -113,10 +116,16 @@ For print workflow changes, the default validation stack is:
   closing a larger print-workflow milestone. This is the full production matrix
   and can run longer than 15 minutes.
 - The same production QA can be run from GitHub Actions via the
-  `Production Print QA` workflow. Use `smoke`, `primary`, `compact`,
-  `multi-chemical`, `prepared`, `full`, or `all` depending on the change scope.
-  The workflow uploads JSON reports, screenshots, print HTML artifacts,
-  generated PDFs, and `production-print-qa-summary.json` for review.
+  `Production Print QA` workflow. Use `product` as the default closure mode for
+  user-facing product work; use `smoke`, `primary`, `compact`,
+  `multi-chemical`, `prepared`, `full`, or `all` for focused reruns or deeper
+  print-matrix checks. The workflow uploads JSON reports, screenshots, print
+  HTML artifacts, generated PDFs, and `production-print-qa-summary.json` for
+  review, and its job summary lists product-block status when available.
+- Use `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` when a change affects real
+  paper/stock behavior, label-printer scaling, QR scan reliability, or physical
+  readability. Automated Browser/PDF gates are preconditions for that pass, not
+  substitutes for it.
 
 Use narrower commands only for early iteration. A print change is not complete
 until the production-facing path has been checked when deployment is part of the
@@ -132,6 +141,10 @@ Choose the verification level by blast radius:
   `python -m pytest test_name_search.py -v`.
 - Security or storage changes: add regression tests for malformed data,
   over-limit payloads, blocked schemes, or permission headers.
+- Source, SDS/reference, QR-target, admin/manual dictionary, telemetry, or
+  upstream-error changes: check `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md` and
+  add regression tests for unsafe URLs, role precedence, no-GHS/upstream-error
+  separation, or bounded writes as appropriate.
 - Docs-only changes: `git diff --check` is sufficient unless generated docs or
   links are part of the change.
 

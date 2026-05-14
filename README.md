@@ -19,7 +19,7 @@
 
 ## 功能特色
 
-> 目前 runtime 版本：`1.10.0`。前端已由 CRA/CRACO 遷移至 Vite，並新增列印用途模式、stock presets、QR 補充標籤、live preview、recent print reload、lab profile、pilot admin，以及預設 local-only、可選 admin-gated workspace sync 的 v1.10 功能。後續產品化與視覺改版方向見 [DESIGN.md](./DESIGN.md)、[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)、[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)；列印重構標準與剩餘產品工作見 [PRINT_ACCEPTANCE_STANDARD.md](./PRINT_ACCEPTANCE_STANDARD.md)、[PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md)、[NEXT_PRINT_WORKSTREAMS.md](./NEXT_PRINT_WORKSTREAMS.md)、[NEXT_REMAINING_PRODUCT_WORK.md](./NEXT_REMAINING_PRODUCT_WORK.md)。
+> 目前 runtime 版本：`1.10.0`。前端已由 CRA/CRACO 遷移至 Vite，並新增列印用途模式、stock presets、QR 補充標籤、live preview、recent print reload、lab profile、pilot admin，以及預設 local-only、可選 admin-gated workspace sync 的 v1.10 功能。後續全局規劃入口見 [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md)；產品化與視覺改版方向見 [DESIGN.md](./DESIGN.md)、[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)、[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)；列印重構標準、實體列印驗證、資料治理與剩餘產品工作見 [PRINT_ACCEPTANCE_STANDARD.md](./PRINT_ACCEPTANCE_STANDARD.md)、[PHYSICAL_PRINT_VALIDATION_CHECKLIST.md](./PHYSICAL_PRINT_VALIDATION_CHECKLIST.md)、[DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md](./DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md)、[PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md)、[NEXT_PRINT_WORKSTREAMS.md](./NEXT_PRINT_WORKSTREAMS.md)、[NEXT_REMAINING_PRODUCT_WORK.md](./NEXT_REMAINING_PRODUCT_WORK.md)。
 
 ### 🔍 單一查詢
 
@@ -439,7 +439,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand` → 51 suites / 836 passed；`npm run test:print-contract` → 233 focused print/planner/renderer assertions；`npm run qa:print-pdf` → 34 print cases；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。Production print QA 可用 GitHub Actions 的 `Production Print QA` workflow 執行 smoke/layer/full/all，並保留 JSON reports、screenshots、PDF artifacts 與 summary manifest。
+- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand` → 51 suites / 842 passed；`npm run test:print-contract` → 233 focused print/planner/renderer assertions；`npm run qa:print-pdf` → 34 print cases；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。Production print QA 可用 GitHub Actions 的 `Production Print QA` workflow 執行 product/smoke/layer/full/all，並保留 JSON reports、screenshots、PDF artifacts 與 summary manifest。
 - backend 最近基準：`python -m pytest -v` → 132 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)
