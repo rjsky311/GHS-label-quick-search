@@ -25,7 +25,32 @@ describe("AuthoritativeSourceNote", () => {
 
   it("renders the i18n note key (mock returns as-is)", () => {
     render(<AuthoritativeSourceNote />);
+    expect(screen.getByText("trust.authoritativeTitle")).toBeInTheDocument();
     expect(screen.getByText("trust.authoritativeNote")).toBeInTheDocument();
+  });
+
+  it("renders the verification checklist", () => {
+    render(<AuthoritativeSourceNote />);
+    const checklist = screen.getByTestId("authoritative-source-checklist-results");
+    expect(checklist).toHaveTextContent("trust.verifySds");
+    expect(checklist).toHaveTextContent("trust.verifySupplier");
+    expect(checklist).toHaveTextContent("trust.verifyLocal");
+  });
+
+  it("supports supplemental and blocked safety modes", () => {
+    const { rerender } = render(<AuthoritativeSourceNote mode="supplemental" />);
+    expect(screen.getByTestId("authoritative-source-note-results")).toHaveAttribute(
+      "data-mode",
+      "supplemental",
+    );
+    expect(screen.getByText("trust.supplementalNote")).toBeInTheDocument();
+
+    rerender(<AuthoritativeSourceNote mode="blocked" variant="print" />);
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
+      "data-mode",
+      "blocked",
+    );
+    expect(screen.getByText("trust.blockedNote")).toBeInTheDocument();
   });
 
   it("note copy is identical across variants (single source of truth)", () => {

@@ -153,6 +153,12 @@ export default function DetailModal({
     }
     return "flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50";
   };
+  const getReferenceTypeLabel = (linkType) => {
+    if (linkType === "sds") return t("detail.referenceTypeSds");
+    if (linkType === "regulatory") return t("detail.referenceTypeRegulatory");
+    if (linkType === "occupational") return t("detail.referenceTypeOccupational");
+    return t("detail.referenceTypeReference");
+  };
 
   return (
     <div
@@ -400,6 +406,12 @@ export default function DetailModal({
               <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" /> {t("sds.section")}
               </h3>
+              <p
+                className="mb-3 text-xs leading-5 text-slate-500"
+                data-testid="detail-reference-verification-hint"
+              >
+                {t("detail.referenceVerificationHint")}
+              </p>
               <div className="flex gap-3 flex-wrap">
                 {referenceLinks.map((link) => (
                   <a
@@ -407,9 +419,14 @@ export default function DetailModal({
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-testid={`detail-reference-link-${link.linkType}`}
                     className={getReferenceLinkClassName(link.linkType)}
                   >
-                    <ExternalLink className="w-4 h-4" /> {link.label}
+                    <ExternalLink className="w-4 h-4" />
+                    <span>{link.label}</span>
+                    <span className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-current/10">
+                      {getReferenceTypeLabel(link.linkType)}
+                    </span>
                   </a>
                 ))}
               </div>

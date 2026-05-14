@@ -171,6 +171,24 @@ Acceptance:
 - Unsafe reference-link schemes, stale hazard states, and missing upstream data
   remain blocked or clearly warned.
 
+Current status:
+
+- Search results now distinguish three safety states instead of collapsing them
+  together: no GHS classification data, GHS text without renderable pictograms,
+  and renderable pictograms. This prevents H/P or signal-word-only records from
+  being presented as "no hazard."
+- The shared `AuthoritativeSourceNote` now supports results, detail, and print
+  variants with explicit SDS, supplier-label, and local-rule verification chips.
+  Print mode can also show supplemental-only or blocked-output wording.
+- Detail-modal reference links are labeled by role (`SDS`, `Regulatory`,
+  `Occupational`, or `Reference`) and include a short verification hint so SDS
+  paths remain useful without implying that the app itself is the authority.
+  The frontend and backend still reject unsafe non-http(s) reference URLs.
+- The print modal now keeps the same trust boundary close to the output-planner
+  decision: complete outputs get verification copy, QR/quick-ID/supplemental
+  outputs state that they do not replace the complete primary label, and blocked
+  states tell the user not to print yet.
+
 Suggested verification:
 
 - Frontend tests for copy/state changes

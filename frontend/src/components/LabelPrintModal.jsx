@@ -46,6 +46,7 @@ import {
   PRINT_HAZARD_TEXT_MODE,
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
+import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";
 import useFocusTrap from "@/hooks/useFocusTrap";
@@ -873,6 +874,17 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
+  const printTrustMode =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+      ? "blocked"
+      : isSupplementalOutput || isQrSupplementOutput || isQuickIdOutput
+        ? "supplemental"
+        : "general";
+  const shouldShowPrintTrustNote =
+    selectedForLabel.length > 0 &&
+    outputPlan.state !== PRINT_OUTPUT_PLAN_STATE.PENDING_SELECTION;
   const contentPolicy =
     outputPlan.readiness?.contentPolicy ||
     printReadiness.contentPolicy ||
@@ -2827,6 +2839,13 @@ export default function LabelPrintModal({
                       ))}
                     </div>
                   </details>
+
+                  {shouldShowPrintTrustNote && (
+                    <AuthoritativeSourceNote
+                      variant="print"
+                      mode={printTrustMode}
+                    />
+                  )}
 
                   <div
                     className="mt-3 rounded-md border border-blue-100 bg-blue-50/70 p-3"

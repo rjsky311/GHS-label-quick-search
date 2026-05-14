@@ -359,11 +359,9 @@ export default function ResultsTable({
                 </td>
                 <td className="px-4 py-4 align-top">
                   {(() => {
-                    // v1.8 M2 three-branch decision:
-                    //   1. not-found → "-"
-                    //   2. found but no GHS data anywhere (on effective) → new warning
-                    //   3. found with GHS data but nothing for the visual block to draw → existing `noHazard`
-                    //   4. found with renderable visual → existing pictogram block (unchanged)
+                    // Keep "no GHS data" separate from "GHS text exists but
+                    // there is no pictogram to draw"; neither should be
+                    // mistaken for a no-hazard result.
                     if (!result.found) return "-";
                     const effectiveForGhsCheck = getEffectiveClassification(result);
                     if (!hasGhsData(effectiveForGhsCheck)) {
@@ -383,7 +381,17 @@ export default function ResultsTable({
                     }
                     if (!hasRenderableGhsVisual(result)) {
                       return (
-                        <span className="text-slate-500">{t("results.noHazard")}</span>
+                        <div
+                          className="space-y-1"
+                          data-testid={`ghs-data-no-pictograms-${result.cas_number}`}
+                        >
+                          <div className="text-sm text-slate-700">
+                            {t("results.ghsDataNoPictograms")}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {t("results.ghsDataNoPictogramsHint")}
+                          </div>
+                        </div>
                       );
                     }
                     return (

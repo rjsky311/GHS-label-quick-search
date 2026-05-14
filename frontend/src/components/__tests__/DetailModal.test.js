@@ -191,6 +191,19 @@ describe('DetailModal', () => {
       expect(echaLink).toBeTruthy();
     });
 
+    it('labels reference links as verification aids', () => {
+      render(<DetailModal {...defaultProps} />);
+      expect(screen.getByTestId('detail-reference-verification-hint')).toHaveTextContent(
+        'detail.referenceVerificationHint'
+      );
+      expect(screen.getByTestId('detail-reference-link-sds')).toHaveTextContent(
+        'detail.referenceTypeSds'
+      );
+      expect(screen.getByTestId('detail-reference-link-regulatory')).toHaveTextContent(
+        'detail.referenceTypeRegulatory'
+      );
+    });
+
     it('renders print label button', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText('detail.printLabel')).toBeInTheDocument();

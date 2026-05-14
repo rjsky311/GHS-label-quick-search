@@ -327,7 +327,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 822 tests across 50 suites; 0 known React `act(...)` warnings
+- **Frontend**: 826 tests across 50 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 33 print cases, including prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions

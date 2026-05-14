@@ -118,6 +118,13 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
       "Why this output was chosen",
     );
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
+      "data-mode",
+      "supplemental",
+    );
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveTextContent(
+      "trust.supplementalTitle",
+    );
     expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
@@ -444,6 +451,13 @@ describe("LabelPrintModal", () => {
       "QR supplement is printable",
     );
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
+      "data-mode",
+      "supplemental",
+    );
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveTextContent(
+      "trust.supplementalTitle",
+    );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Details via QR/SDS",
     );
@@ -790,6 +804,13 @@ describe("LabelPrintModal", () => {
       "Responsible profile required",
     );
     expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
+      "data-mode",
+      "blocked",
+    );
+    expect(screen.getByTestId("authoritative-source-note-print")).toHaveTextContent(
+      "trust.blockedTitle",
+    );
     expect(screen.getByTestId("responsible-profile-controls")).toHaveAttribute(
       "open",
     );

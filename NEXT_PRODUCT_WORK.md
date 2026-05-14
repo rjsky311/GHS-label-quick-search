@@ -180,6 +180,18 @@ Acceptance:
   safety-critical workflow.
 - Trust copy remains short, specific, and action-oriented.
 
+Current progress:
+
+- Results no longer show "No hazard label" when GHS H/P text or signal words
+  exist but no pictogram is renderable. That state now has its own copy that
+  points the user back to detail/SDS verification.
+- SDS/reference links in the detail modal are visibly typed and include a
+  verification hint, while unsafe schemes remain filtered out before links or QR
+  targets are rendered.
+- The same trust-boundary component now appears near search results, detail
+  references, and print-planner decisions. Supplemental/QR/quick-ID labels are
+  described as support outputs, not replacements for complete primary labels.
+
 ## Priority 5 - Prepared Solution And Reprint Workflows
 
 Goal: prepared-solution labels and recents should feel like a reliable lab

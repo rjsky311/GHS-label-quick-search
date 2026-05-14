@@ -268,10 +268,9 @@ describe('ResultsTable', () => {
       ).toBeInTheDocument();
     });
 
-    it('does NOT render the new warning when the classification has any signal (regression against over-eager warning)', () => {
-      // Has H-codes and signal word but no pictogram — this is a real GHS record
-      // that the pictogram visual can't render. The new warning must NOT fire;
-      // the UI falls back to the existing `results.noHazard` text.
+    it('shows a text-only GHS state when the classification has H/signal data but no pictograms', () => {
+      // Has H-codes and signal word but no pictogram. This is a real GHS record
+      // that the pictogram visual can't render, not a no-hazard result.
       const signalOnly = {
         ...mockNoHazardResult,
         cas_number: '100-00-1',
@@ -290,11 +289,14 @@ describe('ResultsTable', () => {
       expect(
         screen.queryByTestId(`no-ghs-data-${signalOnly.cas_number}`)
       ).not.toBeInTheDocument();
-      // Falls back to existing `results.noHazard` — must not be blank
-      expect(screen.getByText('results.noHazard')).toBeInTheDocument();
+      expect(screen.getByText('results.ghsDataNoPictograms')).toBeInTheDocument();
+      expect(screen.getByText('results.ghsDataNoPictogramsHint')).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`ghs-data-no-pictograms-${signalOnly.cas_number}`)
+      ).toBeInTheDocument();
     });
 
-    it('shows results.noHazard (not the visual block) when H/P/signal exist but NOTHING has pictograms (Codex PR #10 regression)', () => {
+    it('shows a text-only GHS state when H/P/signal exist but nothing has pictograms (Codex PR #10 regression)', () => {
       // Codex caught that hasRenderableGhsVisual was treating
       // `other_classifications.length > 0` as renderable even when
       // those alternate classifications had no pictograms.
@@ -305,9 +307,8 @@ describe('ResultsTable', () => {
       //   - other_classifications has entries, but none have pictograms
       //   - there ARE hazard_statements + signal_word
       //
-      // Expected: no "no GHS data" warning (there IS GHS data), AND
-      // no empty pictogram block, AND the existing `results.noHazard`
-      // fallback text is shown.
+      // Expected: no "no GHS data" warning (there IS GHS data), no empty
+      // pictogram block, and a distinct text-only GHS state.
       const noPicsAnywhere = {
         ...mockNoHazardResult,
         cas_number: '300-00-3',
@@ -330,14 +331,16 @@ describe('ResultsTable', () => {
           getEffectiveClassification={createMockGetEffective()}
         />
       );
-      // Not the "no GHS data" warning — there IS GHS data
+      // Not the "no GHS data" warning: there IS GHS data.
       expect(screen.queryByText('results.noGhsDataAvailable')).not.toBeInTheDocument();
       expect(
         screen.queryByTestId(`no-ghs-data-${noPicsAnywhere.cas_number}`)
       ).not.toBeInTheDocument();
-      // And not the visual pictogram block either (nothing to draw)
-      // We verify this indirectly: the `noHazard` fallback text is present.
-      expect(screen.getByText('results.noHazard')).toBeInTheDocument();
+      expect(screen.getByText('results.ghsDataNoPictograms')).toBeInTheDocument();
+      expect(screen.getByText('results.ghsDataNoPictogramsHint')).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`ghs-data-no-pictograms-${noPicsAnywhere.cas_number}`)
+      ).toBeInTheDocument();
     });
 
     it('custom override that selects an alternate classification with H-codes suppresses the warning', () => {
