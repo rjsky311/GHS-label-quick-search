@@ -36,7 +36,10 @@ import {
   buildPrintQaMatrixReport,
   resolvePrintQaCaseChemical,
 } from "@/utils/printQaMatrix";
-import { PRINT_OUTPUT_PLAN_STATE } from "@/utils/printOutputPlanner";
+import {
+  PRINT_OUTPUT_KIND,
+  PRINT_OUTPUT_PLAN_STATE,
+} from "@/utils/printOutputPlanner";
 import {
   buildPrintDocument,
   buildPrintPreviewDocument,
@@ -101,7 +104,9 @@ const maybeWritePrintArtifacts = () => {
   const absoluteDir = path.resolve(process.cwd(), outputDir);
   fs.mkdirSync(absoluteDir, { recursive: true });
 
-  const index = PRINT_QA_MATRIX.map((testCase) => {
+  const index = PRINT_QA_MATRIX.filter(
+    (testCase) => testCase.expected?.canPrint !== false,
+  ).map((testCase) => {
     const chemical = resolvePrintQaCaseChemical(testCase);
     const documentBundle = buildPrintDocument(
       [chemical],
@@ -250,6 +255,7 @@ describe("print QA matrix report", () => {
       "large-primary",
       "a4-primary",
       "letter-primary",
+      "custom",
     ].forEach((stockPreset) => {
       expect(coveredStockPresets.has(stockPreset)).toBe(true);
     });
@@ -448,6 +454,58 @@ describe("print QA matrix report", () => {
     expect(byId["qr-supplement"].actual.contentPolicy).toMatchObject(
       byId["qr-supplement"].expected.contentPolicy,
     );
+
+    expect(byId["custom-tiny-complete-primary-blocked"]).toMatchObject({
+      expected: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE,
+        outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+        stockPreset: "custom",
+        template: "full",
+      }),
+      actual: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE,
+        outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+        stockPreset: "custom",
+        template: "full",
+        hasEveryPictogram: true,
+        printHasEveryPictogram: true,
+      }),
+      handoffExpectation: expect.objectContaining({
+        status: "blocked",
+        labelKind: "complete-primary",
+        stockPreset: "custom",
+        template: "full",
+        hasQr: false,
+      }),
+    });
+    expect(browserCaseById["custom-tiny-complete-primary-blocked"]).toBeUndefined();
+
+    expect(byId["custom-tiny-supplemental"]).toMatchObject({
+      expected: expect.objectContaining({
+        canPrint: true,
+        outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+        stockPreset: "custom",
+        template: "standard",
+      }),
+      actual: expect.objectContaining({
+        canPrint: true,
+        outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+        stockPreset: "custom",
+        template: "standard",
+        hasEveryPictogram: true,
+        printHasEveryPictogram: true,
+      }),
+      handoffExpectation: expect.objectContaining({
+        status: "qa_handoff",
+        labelKind: "supplemental",
+        stockPreset: "custom",
+        template: "standard",
+        hasQr: false,
+      }),
+    });
+    expect(browserCaseById["custom-tiny-supplemental"]).toBeUndefined();
 
     report.cases.forEach((testCase) => {
       expect(testCase.passed).toBe(true);

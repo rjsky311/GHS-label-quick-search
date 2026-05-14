@@ -435,6 +435,10 @@ describe("print acceptance matrix", () => {
       labelHeightMm: 28,
       nameDisplay: "both",
     });
+
+    expect(layout.size).toBe("small");
+    expect(layout.formFactor).toBe("strip");
+
     const plan = buildPrintOutputPlan({
       selectedForLabel: [hydrochloricAcid],
       layout,
@@ -457,6 +461,8 @@ describe("print acceptance matrix", () => {
       nameDisplay: "both",
     }, {});
 
+    expect(preview.model.layout.size).toBe("small");
+    expect(preview.model.layout.formFactor).toBe("strip");
     expect(preview.fragmentHtml).toContain("label-kind-supplemental");
     expect(preview.fragmentHtml).not.toContain("label-kind-complete-primary");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);

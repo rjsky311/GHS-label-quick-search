@@ -439,7 +439,7 @@ v1.10 將專案從「可用的查詢/列印工具」推進到更接近日常 lab
 
 **Verification baseline**
 
-- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand` → 51 suites / 836 passed；`npm run test:print-contract` → 233 focused print/planner/renderer assertions；`npm run qa:print-pdf` → 33 print cases；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。Production print QA 可用 GitHub Actions 的 `Production Print QA` workflow 執行 smoke/layer/full/all，並保留 JSON reports、screenshots、PDF artifacts 與 summary manifest。
+- 最近前端驗證：`npm run test:i18n` → success；`npm test -- --runInBand` → 51 suites / 836 passed；`npm run test:print-contract` → 233 focused print/planner/renderer assertions；`npm run qa:print-pdf` → 34 print cases；`npm run build` → success，並透過 Vite `manualChunks` 拆分 vendor bundles。Production print QA 可用 GitHub Actions 的 `Production Print QA` workflow 執行 smoke/layer/full/all，並保留 JSON reports、screenshots、PDF artifacts 與 summary manifest。
 - backend 最近基準：`python -m pytest -v` → 132 passed；若修改 backend 行為需重跑。
 
 ### v1.9.0 (2026-04)

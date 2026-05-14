@@ -367,11 +367,14 @@ directory. These artifacts reuse the same preview renderer as the app and now
 cover A4 Primary, Letter Primary, A4 Chinese/B&W, Letter English/B&W, bottle
 supplemental, bottle supplemental with case identity, Avery 5163, Avery 5164,
 rack landscape, tube/vial quick-ID, tube/vial quick-ID with case identity,
-Brother 62 mm quick-ID, QR supplement, and Brother 62 mm QR supplement for
-Hydrochloric Acid, plus lower-density Ethanol, Sodium Hydroxide QR, Methanol
-B/W, Hydrogen Peroxide English QR, sparse single-pictogram Nitrogen, Zinc
-Oxide, and Boric Acid outputs, and long-name corrosive bottle and tube fixtures
-that verify identity shrink rules keep CAS visible.
+Brother 62 mm quick-ID, QR supplement, Brother 62 mm QR supplement, and custom
+tiny supplemental stock for Hydrochloric Acid, plus lower-density Ethanol,
+Sodium Hydroxide QR, Methanol B/W, Hydrogen Peroxide English QR, sparse
+single-pictogram Nitrogen, Zinc Oxide, and Boric Acid outputs, and long-name
+corrosive bottle and tube fixtures that verify identity shrink rules keep CAS
+visible. Blocked custom complete-primary cases remain in the matrix report but
+are excluded from PDF artifact generation because they should not reach print
+handoff.
 
 The report records the expected `qa_handoff` attributes, preview scale, actual
 print-document HTML checks, and a `productionBrowserQa` section listing the

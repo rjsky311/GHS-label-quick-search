@@ -78,9 +78,17 @@ Current status:
 - Fixed the small-rack renderer where the new stock-fit gate found undersized
   GHS pictograms: quick-ID small-rack icons now render at 11.4 mm and
   small-rack QR supplement icons render at 10 mm.
+- Added custom-stock cases to the print QA matrix: a tiny custom complete
+  primary is blocked and routed back to A4/Letter, while the same tiny custom
+  geometry remains printable as truthful supplemental output with every GHS
+  pictogram preserved. Blocked custom-primary cases are kept out of PDF artifact
+  generation because they are not valid print handoff outputs.
+- Custom physical sizes now infer typography size from the entered dimensions
+  instead of inheriting the large-primary preset size. This keeps tiny custom
+  labels on the strip renderer path and prevents standard-grid overflow.
 - Local verification passed: `npm run test:print-contract`, generated
   `build/print-qa-report.json`, generated `build/print-html-artifacts/`,
-  `npm run qa:print-pdf` (33/33), `npm run build`,
+  `npm run qa:print-pdf` (34/34), `npm run build`,
   `npm test -- --runInBand` (822/822), and
   `npm run qa:production-compact` against the deployed production URL
   (15/15 compact handoff cases).

@@ -373,6 +373,16 @@ const coerceNumber = (
 const coerceEnum = (value, valid, fallback) =>
   valid.has(value) ? value : fallback;
 
+const inferCustomSizeFromDimensions = (widthMm, heightMm) => {
+  const shortSide = Math.min(widthMm || 0, heightMm || 0);
+  const longSide = Math.max(widthMm || 0, heightMm || 0);
+  const area = (widthMm || 0) * (heightMm || 0);
+
+  if (shortSide <= 42 || longSide <= 75 || area < 3600) return "small";
+  if (shortSide <= 62 || area < 9000) return "medium";
+  return "large";
+};
+
 function getPreset(source) {
   if (!source) return DEFAULT_PRESET;
   return PRESET_INDEX[source] || DEFAULT_PRESET;
@@ -760,7 +770,23 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       labelConfig.size || purposePreset.size,
       labelConfig.orientation || purposePreset.orientation,
     );
-  const size = labelConfig.size || base.size;
+  const resolvedLabelWidthMm = locksPresetGeometry
+    ? base.labelWidthMm
+    : coerceNumber(labelConfig.labelWidthMm, base.labelWidthMm, {
+        min: 24,
+        max: 220,
+      });
+  const resolvedLabelHeightMm = locksPresetGeometry
+    ? base.labelHeightMm
+    : coerceNumber(labelConfig.labelHeightMm, base.labelHeightMm, {
+        min: 18,
+        max: 297,
+      });
+  const size =
+    labelConfig.size ||
+    (explicitPreset === "custom"
+      ? inferCustomSizeFromDimensions(resolvedLabelWidthMm, resolvedLabelHeightMm)
+      : base.size);
   const orientation = coerceEnum(
     labelConfig.orientation || base.orientation,
     VALID_ORIENTATIONS,
@@ -822,16 +848,10 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
     perPage: columns * rows,
     labelWidthMm: locksPresetGeometry
       ? base.labelWidthMm
-      : coerceNumber(labelConfig.labelWidthMm, base.labelWidthMm, {
-          min: 24,
-          max: 220,
-        }),
+      : resolvedLabelWidthMm,
     labelHeightMm: locksPresetGeometry
       ? base.labelHeightMm
-      : coerceNumber(labelConfig.labelHeightMm, base.labelHeightMm, {
-          min: 18,
-          max: 297,
-        }),
+      : resolvedLabelHeightMm,
     pageMarginMm: coerceNumber(
       labelConfig.pageMarginMm ?? calibration.pageMarginMm,
       PAGE_MARGIN_MM,
