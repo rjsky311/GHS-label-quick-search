@@ -88,7 +88,7 @@ describe("ClassificationComparisonTable", () => {
       const secondStrip = within(secondColumn).getByTestId("ghs-pictogram-strip");
 
       expect(firstStrip).toHaveAttribute("data-size", "md");
-      expect(firstStrip).toHaveAttribute("data-variant", "custom");
+      expect(firstStrip).toHaveAttribute("data-variant", "selected");
       expect(firstStrip).toHaveAttribute("data-count", "2");
       expect(secondStrip).toHaveAttribute("data-variant", "comparison");
       expect(secondStrip).toHaveAttribute("data-count", "1");

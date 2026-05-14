@@ -36,6 +36,10 @@ const VARIANT_STYLES = {
     tile: "border-blue-200 bg-blue-50/60 shadow-sm shadow-blue-100/50",
     code: "text-blue-700",
   },
+  selected: {
+    tile: "border-blue-200 bg-blue-50/60 shadow-sm shadow-blue-100/50",
+    code: "text-blue-700",
+  },
   muted: {
     tile: "border-slate-200 bg-white/90",
     code: "text-slate-500",

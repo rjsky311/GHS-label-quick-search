@@ -385,6 +385,62 @@ try {
     }
   }
 
+  await page.getByTestId("detail-btn-0").click();
+  const detailModal = page.getByTestId("detail-modal");
+  await detailModal.waitFor({ state: "visible", timeout: 10000 });
+  const detailComparisonTable = detailModal.getByTestId("comparison-table");
+  await detailComparisonTable.waitFor({ state: "visible", timeout: 10000 });
+  const detailImageWait = await waitForImagesInLocator(
+    detailComparisonTable,
+    "detail-comparison-table",
+  );
+  imageWaits.push(detailImageWait);
+  if (detailImageWait.failed.length > 0) {
+    failures.push("detail-comparison-pictogram-image-load-timeout");
+  }
+
+  const detailScreenshotPath = path.join(
+    screenshotDir,
+    "detail-modal-classification-comparison.png",
+  );
+  await page.screenshot({ path: detailScreenshotPath, fullPage: false });
+
+  const detailComparisonMetrics = [];
+  const detailComparisonColumns = detailComparisonTable.locator(
+    '[data-testid^="comparison-pictograms-"]',
+  );
+  const detailComparisonColumnCount = await detailComparisonColumns.count();
+  if (detailComparisonColumnCount < 2) {
+    failures.push("detail-comparison-columns-missing");
+  }
+  for (let index = 0; index < detailComparisonColumnCount; index += 1) {
+    const strip = detailComparisonColumns.nth(index).getByTestId(
+      "ghs-pictogram-strip",
+    );
+    if ((await strip.count()) === 0) {
+      failures.push(`detail-comparison-${index}-pictogram-strip-missing`);
+      continue;
+    }
+    const metrics = await inspectPictogramStrip(
+      strip,
+      `detail-comparison-${index}`,
+    );
+    detailComparisonMetrics.push(metrics);
+    failures.push(
+      ...validatePictogramStrip(metrics, `detail-comparison-${index}-pictogram`, {
+        minCount: index === 0 ? 4 : 1,
+        minFrame: 40,
+        maxFrame: 60,
+      }),
+    );
+  }
+  if (detailComparisonMetrics[0]?.variant !== "selected") {
+    failures.push("detail-comparison-current-variant-mismatch");
+  }
+  if ((detailComparisonMetrics[0]?.tiles || []).length !== pictogramTiles) {
+    failures.push("detail-comparison-current-pictogram-count-mismatch");
+  }
+
   const report = {
     ok: failures.length === 0,
     productionUrl,
@@ -392,6 +448,7 @@ try {
     executablePath,
     screenshotPath,
     expandedScreenshotPath,
+    detailScreenshotPath,
     failures,
     searchAttempts,
     metrics: {
@@ -401,6 +458,8 @@ try {
       resultPictogramMetrics,
       expandedClassificationCount,
       expandedPictogramMetrics,
+      detailComparisonColumnCount,
+      detailComparisonMetrics,
       imageWaits,
       verticalRisks,
     },

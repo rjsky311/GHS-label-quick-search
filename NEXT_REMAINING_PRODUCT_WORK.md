@@ -142,6 +142,15 @@ Current status:
   pictogram geometry, expands the alternate-classification drawer, captures a
   second screenshot, and fails on missing strips, undersized images, non-square
   tiles, and action-button vertical-text regressions.
+- Production search UI QA now also clicks into the deployed detail modal and
+  inspects the same-chemical classification comparison table. It verifies that
+  the currently selected classification uses the shared selected pictogram
+  strip, that every comparison column keeps readable official-symbol imagery,
+  and that detail-modal pictogram images load before the run is accepted.
+- The shared pictogram strip now distinguishes a `selected` classification
+  state from a real `custom` override. This keeps result-row custom overrides,
+  detail-modal current-classification styling, and QA metadata semantically
+  separate while preserving the same calm blue selected-state treatment.
 
 Suggested verification:
 

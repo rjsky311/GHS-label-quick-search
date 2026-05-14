@@ -55,6 +55,25 @@ describe("GHSPictogramStrip", () => {
     expect(screen.getByTestId("ghs-pictogram-code")).toHaveTextContent("GHS05");
   });
 
+  it("keeps selected classification styling separate from custom overrides", () => {
+    render(
+      <GHSPictogramStrip
+        pictograms={[{ code: "GHS04" }]}
+        variant="selected"
+        showCodes
+      />,
+    );
+
+    expect(screen.getByTestId("ghs-pictogram-strip")).toHaveAttribute(
+      "data-variant",
+      "selected",
+    );
+    expect(screen.getByTestId("ghs-pictogram-frame")).toHaveClass(
+      "border-blue-200",
+      "bg-blue-50/60",
+    );
+  });
+
   it("returns no visual wrapper when there are no pictograms", () => {
     const { container } = render(<GHSPictogramStrip pictograms={[]} />);
 

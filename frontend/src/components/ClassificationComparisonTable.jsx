@@ -186,7 +186,7 @@ export default function ClassificationComparisonTable({
                       <GHSPictogramStrip
                         pictograms={presentPictograms}
                         size="md"
-                        variant={isSelected ? "custom" : "comparison"}
+                        variant={isSelected ? "selected" : "comparison"}
                         markerTitle={col.label}
                         getName={(pic) =>
                           getLocalizedPictogramName(pic, displayLocale)

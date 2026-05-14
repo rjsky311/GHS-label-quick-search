@@ -147,9 +147,13 @@ the result-row action buttons for vertical text regressions, verifies the
 visible GHS pictogram strip uses square readable tiles, expands the alternate
 classification drawer, captures
 `build/production-search-ui-screenshots/search-results-expanded-classifications.png`,
-and checks each expanded classification card for a shared pictogram strip with
-readable official-symbol imagery. Treat failures such as
-`result-ghs-pictogram-*`, `other-classification-*-pictogram-*`, or
+checks each expanded classification card for a shared pictogram strip with
+readable official-symbol imagery, then opens the detail modal and captures
+`build/production-search-ui-screenshots/detail-modal-classification-comparison.png`.
+The detail pass verifies that the selected classification uses the shared
+`selected` strip variant and that every comparison-table pictogram image loads
+and remains readable. Treat failures such as `result-ghs-pictogram-*`,
+`other-classification-*-pictogram-*`, `detail-comparison-*-pictogram-*`, or
 `result-action-button-vertical-text` as product regressions, not just test
 noise.
 
