@@ -6,6 +6,7 @@ describe('ProductTrustPanel', () => {
     render(<ProductTrustPanel variant="empty" />);
 
     expect(screen.getByTestId('product-trust-panel-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('product-trust-proof-list-empty')).toBeInTheDocument();
     expect(screen.getByText('productTrust.title')).toBeInTheDocument();
     expect(screen.getByText('productTrust.sourceTitle')).toBeInTheDocument();
     expect(screen.getByText('productTrust.noAdsTitle')).toBeInTheDocument();
@@ -16,6 +17,9 @@ describe('ProductTrustPanel', () => {
     render(<ProductTrustPanel variant="results" />);
 
     expect(screen.getByTestId('product-trust-panel-results')).toBeInTheDocument();
+    expect(screen.getByTestId('product-trust-panel-results')).toHaveClass('border-t');
+    expect(screen.getByTestId('product-trust-panel-results')).not.toHaveClass('rounded-lg');
+    expect(screen.getByTestId('product-trust-proof-list-results')).toBeInTheDocument();
     expect(screen.getByText('productTrust.resultsTitle')).toBeInTheDocument();
 
     const link = screen.getByText('productTrust.cta').closest('a');

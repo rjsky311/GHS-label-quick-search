@@ -229,6 +229,30 @@ Current progress:
   context before reprint, and reprint continues to refetch the parent chemical
   so the label uses current hazard data and the current planner.
 
+## Priority 6 - Whole-Product UX And Brand-Utility Convergence
+
+Goal: make the app feel like one focused safety utility while still preserving
+non-intrusive support, feedback, and future brand paths.
+
+Current progress:
+
+- The post-result product trust surface is now a lightweight support band
+  instead of another prominent card group. It stays after the search value has
+  been delivered and does not compete with result actions or label printing.
+- The copy now leads with the user task: search, verify, print/export, then
+  report corrections or workflow requests if needed.
+- Footer and support copy explicitly keep brand/support links outside
+  safety-critical label content.
+
+Work to continue:
+
+- Walk the production app end to end and remove remaining copy that describes
+  internal implementation instead of user decisions.
+- Keep visual hierarchy consistent across empty state, results, detail, print,
+  prepared workflow, recents, exports, and footer.
+- Treat any future brand, sponsor, education, or support surface as secondary
+  to safety communication and never part of printed hazard labels.
+
 ## Immediate Next Recommended Slice
 
 The next autonomous implementation slice should start from

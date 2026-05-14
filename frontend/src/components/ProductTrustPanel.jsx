@@ -1,4 +1,10 @@
-import { ExternalLink, FileCheck2, MessageSquarePlus, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  FileCheck2,
+  MessageSquarePlus,
+  ShieldCheck,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ISSUE_URL = "https://github.com/rjsky311/GHS-label-quick-search/issues";
@@ -27,14 +33,16 @@ export default function ProductTrustPanel({ variant = "empty" }) {
 
   return (
     <section
-      className={`mx-auto rounded-lg border border-slate-200 bg-white shadow-sm ${
-        isCompact ? "mt-4 p-4" : "mt-8 max-w-4xl p-5 text-left"
+      className={`mx-auto border-slate-200 bg-white/80 ${
+        isCompact
+          ? "mt-4 border-t py-4"
+          : "mt-8 max-w-5xl rounded-md border px-5 py-5 text-left shadow-sm"
       }`}
       aria-label={t("productTrust.ariaLabel")}
       data-testid={`product-trust-panel-${variant}`}
     >
-      <div className={isCompact ? "grid gap-4 lg:grid-cols-[1.1fr_2fr]" : "space-y-4"}>
-        <div>
+      <div className={isCompact ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]" : "space-y-4"}>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
             {t("productTrust.kicker")}
           </p>
@@ -55,12 +63,26 @@ export default function ProductTrustPanel({ variant = "empty" }) {
           </a>
         </div>
 
-        <div className={`grid gap-3 ${isCompact ? "sm:grid-cols-3" : "md:grid-cols-3"}`}>
+        <div
+          className={`grid gap-3 ${isCompact ? "sm:grid-cols-3" : "md:grid-cols-3"}`}
+          data-testid={`product-trust-proof-list-${variant}`}
+        >
           {cards.map(({ icon: Icon, titleKey, bodyKey }) => (
-            <div key={titleKey} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <Icon className="mb-2 h-4 w-4 text-blue-700" />
-              <h3 className="text-sm font-medium text-slate-950">{t(titleKey)}</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-600">{t(bodyKey)}</p>
+            <div
+              key={titleKey}
+              className="flex min-w-0 items-start gap-2 text-sm text-slate-600"
+            >
+              <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                {isCompact ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Icon className="h-4 w-4" />
+                )}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-medium text-slate-950">{t(titleKey)}</h3>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{t(bodyKey)}</p>
+              </div>
             </div>
           ))}
         </div>

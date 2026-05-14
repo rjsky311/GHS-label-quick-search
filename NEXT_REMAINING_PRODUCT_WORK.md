@@ -272,6 +272,18 @@ Acceptance:
 - Remaining roadmap items are tracked in documents, tests, or QA reports rather
   than being preserved only in chat.
 
+Current status:
+
+- The product trust/support surface has been downgraded from a nested card
+  block into a lightweight support band after results, so it no longer competes
+  with the primary search and print task.
+- Empty-state and footer copy now describes the user value directly: search,
+  verify, print/export, and report corrections or workflow requests only after
+  the safety task is complete.
+- Brand/support positioning is now explicit in UI copy: labels and hazard
+  content stay ad-free, while feedback and workflow links stay outside
+  safety-critical label content.
+
 Suggested verification:
 
 - Manual product walkthrough against production
