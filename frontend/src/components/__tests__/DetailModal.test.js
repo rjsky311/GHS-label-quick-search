@@ -47,6 +47,7 @@ jest.mock('@/utils/sdsLinks', () => ({
         label: "PubChem Safety & Hazards",
         url: `https://pubchem.example.com/${result.cid}`,
         linkType: "sds",
+        source: "pubchem",
       });
     }
     if (result?.cas_number) {
@@ -54,6 +55,7 @@ jest.mock('@/utils/sdsLinks', () => ({
         label: "ECHA Substance Search",
         url: `https://echa.example.com/${result.cas_number}`,
         linkType: "regulatory",
+        source: "echa",
       });
     }
     return links;
@@ -99,6 +101,7 @@ beforeEach(() => {
         label: "PubChem Safety & Hazards",
         url: `https://pubchem.example.com/${result.cid}`,
         linkType: "sds",
+        source: "pubchem",
       });
     }
     if (result?.cas_number) {
@@ -106,6 +109,7 @@ beforeEach(() => {
         label: "ECHA Substance Search",
         url: `https://echa.example.com/${result.cas_number}`,
         linkType: "regulatory",
+        source: "echa",
       });
     }
     return links;
@@ -199,8 +203,26 @@ describe('DetailModal', () => {
       expect(screen.getByTestId('detail-reference-link-sds')).toHaveTextContent(
         'detail.referenceTypeSds'
       );
+      expect(screen.getByTestId('detail-reference-link-sds')).toHaveAttribute(
+        'data-link-type',
+        'sds'
+      );
+      expect(screen.getByTestId('detail-reference-link-sds')).toHaveAttribute(
+        'data-reference-source',
+        'pubchem'
+      );
+      expect(screen.getByTestId('detail-reference-link-sds')).toHaveAttribute(
+        'data-reference-url-scheme',
+        'https'
+      );
+      expect(screen.getByTestId('detail-reference-source-sds')).toHaveTextContent(
+        'detail.referenceSourcePubChem'
+      );
       expect(screen.getByTestId('detail-reference-link-regulatory')).toHaveTextContent(
         'detail.referenceTypeRegulatory'
+      );
+      expect(screen.getByTestId('detail-reference-source-regulatory')).toHaveTextContent(
+        'detail.referenceSourceEcha'
       );
     });
 

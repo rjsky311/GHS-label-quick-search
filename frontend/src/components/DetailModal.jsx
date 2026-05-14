@@ -159,6 +159,22 @@ export default function DetailModal({
     if (linkType === "occupational") return t("detail.referenceTypeOccupational");
     return t("detail.referenceTypeReference");
   };
+  const getReferenceSourceLabel = (source) => {
+    const sourceText = typeof source === "string" ? source.trim() : "";
+    const normalized = sourceText.toLowerCase();
+    if (normalized.includes("pubchem")) return t("detail.referenceSourcePubChem");
+    if (normalized.includes("echa")) return t("detail.referenceSourceEcha");
+    if (normalized.includes("niosh")) return t("detail.referenceSourceNiosh");
+    if (normalized.includes("manual")) return t("detail.referenceSourceManual");
+    return sourceText || t("detail.referenceSourceReference");
+  };
+  const getReferenceUrlScheme = (url) => {
+    try {
+      return new URL(url).protocol.replace(":", "");
+    } catch {
+      return "";
+    }
+  };
 
   return (
     <div
@@ -420,12 +436,22 @@ export default function DetailModal({
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid={`detail-reference-link-${link.linkType}`}
+                    data-link-type={link.linkType}
+                    data-reference-source={link.source || "manual"}
+                    data-reference-url-scheme={getReferenceUrlScheme(link.url)}
+                    aria-label={`${link.label} ${getReferenceTypeLabel(link.linkType)} ${getReferenceSourceLabel(link.source)}`}
                     className={getReferenceLinkClassName(link.linkType)}
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>{link.label}</span>
                     <span className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-current/10">
                       {getReferenceTypeLabel(link.linkType)}
+                    </span>
+                    <span
+                      className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-current/10"
+                      data-testid={`detail-reference-source-${link.linkType}`}
+                    >
+                      {getReferenceSourceLabel(link.source)}
                     </span>
                   </a>
                 ))}

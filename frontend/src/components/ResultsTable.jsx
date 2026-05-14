@@ -10,6 +10,31 @@ import {
   getLocalizedSignalWord,
 } from "@/utils/ghsText";
 
+const getSourceBadge = (source, t) => {
+  const sourceText = typeof source === "string" ? source.trim() : "";
+  if (!sourceText) return null;
+  const normalized = sourceText.toLowerCase();
+  if (normalized.includes("echa")) {
+    return {
+      key: "echa",
+      label: t("results.sourceEcha"),
+      className: "border-blue-200 bg-blue-50 text-blue-700",
+    };
+  }
+  if (normalized.includes("pubchem")) {
+    return {
+      key: "pubchem",
+      label: t("results.sourcePubChem"),
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    };
+  }
+  return {
+    key: "other",
+    label: t("results.sourceOther"),
+    className: "border-slate-200 bg-slate-50 text-slate-700",
+  };
+};
+
 export default function ResultsTable({
   results,
   totalCount,
@@ -312,16 +337,18 @@ export default function ResultsTable({
                           readable when many rows are shown. */}
                       {(result.primary_source || result.cache_hit) && (
                         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                          {result.primary_source &&
-                            /echa/i.test(result.primary_source) && (
+                          {(() => {
+                            const sourceBadge = getSourceBadge(result.primary_source, t);
+                            return sourceBadge ? (
                               <span
-                                className="inline-flex items-center rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-700"
+                                className={`inline-flex items-center rounded border px-1.5 py-0.5 ${sourceBadge.className}`}
                                 title={result.primary_source}
-                                data-testid={`source-badge-echa-${result.cas_number}`}
+                                data-testid={`source-badge-${sourceBadge.key}-${result.cas_number}`}
                               >
-                                {t("results.sourceEcha")}
+                                {sourceBadge.label}
                               </span>
-                            )}
+                            ) : null;
+                          })()}
                           {result.primary_report_count && (
                             <span
                               className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"

@@ -559,6 +559,14 @@ describe('ResultsTable', () => {
       ).toBeInTheDocument();
     });
 
+    it('renders the PubChem source badge when primary_source contains "PubChem"', () => {
+      const pubchem = { ...mockFoundResult, primary_source: 'PubChem LCSS' };
+      render(<ResultsTable {...defaultProps} results={[pubchem]} />);
+      expect(
+        screen.getByTestId(`source-badge-pubchem-${pubchem.cas_number}`)
+      ).toHaveTextContent('results.sourcePubChem');
+    });
+
     it('renders the report-count badge when primary_report_count is present', () => {
       render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
       expect(screen.getByText('results.reportCountBadge')).toBeInTheDocument();
@@ -575,12 +583,15 @@ describe('ResultsTable', () => {
       expect(screen.getByText('results.cacheBadge')).toBeInTheDocument();
     });
 
-    it('does NOT render the ECHA badge for non-ECHA sources', () => {
+    it('renders a generic source badge for non-ECHA sources', () => {
       const vendor = { ...mockFoundResult, primary_source: 'Some SDS vendor notification' };
       render(<ResultsTable {...defaultProps} results={[vendor]} />);
       expect(
         screen.queryByTestId(`source-badge-echa-${vendor.cas_number}`)
       ).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId(`source-badge-other-${vendor.cas_number}`)
+      ).toHaveTextContent('results.sourceOther');
     });
 
     it('omits all provenance chips when backend did not supply them', () => {
@@ -593,6 +604,9 @@ describe('ResultsTable', () => {
       render(<ResultsTable {...defaultProps} results={[bare]} />);
       expect(
         screen.queryByTestId(`source-badge-echa-${bare.cas_number}`)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`source-badge-other-${bare.cas_number}`)
       ).not.toBeInTheDocument();
       expect(screen.queryByText('results.reportCountBadge')).not.toBeInTheDocument();
       expect(screen.queryByText('results.cacheBadge')).not.toBeInTheDocument();

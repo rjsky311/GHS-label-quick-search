@@ -144,18 +144,21 @@ npm run qa:production-search-ui
 This opens the deployed search page in Chrome/Edge, searches Hydrochloric Acid,
 captures `build/production-search-ui-screenshots/search-results.png`, checks
 the result-row action buttons for vertical text regressions, verifies the
-visible GHS pictogram strip uses square readable tiles, expands the alternate
-classification drawer, captures
+visible GHS pictogram strip uses square readable tiles, checks the deployed
+results-page trust note, source badge, product trust panel, and PubChem SDS
+link shape, expands the alternate classification drawer, captures
 `build/production-search-ui-screenshots/search-results-expanded-classifications.png`,
 checks each expanded classification card for a shared pictogram strip with
 readable official-symbol imagery, then opens the detail modal and captures
 `build/production-search-ui-screenshots/detail-modal-classification-comparison.png`.
 The detail pass verifies that the selected classification uses the shared
-`selected` strip variant and that every comparison-table pictogram image loads
-and remains readable. Treat failures such as `result-ghs-pictogram-*`,
-`other-classification-*-pictogram-*`, `detail-comparison-*-pictogram-*`, or
-`result-action-button-vertical-text` as product regressions, not just test
-noise.
+`selected` strip variant, every comparison-table pictogram image loads and
+remains readable, and every detail reference link exposes safe
+`http`/`https`, known type, and non-empty source metadata. Treat failures such
+as `result-ghs-pictogram-*`, `other-classification-*-pictogram-*`,
+`detail-comparison-*-pictogram-*`, `results-*-missing`,
+`detail-reference-*-missing`, or `result-action-button-vertical-text` as
+product regressions, not just test noise.
 
 After generating `build/print-html-artifacts/`, the print/PDF artifact gate can
 be run independently:

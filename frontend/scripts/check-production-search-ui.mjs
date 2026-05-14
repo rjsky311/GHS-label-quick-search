@@ -223,6 +223,95 @@ const validatePictogramStrip = (
   return stripFailures;
 };
 
+const allowedReferenceLinkTypes = new Set([
+  "sds",
+  "regulatory",
+  "occupational",
+  "reference",
+]);
+
+const inspectResultsTrustSurface = async (page) => {
+  const note = page.getByTestId("authoritative-source-note-results");
+  const checklist = page.getByTestId("authoritative-source-checklist-results");
+  const panel = page.getByTestId("product-trust-panel-results");
+  const sdsButton = page.getByTestId("sds-btn-0");
+  const sdsHref = (await sdsButton.getAttribute("href").catch(() => "")) || "";
+  let sdsProtocol = "";
+  let sdsHost = "";
+  try {
+    const parsed = new URL(sdsHref);
+    sdsProtocol = parsed.protocol.replace(":", "");
+    sdsHost = parsed.hostname;
+  } catch {
+    sdsProtocol = "";
+    sdsHost = "";
+  }
+
+  return {
+    authoritativeNoteCount: await note.count(),
+    authoritativeNoteMode: await note
+      .first()
+      .getAttribute("data-mode")
+      .catch(() => null),
+    checklistCount: await checklist
+      .locator("span")
+      .count()
+      .catch(() => 0),
+    productTrustPanelCount: await panel.count(),
+    productTrustProofCount: await page
+      .getByTestId("product-trust-proof-list-results")
+      .locator("h3")
+      .count()
+      .catch(() => 0),
+    sourceBadges: await page
+      .locator('[data-testid^="source-badge-"]')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          testId: node.getAttribute("data-testid") || "",
+          text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+          title: node.getAttribute("title") || "",
+        })),
+      ),
+    sdsHref,
+    sdsProtocol,
+    sdsHost,
+  };
+};
+
+const inspectDetailTrustSurface = async (detailModal) => {
+  const references = [];
+  const referenceLinks = detailModal.locator(
+    'a[data-testid^="detail-reference-link-"]',
+  );
+  const referenceCount = await referenceLinks.count();
+  for (let index = 0; index < referenceCount; index += 1) {
+    const link = referenceLinks.nth(index);
+    references.push({
+      testId: (await link.getAttribute("data-testid")) || "",
+      href: (await link.getAttribute("href")) || "",
+      linkType: (await link.getAttribute("data-link-type")) || "",
+      source: (await link.getAttribute("data-reference-source")) || "",
+      scheme: (await link.getAttribute("data-reference-url-scheme")) || "",
+      sourceChipText:
+        (await link
+          .locator('[data-testid^="detail-reference-source-"]')
+          .first()
+          .textContent()
+          .catch(() => "")) || "",
+    });
+  }
+  return {
+    trustStripCount: await detailModal.getByTestId("detail-trust-strip").count(),
+    authoritativeNoteCount: await detailModal
+      .getByTestId("authoritative-source-note-detail")
+      .count(),
+    verificationHintCount: await detailModal
+      .getByTestId("detail-reference-verification-hint")
+      .count(),
+    references,
+  };
+};
+
 const searchUntilUsableResult = async (page) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
@@ -285,6 +374,33 @@ try {
   const sdsButton = await inspectActionButton(page, "sds-btn-0");
   const actionButtons = [detailButton, sdsButton];
   const verticalRisks = actionButtons.filter(isVerticalTextRisk);
+  const resultsTrustSurface = await inspectResultsTrustSurface(page);
+
+  if (resultsTrustSurface.authoritativeNoteCount < 1) {
+    failures.push("results-authoritative-note-missing");
+  }
+  if (resultsTrustSurface.authoritativeNoteMode !== "general") {
+    failures.push("results-authoritative-note-mode-mismatch");
+  }
+  if (resultsTrustSurface.checklistCount < 3) {
+    failures.push("results-authoritative-checklist-incomplete");
+  }
+  if (resultsTrustSurface.productTrustPanelCount < 1) {
+    failures.push("results-product-trust-panel-missing");
+  }
+  if (resultsTrustSurface.productTrustProofCount < 3) {
+    failures.push("results-product-trust-proof-list-incomplete");
+  }
+  if (resultsTrustSurface.sourceBadges.length < 1) {
+    failures.push("results-source-badge-missing");
+  }
+  if (
+    resultsTrustSurface.sdsProtocol !== "https" ||
+    resultsTrustSurface.sdsHost !== "pubchem.ncbi.nlm.nih.gov" ||
+    !resultsTrustSurface.sdsHref.includes("Safety-and-Hazards")
+  ) {
+    failures.push("results-sds-link-not-pubchem-safety");
+  }
 
   if (verticalRisks.length > 0) {
     failures.push("result-action-button-vertical-text");
@@ -388,6 +504,43 @@ try {
   await page.getByTestId("detail-btn-0").click();
   const detailModal = page.getByTestId("detail-modal");
   await detailModal.waitFor({ state: "visible", timeout: 10000 });
+  const detailTrustSurface = await inspectDetailTrustSurface(detailModal);
+  if (detailTrustSurface.trustStripCount < 1) {
+    failures.push("detail-trust-strip-missing");
+  }
+  if (detailTrustSurface.authoritativeNoteCount < 1) {
+    failures.push("detail-authoritative-note-missing");
+  }
+  if (detailTrustSurface.verificationHintCount < 1) {
+    failures.push("detail-reference-verification-hint-missing");
+  }
+  if (detailTrustSurface.references.length < 3) {
+    failures.push("detail-reference-links-incomplete");
+  }
+  const detailReferenceTypes = new Set(
+    detailTrustSurface.references.map((reference) => reference.linkType),
+  );
+  if (!detailReferenceTypes.has("sds")) {
+    failures.push("detail-reference-sds-link-missing");
+  }
+  if (!detailReferenceTypes.has("regulatory")) {
+    failures.push("detail-reference-regulatory-link-missing");
+  }
+  detailTrustSurface.references.forEach((reference) => {
+    const label = reference.testId || "unknown";
+    if (!allowedReferenceLinkTypes.has(reference.linkType)) {
+      failures.push(`${label}-invalid-link-type`);
+    }
+    if (!["http", "https"].includes(reference.scheme)) {
+      failures.push(`${label}-unsafe-url-scheme`);
+    }
+    if (!reference.source) {
+      failures.push(`${label}-source-missing`);
+    }
+    if (!reference.sourceChipText.trim()) {
+      failures.push(`${label}-source-chip-missing`);
+    }
+  });
   const detailComparisonTable = detailModal.getByTestId("comparison-table");
   await detailComparisonTable.waitFor({ state: "visible", timeout: 10000 });
   const detailImageWait = await waitForImagesInLocator(
@@ -458,6 +611,8 @@ try {
       resultPictogramMetrics,
       expandedClassificationCount,
       expandedPictogramMetrics,
+      resultsTrustSurface,
+      detailTrustSurface,
       detailComparisonColumnCount,
       detailComparisonMetrics,
       imageWaits,

@@ -78,6 +78,26 @@ describe("normalizeReferenceLink", () => {
       })
     ).toBeNull();
   });
+
+  it("normalizes known link types before rendering or QR reuse", () => {
+    expect(
+      normalizeReferenceLink({
+        label: "Uppercase SDS",
+        url: "https://example.com/sds",
+        link_type: " SDS ",
+      })?.linkType
+    ).toBe("sds");
+  });
+
+  it("downgrades unknown link types to a safe reference role", () => {
+    expect(
+      normalizeReferenceLink({
+        label: "Unknown Role",
+        url: "https://example.com/reference",
+        link_type: "javascript",
+      })?.linkType
+    ).toBe("reference");
+  });
 });
 
 describe("getFallbackReferenceLinks", () => {

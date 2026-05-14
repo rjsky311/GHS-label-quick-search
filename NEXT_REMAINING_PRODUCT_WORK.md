@@ -201,6 +201,18 @@ Current status:
   `Occupational`, or `Reference`) and include a short verification hint so SDS
   paths remain useful without implying that the app itself is the authority.
   The frontend and backend still reject unsafe non-http(s) reference URLs.
+- Reference link roles are now constrained to the same four safe categories on
+  both backend writes and frontend normalization. Legacy/manual links with
+  unknown roles are downgraded to `Reference`, while unsafe URL schemes remain
+  blocked.
+- Result rows now show a compact source chip for ECHA, PubChem, or other
+  supplied sources instead of hiding non-ECHA provenance. Detail reference
+  links also expose both role and source chips so verification links remain
+  readable as secondary evidence rather than untyped CTAs.
+- Production search UI QA now checks deployed trust surfaces as part of the
+  Hydrochloric Acid click-through: result-page authoritative note, trust panel,
+  PubChem SDS URL shape, source chip presence, detail-modal verification hint,
+  and every detail reference link's safe scheme/type/source metadata.
 - The print modal now keeps the same trust boundary close to the output-planner
   decision: complete outputs get verification copy, QR/quick-ID/supplemental
   outputs state that they do not replace the complete primary label, and blocked

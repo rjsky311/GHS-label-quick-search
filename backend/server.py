@@ -50,6 +50,7 @@ WORKSPACE_DOC_TYPES = {
     "prepared_presets",
 }
 ALLOWED_REFERENCE_URL_SCHEMES = {"http", "https"}
+REFERENCE_LINK_TYPES = {"sds", "regulatory", "occupational", "reference"}
 MAX_MISS_QUERY_LENGTH = 160
 MAX_MISS_QUERY_KIND_LENGTH = 40
 MAX_MISS_ENDPOINT_LENGTH = 80
@@ -158,6 +159,11 @@ def _record_upstream_failure(kind: str, url: str, attempt: int, **payload: Any) 
 def _is_safe_reference_url(value: str) -> bool:
     parsed = urlparse((value or "").strip())
     return parsed.scheme.lower() in ALLOWED_REFERENCE_URL_SCHEMES and bool(parsed.netloc)
+
+
+def _safe_reference_link_type(value: Any) -> str:
+    normalized = str(value or "").strip().lower()
+    return normalized if normalized in REFERENCE_LINK_TYPES else "reference"
 
 
 def _require_admin(request: Request) -> None:
@@ -294,8 +300,8 @@ def _build_reference_links(
                 {
                     "label": link["label"],
                     "url": url,
-                    "link_type": link["linkType"],
-                    "source": link["source"],
+                    "link_type": _safe_reference_link_type(link.get("linkType")),
+                    "source": str(link.get("source") or "manual").strip() or "manual",
                     "priority": link["priority"],
                 }
             )
@@ -631,10 +637,10 @@ class DictionaryAliasPayload(BaseModel):
 
 class DictionaryReferenceLinkPayload(BaseModel):
     cas_number: str
-    label: str
+    label: str = Field(..., max_length=160)
     url: str = Field(..., max_length=2048)
     link_type: str = "reference"
-    source: str = "manual"
+    source: str = Field(default="manual", max_length=80)
     priority: int = 50
     status: str = "active"
     cid: Optional[int] = None
@@ -646,6 +652,14 @@ class DictionaryReferenceLinkPayload(BaseModel):
         if not _is_safe_reference_url(value):
             raise ValueError("reference link URL must use http or https")
         return value
+
+    @field_validator("link_type")
+    @classmethod
+    def link_type_must_be_known(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in REFERENCE_LINK_TYPES:
+            raise ValueError("reference link type must be sds, regulatory, occupational, or reference")
+        return normalized
 
 
 # Characters that Excel / Google Sheets / LibreOffice Calc treat as the

@@ -4,6 +4,13 @@
  * merges them with backend-enriched reference links when available.
  */
 
+const REFERENCE_LINK_TYPES = new Set([
+  "sds",
+  "regulatory",
+  "occupational",
+  "reference",
+]);
+
 export function getPubChemSDSUrl(cid) {
   return cid
     ? `https://pubchem.ncbi.nlm.nih.gov/compound/${cid}#section=Safety-and-Hazards`
@@ -30,6 +37,11 @@ function isSafeReferenceUrl(value) {
   }
 }
 
+function normalizeReferenceLinkType(raw) {
+  const normalized = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  return REFERENCE_LINK_TYPES.has(normalized) ? normalized : "reference";
+}
+
 export function normalizeReferenceLink(raw) {
   if (!raw || typeof raw !== "object") return null;
   const label =
@@ -39,12 +51,7 @@ export function normalizeReferenceLink(raw) {
   return {
     label,
     url,
-    linkType:
-      typeof raw.linkType === "string" && raw.linkType.trim()
-        ? raw.linkType.trim()
-        : typeof raw.link_type === "string" && raw.link_type.trim()
-          ? raw.link_type.trim()
-          : "reference",
+    linkType: normalizeReferenceLinkType(raw.linkType ?? raw.link_type),
     source:
       typeof raw.source === "string" && raw.source.trim()
         ? raw.source.trim()

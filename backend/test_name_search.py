@@ -214,6 +214,25 @@ async def test_reference_link_rejects_non_http_url(monkeypatch):
     assert response.status_code == 422
 
 
+async def test_reference_link_rejects_unknown_link_type(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/reference-links",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "cas_number": "64-17-5",
+                "label": "Unsafe role",
+                "url": "https://example.com/sds",
+                "link_type": "script",
+            },
+        )
+
+    assert response.status_code == 422
+
+
 def test_build_reference_links_skips_unsafe_manual_urls(monkeypatch):
     def fake_reference_links(_cas_number):
         return [
@@ -239,6 +258,26 @@ def test_build_reference_links_skips_unsafe_manual_urls(monkeypatch):
 
     assert all(link["url"] != "javascript:alert(1)" for link in links)
     assert any(link["url"] == "https://example.com/sds" for link in links)
+
+
+def test_build_reference_links_normalizes_legacy_manual_link_type(monkeypatch):
+    def fake_reference_links(_cas_number):
+        return [
+            {
+                "label": "Legacy Role SDS",
+                "url": "https://example.com/legacy-sds",
+                "linkType": "script",
+                "source": "manual",
+                "priority": 1,
+            },
+        ]
+
+    monkeypatch.setattr(server.pilot_store, "list_reference_links", fake_reference_links)
+
+    links = server._build_reference_links("64-17-5", None, "Ethanol")
+    legacy = next(link for link in links if link["url"] == "https://example.com/legacy-sds")
+
+    assert legacy["link_type"] == "reference"
 
 
 async def test_search_by_name_chinese():
