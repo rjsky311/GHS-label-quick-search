@@ -115,6 +115,9 @@ const inspectPictogramStrip = async (locator, label) =>
         frameHeight: Math.round(frameRect?.height || 0),
         imageWidth: Math.round(imageRect?.width || 0),
         imageHeight: Math.round(imageRect?.height || 0),
+        imageComplete: Boolean(image?.complete),
+        naturalWidth: image?.naturalWidth || 0,
+        naturalHeight: image?.naturalHeight || 0,
         codeText: (codeLabel?.textContent || "").trim(),
       };
     });
@@ -127,6 +130,54 @@ const inspectPictogramStrip = async (locator, label) =>
       width: Math.round(rect.width),
       height: Math.round(rect.height),
       tiles,
+    };
+  }, label);
+
+const waitForImagesInLocator = async (locator, label) =>
+  locator.evaluate(async (node, waitLabel) => {
+    const images = Array.from(node.querySelectorAll("img"));
+    const results = await Promise.all(
+      images.map((image, index) => {
+        if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+          return { index, ok: true };
+        }
+        return new Promise((resolve) => {
+          const timer = window.setTimeout(
+            () =>
+              resolve({
+                index,
+                ok: false,
+                src: image.currentSrc || image.src || "",
+              }),
+            15000,
+          );
+          image.addEventListener(
+            "load",
+            () => {
+              window.clearTimeout(timer);
+              resolve({ index, ok: image.naturalWidth > 0 });
+            },
+            { once: true },
+          );
+          image.addEventListener(
+            "error",
+            () => {
+              window.clearTimeout(timer);
+              resolve({
+                index,
+                ok: false,
+                src: image.currentSrc || image.src || "",
+              });
+            },
+            { once: true },
+          );
+        });
+      }),
+    );
+    return {
+      label: waitLabel,
+      count: results.length,
+      failed: results.filter((result) => !result.ok),
     };
   }, label);
 
@@ -161,6 +212,12 @@ const validatePictogramStrip = (
     }
     if (requireImage && (tile.imageWidth < minFrame * 0.65 || tile.imageHeight < minFrame * 0.65)) {
       stripFailures.push(`${failurePrefix}-${code}-image-too-small`);
+    }
+    if (
+      requireImage &&
+      (!tile.imageComplete || tile.naturalWidth <= 0 || tile.naturalHeight <= 0)
+    ) {
+      stripFailures.push(`${failurePrefix}-${code}-image-not-loaded`);
     }
   });
   return stripFailures;
@@ -223,7 +280,6 @@ try {
   const searchAttempts = await searchUntilUsableResult(page);
 
   const screenshotPath = path.join(screenshotDir, "search-results.png");
-  await page.screenshot({ path: screenshotPath, fullPage: false });
 
   const detailButton = await inspectActionButton(page, "detail-btn-0");
   const sdsButton = await inspectActionButton(page, "sds-btn-0");
@@ -245,7 +301,17 @@ try {
     }
   });
 
+  const imageWaits = [];
   const pictogramStrip = page.getByTestId("ghs-pictogram-strip").first();
+  const resultImageWait = await waitForImagesInLocator(
+    pictogramStrip,
+    "primary-result-row",
+  );
+  imageWaits.push(resultImageWait);
+  if (resultImageWait.failed.length > 0) {
+    failures.push("result-ghs-pictogram-image-load-timeout");
+  }
+  await page.screenshot({ path: screenshotPath, fullPage: false });
   const resultPictogramMetrics = await inspectPictogramStrip(
     pictogramStrip,
     "primary-result-row",
@@ -273,6 +339,14 @@ try {
     await otherToggle.click();
     const expandedPanel = page.getByTestId(`other-classifications-${casSuffix}`);
     await expandedPanel.waitFor({ state: "visible", timeout: 10000 });
+    const expandedImageWait = await waitForImagesInLocator(
+      expandedPanel,
+      "expanded-classifications",
+    );
+    imageWaits.push(expandedImageWait);
+    if (expandedImageWait.failed.length > 0) {
+      failures.push("other-classification-pictogram-image-load-timeout");
+    }
     expandedScreenshotPath = path.join(
       screenshotDir,
       "search-results-expanded-classifications.png",
@@ -327,6 +401,7 @@ try {
       resultPictogramMetrics,
       expandedClassificationCount,
       expandedPictogramMetrics,
+      imageWaits,
       verticalRisks,
     },
   };
