@@ -53,6 +53,36 @@ const makeColumns = (classifications, mode) =>
     index: idx,
   }));
 
+const forceMatchMedia = (matches) => {
+  const originalMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+
+  return () => {
+    if (originalMatchMedia) {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        writable: true,
+        value: originalMatchMedia,
+      });
+    } else {
+      delete window.matchMedia;
+    }
+  };
+};
+
 // ── Tests ──
 
 describe("ClassificationComparisonTable", () => {
@@ -223,6 +253,36 @@ describe("ClassificationComparisonTable", () => {
         />
       );
       expect(screen.getByTestId("comparison-table")).toBeInTheDocument();
+    });
+
+    it("uses readable cards on narrow viewports", () => {
+      const restoreMatchMedia = forceMatchMedia(true);
+      try {
+        const onSelect = jest.fn();
+        const columns = makeColumns([cls1, cls2], "same-chemical");
+        render(
+          <ClassificationComparisonTable
+            mode="same-chemical"
+            columns={columns}
+            selectedIndex={0}
+            onSelectClassification={onSelect}
+          />
+        );
+
+        expect(screen.getByTestId("comparison-table")).toHaveAttribute(
+          "data-layout",
+          "mobile-cards",
+        );
+        expect(screen.getByTestId("comparison-mobile-card-0")).toBeInTheDocument();
+        expect(screen.getByTestId("comparison-mobile-card-1")).toBeInTheDocument();
+        expect(screen.getByTestId("comparison-mobile-pictograms-0")).toBeInTheDocument();
+        expect(screen.getByTestId("mobile-absent-GHS02-1")).toBeInTheDocument();
+
+        fireEvent.click(screen.getByTestId("mobile-set-primary-1"));
+        expect(onSelect).toHaveBeenCalledWith(1);
+      } finally {
+        restoreMatchMedia();
+      }
     });
   });
 

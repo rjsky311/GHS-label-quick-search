@@ -154,6 +154,14 @@ Current status:
 - Production search UI QA also runs a 390px narrow read-first scenario and
   fails when the result area horizontally scrolls or when detail/SDS actions
   land outside the viewport.
+- Same-chemical classification comparison now switches from the desktop
+  matrix table to stacked cards on narrow viewports. Production search UI QA
+  opens the deployed detail modal at 390px, verifies the mobile card layout,
+  checks for horizontal overflow, and validates the shared pictogram strips in
+  those cards.
+- `GHSImage` loads the checked-in regulatory SVG pictograms eagerly. These
+  assets are small and safety-critical, and eager loading prevents off-screen
+  modal comparison cards from silently carrying unloaded icons during QA.
 - Production search UI QA now also clicks into the deployed detail modal and
   inspects the same-chemical classification comparison table. It verifies that
   the currently selected classification uses the shared selected pictogram

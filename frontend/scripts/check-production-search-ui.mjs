@@ -405,6 +405,45 @@ const inspectMobileReadFirstResult = async (page) =>
     };
   });
 
+const inspectMobileDetailReadFirstResult = async (page) =>
+  page.evaluate(() => {
+    const serializeRect = (node) => {
+      const rect = node?.getBoundingClientRect();
+      if (!rect) return null;
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+      };
+    };
+    const modal = document.querySelector('[data-testid="detail-modal"]');
+    const panel = modal?.querySelector(":scope > div");
+    const comparison = document.querySelector('[data-testid="comparison-table"]');
+    const cards = Array.from(
+      document.querySelectorAll('[data-testid^="comparison-mobile-card-"]'),
+    );
+    const firstCard = cards[0];
+    return {
+      viewportWidth: window.innerWidth,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      modalRect: serializeRect(modal),
+      panelRect: serializeRect(panel),
+      panelClientWidth: panel?.clientWidth || 0,
+      panelScrollWidth: panel?.scrollWidth || 0,
+      comparisonLayout: comparison?.getAttribute("data-layout") || "",
+      comparisonRect: serializeRect(comparison),
+      comparisonClientWidth: comparison?.clientWidth || 0,
+      comparisonScrollWidth: comparison?.scrollWidth || 0,
+      cardCount: cards.length,
+      firstCardRect: serializeRect(firstCard),
+      modalText: (modal?.textContent || "").replace(/\s+/g, " ").trim(),
+    };
+  });
+
 const failures = [];
 let browser;
 
@@ -679,6 +718,64 @@ try {
   );
   await mobilePage.screenshot({ path: mobileScreenshotPath, fullPage: true });
   const mobileReadFirst = await inspectMobileReadFirstResult(mobilePage);
+  await mobilePage.getByTestId("detail-btn-0").click();
+  const mobileDetailModal = mobilePage.getByTestId("detail-modal");
+  await mobileDetailModal.waitFor({ state: "visible", timeout: 10000 });
+  const mobileDetailComparisonTable =
+    mobileDetailModal.getByTestId("comparison-table");
+  await mobileDetailComparisonTable.waitFor({ state: "visible", timeout: 10000 });
+  const mobileDetailImageWait = await waitForImagesInLocator(
+    mobileDetailComparisonTable,
+    "mobile-detail-comparison",
+  );
+  imageWaits.push(mobileDetailImageWait);
+  if (mobileDetailImageWait.failed.length > 0) {
+    failures.push("mobile-detail-comparison-pictogram-image-load-timeout");
+  }
+  const mobileDetailScreenshotPath = path.join(
+    screenshotDir,
+    "search-results-mobile-detail-read-first.png",
+  );
+  await mobilePage.screenshot({
+    path: mobileDetailScreenshotPath,
+    fullPage: false,
+  });
+  const mobileDetailReadFirst =
+    await inspectMobileDetailReadFirstResult(mobilePage);
+  const mobileDetailComparisonMetrics = [];
+  const mobileDetailComparisonCards = mobileDetailModal.locator(
+    '[data-testid^="comparison-mobile-pictograms-"]',
+  );
+  const mobileDetailComparisonCardCount =
+    await mobileDetailComparisonCards.count();
+  if (mobileDetailComparisonCardCount < 2) {
+    failures.push("mobile-detail-comparison-cards-missing");
+  }
+  for (let index = 0; index < mobileDetailComparisonCardCount; index += 1) {
+    const strip = mobileDetailComparisonCards.nth(index).getByTestId(
+      "ghs-pictogram-strip",
+    );
+    if ((await strip.count()) === 0) {
+      failures.push(`mobile-detail-comparison-${index}-pictogram-strip-missing`);
+      continue;
+    }
+    const metrics = await inspectPictogramStrip(
+      strip,
+      `mobile-detail-comparison-${index}`,
+    );
+    mobileDetailComparisonMetrics.push(metrics);
+    failures.push(
+      ...validatePictogramStrip(
+        metrics,
+        `mobile-detail-comparison-${index}-pictogram`,
+        {
+          minCount: index === 0 ? 4 : 1,
+          minFrame: 40,
+          maxFrame: 60,
+        },
+      ),
+    );
+  }
   await mobileContext.close();
 
   if (
@@ -710,6 +807,46 @@ try {
     failures.push("mobile-read-first-result-identity-missing");
   }
 
+  if (
+    mobileDetailReadFirst.documentScrollWidth >
+      mobileDetailReadFirst.viewportWidth + 2 ||
+    mobileDetailReadFirst.bodyScrollWidth >
+      mobileDetailReadFirst.viewportWidth + 2
+  ) {
+    failures.push("mobile-detail-page-horizontal-overflow");
+  }
+  if (
+    mobileDetailReadFirst.panelScrollWidth >
+    mobileDetailReadFirst.panelClientWidth + 2
+  ) {
+    failures.push("mobile-detail-panel-horizontal-scroll");
+  }
+  if (mobileDetailReadFirst.comparisonLayout !== "mobile-cards") {
+    failures.push("mobile-detail-comparison-not-card-layout");
+  }
+  if (
+    mobileDetailReadFirst.comparisonScrollWidth >
+    mobileDetailReadFirst.comparisonClientWidth + 2
+  ) {
+    failures.push("mobile-detail-comparison-horizontal-scroll");
+  }
+  if (
+    !isRectInsideViewport(
+      mobileDetailReadFirst.comparisonRect,
+      mobileDetailReadFirst.viewportWidth,
+    )
+  ) {
+    failures.push("mobile-detail-comparison-offscreen");
+  }
+  if (
+    !isRectInsideViewport(
+      mobileDetailReadFirst.firstCardRect,
+      mobileDetailReadFirst.viewportWidth,
+    )
+  ) {
+    failures.push("mobile-detail-first-card-offscreen");
+  }
+
   const report = {
     ok: failures.length === 0,
     productionUrl,
@@ -719,6 +856,7 @@ try {
     expandedScreenshotPath,
     detailScreenshotPath,
     mobileScreenshotPath,
+    mobileDetailScreenshotPath,
     failures,
     searchAttempts,
     mobileSearchAttempts,
@@ -736,6 +874,9 @@ try {
       imageWaits,
       verticalRisks,
       mobileReadFirst,
+      mobileDetailReadFirst,
+      mobileDetailComparisonCardCount,
+      mobileDetailComparisonMetrics,
     },
   };
 

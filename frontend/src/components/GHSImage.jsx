@@ -26,7 +26,7 @@ export default function GHSImage({
       <img
         src={imageSrc}
         alt={name || code}
-        loading="lazy"
+        loading="eager"
         className={`block object-contain ${className}`}
         title={name ? `${code}: ${name}` : code}
         onError={() => setHasError(true)}

@@ -61,7 +61,8 @@ Current validation gates:
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production search UI: `npm run qa:production-search-ui` (desktop
-  search/detail plus 390px narrow read-first result check)
+  search/detail plus 390px narrow read-first result and detail-comparison
+  checks)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -245,9 +246,13 @@ Current status:
   on phone-width viewports, keeping chemical identity, GHS pictograms, signal
   word, detail action, and SDS action inside the viewport instead of requiring
   horizontal table scrolling.
-- `qa:production-search-ui` now captures a 390px deployed screenshot and fails
-  when the result area needs horizontal scrolling or when detail/SDS actions
-  are outside the narrow viewport.
+- The detail modal's same-chemical classification comparison uses readable
+  stacked cards on narrow viewports instead of a desktop-width comparison
+  table, so alternate GHS reports can be inspected without horizontal dragging.
+- `qa:production-search-ui` now captures 390px deployed screenshots for both
+  search results and detail comparison, and fails when either area needs
+  horizontal scrolling or when key actions/cards are outside the narrow
+  viewport.
 
 ## 4. Known Blind Spots
 

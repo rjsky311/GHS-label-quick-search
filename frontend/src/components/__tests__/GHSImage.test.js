@@ -18,6 +18,12 @@ describe('GHSImage', () => {
     );
   });
 
+  it('loads regulatory pictograms eagerly so modal QA can verify off-screen cards', () => {
+    render(<GHSImage code="GHS02" name="Flammable" />);
+
+    expect(screen.getByRole('img')).toHaveAttribute('loading', 'eager');
+  });
+
   it('uses name as alt text when provided', () => {
     render(<GHSImage code="GHS02" name="Flammable" />);
     expect(screen.getByAltText('Flammable')).toBeInTheDocument();

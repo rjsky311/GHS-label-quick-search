@@ -46,9 +46,9 @@ or user request points elsewhere, continue in this order:
    keep source/QR/admin changes aligned with that policy and add tests when
    behavior changes.
 5. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
-   polish. Search-result read-first layout is now covered at 390px by
-   `qa:production-search-ui`; keep extending that gate when mobile/narrow
-   behavior changes.
+   polish. Search-result and detail-comparison read-first layouts are now
+   covered at 390px by `qa:production-search-ui`; keep extending that gate
+   when mobile/narrow behavior changes.
 
 ## Current Detailed Backlog
 

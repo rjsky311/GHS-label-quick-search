@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, CircleDot } from "lucide-react";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
@@ -29,6 +29,29 @@ export default function ClassificationComparisonTable({
   const { t, i18n } = useTranslation();
   const displayLocale = i18n.language;
   const isSameChemical = mode === "same-chemical";
+  const [isNarrowViewport, setIsNarrowViewport] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(max-width: 767px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handleChange = () => setIsNarrowViewport(mediaQuery.matches);
+    handleChange();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener?.(handleChange);
+    }
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener?.(handleChange);
+      }
+    };
+  }, []);
 
   // ── Compute union sets for difference highlighting ──
 
@@ -94,8 +117,239 @@ export default function ClassificationComparisonTable({
   const getPStatement = (col, code) =>
     (col.classification?.precautionary_statements || []).find((s) => s.code === code);
 
+  if (isNarrowViewport) {
+    return (
+      <div
+        className="space-y-3 rounded-lg border border-slate-200 bg-white p-3"
+        data-testid="comparison-table"
+        data-layout="mobile-cards"
+      >
+        {columns.map((col, colIdx) => {
+          const isSelected = isSameChemical && selectedIndex === col.index;
+          const colCodes = getColumnPictogramCodes(col);
+          const presentPictograms = (col.classification?.pictograms || [])
+            .filter((pic) => pic?.code && allPictogramCodes.includes(pic.code))
+            .sort((left, right) => left.code.localeCompare(right.code));
+          const absentCodes = allPictogramCodes.filter(
+            (code) => !colCodes.has(code),
+          );
+          const sw = col.classification?.signal_word;
+          const isDanger = sw === "Danger";
+          const isWarning = sw === "Warning";
+          const colHCodes = getColumnHCodes(col);
+          const colPCodes = getColumnPCodes(col);
+          const source = col.classification?.source;
+
+          return (
+            <article
+              key={colIdx}
+              className={`rounded-md border p-3 ${
+                isSelected
+                  ? "border-blue-200 bg-blue-50/70"
+                  : "border-slate-200 bg-white"
+              }`}
+              data-testid={`comparison-mobile-card-${colIdx}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    {isSameChemical && (
+                      isSelected ? (
+                        <Star className="h-4 w-4 shrink-0 fill-current text-blue-600" />
+                      ) : (
+                        <CircleDot className="h-4 w-4 shrink-0 text-slate-500" />
+                      )
+                    )}
+                    <h4
+                      className={`font-medium ${
+                        isSelected ? "text-blue-800" : "text-slate-950"
+                      }`}
+                    >
+                      {col.label}
+                    </h4>
+                  </div>
+                  {col.sublabel && (
+                    <p className="mt-1 font-mono text-xs text-blue-700">
+                      {col.sublabel}
+                    </p>
+                  )}
+                </div>
+                {isSameChemical && (
+                  isSelected ? (
+                    <span className="shrink-0 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                      {t("compare.currentBadge")}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectClassification?.(col.index);
+                      }}
+                      className="shrink-0 rounded px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      data-testid={`mobile-set-primary-${colIdx}`}
+                    >
+                      {t("compare.setAsPrimary")}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="mt-3 space-y-3 text-sm">
+                <section>
+                  <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t("compare.rowPictograms")}
+                  </h5>
+                  {allPictogramCodes.length > 0 ? (
+                    <div
+                      className="space-y-2"
+                      data-testid={`comparison-mobile-pictograms-${colIdx}`}
+                    >
+                      <GHSPictogramStrip
+                        pictograms={presentPictograms}
+                        size="md"
+                        variant={isSelected ? "selected" : "comparison"}
+                        markerTitle={col.label}
+                        getName={(pic) =>
+                          getLocalizedPictogramName(pic, displayLocale)
+                        }
+                        showCodes
+                      />
+                      {absentCodes.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] leading-none text-slate-500">
+                          <span>{t("compare.absent")}</span>
+                          {absentCodes.map((code) => (
+                            <span
+                              key={code}
+                              data-testid={`mobile-absent-${code}-${colIdx}`}
+                              className="rounded border border-dashed border-slate-300 bg-slate-50 px-1.5 py-1 font-mono text-slate-500"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500">{t("compare.noPictograms")}</span>
+                  )}
+                </section>
+
+                <section>
+                  <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t("compare.rowSignalWord")}
+                  </h5>
+                  {sw ? (
+                    <span
+                      className={`inline-block rounded-lg px-3 py-1 text-sm font-bold ${
+                        isDanger
+                          ? "border border-red-200 bg-red-50 text-red-700"
+                          : isWarning
+                          ? "border border-amber-200 bg-amber-50 text-amber-800"
+                          : "text-slate-700"
+                      }`}
+                      data-testid={`mobile-signal-word-${colIdx}`}
+                    >
+                      {getLocalizedSignalWord(col.classification, displayLocale)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500">{t("compare.noSignalWord")}</span>
+                  )}
+                </section>
+
+                <section>
+                  <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t("compare.rowHazards")}
+                  </h5>
+                  {colHCodes.size > 0 ? (
+                    <div className="space-y-1.5">
+                      {allHCodes.map((code) => {
+                        if (!colHCodes.has(code)) return null;
+                        const stmt = getHStatement(col, code);
+                        const isUnique = hCodePresenceCount[code] === 1;
+                        return (
+                          <div
+                            key={code}
+                            className={`flex items-start gap-2 rounded px-2 py-1 text-xs ${
+                              isUnique
+                                ? "border-l-2 border-l-blue-600 bg-blue-50"
+                                : "bg-slate-50"
+                            }`}
+                            data-testid={
+                              isUnique ? `mobile-unique-${code}-${colIdx}` : undefined
+                            }
+                          >
+                            <span className="shrink-0 font-mono font-medium text-blue-700">
+                              {code}
+                            </span>
+                            <span className="min-w-0 text-slate-700">
+                              {getLocalizedStatementText(stmt, displayLocale)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500">{t("compare.noHazards")}</span>
+                  )}
+                </section>
+
+                {allPCodes.length > 0 && (
+                  <section>
+                    <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {t("compare.rowPrecautions")}
+                    </h5>
+                    {colPCodes.size > 0 ? (
+                      <div className="space-y-1">
+                        {allPCodes.map((code) => {
+                          if (!colPCodes.has(code)) return null;
+                          const stmt = getPStatement(col, code);
+                          return (
+                            <div
+                              key={code}
+                              className="flex items-start gap-2 rounded bg-slate-50 px-2 py-1 text-xs"
+                            >
+                              <span className="shrink-0 font-mono font-medium text-blue-700">
+                                {code}
+                              </span>
+                              <span className="min-w-0 text-slate-700">
+                                {getLocalizedStatementText(stmt, displayLocale)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-slate-500">{t("compare.noPrecautions")}</span>
+                    )}
+                  </section>
+                )}
+
+                {isSameChemical && (
+                  <section>
+                    <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {t("compare.rowSource")}
+                    </h5>
+                    {source ? (
+                      <p className="text-xs leading-5 text-slate-600">{source}</p>
+                    ) : (
+                      <span className="text-xs text-slate-600">-</span>
+                    )}
+                  </section>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white" data-testid="comparison-table">
+    <div
+      className="overflow-x-auto rounded-lg border border-slate-200 bg-white"
+      data-testid="comparison-table"
+      data-layout="desktop-table"
+    >
       <table className="w-full border-collapse text-sm">
         {/* ── Header Row: Column labels ── */}
         <thead>
