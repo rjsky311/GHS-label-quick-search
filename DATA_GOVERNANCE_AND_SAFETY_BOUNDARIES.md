@@ -94,6 +94,11 @@ Admin-gated surfaces:
 - Workspace documents.
 - Pilot observability/export reports.
 
+Admin write payloads are still bounded. Manual entries, aliases, and
+reference links must trim text, reject blank required fields, cap long notes and
+names, constrain source/status/locale values, and keep priority/confidence in a
+small numeric range. Admin-gated does not mean unbounded.
+
 Telemetry:
 
 - Dictionary miss capture is opt-in via `CAPTURE_DICTIONARY_MISSES=true`.
@@ -110,6 +115,11 @@ Backend:
 - Reference-link reads skip unsafe legacy/manual URLs.
 - Miss-query capture is disabled unless explicitly enabled.
 - Miss-query payloads reject oversized query/context values.
+- Miss-query endpoint keeps its public write route rate-limited.
+- Manual dictionary entry and alias payloads reject oversized or unsupported
+  admin values before writing to SQLite.
+- Reference-link payloads reject unsupported statuses or out-of-range
+  priorities in addition to unsafe URLs and unknown roles.
 - Search surfaces `upstream_error` for transient failures instead of pretending
   there are no hazards.
 

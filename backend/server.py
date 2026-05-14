@@ -62,6 +62,15 @@ MAX_MISS_QUERY_KIND_LENGTH = 40
 MAX_MISS_ENDPOINT_LENGTH = 80
 MAX_MISS_CONTEXT_ITEMS = 20
 MAX_MISS_CONTEXT_JSON_CHARS = 2000
+MAX_ADMIN_CAS_LENGTH = 32
+MAX_ADMIN_NAME_LENGTH = 240
+MAX_ADMIN_NOTES_LENGTH = 1000
+MAX_ADMIN_SOURCE_LENGTH = 80
+MAX_ALIAS_TEXT_LENGTH = 240
+MAX_REFERENCE_PRIORITY = 1000
+ALLOWED_ALIAS_LOCALES = {"en", "zh"}
+ALLOWED_ALIAS_STATUSES = {APPROVED_ALIAS_STATUS, "pending", "rejected"}
+ALLOWED_REFERENCE_STATUSES = {"active", "inactive"}
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -641,32 +650,102 @@ class DictionaryMissQueryPayload(BaseModel):
 
 
 class DictionaryManualEntryPayload(BaseModel):
-    cas_number: str
-    name_en: Optional[str] = None
-    name_zh: Optional[str] = None
-    notes: str = ""
-    source: str = "manual"
+    cas_number: str = Field(..., min_length=1, max_length=MAX_ADMIN_CAS_LENGTH)
+    name_en: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NAME_LENGTH)
+    name_zh: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NAME_LENGTH)
+    notes: str = Field(default="", max_length=MAX_ADMIN_NOTES_LENGTH)
+    source: str = Field(default="manual", max_length=MAX_ADMIN_SOURCE_LENGTH)
+
+    @field_validator("cas_number")
+    @classmethod
+    def cas_number_must_not_be_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("cas_number must not be blank")
+        return value
+
+    @field_validator("name_en", "name_zh")
+    @classmethod
+    def optional_names_are_trimmed(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    @field_validator("notes")
+    @classmethod
+    def notes_are_trimmed(cls, value: str) -> str:
+        return (value or "").strip()
+
+    @field_validator("source")
+    @classmethod
+    def source_defaults_to_manual(cls, value: str) -> str:
+        value = (value or "").strip()
+        return value or "manual"
 
 
 class DictionaryAliasPayload(BaseModel):
-    alias_text: str
-    locale: str
-    cas_number: str
-    source: str = "manual"
-    confidence: float = 1.0
-    status: str = APPROVED_ALIAS_STATUS
-    notes: str = ""
+    alias_text: str = Field(..., min_length=1, max_length=MAX_ALIAS_TEXT_LENGTH)
+    locale: str = Field(..., min_length=1, max_length=8)
+    cas_number: str = Field(..., min_length=1, max_length=MAX_ADMIN_CAS_LENGTH)
+    source: str = Field(default="manual", max_length=MAX_ADMIN_SOURCE_LENGTH)
+    confidence: float = Field(default=1.0, ge=0, le=1)
+    status: str = Field(default=APPROVED_ALIAS_STATUS, max_length=40)
+    notes: str = Field(default="", max_length=MAX_ADMIN_NOTES_LENGTH)
+
+    @field_validator("alias_text", "cas_number")
+    @classmethod
+    def required_text_must_not_be_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("field must not be blank")
+        return value
+
+    @field_validator("locale")
+    @classmethod
+    def locale_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_ALIAS_LOCALES:
+            raise ValueError("alias locale must be en or zh")
+        return normalized
+
+    @field_validator("status")
+    @classmethod
+    def status_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_ALIAS_STATUSES:
+            raise ValueError("alias status must be approved, pending, or rejected")
+        return normalized
+
+    @field_validator("source")
+    @classmethod
+    def alias_source_defaults_to_manual(cls, value: str) -> str:
+        value = (value or "").strip()
+        return value or "manual"
+
+    @field_validator("notes")
+    @classmethod
+    def alias_notes_are_trimmed(cls, value: str) -> str:
+        return (value or "").strip()
 
 
 class DictionaryReferenceLinkPayload(BaseModel):
-    cas_number: str
+    cas_number: str = Field(..., min_length=1, max_length=MAX_ADMIN_CAS_LENGTH)
     label: str = Field(..., max_length=160)
     url: str = Field(..., max_length=2048)
     link_type: str = "reference"
     source: str = Field(default="manual", max_length=80)
-    priority: int = 50
-    status: str = "active"
+    priority: int = Field(default=50, ge=0, le=MAX_REFERENCE_PRIORITY)
+    status: str = Field(default="active", max_length=40)
     cid: Optional[int] = None
+
+    @field_validator("cas_number", "label")
+    @classmethod
+    def required_reference_text_must_not_be_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("field must not be blank")
+        return value
 
     @field_validator("url")
     @classmethod
@@ -682,6 +761,20 @@ class DictionaryReferenceLinkPayload(BaseModel):
         normalized = str(value or "").strip().lower()
         if normalized not in REFERENCE_LINK_TYPES:
             raise ValueError("reference link type must be sds, regulatory, occupational, or reference")
+        return normalized
+
+    @field_validator("source")
+    @classmethod
+    def reference_source_defaults_to_manual(cls, value: str) -> str:
+        value = (value or "").strip()
+        return value or "manual"
+
+    @field_validator("status")
+    @classmethod
+    def reference_status_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_REFERENCE_STATUSES:
+            raise ValueError("reference link status must be active or inactive")
         return normalized
 
 

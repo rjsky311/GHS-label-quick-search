@@ -9,6 +9,7 @@ Tests for name search functionality:
 import pytest
 import server
 from httpx import AsyncClient, ASGITransport
+from pydantic import ValidationError
 from server import (
     app,
     resolve_name_to_cas,
@@ -193,6 +194,134 @@ async def test_dictionary_miss_query_rejects_oversized_payload(monkeypatch):
 
     assert long_query_response.status_code == 422
     assert large_context_response.status_code == 422
+
+
+def test_dictionary_miss_query_endpoint_is_rate_limited():
+    limits = server.limiter._route_limits.get("server.dictionary_miss_query", [])
+    assert any(
+        limit.limit.amount == 30 and limit.limit.GRANULARITY.name == "minute"
+        for limit in limits
+    )
+
+
+def test_admin_dictionary_payloads_trim_safe_fields():
+    manual = server.DictionaryManualEntryPayload(
+        cas_number=" 64-17-5 ",
+        name_en=" Ethanol ",
+        name_zh=" ",
+        notes=" Pilot note ",
+        source=" ",
+    )
+    alias = server.DictionaryAliasPayload(
+        alias_text=" EtOH ",
+        locale=" EN ",
+        cas_number=" 64-17-5 ",
+        status=" PENDING ",
+        source=" ",
+        notes=" Alias note ",
+    )
+    reference = server.DictionaryReferenceLinkPayload(
+        cas_number=" 64-17-5 ",
+        label=" Supplier SDS ",
+        url=" https://example.com/sds ",
+        link_type=" SDS ",
+        source=" ",
+        status=" ACTIVE ",
+    )
+
+    assert manual.cas_number == "64-17-5"
+    assert manual.name_en == "Ethanol"
+    assert manual.name_zh is None
+    assert manual.notes == "Pilot note"
+    assert manual.source == "manual"
+    assert alias.alias_text == "EtOH"
+    assert alias.locale == "en"
+    assert alias.status == "pending"
+    assert alias.source == "manual"
+    assert reference.cas_number == "64-17-5"
+    assert reference.label == "Supplier SDS"
+    assert reference.url == "https://example.com/sds"
+    assert reference.link_type == "sds"
+    assert reference.status == "active"
+
+
+def test_admin_dictionary_payloads_reject_unbounded_values():
+    with pytest.raises(ValidationError):
+        server.DictionaryManualEntryPayload(
+            cas_number="64-17-5",
+            name_en="x" * (server.MAX_ADMIN_NAME_LENGTH + 1),
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryAliasPayload(
+            alias_text="x" * (server.MAX_ALIAS_TEXT_LENGTH + 1),
+            locale="en",
+            cas_number="64-17-5",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryAliasPayload(
+            alias_text="EtOH",
+            locale="all",
+            cas_number="64-17-5",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryAliasPayload(
+            alias_text="EtOH",
+            locale="en",
+            cas_number="64-17-5",
+            confidence=2,
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryReferenceLinkPayload(
+            cas_number="64-17-5",
+            label="Supplier SDS",
+            url="https://example.com/sds",
+            priority=server.MAX_REFERENCE_PRIORITY + 1,
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryReferenceLinkPayload(
+            cas_number="64-17-5",
+            label="Supplier SDS",
+            url="https://example.com/sds",
+            status="script",
+        )
+
+
+async def test_admin_write_routes_reject_invalid_payloads(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        manual_response = await ac.post(
+            "/api/dictionary/manual-entries",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "cas_number": "64-17-5",
+                "name_en": "x" * (server.MAX_ADMIN_NAME_LENGTH + 1),
+            },
+        )
+        alias_response = await ac.post(
+            "/api/dictionary/aliases",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "alias_text": "EtOH",
+                "locale": "all",
+                "cas_number": "64-17-5",
+            },
+        )
+        reference_response = await ac.post(
+            "/api/dictionary/reference-links",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "cas_number": "64-17-5",
+                "label": "Supplier SDS",
+                "url": "https://example.com/sds",
+                "priority": server.MAX_REFERENCE_PRIORITY + 1,
+            },
+        )
+
+    assert manual_response.status_code == 422
+    assert alias_response.status_code == 422
+    assert reference_response.status_code == 422
 
 
 async def test_reference_link_rejects_non_http_url(monkeypatch):

@@ -203,6 +203,10 @@ Current status:
 - Duplicate reference URLs preserve the strongest role on backend and frontend
   before priority sorting, so a generic mirror cannot downgrade the same URL
   when it is also available as SDS or regulatory evidence.
+- Admin curation writes are bounded on the backend: manual dictionary entries,
+  aliases, and reference links trim text, cap long fields, reject unsupported
+  locale/status values, and constrain numeric priority/confidence before data
+  reaches SQLite.
 
 ### 5. User Guidance, Brand Utility, And Low-Noise UX
 
