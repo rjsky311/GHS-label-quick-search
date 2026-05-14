@@ -51,6 +51,12 @@ WORKSPACE_DOC_TYPES = {
 }
 ALLOWED_REFERENCE_URL_SCHEMES = {"http", "https"}
 REFERENCE_LINK_TYPES = {"sds", "regulatory", "occupational", "reference"}
+REFERENCE_LINK_TYPE_PRIORITY = {
+    "sds": 0,
+    "regulatory": 1,
+    "occupational": 2,
+    "reference": 3,
+}
 MAX_MISS_QUERY_LENGTH = 160
 MAX_MISS_QUERY_KIND_LENGTH = 40
 MAX_MISS_ENDPOINT_LENGTH = 80
@@ -166,6 +172,20 @@ def _safe_reference_link_type(value: Any) -> str:
     return normalized if normalized in REFERENCE_LINK_TYPES else "reference"
 
 
+def _reference_link_type_rank(link: Dict[str, Any]) -> int:
+    return REFERENCE_LINK_TYPE_PRIORITY.get(str(link.get("link_type") or ""), 99)
+
+
+def _preferred_duplicate_reference_link(current: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[str, Any]:
+    current_rank = _reference_link_type_rank(current)
+    candidate_rank = _reference_link_type_rank(candidate)
+    if candidate_rank != current_rank:
+        return candidate if candidate_rank < current_rank else current
+    if candidate["priority"] != current["priority"]:
+        return candidate if candidate["priority"] < current["priority"] else current
+    return candidate if candidate["label"] < current["label"] else current
+
+
 def _require_admin(request: Request) -> None:
     if not ADMIN_API_TOKEN:
         raise HTTPException(
@@ -249,7 +269,6 @@ def _build_reference_links(
     name_en: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     links: list[dict[str, Any]] = []
-    seen_urls: set[str] = set()
 
     if cid:
         links.append(
@@ -306,13 +325,17 @@ def _build_reference_links(
                 }
             )
 
-    deduped = []
-    for link in sorted(links, key=lambda item: (item["priority"], item["label"])):
-        if link["url"] in seen_urls:
-            continue
-        seen_urls.add(link["url"])
-        deduped.append(link)
-    return deduped
+    deduped_by_url: dict[str, dict[str, Any]] = {}
+    for link in links:
+        current = deduped_by_url.get(link["url"])
+        deduped_by_url[link["url"]] = (
+            _preferred_duplicate_reference_link(current, link) if current else link
+        )
+
+    return sorted(
+        deduped_by_url.values(),
+        key=lambda item: (item["priority"], item["label"]),
+    )
 
 
 def _record_dictionary_miss(query: str, query_kind: str, endpoint: str, *, context: Optional[Dict[str, Any]] = None) -> None:

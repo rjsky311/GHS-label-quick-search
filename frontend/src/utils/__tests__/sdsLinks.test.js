@@ -157,6 +157,28 @@ describe("getReferenceLinks", () => {
     expect(links.some((link) => link.label === "Unsafe SDS")).toBe(false);
     expect(links[0].label).toBe("PubChem Safety & Hazards");
   });
+
+  it("keeps the strongest role when duplicate URLs have different link types", () => {
+    const pubchemSds = getPubChemSDSUrl(702);
+    const links = getReferenceLinks({
+      cid: 702,
+      cas_number: "64-17-5",
+      reference_links: [
+        {
+          label: "Generic mirror of PubChem safety",
+          url: pubchemSds,
+          link_type: "reference",
+          priority: 1,
+        },
+      ],
+    });
+    const safetyLink = links.find((link) => link.url === pubchemSds);
+
+    expect(safetyLink).toMatchObject({
+      label: "PubChem Safety & Hazards",
+      linkType: "sds",
+    });
+  });
 });
 
 describe("getPreferredQrTarget", () => {
@@ -197,6 +219,21 @@ describe("getPreferredQrTarget", () => {
         },
       ])
     ).toBe(getPubChemSDSUrl(702));
+  });
+
+  it("does not let a duplicate generic reference downgrade an SDS QR target", () => {
+    const pubchemSds = getPubChemSDSUrl(702);
+
+    expect(
+      getPreferredQrTarget(702, "64-17-5", [
+        {
+          label: "Generic mirror of PubChem safety",
+          url: pubchemSds,
+          link_type: "reference",
+          priority: 1,
+        },
+      ])
+    ).toBe(pubchemSds);
   });
 
   it("falls back to PubChem SDS when no custom links exist", () => {

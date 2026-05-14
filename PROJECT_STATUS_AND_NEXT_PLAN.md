@@ -165,6 +165,8 @@ Current status:
   into `frontend/build/physical-print-validation-plan.md` and `.json`, giving
   each physical stock family a generated work order with expected output role,
   pictograms, QR expectations, browser steps, and evidence fields.
+- Real-printer validation is intentionally deferred until physical paper/stock
+  and printer access are available.
 - Automated Browser/PDF/production QA remains the precondition before physical
   print validation, not a replacement for it.
 
@@ -198,6 +200,9 @@ Current status:
 - QR target selection now prefers SDS, regulatory, and occupational links before
   generic references, even when a generic reference has a lower numeric
   priority.
+- Duplicate reference URLs preserve the strongest role on backend and frontend
+  before priority sorting, so a generic mirror cannot downgrade the same URL
+  when it is also available as SDS or regulatory evidence.
 
 ### 5. User Guidance, Brand Utility, And Low-Noise UX
 

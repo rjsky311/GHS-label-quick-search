@@ -12,6 +12,9 @@ const REFERENCE_LINK_TYPES = new Set([
 ]);
 
 const QR_TARGET_TYPE_PRIORITY = ["sds", "regulatory", "occupational", "reference"];
+const REFERENCE_LINK_TYPE_RANK = new Map(
+  QR_TARGET_TYPE_PRIORITY.map((linkType, index) => [linkType, index])
+);
 
 export function getPubChemSDSUrl(cid) {
   return cid
@@ -65,17 +68,35 @@ export function normalizeReferenceLink(raw) {
   };
 }
 
+function linkTypeRank(link) {
+  return REFERENCE_LINK_TYPE_RANK.get(link?.linkType) ?? 99;
+}
+
+function preferredDuplicateLink(current, candidate) {
+  const currentRank = linkTypeRank(current);
+  const candidateRank = linkTypeRank(candidate);
+  if (candidateRank !== currentRank) {
+    return candidateRank < currentRank ? candidate : current;
+  }
+  if (candidate.priority !== current.priority) {
+    return candidate.priority < current.priority ? candidate : current;
+  }
+  return candidate.label.localeCompare(current.label) < 0 ? candidate : current;
+}
+
 function dedupeAndSortLinks(links) {
-  const seen = new Set();
-  return links
+  const byUrl = new Map();
+  links
     .map(normalizeReferenceLink)
     .filter(Boolean)
-    .sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label))
-    .filter((link) => {
-      if (seen.has(link.url)) return false;
-      seen.add(link.url);
-      return true;
+    .forEach((link) => {
+      const current = byUrl.get(link.url);
+      byUrl.set(link.url, current ? preferredDuplicateLink(current, link) : link);
     });
+
+  return [...byUrl.values()].sort(
+    (a, b) => a.priority - b.priority || a.label.localeCompare(b.label)
+  );
 }
 
 export function getFallbackReferenceLinks(cid, cas) {

@@ -58,6 +58,9 @@ Rules:
   3. Occupational
   4. Reference
 - Within the same link type, lower numeric priority wins.
+- If duplicate URLs appear with different roles, keep the strongest role before
+  sorting by priority. A generic reference must not downgrade the same URL when
+  it is also available as an SDS or regulatory source.
 - QR supplements must still preserve every available GHS pictogram.
 
 This means a manually added generic reference with priority `1` must not outrank

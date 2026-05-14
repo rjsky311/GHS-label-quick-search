@@ -280,6 +280,29 @@ def test_build_reference_links_normalizes_legacy_manual_link_type(monkeypatch):
     assert legacy["link_type"] == "reference"
 
 
+def test_build_reference_links_keeps_strongest_role_for_duplicate_urls(monkeypatch):
+    pubchem_sds_url = "https://pubchem.ncbi.nlm.nih.gov/compound/702#section=Safety-and-Hazards"
+
+    def fake_reference_links(_cas_number):
+        return [
+            {
+                "label": "Generic mirror of PubChem safety",
+                "url": pubchem_sds_url,
+                "linkType": "reference",
+                "source": "manual",
+                "priority": 1,
+            },
+        ]
+
+    monkeypatch.setattr(server.pilot_store, "list_reference_links", fake_reference_links)
+
+    links = server._build_reference_links("64-17-5", 702, "Ethanol")
+    safety_link = next(link for link in links if link["url"] == pubchem_sds_url)
+
+    assert safety_link["label"] == "PubChem Safety & Hazards"
+    assert safety_link["link_type"] == "sds"
+
+
 async def test_search_by_name_chinese():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

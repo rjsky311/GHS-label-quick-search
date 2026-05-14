@@ -38,13 +38,12 @@ or user request points elsewhere, continue in this order:
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
    `npm run qa:physical-print-plan` generates the current physical-print work
-   order from `build/print-qa-report.json`. The next implementation work is to
-   use that generated work order on actual paper/stock and turn repeated
-   findings into automated QA.
+   order from `build/print-qa-report.json`. Real-printer execution is deferred
+   until physical stock and printer access are available.
 4. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
-   flows. The policy now lives in
-   `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`; the next implementation work is
-   to keep source/QR/admin changes aligned with that policy and add tests when
+   flows. Use this as the active continuation target while physical printing is
+   deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
+   keep source/QR/admin changes aligned with that policy and add tests when
    behavior changes.
 5. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish.
