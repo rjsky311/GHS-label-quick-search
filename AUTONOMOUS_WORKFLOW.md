@@ -125,7 +125,10 @@ For print workflow changes, the default validation stack is:
 - Use `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` when a change affects real
   paper/stock behavior, label-printer scaling, QR scan reliability, or physical
   readability. Automated Browser/PDF gates are preconditions for that pass, not
-  substitutes for it.
+  substitutes for it. After generating `build/print-qa-report.json`, run
+  `npm run qa:physical-print-plan` to produce
+  `build/physical-print-validation-plan.md` and `.json` as the real-printer
+  work order.
 
 Use narrower commands only for early iteration. A print change is not complete
 until the production-facing path has been checked when deployment is part of the

@@ -36,8 +36,11 @@ or user request points elsewhere, continue in this order:
    `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
 3. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
-   `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`; the next implementation work is to
-   use it on actual paper/stock and turn repeated findings into automated QA.
+   `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
+   `npm run qa:physical-print-plan` generates the current physical-print work
+   order from `build/print-qa-report.json`. The next implementation work is to
+   use that generated work order on actual paper/stock and turn repeated
+   findings into automated QA.
 4. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. The policy now lives in
    `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`; the next implementation work is

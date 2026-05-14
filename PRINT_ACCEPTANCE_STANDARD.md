@@ -5,7 +5,8 @@ This document defines the product acceptance bar for GHS label output. It is a p
 Deployment and Browser Use verification steps live in
 `PRINT_BROWSER_QA_CHECKLIST.md`. Real paper, label stock, printer scaling, QR
 scan, and physical readability checks live in
-`PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`.
+`PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`; generate the current work order with
+`npm run qa:physical-print-plan` after `qa:print-report`.
 
 ## Grounding References
 

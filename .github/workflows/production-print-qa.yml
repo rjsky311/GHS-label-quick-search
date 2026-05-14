@@ -101,6 +101,16 @@ jobs:
               ;;
           esac
 
+      - name: Generate physical print validation plan
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -f build/print-qa-report.json ]; then
+            npm run qa:physical-print-plan
+          else
+            echo "Skipping physical print validation plan; build/print-qa-report.json was not generated for this mode."
+          fi
+
       - name: Write production QA summary
         if: always()
         run: npm run qa:production-summary || true
@@ -135,7 +145,7 @@ jobs:
             lines.push("");
           }
           lines.push(
-            "Artifact includes JSON reports, preview screenshots, print HTML artifacts, and generated PDFs when present.",
+            "Artifact includes JSON reports, preview screenshots, print HTML artifacts, generated PDFs, and the physical print validation plan when present.",
           );
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join("\n")}\n`);
           NODE
@@ -151,6 +161,7 @@ jobs:
           retention-days: 14
           path: |
             frontend/build/*.json
+            frontend/build/physical-print-validation-plan.md
             frontend/build/production-*-screenshots/**
             frontend/build/print-html-artifacts/**
             frontend/build/print-pdf-artifacts/**

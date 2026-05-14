@@ -67,6 +67,7 @@
     "test:print-contract": "jest --runInBand printContentPolicy.test.js printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printLabels.test.js printQaMatrixReport.test.js",
     "qa:print-report": "jest --runInBand printQaMatrixReport.test.js --silent=false",
     "qa:print-pdf": "node scripts/check-print-pdf-artifacts.mjs",
+    "qa:physical-print-plan": "node scripts/generate-physical-print-plan.mjs",
     "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
     "qa:production-handoff": "node scripts/check-production-print-handoff.mjs",
     "qa:production-search-ui": "node scripts/check-production-search-ui.mjs",

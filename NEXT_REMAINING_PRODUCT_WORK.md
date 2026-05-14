@@ -20,6 +20,9 @@ baseline rather than the next queue:
   `qa:production-prepared`.
 - Production print matrix automation exists locally and in GitHub Actions.
 - Real chemical edge-case coverage is recorded in the print QA matrix report.
+- Physical print validation now has a generated work order:
+  `npm run qa:physical-print-plan` reads the print QA matrix report and writes
+  `build/physical-print-validation-plan.md` plus `.json`.
 - Shared print content policy is implemented and asserted by focused tests.
 - Print-modal first-screen visual/noise polish is deployed and gated by
   production handoff QA plus the `preview-context-strip` bundle marker.

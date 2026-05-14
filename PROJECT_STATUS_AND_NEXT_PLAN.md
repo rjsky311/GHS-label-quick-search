@@ -161,6 +161,10 @@ Current status:
 - `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` defines the real-printer evidence
   workflow for paper/stock, printer scaling, QR scan success, and physical
   readability.
+- `npm run qa:physical-print-plan` converts the current print QA matrix report
+  into `frontend/build/physical-print-validation-plan.md` and `.json`, giving
+  each physical stock family a generated work order with expected output role,
+  pictograms, QR expectations, browser steps, and evidence fields.
 - Automated Browser/PDF/production QA remains the precondition before physical
   print validation, not a replacement for it.
 

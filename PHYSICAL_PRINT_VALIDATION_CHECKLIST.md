@@ -15,9 +15,22 @@ Run automated gates first so the physical print pass is not debugging basic
 renderer failures:
 
 - `npm run test:print-contract`
+- `PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:print-report`
 - `npm run qa:print-pdf`
 - `npm run qa:production-product` after Zeabur deploy when the change is
   user-facing
+- `npm run qa:physical-print-plan`
+
+`qa:physical-print-plan` reads `frontend/build/print-qa-report.json` and writes:
+
+- `frontend/build/physical-print-validation-plan.md`
+- `frontend/build/physical-print-validation-plan.json`
+
+Use those generated files as the work order for the physical print pass. They
+pin the current representative cases, expected stock, output role, pictograms,
+QR expectations, browser steps, and per-case evidence fields. Regenerate them
+after print-matrix or stock-preset changes so the manual evidence follows the
+same contract as automated QA.
 
 Use the production URL for final evidence:
 

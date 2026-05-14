@@ -69,7 +69,9 @@ manifest as a GitHub artifact.
 Physical paper/stock validation is tracked separately in
 `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`. Use that checklist after automated
 Browser/PDF/production gates pass when a change affects real printer behavior,
-paper stock, roll labels, QR scan reliability, or physical readability.
+paper stock, roll labels, QR scan reliability, or physical readability. After
+`build/print-qa-report.json` exists, run `npm run qa:physical-print-plan` to
+generate the current physical-print work order under `frontend/build/`.
 
 For automated click-through checks that must press the print action, append
 `?qaPrintHandoff=1` or `&qaPrintHandoff=1` to the browser URL. In this mode the
