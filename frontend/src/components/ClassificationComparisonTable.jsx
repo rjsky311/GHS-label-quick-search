@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, CircleDot } from "lucide-react";
-import GHSImage from "@/components/GHSImage";
+import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import {
   getLocalizedPictogramName,
   getLocalizedSignalWord,
@@ -165,6 +165,12 @@ export default function ClassificationComparisonTable({
             {columns.map((col, colIdx) => {
               const colCodes = getColumnPictogramCodes(col);
               const isSelected = isSameChemical && selectedIndex === col.index;
+              const presentPictograms = (col.classification?.pictograms || [])
+                .filter((pic) => pic?.code && allPictogramCodes.includes(pic.code))
+                .sort((left, right) => left.code.localeCompare(right.code));
+              const absentCodes = allPictogramCodes.filter(
+                (code) => !colCodes.has(code),
+              );
               return (
                 <td
                   key={colIdx}
@@ -173,60 +179,43 @@ export default function ClassificationComparisonTable({
                   }`}
                 >
                   {allPictogramCodes.length > 0 ? (
-                    <div className="flex max-w-[18rem] flex-wrap gap-1.5">
-                      {allPictogramCodes.map((code) => {
-                        if (colCodes.has(code)) {
-                          const pic = (col.classification?.pictograms || []).find(
-                            (p) => p.code === code
-                          );
-                          return (
-                            <span
-                              key={code}
-                              className="inline-flex flex-col items-center gap-1"
-                              data-testid={`present-${code}-${colIdx}`}
-                            >
-                              <span
-                                data-testid={`present-tile-${code}-${colIdx}`}
-                                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border p-1 ${
-                                  isSelected
-                                    ? "border-blue-200 bg-blue-50/50 shadow-sm shadow-blue-100/50"
-                                    : "border-slate-200 bg-white shadow-sm shadow-slate-200/40"
-                                }`}
-                              >
-                                <GHSImage
-                                  code={code}
-                                  name={getLocalizedPictogramName(pic, displayLocale)}
-                                  className="h-10 w-10"
-                                  showTooltip
-                                />
-                              </span>
-                              <span className="font-mono text-[9px] leading-none text-slate-500">
-                                {code}
-                              </span>
-                            </span>
-                          );
-                        } else {
-                          return (
-                            <span
-                              key={code}
-                              className="inline-flex flex-col items-center gap-1"
-                              data-testid={`absent-${code}-${colIdx}`}
-                            >
-                              <span
-                                data-testid={`absent-tile-${code}-${colIdx}`}
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50/70"
-                              >
-                                <span className="font-mono text-[9px] text-slate-400">
-                                  {code}
-                                </span>
-                              </span>
-                              <span className="text-[10px] leading-none text-slate-500">
-                                {t("compare.absent")}
-                              </span>
-                            </span>
-                          );
+                    <div
+                      className="max-w-[18rem] space-y-2"
+                      data-testid={`comparison-pictograms-${colIdx}`}
+                    >
+                      <GHSPictogramStrip
+                        pictograms={presentPictograms}
+                        size="md"
+                        variant={isSelected ? "custom" : "comparison"}
+                        markerTitle={col.label}
+                        getName={(pic) =>
+                          getLocalizedPictogramName(pic, displayLocale)
                         }
-                      })}
+                        showCodes
+                      />
+                      {presentPictograms.map((pic) => (
+                        <span
+                          key={`present-${pic.code}`}
+                          data-testid={`present-${pic.code}-${colIdx}`}
+                          className="sr-only"
+                        >
+                          {pic.code}
+                        </span>
+                      ))}
+                      {absentCodes.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] leading-none text-slate-500">
+                          <span>{t("compare.absent")}</span>
+                          {absentCodes.map((code) => (
+                            <span
+                              key={code}
+                              data-testid={`absent-${code}-${colIdx}`}
+                              className="rounded border border-dashed border-slate-300 bg-slate-50 px-1.5 py-1 font-mono text-slate-500"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <span className="text-slate-500">{t("compare.noPictograms")}</span>

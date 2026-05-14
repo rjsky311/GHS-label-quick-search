@@ -134,6 +134,25 @@ It also covers prepared-sidebar reprint and prepared preset reuse for the same
 output families. The preset branch records preset prefill evidence and proves
 that stale operational fields are not carried into new prepared labels.
 
+For result-table and pictogram presentation changes, run:
+
+```bash
+cd frontend
+npm run qa:production-search-ui
+```
+
+This opens the deployed search page in Chrome/Edge, searches Hydrochloric Acid,
+captures `build/production-search-ui-screenshots/search-results.png`, checks
+the result-row action buttons for vertical text regressions, verifies the
+visible GHS pictogram strip uses square readable tiles, expands the alternate
+classification drawer, captures
+`build/production-search-ui-screenshots/search-results-expanded-classifications.png`,
+and checks each expanded classification card for a shared pictogram strip with
+readable official-symbol imagery. Treat failures such as
+`result-ghs-pictogram-*`, `other-classification-*-pictogram-*`, or
+`result-action-button-vertical-text` as product regressions, not just test
+noise.
+
 After generating `build/print-html-artifacts/`, the print/PDF artifact gate can
 be run independently:
 

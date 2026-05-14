@@ -440,6 +440,7 @@ export default function ResultsTable({
                                   onClick={() => onToggleOtherClassifications(result.cas_number)}
                                   className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100 transition-colors hover:bg-blue-100 hover:text-blue-900"
                                   aria-expanded={!!expandedOtherClassifications[result.cas_number]}
+                                  data-testid={`other-classifications-toggle-${result.cas_number}`}
                                 >
                                   {expandedOtherClassifications[result.cas_number] ? (
                                     <ChevronDown className="h-3.5 w-3.5" />
@@ -468,11 +469,27 @@ export default function ResultsTable({
                                       return (
                                         <div
                                           key={clsIdx}
+                                          data-testid={`other-classification-option-${result.cas_number}-${clsIdx}`}
                                           className="group/item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-slate-200 bg-white px-2.5 py-2 shadow-sm shadow-slate-100"
                                         >
                                           <div className="min-w-0">
-                                            <div className="mb-1 text-[11px] font-medium text-slate-500">
-                                              {classificationLabel}
+                                            <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                                              <span>{classificationLabel}</span>
+                                              {cls.signal_word && (
+                                                <span
+                                                  className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                                                    cls.signal_word === "Danger"
+                                                      ? "bg-red-50 text-red-700 ring-1 ring-red-100"
+                                                      : "bg-amber-50 text-amber-700 ring-1 ring-amber-100"
+                                                  }`}
+                                                  data-testid={`other-classification-signal-${result.cas_number}-${clsIdx}`}
+                                                >
+                                                  {getLocalizedSignalWord(
+                                                    cls,
+                                                    displayLocale
+                                                  )}
+                                                </span>
+                                              )}
                                             </div>
                                             <GHSPictogramStrip
                                               pictograms={cls.pictograms || []}
@@ -485,6 +502,7 @@ export default function ResultsTable({
                                                   displayLocale
                                                 )
                                               }
+                                              showCodes
                                             />
                                           </div>
                                           <button

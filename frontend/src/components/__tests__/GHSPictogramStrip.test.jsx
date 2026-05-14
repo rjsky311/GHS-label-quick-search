@@ -33,6 +33,28 @@ describe("GHSPictogramStrip", () => {
     expect(screen.getAllByTestId("ghs-pictogram-tile")).toHaveLength(2);
   });
 
+  it("can expose code labels and stable geometry metadata for QA", () => {
+    render(
+      <GHSPictogramStrip
+        pictograms={[{ code: "GHS05" }]}
+        size="sm"
+        variant="muted"
+        showCodes
+      />,
+    );
+
+    expect(screen.getByTestId("ghs-pictogram-strip")).toHaveAttribute(
+      "data-count",
+      "1",
+    );
+    expect(screen.getByTestId("ghs-pictogram-strip")).toHaveAttribute(
+      "data-size",
+      "sm",
+    );
+    expect(screen.getByTestId("ghs-pictogram-frame")).toHaveClass("h-9", "w-9");
+    expect(screen.getByTestId("ghs-pictogram-code")).toHaveTextContent("GHS05");
+  });
+
   it("returns no visual wrapper when there are no pictograms", () => {
     const { container } = render(<GHSPictogramStrip pictograms={[]} />);
 

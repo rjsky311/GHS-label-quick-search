@@ -122,6 +122,19 @@ Acceptance:
 - Production search UI QA captures result-table readability and fails on obvious
   pictogram layout regressions.
 
+Current status:
+
+- Result table, expanded alternate classifications, detail/favorites surfaces,
+  and comparison table now use the shared `GHSPictogramStrip` instead of
+  hand-rolled pictogram tiles.
+- Comparison table cells use the canonical tile geometry and show missing
+  pictograms as small code chips rather than rendering a second, inconsistent
+  absent-icon grid.
+- Production search UI QA now inspects deployed Hydrochloric Acid result-row
+  pictogram geometry, expands the alternate-classification drawer, captures a
+  second screenshot, and fails on missing strips, undersized images, non-square
+  tiles, and action-button vertical-text regressions.
+
 Suggested verification:
 
 - `npm test -- --runInBand`

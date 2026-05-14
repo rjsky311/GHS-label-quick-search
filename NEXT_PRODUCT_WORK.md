@@ -134,6 +134,12 @@ Current progress:
 - Favorite/sidebar pictograms now reuse the shared tile strip, and comparison
   table pictogram cells use the same compact tile geometry instead of a
   separate oversized card style.
+- The shared pictogram strip exposes stable geometry markers so result-table,
+  expanded-classification, and comparison-table tests assert the same tile
+  contract instead of checking one-off DOM shapes.
+- Production search UI QA now expands Hydrochloric Acid alternate
+  classifications and records geometry metrics/screenshots for both the result
+  row and expanded cards.
 
 Work to continue:
 

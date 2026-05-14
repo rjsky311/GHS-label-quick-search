@@ -95,6 +95,77 @@ const inspectActionButton = async (page, testId) =>
 const isVerticalTextRisk = ({ text, width, height }) =>
   text.length >= 3 && height > width * 1.8 && width < 90;
 
+const inspectPictogramStrip = async (locator, label) =>
+  locator.evaluate((node, stripLabel) => {
+    const rect = node.getBoundingClientRect();
+    const tiles = Array.from(
+      node.querySelectorAll('[data-testid="ghs-pictogram-tile"]'),
+    ).map((tile) => {
+      const tileRect = tile.getBoundingClientRect();
+      const frame = tile.querySelector('[data-testid="ghs-pictogram-frame"]');
+      const frameRect = frame?.getBoundingClientRect();
+      const image = tile.querySelector("img");
+      const imageRect = image?.getBoundingClientRect();
+      const codeLabel = tile.querySelector('[data-testid="ghs-pictogram-code"]');
+      return {
+        code: tile.getAttribute("data-ghs-code") || "",
+        tileWidth: Math.round(tileRect.width),
+        tileHeight: Math.round(tileRect.height),
+        frameWidth: Math.round(frameRect?.width || 0),
+        frameHeight: Math.round(frameRect?.height || 0),
+        imageWidth: Math.round(imageRect?.width || 0),
+        imageHeight: Math.round(imageRect?.height || 0),
+        codeText: (codeLabel?.textContent || "").trim(),
+      };
+    });
+    return {
+      label: stripLabel,
+      size: node.getAttribute("data-size") || "",
+      variant: node.getAttribute("data-variant") || "",
+      count: Number.parseInt(node.getAttribute("data-count") || "", 10) ||
+        tiles.length,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      tiles,
+    };
+  }, label);
+
+const validatePictogramStrip = (
+  metrics,
+  failurePrefix,
+  {
+    minCount = 1,
+    minFrame = 30,
+    maxFrame = 80,
+    maxAspectDelta = 4,
+    requireImage = true,
+  } = {},
+) => {
+  const stripFailures = [];
+  if (!metrics) {
+    return [`${failurePrefix}-missing`];
+  }
+  if (metrics.count < minCount || metrics.tiles.length < minCount) {
+    stripFailures.push(`${failurePrefix}-count`);
+  }
+  metrics.tiles.forEach((tile) => {
+    const code = tile.code || "unknown";
+    if (tile.frameWidth < minFrame || tile.frameHeight < minFrame) {
+      stripFailures.push(`${failurePrefix}-${code}-frame-too-small`);
+    }
+    if (tile.frameWidth > maxFrame || tile.frameHeight > maxFrame) {
+      stripFailures.push(`${failurePrefix}-${code}-frame-too-large`);
+    }
+    if (Math.abs(tile.frameWidth - tile.frameHeight) > maxAspectDelta) {
+      stripFailures.push(`${failurePrefix}-${code}-frame-not-square`);
+    }
+    if (requireImage && (tile.imageWidth < minFrame * 0.65 || tile.imageHeight < minFrame * 0.65)) {
+      stripFailures.push(`${failurePrefix}-${code}-image-too-small`);
+    }
+  });
+  return stripFailures;
+};
+
 const searchUntilUsableResult = async (page) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
@@ -175,11 +246,69 @@ try {
   });
 
   const pictogramStrip = page.getByTestId("ghs-pictogram-strip").first();
-  const pictogramTiles = await pictogramStrip
-    .getByTestId("ghs-pictogram-tile")
-    .count();
-  if (pictogramTiles < 4) {
-    failures.push("result-ghs-pictogram-count");
+  const resultPictogramMetrics = await inspectPictogramStrip(
+    pictogramStrip,
+    "primary-result-row",
+  );
+  failures.push(
+    ...validatePictogramStrip(resultPictogramMetrics, "result-ghs-pictogram", {
+      minCount: 4,
+      minFrame: 36,
+      maxFrame: 58,
+    }),
+  );
+  const pictogramTiles = resultPictogramMetrics.tiles.length;
+
+  const otherToggle = page.locator(
+    '[data-testid^="other-classifications-toggle-"]',
+  ).first();
+  const expandedPictogramMetrics = [];
+  let expandedClassificationCount = 0;
+  let expandedScreenshotPath = null;
+  if ((await otherToggle.count()) === 0) {
+    failures.push("other-classifications-toggle-missing");
+  } else {
+    const toggleId = await otherToggle.getAttribute("data-testid");
+    const casSuffix = toggleId?.replace("other-classifications-toggle-", "");
+    await otherToggle.click();
+    const expandedPanel = page.getByTestId(`other-classifications-${casSuffix}`);
+    await expandedPanel.waitFor({ state: "visible", timeout: 10000 });
+    expandedScreenshotPath = path.join(
+      screenshotDir,
+      "search-results-expanded-classifications.png",
+    );
+    await page.screenshot({ path: expandedScreenshotPath, fullPage: false });
+
+    const expandedCards = page.locator(
+      '[data-testid^="other-classification-option-"]',
+    );
+    expandedClassificationCount = await expandedCards.count();
+    if (expandedClassificationCount < 1) {
+      failures.push("other-classifications-empty");
+    }
+    for (let index = 0; index < expandedClassificationCount; index += 1) {
+      const strip = expandedCards.nth(index).getByTestId("ghs-pictogram-strip");
+      if ((await strip.count()) === 0) {
+        failures.push(`other-classification-${index}-pictogram-strip-missing`);
+        continue;
+      }
+      const metrics = await inspectPictogramStrip(
+        strip,
+        `other-classification-${index}`,
+      );
+      expandedPictogramMetrics.push(metrics);
+      failures.push(
+        ...validatePictogramStrip(
+          metrics,
+          `other-classification-${index}-pictogram`,
+          {
+            minCount: 1,
+            minFrame: 30,
+            maxFrame: 50,
+          },
+        ),
+      );
+    }
   }
 
   const report = {
@@ -188,12 +317,16 @@ try {
     searchTerm,
     executablePath,
     screenshotPath,
+    expandedScreenshotPath,
     failures,
     searchAttempts,
     metrics: {
       detailButton,
       sdsButton,
       pictogramTiles,
+      resultPictogramMetrics,
+      expandedClassificationCount,
+      expandedPictogramMetrics,
       verticalRisks,
     },
   };

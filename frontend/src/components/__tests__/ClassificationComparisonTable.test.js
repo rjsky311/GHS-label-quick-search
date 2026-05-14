@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import ClassificationComparisonTable from "../ClassificationComparisonTable";
 
 // ── Test fixtures ──
@@ -72,7 +72,7 @@ describe("ClassificationComparisonTable", () => {
       expect(screen.getByText("Class. 3")).toBeInTheDocument();
     });
 
-    it("renders pictograms via GHSImage for each column", () => {
+    it("renders pictograms through the shared GHS pictogram strip for each column", () => {
       const columns = makeColumns([cls1, cls2], "same-chemical");
       render(
         <ClassificationComparisonTable
@@ -82,18 +82,25 @@ describe("ClassificationComparisonTable", () => {
           onSelectClassification={jest.fn()}
         />
       );
-      // cls1 has GHS02 + GHS07, cls2 has GHS07
-      // Both should show GHS07 images
-      const ghsImages = screen.getAllByRole("img");
-      expect(ghsImages.length).toBeGreaterThanOrEqual(2);
-      expect(screen.getByTestId("present-GHS02-0")).toHaveClass(
-        "inline-flex",
-      );
-      expect(screen.getByTestId("present-tile-GHS02-0")).toHaveClass(
+      const firstColumn = screen.getByTestId("comparison-pictograms-0");
+      const secondColumn = screen.getByTestId("comparison-pictograms-1");
+      const firstStrip = within(firstColumn).getByTestId("ghs-pictogram-strip");
+      const secondStrip = within(secondColumn).getByTestId("ghs-pictogram-strip");
+
+      expect(firstStrip).toHaveAttribute("data-size", "md");
+      expect(firstStrip).toHaveAttribute("data-variant", "custom");
+      expect(firstStrip).toHaveAttribute("data-count", "2");
+      expect(secondStrip).toHaveAttribute("data-variant", "comparison");
+      expect(secondStrip).toHaveAttribute("data-count", "1");
+      expect(within(firstColumn).getAllByTestId("ghs-pictogram-frame")[0]).toHaveClass(
         "h-11",
         "w-11",
         "rounded-md",
       );
+      expect(within(firstColumn).getAllByTestId("ghs-pictogram-code")[0]).toHaveTextContent(
+        "GHS02",
+      );
+      expect(screen.getByTestId("present-GHS02-0")).toBeInTheDocument();
       expect(screen.getByTestId("present-GHS07-1")).toBeInTheDocument();
     });
 
@@ -109,10 +116,9 @@ describe("ClassificationComparisonTable", () => {
       );
       // cls2 is missing GHS02 — should see absent placeholder
       expect(screen.getByTestId("absent-GHS02-1")).toBeInTheDocument();
-      expect(screen.getByTestId("absent-tile-GHS02-1")).toHaveClass(
-        "h-11",
-        "w-11",
-        "rounded-md",
+      expect(screen.getByTestId("absent-GHS02-1")).toHaveClass(
+        "border-dashed",
+        "font-mono",
       );
     });
 

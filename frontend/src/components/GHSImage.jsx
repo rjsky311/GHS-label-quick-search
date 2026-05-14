@@ -8,8 +8,9 @@ export default function GHSImage({
   showTooltip = false,
 }) {
   const [hasError, setHasError] = useState(false);
+  const imageSrc = GHS_IMAGES[code];
 
-  if (hasError) {
+  if (hasError || !imageSrc) {
     return (
       <span
         className={`inline-flex items-center justify-center rounded border border-red-300 bg-red-100 text-[10px] font-bold text-red-600 ${className}`}
@@ -23,7 +24,7 @@ export default function GHSImage({
   return (
     <div className={showTooltip ? "group relative inline-flex" : "inline-flex"}>
       <img
-        src={GHS_IMAGES[code]}
+        src={imageSrc}
         alt={name || code}
         loading="lazy"
         className={`block object-contain ${className}`}
