@@ -236,10 +236,10 @@ export default function ResultsTable({
       )}
 
       {/* Results Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1120px]" data-testid="results-table">
+      <div className="overflow-visible md:overflow-x-auto" data-testid="results-table-scroll">
+        <table className="w-full min-w-0 md:min-w-[1120px]" data-testid="results-table">
           <caption className="sr-only">{t("results.tableCaption")}</caption>
-          <thead>
+          <thead className="hidden md:table-header-group">
             <tr className="bg-slate-50">
               <th className="w-12 px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colSelect")}
@@ -276,16 +276,16 @@ export default function ResultsTable({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="block space-y-3 md:table-row-group md:space-y-0 md:divide-y md:divide-slate-200">
             {results.map((result, idx) => (
               <tr
                 key={idx}
-                className={`transition-colors hover:bg-blue-50/60 ${
+                className={`block rounded-lg border border-slate-200 p-4 shadow-sm transition-colors hover:bg-blue-50/60 md:table-row md:rounded-none md:border-0 md:p-0 md:shadow-none ${
                   !result.found ? "opacity-60" : ""
-                } ${isSelectedForLabel(result.cas_number) ? "bg-blue-50" : ""}`}
+                } ${isSelectedForLabel(result.cas_number) ? "bg-blue-50" : "bg-white md:bg-transparent"}`}
                 data-testid={`result-row-${idx}`}
               >
-                <td className="px-2 py-4 text-center align-top">
+                <td className="inline-flex w-9 px-0 py-0 align-top md:table-cell md:w-12 md:px-2 md:py-4 md:text-center">
                   {result.found && (
                     <input
                       type="checkbox"
@@ -296,7 +296,7 @@ export default function ResultsTable({
                     />
                   )}
                 </td>
-                <td className="px-2 py-4 text-center align-top">
+                <td className="inline-flex w-9 px-0 py-0 align-top md:table-cell md:w-12 md:px-2 md:py-4 md:text-center">
                   {result.found && (
                     <button
                       onClick={() => onToggleFavorite(result)}
@@ -312,12 +312,12 @@ export default function ResultsTable({
                     </button>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-4 py-4 align-top">
+                <td className="mt-3 block whitespace-nowrap px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
                   <span className="font-mono text-blue-700">
                     {result.cas_number}
                   </span>
                 </td>
-                <td className="min-w-[18rem] px-4 py-4 align-top">
+                <td className="mt-2 block min-w-0 px-0 py-0 align-top md:table-cell md:mt-0 md:min-w-[18rem] md:px-4 md:py-4">
                   {result.found ? (
                     (() => {
                       const displayNames = getLocalizedNames(result, displayLocale);
@@ -384,7 +384,7 @@ export default function ResultsTable({
                     <span className="text-red-700">{result.error}</span>
                   )}
                 </td>
-                <td className="px-4 py-4 align-top">
+                <td className="mt-3 block px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
                   {(() => {
                     // Keep "no GHS data" separate from "GHS text exists but
                     // there is no pictogram to draw"; neither should be
@@ -438,7 +438,7 @@ export default function ResultsTable({
                         return (
                           <>
                             <div
-                              className="flex max-w-[18rem] flex-wrap items-center gap-2"
+                              className="flex max-w-full flex-wrap items-center gap-2 md:max-w-[18rem]"
                               data-testid={`result-ghs-visual-${result.cas_number}`}
                             >
                               <GHSPictogramStrip
@@ -561,7 +561,7 @@ export default function ResultsTable({
                     );
                   })()}
                 </td>
-                <td className="px-4 py-4 align-top">
+                <td className="mt-3 block px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
                   {result.found ? (
                     (() => {
                       const effective = getEffectiveClassification(result);
@@ -583,7 +583,7 @@ export default function ResultsTable({
                     "-"
                   )}
                 </td>
-                <td className="w-44 min-w-[11rem] px-4 py-4 align-top">
+                <td className="mt-3 block w-full min-w-0 px-0 py-0 align-top md:table-cell md:mt-0 md:w-44 md:min-w-[11rem] md:px-4 md:py-4">
                   {result.found && (
                     <div className="flex flex-wrap gap-1.5">
                       <button

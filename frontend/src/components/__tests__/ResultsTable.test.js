@@ -166,6 +166,26 @@ describe('ResultsTable', () => {
   });
 
   describe('Found result rows', () => {
+    it('keeps the results readable on narrow screens without a desktop-only minimum table width', () => {
+      render(<ResultsTable {...defaultProps} />);
+
+      expect(screen.getByTestId('results-table-scroll')).toHaveClass(
+        'overflow-visible',
+      );
+      expect(screen.getByTestId('results-table')).toHaveClass(
+        'min-w-0',
+        'md:min-w-[1120px]',
+      );
+      expect(screen.getByTestId('result-row-0')).toHaveClass(
+        'block',
+        'md:table-row',
+      );
+      expect(screen.getByTestId('detail-btn-0')).toHaveClass(
+        'whitespace-nowrap',
+      );
+      expect(screen.getByTestId('sds-btn-0')).toHaveClass('whitespace-nowrap');
+    });
+
     it('renders CAS number', () => {
       render(<ResultsTable {...defaultProps} />);
       expect(screen.getByText('64-17-5')).toBeInTheDocument();

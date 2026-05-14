@@ -151,6 +151,9 @@ Current status:
   pictogram geometry, expands the alternate-classification drawer, captures a
   second screenshot, and fails on missing strips, undersized images, non-square
   tiles, and action-button vertical-text regressions.
+- Production search UI QA also runs a 390px narrow read-first scenario and
+  fails when the result area horizontally scrolls or when detail/SDS actions
+  land outside the viewport.
 - Production search UI QA now also clicks into the deployed detail modal and
   inspects the same-chemical classification comparison table. It verifies that
   the currently selected classification uses the shared selected pictogram
@@ -342,6 +345,10 @@ Current status:
   data-correction reports and workflow requests. This keeps safety-data
   corrections separate from brand/service-oriented workflow conversations while
   leaving both outside printed labels and hazard content.
+- The result table now behaves as a readable result card on narrow screens
+  while preserving the same DOM and desktop table layout on larger screens.
+  Mobile users can see identity, GHS pictograms, signal word, detail, and SDS
+  actions without dragging a 1120px-wide table.
 - A new product-level production QA entry point (`npm run qa:production-product`)
   stitches together the five blocks: deployed search/detail/trust checks,
   deployed print smoke handoff, and deployed prepared-solution workflows. The
@@ -355,6 +362,8 @@ Suggested verification:
 - `npm run qa:production-smoke`
 - `npm run qa:production-product` when closing all five product blocks together
 - Screenshot review across desktop and narrower modal widths
+- `build/production-search-ui-screenshots/search-results-mobile-read-first.png`
+  after running production search UI QA
 
 ## Default Next Order
 

@@ -60,7 +60,8 @@ Current validation gates:
 - Frontend: `npm test -- --runInBand`, `npm run test:i18n`, `npm run build`
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
-- Production search UI: `npm run qa:production-search-ui`
+- Production search UI: `npm run qa:production-search-ui` (desktop
+  search/detail plus 390px narrow read-first result check)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -237,6 +238,16 @@ Done means:
   long instructions.
 - The app can create visibility and trust for the broader brand without
   weakening hazard communication.
+
+Current status:
+
+- Search results now use the same result-row DOM as a narrow-screen card layout
+  on phone-width viewports, keeping chemical identity, GHS pictograms, signal
+  word, detail action, and SDS action inside the viewport instead of requiring
+  horizontal table scrolling.
+- `qa:production-search-ui` now captures a 390px deployed screenshot and fails
+  when the result area needs horizontal scrolling or when detail/SDS actions
+  are outside the narrow viewport.
 
 ## 4. Known Blind Spots
 

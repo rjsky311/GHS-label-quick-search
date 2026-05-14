@@ -14,6 +14,10 @@ const screenshotDir = path.resolve(
   env.PRODUCTION_SEARCH_UI_SCREENSHOT_DIR ||
     "build/production-search-ui-screenshots",
 );
+const mobileViewport = {
+  width: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_WIDTH || "390", 10),
+  height: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_HEIGHT || "844", 10),
+};
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
 const headless = env.PRINT_QA_HEADLESS !== "0";
 const SEARCH_UI_ATTEMPTS = Number.parseInt(
@@ -98,6 +102,13 @@ const inspectActionButton = async (page, testId) =>
 
 const isVerticalTextRisk = ({ text, width, height }) =>
   text.length >= 3 && height > width * 1.8 && width < 90;
+
+const isRectInsideViewport = (rect, viewportWidth) =>
+  rect &&
+  rect.x >= -1 &&
+  rect.right <= viewportWidth + 1 &&
+  rect.width > 0 &&
+  rect.height > 0;
 
 const inspectPictogramStrip = async (locator, label) =>
   locator.evaluate((node, stripLabel) => {
@@ -359,6 +370,41 @@ const searchUntilUsableResult = async (page) => {
   throw lastError || new Error("Search did not produce a usable result.");
 };
 
+const inspectMobileReadFirstResult = async (page) =>
+  page.evaluate(() => {
+    const serializeRect = (node) => {
+      const rect = node?.getBoundingClientRect();
+      if (!rect) return null;
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+      };
+    };
+    const table = document.querySelector('[data-testid="results-table"]');
+    const wrapper = document.querySelector('[data-testid="results-table-scroll"]');
+    const detailButton = document.querySelector('[data-testid="detail-btn-0"]');
+    const sdsButton = document.querySelector('[data-testid="sds-btn-0"]');
+    const firstRow = document.querySelector('[data-testid="result-row-0"]');
+    const tableStyle = table ? window.getComputedStyle(table) : null;
+    return {
+      viewportWidth: window.innerWidth,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      resultsClientWidth: wrapper?.clientWidth || 0,
+      resultsScrollWidth: wrapper?.scrollWidth || 0,
+      tableDisplay: tableStyle?.display || "",
+      tableRect: serializeRect(table),
+      rowRect: serializeRect(firstRow),
+      detailButton: serializeRect(detailButton),
+      sdsButton: serializeRect(sdsButton),
+      rowText: (firstRow?.textContent || "").replace(/\s+/g, " ").trim(),
+    };
+  });
+
 const failures = [];
 let browser;
 
@@ -617,6 +663,53 @@ try {
     failures.push("detail-comparison-current-pictogram-count-mismatch");
   }
 
+  const mobileContext = await browser.newContext({
+    viewport: mobileViewport,
+    deviceScaleFactor: 2,
+    isMobile: true,
+  });
+  const mobilePage = await mobileContext.newPage();
+  await mobilePage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
+  await mobilePage.evaluate(() => localStorage.clear());
+  await mobilePage.reload({ waitUntil: "networkidle" });
+  const mobileSearchAttempts = await searchUntilUsableResult(mobilePage);
+  const mobileScreenshotPath = path.join(
+    screenshotDir,
+    "search-results-mobile-read-first.png",
+  );
+  await mobilePage.screenshot({ path: mobileScreenshotPath, fullPage: true });
+  const mobileReadFirst = await inspectMobileReadFirstResult(mobilePage);
+  await mobileContext.close();
+
+  if (
+    mobileReadFirst.documentScrollWidth > mobileReadFirst.viewportWidth + 2 ||
+    mobileReadFirst.bodyScrollWidth > mobileReadFirst.viewportWidth + 2
+  ) {
+    failures.push("mobile-read-first-page-horizontal-overflow");
+  }
+  if (
+    mobileReadFirst.resultsScrollWidth >
+    mobileReadFirst.resultsClientWidth + 2
+  ) {
+    failures.push("mobile-read-first-results-horizontal-scroll");
+  }
+  if (
+    !isRectInsideViewport(
+      mobileReadFirst.detailButton,
+      mobileReadFirst.viewportWidth,
+    )
+  ) {
+    failures.push("mobile-read-first-detail-action-offscreen");
+  }
+  if (
+    !isRectInsideViewport(mobileReadFirst.sdsButton, mobileReadFirst.viewportWidth)
+  ) {
+    failures.push("mobile-read-first-sds-action-offscreen");
+  }
+  if (!/Hydrochloric acid|鹽酸|Hydrochloric Acid/.test(mobileReadFirst.rowText)) {
+    failures.push("mobile-read-first-result-identity-missing");
+  }
+
   const report = {
     ok: failures.length === 0,
     productionUrl,
@@ -625,8 +718,10 @@ try {
     screenshotPath,
     expandedScreenshotPath,
     detailScreenshotPath,
+    mobileScreenshotPath,
     failures,
     searchAttempts,
+    mobileSearchAttempts,
     metrics: {
       detailButton,
       sdsButton,
@@ -640,6 +735,7 @@ try {
       detailComparisonMetrics,
       imageWaits,
       verticalRisks,
+      mobileReadFirst,
     },
   };
 
