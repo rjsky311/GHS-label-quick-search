@@ -38,7 +38,8 @@ Current mode:
   and QR-scan evidence can be collected.
 - While physical printing is deferred, the default active continuation target
   is data governance / safety boundaries, followed by low-noise UX and
-  narrow/mobile polish.
+  narrow/mobile polish. Track that future work in
+  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
 
 1. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
@@ -54,8 +55,9 @@ Current mode:
 4. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
-   keep source/QR/admin changes aligned with that policy and add tests when
-   behavior changes.
+   the detailed future tracker lives in
+   `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Keep source/QR/admin changes
+   aligned with that policy and add tests when behavior changes.
 5. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate

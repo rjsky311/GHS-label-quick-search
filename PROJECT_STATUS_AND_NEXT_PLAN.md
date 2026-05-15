@@ -87,7 +87,8 @@ Current completion snapshot:
   states, QR real-world reliability, compact multilingual labels, long
   chemical names, case/custom identity fields, admin/telemetry limits, and
   low-noise UX should continue to receive new regression cases when evidence
-  appears.
+  appears. Track these non-physical-print follow-ups in
+  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
 
 ## 3. Next Priority Order
 
@@ -365,6 +366,9 @@ Use these files by role:
   scaling, QR scan, and physical readability checklist.
 - `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`: source roles, SDS/reference
   policy, admin/manual data boundaries, telemetry limits, and conflict handling.
+- `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`: future work tracker for data
+  trust, UX guidance, public docs, and brand/support surfaces while real
+  physical printing is deferred.
 - `PRINT_OUTPUT_REFACTOR_PLAN.md`: v1.10 print refactor baseline.
 - `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline.
 - `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:

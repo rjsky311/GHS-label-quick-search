@@ -263,6 +263,11 @@ ranking, SDS/reference links, QR targets, manual dictionary/alias behavior,
 dictionary miss telemetry, admin-gated data paths, or upstream-error/no-GHS
 states.
 
+Future non-physical-print work while real-printer validation is deferred is
+tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data
+trust/correction workflow, first-time UX guidance, public README/docs cleanup,
+and brand/support surfaces.
+
 Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
 live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
 execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user

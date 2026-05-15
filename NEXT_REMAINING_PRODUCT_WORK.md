@@ -46,7 +46,8 @@ implementation checklist.
 - **Still worth extending**: compact multilingual pressure, long names,
   case/custom identity fields, QR scan evidence, admin/telemetry limits,
   source-conflict handling, and first-time user guidance should receive new
-  tests or QA cases when a new example appears.
+  tests or QA cases when a new example appears. The non-physical-print tracker
+  for those next steps is `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.

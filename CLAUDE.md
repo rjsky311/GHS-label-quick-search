@@ -223,7 +223,9 @@ order, and done criteria. The print-workflow refactor baseline is pinned in
 `PRINT_ACCEPTANCE_STANDARD.md`, and the completed five-workstream execution map
 is in `NEXT_PRINT_WORKSTREAMS.md`. The detailed remaining product backlog lives
 in `NEXT_REMAINING_PRODUCT_WORK.md`. Data governance and safety boundaries live
-in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`.
+in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`. Future non-physical-print work
+while real-printer validation is deferred is tracked in
+`FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
 
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
