@@ -450,6 +450,42 @@ def test_build_reference_links_keeps_strongest_role_for_duplicate_urls(monkeypat
     assert safety_link["link_type"] == "sds"
 
 
+def test_build_reference_links_orders_by_authority_role_before_priority(monkeypatch):
+    def fake_reference_links(_cas_number):
+        return [
+            {
+                "label": "Generic internal note",
+                "url": "https://example.com/internal-note",
+                "linkType": "reference",
+                "source": "manual",
+                "priority": 1,
+            },
+            {
+                "label": "Supplier SDS",
+                "url": "https://example.com/supplier-sds",
+                "linkType": "sds",
+                "source": "manual",
+                "priority": 50,
+            },
+        ]
+
+    monkeypatch.setattr(server.pilot_store, "list_reference_links", fake_reference_links)
+
+    links = server._build_reference_links("64-17-5", 702, "Ethanol")
+
+    assert [link["link_type"] for link in links] == [
+        "sds",
+        "sds",
+        "regulatory",
+        "occupational",
+        "reference",
+        "reference",
+    ]
+    assert links[0]["label"] == "PubChem Safety & Hazards"
+    assert links[1]["label"] == "Supplier SDS"
+    assert links[4]["label"] == "Generic internal note"
+
+
 async def test_search_by_name_chinese():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

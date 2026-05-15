@@ -209,6 +209,8 @@ Current status:
   (`SDS`, `Regulatory`, `Occupational`, then generic `Reference`) before
   numeric priority, so low-priority values cannot make a generic note look more
   authoritative than verification links.
+- Backend reference-link payloads now use the same role-first source order, so
+  the API, frontend display, and QR target selection share one authority model.
 - Admin curation writes are bounded on the backend: manual dictionary entries,
   aliases, and reference links trim text, cap long fields, reject unsupported
   locale/status values, and constrain numeric priority/confidence before data

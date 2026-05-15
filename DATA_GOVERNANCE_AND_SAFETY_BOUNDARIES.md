@@ -61,6 +61,8 @@ Rules:
 - Visible detail/reference lists use the same role-first order before numeric
   priority, so generic references cannot visually outrank SDS, regulatory, or
   occupational verification links.
+- Backend API reference-link payloads use the same role-first order, so future
+  consumers do not have to rediscover the authority hierarchy independently.
 - If duplicate URLs appear with different roles, keep the strongest role before
   sorting by priority. A generic reference must not downgrade the same URL when
   it is also available as an SDS or regulatory source.
@@ -124,6 +126,8 @@ Backend:
   admin values before writing to SQLite.
 - Reference-link payloads reject unsupported statuses or out-of-range
   priorities in addition to unsafe URLs and unknown roles.
+- Reference-link reads order SDS/regulatory/occupational links before generic
+  references even when a generic reference has a lower numeric priority.
 - Workspace document writes reject oversized serialized JSON payloads.
 - Search surfaces `upstream_error` for transient failures instead of pretending
   there are no hazards.

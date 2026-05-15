@@ -232,6 +232,8 @@ Current status:
   `SDS`, `Regulatory`, `Occupational`, then generic `Reference`, with numeric
   priority applied only within the same role. Production search UI QA checks
   that deployed detail links keep that authority order.
+- Backend reference-link payloads now use that same role-first order, keeping
+  the API contract aligned with QR target selection and frontend detail views.
 - Result rows now show a compact source chip for ECHA, PubChem, or other
   supplied sources instead of hiding non-ECHA provenance. Detail reference
   links also expose both role and source chips so verification links remain

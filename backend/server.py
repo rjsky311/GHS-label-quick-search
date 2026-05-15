@@ -344,7 +344,11 @@ def _build_reference_links(
 
     return sorted(
         deduped_by_url.values(),
-        key=lambda item: (item["priority"], item["label"]),
+        key=lambda item: (
+            _reference_link_type_rank(item),
+            item["priority"],
+            item["label"],
+        ),
     )
 
 
