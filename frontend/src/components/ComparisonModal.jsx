@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
 import { X, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
+import useFocusTrap from "@/hooks/useFocusTrap";
 
 /**
  * Cross-chemical GHS classification comparison modal.
@@ -17,16 +17,7 @@ export default function ComparisonModal({
   onClose,
 }) {
   const { t } = useTranslation();
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    dialogRef.current?.focus();
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   const columns = chemicals.map((chem) => {
     const effective = getEffectiveClassification(chem) || {

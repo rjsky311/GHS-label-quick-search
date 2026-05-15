@@ -164,7 +164,32 @@ describe("ComparisonModal", () => {
         onClose={onClose}
       />
     );
-    fireEvent.keyDown(window, { key: "Escape" });
+    const closeButton = screen.getByTestId("close-comparison-btn");
+    closeButton.focus();
+    fireEvent.keyDown(closeButton, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("traps Tab navigation inside the comparison modal", () => {
+    render(
+      <ComparisonModal
+        chemicals={mockChemicals}
+        getEffectiveClassification={mockGetEffective}
+        onClose={jest.fn()}
+      />
+    );
+
+    const buttons = screen.getAllByRole("button");
+    const firstButton = buttons[0];
+    const lastButton = buttons[buttons.length - 1];
+
+    expect(firstButton).toHaveFocus();
+
+    lastButton.focus();
+    fireEvent.keyDown(lastButton, { key: "Tab" });
+    expect(firstButton).toHaveFocus();
+
+    fireEvent.keyDown(firstButton, { key: "Tab", shiftKey: true });
+    expect(lastButton).toHaveFocus();
   });
 });
