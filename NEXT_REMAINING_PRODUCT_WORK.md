@@ -228,6 +228,10 @@ Current status:
   both backend writes and frontend normalization. Legacy/manual links with
   unknown roles are downgraded to `Reference`, while unsafe URL schemes remain
   blocked.
+- Detail reference lists now use the same role-first order as QR targets:
+  `SDS`, `Regulatory`, `Occupational`, then generic `Reference`, with numeric
+  priority applied only within the same role. Production search UI QA checks
+  that deployed detail links keep that authority order.
 - Result rows now show a compact source chip for ECHA, PubChem, or other
   supplied sources instead of hiding non-ECHA provenance. Detail reference
   links also expose both role and source chips so verification links remain

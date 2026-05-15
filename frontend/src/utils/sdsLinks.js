@@ -95,7 +95,10 @@ function dedupeAndSortLinks(links) {
     });
 
   return [...byUrl.values()].sort(
-    (a, b) => a.priority - b.priority || a.label.localeCompare(b.label)
+    (a, b) =>
+      linkTypeRank(a) - linkTypeRank(b) ||
+      a.priority - b.priority ||
+      a.label.localeCompare(b.label)
   );
 }
 

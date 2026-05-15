@@ -58,6 +58,9 @@ Rules:
   3. Occupational
   4. Reference
 - Within the same link type, lower numeric priority wins.
+- Visible detail/reference lists use the same role-first order before numeric
+  priority, so generic references cannot visually outrank SDS, regulatory, or
+  occupational verification links.
 - If duplicate URLs appear with different roles, keep the strongest role before
   sorting by priority. A generic reference must not downgrade the same URL when
   it is also available as an SDS or regulatory source.
@@ -132,6 +135,8 @@ Frontend:
 - `getPreferredQrTarget` never chooses unsafe URLs.
 - QR target selection prefers SDS/regulatory/occupational over generic
   references.
+- Visible reference lists prefer SDS/regulatory/occupational over generic
+  references before applying numeric priority.
 - Results and detail views distinguish no-GHS, GHS-text-without-pictogram, and
   renderable-GHS states.
 - Detail views keep alternate-classification comparison visible even when the

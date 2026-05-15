@@ -244,6 +244,12 @@ const allowedReferenceLinkTypes = new Set([
   "occupational",
   "reference",
 ]);
+const referenceLinkTypeRank = new Map(
+  ["sds", "regulatory", "occupational", "reference"].map((linkType, index) => [
+    linkType,
+    index,
+  ]),
+);
 
 const inspectResultsTrustSurface = async (page) => {
   const note = page.getByTestId("authoritative-source-note-results");
@@ -649,6 +655,15 @@ try {
       failures.push(`${label}-source-chip-missing`);
     }
   });
+  const detailReferenceRanks = detailTrustSurface.references.map((reference) =>
+    referenceLinkTypeRank.get(reference.linkType) ?? 99,
+  );
+  const detailReferencesAreRoleSorted = detailReferenceRanks.every(
+    (rank, index, ranks) => index === 0 || rank >= ranks[index - 1],
+  );
+  if (!detailReferencesAreRoleSorted) {
+    failures.push("detail-reference-link-role-order-mismatch");
+  }
   const detailComparisonTable = detailModal.getByTestId("comparison-table");
   await detailComparisonTable.waitFor({ state: "visible", timeout: 10000 });
   const detailImageWait = await waitForImagesInLocator(

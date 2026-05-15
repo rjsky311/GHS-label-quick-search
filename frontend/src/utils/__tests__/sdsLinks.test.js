@@ -106,10 +106,12 @@ describe("getFallbackReferenceLinks", () => {
     expect(links.map((link) => link.label)).toEqual([
       "PubChem Safety & Hazards",
       "ECHA Substance Search",
-      "PubChem Compound Overview",
       "NIOSH Pocket Guide",
+      "PubChem Compound Overview",
     ]);
-    expect(links.at(-1).url).toBe(getNioshPocketGuideUrl());
+    expect(links.find((link) => link.label === "NIOSH Pocket Guide").url).toBe(
+      getNioshPocketGuideUrl()
+    );
   });
 });
 
@@ -177,6 +179,48 @@ describe("getReferenceLinks", () => {
     expect(safetyLink).toMatchObject({
       label: "PubChem Safety & Hazards",
       linkType: "sds",
+    });
+  });
+
+  it("orders visible links by authority role before numeric priority", () => {
+    const links = getReferenceLinks({
+      cid: 702,
+      cas_number: "64-17-5",
+      reference_links: [
+        {
+          label: "Generic internal note",
+          url: "https://example.com/internal-note",
+          link_type: "reference",
+          priority: 1,
+        },
+        {
+          label: "Supplier SDS",
+          url: "https://example.com/supplier-sds",
+          link_type: "sds",
+          priority: 50,
+        },
+      ],
+    });
+
+    expect(links.map((link) => link.linkType)).toEqual([
+      "sds",
+      "sds",
+      "regulatory",
+      "occupational",
+      "reference",
+      "reference",
+    ]);
+    expect(links[0]).toMatchObject({
+      label: "PubChem Safety & Hazards",
+      linkType: "sds",
+    });
+    expect(links[1]).toMatchObject({
+      label: "Supplier SDS",
+      linkType: "sds",
+    });
+    expect(links[4]).toMatchObject({
+      label: "Generic internal note",
+      linkType: "reference",
     });
   });
 });
