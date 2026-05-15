@@ -333,9 +333,10 @@ Current status:
 - Production prepared QA now uses run-relative prepared/expiry dates instead of
   fixed calendar dates, so the deployed workflow check continues to represent a
   fresh prepared job instead of aging into a false expired-fixture failure.
-- `npm run qa:production-product` includes `qa:production-prepared`, so prepared
-  print, recent reprint, and saved preset reuse are no longer optional when
-  closing a whole-product production pass.
+- `npm run qa:production-product` includes `qa:production-prepared` and
+  `qa:production-batch-print`, so prepared print, recent reprint, saved preset
+  reuse, and fixed-stock batch evidence are no longer optional when closing a
+  whole-product production pass.
 
 Suggested verification:
 
@@ -390,11 +391,12 @@ Current status:
   while preserving the same DOM and desktop table layout on larger screens.
   Mobile users can see identity, GHS pictograms, signal word, detail, and SDS
   actions without dragging a 1120px-wide table.
-- A new product-level production QA entry point (`npm run qa:production-product`)
-  stitches together the current product blocks: deployed search/detail/trust checks,
-  deployed print smoke handoff, and deployed prepared-solution workflows. The
-  generated summary exposes one pass/fail line per block so future autonomous
-  rounds can see which area is actually not done.
+- The product-level production QA entry point (`npm run qa:production-product`)
+  stitches together the current product blocks: deployed search/detail/trust
+  checks, deployed print smoke handoff, deployed prepared-solution workflows,
+  and deployed fixed-stock batch printing. The generated summary exposes one
+  pass/fail line per block so future autonomous rounds can see which area is
+  actually not done.
 - Core custom dialogs now share the focus-trap path across label print,
   prepared solution, cross-chemical comparison, sidebars, and DetailModal.
   DetailModal also disables its trap while a prepared-solution modal is stacked
@@ -411,7 +413,7 @@ Suggested verification:
 - Manual product walkthrough against production
 - `npm run qa:production-search-ui`
 - `npm run qa:production-smoke`
-- `npm run qa:production-product` when closing all five product blocks together
+- `npm run qa:production-product` when closing all product blocks together
 - Screenshot review across desktop and narrower modal widths
 - `build/production-search-ui-screenshots/search-results-mobile-read-first.png`
   after running production search UI QA
@@ -457,16 +459,23 @@ Current status:
 - `LabelPrintModal` shows a first batch fit report for multi-item selections
   and prints the default ready subset instead of blocking a whole batch when
   unrelated items need review.
-- Representative preview switching, explicit reduced/continuation
-  acknowledgement controls, production Browser QA, and deployed 50-item batch
-  evidence are still open.
+- `LabelPrintModal` now supports representative preview switching for the
+  batch fit report, keeps the sheet preview on the default ready print scope,
+  and shows a review/excluded list with CSV export before handoff.
+- `npm run qa:production-batch-print` now exercises the deployed fixed-stock
+  batch modal flow and writes `build/production-batch-print-report.json` with
+  a screenshot.
+- `qa:production-product` now runs `qa:production-batch-print`, and the
+  production QA summary has a fixed-stock batch product block.
+- Explicit reduced/continuation inclusion and deployed 50-item batch evidence
+  are still open.
 
 Suggested verification:
 
 - New batch planner unit/integration tests.
 - New renderer/PDF batch artifacts.
-- Future `npm run qa:production-batch-print`.
-- `npm run qa:production-product` after the batch gate is integrated.
+- `npm run qa:production-batch-print`
+- `npm run qa:production-product`
 
 ## Default Next Order
 

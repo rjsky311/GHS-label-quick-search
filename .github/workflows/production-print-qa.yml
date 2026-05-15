@@ -15,6 +15,7 @@ on:
           - compact
           - multi-chemical
           - prepared
+          - batch
           - full
           - all
       production_url:
@@ -85,6 +86,11 @@ jobs:
             prepared)
               npm run qa:production-bundle
               npm run qa:production-prepared
+              npm run qa:production-summary
+              ;;
+            batch)
+              npm run qa:production-bundle
+              npm run qa:production-batch-print
               npm run qa:production-summary
               ;;
             full)

@@ -106,13 +106,15 @@ For print workflow changes, the default validation stack is:
   supplemental, and tube quick-ID prepared outputs. It also covers prepared
   preset creation/reuse and verifies that stale operational fields are cleared
   before a new prepared print job is submitted.
-- `npm run qa:production-product` when closing or revalidating all five product
+- `npm run qa:production-product` when closing or revalidating all product
   work blocks together. It runs the deployed print smoke gate, deployed prepared
-  workflow gate, and product-level summary with required block mapping for:
+  workflow gate, deployed fixed-stock batch gate, and product-level summary with
+  required block mapping for:
   print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared
-  reprints, and whole-product UX/support positioning. Allow a generous local
-  command timeout of at least 10 minutes; a healthy run can take 5-6 minutes
-  because it opens production Chrome flows and generates print reports.
+  reprints, fixed-stock batch printing, and whole-product UX/support
+  positioning. Allow a generous local command timeout of at least 12 minutes; a
+  healthy run can take several minutes because it opens production Chrome flows
+  and generates print reports.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix
@@ -120,8 +122,8 @@ For print workflow changes, the default validation stack is:
 - The same production QA can be run from GitHub Actions via the
   `Production Print QA` workflow. Use `product` as the default closure mode for
   user-facing product work; use `smoke`, `primary`, `compact`,
-  `multi-chemical`, `prepared`, `full`, or `all` for focused reruns or deeper
-  print-matrix checks. The workflow uploads JSON reports, screenshots, print
+  `multi-chemical`, `prepared`, `batch`, `full`, or `all` for focused reruns or
+  deeper print-matrix checks. The workflow uploads JSON reports, screenshots, print
   HTML artifacts, generated PDFs, and `production-print-qa-summary.json` for
   review, and its job summary lists product-block status when available.
 - Use `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` when a change affects real

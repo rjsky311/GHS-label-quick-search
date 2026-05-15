@@ -74,6 +74,7 @@ Current validation gates:
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
+- Production fixed-stock batch print: `npm run qa:production-batch-print`
 - Prepared production workflow: `npm run qa:production-prepared`
 - Whole product closure: `npm run qa:production-product`
 - Backend: `python -m py_compile server.py` and
@@ -126,15 +127,15 @@ Current status:
 - Workflow job summaries include product-block pass/fail status when product
   block evidence is present.
 - Split modes remain available for focused reruns: `smoke`, `primary`,
-  `compact`, `multi-chemical`, `prepared`, `full`, and `all`.
+  `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and `all`.
 - `qa:production-search-ui` keeps the full deployed evidence in
   `build/production-search-ui-report.json`, but prints a compact console
   summary so CI logs show the action, pictogram, trust, data-state, keyboard,
   mobile, and image-load checks without burying failures in raw DOM text.
-- Local `qa:production-product` runs should be given at least a 10 minute
-  timeout; a healthy full product pass often takes 5-6 minutes because it runs
-  deployed Chrome flows, print handoff checks, prepared workflow checks, and
-  summary generation.
+- Local `qa:production-product` runs should be given at least a 12 minute
+  timeout; a healthy full product pass can take several minutes because it runs
+  deployed Chrome flows, print handoff checks, prepared workflow checks,
+  fixed-stock batch checks, and summary generation.
 
 Done means:
 
@@ -213,10 +214,18 @@ Current status:
 - `LabelPrintModal` now surfaces a first batch fit report for multi-item
   selections and can hand off the default ready subset without forcing the
   whole batch to A4/Letter.
+- `LabelPrintModal` now also supports representative preview switching for
+  the batch fit report, aligns the sheet preview to the default ready print
+  scope, and exposes review/excluded items with CSV export before print
+  handoff.
+- `npm run qa:production-batch-print` exists as a deploy-time gate for the
+  fixed-stock batch modal flow and is now folded into `qa:production-product`
+  plus the `fixed-stock-batch-printing` product block in the production QA
+  summary.
 - Existing print gates still protect single-label and representative
-  multi-chemical cases, but representative preview switching, explicit
-  review/continuation controls, production Browser QA, and deployed 50-item
-  batch evidence do not yet prove the full workflow.
+  multi-chemical cases, but explicit reduced/continuation inclusion,
+  same-stock continuation rendering, and deployed 50-item batch evidence must
+  still be watched before calling the full workflow complete.
 
 ### 4. Physical Print Validation
 

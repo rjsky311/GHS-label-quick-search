@@ -263,7 +263,9 @@ print flows, `Print all with GHS data`, multi-selected label modal behavior,
 batch preview, batch print planning, or multi-chemical QA. Batch printing must
 be purpose-first and fixed-stock: users choose one physical stock for the batch,
 then the app classifies each item as printable, reduced, continuation, or
-excluded without silently mixing paper/roll sizes.
+excluded without silently mixing paper/roll sizes. `qa:production-batch-print`
+is the deployed fixed-stock batch gate and is included in
+`qa:production-product`.
 
 Data governance and safety boundaries are pinned in
 `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`. Use it before changing source
@@ -352,16 +354,16 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 842 tests across 51 suites; 0 known React `act(...)` warnings
+- **Frontend**: 873 tests across 52 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Print contract**: `npm run test:print-contract` covers 233 focused print/planner/renderer assertions
+- **Print contract**: `npm run test:print-contract` covers 239 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 34 print cases, including custom tiny supplemental stock, prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, and sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs; it fails on compact visual-overlap regressions
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
-- **Batch print gap**: `qa:production-multi-chemical` is representative multi-chemical print coverage, not proof of a fixed-stock 50-item batch workflow. The planned batch gate is defined in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- **Batch print QA**: `qa:production-multi-chemical` remains representative multi-chemical print coverage, while `qa:production-batch-print` exercises the deployed fixed-stock batch modal flow, representative preview switching, ready-batch print handoff, and batch review screenshot/report.
 - **Production search UI QA**: `npm run qa:production-search-ui` uses deployed Chrome to search Hydrochloric Acid, inspect the result-row pictogram strip, trust note, source badge, separated data-correction/workflow support links, SDS link, expand alternate classifications, open the detail modal classification comparison/reference-link surfaces, verify the Urea no-GHS data-state boundary, and verify Detail/Prepare Solution modal keyboard containment. It saves full JSON evidence plus result, expanded-classification, detail-modal, mobile-result, mobile-detail, no-GHS-result, and no-GHS-detail screenshots, but prints a compact console summary for CI review. It fails on unreadable/missing pictogram strips, unsafe/untyped reference links, missing trust surfaces, no-GHS rows that can be selected/printed, support-link regressions, mobile horizontal overflow, broken modal Tab/Escape behavior, image-load failures, or vertical action-button regressions.
-- **Production print workflow**: GitHub Actions workflow `Production Print QA` defaults to `product` mode for the product-level closure gate, can also run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
+- **Production print workflow**: GitHub Actions workflow `Production Print QA` defaults to `product` mode for the product-level closure gate, can also run `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
 - **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary, bottle supplemental, and tube quick-ID outputs. The fixture uses run-relative prepared/expiry dates so the QA remains a fresh workflow check over time.
-- **Production product QA**: `npm run qa:production-product` is the product-level closure gate. It runs deployed print smoke, deployed prepared QA, and a required product-block summary so print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared workflows, and whole-product UX/support positioning are all represented in one pass/fail report.
+- **Production product QA**: `npm run qa:production-product` is the product-level closure gate. It runs deployed print smoke, deployed prepared QA, deployed fixed-stock batch QA, and a required product-block summary so print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared workflows, fixed-stock batch printing, and whole-product UX/support positioning are all represented in one pass/fail report.
 - **Physical print QA**: `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` covers real paper/stock, printer scaling, QR scan, and physical readability checks that automated Browser/PDF QA cannot fully prove. Run `npm run qa:physical-print-plan` after `qa:print-report` to generate `build/physical-print-validation-plan.md` and `.json` as the current real-printer work order.
 - **Data governance**: `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md` covers source roles, SDS/reference policy, QR target precedence, admin/manual data boundaries, telemetry limits, and conflict handling.
 - **Backend**: 149 tests covering name resolution, reverse dicts, aliases, API endpoints,

@@ -72,6 +72,7 @@
     "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
     "qa:production-handoff": "node scripts/check-production-print-handoff.mjs",
     "qa:production-search-ui": "node scripts/check-production-search-ui.mjs",
+    "qa:production-batch-print": "node scripts/check-production-batch-print.mjs",
     "qa:production-smoke": "node scripts/run-production-print-smoke.mjs",
     "qa:production-product": "node scripts/run-production-product-qa.mjs",
     "qa:production-primary": "node scripts/run-production-print-layer.mjs primary",

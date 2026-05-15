@@ -15,6 +15,9 @@ const env = {
   PRINT_QA_PREPARED_REPORT_PATH:
     process.env.PRINT_QA_PREPARED_REPORT_PATH ||
     "build/production-prepared-print-report.json",
+  BATCH_PRINT_QA_REPORT_PATH:
+    process.env.BATCH_PRINT_QA_REPORT_PATH ||
+    "build/production-batch-print-report.json",
   PRINT_QA_SUMMARY_REPORT_PATH:
     process.env.PRINT_QA_SUMMARY_REPORT_PATH ||
     "build/production-print-qa-summary.json",
@@ -42,6 +45,7 @@ const run = (args, extraEnv = {}) =>
 
 await run(["run", "qa:production-smoke"]);
 await run(["run", "qa:production-prepared"]);
+await run(["run", "qa:production-batch-print"]);
 await run(["run", "qa:production-summary"], {
   PRINT_QA_REQUIRE_PRODUCT_BLOCKS: "1",
 });

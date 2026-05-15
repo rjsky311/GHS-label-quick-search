@@ -51,8 +51,9 @@ Current mode:
 3. Fixed-stock batch label printing. The app must support the real workflow of
    choosing one physical stock for a batch, choosing Quick ID / Supplemental /
    Complete purpose, then reviewing per-item fit results before printing. Use
-   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`; do not treat the existing
-   `multi-chemical` QA layer as proof of a 50-item batch workflow.
+   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`; `qa:production-batch-print` is now the
+   deployed batch gate and `multi-chemical` remains only representative
+   coverage.
 4. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and

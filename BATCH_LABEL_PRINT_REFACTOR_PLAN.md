@@ -31,12 +31,25 @@ Status as of 2026-05-16:
   fixed-stock batch classification.
 - `frontend/src/utils/__tests__/printBatchPlanner.test.js` verifies Quick ID,
   Supplemental, and Complete batch planning against the 50-item fixture.
-- `LabelPrintModal` now shows a first batch fit report for multi-item
-  selections and sends only the default ready batch scope to print handoff.
+- Phase 3 has started: `LabelPrintModal` now shows a batch fit report for
+  multi-item selections, lets users switch representative previews
+  (`first`, `worst-fit`, `longest-name`, `most-pictograms`, `densest-text`,
+  and excluded when present), keeps the sheet preview aligned to the default
+  ready print scope, and exposes a review/excluded list with CSV export before
+  handoff.
+- Print handoff still sends only the default ready batch scope.
 - `npm run test:print-contract` now includes the batch planner test.
-- Full representative preview switching, explicit reduced/continuation
-  acknowledgement controls, production Browser QA, and deployed 50-item batch
-  evidence are still not complete.
+- Explicitly including reduced-purpose items or same-stock continuation items
+  in the same physical batch remains a renderer/preflight follow-up.
+- Phase 5 has started: `npm run qa:production-batch-print` opens the deployed
+  app, performs a fixed-stock batch search, opens the label-print modal,
+  verifies the batch fit report, switches the worst-fit representative preview,
+  checks the ready-batch print action, and writes
+  `build/production-batch-print-report.json` plus a modal screenshot.
+- `qa:production-batch-print` is now part of `qa:production-product` and the
+  production QA summary includes a `fixed-stock-batch-printing` block.
+  Deployed 50-item batch evidence must still be captured after this slice is
+  pushed and deployed.
 
 ## 1. Problem Statement
 

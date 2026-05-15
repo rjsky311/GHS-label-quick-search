@@ -149,6 +149,11 @@ const preparedPath = path.resolve(
   env.PRINT_QA_PREPARED_REPORT_PATH ||
     "build/production-prepared-print-report.json",
 );
+const batchPath = path.resolve(
+  process.cwd(),
+  env.BATCH_PRINT_QA_REPORT_PATH ||
+    "build/production-batch-print-report.json",
+);
 const handoffReportPaths = findReports(/^production-print-.*report\.json$/)
   .filter((filePath) => path.resolve(filePath) !== bundlePath)
   .filter((filePath) => !/production-print-qa-summary\.json$/.test(filePath));
@@ -175,6 +180,11 @@ const reports = {
     preparedPath,
     readJsonIfExists(preparedPath),
   ),
+  batch: summarizeGenericReport(
+    "fixed-stock-batch-print",
+    batchPath,
+    readJsonIfExists(batchPath),
+  ),
   handoff: handoffReportPaths.map((reportPath) =>
     summarizeGenericReport(
       path.basename(reportPath, ".json"),
@@ -190,6 +200,7 @@ const presentReports = [
   reports.printQa,
   reports.pdf,
   reports.prepared,
+  reports.batch,
   ...reports.handoff,
 ].filter((report) => report.present);
 
@@ -247,6 +258,14 @@ const buildProductBlocks = () => [
       "Production prepared QA covers prepared print, recent reprint, and saved preset reuse across primary, bottle, and tube outputs.",
   },
   {
+    id: "fixed-stock-batch-printing",
+    name: "Fixed-stock batch label printing",
+    reports: [reports.batch.name],
+    ok: isPassingReport(reports.batch),
+    evidence:
+      "Production batch print QA searches a mixed batch, opens the fixed-stock modal, verifies the batch fit report, switches representative preview, and checks ready-batch handoff.",
+  },
+  {
     id: "whole-product-ux-brand-utility",
     name: "Whole-product UX and brand-utility convergence",
     reports: [
@@ -254,14 +273,16 @@ const buildProductBlocks = () => [
       reports.bundle.name,
       ...reports.handoff.map((report) => report.name),
       reports.prepared.name,
+      reports.batch.name,
     ],
     ok:
       isPassingReport(reports.searchUi) &&
       isPassingReport(reports.bundle) &&
       handoffReportsPassing &&
-      isPassingReport(reports.prepared),
+      isPassingReport(reports.prepared) &&
+      isPassingReport(reports.batch),
     evidence:
-      "Core deployed walkthroughs keep search, detail, modal keyboard containment, trust/support, print, and prepared workflows in one production gate.",
+      "Core deployed walkthroughs keep search, detail, modal keyboard containment, trust/support, print, prepared, and batch workflows in one production gate.",
   },
 ];
 

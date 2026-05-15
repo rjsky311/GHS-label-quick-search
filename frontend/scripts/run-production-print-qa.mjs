@@ -13,6 +13,7 @@ const defaultSearchUiScreenshotDir = "build/production-search-ui-screenshots";
 const defaultHandoffReportPath = "build/production-print-handoff-report.json";
 const defaultScreenshotDir = "build/production-print-screenshots";
 const defaultSummaryReportPath = "build/production-print-qa-summary.json";
+const defaultBatchReportPath = "build/production-batch-print-report.json";
 
 const env = {
   ...process.env,
@@ -37,6 +38,8 @@ const env = {
     process.env.PRINT_QA_SCREENSHOT_DIR || defaultScreenshotDir,
   PRINT_QA_SUMMARY_REPORT_PATH:
     process.env.PRINT_QA_SUMMARY_REPORT_PATH || defaultSummaryReportPath,
+  BATCH_PRINT_QA_REPORT_PATH:
+    process.env.BATCH_PRINT_QA_REPORT_PATH || defaultBatchReportPath,
 };
 
 const run = (args, extraEnv = {}) =>
@@ -64,6 +67,7 @@ await run(["run", "qa:production-search-ui"]);
 await run(["run", "qa:print-report"]);
 await run(["run", "qa:print-pdf"]);
 await run(["run", "qa:production-handoff"]);
+await run(["run", "qa:production-batch-print"]);
 await run(["run", "qa:production-summary"]);
 
 const reportPath = path.resolve(process.cwd(), env.PRINT_QA_REPORT_PATH);
@@ -94,6 +98,10 @@ const summaryReportPath = path.resolve(
   process.cwd(),
   env.PRINT_QA_SUMMARY_REPORT_PATH,
 );
+const batchReportPath = path.resolve(
+  process.cwd(),
+  env.BATCH_PRINT_QA_REPORT_PATH,
+);
 
 console.log(
   JSON.stringify(
@@ -109,6 +117,7 @@ console.log(
       screenshotDir,
       searchUiScreenshotDir,
       summaryReportPath,
+      batchReportPath,
     },
     null,
     2,

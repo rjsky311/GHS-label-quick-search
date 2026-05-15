@@ -362,6 +362,73 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("lets batch users inspect representative and review-list items before printing", () => {
+    const readyChem = makeChem({
+      cas_number: "64-17-5",
+      name_en: "Ethanol",
+      hazard_statements: [{ code: "H225", text_en: "Highly flammable." }],
+      precautionary_statements: [],
+    });
+    const denseChem = makeChem({
+      cas_number: "7647-01-0",
+      name_en: "Hydrochloric Acid",
+      ghs_pictograms: [
+        { code: "GHS04" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS07" },
+      ],
+      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Dense hazard statement ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Dense precaution statement ${index}`,
+      })),
+    });
+
+    renderModal({
+      selectedForLabel: [readyChem, denseChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "large-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    expect(screen.getByTestId("batch-preview-selector")).toBeInTheDocument();
+    expect(screen.getByTestId("batch-review-list")).toHaveTextContent(
+      "Items needing review or exclusion",
+    );
+
+    fireEvent.click(screen.getByTestId("batch-preview-rep-worstFit"));
+
+    expect(screen.getByTestId("batch-active-preview-summary")).toHaveTextContent(
+      "Hydrochloric Acid",
+    );
+    expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
+      "Previewing a batch representative",
+    );
+    expect(screen.getByTestId("preview-context-role")).toHaveTextContent(
+      "Supplemental",
+    );
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).toContain("Hydrochloric Acid");
+
+    fireEvent.click(screen.getByTestId("batch-review-preview-1"));
+    expect(screen.getByTestId("batch-active-preview-summary")).toHaveTextContent(
+      "Needs reduced output",
+    );
+  });
+
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 

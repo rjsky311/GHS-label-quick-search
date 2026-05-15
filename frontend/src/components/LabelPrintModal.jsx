@@ -44,6 +44,7 @@ import {
 import {
   BATCH_PRINT_ITEM_CATEGORY,
   BATCH_PRINT_PURPOSE,
+  BATCH_PRINT_REPRESENTATIVE,
   buildBatchPrintPlan,
 } from "@/utils/printBatchPlanner";
 import {
@@ -214,6 +215,119 @@ const READINESS_TONE_CLASSES = {
   neutral: "border-slate-200 bg-white text-slate-700",
   caution: "border-amber-200 bg-amber-50 text-amber-900",
   danger: "border-red-200 bg-red-50 text-red-900",
+};
+
+const BATCH_CATEGORY_TONE = {
+  [BATCH_PRINT_ITEM_CATEGORY.READY]: "ready",
+  [BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT]: "ready",
+  [BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE]: "caution",
+  [BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION]: "caution",
+  [BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_DATA]: "danger",
+  [BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT]: "danger",
+};
+
+const getBatchCategoryLabel = (category, tx) => {
+  switch (category) {
+    case BATCH_PRINT_ITEM_CATEGORY.READY:
+      return tx("label.batchCategoryReady", "Ready");
+    case BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT:
+      return tx("label.batchCategoryReadyTight", "Ready, tightened");
+    case BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE:
+      return tx("label.batchCategoryReducedPurpose", "Needs reduced output");
+    case BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION:
+      return tx("label.batchCategoryContinuation", "Needs continuation");
+    case BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_DATA:
+      return tx("label.batchCategoryExcludedData", "Excluded: data");
+    case BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT:
+      return tx("label.batchCategoryExcludedFit", "Excluded: fit");
+    default:
+      return category || "";
+  }
+};
+
+const getBatchPurposeLabel = (purpose, tx) => {
+  switch (purpose) {
+    case BATCH_PRINT_PURPOSE.QUICK_ID:
+      return tx("label.batchPurposeQuickId", "Quick ID");
+    case BATCH_PRINT_PURPOSE.SUPPLEMENTAL:
+      return tx("label.batchPurposeSupplemental", "Supplemental");
+    case BATCH_PRINT_PURPOSE.COMPLETE:
+      return tx("label.batchPurposeComplete", "Complete");
+    default:
+      return purpose || "";
+  }
+};
+
+const getBatchReasonLabel = (reason, tx) => {
+  switch (reason?.type) {
+    case "upstream-error":
+      return tx("label.batchReasonUpstream", "Source temporarily unavailable");
+    case "missing-hazard-data":
+      return tx("label.batchReasonMissingHazards", "No printable GHS hazard data");
+    case "text-only-ghs-needs-hazard-text":
+      return tx(
+        "label.batchReasonTextOnlyQuickId",
+        "GHS text exists but no pictogram is available for Quick ID",
+      );
+    case "responsible-profile-missing":
+      return tx("label.batchReasonProfile", "Responsible profile is incomplete");
+    case "complete-content-needs-continuation":
+      return tx("label.batchReasonContinuation", "Full H/P text needs continuation");
+    case "complete-content-too-dense-for-stock":
+      return tx(
+        "label.batchReasonCompleteTooDense",
+        "Complete content is too dense for this stock",
+      );
+    case "supplemental-content-too-dense-for-stock":
+      return tx(
+        "label.batchReasonSupplementalTooDense",
+        "Supplemental content is too dense for this stock",
+      );
+    default:
+      return tx("label.batchReasonFit", "Needs review before printing");
+  }
+};
+
+const getBatchRepresentativeLabel = (representative, tx) => {
+  switch (representative) {
+    case BATCH_PRINT_REPRESENTATIVE.FIRST:
+      return tx("label.batchRepFirst", "First");
+    case BATCH_PRINT_REPRESENTATIVE.WORST_FIT:
+      return tx("label.batchRepWorstFit", "Worst fit");
+    case BATCH_PRINT_REPRESENTATIVE.LONGEST_NAME:
+      return tx("label.batchRepLongestName", "Longest name");
+    case BATCH_PRINT_REPRESENTATIVE.MOST_PICTOGRAMS:
+      return tx("label.batchRepMostPictograms", "Most pictograms");
+    case BATCH_PRINT_REPRESENTATIVE.DENSEST_TEXT:
+      return tx("label.batchRepDensestText", "Densest text");
+    case BATCH_PRINT_REPRESENTATIVE.EXCLUDED:
+      return tx("label.batchRepExcluded", "Excluded");
+    default:
+      return representative || "";
+  }
+};
+
+const buildBatchReviewCsv = (items, tx) => {
+  const rows = [
+    ["index", "cas", "identity", "category", "preferredPurpose", "effectivePurpose", "reason"],
+    ...items.map((item) => [
+      item.index + 1,
+      item.cas || "",
+      item.identity || "",
+      getBatchCategoryLabel(item.category, tx),
+      getBatchPurposeLabel(item.preferredPurpose, tx),
+      getBatchPurposeLabel(item.effectivePurpose, tx),
+      getBatchReasonLabel(item.reason, tx),
+    ]),
+  ];
+
+  return rows
+    .map((row) =>
+      row
+        .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+        .join(","),
+    )
+    .join("\n");
 };
 
 const getPreviewFrameHeight = (metrics, fallbackHeight) => {
@@ -691,6 +805,10 @@ export default function LabelPrintModal({
   const [templateName, setTemplateName] = useState("");
   const [previewZoomMode, setPreviewZoomMode] = useState("fit");
   const [previewPageIndex, setPreviewPageIndex] = useState(0);
+  const [batchPreviewRepresentative, setBatchPreviewRepresentative] = useState(
+    BATCH_PRINT_REPRESENTATIVE.FIRST,
+  );
+  const [batchPreviewItemIndex, setBatchPreviewItemIndex] = useState(null);
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
@@ -709,7 +827,7 @@ export default function LabelPrintModal({
         selectedPrintTargetOption.fallbackLabel,
       )
     : tx("label.targetMainContainer", "Main container");
-  const previewChem = selectedForLabel[0] ?? null;
+  const firstSelectedChem = selectedForLabel[0] ?? null;
   const currentLocale = i18n.language;
   const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
     layoutProfile,
@@ -733,11 +851,6 @@ export default function LabelPrintModal({
     .join("|");
   const estimatedPages =
     totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
-  const displayNames = buildDisplayNames(
-    previewChem,
-    effectiveNameDisplay,
-    currentLocale,
-  );
   const resolvedResponsibleProfile = resolveResponsibleProfile(
     customLabelFields,
     labProfile,
@@ -745,20 +858,6 @@ export default function LabelPrintModal({
   const stockPresetDisplay = getLabelStockPresetDisplay(
     layoutProfile.stockPreset,
     t,
-  );
-  const previewRisks = buildPreviewRisks({
-    previewChem,
-    labelConfig,
-    layoutProfile,
-    labProfile: resolvedResponsibleProfile,
-    displayNames,
-    tx,
-  });
-  const densityLabel = getDensityLabel(
-    labelConfig,
-    layoutProfile,
-    previewChem,
-    tx,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
   const readyPreviewMessage = tx(
@@ -887,6 +986,68 @@ export default function LabelPrintModal({
                   "This item does not have enough GHS hazard content to produce a hazard label.",
                 )
             : "";
+  const batchRepresentativeOptions = Object.values(
+    BATCH_PRINT_REPRESENTATIVE,
+  ).filter((representative) => batchPrintPlan.representatives[representative]);
+  const activeBatchPreviewItem = hasBatchPrintPlan
+    ? batchPrintPlan.items.find((item) => item.index === batchPreviewItemIndex) ||
+      batchPrintPlan.items.find(
+        (item) =>
+          item.index ===
+          batchPrintPlan.representatives[batchPreviewRepresentative]?.index,
+      ) ||
+      batchPrintPlan.items.find(
+        (item) =>
+          item.index === batchPrintPlan.representatives.first?.index,
+      ) ||
+      null
+    : null;
+  const previewChem = activeBatchPreviewItem?.chemical || firstSelectedChem;
+  const previewSourceItems = activeBatchPreviewItem
+    ? [activeBatchPreviewItem.chemical]
+    : selectedForLabel;
+  const previewLabelConfig = activeBatchPreviewItem?.alternateAttempt?.layout
+    ? {
+        ...labelConfig,
+        ...activeBatchPreviewItem.alternateAttempt.layout,
+      }
+    : labelConfig;
+  const previewLabelQuantities = activeBatchPreviewItem
+    ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
+    : labelQuantities;
+  const sheetPreviewItems = canPrintBatchDefaultScope
+    ? batchDefaultPrintItems
+    : selectedForLabel;
+  const sheetPreviewQuantities = canPrintBatchDefaultScope
+    ? batchDefaultPrintItems.reduce((acc, chem) => {
+        acc[chem.cas_number] = labelQuantities?.[chem.cas_number] || 1;
+        return acc;
+      }, {})
+    : labelQuantities;
+  const batchItemsNeedingReview = hasBatchPrintPlan
+    ? batchPrintPlan.items.filter(
+        (item) => item.requiresAcknowledgement || item.excluded,
+      )
+    : [];
+  const displayNames = buildDisplayNames(
+    previewChem,
+    effectiveNameDisplay,
+    currentLocale,
+  );
+  const previewRisks = buildPreviewRisks({
+    previewChem,
+    labelConfig: previewLabelConfig,
+    layoutProfile: resolveLayoutProfile(previewLabelConfig),
+    labProfile: resolvedResponsibleProfile,
+    displayNames,
+    tx,
+  });
+  const densityLabel = getDensityLabel(
+    previewLabelConfig,
+    resolveLayoutProfile(previewLabelConfig),
+    previewChem,
+    tx,
+  );
   const visiblePreviewRisks =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
     plannerPreviewRisk
@@ -973,6 +1134,12 @@ export default function LabelPrintModal({
                   PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
                 ? tx("label.decisionRoleBlockedProfile", "Profile required")
                 : tx("label.decisionRolePending", "Select content");
+  const previewContextOutputSummary = activeBatchPreviewItem
+    ? `${getBatchPurposeLabel(
+        activeBatchPreviewItem.effectivePurpose,
+        tx,
+      )} · ${getBatchCategoryLabel(activeBatchPreviewItem.category, tx)}`
+    : outputRoleSummary;
   const pictogramSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
       ? tx("label.decisionIconsNeedData", "Need verified hazard data")
@@ -1457,20 +1624,20 @@ export default function LabelPrintModal({
   const sheetPreviewBundle = useMemo(
     () =>
       buildPrintPreviewDocument(
-        selectedForLabel,
+        sheetPreviewItems,
         labelConfig,
         customGHSSettings,
         customLabelFields,
-        labelQuantities,
+        sheetPreviewQuantities,
         labProfile,
         { mode: "sheet", pageIndex: previewPageIndex },
       ),
     [
-      selectedForLabel,
+      sheetPreviewItems,
       labelConfig,
       customGHSSettings,
       customLabelFields,
-      labelQuantities,
+      sheetPreviewQuantities,
       labProfile,
       previewPageIndex,
     ],
@@ -1493,11 +1660,11 @@ export default function LabelPrintModal({
     if (selectedForLabel.length === 0) return null;
 
     return buildPrintPreviewDocument(
-      selectedForLabel,
-      labelConfig,
+      previewSourceItems,
+      previewLabelConfig,
       customGHSSettings,
       customLabelFields,
-      labelQuantities,
+      previewLabelQuantities,
       labProfile,
       {
         mode: "label",
@@ -1506,11 +1673,11 @@ export default function LabelPrintModal({
       },
     );
   }, [
-    selectedForLabel,
-    labelConfig,
+    previewSourceItems,
+    previewLabelConfig,
     customGHSSettings,
     customLabelFields,
-    labelQuantities,
+    previewLabelQuantities,
     labProfile,
     previewZoomMode,
     activePreviewLabelIndex,
@@ -1520,6 +1687,8 @@ export default function LabelPrintModal({
     setPreviewZoomMode("fit");
     setPreviewPageIndex(0);
   }, [
+    batchPreviewRepresentative,
+    batchPreviewItemIndex,
     labelConfig.colorMode,
     labelConfig.labelHeightMm,
     labelConfig.labelPurpose,
@@ -1527,6 +1696,18 @@ export default function LabelPrintModal({
     labelConfig.nameDisplay,
     labelConfig.orientation,
     labelConfig.size,
+    labelConfig.stockPreset,
+    labelConfig.template,
+    previewSelectionKey,
+  ]);
+
+  useEffect(() => {
+    setBatchPreviewRepresentative(BATCH_PRINT_REPRESENTATIVE.FIRST);
+    setBatchPreviewItemIndex(null);
+  }, [
+    labelConfig.labelPurpose,
+    labelConfig.labelHeightMm,
+    labelConfig.labelWidthMm,
     labelConfig.stockPreset,
     labelConfig.template,
     previewSelectionKey,
@@ -1632,6 +1813,22 @@ export default function LabelPrintModal({
       labelConfig,
       canPrintBatchDefaultScope ? batchDefaultPrintItems : undefined,
     );
+  };
+
+  const handleExportBatchReviewList = () => {
+    const reviewItems = batchItemsNeedingReview.length
+      ? batchItemsNeedingReview
+      : batchPrintPlan.items;
+    const csv = buildBatchReviewCsv(reviewItems, tx);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ghs-batch-print-review.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleFocusResponsibleProfile = () => {
@@ -2504,6 +2701,133 @@ export default function LabelPrintModal({
             {tx("label.batchWorstFit", "Highest pressure")}:{" "}
             {batchPrintPlan.representatives.worstFit.identity}
           </p>
+        )}
+        {batchRepresentativeOptions.length > 0 && (
+          <div
+            className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-2"
+            data-testid="batch-preview-selector"
+          >
+            <div className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+              {tx("label.batchPreviewSelectorTitle", "Representative preview")}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {batchRepresentativeOptions.map((representative) => {
+                const rep = batchPrintPlan.representatives[representative];
+                const isActive =
+                  batchPreviewItemIndex === null &&
+                  batchPreviewRepresentative === representative;
+                return (
+                  <button
+                    key={representative}
+                    type="button"
+                    onClick={() => {
+                      setBatchPreviewRepresentative(representative);
+                      setBatchPreviewItemIndex(null);
+                    }}
+                    className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      isActive
+                        ? "border-blue-300 bg-blue-50 text-blue-800"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700"
+                    }`}
+                    data-testid={`batch-preview-rep-${representative}`}
+                  >
+                    {getBatchRepresentativeLabel(representative, tx)}
+                    {rep?.identity ? (
+                      <span className="ml-1 text-slate-400">
+                        #{rep.index + 1}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            {activeBatchPreviewItem && (
+              <div
+                className={`mt-2 rounded-md border px-3 py-2 text-xs ${
+                  READINESS_TONE_CLASSES[
+                    BATCH_CATEGORY_TONE[activeBatchPreviewItem.category] ||
+                      "neutral"
+                  ]
+                }`}
+                data-testid="batch-active-preview-summary"
+              >
+                <div className="font-semibold">
+                  {activeBatchPreviewItem.identity ||
+                    activeBatchPreviewItem.cas ||
+                    tx("label.batchUnnamedItem", "Selected item")}
+                </div>
+                <div className="mt-1 leading-5">
+                  {getBatchCategoryLabel(activeBatchPreviewItem.category, tx)}
+                  {activeBatchPreviewItem.reason
+                    ? ` · ${getBatchReasonLabel(activeBatchPreviewItem.reason, tx)}`
+                    : ""}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {batchItemsNeedingReview.length > 0 && (
+          <details
+            className="mt-3 rounded-md border border-slate-200 bg-white p-2"
+            data-testid="batch-review-list"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-700">
+              <span>
+                {tx(
+                  "label.batchReviewListTitle",
+                  "Items needing review or exclusion",
+                )}
+              </span>
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                {batchItemsNeedingReview.length}
+              </span>
+            </summary>
+            <div className="mt-3 flex flex-col gap-2">
+              {batchItemsNeedingReview.slice(0, 12).map((item) => (
+                <div
+                  key={`${item.index}-${item.cas}`}
+                  className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs sm:grid-cols-[minmax(0,1fr)_auto]"
+                  data-testid={`batch-review-item-${item.index}`}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold text-slate-800">
+                      #{item.index + 1} {item.identity || item.cas}
+                    </div>
+                    <div className="mt-1 leading-5 text-slate-600">
+                      {getBatchCategoryLabel(item.category, tx)} ·{" "}
+                      {getBatchReasonLabel(item.reason, tx)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBatchPreviewItemIndex(item.index)}
+                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700"
+                    data-testid={`batch-review-preview-${item.index}`}
+                  >
+                    {tx("label.batchPreviewItemAction", "Preview")}
+                  </button>
+                </div>
+              ))}
+              {batchItemsNeedingReview.length > 12 && (
+                <div className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  {tx(
+                    "label.batchReviewListMore",
+                    "{{count}} more item(s) in the exported review list",
+                    { count: batchItemsNeedingReview.length - 12 },
+                  )}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleExportBatchReviewList}
+                className="inline-flex w-fit items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700"
+                data-testid="batch-export-review-list"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                {tx("label.batchExportReviewList", "Export review list")}
+              </button>
+            </div>
+          </details>
         )}
       </div>
     );
@@ -3500,18 +3824,28 @@ export default function LabelPrintModal({
                         {tx("label.previewTitle", "Live preview")}
                       </div>
                       <h3 className="mt-1 text-base font-semibold text-slate-950">
-                        {previewChem
+                        {activeBatchPreviewItem
                           ? tx(
-                              "label.previewFocusFilled",
-                              "Previewing the first selected label",
+                              "label.previewFocusBatchRepresentative",
+                              "Previewing a batch representative",
                             )
+                          : previewChem
+                            ? tx(
+                                "label.previewFocusFilled",
+                                "Previewing the first selected label",
+                              )
                           : tx(
                               "label.previewFocusEmptyTitle",
                               "No chemical selected yet",
                             )}
                       </h3>
                       <p className="mt-1 text-xs text-slate-600">
-                        {previewChem
+                        {activeBatchPreviewItem
+                          ? tx(
+                              "label.previewFocusBatchBody",
+                              "The preview follows the selected representative item, while the sheet view shows the default printable batch scope.",
+                            )
+                          : previewChem
                           ? tx(
                               "label.previewFocusBody",
                               "This is the label fragment that will be printed.",
@@ -3538,7 +3872,7 @@ export default function LabelPrintModal({
                       {
                         key: "role",
                         label: tx("label.previewContextOutput", "Output"),
-                        value: outputRoleSummary,
+                        value: previewContextOutputSummary,
                       },
                       {
                         key: "icons",
