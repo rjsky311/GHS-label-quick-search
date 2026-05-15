@@ -697,6 +697,113 @@ const inspectMobileDetailReadFirstResult = async (page) =>
     };
   });
 
+const summarizePictogramMetrics = (metrics) => {
+  const tiles = metrics?.tiles || [];
+  const minFrames = tiles.map((tile) =>
+    Math.min(tile.frameWidth || 0, tile.frameHeight || 0),
+  );
+  const maxFrames = tiles.map((tile) =>
+    Math.max(tile.frameWidth || 0, tile.frameHeight || 0),
+  );
+  return {
+    count: metrics?.count || 0,
+    codes: tiles.map((tile) => tile.code).filter(Boolean),
+    framePxRange: {
+      min: minFrames.length > 0 ? Math.min(...minFrames) : 0,
+      max: maxFrames.length > 0 ? Math.max(...maxFrames) : 0,
+    },
+  };
+};
+
+const summarizeFocusWrap = (surface) => ({
+  focusableCount: surface?.count || 0,
+  forwardWrapOk: Boolean(surface?.forwardWrapOk),
+  backwardWrapOk: Boolean(surface?.backwardWrapOk),
+});
+
+const summarizeSearchUiReportForConsole = (report) => {
+  const metrics = report.metrics || {};
+  const mobileReadFirst = metrics.mobileReadFirst || {};
+  const mobileDetailReadFirst = metrics.mobileDetailReadFirst || {};
+  const prepareStacking = metrics.prepareStackingSurface || {};
+  return {
+    ok: report.ok,
+    productionUrl: report.productionUrl,
+    searchTerm: report.searchTerm,
+    reportPath: outputPath,
+    screenshots: {
+      search: report.screenshotPath,
+      expandedClassifications: report.expandedScreenshotPath,
+      detail: report.detailScreenshotPath,
+      mobileSearch: report.mobileScreenshotPath,
+      mobileDetail: report.mobileDetailScreenshotPath,
+    },
+    failures: report.failures,
+    searchAttempts: report.searchAttempts,
+    mobileSearchAttempts: report.mobileSearchAttempts,
+    checks: {
+      resultActions: {
+        detailButton: metrics.detailButton,
+        sdsButton: metrics.sdsButton,
+        verticalTextRisks: metrics.verticalRisks?.length || 0,
+      },
+      pictograms: {
+        result: summarizePictogramMetrics(metrics.resultPictogramMetrics),
+        expandedClassificationCount:
+          metrics.expandedClassificationCount || 0,
+        detailComparisonColumns: metrics.detailComparisonColumnCount || 0,
+        mobileDetailComparisonCards:
+          metrics.mobileDetailComparisonCardCount || 0,
+      },
+      trust: {
+        resultAuthoritativeNotes:
+          metrics.resultsTrustSurface?.authoritativeNoteCount || 0,
+        detailReferenceLinks:
+          metrics.detailTrustSurface?.references?.length || 0,
+        detailReferenceRoles: [
+          ...new Set(
+            (metrics.detailTrustSurface?.references || [])
+              .map((reference) => reference.linkType)
+              .filter(Boolean),
+          ),
+        ],
+      },
+      keyboard: {
+        detailModal: summarizeFocusWrap(metrics.detailKeyboardSurface),
+        prepareSolutionModal: summarizeFocusWrap(
+          prepareStacking.prepareFocusWrap,
+        ),
+        detailSuppressedWhilePrepareStacked: Boolean(
+          prepareStacking.detailSuppressedOk,
+        ),
+        escapeRestoresDetailModal: Boolean(
+          prepareStacking.escapeRestoresDetailOk,
+        ),
+      },
+      mobileReadFirst: {
+        resultHorizontalOverflow:
+          mobileReadFirst.documentScrollWidth >
+            mobileReadFirst.viewportWidth + 2 ||
+          mobileReadFirst.bodyScrollWidth > mobileReadFirst.viewportWidth + 2,
+        detailHorizontalOverflow:
+          mobileDetailReadFirst.documentScrollWidth >
+            mobileDetailReadFirst.viewportWidth + 2 ||
+          mobileDetailReadFirst.bodyScrollWidth >
+            mobileDetailReadFirst.viewportWidth + 2,
+        detailComparisonLayout: mobileDetailReadFirst.comparisonLayout || "",
+      },
+      images: {
+        waitedContexts: metrics.imageWaits?.length || 0,
+        failedImages:
+          metrics.imageWaits?.reduce(
+            (total, imageWait) => total + (imageWait.failed?.length || 0),
+            0,
+          ) || 0,
+      },
+    },
+  };
+};
+
 const failures = [];
 let browser;
 
@@ -1189,7 +1296,9 @@ try {
   };
 
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
-  console.log(JSON.stringify(report, null, 2));
+  console.log(
+    JSON.stringify(summarizeSearchUiReportForConsole(report), null, 2),
+  );
 
   if (failures.length > 0) {
     process.exitCode = 1;
