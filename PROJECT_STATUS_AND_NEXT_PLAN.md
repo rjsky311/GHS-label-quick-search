@@ -71,6 +71,24 @@ Current validation gates:
 - Backend: `python -m py_compile server.py` and
   `python -m pytest test_name_search.py -v`
 
+Current completion snapshot:
+
+- **Stable automated baseline**: CI, production product QA, production search
+  UI QA, production print handoff, prepared production QA, print contract/PDF
+  QA, reference-link safety checks, and modal keyboard containment are all
+  represented by repeatable gates.
+- **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
+  `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
+  the continuation order and done criteria.
+- **Intentionally deferred**: real-printer validation remains deferred until
+  physical paper/stock/printer access is available. Automated Browser/PDF
+  checks are strong preconditions, not proof of real printer behavior.
+- **Still active / recurring**: source-conflict governance, upstream outage
+  states, QR real-world reliability, compact multilingual labels, long
+  chemical names, case/custom identity fields, admin/telemetry limits, and
+  low-noise UX should continue to receive new regression cases when evidence
+  appears.
+
 ## 3. Next Priority Order
 
 Use this order unless a fresh production screenshot, failing CI/QA run, security
@@ -149,9 +167,9 @@ Goal: browser/PDF QA should be complemented by real-world print evidence.
 
 Do next:
 
-- Define a manual physical-print checklist for A4, Letter, common bottle
-  labels, tube/vial labels, rack labels, 62 mm continuous stock, QR supplement,
-  and prepared-solution outputs.
+- Keep the manual physical-print checklist current for A4, Letter, common
+  bottle labels, tube/vial labels, rack labels, 62 mm continuous stock, QR
+  supplement, and prepared-solution outputs.
 - Check browser print scaling, printer margins, orientation, paper/label stock,
   thermal/label-printer legibility, QR scan success, and pictogram readability.
 - Record when the expected outcome is a complete primary label versus a

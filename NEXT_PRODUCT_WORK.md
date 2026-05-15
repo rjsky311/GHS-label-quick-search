@@ -29,6 +29,17 @@ The product should be:
 Unless a fresh bug report, production screenshot, CI failure, security finding,
 or user request points elsewhere, continue in this order:
 
+Current mode:
+
+- CI / production QA and documentation consolidation are in **maintenance**
+  state: keep them healthy, but do not treat them as unfinished product work
+  unless a gate fails or a workflow assumption changes.
+- Physical print validation is **deferred** until real paper, stock, printer,
+  and QR-scan evidence can be collected.
+- While physical printing is deferred, the default active continuation target
+  is data governance / safety boundaries, followed by low-noise UX and
+  narrow/mobile polish.
+
 1. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.

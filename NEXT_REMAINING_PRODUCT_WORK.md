@@ -31,6 +31,26 @@ Future work should build on that baseline instead of reopening the same
 questions unless a new production screenshot, QA failure, or code-review
 finding proves the baseline is insufficient.
 
+## Current Open / Stable Snapshot
+
+Use this section to avoid mistaking an ongoing backlog for an unfinished
+implementation checklist.
+
+- **Stable with gates**: print renderer/stock fit, result pictogram unity,
+  trust/source/SDS boundaries, prepared-solution reprint flows, and
+  whole-product UX/support positioning are all represented in
+  `npm run qa:production-product`.
+- **Deferred by decision**: real-printer paper/stock validation is not complete
+  because physical evidence is intentionally postponed; keep generated work
+  orders current and convert future physical findings into automated checks.
+- **Still worth extending**: compact multilingual pressure, long names,
+  case/custom identity fields, QR scan evidence, admin/telemetry limits,
+  source-conflict handling, and first-time user guidance should receive new
+  tests or QA cases when a new example appears.
+- **Do not reopen by default**: the v1.10 print workflow baseline and completed
+  five workstreams are historical context unless new evidence proves a
+  regression.
+
 ## 1. Print Renderer And Stock Fit Robustness
 
 Why this matters: the print modal can now guide the user, but the physical label
