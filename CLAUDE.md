@@ -13,6 +13,8 @@ Read these files in order before choosing or continuing work:
    verification, push/deploy, and production QA rules.
 4. `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` - active non-physical-print
    product tracker while real-printer validation is deferred.
+5. `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` - fixed-stock, purpose-first batch
+   label printing contract when the selected work touches batch print flows.
 
 Maintenance rule:
 

@@ -2,7 +2,11 @@
 
 This document defines the target behavior for printed labels. It is a product and test contract, not legal advice. Final use still requires SDS, supplier label, and local regulation review.
 
-The detailed implementation plan for the next workflow refactor lives in `PRINT_OUTPUT_REFACTOR_PLAN.md`. Keep this contract authoritative for safety boundaries, and use the refactor plan for planner, stock, typography, preview, and UI sequencing decisions.
+The detailed implementation plan for the v1.10 print workflow baseline lives in
+`PRINT_OUTPUT_REFACTOR_PLAN.md`. The next batch-print refactor lives in
+`BATCH_LABEL_PRINT_REFACTOR_PLAN.md`. Keep this contract authoritative for
+safety boundaries, and use those plans for planner, stock, typography, preview,
+batch, and UI sequencing decisions.
 
 ## North Star
 
@@ -29,6 +33,12 @@ The best path is a complete primary label that a lab user can print without gues
   then retry fixable overflow with smaller typography before blocking print.
 - A4 and Letter are complete primary outputs, not the only valid physical label sizes. Container label stocks may be selected first; the app must scale text and pictograms for that stock, then recommend A4/Letter only when the selected stock cannot truthfully carry the complete primary label.
 - When a user manually selects a bottle/container stock that cannot carry the complete primary label, the app must keep that selected physical size and produce a clearly marked supplemental label rather than silently changing the user's stock choice.
+- Batch printing must keep the user-selected physical stock fixed for the
+  batch. The app may recommend A4/Letter or another stock as a recovery path,
+  but it must not silently split one batch across mixed stocks.
+- Batch printing must be purpose-first. Quick-ID and supplemental batches do
+  not fail merely because full H/P text cannot fit; complete-primary batches
+  must never silently omit required content.
 - 140 x 88 mm and similar large container-front labels are not mini A4 labels.
   They must keep identity, CAS, case/batch number, signal word, and every
   available GHS pictogram visible, then print a prioritized H-statement summary
@@ -84,6 +94,10 @@ Automated tests should pin these behaviors:
   print CSS or renderer behavior depends on stock families. A deployed bundle
   that lacks current small-rack or medium-rack markers is stale even if the app
   loads successfully.
+- Batch-print QA must include a true fixed-stock mixed batch, not only separate
+  representative `multi-chemical` cases. The gate must verify per-item fit
+  categories, excluded reasons, representative previews, and fixed-stock print
+  output.
 
 ## Browser QA Scenarios
 
@@ -106,3 +120,7 @@ Run these in Browser Use after meaningful print-workflow changes:
   completeness.
 - Black-and-white mode: pictograms and QR are grayscale in preview.
 - English / Chinese / bilingual name modes: preview text changes while icon positions remain stable.
+- Fixed-stock batch: a mixed batch keeps one selected stock, shows included /
+  reduced / continuation / excluded counts, previews worst-fit representatives,
+  and does not force truthful Quick-ID or Supplemental output into A4-only
+  recovery.

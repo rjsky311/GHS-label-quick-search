@@ -37,28 +37,35 @@ Current mode:
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, the default active continuation target
-  is data governance / safety boundaries, followed by low-noise UX and
-  narrow/mobile polish. Track that future work in
-  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
+  is fixed-stock batch label printing, followed by data governance / safety
+  boundaries, low-noise UX, and narrow/mobile polish. Track non-physical-print
+  work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; use
+  `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the batch-print implementation
+  contract.
 
 1. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
 2. Keep documentation consolidation and autonomous continuation hygiene healthy.
    `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
-3. Physical print validation for real paper, label stock, printer scaling, QR
+3. Fixed-stock batch label printing. The app must support the real workflow of
+   choosing one physical stock for a batch, choosing Quick ID / Supplemental /
+   Complete purpose, then reviewing per-item fit results before printing. Use
+   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`; do not treat the existing
+   `multi-chemical` QA layer as proof of a 50-item batch workflow.
+4. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
    `npm run qa:physical-print-plan` generates the current physical-print work
    order from `build/print-qa-report.json`. Real-printer execution is deferred
    until physical stock and printer access are available.
-4. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
+5. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
    `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Keep source/QR/admin changes
    aligned with that policy and add tests when behavior changes.
-5. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
+6. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate
    also checks Detail/Prepare Solution modal keyboard containment. Keep
@@ -66,7 +73,7 @@ Current mode:
 
 ## Current Detailed Backlog
 
-The detailed five-block execution backlog lives in
+The detailed execution backlog lives in
 `NEXT_REMAINING_PRODUCT_WORK.md`:
 
 1. Print renderer and stock fit robustness.
@@ -74,6 +81,8 @@ The detailed five-block execution backlog lives in
 3. Trust, source, SDS, and safety boundaries.
 4. Prepared solution and reprint workflow maturity.
 5. Whole-product UX and brand-utility convergence.
+6. Fixed-stock batch label printing, tracked in
+   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 
 Treat the older `NEXT_PRINT_WORKSTREAMS.md` and
 `PRINT_OUTPUT_REFACTOR_PLAN.md` as v1.10 baseline context unless a new failure

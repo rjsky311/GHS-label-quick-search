@@ -45,9 +45,11 @@ implementation checklist.
   orders current and convert future physical findings into automated checks.
 - **Still worth extending**: compact multilingual pressure, long names,
   case/custom identity fields, QR scan evidence, admin/telemetry limits,
-  source-conflict handling, and first-time user guidance should receive new
-  tests or QA cases when a new example appears. The non-physical-print tracker
-  for those next steps is `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
+  source-conflict handling, fixed-stock batch label printing, and first-time
+  user guidance should receive new tests or QA cases when a new example
+  appears. The non-physical-print tracker for those next steps is
+  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; the batch-print contract is
+  `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
@@ -389,7 +391,7 @@ Current status:
   Mobile users can see identity, GHS pictograms, signal word, detail, and SDS
   actions without dragging a 1120px-wide table.
 - A new product-level production QA entry point (`npm run qa:production-product`)
-  stitches together the five blocks: deployed search/detail/trust checks,
+  stitches together the current product blocks: deployed search/detail/trust checks,
   deployed print smoke handoff, and deployed prepared-solution workflows. The
   generated summary exposes one pass/fail line per block so future autonomous
   rounds can see which area is actually not done.
@@ -414,16 +416,59 @@ Suggested verification:
 - `build/production-search-ui-screenshots/search-results-mobile-read-first.png`
   after running production search UI QA
 
+## 6. Fixed-Stock Batch Label Printing
+
+Why this matters: batch printing is not just "many single-label prints." Lab
+users often load one label roll or sheet and need a whole set of chemicals to
+print consistently on that stock. The existing `multi-chemical` QA layer checks
+representative chemical variety, but it does not prove that a 30-100 item
+fixed-stock batch can be planned, previewed, filtered, and printed.
+
+Work to continue:
+
+- Use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the owner contract.
+- Add a batch planner above the existing single-label planner.
+- Keep one selected physical stock for the batch.
+- Make Quick ID, Supplemental, and Complete first-level batch purposes.
+- Generate per-item categories: ready, ready-tight, reduced-purpose,
+  same-stock-continuation, excluded-data, and excluded-fit.
+- Replace first-selected-label preview assumptions with first/worst/longest/
+  most-pictograms/densest/excluded representative views.
+- Add a mixed 50-item fixture and production Browser QA gate.
+
+Acceptance:
+
+- One dense or missing-data chemical does not block unrelated printable items.
+- Quick ID and Supplemental batches remain printable when truthful, even if
+  complete H/P would not fit.
+- Complete batches never silently omit required content.
+- Users can see what will print, what was reduced, and what was excluded before
+  print handoff.
+
+Current status:
+
+- Planned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- No implementation yet.
+
+Suggested verification:
+
+- New batch planner unit/integration tests.
+- New renderer/PDF batch artifacts.
+- Future `npm run qa:production-batch-print`.
+- `npm run qa:production-product` after the batch gate is integrated.
+
 ## Default Next Order
 
 Unless a fresh bug report or failing check points elsewhere, continue in this
 order:
 
-1. Print renderer and stock fit robustness.
-2. Result table and GHS pictogram visual unity.
-3. Trust/source/SDS safety boundaries.
-4. Prepared solution and reprint workflow maturity.
-5. Whole-product UX and brand-utility convergence.
+1. Fixed-stock batch label printing.
+2. Print renderer and stock fit robustness.
+3. Result table and GHS pictogram visual unity.
+4. Trust/source/SDS safety boundaries.
+5. Prepared solution and reprint workflow maturity.
+6. Whole-product UX and brand-utility convergence.
 
-This order prioritizes safety-critical printed output first, then the search
-surface that creates trust before the print workflow begins.
+This order prioritizes the newly identified batch workflow gap, then
+safety-critical printed output, and then the search surface that creates trust
+before the print workflow begins.

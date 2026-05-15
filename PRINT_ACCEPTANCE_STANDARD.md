@@ -7,6 +7,8 @@ Deployment and Browser Use verification steps live in
 scan, and physical readability checks live in
 `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`; generate the current work order with
 `npm run qa:physical-print-plan` after `qa:print-report`.
+Fixed-stock batch-print requirements live in
+`BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 
 ## Grounding References
 
@@ -127,6 +129,12 @@ These are acceptance targets for the renderer and Browser QA:
 - Less common stock sizes remain available but are collapsed behind a secondary control so the main workflow does not read like a template catalog.
 - Responsible lab/supplier fields are collapsed unless the selected complete-primary output is blocked by missing profile data.
 - Custom stock size controls remain advanced and must still pass the same planner rules as curated stock.
+- Batch label printing keeps one selected physical stock for the batch. The
+  app may classify, reduce, continue, or exclude individual items, but it must
+  not silently auto-mix paper/roll sizes.
+- Batch preview must include representative labels beyond the first selected
+  item: first included, worst-fit, longest-name, most-pictograms, densest-text,
+  and excluded-list views where applicable.
 
 ## Required QA Matrix
 

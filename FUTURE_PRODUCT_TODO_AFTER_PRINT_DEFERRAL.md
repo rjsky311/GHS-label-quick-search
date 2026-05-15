@@ -7,6 +7,9 @@ The goal is not to add more features for their own sake. The goal is to bring
 the public free utility to a "ready enough for repeated daily use" level:
 trustworthy data boundaries, calm task-first UX, clean public documentation,
 and brand/support surfaces that do not interfere with safety-critical work.
+Fixed-stock batch label printing is now tracked as a first-class product slice
+in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` because it is a non-physical-print
+workflow gap that affects daily usability before real-printer validation.
 
 ## Scope And Status Model
 
@@ -277,6 +280,40 @@ Acceptance:
   layers.
 - Production search UI QA continues covering Detail and Prepare Solution.
 
+### 2.5 Fixed-Stock Batch Label Printing
+
+Status: `Planned`
+
+Goal: users should be able to print a realistic batch by choosing one physical
+stock and one purpose, then reviewing which chemicals can print, which are
+reduced, and which are excluded.
+
+Owner document: `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+
+Work items:
+
+- Treat Quick ID, Supplemental, and Complete as first-level batch purposes.
+- Keep one selected stock for the batch; do not silently mix A4/Letter, bottle,
+  tube, rack, and QR stocks in one automatic print job.
+- Build a batch fit report with per-item categories: `ready`, `ready-tight`,
+  `reduced-purpose`, `same-stock-continuation`, `excluded-data`, and
+  `excluded-fit`.
+- Replace first-selected-label preview assumptions with representative previews:
+  first included, worst fit, longest name, most pictograms, densest text, and
+  excluded list.
+- Add a true 50-item fixed-stock QA fixture and production/browser gate. The
+  current `multi-chemical` layer is representative coverage only.
+
+Acceptance:
+
+- One dense or missing-data chemical does not block unrelated printable labels.
+- Quick ID and Supplemental batches can print truthfully without full H/P text.
+- Complete batches either fit, continue on the same stock, exclude items, or
+  ask the user to change purpose/stock; they never silently omit required
+  content.
+- Users can see included, reduced, continuation, and excluded counts before
+  print handoff.
+
 ## 3. Public Documentation, README Cleanup, And Maintainer Clarity
 
 Status: `In progress`
@@ -463,10 +500,11 @@ Acceptance:
 
 1. README cleanup and public documentation rewrite.
 2. Data correction intake and source-conflict governance.
-3. First-time search-to-decision UX polish.
-4. Narrow/mobile read-first follow-up cases.
-5. Brand/support funnel rules and copy review.
-6. Optional documentation drift checks.
+3. Fixed-stock batch label printing.
+4. First-time search-to-decision UX polish.
+5. Narrow/mobile read-first follow-up cases.
+6. Brand/support funnel rules and copy review.
+7. Optional documentation drift checks.
 
 Use this order unless a production screenshot, code review finding, CI failure,
 or user report points to a more urgent slice.
@@ -480,6 +518,7 @@ or user report points to a more urgent slice.
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
+| Fixed-stock batch print | `Planned` | Implement the purpose-first batch planner and 50-item fixed-stock QA fixture from `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` | New batch planner tests + production batch QA |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |

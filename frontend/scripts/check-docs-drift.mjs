@@ -43,6 +43,9 @@ const docs = {
   "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md": readText(
     "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md",
   ),
+  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md": readText(
+    "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  ),
 };
 
 const frontendPackage = JSON.parse(fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"));
@@ -132,6 +135,24 @@ requireIncludes(
   docs["FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md"],
   "Physical print validation is out of scope for this document",
   "physical-print deferral boundary",
+);
+requireIncludes(
+  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  docs["BATCH_LABEL_PRINT_REFACTOR_PLAN.md"],
+  "fixed-stock",
+  "batch print contract must preserve one selected stock per batch",
+);
+requireIncludes(
+  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  docs["BATCH_LABEL_PRINT_REFACTOR_PLAN.md"],
+  "Quick ID",
+  "batch plan must define purpose-first output modes",
+);
+requireIncludes(
+  "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  docs["BATCH_LABEL_PRINT_REFACTOR_PLAN.md"],
+  "50-item",
+  "batch plan must include the mixed batch QA target",
 );
 
 const allowedStatuses = new Set([

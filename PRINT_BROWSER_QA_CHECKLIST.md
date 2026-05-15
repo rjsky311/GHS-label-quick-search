@@ -53,7 +53,7 @@ The same deployed-browser matrix can also run in GitHub Actions through
 `Production Print QA` (`.github/workflows/production-print-qa.yml`). Trigger it
 manually with one of these modes:
 
-- `product`: default five-block closure gate for user-facing product work.
+- `product`: default product-level closure gate for user-facing product work.
 - `smoke`: fast high-risk deployed print path.
 - `primary`: full-page primary and continuation outputs.
 - `compact`: compact bottle/rack/QR/quick-ID outputs.

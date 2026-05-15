@@ -6,6 +6,12 @@ stable plan so future work does not drift back into one-off template fixes.
 Concrete ship/no-ship gates live in `PRINT_ACCEPTANCE_STANDARD.md`; use that
 file as the acceptance contract before merging print changes.
 
+Status note: this document is the single-label and representative
+multi-chemical baseline. It does not define the next fixed-stock batch label
+printing refactor. For batch search-to-print flows, one-stock batch planning,
+purpose-first batch output, representative batch preview, excluded lists, and
+50-item QA, use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+
 This is a product and engineering plan, not legal advice. Final use still requires SDS, supplier label, and local regulation review.
 
 ## Why This Refactor Exists

@@ -152,6 +152,8 @@ Use these files before starting product or safety-critical changes:
 - [AUTONOMOUS_WORKFLOW.md](./AUTONOMOUS_WORKFLOW.md) - continuation, verification,
   push, and stop rules.
 - [PRINT_LABEL_CONTRACT.md](./PRINT_LABEL_CONTRACT.md) - print safety contract.
+- [BATCH_LABEL_PRINT_REFACTOR_PLAN.md](./BATCH_LABEL_PRINT_REFACTOR_PLAN.md) -
+  fixed-stock, purpose-first batch label printing plan.
 - [PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md) - current print
   workflow baseline.
 - [PHYSICAL_PRINT_VALIDATION_CHECKLIST.md](./PHYSICAL_PRINT_VALIDATION_CHECKLIST.md) -

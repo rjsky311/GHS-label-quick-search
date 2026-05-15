@@ -48,9 +48,15 @@ Current baseline capabilities:
 - A4 and Letter are complete primary outputs. Smaller physical stocks are
   supplemental or quick-ID unless the renderer proves a truthful complete label
   can fit.
+- Batch search can select and print multiple chemicals, but fixed-stock
+  30-100 item batch label printing is not yet a first-class workflow. The
+  required direction is pinned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
+- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the next batch-print product
+  contract: purpose-first, one physical stock per batch, per-item fit report,
+  representative preview, excluded-list handling, and a future 50-item QA gate.
 - `NEXT_REMAINING_PRODUCT_WORK.md` holds the detailed execution backlog for the
-  five current product work blocks.
+  current product work blocks.
 - `AUTONOMOUS_WORKFLOW.md` defines when to continue, verify, push, deploy, and
   stop for user input.
 
@@ -85,12 +91,13 @@ Current completion snapshot:
 - **Intentionally deferred**: real-printer validation remains deferred until
   physical paper/stock/printer access is available. Automated Browser/PDF
   checks are strong preconditions, not proof of real printer behavior.
-- **Still active / recurring**: source-conflict governance, upstream outage
-  states, QR real-world reliability, compact multilingual labels, long
-  chemical names, case/custom identity fields, admin/telemetry limits, and
-  low-noise UX should continue to receive new regression cases when evidence
-  appears. Track these non-physical-print follow-ups in
-  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`.
+- **Still active / recurring**: fixed-stock batch label printing,
+  source-conflict governance, upstream outage states, QR real-world
+  reliability, compact multilingual labels, long chemical names, case/custom
+  identity fields, admin/telemetry limits, and low-noise UX should continue to
+  receive new regression cases when evidence appears. Track these
+  non-physical-print follow-ups in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
+  use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` for the batch-print contract.
 
 ## 3. Next Priority Order
 
@@ -164,7 +171,45 @@ Current status:
 - `NEXT_REMAINING_PRODUCT_WORK.md` is the detailed execution backlog, not the
   priority selector.
 
-### 3. Physical Print Validation
+### 3. Fixed-Stock Batch Label Printing
+
+Goal: batch printing should solve the real workflow of choosing one physical
+label stock and printing many chemicals, without forcing every item through
+complete-primary/A4 logic.
+
+Do next:
+
+- Use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the implementation contract.
+- Treat batch printing as purpose-first: Quick ID, Supplemental, or Complete.
+- Keep one selected physical stock for the batch. Do not silently split a batch
+  across A4, Letter, tube, rack, and QR stocks.
+- Add a batch fit report that classifies each item as ready, ready-tight,
+  reduced-purpose, same-stock-continuation, excluded-data, or excluded-fit.
+- Replace "preview the first selected label" assumptions with representative
+  previews: first, worst-fit, longest name, most pictograms, densest text, and
+  excluded list.
+- Add a true 50-item fixed-stock batch fixture and QA gate. The existing
+  `multi-chemical` production layer is representative coverage, not proof of a
+  real batch workflow.
+
+Done means:
+
+- A user can select one stock and one purpose, then understand exactly which
+  items will print, which are reduced, which need same-stock continuation, and
+  which are excluded before pressing print.
+- Quick ID and Supplemental batches remain printable when truthful, even when a
+  complete primary label would not fit.
+- Complete batches never silently omit required content; they continue,
+  exclude, or ask the user to choose a different purpose/stock.
+
+Current status:
+
+- Direction is documented in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- Implementation has not started. Existing print gates still protect
+  single-label and representative multi-chemical cases, but do not yet prove a
+  fixed-stock 50-item batch workflow.
+
+### 4. Physical Print Validation
 
 Goal: browser/PDF QA should be complemented by real-world print evidence.
 
@@ -201,7 +246,7 @@ Current status:
 - Automated Browser/PDF/production QA remains the precondition before physical
   print validation, not a replacement for it.
 
-### 4. Data Governance And Safety Boundaries
+### 5. Data Governance And Safety Boundaries
 
 Goal: users should trust the workflow without mistaking the app for the legal
 authority.
@@ -256,7 +301,7 @@ Current status:
   handoff, while text-only GHS records can still be selected because they carry
   hazard content.
 
-### 5. User Guidance, Brand Utility, And Low-Noise UX
+### 6. User Guidance, Brand Utility, And Low-Noise UX
 
 Goal: the tool should feel useful, calm, and trustworthy enough for repeated
 daily use.
@@ -315,6 +360,10 @@ complete.
 
 - Physical printing: automated browser/PDF checks do not fully prove printer
   scaling, margin, media, thermal resolution, or label-stock behavior.
+- Batch printing: the current `multi-chemical` gate is representative coverage,
+  not a fixed-stock 50-item batch workflow. Batch work must keep one selected
+  stock, classify each item, show representative previews, and expose excluded
+  reasons before print.
 - Browser and OS print dialogs: Chrome, Edge, Windows print scaling, PDF
   viewers, and printer drivers can change output after the app hands off.
 - QR reliability: QR must stay large enough, scan quickly, and point to safe,
@@ -374,9 +423,11 @@ Use these files by role:
 - `AUTONOMOUS_WORKFLOW.md`: standing approval, default work loop, stop
   conditions, and verification rules.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
-- `NEXT_REMAINING_PRODUCT_WORK.md`: detailed five-block execution backlog and
+- `NEXT_REMAINING_PRODUCT_WORK.md`: detailed execution backlog and
   current status.
 - `PRINT_LABEL_CONTRACT.md`: print safety contract.
+- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`: fixed-stock, purpose-first batch label
+  printing contract and future 50-item QA plan.
 - `PRINT_ACCEPTANCE_STANDARD.md`: print acceptance bar.
 - `PRINT_BROWSER_QA_CHECKLIST.md`: browser QA checklist.
 - `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`: real paper, label stock, printer
