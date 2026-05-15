@@ -271,6 +271,10 @@ Current status:
   for trust/source/SDS boundaries, including authoritative notes, source chips,
   safe reference-link metadata, and separated data-correction/workflow support
   links.
+- Production search UI QA now includes a deployed found-with-no-GHS-data path
+  using Urea (`57-13-6` by default). It verifies no-GHS warnings in both result
+  and Detail views, keeps text-only GHS states separate, disables print entry
+  points, and prevents label selection for that row.
 
 Suggested verification:
 

@@ -228,7 +228,9 @@ describe('DetailModal', () => {
 
     it('renders print label button', () => {
       render(<DetailModal {...defaultProps} />);
-      expect(screen.getByText('detail.printLabel')).toBeInTheDocument();
+      expect(screen.getByTestId('detail-print-label-btn')).toHaveTextContent(
+        'detail.printLabel',
+      );
     });
 
     it('disables printing when the detail result has no GHS hazard content', () => {
@@ -242,7 +244,7 @@ describe('DetailModal', () => {
         />
       );
 
-      const printButton = screen.getByText('detail.printLabel').closest('button');
+      const printButton = screen.getByTestId('detail-print-label-btn');
       expect(printButton).toBeDisabled();
       fireEvent.click(printButton);
       expect(onPrintLabel).not.toHaveBeenCalled();

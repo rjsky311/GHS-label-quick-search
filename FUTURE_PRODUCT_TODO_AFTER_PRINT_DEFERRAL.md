@@ -62,6 +62,11 @@ Work items:
   hazard content cannot be auto-selected, selected from result rows, printed
   from Detail, or printed from Favorites. Text-only GHS records remain
   selectable because they still carry hazard content.
+- Completed: expanded `qa:production-search-ui` with a deployed no-GHS data
+  state using Urea (`57-13-6` by default). The gate now verifies the result row
+  and Detail modal both show the no-GHS warning, keep text-only-GHS warnings
+  separate, disable print entry points, and keep the row out of label
+  selection.
 - Audit the search result, detail modal, print modal, export rows, and QR
   target selection for source-conflict language.
 - Define what the UI says when the primary source is PubChem, ECHA-derived,
@@ -465,7 +470,7 @@ or user report points to a more urgent slice.
 
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
-| Data source conflicts | `Gate added` | Keep expanding examples for no-GHS, text-only GHS, and upstream-degraded states | Backend/frontend focused tests + `qa:production-search-ui` |
+| Data source conflicts | `Gate added` | No-GHS deployed state is covered with Urea; keep expanding text-only GHS and upstream-degraded examples | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Add retention/export-review policy before enabling capture in production | Backend tests |

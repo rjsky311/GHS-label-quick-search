@@ -19,6 +19,7 @@ const mobileViewport = {
   height: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_HEIGHT || "844", 10),
 };
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
+const noGhsSearchTerm = env.PRODUCTION_SEARCH_UI_NO_GHS_TERM || "57-13-6";
 const headless = env.PRINT_QA_HEADLESS !== "0";
 const SEARCH_UI_ATTEMPTS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_ATTEMPTS || "3",
@@ -599,10 +600,10 @@ const inspectDetailPrepareStacking = async (page) => {
   };
 };
 
-const searchUntilUsableResult = async (page) => {
+const searchUntilUsableResult = async (page, term = searchTerm) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
-    await page.getByTestId("single-cas-input").fill(searchTerm);
+    await page.getByTestId("single-cas-input").fill(term);
     await page.getByTestId("single-search-btn").click();
     await page.getByTestId("result-row-0").waitFor({
       timeout: SEARCH_UI_TIMEOUT_MS,
@@ -717,6 +718,72 @@ const inspectMobileDetailReadFirstResult = async (page) =>
     };
   });
 
+const inspectNoGhsResultState = async (
+  page,
+  term,
+  { screenshotPath, detailScreenshotPath } = {},
+) => {
+  const attempts = await searchUntilUsableResult(page, term);
+  const row = page.getByTestId("result-row-0");
+  const printButton = page.getByTestId("print-label-btn");
+  const detailButton = page.getByTestId("detail-btn-0");
+  const noGhsBanner = page.locator('[data-testid^="no-ghs-data-"]');
+  const textOnlyBanner = page.locator(
+    '[data-testid^="ghs-data-no-pictograms-"]',
+  );
+  const rowText = ((await row.textContent().catch(() => "")) || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const resultState = {
+    attempts,
+    rowText,
+    noGhsBannerCount: await noGhsBanner.count(),
+    textOnlyBannerCount: await textOnlyBanner.count(),
+    resultCheckboxCount: await row.locator('input[type="checkbox"]').count(),
+    resultPrintButtonDisabled: await printButton.evaluate(
+      (node) => Boolean(node.disabled),
+    ),
+    resultPrintButtonTitle: (await printButton.getAttribute("title")) || "",
+  };
+
+  if (screenshotPath) {
+    await page.screenshot({
+      path: screenshotPath,
+      fullPage: false,
+    });
+  }
+
+  await detailButton.click();
+  const detailModal = page.getByTestId("detail-modal");
+  await detailModal.waitFor({ state: "visible", timeout: 10000 });
+  const detailPrintButton = page.getByTestId("detail-print-label-btn");
+  const detailState = {
+    noGhsBannerCount: await detailModal
+      .getByTestId("detail-no-ghs-data-banner")
+      .count(),
+    textOnlyBannerCount: await detailModal
+      .getByTestId("detail-ghs-text-no-pictograms-banner")
+      .count(),
+    printButtonDisabled: await detailPrintButton.evaluate(
+      (node) => Boolean(node.disabled),
+    ),
+    printButtonTitle: (await detailPrintButton.getAttribute("title")) || "",
+  };
+
+  if (detailScreenshotPath) {
+    await page.screenshot({
+      path: detailScreenshotPath,
+      fullPage: false,
+    });
+  }
+
+  return {
+    term,
+    result: resultState,
+    detail: detailState,
+  };
+};
+
 const summarizePictogramMetrics = (metrics) => {
   const tiles = metrics?.tiles || [];
   const minFrames = tiles.map((tile) =>
@@ -750,6 +817,7 @@ const summarizeSearchUiReportForConsole = (report) => {
     ok: report.ok,
     productionUrl: report.productionUrl,
     searchTerm: report.searchTerm,
+    noGhsSearchTerm: report.noGhsSearchTerm,
     reportPath: outputPath,
     screenshots: {
       search: report.screenshotPath,
@@ -757,6 +825,8 @@ const summarizeSearchUiReportForConsole = (report) => {
       detail: report.detailScreenshotPath,
       mobileSearch: report.mobileScreenshotPath,
       mobileDetail: report.mobileDetailScreenshotPath,
+      noGhsSearch: report.noGhsScreenshotPath,
+      noGhsDetail: report.noGhsDetailScreenshotPath,
     },
     failures: report.failures,
     searchAttempts: report.searchAttempts,
@@ -820,6 +890,20 @@ const summarizeSearchUiReportForConsole = (report) => {
             mobileDetailReadFirst.viewportWidth + 2,
         detailComparisonLayout: mobileDetailReadFirst.comparisonLayout || "",
       },
+      dataStates: {
+        noGhsResultBannerCount:
+          metrics.noGhsState?.result?.noGhsBannerCount || 0,
+        noGhsDetailBannerCount:
+          metrics.noGhsState?.detail?.noGhsBannerCount || 0,
+        noGhsResultPrintDisabled: Boolean(
+          metrics.noGhsState?.result?.resultPrintButtonDisabled,
+        ),
+        noGhsDetailPrintDisabled: Boolean(
+          metrics.noGhsState?.detail?.printButtonDisabled,
+        ),
+        noGhsCheckboxCount:
+          metrics.noGhsState?.result?.resultCheckboxCount || 0,
+      },
       images: {
         waitedContexts: metrics.imageWaits?.length || 0,
         failedImages:
@@ -853,7 +937,7 @@ try {
   await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: "networkidle" });
-  const searchAttempts = await searchUntilUsableResult(page);
+  const searchAttempts = await searchUntilUsableResult(page, searchTerm);
 
   const screenshotPath = path.join(screenshotDir, "search-results.png");
 
@@ -1161,7 +1245,10 @@ try {
   await mobilePage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
   await mobilePage.evaluate(() => localStorage.clear());
   await mobilePage.reload({ waitUntil: "networkidle" });
-  const mobileSearchAttempts = await searchUntilUsableResult(mobilePage);
+  const mobileSearchAttempts = await searchUntilUsableResult(
+    mobilePage,
+    searchTerm,
+  );
   const mobileScreenshotPath = path.join(
     screenshotDir,
     "search-results-mobile-read-first.png",
@@ -1227,6 +1314,52 @@ try {
     );
   }
   await mobileContext.close();
+
+  const noGhsPage = await context.newPage();
+  await noGhsPage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
+  await noGhsPage.evaluate(() => localStorage.clear());
+  await noGhsPage.reload({ waitUntil: "networkidle" });
+  const noGhsScreenshotPath = path.join(
+    screenshotDir,
+    "search-results-no-ghs-state.png",
+  );
+  const noGhsDetailScreenshotPath = path.join(
+    screenshotDir,
+    "detail-modal-no-ghs-state.png",
+  );
+  const noGhsState = await inspectNoGhsResultState(noGhsPage, noGhsSearchTerm, {
+    screenshotPath: noGhsScreenshotPath,
+    detailScreenshotPath: noGhsDetailScreenshotPath,
+  });
+  await noGhsPage.close();
+
+  if (
+    !noGhsState.result.rowText.includes(noGhsSearchTerm) &&
+    !/Urea|尿素/i.test(noGhsState.result.rowText)
+  ) {
+    failures.push("no-ghs-result-identity-missing");
+  }
+  if (noGhsState.result.noGhsBannerCount < 1) {
+    failures.push("no-ghs-result-banner-missing");
+  }
+  if (noGhsState.result.textOnlyBannerCount > 0) {
+    failures.push("no-ghs-result-misclassified-as-text-only");
+  }
+  if (!noGhsState.result.resultPrintButtonDisabled) {
+    failures.push("no-ghs-result-print-button-enabled");
+  }
+  if (noGhsState.result.resultCheckboxCount > 0) {
+    failures.push("no-ghs-result-label-checkbox-present");
+  }
+  if (noGhsState.detail.noGhsBannerCount < 1) {
+    failures.push("no-ghs-detail-banner-missing");
+  }
+  if (noGhsState.detail.textOnlyBannerCount > 0) {
+    failures.push("no-ghs-detail-misclassified-as-text-only");
+  }
+  if (!noGhsState.detail.printButtonDisabled) {
+    failures.push("no-ghs-detail-print-button-enabled");
+  }
 
   if (
     mobileReadFirst.documentScrollWidth > mobileReadFirst.viewportWidth + 2 ||
@@ -1318,12 +1451,15 @@ try {
     ok: failures.length === 0,
     productionUrl,
     searchTerm,
+    noGhsSearchTerm,
     executablePath,
     screenshotPath,
     expandedScreenshotPath,
     detailScreenshotPath,
     mobileScreenshotPath,
     mobileDetailScreenshotPath,
+    noGhsScreenshotPath,
+    noGhsDetailScreenshotPath,
     failures,
     searchAttempts,
     mobileSearchAttempts,
@@ -1344,6 +1480,7 @@ try {
       verticalRisks,
       mobileReadFirst,
       mobileDetailReadFirst,
+      noGhsState,
       mobileDetailComparisonCardCount,
       mobileDetailComparisonMetrics,
     },

@@ -585,6 +585,7 @@ export default function DetailModal({
               disabled={!canPrintHazardLabel}
               title={!canPrintHazardLabel ? t("label.noPrintableHazardData") : undefined}
               className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+              data-testid="detail-print-label-btn"
             >
               <Tag className="w-4 h-4" /> {t("detail.printLabel")}
             </button>

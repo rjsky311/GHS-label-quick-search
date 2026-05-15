@@ -62,8 +62,9 @@ Current validation gates:
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production search UI: `npm run qa:production-search-ui` (desktop
-  search/detail, detail-to-prepared modal keyboard/focus checks, plus 390px
-  narrow read-first result and detail-comparison checks)
+  search/detail, source/trust surfaces, no-GHS data-state boundary,
+  detail-to-prepared modal keyboard/focus checks, plus 390px narrow read-first
+  result and detail-comparison checks)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -121,8 +122,8 @@ Current status:
   `compact`, `multi-chemical`, `prepared`, `full`, and `all`.
 - `qa:production-search-ui` keeps the full deployed evidence in
   `build/production-search-ui-report.json`, but prints a compact console
-  summary so CI logs show the action, pictogram, trust, keyboard, mobile, and
-  image-load checks without burying failures in raw DOM text.
+  summary so CI logs show the action, pictogram, trust, data-state, keyboard,
+  mobile, and image-load checks without burying failures in raw DOM text.
 - Local `qa:production-product` runs should be given at least a 10 minute
   timeout; a healthy full product pass often takes 5-6 minutes because it runs
   deployed Chrome flows, print handoff checks, prepared workflow checks, and
