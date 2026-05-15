@@ -110,7 +110,9 @@ For print workflow changes, the default validation stack is:
   work blocks together. It runs the deployed print smoke gate, deployed prepared
   workflow gate, and product-level summary with required block mapping for:
   print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared
-  reprints, and whole-product UX/support positioning.
+  reprints, and whole-product UX/support positioning. Allow a generous local
+  command timeout of at least 10 minutes; a healthy run can take 5-6 minutes
+  because it opens production Chrome flows and generates print reports.
 - `npm run qa:production-print` after Zeabur deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix

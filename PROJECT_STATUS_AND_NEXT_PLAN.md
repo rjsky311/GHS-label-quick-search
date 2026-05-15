@@ -99,6 +99,10 @@ Current status:
   block evidence is present.
 - Split modes remain available for focused reruns: `smoke`, `primary`,
   `compact`, `multi-chemical`, `prepared`, `full`, and `all`.
+- Local `qa:production-product` runs should be given at least a 10 minute
+  timeout; a healthy full product pass often takes 5-6 minutes because it runs
+  deployed Chrome flows, print handoff checks, prepared workflow checks, and
+  summary generation.
 
 Done means:
 
