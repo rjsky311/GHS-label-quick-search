@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import {
   Star,
   X,
@@ -21,6 +21,7 @@ import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
+import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   getLocalizedNames,
   getLocalizedPictogramName,
@@ -69,7 +70,10 @@ export default function DetailModal({
   suppressed = false,
 }) {
   const { t, i18n } = useTranslation();
-  const dialogRef = useRef(null);
+  const dialogRef = useFocusTrap(onClose, {
+    disabled: suppressed,
+    disableEscape: suppressed,
+  });
   const displayLocale = i18n.language;
 
   const copyCAS = useCallback((cas) => {
@@ -79,19 +83,13 @@ export default function DetailModal({
   }, [t]);
 
   useEffect(() => {
-    // Don't pull focus or register the Escape handler while a higher
-    // modal is stacked on top of us — the stacked modal owns focus +
-    // Escape. PR #14 added capture-phase stopImmediatePropagation in
-    // PrepareSolutionModal as the first line of defence; this is the
-    // structurally cleaner second line.
+    // Don't pull focus while a higher modal is stacked on top of us:
+    // the stacked modal owns focus +
+    // Escape. `useFocusTrap` is disabled in the same state, so this
+    // dialog also stops trapping Tab behind the top layer.
     if (suppressed) return;
     dialogRef.current?.focus();
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, suppressed]);
+  }, [dialogRef, suppressed]);
 
   const effective = getEffectiveClassification(result) || {
     pictograms: result.ghs_pictograms || [],

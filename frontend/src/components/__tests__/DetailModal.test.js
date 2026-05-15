@@ -271,9 +271,24 @@ describe('DetailModal', () => {
     it('pressing Escape key calls onClose', () => {
       const onClose = jest.fn();
       render(<DetailModal {...defaultProps} onClose={onClose} />);
-      // DetailModal listens on window for keydown
-      fireEvent.keyDown(document, { key: 'Escape' });
+      const closeButton = screen.getByTestId('close-modal-btn');
+      closeButton.focus();
+      fireEvent.keyDown(closeButton, { key: 'Escape' });
       expect(onClose).toHaveBeenCalled();
+    });
+
+    it('traps Tab navigation inside the detail modal', () => {
+      render(<DetailModal {...defaultProps} />);
+      const firstFocusable = screen.getByTitle(/detail\.copyCAS/);
+      const links = screen.getAllByRole('link');
+      const lastFocusable = links[links.length - 1];
+
+      lastFocusable.focus();
+      fireEvent.keyDown(lastFocusable, { key: 'Tab' });
+      expect(firstFocusable).toHaveFocus();
+
+      fireEvent.keyDown(firstFocusable, { key: 'Tab', shiftKey: true });
+      expect(lastFocusable).toHaveFocus();
     });
 
     it('clicking close button (X) calls onClose', () => {
@@ -664,14 +679,29 @@ describe('DetailModal', () => {
       render(
         <DetailModal {...defaultProps} onClose={onClose} suppressed />
       );
-      fireEvent.keyDown(window, { key: "Escape" });
+      fireEvent.keyDown(document, { key: "Escape" });
       expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("when suppressed, Tab does NOT trap focus back into DetailModal", () => {
+      render(
+        <>
+          <button data-testid="top-layer-control">Top layer</button>
+          <DetailModal {...defaultProps} suppressed />
+        </>
+      );
+      const topLayerControl = screen.getByTestId("top-layer-control");
+      topLayerControl.focus();
+      fireEvent.keyDown(document, { key: "Tab" });
+      expect(topLayerControl).toHaveFocus();
     });
 
     it("when not suppressed, Escape still fires onClose (no regression on Tier 1 behaviour)", () => {
       const onClose = jest.fn();
       render(<DetailModal {...defaultProps} onClose={onClose} />);
-      fireEvent.keyDown(window, { key: "Escape" });
+      const closeButton = screen.getByTestId("close-modal-btn");
+      closeButton.focus();
+      fireEvent.keyDown(closeButton, { key: "Escape" });
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });

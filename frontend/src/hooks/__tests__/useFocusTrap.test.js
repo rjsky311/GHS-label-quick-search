@@ -102,6 +102,34 @@ describe("useFocusTrap", () => {
     expect(screen.getByTestId("first")).toHaveFocus();
   });
 
+  it("can disable focus capture and key handling while another layer owns focus", () => {
+    const onClose = jest.fn();
+    function DisabledHost() {
+      const ref = useFocusTrap(onClose, { disabled: true });
+      return (
+        <div ref={ref} role="dialog" aria-modal="true">
+          <button data-testid="first">First</button>
+          <button data-testid="last">Last</button>
+        </div>
+      );
+    }
+
+    render(
+      <>
+        <button data-testid="outside">Outside</button>
+        <DisabledHost />
+      </>
+    );
+
+    const outside = screen.getByTestId("outside");
+    outside.focus();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(outside).toHaveFocus();
+  });
+
   it("wraps Tab from the last focusable back to the first", () => {
     render(<TrapHost showSecondary />);
     const first = screen.getByTestId("first");

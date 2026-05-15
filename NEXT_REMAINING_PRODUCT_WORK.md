@@ -368,6 +368,11 @@ Current status:
   deployed print smoke handoff, and deployed prepared-solution workflows. The
   generated summary exposes one pass/fail line per block so future autonomous
   rounds can see which area is actually not done.
+- Core custom dialogs now share the focus-trap path across label print,
+  prepared solution, cross-chemical comparison, sidebars, and DetailModal.
+  DetailModal also disables its trap while a prepared-solution modal is stacked
+  above it, so Tab/Escape belong to the visible top layer instead of leaking to
+  or being captured by the background dialog.
 
 Suggested verification:
 

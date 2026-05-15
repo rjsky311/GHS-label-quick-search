@@ -263,6 +263,10 @@ Current status:
   search results and detail comparison, and fails when either area needs
   horizontal scrolling or when key actions/cards are outside the narrow
   viewport.
+- Core custom dialogs now share focus-trap behavior. DetailModal keeps its
+  keyboard trap active for normal review, but disables it while a
+  prepared-solution modal is stacked above it so the visible top layer owns
+  Tab/Escape.
 
 ## 4. Known Blind Spots
 

@@ -15,7 +15,11 @@ import { useEffect, useRef } from "react";
  *
  * Usage:
  *   const panelRef = useFocusTrap(onClose);
- *   const panelRef = useFocusTrap(onClose, { initialFocusRef, disableEscape });
+ *   const panelRef = useFocusTrap(onClose, {
+ *     initialFocusRef,
+ *     disableEscape,
+ *     disabled,
+ *   });
  *   return <div ref={panelRef} role="dialog" aria-modal="true">…</div>;
  *
  * The ref should be attached to the inner panel element, not to the
@@ -65,24 +69,27 @@ export default function useFocusTrap(onClose, options = null) {
     // Move focus into the panel. Prefer the first focusable element;
     // fall back to the container itself (tabindex -1) so Tab still
     // starts from a sensible anchor inside the modal.
-    const focusables = getFocusable();
-    const preferredFocus = optionsRef.current?.initialFocusRef?.current;
-    if (
-      preferredFocus instanceof HTMLElement &&
-      container.contains(preferredFocus) &&
-      !preferredFocus.hasAttribute("disabled")
-    ) {
-      preferredFocus.focus();
-    } else if (focusables.length > 0) {
-      focusables[0].focus();
-    } else {
-      if (!container.hasAttribute("tabindex")) {
-        container.setAttribute("tabindex", "-1");
+    if (!optionsRef.current?.disabled) {
+      const focusables = getFocusable();
+      const preferredFocus = optionsRef.current?.initialFocusRef?.current;
+      if (
+        preferredFocus instanceof HTMLElement &&
+        container.contains(preferredFocus) &&
+        !preferredFocus.hasAttribute("disabled")
+      ) {
+        preferredFocus.focus();
+      } else if (focusables.length > 0) {
+        focusables[0].focus();
+      } else {
+        if (!container.hasAttribute("tabindex")) {
+          container.setAttribute("tabindex", "-1");
+        }
+        container.focus();
       }
-      container.focus();
     }
 
     const handleKeyDown = (e) => {
+      if (optionsRef.current?.disabled) return;
       if (e.key === "Escape") {
         if (optionsRef.current?.disableEscape) return;
         e.preventDefault();
