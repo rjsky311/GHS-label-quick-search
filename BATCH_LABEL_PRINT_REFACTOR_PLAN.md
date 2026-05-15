@@ -20,6 +20,24 @@ Cross-reference this file with:
   upstream-error, source-conflict, SDS/reference, and telemetry boundaries.
 - `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` for later real-printer evidence.
 
+## Current Implementation Status
+
+Status as of 2026-05-16:
+
+- Phase 1 has started: `frontend/src/utils/testFixtures/batchPrintFixtures.js`
+  provides a reusable 50-item mixed fixture.
+- Phase 2 has started: `frontend/src/utils/printBatchPlanner.js` provides the
+  first pure `buildBatchPrintPlan` implementation for purpose-first,
+  fixed-stock batch classification.
+- `frontend/src/utils/__tests__/printBatchPlanner.test.js` verifies Quick ID,
+  Supplemental, and Complete batch planning against the 50-item fixture.
+- `LabelPrintModal` now shows a first batch fit report for multi-item
+  selections and sends only the default ready batch scope to print handoff.
+- `npm run test:print-contract` now includes the batch planner test.
+- Full representative preview switching, explicit reduced/continuation
+  acknowledgement controls, production Browser QA, and deployed 50-item batch
+  evidence are still not complete.
+
 ## 1. Problem Statement
 
 The current print workflow is strongest for one selected chemical or a small

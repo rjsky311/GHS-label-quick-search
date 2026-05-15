@@ -42,6 +42,11 @@ import {
   buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
 import {
+  BATCH_PRINT_ITEM_CATEGORY,
+  BATCH_PRINT_PURPOSE,
+  buildBatchPrintPlan,
+} from "@/utils/printBatchPlanner";
+import {
   PRINT_CONTENT_ROLE,
   PRINT_HAZARD_TEXT_MODE,
   resolvePrintContentPolicy,
@@ -768,6 +773,39 @@ export default function LabelPrintModal({
     resolvedLabProfile: resolvedResponsibleProfile,
     locale: currentLocale,
   });
+  const batchPrintPurpose =
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY
+      ? BATCH_PRINT_PURPOSE.COMPLETE
+      : outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
+        ? BATCH_PRINT_PURPOSE.QUICK_ID
+        : BATCH_PRINT_PURPOSE.SUPPLEMENTAL;
+  const batchPrintPlan = useMemo(
+    () =>
+      buildBatchPrintPlan({
+        selectedForLabel,
+        layout: layoutProfile,
+        purpose: batchPrintPurpose,
+        customGHSSettings,
+        customLabelFields,
+        resolvedLabProfile: resolvedResponsibleProfile,
+        locale: currentLocale,
+      }),
+    [
+      selectedForLabel,
+      layoutProfile,
+      batchPrintPurpose,
+      customGHSSettings,
+      customLabelFields,
+      resolvedResponsibleProfile,
+      currentLocale,
+    ],
+  );
+  const hasBatchPrintPlan = selectedForLabel.length > 1;
+  const batchDefaultPrintItems = batchPrintPlan.items
+    .filter((item) => item.includedByDefault)
+    .map((item) => item.chemical);
+  const canPrintBatchDefaultScope =
+    hasBatchPrintPlan && batchPrintPlan.summary.canPrintDefaultScope;
   const printReadiness = outputPlan.readiness;
   const recommendedFullPagePreset = ALL_STOCK_PRESETS.find(
     (preset) => preset.id === outputPlan.recommendedFullPageStockId,
@@ -1172,7 +1210,9 @@ export default function LabelPrintModal({
     (risk) => risk !== readyPreviewMessage,
   );
   const isPrintFitBlocked =
-    selectedForLabel.length > 0 && !outputPlan.canPrint;
+    selectedForLabel.length > 0 &&
+    !outputPlan.canPrint &&
+    !canPrintBatchDefaultScope;
   const isProfileBlocked =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const printBlockedLabel = isProfileBlocked
@@ -1185,7 +1225,8 @@ export default function LabelPrintModal({
   const canUseFullPagePrimary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
     Boolean(recommendedFullPagePreset) &&
-    layoutProfile.stockPreset !== recommendedFullPagePreset.id;
+    layoutProfile.stockPreset !== recommendedFullPagePreset.id &&
+    !canPrintBatchDefaultScope;
   const autoApplyFullPageKey = [
     selectedForLabel.map((chem) => chem.cas_number).join("|"),
     layoutProfile.stockPreset,
@@ -1363,6 +1404,15 @@ export default function LabelPrintModal({
       ? t("label.printBtn", { count: totalLabels })
       : isPrintFitBlocked
         ? printBlockedLabel
+        : canPrintBatchDefaultScope
+          ? tx(
+              "label.printReadyBatchAction",
+              "Print ready batch ({{ready}} / {{total}})",
+              {
+                ready: batchPrintPlan.summary.printableByDefault,
+                total: batchPrintPlan.summary.total,
+              },
+            )
         : isContinuationOutput
           ? tx(
               "label.printContinuationAction",
@@ -1575,6 +1625,13 @@ export default function LabelPrintModal({
   const handleUseFullPagePrimary = () => {
     if (!recommendedFullPagePreset) return;
     applyStockPreset(recommendedFullPagePreset);
+  };
+
+  const handlePrintAction = () => {
+    onPrintLabels(
+      labelConfig,
+      canPrintBatchDefaultScope ? batchDefaultPrintItems : undefined,
+    );
   };
 
   const handleFocusResponsibleProfile = () => {
@@ -2377,6 +2434,81 @@ export default function LabelPrintModal({
     </details>
   );
 
+  const renderBatchFitReport = () => {
+    if (!hasBatchPrintPlan) return null;
+
+    const countItems = [
+      {
+        key: "ready",
+        label: tx("label.batchReady", "Ready"),
+        value:
+          batchPrintPlan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.READY] +
+          batchPrintPlan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT],
+        tone: "ready",
+      },
+      {
+        key: "review",
+        label: tx("label.batchReview", "Needs review"),
+        value: batchPrintPlan.summary.requiresAcknowledgement,
+        tone: batchPrintPlan.summary.requiresAcknowledgement > 0 ? "caution" : "neutral",
+      },
+      {
+        key: "excluded",
+        label: tx("label.batchExcluded", "Excluded"),
+        value: batchPrintPlan.summary.excluded,
+        tone: batchPrintPlan.summary.excluded > 0 ? "danger" : "neutral",
+      },
+    ];
+
+    return (
+      <div
+        className="mt-3 rounded-md border border-slate-200 bg-white/80 p-3"
+        data-testid="batch-fit-report"
+      >
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+              {tx("label.batchFitReportTitle", "Batch fit report")}
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              {tx(
+                "label.batchFitReportBody",
+                "One fixed stock is kept for this batch. Ready labels can print now; review or excluded labels stay visible before handoff.",
+              )}
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+            {batchPrintPlan.stockPreset}
+          </span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {countItems.map((item) => (
+            <div
+              key={item.key}
+              className={`rounded-md border px-3 py-2 ${
+                READINESS_TONE_CLASSES[item.tone] ||
+                READINESS_TONE_CLASSES.neutral
+              }`}
+              data-testid={`batch-fit-${item.key}`}
+            >
+              <div className="text-xs font-medium opacity-80">{item.label}</div>
+              <div className="mt-1 text-lg font-semibold">{item.value}</div>
+            </div>
+          ))}
+        </div>
+        {batchPrintPlan.representatives.worstFit && (
+          <p
+            className="mt-2 text-xs leading-5 text-slate-500"
+            data-testid="batch-fit-worst"
+          >
+            {tx("label.batchWorstFit", "Highest pressure")}:{" "}
+            {batchPrintPlan.representatives.worstFit.identity}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const renderRecommendedOutputSection = () => {
     const RecommendationIcon =
       outputOutcomeTone === "ready" ? CheckCircle2 : AlertTriangle;
@@ -2858,6 +2990,7 @@ export default function LabelPrintModal({
                         </div>
                       ))}
                     </div>
+                    {renderBatchFitReport()}
                   </details>
 
                   {shouldShowPrintTrustNote && (
@@ -3678,7 +3811,7 @@ export default function LabelPrintModal({
           ) : (
             <button
               type="button"
-              onClick={() => onPrintLabels(labelConfig)}
+              onClick={handlePrintAction}
               disabled={selectedForLabel.length === 0 || isPrintFitBlocked}
               className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
               data-testid="print-label-action"

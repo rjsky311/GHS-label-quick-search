@@ -562,9 +562,10 @@ function App() {
     return (dictionary.pendingAliasCount || 0) + (dictionary.openMissQueryCount || 0);
   }, [pilotReport]);
 
-  const handlePrintLabels = useCallback((configOverride) => {
+  const handlePrintLabels = useCallback((configOverride, itemOverride) => {
     const effectiveLabelConfig = configOverride || labelConfig;
-    const printableSelection = selectedForLabel.map((chemical) =>
+    const sourceSelection = itemOverride || selectedForLabel;
+    const printableSelection = sourceSelection.map((chemical) =>
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
     );
 

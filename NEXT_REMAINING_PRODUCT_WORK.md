@@ -448,7 +448,18 @@ Acceptance:
 Current status:
 
 - Planned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- No implementation yet.
+- Planner-layer implementation has started:
+  `frontend/src/utils/printBatchPlanner.js` classifies Quick ID,
+  Supplemental, and Complete batches against one fixed stock.
+- A reusable mixed 50-item fixture and unit coverage live in
+  `frontend/src/utils/testFixtures/batchPrintFixtures.js` and
+  `frontend/src/utils/__tests__/printBatchPlanner.test.js`.
+- `LabelPrintModal` shows a first batch fit report for multi-item selections
+  and prints the default ready subset instead of blocking a whole batch when
+  unrelated items need review.
+- Representative preview switching, explicit reduced/continuation
+  acknowledgement controls, production Browser QA, and deployed 50-item batch
+  evidence are still open.
 
 Suggested verification:
 

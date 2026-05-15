@@ -302,6 +302,66 @@ describe("LabelPrintModal", () => {
     ).not.toEqual(firstPreviewSrc);
   });
 
+  it("shows a fixed-stock batch fit report and prints only ready default items", () => {
+    const denseChem = makeChem({
+      cas_number: "7647-01-0",
+      name_en: "Hydrochloric Acid",
+      ghs_pictograms: [
+        { code: "GHS04" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS07" },
+      ],
+      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en: `Dense hazard statement ${index}`,
+      })),
+      precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en: `Dense precaution statement ${index}`,
+      })),
+    });
+    const readyChem = makeChem({
+      cas_number: "64-17-5",
+      name_en: "Ethanol",
+      hazard_statements: [{ code: "H225", text_en: "Highly flammable." }],
+      precautionary_statements: [],
+    });
+
+    const { props } = renderModal({
+      selectedForLabel: [denseChem, readyChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "large-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    expect(screen.getByTestId("batch-fit-report")).toHaveTextContent(
+      "Batch fit report",
+    );
+    expect(screen.getByTestId("batch-fit-ready")).toHaveTextContent("Ready");
+    expect(screen.getByTestId("batch-fit-review")).toHaveTextContent(
+      "Needs review",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print ready batch",
+    );
+
+    fireEvent.click(screen.getByTestId("print-label-action"));
+
+    expect(props.onPrintLabels).toHaveBeenCalledWith(
+      expect.objectContaining({ stockPreset: "large-primary" }),
+      [readyChem],
+    );
+  });
+
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
@@ -399,7 +459,10 @@ describe("LabelPrintModal", () => {
 
     fireEvent.click(printButton);
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
-    expect(props.onPrintLabels).toHaveBeenCalledWith(props.labelConfig);
+    expect(props.onPrintLabels).toHaveBeenCalledWith(
+      props.labelConfig,
+      undefined,
+    );
   });
 
   it("states the printable outcome before users inspect diagnostics", () => {

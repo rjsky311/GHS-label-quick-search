@@ -205,9 +205,18 @@ Done means:
 Current status:
 
 - Direction is documented in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- Implementation has not started. Existing print gates still protect
-  single-label and representative multi-chemical cases, but do not yet prove a
-  fixed-stock 50-item batch workflow.
+- Implementation has started at the planner layer:
+  `frontend/src/utils/printBatchPlanner.js`,
+  `frontend/src/utils/testFixtures/batchPrintFixtures.js`, and
+  `frontend/src/utils/__tests__/printBatchPlanner.test.js` define the first
+  fixed-stock 50-item classification baseline.
+- `LabelPrintModal` now surfaces a first batch fit report for multi-item
+  selections and can hand off the default ready subset without forcing the
+  whole batch to A4/Letter.
+- Existing print gates still protect single-label and representative
+  multi-chemical cases, but representative preview switching, explicit
+  review/continuation controls, production Browser QA, and deployed 50-item
+  batch evidence do not yet prove the full workflow.
 
 ### 4. Physical Print Validation
 
