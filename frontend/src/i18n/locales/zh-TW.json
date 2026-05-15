@@ -262,6 +262,7 @@
   "label.selectedLabelsWithPagesSummary": "{{labels}} 張標籤，約 {{pages}} 頁；只有需要多份時才調整數量。",
   "label.selectedLabelsContinuationSummary": "{{sourceLabels}} 張原始標籤會展開為 {{labels}} 張續頁標籤，約 {{pages}} 頁。",
   "label.noneSelected": "尚未選擇任何化學品",
+  "label.noPrintableHazardData": "此選取項目沒有可列印的 GHS 危害資料。製作危害標籤前，請先查閱 SDS 或來源連結。",
   "label.pictogramCount": "({{count}} 個圖示)",
   "label.nameDisplay": "名稱顯示",
   "label.nameBoth": "雙語",

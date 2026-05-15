@@ -58,6 +58,10 @@ Work items:
 - Completed: expanded `qa:production-search-ui` so the deployed Detail modal
   must keep the source-conflict note visible for the Hydrochloric Acid
   multiple-classification path.
+- Completed: tightened label-print entry points so found chemicals with no GHS
+  hazard content cannot be auto-selected, selected from result rows, printed
+  from Detail, or printed from Favorites. Text-only GHS records remain
+  selectable because they still carry hazard content.
 - Audit the search result, detail modal, print modal, export rows, and QR
   target selection for source-conflict language.
 - Define what the UI says when the primary source is PubChem, ECHA-derived,
@@ -466,7 +470,7 @@ or user report points to a more urgent slice.
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Add retention/export-review policy before enabling capture in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
-| Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
+| Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |

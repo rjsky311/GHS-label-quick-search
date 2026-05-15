@@ -67,6 +67,11 @@ export default function ResultsTable({
   const { t, i18n } = useTranslation();
   const displayLocale = i18n.language;
   const hasFoundResults = results.some((result) => result.found);
+  const isPrintableForLabel = (result) =>
+    result.found && hasGhsData(getEffectiveClassification(result));
+  const hasPrintableLabelResults = results.some(isPrintableForLabel);
+  const selectedPrintableCount = selectedForLabel.filter(isPrintableForLabel)
+    .length;
   const decisionSteps = [
     {
       key: "identity",
@@ -109,13 +114,19 @@ export default function ResultsTable({
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={onOpenLabelModal}
-            className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
+            disabled={!hasPrintableLabelResults && selectedPrintableCount === 0}
+            title={
+              !hasPrintableLabelResults && selectedPrintableCount === 0
+                ? t("label.noPrintableHazardData")
+                : undefined
+            }
+            className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
             data-testid="print-label-btn"
           >
             <Tag className="w-4 h-4" /> {t("results.printLabel")}
-            {selectedForLabel.length > 0 && (
+            {selectedPrintableCount > 0 && (
               <span className="rounded-full bg-blue-900 px-2 py-0.5 text-xs">
-                {selectedForLabel.length}
+                {selectedPrintableCount}
               </span>
             )}
           </button>
@@ -198,7 +209,7 @@ export default function ResultsTable({
       )}
 
       {/* Selection controls */}
-      {hasFoundResults && (
+      {hasPrintableLabelResults && (
         <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm">
           <span className="text-slate-600">{t("results.labelSelect")}</span>
           <button
@@ -214,7 +225,7 @@ export default function ResultsTable({
             {t("results.deselectAll")}
           </button>
           <span className="text-slate-500">
-            {t("results.selectedCount", { count: selectedForLabel.length })}
+            {t("results.selectedCount", { count: selectedPrintableCount })}
           </span>
         </div>
       )}
@@ -327,7 +338,7 @@ export default function ResultsTable({
                 data-testid={`result-row-${idx}`}
               >
                 <td className="inline-flex w-9 px-0 py-0 align-top md:table-cell md:w-12 md:px-2 md:py-4 md:text-center">
-                  {result.found && (
+                  {isPrintableForLabel(result) && (
                     <input
                       type="checkbox"
                       checked={isSelectedForLabel(result.cas_number)}

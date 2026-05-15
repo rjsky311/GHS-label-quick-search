@@ -142,6 +142,24 @@ describe('FavoritesSidebar', () => {
     expect(onPrintLabel).toHaveBeenCalledWith(fav);
   });
 
+  it('disables print for favorites without GHS hazard content', () => {
+    const onPrintLabel = jest.fn();
+    const fav = makeFav({
+      ghs_pictograms: [],
+      hazard_statements: [],
+      precautionary_statements: [],
+      signal_word: null,
+    });
+    render(
+      <FavoritesSidebar {...defaultProps} favorites={[fav]} onPrintLabel={onPrintLabel} />
+    );
+
+    const printButton = screen.getByText('favorites.printLabel');
+    expect(printButton).toBeDisabled();
+    fireEvent.click(printButton);
+    expect(onPrintLabel).not.toHaveBeenCalled();
+  });
+
   it('star toggle button invokes onToggleFavorite with the item', () => {
     const onToggleFavorite = jest.fn();
     const fav = makeFav();

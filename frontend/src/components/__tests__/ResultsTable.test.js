@@ -108,6 +108,43 @@ describe('ResultsTable', () => {
       expect(within(printBtn).getByText('2')).toBeInTheDocument();
     });
 
+    it('does not offer label selection when found results have no GHS hazard content', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockNoHazardResult]}
+          selectedForLabel={[mockNoHazardResult]}
+        />
+      );
+
+      expect(screen.getByTestId('print-label-btn')).toBeDisabled();
+      expect(screen.queryByText('results.selectAll')).not.toBeInTheDocument();
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+
+    it('still allows label selection for text-only GHS data without pictograms', () => {
+      const textOnlyGhs = {
+        ...mockNoHazardResult,
+        cas_number: '50-00-0',
+        name_en: 'Text-only hazard',
+        hazard_statements: [{ code: 'H302', text_en: 'Harmful if swallowed.' }],
+        signal_word: 'Warning',
+      };
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[textOnlyGhs]}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('print-label-btn')).not.toBeDisabled();
+      expect(screen.getByText('results.selectAll')).toBeInTheDocument();
+      expect(screen.getByRole('checkbox')).toBeInTheDocument();
+      expect(screen.getByTestId('ghs-data-no-pictograms-50-00-0')).toBeInTheDocument();
+    });
+
     it('renders a compact first-time decision guide when results are usable', () => {
       render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
 

@@ -231,6 +231,23 @@ describe('DetailModal', () => {
       expect(screen.getByText('detail.printLabel')).toBeInTheDocument();
     });
 
+    it('disables printing when the detail result has no GHS hazard content', () => {
+      const onPrintLabel = jest.fn();
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={mockNoHazardResult}
+          onPrintLabel={onPrintLabel}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      const printButton = screen.getByText('detail.printLabel').closest('button');
+      expect(printButton).toBeDisabled();
+      fireEvent.click(printButton);
+      expect(onPrintLabel).not.toHaveBeenCalled();
+    });
+
     it('renders PubChem compound link when cid exists', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText('detail.viewPubChem')).toBeInTheDocument();

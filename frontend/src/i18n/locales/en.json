@@ -262,6 +262,7 @@
   "label.selectedLabelsWithPagesSummary": "{{labels}} label(s), about {{pages}} page(s). Adjust copies only when needed.",
   "label.selectedLabelsContinuationSummary": "{{sourceLabels}} selected label(s) expands to {{labels}} continuation label(s), about {{pages}} page(s).",
   "label.noneSelected": "No chemicals selected",
+  "label.noPrintableHazardData": "No printable GHS hazard data is available for this selection. Review the SDS or source links before making a hazard label.",
   "label.pictogramCount": "({{count}} pictograms)",
   "label.totalLabels": "{{count}} label(s) total",
   "label.totalOutputLabels": "{{count}} output label(s)",

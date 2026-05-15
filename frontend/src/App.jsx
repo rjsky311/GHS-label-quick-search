@@ -437,16 +437,25 @@ function App() {
   }, []);
 
   const handlePrintLabelFromFavorites = useCallback((item) => {
+    if (!hasGhsData(item)) {
+      toast.error(t("label.noPrintableHazardData"));
+      return;
+    }
     setSelectedForLabel([item]);
     setShowLabelModal(true);
     setShowFavorites(false);
-  }, [setSelectedForLabel]);
+  }, [setSelectedForLabel, t]);
 
   const handlePrintLabelFromDetail = useCallback((item) => {
+    const effective = getEffectiveClassification(item);
+    if (!hasGhsData(effective)) {
+      toast.error(t("label.noPrintableHazardData"));
+      return;
+    }
     setSelectedForLabel([item]);
     setSelectedResult(null);
     setShowLabelModal(true);
-  }, [setSelectedForLabel]);
+  }, [getEffectiveClassification, setSelectedForLabel, t]);
 
   const handleTogglePilotDashboard = useCallback(() => {
     if (!PILOT_ADMIN_ENABLED) return;
@@ -484,11 +493,32 @@ function App() {
   );
 
   const handleOpenLabelModal = useCallback(() => {
-    if (selectedForLabel.length === 0) {
-      selectAllForLabel(sortedResults);
+    const getPrintableResults = (items) =>
+      items.filter((r) => r.found && hasGhsData(getEffectiveClassification(r)));
+    const printableSelection = getPrintableResults(selectedForLabel);
+    if (selectedForLabel.length > 0 && printableSelection.length > 0) {
+      if (printableSelection.length !== selectedForLabel.length) {
+        setSelectedForLabel(printableSelection);
+      }
+      setShowLabelModal(true);
+      return;
     }
+
+    const printableVisibleResults = getPrintableResults(sortedResults);
+    if (printableVisibleResults.length === 0) {
+      toast.error(t("label.noPrintableHazardData"));
+      return;
+    }
+
+    setSelectedForLabel(printableVisibleResults);
     setShowLabelModal(true);
-  }, [selectedForLabel.length, selectAllForLabel, sortedResults]);
+  }, [
+    getEffectiveClassification,
+    selectedForLabel,
+    setSelectedForLabel,
+    sortedResults,
+    t,
+  ]);
 
   // Pilot refinement: table-context bulk actions now follow the
   // filtered/sorted view the user is actually looking at, not the raw
@@ -831,7 +861,14 @@ function App() {
               printAllWithGhsCount={printableWithGhsCount}
               onExportToExcel={() => handleOpenExportPreview("xlsx")}
               onExportToCSV={() => handleOpenExportPreview("csv")}
-              onSelectAllForLabel={() => selectAllForLabel(sortedResults)}
+              onSelectAllForLabel={() =>
+                selectAllForLabel(
+                  sortedResults.filter(
+                    (r) =>
+                      r.found && hasGhsData(getEffectiveClassification(r)),
+                  ),
+                )
+              }
               onClearLabelSelection={clearLabelSelection}
               onToggleSelectForLabel={toggleSelectForLabel}
               isSelectedForLabel={isSelectedForLabel}

@@ -250,6 +250,10 @@ Current status:
 - Detail views now match the result table's data-state contract: GHS text
   without renderable pictograms is called out explicitly, and alternate
   classifications remain inspectable even if the primary report has no icons.
+- Label-print entry points now preserve that same data-state boundary: found
+  chemicals with no GHS hazard content stay out of label selection and print
+  handoff, while text-only GHS records can still be selected because they carry
+  hazard content.
 
 ### 5. User Guidance, Brand Utility, And Low-Noise UX
 
