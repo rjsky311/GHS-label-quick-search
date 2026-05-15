@@ -255,6 +255,7 @@ const inspectResultsTrustSurface = async (page) => {
   const note = page.getByTestId("authoritative-source-note-results");
   const checklist = page.getByTestId("authoritative-source-checklist-results");
   const panel = page.getByTestId("product-trust-panel-results");
+  const decisionGuide = page.getByTestId("results-decision-guide");
   const sdsButton = page.getByTestId("sds-btn-0");
   const sdsHref = (await sdsButton.getAttribute("href").catch(() => "")) || "";
   let sdsProtocol = "";
@@ -282,6 +283,11 @@ const inspectResultsTrustSurface = async (page) => {
     productTrustProofCount: await page
       .getByTestId("product-trust-proof-list-results")
       .locator("h3")
+      .count()
+      .catch(() => 0),
+    decisionGuideCount: await decisionGuide.count(),
+    decisionStepCount: await page
+      .locator('[data-testid^="results-decision-step-"]')
       .count()
       .catch(() => 0),
     productTrustReportHref:
@@ -758,6 +764,8 @@ const summarizeSearchUiReportForConsole = (report) => {
       trust: {
         resultAuthoritativeNotes:
           metrics.resultsTrustSurface?.authoritativeNoteCount || 0,
+        resultDecisionSteps:
+          metrics.resultsTrustSurface?.decisionStepCount || 0,
         detailReferenceLinks:
           metrics.detailTrustSurface?.references?.length || 0,
         detailReferenceRoles: [
@@ -849,6 +857,12 @@ try {
   }
   if (resultsTrustSurface.productTrustProofCount < 3) {
     failures.push("results-product-trust-proof-list-incomplete");
+  }
+  if (resultsTrustSurface.decisionGuideCount < 1) {
+    failures.push("results-decision-guide-missing");
+  }
+  if (resultsTrustSurface.decisionStepCount < 3) {
+    failures.push("results-decision-guide-incomplete");
   }
   if (resultsTrustSurface.productTrustReportHref !== SUPPORT_REPORT_DATA_URL) {
     failures.push("results-product-trust-report-link-mismatch");

@@ -66,6 +66,24 @@ export default function ResultsTable({
 }) {
   const { t, i18n } = useTranslation();
   const displayLocale = i18n.language;
+  const hasFoundResults = results.some((result) => result.found);
+  const decisionSteps = [
+    {
+      key: "identity",
+      icon: Search,
+      label: t("results.decisionIdentity"),
+    },
+    {
+      key: "verify",
+      icon: ShieldCheck,
+      label: t("results.decisionVerify"),
+    },
+    {
+      key: "output",
+      icon: Printer,
+      label: t("results.decisionOutput"),
+    },
+  ];
 
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
@@ -156,8 +174,31 @@ export default function ResultsTable({
         </div>
       </div>
 
+      {hasFoundResults && (
+        <div
+          className="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-blue-50/70 px-4 py-3 text-sm"
+          data-testid="results-decision-guide"
+        >
+          <span className="font-medium text-blue-950">
+            {t("results.decisionGuideTitle")}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {decisionSteps.map(({ key, icon: Icon, label }) => (
+              <span
+                key={key}
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                data-testid={`results-decision-step-${key}`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 text-blue-700" />
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Selection controls */}
-      {results.filter((r) => r.found).length > 0 && (
+      {hasFoundResults && (
         <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm">
           <span className="text-slate-600">{t("results.labelSelect")}</span>
           <button

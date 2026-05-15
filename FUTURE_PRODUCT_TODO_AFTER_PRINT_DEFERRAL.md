@@ -148,13 +148,20 @@ without reading long explanations or understanding internal print logic.
 
 ### 2.1 First-Time Search-To-Decision Path
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: a new user should understand what to do first and what result they are
 looking at within seconds.
 
 Work items:
 
-- Review empty state, search examples, autocomplete, result row hierarchy,
-  source chips, SDS links, detail action, print action, and export actions.
+- Completed: reviewed empty state, search examples, autocomplete, result row
+  hierarchy, source chips, SDS links, detail action, print action, and export
+  actions.
+- Completed: added a compact results decision guide that fixes the first result
+  path as identity check, SDS/source verification, then print/export.
+- Completed: extended production search UI QA to require the decision guide and
+  three decision steps.
 - Reduce wording that explains implementation details instead of user
   decisions.
 - Make common paths obvious: search by CAS, search by name, inspect details,
@@ -400,7 +407,7 @@ or user report points to a more urgent slice.
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Monitoring` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Open` | Document retention and re-check public write limits | Backend tests |
-| First-time UX | `Open` | Audit empty/search/result/detail path | Production search UI screenshots |
+| First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
 | Narrow/mobile reading | `Monitoring` | Add cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |

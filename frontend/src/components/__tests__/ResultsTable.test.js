@@ -107,6 +107,27 @@ describe('ResultsTable', () => {
       const printBtn = screen.getByTestId('print-label-btn');
       expect(within(printBtn).getByText('2')).toBeInTheDocument();
     });
+
+    it('renders a compact first-time decision guide when results are usable', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
+
+      expect(screen.getByTestId('results-decision-guide')).toBeInTheDocument();
+      expect(screen.getByText('results.decisionGuideTitle')).toBeInTheDocument();
+      expect(screen.getByTestId('results-decision-step-identity')).toHaveTextContent(
+        'results.decisionIdentity',
+      );
+      expect(screen.getByTestId('results-decision-step-verify')).toHaveTextContent(
+        'results.decisionVerify',
+      );
+      expect(screen.getByTestId('results-decision-step-output')).toHaveTextContent(
+        'results.decisionOutput',
+      );
+    });
+
+    it('does not show the decision guide for not-found-only result sets', () => {
+      render(<ResultsTable {...defaultProps} results={[mockNotFoundResult]} />);
+      expect(screen.queryByTestId('results-decision-guide')).not.toBeInTheDocument();
+    });
   });
 
   describe('Selection controls', () => {
