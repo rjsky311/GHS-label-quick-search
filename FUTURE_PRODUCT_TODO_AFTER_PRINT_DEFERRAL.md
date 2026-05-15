@@ -104,11 +104,18 @@ Acceptance:
 
 ### 1.3 SDS And Reference-Link Authority Model
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: SDS/regulatory/occupational/reference links should remain useful without
 implying that the app has resolved compliance.
 
 Work items:
 
+- Completed: `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md` defines the role-first
+  order, safe-scheme requirement, duplicate-URL strongest-role rule, and QR
+  target boundary.
+- Completed: frontend and backend tests cover unsafe schemes, unknown roles,
+  role-first ordering, duplicate role merging, and QR target preference.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.
@@ -456,7 +463,7 @@ or user report points to a more urgent slice.
 | --- | --- | --- | --- |
 | Data source conflicts | `Gate added` | Keep expanding examples for no-GHS, text-only GHS, and upstream-degraded states | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
-| SDS/reference authority | `Monitoring` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
+| SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Add retention/export-review policy before enabling capture in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
