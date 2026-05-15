@@ -18,6 +18,7 @@ const mobileViewport = {
   width: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_WIDTH || "390", 10),
   height: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_HEIGHT || "844", 10),
 };
+const browserLocale = env.PRODUCTION_SEARCH_UI_LOCALE || "en-US";
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
 const noGhsSearchTerm = env.PRODUCTION_SEARCH_UI_NO_GHS_TERM || "57-13-6";
 const headless = env.PRINT_QA_HEADLESS !== "0";
@@ -931,6 +932,7 @@ try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
     deviceScaleFactor: 1,
+    locale: browserLocale,
   });
   const page = await context.newPage();
 
@@ -1240,6 +1242,7 @@ try {
     viewport: mobileViewport,
     deviceScaleFactor: 2,
     isMobile: true,
+    locale: browserLocale,
   });
   const mobilePage = await mobileContext.newPage();
   await mobilePage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });

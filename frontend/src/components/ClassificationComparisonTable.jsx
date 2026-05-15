@@ -120,7 +120,7 @@ export default function ClassificationComparisonTable({
   if (isNarrowViewport) {
     return (
       <div
-        className="space-y-3 rounded-lg border border-slate-200 bg-white p-3"
+        className="min-w-0 max-w-full space-y-3 overflow-hidden rounded-lg border border-slate-200 bg-white p-3"
         data-testid="comparison-table"
         data-layout="mobile-cards"
       >
@@ -143,16 +143,16 @@ export default function ClassificationComparisonTable({
           return (
             <article
               key={colIdx}
-              className={`rounded-md border p-3 ${
+              className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${
                 isSelected
                   ? "border-blue-200 bg-blue-50/70"
                   : "border-slate-200 bg-white"
               }`}
               data-testid={`comparison-mobile-card-${colIdx}`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
                     {isSameChemical && (
                       isSelected ? (
                         <Star className="h-4 w-4 shrink-0 fill-current text-blue-600" />
@@ -161,7 +161,7 @@ export default function ClassificationComparisonTable({
                       )
                     )}
                     <h4
-                      className={`font-medium ${
+                      className={`min-w-0 break-words font-medium leading-snug ${
                         isSelected ? "text-blue-800" : "text-slate-950"
                       }`}
                     >
@@ -169,7 +169,7 @@ export default function ClassificationComparisonTable({
                     </h4>
                   </div>
                   {col.sublabel && (
-                    <p className="mt-1 font-mono text-xs text-blue-700">
+                    <p className="mt-1 break-all font-mono text-xs text-blue-700">
                       {col.sublabel}
                     </p>
                   )}
@@ -194,14 +194,14 @@ export default function ClassificationComparisonTable({
                 )}
               </div>
 
-              <div className="mt-3 space-y-3 text-sm">
-                <section>
+              <div className="mt-3 min-w-0 space-y-3 text-sm">
+                <section className="min-w-0">
                   <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {t("compare.rowPictograms")}
                   </h5>
                   {allPictogramCodes.length > 0 ? (
                     <div
-                      className="space-y-2"
+                      className="min-w-0 max-w-full space-y-2 overflow-hidden"
                       data-testid={`comparison-mobile-pictograms-${colIdx}`}
                     >
                       <GHSPictogramStrip
@@ -234,7 +234,7 @@ export default function ClassificationComparisonTable({
                   )}
                 </section>
 
-                <section>
+                <section className="min-w-0">
                   <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {t("compare.rowSignalWord")}
                   </h5>
@@ -256,7 +256,7 @@ export default function ClassificationComparisonTable({
                   )}
                 </section>
 
-                <section>
+                <section className="min-w-0">
                   <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {t("compare.rowHazards")}
                   </h5>
@@ -269,7 +269,7 @@ export default function ClassificationComparisonTable({
                         return (
                           <div
                             key={code}
-                            className={`flex items-start gap-2 rounded px-2 py-1 text-xs ${
+                            className={`flex min-w-0 items-start gap-2 rounded px-2 py-1 text-xs ${
                               isUnique
                                 ? "border-l-2 border-l-blue-600 bg-blue-50"
                                 : "bg-slate-50"
@@ -281,7 +281,7 @@ export default function ClassificationComparisonTable({
                             <span className="shrink-0 font-mono font-medium text-blue-700">
                               {code}
                             </span>
-                            <span className="min-w-0 text-slate-700">
+                            <span className="min-w-0 break-words text-slate-700">
                               {getLocalizedStatementText(stmt, displayLocale)}
                             </span>
                           </div>
@@ -294,7 +294,7 @@ export default function ClassificationComparisonTable({
                 </section>
 
                 {allPCodes.length > 0 && (
-                  <section>
+                  <section className="min-w-0">
                     <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {t("compare.rowPrecautions")}
                     </h5>
@@ -306,12 +306,12 @@ export default function ClassificationComparisonTable({
                           return (
                             <div
                               key={code}
-                              className="flex items-start gap-2 rounded bg-slate-50 px-2 py-1 text-xs"
+                              className="flex min-w-0 items-start gap-2 rounded bg-slate-50 px-2 py-1 text-xs"
                             >
                               <span className="shrink-0 font-mono font-medium text-blue-700">
                                 {code}
                               </span>
-                              <span className="min-w-0 text-slate-700">
+                              <span className="min-w-0 break-words text-slate-700">
                                 {getLocalizedStatementText(stmt, displayLocale)}
                               </span>
                             </div>
@@ -325,12 +325,14 @@ export default function ClassificationComparisonTable({
                 )}
 
                 {isSameChemical && (
-                  <section>
+                  <section className="min-w-0">
                     <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {t("compare.rowSource")}
                     </h5>
                     {source ? (
-                      <p className="text-xs leading-5 text-slate-600">{source}</p>
+                      <p className="break-words text-xs leading-5 text-slate-600">
+                        {source}
+                      </p>
                     ) : (
                       <span className="text-xs text-slate-600">-</span>
                     )}
