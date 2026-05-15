@@ -120,6 +120,10 @@ Telemetry:
 - Dictionary miss capture is opt-in via `CAPTURE_DICTIONARY_MISSES=true`.
 - Miss-query payloads must remain length-limited, context-size-limited, and
   rate-limited.
+- Miss-query context is limited to an allow-list of non-freeform metadata keys:
+  `locale`, `normalizedCas`, `resultCount`, `searchMode`, and `source`.
+  Unsupported keys and nested objects must be dropped before persistence, and
+  long allowed scalar values must be rejected.
 - Telemetry must not become a public unbounded write path into SQLite.
 
 ## 6. Required Tests
@@ -131,6 +135,8 @@ Backend:
 - Reference-link reads skip unsafe legacy/manual URLs.
 - Miss-query capture is disabled unless explicitly enabled.
 - Miss-query payloads reject oversized query/context values.
+- Miss-query context drops unsupported/free-text/nested keys before
+  persistence and rejects long allowed scalar values.
 - Miss-query endpoint keeps its public write route rate-limited.
 - Manual dictionary entry and alias payloads reject oversized or unsupported
   admin values before writing to SQLite.

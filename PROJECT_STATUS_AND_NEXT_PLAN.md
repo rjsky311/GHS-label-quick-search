@@ -243,6 +243,9 @@ Current status:
   locale/status values, and constrain numeric priority/confidence before data
   reaches SQLite. Optional workspace document writes also reject oversized JSON
   payloads.
+- Optional miss-query telemetry remains opt-in and now stores only allow-listed
+  non-freeform context metadata, so public capture cannot persist arbitrary
+  email/free-text/nested payloads.
 - Detail views now match the result table's data-state contract: GHS text
   without renderable pictograms is called out explicitly, and alternate
   classifications remain inspectable even if the primary report has no icons.

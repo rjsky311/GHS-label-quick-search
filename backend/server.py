@@ -62,6 +62,14 @@ MAX_MISS_QUERY_KIND_LENGTH = 40
 MAX_MISS_ENDPOINT_LENGTH = 80
 MAX_MISS_CONTEXT_ITEMS = 20
 MAX_MISS_CONTEXT_JSON_CHARS = 2000
+MAX_MISS_CONTEXT_SCALAR_CHARS = 160
+ALLOWED_MISS_CONTEXT_KEYS = {
+    "locale",
+    "normalizedCas",
+    "resultCount",
+    "searchMode",
+    "source",
+}
 MAX_WORKSPACE_DOCUMENT_JSON_CHARS = 200000
 MAX_ADMIN_CAS_LENGTH = 32
 MAX_ADMIN_NAME_LENGTH = 240
@@ -180,6 +188,27 @@ def _is_safe_reference_url(value: str) -> bool:
 def _safe_reference_link_type(value: Any) -> str:
     normalized = str(value or "").strip().lower()
     return normalized if normalized in REFERENCE_LINK_TYPES else "reference"
+
+
+def _sanitize_dictionary_miss_context(value: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Keep public miss-query telemetry bounded to non-freeform metadata."""
+    sanitized: Dict[str, Any] = {}
+    for raw_key, raw_value in (value or {}).items():
+        key = str(raw_key or "").strip()
+        if key not in ALLOWED_MISS_CONTEXT_KEYS:
+            continue
+        if isinstance(raw_value, bool) or raw_value is None:
+            sanitized[key] = raw_value
+            continue
+        if isinstance(raw_value, (int, float)):
+            sanitized[key] = raw_value
+            continue
+        if isinstance(raw_value, str):
+            text = raw_value.strip()
+            if len(text) > MAX_MISS_CONTEXT_SCALAR_CHARS:
+                raise ValueError("context scalar value is too large")
+            sanitized[key] = text
+    return sanitized
 
 
 def _reference_link_type_rank(link: Dict[str, Any]) -> int:
@@ -361,7 +390,7 @@ def _record_dictionary_miss(query: str, query_kind: str, endpoint: str, *, conte
             query,
             query_kind,
             endpoint,
-            context=context or {},
+            context=_sanitize_dictionary_miss_context(context),
         )
     except Exception as exc:
         logger.warning("Failed to persist miss query '%s': %s", query, exc)
@@ -659,7 +688,7 @@ class DictionaryMissQueryPayload(BaseModel):
         encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
         if len(encoded) > MAX_MISS_CONTEXT_JSON_CHARS:
             raise ValueError("context payload is too large")
-        return value
+        return _sanitize_dictionary_miss_context(value)
 
 
 class DictionaryManualEntryPayload(BaseModel):

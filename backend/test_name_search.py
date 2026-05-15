@@ -214,6 +214,66 @@ async def test_dictionary_miss_query_rejects_oversized_payload(monkeypatch):
     assert large_context_response.status_code == 422
 
 
+async def test_dictionary_miss_query_context_is_sanitized(monkeypatch):
+    monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", True)
+    captured = {}
+
+    def fake_record_miss_query(query, query_kind, endpoint, *, context=None):
+        captured["query"] = query
+        captured["query_kind"] = query_kind
+        captured["endpoint"] = endpoint
+        captured["context"] = context
+        return {"query": query, "queryKind": query_kind, "endpoint": endpoint}
+
+    monkeypatch.setattr(server.pilot_store, "record_miss_query", fake_record_miss_query)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-query",
+            json={
+                "query": "unknown solvent",
+                "query_kind": "name",
+                "endpoint": "frontend",
+                "context": {
+                    "locale": " zh ",
+                    "normalizedCas": " 64-17-5 ",
+                    "resultCount": 0,
+                    "email": "user@example.com",
+                    "freeText": "please call me",
+                    "nested": {"unsafe": True},
+                },
+            },
+        )
+
+    assert response.status_code == 200
+    assert captured["context"] == {
+        "locale": "zh",
+        "normalizedCas": "64-17-5",
+        "resultCount": 0,
+    }
+
+
+async def test_dictionary_miss_query_rejects_long_allowed_context_scalar(monkeypatch):
+    monkeypatch.setattr(server, "CAPTURE_DICTIONARY_MISSES", True)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-query",
+            json={
+                "query": "unknown solvent",
+                "query_kind": "name",
+                "endpoint": "frontend",
+                "context": {
+                    "source": "x" * (server.MAX_MISS_CONTEXT_SCALAR_CHARS + 1),
+                },
+            },
+        )
+
+    assert response.status_code == 422
+
+
 def test_dictionary_miss_query_endpoint_is_rate_limited():
     limits = server.limiter._route_limits.get("server.dictionary_miss_query", [])
     assert any(

@@ -127,11 +127,19 @@ Acceptance:
 
 ### 1.4 Telemetry, Admin Cost, And Privacy Boundaries
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: pilot telemetry should help improve coverage without becoming a storage,
 privacy, or abuse risk.
 
 Work items:
 
+- Completed: restricted public miss-query `context` to a small allow-list of
+  non-freeform metadata keys and primitive values; unsupported keys such as
+  email/free-text/nested payloads are dropped before persistence.
+- Completed: added backend tests for miss-query context sanitization,
+  long-allowed-scalar rejection, existing oversized payload rejection, opt-in
+  behavior, and rate-limit registration.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should
@@ -418,7 +426,7 @@ or user report points to a more urgent slice.
 | Data source conflicts | `Gate added` | Keep expanding examples for no-GHS, text-only GHS, and upstream-degraded states | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Monitoring` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
-| Telemetry/privacy | `Open` | Document retention and re-check public write limits | Backend tests |
+| Telemetry/privacy | `Gate added` | Add retention/export-review policy before enabling capture in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
