@@ -28,6 +28,9 @@ jobs:
       - name: Check i18n parity
         run: npm run test:i18n
 
+      - name: Check docs drift
+        run: npm run test:docs
+
       - name: Run tests
         run: npm test -- --runInBand
 

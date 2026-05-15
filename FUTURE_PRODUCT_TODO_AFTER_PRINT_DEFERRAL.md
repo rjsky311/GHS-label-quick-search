@@ -316,12 +316,17 @@ Acceptance:
 
 ### 3.3 Documentation Drift Checks
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: docs should not silently contradict the product state.
 
 Work items:
 
-- Consider adding lightweight checks for version strings, canonical doc links,
-  and stale "next" language.
+- Completed: added `npm run test:docs`, which checks runtime version alignment,
+  canonical planning links, doc role statements, physical-print deferral
+  wording, and future-tracker status labels.
+- Completed: added the docs drift gate to CI so future pushes catch broken
+  planning links or unsupported tracker status values.
 - Keep docs-only closure to `git diff --check` plus targeted `rg` checks unless
   generated docs are involved.
 - When a behavior changes, update the closest owner doc instead of adding a new
@@ -459,5 +464,6 @@ or user report points to a more urgent slice.
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
 | Maintainer doc split | `Shipped` | Keep `CLAUDE.md` as a pointer only | Docs-only checks |
+| Documentation drift checks | `Gate added` | Keep `test:docs` aligned when canonical docs change | `npm run test:docs` |
 | Brand/support rules | `Shipped` | Apply the commercial-copy review gate to any future conversion change | Docs + production UX review |
 | Education/help content | `Monitoring` | Add only task-supporting help where confusion persists | i18n + production walkthrough |

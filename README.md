@@ -98,6 +98,7 @@ Frontend:
 cd frontend
 npm test -- --runInBand
 npm run test:i18n
+npm run test:docs
 npm run build
 npm run test:print-contract
 ```
@@ -114,6 +115,8 @@ Docs-only changes should at minimum pass:
 
 ```bash
 git diff --check
+cd frontend
+npm run test:docs
 ```
 
 ## Project Structure

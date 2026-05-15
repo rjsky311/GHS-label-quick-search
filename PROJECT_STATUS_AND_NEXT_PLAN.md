@@ -57,6 +57,7 @@ Current baseline capabilities:
 Current validation gates:
 
 - Docs-only: `git diff --check`
+- Docs drift: `npm run test:docs` from `frontend/`
 - Frontend: `npm test -- --runInBand`, `npm run test:i18n`, `npm run build`
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
@@ -351,6 +352,8 @@ Minimum closure requirements:
 Docs-only closure:
 
 - `git diff --check`
+- `npm run test:docs` from `frontend/` when canonical docs, version strings,
+  status labels, or planning links changed
 - `rg "PROJECT_STATUS_AND_NEXT_PLAN" .`
 - Confirm the changed docs do not contradict the canonical planning role of
   this file.
