@@ -648,6 +648,12 @@ const inspectMobileReadFirstResult = async (page) =>
     const detailButton = document.querySelector('[data-testid="detail-btn-0"]');
     const sdsButton = document.querySelector('[data-testid="sds-btn-0"]');
     const firstRow = document.querySelector('[data-testid="result-row-0"]');
+    const decisionGuide = document.querySelector(
+      '[data-testid="results-decision-guide"]',
+    );
+    const decisionSteps = Array.from(
+      document.querySelectorAll('[data-testid^="results-decision-step-"]'),
+    );
     const tableStyle = table ? window.getComputedStyle(table) : null;
     return {
       viewportWidth: window.innerWidth,
@@ -658,6 +664,11 @@ const inspectMobileReadFirstResult = async (page) =>
       tableDisplay: tableStyle?.display || "",
       tableRect: serializeRect(table),
       rowRect: serializeRect(firstRow),
+      decisionGuideRect: serializeRect(decisionGuide),
+      decisionStepRects: decisionSteps.map((step) => ({
+        ...serializeRect(step),
+        text: (step.textContent || "").replace(/\s+/g, " ").trim(),
+      })),
       detailButton: serializeRect(detailButton),
       sdsButton: serializeRect(sdsButton),
       rowText: (firstRow?.textContent || "").replace(/\s+/g, " ").trim(),
@@ -793,6 +804,10 @@ const summarizeSearchUiReportForConsole = (report) => {
           mobileReadFirst.documentScrollWidth >
             mobileReadFirst.viewportWidth + 2 ||
           mobileReadFirst.bodyScrollWidth > mobileReadFirst.viewportWidth + 2,
+        decisionStepCount: mobileReadFirst.decisionStepRects?.length || 0,
+        decisionStepVerticalRisks:
+          mobileReadFirst.decisionStepRects?.filter(isVerticalTextRisk).length ||
+          0,
         detailHorizontalOverflow:
           mobileDetailReadFirst.documentScrollWidth >
             mobileDetailReadFirst.viewportWidth + 2 ||
@@ -1229,6 +1244,23 @@ try {
     !isRectInsideViewport(mobileReadFirst.sdsButton, mobileReadFirst.viewportWidth)
   ) {
     failures.push("mobile-read-first-sds-action-offscreen");
+  }
+  if (
+    !isRectInsideViewport(
+      mobileReadFirst.decisionGuideRect,
+      mobileReadFirst.viewportWidth,
+    )
+  ) {
+    failures.push("mobile-read-first-decision-guide-offscreen");
+  }
+  if ((mobileReadFirst.decisionStepRects || []).length < 3) {
+    failures.push("mobile-read-first-decision-guide-incomplete");
+  }
+  const mobileDecisionVerticalRisks = (
+    mobileReadFirst.decisionStepRects || []
+  ).filter(isVerticalTextRisk);
+  if (mobileDecisionVerticalRisks.length > 0) {
+    failures.push("mobile-read-first-decision-guide-vertical-text");
   }
   if (!/Hydrochloric acid|鹽酸|Hydrochloric Acid/.test(mobileReadFirst.rowText)) {
     failures.push("mobile-read-first-result-identity-missing");

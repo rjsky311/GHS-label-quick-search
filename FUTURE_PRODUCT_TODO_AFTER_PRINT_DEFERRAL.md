@@ -200,11 +200,15 @@ Acceptance:
 
 ### 2.3 Narrow And Mobile Read-First Polish
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: mobile and narrow screens may be read/search/SDS-first rather than
 print-first, but the core workflow should not visually break.
 
 Work items:
 
+- Completed: expanded `qa:production-search-ui` so the first-time decision
+  guide must remain visible, complete, and non-vertical at 390px width.
 - Continue expanding `qa:production-search-ui` when new narrow/mobile
   regressions appear.
 - Review result cards, detail comparison cards, trust notes, SDS/reference
@@ -409,7 +413,7 @@ or user report points to a more urgent slice.
 | Telemetry/privacy | `Open` | Document retention and re-check public write limits | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
-| Narrow/mobile reading | `Monitoring` | Add cases when new narrow regressions appear | `qa:production-search-ui` |
+| Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
 | Maintainer doc split | `Planned` | Decide whether `CLAUDE.md` should delegate to `AGENTS.md` | Docs-only checks |
