@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   formatPreparedDisplayName,
   getPreparedExpiryStatus,
@@ -73,8 +74,11 @@ export default function PrepareSolutionModal({
   onPresetNameChange,
 }) {
   const { t } = useTranslation();
-  const dialogRef = useRef(null);
   const concentrationInputRef = useRef(null);
+  const dialogRef = useFocusTrap(onClose, {
+    initialFocusRef: concentrationInputRef,
+    disableEscape: true,
+  });
 
   const [concentration, setConcentration] = useState("");
   const [solvent, setSolvent] = useState("");
@@ -172,8 +176,6 @@ export default function PrepareSolutionModal({
   };
 
   useEffect(() => {
-    // Put focus on the first meaningful input, not the X button.
-    concentrationInputRef.current?.focus();
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         // Capture phase + stopImmediatePropagation so the DetailModal

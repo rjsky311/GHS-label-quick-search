@@ -234,6 +234,53 @@ describe("PrepareSolutionModal", () => {
     expect(screen.getByTestId("prepared-concentration-input")).toHaveFocus();
   });
 
+  it("traps Tab navigation inside the modal while keeping the form-first focus target", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    const closeButton = screen.getByTestId("prepare-solution-close-btn");
+    const concentrationInput = screen.getByTestId(
+      "prepared-concentration-input"
+    );
+    const solventInput = screen.getByTestId("prepared-solvent-input");
+    const submitButton = screen.getByTestId("prepare-solution-submit-btn");
+
+    expect(concentrationInput).toHaveFocus();
+
+    fireEvent.change(concentrationInput, { target: { value: "10%" } });
+    fireEvent.change(solventInput, { target: { value: "Water" } });
+    expect(submitButton).not.toBeDisabled();
+
+    submitButton.focus();
+    fireEvent.keyDown(submitButton, { key: "Tab" });
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.keyDown(closeButton, { key: "Tab", shiftKey: true });
+    expect(submitButton).toHaveFocus();
+  });
+
+  it("Escape from the focused input closes the modal", () => {
+    const onClose = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={onClose}
+      />
+    );
+    const concentrationInput = screen.getByTestId(
+      "prepared-concentration-input"
+    );
+    concentrationInput.focus();
+    fireEvent.keyDown(concentrationInput, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the trust-boundary form note so users see the disclaimer before submitting", () => {
     render(
       <PrepareSolutionModal

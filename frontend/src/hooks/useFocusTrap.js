@@ -15,6 +15,7 @@ import { useEffect, useRef } from "react";
  *
  * Usage:
  *   const panelRef = useFocusTrap(onClose);
+ *   const panelRef = useFocusTrap(onClose, { initialFocusRef, disableEscape });
  *   return <div ref={panelRef} role="dialog" aria-modal="true">…</div>;
  *
  * The ref should be attached to the inner panel element, not to the
@@ -30,15 +31,22 @@ import { useEffect, useRef } from "react";
  *   every parent re-render. We hold the latest `onClose` in a ref
  *   so the main effect's dependency list stays empty.
  */
-export default function useFocusTrap(onClose) {
+export default function useFocusTrap(onClose, options = null) {
   const containerRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  const optionsRef = useRef(options || {});
 
   // Keep the ref in sync with the latest `onClose` without causing
   // the main effect to tear down and rebuild the trap.
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  // Options are read by the once-mounted key handler. Keep them fresh
+  // without rebuilding the trap when a parent re-renders.
+  useEffect(() => {
+    optionsRef.current = options || {};
+  }, [options]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -58,7 +66,14 @@ export default function useFocusTrap(onClose) {
     // fall back to the container itself (tabindex -1) so Tab still
     // starts from a sensible anchor inside the modal.
     const focusables = getFocusable();
-    if (focusables.length > 0) {
+    const preferredFocus = optionsRef.current?.initialFocusRef?.current;
+    if (
+      preferredFocus instanceof HTMLElement &&
+      container.contains(preferredFocus) &&
+      !preferredFocus.hasAttribute("disabled")
+    ) {
+      preferredFocus.focus();
+    } else if (focusables.length > 0) {
       focusables[0].focus();
     } else {
       if (!container.hasAttribute("tabindex")) {
@@ -69,6 +84,7 @@ export default function useFocusTrap(onClose) {
 
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
+        if (optionsRef.current?.disableEscape) return;
         e.preventDefault();
         // Read through the ref so we always invoke the latest callback,
         // even if the parent has re-rendered since mount.
