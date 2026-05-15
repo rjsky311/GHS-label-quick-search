@@ -290,16 +290,23 @@ Acceptance:
 
 ### 3.2 Maintainer Docs Split
 
+Status: `Shipped` on 2026-05-15.
+
 Goal: public docs and maintainer docs should not fight each other.
 
 Work items:
 
+- Completed: replaced `CLAUDE.md` with a short delegation file that points to
+  `AGENTS.md`, `PROJECT_STATUS_AND_NEXT_PLAN.md`,
+  `AUTONOMOUS_WORKFLOW.md`, and this future tracker instead of duplicating
+  stale project context.
+- Completed: added `AGENTS.md` to the README maintainer entry points.
 - Keep `PROJECT_STATUS_AND_NEXT_PLAN.md` as the canonical internal planning
   entry.
 - Keep `AGENTS.md` current for coding-agent/session bootstrap context.
 - Keep `AUTONOMOUS_WORKFLOW.md` focused on how to continue work.
-- Decide whether `CLAUDE.md` is still actively maintained or should point to
-  `AGENTS.md` to reduce duplicate drift.
+- Keep `CLAUDE.md` as a pointer only, unless the canonical entry-point order
+  changes.
 
 Acceptance:
 
@@ -328,7 +335,7 @@ Acceptance:
 
 ## 4. Brand Trust, Support Surfaces, And Non-Intrusive Conversion
 
-Status: `Open`
+Status: `Shipped` on 2026-05-15.
 
 Why this matters: the tool can support brand visibility and future indirect
 monetization, but it must never make printed safety labels feel promotional or
@@ -336,11 +343,16 @@ make users question whether hazard communication is being traded for ads.
 
 ### 4.1 Brand Trust Surface Rules
 
+Status: `Shipped` on 2026-05-15.
+
 Goal: brand presence should reinforce trust after the safety task has been
 served.
 
 Work items:
 
+- Completed: expanded `BRANDED_UTILITY_STRATEGY.md` with a current product
+  contract, surface matrix, regression expectations, and commercial-copy
+  review gate.
 - Keep printed labels, GHS pictograms, hazard statements, and SDS verification
   paths free of ads and unrelated promotion.
 - Limit brand/support surfaces to footer, support band, help/education,
@@ -355,10 +367,15 @@ Acceptance:
 
 ### 4.2 Support And Feedback Funnel
 
+Status: `Shipped` on 2026-05-15.
+
 Goal: capture useful feedback while preserving the safety boundary.
 
 Work items:
 
+- Completed: documented the split between data corrections and workflow help in
+  `BRANDED_UTILITY_STRATEGY.md`; existing ProductTrustPanel/Footer tests and
+  production search UI QA cover the separated issue-template links.
 - Keep data-correction requests separate from workflow/product requests.
 - Consider adding structured prompts for correction evidence: CAS, SDS URL,
   supplier label, observed mismatch, local regulation context.
@@ -372,11 +389,15 @@ Acceptance:
 
 ### 4.3 Educational Or Help Content
 
+Status: `Monitoring` on 2026-05-15.
+
 Goal: explain the tool's limitations and output roles without cluttering the
 main workflow.
 
 Work items:
 
+- Completed: documented that help/education must support the task and must not
+  become modal popups, sales heroes, or explanatory clutter.
 - Add concise help content only where it reduces user confusion.
 - Explain complete primary labels, supplemental labels, quick-ID labels, QR
   supplements, and why SDS/local verification still matters.
@@ -389,11 +410,16 @@ Acceptance:
 
 ### 4.4 Future Conversion Experiments
 
+Status: `Shipped` on 2026-05-15.
+
 Goal: leave room for ethical indirect monetization without compromising the
 free utility.
 
 Work items:
 
+- Completed: added a commercial-copy review gate that blocks conversion copy
+  from GHS icons, signal words, H/P statements, SDS authority copy,
+  blocked-output warnings, and printed label bodies.
 - Define allowed surfaces for future brand or service prompts.
 - Define disallowed surfaces: printed labels, GHS icons, hazard statements,
   warning panels, blocked-output recovery, and SDS authority copy.
@@ -432,6 +458,6 @@ or user report points to a more urgent slice.
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
-| Maintainer doc split | `Planned` | Decide whether `CLAUDE.md` should delegate to `AGENTS.md` | Docs-only checks |
-| Brand/support rules | `Open` | Define allowed/disallowed conversion surfaces | Docs + production UX review |
-| Education/help content | `Open` | Add only task-supporting help where confusion persists | i18n + production walkthrough |
+| Maintainer doc split | `Shipped` | Keep `CLAUDE.md` as a pointer only | Docs-only checks |
+| Brand/support rules | `Shipped` | Apply the commercial-copy review gate to any future conversion change | Docs + production UX review |
+| Education/help content | `Monitoring` | Add only task-supporting help where confusion persists | i18n + production walkthrough |

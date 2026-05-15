@@ -282,6 +282,10 @@ Current status:
   on phone-width viewports, keeping chemical identity, GHS pictograms, signal
   word, detail action, and SDS action inside the viewport instead of requiring
   horizontal table scrolling.
+- Brand/support boundaries are now pinned in `BRANDED_UTILITY_STRATEGY.md`:
+  conversion surfaces must stay outside GHS icons, signal words, H/P
+  statements, SDS authority copy, blocked-output warnings, and printed label
+  bodies.
 - The detail modal's same-chemical classification comparison uses readable
   stacked cards on narrow viewports instead of a desktop-width comparison
   table, so alternate GHS reports can be inspected without horizontal dragging.
@@ -357,6 +361,8 @@ Use these files by role:
 
 - `AGENTS.md`: project context, architecture, current runtime state, and
   session bootstrap guidance.
+- `CLAUDE.md`: short compatibility entry point that delegates to `AGENTS.md`,
+  this file, `AUTONOMOUS_WORKFLOW.md`, and the future tracker.
 - `AUTONOMOUS_WORKFLOW.md`: standing approval, default work loop, stop
   conditions, and verification rules.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.

@@ -139,6 +139,8 @@ zeabur.yaml             Zeabur deployment configuration
 
 Use these files before starting product or safety-critical changes:
 
+- [AGENTS.md](./AGENTS.md) - coding-agent bootstrap context, architecture, and
+  current runtime state.
 - [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md) -
   canonical current status, priority order, and done criteria.
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.

@@ -8,6 +8,28 @@ The strategic stance is:
 
 > Give users real safety workflow value first. Create trust and recall through usefulness. Offer the next step only after the tool has helped them.
 
+## Current Product Contract
+
+As of v1.10, brand/support surfaces are allowed only when they clarify
+authorship, correction paths, workflow help, or post-task resources. They must
+not compete with the user's safety decision.
+
+Current shipped surfaces:
+
+- Footer attribution and correction/request links.
+- Product trust panel on the empty/results states.
+- Separate GitHub issue templates for data corrections and workflow requests.
+- Generated/printed label trust footer copy that stays safety-focused rather
+  than promotional.
+
+Regression expectation:
+
+- `qa:production-search-ui` must keep data-correction and workflow-request
+  links separated.
+- Footer/ProductTrustPanel tests must keep support links pointed to the correct
+  issue templates.
+- Print QA must keep promotional or unrelated content out of hazard labels.
+
 ## What This Means For Design
 
 The app should not look like a lead-generation landing page. The first screen remains the working tool. The product can still be branded, but brand presence should feel like authorship and reliability, not pressure.
@@ -33,6 +55,17 @@ Promotion and conversion belong after value is delivered:
 
 Promotion does not belong before the first search, inside hazard statements, or inside compliance-critical printed labels.
 
+## Surface Matrix
+
+| Surface | Allowed | Not allowed |
+| --- | --- | --- |
+| Search/empty state | Product authorship, source boundary, correction/workflow links | Lead-capture wall, forced sign-up, sales hero |
+| Results/detail views | SDS/source verification, correction links, workflow request links | Claims of legal approval, sponsored source ranking |
+| Print modal | Output-role explanation, blocked-output recovery, template guidance | Ads, affiliate prompts, service upsells in blocker copy |
+| Printed labels | Required hazard communication, identity/profile fields, safety footer | Brand campaigns, sponsor copy, unrelated QR destinations |
+| Exports | Source timestamp or generated-by metadata if useful | Promotional rows mixed into safety data |
+| QR/detail pages | Hazard summary, SDS path, subtle footer attribution | Promotions above hazard/SDS content |
+
 ## Allowed Conversion Surfaces
 
 ### Header / Footer
@@ -56,6 +89,15 @@ After results exist, a narrow resource strip can offer:
 - Downloadable lab label checklist.
 
 This must be visually secondary to results and never look like a safety source.
+
+Data corrections and workflow help must remain separate:
+
+- Data correction: wrong/missing CAS, name, GHS state, SDS/reference link, or
+  source conflict evidence.
+- Workflow help: batch labels, prepared-solution workflows, QR flows, internal
+  deployment, lab templates, or printer/stock setup.
+
+Do not route safety-data corrections into a commercial lead path.
 
 ### Print Completion
 
@@ -122,6 +164,20 @@ Publish practical resources:
 - PubChem/ECHA/SDS source explanation.
 
 Use content as discovery and trust-building, not as modal popups.
+
+## Commercial Copy Review Gate
+
+Any future commercial or brand-visibility change must answer these checks
+before implementation:
+
+1. Does it appear only after or outside the safety task?
+2. Does it avoid GHS pictograms, signal words, H/P statements, SDS authority
+   copy, blocked-output warnings, and printed label bodies?
+3. Does it keep data-correction paths separate from business/workflow requests?
+4. Can a user complete search, verify, preview, print, and export without
+   interacting with the promotional surface?
+5. Does production QA or a focused test prove the safety-critical surface stayed
+   clean?
 
 ## Product Metrics
 
