@@ -156,11 +156,16 @@ Work items:
 - Completed: added backend tests for miss-query context sanitization,
   long-allowed-scalar rejection, existing oversized payload rejection, opt-in
   behavior, and rate-limit registration.
+- Completed: added maintainer retention and review rules to
+  `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`: public production keeps capture
+  disabled by default, pilot raw rows get monthly review and 90-day delete or
+  aggregation, exports are not analytics storage, identity/free-form payloads
+  stay out of miss context, and abuse is handled by disabling capture before
+  loosening caps.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should
   never be stored.
-- Add a simple data-retention note for maintainers.
 - Keep observability exports admin-gated and avoid user-identifying payloads
   unless explicitly justified.
 
@@ -473,7 +478,7 @@ or user report points to a more urgent slice.
 | Data source conflicts | `Gate added` | No-GHS deployed state is covered with Urea; keep expanding text-only GHS and upstream-degraded examples | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
-| Telemetry/privacy | `Gate added` | Add retention/export-review policy before enabling capture in production | Backend tests |
+| Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |

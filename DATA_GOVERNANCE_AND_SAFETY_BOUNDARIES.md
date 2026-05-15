@@ -126,6 +126,24 @@ Telemetry:
   long allowed scalar values must be rejected.
 - Telemetry must not become a public unbounded write path into SQLite.
 
+Retention and review rules:
+
+- Public production should keep `CAPTURE_DICTIONARY_MISSES=false` unless there
+  is an explicit pilot window, owner, and review cadence.
+- When miss capture is enabled for a pilot, raw miss-query rows should be
+  reviewed at least monthly and deleted or aggregated within 90 days unless a
+  specific correction task still needs the evidence.
+- Admin exports are for review, triage, and audit only. Do not use them as a
+  long-term analytics warehouse or copy raw miss telemetry into public docs.
+- Do not add email, names, free-form lab notes, file paths, or nested user
+  payloads to miss-query context. If support needs identity or follow-up
+  details, route that through the separate GitHub issue templates instead.
+- If spam, scraping, or unexpected storage growth appears, disable capture
+  first, then tighten limits. Do not raise payload caps to preserve abusive
+  data.
+- Workspace documents are user/admin workflow state, not telemetry. Keep their
+  payload caps and admin access separate from miss-query retention decisions.
+
 ## 6. Required Tests
 
 Backend:
@@ -170,8 +188,8 @@ Frontend:
 Production QA:
 
 - `npm run qa:production-search-ui` must continue checking trust notes, source
-  badges, safe reference link metadata, SDS link shape, and separated
-  data-correction/workflow support links.
+  badges, no-GHS data-state behavior, safe reference link metadata, SDS link
+  shape, and separated data-correction/workflow support links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 
