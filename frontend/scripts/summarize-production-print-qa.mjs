@@ -261,7 +261,7 @@ const buildProductBlocks = () => [
       handoffReportsPassing &&
       isPassingReport(reports.prepared),
     evidence:
-      "Core deployed walkthroughs keep search, detail, trust/support, print, and prepared workflows in one production gate.",
+      "Core deployed walkthroughs keep search, detail, modal keyboard containment, trust/support, print, and prepared workflows in one production gate.",
   },
 ];
 
