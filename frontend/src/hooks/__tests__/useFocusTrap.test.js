@@ -55,11 +55,51 @@ describe("useFocusTrap", () => {
     expect(panel).toHaveFocus();
   });
 
+  it("can move initial focus to a preferred element inside the trap", () => {
+    function PreferredHost() {
+      const preferredRef = React.useRef(null);
+      const ref = useFocusTrap(() => {}, { initialFocusRef: preferredRef });
+      return (
+        <div ref={ref} role="dialog" aria-modal="true">
+          <button data-testid="first">First</button>
+          <button ref={preferredRef} data-testid="preferred">
+            Preferred
+          </button>
+          <button data-testid="last">Last</button>
+        </div>
+      );
+    }
+
+    render(<PreferredHost />);
+    expect(screen.getByTestId("preferred")).toHaveFocus();
+  });
+
   it("calls onClose when Escape is pressed", () => {
     const onClose = jest.fn();
     render(<TrapHost onClose={onClose} />);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("can leave Escape handling to an outer owner while preserving Tab trapping", () => {
+    const onClose = jest.fn();
+    function EscapeDisabledHost() {
+      const ref = useFocusTrap(onClose, { disableEscape: true });
+      return (
+        <div ref={ref} role="dialog" aria-modal="true">
+          <button data-testid="first">First</button>
+          <button data-testid="last">Last</button>
+        </div>
+      );
+    }
+
+    render(<EscapeDisabledHost />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+
+    screen.getByTestId("last").focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(screen.getByTestId("first")).toHaveFocus();
   });
 
   it("wraps Tab from the last focusable back to the first", () => {
