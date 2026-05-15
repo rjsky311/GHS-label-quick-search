@@ -285,6 +285,18 @@ export default function DetailModal({
               <p className="mb-3 text-xs text-slate-600">
                 {t("detail.customSettingsHint")}
               </p>
+              <div
+                className="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                data-testid="detail-source-conflict-note"
+              >
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
+                <span>
+                  <span className="block font-semibold">
+                    {t("detail.sourceConflictTitle")}
+                  </span>
+                  <span>{t("detail.sourceConflictHint")}</span>
+                </span>
+              </div>
               <div className="flex gap-2 items-center">
                 <input
                   type="text"

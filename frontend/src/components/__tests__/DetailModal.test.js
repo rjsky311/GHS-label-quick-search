@@ -356,6 +356,13 @@ describe('DetailModal', () => {
       expect(screen.getByText(/detail\.classificationCount/)).toBeInTheDocument();
     });
 
+    it('warns that alternate classifications must stay source-verified', () => {
+      render(<DetailModal {...defaultProps} result={mockFoundResult} />);
+      const note = screen.getByTestId('detail-source-conflict-note');
+      expect(note).toHaveTextContent('detail.sourceConflictTitle');
+      expect(note).toHaveTextContent('detail.sourceConflictHint');
+    });
+
     it('shows restore default button when hasCustomClassification returns true', () => {
       render(
         <DetailModal

@@ -345,6 +345,9 @@ const inspectDetailTrustSurface = async (detailModal) => {
     verificationHintCount: await detailModal
       .getByTestId("detail-reference-verification-hint")
       .count(),
+    sourceConflictNoteCount: await detailModal
+      .getByTestId("detail-source-conflict-note")
+      .count(),
     references,
   };
 };
@@ -779,6 +782,8 @@ const summarizeSearchUiReportForConsole = (report) => {
           metrics.resultsTrustSurface?.decisionStepCount || 0,
         detailReferenceLinks:
           metrics.detailTrustSurface?.references?.length || 0,
+        detailSourceConflictNotes:
+          metrics.detailTrustSurface?.sourceConflictNoteCount || 0,
         detailReferenceRoles: [
           ...new Set(
             (metrics.detailTrustSurface?.references || [])
@@ -1054,6 +1059,9 @@ try {
   }
   if (detailTrustSurface.verificationHintCount < 1) {
     failures.push("detail-reference-verification-hint-missing");
+  }
+  if (detailTrustSurface.sourceConflictNoteCount < 1) {
+    failures.push("detail-source-conflict-note-missing");
   }
   if (detailTrustSurface.references.length < 3) {
     failures.push("detail-reference-links-incomplete");

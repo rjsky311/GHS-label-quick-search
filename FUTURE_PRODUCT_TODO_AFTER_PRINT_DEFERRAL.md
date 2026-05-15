@@ -45,11 +45,19 @@ differences understandable and safe.
 
 ### 1.1 Source-Conflict Handling
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: when PubChem/ECHA/manual/reference sources disagree or look incomplete,
 the app should expose the uncertainty without creating false certainty.
 
 Work items:
 
+- Completed: added a Detail modal source-conflict note for chemicals with
+  multiple public classifications, and reframed classification switching as an
+  SDS/supplier/local-rule verified action rather than a casual preference.
+- Completed: expanded `qa:production-search-ui` so the deployed Detail modal
+  must keep the source-conflict note visible for the Hydrochloric Acid
+  multiple-classification path.
 - Audit the search result, detail modal, print modal, export rows, and QR
   target selection for source-conflict language.
 - Define what the UI says when the primary source is PubChem, ECHA-derived,
@@ -407,7 +415,7 @@ or user report points to a more urgent slice.
 
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
-| Data source conflicts | `Open` | Add examples and UI/test cases for disagreement states | Backend/frontend focused tests + `qa:production-search-ui` |
+| Data source conflicts | `Gate added` | Keep expanding examples for no-GHS, text-only GHS, and upstream-degraded states | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Monitoring` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Open` | Document retention and re-check public write limits | Backend tests |

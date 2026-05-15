@@ -153,6 +153,9 @@ Frontend:
   references before applying numeric priority.
 - Results and detail views distinguish no-GHS, GHS-text-without-pictogram, and
   renderable-GHS states.
+- Detail views surface a source-conflict note when multiple classifications are
+  available, and the copy must say switching reports requires SDS,
+  supplier-label, or local-rule support.
 - Detail views keep alternate-classification comparison visible even when the
   current primary classification has GHS text but no pictograms.
 - Print planner blocks unavailable/unverified source data from hazard-label
