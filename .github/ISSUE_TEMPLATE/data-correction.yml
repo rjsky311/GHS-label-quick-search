@@ -1,0 +1,94 @@
+name: Data correction
+description: Report a chemical identity, GHS, SDS, or reference-link mismatch.
+title: "[Data correction]: "
+labels:
+  - data-correction
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for data issues only. For workflow or UI requests, use the workflow request template.
+
+        This app is a reference aid. Please include source evidence so maintainers can review the correction without treating the report itself as authority.
+  - type: input
+    id: cas_number
+    attributes:
+      label: CAS number
+      description: Include the CAS number shown in the app or the CAS number you expected.
+      placeholder: "7647-01-0"
+    validations:
+      required: true
+  - type: input
+    id: chemical_name
+    attributes:
+      label: Chemical name
+      description: Include English, Chinese, or supplier wording if relevant.
+      placeholder: Hydrochloric acid
+    validations:
+      required: true
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: What looks wrong?
+      options:
+        - Chemical identity or alias
+        - GHS pictogram
+        - Signal word
+        - H statement
+        - P statement
+        - SDS or reference link
+        - Source/provenance display
+        - Other data issue
+    validations:
+      required: true
+  - type: textarea
+    id: current_output
+    attributes:
+      label: Current app output
+      description: Paste the current app result, screenshot text, or exported row.
+      placeholder: The app currently shows...
+    validations:
+      required: true
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: Expected correction
+      description: Describe the expected value and where it should appear.
+      placeholder: I expected...
+    validations:
+      required: true
+  - type: input
+    id: evidence_url
+    attributes:
+      label: Evidence URL
+      description: SDS, supplier page, official regulatory page, or other source.
+      placeholder: https://example.com/sds.pdf
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence_type
+    attributes:
+      label: Evidence type
+      options:
+        - Supplier SDS
+        - Supplier label
+        - Official regulatory source
+        - PubChem page
+        - ECHA page
+        - Internal lab evidence
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: local_context
+    attributes:
+      label: Local context
+      description: Optional. Mention jurisdiction, workplace rule, concentration, mixture, or prepared-solution context.
+      placeholder: Taiwan lab stock label, supplier SDS revision date, mixture concentration, etc.
+  - type: checkboxes
+    id: safety_ack
+    attributes:
+      label: Safety acknowledgement
+      options:
+        - label: I understand this report does not replace SDS, supplier label, or local-rule verification.
+          required: true

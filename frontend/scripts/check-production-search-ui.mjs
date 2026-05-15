@@ -33,9 +33,9 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
   10,
 );
 const SUPPORT_REPORT_DATA_URL =
-  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction";
+  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 const SUPPORT_WORKFLOW_REQUEST_URL =
-  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request";
+  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

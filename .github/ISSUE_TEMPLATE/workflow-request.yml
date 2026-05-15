@@ -1,0 +1,64 @@
+name: Workflow request
+description: Request a product, UI, printing, export, or daily-workflow improvement.
+title: "[Workflow request]: "
+labels:
+  - workflow-request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for workflow and usability requests. If the chemical data itself is wrong, use the data correction template instead.
+  - type: dropdown
+    id: workflow_area
+    attributes:
+      label: Workflow area
+      options:
+        - Search and results
+        - Chemical detail and comparison
+        - SDS/reference verification
+        - Label preview
+        - Label printing
+        - Prepared-solution workflow
+        - Export
+        - Admin/pilot workflow
+        - Mobile or narrow-screen usage
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: Describe the real task, not only the button or screen.
+      placeholder: I am trying to...
+    validations:
+      required: true
+  - type: textarea
+    id: current_problem
+    attributes:
+      label: What gets in the way?
+      description: Explain the confusion, wasted step, blocked path, or layout problem.
+      placeholder: Currently...
+    validations:
+      required: true
+  - type: textarea
+    id: desired_behavior
+    attributes:
+      label: Desired behavior
+      description: Describe what would make this easier or safer to use.
+      placeholder: It would be better if...
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example chemical, label stock, file, or screenshot context
+      description: Optional but useful for reproducing the workflow.
+      placeholder: Hydrochloric acid, 70 x 24 mm stock, A4 primary label, etc.
+  - type: checkboxes
+    id: separation_ack
+    attributes:
+      label: Request type acknowledgement
+      options:
+        - label: This is a workflow/product request, not a request to change hazard data.
+          required: true

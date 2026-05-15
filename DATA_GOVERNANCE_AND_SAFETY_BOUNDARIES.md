@@ -89,6 +89,16 @@ If a future feature adds stronger manual hazard overrides, it must be explicitly
 admin-gated, visibly labeled, tested, and documented as a separate authority
 mode before it can affect printed labels.
 
+Public intake is also separated at the repository edge:
+
+- Data issues use `.github/ISSUE_TEMPLATE/data-correction.yml`.
+- Workflow/product requests use `.github/ISSUE_TEMPLATE/workflow-request.yml`.
+
+Data-correction reports should include source evidence such as SDS, supplier
+label, official regulatory page, current app output, and expected correction.
+Workflow requests should describe the operational task and should not be used
+to request hazard-data changes.
+
 ## 5. Admin And Telemetry Boundaries
 
 Admin-gated surfaces:

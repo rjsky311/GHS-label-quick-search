@@ -69,15 +69,20 @@ Acceptance:
 
 ### 1.2 Correction Intake And Review Flow
 
+Status: `Gate added` on 2026-05-15.
+
 Goal: data-correction requests should become an auditable improvement path, not
 an unstructured support inbox.
 
 Work items:
 
-- Clarify the public correction path: what users can report, what evidence they
-  should provide, and what the app will or will not change.
-- Decide whether correction requests remain GitHub issue links, move to a form,
-  or are mirrored into admin review.
+- Completed: clarified the public correction path in `README.md` and
+  `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`.
+- Completed: added separate GitHub issue templates for data corrections and
+  workflow requests.
+- Completed: routed frontend support links to the specific issue templates.
+- Keep deciding whether correction requests remain GitHub issue links, move to
+  a form, or are mirrored into admin review after usage evidence appears.
 - Add admin-facing status fields if manual dictionary/reference curation needs
   review states such as `pending`, `accepted`, `rejected`, or `needs evidence`.
 - Keep workflow/business requests separate from safety-data corrections.
@@ -226,26 +231,29 @@ Acceptance:
 
 ## 3. Public Documentation, README Cleanup, And Maintainer Clarity
 
-Status: `Open`
+Status: `In progress`
 
 Why this matters: the project has strong internal planning docs, but the public
-README currently has encoding corruption and mixes historical, maintainer, and
-user-facing information. A public tool needs clean docs that build trust.
+README must stay readable, user-facing, and aligned with the internal planning
+entry points. A public tool needs clean docs that build trust.
 
 ### 3.1 README Encoding And Public-Facing Rewrite
+
+Status: `Shipped` on 2026-05-15.
 
 Goal: `README.md` should be clean, readable, and oriented toward users and
 maintainers, not a corrupted historical dump.
 
 Work items:
 
-- Replace corrupted text with a concise, UTF-8 clean README.
-- Keep public-facing sections: what the tool does, safety boundary, quick start,
-  local dev, production URLs, main commands, data sources, limitations, and
-  contribution/correction paths.
-- Move deep internal history to existing roadmap docs or a separate historical
-  appendix if needed.
-- Avoid making stronger legal/compliance claims than the product supports.
+- Completed: replaced corrupted text with a concise, UTF-8 clean README.
+- Completed: kept public-facing sections for what the tool does, safety
+  boundary, local dev, production URLs, main commands, data sources,
+  limitations, maintainer entry points, and correction paths.
+- Completed: moved deep internal history out of the public README by pointing
+  readers to the canonical planning and safety docs.
+- Completed: avoided stronger legal/compliance claims than the product
+  supports.
 
 Acceptance:
 
@@ -389,14 +397,14 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Open` | Add examples and UI/test cases for disagreement states | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Open` | Define correction request shape and admin review path | Docs + backend/admin tests if implemented |
+| Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Monitoring` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Open` | Document retention and re-check public write limits | Backend tests |
 | First-time UX | `Open` | Audit empty/search/result/detail path | Production search UI screenshots |
 | Print guidance copy | `Monitoring` | Improve only when a blocked/supplemental case confuses users | Production product QA |
 | Narrow/mobile reading | `Monitoring` | Add cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
-| README cleanup | `Open` | Rewrite corrupted README into clean public doc | `git diff --check`, rendered review |
+| README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
 | Maintainer doc split | `Planned` | Decide whether `CLAUDE.md` should delegate to `AGENTS.md` | Docs-only checks |
 | Brand/support rules | `Open` | Define allowed/disallowed conversion surfaces | Docs + production UX review |
 | Education/help content | `Open` | Add only task-supporting help where confusion persists | i18n + production walkthrough |

@@ -29,7 +29,7 @@ describe('Footer', () => {
     const link = screen.getByText('footer.reportIssue');
     expect(link).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
   });
 
@@ -38,7 +38,7 @@ describe('Footer', () => {
     const link = screen.getByText('footer.workflowRequest');
     expect(link).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request'
     );
   });
 

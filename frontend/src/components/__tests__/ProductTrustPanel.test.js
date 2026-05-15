@@ -13,11 +13,11 @@ describe('ProductTrustPanel', () => {
     expect(screen.getByText('productTrust.feedbackTitle')).toBeInTheDocument();
     expect(screen.getByTestId('product-trust-report-link-empty')).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
     expect(screen.getByTestId('product-trust-workflow-link-empty')).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request'
     );
   });
 
@@ -35,12 +35,12 @@ describe('ProductTrustPanel', () => {
     expect(reportLink).toHaveTextContent('productTrust.reportDataCta');
     expect(reportLink).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=data-correction'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
     expect(workflowLink).toHaveTextContent('productTrust.requestWorkflowCta');
     expect(workflowLink).toHaveAttribute(
       'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?labels=workflow-request'
+      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request'
     );
     for (const link of [reportLink, workflowLink]) {
       expect(link).toHaveAttribute('target', '_blank');
