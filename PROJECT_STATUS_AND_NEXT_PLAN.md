@@ -61,8 +61,8 @@ Current validation gates:
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production search UI: `npm run qa:production-search-ui` (desktop
-  search/detail plus 390px narrow read-first result and detail-comparison
-  checks)
+  search/detail, detail-to-prepared modal keyboard/focus checks, plus 390px
+  narrow read-first result and detail-comparison checks)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -267,6 +267,10 @@ Current status:
   keyboard trap active for normal review, but disables it while a
   prepared-solution modal is stacked above it so the visible top layer owns
   Tab/Escape.
+- `qa:production-search-ui` now exercises that deployed keyboard path: Detail
+  modal Tab/Shift+Tab wrapping, detail suppression while Prepare Solution is
+  stacked, Prepare Solution Tab/Shift+Tab wrapping, and Escape closing only the
+  top modal before returning to Detail.
 
 ## 4. Known Blind Spots
 

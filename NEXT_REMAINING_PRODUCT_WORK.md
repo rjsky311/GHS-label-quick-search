@@ -373,6 +373,11 @@ Current status:
   DetailModal also disables its trap while a prepared-solution modal is stacked
   above it, so Tab/Escape belong to the visible top layer instead of leaking to
   or being captured by the background dialog.
+- Production search UI QA now verifies the deployed keyboard contract for that
+  path: DetailModal forward/backward Tab wrapping, DetailModal suppression while
+  Prepare Solution is stacked, Prepare Solution forward/backward Tab wrapping,
+  and Escape restoring the underlying DetailModal instead of closing both
+  layers.
 
 Suggested verification:
 

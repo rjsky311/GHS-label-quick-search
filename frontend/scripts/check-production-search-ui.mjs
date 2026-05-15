@@ -343,6 +343,253 @@ const inspectDetailTrustSurface = async (detailModal) => {
   };
 };
 
+const inspectModalFocusableState = async (page, modalTestId, label) =>
+  page.evaluate(
+    ({ modalTestId: targetTestId, label: stateLabel }) => {
+      const focusableSelector = [
+        "a[href]",
+        "button:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(",");
+      const modal = document.querySelector(`[data-testid="${targetTestId}"]`);
+      const panel = modal?.querySelector(":scope > div") || modal;
+      const isVisible = (element) => {
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.visibility !== "hidden" &&
+          style.display !== "none"
+        );
+      };
+      const signature = (element, index = -1) => {
+        if (!element) return null;
+        const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+        return {
+          index,
+          tag: element.tagName.toLowerCase(),
+          testId: element.getAttribute("data-testid") || "",
+          id: element.getAttribute("id") || "",
+          ariaLabel: element.getAttribute("aria-label") || "",
+          title: element.getAttribute("title") || "",
+          text: text.slice(0, 80),
+          key: [
+            element.tagName.toLowerCase(),
+            element.getAttribute("data-testid") || "",
+            element.getAttribute("id") || "",
+            element.getAttribute("aria-label") || "",
+            element.getAttribute("title") || "",
+            text.slice(0, 80),
+          ].join("|"),
+        };
+      };
+      const focusables = panel
+        ? Array.from(panel.querySelectorAll(focusableSelector)).filter(isVisible)
+        : [];
+      return {
+        label: stateLabel,
+        modalTestId: targetTestId,
+        modalPresent: Boolean(modal),
+        modalAriaModal: modal?.getAttribute("aria-modal") || null,
+        modalAriaHidden: modal?.getAttribute("aria-hidden") || null,
+        modalHasInertAttribute: Boolean(modal?.hasAttribute("inert")),
+        modalInertProperty: Boolean(modal?.inert),
+        count: focusables.length,
+        first: signature(focusables[0], 0),
+        last: signature(focusables.at(-1), focusables.length - 1),
+        focusables: focusables.map((element, index) =>
+          signature(element, index),
+        ),
+      };
+    },
+    { modalTestId, label },
+  );
+
+const focusModalElement = async (page, modalTestId, index) =>
+  page.evaluate(
+    ({ modalTestId: targetTestId, focusIndex }) => {
+      const focusableSelector = [
+        "a[href]",
+        "button:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(",");
+      const modal = document.querySelector(`[data-testid="${targetTestId}"]`);
+      const panel = modal?.querySelector(":scope > div") || modal;
+      const isVisible = (element) => {
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.visibility !== "hidden" &&
+          style.display !== "none"
+        );
+      };
+      const focusables = panel
+        ? Array.from(panel.querySelectorAll(focusableSelector)).filter(isVisible)
+        : [];
+      const resolvedIndex =
+        focusIndex < 0 ? focusables.length + focusIndex : focusIndex;
+      const element = focusables[resolvedIndex];
+      element?.focus();
+      return Boolean(element && document.activeElement === element);
+    },
+    { modalTestId, focusIndex: index },
+  );
+
+const getActiveFocusSignature = async (page) =>
+  page.evaluate(() => {
+    const element = document.activeElement;
+    if (!element) return null;
+    const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+    return {
+      tag: element.tagName.toLowerCase(),
+      testId: element.getAttribute("data-testid") || "",
+      id: element.getAttribute("id") || "",
+      ariaLabel: element.getAttribute("aria-label") || "",
+      title: element.getAttribute("title") || "",
+      text: text.slice(0, 80),
+      key: [
+        element.tagName.toLowerCase(),
+        element.getAttribute("data-testid") || "",
+        element.getAttribute("id") || "",
+        element.getAttribute("aria-label") || "",
+        element.getAttribute("title") || "",
+        text.slice(0, 80),
+      ].join("|"),
+    };
+  });
+
+const inspectModalFocusWrap = async (page, modalTestId, label) => {
+  const state = await inspectModalFocusableState(page, modalTestId, label);
+  if (state.count < 2) {
+    return {
+      ...state,
+      ok: false,
+      reason: "not-enough-focusable-elements",
+      focusedLastBeforeForward: false,
+      focusedFirstBeforeBackward: false,
+      afterForwardTab: null,
+      afterBackwardTab: null,
+      forwardWrapOk: false,
+      backwardWrapOk: false,
+    };
+  }
+
+  const focusedLastBeforeForward = await focusModalElement(page, modalTestId, -1);
+  await page.keyboard.press("Tab");
+  const afterForwardTab = await getActiveFocusSignature(page);
+
+  const focusedFirstBeforeBackward = await focusModalElement(
+    page,
+    modalTestId,
+    0,
+  );
+  await page.keyboard.down("Shift");
+  await page.keyboard.press("Tab");
+  await page.keyboard.up("Shift");
+  const afterBackwardTab = await getActiveFocusSignature(page);
+
+  const forwardWrapOk = afterForwardTab?.key === state.first?.key;
+  const backwardWrapOk = afterBackwardTab?.key === state.last?.key;
+  return {
+    ...state,
+    focusedLastBeforeForward,
+    focusedFirstBeforeBackward,
+    afterForwardTab,
+    afterBackwardTab,
+    forwardWrapOk,
+    backwardWrapOk,
+    ok:
+      focusedLastBeforeForward &&
+      focusedFirstBeforeBackward &&
+      forwardWrapOk &&
+      backwardWrapOk,
+  };
+};
+
+const inspectDetailPrepareStacking = async (page) => {
+  await page.getByTestId("prepare-solution-btn").click();
+  const prepareModal = page.getByTestId("prepare-solution-modal");
+  await prepareModal.waitFor({ state: "visible", timeout: 10000 });
+  await page
+    .getByTestId("prepared-concentration-input")
+    .waitFor({ state: "visible", timeout: 10000 });
+  await page.waitForFunction(() => {
+    const active = document.activeElement;
+    return (
+      active?.getAttribute("data-testid") === "prepared-concentration-input"
+    );
+  });
+
+  const stackedState = {
+    detail: await inspectModalFocusableState(
+      page,
+      "detail-modal",
+      "detail-stacked",
+    ),
+    prepare: await inspectModalFocusableState(
+      page,
+      "prepare-solution-modal",
+      "prepare-stacked",
+    ),
+    activeAfterOpen: await getActiveFocusSignature(page),
+  };
+
+  const prepareFocusWrap = await inspectModalFocusWrap(
+    page,
+    "prepare-solution-modal",
+    "prepare-solution-modal",
+  );
+
+  await page.getByTestId("prepared-concentration-input").focus();
+  await page.keyboard.press("Escape");
+  await prepareModal.waitFor({ state: "detached", timeout: 10000 });
+
+  const restoredState = {
+    detail: await inspectModalFocusableState(
+      page,
+      "detail-modal",
+      "detail-restored",
+    ),
+    preparePresent:
+      (await page.getByTestId("prepare-solution-modal").count()) > 0,
+    activeAfterEscape: await getActiveFocusSignature(page),
+  };
+
+  return {
+    stackedState,
+    prepareFocusWrap,
+    restoredState,
+    detailSuppressedOk:
+      stackedState.detail.modalPresent &&
+      stackedState.detail.modalAriaModal === null &&
+      stackedState.detail.modalAriaHidden === "true" &&
+      (stackedState.detail.modalHasInertAttribute ||
+        stackedState.detail.modalInertProperty),
+    prepareOwnsModalOk:
+      stackedState.prepare.modalPresent &&
+      stackedState.prepare.modalAriaModal === "true" &&
+      stackedState.activeAfterOpen?.testId === "prepared-concentration-input",
+    escapeRestoresDetailOk:
+      restoredState.detail.modalPresent &&
+      restoredState.detail.modalAriaModal === "true" &&
+      restoredState.detail.modalAriaHidden !== "true" &&
+      !restoredState.detail.modalHasInertAttribute &&
+      !restoredState.detail.modalInertProperty &&
+      restoredState.preparePresent === false,
+  };
+};
+
 const searchUntilUsableResult = async (page) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
@@ -618,6 +865,50 @@ try {
   await page.getByTestId("detail-btn-0").click();
   const detailModal = page.getByTestId("detail-modal");
   await detailModal.waitFor({ state: "visible", timeout: 10000 });
+  const detailKeyboardSurface = await inspectModalFocusWrap(
+    page,
+    "detail-modal",
+    "detail-modal",
+  );
+  if (detailKeyboardSurface.count < 2) {
+    failures.push("detail-focus-trap-not-enough-focusable-elements");
+  }
+  if (!detailKeyboardSurface.focusedLastBeforeForward) {
+    failures.push("detail-focus-trap-last-focus-failed");
+  }
+  if (!detailKeyboardSurface.focusedFirstBeforeBackward) {
+    failures.push("detail-focus-trap-first-focus-failed");
+  }
+  if (!detailKeyboardSurface.forwardWrapOk) {
+    failures.push("detail-focus-trap-forward-wrap-broken");
+  }
+  if (!detailKeyboardSurface.backwardWrapOk) {
+    failures.push("detail-focus-trap-backward-wrap-broken");
+  }
+
+  const prepareStackingSurface = await inspectDetailPrepareStacking(page);
+  if (!prepareStackingSurface.detailSuppressedOk) {
+    failures.push("prepare-stacked-detail-not-suppressed");
+  }
+  if (!prepareStackingSurface.prepareOwnsModalOk) {
+    failures.push("prepare-stacked-modal-does-not-own-focus");
+  }
+  if (!prepareStackingSurface.prepareFocusWrap.focusedLastBeforeForward) {
+    failures.push("prepare-focus-trap-last-focus-failed");
+  }
+  if (!prepareStackingSurface.prepareFocusWrap.focusedFirstBeforeBackward) {
+    failures.push("prepare-focus-trap-first-focus-failed");
+  }
+  if (!prepareStackingSurface.prepareFocusWrap.forwardWrapOk) {
+    failures.push("prepare-focus-trap-forward-wrap-broken");
+  }
+  if (!prepareStackingSurface.prepareFocusWrap.backwardWrapOk) {
+    failures.push("prepare-focus-trap-backward-wrap-broken");
+  }
+  if (!prepareStackingSurface.escapeRestoresDetailOk) {
+    failures.push("prepare-escape-did-not-restore-detail-modal");
+  }
+
   const detailTrustSurface = await inspectDetailTrustSurface(detailModal);
   if (detailTrustSurface.trustStripCount < 1) {
     failures.push("detail-trust-strip-missing");
@@ -884,6 +1175,8 @@ try {
       expandedPictogramMetrics,
       resultsTrustSurface,
       detailTrustSurface,
+      detailKeyboardSurface,
+      prepareStackingSurface,
       detailComparisonColumnCount,
       detailComparisonMetrics,
       imageWaits,

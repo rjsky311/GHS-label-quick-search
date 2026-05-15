@@ -47,8 +47,9 @@ or user request points elsewhere, continue in this order:
    behavior changes.
 5. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
-   covered at 390px by `qa:production-search-ui`; keep extending that gate
-   when mobile/narrow behavior changes.
+   covered at 390px by `qa:production-search-ui`; the same production gate
+   also checks Detail/Prepare Solution modal keyboard containment. Keep
+   extending that gate when mobile, narrow, or modal behavior changes.
 
 ## Current Detailed Backlog
 
