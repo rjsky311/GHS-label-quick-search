@@ -199,6 +199,35 @@ describe("inspectPrintLayoutDocument", () => {
     );
   });
 
+  it("does not block a label solely because clamped identity text has horizontal scroll", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label">
+        <div class="name-section">
+          <div class="name-en">Very long display name controlled by CSS line clamp</div>
+        </div>
+      </div>
+    `;
+
+    const label = root.querySelector(".label");
+    const nameSection = root.querySelector(".name-section");
+
+    Object.defineProperties(label, {
+      clientHeight: { value: 100, configurable: true },
+      scrollHeight: { value: 100, configurable: true },
+      clientWidth: { value: 180, configurable: true },
+      scrollWidth: { value: 220, configurable: true },
+    });
+    Object.defineProperties(nameSection, {
+      clientHeight: { value: 20, configurable: true },
+      scrollHeight: { value: 20, configurable: true },
+      clientWidth: { value: 160, configurable: true },
+      scrollWidth: { value: 160, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([]);
+  });
+
   it("reports clipped full-label inner panels before printing", () => {
     const root = document.createElement("div");
     root.innerHTML = `

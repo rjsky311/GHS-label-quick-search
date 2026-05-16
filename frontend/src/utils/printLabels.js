@@ -3420,6 +3420,14 @@ const elementOverflows = (element, tolerancePx = 1) => {
   return clientWidth > 0 && scrollWidth > clientWidth + tolerancePx;
 };
 
+const elementVerticallyOverflows = (element, tolerancePx = 1) => {
+  if (!element) return false;
+  const scrollHeight = Math.ceil(element.scrollHeight || 0);
+  const clientHeight = Math.ceil(element.clientHeight || 0);
+
+  return clientHeight > 0 && scrollHeight > clientHeight + tolerancePx;
+};
+
 export function inspectPrintLayoutDocument(documentLike) {
   const root = documentLike?.body || documentLike;
   if (!root?.querySelectorAll) return [];
@@ -3430,7 +3438,7 @@ export function inspectPrintLayoutDocument(documentLike) {
   ).filter((element) => typeof element.querySelector === "function");
 
   labels.forEach((label, index) => {
-    if (elementOverflows(label, 2)) {
+    if (elementVerticallyOverflows(label, 2)) {
       issues.push({ type: "label-overflow", index });
     }
 
