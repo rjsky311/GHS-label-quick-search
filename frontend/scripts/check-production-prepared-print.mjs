@@ -68,11 +68,12 @@ const PREPARED_CASES = Object.freeze([
   {
     id: "prepared-a4-primary",
     label: "Prepared HCl A4 complete primary",
-    targetOption: "mainContainer",
+    targetOption: "complete",
     stockPreset: "a4-primary",
     expectedLabelKind: "complete-primary",
     expectedTemplate: "full",
-    expectedHasQr: false,
+    expectedHasQr: true,
+    expectedHasPreparedBadge: true,
     expectedMinPictogramSidePx: 18,
     expectedPreparedTexts: [
       PREPARED_FORM.concentration,
@@ -83,26 +84,29 @@ const PREPARED_CASES = Object.freeze([
     ],
   },
   {
-    id: "prepared-bottle-supplemental",
-    label: "Prepared HCl bottle supplemental",
-    targetOption: "bottle",
-    stockPreset: "medium-bottle",
-    expectedLabelKind: "supplemental",
-    expectedTemplate: "standard",
-    expectedHasQr: false,
-    expectedMinPictogramSidePx: 24,
-    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
+    id: "prepared-qr-supplement",
+    label: "Prepared HCl QR small label",
+    targetOption: "qrSupplement",
+    stockPreset: "brother-62mm-continuous",
+    expectedLabelKind: "qr-supplement",
+    expectedTemplate: "qrcode",
+    expectedHasQr: true,
+    expectedMinPictogramSidePx: 35,
+    expectedMinTotalLabels: 2,
+    expectedHasPreparedBadge: false,
+    expectedPreparedTexts: [],
   },
   {
     id: "prepared-tube-quick-id",
     label: "Prepared HCl tube quick-ID",
-    targetOption: "vial",
+    targetOption: "quickId",
     stockPreset: "small-strip",
     expectedLabelKind: "quick-id",
     expectedTemplate: "icon",
     expectedHasQr: false,
     expectedMinPictogramSidePx: 26,
-    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
+    expectedHasPreparedBadge: false,
+    expectedPreparedTexts: [],
   },
 ]);
 
@@ -624,6 +628,36 @@ const inspectPreviewFrame = async (page, testCase) => {
   );
 };
 
+const mergePreviewEvidence = (first, second) => {
+  if (!second) return first;
+  return {
+    ...first,
+    pictogramCodes: [...new Set([
+      ...(first.pictogramCodes || []),
+      ...(second.pictogramCodes || []),
+    ])].sort(),
+    hasQrImage: first.hasQrImage || second.hasQrImage,
+    hasPreparedTexts: first.hasPreparedTexts && second.hasPreparedTexts,
+    hasPreparedBadge: first.hasPreparedBadge || second.hasPreparedBadge,
+    hasCas: first.hasCas && second.hasCas,
+    clippedCriticalElements: [
+      ...(first.clippedCriticalElements || []),
+      ...(second.clippedCriticalElements || []),
+    ],
+    clippedContentElements: [
+      ...(first.clippedContentElements || []),
+      ...(second.clippedContentElements || []),
+    ],
+    minPictogramSidePx: Math.min(
+      first.minPictogramSidePx || 0,
+      second.minPictogramSidePx || 0,
+    ),
+    pictogramSizeOk: first.pictogramSizeOk && second.pictogramSizeOk,
+    qrStateOk: first.qrStateOk && second.qrStateOk,
+    nextPreview: second,
+  };
+};
+
 const readPrintStatus = async (page) => {
   await page.evaluate(() => {
     document.getElementById("ghs-print-qa-status")?.remove();
@@ -734,7 +768,10 @@ const evaluateCase = ({
   assert("preview-label-visible", preview.labelVisible);
   assert("preview-label-within-viewport", preview.labelWithinViewport);
   assert("preview-no-scroll-overflow", !preview.documentHasScrollOverflow);
-  assert("preview-has-prepared-badge", preview.hasPreparedBadge);
+  assert(
+    "preview-has-prepared-badge",
+    preview.hasPreparedBadge === (testCase.expectedHasPreparedBadge !== false),
+  );
   assert("preview-has-prepared-texts", preview.hasPreparedTexts);
   assert("preview-has-cas", preview.hasCas);
   assert("preview-qr-state", preview.qrStateOk);
@@ -792,7 +829,13 @@ const runCase = async ({ browser, testCase }) => {
     await fillResponsibleProfile(page);
     await setTargetAndStock(page, testCase);
     const selectedSummary = await inspectSelectedPreparedSummary(page);
-    const preview = await inspectPreviewFrame(page, testCase);
+    let preview = await inspectPreviewFrame(page, testCase);
+    if (Number(testCase.expectedMinTotalLabels || 1) > 1) {
+      await page.getByTestId("preview-page-next").click();
+      await page.waitForTimeout(300);
+      const nextPreview = await inspectPreviewFrame(page, testCase);
+      preview = mergePreviewEvidence(preview, nextPreview);
+    }
     fs.mkdirSync(screenshotDir, { recursive: true });
     const screenshotPath = path.join(screenshotDir, `${testCase.id}.png`);
     await page.getByTestId("label-fragment-preview").screenshot({

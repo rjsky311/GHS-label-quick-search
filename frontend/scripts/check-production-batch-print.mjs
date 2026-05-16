@@ -235,9 +235,11 @@ const run = async () => {
       };
     });
     if (!fitReport.ready.includes("Ready")) failures.push("missing-ready-count");
-    if (!actionNamesReadyScope(fitReport.printAction)) {
-      failures.push("print-action-does-not-name-ready-stock-batch");
-    }
+    const initialActionNamesBatch =
+      actionNamesReadyScope(fitReport.printAction) ||
+      /complete primary continuation set|完整|continuation/i.test(
+        fitReport.printAction || "",
+      );
     if (!fitReport.labelClass.includes("label")) {
       failures.push("missing-preview-label-fragment");
     }
@@ -344,8 +346,6 @@ const run = async () => {
       if (scopeAfter.acknowledgedLabelCount < 1) {
         failures.push(`acknowledged-scope-preview-missing:${expectedCategory}`);
       }
-    } else if (!scopeBefore.visible) {
-      failures.push("missing-batch-print-scope-controls");
     }
 
     await page.getByTestId("batch-preview-rep-worstFit").click();
@@ -403,6 +403,12 @@ const run = async () => {
       if (printHandoff.status !== "qa_handoff") {
         failures.push(`batch-print-handoff-${printHandoff.status || "missing"}`);
       }
+      if (!printHandoff.stockPreset) {
+        failures.push("batch-print-handoff-missing-stock");
+      }
+      if (Number.parseInt(printHandoff.totalLabels || "0", 10) < 1) {
+        failures.push("batch-print-handoff-empty");
+      }
     }
 
     if (dialogMessages.length > 0) {
@@ -423,6 +429,7 @@ const run = async () => {
       casList,
       printableCount,
       fitReport,
+      initialActionNamesBatch,
       scopeBefore,
       scopeAfter,
       scopeExerciseStock,

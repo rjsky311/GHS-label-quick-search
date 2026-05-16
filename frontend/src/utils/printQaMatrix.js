@@ -2408,6 +2408,16 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => {
   const activeCustomLabelFields = caseResult.handoffExpectation.requiredIdentityText
     ? testCase.customLabelFields || {}
     : {};
+  const expectedMinTotalLabels =
+    caseResult.expected.minPrintTotalLabels ||
+    caseResult.handoffExpectation.totalLabels ||
+    caseResult.expected.printTotalLabels ||
+    1;
+  const expectedMinTotalPages =
+    caseResult.expected.minPrintTotalPages ||
+    caseResult.expected.minPrintTotalLabels ||
+    caseResult.handoffExpectation.totalPages ||
+    1;
 
   return {
   id: testCase.id,
@@ -2466,17 +2476,8 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => {
   expectedNameDisplay: caseResult.handoffExpectation.nameDisplay,
   expectedRequiredIdentityText:
     caseResult.handoffExpectation.requiredIdentityText || "",
-  expectedMinTotalLabels:
-    caseResult.expected.minPrintTotalLabels ||
-    caseResult.handoffExpectation.totalLabels ||
-    caseResult.expected.printTotalLabels ||
-    1,
-  expectedMinTotalPages:
-    caseResult.expected.minPrintTotalPages ||
-    caseResult.expected.minPrintTotalLabels ||
-    caseResult.handoffExpectation.totalLabels ||
-    caseResult.expected.printTotalLabels ||
-    1,
+  expectedMinTotalLabels,
+  expectedMinTotalPages,
   customLabelFields: activeCustomLabelFields,
   responsibleProfile:
     testCase.productionResponsibleProfile ?? testCase.labProfile ?? null,
