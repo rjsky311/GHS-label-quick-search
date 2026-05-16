@@ -45,6 +45,7 @@ import {
   BATCH_PRINT_ITEM_CATEGORY,
   BATCH_PRINT_PURPOSE,
   BATCH_PRINT_REPRESENTATIVE,
+  buildBatchPrintableItems,
   buildBatchPrintPlan,
 } from "@/utils/printBatchPlanner";
 import {
@@ -809,6 +810,10 @@ export default function LabelPrintModal({
     BATCH_PRINT_REPRESENTATIVE.FIRST,
   );
   const [batchPreviewItemIndex, setBatchPreviewItemIndex] = useState(null);
+  const [batchIncludeReducedPurpose, setBatchIncludeReducedPurpose] =
+    useState(false);
+  const [batchIncludeContinuation, setBatchIncludeContinuation] =
+    useState(false);
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
@@ -900,11 +905,29 @@ export default function LabelPrintModal({
     ],
   );
   const hasBatchPrintPlan = selectedForLabel.length > 1;
-  const batchDefaultPrintItems = batchPrintPlan.items
-    .filter((item) => item.includedByDefault)
-    .map((item) => item.chemical);
-  const canPrintBatchDefaultScope =
-    hasBatchPrintPlan && batchPrintPlan.summary.canPrintDefaultScope;
+  const batchReducedPurposeItems = hasBatchPrintPlan
+    ? batchPrintPlan.items.filter(
+        (item) => item.category === BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
+      )
+    : [];
+  const batchContinuationItems = hasBatchPrintPlan
+    ? batchPrintPlan.items.filter(
+        (item) =>
+          item.category === BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION,
+      )
+    : [];
+  const batchSelectedPrintItems = hasBatchPrintPlan
+    ? buildBatchPrintableItems(batchPrintPlan, {
+        includeReducedPurpose: batchIncludeReducedPurpose,
+        includeContinuation: batchIncludeContinuation,
+      })
+    : [];
+  const canPrintBatchSelectedScope =
+    hasBatchPrintPlan && batchSelectedPrintItems.length > 0;
+  const batchAcknowledgedPrintCount = Math.max(
+    0,
+    batchSelectedPrintItems.length - batchPrintPlan.summary.printableByDefault,
+  );
   const printReadiness = outputPlan.readiness;
   const recommendedFullPagePreset = ALL_STOCK_PRESETS.find(
     (preset) => preset.id === outputPlan.recommendedFullPageStockId,
@@ -1003,23 +1026,31 @@ export default function LabelPrintModal({
       null
     : null;
   const previewChem = activeBatchPreviewItem?.chemical || firstSelectedChem;
+  const activeBatchPreviewPrintItems = activeBatchPreviewItem
+    ? buildBatchPrintableItems(
+        { items: [activeBatchPreviewItem] },
+        { includeReducedPurpose: true, includeContinuation: true },
+      )
+    : [];
   const previewSourceItems = activeBatchPreviewItem
-    ? [activeBatchPreviewItem.chemical]
+    ? activeBatchPreviewPrintItems.length
+      ? activeBatchPreviewPrintItems
+      : [activeBatchPreviewItem.chemical]
     : selectedForLabel;
-  const previewLabelConfig = activeBatchPreviewItem?.alternateAttempt?.layout
+  const previewLabelConfig = activeBatchPreviewPrintItems[0]?.__printLayoutOverride
     ? {
         ...labelConfig,
-        ...activeBatchPreviewItem.alternateAttempt.layout,
+        ...activeBatchPreviewPrintItems[0].__printLayoutOverride,
       }
     : labelConfig;
   const previewLabelQuantities = activeBatchPreviewItem
     ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
     : labelQuantities;
-  const sheetPreviewItems = canPrintBatchDefaultScope
-    ? batchDefaultPrintItems
+  const sheetPreviewItems = canPrintBatchSelectedScope
+    ? batchSelectedPrintItems
     : selectedForLabel;
-  const sheetPreviewQuantities = canPrintBatchDefaultScope
-    ? batchDefaultPrintItems.reduce((acc, chem) => {
+  const sheetPreviewQuantities = canPrintBatchSelectedScope
+    ? batchSelectedPrintItems.reduce((acc, chem) => {
         acc[chem.cas_number] = labelQuantities?.[chem.cas_number] || 1;
         return acc;
       }, {})
@@ -1379,7 +1410,7 @@ export default function LabelPrintModal({
   const isPrintFitBlocked =
     selectedForLabel.length > 0 &&
     !outputPlan.canPrint &&
-    !canPrintBatchDefaultScope;
+    !canPrintBatchSelectedScope;
   const isProfileBlocked =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const printBlockedLabel = isProfileBlocked
@@ -1393,7 +1424,7 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
     Boolean(recommendedFullPagePreset) &&
     layoutProfile.stockPreset !== recommendedFullPagePreset.id &&
-    !canPrintBatchDefaultScope;
+    !canPrintBatchSelectedScope;
   const autoApplyFullPageKey = [
     selectedForLabel.map((chem) => chem.cas_number).join("|"),
     layoutProfile.stockPreset,
@@ -1571,15 +1602,24 @@ export default function LabelPrintModal({
       ? t("label.printBtn", { count: totalLabels })
       : isPrintFitBlocked
         ? printBlockedLabel
-        : canPrintBatchDefaultScope
-          ? tx(
-              "label.printReadyBatchAction",
-              "Print ready batch ({{ready}} / {{total}})",
-              {
-                ready: batchPrintPlan.summary.printableByDefault,
-                total: batchPrintPlan.summary.total,
-              },
-            )
+        : canPrintBatchSelectedScope
+          ? batchAcknowledgedPrintCount > 0
+            ? tx(
+                "label.printAcknowledgedBatchAction",
+                "Print selected batch ({{count}} / {{total}})",
+                {
+                  count: batchSelectedPrintItems.length,
+                  total: batchPrintPlan.summary.total,
+                },
+              )
+            : tx(
+                "label.printReadyBatchAction",
+                "Print ready batch ({{ready}} / {{total}})",
+                {
+                  ready: batchPrintPlan.summary.printableByDefault,
+                  total: batchPrintPlan.summary.total,
+                },
+              )
         : isContinuationOutput
           ? tx(
               "label.printContinuationAction",
@@ -1704,6 +1744,8 @@ export default function LabelPrintModal({
   useEffect(() => {
     setBatchPreviewRepresentative(BATCH_PRINT_REPRESENTATIVE.FIRST);
     setBatchPreviewItemIndex(null);
+    setBatchIncludeReducedPurpose(false);
+    setBatchIncludeContinuation(false);
   }, [
     labelConfig.labelPurpose,
     labelConfig.labelHeightMm,
@@ -1811,7 +1853,7 @@ export default function LabelPrintModal({
   const handlePrintAction = () => {
     onPrintLabels(
       labelConfig,
-      canPrintBatchDefaultScope ? batchDefaultPrintItems : undefined,
+      canPrintBatchSelectedScope ? batchSelectedPrintItems : undefined,
     );
   };
 
@@ -2764,6 +2806,98 @@ export default function LabelPrintModal({
                 </div>
               </div>
             )}
+          </div>
+        )}
+        {(batchReducedPurposeItems.length > 0 ||
+          batchContinuationItems.length > 0) && (
+          <div
+            className="mt-3 rounded-md border border-amber-200 bg-amber-50/70 p-3"
+            data-testid="batch-print-scope-controls"
+          >
+            <div className="text-xs font-semibold uppercase tracking-normal text-amber-800">
+              {tx("label.batchPrintScopeTitle", "Print scope")}
+            </div>
+            <p className="mt-1 text-xs leading-5 text-amber-900/80">
+              {tx(
+                "label.batchPrintScopeBody",
+                "Ready labels are included by default. Add reduced or continuation items only when that output role is acceptable for this batch.",
+              )}
+            </p>
+            <div className="mt-3 grid gap-2">
+              {batchReducedPurposeItems.length > 0 && (
+                <label className="flex items-start gap-2 rounded-md border border-amber-200 bg-white/80 px-3 py-2 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    checked={batchIncludeReducedPurpose}
+                    onChange={(event) =>
+                      setBatchIncludeReducedPurpose(event.target.checked)
+                    }
+                    data-testid="batch-include-reduced-purpose"
+                  />
+                  <span>
+                    <span className="font-semibold text-slate-900">
+                      {tx(
+                        "label.batchIncludeReducedPurpose",
+                        "Include reduced-purpose labels",
+                      )}
+                    </span>
+                    <span className="ml-1 text-slate-500">
+                      ({batchReducedPurposeItems.length})
+                    </span>
+                    <span className="block leading-5 text-slate-500">
+                      {tx(
+                        "label.batchIncludeReducedPurposeHint",
+                        "These keep identity, signal word, and pictograms on the same stock, but do not claim complete-primary output.",
+                      )}
+                    </span>
+                  </span>
+                </label>
+              )}
+              {batchContinuationItems.length > 0 && (
+                <label className="flex items-start gap-2 rounded-md border border-amber-200 bg-white/80 px-3 py-2 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    checked={batchIncludeContinuation}
+                    onChange={(event) =>
+                      setBatchIncludeContinuation(event.target.checked)
+                    }
+                    data-testid="batch-include-continuation"
+                  />
+                  <span>
+                    <span className="font-semibold text-slate-900">
+                      {tx(
+                        "label.batchIncludeContinuation",
+                        "Include same-stock continuation labels",
+                      )}
+                    </span>
+                    <span className="ml-1 text-slate-500">
+                      ({batchContinuationItems.length})
+                    </span>
+                    <span className="block leading-5 text-slate-500">
+                      {tx(
+                        "label.batchIncludeContinuationHint",
+                        "These may expand one chemical into multiple labels on the same selected stock.",
+                      )}
+                    </span>
+                  </span>
+                </label>
+              )}
+            </div>
+            <div
+              className="mt-2 rounded-md bg-white/70 px-3 py-2 text-xs font-medium text-amber-900"
+              data-testid="batch-print-scope-summary"
+            >
+              {tx(
+                "label.batchPrintScopeSummary",
+                "{{count}} item(s) selected for print handoff; {{excluded}} excluded item(s) remain out of output.",
+                {
+                  count: batchSelectedPrintItems.length,
+                  excluded: batchPrintPlan.summary.excluded,
+                },
+              )}
+            </div>
           </div>
         )}
         {batchItemsNeedingReview.length > 0 && (
@@ -3843,7 +3977,7 @@ export default function LabelPrintModal({
                         {activeBatchPreviewItem
                           ? tx(
                               "label.previewFocusBatchBody",
-                              "The preview follows the selected representative item, while the sheet view shows the default printable batch scope.",
+                              "The preview follows the selected representative item, while the sheet view shows the current selected batch print scope.",
                             )
                           : previewChem
                           ? tx(

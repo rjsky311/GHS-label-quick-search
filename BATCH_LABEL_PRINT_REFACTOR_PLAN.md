@@ -37,14 +37,19 @@ Status as of 2026-05-16:
   and excluded when present), keeps the sheet preview aligned to the default
   ready print scope, and exposes a review/excluded list with CSV export before
   handoff.
-- Print handoff still sends only the default ready batch scope.
+- Batch print handoff now defaults to the ready scope but lets users explicitly
+  include `reduced-purpose` or `same-stock-continuation` items after
+  acknowledgement. The sheet preview follows the current selected print scope.
 - `npm run test:print-contract` now includes the batch planner test.
-- Explicitly including reduced-purpose items or same-stock continuation items
-  in the same physical batch remains a renderer/preflight follow-up.
+- The renderer can now carry per-label batch metadata and per-label layout
+  overrides, so a fixed-stock batch can mix ready labels with acknowledged
+  reduced-purpose labels while keeping one physical stock. Same-stock
+  continuation labels are also materialized for print after acknowledgement.
 - Phase 5 has started: `npm run qa:production-batch-print` opens the deployed
   app, performs a fixed-stock batch search, opens the label-print modal,
   verifies the batch fit report, switches the worst-fit representative preview,
-  checks the ready-batch print action, and writes
+  checks the ready-batch print action, exercises an acknowledged
+  reduced/continuation scope when available, and writes
   `build/production-batch-print-report.json` plus a modal screenshot.
 - `qa:production-batch-print` is now part of `qa:production-product` and the
   production QA summary includes a `fixed-stock-batch-printing` block.
@@ -394,9 +399,16 @@ Done when:
 
 Deliverables:
 
-- Batch print HTML with per-label purpose/status attributes.
-- Preflight over every included label.
-- Same-stock continuation support if selected for Complete purpose.
+- Batch print HTML with per-label purpose/status attributes. **Started**:
+  labels now include print-purpose/stock/template attributes and batch
+  category/preferred/effective-purpose attributes when produced from the batch
+  planner.
+- Preflight over every included label. **Started**: print content/layout
+  preflight now respects per-label layout overrides when reduced-purpose items
+  are included.
+- Same-stock continuation support if selected for Complete purpose. **Started**:
+  continuation items can be explicitly included, materialized, previewed, and
+  handed to the print renderer on the same selected stock.
 
 Done when:
 

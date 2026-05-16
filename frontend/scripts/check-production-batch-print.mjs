@@ -223,6 +223,112 @@ const run = async () => {
       failures.push("missing-preview-label-fragment");
     }
 
+    const readScopeState = () =>
+      page.evaluate(() => {
+        const textOf = (testId) =>
+          document
+            .querySelector(`[data-testid="${testId}"]`)
+            ?.textContent?.replace(/\s+/g, " ")
+            .trim() || "";
+        const reducedControl = document.querySelector(
+          '[data-testid="batch-include-reduced-purpose"]',
+        );
+        const continuationControl = document.querySelector(
+          '[data-testid="batch-include-continuation"]',
+        );
+        return {
+          visible: Boolean(
+            document.querySelector('[data-testid="batch-print-scope-controls"]'),
+          ),
+          hasReducedControl: Boolean(reducedControl),
+          hasContinuationControl: Boolean(continuationControl),
+          summary: textOf("batch-print-scope-summary"),
+        };
+      });
+
+    let scopeBefore = await readScopeState();
+    let scopeExerciseStock = "initial";
+    if (
+      !scopeBefore.hasReducedControl &&
+      !scopeBefore.hasContinuationControl &&
+      (await page.getByTestId("primary-output-size-a4-primary").count()) > 0
+    ) {
+      await page.locator('[data-testid="responsible-profile-controls"]').evaluate(
+        (node) => {
+          node.open = true;
+        },
+      );
+      await page.getByTestId("responsible-profile-field-organization").fill(
+        "QA Lab",
+      );
+      await page.getByTestId("responsible-profile-field-phone").fill(
+        "02-0000-0000",
+      );
+      await page.getByTestId("responsible-profile-field-address").fill(
+        "QA Address",
+      );
+      await page.locator('[data-testid="stock-size-picker"]').evaluate(
+        (node) => {
+          node.open = true;
+          node.scrollIntoView({ block: "center" });
+        },
+      );
+      await page.getByTestId("primary-output-size-a4-primary").click();
+      await page.waitForTimeout(500);
+      scopeExerciseStock = "a4-primary";
+      scopeBefore = await readScopeState();
+    }
+    let scopeAfter = null;
+    if (scopeBefore.hasReducedControl || scopeBefore.hasContinuationControl) {
+      const controlTestId = scopeBefore.hasReducedControl
+        ? "batch-include-reduced-purpose"
+        : "batch-include-continuation";
+      const expectedCategory = scopeBefore.hasReducedControl
+        ? "reduced-purpose"
+        : "same-stock-continuation";
+      await page.getByTestId(controlTestId).click();
+      await page.waitForTimeout(300);
+      if ((await page.getByTestId("batch-preview-rep-worstFit").count()) > 0) {
+        await page.getByTestId("batch-preview-rep-worstFit").click();
+        await page.waitForTimeout(300);
+      }
+      scopeAfter = await page.evaluate((category) => {
+      const textOf = (testId) =>
+        document
+          .querySelector(`[data-testid="${testId}"]`)
+          ?.textContent?.replace(/\s+/g, " ")
+          .trim() || "";
+        const frame = document.querySelector(
+          '[data-testid="label-sheet-preview"]',
+        );
+        const labelFrame = document.querySelector(
+          '[data-testid="label-fragment-preview"]',
+        );
+        const acknowledgedLabels = frame?.contentDocument?.querySelectorAll(
+          `[data-batch-category="${category}"]`,
+        );
+        const acknowledgedPreviewLabels =
+          labelFrame?.contentDocument?.querySelectorAll(
+            `[data-batch-category="${category}"]`,
+          );
+        return {
+          summary: textOf("batch-print-scope-summary"),
+          printAction: textOf("print-label-action"),
+          acknowledgedLabelCount:
+            (acknowledgedLabels?.length || 0) +
+            (acknowledgedPreviewLabels?.length || 0),
+        };
+      }, expectedCategory);
+      if (!scopeAfter.printAction.includes("Print selected batch")) {
+        failures.push("acknowledged-scope-action-not-selected-batch");
+      }
+      if (scopeAfter.acknowledgedLabelCount < 1) {
+        failures.push(`acknowledged-scope-preview-missing:${expectedCategory}`);
+      }
+    } else if (!scopeBefore.visible) {
+      failures.push("missing-batch-print-scope-controls");
+    }
+
     await page.getByTestId("batch-preview-rep-worstFit").click();
     await page.waitForTimeout(300);
     const representative = await page.evaluate(() => {
@@ -260,6 +366,9 @@ const run = async () => {
       casList,
       printableCount,
       fitReport,
+      scopeBefore,
+      scopeAfter,
+      scopeExerciseStock,
       representative,
       screenshotDir,
       failures,

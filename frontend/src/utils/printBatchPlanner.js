@@ -31,6 +31,11 @@ export const BATCH_PRINT_REPRESENTATIVE = Object.freeze({
   EXCLUDED: "excluded",
 });
 
+export const BATCH_PRINT_SCOPE = Object.freeze({
+  READY_ONLY: "ready-only",
+  READY_AND_ACKNOWLEDGED: "ready-and-acknowledged",
+});
+
 const CATEGORY_ORDER = Object.values(BATCH_PRINT_ITEM_CATEGORY);
 
 const PURPOSE_PATCHES = {
@@ -281,6 +286,57 @@ const classifyAs = ({
   requiresAcknowledgement: ACKNOWLEDGED_CATEGORIES.has(category),
   excluded: EXCLUDED_CATEGORIES.has(category),
 });
+
+const printMetaForItem = (item) => ({
+  category: item.category,
+  preferredPurpose: item.preferredPurpose,
+  effectivePurpose: item.effectivePurpose,
+  alternatePurpose: item.alternatePurpose,
+  reasonType: item.reason?.type || "",
+});
+
+const withBatchPrintMetadata = (item, layoutOverride = item.layout) => ({
+  ...item.chemical,
+  __batchPrintItem: printMetaForItem(item),
+  __printLayoutOverride: layoutOverride || item.layout || null,
+});
+
+export function buildBatchPrintableItems(
+  plan,
+  {
+    includeReducedPurpose = false,
+    includeContinuation = false,
+    scope = BATCH_PRINT_SCOPE.READY_ONLY,
+  } = {},
+) {
+  if (!plan?.items?.length) return [];
+
+  const includeAcknowledged =
+    scope === BATCH_PRINT_SCOPE.READY_AND_ACKNOWLEDGED;
+
+  return plan.items.flatMap((item) => {
+    if (item.includedByDefault) {
+      return [withBatchPrintMetadata(item)];
+    }
+
+    if (
+      item.category === BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE &&
+      (includeAcknowledged || includeReducedPurpose) &&
+      item.alternateAttempt?.layout
+    ) {
+      return [withBatchPrintMetadata(item, item.alternateAttempt.layout)];
+    }
+
+    if (
+      item.category === BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION &&
+      (includeAcknowledged || includeContinuation)
+    ) {
+      return [withBatchPrintMetadata(item)];
+    }
+
+    return [];
+  });
+}
 
 const buildBaseItem = ({
   chemical,

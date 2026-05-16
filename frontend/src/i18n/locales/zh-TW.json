@@ -813,5 +813,13 @@
   "label.decisionTextBlocked": "暫時不要列印",
   "label.decisionTextCheck": "檢查必要條件",
   "label.profileCompleteAction": "立即補齊資訊",
-  "label.profileUseSupplementAction": "改印補充標籤"
+  "label.profileUseSupplementAction": "改印補充標籤",
+  "label.printAcknowledgedBatchAction": "列印已確認的批次（{{count}} / {{total}}）",
+  "label.batchPrintScopeTitle": "列印範圍",
+  "label.batchPrintScopeBody": "可直接輸出的標籤會預設納入；只有當這批次可接受縮減用途或同紙材續頁時，才勾選加入。",
+  "label.batchIncludeReducedPurpose": "納入縮減用途標籤",
+  "label.batchIncludeReducedPurposeHint": "這些標籤仍保留身分、警示語與圖示，且使用同一紙材，但不宣稱是完整主標。",
+  "label.batchIncludeContinuation": "納入同紙材續頁標籤",
+  "label.batchIncludeContinuationHint": "這些項目可能會把一個化學品展開成同一紙材上的多張標籤。",
+  "label.batchPrintScopeSummary": "目前 {{count}} 筆會送出列印；{{excluded}} 筆排除項目不會輸出。"
 }

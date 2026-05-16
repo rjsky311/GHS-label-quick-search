@@ -52,9 +52,10 @@ Current baseline capabilities:
   30-100 item batch label printing is not yet a first-class workflow. The
   required direction is pinned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
-- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the next batch-print product
+- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the active batch-print product
   contract: purpose-first, one physical stock per batch, per-item fit report,
-  representative preview, excluded-list handling, and a future 50-item QA gate.
+  representative preview, explicit reduced/continuation print scope,
+  excluded-list handling, and deployed batch QA.
 - `NEXT_REMAINING_PRODUCT_WORK.md` holds the detailed execution backlog for the
   current product work blocks.
 - `AUTONOMOUS_WORKFLOW.md` defines when to continue, verify, push, deploy, and
@@ -215,17 +216,22 @@ Current status:
   selections and can hand off the default ready subset without forcing the
   whole batch to A4/Letter.
 - `LabelPrintModal` now also supports representative preview switching for
-  the batch fit report, aligns the sheet preview to the default ready print
+  the batch fit report, aligns the sheet preview to the current selected print
   scope, and exposes review/excluded items with CSV export before print
   handoff.
+- Batch print handoff now defaults to ready items but can explicitly include
+  acknowledged `reduced-purpose` and `same-stock-continuation` items on the
+  same physical stock. The renderer records per-label batch metadata and
+  per-label layout overrides so mixed ready/reduced batches remain inspectable.
 - `npm run qa:production-batch-print` exists as a deploy-time gate for the
-  fixed-stock batch modal flow and is now folded into `qa:production-product`
-  plus the `fixed-stock-batch-printing` product block in the production QA
-  summary.
+  fixed-stock batch modal flow, including acknowledged scope exercise when a
+  reduced/continuation path is available. It is folded into
+  `qa:production-product` plus the `fixed-stock-batch-printing` product block
+  in the production QA summary.
 - Existing print gates still protect single-label and representative
-  multi-chemical cases, but explicit reduced/continuation inclusion,
-  same-stock continuation rendering, and deployed 50-item batch evidence must
-  still be watched before calling the full workflow complete.
+  multi-chemical cases, but deployed 50-item batch evidence must still be
+  watched after each production-facing batch change before calling the full
+  workflow complete.
 
 ### 4. Physical Print Validation
 

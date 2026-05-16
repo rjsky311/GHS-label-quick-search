@@ -510,6 +510,59 @@ const getContinuationCapacity = (layout = {}) => {
   };
 };
 
+const getPrintLayoutOverride = (chemical) => {
+  if (chemical?.__printLayoutOverride) return chemical.__printLayoutOverride;
+  if (chemical?.__printContinuation && chemical.sourceChemical) {
+    return chemical.sourceChemical.__printLayoutOverride || null;
+  }
+  return null;
+};
+
+const resolveRenderModelForChemical = (chemical, model) => {
+  const override = getPrintLayoutOverride(chemical);
+  if (!override) return model;
+
+  const layout = resolvePrintLayoutConfig({
+    ...model.layout,
+    ...override,
+    template: normalizeTemplate(override.template || model.layout.template),
+  });
+
+  return {
+    ...model,
+    layout,
+    contentPolicy: resolvePrintContentPolicy(layout, { locale: model.locale }),
+  };
+};
+
+const getBatchPrintMeta = (chemical) =>
+  chemical?.__batchPrintItem ||
+  chemical?.sourceChemical?.__batchPrintItem ||
+  null;
+
+const renderLabelDataAttributes = (chemical, model) => {
+  const meta = getBatchPrintMeta(chemical);
+  const attrs = [
+    ["data-print-template", model.layout.template],
+    ["data-print-purpose", model.layout.labelPurpose],
+    ["data-print-stock", model.layout.stockId || model.layout.stockPreset],
+  ];
+
+  if (meta) {
+    attrs.push(
+      ["data-batch-category", meta.category],
+      ["data-batch-preferred-purpose", meta.preferredPurpose],
+      ["data-batch-effective-purpose", meta.effectivePurpose],
+      ["data-batch-reason", meta.reasonType],
+    );
+  }
+
+  return attrs
+    .filter(([, value]) => value != null && value !== "")
+    .map(([name, value]) => `${name}="${escapeHtml(value)}"`)
+    .join(" ");
+};
+
 const appendContinuationStatement = (pages, item, capacity, model) => {
   const weight = getContinuationStatementWeight(item.statement, model);
   let current = pages[pages.length - 1];
@@ -530,9 +583,10 @@ const appendContinuationStatement = (pages, item, capacity, model) => {
 };
 
 const buildContinuationLabelsForChemical = (chemical, model) => {
-  if (!isFullPagePrimaryLayout(model.layout)) return [chemical];
+  const renderModel = resolveRenderModelForChemical(chemical, model);
+  if (!isFullPagePrimaryLayout(renderModel.layout)) return [chemical];
 
-  const content = getLabelContentForRender(chemical, model);
+  const content = getLabelContentForRender(chemical, renderModel);
   const statements = [
     ...content.hazardStatements.map((statement) => ({
       kind: "hazard",
@@ -543,10 +597,10 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
       statement,
     })),
   ];
-  const capacity = getContinuationCapacity(model.layout);
+  const capacity = getContinuationCapacity(renderModel.layout);
   const statementTextWeight = statements.reduce(
     (total, item) =>
-      total + getContinuationStatementWeight(item.statement, model),
+      total + getContinuationStatementWeight(item.statement, renderModel),
     0,
   );
 
@@ -559,7 +613,7 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
 
   const pages = [{ items: [], textWeight: 0 }];
   statements.forEach((item) =>
-    appendContinuationStatement(pages, item, capacity, model),
+    appendContinuationStatement(pages, item, capacity, renderModel),
   );
   const populatedPages = pages.filter((page) => page.items.length > 0);
   if (populatedPages.length <= 1) return [chemical];
@@ -1037,7 +1091,7 @@ const renderIconTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
+    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       ${renderPurposeNotice(model)}
       <div class="label-top">
         ${renderNameSection(effectiveChem, model, {
@@ -1086,7 +1140,7 @@ const renderStandardTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-standard ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
+    <div class="label label-standard ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       ${renderPurposeNotice(model)}
       <div class="label-top label-top-standard">
         ${renderNameSection(effectiveChem, model, {
@@ -1176,7 +1230,7 @@ const renderFullTemplate = (chemical, model) => {
   ].join(";");
 
   return `
-    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}"${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
+    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="compliance-header">
         ${renderNameSection(effectiveChem, model, {
           showCasLine: false,
@@ -1274,7 +1328,7 @@ const renderQRCodeTemplate = (chemical, model) => {
   const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `
-    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}">
+    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       <div class="qr-left qr-left-scan">
         ${renderPurposeNotice(model)}
         <div class="qr-identity">
@@ -2963,12 +3017,17 @@ export function buildPrintDocument(
 
   if (!model) return null;
 
-  const renderer =
-    TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
+  const renderLabel = (chemical) => {
+    const renderModel = resolveRenderModelForChemical(chemical, model);
+    const renderer =
+      TEMPLATE_RENDERERS[renderModel.layout.template] ||
+      TEMPLATE_RENDERERS.standard;
+    return renderer(chemical, renderModel);
+  };
   const pagesHtml = model.pages
     .map((pageLabels, pageIndex) => {
       const labelsHtml = pageLabels
-        .map((chemical) => renderer(chemical, model))
+        .map((chemical) => renderLabel(chemical))
         .join("");
       return `
         <div class="page">
@@ -3190,8 +3249,13 @@ export function buildPrintPreviewDocument(
 
   if (!model) return null;
 
-  const renderer =
-    TEMPLATE_RENDERERS[model.layout.template] || TEMPLATE_RENDERERS.standard;
+  const renderLabel = (chemical) => {
+    const renderModel = resolveRenderModelForChemical(chemical, model);
+    const renderer =
+      TEMPLATE_RENDERERS[renderModel.layout.template] ||
+      TEMPLATE_RENDERERS.standard;
+    return renderer(chemical, renderModel);
+  };
   const previewStyles = buildPreviewStyles(mode, model, options);
   const sharedStyles = buildStyles(model);
   const selectedPageIndex = clampIndex(
@@ -3205,14 +3269,13 @@ export function buildPrintPreviewDocument(
 
   let fragmentHtml = "";
   if (mode === "label") {
-    fragmentHtml = `<div class="preview-label-scaler">${renderer(
+    fragmentHtml = `<div class="preview-label-scaler">${renderLabel(
       model.expandedLabels[selectedLabelIndex] || model.expandedLabels[0],
-      model,
     )}</div>`;
   } else {
     const firstPage = model.pages[selectedPageIndex] || model.pages[0] || [];
     const labelMarkup = firstPage
-      .map((chemical) => renderer(chemical, model))
+      .map((chemical) => renderLabel(chemical))
       .join("");
     const placeholderCount = Math.max(
       model.layout.page.perPage - firstPage.length,

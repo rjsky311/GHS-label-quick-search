@@ -460,15 +460,19 @@ Current status:
   and prints the default ready subset instead of blocking a whole batch when
   unrelated items need review.
 - `LabelPrintModal` now supports representative preview switching for the
-  batch fit report, keeps the sheet preview on the default ready print scope,
-  and shows a review/excluded list with CSV export before handoff.
+  batch fit report, keeps the sheet preview on the current selected print
+  scope, and shows a review/excluded list with CSV export before handoff.
+- Batch users can now explicitly include acknowledged `reduced-purpose` and
+  `same-stock-continuation` items. The print renderer receives per-label batch
+  metadata and layout overrides, so one fixed-stock job can mix ready and
+  reduced/continuation output without silently changing paper sizes.
 - `npm run qa:production-batch-print` now exercises the deployed fixed-stock
-  batch modal flow and writes `build/production-batch-print-report.json` with
-  a screenshot.
+  batch modal flow, acknowledged scope selection when available, and writes
+  `build/production-batch-print-report.json` with a screenshot.
 - `qa:production-product` now runs `qa:production-batch-print`, and the
   production QA summary has a fixed-stock batch product block.
-- Explicit reduced/continuation inclusion and deployed 50-item batch evidence
-  are still open.
+- Deployed 50-item batch evidence remains the production closure step after
+  each batch-facing change.
 
 Suggested verification:
 

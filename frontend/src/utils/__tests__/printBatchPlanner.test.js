@@ -2,7 +2,9 @@ import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import {
   BATCH_PRINT_ITEM_CATEGORY,
   BATCH_PRINT_PURPOSE,
+  BATCH_PRINT_SCOPE,
   buildBatchPrintPlan,
+  buildBatchPrintableItems,
 } from "../printBatchPlanner";
 import { batchPrintMixedFixture50 } from "../testFixtures/batchPrintFixtures";
 
@@ -140,6 +142,36 @@ describe("printBatchPlanner", () => {
     );
   });
 
+  it("materializes acknowledged reduced-purpose items on the same physical stock", () => {
+    const plan = buildBatchPrintPlan({
+      selectedForLabel: batchPrintMixedFixture50,
+      layout: largePrimaryLayout,
+      purpose: BATCH_PRINT_PURPOSE.COMPLETE,
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+
+    const readyOnly = buildBatchPrintableItems(plan);
+    const withAcknowledged = buildBatchPrintableItems(plan, {
+      scope: BATCH_PRINT_SCOPE.READY_AND_ACKNOWLEDGED,
+    });
+    const reducedItem = withAcknowledged.find(
+      (item) => item.cas_number === "7647-01-0",
+    );
+
+    expect(readyOnly).toHaveLength(plan.summary.printableByDefault);
+    expect(withAcknowledged.length).toBeGreaterThan(readyOnly.length);
+    expect(reducedItem.__batchPrintItem).toEqual(
+      expect.objectContaining({
+        category: BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
+        preferredPurpose: BATCH_PRINT_PURPOSE.COMPLETE,
+        effectivePurpose: BATCH_PRINT_PURPOSE.QUICK_ID,
+      }),
+    );
+    expect(reducedItem.__printLayoutOverride.stockPreset).toBe("large-primary");
+    expect(reducedItem.__printLayoutOverride.template).not.toBe("full");
+  });
+
   it("classifies very dense A4 complete labels as same-stock continuation", () => {
     const plan = buildBatchPrintPlan({
       selectedForLabel: batchPrintMixedFixture50,
@@ -163,6 +195,38 @@ describe("printBatchPlanner", () => {
     );
     expect(new Set(plan.items.map((item) => item.layout.stockPreset))).toEqual(
       new Set(["a4-primary"]),
+    );
+  });
+
+  it("materializes same-stock continuation items only after acknowledgement", () => {
+    const plan = buildBatchPrintPlan({
+      selectedForLabel: batchPrintMixedFixture50,
+      layout: a4PrimaryLayout,
+      purpose: BATCH_PRINT_PURPOSE.COMPLETE,
+      resolvedLabProfile: completeProfile,
+      locale: "en-US",
+    });
+
+    const readyOnly = buildBatchPrintableItems(plan);
+    const withContinuation = buildBatchPrintableItems(plan, {
+      includeContinuation: true,
+    });
+    const continuationItem = withContinuation.find(
+      (item) => item.cas_number === "50-00-0",
+    );
+
+    expect(readyOnly.some((item) => item.cas_number === "50-00-0")).toBe(
+      false,
+    );
+    expect(continuationItem.__batchPrintItem).toEqual(
+      expect.objectContaining({
+        category: BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION,
+        preferredPurpose: BATCH_PRINT_PURPOSE.COMPLETE,
+        effectivePurpose: BATCH_PRINT_PURPOSE.COMPLETE,
+      }),
+    );
+    expect(continuationItem.__printLayoutOverride.stockPreset).toBe(
+      "a4-primary",
     );
   });
 

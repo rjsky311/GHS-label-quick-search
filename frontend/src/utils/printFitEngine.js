@@ -1,5 +1,6 @@
 import {
   PRINT_LABEL_ELEMENT_STATUS,
+  buildPrintLabelContent,
   buildPrintLabelContents,
   countResponsibleProfileFields,
   hasResponsibleProfile,
@@ -466,22 +467,32 @@ export function inspectPrintContentFit(model) {
   if (!model?.expandedLabels?.length) return [];
   const { layout } = model;
   const locale = model.locale || "zh";
-  const contents = buildPrintLabelContents(
-    model.expandedLabels,
-    buildContentOptions(model),
-  );
-  if (!isCompletePrimaryLayout(layout)) {
-    return inspectSupplementalContentFitForContents(
-      contents,
-      layout,
-      locale,
-      model.customLabelFields,
-    );
-  }
+  const contentOptions = buildContentOptions(model);
 
-  const maxStatements = getMaxCompleteStatementCount(layout);
-  const maxTextWeight = getMaxCompleteTextWeight(layout);
-  return contents.flatMap((content) => {
+  return model.expandedLabels.flatMap((chemical, index) => {
+    const labelLayout =
+      chemical?.__printLayoutOverride ||
+      chemical?.sourceChemical?.__printLayoutOverride ||
+      layout;
+    const content = {
+      index,
+      ...buildPrintLabelContent(chemical, {
+        ...contentOptions,
+        layout: labelLayout,
+      }),
+    };
+
+    if (!isCompletePrimaryLayout(labelLayout)) {
+      return inspectSupplementalContentFitForContents(
+        [content],
+        labelLayout,
+        locale,
+        model.customLabelFields,
+      );
+    }
+
+    const maxStatements = getMaxCompleteStatementCount(labelLayout);
+    const maxTextWeight = getMaxCompleteTextWeight(labelLayout);
     const issues = [];
     if (content.counts.statements > maxStatements) {
       issues.push({
@@ -492,7 +503,11 @@ export function inspectPrintContentFit(model) {
       });
     }
 
-    const textWeight = estimatePrintContentTextWeight(content, layout, locale);
+    const textWeight = estimatePrintContentTextWeight(
+      content,
+      labelLayout,
+      locale,
+    );
     if (textWeight > maxTextWeight) {
       issues.push({
         type: "content-text-too-dense",

@@ -443,6 +443,52 @@ describe("print layout model", () => {
     expect(documentBundle.model.layout.stockId).toBe("medium-bottle");
   });
 
+  it("renders per-item batch layout overrides on the same physical stock", () => {
+    const standardLargePrimary = resolvePrintLayoutConfig({
+      stockPreset: "large-primary",
+      labelPurpose: "shipping",
+      template: "standard",
+    });
+    const reducedItem = {
+      ...mockChemical,
+      cas_number: "7647-01-0",
+      name_en: "Hydrochloric Acid",
+      __batchPrintItem: {
+        category: "reduced-purpose",
+        preferredPurpose: "complete",
+        effectivePurpose: "supplemental",
+        reasonType: "complete-content-too-dense-for-stock",
+      },
+      __printLayoutOverride: standardLargePrimary,
+    };
+
+    const documentBundle = buildPrintDocument(
+      [mockChemical, reducedItem],
+      {
+        stockPreset: "large-primary",
+        labelPurpose: "shipping",
+        template: "full",
+      },
+      {},
+      {},
+      {},
+      {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    );
+
+    expect(documentBundle.html).toContain("label-full");
+    expect(documentBundle.html).toContain("label-standard");
+    expect(documentBundle.html).toContain(
+      'data-batch-category="reduced-purpose"',
+    );
+    expect(documentBundle.html).toContain(
+      'data-batch-effective-purpose="supplemental"',
+    );
+  });
+
   it("buildPrintPreviewDocument reuses the shared renderer for label and sheet previews", () => {
     const labelPreview = buildPrintPreviewDocument(
       [mockChemical],
