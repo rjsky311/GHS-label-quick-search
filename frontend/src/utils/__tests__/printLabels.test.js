@@ -352,6 +352,20 @@ describe("print layout model", () => {
     expect(layout.page.perPage).toBe(1);
   });
 
+  it("ignores stale orientation values when a fixed stock preset is selected", () => {
+    const layout = resolvePrintLayoutConfig({
+      stockPreset: "brother-62mm-continuous",
+      orientation: "portrait",
+      pageOrientation: "portrait",
+    });
+
+    expect(layout.orientation).toBe("landscape");
+    expect(layout.page.orientation).toBe("landscape");
+    expect(layout.page.gridWidthMm).toBeLessThanOrEqual(
+      layout.page.contentWidthMm + 0.2,
+    );
+  });
+
   it("scales label typography and GHS pictogram size from physical stock dimensions", () => {
     const small = resolvePrintLayoutConfig({
       stockPreset: "small-strip",

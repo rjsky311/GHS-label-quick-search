@@ -793,12 +793,16 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
       ? inferCustomSizeFromDimensions(resolvedLabelWidthMm, resolvedLabelHeightMm)
       : base.size);
   const orientation = coerceEnum(
-    labelConfig.orientation || base.orientation,
+    locksPresetGeometry
+      ? base.orientation
+      : labelConfig.orientation || base.orientation,
     VALID_ORIENTATIONS,
     base.orientation,
   );
   const pageOrientation = coerceEnum(
-    labelConfig.pageOrientation || base.pageOrientation || orientation,
+    locksPresetGeometry
+      ? base.pageOrientation || base.orientation
+      : labelConfig.pageOrientation || base.pageOrientation || orientation,
     VALID_ORIENTATIONS,
     base.pageOrientation || orientation,
   );
