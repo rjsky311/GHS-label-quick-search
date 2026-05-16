@@ -144,6 +144,9 @@ Current status:
   timeout; a healthy full product pass can take several minutes because it runs
   deployed Chrome flows, print handoff checks, prepared workflow checks,
   fixed-stock batch checks, and summary generation.
+- Production print handoff QA now checks QR supplement scan-target metadata and
+  visible QR target role copy, so the SDS/regulatory/reference scan path is not
+  only manually inspected.
 
 Done means:
 
@@ -326,6 +329,8 @@ Current status:
 - QR supplement planning now uses the same source model for scan targets: the
   UI shows the target role/source before printing, and printed QR images carry
   target URL/type/source/label metadata for QA and troubleshooting.
+- The deployed print handoff gate now fails QR supplement cases if that target
+  metadata or visible role copy disappears.
 - Admin curation writes are bounded on the backend: manual dictionary entries,
   aliases, and reference links trim text, cap long fields, reject unsupported
   locale/status values, and constrain numeric priority/confidence before data

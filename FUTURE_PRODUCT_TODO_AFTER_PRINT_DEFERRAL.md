@@ -144,6 +144,8 @@ Work items:
   `getPreferredQrTargetInfo`; QR supplement preflight shows the selected scan
   target role, and printed QR images carry target URL/type/source/label data
   attributes for QA and troubleshooting.
+- Completed: production print handoff QA now enforces QR target metadata and
+  visible QR target role copy for QR supplement cases.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.
@@ -161,7 +163,8 @@ Acceptance:
   alone.
 - QR supplement users can see whether the scan path is SDS, regulatory,
   occupational, or generic reference support before printing.
-- Production QA continues checking safe schemes, roles, sources, and ordering.
+- Production QA continues checking safe schemes, roles, sources, ordering, and
+  QR supplement target metadata.
 
 ### 1.4 Telemetry, Admin Cost, And Privacy Boundaries
 

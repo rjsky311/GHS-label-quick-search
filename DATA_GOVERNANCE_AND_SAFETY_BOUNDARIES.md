@@ -185,6 +185,9 @@ Frontend:
 - QR supplement preflight shows the selected scan target role/source, and the
   printed QR image carries `data-qr-target`, `data-qr-target-type`,
   `data-qr-target-source`, and `data-qr-target-label` for audit/debug checks.
+- Production print handoff QA fails QR supplement cases when those target
+  attributes are missing, unsafe, untyped, or when the modal no longer exposes
+  the QR target role in the printed-output checklist and decision summary.
 - Visible reference lists prefer SDS/regulatory/occupational over generic
   references before applying numeric priority.
 - Results and detail views distinguish no-GHS, GHS-text-without-pictogram, and

@@ -184,6 +184,14 @@ const LABEL_KIND_CLASSES = {
   "qr-supplement": "label-kind-qr-supplement",
   "quick-id": "label-kind-quick-id",
 };
+const QR_TARGET_TYPES = new Set([
+  "sds",
+  "regulatory",
+  "occupational",
+  "reference",
+]);
+const QR_TARGET_ROLE_TEXT_RE =
+  /(?:SDS|Regulatory|Occupational|Reference|法規|職安|參考)/i;
 
 const getAttributeMap = async (locator, attributes) => {
   const result = {};
@@ -564,6 +572,13 @@ const inspectPreviewFrame = async (page, testCase) => {
         }))
         .filter(({ alt }) => /^GHS\d{2}$/i.test(alt));
       const qrImages = selectorItems(".qrcode-img", "qr");
+      const qrTargetAttributes = qrImages.map(({ element, key }) => ({
+        key,
+        target: element.getAttribute("data-qr-target") || "",
+        type: element.getAttribute("data-qr-target-type") || "",
+        source: element.getAttribute("data-qr-target-source") || "",
+        label: element.getAttribute("data-qr-target-label") || "",
+      }));
       const supportChips = selectorItems(".support-chip", "support-chip");
       const signalNodes = selectorItems(".signal", "signal");
       const casNodes = Array.from(
@@ -825,6 +840,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           signalWords: signalNodes.length,
           casNodes: casNodes.length,
         },
+        qrTargetAttributes,
       };
     },
     {
@@ -886,6 +902,20 @@ const capturePreviewEvidence = async (page, testCase) => {
       Boolean(beforeSrcDoc) && beforeSrcDoc !== afterSrcDoc;
     evidence.nextPreviewInspection = await inspectPreviewFrame(page, testCase);
   }
+  evidence.outputChecklistText =
+    ((await page
+      .getByTestId("required-output-checklist")
+      .textContent()
+      .catch(() => "")) || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  evidence.decisionSummaryText =
+    ((await page
+      .getByTestId("print-decision-summary")
+      .textContent()
+      .catch(() => "")) || "")
+      .replace(/\s+/g, " ")
+      .trim();
   if (screenshotDir) {
     fs.mkdirSync(screenshotDir, { recursive: true });
     const targetPath = path.join(screenshotDir, `${testCase.id}.png`);
@@ -1111,6 +1141,30 @@ const evaluateCase = ({ testCase, status, evidence }) => {
       "preview-qr-min-size",
       Number(previewInspection.minQrSidePx) >=
         Number(testCase.expectedMinQrSidePx),
+    );
+  }
+  if (testCase.expectedLabelKind === "qr-supplement") {
+    const qrTargetAttributes = previewInspection.qrTargetAttributes || [];
+    assert(
+      "qr-target-attributes-present",
+      qrTargetAttributes.length > 0 &&
+        qrTargetAttributes.every(
+          ({ target, type, source, label }) =>
+            /^https?:\/\//i.test(target || "") &&
+            QR_TARGET_TYPES.has(type) &&
+            Boolean(source) &&
+            Boolean(label),
+        ),
+    );
+    assert(
+      "qr-target-checklist-visible",
+      /QR (target|目標)|QR 目標/i.test(evidence.outputChecklistText || "") &&
+        QR_TARGET_ROLE_TEXT_RE.test(evidence.outputChecklistText || ""),
+    );
+    assert(
+      "qr-target-decision-visible",
+      /QR/i.test(evidence.decisionSummaryText || "") &&
+        QR_TARGET_ROLE_TEXT_RE.test(evidence.decisionSummaryText || ""),
     );
   }
   if (Number(testCase.expectedMinTotalPages || 1) > 1) {
