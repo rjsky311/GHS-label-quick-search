@@ -398,6 +398,14 @@ const getPhysicalLabelClasses = (layout = {}) => {
     .join(" ");
 };
 
+const getPictogramDensityClasses = (pictograms = []) => {
+  const count = Math.max(0, pictograms.length);
+  const density =
+    count >= 7 ? "ultra" : count >= 5 ? "dense" : count >= 3 ? "standard" : "sparse";
+
+  return `label-pictogram-count-${count} label-pictogram-density-${density}`;
+};
+
 const resolveLabProfile = (customLabelFields, labProfile) => ({
   organization:
     (labProfile?.organization || "").trim() ||
@@ -1137,7 +1145,7 @@ const renderIconTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
+    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       ${renderPurposeNotice(model)}
       <div class="label-top">
         ${renderNameSection(effectiveChem, model, {
@@ -1186,7 +1194,7 @@ const renderStandardTemplate = (chemical, model) => {
   const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-standard ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
+    <div class="label label-standard ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       ${renderPurposeNotice(model)}
       <div class="label-top label-top-standard">
         ${renderNameSection(effectiveChem, model, {
@@ -1280,7 +1288,7 @@ const renderFullTemplate = (chemical, model) => {
   ].join(";");
 
   return `
-    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
+    <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="compliance-header">
         ${renderNameSection(effectiveChem, model, {
           showCasLine: false,
@@ -1378,7 +1386,7 @@ const renderQRCodeTemplate = (chemical, model) => {
   const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
 
   return `
-    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
+    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       <div class="qr-left qr-left-scan">
         ${renderPurposeNotice(model)}
         <div class="qr-identity">
@@ -2757,6 +2765,26 @@ const buildStyles = (model) => {
     .label-standard.label-stock-large-primary .pictograms-standard img {
       width: 28mm;
       height: 28mm;
+    }
+    .label-standard.label-stock-large-primary.label-pictogram-density-dense .pictograms-standard {
+      grid-template-columns: repeat(2, 21mm);
+      gap: 1.3mm;
+    }
+    .label-standard.label-stock-large-primary.label-pictogram-density-dense .pictograms-standard img {
+      width: 21mm;
+      height: 21mm;
+    }
+    .label-standard.label-stock-large-primary.label-pictogram-density-ultra .standard-grid {
+      grid-template-columns: minmax(0, 58mm) minmax(0, 1fr);
+      gap: 3.2mm;
+    }
+    .label-standard.label-stock-large-primary.label-pictogram-density-ultra .pictograms-standard {
+      grid-template-columns: repeat(3, 17mm);
+      gap: 1.1mm;
+    }
+    .label-standard.label-stock-large-primary.label-pictogram-density-ultra .pictograms-standard img {
+      width: 17mm;
+      height: 17mm;
     }
     .label-standard.label-stock-large-primary .standard-main {
       gap: 1mm;

@@ -508,6 +508,37 @@ describe("print layout model", () => {
     expect(documentBundle.model.layout.stockId).toBe("medium-bottle");
   });
 
+  it("adds pictogram density classes so roomy front labels can scale many icons", () => {
+    const chemicalWithManyPictograms = {
+      ...mockChemical,
+      ghs_pictograms: [
+        { code: "GHS01" },
+        { code: "GHS02" },
+        { code: "GHS03" },
+        { code: "GHS04" },
+        { code: "GHS05" },
+        { code: "GHS06" },
+        { code: "GHS08" },
+      ],
+    };
+
+    const documentBundle = buildPrintDocument(
+      [chemicalWithManyPictograms],
+      {
+        stockPreset: "large-primary",
+        template: "standard",
+        labelPurpose: "shipping",
+      },
+      {},
+    );
+
+    expect(documentBundle.html).toContain("label-pictogram-count-7");
+    expect(documentBundle.html).toContain("label-pictogram-density-ultra");
+    expect(documentBundle.html).toContain(
+      ".label-standard.label-stock-large-primary.label-pictogram-density-ultra .pictograms-standard",
+    );
+  });
+
   it("renders per-item batch layout overrides on the same physical stock", () => {
     const standardLargePrimary = resolvePrintLayoutConfig({
       stockPreset: "large-primary",
