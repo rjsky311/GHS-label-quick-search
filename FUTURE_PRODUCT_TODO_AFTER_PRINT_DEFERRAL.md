@@ -39,12 +39,19 @@ Definition of done for any item:
 
 ## 1. Data Trust, Source Governance, And Correction Workflow
 
-Status: `Open`
+Status: `Monitoring` on 2026-05-16.
 
 Why this matters: users need to trust the tool without mistaking it for the
 legal authority. PubChem, ECHA, supplier SDS, local dictionary aliases, manual
 curation, and user corrections can disagree. The product should make those
 differences understandable and safe.
+
+Current baseline: the core data-trust surfaces now have regression gates for
+source conflicts, no-GHS states, selected-classification evidence, SDS/reference
+authority ordering, QR target metadata, correction links, and telemetry caps.
+Keep this section open as a monitoring prompt rather than as an unfinished
+feature list; add new implementation work only when a new source conflict,
+correction pattern, unsafe-link example, or upstream-data failure appears.
 
 ### 1.1 Source-Conflict Handling
 
@@ -78,14 +85,16 @@ Work items:
   original primary report.
 - Completed: expanded `qa:production-search-ui` so the deployed export preview
   must expose data state, primary source, and classification-selection columns.
-- Audit the print modal and QR target selection for remaining source-conflict
-  language.
-- Define what the UI says when the primary source is PubChem, ECHA-derived,
-  local dictionary assisted, manual-reference assisted, or upstream-degraded.
+- Completed: audited the print modal and QR supplement path so scan targets
+  expose role/source/label metadata before print and in production handoff QA.
+- Completed: defined the current baseline language for PubChem/ECHA/manual
+  source context through result rows, Detail trust/provenance surfaces,
+  print/export preparation, export preview, and CSV/XLSX exports.
 - Keep alternate GHS classifications inspectable and make their source/ranking
   logic easier to understand.
-- Add regression cases for chemicals with multiple classifications, no
-  pictograms but GHS text, no GHS data, and upstream transient failures.
+- Add more regression cases when new examples appear for multiple
+  classifications, text-only GHS records, no GHS data, or upstream transient
+  failures.
 
 Acceptance:
 
@@ -202,11 +211,17 @@ Acceptance:
 
 ## 2. User Guidance, Low-Noise UX, And First-Time Success
 
-Status: `Open`
+Status: `Monitoring` on 2026-05-16.
 
 Why this matters: the tool already has many capabilities. The next maturity
 step is helping a first-time lab or operations user complete the main task
 without reading long explanations or understanding internal print logic.
+
+Current baseline: first-time decision guidance, narrow result/detail reading,
+print recovery routing, fixed-stock batch guidance, and keyboard containment
+are now covered by production QA. Keep iterating when screenshots or user
+feedback show confusion; do not add more visible controls simply because an
+implementation option exists.
 
 ### 2.1 First-Time Search-To-Decision Path
 
@@ -224,11 +239,12 @@ Work items:
   path as identity check, SDS/source verification, then print/export.
 - Completed: extended production search UI QA to require the decision guide and
   three decision steps.
-- Reduce wording that explains implementation details instead of user
-  decisions.
-- Make common paths obvious: search by CAS, search by name, inspect details,
-  verify SDS, print selected labels, export data.
-- Add production QA or screenshot review for first-screen readability when UI
+- Completed: made common paths explicit through the result decision guide,
+  result actions, SDS/detail paths, print entry, export preview, and support
+  links.
+- Keep reducing wording that explains implementation details instead of user
+  decisions when copy changes.
+- Keep production QA or screenshot review for first-screen readability when UI
   changes.
 
 Acceptance:
@@ -262,8 +278,9 @@ Work items:
 - Keep the first-level print modal focused on physical target, output role,
   preview, and print action.
 - Move rare tuning into secondary or advanced areas.
-- Improve blocked-output recovery copy: name the current stock, why it cannot
-  carry the content, and the recommended next output.
+- Completed: blocked-output recovery now names the current stock, the concrete
+  next action, and either the larger complete-primary stock or the missing
+  responsible-profile requirement.
 - Keep supplemental/quick-ID/QR labels honest and visually distinct from
   complete primary labels.
 
@@ -298,6 +315,8 @@ Acceptance:
 - Complex dialogs keep focus containment and Escape behavior.
 
 ### 2.4 Accessibility And Keyboard Continuity
+
+Status: `Gate added` on 2026-05-15.
 
 Goal: safety workflow surfaces should stay usable by keyboard and screen-reader
 users as the UI is simplified.
@@ -356,11 +375,16 @@ Acceptance:
 
 ## 3. Public Documentation, README Cleanup, And Maintainer Clarity
 
-Status: `In progress`
+Status: `Shipped` on 2026-05-16.
 
 Why this matters: the project has strong internal planning docs, but the public
 README must stay readable, user-facing, and aligned with the internal planning
 entry points. A public tool needs clean docs that build trust.
+
+Current baseline: public README cleanup, maintainer doc split, and docs drift
+checks are complete. Treat this section as a shipped documentation baseline;
+reopen it only when canonical entry points, public claims, or workflow rules
+change.
 
 ### 3.1 README Encoding And Public-Facing Rewrite
 
@@ -538,13 +562,17 @@ Acceptance:
 
 ## Recommended Execution Order
 
-1. README cleanup and public documentation rewrite.
-2. Data correction intake and source-conflict governance.
-3. First-time search-to-decision UX polish.
-4. Narrow/mobile read-first follow-up cases.
-5. Brand/support funnel rules and copy review.
-6. Fixed-stock batch label printing monitoring.
-7. Optional documentation drift checks.
+1. Keep data governance and source-conflict examples monitored; add focused
+   tests only when a new chemical/source case exposes ambiguity.
+2. Keep first-time and low-noise UX monitored; improve copy or layout only when
+   production screenshots or user feedback show confusion.
+3. Keep narrow/mobile and keyboard QA extended as new complex UI paths are
+   added.
+4. Keep fixed-stock batch label printing in monitoring; add fixtures when new
+   real-world batch lists expose new fit or guidance cases.
+5. Keep public documentation and brand/support rules stable; update them only
+   when product behavior, canonical workflow, or conversion-copy boundaries
+   change.
 
 Use this order unless a production screenshot, code review finding, CI failure,
 or user report points to a more urgent slice.
@@ -553,15 +581,15 @@ or user report points to a more urgent slice.
 
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
-| Data source conflicts | `Gate added` | No-GHS deployed state is covered with Urea; keep expanding text-only GHS and upstream-degraded examples | Backend/frontend focused tests + `qa:production-search-ui` |
+| Data source conflicts | `Monitoring` | No-GHS deployed state is covered with Urea; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |
-| First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
-| Fixed-stock batch print | `Gate added` | Keep monitoring future batch examples; re-run production batch/product gates after changes | Batch planner tests + print PDF artifact + production batch QA |
+| First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
+| Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; re-run production batch/product gates after changes | Batch planner tests + print PDF artifact + production batch QA |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
-| Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
+| Accessibility | `Gate added` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
 | Maintainer doc split | `Shipped` | Keep `CLAUDE.md` as a pointer only | Docs-only checks |
 | Documentation drift checks | `Gate added` | Keep `test:docs` aligned when canonical docs change | `npm run test:docs` |

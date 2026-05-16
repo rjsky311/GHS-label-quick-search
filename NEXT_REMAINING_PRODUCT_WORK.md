@@ -447,21 +447,24 @@ Suggested verification:
 
 Why this matters: batch printing is not just "many single-label prints." Lab
 users often load one label roll or sheet and need a whole set of chemicals to
-print consistently on that stock. The existing `multi-chemical` QA layer checks
-representative chemical variety, but it does not prove that a 30-100 item
-fixed-stock batch can be planned, previewed, filtered, and printed.
+print consistently on that stock. This block is now implemented and monitored
+through the batch contract and production gates. Reopen it only when a fresh
+batch list, screenshot, QA failure, or code-review finding proves the current
+fixed-stock baseline is insufficient.
 
-Work to continue:
+Monitoring rules:
 
 - Use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the owner contract.
-- Add a batch planner above the existing single-label planner.
-- Keep one selected physical stock for the batch.
-- Make Quick ID, Supplemental, and Complete first-level batch purposes.
-- Generate per-item categories: ready, ready-tight, reduced-purpose,
-  same-stock-continuation, excluded-data, and excluded-fit.
-- Replace first-selected-label preview assumptions with first/worst/longest/
-  most-pictograms/densest/excluded representative views.
-- Add a mixed 50-item fixture and production Browser QA gate.
+- Keep one selected physical stock per batch; do not silently split a batch
+  across paper or roll sizes.
+- Keep Quick ID, Supplemental, and Complete as first-level batch purposes.
+- Keep per-item categories visible before print handoff: ready, ready-tight,
+  reduced-purpose, same-stock-continuation, excluded-data, and excluded-fit.
+- Keep representative previews available: first, worst fit, longest name, most
+  pictograms, densest text, and excluded list.
+- Add new fixtures and QA cases when real 30-100 item batch examples expose
+  layout, guidance, or exclusion issues not covered by the current 50-item
+  fixture.
 
 Acceptance:
 

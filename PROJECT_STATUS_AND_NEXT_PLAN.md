@@ -413,10 +413,10 @@ complete.
 
 - Physical printing: automated browser/PDF checks do not fully prove printer
   scaling, margin, media, thermal resolution, or label-stock behavior.
-- Batch printing: the current `multi-chemical` gate is representative coverage,
-  not a fixed-stock 50-item batch workflow. Batch work must keep one selected
-  stock, classify each item, show representative previews, and expose excluded
-  reasons before print.
+- Batch printing: the fixed-stock 50-item workflow is now gated, but new
+  real-world batch lists can still expose fit, guidance, or exclusion cases.
+  Keep one selected stock, classify each item, show representative previews,
+  and expose excluded reasons before print.
 - Browser and OS print dialogs: Chrome, Edge, Windows print scaling, PDF
   viewers, and printer drivers can change output after the app hands off.
 - QR reliability: QR must stay large enough, scan quickly, and point to safe,
