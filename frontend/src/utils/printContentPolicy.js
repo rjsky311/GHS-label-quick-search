@@ -83,6 +83,10 @@ export const shouldUseHazardCodesOnly = (layout = {}) => {
     return false;
   }
 
+  if (layout.stockId === "large-primary" || layout.stockPreset === "large-primary") {
+    return true;
+  }
+
   const area = areaMm(layout);
   const shortSide = shortSideMm(layout);
   if (
@@ -191,4 +195,3 @@ export function resolvePrintContentPolicy(
     suppressesPrecautionText: !isCompletePrimary,
   };
 }
-

@@ -287,7 +287,7 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
-  it("renders roomy large physical stock as a container front label with priority H only", () => {
+  it("renders roomy large physical stock as a container front label with H-code chips", () => {
     const layout = resolvePrintLayoutConfig({
       labelPurpose: "shipping",
       template: "standard",
@@ -311,7 +311,7 @@ describe("print acceptance matrix", () => {
     expect(plan.canPrint).toBe(true);
     expect(preview.fragmentHtml).toContain("label-kind-supplemental");
     expect(preview.fragmentHtml).toContain("label-form-roomy");
-    expect(preview.fragmentHtml).toContain("hazard-summary-item");
+    expect(preview.fragmentHtml).toContain("hazard-code-list");
     expect(preview.fragmentHtml).toContain("H314");
     expect(preview.fragmentHtml).not.toContain("P234");
     expect(preview.fragmentHtml).toContain("hazard-more");

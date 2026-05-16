@@ -56,7 +56,7 @@ terms, not just CSS classes:
 | --- | --- | --- | --- |
 | Complete primary | Full H/P on the printed label | Full P text | Printed A4/Letter or other verified complete primary |
 | Complete primary continuation | Full H/P split across pages | Full P text split across pages | Printed continuation set |
-| Container front | Priority H summaries when roomy, H codes only when compact | Omitted from the face label | A4/Letter primary, SDS/QR, or back/fold-out label |
+| Container front | H-code front label by default; very short priority summaries only when a verified stock-specific layout proves they fit | Omitted from the face label | A4/Letter primary, SDS/QR, or back/fold-out label |
 | Quick-ID | No full H/P text | Omitted | Complete primary or SDS |
 | QR supplement | QR/SDS reference with optional teaser only when it fits | Omitted | QR/SDS path plus complete primary when required |
 
@@ -96,7 +96,11 @@ Acceptance gates:
 - Signal word is present when available.
 - Every available GHS pictogram is printed.
 - GHS pictograms are visually prioritized before H/P text summaries.
-- H-statements may be summarized only after typography and layout scaling have been attempted.
+- H-statements may be summarized only after typography and layout scaling have
+  been attempted and the target stock has a verified render gate. Large
+  container front labels default to H-code chips because their job is fast
+  recognition on the container face, not replacing the complete A4/Letter or
+  SDS path.
 - P-statements are intentionally omitted from the front face by default; the
   UI must state that complete H/P content belongs on A4/Letter primary,
   continuation pages, SDS/QR, or another complete source.

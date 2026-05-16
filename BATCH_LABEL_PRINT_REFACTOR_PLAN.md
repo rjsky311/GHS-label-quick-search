@@ -175,7 +175,8 @@ carry the complete primary label.
 Required for each printed item:
 
 - Quick ID requirements.
-- Priority H summaries or H codes when space allows after scaling/reflow.
+- H-code front-label chips by default, with short priority H summaries only
+  when a stock-specific render gate proves they fit after scaling/reflow.
 - Optional QR/SDS/reference target when it fits and does not compromise
   identity or pictograms.
 - Clear workflow status that complete H/P content lives in SDS, an existing

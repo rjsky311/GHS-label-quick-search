@@ -1914,7 +1914,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("hazard-more");
     });
 
-    it("omits P codes from container front labels so priority H content stays readable", () => {
+    it("omits P codes from container front labels so H-code content stays readable", () => {
       const mixedPrecautions = {
         ...mockChemical,
         hazard_statements: [{ code: "H314", text_en: "Corrosive" }],
@@ -1946,7 +1946,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("H314");
       expect(preview.fragmentHtml).toContain("label-content-container-front");
       expect(preview.fragmentHtml).toContain(
-        "label-hazard-mode-priority-h-summary",
+        "label-hazard-mode-h-codes-only",
       );
       expect(preview.fragmentHtml).toContain(
         "label-precaution-mode-omitted",
@@ -2583,7 +2583,7 @@ describe("printLabels", () => {
       expect(html).not.toContain("乙醇");
     });
 
-    it('auto-fits compact nameDisplay "both" to the current UI language', () => {
+    it('auto-fits compact bottle nameDisplay "both" to the current UI language', () => {
       printLabels(
         [mockChemical],
         {
@@ -2654,7 +2654,7 @@ describe("printLabels", () => {
         expect(html).not.toContain("乙醇");
       });
     });
-    it('auto-fits compact templates when nameDisplay is "both"', () => {
+    it('keeps short bilingual names on compact templates when nameDisplay is "both"', () => {
       ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
@@ -2674,8 +2674,31 @@ describe("printLabels", () => {
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).toContain("Ethanol");
-        expect(html).not.toContain(mockChemical.name_zh);
+        expect(html).toContain(mockChemical.name_zh);
       });
+    });
+
+    it('falls compact bilingual names back to one language when the identity is long', () => {
+      const longNamedChemical = {
+        ...mockChemical,
+        name_en: "N,N-Dimethyl Extremely Long Internal Batch Reagent Name",
+        name_zh: "超長內部批次試劑中文名稱",
+      };
+
+      printLabels(
+        [longNamedChemical],
+        {
+          size: "small",
+          template: "standard",
+          orientation: "portrait",
+          nameDisplay: "both",
+        },
+        {},
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain(longNamedChemical.name_en);
+      expect(html).not.toContain(longNamedChemical.name_zh);
     });
 
     it('prints bilingual signal and statements when nameDisplay is "both"', () => {
@@ -3188,12 +3211,20 @@ describe("printLabels", () => {
       printLabels(
         [chem],
         {
-          size: "large",
-          template: "standard",
-          orientation: "portrait",
-          stockPreset: "large-primary",
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "zh",
         },
         {},
+        {},
+        {},
+        {},
+        {
+          organization: "QA Lab",
+          phone: "02-0000-0000",
+          address: "QA Address",
+        },
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("H&lt;200&gt;");

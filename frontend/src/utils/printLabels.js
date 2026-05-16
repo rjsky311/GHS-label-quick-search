@@ -178,6 +178,46 @@ const resolveModelNameDisplay = (model) =>
 const resolveModelContentLocale = (model) =>
   resolveEffectiveLabelContentLocale(model.layout, i18n.language);
 
+const approxNameWidthScore = (value) =>
+  String(value || "")
+    .trim()
+    .split("")
+    .reduce((score, char) => {
+      if (!char.trim()) return score + 0.45;
+      return score + (char.charCodeAt(0) > 255 ? 1.85 : 1);
+    }, 0);
+
+const canRenderCompactBilingualName = (chemical, layout = {}) => {
+  if (layout?.nameDisplay !== "both") return false;
+  const englishName = chemical?.name_en || chemical?.name || "";
+  const chineseName = chemical?.name_zh || "";
+  if (!englishName || !chineseName || englishName === chineseName) return false;
+
+  const area = Math.max(0, Number(layout.widthMm || 0) * Number(layout.heightMm || 0));
+  const score =
+    approxNameWidthScore(englishName) + approxNameWidthScore(chineseName);
+
+  if (layout.formFactor === "strip" || layout.size === "small") {
+    return score <= 24;
+  }
+  if (layout.formFactor === "compact" || layout.outputRole === "supplemental") {
+    return score <= (area >= 4500 ? 34 : 28);
+  }
+  return false;
+};
+
+const resolveNameDisplayForChemical = (chemical, model) => {
+  const effectiveDisplay = resolveModelNameDisplay(model);
+  if (
+    effectiveDisplay !== "both" &&
+    model?.layout?.nameDisplay === "both" &&
+    canRenderCompactBilingualName(chemical, model.layout)
+  ) {
+    return "both";
+  }
+  return effectiveDisplay;
+};
+
 const joinLocalizedParts = (...parts) => {
   const uniqueParts = parts
     .map((part) => String(part || "").trim())
@@ -187,7 +227,7 @@ const joinLocalizedParts = (...parts) => {
 };
 
 const getIdentityDensityClass = (chemical, model) => {
-  const nameDisplay = resolveModelNameDisplay(model);
+  const nameDisplay = resolveNameDisplayForChemical(chemical, model);
   const names = [];
   if (nameDisplay === "en" || nameDisplay === "both") {
     names.push(chemical?.name_en || "");
@@ -811,7 +851,7 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
     showCasLine = true,
     metaRibbonHtml = "",
   } = options;
-  const nameDisplay = resolveModelNameDisplay(model);
+  const nameDisplay = resolveNameDisplayForChemical(effectiveChem, model);
   let nameHtml = "";
 
   if (nameDisplay === "en" || nameDisplay === "both") {
@@ -984,6 +1024,12 @@ const renderPurposeNotice = (model) => {
 
 const getStatementCodeClass = (code) =>
   String(code || "").length > 8 ? " statement-code-long" : "";
+
+const shouldRenderMoreHazards = (layout = {}) => {
+  const area = Math.max(0, Number(layout.widthMm || 0) * Number(layout.heightMm || 0));
+  if (layout.formFactor === "strip" && area < 1600) return false;
+  return true;
+};
 
 const renderComplianceStatements = (statements, className, model) => {
   if (!statements.length) return "";
@@ -1185,7 +1231,11 @@ const renderStandardTemplate = (chemical, model) => {
                             ),
                       )
                       .join("")}
-                    ${renderMoreHazards(omittedHazards, model)}
+                    ${
+                      shouldRenderMoreHazards(model.layout)
+                        ? renderMoreHazards(omittedHazards, model)
+                        : ""
+                    }
                   </div>`
                 : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
@@ -2656,21 +2706,21 @@ const buildStyles = (model) => {
       display: none;
     }
     .label-standard.label-stock-large-primary {
-      padding: 3.2mm 4mm;
+      padding: 3mm 4.2mm;
     }
     .label-standard.label-stock-large-primary .label-top-standard {
-      margin: -0.4mm -0.6mm 1.7mm -0.6mm;
-      padding: 0.2mm 0.2mm 1.15mm 0.2mm;
+      margin: -0.4mm -0.6mm 1.35mm -0.6mm;
+      padding: 0.1mm 0.2mm 0.9mm 0.2mm;
       border-bottom-width: 0.45mm;
     }
     .label-standard.label-stock-large-primary .name-en {
-      font-size: 18px;
-      line-height: 1.02;
+      font-size: 20px;
+      line-height: 1;
       -webkit-line-clamp: 1;
     }
     .label-standard.label-stock-large-primary .name-zh {
-      font-size: 12.5px;
-      line-height: 1.02;
+      font-size: 13.5px;
+      line-height: 1;
       margin-top: 0.2mm;
     }
     .label-standard.label-stock-large-primary .meta-ribbon {
@@ -2682,30 +2732,36 @@ const buildStyles = (model) => {
       font-size: 8px;
       line-height: 1.05;
     }
+    .label-standard.label-stock-large-primary .label-middle-standard {
+      justify-content: center;
+    }
     .label-standard.label-stock-large-primary .standard-grid {
-      grid-template-columns: minmax(0, 58mm) minmax(0, 1fr);
-      gap: 3.2mm;
-      align-items: stretch;
-      height: 100%;
+      grid-template-columns: minmax(0, 61mm) minmax(0, 1fr);
+      gap: 3.8mm;
+      align-items: center;
+      height: auto;
+      min-height: 0;
     }
     .label-standard.label-stock-large-primary .standard-rail {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding-right: 2.8mm;
+      padding-right: 3mm;
       border-right-width: 0.3mm;
+      min-height: 0;
     }
     .label-standard.label-stock-large-primary .pictograms-standard {
-      grid-template-columns: repeat(2, 27mm);
+      grid-template-columns: repeat(2, 28mm);
       gap: 2.2mm;
     }
     .label-standard.label-stock-large-primary .pictograms-standard img {
-      width: 27mm;
-      height: 27mm;
+      width: 28mm;
+      height: 28mm;
     }
     .label-standard.label-stock-large-primary .standard-main {
-      gap: 0.85mm;
+      gap: 1mm;
       justify-content: center;
+      min-height: 0;
     }
     .label-standard.label-stock-large-primary .standard-signal-row {
       min-height: 5.8mm;
@@ -2717,12 +2773,25 @@ const buildStyles = (model) => {
       line-height: 1.05;
     }
     .label-standard.label-stock-large-primary .hazard-primary-list {
-      gap: 0.55mm;
+      gap: 0.7mm;
+    }
+    .label-standard.label-stock-large-primary .hazard-code-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9mm;
+      align-items: stretch;
+      width: 100%;
     }
     .label-standard.label-stock-large-primary .hazard-primary-item {
-      padding: 0.52mm 0.8mm;
-      font-size: 9px;
+      padding: 0.6mm 0.9mm;
+      font-size: 10px;
       line-height: 1.05;
+    }
+    .label-standard.label-stock-large-primary .hazard-code-only {
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0.85mm 1.1mm;
     }
     .label-standard.label-stock-large-primary .hazard-more {
       padding: 0.42mm 0.75mm;
@@ -3380,7 +3449,6 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".support-chip", "support-chip-overflow"],
       [".custom-fields", "custom-fields-overflow"],
       [".name-section", "name-section-overflow"],
-      [".standard-grid", "standard-grid-overflow"],
       [".standard-rail", "standard-rail-overflow"],
       [".standard-main", "standard-main-overflow"],
       [".standard-hazard-board", "standard-hazard-board-overflow"],
@@ -3652,7 +3720,6 @@ const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
   "support-chip-overflow",
   "custom-fields-overflow",
   "name-section-overflow",
-  "standard-grid-overflow",
   "standard-rail-overflow",
   "standard-main-overflow",
   "standard-hazard-board-overflow",

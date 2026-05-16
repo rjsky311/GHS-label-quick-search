@@ -189,6 +189,68 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   ],
 });
 
+export const PRINT_QA_AMINOBIPHENYL = Object.freeze({
+  cas_number: "90-41-5",
+  name_en: "2-Aminobiphenyl",
+  name_zh: "2-胺基聯苯",
+  cid: 7015,
+  ghs_pictograms: [{ code: "GHS07" }, { code: "GHS08" }],
+  signal_word: "Warning",
+  signal_word_zh: "警告",
+  hazard_statements: [
+    {
+      code: "H302",
+      text_en: "H302 (100%): Harmful if swallowed [Warning Acute toxicity, oral]",
+      text_zh: "吞食有害",
+    },
+    {
+      code: "H351",
+      text_en: "H351 (99.3%): Suspected of causing cancer [Warning Carcinogenicity]",
+      text_zh: "懷疑會致癌",
+    },
+    {
+      code: "H412",
+      text_en:
+        "H412 (100%): Harmful to aquatic life with long lasting effects [Hazardous to the aquatic environment, long-term hazard]",
+      text_zh: "對水生生物有害並具有長期持續影響",
+    },
+  ],
+  precautionary_statements: [
+    { code: "P203", text_en: "P203", text_zh: "P203" },
+    {
+      code: "P264",
+      text_en: "Wash hands thoroughly after handling.",
+      text_zh: "操作後徹底清洗雙手。",
+    },
+    {
+      code: "P270",
+      text_en: "Do not eat, drink or smoke when using this product.",
+      text_zh: "使用本品時勿飲食或吸菸。",
+    },
+    {
+      code: "P273",
+      text_en: "Avoid release to the environment.",
+      text_zh: "避免排放至環境。",
+    },
+    {
+      code: "P280",
+      text_en:
+        "Wear protective gloves, protective clothing, eye protection, face protection.",
+      text_zh: "佩戴防護手套、防護衣物、護眼用具及護面用具。",
+    },
+    { code: "P301+P317", text_en: "P301+P317", text_zh: "P301+P317" },
+    { code: "P318", text_en: "P318", text_zh: "P318" },
+    { code: "P330", text_en: "Rinse mouth.", text_zh: "漱口。" },
+    { code: "P405", text_en: "Store locked up.", text_zh: "存放於加鎖處。" },
+    {
+      code: "P501",
+      text_en:
+        "Dispose of contents and container in accordance with local regulations.",
+      text_zh: "依照地方、區域、國家及國際法規處置內容物及容器。",
+    },
+  ],
+});
+
 export const PRINT_QA_ETHANOL = Object.freeze({
   cas_number: "64-17-5",
   name_en: "Ethanol",
@@ -711,6 +773,7 @@ export const PRINT_QA_PREPARED_HYDROCHLORIC_ACID = Object.freeze(
 
 export const PRINT_QA_CHEMICALS = Object.freeze({
   hydrochloricAcid: PRINT_QA_HYDROCHLORIC_ACID,
+  aminobiphenyl: PRINT_QA_AMINOBIPHENYL,
   ethanol: PRINT_QA_ETHANOL,
   sodiumHydroxide: PRINT_QA_SODIUM_HYDROXIDE,
   methanol: PRINT_QA_METHANOL,
@@ -729,6 +792,12 @@ export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
     riskTags: ["dense-hp", "multi-pictogram", "corrosive", "compressed-gas"],
     rationale:
       "Dense common acid used to prove complete-primary continuation, compact routing, and four-pictogram layouts.",
+  },
+  aminobiphenyl: {
+    source: "production",
+    riskTags: ["batch-print", "container-front", "warning-signal", "large-primary"],
+    rationale:
+      "Production batch-print item that previously looked visually sparse but still blocked Large Container Front handoff with label/standard-grid overflow.",
   },
   ethanol: {
     source: "production",
@@ -1043,9 +1112,40 @@ export const PRINT_QA_MATRIX = Object.freeze([
       minProductionPictogramSidePx: 78,
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.CONTAINER_FRONT,
-        hazardTextMode: PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY,
         precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
       },
+    },
+  },
+  {
+    id: "large-primary-front-warning-batch-item",
+    label: "Large primary front label warning batch item",
+    chemicalId: "aminobiphenyl",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "standard",
+      stockPreset: "large-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
+      labelKind: "supplemental",
+      stockPreset: "large-primary",
+      template: "standard",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 0.75,
+      minProductionPictogramSidePx: 78,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.CONTAINER_FRONT,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
+      },
+      productionExpectedIdentityTexts: ["2-Aminobiphenyl", "2-胺基聯苯", "90-41-5"],
+      productionExpectedRequiredIdentityTexts: ["2-Aminobiphenyl", "90-41-5"],
     },
   },
   {

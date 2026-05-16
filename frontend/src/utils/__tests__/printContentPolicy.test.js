@@ -57,7 +57,7 @@ describe("printContentPolicy", () => {
     });
   });
 
-  it("uses priority H summaries and omits P text on roomy container fronts", () => {
+  it("uses H-code front labels and omits P text on roomy container fronts", () => {
     const policy = resolvePrintContentPolicy(
       resolvePrintLayoutConfig({
         labelPurpose: "shipping",
@@ -70,7 +70,7 @@ describe("printContentPolicy", () => {
     expect(policy).toMatchObject({
       role: PRINT_CONTENT_ROLE.CONTAINER_FRONT,
       outputKind: PRINT_POLICY_OUTPUT_KIND.SUPPLEMENTAL,
-      hazardTextMode: PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY,
+      hazardTextMode: PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY,
       precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.OMITTED,
       detailSource: PRINT_DETAIL_SOURCE.SDS_OR_BACK_LABEL,
       suppressesPrecautionText: true,
@@ -132,4 +132,3 @@ describe("printContentPolicy", () => {
     });
   });
 });
-

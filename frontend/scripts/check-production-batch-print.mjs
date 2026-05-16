@@ -29,6 +29,7 @@ const actionNamesSelectedScope = (text = "") =>
 const DEFAULT_BATCH_CAS = [
   "64-17-5",
   "7647-01-0",
+  "90-41-5",
   "67-56-1",
   "7664-93-9",
   "1310-73-2",
@@ -134,6 +135,7 @@ const parseBatchCas = () => {
 const withQaParam = (url) => {
   const nextUrl = new URL(url);
   nextUrl.searchParams.set("qaBatchPrint", "1");
+  nextUrl.searchParams.set("qaPrintHandoff", "1");
   nextUrl.searchParams.set("productionBatchPrintQa", Date.now().toString());
   return nextUrl.toString();
 };
@@ -162,6 +164,11 @@ const run = async () => {
     headless: process.env.BATCH_PRINT_QA_HEADLESS !== "0",
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const dialogMessages = [];
+  page.on("dialog", async (dialog) => {
+    dialogMessages.push(dialog.message());
+    await dialog.accept();
+  });
   await page.addInitScript(() => {
     window.localStorage.setItem("ghs_language", "en");
   });
@@ -364,6 +371,44 @@ const run = async () => {
       failures.push("representative-preview-empty");
     }
 
+    let printHandoff = null;
+    const printAction = page.getByTestId("print-label-action");
+    if (!(await printAction.count())) {
+      failures.push("missing-batch-print-action");
+    } else if (await printAction.isDisabled()) {
+      failures.push("batch-print-action-disabled");
+    } else {
+      await page.evaluate(() => {
+        document.getElementById("ghs-print-qa-status")?.remove();
+      });
+      await printAction.click();
+      const status = page.locator("#ghs-print-qa-status");
+      await status.waitFor({ state: "attached", timeout: MODAL_TIMEOUT_MS });
+      await page.waitForFunction(
+        () => {
+          const node = document.getElementById("ghs-print-qa-status");
+          return ["qa_handoff", "blocked"].includes(node?.dataset?.status || "");
+        },
+        null,
+        { timeout: MODAL_TIMEOUT_MS },
+      );
+      printHandoff = await status.evaluate((node) => ({
+        status: node.dataset.status || "",
+        stockPreset: node.dataset.stockPreset || "",
+        issueTypes: node.dataset.issueTypes || "",
+        totalLabels: node.dataset.totalLabels || "",
+        totalPages: node.dataset.totalPages || "",
+        text: node.textContent || "",
+      }));
+      if (printHandoff.status !== "qa_handoff") {
+        failures.push(`batch-print-handoff-${printHandoff.status || "missing"}`);
+      }
+    }
+
+    if (dialogMessages.length > 0) {
+      failures.push("unexpected-browser-dialog");
+    }
+
     fs.mkdirSync(screenshotDir, { recursive: true });
     await page.screenshot({
       path: path.join(screenshotDir, "batch-print-modal.png"),
@@ -382,6 +427,8 @@ const run = async () => {
       scopeAfter,
       scopeExerciseStock,
       representative,
+      printHandoff,
+      dialogMessages,
       screenshotDir,
       failures,
     };

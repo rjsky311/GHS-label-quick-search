@@ -157,7 +157,6 @@ const inspectPrintDom = async (page, testCase) =>
         [".meta-chip-batch", "case-chip"],
         [".signal", "signal"],
         [".pictograms", "pictograms"],
-        [".standard-grid", "standard-grid"],
         [".standard-rail", "standard-rail"],
         [".standard-main", "standard-main"],
         [".standard-hazard-board", "standard-hazard-board"],
