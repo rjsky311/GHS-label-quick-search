@@ -1,4 +1,5 @@
 const PAGE_MARGIN_MM = 5;
+const PAGE_BOTTOM_FOOTER_CLEARANCE_MM = 1;
 const FOOTER_RESERVE_RIGHT_MM = 30;
 
 const PAGE_SIZE_DIMENSIONS_MM = {
@@ -94,13 +95,14 @@ const STOCK_PRESETS = [
     noteKey: "label.stockPresetSmallStripNote",
     size: "small",
     orientation: "landscape",
-    columns: 4,
-    rows: 4,
+    pageOrientation: "portrait",
+    columns: 2,
+    rows: 10,
     labelWidthMm: 70,
     labelHeightMm: 24,
-    pagePaddingMm: 6,
+    pagePaddingMm: 3,
     columnGapMm: 3,
-    rowGapMm: 3,
+    rowGapMm: 2,
     offsetXmm: 0,
     offsetYmm: 0,
     outputRole: "supplemental",
@@ -138,12 +140,12 @@ const STOCK_PRESETS = [
     size: "medium",
     orientation: "portrait",
     columns: 2,
-    rows: 4,
+    rows: 5,
     labelWidthMm: 95,
     labelHeightMm: 50,
-    pagePaddingMm: 8,
-    columnGapMm: 4,
-    rowGapMm: 4,
+    pagePaddingMm: 3,
+    columnGapMm: 3,
+    rowGapMm: 2,
     offsetXmm: 0,
     offsetYmm: 0,
     outputRole: "primary-candidate",
@@ -249,9 +251,9 @@ const STOCK_PRESETS = [
     rows: 3,
     labelWidthMm: 140,
     labelHeightMm: 88,
-    pagePaddingMm: 10,
+    pagePaddingMm: 3,
     columnGapMm: 6,
-    rowGapMm: 6,
+    rowGapMm: 2,
     offsetXmm: 0,
     offsetYmm: 0,
     outputRole: "primary-candidate",
@@ -413,6 +415,9 @@ export const DEFAULT_LABEL_CONFIG = Object.freeze({
   template: "standard",
   size: PRESET_INDEX["large-primary"].size,
   orientation: PRESET_INDEX["large-primary"].orientation,
+  pageOrientation:
+    PRESET_INDEX["large-primary"].pageOrientation ||
+    PRESET_INDEX["large-primary"].orientation,
   nameDisplay: "both",
   colorMode: "color",
   stockPreset: PRESET_INDEX["large-primary"].id,
@@ -439,7 +444,7 @@ const inferLabelPurpose = (template) => {
 };
 
 const getDefaultPresetForPurpose = (purpose) => {
-  if (purpose === "qrSupplement") return PRESET_INDEX["small-strip"];
+  if (purpose === "qrSupplement") return PRESET_INDEX["brother-62mm-continuous"];
   if (purpose === "quickId") return PRESET_INDEX["brother-62mm-continuous"];
   return DEFAULT_PRESET;
 };
@@ -792,6 +797,11 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
     VALID_ORIENTATIONS,
     base.orientation,
   );
+  const pageOrientation = coerceEnum(
+    labelConfig.pageOrientation || base.pageOrientation || orientation,
+    VALID_ORIENTATIONS,
+    base.pageOrientation || orientation,
+  );
 
   const columns = locksPresetGeometry
     ? base.columns
@@ -816,6 +826,7 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
     ),
     size,
     orientation,
+    pageOrientation,
     nameDisplay: coerceEnum(
       labelConfig.nameDisplay,
       VALID_NAME_DISPLAYS,
@@ -912,6 +923,7 @@ export function getLabelStockPreset(labelConfig = {}) {
         note: null,
         size: normalized.size,
         orientation: normalized.orientation,
+        pageOrientation: normalized.pageOrientation,
         columns: normalized.columns,
         rows: normalized.rows,
         labelWidthMm: normalized.labelWidthMm,
@@ -933,16 +945,32 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
   const metrics = resolveTypographyMetrics(normalized);
   const budgets = resolveTemplateBudgets(normalized);
   const pageSize = normalized.pageSize || stock.pageSize || "A4";
+  const pageOrientation =
+    normalized.pageOrientation || stock.pageOrientation || normalized.orientation;
   const pageDimensions =
-    PAGE_SIZE_DIMENSIONS_MM[pageSize]?.[normalized.orientation] ||
-    PAGE_SIZE_DIMENSIONS_MM.A4[normalized.orientation] ||
+    PAGE_SIZE_DIMENSIONS_MM[pageSize]?.[pageOrientation] ||
+    PAGE_SIZE_DIMENSIONS_MM.A4[pageOrientation] ||
     PAGE_SIZE_DIMENSIONS_MM.A4.portrait;
   const pageMinHeightMm =
     pageSize === "Letter"
       ? pageDimensions.height - 20
-      : normalized.orientation === "landscape"
+      : pageOrientation === "landscape"
         ? metrics.minHeightLandscapeMm
         : metrics.minHeightPortraitMm;
+  const gridWidthMm =
+    normalized.columns * normalized.labelWidthMm +
+    Math.max(0, normalized.columns - 1) * normalized.columnGapMm;
+  const gridHeightMm =
+    normalized.rows * normalized.labelHeightMm +
+    Math.max(0, normalized.rows - 1) * normalized.rowGapMm;
+  const pageContentWidthMm =
+    pageDimensions.width -
+    normalized.pageMarginMm * 2 -
+    normalized.pagePaddingMm * 2;
+  const pageContentHeightMm =
+    pageMinHeightMm -
+    normalized.pagePaddingMm * 2 -
+    PAGE_BOTTOM_FOOTER_CLEARANCE_MM;
 
   return {
     ...normalized,
@@ -952,6 +980,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
     autoFitLevel: normalized.autoFitLevel,
     stock,
     pageSize,
+    pageOrientation,
     outputRole: stock.outputRole || null,
     formFactor: resolveLabelFormFactor(normalized, stock),
     note: stock.note || null,
@@ -983,6 +1012,7 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
     },
     page: {
       size: pageSize,
+      orientation: pageOrientation,
       widthMm: pageDimensions.width,
       heightMm: pageDimensions.height,
       cols: normalized.columns,
@@ -998,6 +1028,11 @@ export function resolvePrintLayoutConfig(labelConfig = {}) {
       rowGap: formatMm(normalized.rowGapMm),
       gapMm: normalized.columnGapMm,
       gap: formatMm(normalized.columnGapMm),
+      gridWidthMm,
+      gridHeightMm,
+      contentWidthMm: roundTo(pageContentWidthMm, 1),
+      contentHeightMm: roundTo(pageContentHeightMm, 1),
+      bottomFooterClearanceMm: PAGE_BOTTOM_FOOTER_CLEARANCE_MM,
       minHeight: formatMm(
         pageMinHeightMm,
       ),

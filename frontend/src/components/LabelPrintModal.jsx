@@ -207,7 +207,7 @@ const PRINT_TARGET_OPTIONS = [
     descKey: "label.targetQrSupplementDesc",
     fallbackLabel: "QR supplement",
     icon: ScanLine,
-    presetId: "small-strip",
+    presetId: "brother-62mm-continuous",
     template: "qrcode",
   },
 ];
@@ -374,7 +374,7 @@ const SUPPLEMENTAL_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
 
 const CORE_STOCK_IDS_BY_PURPOSE = {
   shipping: ["a4-primary", "letter-primary", "medium-bottle", "large-primary"],
-  qrSupplement: ["small-strip", "brother-62mm-continuous"],
+  qrSupplement: ["brother-62mm-continuous", "small-strip"],
   quickId: ["brother-62mm-continuous", "small-strip"],
 };
 

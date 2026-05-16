@@ -392,6 +392,28 @@ describe("print layout model", () => {
     expect(a4Primary.typography.compliancePictogramSize).toBe("28.2mm");
   });
 
+  it("keeps curated A4 stock grids within printable page geometry", () => {
+    const cases = [
+      ["small-strip", 20, "portrait"],
+      ["medium-bottle", 10, "portrait"],
+      ["large-primary", 3, "portrait"],
+      ["a4-primary", 1, "portrait"],
+    ];
+
+    cases.forEach(([stockPreset, perPage, pageOrientation]) => {
+      const layout = resolvePrintLayoutConfig({ stockPreset });
+
+      expect(layout.page.perPage).toBe(perPage);
+      expect(layout.page.orientation).toBe(pageOrientation);
+      expect(layout.page.gridWidthMm).toBeLessThanOrEqual(
+        layout.page.contentWidthMm + 0.2,
+      );
+      expect(layout.page.gridHeightMm).toBeLessThanOrEqual(
+        layout.page.contentHeightMm + 0.2,
+      );
+    });
+  });
+
   it("accepts calibration nudges and sheet overrides", () => {
     const layout = resolvePrintLayoutConfig({
       size: "medium",
@@ -422,8 +444,8 @@ describe("print layout model", () => {
     );
 
     expect(model.expandedLabels).toHaveLength(9);
-    expect(model.pages).toHaveLength(2);
-    expect(model.layout.page.perPage).toBe(8);
+    expect(model.pages).toHaveLength(1);
+    expect(model.layout.page.perPage).toBe(10);
   });
 
   it("buildPrintDocument returns shared HTML that can be reused for preview and print", () => {
@@ -2723,9 +2745,9 @@ describe("printLabels", () => {
     });
 
     it("paginates correctly with expanded quantities", () => {
-      // perPage for medium+portrait = 8 labels per page
-      // 5 copies of ethanol + 5 copies of water = 10 total → 2 pages
-      const quantities = { "64-17-5": 5, "7732-18-5": 5 };
+      // perPage for medium+portrait = 10 labels per page
+      // 6 copies of ethanol + 6 copies of water = 12 total => 2 pages
+      const quantities = { "64-17-5": 6, "7732-18-5": 6 };
       printLabels(
         [mockChemical, mockChemicalNoGHS],
         config,

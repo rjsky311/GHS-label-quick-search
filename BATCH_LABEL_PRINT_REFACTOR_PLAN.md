@@ -342,6 +342,12 @@ Add these gates:
 - Excluded items are absent from print output and present in the review list.
 - Large batches do not create blank pages, clipped labels, or missing image
   failures.
+- Fixed-stock sheet geometry is part of the batch contract. A batch may not
+  pass merely because each individual label fragment fits; the selected sheet
+  grid must also fit the physical page so the PDF does not interleave blank
+  pages or rotate the whole sheet unexpectedly. Current A4 targets are:
+  large-primary 3/page, medium bottle 10/page, and 70 x 24 mm vial strip
+  20/page on portrait A4.
 
 ### Production Browser QA
 

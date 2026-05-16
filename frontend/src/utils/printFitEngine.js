@@ -468,8 +468,28 @@ export function inspectPrintContentFit(model) {
   const { layout } = model;
   const locale = model.locale || "zh";
   const contentOptions = buildContentOptions(model);
+  const sheetIssues = [];
+  const page = layout?.page || {};
+  const gridWidthMm = Number(page.gridWidthMm || 0);
+  const gridHeightMm = Number(page.gridHeightMm || 0);
+  const contentWidthMm = Number(page.contentWidthMm || 0);
+  const contentHeightMm = Number(page.contentHeightMm || 0);
+  if (gridWidthMm > 0 && contentWidthMm > 0 && gridWidthMm > contentWidthMm + 0.2) {
+    sheetIssues.push({
+      type: "sheet-grid-width-overflow",
+      gridWidthMm,
+      contentWidthMm,
+    });
+  }
+  if (gridHeightMm > 0 && contentHeightMm > 0 && gridHeightMm > contentHeightMm + 0.2) {
+    sheetIssues.push({
+      type: "sheet-grid-height-overflow",
+      gridHeightMm,
+      contentHeightMm,
+    });
+  }
 
-  return model.expandedLabels.flatMap((chemical, index) => {
+  const labelIssues = model.expandedLabels.flatMap((chemical, index) => {
     const labelLayout =
       chemical?.__printLayoutOverride ||
       chemical?.sourceChemical?.__printLayoutOverride ||
@@ -519,6 +539,8 @@ export function inspectPrintContentFit(model) {
 
     return issues;
   });
+
+  return [...sheetIssues, ...labelIssues];
 }
 
 const summarizeElements = (

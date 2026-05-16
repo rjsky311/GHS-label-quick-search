@@ -500,8 +500,10 @@ describe("print acceptance matrix", () => {
       nameDisplay: "en",
     });
 
-    expect(strip.html).toContain("size: A4 landscape");
+    expect(strip.html).toContain("size: A4");
+    expect(strip.html).not.toContain("size: A4 landscape");
     expect(strip.model.layout.orientation).toBe("landscape");
+    expect(strip.model.layout.page.orientation).toBe("portrait");
     expect(letter.html).toContain("size: Letter");
     expect(letter.model.layout.page.size).toBe("Letter");
   });

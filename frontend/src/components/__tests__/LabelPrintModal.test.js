@@ -952,7 +952,7 @@ describe("LabelPrintModal", () => {
         stockPreset: "medium-bottle",
         labelWidthMm: 95,
         labelHeightMm: 50,
-        perPage: 8,
+        perPage: 10,
         template: "standard",
         labelPurpose: "shipping",
       }),
@@ -970,7 +970,7 @@ describe("LabelPrintModal", () => {
         stockPreset: "medium-bottle",
         labelWidthMm: 95,
         labelHeightMm: 50,
-        perPage: 8,
+        perPage: 10,
       },
     });
 
@@ -1015,7 +1015,7 @@ describe("LabelPrintModal", () => {
         stockPreset: "medium-bottle",
         labelWidthMm: 95,
         labelHeightMm: 50,
-        perPage: 8,
+        perPage: 10,
       },
       labProfile: {
         organization: "Lab A",
@@ -1254,8 +1254,8 @@ describe("LabelPrintModal", () => {
         size: "medium",
         orientation: "portrait",
         columns: 2,
-        rows: 4,
-        perPage: 8,
+        rows: 5,
+        perPage: 10,
         labelWidthMm: 95,
         labelHeightMm: 50,
       }),
@@ -1271,12 +1271,12 @@ describe("LabelPrintModal", () => {
       expect.objectContaining({
         labelPurpose: "qrSupplement",
         template: "qrcode",
-        stockPreset: "small-strip",
+        stockPreset: "brother-62mm-continuous",
         size: "small",
         orientation: "landscape",
-        columns: 4,
+        columns: 3,
         rows: 4,
-        perPage: 16,
+        perPage: 12,
       }),
     );
   });
@@ -1352,7 +1352,7 @@ describe("LabelPrintModal", () => {
       "Print QR supplement (1)",
     );
     expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
-      "Vial Strip",
+      "62 mm Continuous",
     );
   });
 
@@ -1409,7 +1409,7 @@ describe("LabelPrintModal", () => {
         stockPreset: "medium-bottle",
         labelWidthMm: 95,
         labelHeightMm: 50,
-        perPage: 8,
+        perPage: 10,
       }),
     );
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");

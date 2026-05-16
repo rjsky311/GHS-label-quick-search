@@ -16,6 +16,20 @@ Fixed-stock batch-print requirements live in
 - OSHA HazCom side-by-side comparison: product identifier, signal word, hazard statements, pictograms, precautionary statements, and responsible party information must be provided; signal word, hazard statements, and pictograms must be located together.
 - Taiwan GHS overview: GHS communication elements include pictograms, signal words, hazard statements, precautionary information, product/chemical identifier, and supplier identifier.
 - BAuA CLP/GHS pictogram guidance: pictograms should remain visually prominent and have practical minimum area. This app uses that principle as a conservative UX guardrail, even when a small label is only supplemental.
+- ECHA CLP labelling guidance and recent CLP revision material: label text
+  should remain easily readable; 1.2 mm x-height is a useful reference floor,
+  line spacing should not collapse, and pictograms should scale with the label
+  area rather than stay tiny on larger labels.
+- EPA electronic-label specifications: 12 point is preferred for most
+  regulatory text and 6 point is a practical minimum reference for printed
+  label text. This app uses that as a conservative lower bound for complete
+  primary label prose, while compact supplemental chips may be smaller only
+  when they are identity/code helpers rather than full instructions.
+- DENSO WAVE QR implementation guidance: QR codes need a four-module quiet
+  zone and module size must reflect printer resolution. For general phone
+  scanning, this app treats about 20 mm square as the practical default floor
+  for QR supplements unless a specific physical-printer validation proves a
+  smaller code reliable.
 
 Reference URLs:
 
@@ -23,6 +37,12 @@ Reference URLs:
 - https://www.osha.gov/hazcom/side-by-side
 - https://ghs.osha.gov.tw/ENG/intro/ghsScope.aspx
 - https://www.baua.de/EN/Topics/Chemicals-biological-agents/Hazardous-substances/Classification-and-labelling/Labelling-elements/Hazard-pictograms-and-signal-words
+- https://www.prevencionintegral.com/sites/default/files/noticia/47842/field_adjuntos/clplabellingen.pdf
+- https://circabc.europa.eu/d/d/workspace/SpacesStore/90ee0974-9aac-4ba3-a8e9-630bd1836906/AP5_Open_session_CLP%20revision%20-%20provisional%20agreement_presentation.pdf
+- https://www.epa.gov/sites/default/files/2017-02/documents/full_specs.pdf
+- https://www.qrcode.com/en/howto/code.html
+- https://www.qrcode.com/en/howto/cell.html
+- https://qrplanet.com/help/article/what-is-the-minimum-size-of-a-qr-code
 
 ## Output Classes
 
@@ -110,6 +130,25 @@ Acceptance gates:
 
 These are acceptance targets for the renderer and Browser QA:
 
+- Page geometry must fit the selected sheet before printing. The physical grid
+  width and height must fit inside the selected page, margins, padding, and
+  footer clearance. A rendered PDF must not create blank overflow pages.
+- Standard A4 portrait sheet presets should use the sheet efficiently:
+  large-primary is 3/page without blank interleaved pages, medium bottle is
+  10/page, and 70 x 24 mm vial strips are 20/page on portrait A4. Any future
+  stock change must update this document and the PDF QA matrix.
+- Complete-primary prose should stay at or above roughly 6 point equivalent.
+  Prefer 8-12 point where the label size allows it. Supplemental identity
+  chips may go below this only for short CAS/case/code text; long H/P prose
+  below this floor must become H-code summary, QR/SDS reference, continuation,
+  or a larger stock recommendation.
+- QR supplements should default to a stock that can keep a QR code near the
+  practical 20 mm floor plus quiet zone. A 70 x 24 mm vial strip may remain a
+  quick-ID label, but it should not be the default QR supplement stock.
+- GHS pictograms on compact supplemental labels should not fall below the
+  renderer's stock-specific minimums. For complete or large-front labels,
+  pictograms must grow with the label and remain visually dominant instead of
+  being left at tiny compact-label size.
 - Preview and print use the same rendered HTML fragment.
 - A4 and Letter primary labels show the whole label in preview without clipping.
 - Multi-page and continuation outputs expose preview page controls so each

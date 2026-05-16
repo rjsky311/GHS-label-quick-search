@@ -1406,7 +1406,7 @@ const TEMPLATE_RENDERERS = {
 
 const buildStyles = (model) => {
   const { layout } = model;
-  const isLandscape = layout.orientation === "landscape";
+  const isLandscape = layout.page?.orientation === "landscape";
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const compliancePictogramSize = layout.typography.compliancePictogramSize;
   const standardPictogramSize =
@@ -2664,12 +2664,12 @@ const buildStyles = (model) => {
       border-bottom-width: 0.45mm;
     }
     .label-standard.label-stock-large-primary .name-en {
-      font-size: 21px;
+      font-size: 18px;
       line-height: 1.02;
       -webkit-line-clamp: 1;
     }
     .label-standard.label-stock-large-primary .name-zh {
-      font-size: 14px;
+      font-size: 12.5px;
       line-height: 1.02;
       margin-top: 0.2mm;
     }
@@ -2678,8 +2678,8 @@ const buildStyles = (model) => {
       margin-top: 0.55mm;
     }
     .label-standard.label-stock-large-primary .meta-chip {
-      padding: 0.32mm 0.95mm;
-      font-size: 8.8px;
+      padding: 0.28mm 0.85mm;
+      font-size: 8px;
       line-height: 1.05;
     }
     .label-standard.label-stock-large-primary .standard-grid {
@@ -2704,29 +2704,29 @@ const buildStyles = (model) => {
       height: 27mm;
     }
     .label-standard.label-stock-large-primary .standard-main {
-      gap: 1.15mm;
+      gap: 0.85mm;
       justify-content: center;
     }
     .label-standard.label-stock-large-primary .standard-signal-row {
-      min-height: 6.8mm;
+      min-height: 5.8mm;
     }
     .label-standard.label-stock-large-primary .signal.signal-inline {
-      padding: 0.85mm 2.45mm;
+      padding: 0.65mm 2mm;
       border-radius: 1.1mm;
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1.05;
     }
     .label-standard.label-stock-large-primary .hazard-primary-list {
-      gap: 0.78mm;
+      gap: 0.55mm;
     }
     .label-standard.label-stock-large-primary .hazard-primary-item {
-      padding: 0.75mm 1mm;
-      font-size: 10px;
-      line-height: 1.08;
+      padding: 0.52mm 0.8mm;
+      font-size: 9px;
+      line-height: 1.05;
     }
     .label-standard.label-stock-large-primary .hazard-more {
-      padding: 0.52mm 0.85mm;
-      font-size: 9px;
+      padding: 0.42mm 0.75mm;
+      font-size: 8px;
       line-height: 1.05;
     }
     .label-qr.label-form-strip {
@@ -3070,7 +3070,7 @@ export function buildPrintDocument(
 }
 
 function buildPreviewStyles(mode, model, options = {}) {
-  const isLandscape = model.layout.orientation === "landscape";
+  const isLandscape = model.layout.page?.orientation === "landscape";
   const pageWidthMm = model.layout.page.widthMm || (isLandscape ? 297 : 210);
   const pageHeightMm = model.layout.page.heightMm || (isLandscape ? 210 : 297);
   const sheetScale = isLandscape ? 0.28 : 0.24;
