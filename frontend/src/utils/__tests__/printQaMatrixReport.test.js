@@ -41,9 +41,23 @@ import {
   PRINT_OUTPUT_PLAN_STATE,
 } from "@/utils/printOutputPlanner";
 import {
+  BATCH_PRINT_ITEM_CATEGORY,
+  BATCH_PRINT_PURPOSE,
+  buildBatchPrintPlan,
+  buildBatchPrintableItems,
+} from "@/utils/printBatchPlanner";
+import { batchPrintMixedFixture50 } from "@/utils/testFixtures/batchPrintFixtures";
+import {
   buildPrintDocument,
   buildPrintPreviewDocument,
 } from "@/utils/printLabels";
+
+const getPictogramCodes = (chemical = {}) =>
+  (chemical.ghs_pictograms || [])
+    .map((pictogram) => pictogram?.code)
+    .filter(Boolean);
+
+const uniqueSorted = (values = []) => [...new Set(values.filter(Boolean))].sort();
 
 const maybeWriteReport = (report) => {
   const outputPath = process.env.PRINT_QA_REPORT_PATH;
@@ -133,6 +147,7 @@ const maybeWritePrintArtifacts = () => {
         .map((pictogram) => pictogram.code)
         .filter(Boolean),
       expectedHasQr: Boolean(testCase.expected?.hasQr),
+      expectedStockPreset: testCase.expected?.stockPreset || "",
       expectedMinTotalLabels: testCase.expected?.minPrintTotalLabels || 1,
       expectedPrintMinPictogramSidePx:
         caseResult.handoffExpectation.expectedPrintMinPictogramSidePx,
@@ -145,6 +160,56 @@ const maybeWritePrintArtifacts = () => {
       expectedForbiddenIdentityTexts:
         caseResult.chemical.expectedForbiddenIdentityTexts || [],
     };
+  });
+
+  const quickIdBatchPlan = buildBatchPrintPlan({
+    selectedForLabel: batchPrintMixedFixture50,
+    layout: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "en",
+      colorMode: "color",
+    },
+    purpose: BATCH_PRINT_PURPOSE.QUICK_ID,
+    resolvedLabProfile: PRINT_QA_PROFILE,
+    locale: "en-US",
+  });
+  const quickIdBatchItems = buildBatchPrintableItems(quickIdBatchPlan);
+  const quickIdBatchBundle = buildPrintDocument(
+    quickIdBatchItems,
+    quickIdBatchPlan.layout,
+    {},
+    {},
+    Object.fromEntries(
+      quickIdBatchItems.map((chemical) => [chemical.cas_number, 1]),
+    ),
+    PRINT_QA_PROFILE,
+  );
+  const quickIdBatchFile = "batch-quick-id-50-small-strip.html";
+  fs.writeFileSync(
+    path.join(absoluteDir, quickIdBatchFile),
+    quickIdBatchBundle.html,
+  );
+  index.push({
+    id: "batch-quick-id-50-small-strip",
+    label: "50-item fixed-stock Quick ID batch",
+    chemical: "batchPrintMixedFixture50",
+    file: quickIdBatchFile,
+    expectedLabelKind: "quick-id",
+    expectedLabelKinds: ["quick-id"],
+    expectedPictograms: uniqueSorted(
+      quickIdBatchItems.flatMap((chemical) => getPictogramCodes(chemical)),
+    ),
+    expectedBatchCategories: [BATCH_PRINT_ITEM_CATEGORY.READY],
+    expectedHasQr: false,
+    expectedStockPreset: "small-strip",
+    expectedMinTotalLabels: quickIdBatchItems.length,
+    expectedPrintMinPictogramSidePx: 26,
+    expectedPrintMinQrSidePx: 0,
+    expectedRequiredIdentityText: "",
+    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
+    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
   });
 
   fs.writeFileSync(

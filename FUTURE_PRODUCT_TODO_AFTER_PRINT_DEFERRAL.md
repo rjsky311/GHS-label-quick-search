@@ -282,7 +282,7 @@ Acceptance:
 
 ### 2.5 Fixed-Stock Batch Label Printing
 
-Status: `Planned`
+Status: `Gate added` on 2026-05-16.
 
 Goal: users should be able to print a realistic batch by choosing one physical
 stock and one purpose, then reviewing which chemicals can print, which are
@@ -292,17 +292,21 @@ Owner document: `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 
 Work items:
 
-- Treat Quick ID, Supplemental, and Complete as first-level batch purposes.
-- Keep one selected stock for the batch; do not silently mix A4/Letter, bottle,
-  tube, rack, and QR stocks in one automatic print job.
-- Build a batch fit report with per-item categories: `ready`, `ready-tight`,
-  `reduced-purpose`, `same-stock-continuation`, `excluded-data`, and
-  `excluded-fit`.
-- Replace first-selected-label preview assumptions with representative previews:
-  first included, worst fit, longest name, most pictograms, densest text, and
-  excluded list.
-- Add a true 50-item fixed-stock QA fixture and production/browser gate. The
-  current `multi-chemical` layer is representative coverage only.
+- Completed: Quick ID, Supplemental, and Complete are first-level batch
+  purposes in the batch planner.
+- Completed: the planner keeps one selected stock for the batch and does not
+  silently mix A4/Letter, bottle, tube, rack, and QR stocks in one automatic
+  print job.
+- Completed: the batch fit report uses per-item categories: `ready`,
+  `ready-tight`, `reduced-purpose`, `same-stock-continuation`,
+  `excluded-data`, and `excluded-fit`.
+- Completed: representative previews cover first included, worst fit, longest
+  name, most pictograms, densest text, and excluded list.
+- Completed: a true 50-item fixed-stock fixture is covered by planner tests,
+  production Browser QA, product-level QA, and a print HTML/PDF artifact for a
+  fixed-stock Quick ID batch.
+- Keep this area in monitoring and add new examples when screenshots, QA
+  failures, or real-world batch lists expose new layout or guidance issues.
 
 Acceptance:
 
@@ -500,10 +504,10 @@ Acceptance:
 
 1. README cleanup and public documentation rewrite.
 2. Data correction intake and source-conflict governance.
-3. Fixed-stock batch label printing.
-4. First-time search-to-decision UX polish.
-5. Narrow/mobile read-first follow-up cases.
-6. Brand/support funnel rules and copy review.
+3. First-time search-to-decision UX polish.
+4. Narrow/mobile read-first follow-up cases.
+5. Brand/support funnel rules and copy review.
+6. Fixed-stock batch label printing monitoring.
 7. Optional documentation drift checks.
 
 Use this order unless a production screenshot, code review finding, CI failure,
@@ -518,7 +522,7 @@ or user report points to a more urgent slice.
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |
 | First-time UX | `Gate added` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
-| Fixed-stock batch print | `Planned` | Implement the purpose-first batch planner and 50-item fixed-stock QA fixture from `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` | New batch planner tests + production batch QA |
+| Fixed-stock batch print | `Gate added` | Keep monitoring future batch examples; re-run production batch/product gates after changes | Batch planner tests + print PDF artifact + production batch QA |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Monitoring` | Extend focus tests for new complex dialogs | Unit tests + production search UI |

@@ -116,7 +116,8 @@ Current status:
   labels on the strip renderer path and prevents standard-grid overflow.
 - Local verification passed: `npm run test:print-contract`, generated
   `build/print-qa-report.json`, generated `build/print-html-artifacts/`,
-  `npm run qa:print-pdf` (34/34), `npm run build`,
+  `npm run qa:print-pdf` (35/35, including the fixed-stock 50-item Quick ID
+  batch print artifact), `npm run build`,
   `npm test -- --runInBand` (822/822), and
   `npm run qa:production-compact` against the deployed production URL
   (15/15 compact handoff cases).
@@ -449,8 +450,8 @@ Acceptance:
 
 Current status:
 
-- Planned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- Planner-layer implementation has started:
+- Implemented and now monitored through `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- Planner-layer implementation:
   `frontend/src/utils/printBatchPlanner.js` classifies Quick ID,
   Supplemental, and Complete batches against one fixed stock.
 - A reusable mixed 50-item fixture and unit coverage live in
@@ -471,8 +472,13 @@ Current status:
   `build/production-batch-print-report.json` with a screenshot.
 - `qa:production-product` now runs `qa:production-batch-print`, and the
   production QA summary has a fixed-stock batch product block.
-- Deployed 50-item batch evidence remains the production closure step after
-  each batch-facing change.
+- `qa:print-report` now writes a 50-item fixed-stock Quick ID batch print HTML
+  artifact, and `qa:print-pdf` verifies that the batch output uses one stock,
+  carries batch-category metadata on every label, preserves required GHS
+  pictograms, and avoids clipping/overlap.
+- Deployed 50-item batch evidence was captured on commit `37cdff9` by local
+  production QA and GitHub Actions `Production Print QA` run `25947899331`.
+  Re-run the same production closure after each future batch-facing change.
 
 Suggested verification:
 
@@ -486,13 +492,14 @@ Suggested verification:
 Unless a fresh bug report or failing check points elsewhere, continue in this
 order:
 
-1. Fixed-stock batch label printing.
-2. Print renderer and stock fit robustness.
-3. Result table and GHS pictogram visual unity.
-4. Trust/source/SDS safety boundaries.
+1. Trust/source/SDS safety boundaries.
+2. Whole-product UX and brand-utility convergence.
+3. Print renderer and stock fit robustness.
+4. Result table and GHS pictogram visual unity.
 5. Prepared solution and reprint workflow maturity.
-6. Whole-product UX and brand-utility convergence.
+6. Fixed-stock batch label printing monitoring.
 
-This order prioritizes the newly identified batch workflow gap, then
-safety-critical printed output, and then the search surface that creates trust
-before the print workflow begins.
+This order reflects the current state after batch-print gate coverage shipped:
+keep batch monitored, then prioritize trust/data-state clarity and low-noise
+daily-use UX unless a fresh print screenshot or failing QA run points back to
+the renderer.

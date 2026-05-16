@@ -48,9 +48,10 @@ Current baseline capabilities:
 - A4 and Letter are complete primary outputs. Smaller physical stocks are
   supplemental or quick-ID unless the renderer proves a truthful complete label
   can fit.
-- Batch search can select and print multiple chemicals, but fixed-stock
-  30-100 item batch label printing is not yet a first-class workflow. The
-  required direction is pinned in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- Batch search can now plan, preview, and print a fixed-stock batch with
+  per-item fit categories, representative previews, acknowledged
+  reduced/continuation scope, and deployed production QA evidence. Keep future
+  changes aligned with `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
 - `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the active batch-print product
   contract: purpose-first, one physical stock per batch, per-item fit report,
@@ -93,7 +94,7 @@ Current completion snapshot:
 - **Intentionally deferred**: real-printer validation remains deferred until
   physical paper/stock/printer access is available. Automated Browser/PDF
   checks are strong preconditions, not proof of real printer behavior.
-- **Still active / recurring**: fixed-stock batch label printing,
+- **Still active / recurring**: fixed-stock batch regression coverage,
   source-conflict governance, upstream outage states, QR real-world
   reliability, compact multilingual labels, long chemical names, case/custom
   identity fields, admin/telemetry limits, and low-noise UX should continue to
@@ -190,9 +191,9 @@ Do next:
 - Replace "preview the first selected label" assumptions with representative
   previews: first, worst-fit, longest name, most pictograms, densest text, and
   excluded list.
-- Add a true 50-item fixed-stock batch fixture and QA gate. The existing
-  `multi-chemical` production layer is representative coverage, not proof of a
-  real batch workflow.
+- Keep the true 50-item fixed-stock batch fixture and QA gate healthy. The
+  existing `multi-chemical` production layer remains representative coverage,
+  not proof of a real batch workflow.
 
 Done means:
 
@@ -228,10 +229,14 @@ Current status:
   reduced/continuation path is available. It is folded into
   `qa:production-product` plus the `fixed-stock-batch-printing` product block
   in the production QA summary.
-- Existing print gates still protect single-label and representative
-  multi-chemical cases, but deployed 50-item batch evidence must still be
-  watched after each production-facing batch change before calling the full
-  workflow complete.
+- Deployed 50-item batch evidence was captured on commit `37cdff9` by
+  `qa:production-batch-print`, `qa:production-product`, and GitHub Actions
+  `Production Print QA` run `25947899331`.
+- `qa:print-report` now also writes a 50-item fixed-stock Quick ID batch print
+  artifact, and `qa:print-pdf` checks that artifact for stock metadata, batch
+  categories, required pictograms, identity text, clipping, and visual overlap.
+  Re-run the deployed batch/product gates after each production-facing batch
+  change.
 
 ### 4. Physical Print Validation
 

@@ -81,8 +81,11 @@ const inspectPrintDom = async (page, testCase) =>
   page.evaluate(
     ({
       expectedLabelKind,
+      expectedLabelKinds,
       expectedPictograms,
       expectedHasQr,
+      expectedStockPreset,
+      expectedBatchCategories,
       expectedMinTotalLabels,
       expectedPrintMinPictogramSidePx,
       expectedPrintMinQrSidePx,
@@ -356,6 +359,19 @@ const inspectPrintDom = async (page, testCase) =>
       const pictogramCodes = unique(
         pictogramImages.map(({ alt }) => alt.toUpperCase()),
       ).sort();
+      const labelStocks = labels.map((label) =>
+        label.getAttribute("data-print-stock") || "",
+      );
+      const stockPresets = unique(labelStocks.filter(Boolean)).sort();
+      const batchCategories = unique(
+        labels
+          .map((label) => label.getAttribute("data-batch-category") || "")
+          .filter(Boolean),
+      ).sort();
+      const missingBatchCategoryCount = (expectedBatchCategories || []).length
+        ? labels.filter((label) => !label.getAttribute("data-batch-category"))
+            .length
+        : 0;
       const expectedSet = new Set(expectedPictograms || []);
       const actualSet = new Set(pictogramCodes);
       const expectedPictogramsPresent =
@@ -393,6 +409,20 @@ const inspectPrintDom = async (page, testCase) =>
             })
             .filter(Boolean),
         ),
+        stockPresets,
+        expectedStockPreset: expectedStockPreset || "",
+        stockPresetMatches:
+          !expectedStockPreset ||
+          (stockPresets.length === 1 && stockPresets[0] === expectedStockPreset),
+        batchCategories,
+        expectedBatchCategories: expectedBatchCategories || [],
+        expectedBatchCategoriesPresent: (expectedBatchCategories || []).every(
+          (category) => batchCategories.includes(category),
+        ),
+        missingBatchCategoryCount,
+        allLabelsHaveBatchCategory:
+          !(expectedBatchCategories || []).length ||
+          missingBatchCategoryCount === 0,
         hasMorePics: document.body.textContent.includes("more-pics"),
         imageFailures,
         clippedElements,
@@ -415,8 +445,11 @@ const inspectPrintDom = async (page, testCase) =>
     },
     {
       expectedLabelKind: testCase.expectedLabelKind || "",
+      expectedLabelKinds: testCase.expectedLabelKinds || [],
       expectedPictograms: testCase.expectedPictograms || [],
       expectedHasQr: Boolean(testCase.expectedHasQr),
+      expectedStockPreset: testCase.expectedStockPreset || "",
+      expectedBatchCategories: testCase.expectedBatchCategories || [],
       expectedMinTotalLabels: testCase.expectedMinTotalLabels || 1,
       expectedPrintMinPictogramSidePx:
         testCase.expectedPrintMinPictogramSidePx || 0,
@@ -469,11 +502,17 @@ const runCase = async ({ page, testCase }) => {
   assert("pdf-header", pdf.hasPdfHeader);
   assert("pdf-size", pdf.bytes > 4000);
   assert("labels-rendered", dom.hasMinimumLabels);
+  const expectedLabelKinds =
+    testCase.expectedLabelKinds ||
+    (testCase.expectedLabelKind ? [testCase.expectedLabelKind] : []);
   assert(
     "label-kind",
-    !testCase.expectedLabelKind ||
-      dom.labelKinds.every((labelKind) => labelKind === testCase.expectedLabelKind),
+    expectedLabelKinds.length === 0 ||
+      dom.labelKinds.every((labelKind) => expectedLabelKinds.includes(labelKind)),
   );
+  assert("stock-preset", dom.stockPresetMatches);
+  assert("batch-categories", dom.expectedBatchCategoriesPresent);
+  assert("batch-category-on-every-label", dom.allLabelsHaveBatchCategory);
   assert("pictograms-present", dom.expectedPictogramsPresent);
   assert("pictograms-exact", dom.exactPictograms);
   assert("qr-state", dom.hasQr === dom.expectedHasQr);

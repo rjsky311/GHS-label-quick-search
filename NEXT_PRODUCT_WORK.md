@@ -36,25 +36,24 @@ Current mode:
   unless a gate fails or a workflow assumption changes.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
-- While physical printing is deferred, the default active continuation target
-  is fixed-stock batch label printing, followed by data governance / safety
-  boundaries, low-noise UX, and narrow/mobile polish. Track non-physical-print
-  work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; use
-  `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the batch-print implementation
-  contract.
+- While physical printing is deferred, fixed-stock batch label printing is now
+  in gate/monitoring state. The default active continuation targets are data
+  governance / safety boundaries, low-noise UX, and narrow/mobile polish. Track
+  non-physical-print work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
+  use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` before changing batch behavior.
 
 1. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
 2. Keep documentation consolidation and autonomous continuation hygiene healthy.
    `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
-3. Fixed-stock batch label printing. The app must support the real workflow of
-   choosing one physical stock for a batch, choosing Quick ID / Supplemental /
-   Complete purpose, then reviewing per-item fit results before printing. Use
-   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`; acknowledged reduced/continuation
-   scope is now part of the print handoff, `qa:production-batch-print` is the
-   deployed batch gate, and `multi-chemical` remains only representative
-   coverage.
+3. Fixed-stock batch label printing. Keep this in monitoring unless a new
+   screenshot, QA failure, or product change reopens it. The current baseline
+   supports one physical stock, Quick ID / Supplemental / Complete purpose,
+   per-item fit results, representative previews, acknowledged
+   reduced/continuation scope, PDF artifact coverage for a 50-item Quick ID
+   batch, and deployed `qa:production-batch-print` / `qa:production-product`
+   evidence.
 4. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and

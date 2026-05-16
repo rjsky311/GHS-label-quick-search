@@ -24,14 +24,14 @@ Cross-reference this file with:
 
 Status as of 2026-05-16:
 
-- Phase 1 has started: `frontend/src/utils/testFixtures/batchPrintFixtures.js`
+- Phase 1 is implemented: `frontend/src/utils/testFixtures/batchPrintFixtures.js`
   provides a reusable 50-item mixed fixture.
-- Phase 2 has started: `frontend/src/utils/printBatchPlanner.js` provides the
-  first pure `buildBatchPrintPlan` implementation for purpose-first,
-  fixed-stock batch classification.
+- Phase 2 is implemented: `frontend/src/utils/printBatchPlanner.js` provides a
+  pure `buildBatchPrintPlan` implementation for purpose-first, fixed-stock
+  batch classification.
 - `frontend/src/utils/__tests__/printBatchPlanner.test.js` verifies Quick ID,
   Supplemental, and Complete batch planning against the 50-item fixture.
-- Phase 3 has started: `LabelPrintModal` now shows a batch fit report for
+- Phase 3 is implemented: `LabelPrintModal` now shows a batch fit report for
   multi-item selections, lets users switch representative previews
   (`first`, `worst-fit`, `longest-name`, `most-pictograms`, `densest-text`,
   and excluded when present), keeps the sheet preview aligned to the default
@@ -45,7 +45,13 @@ Status as of 2026-05-16:
   overrides, so a fixed-stock batch can mix ready labels with acknowledged
   reduced-purpose labels while keeping one physical stock. Same-stock
   continuation labels are also materialized for print after acknowledgement.
-- Phase 5 has started: `npm run qa:production-batch-print` opens the deployed
+- Phase 4 is covered by renderer metadata and artifact QA: labels carry
+  per-label print-purpose/stock/template attributes plus batch
+  category/preferred/effective-purpose attributes, `qa:print-report` writes a
+  50-item fixed-stock Quick ID batch print artifact, and `qa:print-pdf` checks
+  that artifact for the selected stock, batch categories, pictograms, identity
+  text, clipping, and overlap.
+- Phase 5 is implemented: `npm run qa:production-batch-print` opens the deployed
   app, performs a fixed-stock batch search, opens the label-print modal,
   verifies the batch fit report, switches the worst-fit representative preview,
   checks the ready-batch print action, exercises an acknowledged
@@ -53,8 +59,8 @@ Status as of 2026-05-16:
   `build/production-batch-print-report.json` plus a modal screenshot.
 - `qa:production-batch-print` is now part of `qa:production-product` and the
   production QA summary includes a `fixed-stock-batch-printing` block.
-  Deployed 50-item batch evidence must still be captured after this slice is
-  pushed and deployed.
+- Deployed 50-item batch evidence was captured on commit `37cdff9` by local
+  production QA and GitHub Actions `Production Print QA` run `25947899331`.
 
 ## 1. Problem Statement
 
