@@ -220,6 +220,9 @@ Current status:
   the batch fit report, aligns the sheet preview to the current selected print
   scope, and exposes review/excluded items with CSV export before print
   handoff.
+- Batch print actions and scope summaries name the selected purpose, physical
+  stock, selected count, excluded count, and unselected review count so the
+  user can understand the handoff before pressing print.
 - Batch print handoff now defaults to ready items but can explicitly include
   acknowledged `reduced-purpose` and `same-stock-continuation` items on the
   same physical stock. The renderer records per-label batch metadata and

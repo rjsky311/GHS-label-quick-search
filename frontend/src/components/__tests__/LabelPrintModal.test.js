@@ -350,8 +350,14 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("batch-fit-review")).toHaveTextContent(
       "Needs review",
     );
+    expect(screen.getByTestId("batch-fit-stock-purpose")).toHaveTextContent(
+      "Complete",
+    );
+    expect(screen.getByTestId("batch-fit-stock-purpose")).toHaveTextContent(
+      "Large Container Front",
+    );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print ready batch",
+      "Print 1 ready Complete labels on Large Container Front",
     );
 
     fireEvent.click(screen.getByTestId("print-label-action"));
@@ -414,14 +420,20 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
       "1 item",
     );
+    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
+      "Large Container Front",
+    );
 
     fireEvent.click(screen.getByTestId("batch-include-reduced-purpose"));
 
     expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
       "2 item",
     );
+    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
+      "0 review item",
+    );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print selected batch",
+      "Print 2 selected Complete labels on Large Container Front",
     );
 
     fireEvent.click(screen.getByTestId("print-label-action"));

@@ -54,8 +54,9 @@ Status as of 2026-05-16:
 - Phase 5 is implemented: `npm run qa:production-batch-print` opens the deployed
   app, performs a fixed-stock batch search, opens the label-print modal,
   verifies the batch fit report, switches the worst-fit representative preview,
-  checks the ready-batch print action, exercises an acknowledged
-  reduced/continuation scope when available, and writes
+  checks that the print action names purpose, stock, selected count, and
+  exclusions, exercises an acknowledged reduced/continuation scope when
+  available, and writes
   `build/production-batch-print-report.json` plus a modal screenshot.
 - `qa:production-batch-print` is now part of `qa:production-product` and the
   production QA summary includes a `fixed-stock-batch-printing` block.

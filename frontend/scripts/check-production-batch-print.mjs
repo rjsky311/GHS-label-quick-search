@@ -14,6 +14,18 @@ const MODAL_TIMEOUT_MS = Number.parseInt(
   10,
 );
 
+const actionNamesStockAndExclusion = (text = "") =>
+  (text.includes("labels on") || text.includes("列印")) &&
+  (text.includes("excluded") || text.includes("排除"));
+
+const actionNamesReadyScope = (text = "") =>
+  actionNamesStockAndExclusion(text) &&
+  (text.includes("ready") || text.includes("可直接輸出"));
+
+const actionNamesSelectedScope = (text = "") =>
+  actionNamesStockAndExclusion(text) &&
+  (text.includes("selected") || text.includes("已確認"));
+
 const DEFAULT_BATCH_CAS = [
   "64-17-5",
   "7647-01-0",
@@ -216,8 +228,8 @@ const run = async () => {
       };
     });
     if (!fitReport.ready.includes("Ready")) failures.push("missing-ready-count");
-    if (!fitReport.printAction.includes("Print ready batch")) {
-      failures.push("print-action-does-not-name-ready-batch");
+    if (!actionNamesReadyScope(fitReport.printAction)) {
+      failures.push("print-action-does-not-name-ready-stock-batch");
     }
     if (!fitReport.labelClass.includes("label")) {
       failures.push("missing-preview-label-fragment");
@@ -319,8 +331,8 @@ const run = async () => {
             (acknowledgedPreviewLabels?.length || 0),
         };
       }, expectedCategory);
-      if (!scopeAfter.printAction.includes("Print selected batch")) {
-        failures.push("acknowledged-scope-action-not-selected-batch");
+      if (!actionNamesSelectedScope(scopeAfter.printAction)) {
+        failures.push("acknowledged-scope-action-not-selected-stock-batch");
       }
       if (scopeAfter.acknowledgedLabelCount < 1) {
         failures.push(`acknowledged-scope-preview-missing:${expectedCategory}`);

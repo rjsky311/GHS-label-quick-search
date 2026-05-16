@@ -962,6 +962,14 @@ export default function LabelPrintModal({
     ORIENTATION_OPTIONS.find((item) => item.value === layoutProfile.orientation)
       ?.labelKey || "label.portrait",
   );
+  const batchPrintPurposeLabel = getBatchPurposeLabel(batchPrintPurpose, tx);
+  const batchUnselectedReviewCount = hasBatchPrintPlan
+    ? Math.max(
+        0,
+        batchPrintPlan.summary.requiresAcknowledgement -
+          batchAcknowledgedPrintCount,
+      )
+    : 0;
   const configuredNameDisplayLabel = getOptionLabel(
     NAME_DISPLAY_OPTIONS,
     labelConfig.nameDisplay,
@@ -1606,18 +1614,24 @@ export default function LabelPrintModal({
           ? batchAcknowledgedPrintCount > 0
             ? tx(
                 "label.printAcknowledgedBatchAction",
-                "Print selected batch ({{count}} / {{total}})",
+                "Print {{count}} selected {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
                 {
                   count: batchSelectedPrintItems.length,
                   total: batchPrintPlan.summary.total,
+                  purpose: batchPrintPurposeLabel,
+                  stock: currentStockName,
+                  excluded: batchPrintPlan.summary.excluded,
                 },
               )
             : tx(
                 "label.printReadyBatchAction",
-                "Print ready batch ({{ready}} / {{total}})",
+                "Print {{ready}} ready {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
                 {
                   ready: batchPrintPlan.summary.printableByDefault,
                   total: batchPrintPlan.summary.total,
+                  purpose: batchPrintPurposeLabel,
+                  stock: currentStockName,
+                  excluded: batchPrintPlan.summary.excluded,
                 },
               )
         : isContinuationOutput
@@ -2716,8 +2730,11 @@ export default function LabelPrintModal({
               )}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-            {batchPrintPlan.stockPreset}
+          <span
+            className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+            data-testid="batch-fit-stock-purpose"
+          >
+            {batchPrintPurposeLabel} · {currentStockName}
           </span>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -2891,10 +2908,13 @@ export default function LabelPrintModal({
             >
               {tx(
                 "label.batchPrintScopeSummary",
-                "{{count}} item(s) selected for print handoff; {{excluded}} excluded item(s) remain out of output.",
+                "{{count}} item(s) will print as {{purpose}} on {{stock}}; {{excluded}} excluded; {{review}} review item(s) not selected.",
                 {
                   count: batchSelectedPrintItems.length,
+                  purpose: batchPrintPurposeLabel,
+                  stock: currentStockName,
                   excluded: batchPrintPlan.summary.excluded,
+                  review: batchUnselectedReviewCount,
                 },
               )}
             </div>
