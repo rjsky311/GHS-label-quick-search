@@ -41,6 +41,10 @@ export function resolveEffectiveLabelNameDisplay(
     return "both";
   }
 
+  if (layout.template === "icon" || layout.template === "qrcode") {
+    return "both";
+  }
+
   const isCompactPhysicalLabel =
     layout.labelPurpose !== "shipping" ||
     layout.template === "icon" ||

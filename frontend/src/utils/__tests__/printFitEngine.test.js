@@ -309,7 +309,7 @@ describe("printFitEngine", () => {
     );
   });
 
-  it("blocks supplemental stocks that cannot physically keep every pictogram", () => {
+  it("keeps supplemental stocks printable because extra pictograms continue onto same-stock labels", () => {
     const layout = resolvePrintLayoutConfig({
       labelPurpose: "quickId",
       template: "icon",
@@ -332,16 +332,10 @@ describe("printFitEngine", () => {
       resolvedLabProfile: {},
     });
 
-    expect(getMaxSupplementalPictogramCount(layout)).toBe(4);
-    expect(readiness.state).toBe(PRINT_READINESS_STATE.BLOCKED_INVALID);
-    expect(readiness.canPrint).toBe(false);
-    expect(readiness.issues).toEqual([
-      expect.objectContaining({
-        type: "too-many-pictograms-for-stock",
-        pictogramCount: 5,
-        maxPictograms: 4,
-      }),
-    ]);
+    expect(getMaxSupplementalPictogramCount(layout)).toBe(99);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY);
+    expect(readiness.canPrint).toBe(true);
+    expect(readiness.issues).toEqual([]);
   });
 
   it("keeps normal case identity printable on small quick-ID labels", () => {

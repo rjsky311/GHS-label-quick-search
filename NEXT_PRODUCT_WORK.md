@@ -45,14 +45,16 @@ Current mode:
   governance / safety boundaries, low-noise UX, and narrow/mobile polish. Track
   non-physical-print work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
   use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` before changing batch behavior.
-- A new product simplification decision is active for label printing:
-  `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the old first-level print UI
-  model. The next print slice should implement the three-output workflow before
-  adding more stock, purpose, density, or front-label options.
+- The product simplification decision for label printing is now the active
+  implementation baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the
+  old first-level print UI model. Keep future print work inside the three
+  outputs before adding more stock, purpose, density, or front-label options.
 
-1. Simplify the label-printing workflow around the three outputs in
+1. Harden and monitor the simplified three-output label workflow in
    `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
-   label, and identification small label.
+   label, and identification small label. New work should improve QA,
+   production verification, batch coverage, or visual polish without
+   reintroducing old first-level complexity.
 2. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.

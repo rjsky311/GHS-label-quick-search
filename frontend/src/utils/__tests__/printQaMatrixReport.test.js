@@ -146,7 +146,7 @@ const maybeWritePrintArtifacts = () => {
       expectedPictograms: (chemical.ghs_pictograms || [])
         .map((pictogram) => pictogram.code)
         .filter(Boolean),
-      expectedHasQr: Boolean(testCase.expected?.hasQr),
+      expectedHasQr: Boolean(caseResult.expected?.hasQr),
       expectedStockPreset: testCase.expected?.stockPreset || "",
       expectedMinTotalLabels: testCase.expected?.minPrintTotalLabels || 1,
       expectedPrintMinPictogramSidePx:
@@ -366,7 +366,7 @@ describe("print QA matrix report", () => {
       labelKind: "complete-primary",
       stockPreset: "a4-primary",
       template: "full",
-      hasQr: false,
+      hasQr: true,
       casNumbers: ["7647-01-0"],
       labelWidthMm: 188,
       labelHeightMm: 268,
@@ -420,7 +420,7 @@ describe("print QA matrix report", () => {
       labelKind: "complete-primary",
       stockPreset: "letter-primary",
       template: "full",
-      hasQr: false,
+      hasQr: true,
       casNumbers: ["7647-01-0"],
       labelWidthMm: 196,
       labelHeightMm: 250,
@@ -433,7 +433,7 @@ describe("print QA matrix report", () => {
       labelKind: "complete-primary",
       stockPreset: "a4-primary",
       template: "full",
-      hasQr: false,
+      hasQr: true,
       casNumbers: ["7647-01-0"],
       pageSize: "A4",
       colorMode: "bw",
@@ -443,8 +443,8 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["a4-primary-zh-bw"]).toMatchObject({
       expectedColorMode: "bw",
       expectedNameDisplay: "zh",
-      expectedRequiredIdentityTexts: ["鹽酸"],
-      expectedForbiddenIdentityTexts: ["Hydrochloric Acid"],
+      expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
+      expectedForbiddenIdentityTexts: [],
     });
 
     expect(byId["letter-primary-en-bw"].handoffExpectation).toMatchObject({
@@ -452,7 +452,7 @@ describe("print QA matrix report", () => {
       labelKind: "complete-primary",
       stockPreset: "letter-primary",
       template: "full",
-      hasQr: false,
+      hasQr: true,
       casNumbers: ["7647-01-0"],
       pageSize: "Letter",
       colorMode: "bw",
@@ -462,8 +462,8 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["letter-primary-en-bw"]).toMatchObject({
       expectedColorMode: "bw",
       expectedNameDisplay: "en",
-      expectedRequiredIdentityTexts: ["Hydrochloric Acid"],
-      expectedForbiddenIdentityTexts: ["鹽酸"],
+      expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
+      expectedForbiddenIdentityTexts: [],
     });
 
     expect(byId["formaldehyde-a4-primary-continuation"]).toMatchObject({
@@ -486,7 +486,7 @@ describe("print QA matrix report", () => {
         labelKind: "complete-primary",
         stockPreset: "a4-primary",
         template: "full",
-        hasQr: false,
+        hasQr: true,
       }),
     });
     expect(
@@ -577,7 +577,7 @@ describe("print QA matrix report", () => {
         labelKind: "complete-primary",
         stockPreset: "custom",
         template: "full",
-        hasQr: false,
+        hasQr: true,
       }),
     });
     expect(browserCaseById["custom-tiny-complete-primary-blocked"]).toBeUndefined();
@@ -618,8 +618,11 @@ describe("print QA matrix report", () => {
       expect(testCase.actual.hasExactPictogramSet).toBe(true);
       expect(testCase.actual.printHasExactPictogramSet).toBe(true);
       expect(testCase.actual.previewPrintPictogramParity).toBe(true);
-      expect(testCase.actual.hasSignalWord).toBe(true);
-      expect(testCase.actual.printHasSignalWord).toBe(true);
+      const shouldRenderSignalWord = !["quick-id", "qr-supplement"].includes(
+        testCase.expected.labelKind,
+      );
+      expect(testCase.actual.hasSignalWord).toBe(shouldRenderSignalWord);
+      expect(testCase.actual.printHasSignalWord).toBe(shouldRenderSignalWord);
       expect(testCase.actual.hasAnyIdentityText).toBe(true);
       expect(testCase.actual.printHasAnyIdentityText).toBe(true);
       expect(testCase.actual.hasRequiredIdentityTexts).toBe(true);
@@ -651,10 +654,10 @@ describe("print QA matrix report", () => {
     ).toEqual([]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedRequiredIdentityTexts,
-    ).toEqual(["Ethanol"]);
+    ).toEqual(["乙醇", "Ethanol"]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedForbiddenIdentityTexts,
-    ).toHaveLength(1);
+    ).toEqual([]);
     expect(byId["sodium-hydroxide-qr-supplement"].chemical).toMatchObject({
       cas: "1310-73-2",
       expectedPictograms: ["GHS05", "GHS07"],
@@ -671,7 +674,7 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["methanol-brother-quick-id-bw"]).toMatchObject({
       expectedNameDisplay: "en",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["Methanol"],
+      expectedRequiredIdentityTexts: ["Methanol ZH", "Methanol"],
       expectedMinPictogramSidePx: 26,
     });
     expect(byId["hydrogen-peroxide-qr-supplement-en"].chemical).toMatchObject({
@@ -681,7 +684,7 @@ describe("print QA matrix report", () => {
     expect(byId["nitrogen-tube-quick-id-single-pictogram"].chemical).toMatchObject({
       cas: "7727-37-9",
       expectedPictograms: ["GHS04"],
-      expectedRequiredIdentityTexts: ["Nitrogen"],
+      expectedRequiredIdentityTexts: ["Nitrogen ZH", "Nitrogen"],
     });
     expect(browserCaseById["nitrogen-tube-quick-id-single-pictogram"]).toMatchObject({
       expectedNameDisplay: "en",
@@ -693,7 +696,7 @@ describe("print QA matrix report", () => {
     expect(byId["zinc-oxide-small-qr-environmental"].chemical).toMatchObject({
       cas: "1314-13-2",
       expectedPictograms: ["GHS09"],
-      expectedRequiredIdentityTexts: ["Zinc Oxide"],
+      expectedRequiredIdentityTexts: ["Zinc Oxide ZH", "Zinc Oxide"],
     });
     expect(browserCaseById["zinc-oxide-small-qr-environmental"]).toMatchObject({
       expectedNameDisplay: "en",
@@ -760,26 +763,25 @@ describe("print QA matrix report", () => {
     expect(byId["tube-vial-quick-id-with-case"].actual).toMatchObject({
       hasRequiredIdentityText: true,
       printHasRequiredIdentityText: true,
-      hasSupportChip: true,
-      printHasSupportChip: true,
+      hasSupportChip: false,
+      printHasSupportChip: false,
       autoFitLevel: 2,
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"]).toMatchObject({
       expectedLabelKind: "quick-id",
       expectedStockPreset: "small-strip",
-      expectedHasSignalWord: true,
+      expectedHasSignalWord: false,
       expectedIdentityTexts: expect.arrayContaining([
         "Hydrochloric Acid",
         "鹽酸",
       ]),
       expectedMinPictogramSidePx: 26,
       expectedMinQrSidePx: 0,
-      expectedRequiredIdentityText: "CASE-2026-0007",
-      customLabelFields: { batchNumber: "CASE-2026-0007" },
+      expectedRequiredIdentityText: "",
+      customLabelFields: {},
       selectors: expect.objectContaining({
         printAllButtonTestId: "print-all-with-ghs-btn",
         stockButtonTestId: "primary-output-size-small-strip",
-        customFieldPrefixTestId: "custom-label-field-",
         qaStatusElementId: "ghs-print-qa-status",
       }),
     });
@@ -790,17 +792,12 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["ethanol-tube-quick-id"]).toMatchObject({
       expectedNameDisplay: "en",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["Ethanol"],
-      expectedForbiddenIdentityTexts: expect.any(Array),
+      expectedRequiredIdentityTexts: ["乙醇", "Ethanol"],
+      expectedForbiddenIdentityTexts: [],
     });
-    expect(browserCaseById["tube-vial-quick-id-with-case"].steps).toEqual(
+    expect(browserCaseById["tube-vial-quick-id-with-case"].steps).not.toEqual(
       expect.arrayContaining([
-        {
-          action: "setCustomField",
-          key: "batchNumber",
-          value: "CASE-2026-0007",
-          testId: "custom-label-field-batchNumber",
-        },
+        expect.objectContaining({ action: "setCustomField" }),
       ]),
     );
     expect(browserCaseById["long-name-tube-quick-id"]).toMatchObject({
@@ -811,12 +808,12 @@ describe("print QA matrix report", () => {
       expectedLabelWidthMm: 70,
       expectedLabelHeightMm: 24,
       expectedPageSize: "A4",
-      targetOption: "vial",
+      targetOption: "quickId",
       mustContainCas: true,
     });
     expect(browserCaseById["long-name-tube-quick-id"].steps).toEqual(
       expect.arrayContaining([
-        { action: "selectTarget", value: "vial" },
+        { action: "selectTarget", value: "quickId" },
         { action: "selectStock", value: "small-strip" },
         { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
       ]),

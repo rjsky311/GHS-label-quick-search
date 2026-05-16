@@ -317,7 +317,7 @@ export const LABEL_STOCK_PRESETS = STOCK_PRESETS;
 export const LABEL_STOCK_PICKER_PRESETS = STOCK_PRESETS.filter(
   (preset) => !preset.hiddenFromPrimaryPicker,
 ).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
-export const DEFAULT_LABEL_STOCK_ID = "large-primary";
+export const DEFAULT_LABEL_STOCK_ID = "a4-primary";
 export const FULL_PAGE_PRIMARY_STOCK_IDS = Object.freeze([
   "a4-primary",
   "letter-primary",
@@ -412,29 +412,27 @@ function getBaseLayout(size = "medium", orientation = "portrait") {
 export const DEFAULT_LABEL_CONFIG = Object.freeze({
   schemaVersion: 2,
   labelPurpose: "shipping",
-  template: "standard",
-  size: PRESET_INDEX["large-primary"].size,
-  orientation: PRESET_INDEX["large-primary"].orientation,
+  template: "full",
+  size: DEFAULT_PRESET.size,
+  orientation: DEFAULT_PRESET.orientation,
   pageOrientation:
-    PRESET_INDEX["large-primary"].pageOrientation ||
-    PRESET_INDEX["large-primary"].orientation,
+    DEFAULT_PRESET.pageOrientation || DEFAULT_PRESET.orientation,
   nameDisplay: "both",
   colorMode: "color",
-  stockPreset: PRESET_INDEX["large-primary"].id,
-  stockPresetName: PRESET_INDEX["large-primary"].name,
+  stockPreset: DEFAULT_PRESET.id,
+  stockPresetName: DEFAULT_PRESET.name,
   autoFitLevel: 0,
-  columns: PRESET_INDEX["large-primary"].columns,
-  rows: PRESET_INDEX["large-primary"].rows,
-  perPage:
-    PRESET_INDEX["large-primary"].columns * PRESET_INDEX["large-primary"].rows,
-  labelWidthMm: PRESET_INDEX["large-primary"].labelWidthMm,
-  labelHeightMm: PRESET_INDEX["large-primary"].labelHeightMm,
+  columns: DEFAULT_PRESET.columns,
+  rows: DEFAULT_PRESET.rows,
+  perPage: DEFAULT_PRESET.columns * DEFAULT_PRESET.rows,
+  labelWidthMm: DEFAULT_PRESET.labelWidthMm,
+  labelHeightMm: DEFAULT_PRESET.labelHeightMm,
   pageMarginMm: PAGE_MARGIN_MM,
-  pagePaddingMm: PRESET_INDEX["large-primary"].pagePaddingMm,
-  columnGapMm: PRESET_INDEX["large-primary"].columnGapMm,
-  rowGapMm: PRESET_INDEX["large-primary"].rowGapMm,
-  offsetXmm: PRESET_INDEX["large-primary"].offsetXmm,
-  offsetYmm: PRESET_INDEX["large-primary"].offsetYmm,
+  pagePaddingMm: DEFAULT_PRESET.pagePaddingMm,
+  columnGapMm: DEFAULT_PRESET.columnGapMm,
+  rowGapMm: DEFAULT_PRESET.rowGapMm,
+  offsetXmm: DEFAULT_PRESET.offsetXmm,
+  offsetYmm: DEFAULT_PRESET.offsetYmm,
 });
 
 const inferLabelPurpose = (template) => {
@@ -445,7 +443,7 @@ const inferLabelPurpose = (template) => {
 
 const getDefaultPresetForPurpose = (purpose) => {
   if (purpose === "qrSupplement") return PRESET_INDEX["brother-62mm-continuous"];
-  if (purpose === "quickId") return PRESET_INDEX["brother-62mm-continuous"];
+  if (purpose === "quickId") return PRESET_INDEX["small-strip"];
   return DEFAULT_PRESET;
 };
 
@@ -769,12 +767,22 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
         ? getPreset(explicitPreset)
         : null;
   const locksPresetGeometry = Boolean(preset);
+  const shouldUsePurposePreset =
+    !explicitPreset &&
+    !labelConfig.size &&
+    !labelConfig.orientation &&
+    !labelConfig.labelWidthMm &&
+    !labelConfig.labelHeightMm &&
+    !labelConfig.columns &&
+    !labelConfig.rows;
   const base =
     preset ||
-    getBaseLayout(
-      labelConfig.size || purposePreset.size,
-      labelConfig.orientation || purposePreset.orientation,
-    );
+    (shouldUsePurposePreset
+      ? purposePreset
+      : getBaseLayout(
+          labelConfig.size || purposePreset.size,
+          labelConfig.orientation || purposePreset.orientation,
+        ));
   const resolvedLabelWidthMm = locksPresetGeometry
     ? base.labelWidthMm
     : coerceNumber(labelConfig.labelWidthMm, base.labelWidthMm, {

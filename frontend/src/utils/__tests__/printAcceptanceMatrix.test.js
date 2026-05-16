@@ -110,28 +110,35 @@ const expectEveryPictogram = (html, codes) => {
   });
 };
 
+const expandedPictogramCodes = (preview) =>
+  preview.model.expandedLabels.flatMap((label) =>
+    label.continuation?.pictograms
+      ? label.continuation.pictograms.map((pictogram) => pictogram.code)
+      : (label.ghs_pictograms || []).map((pictogram) => pictogram.code),
+  );
+
 const hydrochloricPictogramCodes = ["GHS04", "GHS05", "GHS06", "GHS07"];
 
 const mmValue = (value) => Number.parseFloat(String(value).replace("mm", ""));
 
 const hydrochloricTargetMatrix = [
   {
-    id: "main-container",
+    id: "complete-a4",
+    labelPurpose: "shipping",
+    template: "full",
+    stockPreset: "a4-primary",
+    expectedKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+    expectedClass: "label-kind-complete-primary",
+    expectsQr: true,
+  },
+  {
+    id: "complete-letter",
     labelPurpose: "shipping",
     template: "full",
     stockPreset: "letter-primary",
     expectedKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
     expectedClass: "label-kind-complete-primary",
-    expectsQr: false,
-  },
-  {
-    id: "bottle-label",
-    labelPurpose: "shipping",
-    template: "standard",
-    stockPreset: "medium-bottle",
-    expectedKind: PRINT_OUTPUT_KIND.SUPPLEMENTAL,
-    expectedClass: "label-kind-supplemental",
-    expectsQr: false,
+    expectsQr: true,
   },
   {
     id: "tube-vial",
@@ -143,10 +150,10 @@ const hydrochloricTargetMatrix = [
     expectsQr: false,
   },
   {
-    id: "qr-supplement",
+    id: "qr-small",
     labelPurpose: "qrSupplement",
     template: "qrcode",
-    stockPreset: "small-strip",
+    stockPreset: "brother-62mm-continuous",
     expectedKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
     expectedClass: "label-kind-qr-supplement",
     expectsQr: true,
@@ -207,13 +214,17 @@ describe("print acceptance matrix", () => {
         colorMode === "bw" ? "print-bw" : "print-color",
       );
       expect(preview.fragmentHtml).not.toContain("more-pics");
-      expectEveryPictogram(preview.fragmentHtml, hydrochloricPictogramCodes);
+      if (template === "qrcode") {
+        expect(expandedPictogramCodes(preview)).toEqual(hydrochloricPictogramCodes);
+      } else {
+        expectEveryPictogram(preview.fragmentHtml, hydrochloricPictogramCodes);
+      }
 
       if (expectsQr) {
         expect(preview.fragmentHtml).toContain("qrcode-img");
         expect(preview.fragmentHtml).toContain("data:image/gif;base64");
         expect(preview.fragmentHtml).toContain(
-          "data-qr-target=\"https://pubchem.ncbi.nlm.nih.gov/compound/313#section=Safety-and-Hazards\"",
+          "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
         );
       } else {
         expect(preview.fragmentHtml).not.toContain("qrcode-img");
@@ -221,7 +232,7 @@ describe("print acceptance matrix", () => {
     },
   );
 
-  it("renders complete A4 primary labels without QR or H/P summaries", () => {
+  it("renders complete A4 primary labels with QR and complete H/P text", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "shipping",
       template: "full",
@@ -232,7 +243,10 @@ describe("print acceptance matrix", () => {
 
     expect(preview.fragmentHtml).toContain("label-kind-complete-primary");
     expect(preview.fragmentHtml).toContain("label-a4-primary");
-    expect(preview.fragmentHtml).not.toContain("qrcode-img");
+    expect(preview.fragmentHtml).toContain("qrcode-img");
+    expect(preview.fragmentHtml).toContain(
+      "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
+    );
     expect(preview.fragmentHtml).not.toContain("hazard-more");
     expect(preview.fragmentHtml).not.toContain("precaution-more");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
@@ -244,7 +258,7 @@ describe("print acceptance matrix", () => {
     });
   });
 
-  it("renders complete Letter primary labels on Letter paper without QR", () => {
+  it("renders complete Letter primary labels on Letter paper with QR", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "shipping",
       template: "full",
@@ -255,7 +269,10 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-kind-complete-primary");
     expect(preview.fragmentHtml).toContain("label-letter-primary");
     expect(preview.html).toContain("size: Letter");
-    expect(preview.fragmentHtml).not.toContain("qrcode-img");
+    expect(preview.fragmentHtml).toContain("qrcode-img");
+    expect(preview.fragmentHtml).toContain(
+      "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
+    );
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
   });
 
@@ -385,8 +402,10 @@ describe("print acceptance matrix", () => {
     expect(plan.canPrint).toBe(true);
     expect(preview.fragmentHtml).toContain("label-kind-quick-id");
     expect(preview.fragmentHtml).toContain("label-form-strip");
-    expect(preview.fragmentHtml).toContain("meta-chip-cas");
+    expect(preview.fragmentHtml).toContain("small-cas");
     expect(preview.fragmentHtml).toContain("7647-01-0");
+    expect(preview.fragmentHtml).toContain("Hydrochloric Acid");
+    expect(preview.fragmentHtml).toContain(hydrochloricAcid.name_zh);
     expect(preview.fragmentHtml).not.toContain("qrcode-img");
     expect(preview.fragmentHtml).not.toContain("more-pics");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
@@ -469,11 +488,11 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
-  it("renders English black-and-white QR supplement with QR and all pictograms", () => {
+  it("renders black-and-white QR small labels with QR, bilingual identity, and all pictograms across continuations", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "qrSupplement",
       template: "qrcode",
-      stockPreset: "small-strip",
+      stockPreset: "brother-62mm-continuous",
       nameDisplay: "en",
       colorMode: "bw",
     }, {});
@@ -481,8 +500,15 @@ describe("print acceptance matrix", () => {
     expect(preview.html).toContain("print-bw");
     expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
     expect(preview.fragmentHtml).toContain("qrcode-img");
-    expect(preview.fragmentHtml).not.toContain("鹽酸");
-    expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
+    expect(preview.fragmentHtml).toContain("small-cas");
+    expect(preview.fragmentHtml).toContain("Hydrochloric Acid");
+    expect(preview.fragmentHtml).toContain(hydrochloricAcid.name_zh);
+    expect(expandedPictogramCodes(preview)).toEqual([
+      "GHS04",
+      "GHS05",
+      "GHS06",
+      "GHS07",
+    ]);
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 

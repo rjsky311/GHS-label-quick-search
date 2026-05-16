@@ -248,13 +248,15 @@ The current project-level planning entry is
 slice; it consolidates current status, should-do items, blind spots, priority
 order, and done criteria.
 
-The next label-printing product target is pinned in
+The current label-printing product baseline is pinned in
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`. Use it before changing `LabelPrintModal`,
-print output planning, stock presets, batch print UX, or print QA. It reduces
-the user-facing workflow to three outputs: complete A4/Letter label, QR small
-label, and identification small label. Small labels should not expose H/P,
-signal words, H-code chips, or front-label terminology; overfit small-label
-items should split into same-output continuation labels.
+print output planning, stock presets, batch print UX, or print QA. The
+user-facing workflow has three outputs: complete A4/Letter label, QR small
+label, and identification small label. Complete labels include full H/P and a
+QR lookup link. Small labels print CAS first, English name second, Chinese name
+third, and all available GHS pictograms across same-output continuation labels;
+they should not expose H/P, signal words, H-code chips, case/custom fields, or
+front-label terminology.
 
 The print-workflow refactor baseline is pinned in
 `PRINT_OUTPUT_REFACTOR_PLAN.md`. Use it before changing `LabelPrintModal`,
@@ -368,9 +370,9 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 877 tests across 52 suites; 0 known React `act(...)` warnings
+- **Frontend**: 888 tests across 52 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Print contract**: `npm run test:print-contract` covers 242 focused print/planner/renderer assertions
+- **Print contract**: `npm run test:print-contract` covers 248 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 35 print cases, including custom tiny supplemental stock, prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs, and a fixed-stock 50-item Quick ID batch print artifact; it fails on compact visual-overlap regressions, stock mismatch, missing batch-category metadata, clipping, or hidden pictograms
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
 - **Batch print QA**: `qa:production-multi-chemical` remains representative multi-chemical print coverage, while `qa:production-batch-print` exercises the deployed fixed-stock batch modal flow, representative preview switching, print action copy that names purpose/stock/exclusions, acknowledged reduced/continuation scope when available, and batch review screenshot/report.

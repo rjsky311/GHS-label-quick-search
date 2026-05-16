@@ -84,7 +84,7 @@ describe("printBatchPlanner", () => {
     ).toBe("text-only-ghs-needs-hazard-text");
   });
 
-  it("keeps supplemental batch intent on the selected stock and isolates unfit items", () => {
+  it("keeps QR small-label batch intent on the selected stock and continues dense pictogram sets", () => {
     const plan = buildBatchPrintPlan({
       selectedForLabel: batchPrintMixedFixture50,
       layout: smallStripLayout,
@@ -95,9 +95,7 @@ describe("printBatchPlanner", () => {
 
     expect(plan.stockPreset).toBe("small-strip");
     expect(plan.summary.printableByDefault).toBeGreaterThan(0);
-    expect(
-      plan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT],
-    ).toBeGreaterThan(0);
+    expect(plan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT]).toBe(0);
     expect(new Set(plan.items.map((item) => item.layout.stockPreset))).toEqual(
       new Set(["small-strip"]),
     );
@@ -109,7 +107,7 @@ describe("printBatchPlanner", () => {
     );
     expect(plan.representatives.excluded).toEqual(
       expect.objectContaining({
-        category: expect.stringMatching(/^excluded-/),
+        category: BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_DATA,
       }),
     );
     expect(
@@ -165,11 +163,11 @@ describe("printBatchPlanner", () => {
       expect.objectContaining({
         category: BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
         preferredPurpose: BATCH_PRINT_PURPOSE.COMPLETE,
-        effectivePurpose: BATCH_PRINT_PURPOSE.SUPPLEMENTAL,
+        effectivePurpose: BATCH_PRINT_PURPOSE.QUICK_ID,
       }),
     );
     expect(reducedItem.__printLayoutOverride.stockPreset).toBe("large-primary");
-    expect(reducedItem.__printLayoutOverride.template).not.toBe("full");
+    expect(reducedItem.__printLayoutOverride.template).toBe("icon");
   });
 
   it("classifies very dense A4 complete labels as same-stock continuation", () => {
@@ -198,7 +196,7 @@ describe("printBatchPlanner", () => {
     );
   });
 
-  it("materializes same-stock continuation items only after acknowledgement", () => {
+  it("materializes same-stock continuation items in the default print set", () => {
     const plan = buildBatchPrintPlan({
       selectedForLabel: batchPrintMixedFixture50,
       layout: a4PrimaryLayout,
@@ -208,15 +206,12 @@ describe("printBatchPlanner", () => {
     });
 
     const readyOnly = buildBatchPrintableItems(plan);
-    const withContinuation = buildBatchPrintableItems(plan, {
-      includeContinuation: true,
-    });
-    const continuationItem = withContinuation.find(
+    const continuationItem = readyOnly.find(
       (item) => item.cas_number === "50-00-0",
     );
 
     expect(readyOnly.some((item) => item.cas_number === "50-00-0")).toBe(
-      false,
+      true,
     );
     expect(continuationItem.__batchPrintItem).toEqual(
       expect.objectContaining({

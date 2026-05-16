@@ -4,10 +4,10 @@ This is the canonical planning entry point for the project. Read this file
 first when choosing the next autonomous product slice. Use the linked planning
 and QA files only after this file has set the priority.
 
-Active print simplification target: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
-canonical product model for the next label-printing refactor. It replaces the
-prior first-level print UI model with exactly three outputs: complete
-A4/Letter label, QR small label, and identification small label.
+Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
+canonical product model for label-printing work. It replaces the prior
+first-level print UI model with exactly three outputs: complete A4/Letter
+label, QR small label, and identification small label.
 
 ## 1. Product Positioning
 
@@ -50,20 +50,20 @@ Production:
 Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
-- Print workflow has stock presets, QR supplements, live preview, recent print
-  reload, lab profile, saved templates, calibration controls, and prepared
-  solution support.
-- A4 and Letter are complete primary outputs. Smaller physical stocks are
-  supplemental or quick-ID unless the renderer proves a truthful complete label
-  can fit.
+- Print workflow now exposes the simplified three-output model on the first
+  screen: Complete A4/Letter label, QR small label, and Identification small
+  label. Legacy stock/template complexity remains internal or advanced only.
+- A4 and Letter are complete primary outputs with full H/P text and QR back to
+  this product's lookup page. QR small labels use 62 x 40 mm; identification
+  small labels use 70 x 24 mm.
 - Batch search can now plan, preview, and print a fixed-stock batch with
   per-item fit categories, representative previews, acknowledged
   reduced/continuation scope, and deployed production QA evidence. Keep future
   changes aligned with `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- The next print UX refactor should simplify that baseline according to
-  `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: one batch output type at a time, no
-  first-level purpose/card sprawl, and small-label continuation on the same
-  output instead of recommending mixed A4 recovery.
+- The simplified print UX baseline follows `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`:
+  one batch output type at a time, no first-level purpose/card sprawl, and
+  small-label continuation on the same output instead of recommending mixed A4
+  recovery.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
 - `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the active batch-print product
   contract: purpose-first, one physical stock per batch, per-item fit report,
@@ -131,22 +131,22 @@ finding, or user-reported blocker clearly points elsewhere.
 
 ### 0. Simplified Label Output Model
 
-Goal: stop repairing the old complex print modal one edge case at a time.
-Rebuild the label workflow around the three user-facing outputs in
-`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`.
+Goal: keep the newly simplified print modal from drifting back into the old
+complex model. The three user-facing outputs in
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md` are now the baseline.
 
 Do next:
 
-- Replace the first-level print UI with three output choices: complete label,
-  QR small label, and identification small label.
-- Keep A4/Letter complete labels as one page per label with full H/P and QR.
-- Make small labels identity-first: CAS, English name, Chinese name, all GHS
+- Keep the first-level print UI limited to complete label, QR small label, and
+  identification small label.
+- Keep A4/Letter complete labels one label per page with full H/P and QR.
+- Keep small labels identity-first: CAS, English name, Chinese name, all GHS
   pictograms, and QR only for QR small labels.
-- Remove H/P text, signal words, H-code chips, teaser summaries, and dense
-  purpose language from small labels.
+- Keep H/P text, signal words, H-code chips, teaser summaries, and dense
+  purpose language out of small labels.
 - For small-label overfit, continue on the same selected output type and stock
   by creating second/third small labels instead of recommending A4/Letter.
-- Add URL-query hydration for `?cas=...` so QR codes can scan back to this
+- Keep URL-query hydration for `?cas=...` covered so QR codes scan back to this
   product's lookup page.
 
 Done means:

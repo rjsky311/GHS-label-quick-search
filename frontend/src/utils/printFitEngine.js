@@ -192,18 +192,9 @@ export const getMaxSupplementalTextWeight = (layout = {}) => {
 export const getMaxSupplementalPictogramCount = (layout = {}) => {
   const area = layoutAreaMm(layout);
   const isStrip = layout.formFactor === "strip" || layout.heightMm <= 32;
-  const isCompact = isStrip || layout.formFactor === "compact";
 
-  if (layout.template === "qrcode") {
-    if (isStrip) return 4;
-    if (layout.size === "small" || area < 3200) return 4;
-    return layout.size === "large" ? 6 : 5;
-  }
-
-  if (layout.template === "icon") {
-    if (isStrip) return 4;
-    if (isCompact || layout.size === "small") return 4;
-    return layout.size === "large" ? 8 : 6;
+  if (layout.template === "qrcode" || layout.template === "icon") {
+    return 99;
   }
 
   if (isStrip || layout.size === "small") return 4;
@@ -347,7 +338,14 @@ const estimateSupplementalPrintContentTextWeight = (
   const budgets = layout.templateBudgets || {};
   const hazards = content.hazardStatements || [];
   const precautions = content.precautionaryStatements || [];
-  const pictogramReserve = (content.counts?.pictograms || 0) * 26;
+  const pictogramCount = content.counts?.pictograms || 0;
+  const pictogramReserveCount =
+    layout.template === "qrcode"
+      ? Math.min(pictogramCount, 2)
+      : layout.template === "icon"
+        ? Math.min(pictogramCount, 4)
+        : pictogramCount;
+  const pictogramReserve = pictogramReserveCount * 26;
 
   if (layout.template === "icon") {
     return Math.round(

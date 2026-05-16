@@ -18,13 +18,11 @@ import {
   LayoutPanelTop,
   Lightbulb,
   MapPin,
-  Package2,
   Palette,
   Phone,
   Plus,
   Printer,
   QrCode,
-  ScanLine,
   Settings2,
   Tag,
   Target,
@@ -64,10 +62,8 @@ import {
   getLocalizedNames,
   getLocalizedSignalWord,
   getLocalizedStatementText,
-  resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
-import { getPreferredQrTargetInfo } from "@/utils/sdsLinks";
 
 const TEMPLATE_OPTIONS = [
   {
@@ -153,17 +149,6 @@ const ORIENTATION_OPTIONS = [
   },
 ];
 
-const NAME_DISPLAY_OPTIONS = [
-  {
-    value: "both",
-    labelKey: "label.nameBoth",
-    descKey: "label.nameBothDesc",
-    icon: Languages,
-  },
-  { value: "en", labelKey: "label.nameEn", iconLabel: "EN" },
-  { value: "zh", labelKey: "label.nameZh", iconLabel: "ZH" },
-];
-
 const COLOR_OPTIONS = [
   { value: "color", labelKey: "label.colorColor", iconLabel: "CMYK" },
   { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
@@ -171,44 +156,40 @@ const COLOR_OPTIONS = [
 
 const PRINT_TARGET_OPTIONS = [
   {
-    value: "mainContainer",
+    value: "complete",
     purpose: "shipping",
-    labelKey: "label.targetMainContainer",
-    descKey: "label.targetMainContainerDesc",
-    fallbackLabel: "Main container",
-    icon: Package2,
-    presetId: "large-primary",
-    template: "standard",
-  },
-  {
-    value: "bottle",
-    purpose: "shipping",
-    labelKey: "label.targetBottle",
-    descKey: "label.targetBottleDesc",
-    fallbackLabel: "Bottle label",
-    icon: Tag,
-    presetId: "medium-bottle",
-    template: "standard",
-  },
-  {
-    value: "vial",
-    purpose: "quickId",
-    labelKey: "label.targetVial",
-    descKey: "label.targetVialDesc",
-    fallbackLabel: "Tube / vial",
-    icon: Target,
-    presetId: "small-strip",
-    template: "icon",
+    labelKey: "label.targetComplete",
+    descKey: "label.targetCompleteDesc",
+    fallbackLabel: "Complete A4/Letter label",
+    fallbackDesc:
+      "Full information label with CAS, English, Chinese, every GHS pictogram, H/P statements, and QR.",
+    icon: FileText,
+    presetId: "a4-primary",
+    template: "full",
   },
   {
     value: "qrSupplement",
     purpose: "qrSupplement",
-    labelKey: "label.targetQrSupplement",
-    descKey: "label.targetQrSupplementDesc",
-    fallbackLabel: "QR supplement",
-    icon: ScanLine,
+    labelKey: "label.targetQrSmall",
+    descKey: "label.targetQrSmallDesc",
+    fallbackLabel: "QR small label",
+    fallbackDesc:
+      "Small label with CAS, English, Chinese, QR, and all GHS pictograms across continuation labels.",
+    icon: QrCode,
     presetId: "brother-62mm-continuous",
     template: "qrcode",
+  },
+  {
+    value: "quickId",
+    purpose: "quickId",
+    labelKey: "label.targetIdentitySmall",
+    descKey: "label.targetIdentitySmallDesc",
+    fallbackLabel: "Identification small label",
+    fallbackDesc:
+      "Small label with CAS, English, Chinese, and all GHS pictograms across continuation labels.",
+    icon: Target,
+    presetId: "small-strip",
+    template: "icon",
   },
 ];
 
@@ -354,28 +335,17 @@ const ALL_STOCK_PRESETS = LABEL_STOCK_PRESETS.map((preset) => ({
   widthMm: preset.labelWidthMm,
   heightMm: preset.labelHeightMm,
 }));
-const SHIPPING_PRIMARY_PRESETS = ALL_STOCK_PRESETS.filter(
-  (preset) =>
-    preset.outputRole === "primary-candidate" ||
-    FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id),
-).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
-const SHIPPING_PRIMARY_STOCK_IDS = new Set(
-  SHIPPING_PRIMARY_PRESETS.map((preset) => preset.id),
-);
-const SHIPPING_SECONDARY_STOCK_IDS = new Set(["medium-rack"]);
-const SHIPPING_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
-  (preset) =>
-    SHIPPING_PRIMARY_STOCK_IDS.has(preset.id) ||
-    SHIPPING_SECONDARY_STOCK_IDS.has(preset.id),
-).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
-const SUPPLEMENTAL_STOCK_PRESETS = ALL_STOCK_PRESETS.filter(
-  (preset) => preset.outputRole === "supplemental",
-).sort((a, b) => (a.pickerPriority ?? 999) - (b.pickerPriority ?? 999));
+const STOCK_IDS_BY_PRINT_TARGET = {
+  complete: ["a4-primary", "letter-primary"],
+  qrSupplement: ["brother-62mm-continuous"],
+  quickId: ["small-strip"],
+};
 
 const CORE_STOCK_IDS_BY_PURPOSE = {
+  complete: ["a4-primary", "letter-primary"],
   shipping: ["a4-primary", "letter-primary", "medium-bottle", "large-primary"],
-  qrSupplement: ["brother-62mm-continuous", "small-strip"],
-  quickId: ["brother-62mm-continuous", "small-strip"],
+  qrSupplement: ["brother-62mm-continuous"],
+  quickId: ["small-strip"],
 };
 
 const GRID_MAP = {
@@ -516,19 +486,14 @@ function getLabelPurposeForConfig(labelConfig = {}) {
 
 function getPrintTargetForConfig(labelPurpose, layoutProfile = {}) {
   if (labelPurpose === "qrSupplement") return "qrSupplement";
-  if (labelPurpose === "quickId") return "vial";
-  if (
-    ["medium-bottle", "avery-5163", "avery-5164"].includes(
-      layoutProfile.stockPreset,
-    ) ||
-    layoutProfile.size === "medium"
-  ) {
-    return "bottle";
-  }
-  return "mainContainer";
+  if (labelPurpose === "quickId") return "quickId";
+  if (layoutProfile.template === "qrcode") return "qrSupplement";
+  if (layoutProfile.template === "icon") return "quickId";
+  return "complete";
 }
 
 function getQrTargetRoleLabel(linkType, tx) {
+  if (linkType === "lookup") return tx("label.qrTargetRoleLookup", "Lookup page");
   if (linkType === "sds") return tx("label.qrTargetRoleSds", "SDS");
   if (linkType === "regulatory") {
     return tx("label.qrTargetRoleRegulatory", "Regulatory");
@@ -547,6 +512,9 @@ function getQrTargetSourceLabel(source, tx) {
   if (normalized === "echa") return tx("label.qrTargetSourceEcha", "ECHA");
   if (normalized === "niosh") return tx("label.qrTargetSourceNiosh", "NIOSH");
   if (normalized === "manual") return tx("label.qrTargetSourceManual", "Manual");
+  if (normalized === "site") {
+    return tx("label.qrTargetSourceSite", "GHS Label Quick Search");
+  }
   return tx("label.qrTargetSourceReference", "Reference");
 }
 
@@ -835,16 +803,61 @@ export default function LabelPrintModal({
   const [batchPreviewItemIndex, setBatchPreviewItemIndex] = useState(null);
   const [batchIncludeReducedPurpose, setBatchIncludeReducedPurpose] =
     useState(false);
-  const [batchIncludeContinuation, setBatchIncludeContinuation] =
-    useState(false);
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
     return interpolateText(translated === key ? fallback : translated, options);
   };
 
-  const layoutProfile = resolveLayoutProfile(labelConfig);
-  const labelPurpose = getLabelPurposeForConfig(labelConfig);
+  const rawLayoutProfile = resolveLayoutProfile(labelConfig);
+  const rawLabelPurpose = getLabelPurposeForConfig(labelConfig);
+  const rawPrintTarget = getPrintTargetForConfig(
+    rawLabelPurpose,
+    rawLayoutProfile,
+  );
+  const effectiveLabelConfig = useMemo(() => {
+    const allowedStocks = STOCK_IDS_BY_PRINT_TARGET[rawPrintTarget] || [];
+    if (allowedStocks.includes(rawLayoutProfile.stockPreset)) {
+      return labelConfig;
+    }
+
+    const fallbackOption =
+      PRINT_TARGET_OPTIONS.find((option) => option.value === rawPrintTarget) ||
+      PRINT_TARGET_OPTIONS[0];
+    const fallbackPreset = ALL_STOCK_PRESETS.find(
+      (preset) => preset.id === fallbackOption?.presetId,
+    );
+
+    if (!fallbackOption || !fallbackPreset) return labelConfig;
+
+    return {
+      ...labelConfig,
+      labelPurpose: fallbackOption.purpose,
+      template: fallbackOption.template,
+      nameDisplay: "both",
+      stockPreset: fallbackPreset.id,
+      size: fallbackPreset.size,
+      orientation: fallbackPreset.orientation,
+      columns: fallbackPreset.columns,
+      rows: fallbackPreset.rows,
+      perPage: fallbackPreset.perPage,
+      labelWidthMm: fallbackPreset.widthMm,
+      labelHeightMm: fallbackPreset.heightMm,
+      pagePaddingMm: fallbackPreset.pagePaddingMm,
+      columnGapMm: fallbackPreset.columnGapMm,
+      rowGapMm: fallbackPreset.rowGapMm,
+      offsetXmm: fallbackPreset.offsetXmm,
+      offsetYmm: fallbackPreset.offsetYmm,
+      pageSize: fallbackPreset.pageSize || "A4",
+    };
+  }, [
+    labelConfig,
+    rawLayoutProfile.stockPreset,
+    rawPrintTarget,
+  ]);
+
+  const layoutProfile = resolveLayoutProfile(effectiveLabelConfig);
+  const labelPurpose = getLabelPurposeForConfig(effectiveLabelConfig);
   const printTarget = getPrintTargetForConfig(labelPurpose, layoutProfile);
   const selectedPrintTargetOption =
     PRINT_TARGET_OPTIONS.find((option) => option.value === printTarget) ||
@@ -854,24 +867,20 @@ export default function LabelPrintModal({
         selectedPrintTargetOption.labelKey,
         selectedPrintTargetOption.fallbackLabel,
       )
-    : tx("label.targetMainContainer", "Main container");
+    : tx("label.targetComplete", "Complete A4/Letter label");
   const firstSelectedChem = selectedForLabel[0] ?? null;
   const qrTargetInfo =
-    firstSelectedChem && labelPurpose === "qrSupplement"
-      ? getPreferredQrTargetInfo(
-          firstSelectedChem.cid,
-          firstSelectedChem.cas_number,
-          firstSelectedChem.reference_links,
-        )
+    labelPurpose === "qrSupplement"
+      ? {
+          linkType: "lookup",
+          source: "site",
+          label: tx("label.qrTargetSiteLabel", "GHS Label Quick Search"),
+        }
       : null;
   const qrTargetRoleLabel = getQrTargetRoleLabel(qrTargetInfo?.linkType, tx);
   const qrTargetSourceLabel = getQrTargetSourceLabel(qrTargetInfo?.source, tx);
   const currentLocale = i18n.language;
   const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
-    layoutProfile,
-    currentLocale,
-  );
-  const contentLocale = resolveEffectiveLabelContentLocale(
     layoutProfile,
     currentLocale,
   );
@@ -943,16 +952,10 @@ export default function LabelPrintModal({
         (item) => item.category === BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
       )
     : [];
-  const batchContinuationItems = hasBatchPrintPlan
-    ? batchPrintPlan.items.filter(
-        (item) =>
-          item.category === BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION,
-      )
-    : [];
   const batchSelectedPrintItems = hasBatchPrintPlan
     ? buildBatchPrintableItems(batchPrintPlan, {
         includeReducedPurpose: batchIncludeReducedPurpose,
-        includeContinuation: batchIncludeContinuation,
+        includeContinuation: true,
       })
     : [];
   const canPrintBatchSelectedScope =
@@ -971,14 +974,13 @@ export default function LabelPrintModal({
   const outputPlanHasUpstreamError = outputPlan.issues.some(
     (issue) => issue.type === "upstream-error",
   );
-  const visibleStockChoices =
-    labelPurpose === "shipping"
-      ? SHIPPING_STOCK_PRESETS
-      : SUPPLEMENTAL_STOCK_PRESETS;
+  const visibleStockChoices = ALL_STOCK_PRESETS.filter((preset) =>
+    (STOCK_IDS_BY_PRINT_TARGET[printTarget] || []).includes(preset.id),
+  );
   const { primaryStockChoices, secondaryStockChoices } = splitStockChoices(
     visibleStockChoices,
     layoutProfile.stockPreset,
-    labelPurpose,
+    printTarget,
   );
   const currentStockName =
     layoutProfile.stockPreset === "custom"
@@ -1003,18 +1005,6 @@ export default function LabelPrintModal({
           batchAcknowledgedPrintCount,
       )
     : 0;
-  const configuredNameDisplayLabel = getOptionLabel(
-    NAME_DISPLAY_OPTIONS,
-    labelConfig.nameDisplay,
-    t,
-    "Names",
-  );
-  const effectiveNameDisplayLabel = getOptionLabel(
-    NAME_DISPLAY_OPTIONS,
-    effectiveNameDisplay,
-    t,
-    configuredNameDisplayLabel,
-  );
   const selectableStockCount =
     primaryStockChoices.length + secondaryStockChoices.length;
   const plannerPreviewRisk =
@@ -1080,10 +1070,10 @@ export default function LabelPrintModal({
     : selectedForLabel;
   const previewLabelConfig = activeBatchPreviewPrintItems[0]?.__printLayoutOverride
     ? {
-        ...labelConfig,
+        ...effectiveLabelConfig,
         ...activeBatchPreviewPrintItems[0].__printLayoutOverride,
       }
-    : labelConfig;
+    : effectiveLabelConfig;
   const previewLabelQuantities = activeBatchPreviewItem
     ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
     : labelQuantities;
@@ -1297,7 +1287,6 @@ export default function LabelPrintModal({
       : tx("label.profileStatusMissing", "Required for complete primary")
     : tx("label.profileStatusOptional", "Optional for this output");
   const printedLabelValue = tx("label.outputPrinted", "Printed");
-  const optionalLabelValue = tx("label.outputOptional", "Optional");
   const outputChecklistTitle = isSupplementalOutput
     ? tx("label.outputPrintedChecklistTitle", "This label prints")
     : tx("label.outputChecklistTitle", "Required output");
@@ -1383,12 +1372,6 @@ export default function LabelPrintModal({
         "Available pictograms must stay on the label.",
       ),
     },
-    {
-      key: "signal-word",
-      label: tx("label.outputSignalWord", "Signal word"),
-      value: formatOutputCount(printReadiness.elementSummary.signalWord),
-      tone: getOutputTone(printReadiness.elementSummary.signalWord),
-    },
     ...(isQrSupplementOutput
       ? [
           {
@@ -1425,15 +1408,6 @@ export default function LabelPrintModal({
         ]
       : []),
     supplementalHazardOutputItem,
-    {
-      key: "responsible-profile",
-      label: tx("label.outputResponsibleProfile", "Responsible profile"),
-      value:
-        responsibleProfilePresentCount > 0
-          ? printedLabelValue
-          : optionalLabelValue,
-      tone: responsibleProfilePresentCount > 0 ? "ready" : "neutral",
-    },
   ];
   const primaryChecklistItems = [
     {
@@ -1658,11 +1632,11 @@ export default function LabelPrintModal({
                     "Complete primary label will print across continuation pages",
                   )
               : isQrSupplementOutput
-                ? tx("label.outputOutcomeQrTitle", "QR supplement is printable")
+                ? tx("label.outputOutcomeQrSmallTitle", "QR small label is printable")
                 : isQuickIdOutput
                   ? tx(
-                      "label.outputOutcomeQuickIdTitle",
-                      "{{target}} quick-ID label is printable",
+                      "label.outputOutcomeIdentitySmallTitle",
+                      "Identification small label is printable",
                       { target: printTargetLabel },
                     )
                   : isSupplementalOutput
@@ -1716,14 +1690,14 @@ export default function LabelPrintModal({
                   )
               : isQrSupplementOutput
                 ? tx(
-                    "label.outputOutcomeQrBody",
-                    "This prints a scan-first supplement with identity, QR, and all available pictograms. QR opens {{target}} support and does not replace a complete primary label.",
+                    "label.outputOutcomeQrSmallBody",
+                    "This prints CAS, English, Chinese, QR, and every GHS pictogram. If icons do not fit, the same output continues onto another small label.",
                     { target: qrTargetInfo ? qrTargetRoleLabel : "SDS/QR" },
                   )
                 : isQuickIdOutput
                   ? tx(
-                      "label.outputOutcomeQuickIdBody",
-                      "This prints a bench-side quick-ID supplement with identity, signal word, and every available pictogram. It does not replace a complete primary label.",
+                      "label.outputOutcomeIdentitySmallBody",
+                      "This prints CAS, English, Chinese, and every GHS pictogram. It does not include H/P text or QR.",
                     )
                   : isSupplementalOutput
                     ? tx(
@@ -1740,9 +1714,49 @@ export default function LabelPrintModal({
     selectedForLabel.length === 0 ||
     outputOutcomeTone === "danger" ||
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
+  const useFullPagePrimaryLabel = tx(
+    "label.useFullPagePrimaryForComplete",
+    "Use {{stock}} for complete label",
+    { stock: recommendedFullPageLabel },
+  );
+  const sheetPreviewBundle = useMemo(
+    () =>
+      buildPrintPreviewDocument(
+        sheetPreviewItems,
+        effectiveLabelConfig,
+        customGHSSettings,
+        customLabelFields,
+        sheetPreviewQuantities,
+        labProfile,
+        { mode: "sheet", pageIndex: previewPageIndex },
+      ),
+    [
+      sheetPreviewItems,
+      effectiveLabelConfig,
+      customGHSSettings,
+      customLabelFields,
+      sheetPreviewQuantities,
+      labProfile,
+      previewPageIndex,
+    ],
+  );
+  const plannedPrintLabelCount =
+    sheetPreviewBundle?.model?.expandedLabels?.length || totalLabels;
+  const plannedPrintPageCount =
+    sheetPreviewBundle?.model?.totalPages || estimatedPages;
+  const activePreviewPageIndex = sheetPreviewBundle?.previewPageIndex || 0;
+  const activePreviewLabelIndex =
+    plannedPrintLabelCount > 0
+      ? Math.min(
+          activePreviewPageIndex * Math.max(layoutProfile.perPage || 1, 1),
+          plannedPrintLabelCount - 1,
+        )
+      : 0;
+  const hasMultiplePreviewPages = plannedPrintPageCount > 1;
+  const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
   const printActionLabel =
     selectedForLabel.length === 0
-      ? t("label.printBtn", { count: totalLabels })
+      ? t("label.printBtn", { count: plannedPrintLabelCount })
       : isPrintFitBlocked
         ? printBlockedLabel
         : canPrintBatchSelectedScope
@@ -1776,75 +1790,35 @@ export default function LabelPrintModal({
             )
         : isQrSupplementOutput
           ? tx(
-              "label.printQrSupplementAction",
-              "Print QR supplement ({{count}})",
+              "label.printQrSmallAction",
+              "Print QR small label ({{count}})",
               {
-                count: totalLabels,
+                count: plannedPrintLabelCount,
               },
             )
-          : isQuickIdOutput
-            ? tx(
-                "label.printQuickIdAction",
-                "Print {{target}} quick-ID label ({{count}})",
-                { target: printTargetLabel, count: totalLabels },
-              )
+        : isQuickIdOutput
+          ? tx(
+              "label.printIdentitySmallAction",
+              "Print identification small label ({{count}})",
+              { target: printTargetLabel, count: plannedPrintLabelCount },
+            )
           : isSupplementalOutput
             ? isContainerFrontOutput
               ? tx(
                   "label.printContainerFrontAction",
                   "Print {{target}} (front, {{count}})",
-                  { target: printTargetLabel, count: totalLabels },
+                  { target: printTargetLabel, count: plannedPrintLabelCount },
                 )
               : tx(
                   "label.printSupplementalAction",
                   "Print {{target}} (supplemental, {{count}})",
-                  { target: printTargetLabel, count: totalLabels },
+                  { target: printTargetLabel, count: plannedPrintLabelCount },
                 )
             : tx(
                 "label.printCompletePrimaryAction",
                 "Print complete primary label ({{count}})",
-                { count: totalLabels },
+                { count: plannedPrintLabelCount },
               );
-  const useFullPagePrimaryLabel = tx(
-    "label.useFullPagePrimaryForComplete",
-    "Use {{stock}} for complete label",
-    { stock: recommendedFullPageLabel },
-  );
-  const sheetPreviewBundle = useMemo(
-    () =>
-      buildPrintPreviewDocument(
-        sheetPreviewItems,
-        labelConfig,
-        customGHSSettings,
-        customLabelFields,
-        sheetPreviewQuantities,
-        labProfile,
-        { mode: "sheet", pageIndex: previewPageIndex },
-      ),
-    [
-      sheetPreviewItems,
-      labelConfig,
-      customGHSSettings,
-      customLabelFields,
-      sheetPreviewQuantities,
-      labProfile,
-      previewPageIndex,
-    ],
-  );
-  const plannedPrintLabelCount =
-    sheetPreviewBundle?.model?.expandedLabels?.length || totalLabels;
-  const plannedPrintPageCount =
-    sheetPreviewBundle?.model?.totalPages || estimatedPages;
-  const activePreviewPageIndex = sheetPreviewBundle?.previewPageIndex || 0;
-  const activePreviewLabelIndex =
-    plannedPrintLabelCount > 0
-      ? Math.min(
-          activePreviewPageIndex * Math.max(layoutProfile.perPage || 1, 1),
-          plannedPrintLabelCount - 1,
-        )
-      : 0;
-  const hasMultiplePreviewPages = plannedPrintPageCount > 1;
-  const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
   const labelPreviewBundle = useMemo(() => {
     if (selectedForLabel.length === 0) return null;
 
@@ -1878,15 +1852,15 @@ export default function LabelPrintModal({
   }, [
     batchPreviewRepresentative,
     batchPreviewItemIndex,
-    labelConfig.colorMode,
-    labelConfig.labelHeightMm,
-    labelConfig.labelPurpose,
-    labelConfig.labelWidthMm,
-    labelConfig.nameDisplay,
-    labelConfig.orientation,
-    labelConfig.size,
-    labelConfig.stockPreset,
-    labelConfig.template,
+    effectiveLabelConfig.colorMode,
+    effectiveLabelConfig.labelHeightMm,
+    effectiveLabelConfig.labelPurpose,
+    effectiveLabelConfig.labelWidthMm,
+    effectiveLabelConfig.nameDisplay,
+    effectiveLabelConfig.orientation,
+    effectiveLabelConfig.size,
+    effectiveLabelConfig.stockPreset,
+    effectiveLabelConfig.template,
     previewSelectionKey,
   ]);
 
@@ -1894,13 +1868,12 @@ export default function LabelPrintModal({
     setBatchPreviewRepresentative(BATCH_PRINT_REPRESENTATIVE.FIRST);
     setBatchPreviewItemIndex(null);
     setBatchIncludeReducedPurpose(false);
-    setBatchIncludeContinuation(false);
   }, [
-    labelConfig.labelPurpose,
-    labelConfig.labelHeightMm,
-    labelConfig.labelWidthMm,
-    labelConfig.stockPreset,
-    labelConfig.template,
+    effectiveLabelConfig.labelPurpose,
+    effectiveLabelConfig.labelHeightMm,
+    effectiveLabelConfig.labelWidthMm,
+    effectiveLabelConfig.stockPreset,
+    effectiveLabelConfig.template,
     previewSelectionKey,
   ]);
 
@@ -1925,13 +1898,13 @@ export default function LabelPrintModal({
     autoAppliedOutputRef.current = autoApplyFullPageKey;
 
     onLabelConfigChange({
-      ...labelConfig,
+      ...effectiveLabelConfig,
       ...outputPlan.recommendedFullPagePatch,
     });
   }, [
     autoApplyFullPageKey,
     canUseFullPagePrimary,
-    labelConfig,
+    effectiveLabelConfig,
     onLabelConfigChange,
     outputPlan.recommendedFullPagePatch,
   ]);
@@ -1951,12 +1924,12 @@ export default function LabelPrintModal({
   };
 
   const updateVisualConfig = (patch) => {
-    onLabelConfigChange({ ...labelConfig, ...patch });
+    onLabelConfigChange({ ...effectiveLabelConfig, ...patch });
   };
 
   const updateLayoutConfig = (patch) => {
     onLabelConfigChange({
-      ...labelConfig,
+      ...effectiveLabelConfig,
       ...patch,
       stockPreset: patch.stockPreset ?? "custom",
     });
@@ -1966,10 +1939,11 @@ export default function LabelPrintModal({
     userSelectedStockRef.current = true;
 
     const nextConfig = {
-      ...labelConfig,
+      ...effectiveLabelConfig,
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
+      nameDisplay: "both",
       columns: preset.columns,
       rows: preset.rows,
       perPage: preset.perPage,
@@ -1989,6 +1963,12 @@ export default function LabelPrintModal({
         FULL_PAGE_PRIMARY_STOCK_IDS.includes(preset.id);
       nextConfig.labelPurpose = "shipping";
       nextConfig.template = isFullPageStock ? "full" : "standard";
+    } else if (labelPurpose === "qrSupplement") {
+      nextConfig.labelPurpose = "qrSupplement";
+      nextConfig.template = "qrcode";
+    } else if (labelPurpose === "quickId") {
+      nextConfig.labelPurpose = "quickId";
+      nextConfig.template = "icon";
     }
 
     onLabelConfigChange(nextConfig);
@@ -2001,7 +1981,7 @@ export default function LabelPrintModal({
 
   const handlePrintAction = () => {
     onPrintLabels(
-      labelConfig,
+      effectiveLabelConfig,
       canPrintBatchSelectedScope ? batchSelectedPrintItems : undefined,
     );
   };
@@ -2039,9 +2019,10 @@ export default function LabelPrintModal({
     if (!option || !preset) return;
 
     const nextConfig = {
-      ...labelConfig,
+      ...effectiveLabelConfig,
       labelPurpose: option.purpose,
       template: option.template,
+      nameDisplay: "both",
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
@@ -2069,6 +2050,15 @@ export default function LabelPrintModal({
 
     onLabelConfigChange(nextConfig);
   };
+
+  useEffect(() => {
+    if (effectiveLabelConfig === labelConfig) return;
+    onLabelConfigChange(effectiveLabelConfig);
+  }, [
+    effectiveLabelConfig,
+    labelConfig,
+    onLabelConfigChange,
+  ]);
 
   const renderConfigButtons = (options, value, onSelect, activeClasses) => (
     <div className="grid grid-cols-2 gap-3">
@@ -2960,8 +2950,7 @@ export default function LabelPrintModal({
             )}
           </div>
         )}
-        {(batchReducedPurposeItems.length > 0 ||
-          batchContinuationItems.length > 0) && (
+        {batchReducedPurposeItems.length > 0 && (
           <div
             className="mt-3 rounded-md border border-amber-200 bg-amber-50/70 p-3"
             data-testid="batch-print-scope-controls"
@@ -2972,7 +2961,7 @@ export default function LabelPrintModal({
             <p className="mt-1 text-xs leading-5 text-amber-900/80">
               {tx(
                 "label.batchPrintScopeBody",
-                "Ready labels are included by default. Add reduced or continuation items only when that output role is acceptable for this batch.",
+                "Ready and same-stock continuation labels are included by default. Add reduced-purpose items only when that output role is acceptable for this batch.",
               )}
             </p>
             <div className="mt-3 grid gap-2">
@@ -3001,36 +2990,6 @@ export default function LabelPrintModal({
                       {tx(
                         "label.batchIncludeReducedPurposeHint",
                         "These keep identity, signal word, and pictograms on the same stock, but do not claim complete-primary output.",
-                      )}
-                    </span>
-                  </span>
-                </label>
-              )}
-              {batchContinuationItems.length > 0 && (
-                <label className="flex items-start gap-2 rounded-md border border-amber-200 bg-white/80 px-3 py-2 text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    checked={batchIncludeContinuation}
-                    onChange={(event) =>
-                      setBatchIncludeContinuation(event.target.checked)
-                    }
-                    data-testid="batch-include-continuation"
-                  />
-                  <span>
-                    <span className="font-semibold text-slate-900">
-                      {tx(
-                        "label.batchIncludeContinuation",
-                        "Include same-stock continuation labels",
-                      )}
-                    </span>
-                    <span className="ml-1 text-slate-500">
-                      ({batchContinuationItems.length})
-                    </span>
-                    <span className="block leading-5 text-slate-500">
-                      {tx(
-                        "label.batchIncludeContinuationHint",
-                        "These may expand one chemical into multiple labels on the same selected stock.",
                       )}
                     </span>
                   </span>
@@ -3246,7 +3205,7 @@ export default function LabelPrintModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyPrintTarget("bottle")}
+                  onClick={() => applyPrintTarget("quickId")}
                   className="inline-flex items-center justify-center gap-2 rounded-md bg-white/80 px-3 py-2 text-xs font-semibold ring-1 ring-current/15 transition-colors hover:bg-white"
                 >
                   <Tag className="h-4 w-4" />
@@ -3478,14 +3437,14 @@ export default function LabelPrintModal({
                   <div>
                     <h3 className="text-sm font-medium text-slate-800">
                       {tx(
-                        "label.outputGoalSizeTitle",
-                        "Choose label target",
+                        "label.simplifiedOutputTitle",
+                        "Choose label output",
                       )}
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
                       {tx(
-                        "label.outputGoalSizeHint",
-                        "Pick where this will be attached. The app chooses complete primary, supplemental, quick-ID, or QR output for that target.",
+                        "label.simplifiedOutputHint",
+                        "Choose one output type. Small labels continue onto a second or third label instead of dropping CAS, names, QR, or GHS pictograms.",
                       )}
                     </p>
                   </div>
@@ -3495,7 +3454,7 @@ export default function LabelPrintModal({
                 </div>
                 <div className="mt-4">
                   <div className="text-xs font-semibold text-slate-500">
-                    {tx("label.outputGoalTitle", "Label target")}
+                    {tx("label.simplifiedOutputType", "Output type")}
                   </div>
                   <div
                     className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"
@@ -3504,8 +3463,14 @@ export default function LabelPrintModal({
                     {PRINT_TARGET_OPTIONS.map((option) => {
                       const Icon = option.icon;
                       const selected = printTarget === option.value;
-                      const optionLabel = t(option.labelKey);
-                      const optionDescription = t(option.descKey);
+                      const optionLabel = tx(
+                        option.labelKey,
+                        option.fallbackLabel,
+                      );
+                      const optionDescription = tx(
+                        option.descKey,
+                        option.fallbackDesc || "",
+                      );
 
                       return (
                         <button
@@ -3735,27 +3700,17 @@ export default function LabelPrintModal({
                 <div className="mt-4 grid gap-6 xl:grid-cols-2">
                   <section className="space-y-3">
                     <h4 className="text-sm font-medium text-slate-800">
-                      {t("label.nameDisplay")}
+                      {tx("label.identityDisplay", "Printed identity")}
                     </h4>
-                    {renderConfigButtons(
-                      NAME_DISPLAY_OPTIONS,
-                      labelConfig.nameDisplay,
-                      (nameDisplay) => updateVisualConfig({ nameDisplay }),
-                      "border-emerald-500 bg-emerald-50 text-emerald-800",
-                    )}
-                    {labelConfig.nameDisplay === "both" &&
-                      effectiveNameDisplay !== "both" && (
-                        <p
-                          className="rounded-md bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800"
-                          data-testid="effective-name-display-hint"
-                        >
-                          {tx(
-                            "label.effectiveNameDisplayHint",
-                            "This smaller stock will print in {{effective}} first so the label stays readable. Use A4 or Letter primary labels for full bilingual text.",
-                            { effective: effectiveNameDisplayLabel },
-                          )}
-                        </p>
+                    <div
+                      className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium leading-5 text-emerald-900"
+                      data-testid="fixed-identity-display"
+                    >
+                      {tx(
+                        "label.fixedIdentityDisplay",
+                        "Always prints CAS first, English second, and Chinese third.",
                       )}
+                    </div>
                   </section>
 
                   <section className="space-y-3">

@@ -100,10 +100,10 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
-      "Choose label target",
+      "Choose label output",
     );
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
-      "Label target",
+      "Output type",
     );
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Recommended next step",
@@ -120,13 +120,13 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
       "data-mode",
-      "supplemental",
+      "blocked",
     );
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveTextContent(
-      "trust.supplementalTitle",
+      "trust.blockedTitle",
     );
     expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
-    expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Output role",
     );
@@ -134,7 +134,9 @@ describe("LabelPrintModal", () => {
       "All pictograms kept",
     );
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("print-outcome-summary")).not.toBeInTheDocument();
+    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
+      "Add lab/supplier profile before printing",
+    );
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("preview-context-strip")).toHaveTextContent(
       "Output",
@@ -146,7 +148,7 @@ describe("LabelPrintModal", () => {
       "All pictograms kept",
     );
     expect(screen.getByTestId("preview-context-stock")).toHaveTextContent(
-      "Bottle Primary",
+      "A4 Primary",
     );
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Target size",
@@ -162,7 +164,7 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("selected-stock-summary")).toBeInTheDocument();
     expect(screen.getByTestId("selected-stock-summary")).toHaveTextContent(
-      "Bottle Primary",
+      "A4 Primary",
     );
     expect(screen.getByTestId("stock-size-picker").tagName).toBe("DETAILS");
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
@@ -302,7 +304,7 @@ describe("LabelPrintModal", () => {
     ).not.toEqual(firstPreviewSrc);
   });
 
-  it("shows a fixed-stock batch fit report and prints only ready default items", () => {
+  it("shows a fixed-stock batch fit report and prints ready default items", () => {
     const denseChem = makeChem({
       cas_number: "7647-01-0",
       name_en: "Hydrochloric Acid",
@@ -334,7 +336,7 @@ describe("LabelPrintModal", () => {
         ...baseConfig,
         labelPurpose: "shipping",
         template: "full",
-        stockPreset: "large-primary",
+        stockPreset: "a4-primary",
       },
       labProfile: {
         organization: "Lab A",
@@ -354,26 +356,26 @@ describe("LabelPrintModal", () => {
       "Complete",
     );
     expect(screen.getByTestId("batch-fit-stock-purpose")).toHaveTextContent(
-      "Large Container Front",
+      "A4 Primary",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print 1 ready Complete labels on Large Container Front",
+      "A4 Primary",
     );
 
     fireEvent.click(screen.getByTestId("print-label-action"));
 
     expect(props.onPrintLabels).toHaveBeenCalledWith(
-      expect.objectContaining({ stockPreset: "large-primary" }),
-      [
+      expect.objectContaining({ stockPreset: "a4-primary" }),
+      expect.arrayContaining([
         expect.objectContaining({
           cas_number: readyChem.cas_number,
           __batchPrintItem: expect.objectContaining({ category: "ready" }),
         }),
-      ],
+      ]),
     );
   });
 
-  it("lets batch users explicitly include reduced-purpose items in the print scope", () => {
+  it("includes same-stock continuation labels by default for small-label batches", () => {
     const denseChem = makeChem({
       cas_number: "7647-01-0",
       name_en: "Hydrochloric Acid",
@@ -403,57 +405,28 @@ describe("LabelPrintModal", () => {
       selectedForLabel: [denseChem, readyChem],
       labelConfig: {
         ...baseConfig,
-        labelPurpose: "shipping",
-        template: "full",
-        stockPreset: "large-primary",
-      },
-      labProfile: {
-        organization: "Lab A",
-        phone: "02-1234",
-        address: "Taipei",
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
       },
     });
 
-    expect(screen.getByTestId("batch-print-scope-controls")).toHaveTextContent(
-      "Print scope",
-    );
-    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
-      "1 item",
-    );
-    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
-      "Large Container Front",
-    );
-
-    fireEvent.click(screen.getByTestId("batch-include-reduced-purpose"));
-
-    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
-      "2 item",
-    );
-    expect(screen.getByTestId("batch-print-scope-summary")).toHaveTextContent(
-      "0 review item",
-    );
+    expect(screen.queryByTestId("batch-print-scope-controls")).not.toBeInTheDocument();
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print 2 selected Complete labels on Large Container Front",
+      "Vial Strip",
     );
 
     fireEvent.click(screen.getByTestId("print-label-action"));
 
     expect(props.onPrintLabels).toHaveBeenCalledWith(
-      expect.objectContaining({ stockPreset: "large-primary" }),
+      expect.objectContaining({ stockPreset: "small-strip", template: "icon" }),
       expect.arrayContaining([
         expect.objectContaining({
           cas_number: readyChem.cas_number,
-          __batchPrintItem: expect.objectContaining({ category: "ready" }),
         }),
         expect.objectContaining({
           cas_number: denseChem.cas_number,
-          __batchPrintItem: expect.objectContaining({
-            category: "reduced-purpose",
-          }),
-          __printLayoutOverride: expect.objectContaining({
-            stockPreset: "large-primary",
-            template: "standard",
-          }),
+          __batchPrintItem: expect.objectContaining({ category: "ready" }),
         }),
       ]),
     );
@@ -466,32 +439,22 @@ describe("LabelPrintModal", () => {
       hazard_statements: [{ code: "H225", text_en: "Highly flammable." }],
       precautionary_statements: [],
     });
-    const denseChem = makeChem({
+    const noHazardChem = makeChem({
       cas_number: "7647-01-0",
       name_en: "Hydrochloric Acid",
-      ghs_pictograms: [
-        { code: "GHS04" },
-        { code: "GHS05" },
-        { code: "GHS06" },
-        { code: "GHS07" },
-      ],
-      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
-        code: `H${300 + index}`,
-        text_en: `Dense hazard statement ${index}`,
-      })),
-      precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
-        code: `P${300 + index}`,
-        text_en: `Dense precaution statement ${index}`,
-      })),
+      ghs_pictograms: [],
+      hazard_statements: [],
+      precautionary_statements: [],
+      signal_word: "",
     });
 
     renderModal({
-      selectedForLabel: [readyChem, denseChem],
+      selectedForLabel: [readyChem, noHazardChem],
       labelConfig: {
         ...baseConfig,
         labelPurpose: "shipping",
         template: "full",
-        stockPreset: "large-primary",
+        stockPreset: "a4-primary",
       },
       labProfile: {
         organization: "Lab A",
@@ -505,7 +468,7 @@ describe("LabelPrintModal", () => {
       "Items needing review or exclusion",
     );
 
-    fireEvent.click(screen.getByTestId("batch-preview-rep-worstFit"));
+    fireEvent.click(screen.getByTestId("batch-preview-rep-excluded"));
 
     expect(screen.getByTestId("batch-active-preview-summary")).toHaveTextContent(
       "Hydrochloric Acid",
@@ -514,7 +477,7 @@ describe("LabelPrintModal", () => {
       "Previewing a batch representative",
     );
     expect(screen.getByTestId("preview-context-role")).toHaveTextContent(
-      "Supplemental",
+      "Complete",
     );
     expect(
       screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
@@ -522,12 +485,20 @@ describe("LabelPrintModal", () => {
 
     fireEvent.click(screen.getByTestId("batch-review-preview-1"));
     expect(screen.getByTestId("batch-active-preview-summary")).toHaveTextContent(
-      "Needs reduced output",
+      "Excluded: data",
     );
   });
 
   it("keeps the responsible profile collapsed when the selected output does not require it", () => {
-    renderModal({ selectedForLabel: [makeChem()] });
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+    });
 
     expect(screen.getByTestId("responsible-profile-controls")).not.toHaveAttribute(
       "open",
@@ -616,7 +587,15 @@ describe("LabelPrintModal", () => {
     expect(screen.getByText("label.printBtn").closest("button")).toBeDisabled();
     first.unmount();
 
-    const { props } = renderModal({ selectedForLabel: [makeChem()] });
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+    });
     const printButton = screen.getByTestId("print-label-action");
     expect(printButton).not.toBeDisabled();
     expect(printButton).toHaveTextContent("Print");
@@ -624,7 +603,7 @@ describe("LabelPrintModal", () => {
     fireEvent.click(printButton);
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
     expect(props.onPrintLabels).toHaveBeenCalledWith(
-      props.labelConfig,
+      expect.objectContaining({ stockPreset: "small-strip", template: "icon" }),
       undefined,
     );
   });
@@ -635,13 +614,18 @@ describe("LabelPrintModal", () => {
       labelConfig: {
         ...baseConfig,
         labelPurpose: "shipping",
-        template: "standard",
-        stockPreset: "medium-bottle",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
       },
     });
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "Bottle label is printable as a front label",
+      "Complete primary label is printable",
     );
     expect(screen.getByTestId("print-decision-icons")).toHaveTextContent(
       "All pictograms kept",
@@ -653,13 +637,12 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("preview-diagnostics")).not.toHaveAttribute(
       "open",
     );
-    expect(supplementalChecklist).toHaveTextContent("This label prints");
-    expect(supplementalChecklist).toHaveTextContent("Identity");
-    expect(supplementalChecklist).toHaveTextContent("Hazard summary");
-    expect(supplementalChecklist).toHaveTextContent("H codes only");
-    expect(supplementalChecklist).not.toHaveTextContent("P statements");
+    expect(supplementalChecklist).toHaveTextContent("Primary");
+    expect(supplementalChecklist).toHaveTextContent("GHS pictograms");
+    expect(supplementalChecklist).toHaveTextContent("H statements");
+    expect(supplementalChecklist).toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print Bottle label (front, 1)",
+      "Print complete primary label (1)",
     );
   });
 
@@ -675,7 +658,7 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "QR supplement is printable",
+      "QR small label is printable",
     );
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
@@ -686,20 +669,20 @@ describe("LabelPrintModal", () => {
       "trust.supplementalTitle",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
-      "Details via QR: Regulatory",
+      "Details via QR: Lookup page",
     );
     const qrChecklist = screen.getByTestId("required-output-checklist");
     expect(qrChecklist).toHaveTextContent("This label prints");
     expect(qrChecklist).toHaveTextContent("QR code");
     expect(qrChecklist).toHaveTextContent("QR target");
-    expect(qrChecklist).toHaveTextContent("Regulatory");
-    expect(qrChecklist).toHaveTextContent("ECHA Substance Search");
+    expect(qrChecklist).toHaveTextContent("Lookup page");
+    expect(qrChecklist).toHaveTextContent("GHS Label Quick Search");
     expect(qrChecklist).toHaveTextContent("Detailed hazard text");
-    expect(qrChecklist).toHaveTextContent("Via QR: Regulatory");
+    expect(qrChecklist).toHaveTextContent("Via QR: Lookup page");
     expect(qrChecklist).not.toHaveTextContent("H statements");
     expect(qrChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print QR supplement (1)",
+      "Print QR small label (1)",
     );
   });
 
@@ -715,17 +698,17 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "Tube / vial quick-ID label is printable",
+      "Identification small label is printable",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Quick-ID supplement",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print Tube / vial quick-ID label (1)",
+      "Print identification small label (1)",
     );
   });
 
-  it("auto-routes dense shipped-container labels to full-page primary instead of a print dead end", () => {
+  it("normalizes legacy container stock to the simplified complete primary output", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -746,46 +729,25 @@ describe("LabelPrintModal", () => {
         size: "large",
         stockPreset: "large-primary",
       },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
     });
 
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        stockPreset: "letter-primary",
-        labelWidthMm: 196,
-        labelHeightMm: 250,
-        pageSize: "Letter",
+        stockPreset: "a4-primary",
+        labelWidthMm: 188,
+        labelHeightMm: 268,
+        pageSize: "A4",
         perPage: 1,
         template: "full",
         labelPurpose: "shipping",
       }),
     );
-    expect(screen.getByTestId("preview-warning-banner")).toHaveTextContent(
-      "Printing blocked",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
-      "Recommended recovery",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
-      "data-recovery-kind",
-      "use-full-page",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
-      "data-current-stock",
-      "Large Container Front",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
-      "data-target-stock",
-      "Letter Primary",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
-      "Switch to Letter Primary",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
-      "Large Container Front is too small",
-    );
-    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
-      "smaller stock only as a supplemental label",
-    );
+    expect(screen.queryByTestId("print-recovery-route")).not.toBeInTheDocument();
     expect(screen.getByTestId("required-output-checklist")).toBeInTheDocument();
     expect(screen.getByTestId("required-output-pictograms")).toHaveTextContent(
       "2/2",
@@ -798,8 +760,7 @@ describe("LabelPrintModal", () => {
     ).toHaveTextContent("18/18");
     expect(
       screen.getByTestId("required-output-responsible-profile"),
-    ).toHaveTextContent("0/3");
-    expect(props.onPrintLabels).not.toHaveBeenCalled();
+    ).toHaveTextContent("3/3");
   });
 
   it("keeps the actual label fragment before warnings and output diagnostics", () => {
@@ -839,7 +800,7 @@ describe("LabelPrintModal", () => {
     ).toBeTruthy();
   });
 
-  it("shows curated physical output sizes instead of only A4 and Letter", () => {
+  it("shows only A4 and Letter for complete labels", () => {
     renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
@@ -853,29 +814,26 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
     expect(
-      screen.getByTestId("primary-output-size-large-primary"),
-    ).toHaveTextContent("Large Container Front");
+      screen.queryByTestId("primary-output-size-large-primary"),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByTestId("primary-output-size-medium-bottle"),
-    ).toHaveTextContent("Bottle Primary");
+      screen.queryByTestId("primary-output-size-medium-bottle"),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-a4-primary")).toHaveTextContent(
       "A4 Primary",
     );
     expect(
       screen.getByTestId("primary-output-size-letter-primary"),
     ).toHaveTextContent("Letter Primary");
-    expect(screen.getByTestId("secondary-output-size-controls").tagName).toBe(
-      "DETAILS",
-    );
-    expect(screen.getByTestId("secondary-output-size-controls")).toHaveTextContent(
-      "More common stock sizes",
-    );
     expect(
-      screen.getByTestId("primary-output-size-avery-5163"),
-    ).toHaveTextContent("2 x 4 in Bottle");
+      screen.queryByTestId("secondary-output-size-controls"),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByTestId("primary-output-size-medium-rack"),
-    ).toHaveTextContent("Rack Landscape");
+      screen.queryByTestId("primary-output-size-avery-5163"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("primary-output-size-medium-rack"),
+    ).not.toBeInTheDocument();
     const previewHeight = screen.getByTestId("label-fragment-preview").style
       .height;
     expect(previewHeight).toMatch(/px$/);
@@ -883,7 +841,7 @@ describe("LabelPrintModal", () => {
     expect(Number.parseInt(previewHeight, 10)).toBeLessThanOrEqual(400);
   });
 
-  it("shows supplemental physical stock choices for QR supplement output", () => {
+  it("shows only the 62 mm stock for QR small labels", () => {
     renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
@@ -891,25 +849,25 @@ describe("LabelPrintModal", () => {
         labelPurpose: "qrSupplement",
         template: "qrcode",
         size: "small",
-        stockPreset: "small-strip",
+        stockPreset: "brother-62mm-continuous",
       },
     });
 
     expect(
-      screen.getByTestId("primary-output-size-small-strip"),
-    ).toHaveTextContent("Vial Strip");
+      screen.queryByTestId("primary-output-size-small-strip"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByTestId("primary-output-size-brother-62mm-continuous"),
     ).toHaveTextContent("62 mm Continuous");
-    expect(screen.getByTestId("secondary-output-size-controls")).toHaveTextContent(
-      "More common stock sizes",
-    );
+    expect(
+      screen.queryByTestId("secondary-output-size-controls"),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByTestId("primary-output-size-a4-primary"),
     ).not.toBeInTheDocument();
   });
 
-  it("keeps a manually selected dense container stock printable instead of bouncing back to full-page primary", () => {
+  it("does not expose legacy bottle stock as a complete-label choice", () => {
     const denseChem = makeChem({
       ghs_pictograms: [
         { code: "GHS04" },
@@ -926,7 +884,7 @@ describe("LabelPrintModal", () => {
         text_en: `Precaution ${index}`,
       })),
     });
-    const { props } = renderModal({
+    renderModal({
       selectedForLabel: [denseChem],
       labelConfig: {
         ...baseConfig,
@@ -945,47 +903,27 @@ describe("LabelPrintModal", () => {
       },
     });
 
-    fireEvent.click(screen.getByTestId("primary-output-size-medium-bottle"));
-
-    expect(props.onLabelConfigChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        stockPreset: "medium-bottle",
-        labelWidthMm: 95,
-        labelHeightMm: 50,
-        perPage: 10,
-        template: "standard",
-        labelPurpose: "shipping",
-      }),
-    );
+    expect(
+      screen.queryByTestId("primary-output-size-medium-bottle"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-a4-primary")).toBeInTheDocument();
   });
 
-  it("treats rack landscape as a printable supplemental container stock", () => {
-    const { props } = renderModal({
+  it("does not expose legacy rack stock as a simplified output choice", () => {
+    renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
         ...baseConfig,
-        labelPurpose: "shipping",
-        template: "full",
-        size: "medium",
-        stockPreset: "medium-bottle",
-        labelWidthMm: 95,
-        labelHeightMm: 50,
-        perPage: 10,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
       },
     });
 
-    fireEvent.click(screen.getByTestId("primary-output-size-medium-rack"));
-
-    expect(props.onLabelConfigChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        stockPreset: "medium-rack",
-        labelWidthMm: 90,
-        labelHeightMm: 38,
-        perPage: 9,
-        template: "standard",
-        labelPurpose: "shipping",
-      }),
-    );
+    expect(
+      screen.queryByTestId("primary-output-size-medium-rack"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("primary-output-size-small-strip")).toBeInTheDocument();
   });
 
   it("restores the complete full template when switching from supplemental bottle stock back to A4 primary", () => {
@@ -1246,18 +1184,19 @@ describe("LabelPrintModal", () => {
   it("selects a stock preset and pushes its layout values to labelConfig", () => {
     const { props } = renderModal();
 
-    fireEvent.click(screen.getByTestId("primary-output-size-medium-bottle"));
+    fireEvent.click(screen.getByTestId("primary-output-size-letter-primary"));
 
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        stockPreset: "medium-bottle",
-        size: "medium",
+        stockPreset: "letter-primary",
+        size: "large",
         orientation: "portrait",
-        columns: 2,
-        rows: 5,
-        perPage: 10,
-        labelWidthMm: 95,
-        labelHeightMm: 50,
+        columns: 1,
+        rows: 1,
+        perPage: 1,
+        labelWidthMm: 196,
+        labelHeightMm: 250,
+        pageSize: "Letter",
       }),
     );
   });
@@ -1346,10 +1285,10 @@ describe("LabelPrintModal", () => {
     fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "QR supplement is printable",
+      "QR small label is printable",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print QR supplement (1)",
+      "Print QR small label (2)",
     );
     expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
       "62 mm Continuous",
@@ -1398,24 +1337,25 @@ describe("LabelPrintModal", () => {
     );
   });
 
-  it("selects the bottle task as a physical target without exposing stock tuning first", () => {
+  it("selects the identification small label target without exposing stock tuning first", () => {
     const { props } = renderModal({ selectedForLabel: [makeChem()] });
 
-    fireEvent.click(screen.getByTestId("label-purpose-bottle"));
+    fireEvent.click(screen.getByTestId("label-purpose-quickId"));
 
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        labelPurpose: "shipping",
-        stockPreset: "medium-bottle",
-        labelWidthMm: 95,
-        labelHeightMm: 50,
-        perPage: 10,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+        labelWidthMm: 70,
+        labelHeightMm: 24,
+        perPage: 20,
       }),
     );
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
   });
 
-  it("keeps dense main-container target on a front label instead of forcing A4/Letter", () => {
+  it("selects the complete label target as A4 primary by default", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 6 }, (_, index) => ({
         code: `H${300 + index}`,
@@ -1435,16 +1375,16 @@ describe("LabelPrintModal", () => {
       },
     });
 
-    fireEvent.click(screen.getByTestId("label-purpose-mainContainer"));
+    fireEvent.click(screen.getByTestId("label-purpose-complete"));
 
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({
         labelPurpose: "shipping",
-        template: "standard",
-        stockPreset: "large-primary",
-        labelWidthMm: 140,
-        labelHeightMm: 88,
-        perPage: 3,
+        template: "full",
+        stockPreset: "a4-primary",
+        labelWidthMm: 188,
+        labelHeightMm: 268,
+        perPage: 1,
       }),
     );
   });
@@ -1485,7 +1425,13 @@ describe("LabelPrintModal", () => {
     ).toContain("qrcode-img");
     expect(
       screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
-    ).toContain("70%");
+    ).toContain("CAS 64-17-5");
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).toContain("data-qr-target");
+    expect(
+      screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
+    ).not.toContain("70%");
     expect(
       screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
     ).not.toContain("Lab A");
@@ -1592,7 +1538,8 @@ describe("LabelPrintModal", () => {
       .getAttribute("srcdoc");
     expect(srcdoc).toContain("preview-sheet-viewport");
     expect(srcdoc).toContain("preview-page");
-    expect(srcdoc).toContain("size: A4 landscape");
+    expect(srcdoc).toContain("size: A4");
+    expect(srcdoc).not.toContain("size: A4 landscape");
     expect(srcdoc).toContain("print-bw");
   });
 
@@ -1613,12 +1560,10 @@ describe("LabelPrintModal", () => {
     fireEvent.click(screen.getByText("label.templateIcon"));
     fireEvent.click(screen.getByText("label.colorBW"));
 
-    expect(props.onLabelConfigChange).toHaveBeenNthCalledWith(
-      1,
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({ template: "icon" }),
     );
-    expect(props.onLabelConfigChange).toHaveBeenNthCalledWith(
-      2,
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({ colorMode: "bw" }),
     );
   });
@@ -1627,7 +1572,7 @@ describe("LabelPrintModal", () => {
     renderModal();
 
     const slots = screen.getAllByTestId("label-config-icon-slot");
-    expect(slots.length).toBeGreaterThanOrEqual(10);
+    expect(slots.length).toBeGreaterThanOrEqual(7);
     slots.forEach((slot) => {
       expect(slot).toHaveClass("h-6", "w-8", "shrink-0");
     });
@@ -1636,6 +1581,6 @@ describe("LabelPrintModal", () => {
         slot.querySelector("svg")?.classList.contains("shrink-0"),
       ),
     ).toBe(true);
-    expect(slots.some((slot) => slot.textContent === "ZH")).toBe(true);
+    expect(slots.some((slot) => slot.textContent === "CMYK")).toBe(true);
   });
 });

@@ -1808,6 +1808,16 @@ const extractPictogramCodes = (fragmentHtml = "") => [
   ),
 ];
 
+const extractModelPictogramCodes = (model = {}) => [
+  ...new Set(
+    (model.expandedLabels || []).flatMap((label) =>
+      label.continuation?.pictograms
+        ? label.continuation.pictograms.map((pictogram) => pictogram.code)
+        : (label.ghs_pictograms || []).map((pictogram) => pictogram.code),
+    ),
+  ),
+];
+
 const includesEvery = (actual = [], expected = []) =>
   expected.every((item) => actual.includes(item));
 
@@ -1842,7 +1852,19 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
   const english = chemical.name_en || chemical.name;
   const chinese = chemical.name_zh || chemical.name;
   const allNames = uniqueTexts([chinese, english, chemical.name]);
-  const completePrimary = expected.labelKind === "complete-primary";
+  const requiresBilingualIdentity = [
+    "complete-primary",
+    "quick-id",
+    "qr-supplement",
+  ].includes(expected.labelKind);
+
+  if (requiresBilingualIdentity) {
+    return {
+      any: uniqueTexts([...allNames, chemical.cas_number]),
+      required: allNames,
+      forbidden: [],
+    };
+  }
 
   if (labelConfig.nameDisplay === "en") {
     return {
@@ -1862,7 +1884,7 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
 
   return {
     any: uniqueTexts([...allNames, chemical.cas_number]),
-    required: completePrimary ? allNames : [],
+    required: [],
     forbidden: [],
   };
 };
@@ -1962,10 +1984,15 @@ const buildStockFitContract = ({ layout = {}, labelKind = "", expected = {} }) =
     template: layout.template,
     expectedPrintMinPictogramSidePx: floorVisualPx(pictogramPx),
     expectedPrintMinQrSidePx:
-      labelKind === "qr-supplement" ? floorVisualPx(qrImagePx) : 0,
+      labelKind === "qr-supplement" || labelKind === "complete-primary"
+        ? floorVisualPx(qrImagePx)
+        : 0,
     expectedPreviewMinPictogramSidePx:
       expected.minProductionPictogramSidePx || defaultPreviewMin,
-    expectedPreviewMinQrSidePx: labelKind === "qr-supplement" ? 30 : 0,
+    expectedPreviewMinQrSidePx:
+      labelKind === "qr-supplement" || labelKind === "complete-primary"
+        ? 30
+        : 0,
     requiresSupportChip: Boolean(expected.requiredIdentityText),
   };
 };
@@ -2056,13 +2083,25 @@ export function buildPrintQaCaseResult({
   const fragmentHtml = fitPreview?.fragmentHtml || "";
   const printHtml = printDocument?.pagesHtml || "";
   const printPictogramCodes = extractPictogramCodes(printHtml);
-  const pictogramCodes = extractPictogramCodes(fragmentHtml);
-  const expected = testCase.expected || {};
+  const pictogramCodes =
+    extractModelPictogramCodes(fitPreview?.model).length > 0
+      ? extractModelPictogramCodes(fitPreview?.model)
+      : extractPictogramCodes(fragmentHtml);
+  const expected = {
+    ...(testCase.expected || {}),
+  };
+  if (expected.labelKind === "complete-primary") {
+    expected.hasQr = true;
+  }
+  if (["quick-id", "qr-supplement"].includes(expected.labelKind)) {
+    expected.requiredIdentityText = "";
+    expected.preparedIdentityTexts = [];
+  }
   const contentPolicy =
     plan.readiness?.contentPolicy || fitPreview?.model?.contentPolicy || {};
-  const expectedHasSignalWord = Boolean(
-    selectedChemical.signal_word || selectedChemical.signal_word_zh,
-  );
+  const expectedHasSignalWord =
+    !["quick-id", "qr-supplement"].includes(expected.labelKind) &&
+    Boolean(selectedChemical.signal_word || selectedChemical.signal_word_zh);
   const identityTextExpectation = resolveIdentityTextExpectation(
     selectedChemical,
     testCase.labelConfig,
@@ -2230,7 +2269,15 @@ export function buildPrintQaCaseResult({
       actual.printTotalLabels === expected.printTotalLabels,
     ]);
   } else {
-    checks.push(["printTotalLabels", actual.printTotalLabels === 1]);
+    const allowsSameStockContinuation = ["quick-id", "qr-supplement"].includes(
+      expected.labelKind,
+    );
+    checks.push([
+      "printTotalLabels",
+      allowsSameStockContinuation
+        ? actual.printTotalLabels >= 1
+        : actual.printTotalLabels === 1,
+    ]);
   }
 
   if (expected.planState) {
@@ -2352,20 +2399,17 @@ const PRODUCTION_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
 
 const resolveProductionTargetValue = (testCase = {}) => {
   const config = testCase.labelConfig || {};
-  if (config.labelPurpose === "quickId") return "vial";
+  if (config.labelPurpose === "quickId") return "quickId";
   if (config.labelPurpose === "qrSupplement") return "qrSupplement";
-  if (
-    config.stockPreset === "medium-bottle" ||
-    config.stockPreset === "avery-5163" ||
-    config.stockPreset === "avery-5164" ||
-    config.stockPreset === "medium-rack"
-  ) {
-    return "bottle";
-  }
-  return "mainContainer";
+  return "complete";
 };
 
-const buildProductionBrowserQaCase = (testCase, caseResult) => ({
+const buildProductionBrowserQaCase = (testCase, caseResult) => {
+  const activeCustomLabelFields = caseResult.handoffExpectation.requiredIdentityText
+    ? testCase.customLabelFields || {}
+    : {};
+
+  return {
   id: testCase.id,
   label: testCase.label,
   searchTerm: caseResult.chemical.cas,
@@ -2387,7 +2431,9 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedTemplate: caseResult.handoffExpectation.template,
   expectedPictograms: caseResult.handoffExpectation.pictogramCodes,
   expectedHasQr: caseResult.handoffExpectation.hasQr,
-  expectedHasSignalWord: Boolean(caseResult.chemical.hasSignalWord),
+  expectedHasSignalWord: !["quick-id", "qr-supplement"].includes(
+    caseResult.handoffExpectation.labelKind,
+  ) && Boolean(caseResult.chemical.hasSignalWord),
   expectedIdentityTexts:
     caseResult.expected.productionExpectedIdentityTexts ||
     caseResult.chemical.expectedIdentityTexts ||
@@ -2429,7 +2475,7 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
     caseResult.expected.minPrintTotalLabels ||
     caseResult.expected.printTotalLabels ||
     1,
-  customLabelFields: testCase.customLabelFields || {},
+  customLabelFields: activeCustomLabelFields,
   responsibleProfile:
     testCase.productionResponsibleProfile ?? testCase.labProfile ?? null,
   mustContainCas: Boolean(caseResult.chemical.cas),
@@ -2455,7 +2501,7 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
       action: "selectStock",
       value: caseResult.handoffExpectation.stockPreset,
     },
-    ...(Object.entries(testCase.customLabelFields || {}).map(([key, value]) => ({
+    ...(Object.entries(activeCustomLabelFields).map(([key, value]) => ({
       action: "setCustomField",
       key,
       value,
@@ -2464,7 +2510,8 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
     { action: "clickPrint" },
     { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
   ],
-});
+  };
+};
 
 export function buildPrintQaMatrixReport({
   chemical,

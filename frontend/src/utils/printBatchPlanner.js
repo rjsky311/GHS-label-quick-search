@@ -44,8 +44,8 @@ const PURPOSE_PATCHES = {
     template: "icon",
   },
   [BATCH_PRINT_PURPOSE.SUPPLEMENTAL]: {
-    labelPurpose: "shipping",
-    template: "standard",
+    labelPurpose: "qrSupplement",
+    template: "qrcode",
   },
   [BATCH_PRINT_PURPOSE.COMPLETE]: {
     labelPurpose: "shipping",
@@ -56,11 +56,11 @@ const PURPOSE_PATCHES = {
 const PRINTABLE_CATEGORIES = new Set([
   BATCH_PRINT_ITEM_CATEGORY.READY,
   BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT,
+  BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION,
 ]);
 
 const ACKNOWLEDGED_CATEGORIES = new Set([
   BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
-  BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION,
 ]);
 
 const EXCLUDED_CATEGORIES = new Set([

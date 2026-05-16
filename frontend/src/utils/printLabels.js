@@ -15,7 +15,6 @@ import {
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
 import { inspectPrintContentFit } from "@/utils/printFitEngine";
-import { getPreferredQrTargetInfo } from "@/utils/sdsLinks";
 import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
@@ -27,6 +26,7 @@ import {
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
 const PRINT_QA_HANDOFF_PARAM = "qaPrintHandoff";
 const REQUIRED_PRINT_IMAGE_TIMEOUT_MS = 10000;
+const PUBLIC_LOOKUP_ORIGIN = "https://ghs-frontend.zeabur.app";
 
 export { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
 export { inspectPrintContentFit } from "@/utils/printFitEngine";
@@ -59,6 +59,33 @@ export function getQRCodeUrl(text, size = 100) {
   const cellSize = Math.max(2, Math.ceil(size / Math.max(moduleCount, 1)));
   return qr.createDataURL(cellSize, 0);
 }
+
+const getCurrentLookupOrigin = () => {
+  if (
+    typeof window !== "undefined" &&
+    window.location?.origin &&
+    window.location.origin !== "null"
+  ) {
+    return window.location.origin;
+  }
+  return PUBLIC_LOOKUP_ORIGIN;
+};
+
+export const getChemicalLookupUrl = (
+  casNumber,
+  origin = getCurrentLookupOrigin(),
+) => {
+  let url;
+  try {
+    url = new URL("/", origin || PUBLIC_LOOKUP_ORIGIN);
+  } catch {
+    url = new URL("/", PUBLIC_LOOKUP_ORIGIN);
+  }
+
+  const cas = String(casNumber || "").trim();
+  if (cas) url.searchParams.set("cas", cas);
+  return url.toString();
+};
 
 export function getHazardFontTier(hazardCount, labelSize) {
   const tiers = [
@@ -207,6 +234,10 @@ const canRenderCompactBilingualName = (chemical, layout = {}) => {
 };
 
 const resolveNameDisplayForChemical = (chemical, model) => {
+  if (["full", "icon", "qrcode"].includes(model?.layout?.template)) {
+    return "both";
+  }
+
   const effectiveDisplay = resolveModelNameDisplay(model);
   if (
     effectiveDisplay !== "both" &&
@@ -632,9 +663,39 @@ const appendContinuationStatement = (pages, item, capacity, model) => {
 
 const buildContinuationLabelsForChemical = (chemical, model) => {
   const renderModel = resolveRenderModelForChemical(chemical, model);
-  if (!isFullPagePrimaryLayout(renderModel.layout)) return [chemical];
+  const isCompactIdentityLayout =
+    renderModel.layout.template === "icon" ||
+    renderModel.layout.template === "qrcode";
+
+  if (!isFullPagePrimaryLayout(renderModel.layout) && !isCompactIdentityLayout) {
+    return [chemical];
+  }
 
   const content = getLabelContentForRender(chemical, renderModel);
+  if (isCompactIdentityLayout) {
+    const pictogramCapacity =
+      renderModel.layout.template === "qrcode"
+        ? 2
+        : renderModel.layout.stockPreset === "small-strip"
+          ? 4
+          : 3;
+    const pictogramPages = chunk(content.pictograms || [], pictogramCapacity);
+
+    if (pictogramPages.length <= 1) return [chemical];
+
+    return pictogramPages.map((pictograms, index) => ({
+      __printContinuation: true,
+      sourceChemical: chemical,
+      continuation: {
+        current: index + 1,
+        total: pictogramPages.length,
+        pictograms,
+        hazardStatements: [],
+        precautionaryStatements: [],
+      },
+    }));
+  }
+
   const statements = [
     ...content.hazardStatements.map((statement) => ({
       kind: "hazard",
@@ -883,6 +944,21 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   </div>`;
 };
 
+const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
+  const englishName =
+    effectiveChem.name_en || effectiveChem.name || effectiveChem.cas_number || "";
+  const chineseName =
+    effectiveChem.name_zh || effectiveChem.name_zh_tw || effectiveChem.name_en || "";
+  const continuation = getContinuationMeta(chemical);
+
+  return `<div class="small-identity${getIdentityDensityClass(effectiveChem, model)}">
+    <div class="small-cas">CAS ${escapeHtml(effectiveChem.cas_number || "")}</div>
+    <div class="small-name-en">${escapeHtml(englishName)}</div>
+    <div class="small-name-zh">${escapeHtml(chineseName)}</div>
+    ${renderContinuationBadge(continuation, model)}
+  </div>`;
+};
+
 const isPrepared = (chemical) => Boolean(chemical?.isPreparedSolution);
 
 const renderPreparedBadge = (model) =>
@@ -1058,13 +1134,31 @@ const renderComplianceStatements = (statements, className, model) => {
   </div>`;
 };
 
-const renderComplianceFooter = (_effectiveChem, model) => {
+const renderComplianceQrPanel = (effectiveChem, model) => {
+  const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
+
+  return `<div class="compliance-qr qrcode-panel">
+    <div class="compliance-qr-shell">
+      <img class="qrcode-img"
+        src="${getQRCodeUrl(qrTarget, 220)}"
+        alt="QR"
+        data-required-print-image="qr-code"
+        data-qr-target="${escapeHtml(qrTarget)}"
+        data-qr-target-type="ghs-lookup"
+        data-qr-target-source="ghs-label-quick-search"
+        data-qr-target-label="GHS Label Quick Search" />
+    </div>
+    <div class="compliance-qr-caption">${escapeHtml(model.t("print.scanForDetail"))}</div>
+  </div>`;
+};
+
+const renderComplianceFooter = (effectiveChem, model) => {
   const hasProfile =
     model.resolvedLabProfile.organization ||
     model.resolvedLabProfile.phone ||
     model.resolvedLabProfile.address;
 
-  return `<div class="compliance-footer compliance-footer-no-qr">
+  return `<div class="compliance-footer">
     <div class="compliance-supplier">
       ${
         hasProfile
@@ -1075,6 +1169,7 @@ const renderComplianceFooter = (_effectiveChem, model) => {
       }
       ${renderCustomFields(model)}
     </div>
+    ${renderComplianceQrPanel(effectiveChem, model)}
   </div>`;
 };
 
@@ -1129,6 +1224,7 @@ const getLabelContentForRender = (chemical, model) => {
   if (!continuation) return content;
   return {
     ...content,
+    pictograms: continuation.pictograms || content.pictograms,
     hazardStatements: continuation.hazardStatements || [],
     precautionaryStatements: continuation.precautionaryStatements || [],
   };
@@ -1139,28 +1235,12 @@ const renderIconTemplate = (chemical, model) => {
     effectiveChemical: effectiveChem,
     pictograms,
   } = getLabelContentForRender(chemical, model);
-  const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass =
-    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
-  const prepared = isPrepared(effectiveChem);
 
   return `
-    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
+    <div class="label label-icon ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${isPrepared(effectiveChem) ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       ${renderPurposeNotice(model)}
-      <div class="label-top">
-        ${renderNameSection(effectiveChem, model, {
-          compactNames: true,
-          showProfile: false,
-          showCustomFields: false,
-          showCasLine: false,
-          metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
-            includeCas: true,
-            includeBatch: true,
-            includePrepared: true,
-            preparedDetailLimit: 1,
-          }),
-        })}
-        ${prepared ? renderPreparedBadge(model) + renderPreparedMeta(effectiveChem, model) : ""}
+      <div class="label-top label-top-identity">
+        ${renderSmallIdentitySection(chemical, effectiveChem, model)}
       </div>
       <div class="label-middle">
         ${
@@ -1168,9 +1248,6 @@ const renderIconTemplate = (chemical, model) => {
             ? renderPictograms(pictograms, "pictograms-icon")
             : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
         }
-      </div>
-      <div class="label-bottom">
-        ${renderSignal(signalWord, signalClass)}
       </div>
     </div>
   `;
@@ -1362,92 +1439,33 @@ const renderQRCodeTemplate = (chemical, model) => {
   const {
     effectiveChemical: effectiveChem,
     pictograms,
-    hazardStatements: hazards,
   } = getLabelContentForRender(chemical, model);
-  const signalWord = getSignalWordForModel(effectiveChem, model);
-  const signalClass =
-    effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
-  const qrTargetInfo = getPreferredQrTargetInfo(
-    effectiveChem.cid,
-    effectiveChem.cas_number,
-    effectiveChem.reference_links,
-  );
-  const qrTarget = qrTargetInfo?.url || "https://pubchem.ncbi.nlm.nih.gov/";
-  const budgets = model.layout.templateBudgets.qrcode;
-  const prioritizedHazards = prioritizeHazardStatements(hazards);
-  const compactQrSupplement =
-    model.layout.formFactor === "strip" ||
-    model.layout.size === "small" ||
-    model.layout.heightMm <= 32;
-  const hazardTeasers = compactQrSupplement
-    ? []
-    : prioritizedHazards.slice(0, budgets.hazardTeasers);
-  const omittedHazards = Math.max(0, hazards.length - hazardTeasers.length);
+  const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
 
   return `
     <div class="label label-qr ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
       <div class="qr-left qr-left-scan">
         ${renderPurposeNotice(model)}
         <div class="qr-identity">
-          ${renderNameSection(effectiveChem, model, {
-            compactNames: true,
-            showProfile: false,
-            showCustomFields: false,
-            showCasLine: false,
-            metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
-              includeCas: true,
-              includeBatch: true,
-              includePrepared: true,
-              preparedDetailLimit: 2,
-            }),
-          })}
+          ${renderSmallIdentitySection(chemical, effectiveChem, model)}
         </div>
         ${
           pictograms.length > 0
             ? `<div class="qr-support-row qr-support-row-primary">${renderPictograms(pictograms, "qr-pics")}</div>`
             : ""
         }
-        <div class="qr-priority-block">
-          ${signalWord ? renderSignal(signalWord, signalClass, "qr-signal") : ""}
-          ${
-            compactQrSupplement
-              ? ""
-              : hazardTeasers.length > 0
-              ? `<div class="qr-hazard-list">
-                  ${hazardTeasers
-                    .map(
-                      (hazard) =>
-                        `<div class="qr-hazard-chip">${escapeHtml(hazard.code)}${
-                          getLocalizedTextForModel(hazard, model)
-                            ? `<span class="qr-hazard-summary">${escapeHtml(
-                                truncateText(
-                                  getLocalizedTextForModel(hazard, model),
-                                  model.layout.size === "small" ? 18 : 28,
-                                ),
-                              )}</span>`
-                            : ""
-                        }</div>`,
-                    )
-                    .join("")}
-                  ${renderMoreHazards(omittedHazards, model, "qr-hazard-more")}
-                </div>`
-              : `<div class="no-hazard-text qr-no-hazard">${escapeHtml(
-                  model.t("print.noHazardStatement"),
-                )}</div>`
-            }
-        </div>
       </div>
-      <div class="qr-right qr-panel">
+      <div class="qr-right qr-panel qrcode-panel">
         <div class="qr-code-shell">
           <img class="qrcode-img"
             src="${getQRCodeUrl(qrTarget, 200)}"
             alt="QR"
             data-required-print-image="qr-code"
             data-qr-target="${escapeHtml(qrTarget)}"
-            data-qr-target-type="${escapeHtml(qrTargetInfo?.linkType || "reference")}"
-            data-qr-target-source="${escapeHtml(qrTargetInfo?.source || "pubchem")}"
-            data-qr-target-label="${escapeHtml(qrTargetInfo?.label || "PubChem")}" />
+            data-qr-target-type="ghs-lookup"
+            data-qr-target-source="ghs-label-quick-search"
+            data-qr-target-label="GHS Label Quick Search" />
         </div>
         <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
       </div>
@@ -1779,6 +1797,36 @@ const buildStyles = (model) => {
     .compliance-footer .custom-fields {
       margin-top: 0.7mm;
     }
+    .compliance-qr {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.7mm;
+      width: ${layout.typography.qrBox};
+      flex: 0 0 ${layout.typography.qrBox};
+      text-align: center;
+    }
+    .compliance-qr-shell {
+      width: ${layout.typography.qrBox};
+      height: ${layout.typography.qrBox};
+      padding: 1.6mm;
+      border: 0.25mm solid #cbd5e1;
+      border-radius: 1.2mm;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .compliance-qr-caption {
+      font-size: 7px;
+      line-height: 1.1;
+      color: #475569;
+      font-weight: 700;
+    }
+    .compliance-qr .qrcode-img {
+      width: calc(${layout.typography.qrBox} - 3.2mm);
+      height: calc(${layout.typography.qrBox} - 3.2mm);
+    }
     .label-full-page-primary .compliance-footer {
       margin-top: 0;
       padding-top: 1.1mm;
@@ -1793,6 +1841,48 @@ const buildStyles = (model) => {
     .name-section {
       text-align: left;
       min-width: 0;
+    }
+    .label-top-identity {
+      border-bottom: 0.25mm solid #cbd5e1;
+      padding-bottom: 0.9mm;
+      margin-bottom: 0.9mm;
+    }
+    .small-identity {
+      display: grid;
+      gap: 0.45mm;
+      min-width: 0;
+      line-height: 1.06;
+    }
+    .small-cas {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      color: #334155;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+    .small-name-en {
+      color: #0f172a;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .small-name-zh {
+      color: #334155;
+      font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .small-identity .continuation-badge {
+      margin-top: 0;
+      padding: 0.15mm 0.7mm;
+      font-size: 5px;
+      line-height: 1;
+      border-radius: 999px;
     }
     .name-section-compact {
       display: grid;
@@ -2505,34 +2595,36 @@ const buildStyles = (model) => {
       padding: 1.25mm;
       gap: 0.3mm;
     }
-    .label-icon.label-form-strip .label-top {
-      padding-bottom: 0.35mm;
-      margin-bottom: 0.35mm;
+    .label-icon.label-form-strip .label-top-identity {
+      padding-bottom: 0.45mm;
+      margin-bottom: 0.45mm;
     }
-    .label-icon.label-form-strip .name-section-compact {
-      gap: 0.12mm;
+    .label-icon.label-form-strip .small-identity {
+      gap: 0.18mm;
     }
-    .label-icon.label-form-strip .name-en {
-      font-size: 7.2px;
+    .label-icon.label-form-strip .small-cas {
+      font-size: 6.2px;
       line-height: 1;
-      -webkit-line-clamp: 1;
     }
-    .label-icon.label-form-strip .identity-density-medium .name-en {
-      font-size: 6.5px;
+    .label-icon.label-form-strip .small-name-en {
+      font-size: 6.8px;
+      line-height: 1;
     }
-    .label-icon.label-form-strip .identity-density-high .name-en {
-      font-size: 5.9px;
+    .label-icon.label-form-strip .identity-density-medium .small-name-en {
+      font-size: 6.2px;
     }
-    .label-icon.label-form-strip .name-zh {
+    .label-icon.label-form-strip .identity-density-high .small-name-en {
+      font-size: 5.6px;
+    }
+    .label-icon.label-form-strip .small-name-zh {
       font-size: 6px;
       line-height: 1;
-      margin-top: 0;
     }
-    .label-icon.label-form-strip .identity-density-medium .name-zh {
-      font-size: 5.5px;
-    }
-    .label-icon.label-form-strip .identity-density-high .name-zh {
-      font-size: 5px;
+    .label-icon.label-form-strip .identity-density-medium .small-name-zh,
+    .label-icon.label-form-strip .identity-density-high .small-name-zh,
+    .label-icon.label-form-strip .identity-density-medium .small-cas,
+    .label-icon.label-form-strip .identity-density-high .small-cas {
+      font-size: 5.4px;
     }
     .label-icon.label-form-strip .cas {
       display: block;
@@ -2582,15 +2674,6 @@ const buildStyles = (model) => {
     .label-icon.label-form-strip .pictograms-icon {
       grid-template-columns: repeat(4, ${iconPictogramSize});
       gap: 0.45mm;
-    }
-    .label-icon.label-form-strip .signal {
-      margin: 0;
-      width: fit-content;
-      min-width: 10mm;
-      padding: 0.22mm 0.8mm;
-      border-radius: 0.6mm;
-      font-size: 5.3px;
-      line-height: 1;
     }
     .label-icon.label-stock-small-strip .label-middle,
     .label-icon.label-stock-small-rack .label-middle,
@@ -2835,27 +2918,31 @@ const buildStyles = (model) => {
       padding-right: 0.8mm;
     }
     .label-qr.label-form-strip .qr-identity,
-    .label-qr.label-form-strip .name-section-compact {
-      gap: 0.12mm;
+    .label-qr.label-form-strip .small-identity {
+      gap: 0.18mm;
     }
-    .label-qr.label-form-strip .name-en {
-      font-size: 7px;
+    .label-qr.label-form-strip .small-cas {
+      font-size: 6px;
       line-height: 1;
-      -webkit-line-clamp: 1;
     }
-    .label-qr.label-form-strip .identity-density-medium .name-en {
+    .label-qr.label-form-strip .small-name-en {
       font-size: 6.4px;
+      line-height: 1;
     }
-    .label-qr.label-form-strip .identity-density-high .name-en {
+    .label-qr.label-form-strip .identity-density-medium .small-name-en {
       font-size: 5.8px;
     }
-    .label-qr.label-form-strip .name-zh {
+    .label-qr.label-form-strip .identity-density-high .small-name-en {
+      font-size: 5.2px;
+    }
+    .label-qr.label-form-strip .small-name-zh {
       font-size: 6.4px;
       line-height: 1;
-      margin-top: 0;
     }
-    .label-qr.label-form-strip .identity-density-medium .name-zh,
-    .label-qr.label-form-strip .identity-density-high .name-zh {
+    .label-qr.label-form-strip .identity-density-medium .small-name-zh,
+    .label-qr.label-form-strip .identity-density-high .small-name-zh,
+    .label-qr.label-form-strip .identity-density-medium .small-cas,
+    .label-qr.label-form-strip .identity-density-high .small-cas {
       font-size: 5.4px;
     }
     .label-qr.label-form-strip .meta-ribbon {
@@ -2910,11 +2997,7 @@ const buildStyles = (model) => {
       overflow-wrap: normal;
     }
     .label-qr.label-form-strip .qr-priority-block {
-      gap: 0;
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
+      display: none;
     }
     .label-qr.label-form-strip .qr-hazard-chip {
       font-size: 5.5px;
@@ -2931,13 +3014,6 @@ const buildStyles = (model) => {
     .label-qr.label-form-strip .qr-panel {
       gap: 0.45mm;
       padding-left: 0;
-    }
-    .label-qr.label-form-strip .signal.qr-signal {
-      margin: 0;
-      padding: 0.25mm 1mm;
-      border-radius: 0.6mm;
-      font-size: 5.6px;
-      line-height: 1;
     }
     .label-qr.label-form-strip .qr-code-shell {
       padding: 1mm;
@@ -3409,8 +3485,8 @@ export function buildPrintPreviewDocument(
           </div>
         </div>
       </div>
-    `;
-  }
+  `;
+}
 
   const bodyClass = [
     "preview-body",

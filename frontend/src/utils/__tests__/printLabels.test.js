@@ -98,6 +98,13 @@ function createMockIframe() {
 
 // ── Tests ──
 
+const expandedPictogramCodes = (preview) =>
+  preview.model.expandedLabels.flatMap((label) =>
+    label.continuation?.pictograms
+      ? label.continuation.pictograms.map((pictogram) => pictogram.code)
+      : (label.ghs_pictograms || []).map((pictogram) => pictogram.code),
+  );
+
 describe("getQRCodeUrl", () => {
   it("generates a local QR data URI with default size", () => {
     const url = getQRCodeUrl("https://example.com");
@@ -324,14 +331,14 @@ describe("inspectPrintContentFit", () => {
 });
 
 describe("print layout model", () => {
-  it("defaults to a shipped-container front label on large physical stock", () => {
+  it("defaults to the complete A4 label output", () => {
     const layout = resolvePrintLayoutConfig({});
 
     expect(layout.labelPurpose).toBe("shipping");
-    expect(layout.template).toBe("standard");
-    expect(layout.stockId).toBe("large-primary");
+    expect(layout.template).toBe("full");
+    expect(layout.stockId).toBe("a4-primary");
     expect(layout.size).toBe("large");
-    expect(layout.page.perPage).toBe(3);
+    expect(layout.page.perPage).toBe(1);
   });
 
   it("infers supplemental purposes for legacy compact template configs", () => {
@@ -864,10 +871,11 @@ describe("printLabels", () => {
     expect(html).toContain("font-size:5.1px");
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
-    expect(bodyHtml).not.toContain('class="qrcode-img"');
+    expect(bodyHtml).toContain('class="qrcode-img"');
+    expect(bodyHtml).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
     expect(bodyHtml).not.toContain("hazard-more");
     expect(bodyHtml).not.toContain("precaution-more");
-    expect((bodyHtml.match(/<img/g) || [])).toHaveLength(4);
+    expect((bodyHtml.match(/<img/g) || [])).toHaveLength(5);
     denseChemical.hazard_statements.forEach((statement) => {
       expect(bodyHtml).toContain(`>${statement.code}</span>`);
     });
@@ -1530,7 +1538,7 @@ describe("printLabels", () => {
       expect(html).toContain("data:image/gif;base64");
     });
 
-    it("qrcode supplemental labels fit the QR box to small stock and keep all pictograms", () => {
+    it("qrcode small labels continue same-stock when pictograms exceed one QR label", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
@@ -1562,8 +1570,16 @@ describe("printLabels", () => {
       expect(preview.html).toContain("width: 8.6mm");
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml).toContain("64-17-5");
-      expect(preview.html).toContain(".label-qr.label-form-strip .meta-chip-cas");
-      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(preview.fragmentHtml).toContain("small-cas");
+      expect(preview.model.expandedLabels).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+      expect(expandedPictogramCodes(preview)).toEqual([
+        "GHS02",
+        "GHS05",
+        "GHS06",
+        "GHS07",
+      ]);
+      expect(preview.fragmentHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });
 
@@ -1601,7 +1617,14 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
       );
-      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(preview.model.expandedLabels).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+      expect(expandedPictogramCodes(preview)).toEqual([
+        "GHS02",
+        "GHS05",
+        "GHS06",
+        "GHS07",
+      ]);
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });
 
@@ -1623,7 +1646,7 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-kind-quick-id");
       expect(preview.fragmentHtml).toContain("label-form-strip");
-      expect(preview.fragmentHtml).toContain("meta-chip-cas");
+      expect(preview.fragmentHtml).toContain("small-cas");
       expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.html).not.toContain(
         ".label-icon.label-form-strip .cas {\n      display: none;",
@@ -1642,13 +1665,6 @@ describe("printLabels", () => {
       };
       const cases = [
         ["small-strip", "label-stock-small-strip", "repeat(4, 8.4mm)"],
-        ["small-rack", "label-stock-small-rack", "repeat(4, 11.4mm)"],
-        [
-          "brother-62mm-continuous",
-          "label-stock-brother-62mm-continuous",
-          "repeat(4, 11mm)",
-        ],
-        ["medium-rack", "label-stock-medium-rack", "repeat(4, 10.8mm)"],
       ];
 
       cases.forEach(([stockPreset, stockClass, gridRule]) => {
@@ -1669,7 +1685,7 @@ describe("printLabels", () => {
 
         expect(preview.fragmentHtml).toContain("label-kind-quick-id");
         expect(preview.fragmentHtml).toContain(stockClass);
-        expect(preview.fragmentHtml).toContain("meta-chip-cas");
+        expect(preview.fragmentHtml).toContain("small-cas");
         expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
         expect(preview.html).toContain(
           `.label-icon.${stockClass} .pictograms-icon`,
@@ -1678,7 +1694,7 @@ describe("printLabels", () => {
       });
     });
 
-    it("uses stock-specific QR supplement geometry for secondary stock choices", () => {
+    it("keeps QR small labels on the curated 62 mm stock geometry", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
@@ -1690,16 +1706,10 @@ describe("printLabels", () => {
       };
       const cases = [
         [
-          "small-rack",
-          "label-stock-small-rack",
-          "repeat(2, 10mm)",
+          "brother-62mm-continuous",
+          "label-stock-brother-62mm-continuous",
+          "repeat(2, 11mm)",
           "label-form-strip",
-        ],
-        [
-          "medium-rack",
-          "label-stock-medium-rack",
-          "repeat(4, 9mm)",
-          "label-form-compact",
         ],
       ];
 
@@ -1723,7 +1733,14 @@ describe("printLabels", () => {
         expect(preview.fragmentHtml).toContain(stockClass);
         expect(preview.fragmentHtml).toContain(formClass);
         expect(preview.fragmentHtml).toContain("qrcode-img");
-        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+        expect(preview.model.expandedLabels).toHaveLength(2);
+        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+        expect(expandedPictogramCodes(preview)).toEqual([
+          "GHS02",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+        ]);
         expect(preview.html).toContain(
           `.label-stock-${stockPreset}.label-qr.${formClass} .pictograms.qr-pics`,
         );
@@ -1755,13 +1772,13 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("identity-density-high");
-      expect(preview.fragmentHtml).toContain("meta-chip-cas");
+      expect(preview.fragmentHtml).toContain("small-cas");
       expect(preview.fragmentHtml).toContain("123456-78-9");
       expect(preview.html).toContain(
-        ".label-icon.label-form-strip .identity-density-high .name-en",
+        ".label-icon.label-form-strip .identity-density-high .small-name-en",
       );
       expect(preview.html).toContain(
-        ".label-icon.label-form-strip .identity-density-medium .cas",
+        ".label-icon.label-form-strip .identity-density-medium .small-cas",
       );
     });
 
@@ -1790,8 +1807,8 @@ describe("printLabels", () => {
 
       expect(preview.model.layout.autoFitLevel).toBe(2);
       expect(preview.fragmentHtml).toContain("label-fit-level-2");
-      expect(preview.fragmentHtml).toContain("CASE-2026-0007");
-      expect(preview.fragmentHtml).toContain("meta-chip-cas");
+      expect(preview.fragmentHtml).not.toContain("CASE-2026-0007");
+      expect(preview.fragmentHtml).toContain("small-cas");
     });
 
     it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {
@@ -1822,6 +1839,7 @@ describe("printLabels", () => {
       expect(bodyHtml).toContain("label-kind-qr-supplement");
       expect(bodyHtml).toContain("qrcode-img");
       expect(bodyHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
+      expect(bodyHtml.match(/class="qrcode-img"/g)).toHaveLength(2);
       expect(bodyHtml).not.toContain("more-pics");
       expect(alertSpy).not.toHaveBeenCalled();
       jest.advanceTimersByTime(300);
@@ -2017,7 +2035,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).not.toContain("precaution-more");
     });
 
-    it("keeps QR strip supplements focused on identity, QR, signal, and pictograms", () => {
+    it("keeps QR strip supplements focused on identity, QR, and pictograms only", () => {
       const mixedHazards = {
         ...mockChemical,
         ghs_pictograms: [
@@ -2053,8 +2071,15 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-hazard-mode-qr-reference");
       expect(preview.fragmentHtml).not.toContain("qr-hazard-chip");
       expect(preview.fragmentHtml).not.toContain("H330");
-      expect(preview.fragmentHtml).toContain("Danger");
-      expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(4);
+      expect(preview.fragmentHtml).not.toContain("Danger");
+      expect(preview.model.expandedLabels).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(2);
+      expect(expandedPictogramCodes(preview)).toEqual([
+        "GHS04",
+        "GHS05",
+        "GHS06",
+        "GHS07",
+      ]);
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });
 
@@ -2157,8 +2182,9 @@ describe("printLabels", () => {
       expect(preview.html).toContain("font-size:5.1px");
       expect(preview.html).toContain("--precaution-code-max:16mm");
       expect(preview.html).not.toContain("font-size: 9px !important");
-      expect(preview.html).not.toContain("compliance-qr");
-      expect(preview.html).not.toContain("qrcode-img-small");
+      expect(preview.html).toContain("compliance-qr");
+      expect(preview.html).toContain("qrcode-img");
+      expect(preview.html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
       expect(preview.html).toContain("height: 264px");
@@ -2300,8 +2326,8 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
       expect(preview.html).toContain("width: 29.4mm");
-      expect(preview.html).not.toContain("compliance-qr");
-      expect(preview.html).not.toContain("qrcode-img-small");
+      expect(preview.html).toContain("compliance-qr");
+      expect(preview.html).toContain("qrcode-img");
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("height: 264px");
       expect(preview.previewMetrics.frameHeightPx).toBeLessThanOrEqual(300);
@@ -2314,13 +2340,14 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain("qr-priority-block");
+      expect(html).toContain("small-identity");
       expect(html).toContain("qr-code-shell");
       expect(html).toContain("qr-hint");
+      expect(html).toContain("CAS 64-17-5");
       expect(html).not.toContain("qr-cas");
     });
 
-    it("qrcode template flags additional hazards behind the scan path", () => {
+    it("qrcode template omits H/P hazard teasers and relies on the lookup QR", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 4 }, (_, i) => ({
@@ -2334,8 +2361,10 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="hazard-more qr-hazard-more"/);
-      expect(html).toContain("print.moreHazardsShort");
+      expect(html).not.toMatch(/<div\s+class="hazard-more qr-hazard-more"/);
+      expect(html).not.toContain("H300");
+      expect(html).not.toContain("print.moreHazardsShort");
+      expect(html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
     });
 
     it("keeps supplemental workflow notices out of the printed label body", () => {
@@ -2477,8 +2506,8 @@ describe("printLabels", () => {
       expect(html).not.toContain("B-001");
     });
 
-    it("compact templates omit date and profile fallbacks but keep batch identity", () => {
-      ["icon", "standard", "qrcode"].forEach((template) => {
+    it("compact templates omit date, profile fallbacks, and custom batch fields", () => {
+      ["icon", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
           tag === "iframe" ? mocks.mockIframe : {},
@@ -2487,10 +2516,11 @@ describe("printLabels", () => {
 
         printLabels([mockChemical], { ...config, template }, {}, fields);
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
-        expect(html).not.toContain("Lab A");
-        expect(html).not.toContain("2026-02-12");
-        expect(html).toContain("B-001");
-        expect(html).toContain("meta-chip-batch");
+        const bodyHtml = html.slice(html.indexOf("<body"));
+        expect(bodyHtml).not.toContain("Lab A");
+        expect(bodyHtml).not.toContain("2026-02-12");
+        expect(bodyHtml).not.toContain("B-001");
+        expect(bodyHtml).not.toContain("meta-chip-batch");
       });
     });
 
@@ -2513,8 +2543,8 @@ describe("printLabels", () => {
       expect(html).toContain("X-99");
     });
 
-    it("keeps batch identity chips on compact supplemental templates", () => {
-      ["icon", "standard", "qrcode"].forEach((template) => {
+    it("keeps compact supplemental templates limited to CAS, names, icons, and optional QR", () => {
+      ["icon", "qrcode"].forEach((template) => {
         mockIframeDoc.write.mockClear();
         printLabels(
           [mockChemical],
@@ -2533,12 +2563,11 @@ describe("printLabels", () => {
           { labName: "", date: "", batchNumber: "CASE-2026-0007" },
         );
         const html = mockIframeDoc.write.mock.calls[0][0];
-        expect(html).toMatch(
-          /<span\s+class="meta-chip meta-chip-batch support-chip support-chip-critical support-chip-batch"/,
-        );
-        expect(html).toContain("CASE-2026-0007");
-        expect(html).toContain("CAS");
-        expect(html).toContain(mockChemical.cas_number);
+        const bodyHtml = html.slice(html.indexOf("<body"));
+        expect(bodyHtml).not.toContain("meta-chip-batch");
+        expect(bodyHtml).not.toContain("CASE-2026-0007");
+        expect(bodyHtml).toContain("CAS");
+        expect(bodyHtml).toContain(mockChemical.cas_number);
       });
     });
   });
@@ -2691,8 +2720,8 @@ describe("printLabels", () => {
       expect(html).toContain("Ethanol");
     });
 
-    it("respects nameDisplay across all 4 templates", () => {
-      ["icon", "standard", "full", "qrcode"].forEach((template) => {
+    it("respects nameDisplay on the legacy standard template", () => {
+      ["standard"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
           tag === "iframe" ? mocks.mockIframe : {},
@@ -2714,6 +2743,31 @@ describe("printLabels", () => {
         expect(html).not.toContain("乙醇");
       });
     });
+    it("forces compact icon and QR templates to print CAS, English, and Chinese identity", () => {
+      ["icon", "qrcode"].forEach((template) => {
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
+        getByIdSpy.mockReturnValue(null);
+
+        printLabels(
+          [mockChemical],
+          {
+            size: "medium",
+            template,
+            orientation: "portrait",
+            nameDisplay: "en",
+          },
+          {},
+        );
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain("small-cas");
+        expect(html).toContain("Ethanol");
+        expect(html).toContain(mockChemical.name_zh);
+      });
+    });
+
     it('keeps short bilingual names on compact templates when nameDisplay is "both"', () => {
       ["icon", "standard", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
@@ -3316,8 +3370,8 @@ describe("printLabels", () => {
       printLabels(
         [chem],
         {
-          size: "medium",
-          template: "icon",
+          size: "large",
+          template: "full",
           orientation: "portrait",
           nameDisplay: "zh",
         },
@@ -3587,20 +3641,22 @@ describe("prepared solution print rendering", () => {
   });
 
   describe("icon template", () => {
-    // Space-constrained template. Must preserve prepared identity
-    // via the compact badge + meta rows, but does NOT render the
-    // full prepared note (no room).
-    it("renders compact prepared badge and meta rows", () => {
+    // Space-constrained templates now keep the same simple identity contract
+    // as non-prepared chemicals: CAS, English name, Chinese name, and icons.
+    it("renders prepared chemicals with the compact identity block only", () => {
       printLabels(
         [makePrepared()],
         { size: "medium", template: "icon", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toMatch(/<div\s+class="prepared-meta"/);
-      expect(html).toContain("10% (v/v)");
-      expect(html).toContain("Water");
+      expect(html).toContain("small-cas");
+      expect(html).toContain("Ethanol");
+      expect(html).toContain(mockChemical.name_zh);
+      expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
+      expect(html).not.toContain("10% (v/v)");
+      expect(html).not.toContain("Water");
     });
 
     it("does NOT render the full prepared-note on icon template (space)", () => {
@@ -3626,17 +3682,20 @@ describe("prepared solution print rendering", () => {
   });
 
   describe("qrcode template", () => {
-    it("renders a compact prepared meta ribbon in the left column", () => {
+    it("renders the compact identity block in the left column", () => {
       printLabels(
         [makePrepared()],
         { size: "medium", template: "qrcode", orientation: "portrait" },
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain("print.preparedShort");
-      expect(html).toContain("10% (v/v)");
-      expect(html).toContain("Water");
+      expect(html).toContain("small-cas");
+      expect(html).toContain("Ethanol");
+      expect(html).toContain(mockChemical.name_zh);
+      expect(html).not.toMatch(/<div\s+class="meta-ribbon"/);
+      expect(html).not.toContain("print.preparedShort");
+      expect(html).not.toContain("10% (v/v)");
+      expect(html).not.toContain("Water");
     });
 
     it("does NOT render the full prepared-note on qrcode template (space)", () => {
@@ -3659,7 +3718,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toMatch(/<img\s+class="qrcode-img"/);
     });
 
-    it("uses the PubChem SDS target in the QR payload when CID is available", () => {
+    it("uses the site lookup target in the QR payload when CID is available", () => {
       printLabels(
         [mockChemical],
         { size: "medium", template: "qrcode", orientation: "portrait" },
@@ -3667,14 +3726,14 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data-qr-target=\"https://pubchem.ncbi.nlm.nih.gov/compound/702#section=Safety-and-Hazards\"",
+        "data-qr-target=\"http://localhost/?cas=64-17-5\"",
       );
-      expect(html).toContain('data-qr-target-type="sds"');
-      expect(html).toContain('data-qr-target-source="pubchem"');
-      expect(html).toContain('data-qr-target-label="PubChem Safety &amp; Hazards"');
+      expect(html).toContain('data-qr-target-type="ghs-lookup"');
+      expect(html).toContain('data-qr-target-source="ghs-label-quick-search"');
+      expect(html).toContain('data-qr-target-label="GHS Label Quick Search"');
     });
 
-    it("falls back to the ECHA search target in the QR payload when CID is missing", () => {
+    it("still uses the site lookup target in the QR payload when CID is missing", () => {
       printLabels(
         [{ ...mockChemical, cid: null }],
         { size: "medium", template: "qrcode", orientation: "portrait" },
@@ -3682,11 +3741,11 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data-qr-target=\"https://chem.echa.europa.eu/substance-search?searchText=64-17-5\"",
+        "data-qr-target=\"http://localhost/?cas=64-17-5\"",
       );
-      expect(html).toContain('data-qr-target-type="regulatory"');
-      expect(html).toContain('data-qr-target-source="echa"');
-      expect(html).toContain('data-qr-target-label="ECHA Substance Search"');
+      expect(html).toContain('data-qr-target-type="ghs-lookup"');
+      expect(html).toContain('data-qr-target-source="ghs-label-quick-search"');
+      expect(html).toContain('data-qr-target-label="GHS Label Quick Search"');
     });
   });
 
@@ -3886,9 +3945,10 @@ describe("prepared solution print rendering", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
       expect(html).not.toContain("A. Chen");
-      // Tier 1 prepared identity stays intact on icon template.
-      expect(html).toMatch(/<div\s+class="prepared-badge"/);
-      expect(html).toMatch(/<div\s+class="prepared-meta"/);
+      // Compact identity stays intact on icon template.
+      expect(html).toContain("small-cas");
+      expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
+      expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
     });
 
     it("qrcode template does NOT render operational fields (space-constrained)", () => {
@@ -3900,9 +3960,10 @@ describe("prepared solution print rendering", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toMatch(/<div\s+class="prepared-operational"/);
       expect(html).not.toContain("A. Chen");
-      // Tier 1 prepared identity stays intact on qrcode template.
-      expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain("print.preparedShort");
+      // Compact identity stays intact on qrcode template.
+      expect(html).toContain("small-cas");
+      expect(html).not.toMatch(/<div\s+class="meta-ribbon"/);
+      expect(html).not.toContain("print.preparedShort");
     });
 
     it("renders only the filled-in subset of operational fields", () => {

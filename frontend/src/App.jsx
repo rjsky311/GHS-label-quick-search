@@ -106,6 +106,7 @@ function App() {
 
   // ── Refs ──
   const searchInputRef = useRef(null);
+  const hydratedLookupQueryRef = useRef(false);
 
   // ── Custom Hooks ──
   const { history, saveToHistory, clearHistory } = useSearchHistory();
@@ -420,6 +421,21 @@ function App() {
     setSingleCas(cas);
     setActiveTab("single");
     searchSingle(cas);
+  }, [searchSingle]);
+
+  useEffect(() => {
+    if (hydratedLookupQueryRef.current || typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const casFromUrl = (params.get("cas") || params.get("q") || "").trim();
+    if (!casFromUrl) return;
+
+    hydratedLookupQueryRef.current = true;
+    setSingleCas(casFromUrl);
+    setActiveTab("single");
+    searchSingle(casFromUrl);
   }, [searchSingle]);
 
   const handleSelectHistoryItem = useCallback((cas) => {

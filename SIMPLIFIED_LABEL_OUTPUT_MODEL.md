@@ -1,7 +1,9 @@
 # Simplified Label Output Model
 
-Status: canonical target for the next label-printing refactor as of
-2026-05-16.
+Status: implemented product contract for the current label-printing refactor as
+of 2026-05-16. Keep this file as the canonical reference before changing
+`LabelPrintModal`, stock presets, compact print renderers, QR targets, batch
+print planning, or print QA.
 
 This document replaces the prior first-level print workflow model for future
 work. Older documents such as `PRINT_OUTPUT_REFACTOR_PLAN.md` and
@@ -9,8 +11,24 @@ work. Older documents such as `PRINT_OUTPUT_REFACTOR_PLAN.md` and
 QA lessons, and safety constraints, but the user-facing label workflow should
 now converge on the three outputs below.
 
-This is a product and engineering plan, not legal advice. Final workplace use
-still requires SDS, supplier labels, and local regulation review.
+This is a product and engineering contract, not legal advice. Final workplace
+use still requires SDS, supplier labels, and local regulation review.
+
+Current implementation checkpoint:
+
+- The modal first-level output choices are now exactly Complete A4/Letter
+  label, QR small label, and Identification small label.
+- Complete labels support A4 and Letter and include a QR code back to this
+  product's lookup page.
+- QR small labels use `62 x 40 mm` by default and print CAS, English name,
+  Chinese name, QR, and all pictograms across same-output continuation labels.
+- Identification small labels use `70 x 24 mm` by default and print CAS,
+  English name, Chinese name, and all pictograms across same-output
+  continuation labels.
+- Small labels intentionally omit H/P text, signal words, H-code chips, teaser
+  summaries, case/custom fields, and front-label terminology.
+- URL query hydration for `?cas=...` is implemented so printed QR codes can
+  return users to the lookup page.
 
 ## 1. Product Decision
 
@@ -292,4 +310,3 @@ Verification:
 
 Production-facing changes must also be checked on the deployed Zeabur frontend,
 including actual clicks through each of the three output types.
-
