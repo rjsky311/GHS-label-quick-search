@@ -1133,6 +1133,76 @@ async def test_export_xlsx_includes_precautionary_column():
     assert "P210" in data
 
 
+async def test_export_csv_includes_data_trust_columns():
+    """CSV export preserves source/data-state context for downstream users."""
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": "Ethanol",
+                "name_zh": "\u4e59\u9187",
+                "found": True,
+                "ghs_pictograms": [{"code": "GHS02", "name_zh": "\u706b\u7130"}],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+                "signal_word": "Danger",
+                "primary_source": "ECHA C&L Notifications Summary",
+                "primary_report_count": "236",
+                "retrieved_at": "2026-05-16T00:00:00Z",
+                "cache_hit": True,
+                "reference_links": [
+                    {"label": "Supplier SDS", "url": "https://example.com/sds"}
+                ],
+                "customNote": "Use alternate supplier-confirmed report",
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/csv", json=payload)
+    assert response.status_code == 200
+    body = response.content.decode("utf-8-sig")
+
+    assert "Data State" in body
+    assert "Primary Source" in body
+    assert "Found with renderable GHS pictograms" in body
+    assert "ECHA C&L Notifications Summary" in body
+    assert "236" in body
+    assert "Cached" in body
+    assert "1 reference link(s)" in body
+    assert "User-selected classification: Use alternate supplier-confirmed report" in body
+
+
+async def test_export_xlsx_includes_data_trust_columns():
+    """XLSX export includes the same appended trust columns as CSV."""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "999-99-9",
+                "name_en": "Unknown",
+                "found": False,
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/xlsx", json=payload)
+    assert response.status_code == 200
+
+    wb = load_workbook(BytesIO(response.content))
+    ws = wb.active
+    assert ws.cell(row=1, column=8).value == "Data State"
+    assert ws.cell(row=1, column=14).value == "Classification Selection"
+    assert ws.cell(row=2, column=8).value == "Not found"
+    assert ws.cell(row=2, column=14).value == "Default primary classification"
+
+
 async def test_export_csv_neutralizes_formula_injection_in_p_code_text():
     """P-code text starting with a formula trigger must be neutralized
     the same way as other exported cells."""

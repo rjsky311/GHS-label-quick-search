@@ -65,7 +65,9 @@ Current mode:
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
    `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Keep source/QR/admin changes
-   aligned with that policy and add tests when behavior changes.
+   aligned with that policy and add tests when behavior changes. Current
+   baseline includes effective-classification source/report-count alignment
+   and export-preview/CSV/XLSX trust columns.
 6. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate

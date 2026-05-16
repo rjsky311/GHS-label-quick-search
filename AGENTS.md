@@ -274,7 +274,10 @@ Data governance and safety boundaries are pinned in
 `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`. Use it before changing source
 ranking, SDS/reference links, QR targets, manual dictionary/alias behavior,
 dictionary miss telemetry, admin-gated data paths, or upstream-error/no-GHS
-states.
+states. Effective alternate-classification selections now carry their selected
+source/report-count evidence through result rows, Detail provenance,
+print/export preparation, export preview, frontend CSV fallback, and backend
+CSV/XLSX exports.
 
 Future non-physical-print work while real-printer validation is deferred is
 tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data

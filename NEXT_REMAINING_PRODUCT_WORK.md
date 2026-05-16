@@ -278,6 +278,15 @@ Current status:
   using Urea (`57-13-6` by default). It verifies no-GHS warnings in both result
   and Detail views, keeps text-only GHS states separate, disables print entry
   points, and prevents label selection for that row.
+- Effective alternate-classification selections now carry their selected
+  source/report-count evidence through result-row chips, Detail trust and
+  provenance surfaces, print/export preparation, export preview, frontend CSV
+  fallback, and backend CSV/XLSX exports. This prevents a user-selected
+  classification from keeping stale primary-source evidence.
+- Export rows now include data state, primary source, report count, retrieved
+  time, cache state, reference-link count, and classification-selection context.
+  Production search UI QA opens the deployed export preview and fails if these
+  trust columns disappear.
 
 Suggested verification:
 

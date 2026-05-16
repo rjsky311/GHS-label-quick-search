@@ -94,6 +94,8 @@ export function createMockGetEffective(overrides = {}) {
       precautionary_statements: result.precautionary_statements || [],
       signal_word: result.signal_word,
       signal_word_zh: result.signal_word_zh,
+      source: result.primary_source,
+      report_count: result.primary_report_count,
       isCustom: false,
       customIndex: 0,
       note: '',

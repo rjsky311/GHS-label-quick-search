@@ -32,6 +32,8 @@ export function resolveEffectiveChemicalForPrint(
         precautionary_statements: chemical.precautionary_statements || [],
         signal_word: chemical.signal_word,
         signal_word_zh: chemical.signal_word_zh,
+        source: chemical.primary_source,
+        report_count: chemical.primary_report_count,
       },
       ...(chemical.other_classifications || []),
     ];
@@ -47,6 +49,10 @@ export function resolveEffectiveChemicalForPrint(
           selectedClassification.precautionary_statements || [],
         signal_word: selectedClassification.signal_word,
         signal_word_zh: selectedClassification.signal_word_zh,
+        primary_source: selectedClassification.source || chemical.primary_source,
+        primary_report_count:
+          selectedClassification.report_count || chemical.primary_report_count,
+        selected_classification_index: customSetting.selectedIndex,
         customNote: customSetting.note,
       };
     }

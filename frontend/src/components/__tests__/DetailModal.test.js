@@ -483,6 +483,27 @@ describe('DetailModal', () => {
       expect(screen.getByText('ECHA C&L Notifications Summary')).toBeInTheDocument();
     });
 
+    it('uses the effective custom classification source in trust and provenance surfaces', () => {
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={mockFoundResult}
+          getEffectiveClassification={createMockGetEffective({
+            source: 'PubChem LCSS alternate',
+            report_count: '8',
+            isCustom: true,
+            customIndex: 1,
+          })}
+        />
+      );
+
+      expect(screen.getByTestId('detail-trust-source')).toHaveTextContent(
+        'results.sourcePubChem'
+      );
+      expect(screen.getByText('PubChem LCSS alternate')).toBeInTheDocument();
+      expect(screen.queryByText('ECHA C&L Notifications Summary')).not.toBeInTheDocument();
+    });
+
     it('renders the report count badge with count interpolated', () => {
       render(<DetailModal {...defaultProps} result={mockFoundResult} />);
       const badge = screen.getByTestId('provenance-report-count');

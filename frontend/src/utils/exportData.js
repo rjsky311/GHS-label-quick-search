@@ -8,6 +8,8 @@ import {
   getLocalizedSignalWord,
   getLocalizedStatementText,
 } from "@/utils/ghsText";
+import { hasGhsData } from "@/utils/ghsAvailability";
+import { getReferenceLinks } from "@/utils/sdsLinks";
 
 // The `xlsx` package (SheetJS) has unpatched vulnerabilities in the
 // 0.18.x line shipped via npm. We previously used it as a client-side
@@ -43,6 +45,37 @@ export function escapeCsvCell(value) {
   return text;
 }
 
+function hasDirectPictogramVisual(result) {
+  return (result?.ghs_pictograms || result?.pictograms || []).length > 0;
+}
+
+export function resolveExportDataState(result, t) {
+  if (result?.upstream_error) return t("export.dataStateUpstreamError");
+  if (result?.found === false) return t("export.dataStateNotFound");
+  if (hasGhsData(result) && !hasDirectPictogramVisual(result)) {
+    return t("export.dataStateTextOnly");
+  }
+  if (!hasGhsData(result)) return t("export.dataStateNoGhs");
+  return t("export.dataStateRenderable");
+}
+
+function buildExportTrustCells(result, t) {
+  const references = getReferenceLinks(result);
+  return [
+    resolveExportDataState(result, t),
+    result?.primary_source || t("export.notRecorded"),
+    result?.primary_report_count || "-",
+    result?.retrieved_at || t("export.notRecorded"),
+    result?.cache_hit ? t("export.cacheHit") : t("export.cacheNotRecorded"),
+    references.length
+      ? t("export.referenceCount", { count: references.length })
+      : t("export.noReferences"),
+    result?.customNote
+      ? t("export.customClassification", { note: result.customNote })
+      : t("export.defaultClassification"),
+  ];
+}
+
 function buildCsvRows(results, t) {
   const displayLocale = i18n.language;
   const rows = [
@@ -54,6 +87,13 @@ function buildCsvRows(results, t) {
       t("export.signalWord"),
       t("export.hazardStatements"),
       t("export.precautionaryStatements"),
+      t("export.dataState"),
+      t("export.primarySource"),
+      t("export.reportCount"),
+      t("export.retrievedAt"),
+      t("export.cacheState"),
+      t("export.referenceLinks"),
+      t("export.classificationSelection"),
     ],
   ];
   for (const r of results) {
@@ -84,6 +124,7 @@ function buildCsvRows(results, t) {
       signal,
       hazardText,
       precautionText,
+      ...buildExportTrustCells(r, t),
     ]);
   }
   return rows;

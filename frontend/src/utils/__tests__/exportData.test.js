@@ -21,7 +21,13 @@ jest.mock('@/constants/ghs', () => ({
   API: 'http://test-api',
 }));
 
-import { exportToExcel, exportToCSV, escapeCsvCell, buildExportPreview } from '../exportData';
+import {
+  exportToExcel,
+  exportToCSV,
+  escapeCsvCell,
+  buildExportPreview,
+  resolveExportDataState,
+} from '../exportData';
 
 const mockResult = {
   cas_number: '64-17-5',
@@ -35,6 +41,19 @@ const mockResult = {
   ],
   signal_word: 'Danger',
   signal_word_zh: '危險',
+  found: true,
+  primary_source: 'ECHA C&L Notifications Summary',
+  primary_report_count: '120',
+  retrieved_at: '2026-05-16T00:00:00Z',
+  cache_hit: true,
+  reference_links: [
+    {
+      label: 'Supplier SDS',
+      url: 'https://example.com/sds',
+      link_type: 'sds',
+      source: 'manual',
+    },
+  ],
 };
 
 // Silence expected console.error/warn from the error paths.
@@ -96,6 +115,13 @@ describe('buildExportPreview', () => {
       'export.signalWord',
       'export.hazardStatements',
       'export.precautionaryStatements',
+      'export.dataState',
+      'export.primarySource',
+      'export.reportCount',
+      'export.retrievedAt',
+      'export.cacheState',
+      'export.referenceLinks',
+      'export.classificationSelection',
     ]);
     expect(preview.totalRows).toBe(1);
     expect(preview.previewRows).toBe(1);
@@ -103,6 +129,11 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].id).toBe('64-17-5-0');
     expect(preview.rows[0].cells[0]).toBe('64-17-5');
     expect(preview.rows[0].cells[1]).toBe('Ethanol');
+    expect(preview.rows[0].cells[7]).toBe('export.dataStateRenderable');
+    expect(preview.rows[0].cells[8]).toBe('ECHA C&L Notifications Summary');
+    expect(preview.rows[0].cells[9]).toBe('120');
+    expect(preview.rows[0].cells[11]).toBe('export.cacheHit');
+    expect(preview.rows[0].cells[12]).toBe('export.referenceCount');
   });
 
   it('limits preview rows and reports hidden rows', () => {
@@ -120,6 +151,29 @@ describe('buildExportPreview', () => {
     expect(preview.previewRows).toBe(5);
     expect(preview.hiddenRows).toBe(2);
     expect(preview.rows).toHaveLength(5);
+  });
+});
+
+describe('resolveExportDataState', () => {
+  const t = (key) => key;
+
+  it('keeps renderable, text-only, no-GHS, upstream, and not-found states separate', () => {
+    expect(resolveExportDataState(mockResult, t)).toBe('export.dataStateRenderable');
+    expect(
+      resolveExportDataState(
+        {
+          found: true,
+          hazard_statements: [{ code: 'H315', text_en: 'Causes skin irritation.' }],
+          ghs_pictograms: [],
+        },
+        t
+      )
+    ).toBe('export.dataStateTextOnly');
+    expect(resolveExportDataState({ found: true }, t)).toBe('export.dataStateNoGhs');
+    expect(resolveExportDataState({ upstream_error: true }, t)).toBe(
+      'export.dataStateUpstreamError'
+    );
+    expect(resolveExportDataState({ found: false }, t)).toBe('export.dataStateNotFound');
   });
 });
 

@@ -643,6 +643,61 @@ class ExportRequest(BaseModel):
     format: str = "xlsx"  # xlsx or csv
 
 
+EXPORT_TRUST_HEADERS = [
+    "Data State",
+    "Primary Source",
+    "Report Count",
+    "Retrieved At",
+    "Cache State",
+    "Reference Links",
+    "Classification Selection",
+]
+
+
+def _has_export_ghs_data(result: Dict[str, Any]) -> bool:
+    return bool(
+        result.get("ghs_pictograms")
+        or result.get("pictograms")
+        or result.get("hazard_statements")
+        or result.get("precautionary_statements")
+        or result.get("signal_word")
+    )
+
+
+def _export_data_state(result: Dict[str, Any]) -> str:
+    if result.get("upstream_error"):
+        return "Upstream transient failure"
+    if result.get("found") is False:
+        return "Not found"
+    if _has_export_ghs_data(result) and not (
+        result.get("ghs_pictograms") or result.get("pictograms")
+    ):
+        return "Found with GHS text but no pictogram"
+    if not _has_export_ghs_data(result):
+        return "Found with no GHS classification data"
+    return "Found with renderable GHS pictograms"
+
+
+def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
+    reference_links = result.get("reference_links")
+    reference_count = (
+        len(reference_links) if isinstance(reference_links, list) else 0
+    )
+    return [
+        _export_data_state(result),
+        result.get("primary_source") or "Not recorded",
+        result.get("primary_report_count") or "-",
+        result.get("retrieved_at") or "Not recorded",
+        "Cached" if result.get("cache_hit") else "Fresh or not recorded",
+        f"{reference_count} reference link(s)"
+        if reference_count
+        else "No reference links",
+        f"User-selected classification: {result.get('customNote')}"
+        if result.get("customNote")
+        else "Default primary classification",
+    ]
+
+
 class WorkspaceDocumentPayload(BaseModel):
     payload: Any
 
@@ -2077,7 +2132,16 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     )
     
     # Headers
-    headers = ["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明", "預防措施"]
+    headers = [
+        "CAS No.",
+        "英文名稱",
+        "中文名稱",
+        "GHS標示",
+        "警示語",
+        "危害說明",
+        "預防措施",
+        *EXPORT_TRUST_HEADERS,
+    ]
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = header_font
@@ -2121,6 +2185,11 @@ async def export_xlsx(request: Request, payload: ExportRequest):
         prec_cell.border = thin_border
         prec_cell.alignment = Alignment(wrap_text=True)
 
+        for offset, value in enumerate(_export_trust_cells(result), start=8):
+            cell = ws.cell(row=row, column=offset, value=spreadsheet_safe(value))
+            cell.border = thin_border
+            cell.alignment = Alignment(wrap_text=True)
+
     # Adjust column widths
     ws.column_dimensions['A'].width = 15
     ws.column_dimensions['B'].width = 30
@@ -2129,6 +2198,13 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     ws.column_dimensions['E'].width = 12
     ws.column_dimensions['F'].width = 50
     ws.column_dimensions['G'].width = 55
+    ws.column_dimensions['H'].width = 34
+    ws.column_dimensions['I'].width = 36
+    ws.column_dimensions['J'].width = 18
+    ws.column_dimensions['K'].width = 24
+    ws.column_dimensions['L'].width = 18
+    ws.column_dimensions['M'].width = 24
+    ws.column_dimensions['N'].width = 34
     
     # Save to BytesIO
     output = BytesIO()
@@ -2150,7 +2226,16 @@ async def export_csv(request: Request, payload: ExportRequest):
     writer = csv.writer(string_output)
     
     # Headers
-    writer.writerow(["CAS No.", "英文名稱", "中文名稱", "GHS標示", "警示語", "危害說明", "預防措施"])
+    writer.writerow([
+        "CAS No.",
+        "英文名稱",
+        "中文名稱",
+        "GHS標示",
+        "警示語",
+        "危害說明",
+        "預防措施",
+        *EXPORT_TRUST_HEADERS,
+    ])
 
     # Data
     for result in payload.results:
@@ -2177,6 +2262,7 @@ async def export_csv(request: Request, payload: ExportRequest):
             spreadsheet_safe(signal),
             spreadsheet_safe(hazard_text),
             spreadsheet_safe(precaution_text),
+            *[spreadsheet_safe(value) for value in _export_trust_cells(result)],
         ])
     
     # Convert to bytes with BOM

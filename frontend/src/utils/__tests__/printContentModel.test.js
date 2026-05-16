@@ -17,6 +17,8 @@ const baseChemical = {
   hazard_statements: [{ code: "H314", text_en: "Causes severe burns." }],
   precautionary_statements: [{ code: "P280", text_en: "Wear gloves." }],
   signal_word: "Danger",
+  primary_source: "ECHA C&L Notifications Summary",
+  primary_report_count: "236",
 };
 
 describe("printContentModel", () => {
@@ -88,6 +90,8 @@ describe("printContentModel", () => {
           hazard_statements: [{ code: "H301", text_en: "Toxic if swallowed." }],
           precautionary_statements: [],
           signal_word: "Danger",
+          source: "Alternate vendor SDS",
+          report_count: "4",
         },
       ],
     };
@@ -105,6 +109,9 @@ describe("printContentModel", () => {
     });
 
     expect(effective.ghs_pictograms).toEqual([{ code: "GHS06" }]);
+    expect(effective.primary_source).toBe("Alternate vendor SDS");
+    expect(effective.primary_report_count).toBe("4");
+    expect(effective.selected_classification_index).toBe(1);
     expect(content.counts.pictograms).toBe(1);
     expect(content.counts.hazardStatements).toBe(1);
     expect(content.counts.precautionaryStatements).toBe(0);

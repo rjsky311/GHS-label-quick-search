@@ -71,8 +71,8 @@ Current validation gates:
 - Print PDF QA: `npm run qa:print-pdf`
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
-  detail-to-prepared modal keyboard/focus checks, plus 390px narrow read-first
-  result and detail-comparison checks)
+  export-preview trust columns, detail-to-prepared modal keyboard/focus checks,
+  plus 390px narrow read-first result and detail-comparison checks)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -101,6 +101,12 @@ Current completion snapshot:
   receive new regression cases when evidence appears. Track these
   non-physical-print follow-ups in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
   use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` for the batch-print contract.
+- **Data-trust export baseline**: effective custom classification selections
+  now carry source/report-count evidence through result/detail surfaces,
+  print/export preparation, export preview, frontend CSV fallback, and backend
+  CSV/XLSX exports. Export rows include data state, primary source, report
+  count, cache state, reference-link count, and classification-selection
+  context.
 
 ## 3. Next Priority Order
 

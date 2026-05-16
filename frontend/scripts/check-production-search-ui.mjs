@@ -354,6 +354,33 @@ const inspectDetailTrustSurface = async (detailModal) => {
   };
 };
 
+const inspectExportPreviewSurface = async (page) => {
+  await page.getByTestId("export-csv-btn").click();
+  const modal = page.getByTestId("export-preview-modal");
+  await modal.waitFor({ state: "visible", timeout: 10000 });
+  const headers = await modal.locator("thead th").evaluateAll((nodes) =>
+    nodes.map((node) => (node.textContent || "").replace(/\s+/g, " ").trim()),
+  );
+  const bodyText = ((await modal.textContent()) || "").replace(/\s+/g, " ");
+  await modal.getByTestId("export-preview-cancel").click();
+  await modal.waitFor({ state: "hidden", timeout: 10000 });
+  return {
+    headers,
+    bodyText,
+    hasDataState: headers.some((header) => /Data State|資料狀態/i.test(header)),
+    hasPrimarySource: headers.some((header) =>
+      /Primary Source|主要來源/i.test(header),
+    ),
+    hasClassificationSelection: headers.some((header) =>
+      /Classification Selection|分類選擇/i.test(header),
+    ),
+    hasRenderableState: /Found with renderable GHS pictograms|可顯示的 GHS 圖示/i.test(
+      bodyText,
+    ),
+    hasSourceEvidence: /ECHA|PubChem/i.test(bodyText),
+  };
+};
+
 const inspectModalFocusableState = async (page, modalTestId, label) =>
   page.evaluate(
     ({ modalTestId: targetTestId, label: stateLabel }) => {
@@ -904,6 +931,12 @@ const summarizeSearchUiReportForConsole = (report) => {
         ),
         noGhsCheckboxCount:
           metrics.noGhsState?.result?.resultCheckboxCount || 0,
+        exportPreviewTrustColumns:
+          metrics.exportPreviewSurface?.headers?.filter((header) =>
+            /Data State|Primary Source|Classification Selection|資料狀態|主要來源|分類選擇/i.test(
+              header,
+            ),
+          ).length || 0,
       },
       images: {
         waitedContexts: metrics.imageWaits?.length || 0,
@@ -948,6 +981,7 @@ try {
   const actionButtons = [detailButton, sdsButton];
   const verticalRisks = actionButtons.filter(isVerticalTextRisk);
   const resultsTrustSurface = await inspectResultsTrustSurface(page);
+  const exportPreviewSurface = await inspectExportPreviewSurface(page);
 
   if (resultsTrustSurface.authoritativeNoteCount < 1) {
     failures.push("results-authoritative-note-missing");
@@ -988,6 +1022,21 @@ try {
     !resultsTrustSurface.sdsHref.includes("Safety-and-Hazards")
   ) {
     failures.push("results-sds-link-not-pubchem-safety");
+  }
+  if (!exportPreviewSurface.hasDataState) {
+    failures.push("export-preview-data-state-column-missing");
+  }
+  if (!exportPreviewSurface.hasPrimarySource) {
+    failures.push("export-preview-primary-source-column-missing");
+  }
+  if (!exportPreviewSurface.hasClassificationSelection) {
+    failures.push("export-preview-classification-selection-column-missing");
+  }
+  if (!exportPreviewSurface.hasRenderableState) {
+    failures.push("export-preview-renderable-state-missing");
+  }
+  if (!exportPreviewSurface.hasSourceEvidence) {
+    failures.push("export-preview-source-evidence-missing");
   }
 
   if (verticalRisks.length > 0) {
@@ -1474,6 +1523,7 @@ try {
       expandedClassificationCount,
       expandedPictogramMetrics,
       resultsTrustSurface,
+      exportPreviewSurface,
       detailTrustSurface,
       detailKeyboardSurface,
       prepareStackingSurface,

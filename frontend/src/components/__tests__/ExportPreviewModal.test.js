@@ -35,6 +35,9 @@ describe('ExportPreviewModal', () => {
     expect(screen.getAllByTestId('export-preview-row')).toHaveLength(2);
     expect(screen.getByText('64-17-5')).toBeInTheDocument();
     expect(screen.getByText('999-99-9')).toBeInTheDocument();
+    expect(screen.getByText('export.dataState')).toBeInTheDocument();
+    expect(screen.getByText('export.primarySource')).toBeInTheDocument();
+    expect(screen.getByText('export.classificationSelection')).toBeInTheDocument();
   });
 
   it('confirms the initial xlsx format', async () => {

@@ -70,8 +70,16 @@ Work items:
   and Detail modal both show the no-GHS warning, keep text-only-GHS warnings
   separate, disable print entry points, and keep the row out of label
   selection.
-- Audit the search result, detail modal, print modal, export rows, and QR
-  target selection for source-conflict language.
+- Completed: aligned effective-classification source evidence across result
+  rows, Detail trust/provenance surfaces, print/export data preparation, CSV
+  fallback rows, backend CSV/XLSX export rows, and the export preview. If a
+  user selects an alternate classification, the visible source/report count and
+  exported trust columns follow that selected classification rather than the
+  original primary report.
+- Completed: expanded `qa:production-search-ui` so the deployed export preview
+  must expose data state, primary source, and classification-selection columns.
+- Audit the print modal and QR target selection for remaining source-conflict
+  language.
 - Define what the UI says when the primary source is PubChem, ECHA-derived,
   local dictionary assisted, manual-reference assisted, or upstream-degraded.
 - Keep alternate GHS classifications inspectable and make their source/ranking
@@ -128,6 +136,10 @@ Work items:
   target boundary.
 - Completed: frontend and backend tests cover unsafe schemes, unknown roles,
   role-first ordering, duplicate role merging, and QR target preference.
+- Completed: export preview, frontend CSV fallback, and backend CSV/XLSX
+  exports now carry data-state, primary-source, report-count, cache,
+  reference-link, and classification-selection context, so exported rows do not
+  lose the trust boundary users saw in the app.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.

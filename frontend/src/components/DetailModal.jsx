@@ -31,7 +31,9 @@ import {
 
 const getSourceSummary = (source, t) => {
   if (!source) return t("detail.trustSourceUnknown");
-  if (source.toLowerCase().includes("echa")) return t("results.sourceEcha");
+  const normalized = source.toLowerCase();
+  if (normalized.includes("echa")) return t("results.sourceEcha");
+  if (normalized.includes("pubchem")) return t("results.sourcePubChem");
   return source;
 };
 
@@ -117,12 +119,14 @@ export default function DetailModal({
     allClassifications.length > 1 && allClassifications.some(hasGhsData);
   const referenceLinks = getReferenceLinks(result);
   const displayNames = getLocalizedNames(result, displayLocale);
+  const effectiveSource = effective?.source || result.primary_source;
+  const effectiveReportCount = effective?.report_count || result.primary_report_count;
   const trustSummaryItems = [
     {
       key: "source",
       icon: Database,
       label: t("detail.trustSource"),
-      value: getSourceSummary(result.primary_source, t),
+      value: getSourceSummary(effectiveSource, t),
     },
     {
       key: "retrieved",
@@ -137,7 +141,7 @@ export default function DetailModal({
       key: "classification",
       icon: ShieldCheck,
       label: t("detail.trustClassification"),
-      value: getClassificationSummary(effective, result.primary_report_count, t),
+      value: getClassificationSummary(effective, effectiveReportCount, t),
     },
     {
       key: "references",
@@ -513,28 +517,28 @@ export default function DetailModal({
           )}
 
           {/* Data Provenance (v1.8 M1) */}
-          {(result.primary_source || result.retrieved_at) && (
+          {(effectiveSource || result.retrieved_at) && (
             <div>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
                 <Info className="h-4 w-4 text-slate-500" /> {t("detail.provenance")}
               </h3>
               <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                {result.primary_source && (
+                {effectiveSource && (
                   <div className="flex items-start gap-2">
                     <Database className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                     <div className="flex-1">
                       <span className="mr-2 text-slate-500">{t("detail.provenanceSource")}:</span>
-                      <span className="text-slate-800">{result.primary_source}</span>
-                      {result.primary_report_count && (
+                      <span className="text-slate-800">{effectiveSource}</span>
+                      {effectiveReportCount && (
                         <span
                           className="ml-2 inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700"
                           title={t("detail.provenanceReportCountTooltip", {
-                            count: result.primary_report_count,
+                            count: effectiveReportCount,
                           })}
                           data-testid="provenance-report-count"
                         >
                           {t("detail.provenanceReportCount", {
-                            count: result.primary_report_count,
+                            count: effectiveReportCount,
                           })}
                         </span>
                       )}

@@ -291,6 +291,13 @@ function App() {
 
   // Sort hook — applied after filtering
   const { sortedResults, sortConfig, requestSort } = useResultSort(filteredResults, getEffectiveClassification);
+  const exportResults = useMemo(
+    () =>
+      sortedResults.map((result) =>
+        resolveEffectiveChemicalForPrint(result, customGHSSettings)
+      ),
+    [sortedResults, customGHSSettings]
+  );
 
   // ── Handlers ──
   const toggleOtherClassifications = (casNumber) => {
@@ -549,12 +556,12 @@ function App() {
   const handleConfirmExport = useCallback(
     async (format) => {
       if (format === "csv") {
-        await exportToCSV(sortedResults);
+        await exportToCSV(exportResults);
         return;
       }
-      await exportToExcel(sortedResults);
+      await exportToExcel(exportResults);
     },
-    [sortedResults]
+    [exportResults]
   );
 
   const pilotAttentionCount = useMemo(() => {
@@ -812,7 +819,7 @@ function App() {
 
       {showExportPreview && (
         <ExportPreviewModal
-          results={sortedResults}
+          results={exportResults}
           initialFormat={exportPreviewFormat}
           onClose={() => setShowExportPreview(false)}
           onConfirm={handleConfirmExport}

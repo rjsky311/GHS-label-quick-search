@@ -82,6 +82,11 @@ When sources disagree:
 - Preserve alternate classifications where available so users can inspect
   differences.
 - Surface source labels and provenance close to the search/detail decision.
+- Keep the visible effective classification aligned across result rows,
+  detail provenance, print/export preparation, and exported CSV/XLSX rows. If a
+  user selects an alternate classification, source/report-count evidence must
+  follow that selected report instead of silently keeping the original primary
+  source.
 - Keep correction/report links separate from workflow/business request links.
 - Do not claim the app has resolved legal compliance conflicts.
 
@@ -182,14 +187,21 @@ Frontend:
   supplier-label, or local-rule support.
 - Detail views keep alternate-classification comparison visible even when the
   current primary classification has GHS text but no pictograms.
+- Export preview, frontend CSV fallback, and backend CSV/XLSX rows include data
+  state, primary source, report count, cache state, reference-link count, and
+  classification-selection context.
+- Effective custom classification choices carry their own source/report-count
+  evidence through result rows, Detail provenance, print preparation, and
+  export preparation.
 - Print planner blocks unavailable/unverified source data from hazard-label
   output.
 
 Production QA:
 
 - `npm run qa:production-search-ui` must continue checking trust notes, source
-  badges, no-GHS data-state behavior, safe reference link metadata, SDS link
-  shape, and separated data-correction/workflow support links.
+  badges, no-GHS data-state behavior, export-preview trust columns, safe
+  reference link metadata, SDS link shape, and separated
+  data-correction/workflow support links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 

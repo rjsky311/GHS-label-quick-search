@@ -650,6 +650,30 @@ describe('ResultsTable', () => {
       expect(screen.getByText('results.reportCountBadge')).toBeInTheDocument();
     });
 
+    it('uses the effective custom classification source and report count in provenance chips', () => {
+      const customEffective = createMockGetEffective({
+        source: 'PubChem LCSS alternate',
+        report_count: '8',
+        isCustom: true,
+        customIndex: 1,
+      });
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          getEffectiveClassification={customEffective}
+        />
+      );
+
+      expect(
+        screen.getByTestId(`source-badge-pubchem-${mockFoundResult.cas_number}`)
+      ).toHaveTextContent('results.sourcePubChem');
+      expect(
+        screen.getByTestId(`source-badge-pubchem-${mockFoundResult.cas_number}`)
+      ).toHaveAttribute('title', 'PubChem LCSS alternate');
+      expect(screen.getByText('results.reportCountBadge')).toBeInTheDocument();
+    });
+
     it('does NOT render the cache badge when cache_hit is false', () => {
       render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
       expect(screen.queryByText('results.cacheBadge')).not.toBeInTheDocument();

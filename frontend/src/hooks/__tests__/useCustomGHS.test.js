@@ -10,12 +10,16 @@ const mockResult = {
   hazard_statements: [{ code: 'H225', text_zh: '高度易燃' }],
   signal_word: 'Danger',
   signal_word_zh: '危險',
+  primary_source: 'ECHA C&L Notifications Summary',
+  primary_report_count: '236',
   other_classifications: [
     {
       pictograms: [{ code: 'GHS07' }],
       hazard_statements: [{ code: 'H302', text_zh: '吞食有害' }],
       signal_word: 'Warning',
       signal_word_zh: '警告',
+      source: 'Vendor SDS Alternate',
+      report_count: '8',
     },
   ],
   has_multiple_classifications: true,
@@ -48,6 +52,8 @@ describe('useCustomGHS', () => {
     expect(eff.customIndex).toBe(0);
     expect(eff.pictograms).toEqual([{ code: 'GHS02' }]);
     expect(eff.signal_word).toBe('Danger');
+    expect(eff.source).toBe('ECHA C&L Notifications Summary');
+    expect(eff.report_count).toBe('236');
   });
 
   it('getEffectiveClassification returns primary classification fields', () => {
@@ -78,6 +84,8 @@ describe('useCustomGHS', () => {
     expect(eff.customIndex).toBe(1);
     expect(eff.signal_word).toBe('Warning');
     expect(eff.pictograms).toEqual([{ code: 'GHS07' }]);
+    expect(eff.source).toBe('Vendor SDS Alternate');
+    expect(eff.report_count).toBe('8');
   });
 
   it('getEffectiveClassification falls back to default for out-of-range index', () => {

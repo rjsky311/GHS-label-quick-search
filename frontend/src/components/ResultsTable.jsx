@@ -2,7 +2,7 @@ import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, 
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
-import { hasGhsData, hasRenderableGhsVisual } from "@/utils/ghsAvailability";
+import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
 import {
   getLocalizedNames,
@@ -373,6 +373,12 @@ export default function ResultsTable({
                   {result.found ? (
                     (() => {
                       const displayNames = getLocalizedNames(result, displayLocale);
+                      const effectiveForSource = getEffectiveClassification(result);
+                      const effectiveSource =
+                        effectiveForSource?.source || result.primary_source;
+                      const effectiveReportCount =
+                        effectiveForSource?.report_count ||
+                        result.primary_report_count;
                       return (
                         <div>
                       <div className="break-words font-medium text-slate-950">
@@ -387,29 +393,29 @@ export default function ResultsTable({
                           Full provenance (timestamp, full source text) lives
                           in the detail modal to keep the results table
                           readable when many rows are shown. */}
-                      {(result.primary_source || result.cache_hit) && (
+                      {(effectiveSource || effectiveReportCount || result.cache_hit) && (
                         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
                           {(() => {
-                            const sourceBadge = getSourceBadge(result.primary_source, t);
+                            const sourceBadge = getSourceBadge(effectiveSource, t);
                             return sourceBadge ? (
                               <span
                                 className={`inline-flex items-center rounded border px-1.5 py-0.5 ${sourceBadge.className}`}
-                                title={result.primary_source}
+                                title={effectiveSource}
                                 data-testid={`source-badge-${sourceBadge.key}-${result.cas_number}`}
                               >
                                 {sourceBadge.label}
                               </span>
                             ) : null;
                           })()}
-                          {result.primary_report_count && (
+                          {effectiveReportCount && (
                             <span
                               className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"
                               title={t("detail.provenanceReportCountTooltip", {
-                                count: result.primary_report_count,
+                                count: effectiveReportCount,
                               })}
                             >
                               {t("results.reportCountBadge", {
-                                count: result.primary_report_count,
+                                count: effectiveReportCount,
                               })}
                             </span>
                           )}
@@ -458,7 +464,13 @@ export default function ResultsTable({
                         </div>
                       );
                     }
-                    if (!hasRenderableGhsVisual(result)) {
+                    if (
+                      !(
+                        effectiveForGhsCheck?.pictograms ||
+                        effectiveForGhsCheck?.ghs_pictograms ||
+                        []
+                      ).length
+                    ) {
                       return (
                         <div
                           className="space-y-1"
