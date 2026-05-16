@@ -423,6 +423,11 @@ Current status:
   Prepare Solution is stacked, Prepare Solution forward/backward Tab wrapping,
   and Escape restoring the underlying DetailModal instead of closing both
   layers.
+- The print modal now uses the existing diagnostics area to show a recovery
+  route when a complete-primary flow is blocked or upgraded. This keeps the
+  first screen quiet while still telling users which current stock failed, what
+  to do next, and which full-page stock or profile data is needed before
+  printing.
 
 Suggested verification:
 

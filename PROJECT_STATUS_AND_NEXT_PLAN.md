@@ -398,6 +398,10 @@ Current status:
   modal Tab/Shift+Tab wrapping, detail suppression while Prepare Solution is
   stacked, Prepare Solution Tab/Shift+Tab wrapping, and Escape closing only the
   top modal before returning to Detail.
+- Print-output diagnostics now include a specific recovery route for blocked or
+  upgraded complete-primary flows: the current stock, the recommended next
+  action, and the full-page stock or missing profile requirement are visible
+  before print handoff without adding more first-screen controls.
 
 ## 4. Known Blind Spots
 

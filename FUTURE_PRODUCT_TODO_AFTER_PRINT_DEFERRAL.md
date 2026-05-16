@@ -240,11 +240,21 @@ Acceptance:
 
 ### 2.2 Print Workflow Guidance Without More Controls
 
+Status: `Gate added` on 2026-05-16.
+
 Goal: users should feel the app is choosing the right print output with them,
 not forcing them to become layout experts.
 
 Work items:
 
+- Completed: added a recovery route inside the existing print-output
+  diagnostics for blocked or upgraded complete-primary flows. It names the
+  current physical stock, the concrete next action, and the recommended
+  complete-primary stock or missing requirement without adding another
+  first-screen control.
+- Completed: added component coverage so dense complete-primary routing and
+  missing responsible-profile states must keep the recovery route visible and
+  specific.
 - Keep the first-level print modal focused on physical target, output role,
   preview, and print action.
 - Move rare tuning into secondary or advanced areas.

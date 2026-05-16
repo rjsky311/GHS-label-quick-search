@@ -762,6 +762,18 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("preview-warning-banner")).toHaveTextContent(
       "Printing blocked",
     );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "Recommended recovery",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "Switch to Letter Primary",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "Large Container Front is too small",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "smaller stock only as a supplemental label",
+    );
     expect(screen.getByTestId("required-output-checklist")).toBeInTheDocument();
     expect(screen.getByTestId("required-output-pictograms")).toHaveTextContent(
       "2/2",
@@ -1032,6 +1044,12 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
       "Responsible profile required",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "Complete lab/supplier profile",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "A4 Primary is planned as a complete primary label",
     );
     expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(

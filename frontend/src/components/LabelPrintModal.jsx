@@ -1559,6 +1559,64 @@ export default function LabelPrintModal({
                     "label.outputPlanPendingBody",
                     "Select at least one chemical to let the app choose a safe printable output.",
                   );
+  const recoveryRoute =
+    selectedForLabel.length === 0
+      ? null
+      : canUseFullPagePrimary
+        ? {
+            tone: "caution",
+            label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+            value: tx("label.recoveryUseFullPageValue", "Switch to {{stock}}", {
+              stock: recommendedFullPageLabel,
+            }),
+            description: tx(
+              "label.recoveryUseFullPageBody",
+              "{{currentStock}} is too small for complete primary-label content. Print the complete primary label on {{stock}} first; use the smaller stock only as a supplemental label if needed.",
+              {
+                currentStock: currentStockName,
+                stock: recommendedFullPageLabel,
+              },
+            ),
+          }
+        : isProfileBlocked
+          ? {
+              tone: "danger",
+              label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+              value: tx(
+                "label.recoveryProfileValue",
+                "Complete lab/supplier profile",
+              ),
+              description: tx(
+                "label.recoveryProfileBody",
+                "{{stock}} is planned as a complete primary label, so name, phone, and address must be present before print handoff.",
+                { stock: currentStockName },
+              ),
+            }
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            ? {
+                tone: "danger",
+                label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+                value: tx("label.recoveryHazardValue", "Verify hazard data"),
+                description: tx(
+                  "label.recoveryHazardBody",
+                  "The app cannot print a hazard label until this result has usable GHS hazard content. Verify SDS/source data before choosing a label stock.",
+                ),
+              }
+            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+              ? {
+                  tone: "danger",
+                  label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+                  value: tx(
+                    "label.recoveryInvalidStockValue",
+                    "Use a larger stock or continuation output",
+                  ),
+                  description: tx(
+                    "label.recoveryInvalidStockBody",
+                    "{{stock}} cannot carry this output truthfully. Keep every available GHS pictogram visible, then move dense H/P detail to a larger complete label or continuation output.",
+                    { stock: currentStockName },
+                  ),
+                }
+              : null;
   const outputOutcomeTone =
     selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
   const outputOutcomeTitle =
@@ -3511,6 +3569,25 @@ export default function LabelPrintModal({
                         </button>
                       )}
                     </div>
+                    {recoveryRoute && (
+                      <div
+                        className={`mt-3 rounded-md border px-3 py-2 ${
+                          READINESS_TONE_CLASSES[recoveryRoute.tone] ||
+                          READINESS_TONE_CLASSES.neutral
+                        }`}
+                        data-testid="print-recovery-route"
+                      >
+                        <div className="text-xs font-semibold uppercase tracking-normal opacity-80">
+                          {recoveryRoute.label}
+                        </div>
+                        <div className="mt-1 text-sm font-semibold">
+                          {recoveryRoute.value}
+                        </div>
+                        <p className="mt-1 text-xs leading-5 opacity-90">
+                          {recoveryRoute.description}
+                        </p>
+                      </div>
+                    )}
                     <div
                       className="mt-3 grid gap-2 sm:grid-cols-3"
                       data-testid="print-decision-summary"
