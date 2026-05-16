@@ -25,6 +25,9 @@ const REQUIRED_PRINT_QA_MARKERS = [
   "label-hazard-mode-",
   "h_codes_only",
   "qr_reference",
+  "printAcknowledgedBatchAction",
+  "batch-include-continuation",
+  "data-batch-category",
 ];
 
 const productionUrl = process.env.PRINT_QA_PRODUCTION_URL || DEFAULT_PRODUCTION_URL;
