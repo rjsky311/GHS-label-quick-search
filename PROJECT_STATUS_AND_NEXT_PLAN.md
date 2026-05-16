@@ -4,6 +4,11 @@ This is the canonical planning entry point for the project. Read this file
 first when choosing the next autonomous product slice. Use the linked planning
 and QA files only after this file has set the priority.
 
+Active print simplification target: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
+canonical product model for the next label-printing refactor. It replaces the
+prior first-level print UI model with exactly three outputs: complete
+A4/Letter label, QR small label, and identification small label.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -25,6 +30,9 @@ Core product promises:
 - Print output must preserve available GHS pictograms on hazard labels. QR,
   brand surfaces, or supplemental labels must not replace required visual
   hazard communication.
+- Label printing should converge on the simplified three-output model in
+  `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` instead of exposing internal template,
+  purpose, density, H-code, and stock-planning concepts to ordinary users.
 - The app must remain honest about its authority boundary: it is a reference
   tool, and users should verify against SDS, supplier labels, and local rules.
 
@@ -52,6 +60,10 @@ Current baseline capabilities:
   per-item fit categories, representative previews, acknowledged
   reduced/continuation scope, and deployed production QA evidence. Keep future
   changes aligned with `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- The next print UX refactor should simplify that baseline according to
+  `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: one batch output type at a time, no
+  first-level purpose/card sprawl, and small-label continuation on the same
+  output instead of recommending mixed A4 recovery.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
 - `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the active batch-print product
   contract: purpose-first, one physical stock per batch, per-item fit report,
@@ -101,6 +113,10 @@ Current completion snapshot:
   receive new regression cases when evidence appears. Track these
   non-physical-print follow-ups in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
   use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` for the batch-print contract.
+- **Active product simplification**: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` now
+  defines the next print workflow target. It intentionally cuts the public
+  label flow down to complete labels, QR small labels, and identification
+  small labels.
 - **Data-trust export baseline**: effective custom classification selections
   now carry source/report-count evidence through result/detail surfaces,
   print/export preparation, export preview, frontend CSV fallback, and backend
@@ -112,6 +128,34 @@ Current completion snapshot:
 
 Use this order unless a fresh production screenshot, failing CI/QA run, security
 finding, or user-reported blocker clearly points elsewhere.
+
+### 0. Simplified Label Output Model
+
+Goal: stop repairing the old complex print modal one edge case at a time.
+Rebuild the label workflow around the three user-facing outputs in
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`.
+
+Do next:
+
+- Replace the first-level print UI with three output choices: complete label,
+  QR small label, and identification small label.
+- Keep A4/Letter complete labels as one page per label with full H/P and QR.
+- Make small labels identity-first: CAS, English name, Chinese name, all GHS
+  pictograms, and QR only for QR small labels.
+- Remove H/P text, signal words, H-code chips, teaser summaries, and dense
+  purpose language from small labels.
+- For small-label overfit, continue on the same selected output type and stock
+  by creating second/third small labels instead of recommending A4/Letter.
+- Add URL-query hydration for `?cas=...` so QR codes can scan back to this
+  product's lookup page.
+
+Done means:
+
+- The modal first screen exposes exactly the three outputs.
+- Batch printing uses one selected output type and physical stock for the
+  whole batch.
+- PDF and production QA cover all three outputs, including long names,
+  many-pictogram chemicals, and continuation labels.
 
 ### 1. CI And Production QA Operationalization
 

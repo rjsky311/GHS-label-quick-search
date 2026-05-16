@@ -12,6 +12,9 @@ one chemical, batch preview, batch print QA, or fixed-stock label workflows.
 Cross-reference this file with:
 
 - `PROJECT_STATUS_AND_NEXT_PLAN.md` for priority and done criteria.
+- `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` for the next user-facing batch output
+  model. That newer model reduces public batch choices to complete label, QR
+  small label, and identification small label.
 - `PRINT_LABEL_CONTRACT.md` for safety boundaries that remain non-negotiable.
 - `PRINT_ACCEPTANCE_STANDARD.md` for print output acceptance rules.
 - `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` for non-physical-print tracking
@@ -23,6 +26,13 @@ Cross-reference this file with:
 ## Current Implementation Status
 
 Status as of 2026-05-16:
+
+- Supersession note: this file documents the fixed-stock batch baseline that
+  exists today. Future batch work should simplify the public workflow according
+  to `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: the user chooses one of three output
+  types for the batch, the whole batch keeps that output type and stock, and
+  overfit small-label items become same-output continuation labels instead of
+  being redirected to A4/Letter or reduced-purpose terminology.
 
 - Phase 1 is implemented: `frontend/src/utils/testFixtures/batchPrintFixtures.js`
   provides a reusable 50-item mixed fixture.

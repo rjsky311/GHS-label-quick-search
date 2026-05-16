@@ -248,6 +248,14 @@ The current project-level planning entry is
 slice; it consolidates current status, should-do items, blind spots, priority
 order, and done criteria.
 
+The next label-printing product target is pinned in
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`. Use it before changing `LabelPrintModal`,
+print output planning, stock presets, batch print UX, or print QA. It reduces
+the user-facing workflow to three outputs: complete A4/Letter label, QR small
+label, and identification small label. Small labels should not expose H/P,
+signal words, H-code chips, or front-label terminology; overfit small-label
+items should split into same-output continuation labels.
+
 The print-workflow refactor baseline is pinned in
 `PRINT_OUTPUT_REFACTOR_PLAN.md`. Use it before changing `LabelPrintModal`,
 `printLabels`, `printFitEngine`, `printContentModel`, stock presets, preview

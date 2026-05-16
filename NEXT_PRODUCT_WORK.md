@@ -7,6 +7,8 @@ choosing what to do next.
 Use `NEXT_REMAINING_PRODUCT_WORK.md` for detailed execution notes after the
 current priority is chosen. Use `AUTONOMOUS_WORKFLOW.md` for standing approval,
 stop conditions, verification, pushing, deployment, and production QA rules.
+For the next label-printing refactor, use
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the active product contract.
 
 ## Product North Star
 
@@ -21,6 +23,8 @@ The product should be:
 - Trustworthy before it is clever.
 - Visually calm, clear, and easy to scan.
 - Honest about supplemental labels versus complete primary labels.
+- Simple in label printing: three user-facing outputs instead of exposing
+  internal print-planning concepts.
 - Friendly to future brand visibility without putting ads, sponsor copy, or
   unrelated promotion inside safety-critical label content.
 
@@ -41,26 +45,34 @@ Current mode:
   governance / safety boundaries, low-noise UX, and narrow/mobile polish. Track
   non-physical-print work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
   use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` before changing batch behavior.
+- A new product simplification decision is active for label printing:
+  `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the old first-level print UI
+  model. The next print slice should implement the three-output workflow before
+  adding more stock, purpose, density, or front-label options.
 
-1. Keep CI and production QA operationalization healthy. The GitHub Actions
+1. Simplify the label-printing workflow around the three outputs in
+   `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
+   label, and identification small label.
+2. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
-2. Keep documentation consolidation and autonomous continuation hygiene healthy.
+3. Keep documentation consolidation and autonomous continuation hygiene healthy.
    `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
-3. Fixed-stock batch label printing. Keep this in monitoring unless a new
+4. Fixed-stock batch label printing. Keep this in monitoring unless a new
    screenshot, QA failure, or product change reopens it. The current baseline
    supports one physical stock, Quick ID / Supplemental / Complete purpose,
    per-item fit results, representative previews, acknowledged
    reduced/continuation scope, PDF artifact coverage for a 50-item Quick ID
    batch, and deployed `qa:production-batch-print` / `qa:production-product`
-   evidence.
-4. Physical print validation for real paper, label stock, printer scaling, QR
+   evidence. Future changes should converge toward the simplified batch rules:
+   one output type, one stock, and same-output continuation labels.
+5. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
    `npm run qa:physical-print-plan` generates the current physical-print work
    order from `build/print-qa-report.json`. Real-printer execution is deferred
    until physical stock and printer access are available.
-5. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
+6. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
@@ -68,7 +80,7 @@ Current mode:
    aligned with that policy and add tests when behavior changes. Current
    baseline includes effective-classification source/report-count alignment
    and export-preview/CSV/XLSX trust columns.
-6. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
+7. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate
    also checks Detail/Prepare Solution modal keyboard containment. Keep

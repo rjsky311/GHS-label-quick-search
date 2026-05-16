@@ -9,6 +9,9 @@ scan, and physical readability checks live in
 `npm run qa:physical-print-plan` after `qa:print-report`.
 Fixed-stock batch-print requirements live in
 `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+The next simplified user-facing label model lives in
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`; use it before adding or changing first-level
+print outputs.
 
 ## Grounding References
 
@@ -45,6 +48,28 @@ Reference URLs:
 - https://qrplanet.com/help/article/what-is-the-minimum-size-of-a-qr-code
 
 ## Output Classes
+
+## Simplified Target Model
+
+For future user-facing work, the accepted print outputs are intentionally
+limited to the three-output model in `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`:
+
+1. Complete A4/Letter label with full H/P and QR.
+2. QR small label with CAS, English name, Chinese name, all GHS pictograms, and
+   QR only.
+3. Identification small label with CAS, English name, Chinese name, and all GHS
+   pictograms only.
+
+Small labels must not print H statements, P statements, signal words, H-code
+chips, or teaser summaries. If a small label cannot fit all required identity
+and pictogram content in one physical label, the renderer should create a
+second or third label on the same selected output type and stock. It should not
+route that item to A4/Letter merely because the small-label output needs
+continuation.
+
+The older output classes below describe the v1.10 implementation baseline and
+safety vocabulary. They remain useful for tests and migration work, but they
+should not re-expand the simplified first-level UX.
 
 ### Content Policy Matrix
 

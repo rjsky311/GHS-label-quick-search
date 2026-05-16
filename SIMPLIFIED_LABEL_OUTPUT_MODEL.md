@@ -1,0 +1,295 @@
+# Simplified Label Output Model
+
+Status: canonical target for the next label-printing refactor as of
+2026-05-16.
+
+This document replaces the prior first-level print workflow model for future
+work. Older documents such as `PRINT_OUTPUT_REFACTOR_PLAN.md` and
+`BATCH_LABEL_PRINT_REFACTOR_PLAN.md` remain useful for implementation history,
+QA lessons, and safety constraints, but the user-facing label workflow should
+now converge on the three outputs below.
+
+This is a product and engineering plan, not legal advice. Final workplace use
+still requires SDS, supplier labels, and local regulation review.
+
+## 1. Product Decision
+
+The label-printing feature should stop asking ordinary users to reason about
+front labels, supplemental labels, quick-ID labels, QR supplements, H-code
+budgets, reduced-purpose routing, dense-content exceptions, and many stock
+cards.
+
+The user-facing model is:
+
+1. Complete label.
+2. QR small label.
+3. Identification small label.
+
+The app can still use internal planning, renderer checks, continuation splits,
+and QA gates, but those details should not be the first thing the user sees.
+The product should feel like: choose the output type, preview the actual
+labels, print the batch.
+
+## 2. Output Types
+
+### 2.1 Complete Label
+
+Use when the user needs the full reference label.
+
+Physical size:
+
+- A4 primary.
+- Letter primary.
+- One label per page.
+
+Required content:
+
+- CAS number when available.
+- English chemical name.
+- Chinese chemical name.
+- All available GHS pictograms.
+- Full H statements.
+- Full P statements.
+- QR code.
+
+QR target:
+
+- QR should open this product's lookup page for the chemical, using a simple
+  CAS query URL such as `https://ghs-frontend.zeabur.app/?cas=7647-01-0`.
+- If the app does not yet support direct CAS query hydration from URL params,
+  implement that as part of the refactor before relying on the QR.
+
+Layout rules:
+
+- A4 and Letter complete labels remain one page per label.
+- Complete labels may use continuation pages only when the complete H/P content
+  cannot fit on one page without clipping.
+- The QR code must not push H/P content, product identity, or GHS pictograms
+  out of the printable area.
+
+### 2.2 QR Small Label
+
+Use when the user wants a compact label that carries identity, hazard icons,
+and a scan path back to the product detail/search page.
+
+Default physical size:
+
+- `62 x 40 mm`.
+- Sheet layout should place as many labels per page as can fit without
+  sacrificing readability or QR scan reliability.
+
+Required content:
+
+- First line: `CAS 7647-01-0` style CAS number.
+- Second line: English chemical name.
+- Third line: Chinese chemical name.
+- All available GHS pictograms across the label set.
+- QR code on every printed label in the set.
+
+Forbidden content:
+
+- No H statements.
+- No P statements.
+- No signal word such as `Danger`, `Warning`, `危險`, or `警告`.
+- No H-code chips or teaser summaries.
+
+Layout rules:
+
+- CAS, English name, and Chinese name must be visually separated. They must not
+  be packed into one crowded line.
+- Line spacing must remain readable; do not collapse name lines to make room
+  for optional content.
+- QR should remain large enough for practical phone scanning. Treat about
+  `20 mm` square as the default target unless physical-printer validation later
+  proves a smaller size reliable.
+- GHS pictograms should be visually clear and aligned in a predictable grid.
+
+### 2.3 Identification Small Label
+
+Use when the user only needs a compact physical identifier with GHS icons and
+does not need a QR code.
+
+Default physical size:
+
+- `70 x 24 mm`.
+- Sheet layout should place as many labels per page as can fit without
+  sacrificing readability.
+
+Required content:
+
+- First line: `CAS 7647-01-0` style CAS number.
+- Second line: English chemical name.
+- Third line: Chinese chemical name.
+- All available GHS pictograms across the label set.
+
+Forbidden content:
+
+- No QR code.
+- No H statements.
+- No P statements.
+- No signal word such as `Danger`, `Warning`, `危險`, or `警告`.
+- No H-code chips or teaser summaries.
+
+Layout rules:
+
+- CAS, English name, and Chinese name must be visually separated.
+- GHS pictograms are mandatory. They may move to a second/third label for the
+  same chemical, but they must not be omitted or summarized as `+N`.
+
+## 3. Continuation Rules For Small Labels
+
+Small labels should not fail simply because one chemical has a long name or many
+GHS pictograms. The app should continue on the same output type and same
+physical stock.
+
+Rules:
+
+- Do not switch an item from QR small label to A4/Letter just because it does
+  not fit in one small label.
+- Do not mix output types inside one batch.
+- If content does not fit in one small label, create a second or third label for
+  the same chemical.
+- Repeat CAS, English name, and Chinese name on every continuation label.
+- For QR small labels, repeat the QR code on every continuation label.
+- Distribute GHS pictograms across the continuation set when they cannot all fit
+  clearly on one label.
+- Add a small continuation marker such as `1/2`, `2/2`, `1/3`, `2/3`, `3/3`.
+  It should be present but visually quiet.
+- A continuation set is valid only when every required pictogram appears across
+  the set and every label still contains CAS plus both names.
+
+Recommended fallback order:
+
+1. Scale typography within readable bounds.
+2. Reflow name and pictogram areas.
+3. Split GHS pictograms across continuation labels.
+4. Split only within the same selected output type and stock.
+5. If the identity block itself cannot remain readable even after splitting,
+   block the specific item with a clear reason. Do not silently print an
+   unreadable label.
+
+## 4. Batch Printing
+
+Batch printing follows the same three-output model.
+
+Rules:
+
+- User chooses exactly one output type for the batch.
+- Every printed item uses that same output type and same physical stock.
+- The app may create multiple labels for one chemical when needed.
+- The app should summarize the generated label count before handoff.
+- The preview should include representative labels, not only the first item:
+  first, longest name, most pictograms, and any continuation example.
+- Batch output should prioritize page utilization for small labels, but not by
+  shrinking text, QR, or pictograms below practical readability.
+
+Examples:
+
+- `Print 47 QR small labels as 52 physical labels on 62 x 40 mm stock`
+- `Print 47 identification labels as 55 physical labels on 70 x 24 mm stock`
+- `Print 12 complete labels on A4`
+
+## 5. UI Simplification
+
+The first-level print modal should expose only:
+
+1. Complete label.
+2. QR small label.
+3. Identification small label.
+
+Remove or hide from the first-level flow:
+
+- Main container / bottle / tube / QR supplement task cards.
+- Large container front label language.
+- Quick-ID terminology.
+- H-code front-label chips.
+- Signal-word toggles for small labels.
+- H/P density controls for small labels.
+- General stock grids with many similar choices.
+- Layout micro-tuning controls.
+- Custom field controls.
+
+Advanced/future-only:
+
+- Case number.
+- Batch number.
+- Custom fields.
+- Lab profile fields on small labels.
+- User-saved custom physical stock.
+- Calibration controls.
+
+These advanced controls may return later, but they should not block the simple
+three-output workflow.
+
+## 6. Future Case Number And Custom Fields
+
+The current core refactor must treat CAS number as mandatory identity content.
+It must not confuse CAS number with case number.
+
+Future work should add:
+
+- Case number.
+- Batch/lot number.
+- Internal sample ID.
+- Custom lab fields.
+
+Those fields should enter through an advanced section and must have their own
+small-label fit policy. They should not crowd the initial simplified model.
+
+## 7. Implementation Direction
+
+Suggested implementation order:
+
+1. Add a new output model layer that maps the three product outputs to renderer
+   configs.
+2. Add URL-query hydration for `?cas=...` so QR codes can return users to this
+   product.
+3. Replace the first-level print modal selector with the three output cards.
+4. Remove H/P and signal-word rendering from both small-label outputs.
+5. Implement small-label continuation for long names and many pictograms.
+6. Update batch planner copy and output counts to account for continuation
+   labels on the same output type.
+7. Retire or hide legacy public-facing terms from the modal while preserving
+   internal tests for safety constraints.
+8. Refresh PDF, Browser, and production QA around the three new outputs.
+
+## 8. Acceptance Criteria
+
+The refactor is not complete until all criteria below are met.
+
+Product behavior:
+
+- The print modal first screen shows exactly the three output choices.
+- A4 and Letter complete labels include full H/P and QR.
+- QR small labels include CAS, English name, Chinese name, all GHS pictograms
+  across the set, and QR; they include no H/P and no signal word.
+- Identification small labels include CAS, English name, Chinese name, and all
+  GHS pictograms across the set; they include no QR, H/P, or signal word.
+- Small-label continuations repeat CAS and both names.
+- Small-label continuations use quiet page markers.
+- Batch printing uses one output type and one stock for the whole batch.
+- The app does not recommend A4/Letter merely because a selected small-label
+  output needs a second small label.
+
+Visual/readability:
+
+- CAS, English name, and Chinese name are separate visual rows.
+- QR small label QR codes are large enough for practical scanning.
+- Small labels fill sheets efficiently without producing unreadable text.
+- Preview shows the whole label and representative continuation examples.
+- GHS pictograms are not hidden, summarized, or reduced to an unreadable size.
+
+Verification:
+
+- `git diff --check`
+- `npm test -- --runInBand`
+- `npm run test:i18n`
+- `npm run build`
+- `npm run test:print-contract`
+- `npm run qa:print-pdf`
+- `npm run qa:production-batch-print`
+- `npm run qa:production-product`
+
+Production-facing changes must also be checked on the deployed Zeabur frontend,
+including actual clicks through each of the three output types.
+

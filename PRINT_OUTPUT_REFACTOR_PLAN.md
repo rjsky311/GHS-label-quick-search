@@ -6,6 +6,12 @@ stable plan so future work does not drift back into one-off template fixes.
 Concrete ship/no-ship gates live in `PRINT_ACCEPTANCE_STANDARD.md`; use that
 file as the acceptance contract before merging print changes.
 
+Supersession note: the next user-facing print workflow should follow
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`. This v1.10 plan remains useful for renderer
+history, fit lessons, and QA coverage, but it should not be used to re-expand
+the first-level UI into many purposes, stocks, H-code modes, or supplemental
+categories.
+
 Status note: this document is the single-label and representative
 multi-chemical baseline. It does not define the next fixed-stock batch label
 printing refactor. For batch search-to-print flows, one-stock batch planning,

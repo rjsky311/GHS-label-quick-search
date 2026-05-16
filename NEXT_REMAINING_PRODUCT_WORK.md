@@ -6,10 +6,12 @@ baseline. It is not the canonical planning entry point. Start from
 queue, then use this file with `AUTONOMOUS_WORKFLOW.md`,
 `PRINT_ACCEPTANCE_STANDARD.md`, and `PRINT_BROWSER_QA_CHECKLIST.md` when a
 specific product block is selected.
+For label-printing simplification, use `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as
+the active execution contract before using the older print/batch backlog below.
 
 The product goal remains the same: a user should be able to search a chemical,
-understand the hazard source, choose the physical labeling situation, preview a
-truthful output, and print without becoming a layout expert.
+understand the hazard source, choose one clear output type, preview a truthful
+output, and print without becoming a layout expert.
 
 ## Current Baseline
 
@@ -50,6 +52,9 @@ implementation checklist.
   appears. The non-physical-print tracker for those next steps is
   `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; the batch-print contract is
   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- **Active simplification target**: the old print-modal vocabulary should be
+  reduced according to `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete label, QR
+  small label, and identification small label.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
