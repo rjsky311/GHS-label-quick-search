@@ -2468,11 +2468,13 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => {
     caseResult.handoffExpectation.requiredIdentityText || "",
   expectedMinTotalLabels:
     caseResult.expected.minPrintTotalLabels ||
+    caseResult.handoffExpectation.totalLabels ||
     caseResult.expected.printTotalLabels ||
     1,
   expectedMinTotalPages:
     caseResult.expected.minPrintTotalPages ||
     caseResult.expected.minPrintTotalLabels ||
+    caseResult.handoffExpectation.totalLabels ||
     caseResult.expected.printTotalLabels ||
     1,
   customLabelFields: activeCustomLabelFields,

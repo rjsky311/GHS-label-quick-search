@@ -1719,6 +1719,11 @@ export default function LabelPrintModal({
     "Use {{stock}} for complete label",
     { stock: recommendedFullPageLabel },
   );
+  const previewMode =
+    (layoutProfile.template === "icon" || layoutProfile.template === "qrcode") &&
+    layoutProfile.perPage > 1
+      ? "label"
+      : "sheet";
   const sheetPreviewBundle = useMemo(
     () =>
       buildPrintPreviewDocument(
@@ -1728,7 +1733,11 @@ export default function LabelPrintModal({
         customLabelFields,
         sheetPreviewQuantities,
         labProfile,
-        { mode: "sheet", pageIndex: previewPageIndex },
+        {
+          mode: previewMode,
+          pageIndex: previewPageIndex,
+          labelIndex: previewPageIndex,
+        },
       ),
     [
       sheetPreviewItems,
@@ -1738,13 +1747,22 @@ export default function LabelPrintModal({
       sheetPreviewQuantities,
       labProfile,
       previewPageIndex,
+      previewMode,
     ],
   );
   const plannedPrintLabelCount =
     sheetPreviewBundle?.model?.expandedLabels?.length || totalLabels;
   const plannedPrintPageCount =
     sheetPreviewBundle?.model?.totalPages || estimatedPages;
-  const activePreviewPageIndex = sheetPreviewBundle?.previewPageIndex || 0;
+  const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
+  const previewNavigationCount =
+    previewMode === "label" && hasContinuationExpansion
+      ? plannedPrintLabelCount
+      : plannedPrintPageCount;
+  const activePreviewPageIndex =
+    previewMode === "label"
+      ? sheetPreviewBundle?.previewLabelIndex || 0
+      : sheetPreviewBundle?.previewPageIndex || 0;
   const activePreviewLabelIndex =
     plannedPrintLabelCount > 0
       ? Math.min(
@@ -1752,8 +1770,7 @@ export default function LabelPrintModal({
           plannedPrintLabelCount - 1,
         )
       : 0;
-  const hasMultiplePreviewPages = plannedPrintPageCount > 1;
-  const hasContinuationExpansion = plannedPrintLabelCount > totalLabels;
+  const hasMultiplePreviewPages = previewNavigationCount > 1;
   const printActionLabel =
     selectedForLabel.length === 0
       ? t("label.printBtn", { count: plannedPrintLabelCount })
@@ -1878,11 +1895,11 @@ export default function LabelPrintModal({
   ]);
 
   useEffect(() => {
-    const maxPageIndex = Math.max(plannedPrintPageCount - 1, 0);
+    const maxPageIndex = Math.max(previewNavigationCount - 1, 0);
     if (previewPageIndex > maxPageIndex) {
       setPreviewPageIndex(maxPageIndex);
     }
-  }, [plannedPrintPageCount, previewPageIndex]);
+  }, [previewNavigationCount, previewPageIndex]);
 
   useEffect(() => {
     if (
@@ -2229,11 +2246,11 @@ export default function LabelPrintModal({
     "Page {{current}} / {{total}}",
     {
       current: activePreviewPageIndex + 1,
-      total: Math.max(plannedPrintPageCount, 1),
+      total: Math.max(previewNavigationCount, 1),
     },
   );
   const updatePreviewPageIndex = (nextIndex) => {
-    const maxPageIndex = Math.max(plannedPrintPageCount - 1, 0);
+    const maxPageIndex = Math.max(previewNavigationCount - 1, 0);
     setPreviewPageIndex(Math.max(0, Math.min(nextIndex, maxPageIndex)));
   };
 
@@ -3277,7 +3294,7 @@ export default function LabelPrintModal({
               <button
                 type="button"
                 onClick={() => updatePreviewPageIndex(activePreviewPageIndex + 1)}
-                disabled={activePreviewPageIndex >= plannedPrintPageCount - 1}
+                disabled={activePreviewPageIndex >= previewNavigationCount - 1}
                 className="flex h-7 w-7 items-center justify-center rounded bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={tx("label.previewNextPage", "Next preview page")}
                 data-testid="preview-page-next"

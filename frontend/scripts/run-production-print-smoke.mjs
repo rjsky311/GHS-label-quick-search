@@ -9,10 +9,8 @@ const defaultSmokeCases = [
   "a4-primary-profile-blocked",
   "letter-primary",
   "formaldehyde-a4-primary-continuation",
-  "bottle-supplemental-with-case",
-  "tube-vial-quick-id-with-case",
-  "brother-62mm-quick-id",
-  "small-rack-qr-supplement",
+  "tube-vial-quick-id",
+  "brother-62mm-qr-supplement",
 ].join(",");
 
 const env = {
