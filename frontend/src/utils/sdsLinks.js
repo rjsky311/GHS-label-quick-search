@@ -151,20 +151,52 @@ export function getReferenceLinks(result) {
   ]);
 }
 
-export function getPreferredQrTarget(cid, cas, referenceLinks = []) {
+export function getPreferredQrTargetInfo(cid, cas, referenceLinks = []) {
+  const normalizedReferenceLinks = dedupeAndSortLinks(referenceLinks);
+  const fallbackLinks = getFallbackReferenceLinks(cid, cas);
+  const fallbackUrls = new Set(fallbackLinks.map((link) => link.url));
+  const explicitUrls = new Set(normalizedReferenceLinks.map((link) => link.url));
   const normalizedLinks = dedupeAndSortLinks([
-    ...referenceLinks,
-    ...getFallbackReferenceLinks(cid, cas),
+    ...normalizedReferenceLinks,
+    ...fallbackLinks,
   ]);
   const preferred = QR_TARGET_TYPE_PRIORITY.map((linkType) =>
     normalizedLinks.find((link) => link.linkType === linkType)
   ).find(Boolean);
-  return (
-    preferred?.url ||
-    (cid
-      ? `https://pubchem.ncbi.nlm.nih.gov/compound/${cid}`
-      : cas
-        ? `https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(cas)}`
-        : null)
-  );
+
+  if (preferred) {
+    return {
+      ...preferred,
+      isFallback:
+        fallbackUrls.has(preferred.url) && !explicitUrls.has(preferred.url),
+    };
+  }
+
+  if (cid) {
+    return {
+      label: "PubChem Compound Overview",
+      url: `https://pubchem.ncbi.nlm.nih.gov/compound/${cid}`,
+      linkType: "reference",
+      source: "pubchem",
+      priority: 90,
+      isFallback: true,
+    };
+  }
+
+  if (cas) {
+    return {
+      label: "PubChem Search",
+      url: `https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(cas)}`,
+      linkType: "reference",
+      source: "pubchem",
+      priority: 90,
+      isFallback: true,
+    };
+  }
+
+  return null;
+}
+
+export function getPreferredQrTarget(cid, cas, referenceLinks = []) {
+  return getPreferredQrTargetInfo(cid, cas, referenceLinks)?.url || null;
 }

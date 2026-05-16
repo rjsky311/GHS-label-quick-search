@@ -51,6 +51,25 @@ jest.mock('@/utils/printLabels', () => ({
 jest.mock('@/utils/sdsLinks', () => ({
   getPubChemSDSUrl: jest.fn(() => 'http://sds.test'),
   getECHASearchUrl: jest.fn(() => 'http://echa.test'),
+  getPreferredQrTargetInfo: jest.fn((cid, cas) =>
+    cid
+      ? {
+          label: 'PubChem Safety & Hazards',
+          url: 'http://sds.test',
+          linkType: 'sds',
+          source: 'pubchem',
+          isFallback: true,
+        }
+      : cas
+        ? {
+            label: 'ECHA Substance Search',
+            url: 'http://echa.test',
+            linkType: 'regulatory',
+            source: 'echa',
+            isFallback: true,
+          }
+        : null,
+  ),
   getReferenceLinks: jest.fn((result) => {
     const links = [];
     if (result?.cid) {

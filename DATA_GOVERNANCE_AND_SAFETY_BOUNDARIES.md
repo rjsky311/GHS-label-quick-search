@@ -66,6 +66,10 @@ Rules:
 - If duplicate URLs appear with different roles, keep the strongest role before
   sorting by priority. A generic reference must not downgrade the same URL when
   it is also available as an SDS or regulatory source.
+- QR target selection returns role/source/label metadata, not just the URL.
+  Print-modal copy and printed QR HTML data attributes must use that same
+  metadata so users and QA can tell whether the scan path is SDS, regulatory,
+  occupational, or generic reference support.
 - QR supplements must still preserve every available GHS pictogram.
 
 This means a manually added generic reference with priority `1` must not outrank
@@ -178,6 +182,9 @@ Frontend:
 - `getPreferredQrTarget` never chooses unsafe URLs.
 - QR target selection prefers SDS/regulatory/occupational over generic
   references.
+- QR supplement preflight shows the selected scan target role/source, and the
+  printed QR image carries `data-qr-target`, `data-qr-target-type`,
+  `data-qr-target-source`, and `data-qr-target-label` for audit/debug checks.
 - Visible reference lists prefer SDS/regulatory/occupational over generic
   references before applying numeric priority.
 - Results and detail views distinguish no-GHS, GHS-text-without-pictogram, and

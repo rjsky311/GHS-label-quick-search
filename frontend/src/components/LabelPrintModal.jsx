@@ -67,6 +67,7 @@ import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
+import { getPreferredQrTargetInfo } from "@/utils/sdsLinks";
 
 const TEMPLATE_OPTIONS = [
   {
@@ -527,6 +528,28 @@ function getPrintTargetForConfig(labelPurpose, layoutProfile = {}) {
   return "mainContainer";
 }
 
+function getQrTargetRoleLabel(linkType, tx) {
+  if (linkType === "sds") return tx("label.qrTargetRoleSds", "SDS");
+  if (linkType === "regulatory") {
+    return tx("label.qrTargetRoleRegulatory", "Regulatory");
+  }
+  if (linkType === "occupational") {
+    return tx("label.qrTargetRoleOccupational", "Occupational");
+  }
+  return tx("label.qrTargetRoleReference", "Reference");
+}
+
+function getQrTargetSourceLabel(source, tx) {
+  const normalized = typeof source === "string" ? source.toLowerCase() : "";
+  if (normalized === "pubchem") {
+    return tx("label.qrTargetSourcePubChem", "PubChem");
+  }
+  if (normalized === "echa") return tx("label.qrTargetSourceEcha", "ECHA");
+  if (normalized === "niosh") return tx("label.qrTargetSourceNiosh", "NIOSH");
+  if (normalized === "manual") return tx("label.qrTargetSourceManual", "Manual");
+  return tx("label.qrTargetSourceReference", "Reference");
+}
+
 function resolveResponsibleProfile(customLabelFields = {}, labProfile = {}) {
   return {
     organization:
@@ -833,6 +856,16 @@ export default function LabelPrintModal({
       )
     : tx("label.targetMainContainer", "Main container");
   const firstSelectedChem = selectedForLabel[0] ?? null;
+  const qrTargetInfo =
+    firstSelectedChem && labelPurpose === "qrSupplement"
+      ? getPreferredQrTargetInfo(
+          firstSelectedChem.cid,
+          firstSelectedChem.cas_number,
+          firstSelectedChem.reference_links,
+        )
+      : null;
+  const qrTargetRoleLabel = getQrTargetRoleLabel(qrTargetInfo?.linkType, tx);
+  const qrTargetSourceLabel = getQrTargetSourceLabel(qrTargetInfo?.source, tx);
   const currentLocale = i18n.language;
   const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
     layoutProfile,
@@ -1196,7 +1229,13 @@ export default function LabelPrintModal({
           ? tx("label.decisionTextComplete", "Full H/P text")
           : contentPolicy.hazardTextMode ===
               PRINT_HAZARD_TEXT_MODE.QR_REFERENCE
-            ? tx("label.decisionTextQrScan", "Details via QR/SDS")
+            ? qrTargetInfo
+              ? tx(
+                  "label.decisionTextQrScanSpecific",
+                  "Details via QR: {{target}}",
+                  { target: qrTargetRoleLabel },
+                )
+              : tx("label.decisionTextQrScan", "Details via QR/SDS")
             : contentPolicy.hazardTextMode ===
                 PRINT_HAZARD_TEXT_MODE.OMITTED
               ? tx("label.decisionTextIdentityOnly", "No full H/P text")
@@ -1279,7 +1318,11 @@ export default function LabelPrintModal({
     ? {
         key: "hazard-reference",
         label: tx("label.outputHazardReference", "Detailed hazard text"),
-        value: tx("label.outputQrScanPath", "Via QR/SDS"),
+        value: qrTargetInfo
+          ? tx("label.outputQrScanSpecificPath", "Via QR: {{target}}", {
+              target: qrTargetRoleLabel,
+            })
+          : tx("label.outputQrScanPath", "Via QR/SDS"),
         tone: "neutral",
         description: tx(
           "label.outputQrScanPathHint",
@@ -1357,6 +1400,27 @@ export default function LabelPrintModal({
               "label.outputQrCodeHint",
               "Scan path carries supporting detail.",
             ),
+          },
+          {
+            key: "qr-target",
+            label: tx("label.outputQrTarget", "QR target"),
+            value: qrTargetInfo
+              ? qrTargetRoleLabel
+              : tx("label.outputQrTargetMissing", "Not available"),
+            tone: qrTargetInfo ? "ready" : "caution",
+            description: qrTargetInfo
+              ? tx(
+                  "label.outputQrTargetHint",
+                  "Scans to {{label}} ({{source}}). Verify the destination before relying on it.",
+                  {
+                    label: qrTargetInfo.label,
+                    source: qrTargetSourceLabel,
+                  },
+                )
+              : tx(
+                  "label.outputQrTargetMissingHint",
+                  "No safe QR destination is available for this result.",
+                ),
           },
         ]
       : []),
@@ -1583,7 +1647,8 @@ export default function LabelPrintModal({
               : isQrSupplementOutput
                 ? tx(
                     "label.outputOutcomeQrBody",
-                    "This prints a scan-first supplement with identity, QR, and all available pictograms. It does not replace a complete primary label.",
+                    "This prints a scan-first supplement with identity, QR, and all available pictograms. QR opens {{target}} support and does not replace a complete primary label.",
+                    { target: qrTargetInfo ? qrTargetRoleLabel : "SDS/QR" },
                   )
                 : isQuickIdOutput
                   ? tx(

@@ -1,6 +1,7 @@
 import {
   getECHASearchUrl,
   getFallbackReferenceLinks,
+  getPreferredQrTargetInfo,
   getNioshPocketGuideUrl,
   getPreferredQrTarget,
   getPubChemSDSUrl,
@@ -292,5 +293,42 @@ describe("getPreferredQrTarget", () => {
 
   it("returns null when both CID and CAS are missing", () => {
     expect(getPreferredQrTarget(null, null)).toBeNull();
+  });
+});
+
+describe("getPreferredQrTargetInfo", () => {
+  it("returns role/source metadata for the chosen QR target", () => {
+    expect(
+      getPreferredQrTargetInfo(702, "64-17-5", [
+        {
+          label: "Manual supplier SDS",
+          url: "https://example.com/manual-sds",
+          link_type: "sds",
+          source: "manual",
+          priority: 1,
+        },
+      ])
+    ).toMatchObject({
+      label: "Manual supplier SDS",
+      url: "https://example.com/manual-sds",
+      linkType: "sds",
+      source: "manual",
+      isFallback: false,
+    });
+  });
+
+  it("marks local PubChem/ECHA targets as fallbacks", () => {
+    expect(getPreferredQrTargetInfo(702, "64-17-5")).toMatchObject({
+      label: "PubChem Safety & Hazards",
+      linkType: "sds",
+      source: "pubchem",
+      isFallback: true,
+    });
+    expect(getPreferredQrTargetInfo(null, "64-17-5")).toMatchObject({
+      label: "ECHA Substance Search",
+      linkType: "regulatory",
+      source: "echa",
+      isFallback: true,
+    });
   });
 });

@@ -686,13 +686,16 @@ describe("LabelPrintModal", () => {
       "trust.supplementalTitle",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
-      "Details via QR/SDS",
+      "Details via QR: Regulatory",
     );
     const qrChecklist = screen.getByTestId("required-output-checklist");
     expect(qrChecklist).toHaveTextContent("This label prints");
     expect(qrChecklist).toHaveTextContent("QR code");
+    expect(qrChecklist).toHaveTextContent("QR target");
+    expect(qrChecklist).toHaveTextContent("Regulatory");
+    expect(qrChecklist).toHaveTextContent("ECHA Substance Search");
     expect(qrChecklist).toHaveTextContent("Detailed hazard text");
-    expect(qrChecklist).toHaveTextContent("Via QR/SDS");
+    expect(qrChecklist).toHaveTextContent("Via QR: Regulatory");
     expect(qrChecklist).not.toHaveTextContent("H statements");
     expect(qrChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(

@@ -15,7 +15,7 @@ import {
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
 import { inspectPrintContentFit } from "@/utils/printFitEngine";
-import { getPreferredQrTarget } from "@/utils/sdsLinks";
+import { getPreferredQrTargetInfo } from "@/utils/sdsLinks";
 import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
@@ -1310,12 +1310,12 @@ const renderQRCodeTemplate = (chemical, model) => {
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const prepared = isPrepared(effectiveChem);
-  const qrTarget =
-    getPreferredQrTarget(
-      effectiveChem.cid,
-      effectiveChem.cas_number,
-      effectiveChem.reference_links,
-    ) || "https://pubchem.ncbi.nlm.nih.gov/";
+  const qrTargetInfo = getPreferredQrTargetInfo(
+    effectiveChem.cid,
+    effectiveChem.cas_number,
+    effectiveChem.reference_links,
+  );
+  const qrTarget = qrTargetInfo?.url || "https://pubchem.ncbi.nlm.nih.gov/";
   const budgets = model.layout.templateBudgets.qrcode;
   const prioritizedHazards = prioritizeHazardStatements(hazards);
   const compactQrSupplement =
@@ -1382,7 +1382,14 @@ const renderQRCodeTemplate = (chemical, model) => {
       </div>
       <div class="qr-right qr-panel">
         <div class="qr-code-shell">
-          <img class="qrcode-img" src="${getQRCodeUrl(qrTarget, 200)}" alt="QR" data-required-print-image="qr-code" data-qr-target="${escapeHtml(qrTarget)}" />
+          <img class="qrcode-img"
+            src="${getQRCodeUrl(qrTarget, 200)}"
+            alt="QR"
+            data-required-print-image="qr-code"
+            data-qr-target="${escapeHtml(qrTarget)}"
+            data-qr-target-type="${escapeHtml(qrTargetInfo?.linkType || "reference")}"
+            data-qr-target-source="${escapeHtml(qrTargetInfo?.source || "pubchem")}"
+            data-qr-target-label="${escapeHtml(qrTargetInfo?.label || "PubChem")}" />
         </div>
         <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
       </div>

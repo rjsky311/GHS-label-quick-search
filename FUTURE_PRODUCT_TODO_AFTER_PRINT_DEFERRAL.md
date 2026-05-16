@@ -48,7 +48,7 @@ differences understandable and safe.
 
 ### 1.1 Source-Conflict Handling
 
-Status: `Gate added` on 2026-05-15.
+Status: `Gate added` on 2026-05-16.
 
 Goal: when PubChem/ECHA/manual/reference sources disagree or look incomplete,
 the app should expose the uncertainty without creating false certainty.
@@ -140,12 +140,17 @@ Work items:
   exports now carry data-state, primary-source, report-count, cache,
   reference-link, and classification-selection context, so exported rows do not
   lose the trust boundary users saw in the app.
+- Completed: QR target selection now exposes role/source/label metadata through
+  `getPreferredQrTargetInfo`; QR supplement preflight shows the selected scan
+  target role, and printed QR images carry target URL/type/source/label data
+  attributes for QA and troubleshooting.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.
 - Add visual or copy polish only if it reduces confusion; avoid making
   reference links look like final legal approval.
-- Review QR target fallback behavior when no SDS/regulatory link is available.
+- Continue monitoring QR target fallback behavior when no SDS/regulatory link
+  is available.
 - Add examples for unsafe/legacy links, duplicate URLs with different roles,
   and manual SDS links with higher priority.
 
@@ -154,6 +159,8 @@ Acceptance:
 - Unsafe URL schemes never render or become QR targets.
 - Generic references cannot outrank SDS/regulatory evidence by numeric priority
   alone.
+- QR supplement users can see whether the scan path is SDS, regulatory,
+  occupational, or generic reference support before printing.
 - Production QA continues checking safe schemes, roles, sources, and ordering.
 
 ### 1.4 Telemetry, Admin Cost, And Privacy Boundaries

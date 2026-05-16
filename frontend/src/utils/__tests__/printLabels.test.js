@@ -3542,6 +3542,9 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(
         "data-qr-target=\"https://pubchem.ncbi.nlm.nih.gov/compound/702#section=Safety-and-Hazards\"",
       );
+      expect(html).toContain('data-qr-target-type="sds"');
+      expect(html).toContain('data-qr-target-source="pubchem"');
+      expect(html).toContain('data-qr-target-label="PubChem Safety &amp; Hazards"');
     });
 
     it("falls back to the ECHA search target in the QR payload when CID is missing", () => {
@@ -3554,6 +3557,9 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(
         "data-qr-target=\"https://chem.echa.europa.eu/substance-search?searchText=64-17-5\"",
       );
+      expect(html).toContain('data-qr-target-type="regulatory"');
+      expect(html).toContain('data-qr-target-source="echa"');
+      expect(html).toContain('data-qr-target-label="ECHA Substance Search"');
     });
   });
 

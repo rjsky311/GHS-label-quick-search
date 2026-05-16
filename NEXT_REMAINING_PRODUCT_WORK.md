@@ -270,6 +270,9 @@ Current status:
   decision: complete outputs get verification copy, QR/quick-ID/supplemental
   outputs state that they do not replace the complete primary label, and blocked
   states tell the user not to print yet.
+- QR supplement outputs now expose the scan target role before printing
+  (`SDS`, `Regulatory`, `Occupational`, or `Reference`) and the printed QR image
+  keeps URL/type/source/label data attributes for audit-oriented QA.
 - The product-level production gate uses the same search UI report as evidence
   for trust/source/SDS boundaries, including authoritative notes, source chips,
   safe reference-link metadata, and separated data-correction/workflow support

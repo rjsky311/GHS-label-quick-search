@@ -323,6 +323,9 @@ Current status:
   authoritative than verification links.
 - Backend reference-link payloads now use the same role-first source order, so
   the API, frontend display, and QR target selection share one authority model.
+- QR supplement planning now uses the same source model for scan targets: the
+  UI shows the target role/source before printing, and printed QR images carry
+  target URL/type/source/label metadata for QA and troubleshooting.
 - Admin curation writes are bounded on the backend: manual dictionary entries,
   aliases, and reference links trim text, cap long fields, reject unsupported
   locale/status values, and constrain numeric priority/confidence before data
