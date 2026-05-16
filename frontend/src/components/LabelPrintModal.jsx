@@ -1564,11 +1564,14 @@ export default function LabelPrintModal({
       ? null
       : canUseFullPagePrimary
         ? {
+            kind: "use-full-page",
             tone: "caution",
             label: tx("label.recoveryRouteLabel", "Recommended recovery"),
             value: tx("label.recoveryUseFullPageValue", "Switch to {{stock}}", {
               stock: recommendedFullPageLabel,
             }),
+            currentStock: currentStockName,
+            targetStock: recommendedFullPageLabel,
             description: tx(
               "label.recoveryUseFullPageBody",
               "{{currentStock}} is too small for complete primary-label content. Print the complete primary label on {{stock}} first; use the smaller stock only as a supplemental label if needed.",
@@ -1580,43 +1583,52 @@ export default function LabelPrintModal({
           }
         : isProfileBlocked
           ? {
+              kind: "profile",
               tone: "danger",
               label: tx("label.recoveryRouteLabel", "Recommended recovery"),
               value: tx(
                 "label.recoveryProfileValue",
                 "Complete lab/supplier profile",
               ),
+              currentStock: currentStockName,
+              targetStock: "",
               description: tx(
                 "label.recoveryProfileBody",
                 "{{stock}} is planned as a complete primary label, so name, phone, and address must be present before print handoff.",
                 { stock: currentStockName },
               ),
             }
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          ? {
+              kind: "hazard-data",
+              tone: "danger",
+              label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+              value: tx("label.recoveryHazardValue", "Verify hazard data"),
+              currentStock: currentStockName,
+              targetStock: "",
+              description: tx(
+                "label.recoveryHazardBody",
+                "The app cannot print a hazard label until this result has usable GHS hazard content. Verify SDS/source data before choosing a label stock.",
+              ),
+            }
+          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
             ? {
+                kind: "invalid-stock",
                 tone: "danger",
                 label: tx("label.recoveryRouteLabel", "Recommended recovery"),
-                value: tx("label.recoveryHazardValue", "Verify hazard data"),
+                value: tx(
+                  "label.recoveryInvalidStockValue",
+                  "Use a larger stock or continuation output",
+                ),
+                currentStock: currentStockName,
+                targetStock: "",
                 description: tx(
-                  "label.recoveryHazardBody",
-                  "The app cannot print a hazard label until this result has usable GHS hazard content. Verify SDS/source data before choosing a label stock.",
+                  "label.recoveryInvalidStockBody",
+                  "{{stock}} cannot carry this output truthfully. Keep every available GHS pictogram visible, then move dense H/P detail to a larger complete label or continuation output.",
+                  { stock: currentStockName },
                 ),
               }
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
-              ? {
-                  tone: "danger",
-                  label: tx("label.recoveryRouteLabel", "Recommended recovery"),
-                  value: tx(
-                    "label.recoveryInvalidStockValue",
-                    "Use a larger stock or continuation output",
-                  ),
-                  description: tx(
-                    "label.recoveryInvalidStockBody",
-                    "{{stock}} cannot carry this output truthfully. Keep every available GHS pictogram visible, then move dense H/P detail to a larger complete label or continuation output.",
-                    { stock: currentStockName },
-                  ),
-                }
-              : null;
+            : null;
   const outputOutcomeTone =
     selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
   const outputOutcomeTitle =
@@ -3576,6 +3588,9 @@ export default function LabelPrintModal({
                           READINESS_TONE_CLASSES.neutral
                         }`}
                         data-testid="print-recovery-route"
+                        data-recovery-kind={recoveryRoute.kind}
+                        data-current-stock={recoveryRoute.currentStock}
+                        data-target-stock={recoveryRoute.targetStock}
                       >
                         <div className="text-xs font-semibold uppercase tracking-normal opacity-80">
                           {recoveryRoute.label}

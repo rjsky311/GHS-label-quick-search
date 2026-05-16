@@ -125,6 +125,10 @@ Current status:
   product work blocks. `npm run qa:production-product` requires the print
   bundle, print matrix, deployed handoff, search UI, and prepared workflow
   reports to pass before it marks the whole product gate as passing.
+- Production handoff QA now includes a blocked A4 complete-primary case with
+  missing responsible profile. The runner clears browser storage per case and
+  checks the recovery-route metadata, so stale local profile data cannot hide a
+  blocked-flow regression.
 
 Suggested verification:
 

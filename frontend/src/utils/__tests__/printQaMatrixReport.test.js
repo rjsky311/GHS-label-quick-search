@@ -380,6 +380,41 @@ describe("print QA matrix report", () => {
       byId["a4-primary"].expected.contentPolicy,
     );
 
+    expect(byId["a4-primary-profile-blocked"]).toMatchObject({
+      expected: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE,
+        outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+        stockPreset: "a4-primary",
+        template: "full",
+        recoveryKind: "profile",
+      }),
+      actual: expect.objectContaining({
+        canPrint: false,
+        planState: PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE,
+        outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+        stockPreset: "a4-primary",
+        template: "full",
+      }),
+      handoffExpectation: expect.objectContaining({
+        status: "blocked",
+        labelKind: "complete-primary",
+        stockPreset: "a4-primary",
+        template: "full",
+        recoveryKind: "profile",
+      }),
+    });
+    expect(browserCaseById["a4-primary-profile-blocked"]).toMatchObject({
+      expectedCanPrint: false,
+      expectedPrintButtonEnabled: false,
+      expectedRecoveryKind: "profile",
+      responsibleProfile: {
+        organization: "",
+        phone: "",
+        address: "",
+      },
+    });
+
     expect(byId["letter-primary"].handoffExpectation).toMatchObject({
       status: "qa_handoff",
       labelKind: "complete-primary",

@@ -7,6 +7,7 @@ const npmCommand = isWindows ? "cmd.exe" : "npm";
 const LAYERS = Object.freeze({
   primary: [
     "a4-primary",
+    "a4-primary-profile-blocked",
     "letter-primary",
     "a4-primary-zh-bw",
     "letter-primary-en-bw",

@@ -6,6 +6,7 @@ const npmCommand = isWindows ? "cmd.exe" : "npm";
 
 const defaultSmokeCases = [
   "a4-primary",
+  "a4-primary-profile-blocked",
   "letter-primary",
   "formaldehyde-a4-primary-continuation",
   "bottle-supplemental-with-case",

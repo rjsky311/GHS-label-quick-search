@@ -916,6 +916,17 @@ const capturePreviewEvidence = async (page, testCase) => {
       .catch(() => "")) || "")
       .replace(/\s+/g, " ")
       .trim();
+  evidence.recoveryRoute = await page
+    .getByTestId("print-recovery-route")
+    .evaluate((node) => ({
+      text: (node.innerText || node.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim(),
+      kind: node.getAttribute("data-recovery-kind") || "",
+      currentStock: node.getAttribute("data-current-stock") || "",
+      targetStock: node.getAttribute("data-target-stock") || "",
+    }))
+    .catch(() => null);
   if (screenshotDir) {
     fs.mkdirSync(screenshotDir, { recursive: true });
     const targetPath = path.join(screenshotDir, `${testCase.id}.png`);
@@ -1059,6 +1070,7 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     );
   } else {
     const expectedBlockedPatterns = testCase.expectedBlockedTextPatterns || [];
+    const expectedRecoveryKind = testCase.expectedRecoveryKind || "";
     assert(
       "status",
       status.printButtonEnabled === false ||
@@ -1070,6 +1082,19 @@ const evaluateCase = ({ testCase, status, evidence }) => {
         expectedBlockedPatterns.some((pattern) =>
           new RegExp(pattern, "i").test(blockedText),
         ),
+    );
+    assert(
+      "recovery-route-visible",
+      !expectedRecoveryKind || Boolean(evidence.recoveryRoute?.text),
+    );
+    assert(
+      "recovery-route-kind",
+      !expectedRecoveryKind ||
+        evidence.recoveryRoute?.kind === expectedRecoveryKind,
+    );
+    assert(
+      "recovery-route-current-stock",
+      !expectedRecoveryKind || Boolean(evidence.recoveryRoute?.currentStock),
     );
   }
   assert(
@@ -1280,11 +1305,18 @@ const evaluateCase = ({ testCase, status, evidence }) => {
 const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
   try {
+    await page.addInitScript(() => {
+      window.localStorage?.clear();
+      window.sessionStorage?.clear();
+    });
     await page.goto(withQaParam(baseUrl), { waitUntil: "domcontentloaded" });
     await fillSearch(page, testCase.searchTerm);
     await openPrintModal(page);
     const modalShellInspection = await inspectModalShell(page);
-    await fillResponsibleProfile(page, responsibleProfile);
+    await fillResponsibleProfile(
+      page,
+      testCase.responsibleProfile ?? responsibleProfile,
+    );
     await setTargetAndStock(page, testCase);
     await setVisualConfig(page, testCase);
     await setCustomFields(page, testCase);

@@ -826,6 +826,52 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
+    id: "a4-primary-profile-blocked",
+    label: "A4 complete primary blocked without responsible profile",
+    locale: "zh-TW",
+    labProfile: {
+      organization: "",
+      phone: "",
+      address: "",
+    },
+    productionResponsibleProfile: {
+      organization: "",
+      phone: "",
+      address: "",
+    },
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE,
+      outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasQr: false,
+      hasFullPagePictograms: true,
+      recoveryKind: "profile",
+      blockedTextPatterns: [
+        "profile",
+        "lab",
+        "supplier",
+        "A4",
+        "實驗室",
+        "供應商",
+      ],
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+      },
+    },
+  },
+  {
     id: "letter-primary",
     label: "Letter complete primary",
     locale: "en-US",
@@ -1875,6 +1921,7 @@ export function buildPrintQaCaseResult({
 } = {}) {
   const selectedChemical =
     chemical || resolvePrintQaCaseChemical(testCase, chemicals);
+  const caseLabProfile = testCase.labProfile ?? labProfile;
   const expectedPictograms =
     testCase.expected?.pictogramCodes ||
     getChemicalPictogramCodes(selectedChemical);
@@ -1883,28 +1930,28 @@ export function buildPrintQaCaseResult({
     selectedForLabel: [selectedChemical],
     layout,
     customLabelFields: testCase.customLabelFields,
-    resolvedLabProfile: labProfile,
+    resolvedLabProfile: caseLabProfile,
     locale: testCase.locale,
   });
   const fitPreview = buildPreview({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
     customLabelFields: testCase.customLabelFields,
-    labProfile,
+    labProfile: caseLabProfile,
     previewZoom: "fit",
   });
   const inspectPreview = buildPreview({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
     customLabelFields: testCase.customLabelFields,
-    labProfile,
+    labProfile: caseLabProfile,
     previewZoom: "inspect",
   });
   const printDocument = buildDocument({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
     customLabelFields: testCase.customLabelFields,
-    labProfile,
+    labProfile: caseLabProfile,
   });
   const fragmentHtml = fitPreview?.fragmentHtml || "";
   const printHtml = printDocument?.pagesHtml || "";
@@ -2188,6 +2235,7 @@ export function buildPrintQaCaseResult({
       nameDisplay: printDocument?.model?.layout?.nameDisplay,
       autoFitLevel: printDocument?.model?.layout?.autoFitLevel || 0,
       requiredIdentityText: expected.requiredIdentityText || "",
+      recoveryKind: expected.recoveryKind || "",
       expectedPrintMinPictogramSidePx:
         stockFit.expectedPrintMinPictogramSidePx,
       expectedPrintMinQrSidePx: stockFit.expectedPrintMinQrSidePx,
@@ -2229,6 +2277,7 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
   expectedPrintButtonEnabled: caseResult.expected.canPrint !== false,
   expectedStatus: caseResult.handoffExpectation.status,
   expectedPlanState: caseResult.actual.planState,
+  expectedRecoveryKind: caseResult.handoffExpectation.recoveryKind || "",
   expectedBlockedTextPatterns:
     caseResult.expected.canPrint === false
       ? ["continuation", "too dense", "larger", "complete primary", "A4", "續頁", "過密", "更大", "完整主標"]
@@ -2281,6 +2330,8 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => ({
     caseResult.expected.printTotalLabels ||
     1,
   customLabelFields: testCase.customLabelFields || {},
+  responsibleProfile:
+    testCase.productionResponsibleProfile ?? testCase.labProfile ?? null,
   mustContainCas: Boolean(caseResult.chemical.cas),
   selectors: {
     searchInputPlaceholder: "例如: 64-17-5 或 Ethanol 或 乙醇",

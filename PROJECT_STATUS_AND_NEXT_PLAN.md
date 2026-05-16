@@ -147,6 +147,9 @@ Current status:
 - Production print handoff QA now checks QR supplement scan-target metadata and
   visible QR target role copy, so the SDS/regulatory/reference scan path is not
   only manually inspected.
+- Production print handoff QA also includes a blocked A4 complete-primary
+  recovery case with missing responsible profile, so blocked print states must
+  show a concrete recovery route rather than only disabling the button.
 
 Done means:
 

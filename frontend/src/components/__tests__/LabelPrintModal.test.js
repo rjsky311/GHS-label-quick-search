@@ -765,6 +765,18 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
       "Recommended recovery",
     );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-recovery-kind",
+      "use-full-page",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-current-stock",
+      "Large Container Front",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-target-stock",
+      "Letter Primary",
+    );
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
       "Switch to Letter Primary",
     );
@@ -1047,6 +1059,14 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
       "Complete lab/supplier profile",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-recovery-kind",
+      "profile",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-current-stock",
+      "A4 Primary",
     );
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
       "A4 Primary is planned as a complete primary label",

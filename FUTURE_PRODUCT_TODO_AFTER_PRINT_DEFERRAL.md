@@ -255,6 +255,10 @@ Work items:
 - Completed: added component coverage so dense complete-primary routing and
   missing responsible-profile states must keep the recovery route visible and
   specific.
+- Completed: added a deployed production handoff case for an A4 complete
+  primary label with missing responsible profile. The production runner now
+  clears browser storage per case and fails if the recovery route is missing or
+  does not expose the expected recovery kind.
 - Keep the first-level print modal focused on physical target, output role,
   preview, and print action.
 - Move rare tuning into secondary or advanced areas.
