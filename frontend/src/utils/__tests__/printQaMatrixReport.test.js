@@ -437,12 +437,12 @@ describe("print QA matrix report", () => {
       casNumbers: ["7647-01-0"],
       pageSize: "A4",
       colorMode: "bw",
-      nameDisplay: "zh",
+      nameDisplay: "both",
     });
     expect(byId["a4-primary-zh-bw"].actual.hasFullPagePictograms).toBe(true);
     expect(browserCaseById["a4-primary-zh-bw"]).toMatchObject({
       expectedColorMode: "bw",
-      expectedNameDisplay: "zh",
+      expectedNameDisplay: "both",
       expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
       expectedForbiddenIdentityTexts: [],
     });
@@ -456,12 +456,12 @@ describe("print QA matrix report", () => {
       casNumbers: ["7647-01-0"],
       pageSize: "Letter",
       colorMode: "bw",
-      nameDisplay: "en",
+      nameDisplay: "both",
     });
     expect(byId["letter-primary-en-bw"].actual.hasFullPagePictograms).toBe(true);
     expect(browserCaseById["letter-primary-en-bw"]).toMatchObject({
       expectedColorMode: "bw",
-      expectedNameDisplay: "en",
+      expectedNameDisplay: "both",
       expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
       expectedForbiddenIdentityTexts: [],
     });

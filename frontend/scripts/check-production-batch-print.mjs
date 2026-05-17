@@ -120,6 +120,25 @@ const resolveChromeExecutable = () => {
   return found;
 };
 
+const clickRepresentativePreview = async (page, representative) => {
+  const testId = `batch-preview-rep-${representative}`;
+  const button = page.getByTestId(testId);
+  if (!(await button.count())) return false;
+
+  try {
+    await button.click({ timeout: 5000 });
+    return true;
+  } catch (error) {
+    await page.evaluate((targetTestId) => {
+      const node = document.querySelector(`[data-testid="${targetTestId}"]`);
+      if (!node) return;
+      node.scrollIntoView({ block: "center", inline: "nearest" });
+      node.click();
+    }, testId);
+    return true;
+  }
+};
+
 const parseBatchCas = () => {
   const raw = (process.env.BATCH_PRINT_QA_CAS || "").trim();
   const list = raw
@@ -309,8 +328,7 @@ const run = async () => {
         : "same-stock-continuation";
       await page.getByTestId(controlTestId).click();
       await page.waitForTimeout(300);
-      if ((await page.getByTestId("batch-preview-rep-worstFit").count()) > 0) {
-        await page.getByTestId("batch-preview-rep-worstFit").click();
+      if (await clickRepresentativePreview(page, "worstFit")) {
         await page.waitForTimeout(300);
       }
       scopeAfter = await page.evaluate((category) => {
@@ -348,7 +366,7 @@ const run = async () => {
       }
     }
 
-    await page.getByTestId("batch-preview-rep-worstFit").click();
+    await clickRepresentativePreview(page, "worstFit");
     await page.waitForTimeout(300);
     const representative = await page.evaluate(() => {
       const active = document.querySelector(

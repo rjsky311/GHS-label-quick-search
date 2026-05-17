@@ -969,13 +969,13 @@ export const PRINT_QA_MATRIX = Object.freeze([
   },
   {
     id: "a4-primary-zh-bw",
-    label: "A4 complete primary Chinese B/W",
+    label: "A4 complete primary bilingual B/W",
     locale: "zh-TW",
     labelConfig: {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "a4-primary",
-      nameDisplay: "zh",
+      nameDisplay: "both",
       colorMode: "bw",
     },
     expected: {
@@ -993,13 +993,13 @@ export const PRINT_QA_MATRIX = Object.freeze([
   },
   {
     id: "letter-primary-en-bw",
-    label: "Letter complete primary English B/W",
+    label: "Letter complete primary bilingual B/W",
     locale: "en-US",
     labelConfig: {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "letter-primary",
-      nameDisplay: "en",
+      nameDisplay: "both",
       colorMode: "bw",
     },
     expected: {
