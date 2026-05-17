@@ -727,15 +727,22 @@ const renderLabelDataAttributes = (chemical, model) => {
     .join(" ");
 };
 
-const appendContinuationStatement = (pages, item, capacity, model) => {
+const appendContinuationStatementWithLimits = (
+  pages,
+  item,
+  { maxStatements, maxTextWeight },
+  model,
+) => {
   const weight = getContinuationStatementWeight(item.statement, model);
   let current = pages[pages.length - 1];
+  const limitCount = Number.isFinite(maxStatements)
+    ? maxStatements
+    : Infinity;
+  const limitText = Number.isFinite(maxTextWeight) ? maxTextWeight : Infinity;
   const wouldExceedCount =
-    current.items.length > 0 &&
-    current.items.length + 1 > capacity.pageStatementCount;
+    current.items.length > 0 && current.items.length + 1 > limitCount;
   const wouldExceedText =
-    current.items.length > 0 &&
-    current.textWeight + weight > capacity.pageTextWeight;
+    current.items.length > 0 && current.textWeight + weight > limitText;
 
   if (wouldExceedCount || wouldExceedText) {
     current = { items: [], textWeight: 0 };
@@ -791,22 +798,76 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     })),
   ];
   const capacity = getCompletePrimaryContinuationCapacity(renderModel.layout);
+  const hazardItems = statements.filter((item) => item.kind === "hazard");
+  const precautionItems = statements.filter(
+    (item) => item.kind === "precaution",
+  );
+  const hazardTextWeight = hazardItems.reduce(
+    (total, item) =>
+      total + getContinuationStatementWeight(item.statement, renderModel),
+    0,
+  );
+  const precautionTextWeight = precautionItems.reduce(
+    (total, item) =>
+      total + getContinuationStatementWeight(item.statement, renderModel),
+    0,
+  );
   const statementTextWeight = statements.reduce(
     (total, item) =>
       total + getContinuationStatementWeight(item.statement, renderModel),
     0,
   );
+  const shouldSeparatePrecautions =
+    hazardItems.length >= capacity.separatePrecautionsAfterHazardCount ||
+    hazardTextWeight >= capacity.separatePrecautionsAfterHazardTextWeight;
+  const mixedPrecautionOverflowRisk =
+    hazardItems.length > 0 &&
+    precautionItems.length > capacity.mixedPrecautionStatementCount &&
+    precautionTextWeight > capacity.mixedPrecautionTextWeight;
 
   if (
     statements.length <= capacity.splitStatementCount &&
-    statementTextWeight <= capacity.splitTextWeight
+    statementTextWeight <= capacity.splitTextWeight &&
+    !shouldSeparatePrecautions &&
+    !mixedPrecautionOverflowRisk
   ) {
     return [chemical];
   }
 
   const pages = [{ items: [], textWeight: 0 }];
-  statements.forEach((item) =>
-    appendContinuationStatement(pages, item, capacity, renderModel),
+  hazardItems.forEach((item) =>
+    appendContinuationStatementWithLimits(
+      pages,
+      item,
+      {
+        maxStatements:
+          capacity.hazardOnlyStatementCount || capacity.pageStatementCount,
+        maxTextWeight: capacity.hazardOnlyTextWeight || capacity.pageTextWeight,
+      },
+      renderModel,
+    ),
+  );
+  const lastPage = pages[pages.length - 1];
+  const lastPageHasHazards = lastPage.items.some((item) => item.kind === "hazard");
+  if (
+    precautionItems.length > 0 &&
+    (shouldSeparatePrecautions || mixedPrecautionOverflowRisk) &&
+    lastPageHasHazards
+  ) {
+    pages.push({ items: [], textWeight: 0 });
+  }
+  precautionItems.forEach((item) =>
+    appendContinuationStatementWithLimits(
+      pages,
+      item,
+      {
+        maxStatements:
+          capacity.precautionOnlyStatementCount || capacity.pageStatementCount,
+        maxTextWeight:
+          capacity.precautionOnlyTextWeight || capacity.pageTextWeight,
+      },
+      renderModel,
+    ),
   );
   const populatedPages = pages.filter((page) => page.items.length > 0);
   if (populatedPages.length <= 1) return [chemical];

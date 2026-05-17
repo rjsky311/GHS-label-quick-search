@@ -2344,6 +2344,57 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
     });
 
+    it("separates long precaution text from hazards on A4 continuation labels", () => {
+      const precautionHeavyChemical = {
+        ...mockChemical,
+        cas_number: "455-14-1",
+        name_en: "4-Aminobenzotrifluoride",
+        name_zh: "4-胺基三氟甲苯",
+        ghs_pictograms: [
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        signal_word: "Danger",
+        hazard_statements: [
+          { code: "H301", text_en: "Toxic if swallowed." },
+          { code: "H314", text_en: "Causes severe skin burns and eye damage." },
+          { code: "H331", text_en: "Toxic if inhaled." },
+        ],
+        precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+          code: `P${300 + index}`,
+          text_en:
+            "Keep this precautionary instruction readable on the primary label, including handling, storage, emergency response, and disposal instructions that wrap over multiple lines.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [precautionHeavyChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      const [hazardPage, firstPrecautionPage] =
+        documentBundle.model.expandedLabels;
+      expect(hazardPage.continuation.hazardStatements).toHaveLength(3);
+      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
+      expect(firstPrecautionPage.continuation.hazardStatements).toHaveLength(0);
+      expect(
+        firstPrecautionPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
+      expect(documentBundle.pagesHtml).toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
+    });
+
     it("can render a selected continuation page in print preview", () => {
       const denseChemical = {
         ...mockChemical,

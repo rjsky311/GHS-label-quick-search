@@ -64,6 +64,14 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
       splitTextWeight: 3600,
       pageStatementCount: 26,
       pageTextWeight: 2900,
+      hazardOnlyStatementCount: 16,
+      hazardOnlyTextWeight: 1850,
+      precautionOnlyStatementCount: 14,
+      precautionOnlyTextWeight: 1650,
+      mixedPrecautionStatementCount: 18,
+      mixedPrecautionTextWeight: 1650,
+      separatePrecautionsAfterHazardCount: 9,
+      separatePrecautionsAfterHazardTextWeight: 1250,
     };
   }
 
@@ -72,6 +80,14 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     splitTextWeight: 3900,
     pageStatementCount: 28,
     pageTextWeight: 3150,
+    hazardOnlyStatementCount: 17,
+    hazardOnlyTextWeight: 2000,
+    precautionOnlyStatementCount: 15,
+    precautionOnlyTextWeight: 1800,
+    mixedPrecautionStatementCount: 20,
+    mixedPrecautionTextWeight: 1800,
+    separatePrecautionsAfterHazardCount: 10,
+    separatePrecautionsAfterHazardTextWeight: 1400,
   };
 };
 
