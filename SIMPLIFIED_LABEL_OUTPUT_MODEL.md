@@ -79,9 +79,14 @@ QR target:
 
 Layout rules:
 
-- A4 and Letter complete labels remain one page per label.
-- Complete labels may use continuation pages only when the complete H/P content
-  cannot fit on one page without clipping.
+- A4 and Letter complete labels use one physical label per page, but one
+  chemical may produce a same-stock continuation set when the complete H/P
+  content cannot fit on the first page without clipping.
+- Complete continuation pages must stay on the selected A4/Letter stock instead
+  of blocking print or switching output types. Each page repeats CAS, English
+  name, Chinese name, signal word, all available GHS pictograms, QR, responsible
+  profile, and a quiet page marker; H statements print before P statements, and
+  long P text continues onto later pages.
 - The QR code must not push H/P content, product identity, or GHS pictograms
   out of the printable area.
 
@@ -117,6 +122,9 @@ Layout rules:
   be packed into one crowded line.
 - Line spacing must remain readable; do not collapse name lines to make room
   for optional content.
+- Avoid internal divider boxes or grid lines inside continuation small labels.
+  Preserve the outer label boundary/cut area, then use whitespace and alignment
+  to separate identity, pictograms, and QR.
 - QR should remain large enough for practical phone scanning. Treat about
   `20 mm` square as the default target unless physical-printer validation later
   proves a smaller size reliable.
@@ -153,6 +161,9 @@ Layout rules:
 - CAS, English name, and Chinese name must be visually separated.
 - GHS pictograms are mandatory. They may move to a second/third label for the
   same chemical, but they must not be omitted or summarized as `+N`.
+- Avoid internal divider boxes or grid lines inside continuation labels. The
+  outer label boundary is enough; the renderer should spend the available space
+  on identity text and recognizable pictograms.
 
 ## 3. Continuation Rules For Small Labels
 

@@ -189,7 +189,7 @@ describe("printOutputPlanner", () => {
     );
   });
 
-  it("allows dense content on full-page primary output", () => {
+  it("allows dense content on full-page primary output as continuation", () => {
     const plan = buildPrintOutputPlan({
       selectedForLabel: [makeChemical(24)],
       layout: resolvePrintLayoutConfig({
@@ -201,7 +201,7 @@ describe("printOutputPlanner", () => {
       locale: "en-US",
     });
 
-    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY);
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION);
     expect(plan.canPrint).toBe(true);
   });
 

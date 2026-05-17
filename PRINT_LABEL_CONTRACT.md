@@ -41,7 +41,12 @@ The best path is a label workflow that a lab user can print without guessing:
   continuation labels. They must not include QR, H/P text, signal word, H-code
   chips, teaser summaries, case/custom fields, or verbose purpose copy inside
   the physical label.
-- Dense content must route users to a larger complete-label stock first, especially A4 Primary or Letter Primary. Complete primary labels must block print until required content can be rendered and the responsible lab/supplier profile is complete.
+- Dense complete-label content must route users to A4 Primary or Letter Primary
+  first. If the selected A4/Letter complete label still cannot fit all H/P text
+  on one page, it must produce same-stock continuation pages rather than
+  blocking solely because the first page is full. Complete primary labels still
+  block print until required content can be rendered and the responsible
+  lab/supplier profile is complete.
 - A4 Primary is a distinct full-page rendering path, not just a larger paper option. It must scale the live preview to show the whole label, enlarge GHS pictograms, and use statement layout rules that can actually carry dense H/P content.
 - Letter Primary must be supported alongside A4 Primary for North American users. Both are complete primary-label outputs, not supplemental templates.
 - The print workflow should use an output planner: scale typography, reflow layout, and combine/deduplicate safe statement text before routing to a larger stock or supplemental output.
@@ -83,9 +88,15 @@ The best path is a label workflow that a lab user can print without guessing:
 Automated tests should pin these behaviors:
 
 - Every template (`icon`, `standard`, `full`, `qrcode`) renders every available GHS pictogram code and does not emit `.more-pics`.
-- Full primary labels render all H/P statements, or preflight blocks before opening print if the chosen stock cannot fit them.
+- Full primary labels render all H/P statements on the selected A4/Letter stock,
+  using continuation pages when needed. Preflight blocks only if the continuation
+  set still cannot keep required identity, pictograms, QR, profile, and H/P text
+  visible.
 - Dense shipped-container labels on regular large stock auto-route to a viable A4 or Letter primary output when the planner can produce one, instead of leaving the user at a disabled print dead end.
-- A4 Primary allows dense complete labels within the documented statement threshold and does not open the overflow/blocking alert for the HCl-style dense path.
+- A4/Letter Primary allows dense complete labels as continuation sets and does
+  not open the overflow/blocking alert merely because H/P text continues onto a
+  later page. The print action and preview summary must show the resulting label
+  and page count.
 - Complete primary labels block print when responsible lab/supplier name, phone, or address is missing; the required-output checklist reports the missing profile fields.
 - Supplemental template warnings stay visible in the modal/preview workflow, not as verbose text inside the physical label.
 - Layout preflight rejects overflow, footer clipping, and statement-code overflow before printing complete primary labels. Supplemental labels should adapt typography/reflow and remain printable unless safety-critical pictograms or identity are missing.

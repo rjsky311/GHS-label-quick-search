@@ -868,14 +868,17 @@ describe("printLabels", () => {
     expect(html).toContain("width: 28.2mm");
     expect(html).toContain("column-count: 2");
     expect(html).toContain("compliance-statements-panel");
-    expect(html).toContain("font-size:5.1px");
+    expect(html).toContain("label-continuation-page");
+    expect(html).toContain('data-continuation-total="4"');
+    expect(html).toContain("--precaution-code-max:21mm");
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
     expect(bodyHtml).toContain('class="qrcode-img"');
     expect(bodyHtml).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
     expect(bodyHtml).not.toContain("hazard-more");
     expect(bodyHtml).not.toContain("precaution-more");
-    expect((bodyHtml.match(/<img/g) || [])).toHaveLength(5);
+    expect((bodyHtml.match(/class="qrcode-img"/g) || [])).toHaveLength(4);
+    expect((bodyHtml.match(/alt="GHS02"/g) || [])).toHaveLength(4);
     denseChemical.hazard_statements.forEach((statement) => {
       expect(bodyHtml).toContain(`>${statement.code}</span>`);
     });
@@ -1617,6 +1620,8 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
       );
+      expect(preview.html).toContain("border-right: 0");
+      expect(preview.html).toContain("box-shadow: none");
       expect(preview.model.expandedLabels).toHaveLength(2);
       expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
       expect(expandedPictogramCodes(preview)).toEqual([
@@ -1651,6 +1656,7 @@ describe("printLabels", () => {
       expect(preview.html).not.toContain(
         ".label-icon.label-form-strip .cas {\n      display: none;",
       );
+      expect(preview.html).toContain("border-bottom: 0");
     });
 
     it("uses stock-specific horizontal pictogram rows for quick-ID labels", () => {
@@ -2179,8 +2185,9 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         "grid-template-rows: auto minmax(0, 1fr) auto",
       );
-      expect(preview.html).toContain("font-size:5.1px");
-      expect(preview.html).toContain("--precaution-code-max:16mm");
+      expect(preview.fragmentHtml).toContain("label-continuation-page");
+      expect(preview.fragmentHtml).toContain('data-continuation-page="1"');
+      expect(preview.html).toContain("--precaution-code-max:21mm");
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
@@ -2239,6 +2246,83 @@ describe("printLabels", () => {
         documentBundle.model.expandedLabels.length,
       );
       expect(documentBundle.model.totalPages).toBe(
+        documentBundle.model.expandedLabels.length,
+      );
+    });
+
+    it("splits moderate A4 complete labels before precaution text can clip", () => {
+      const moderateChemical = {
+        ...mockChemical,
+        cas_number: "90-41-5",
+        name_en: "2-Aminobiphenyl",
+        name_zh: "2-Aminobiphenyl ZH",
+        ghs_pictograms: [{ code: "GHS07" }, { code: "GHS08" }],
+        signal_word: "Warning",
+        hazard_statements: [
+          { code: "H302", text_en: "Harmful if swallowed." },
+          { code: "H351", text_en: "Suspected of causing cancer." },
+          {
+            code: "H412",
+            text_en: "Harmful to aquatic life with long lasting effects.",
+          },
+        ],
+        precautionary_statements: [
+          {
+            code: "P203",
+            text_en:
+              "Obtain, read and follow all safety instructions before use.",
+          },
+          { code: "P264", text_en: "Wash hands thoroughly after handling." },
+          {
+            code: "P270",
+            text_en: "Do not eat, drink or smoke when using this product.",
+          },
+          { code: "P273", text_en: "Avoid release to the environment." },
+          {
+            code: "P280",
+            text_en:
+              "Wear protective gloves, protective clothing, eye protection and face protection.",
+          },
+          { code: "P301+P317", text_en: "If swallowed: Get medical help." },
+          {
+            code: "P318",
+            text_en: "If exposed or concerned, get medical advice.",
+          },
+          { code: "P330", text_en: "Rinse mouth." },
+          { code: "P405", text_en: "Store locked up." },
+          {
+            code: "P501",
+            text_en:
+              "Dispose of contents and container in accordance with local regulations.",
+          },
+        ],
+      };
+
+      const documentBundle = buildPrintDocument(
+        [moderateChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      expect(documentBundle.pagesHtml).toContain('data-continuation-page="1"');
+      expect(documentBundle.pagesHtml).toContain('data-continuation-page="2"');
+      expect(documentBundle.pagesHtml).toContain(">H302</span>");
+      expect(documentBundle.pagesHtml).toContain(">P501</span>");
+      expect(
+        documentBundle.pagesHtml.match(
+          /CAS<\/span><span class="meta-chip-value">90-41-5/g,
+        ),
+      ).toHaveLength(documentBundle.model.expandedLabels.length);
+      expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(
         documentBundle.model.expandedLabels.length,
       );
     });

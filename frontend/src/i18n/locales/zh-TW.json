@@ -566,7 +566,7 @@
   "label.printSupplementalAction": "列印{{target}}（補充，{{count}} 張）",
   "label.printContainerFrontAction": "列印{{target}}（正面，{{count}} 張）",
   "label.printCompletePrimaryAction": "列印完整主標（{{count}} 張）",
-  "label.printContinuationAction": "列印完整主標續頁",
+  "label.printContinuationAction": "列印完整主標續頁（{{labels}} 張 / {{pages}} 頁）",
   "label.printReadyBatchAction": "用 {{stock}} 列印 {{ready}} 筆可直接輸出的{{purpose}}批次（排除 {{excluded}} 筆）",
   "label.batchFitReportTitle": "批次適配報告",
   "label.batchFitReportBody": "這批會維持同一種實體紙材。可直接列印的標籤會先輸出；需要確認或排除的項目會在交付列印前保留可見。",

@@ -1803,7 +1803,11 @@ export default function LabelPrintModal({
         : isContinuationOutput
           ? tx(
               "label.printContinuationAction",
-              "Print complete primary continuation set",
+              "Print complete primary continuation set ({{labels}} labels / {{pages}} pages)",
+              {
+                labels: plannedPrintLabelCount,
+                pages: plannedPrintPageCount,
+              },
             )
         : isQrSupplementOutput
           ? tx(

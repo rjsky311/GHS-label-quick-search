@@ -422,7 +422,7 @@
   "label.printSupplementalAction": "Print {{target}} (supplemental, {{count}})",
   "label.printContainerFrontAction": "Print {{target}} (front, {{count}})",
   "label.printCompletePrimaryAction": "Print complete primary label ({{count}})",
-  "label.printContinuationAction": "Print complete primary continuation set",
+  "label.printContinuationAction": "Print complete primary continuation set ({{labels}} labels / {{pages}} pages)",
   "label.printReadyBatchAction": "Print {{ready}} ready {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
   "label.printAcknowledgedBatchAction": "Print {{count}} selected {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
   "label.batchFitReportTitle": "Batch fit report",

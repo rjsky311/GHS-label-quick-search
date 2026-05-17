@@ -38,10 +38,49 @@ export const PRINT_RECOMMENDED_ACTION = Object.freeze({
   SELECT_LABELS: "select_labels",
 });
 
+export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
+  const fullPageLike =
+    isFullPagePrimaryStockId(layout.stockId) ||
+    isFullPagePrimaryStockId(layout.stockPreset) ||
+    (layout.widthMm >= 170 && layout.heightMm >= 200);
+
+  if (!fullPageLike) {
+    return {
+      splitStatementCount: Infinity,
+      splitTextWeight: Infinity,
+      pageStatementCount: Infinity,
+      pageTextWeight: Infinity,
+    };
+  }
+
+  const isLetter =
+    layout.stockId === "letter-primary" ||
+    layout.stockPreset === "letter-primary" ||
+    layout.pageSize === "Letter";
+
+  if (isLetter) {
+    return {
+      splitStatementCount: 11,
+      splitTextWeight: 900,
+      pageStatementCount: 6,
+      pageTextWeight: 620,
+    };
+  }
+
+  return {
+    splitStatementCount: 12,
+    splitTextWeight: 980,
+    pageStatementCount: 7,
+    pageTextWeight: 700,
+  };
+};
+
 export const getMaxCompleteStatementCount = (layout) => {
   let maxStatements;
-  if (layout.widthMm >= 170 && layout.heightMm >= 200) maxStatements = 36;
-  else if (layout.size === "large") maxStatements = 18;
+  if (layout.widthMm >= 170 && layout.heightMm >= 200) {
+    maxStatements = getCompletePrimaryContinuationCapacity(layout)
+      .splitStatementCount;
+  } else if (layout.size === "large") maxStatements = 18;
   else if (layout.size === "medium") maxStatements = 10;
   else maxStatements = 6;
 
@@ -142,6 +181,13 @@ export const getMaxCompleteTextWeight = (layout = {}) => {
     legacyCompleteTextWeight(layout) * 0.58 +
       rendererTextCapacity(layout, { complete: true }) * 0.42,
   );
+
+  if (isFullPage) {
+    return Math.min(
+      maxTextWeight,
+      getCompletePrimaryContinuationCapacity(layout).splitTextWeight + 520,
+    );
+  }
 
   if (layout.nameDisplay === "both" && !isFullPage) {
     return Math.max(220, Math.floor(maxTextWeight * 0.82));
@@ -690,22 +736,6 @@ export function evaluatePrintReadiness({
     };
   }
 
-  if (isDense && isFullPagePrimary) {
-    return {
-      state: PRINT_READINESS_STATE.NEEDS_CONTINUATION,
-      canPrint: false,
-      recommendedAction: PRINT_RECOMMENDED_ACTION.CREATE_CONTINUATION,
-      contents,
-      contentPolicy,
-      elementSummary,
-      maxStatements,
-      maxStatementCount,
-      maxTextWeight,
-      maxTextWeightScore,
-      issues,
-    };
-  }
-
   if (isSupplementalDense) {
     return {
       state: PRINT_READINESS_STATE.BLOCKED_INVALID,
@@ -743,6 +773,22 @@ export function evaluatePrintReadiness({
       state: PRINT_READINESS_STATE.NEEDS_PROFILE,
       canPrint: false,
       recommendedAction: PRINT_RECOMMENDED_ACTION.ADD_PROFILE,
+      contents,
+      contentPolicy,
+      elementSummary,
+      maxStatements,
+      maxStatementCount,
+      maxTextWeight,
+      maxTextWeightScore,
+      issues,
+    };
+  }
+
+  if (isDense && isFullPagePrimary) {
+    return {
+      state: PRINT_READINESS_STATE.NEEDS_CONTINUATION,
+      canPrint: false,
+      recommendedAction: PRINT_RECOMMENDED_ACTION.CREATE_CONTINUATION,
       contents,
       contentPolicy,
       elementSummary,

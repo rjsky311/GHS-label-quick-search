@@ -887,9 +887,11 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      minPrintTotalLabels: 2,
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
-        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
         precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
       },
     },
@@ -925,6 +927,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       recoveryKind: "profile",
+      minPrintTotalLabels: 2,
       blockedTextPatterns: [
         "profile",
         "lab",
@@ -935,7 +938,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       ],
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
-        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
         precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
       },
     },
@@ -960,6 +963,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      minPrintTotalLabels: 2,
     },
   },
   {
@@ -982,6 +987,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      minPrintTotalLabels: 2,
     },
   },
   {
@@ -1004,6 +1011,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      minPrintTotalLabels: 2,
     },
   },
   {
@@ -1688,6 +1697,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+      minPrintTotalLabels: 2,
       preparedIdentityTexts: [
         "1 M",
         "Water",

@@ -646,6 +646,43 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("shows continuation label and page counts on dense complete-primary print actions", () => {
+    const denseChem = makeChem({
+      hazard_statements: [
+        { code: "H300", text_en: "Fatal if swallowed." },
+        { code: "H310", text_en: "Fatal in contact with skin." },
+        { code: "H330", text_en: "Fatal if inhaled." },
+      ],
+      precautionary_statements: Array.from({ length: 10 }, (_, index) => ({
+        code: `P${300 + index}`,
+        text_en:
+          "Use protective equipment and follow the site response procedure before handling.",
+      })),
+    });
+
+    renderModal({
+      selectedForLabel: [denseChem],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "Complete primary label will print across continuation pages",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Print complete primary continuation set (2 labels / 2 pages)",
+    );
+  });
+
   it("uses QR-specific outcome and print action text for QR supplements", () => {
     renderModal({
       selectedForLabel: [makeChem()],

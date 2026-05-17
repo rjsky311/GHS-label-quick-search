@@ -107,7 +107,9 @@ Acceptance gates:
 - If the complete H/P text is too dense for one A4/Letter primary page, the app
   prints a continuation set instead of clipping or silently omitting statements.
   Each continuation page repeats product identity, CAS, signal word, all
-  available GHS pictograms, responsible profile, and a continuation marker.
+  available GHS pictograms, QR, responsible profile, and a continuation marker.
+  H statements appear before P statements; P statements may continue on later
+  pages.
 
 ### Container Supplemental
 
@@ -180,8 +182,9 @@ These are acceptance targets for the renderer and Browser QA:
   being left at tiny compact-label size.
 - Preview and print use the same rendered HTML fragment.
 - A4 and Letter primary labels show the whole label in preview without clipping.
-- Multi-page and continuation outputs expose preview page controls so each
-  printed page can be inspected before opening the print dialog.
+- Multi-page and continuation outputs expose preview page controls and print
+  action text with actual label/page counts, so each printed page can be
+  inspected before opening the print dialog.
 - Small labels reflow and scale before content is summarized.
 - Compact summaries prioritize severe H-statements and response/PPE P-codes before lower-priority storage/disposal text.
 - GHS pictograms are never hidden behind QR, summarized as `+N`, or omitted.
@@ -210,8 +213,8 @@ Run this matrix before shipping print-workflow changes:
 
 | Chemical | Output | Language | Color | Required result |
 | --- | --- | --- | --- | --- |
-| Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary, no QR body, no H/P summaries, all pictograms |
-| Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary, Letter page, no QR body, all pictograms |
+| Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary continuation set when needed, QR included, no H/P summaries, all pictograms repeated, no clipping |
+| Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary continuation set when needed, Letter page, QR included, all pictograms repeated, no clipping |
 | Formaldehyde | A4 Primary | Bilingual | Color | Complete primary continuation set, multiple pages, all pictograms repeated, no clipping |
 | Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
@@ -246,6 +249,8 @@ Unit tests should keep these invariants pinned:
 - Complete primary bodies do not contain `qrcode-img`, `hazard-more`, or `precaution-more`.
 - Dense complete primary continuation output produces multiple printed labels
   and keeps every expected pictogram on each continuation page.
+- A4/Letter complete-primary overflow is resolved by same-stock continuation
+  pages before the workflow can block print for layout overflow.
 - Preview rendering can target later continuation pages, not only the first
   rendered label.
 - Every expected pictogram code appears in the printed body.

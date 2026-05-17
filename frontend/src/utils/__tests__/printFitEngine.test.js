@@ -157,7 +157,7 @@ describe("printFitEngine", () => {
     ]);
   });
 
-  it("allows the same dense complete label on A4 primary", () => {
+  it("routes the same dense complete label to A4 continuation", () => {
     const readiness = evaluatePrintReadiness({
       selectedForLabel: [makeChemical(24)],
       layout: {
@@ -171,8 +171,8 @@ describe("printFitEngine", () => {
       resolvedLabProfile: completeProfile,
     });
 
-    expect(readiness.state).toBe(PRINT_READINESS_STATE.READY_COMPLETE);
-    expect(readiness.canPrint).toBe(true);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.NEEDS_CONTINUATION);
+    expect(readiness.canPrint).toBe(false);
     expect(readiness.elementSummary.pictograms).toEqual({
       expected: 2,
       present: 2,

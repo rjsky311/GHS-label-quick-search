@@ -14,7 +14,10 @@ import {
   isQuickIdLayout as isPolicyQuickIdLayout,
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
-import { inspectPrintContentFit } from "@/utils/printFitEngine";
+import {
+  getCompletePrimaryContinuationCapacity,
+  inspectPrintContentFit,
+} from "@/utils/printFitEngine";
 import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
@@ -563,32 +566,6 @@ const resolveAutoFitLevelForModel = ({
   return clampAutoFitLevel(level);
 };
 
-const getContinuationCapacity = (layout = {}) => {
-  const fullPage = isFullPagePrimaryLayout(layout);
-  if (!fullPage) {
-    return {
-      splitStatementCount: Infinity,
-      splitTextWeight: Infinity,
-      pageStatementCount: Infinity,
-      pageTextWeight: Infinity,
-    };
-  }
-  if (layout.stockId === "letter-primary" || layout.stockPreset === "letter-primary") {
-    return {
-      splitStatementCount: 32,
-      splitTextWeight: 2350,
-      pageStatementCount: 14,
-      pageTextWeight: 1150,
-    };
-  }
-  return {
-    splitStatementCount: 34,
-    splitTextWeight: 2550,
-    pageStatementCount: 15,
-    pageTextWeight: 1250,
-  };
-};
-
 const getPrintLayoutOverride = (chemical) => {
   if (chemical?.__printLayoutOverride) return chemical.__printLayoutOverride;
   if (chemical?.__printContinuation && chemical.sourceChemical) {
@@ -706,7 +683,7 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
       statement,
     })),
   ];
-  const capacity = getContinuationCapacity(renderModel.layout);
+  const capacity = getCompletePrimaryContinuationCapacity(renderModel.layout);
   const statementTextWeight = statements.reduce(
     (total, item) =>
       total + getContinuationStatementWeight(item.statement, renderModel),
@@ -2596,8 +2573,9 @@ const buildStyles = (model) => {
       gap: 0.3mm;
     }
     .label-icon.label-form-strip .label-top-identity {
-      padding-bottom: 0.45mm;
-      margin-bottom: 0.45mm;
+      border-bottom: 0;
+      padding-bottom: 0;
+      margin-bottom: 0;
     }
     .label-icon.label-form-strip .small-identity {
       gap: 0.18mm;
@@ -2915,7 +2893,8 @@ const buildStyles = (model) => {
     }
     .label-qr.label-form-strip .qr-left-scan {
       gap: 0.55mm;
-      padding-right: 0.8mm;
+      padding-right: 0.45mm;
+      border-right: 0;
     }
     .label-qr.label-form-strip .qr-identity,
     .label-qr.label-form-strip .small-identity {
@@ -3009,15 +2988,18 @@ const buildStyles = (model) => {
     }
     .label-qr.label-form-strip .qr-support-row {
       min-height: ${qrPictogramSize};
-      padding-top: 0.35mm;
+      padding-top: 0.15mm;
+      border-top: 0;
     }
     .label-qr.label-form-strip .qr-panel {
       gap: 0.45mm;
       padding-left: 0;
     }
     .label-qr.label-form-strip .qr-code-shell {
-      padding: 1mm;
-      border-radius: 1.2mm;
+      padding: 0.65mm;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
     }
     .label-qr.label-form-strip .qrcode-img {
       width: calc(${layout.typography.qrBox} - 2mm);

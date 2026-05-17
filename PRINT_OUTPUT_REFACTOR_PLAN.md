@@ -178,6 +178,15 @@ The first refactor slice has landed:
   the full H/P text is too large for one physical page. Each continuation page
   repeats identity, CAS, signal word, all available GHS pictograms, responsible
   profile, and a continuation badge; H/P statements are split across pages.
+- Complete A4/Letter continuation is now the expected recovery for first-page
+  H/P overflow: the planner and print QA allow same-stock continuation instead
+  of disabling print, and the print action shows the resulting label/page count.
+  H statements remain before P statements, and each continuation page repeats
+  identity, CAS, signal word, all pictograms, QR, and responsible profile.
+- QR small labels and identification small labels avoid internal divider boxes
+  in their continuation layouts. The outer label boundary remains, but scarce
+  area is reserved for CAS, English name, Chinese name, QR when applicable, and
+  recognizable GHS pictograms.
 - The modal preview now exposes page navigation for multi-page and continuation
   outputs. The label preview and sheet preview consume the same selected
   page/label index, so users can inspect later continuation pages before
