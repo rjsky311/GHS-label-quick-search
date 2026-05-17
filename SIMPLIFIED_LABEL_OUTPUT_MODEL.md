@@ -29,13 +29,13 @@ Current implementation checkpoint:
   summaries, case/custom fields, and front-label terminology.
 - URL query hydration for `?cas=...` is implemented so printed QR codes can
   return users to the lookup page.
-- 2026-05-18 local fix checkpoint: complete A4/Letter primary labels now use
-  the resolved full-page typography metrics for H/P text instead of the older
-  oversized 8-10px statement tier, and continuation thresholds are tighter for
-  dense H/P content. `npm run test:print-contract` and `npm run qa:print-pdf`
-  pass, including A4, Letter, formaldehyde continuation, and 50-item batch
-  print artifacts. Keep deployed production QA as the remaining closure step
-  after the change reaches Zeabur.
+- 2026-05-18 deployed fix checkpoint: complete A4/Letter primary labels now
+  use the resolved full-page typography metrics for H/P text instead of the
+  older oversized 8-10px statement tier, and continuation thresholds are
+  tighter for dense H/P content. `npm run test:print-contract`,
+  `npm run qa:print-pdf`, `npm run qa:production-batch-print`, and
+  `npm run qa:production-primary` pass, including A4, Letter, formaldehyde
+  continuation, and 50+ item batch handoff artifacts.
 
 ## 1. Product Decision
 

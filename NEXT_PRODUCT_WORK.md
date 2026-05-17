@@ -50,37 +50,12 @@ Current mode:
   old first-level print UI model. Keep future print work inside the three
   outputs before adding more stock, purpose, density, or front-label options.
 - Current print closure item from 2026-05-18: the A4/Letter complete-primary
-  overflow fix is implemented locally and covered by `test:print-contract` plus
-  `qa:print-pdf`; once deployed, verify Zeabur production no longer blocks the
-  A4 primary batch handoff with `compliance-precautions-overflow`.
+  overflow fix is deployed and covered by `test:print-contract`,
+  `qa:print-pdf`, `qa:production-batch-print`, and `qa:production-primary`.
+  Keep monitoring this class of issue, but return the default continuation
+  target to data governance / safety boundaries and low-noise UX polish.
 
-1. Harden and monitor the simplified three-output label workflow in
-   `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
-   label, and identification small label. New work should improve QA,
-   production verification, batch coverage, or visual polish without
-   reintroducing old first-level complexity. Immediate focus: complete A4/Letter
-   dense-content pagination must stay verified in PDF and deployed production
-   QA.
-2. Keep CI and production QA operationalization healthy. The GitHub Actions
-   `Production Print QA` workflow now defaults to the product-level closure
-   gate, with split modes for focused reruns.
-3. Keep documentation consolidation and autonomous continuation hygiene healthy.
-   `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
-4. Fixed-stock batch label printing. Keep this in monitoring unless a new
-   screenshot, QA failure, or product change reopens it. The current baseline
-   supports one physical stock, Quick ID / Supplemental / Complete purpose,
-   per-item fit results, representative previews, acknowledged
-   reduced/continuation scope, PDF artifact coverage for a 50-item Quick ID
-   batch, and deployed `qa:production-batch-print` / `qa:production-product`
-   evidence. Future changes should converge toward the simplified batch rules:
-   one output type, one stock, and same-output continuation labels.
-5. Physical print validation for real paper, label stock, printer scaling, QR
-   scan success, and pictogram readability. The checklist now lives in
-   `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
-   `npm run qa:physical-print-plan` generates the current physical-print work
-   order from `build/print-qa-report.json`. Real-printer execution is deferred
-   until physical stock and printer access are available.
-6. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
+1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
@@ -92,6 +67,32 @@ Current mode:
    changes aligned with that policy and add tests when behavior changes.
    Current baseline includes effective-classification source/report-count
    alignment and export-preview/CSV/XLSX trust columns.
+2. Harden and monitor the simplified three-output label workflow in
+   `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
+   label, and identification small label. New work should improve QA,
+   production verification, batch coverage, or visual polish without
+   reintroducing old first-level complexity. Immediate focus: complete A4/Letter
+   dense-content pagination must stay verified in PDF and deployed production
+   QA.
+3. Keep CI and production QA operationalization healthy. The GitHub Actions
+   `Production Print QA` workflow now defaults to the product-level closure
+   gate, with split modes for focused reruns.
+4. Keep documentation consolidation and autonomous continuation hygiene healthy.
+   `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
+5. Fixed-stock batch label printing. Keep this in monitoring unless a new
+   screenshot, QA failure, or product change reopens it. The current baseline
+   supports one physical stock, Quick ID / Supplemental / Complete purpose,
+   per-item fit results, representative previews, acknowledged
+   reduced/continuation scope, PDF artifact coverage for a 50-item Quick ID
+   batch, and deployed `qa:production-batch-print` / `qa:production-product`
+   evidence. Future changes should converge toward the simplified batch rules:
+   one output type, one stock, and same-output continuation labels.
+6. Physical print validation for real paper, label stock, printer scaling, QR
+   scan success, and pictogram readability. The checklist now lives in
+   `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and
+   `npm run qa:physical-print-plan` generates the current physical-print work
+   order from `build/print-qa-report.json`. Real-printer execution is deferred
+   until physical stock and printer access are available.
 7. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate

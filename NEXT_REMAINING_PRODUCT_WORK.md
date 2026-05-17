@@ -55,10 +55,11 @@ implementation checklist.
 - **Active simplification target**: the old print-modal vocabulary should be
   reduced according to `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete label, QR
   small label, and identification small label.
-- **A4/Letter complete-primary checkpoint**: the 2026-05-18 local fix aligns
-  full-page H/P typography with resolved layout metrics and tightens dense
-  continuation thresholds. `test:print-contract` and `qa:print-pdf` pass
-  locally; deployed Zeabur clickthrough remains the closure step after push.
+- **A4/Letter complete-primary checkpoint**: the 2026-05-18 deployed fix
+  aligns full-page H/P typography with resolved layout metrics and tightens
+  dense continuation thresholds. `test:print-contract`, `qa:print-pdf`,
+  `qa:production-batch-print`, and `qa:production-primary` pass. Keep this in
+  monitoring unless a new screenshot or QA failure reopens it.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.

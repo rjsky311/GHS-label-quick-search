@@ -129,12 +129,12 @@ Current completion snapshot:
   CSV/XLSX exports. Export rows include data state, primary source, report
   count, cache state, reference-link count, and classification-selection
   context.
-- **A4/Letter complete-primary print fix checkpoint 2026-05-18**: the local
-  renderer now uses resolved full-page typography metrics for H/P text and
-  tighter continuation thresholds for dense complete-label content. Local
-  `test:print-contract` and `qa:print-pdf` pass, including A4, Letter,
-  formaldehyde continuation, and 50-item batch artifacts. The remaining closure
-  task is deployed Zeabur clickthrough after the change reaches production.
+- **A4/Letter complete-primary print fix checkpoint 2026-05-18**: deployed
+  production now uses resolved full-page typography metrics for H/P text and
+  tighter continuation thresholds for dense complete-label content.
+  `test:print-contract`, `qa:print-pdf`, `qa:production-batch-print`, and
+  `qa:production-primary` pass, including A4, Letter, formaldehyde
+  continuation, and 50+ item batch handoff artifacts.
 
 ## 3. Next Priority Order
 
@@ -156,9 +156,9 @@ Do next:
 - Maintain regression coverage for A4/Letter complete labels, including the
   2-Aminobiphenyl A4 fixture, formaldehyde continuation, and 50-item batch A4
   print artifact.
-- Confirm the deployed modal no longer blocks the A4 primary print action after
-  each production deployment touching print layout, and that preview/page count
-  clearly shows continuation pages when they are needed.
+- Confirm the deployed modal does not regress after each production deployment
+  touching print layout, and that preview/page count clearly shows
+  continuation pages when they are needed.
 - Keep the first-level print UI limited to complete label, QR small label, and
   identification small label.
 - Keep A4/Letter complete labels high-utilization first: one physical label per
