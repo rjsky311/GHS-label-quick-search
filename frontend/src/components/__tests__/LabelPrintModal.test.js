@@ -648,15 +648,15 @@ describe("LabelPrintModal", () => {
 
   it("shows continuation label and page counts on dense complete-primary print actions", () => {
     const denseChem = makeChem({
-      hazard_statements: [
-        { code: "H300", text_en: "Fatal if swallowed." },
-        { code: "H310", text_en: "Fatal in contact with skin." },
-        { code: "H330", text_en: "Fatal if inhaled." },
-      ],
-      precautionary_statements: Array.from({ length: 10 }, (_, index) => ({
+      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+        code: `H${300 + index}`,
+        text_en:
+          "Long complete-primary hazard statement with enough explanatory text to require continuation after the high-utilization A4 layout pass.",
+      })),
+      precautionary_statements: Array.from({ length: 34 }, (_, index) => ({
         code: `P${300 + index}`,
         text_en:
-          "Use protective equipment and follow the site response procedure before handling.",
+          "Long complete-primary precautionary statement with enough operational wording to require additional continuation pages.",
       })),
     });
 
