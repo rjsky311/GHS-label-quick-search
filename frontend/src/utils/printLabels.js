@@ -161,61 +161,103 @@ const getContinuationStatementWeight = (statement, model) =>
   String(statement?.code || "").length * 2 +
   getLocalizedTextForModel(statement, model).length;
 
+const parseCssNumber = (value, fallback) => {
+  const parsed = Number.parseFloat(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const formatCssPx = (value) => `${Math.round(value * 10) / 10}px`;
+
 const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
   const statementCount = hazards.length + precautions.length;
   const textLoad =
     getStatementTextLoad(hazards, model) +
     getStatementTextLoad(precautions, model);
+  const typography = model?.layout?.typography || {};
+  const baseFontPx = parseCssNumber(typography.complianceStatementSize, 5.6);
+  const baseLineHeight = parseCssNumber(typography.complianceLineHeight, 1.03);
+
+  const buildTier = ({
+    fontScale,
+    minFontPx,
+    maxFontPx,
+    lineHeight,
+    marginBottom,
+    codeGap,
+    hazardCodeMin,
+    hazardCodeMax,
+    precautionCodeMin,
+    precautionCodeMax,
+  }) => ({
+    fontSize: formatCssPx(
+      Math.max(minFontPx, Math.min(maxFontPx, baseFontPx * fontScale)),
+    ),
+    lineHeight: String(Math.min(lineHeight, baseLineHeight)),
+    marginBottom,
+    codeGap,
+    hazardCodeMin,
+    hazardCodeMax,
+    precautionCodeMin,
+    precautionCodeMax,
+  });
 
   if (statementCount >= 28 || textLoad > 3000) {
-    return {
-      fontSize: "8.2px",
-      lineHeight: "1.1",
+    return buildTier({
+      fontScale: 0.95,
+      minFontPx: 4.6,
+      maxFontPx: 5.4,
+      lineHeight: 1.01,
       marginBottom: "0.38mm",
-      codeGap: "0.7mm",
-      hazardCodeMin: "8.5mm",
-      hazardCodeMax: "11mm",
-      precautionCodeMin: "12mm",
-      precautionCodeMax: "16mm",
-    };
+      codeGap: "0.5mm",
+      hazardCodeMin: "6.8mm",
+      hazardCodeMax: "9mm",
+      precautionCodeMin: "8.6mm",
+      precautionCodeMax: "11.2mm",
+    });
   }
 
   if (statementCount >= 22 || textLoad > 2400) {
-    return {
-      fontSize: "8.8px",
-      lineHeight: "1.1",
+    return buildTier({
+      fontScale: 1,
+      minFontPx: 4.8,
+      maxFontPx: 5.8,
+      lineHeight: 1.02,
       marginBottom: "0.42mm",
-      codeGap: "0.75mm",
-      hazardCodeMin: "9.5mm",
-      hazardCodeMax: "12mm",
-      precautionCodeMin: "13mm",
-      precautionCodeMax: "17mm",
-    };
+      codeGap: "0.55mm",
+      hazardCodeMin: "7.2mm",
+      hazardCodeMax: "9.6mm",
+      precautionCodeMin: "9.2mm",
+      precautionCodeMax: "12mm",
+    });
   }
 
   if (statementCount >= 16 || textLoad > 1800) {
-    return {
-      fontSize: "9.4px",
-      lineHeight: "1.1",
+    return buildTier({
+      fontScale: 1.08,
+      minFontPx: 5,
+      maxFontPx: 6.2,
+      lineHeight: 1.025,
       marginBottom: "0.48mm",
-      codeGap: "0.8mm",
-      hazardCodeMin: "10mm",
-      hazardCodeMax: "13mm",
-      precautionCodeMin: "14mm",
-      precautionCodeMax: "18.5mm",
-    };
+      codeGap: "0.62mm",
+      hazardCodeMin: "7.8mm",
+      hazardCodeMax: "10.5mm",
+      precautionCodeMin: "10mm",
+      precautionCodeMax: "13.2mm",
+    });
   }
 
-  return {
-    fontSize: "10px",
-    lineHeight: "1.12",
+  return buildTier({
+    fontScale: 1.18,
+    minFontPx: 5.2,
+    maxFontPx: 6.8,
+    lineHeight: 1.03,
     marginBottom: "0.55mm",
-    codeGap: "0.85mm",
-    hazardCodeMin: "11mm",
-    hazardCodeMax: "14mm",
-    precautionCodeMin: "15mm",
-    precautionCodeMax: "20mm",
-  };
+    codeGap: "0.7mm",
+    hazardCodeMin: "8.8mm",
+    hazardCodeMax: "11.5mm",
+    precautionCodeMin: "11.5mm",
+    precautionCodeMax: "15mm",
+  });
 };
 
 const chunk = (items, size) => {

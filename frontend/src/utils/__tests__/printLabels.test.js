@@ -868,7 +868,7 @@ describe("printLabels", () => {
     expect(html).toContain("width: 28.2mm");
     expect(html).toContain("column-count: 3");
     expect(html).toContain("compliance-statements-panel");
-    expect(html).toContain("--precaution-code-max:16mm");
+    expect(html).toContain("--precaution-code-max:11.2mm");
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
     expect(bodyHtml).not.toContain("label-continuation-page");
@@ -2203,7 +2203,7 @@ describe("printLabels", () => {
         "grid-template-rows: auto minmax(0, 1fr) auto",
       );
       expect(preview.fragmentHtml).not.toContain("label-continuation-page");
-      expect(preview.html).toContain("--precaution-code-max:16mm");
+      expect(preview.html).toContain("--precaution-code-max:11.2mm");
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
@@ -2331,6 +2331,9 @@ describe("printLabels", () => {
 
       expect(documentBundle.model.expandedLabels).toHaveLength(1);
       expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).toContain(
+        'style="font-size:6.6px;line-height:1.03"',
+      );
       expect(documentBundle.pagesHtml).toContain(">H302</span>");
       expect(documentBundle.pagesHtml).toContain(">P501</span>");
       expect(

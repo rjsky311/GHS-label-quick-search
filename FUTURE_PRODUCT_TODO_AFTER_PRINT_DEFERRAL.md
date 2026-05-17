@@ -560,6 +560,80 @@ Acceptance:
 - The free tool remains genuinely useful without forced sign-up or promotional
   interruption.
 
+## 5. Optional Scientific Lookup Skills For Maintainer Work
+
+Status: `Planned` on 2026-05-18, not installed.
+
+Why this matters: future dictionary, SDS/reference, and source-conflict work
+may benefit from a curated scientific lookup skill, but installing a broad
+research-agent skill collection into this project would widen the agent's
+behavior and dependency surface too much.
+
+Current baseline: `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md` records the review
+of `K-Dense-AI/scientific-agent-skills`. The decision is to avoid full
+installation and keep a small future whitelist only.
+
+### 5.1 Database Lookup Trial
+
+Status: `Planned`.
+
+Goal: use `database-lookup` as a maintainer-only evidence-gathering helper for
+CAS/name/synonym/reference investigations.
+
+Work items:
+
+- Install only in an isolated skill sandbox or dedicated branch.
+- Read the skill's `SKILL.md` and relevant references before use.
+- Trial with public non-sensitive examples.
+- Record raw sources queried, endpoints used, candidate evidence, and
+  confidence notes.
+- Keep all candidate data out of product dictionaries until reviewed.
+
+Acceptance:
+
+- The skill can produce evidence bundles without writing product data.
+- Any candidate alias, Chinese name, SDS/reference link, or external identifier
+  remains explicitly unapproved until admin/human review.
+
+### 5.2 Literature Lookup Trial
+
+Status: `Planned`.
+
+Goal: use `paper-lookup` only when a source-conflict or correction request
+needs DOI/PMID/PMCID/open-access evidence context.
+
+Work items:
+
+- Keep literature output as context, not authority.
+- Prefer DOI/PMID/PMCID/OpenAlex/Crossref metadata with source URLs.
+- Do not let summaries modify GHS classifications or printed hazard content.
+
+Acceptance:
+
+- A correction review can cite the evidence that was consulted.
+- The product still tells users to verify SDS, supplier labels, and local
+  rules.
+
+### 5.3 Offline Structure Cleanup Trial
+
+Status: `Deferred`.
+
+Goal: use `datamol` first, then `rdkit` only if needed, for offline chemical
+identity cleanup if the project adds SMILES/InChIKey curation.
+
+Work items:
+
+- Pin dependencies if a repo script is added.
+- Keep execution offline and maintainer-only.
+- Avoid adding RDKit/Datamol to the production backend request path without a
+  separate design review.
+
+Acceptance:
+
+- Duplicate or inconsistent identity records can be detected in an offline
+  report.
+- No runtime query or label behavior changes just because the skill exists.
+
 ## Recommended Execution Order
 
 1. Keep data governance and source-conflict examples monitored; add focused
@@ -570,7 +644,9 @@ Acceptance:
    added.
 4. Keep fixed-stock batch label printing in monitoring; add fixtures when new
    real-world batch lists expose new fit or guidance cases.
-5. Keep public documentation and brand/support rules stable; update them only
+5. Reopen the optional scientific lookup skill whitelist only for a dedicated
+   data-governance or dictionary-curation round.
+6. Keep public documentation and brand/support rules stable; update them only
    when product behavior, canonical workflow, or conversion-copy boundaries
    change.
 
@@ -595,3 +671,4 @@ or user report points to a more urgent slice.
 | Documentation drift checks | `Gate added` | Keep `test:docs` aligned when canonical docs change | `npm run test:docs` |
 | Brand/support rules | `Shipped` | Apply the commercial-copy review gate to any future conversion change | Docs + production UX review |
 | Education/help content | `Monitoring` | Add only task-supporting help where confusion persists | i18n + production walkthrough |
+| Scientific lookup skills | `Planned` | Do not install now; trial only `database-lookup`, `paper-lookup`, and later `datamol` in an isolated maintainer workflow | `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md` + sandbox dry run |

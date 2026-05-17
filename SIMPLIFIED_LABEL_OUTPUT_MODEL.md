@@ -29,6 +29,13 @@ Current implementation checkpoint:
   summaries, case/custom fields, and front-label terminology.
 - URL query hydration for `?cas=...` is implemented so printed QR codes can
   return users to the lookup page.
+- 2026-05-18 local fix checkpoint: complete A4/Letter primary labels now use
+  the resolved full-page typography metrics for H/P text instead of the older
+  oversized 8-10px statement tier, and continuation thresholds are tighter for
+  dense H/P content. `npm run test:print-contract` and `npm run qa:print-pdf`
+  pass, including A4, Letter, formaldehyde continuation, and 50-item batch
+  print artifacts. Keep deployed production QA as the remaining closure step
+  after the change reaches Zeabur.
 
 ## 1. Product Decision
 
@@ -84,6 +91,10 @@ Layout rules:
   typography and statement columns; one chemical should produce a same-stock
   continuation set only when the complete H/P content still cannot fit on the
   first page without clipping.
+- P-statement overflow is not a valid final block reason by itself when the
+  selected output is A4/Letter complete label. The planner should move
+  remaining precautionary statements to continuation pages that repeat the
+  identity, signal, pictograms, responsible profile, and quiet page marker.
 - Complete continuation pages must stay on the selected A4/Letter stock instead
   of blocking print or switching output types. Each page repeats CAS, English
   name, Chinese name, signal word, all available GHS pictograms, responsible
@@ -301,6 +312,9 @@ Product behavior:
 
 - The print modal first screen shows exactly the three output choices.
 - A4 and Letter complete labels include full H/P and QR.
+- Dense A4 and Letter complete labels paginate H/P content across same-stock
+  continuation pages instead of blocking on `compliance-precautions-overflow`
+  when continuation pages can preserve the required content.
 - QR small labels include CAS, English name, Chinese name, all GHS pictograms
   across the set, and QR; they include no H/P and no signal word.
 - Identification small labels include CAS, English name, Chinese name, and all
@@ -332,3 +346,7 @@ Verification:
 
 Production-facing changes must also be checked on the deployed Zeabur frontend,
 including actual clicks through each of the three output types.
+
+The complete-label gate should include at least one deployed A4 primary batch
+case with dense precautionary statements, clear preview page count, and a
+printable continuation set.

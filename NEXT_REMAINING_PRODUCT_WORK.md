@@ -55,6 +55,10 @@ implementation checklist.
 - **Active simplification target**: the old print-modal vocabulary should be
   reduced according to `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete label, QR
   small label, and identification small label.
+- **A4/Letter complete-primary checkpoint**: the 2026-05-18 local fix aligns
+  full-page H/P typography with resolved layout metrics and tightens dense
+  continuation thresholds. `test:print-contract` and `qa:print-pdf` pass
+  locally; deployed Zeabur clickthrough remains the closure step after push.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
@@ -68,6 +72,16 @@ renderer and QA do not keep pace with the planner.
 
 Work to continue:
 
+- Keep A4/Letter complete-label continuation and calibrated full-page H/P
+  typography covered. A complete primary label should not block solely because
+  `compliance-precautions-overflow` appears when the same stock can either fit
+  the content or produce a continuation page.
+- Keep regression coverage for the observed production failure class: a dense
+  multi-item A4 primary batch where the print action claims items are printable
+  but could block at handoff.
+- Align the modal preview, print button copy, hidden print iframe, PDF artifact,
+  and production handoff inspection so they all agree on page count and
+  continuation status.
 - Add stock-specific renderer checks for compact families: small strip,
   small rack, medium rack, 62 mm continuous, standard bottle, large front label,
   A4 primary, and Letter primary.
@@ -88,6 +102,9 @@ Acceptance:
 - Case number and other selected identity fields stay visible when enabled.
 - A4/Letter primary outputs remain complete and do not overflow when QR,
   profile, bilingual names, or continuation content is present.
+- Dense complete-primary content paginates to same-stock continuation pages and
+  does not surface `compliance-precautions-overflow` as a user-facing dead end
+  when the content is continuable.
 
 Current status:
 

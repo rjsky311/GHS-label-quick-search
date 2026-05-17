@@ -294,6 +294,14 @@ tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data
 trust/correction workflow, first-time UX guidance, public README/docs cleanup,
 and brand/support surfaces.
 
+Optional scientific lookup skill evaluation is recorded in
+`SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`. The current decision is not to install
+the full `K-Dense-AI/scientific-agent-skills` repository. If a future
+data-governance or dictionary-curation round needs external scientific lookup
+support, consider only the documented whitelist (`database-lookup`,
+`paper-lookup`, and later `datamol`) as maintainer-side evidence tools, not
+runtime data sources.
+
 Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
 live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
 execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user

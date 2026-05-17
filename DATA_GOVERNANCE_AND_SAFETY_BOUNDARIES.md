@@ -45,6 +45,24 @@ Rules:
   silently become the printed Chinese identity because chemical common names,
   salts, hydrates, isomers, and mixtures can translate ambiguously.
 
+### External Scientific Lookup Skills
+
+Future maintainer work may use external scientific-agent skills only as
+evidence discovery tools. The current review lives in
+`SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
+
+Rules:
+
+- Do not install the full `K-Dense-AI/scientific-agent-skills` repository into
+  the active project environment.
+- If needed, trial only the documented whitelist: `database-lookup`,
+  `paper-lookup`, and later `datamol` for offline structure cleanup.
+- Output from those skills is a candidate evidence bundle, not an approved
+  dictionary entry, source rank, SDS/reference link, QR target, or printed GHS
+  statement.
+- Any candidate name, alias, reference link, or source interpretation still
+  needs the same admin/human review and safety boundary as other external data.
+
 ## 2. Hazard Data States
 
 Keep these states separate in UI, planner logic, exports, and tests:

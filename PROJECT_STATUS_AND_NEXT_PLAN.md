@@ -9,6 +9,12 @@ canonical product model for label-printing work. It replaces the prior
 first-level print UI model with exactly three outputs: complete A4/Letter
 label, QR small label, and identification small label.
 
+Scientific lookup skill evaluation: `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`
+records the reviewed `K-Dense-AI/scientific-agent-skills` repository and the
+current decision to avoid full installation. Reopen that file only for future
+data-governance, dictionary-cleanup, SDS/reference, or literature-checking
+work.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -123,6 +129,12 @@ Current completion snapshot:
   CSV/XLSX exports. Export rows include data state, primary source, report
   count, cache state, reference-link count, and classification-selection
   context.
+- **A4/Letter complete-primary print fix checkpoint 2026-05-18**: the local
+  renderer now uses resolved full-page typography metrics for H/P text and
+  tighter continuation thresholds for dense complete-label content. Local
+  `test:print-contract` and `qa:print-pdf` pass, including A4, Letter,
+  formaldehyde continuation, and 50-item batch artifacts. The remaining closure
+  task is deployed Zeabur clickthrough after the change reaches production.
 
 ## 3. Next Priority Order
 
@@ -137,6 +149,16 @@ complex model. The three user-facing outputs in
 
 Do next:
 
+- Keep the A4/Letter complete-label overflow fix covered: dense H/P or
+  P-statement content must fit with calibrated full-page typography or paginate
+  onto same-stock continuation pages before the workflow blocks print for
+  `compliance-precautions-overflow`.
+- Maintain regression coverage for A4/Letter complete labels, including the
+  2-Aminobiphenyl A4 fixture, formaldehyde continuation, and 50-item batch A4
+  print artifact.
+- Confirm the deployed modal no longer blocks the A4 primary print action after
+  each production deployment touching print layout, and that preview/page count
+  clearly shows continuation pages when they are needed.
 - Keep the first-level print UI limited to complete label, QR small label, and
   identification small label.
 - Keep A4/Letter complete labels high-utilization first: one physical label per
@@ -158,6 +180,9 @@ Done means:
   whole batch.
 - PDF and production QA cover all three outputs, including long names,
   many-pictogram chemicals, and continuation labels.
+- Complete A4/Letter dense H/P batches paginate on the same stock rather than
+  showing `compliance-precautions-overflow` for content that can continue onto
+  later pages.
 
 ### 1. CI And Production QA Operationalization
 
@@ -343,6 +368,11 @@ authority.
 
 Do next:
 
+- Use `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md` as the future reference if a
+  data-governance round needs external scientific lookup skills. Do not install
+  the whole `scientific-agent-skills` repo; only consider the documented
+  whitelist (`database-lookup`, `paper-lookup`, and later `datamol`) as
+  maintainer-only evidence tools.
 - Clarify source conflict handling between PubChem, ECHA, manual entries, SDS
   links, and local dictionary aliases.
 - Keep unsafe URLs filtered on frontend and backend.
@@ -471,6 +501,10 @@ complete.
   prepared metadata, and custom fields can create pressure in small labels.
 - Data conflicts: PubChem, ECHA, SDS, supplier labels, and manual curation can
   disagree; the app needs clear precedence and verification language.
+- External scientific-agent skills: broad research skills can be useful for
+  maintainer lookup, but they can also introduce dependency sprawl, unsafe
+  cross-skill behavior, and unreviewed source authority. Keep them out of the
+  product runtime unless separately reviewed.
 - Upstream availability: transient PubChem or network failures must remain
   visible and must not degrade into false no-hazard states.
 - Admin and telemetry surfaces: storage growth, privacy, abuse limits, and
@@ -533,6 +567,9 @@ Use these files by role:
   scaling, QR scan, and physical readability checklist.
 - `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`: source roles, SDS/reference
   policy, admin/manual data boundaries, telemetry limits, and conflict handling.
+- `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
+  optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
+  and `datamol`.
 - `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`: future work tracker for data
   trust, UX guidance, public docs, and brand/support surfaces while real
   physical printing is deferred.

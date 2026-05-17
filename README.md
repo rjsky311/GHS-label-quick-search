@@ -149,6 +149,8 @@ Use these files before starting product or safety-critical changes:
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
 - [FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md](./FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md) -
   future non-physical-print tracker while real-printer validation is deferred.
+- [SCIENTIFIC_AGENT_SKILLS_EVALUATION.md](./SCIENTIFIC_AGENT_SKILLS_EVALUATION.md) -
+  optional scientific lookup skill whitelist and install-risk review.
 - [AUTONOMOUS_WORKFLOW.md](./AUTONOMOUS_WORKFLOW.md) - continuation, verification,
   push, and stop rules.
 - [PRINT_LABEL_CONTRACT.md](./PRINT_LABEL_CONTRACT.md) - print safety contract.

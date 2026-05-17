@@ -49,12 +49,18 @@ Current mode:
   implementation baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the
   old first-level print UI model. Keep future print work inside the three
   outputs before adding more stock, purpose, density, or front-label options.
+- Current print closure item from 2026-05-18: the A4/Letter complete-primary
+  overflow fix is implemented locally and covered by `test:print-contract` plus
+  `qa:print-pdf`; once deployed, verify Zeabur production no longer blocks the
+  A4 primary batch handoff with `compliance-precautions-overflow`.
 
 1. Harden and monitor the simplified three-output label workflow in
    `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
    label, and identification small label. New work should improve QA,
    production verification, batch coverage, or visual polish without
-   reintroducing old first-level complexity.
+   reintroducing old first-level complexity. Immediate focus: complete A4/Letter
+   dense-content pagination must stay verified in PDF and deployed production
+   QA.
 2. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
@@ -78,10 +84,14 @@ Current mode:
    flows. Use this as the active continuation target while physical printing is
    deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
-   `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Keep source/QR/admin changes
-   aligned with that policy and add tests when behavior changes. Current
-   baseline includes effective-classification source/report-count alignment
-   and export-preview/CSV/XLSX trust columns.
+   `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. The optional external
+   scientific-skill evaluation lives in
+   `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`; do not install the full
+   `scientific-agent-skills` repo, and only reopen its whitelist for
+   maintainer-side data lookup or evidence gathering. Keep source/QR/admin
+   changes aligned with that policy and add tests when behavior changes.
+   Current baseline includes effective-classification source/report-count
+   alignment and export-preview/CSV/XLSX trust columns.
 7. User guidance, brand utility, low-noise UX, and narrow/mobile read-first
    polish. Search-result and detail-comparison read-first layouts are now
    covered at 390px by `qa:production-search-ui`; the same production gate
@@ -100,6 +110,8 @@ The detailed execution backlog lives in
 5. Whole-product UX and brand-utility convergence.
 6. Fixed-stock batch label printing, tracked in
    `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+7. Optional scientific lookup skill trials, tracked in
+   `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
 
 Treat the older `NEXT_PRINT_WORKSTREAMS.md` and
 `PRINT_OUTPUT_REFACTOR_PLAN.md` as v1.10 baseline context unless a new failure
