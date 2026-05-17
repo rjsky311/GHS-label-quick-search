@@ -1578,8 +1578,8 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.fragmentHtml).toContain("small-cas");
-      expect(preview.model.expandedLabels).toHaveLength(3);
-      expect(preview.fragmentHtml.match(/alt="GHS0[1-3]"/g)).toHaveLength(3);
+      expect(preview.model.expandedLabels).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-6]"/g)).toHaveLength(6);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS01",
         "GHS02",
@@ -1625,14 +1625,16 @@ describe("printLabels", () => {
       );
       expect(preview.fragmentHtml).toContain("label-form-strip");
       expect(preview.html).toContain("width: 22mm");
-      expect(preview.html).toContain("grid-template-columns: repeat(3, 11mm)");
+      expect(preview.html).toContain(
+        "grid-template-columns: repeat(3, minmax(0, 11mm))",
+      );
       expect(preview.html).toContain(
         ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
       );
       expect(preview.html).toContain("border-right: 0");
       expect(preview.html).toContain("box-shadow: none");
-      expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[256]"/g)).toHaveLength(3);
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS02",
         "GHS05",
@@ -1723,7 +1725,7 @@ describe("printLabels", () => {
         [
           "brother-62mm-continuous",
           "label-stock-brother-62mm-continuous",
-          "repeat(3, 11mm)",
+          "repeat(3, minmax(0, 11mm))",
           "label-form-strip",
         ],
       ];
@@ -1748,8 +1750,8 @@ describe("printLabels", () => {
         expect(preview.fragmentHtml).toContain(stockClass);
         expect(preview.fragmentHtml).toContain(formClass);
         expect(preview.fragmentHtml).toContain("qrcode-img");
-        expect(preview.model.expandedLabels).toHaveLength(2);
-        expect(preview.fragmentHtml.match(/alt="GHS0[256]"/g)).toHaveLength(3);
+        expect(preview.model.expandedLabels).toHaveLength(1);
+        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
         expect(expandedPictogramCodes(preview)).toEqual([
           "GHS02",
           "GHS05",
@@ -2093,8 +2095,8 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).not.toContain("qr-hazard-chip");
       expect(preview.fragmentHtml).not.toContain("H330");
       expect(preview.fragmentHtml).not.toContain("Danger");
-      expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[456]"/g)).toHaveLength(3);
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(4);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS04",
         "GHS05",
@@ -2217,7 +2219,7 @@ describe("printLabels", () => {
         ...mockChemical,
         cas_number: "50-00-0",
         name_en: "Formaldehyde",
-        name_zh: "Formaldehyde ZH",
+        name_zh: "甲醛",
         ghs_pictograms: [
           { code: "GHS05" },
           { code: "GHS06" },
@@ -2344,7 +2346,7 @@ describe("printLabels", () => {
         ...mockChemical,
         cas_number: "50-00-0",
         name_en: "Formaldehyde",
-        name_zh: "Formaldehyde ZH",
+        name_zh: "甲醛",
         ghs_pictograms: [
           { code: "GHS05" },
           { code: "GHS06" },
@@ -2429,7 +2431,7 @@ describe("printLabels", () => {
       expect(preview.previewMetrics.frameHeightPx).toBeLessThanOrEqual(300);
     });
 
-    it("qrcode template uses the scan-first hierarchy blocks", () => {
+    it("qrcode template uses the compact lookup hierarchy without caption text", () => {
       printLabels(
         [mockChemical],
         { size: "medium", template: "qrcode", orientation: "portrait" },
@@ -2438,7 +2440,8 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("small-identity");
       expect(html).toContain("qr-code-shell");
-      expect(html).toContain("qr-hint");
+      expect(html).not.toContain("qr-hint");
+      expect(html).not.toContain("print.scanForDetail");
       expect(html).toContain("CAS 64-17-5");
       expect(html).not.toContain("qr-cas");
     });
@@ -2862,6 +2865,32 @@ describe("printLabels", () => {
         expect(html).toContain("Ethanol");
         expect(html).toContain(mockChemical.name_zh);
       });
+    });
+
+    it("does not fake a missing Chinese small-label name by repeating English", () => {
+      const missingChineseName = {
+        ...mockChemical,
+        cas_number: "107-18-6",
+        name_en: "Allyl Alcohol",
+        name_zh: "",
+      };
+
+      printLabels(
+        [missingChineseName],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+          nameDisplay: "both",
+        },
+        {},
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html.match(/Allyl Alcohol/g)).toHaveLength(1);
+      expect(html).not.toContain(
+        '<div class="small-name-zh">Allyl Alcohol</div>',
+      );
     });
 
     it('keeps short bilingual names on compact templates when nameDisplay is "both"', () => {

@@ -22,6 +22,29 @@ Manual entries and aliases can help users find a CAS number. They must not
 silently replace PubChem/ECHA hazard classifications or weaken upstream-error
 handling.
 
+### Chinese Name Coverage
+
+Chinese chemical names are identity aids, not hazard authority. The local seed
+dictionary and admin manual entries can provide Traditional Chinese display
+names, but the app must not invent or fake a Chinese name when coverage is
+missing.
+
+Rules:
+
+- If a search result only has an English name, printed small labels should keep
+  the English name and omit the Chinese line rather than repeating English as
+  fake Chinese.
+- When a known CAS/name pair is missing a Chinese display name, add it through
+  the local dictionary or an admin-reviewed manual dictionary entry with source
+  evidence.
+- Future unknown-name support should treat Chinese-name discovery as a curation
+  workflow: collect the missed CAS/name, suggest candidate names from trusted
+  SDS/supplier/regulatory references when available, then require admin review
+  before using the name in labels.
+- Automated translation may be used only as a candidate suggestion. It must not
+  silently become the printed Chinese identity because chemical common names,
+  salts, hydrates, isomers, and mixtures can translate ambiguously.
+
 ## 2. Hazard Data States
 
 Keep these states separate in UI, planner logic, exports, and tests:

@@ -54,6 +54,30 @@ export function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+const hasCjkText = (value) => /[\u3400-\u9fff]/.test(String(value || ""));
+
+const normalizeIdentityText = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+const resolvePrintableChineseName = (chemical = {}) => {
+  const chineseName = String(
+    chemical.name_zh || chemical.name_zh_tw || "",
+  ).trim();
+  if (!chineseName) return "";
+
+  const normalizedChineseName = normalizeIdentityText(chineseName);
+  const englishCandidates = [chemical.name_en, chemical.name]
+    .map(normalizeIdentityText)
+    .filter(Boolean);
+
+  if (englishCandidates.includes(normalizedChineseName)) return "";
+  if (!hasCjkText(chineseName)) return "";
+  return chineseName;
+};
+
 export function getQRCodeUrl(text, size = 100) {
   const qr = qrcode(0, "M");
   qr.addData(String(text || ""));
@@ -145,10 +169,10 @@ const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
 
   if (statementCount >= 28 || textLoad > 3000) {
     return {
-      fontSize: "5.1px",
-      lineHeight: "1.02",
-      marginBottom: "0.14mm",
-      codeGap: "0.45mm",
+      fontSize: "8.2px",
+      lineHeight: "1.1",
+      marginBottom: "0.38mm",
+      codeGap: "0.7mm",
       hazardCodeMin: "8.5mm",
       hazardCodeMax: "11mm",
       precautionCodeMin: "12mm",
@@ -158,10 +182,10 @@ const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
 
   if (statementCount >= 22 || textLoad > 2400) {
     return {
-      fontSize: "5.5px",
-      lineHeight: "1.03",
-      marginBottom: "0.18mm",
-      codeGap: "0.55mm",
+      fontSize: "8.8px",
+      lineHeight: "1.1",
+      marginBottom: "0.42mm",
+      codeGap: "0.75mm",
       hazardCodeMin: "9.5mm",
       hazardCodeMax: "12mm",
       precautionCodeMin: "13mm",
@@ -171,10 +195,10 @@ const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
 
   if (statementCount >= 16 || textLoad > 1800) {
     return {
-      fontSize: "5.9px",
-      lineHeight: "1.04",
-      marginBottom: "0.24mm",
-      codeGap: "0.65mm",
+      fontSize: "9.4px",
+      lineHeight: "1.1",
+      marginBottom: "0.48mm",
+      codeGap: "0.8mm",
       hazardCodeMin: "10mm",
       hazardCodeMax: "13mm",
       precautionCodeMin: "14mm",
@@ -182,7 +206,16 @@ const getFullPageStatementTier = (hazards = [], precautions = [], model) => {
     };
   }
 
-  return getHazardFontTier(statementCount, model.layout.size);
+  return {
+    fontSize: "10px",
+    lineHeight: "1.12",
+    marginBottom: "0.55mm",
+    codeGap: "0.85mm",
+    hazardCodeMin: "11mm",
+    hazardCodeMax: "14mm",
+    precautionCodeMin: "15mm",
+    precautionCodeMax: "20mm",
+  };
 };
 
 const chunk = (items, size) => {
@@ -198,14 +231,14 @@ const getCompactPictogramCapacity = (layout = {}, template, pageIndex = 0) => {
   const isQr = template === "qrcode";
   const continuationWithoutQr = isQr && pageIndex > 0;
 
-  if (stock === "small-strip") return continuationWithoutQr ? 5 : isQr ? 3 : 5;
+  if (stock === "small-strip") return continuationWithoutQr ? 6 : isQr ? 6 : 5;
   if (stock === "brother-62mm-continuous") {
-    return continuationWithoutQr ? 5 : isQr ? 3 : 5;
+    return continuationWithoutQr ? 6 : isQr ? 6 : 5;
   }
-  if (stock === "small-rack") return continuationWithoutQr ? 6 : isQr ? 4 : 6;
+  if (stock === "small-rack") return continuationWithoutQr ? 6 : isQr ? 6 : 6;
   if (stock === "medium-rack") return continuationWithoutQr ? 8 : isQr ? 6 : 8;
 
-  return continuationWithoutQr ? 6 : isQr ? 4 : 6;
+  return continuationWithoutQr ? 6 : isQr ? 6 : 6;
 };
 
 const splitCompactPictograms = (pictograms = [], layout = {}, template) => {
@@ -248,7 +281,7 @@ const approxNameWidthScore = (value) =>
 const canRenderCompactBilingualName = (chemical, layout = {}) => {
   if (layout?.nameDisplay !== "both") return false;
   const englishName = chemical?.name_en || chemical?.name || "";
-  const chineseName = chemical?.name_zh || "";
+  const chineseName = resolvePrintableChineseName(chemical);
   if (!englishName || !chineseName || englishName === chineseName) return false;
 
   const area = Math.max(0, Number(layout.widthMm || 0) * Number(layout.heightMm || 0));
@@ -295,9 +328,9 @@ const getIdentityDensityClass = (chemical, model) => {
     names.push(chemical?.name_en || "");
   }
   if (nameDisplay === "zh") {
-    names.push(chemical?.name_zh || chemical?.name_en || "");
+    names.push(resolvePrintableChineseName(chemical) || chemical?.name_en || "");
   } else if (nameDisplay === "both") {
-    names.push(chemical?.name_zh || "");
+    names.push(resolvePrintableChineseName(chemical));
   }
 
   const longestName = Math.max(
@@ -496,9 +529,14 @@ const getNameLoadForLayout = (chemical = {}, layout = {}) => {
     names.push(chemical.name_en || chemical.name || "");
   }
   if (layout.nameDisplay === "zh") {
-    names.push(chemical.name_zh || chemical.name_en || chemical.name || "");
+    names.push(
+      resolvePrintableChineseName(chemical) ||
+        chemical.name_en ||
+        chemical.name ||
+        "",
+    );
   } else if (layout.nameDisplay === "both") {
-    names.push(chemical.name_zh || "");
+    names.push(resolvePrintableChineseName(chemical));
   }
   return Math.max(0, ...names.map((name) => String(name || "").trim().length));
 };
@@ -932,10 +970,14 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   }
 
   if (nameDisplay === "zh") {
-    const displayName = effectiveChem.name_zh || effectiveChem.name_en || "";
+    const displayName =
+      resolvePrintableChineseName(effectiveChem) || effectiveChem.name_en || "";
     nameHtml += `<div class="name-en">${escapeHtml(displayName)}</div>`;
-  } else if (nameDisplay === "both" && effectiveChem.name_zh) {
-    nameHtml += `<div class="name-zh">${escapeHtml(effectiveChem.name_zh)}</div>`;
+  } else if (nameDisplay === "both") {
+    const chineseName = resolvePrintableChineseName(effectiveChem);
+    if (chineseName) {
+      nameHtml += `<div class="name-zh">${escapeHtml(chineseName)}</div>`;
+    }
   }
 
   return `<div class="name-section${compactNames ? " name-section-compact" : ""}${getIdentityDensityClass(effectiveChem, model)}">
@@ -951,14 +993,16 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
 const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
   const englishName =
     effectiveChem.name_en || effectiveChem.name || effectiveChem.cas_number || "";
-  const chineseName =
-    effectiveChem.name_zh || effectiveChem.name_zh_tw || effectiveChem.name_en || "";
+  const chineseName = resolvePrintableChineseName(effectiveChem);
   const continuation = getContinuationMeta(chemical);
+  const chineseNameHtml = chineseName
+    ? `<div class="small-name-zh">${escapeHtml(chineseName)}</div>`
+    : "";
 
   return `<div class="small-identity${getIdentityDensityClass(effectiveChem, model)}">
     <div class="small-cas">CAS ${escapeHtml(effectiveChem.cas_number || "")}</div>
     <div class="small-name-en">${escapeHtml(englishName)}</div>
-    <div class="small-name-zh">${escapeHtml(chineseName)}</div>
+    ${chineseNameHtml}
     ${renderContinuationBadge(continuation, model)}
   </div>`;
 };
@@ -1152,7 +1196,6 @@ const renderComplianceQrPanel = (effectiveChem, model) => {
         data-qr-target-source="ghs-label-quick-search"
         data-qr-target-label="GHS Label Quick Search" />
     </div>
-    <div class="compliance-qr-caption">${escapeHtml(model.t("print.scanForDetail"))}</div>
   </div>`;
 };
 
@@ -1478,7 +1521,6 @@ const renderQRCodeTemplate = (chemical, model) => {
                   data-qr-target-source="ghs-label-quick-search"
                   data-qr-target-label="GHS Label Quick Search" />
               </div>
-              <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
             </div>`
           : ""
       }
@@ -1815,7 +1857,6 @@ const buildStyles = (model) => {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.7mm;
       width: ${layout.typography.qrBox};
       flex: 0 0 ${layout.typography.qrBox};
       text-align: center;
@@ -1823,19 +1864,13 @@ const buildStyles = (model) => {
     .compliance-qr-shell {
       width: ${layout.typography.qrBox};
       height: ${layout.typography.qrBox};
-      padding: 1.6mm;
+      padding: 1.2mm;
       border: 0.25mm solid #cbd5e1;
       border-radius: 1.2mm;
       background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-    .compliance-qr-caption {
-      font-size: 7px;
-      line-height: 1.1;
-      color: #475569;
-      font-weight: 700;
     }
     .compliance-qr .qrcode-img {
       width: calc(${layout.typography.qrBox} - 3.2mm);
@@ -2547,12 +2582,6 @@ const buildStyles = (model) => {
       width: calc(${layout.typography.qrBox} - 3mm);
       height: calc(${layout.typography.qrBox} - 3mm);
     }
-    .qr-hint {
-      font-size: calc(${layout.typography.fontSize} - 3px);
-      color: #475569;
-      font-weight: 600;
-      line-height: 1.2;
-    }
     .label-standard.label-form-strip {
       padding: 1.6mm;
     }
@@ -2936,41 +2965,56 @@ const buildStyles = (model) => {
       line-height: 1.05;
     }
     .label-qr.label-form-strip {
-      gap: 1mm;
-      padding: 1.5mm;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 0.35mm 0.8mm;
+      padding: 1.15mm 1.25mm;
     }
     .label-qr.label-form-strip .qr-left-scan {
-      gap: 0.55mm;
-      padding-right: 0.45mm;
+      display: contents;
       border-right: 0;
+      min-width: 0;
     }
-    .label-qr.label-form-strip .qr-identity,
+    .label-qr.label-form-strip .qr-identity {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      min-width: 0;
+    }
     .label-qr.label-form-strip .small-identity {
-      gap: 0.18mm;
+      gap: 0.05mm;
     }
     .label-qr.label-form-strip .small-cas {
-      font-size: 6px;
-      line-height: 1;
+      font-size: 5.7px;
+      line-height: 0.98;
     }
     .label-qr.label-form-strip .small-name-en {
-      font-size: 6.4px;
-      line-height: 1;
+      font-size: 5.9px;
+      line-height: 0.98;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
     }
     .label-qr.label-form-strip .identity-density-medium .small-name-en {
-      font-size: 5.8px;
+      font-size: 5.3px;
     }
     .label-qr.label-form-strip .identity-density-high .small-name-en {
-      font-size: 5.2px;
+      font-size: 4.9px;
     }
     .label-qr.label-form-strip .small-name-zh {
-      font-size: 6.4px;
-      line-height: 1;
+      font-size: 5.9px;
+      line-height: 0.98;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
     }
     .label-qr.label-form-strip .identity-density-medium .small-name-zh,
     .label-qr.label-form-strip .identity-density-high .small-name-zh,
     .label-qr.label-form-strip .identity-density-medium .small-cas,
     .label-qr.label-form-strip .identity-density-high .small-cas {
-      font-size: 5.4px;
+      font-size: 4.9px;
     }
     .label-qr.label-form-strip .meta-ribbon {
       margin-top: 0.2mm;
@@ -3035,62 +3079,104 @@ const buildStyles = (model) => {
       display: none;
     }
     .label-qr.label-form-strip .qr-support-row {
-      min-height: ${qrPictogramSize};
-      padding-top: 0.15mm;
+      grid-column: 1;
+      grid-row: 2;
+      min-height: 0;
+      padding-top: 0;
       border-top: 0;
+      align-self: end;
+      display: grid;
+      align-items: end;
+    }
+    .label-qr.label-form-strip .pictograms.qr-pics {
+      display: grid;
+      grid-template-columns: repeat(3, 7.2mm);
+      justify-content: start;
+      align-content: end;
+      gap: 0.28mm 0.42mm;
+    }
+    .label-qr.label-form-strip .pictograms.qr-pics img {
+      width: 7.2mm;
+      height: 7.2mm;
     }
     .label-qr.label-form-strip.label-qr-no-code {
       gap: 0;
+      grid-template-columns: minmax(0, 1fr);
     }
     .label-qr.label-form-strip.label-qr-no-code .qr-left-scan {
       padding-right: 0;
       width: 100%;
       flex: 1 1 100%;
     }
+    .label-qr.label-form-strip.label-qr-no-code .qr-support-row {
+      grid-column: 1;
+    }
     .label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(5, 8.2mm);
+      grid-template-columns: repeat(3, 7.4mm);
       justify-content: center;
-      gap: 0.45mm;
+      gap: 0.35mm;
     }
     .label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics img {
-      width: 8.2mm;
-      height: 8.2mm;
+      width: 7.4mm;
+      height: 7.4mm;
+    }
+    .label-qr.label-form-strip .qr-right {
+      grid-column: 2;
+      grid-row: 2;
+      width: 13.85mm;
+      flex: 0 0 13.85mm;
     }
     .label-qr.label-form-strip .qr-panel {
-      gap: 0.45mm;
+      gap: 0;
       padding-left: 0;
+      justify-content: end;
+      align-self: end;
+      justify-self: end;
     }
     .label-qr.label-form-strip .qr-code-shell {
-      padding: 0.65mm;
+      width: 13.85mm;
+      height: 13.85mm;
+      padding: 0.25mm;
       border: 0;
       border-radius: 0;
       box-shadow: none;
     }
     .label-qr.label-form-strip .qrcode-img {
-      width: calc(${layout.typography.qrBox} - 2mm);
-      height: calc(${layout.typography.qrBox} - 2mm);
-    }
-    .label-qr.label-form-strip .qr-hint {
-      font-size: 5.5px;
-      line-height: 1.05;
+      width: 13.35mm;
+      height: 13.35mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip {
       gap: 0.65mm;
       padding: 1.35mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-left-scan {
-      gap: 0.45mm;
       padding-right: 0.65mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(3, ${qrPictogramSize});
+      grid-template-columns: repeat(3, minmax(0, ${qrPictogramSize}));
       justify-content: start;
-      gap: 0.42mm;
+      gap: 0.42mm 0.55mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics img {
+      width: ${qrPictogramSize};
+      height: ${qrPictogramSize};
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-right {
+      width: 18.8mm;
+      flex-basis: 18.8mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-code-shell {
+      width: 18.8mm;
+      height: 18.8mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qrcode-img {
+      width: 18.2mm;
+      height: 18.2mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics {
-      grid-template-columns: repeat(5, 9.8mm);
+      grid-template-columns: repeat(3, 9.8mm);
       justify-content: center;
       gap: 0.5mm;
     }
@@ -3099,8 +3185,7 @@ const buildStyles = (model) => {
       height: 9.8mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-support-row {
-      justify-content: center;
-      min-height: auto;
+      justify-content: start;
       padding-top: 0.2mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .signal.qr-signal {
@@ -3110,7 +3195,7 @@ const buildStyles = (model) => {
       font-size: 5.4px;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-code-shell {
-      padding: 0.9mm;
+      padding: 0.45mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip {
       gap: 0.55mm;
@@ -3129,13 +3214,13 @@ const buildStyles = (model) => {
     }
     .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(2, 10mm);
+      grid-template-columns: repeat(3, 9.8mm);
       justify-content: start;
       gap: 0.3mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics img {
-      width: 10mm;
-      height: 10mm;
+      width: 9.8mm;
+      height: 9.8mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip .qr-support-row {
       min-height: auto;
@@ -3148,7 +3233,17 @@ const buildStyles = (model) => {
       padding: 0.22mm 0.75mm;
     }
     .label-stock-small-rack.label-qr.label-form-strip .qr-code-shell {
-      padding: 0.75mm;
+      width: 17.2mm;
+      height: 17.2mm;
+      padding: 0.35mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .qr-right {
+      width: 17.2mm;
+      flex-basis: 17.2mm;
+    }
+    .label-stock-small-rack.label-qr.label-form-strip .qrcode-img {
+      width: 16.5mm;
+      height: 16.5mm;
     }
     .label-stock-medium-rack.label-qr.label-form-compact {
       gap: 1mm;

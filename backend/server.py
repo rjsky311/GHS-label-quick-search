@@ -28,7 +28,7 @@ import re
 from cachetools import TTLCache
 from pilot_store import APPROVED_ALIAS_STATUS, PilotStore, infer_locale, normalize_compact_text
 
-# Import expanded chemical dictionaries (1707 CAS entries, 1816 English entries)
+# Import expanded chemical dictionaries (1709 CAS entries, 1863 English entries)
 # + alias dictionaries for common/colloquial chemical names
 from chemical_dict import (
     CAS_TO_ZH, CAS_TO_EN, CHEMICAL_NAMES_ZH_EXPANDED,
@@ -1324,7 +1324,7 @@ def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
     if manual and manual.get("name_zh"):
         return manual["name_zh"]
 
-    # O(1) exact match in expanded dictionary (1861 entries)
+    # O(1) exact match in expanded dictionary
     if name_lower in CHEMICAL_NAMES_ZH_EXPANDED:
         return CHEMICAL_NAMES_ZH_EXPANDED[name_lower]
 

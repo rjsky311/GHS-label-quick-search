@@ -1325,7 +1325,7 @@ describe("LabelPrintModal", () => {
       "QR small label is printable",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print QR small label (2)",
+      "Print QR small label (1)",
     );
     expect(screen.getByTestId("label-preview-panel")).toHaveTextContent(
       "62 mm Continuous",

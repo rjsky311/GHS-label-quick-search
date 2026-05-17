@@ -92,7 +92,7 @@ const PREPARED_CASES = Object.freeze([
     expectedTemplate: "qrcode",
     expectedHasQr: true,
     expectedMinPictogramSidePx: 35,
-    expectedMinTotalLabels: 2,
+    expectedMinTotalLabels: 1,
     expectedHasPreparedBadge: false,
     expectedPreparedTexts: [],
   },

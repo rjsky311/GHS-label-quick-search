@@ -212,6 +212,98 @@ const maybeWritePrintArtifacts = () => {
     expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
   });
 
+  const qrBatchPlan = buildBatchPrintPlan({
+    selectedForLabel: batchPrintMixedFixture50,
+    layout: {
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+      stockPreset: "brother-62mm-continuous",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    purpose: BATCH_PRINT_PURPOSE.SUPPLEMENTAL,
+    resolvedLabProfile: PRINT_QA_PROFILE,
+    locale: "zh-TW",
+  });
+  const qrBatchItems = buildBatchPrintableItems(qrBatchPlan);
+  const qrBatchBundle = buildPrintDocument(
+    qrBatchItems,
+    qrBatchPlan.layout,
+    {},
+    {},
+    Object.fromEntries(qrBatchItems.map((chemical) => [chemical.cas_number, 1])),
+    PRINT_QA_PROFILE,
+  );
+  const qrBatchFile = "batch-qr-50-brother-62mm.html";
+  fs.writeFileSync(path.join(absoluteDir, qrBatchFile), qrBatchBundle.html);
+  index.push({
+    id: "batch-qr-50-brother-62mm",
+    label: "50-item fixed-stock QR small-label batch",
+    chemical: "batchPrintMixedFixture50",
+    file: qrBatchFile,
+    expectedLabelKind: "qr-supplement",
+    expectedLabelKinds: ["qr-supplement"],
+    expectedPictograms: uniqueSorted(
+      qrBatchItems.flatMap((chemical) => getPictogramCodes(chemical)),
+    ),
+    expectedBatchCategories: [BATCH_PRINT_ITEM_CATEGORY.READY],
+    expectedHasQr: true,
+    expectedStockPreset: "brother-62mm-continuous",
+    expectedMinTotalLabels: qrBatchItems.length,
+    expectedPrintMinPictogramSidePx: 26,
+    expectedPrintMinQrSidePx: 48,
+    expectedRequiredIdentityText: "",
+    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Five Pictogram"],
+    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
+  });
+
+  const completeBatchPlan = buildBatchPrintPlan({
+    selectedForLabel: batchPrintMixedFixture50,
+    layout: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    purpose: BATCH_PRINT_PURPOSE.COMPLETE,
+    resolvedLabProfile: PRINT_QA_PROFILE,
+    locale: "zh-TW",
+  });
+  const completeBatchItems = buildBatchPrintableItems(completeBatchPlan);
+  const completeBatchBundle = buildPrintDocument(
+    completeBatchItems,
+    completeBatchPlan.layout,
+    {},
+    {},
+    Object.fromEntries(
+      completeBatchItems.map((chemical) => [chemical.cas_number, 1]),
+    ),
+    PRINT_QA_PROFILE,
+  );
+  const completeBatchFile = "batch-a4-complete-50.html";
+  fs.writeFileSync(path.join(absoluteDir, completeBatchFile), completeBatchBundle.html);
+  index.push({
+    id: "batch-a4-complete-50",
+    label: "50-item fixed-stock A4 complete-label batch",
+    chemical: "batchPrintMixedFixture50",
+    file: completeBatchFile,
+    expectedLabelKind: "complete-primary",
+    expectedLabelKinds: ["complete-primary"],
+    expectedPictograms: uniqueSorted(
+      completeBatchItems.flatMap((chemical) => getPictogramCodes(chemical)),
+    ),
+    expectedBatchCategories: [BATCH_PRINT_ITEM_CATEGORY.READY],
+    expectedHasQr: true,
+    expectedStockPreset: "a4-primary",
+    expectedMinTotalLabels: completeBatchItems.length,
+    expectedPrintMinPictogramSidePx: 18,
+    expectedPrintMinQrSidePx: 30,
+    expectedRequiredIdentityText: "",
+    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
+    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
+  });
+
   fs.writeFileSync(
     path.join(absoluteDir, "index.json"),
     `${JSON.stringify(index, null, 2)}\n`,
@@ -674,7 +766,7 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["methanol-brother-quick-id-bw"]).toMatchObject({
       expectedNameDisplay: "en",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["Methanol ZH", "Methanol"],
+      expectedRequiredIdentityTexts: ["甲醇", "Methanol"],
       expectedMinPictogramSidePx: 26,
     });
     expect(byId["hydrogen-peroxide-qr-supplement-en"].chemical).toMatchObject({
@@ -684,7 +776,7 @@ describe("print QA matrix report", () => {
     expect(byId["nitrogen-tube-quick-id-single-pictogram"].chemical).toMatchObject({
       cas: "7727-37-9",
       expectedPictograms: ["GHS04"],
-      expectedRequiredIdentityTexts: ["Nitrogen ZH", "Nitrogen"],
+      expectedRequiredIdentityTexts: ["氮氣", "Nitrogen"],
     });
     expect(browserCaseById["nitrogen-tube-quick-id-single-pictogram"]).toMatchObject({
       expectedNameDisplay: "en",
@@ -696,7 +788,7 @@ describe("print QA matrix report", () => {
     expect(byId["zinc-oxide-small-qr-environmental"].chemical).toMatchObject({
       cas: "1314-13-2",
       expectedPictograms: ["GHS09"],
-      expectedRequiredIdentityTexts: ["Zinc Oxide ZH", "Zinc Oxide"],
+      expectedRequiredIdentityTexts: ["氧化鋅", "Zinc Oxide"],
     });
     expect(browserCaseById["zinc-oxide-small-qr-environmental"]).toMatchObject({
       expectedNameDisplay: "en",

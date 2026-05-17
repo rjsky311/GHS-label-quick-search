@@ -342,7 +342,7 @@ export const PRINT_QA_SODIUM_HYDROXIDE = Object.freeze({
 export const PRINT_QA_METHANOL = Object.freeze({
   cas_number: "67-56-1",
   name_en: "Methanol",
-  name_zh: "Methanol ZH",
+  name_zh: "甲醇",
   cid: 887,
   ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }, { code: "GHS08" }],
   signal_word: "Danger",
@@ -396,7 +396,7 @@ export const PRINT_QA_METHANOL = Object.freeze({
 export const PRINT_QA_FORMALDEHYDE = Object.freeze({
   cas_number: "50-00-0",
   name_en: "Formaldehyde",
-  name_zh: "Formaldehyde ZH",
+  name_zh: "甲醛",
   cid: 712,
   ghs_pictograms: [
     { code: "GHS05" },
@@ -590,7 +590,7 @@ export const PRINT_QA_FORMALDEHYDE = Object.freeze({
 export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
   cas_number: "7722-84-1",
   name_en: "Hydrogen Peroxide",
-  name_zh: "Hydrogen Peroxide ZH",
+  name_zh: "過氧化氫",
   cid: 784,
   ghs_pictograms: [{ code: "GHS03" }, { code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Danger",
@@ -629,7 +629,7 @@ export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
 export const PRINT_QA_NITROGEN = Object.freeze({
   cas_number: "7727-37-9",
   name_en: "Nitrogen",
-  name_zh: "Nitrogen ZH",
+  name_zh: "氮氣",
   cid: 947,
   ghs_pictograms: [{ code: "GHS04" }],
   signal_word: "Warning",
@@ -658,7 +658,7 @@ export const PRINT_QA_NITROGEN = Object.freeze({
 export const PRINT_QA_ZINC_OXIDE = Object.freeze({
   cas_number: "1314-13-2",
   name_en: "Zinc Oxide",
-  name_zh: "Zinc Oxide ZH",
+  name_zh: "氧化鋅",
   cid: 14806,
   ghs_pictograms: [{ code: "GHS09" }],
   signal_word: "Warning",
@@ -692,7 +692,7 @@ export const PRINT_QA_ZINC_OXIDE = Object.freeze({
 export const PRINT_QA_BORIC_ACID = Object.freeze({
   cas_number: "10043-35-3",
   name_en: "Boric Acid",
-  name_zh: "Boric Acid ZH",
+  name_zh: "硼酸",
   cid: 7628,
   ghs_pictograms: [{ code: "GHS08" }],
   signal_word: "Danger",
@@ -727,7 +727,7 @@ export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   cas_number: "QA-LONG-001",
   name_en:
     "N,N-Dimethyl-2-hydroxyethylammonium chloride concentrated laboratory solution",
-  name_zh: "Long Name Corrosive Solution ZH",
+  name_zh: "長名腐蝕性溶液",
   cid: 0,
   ghs_pictograms: [{ code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Warning",
@@ -889,6 +889,36 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasSummaries: false,
       planState: PRINT_OUTPUT_PLAN_STATE.READY,
       printTotalLabels: 1,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+      },
+    },
+  },
+  {
+    id: "aminobiphenyl-a4-primary",
+    label: "2-Aminobiphenyl A4 complete primary regression",
+    chemicalId: "aminobiphenyl",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasFullPagePictograms: true,
+      hasSummaries: false,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY,
+      printTotalLabels: 1,
+      productionExpectedRequiredIdentityTexts: ["2-Aminobiphenyl", "90-41-5"],
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
         hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,

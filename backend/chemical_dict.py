@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Chemical Dictionary - CAS to Name Mapping
-Total CAS to Chinese entries: 1707
-Total CAS to English entries: 1707
-Total English to Chinese entries: 1816
+Total CAS to Chinese entries: 1709
+Total CAS to English entries: 1709
+Total English to Chinese entries: 1863
 """
 
 # CAS Number to Chinese Name Dictionary
@@ -141,6 +141,7 @@ CAS_TO_ZH = {
     "107-13-1": "丙烯腈",
     "107-15-3": "乙二胺",
     "107-16-4": "乙醇腈",
+    "107-18-6": "烯丙醇",
     "107-19-7": "炔丙醇 (2-丙炔-1-醇)",
     "107-21-1": "乙二醇",
     "107-37-9": "烯丙基三氯矽烷",
@@ -933,6 +934,7 @@ CAS_TO_ZH = {
     "500-22-1": "3-吡啶甲醛",
     "501-65-5": "二苯乙炔",
     "504-29-0": "2-胺基吡啶",
+    "504-24-5": "4-胺基吡啶",
     "504-63-2": "1,3-丙二醇",
     "5048-19-1": "5-己烯腈",
     "505-54-4": "十六烷二酸",
@@ -1852,6 +1854,7 @@ CAS_TO_EN = {
     "107-13-1": "Acrylonitrile",
     "107-15-3": "Ethylenediamine",
     "107-16-4": "Glycolonitrile",
+    "107-18-6": "Allyl Alcohol",
     "107-19-7": "Propargyl alcohol",
     "107-21-1": "Ethylene glycol",
     "107-37-9": "Allyltrichlorosilane",
@@ -2643,6 +2646,7 @@ CAS_TO_EN = {
     "50-99-7": "D-Glucose (Dextrose)",
     "500-22-1": "3-Pyridinecarboxaldehyde",
     "501-65-5": "Diphenylacetylene",
+    "504-24-5": "4-Aminopyridine",
     "504-29-0": "2-Aminopyridine",
     "504-63-2": "1,3-Propanediol",
     "5048-19-1": "5-Hexenenitrile",
@@ -3430,6 +3434,8 @@ CAS_TO_EN = {
 
 # English to Chinese Name Dictionary
 CHEMICAL_NAMES_ZH_EXPANDED = {
+    "4-aminopyridine": "4-胺基吡啶",
+    "allyl alcohol": "烯丙醇",
     "(+)-trans-chrysanthemic acid": "(+)-反式菊酸",
     "(-)-adenosine": "腺苷",
     "(-)-alpha-phellandrene": "(-)-α-水芹烯",
