@@ -630,6 +630,10 @@ const inspectPreviewFrame = async (page, testCase) => {
 
 const mergePreviewEvidence = (first, second) => {
   if (!second) return first;
+  const qrContinuationStateOk =
+    first.labelKind === "qr-supplement" &&
+    first.hasQrImage === true &&
+    second.hasQrImage === false;
   return {
     ...first,
     pictogramCodes: [...new Set([
@@ -653,7 +657,9 @@ const mergePreviewEvidence = (first, second) => {
       second.minPictogramSidePx || 0,
     ),
     pictogramSizeOk: first.pictogramSizeOk && second.pictogramSizeOk,
-    qrStateOk: first.qrStateOk && second.qrStateOk,
+    qrStateOk: qrContinuationStateOk
+      ? first.qrStateOk
+      : first.qrStateOk && second.qrStateOk,
     nextPreview: second,
   };
 };
