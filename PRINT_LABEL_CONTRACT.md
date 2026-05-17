@@ -42,8 +42,9 @@ The best path is a label workflow that a lab user can print without guessing:
   chips, teaser summaries, case/custom fields, or verbose purpose copy inside
   the physical label.
 - Dense complete-label content must route users to A4 Primary or Letter Primary
-  first. If the selected A4/Letter complete label still cannot fit all H/P text
-  on one page, it must produce same-stock continuation pages rather than
+  first. The renderer should use the available full-page area efficiently before
+  splitting. If the selected A4/Letter complete label still cannot fit all H/P
+  text on one page, it must produce same-stock continuation pages rather than
   blocking solely because the first page is full. Complete primary labels still
   block print until required content can be rendered and the responsible
   lab/supplier profile is complete.
@@ -57,6 +58,10 @@ The best path is a label workflow that a lab user can print without guessing:
 - A4 and Letter are the user-facing complete-label stocks. Smaller public
   outputs stay small and use same-output continuation labels; they do not
   bounce to A4/Letter merely because one item has many pictograms.
+- QR codes must not consume repeated continuation space by default. Complete
+  A4/Letter continuation sets and QR small-label continuation sets print the QR
+  code on the first page/label, then use later continuation space for required
+  text or pictograms.
 - Batch printing must keep the user-selected physical stock fixed for the
   batch. The app may recommend A4/Letter or another stock as a recovery path,
   but it must not silently split one batch across mixed stocks.
@@ -92,6 +97,9 @@ Automated tests should pin these behaviors:
   using continuation pages when needed. Preflight blocks only if the continuation
   set still cannot keep required identity, pictograms, QR, profile, and H/P text
   visible.
+- Moderate A4/Letter primary labels should remain one efficient full-page
+  output. QA should treat unnecessary continuation pages and large unused H/P
+  areas as product regressions, not harmless formatting differences.
 - Dense shipped-container labels on regular large stock auto-route to a viable A4 or Letter primary output when the planner can produce one, instead of leaving the user at a disabled print dead end.
 - A4/Letter Primary allows dense complete labels as continuation sets and does
   not open the overflow/blocking alert merely because H/P text continues onto a
@@ -135,7 +143,8 @@ Run these in Browser Use after meaningful print-workflow changes:
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.
 - QR small label: CAS, English name, Chinese name, QR, and every pictogram
   remain visible across the continuation set; no H/P text or signal word is
-  printed.
+  printed. The QR image appears on the first label; later continuation labels
+  use the recovered space for remaining pictograms.
 - Identification small label: CAS, English name, Chinese name, and every
   pictogram remain visible across the continuation set; no QR, H/P text, or
   signal word is printed.

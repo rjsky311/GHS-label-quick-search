@@ -175,18 +175,24 @@ The first refactor slice has landed:
   pages, and the renderer must continue full H/P text across pages instead of
   clipping the label or leaving the user at a dead end.
 - Dense A4/Letter complete-primary output now uses a continuation renderer when
-  the full H/P text is too large for one physical page. Each continuation page
-  repeats identity, CAS, signal word, all available GHS pictograms, responsible
-  profile, and a continuation badge; H/P statements are split across pages.
+  the full H/P text is too large for one efficiently used physical page. Each
+  continuation page repeats identity, CAS, signal word, all available GHS
+  pictograms, responsible profile, and a continuation badge; H/P statements are
+  split across pages.
 - Complete A4/Letter continuation is now the expected recovery for first-page
   H/P overflow: the planner and print QA allow same-stock continuation instead
   of disabling print, and the print action shows the resulting label/page count.
-  H statements remain before P statements, and each continuation page repeats
-  identity, CAS, signal word, all pictograms, QR, and responsible profile.
+  H statements remain before P statements. The first page carries the QR lookup
+  code; later continuation pages use that space for H/P content instead of
+  repeating QR by default.
 - QR small labels and identification small labels avoid internal divider boxes
   in their continuation layouts. The outer label boundary remains, but scarce
   area is reserved for CAS, English name, Chinese name, QR when applicable, and
   recognizable GHS pictograms.
+- QR small-label continuation uses the QR code on the first label only by
+  default. Later labels repeat identity and pack remaining pictograms across the
+  freed width, so many-pictogram chemicals do not waste an entire column on a
+  repeated scan code.
 - The modal preview now exposes page navigation for multi-page and continuation
   outputs. The label preview and sheet preview consume the same selected
   page/label index, so users can inspect later continuation pages before

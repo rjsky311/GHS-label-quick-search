@@ -79,14 +79,19 @@ QR target:
 
 Layout rules:
 
-- A4 and Letter complete labels use one physical label per page, but one
-  chemical may produce a same-stock continuation set when the complete H/P
-  content cannot fit on the first page without clipping.
+- A4 and Letter complete labels use one physical label per page. The renderer
+  should first use the available full-page space efficiently with calibrated
+  typography and statement columns; one chemical should produce a same-stock
+  continuation set only when the complete H/P content still cannot fit on the
+  first page without clipping.
 - Complete continuation pages must stay on the selected A4/Letter stock instead
   of blocking print or switching output types. Each page repeats CAS, English
-  name, Chinese name, signal word, all available GHS pictograms, QR, responsible
+  name, Chinese name, signal word, all available GHS pictograms, responsible
   profile, and a quiet page marker; H statements print before P statements, and
   long P text continues onto later pages.
+- Complete continuation sets keep the QR lookup code on the first page. Later
+  pages should use the QR area for H/P text unless physical-printer validation
+  proves repeated QR is needed and still does not waste page capacity.
 - The QR code must not push H/P content, product identity, or GHS pictograms
   out of the printable area.
 
@@ -107,7 +112,9 @@ Required content:
 - Second line: English chemical name.
 - Third line: Chinese chemical name.
 - All available GHS pictograms across the label set.
-- QR code on every printed label in the set.
+- QR code on the first printed label in the set. If the same chemical needs
+  continuation labels for remaining pictograms, later labels repeat identity
+  text but use the QR area for pictograms.
 
 Forbidden content:
 
@@ -129,6 +136,9 @@ Layout rules:
   `20 mm` square as the default target unless physical-printer validation later
   proves a smaller size reliable.
 - GHS pictograms should be visually clear and aligned in a predictable grid.
+- Continuation labels should pack pictograms across the usable width before
+  splitting again. Do not leave a large reserved QR column on pages that do not
+  print a QR code.
 
 ### 2.3 Identification Small Label
 
@@ -179,7 +189,8 @@ Rules:
 - If content does not fit in one small label, create a second or third label for
   the same chemical.
 - Repeat CAS, English name, and Chinese name on every continuation label.
-- For QR small labels, repeat the QR code on every continuation label.
+- For QR small labels, print the QR code on the first label only by default.
+  Continuation labels should spend the saved space on remaining pictograms.
 - Distribute GHS pictograms across the continuation set when they cannot all fit
   clearly on one label.
 - Add a small continuation marker such as `1/2`, `2/2`, `1/3`, `2/3`, `3/3`.

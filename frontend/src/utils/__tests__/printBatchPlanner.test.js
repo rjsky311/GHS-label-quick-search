@@ -34,6 +34,25 @@ const a4PrimaryLayout = resolvePrintLayoutConfig({
   nameDisplay: "both",
 });
 
+const makeVeryDenseA4BatchFixture = () =>
+  batchPrintMixedFixture50.map((chemical) =>
+    chemical.cas_number === "50-00-0"
+      ? {
+          ...chemical,
+          hazard_statements: Array.from({ length: 14 }, (_, index) => ({
+            code: `H${300 + index}`,
+            text_en:
+              "This is a very long complete-primary hazard statement retained for a high-density A4 continuation set with readable bilingual wrapping and no clipped label content.",
+          })),
+          precautionary_statements: Array.from({ length: 30 }, (_, index) => ({
+            code: `P${300 + index}`,
+            text_en:
+              "This is a very long precautionary statement retained for same-stock continuation printing so the batch planner still covers truly oversized full-page content.",
+          })),
+        }
+      : chemical,
+  );
+
 describe("printBatchPlanner", () => {
   it("ships a reusable 50-item mixed batch fixture", () => {
     expect(batchPrintMixedFixture50).toHaveLength(50);
@@ -172,7 +191,7 @@ describe("printBatchPlanner", () => {
 
   it("classifies very dense A4 complete labels as same-stock continuation", () => {
     const plan = buildBatchPrintPlan({
-      selectedForLabel: batchPrintMixedFixture50,
+      selectedForLabel: makeVeryDenseA4BatchFixture(),
       layout: a4PrimaryLayout,
       purpose: BATCH_PRINT_PURPOSE.COMPLETE,
       resolvedLabProfile: completeProfile,
@@ -198,7 +217,7 @@ describe("printBatchPlanner", () => {
 
   it("materializes same-stock continuation items in the default print set", () => {
     const plan = buildBatchPrintPlan({
-      selectedForLabel: batchPrintMixedFixture50,
+      selectedForLabel: makeVeryDenseA4BatchFixture(),
       layout: a4PrimaryLayout,
       purpose: BATCH_PRINT_PURPOSE.COMPLETE,
       resolvedLabProfile: completeProfile,

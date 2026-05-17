@@ -498,7 +498,7 @@ function resolveTypographyMetrics(normalized) {
       compliancePictogramMm: fullPagePictogramMm,
       complianceStatementPx: clamp(roundTo(5.6 * textScale, 1), 4.8, 5.6),
       complianceLineHeight: autoFitLevel ? 1.01 : 1.03,
-      complianceColumns: 2,
+      complianceColumns: 3,
       standardPictogramMm: 30,
       standardRailColumnMm: 66,
       standardPictogramGapMm: 2,

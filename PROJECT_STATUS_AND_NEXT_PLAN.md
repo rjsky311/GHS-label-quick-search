@@ -139,9 +139,11 @@ Do next:
 
 - Keep the first-level print UI limited to complete label, QR small label, and
   identification small label.
-- Keep A4/Letter complete labels one label per page with full H/P and QR.
+- Keep A4/Letter complete labels high-utilization first: one physical label per
+  page, full H/P, QR on the first page, and same-stock continuation only when
+  the rendered H/P load truly needs more pages.
 - Keep small labels identity-first: CAS, English name, Chinese name, all GHS
-  pictograms, and QR only for QR small labels.
+  pictograms, and QR only for the first QR small label in a continuation set.
 - Keep H/P text, signal words, H-code chips, teaser summaries, and dense
   purpose language out of small labels.
 - For small-label overfit, continue on the same selected output type and stock

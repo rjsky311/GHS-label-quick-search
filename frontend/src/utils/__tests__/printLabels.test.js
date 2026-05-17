@@ -831,7 +831,7 @@ describe("printLabels", () => {
     expect(mockIframeDoc.write.mock.calls[0][0]).toBe(documentBundle.html);
   });
 
-  it("prints dense A4 primary labels instead of blocking after the automatic upgrade", () => {
+  it("prints dense A4 primary labels as high-utilization single-page output", () => {
     const denseChemical = {
       ...mockChemical,
       ghs_pictograms: [
@@ -866,19 +866,18 @@ describe("printLabels", () => {
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
     expect(html).toContain("width: 28.2mm");
-    expect(html).toContain("column-count: 2");
+    expect(html).toContain("column-count: 3");
     expect(html).toContain("compliance-statements-panel");
-    expect(html).toContain("label-continuation-page");
-    expect(html).toContain('data-continuation-total="4"');
-    expect(html).toContain("--precaution-code-max:21mm");
+    expect(html).toContain("--precaution-code-max:16mm");
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
+    expect(bodyHtml).not.toContain("label-continuation-page");
     expect(bodyHtml).toContain('class="qrcode-img"');
     expect(bodyHtml).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
     expect(bodyHtml).not.toContain("hazard-more");
     expect(bodyHtml).not.toContain("precaution-more");
-    expect((bodyHtml.match(/class="qrcode-img"/g) || [])).toHaveLength(4);
-    expect((bodyHtml.match(/alt="GHS02"/g) || [])).toHaveLength(4);
+    expect((bodyHtml.match(/class="qrcode-img"/g) || [])).toHaveLength(1);
+    expect((bodyHtml.match(/alt="GHS02"/g) || [])).toHaveLength(1);
     denseChemical.hazard_statements.forEach((statement) => {
       expect(bodyHtml).toContain(`>${statement.code}</span>`);
     });
@@ -1541,14 +1540,19 @@ describe("printLabels", () => {
       expect(html).toContain("data:image/gif;base64");
     });
 
-    it("qrcode small labels continue same-stock when pictograms exceed one QR label", () => {
+    it("qrcode small labels continue same-stock only when pictograms exceed the first QR label", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
+          { code: "GHS01" },
           { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
           { code: "GHS05" },
           { code: "GHS06" },
           { code: "GHS07" },
+          { code: "GHS08" },
+          { code: "GHS09" },
         ],
       };
 
@@ -1574,13 +1578,18 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.fragmentHtml).toContain("small-cas");
-      expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+      expect(preview.model.expandedLabels).toHaveLength(3);
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-3]"/g)).toHaveLength(3);
       expect(expandedPictogramCodes(preview)).toEqual([
+        "GHS01",
         "GHS02",
+        "GHS03",
+        "GHS04",
         "GHS05",
         "GHS06",
         "GHS07",
+        "GHS08",
+        "GHS09",
       ]);
       expect(preview.fragmentHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
       expect(preview.fragmentHtml).not.toContain("more-pics");
@@ -1616,14 +1625,14 @@ describe("printLabels", () => {
       );
       expect(preview.fragmentHtml).toContain("label-form-strip");
       expect(preview.html).toContain("width: 22mm");
-      expect(preview.html).toContain("grid-template-columns: repeat(2, 11mm)");
+      expect(preview.html).toContain("grid-template-columns: repeat(3, 11mm)");
       expect(preview.html).toContain(
         ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
       );
       expect(preview.html).toContain("border-right: 0");
       expect(preview.html).toContain("box-shadow: none");
       expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[256]"/g)).toHaveLength(3);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS02",
         "GHS05",
@@ -1670,7 +1679,7 @@ describe("printLabels", () => {
         ],
       };
       const cases = [
-        ["small-strip", "label-stock-small-strip", "repeat(4, 8.4mm)"],
+        ["small-strip", "label-stock-small-strip", "repeat(5, 8.2mm)"],
       ];
 
       cases.forEach(([stockPreset, stockClass, gridRule]) => {
@@ -1714,7 +1723,7 @@ describe("printLabels", () => {
         [
           "brother-62mm-continuous",
           "label-stock-brother-62mm-continuous",
-          "repeat(2, 11mm)",
+          "repeat(3, 11mm)",
           "label-form-strip",
         ],
       ];
@@ -1740,7 +1749,7 @@ describe("printLabels", () => {
         expect(preview.fragmentHtml).toContain(formClass);
         expect(preview.fragmentHtml).toContain("qrcode-img");
         expect(preview.model.expandedLabels).toHaveLength(2);
-        expect(preview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(2);
+        expect(preview.fragmentHtml.match(/alt="GHS0[256]"/g)).toHaveLength(3);
         expect(expandedPictogramCodes(preview)).toEqual([
           "GHS02",
           "GHS05",
@@ -1821,10 +1830,15 @@ describe("printLabels", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
+          { code: "GHS01" },
           { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
           { code: "GHS05" },
           { code: "GHS06" },
           { code: "GHS07" },
+          { code: "GHS08" },
+          { code: "GHS09" },
         ],
       };
 
@@ -1844,8 +1858,9 @@ describe("printLabels", () => {
       expect(bodyHtml).toContain("label-form-strip");
       expect(bodyHtml).toContain("label-kind-qr-supplement");
       expect(bodyHtml).toContain("qrcode-img");
-      expect(bodyHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(4);
-      expect(bodyHtml.match(/class="qrcode-img"/g)).toHaveLength(2);
+      expect(bodyHtml.match(/alt="GHS0[1-9]"/g)).toHaveLength(9);
+      expect(bodyHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
+      expect(bodyHtml).toContain("label-qr-no-code");
       expect(bodyHtml).not.toContain("more-pics");
       expect(alertSpy).not.toHaveBeenCalled();
       jest.advanceTimersByTime(300);
@@ -2079,7 +2094,7 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).not.toContain("H330");
       expect(preview.fragmentHtml).not.toContain("Danger");
       expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[4567]"/g)).toHaveLength(2);
+      expect(preview.fragmentHtml.match(/alt="GHS0[456]"/g)).toHaveLength(3);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS04",
         "GHS05",
@@ -2180,14 +2195,13 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-a4-primary");
       expect(preview.html).toContain("width: 28.2mm");
       expect(preview.html).toContain("height: 28.2mm");
-      expect(preview.html).toContain("column-count: 2");
+      expect(preview.html).toContain("column-count: 3");
       expect(preview.html).toContain("compliance-statements-panel");
       expect(preview.html).toContain(
         "grid-template-rows: auto minmax(0, 1fr) auto",
       );
-      expect(preview.fragmentHtml).toContain("label-continuation-page");
-      expect(preview.fragmentHtml).toContain('data-continuation-page="1"');
-      expect(preview.html).toContain("--precaution-code-max:21mm");
+      expect(preview.fragmentHtml).not.toContain("label-continuation-page");
+      expect(preview.html).toContain("--precaution-code-max:16mm");
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
@@ -2210,15 +2224,15 @@ describe("printLabels", () => {
           { code: "GHS07" },
           { code: "GHS08" },
         ],
-        hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+        hazard_statements: Array.from({ length: 14 }, (_, index) => ({
           code: `H${300 + index}`,
           text_en:
-            "This is a long complete-primary hazard statement that must remain available on the printed shipped-container label set.",
+            "This is a very long complete-primary hazard statement that must remain available on the printed shipped-container label set and still remain readable after bilingual layout calibration.",
         })),
-        precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+        precautionary_statements: Array.from({ length: 30 }, (_, index) => ({
           code: `P${300 + index}`,
           text_en:
-            "This is a long precautionary statement retained for continuation-page printing so the final output does not clip content.",
+            "This is a very long precautionary statement retained for continuation-page printing so the final output does not clip content while preserving clear code alignment and readable wrapping.",
         })),
       };
 
@@ -2241,16 +2255,17 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml).toContain("data-continuation-page=\"1\"");
       expect(documentBundle.pagesHtml).toContain("print.continuationBadge");
       expect(documentBundle.pagesHtml).toContain(">H300</span>");
-      expect(documentBundle.pagesHtml).toContain(">P315</span>");
+      expect(documentBundle.pagesHtml).toContain(">P329</span>");
       expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(
         documentBundle.model.expandedLabels.length,
       );
+      expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
       expect(documentBundle.model.totalPages).toBe(
         documentBundle.model.expandedLabels.length,
       );
     });
 
-    it("splits moderate A4 complete labels before precaution text can clip", () => {
+    it("keeps moderate A4 complete labels on one efficient page before using continuation", () => {
       const moderateChemical = {
         ...mockChemical,
         cas_number: "90-41-5",
@@ -2312,19 +2327,16 @@ describe("printLabels", () => {
         { organization: "Lab A", phone: "02-1234", address: "Taipei" },
       );
 
-      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
-      expect(documentBundle.pagesHtml).toContain('data-continuation-page="1"');
-      expect(documentBundle.pagesHtml).toContain('data-continuation-page="2"');
+      expect(documentBundle.model.expandedLabels).toHaveLength(1);
+      expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
       expect(documentBundle.pagesHtml).toContain(">H302</span>");
       expect(documentBundle.pagesHtml).toContain(">P501</span>");
       expect(
         documentBundle.pagesHtml.match(
           /CAS<\/span><span class="meta-chip-value">90-41-5/g,
         ),
-      ).toHaveLength(documentBundle.model.expandedLabels.length);
-      expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(
-        documentBundle.model.expandedLabels.length,
-      );
+      ).toHaveLength(1);
+      expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
     });
 
     it("can render a selected continuation page in print preview", () => {
@@ -2339,15 +2351,15 @@ describe("printLabels", () => {
           { code: "GHS07" },
           { code: "GHS08" },
         ],
-        hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+        hazard_statements: Array.from({ length: 14 }, (_, index) => ({
           code: `H${300 + index}`,
           text_en:
-            "This is a long complete-primary hazard statement that must remain available on the printed shipped-container label set.",
+            "This is a very long complete-primary hazard statement that must remain available on the printed shipped-container label set and still remain readable after bilingual layout calibration.",
         })),
-        precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+        precautionary_statements: Array.from({ length: 30 }, (_, index) => ({
           code: `P${300 + index}`,
           text_en:
-            "This is a long precautionary statement retained for continuation-page printing so the final output does not clip content.",
+            "This is a very long precautionary statement retained for continuation-page printing so the final output does not clip content while preserving clear code alignment and readable wrapping.",
         })),
       };
 

@@ -193,6 +193,34 @@ const chunk = (items, size) => {
   return chunks;
 };
 
+const getCompactPictogramCapacity = (layout = {}, template, pageIndex = 0) => {
+  const stock = layout.stockPreset || layout.stockId;
+  const isQr = template === "qrcode";
+  const continuationWithoutQr = isQr && pageIndex > 0;
+
+  if (stock === "small-strip") return continuationWithoutQr ? 5 : isQr ? 3 : 5;
+  if (stock === "brother-62mm-continuous") {
+    return continuationWithoutQr ? 5 : isQr ? 3 : 5;
+  }
+  if (stock === "small-rack") return continuationWithoutQr ? 6 : isQr ? 4 : 6;
+  if (stock === "medium-rack") return continuationWithoutQr ? 8 : isQr ? 6 : 8;
+
+  return continuationWithoutQr ? 6 : isQr ? 4 : 6;
+};
+
+const splitCompactPictograms = (pictograms = [], layout = {}, template) => {
+  const pages = [];
+  let index = 0;
+
+  while (index < pictograms.length) {
+    const capacity = getCompactPictogramCapacity(layout, template, pages.length);
+    pages.push(pictograms.slice(index, index + capacity));
+    index += capacity;
+  }
+
+  return pages;
+};
+
 const clampIndex = (value, maxIndex) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric) || maxIndex <= 0) return 0;
@@ -650,13 +678,11 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
 
   const content = getLabelContentForRender(chemical, renderModel);
   if (isCompactIdentityLayout) {
-    const pictogramCapacity =
-      renderModel.layout.template === "qrcode"
-        ? 2
-        : renderModel.layout.stockPreset === "small-strip"
-          ? 4
-          : 3;
-    const pictogramPages = chunk(content.pictograms || [], pictogramCapacity);
+    const pictogramPages = splitCompactPictograms(
+      content.pictograms || [],
+      renderModel.layout,
+      renderModel.layout.template,
+    );
 
     if (pictogramPages.length <= 1) return [chemical];
 
@@ -667,6 +693,7 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
         current: index + 1,
         total: pictogramPages.length,
         pictograms,
+        showQr: renderModel.layout.template === "qrcode" ? index === 0 : false,
         hazardStatements: [],
         precautionaryStatements: [],
       },
@@ -1129,13 +1156,14 @@ const renderComplianceQrPanel = (effectiveChem, model) => {
   </div>`;
 };
 
-const renderComplianceFooter = (effectiveChem, model) => {
+const renderComplianceFooter = (effectiveChem, model, continuation = null) => {
   const hasProfile =
     model.resolvedLabProfile.organization ||
     model.resolvedLabProfile.phone ||
     model.resolvedLabProfile.address;
+  const showQr = !continuation || continuation.current === 1;
 
-  return `<div class="compliance-footer">
+  return `<div class="compliance-footer${showQr ? "" : " compliance-footer-no-qr"}">
     <div class="compliance-supplier">
       ${
         hasProfile
@@ -1146,7 +1174,7 @@ const renderComplianceFooter = (effectiveChem, model) => {
       }
       ${renderCustomFields(model)}
     </div>
-    ${renderComplianceQrPanel(effectiveChem, model)}
+    ${showQr ? renderComplianceQrPanel(effectiveChem, model) : ""}
   </div>`;
 };
 
@@ -1407,21 +1435,25 @@ const renderFullTemplate = (chemical, model) => {
           }
         </div>
       </div>
-      ${renderComplianceFooter(effectiveChem, model)}
+      ${renderComplianceFooter(effectiveChem, model, continuation)}
     </div>
   `;
 };
 
 const renderQRCodeTemplate = (chemical, model) => {
+  const continuation = getContinuationMeta(chemical);
   const {
     effectiveChemical: effectiveChem,
     pictograms,
   } = getLabelContentForRender(chemical, model);
   const prepared = isPrepared(effectiveChem);
   const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
+  const showQr = !continuation || continuation.showQr !== false;
+  const continuationClass = continuation ? " label-continuation-page" : "";
+  const qrNoCodeClass = showQr ? "" : " label-qr-no-code";
 
   return `
-    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
+    <div class="label label-qr ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${continuationClass}${qrNoCodeClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="qr-left qr-left-scan">
         ${renderPurposeNotice(model)}
         <div class="qr-identity">
@@ -1433,19 +1465,23 @@ const renderQRCodeTemplate = (chemical, model) => {
             : ""
         }
       </div>
-      <div class="qr-right qr-panel qrcode-panel">
-        <div class="qr-code-shell">
-          <img class="qrcode-img"
-            src="${getQRCodeUrl(qrTarget, 200)}"
-            alt="QR"
-            data-required-print-image="qr-code"
-            data-qr-target="${escapeHtml(qrTarget)}"
-            data-qr-target-type="ghs-lookup"
-            data-qr-target-source="ghs-label-quick-search"
-            data-qr-target-label="GHS Label Quick Search" />
-        </div>
-        <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
-      </div>
+      ${
+        showQr
+          ? `<div class="qr-right qr-panel qrcode-panel">
+              <div class="qr-code-shell">
+                <img class="qrcode-img"
+                  src="${getQRCodeUrl(qrTarget, 200)}"
+                  alt="QR"
+                  data-required-print-image="qr-code"
+                  data-qr-target="${escapeHtml(qrTarget)}"
+                  data-qr-target-type="ghs-lookup"
+                  data-qr-target-source="ghs-label-quick-search"
+                  data-qr-target-label="GHS Label Quick Search" />
+              </div>
+              <div class="qr-hint">${escapeHtml(model.t("print.scanForDetail"))}</div>
+            </div>`
+          : ""
+      }
     </div>
   `;
 };
@@ -1560,6 +1596,7 @@ const buildStyles = (model) => {
       page-break-inside: avoid;
       display: flex;
       flex-direction: column;
+      position: relative;
       background: #fff;
       overflow: hidden;
       font-size: ${layout.typography.fontSize};
@@ -1578,8 +1615,8 @@ const buildStyles = (model) => {
     .label-full-page-primary {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
-      gap: 1.6mm;
-      padding: 4.5mm;
+      gap: 1.15mm;
+      padding: 3.8mm;
       border-width: 0.8mm;
       border-radius: 1.2mm;
       overflow: hidden;
@@ -1637,7 +1674,7 @@ const buildStyles = (model) => {
       min-width: 0;
     }
     .label-full-page-primary .compliance-header {
-      padding-bottom: 1.4mm;
+      padding-bottom: 0.9mm;
     }
     .continuation-badge {
       display: inline-flex;
@@ -1674,10 +1711,10 @@ const buildStyles = (model) => {
     .label-full-page-primary .compliance-alert-panel {
       border: 0.25mm solid #dbe4ef;
       border-radius: 1.2mm;
-      padding: 1.5mm;
+      padding: 1.1mm 1.35mm;
       background: #f8fafc;
-      gap: 1.3mm;
-      justify-content: flex-start;
+      gap: 1.6mm;
+      justify-content: space-between;
       overflow: hidden;
     }
     .compliance-statements-panel {
@@ -1855,11 +1892,15 @@ const buildStyles = (model) => {
       min-width: 0;
     }
     .small-identity .continuation-badge {
+      position: absolute;
+      right: 1mm;
+      bottom: 0.9mm;
       margin-top: 0;
-      padding: 0.15mm 0.7mm;
-      font-size: 5px;
+      padding: 0.18mm 0.65mm;
+      font-size: 5.2px;
       line-height: 1;
       border-radius: 999px;
+      z-index: 2;
     }
     .name-section-compact {
       display: grid;
@@ -2187,9 +2228,10 @@ const buildStyles = (model) => {
       align-items: center;
     }
     .label-full-page-primary .pictograms.compliance-pictograms {
-      grid-template-columns: repeat(2, ${compliancePictogramSize});
-      justify-content: center;
-      gap: 2.8mm;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 1.1mm;
     }
     .pictograms.compliance-pictograms img {
       width: ${compliancePictogramSize};
@@ -2362,22 +2404,28 @@ const buildStyles = (model) => {
       line-height: 1.08;
     }
     .label-full-page-primary .compliance-core {
-      grid-template-columns: ${complianceAlertColumn} minmax(0, 1fr);
-      gap: 2.4mm;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 1.25mm;
       min-height: 0;
     }
+    .label-full-page-primary .compliance-alert-panel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+    }
     .label-full-page-primary .section-label {
-      font-size: 7.6px;
-      margin-bottom: 0.45mm;
+      font-size: 7px;
+      margin-bottom: 0.32mm;
       letter-spacing: 0;
     }
     .label-full-page-primary .compliance-hazard-list {
-      gap: 0.3mm;
+      gap: 0.2mm;
     }
     .label-full-page-primary .compliance-precaution-list {
       display: block;
       column-count: ${layout.typography.complianceColumns};
-      column-gap: 3.5mm;
+      column-gap: 2.5mm;
     }
     .label-full-page-primary .compliance-statement {
       break-inside: avoid;
@@ -2385,11 +2433,11 @@ const buildStyles = (model) => {
       margin-bottom: var(--compliance-statement-gap, 0.42mm);
     }
     .label-full-page-primary .compliance-hazard-list .compliance-statement {
-      grid-template-columns: minmax(var(--hazard-code-min, 10mm), var(--hazard-code-max, 14mm)) minmax(0, 1fr);
+      grid-template-columns: minmax(var(--hazard-code-min, 8.5mm), var(--hazard-code-max, 12mm)) minmax(0, 1fr);
     }
     .label-full-page-primary .compliance-precaution-list .compliance-statement {
       display: grid;
-      grid-template-columns: minmax(var(--precaution-code-min, 15mm), var(--precaution-code-max, 21mm)) minmax(0, 1fr);
+      grid-template-columns: minmax(var(--precaution-code-min, 12mm), var(--precaution-code-max, 17mm)) minmax(0, 1fr);
       gap: var(--compliance-code-gap, 0.8mm);
     }
     .precaution-code {
@@ -2650,8 +2698,8 @@ const buildStyles = (model) => {
       justify-content: center;
     }
     .label-icon.label-form-strip .pictograms-icon {
-      grid-template-columns: repeat(4, ${iconPictogramSize});
-      gap: 0.45mm;
+      grid-template-columns: repeat(6, ${iconPictogramSize});
+      gap: 0.4mm;
     }
     .label-icon.label-stock-small-strip .label-middle,
     .label-icon.label-stock-small-rack .label-middle,
@@ -2660,12 +2708,12 @@ const buildStyles = (model) => {
       justify-content: center;
     }
     .label-icon.label-stock-small-strip .pictograms-icon {
-      grid-template-columns: repeat(4, 8.4mm);
-      gap: 0.55mm;
+      grid-template-columns: repeat(5, 8.2mm);
+      gap: 0.45mm;
     }
     .label-icon.label-stock-small-strip .pictograms-icon img {
-      width: 8.4mm;
-      height: 8.4mm;
+      width: 8.2mm;
+      height: 8.2mm;
     }
     .label-icon.label-stock-small-rack .label-top {
       padding-bottom: 0.45mm;
@@ -2685,12 +2733,12 @@ const buildStyles = (model) => {
       padding: 0.25mm 0.85mm;
     }
     .label-icon.label-stock-brother-62mm-continuous .pictograms-icon {
-      grid-template-columns: repeat(4, 11mm);
-      gap: 0.75mm;
+      grid-template-columns: repeat(5, 9.9mm);
+      gap: 0.55mm;
     }
     .label-icon.label-stock-brother-62mm-continuous .pictograms-icon img {
-      width: 11mm;
-      height: 11mm;
+      width: 9.9mm;
+      height: 9.9mm;
     }
     .label-icon.label-stock-medium-rack .label-top {
       padding-bottom: 0.55mm;
@@ -2991,6 +3039,24 @@ const buildStyles = (model) => {
       padding-top: 0.15mm;
       border-top: 0;
     }
+    .label-qr.label-form-strip.label-qr-no-code {
+      gap: 0;
+    }
+    .label-qr.label-form-strip.label-qr-no-code .qr-left-scan {
+      padding-right: 0;
+      width: 100%;
+      flex: 1 1 100%;
+    }
+    .label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics {
+      display: grid;
+      grid-template-columns: repeat(5, 8.2mm);
+      justify-content: center;
+      gap: 0.45mm;
+    }
+    .label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics img {
+      width: 8.2mm;
+      height: 8.2mm;
+    }
     .label-qr.label-form-strip .qr-panel {
       gap: 0.45mm;
       padding-left: 0;
@@ -3019,9 +3085,18 @@ const buildStyles = (model) => {
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(2, ${qrPictogramSize});
-      justify-content: center;
+      grid-template-columns: repeat(3, ${qrPictogramSize});
+      justify-content: start;
       gap: 0.42mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics {
+      grid-template-columns: repeat(5, 9.8mm);
+      justify-content: center;
+      gap: 0.5mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics img {
+      width: 9.8mm;
+      height: 9.8mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-support-row {
       justify-content: center;

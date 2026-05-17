@@ -189,9 +189,9 @@ describe("printOutputPlanner", () => {
     );
   });
 
-  it("allows dense content on full-page primary output as continuation", () => {
+  it("allows very dense content on full-page primary output as continuation", () => {
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [makeChemical(24)],
+      selectedForLabel: [makeChemical(42)],
       layout: resolvePrintLayoutConfig({
         labelPurpose: "shipping",
         template: "full",

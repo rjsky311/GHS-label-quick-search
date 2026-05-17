@@ -60,18 +60,18 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
 
   if (isLetter) {
     return {
-      splitStatementCount: 11,
-      splitTextWeight: 900,
-      pageStatementCount: 6,
-      pageTextWeight: 620,
+      splitStatementCount: 36,
+      splitTextWeight: 3900,
+      pageStatementCount: 30,
+      pageTextWeight: 3300,
     };
   }
 
   return {
-    splitStatementCount: 12,
-    splitTextWeight: 980,
-    pageStatementCount: 7,
-    pageTextWeight: 700,
+    splitStatementCount: 38,
+    splitTextWeight: 4200,
+    pageStatementCount: 32,
+    pageTextWeight: 3600,
   };
 };
 
