@@ -2067,6 +2067,9 @@ const buildStyles = (model) => {
       text-align: left;
       min-width: 0;
     }
+    .label-full-page-primary .name-section {
+      padding-bottom: 0.45mm;
+    }
     .label-top-identity {
       border-bottom: 0.25mm solid #cbd5e1;
       padding-bottom: 0.9mm;
