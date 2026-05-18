@@ -2344,7 +2344,7 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
     });
 
-    it("separates long precaution text from hazards on A4 continuation labels", () => {
+    it("uses available A4 space before moving long precautions to continuation labels", () => {
       const precautionHeavyChemical = {
         ...mockChemical,
         cas_number: "455-14-1",
@@ -2386,13 +2386,26 @@ describe("printLabels", () => {
       const [hazardPage, firstPrecautionPage] =
         documentBundle.model.expandedLabels;
       expect(hazardPage.continuation.hazardStatements).toHaveLength(3);
-      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
+      expect(
+        hazardPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
       expect(firstPrecautionPage.continuation.hazardStatements).toHaveLength(0);
       expect(
         firstPrecautionPage.continuation.precautionaryStatements.length,
       ).toBeGreaterThan(0);
+      expect(documentBundle.model.expandedLabels.length).toBeLessThan(4);
       expect(documentBundle.pagesHtml).toContain("label-continuation-page");
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
+
+      expect(documentBundle.pagesHtml).toMatch(
+        /<div class="compliance-header-actions">[\s\S]*class="continuation-badge"[\s\S]*class="signal danger compliance-signal"/,
+      );
+      expect(documentBundle.pagesHtml).toMatch(
+        /<div class="compliance-alert-panel">\s*<div class="pictograms compliance-pictograms">/,
+      );
+      expect(documentBundle.pagesHtml).not.toMatch(
+        /<div class="compliance-alert-panel">\s*<div class="signal [^"]*compliance-signal"/,
+      );
     });
 
     it("can render a selected continuation page in print preview", () => {

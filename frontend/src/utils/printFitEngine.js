@@ -60,34 +60,34 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
 
   if (isLetter) {
     return {
-      splitStatementCount: 34,
-      splitTextWeight: 3600,
-      pageStatementCount: 26,
-      pageTextWeight: 2900,
+      splitStatementCount: 38,
+      splitTextWeight: 3900,
+      pageStatementCount: 32,
+      pageTextWeight: 3150,
       hazardOnlyStatementCount: 16,
       hazardOnlyTextWeight: 1850,
-      precautionOnlyStatementCount: 14,
-      precautionOnlyTextWeight: 1650,
-      mixedPrecautionStatementCount: 18,
-      mixedPrecautionTextWeight: 1650,
-      separatePrecautionsAfterHazardCount: 9,
-      separatePrecautionsAfterHazardTextWeight: 1250,
+      precautionOnlyStatementCount: 30,
+      precautionOnlyTextWeight: 2900,
+      mixedPrecautionStatementCount: 30,
+      mixedPrecautionTextWeight: 2350,
+      separatePrecautionsAfterHazardCount: 13,
+      separatePrecautionsAfterHazardTextWeight: 1700,
     };
   }
 
   return {
-    splitStatementCount: 36,
-    splitTextWeight: 3900,
-    pageStatementCount: 28,
-    pageTextWeight: 3150,
+    splitStatementCount: 40,
+    splitTextWeight: 4200,
+    pageStatementCount: 34,
+    pageTextWeight: 3400,
     hazardOnlyStatementCount: 17,
     hazardOnlyTextWeight: 2000,
-    precautionOnlyStatementCount: 15,
-    precautionOnlyTextWeight: 1800,
-    mixedPrecautionStatementCount: 20,
-    mixedPrecautionTextWeight: 1800,
-    separatePrecautionsAfterHazardCount: 10,
-    separatePrecautionsAfterHazardTextWeight: 1400,
+    precautionOnlyStatementCount: 32,
+    precautionOnlyTextWeight: 3200,
+    mixedPrecautionStatementCount: 32,
+    mixedPrecautionTextWeight: 2600,
+    separatePrecautionsAfterHazardCount: 14,
+    separatePrecautionsAfterHazardTextWeight: 1900,
   };
 };
 

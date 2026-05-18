@@ -679,7 +679,7 @@ describe("LabelPrintModal", () => {
       "Complete primary label will print across continuation pages",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print complete primary continuation set (4 labels / 4 pages)",
+      "Print complete primary continuation set (3 labels / 3 pages)",
     );
   });
 

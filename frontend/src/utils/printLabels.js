@@ -862,9 +862,22 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
       item,
       {
         maxStatements:
-          capacity.precautionOnlyStatementCount || capacity.pageStatementCount,
+          !shouldSeparatePrecautions &&
+          !mixedPrecautionOverflowRisk &&
+          pages[pages.length - 1].items.some(
+            (pageItem) => pageItem.kind === "hazard",
+          )
+            ? capacity.pageStatementCount
+            : capacity.precautionOnlyStatementCount ||
+              capacity.pageStatementCount,
         maxTextWeight:
-          capacity.precautionOnlyTextWeight || capacity.pageTextWeight,
+          !shouldSeparatePrecautions &&
+          !mixedPrecautionOverflowRisk &&
+          pages[pages.length - 1].items.some(
+            (pageItem) => pageItem.kind === "hazard",
+          )
+            ? capacity.pageTextWeight
+            : capacity.precautionOnlyTextWeight || capacity.pageTextWeight,
       },
       renderModel,
     ),
@@ -1504,6 +1517,7 @@ const renderFullTemplate = (chemical, model) => {
     : getHazardFontTier(hazards.length + precautions.length, model.layout.size);
   const prepared = isPrepared(effectiveChem);
   const purposeNotice = renderPurposeNotice(model);
+  const fullPagePrimary = isFullPagePrimaryLayout(model.layout);
   const fullPageClass = getFullPagePrimaryClass(model.layout);
   const continuationClass = continuation ? " label-continuation-page" : "";
   const statementPanelStyle = [
@@ -1518,27 +1532,37 @@ const renderFullTemplate = (chemical, model) => {
   return `
     <div class="label label-full label-compliance ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)} label-purpose-${escapeHtml(model.layout.labelPurpose)}${fullPageClass}${continuationClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
       <div class="compliance-header">
-        ${renderNameSection(effectiveChem, model, {
-          showCasLine: false,
-          metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
-            includeCas: true,
-            includeBatch: true,
-            includePrepared: false,
-          }),
-        })}
-        ${renderContinuationBadge(continuation, model)}
+        <div class="compliance-header-identity">
+          ${renderNameSection(effectiveChem, model, {
+            showCasLine: false,
+            metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
+              includeCas: true,
+              includeBatch: true,
+              includePrepared: false,
+            }),
+          })}
+          ${!fullPagePrimary ? renderContinuationBadge(continuation, model) : ""}
+          ${
+            prepared
+              ? renderPreparedBadge(model) +
+                renderPreparedMeta(effectiveChem, model) +
+                renderPreparedOperational(effectiveChem, model)
+              : ""
+          }
+        </div>
         ${
-          prepared
-            ? renderPreparedBadge(model) +
-              renderPreparedMeta(effectiveChem, model) +
-              renderPreparedOperational(effectiveChem, model)
+          fullPagePrimary
+            ? `<div class="compliance-header-actions">
+                ${renderContinuationBadge(continuation, model)}
+                ${signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
+              </div>`
             : ""
         }
       </div>
       ${purposeNotice}
       <div class="compliance-core">
         <div class="compliance-alert-panel">
-          ${signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
+          ${!fullPagePrimary && signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
           ${
             pictograms.length > 0
               ? renderPictograms(pictograms, "compliance-pictograms")
@@ -1818,8 +1842,23 @@ const buildStyles = (model) => {
       padding-bottom: 1mm;
       min-width: 0;
     }
+    .compliance-header-identity {
+      min-width: 0;
+    }
     .label-full-page-primary .compliance-header {
-      padding-bottom: 0.9mm;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 2mm;
+      align-items: start;
+      padding-bottom: 0.7mm;
+    }
+    .compliance-header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.7mm;
+      min-width: max-content;
+      max-width: 50mm;
     }
     .continuation-badge {
       display: inline-flex;
@@ -1854,12 +1893,12 @@ const buildStyles = (model) => {
       min-width: 0;
     }
     .label-full-page-primary .compliance-alert-panel {
-      border: 0.25mm solid #dbe4ef;
-      border-radius: 1.2mm;
-      padding: 1.1mm 1.35mm;
+      border: 0.2mm solid #dbe4ef;
+      border-radius: 1mm;
+      padding: 0.75mm 1mm;
       background: #f8fafc;
-      gap: 1.6mm;
-      justify-content: space-between;
+      gap: 0.8mm;
+      justify-content: center;
       overflow: hidden;
     }
     .compliance-statements-panel {
@@ -2367,9 +2406,11 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .pictograms.compliance-pictograms {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 1.1mm;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8mm;
+      width: 100%;
     }
     .pictograms.compliance-pictograms img {
       width: ${compliancePictogramSize};
@@ -2411,8 +2452,17 @@ const buildStyles = (model) => {
       line-height: 1.1;
     }
     .label-full-page-primary .signal.compliance-signal {
-      font-size: ${layout.typography.signalSize};
-      padding: 1.4mm 2mm;
+      width: fit-content;
+      max-width: 48mm;
+      font-size: calc(${layout.typography.signalSize} - 2px);
+      padding: 0.65mm 1.7mm;
+      white-space: nowrap;
+    }
+    .label-full-page-primary .compliance-header-actions .continuation-badge {
+      margin: 0;
+      font-size: 8.5px;
+      padding: 0.32mm 1mm;
+      white-space: nowrap;
     }
     .signal.danger {
       background: #fecaca;
@@ -2549,7 +2599,7 @@ const buildStyles = (model) => {
     }
     .label-full-page-primary .compliance-alert-panel {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       align-items: center;
     }
     .label-full-page-primary .section-label {
