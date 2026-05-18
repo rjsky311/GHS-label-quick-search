@@ -2627,6 +2627,87 @@ describe("printLabels", () => {
       ).toBeGreaterThan(0);
     });
 
+    it("keeps moderate A4 H/P content on one retry-fitted page when it fits", () => {
+      const moderateChemical = {
+        ...mockChemical,
+        cas_number: "84-65-1",
+        name_en: "Anthraquinone",
+        name_zh: "Anthraquinone ZH",
+        ghs_pictograms: [{ code: "GHS07" }, { code: "GHS08" }],
+        signal_word: "Danger",
+        hazard_statements: [
+          {
+            code: "H317",
+            text_en:
+              "May cause an allergic skin reaction [Warning Sensitization, Skin]",
+          },
+          {
+            code: "H350",
+            text_en: "May cause cancer [Danger Carcinogenicity]",
+          },
+        ],
+        precautionary_statements: [
+          { code: "P203", text_en: "P203" },
+          {
+            code: "P261",
+            text_en: "Avoid breathing dust, fume, gas, mist, vapours, spray.",
+          },
+          {
+            code: "P272",
+            text_en:
+              "Contaminated work clothing should not be allowed out of the workplace.",
+          },
+          {
+            code: "P280",
+            text_en:
+              "Wear protective gloves, protective clothing, eye protection, face protection.",
+          },
+          {
+            code: "P302+P352",
+            text_en: "IF ON SKIN: Wash with plenty of water.",
+          },
+          { code: "P318", text_en: "P318" },
+          {
+            code: "P321",
+            text_en: "Specific treatment (see supplemental safety document).",
+          },
+          { code: "P333+P317", text_en: "P333+P317" },
+          {
+            code: "P362+P364",
+            text_en:
+              "Take off contaminated clothing and wash it before reuse.",
+          },
+          { code: "P405", text_en: "Store locked up." },
+          {
+            code: "P501",
+            text_en:
+              "Dispose of contents and container in accordance with local regulations.",
+          },
+        ],
+      };
+
+      const documentBundle = buildPrintDocument(
+        [moderateChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          autoFitLevel: 1,
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.html).toContain("label-fit-level-1");
+      expect(documentBundle.model.expandedLabels).toHaveLength(1);
+      expect(documentBundle.pagesHtml).not.toContain(
+        'data-continuation-page="2"',
+      );
+    });
+
     it("keeps retry auto-fit level when batch item layout overrides were planned lower", () => {
       const batchOverrideChemical = {
         ...mockChemical,

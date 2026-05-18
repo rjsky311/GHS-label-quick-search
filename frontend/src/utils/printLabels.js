@@ -929,10 +929,17 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     hazardItems.length > 0 &&
     precautionItems.length > capacity.mixedPrecautionStatementCount &&
     precautionTextWeight > capacity.mixedPrecautionTextWeight;
+  const retryMixedSectionCrowdedRisk =
+    hazardItems.length + precautionItems.length >
+      Math.max(16, (capacity.mixedPrecautionStatementCount || 0) * 0.65) &&
+    precautionTextWeight > (capacity.mixedPrecautionTextWeight || 0) * 0.45;
   const shouldKeepPrecautionsOnSeparateRetryPages =
     clampAutoFitLevel(renderModel.layout.autoFitLevel) > 0 &&
     hazardItems.length > 0 &&
-    precautionItems.length > 0;
+    precautionItems.length > 0 &&
+    (shouldSeparatePrecautions ||
+      mixedPrecautionOverflowRisk ||
+      retryMixedSectionCrowdedRisk);
 
   if (
     statements.length <= capacity.splitStatementCount &&
