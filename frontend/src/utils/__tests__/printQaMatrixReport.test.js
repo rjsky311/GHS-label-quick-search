@@ -558,10 +558,17 @@ describe("print QA matrix report", () => {
       expectedForbiddenIdentityTexts: [],
     });
 
-    expect(byId["formaldehyde-a4-primary-continuation"]).toMatchObject({
+    expect(byId["ethylene-oxide-a4-primary-continuation"]).toMatchObject({
       chemical: expect.objectContaining({
-        cas: "50-00-0",
-        expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
+        cas: "75-21-8",
+        expectedPictograms: [
+          "GHS02",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08",
+        ],
       }),
       expected: expect.objectContaining({
         canPrint: true,
@@ -582,18 +589,25 @@ describe("print QA matrix report", () => {
       }),
     });
     expect(
-      byId["formaldehyde-a4-primary-continuation"].actual.printTotalLabels,
+      byId["ethylene-oxide-a4-primary-continuation"].actual.printTotalLabels,
     ).toBeGreaterThanOrEqual(2);
-    expect(browserCaseById["formaldehyde-a4-primary-continuation"]).toMatchObject({
+    expect(browserCaseById["ethylene-oxide-a4-primary-continuation"]).toMatchObject({
       expectedCanPrint: true,
       expectedPrintButtonEnabled: true,
       expectedStatus: "qa_handoff",
       expectedPlanState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
       expectedLabelKind: "complete-primary",
       expectedStockPreset: "a4-primary",
-      expectedPictograms: ["GHS05", "GHS06", "GHS07", "GHS08"],
-      expectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
-      expectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
+      expectedPictograms: [
+        "GHS02",
+        "GHS04",
+        "GHS05",
+        "GHS06",
+        "GHS07",
+        "GHS08",
+      ],
+      expectedIdentityTexts: ["Ethylene Oxide", "75-21-8"],
+      expectedRequiredIdentityTexts: ["Ethylene Oxide"],
       expectedMinTotalLabels: 2,
       expectedMinTotalPages: 2,
     });

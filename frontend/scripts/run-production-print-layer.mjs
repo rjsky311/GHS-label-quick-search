@@ -11,7 +11,7 @@ const LAYERS = Object.freeze({
     "letter-primary",
     "a4-primary-zh-bw",
     "letter-primary-en-bw",
-    "formaldehyde-a4-primary-continuation",
+    "ethylene-oxide-a4-primary-continuation",
   ],
   compact: [
     "tube-vial-quick-id",

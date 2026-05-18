@@ -8,7 +8,7 @@ const defaultSmokeCases = [
   "a4-primary",
   "a4-primary-profile-blocked",
   "letter-primary",
-  "formaldehyde-a4-primary-continuation",
+  "ethylene-oxide-a4-primary-continuation",
   "tube-vial-quick-id",
   "brother-62mm-qr-supplement",
 ].join(",");

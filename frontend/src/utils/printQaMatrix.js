@@ -587,6 +587,83 @@ export const PRINT_QA_FORMALDEHYDE = Object.freeze({
   ],
 });
 
+export const PRINT_QA_ETHYLENE_OXIDE = Object.freeze({
+  cas_number: "75-21-8",
+  name_en: "Ethylene Oxide",
+  name_zh: "",
+  cid: 6354,
+  ghs_pictograms: [
+    { code: "GHS02" },
+    { code: "GHS04" },
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+    { code: "GHS08" },
+  ],
+  signal_word: "Danger",
+  signal_word_zh: "Danger ZH",
+  hazard_statements: Array.from({ length: 16 }, (_, index) => ({
+    code:
+      [
+        "H220",
+        "H230",
+        "H280",
+        "H301",
+        "H302",
+        "H314",
+        "H315",
+        "H318",
+        "H319",
+        "H331",
+        "H335",
+        "H336",
+        "H340",
+        "H350",
+        "H360",
+        "H372",
+      ][index] || `H${300 + index}`,
+    text_en:
+      "Dense ethylene oxide hazard statement retained for complete A4 primary continuation layout calibration.",
+    text_zh:
+      "Dense ethylene oxide hazard statement ZH retained for complete A4 primary continuation layout calibration.",
+  })),
+  precautionary_statements: Array.from({ length: 36 }, (_, index) => ({
+    code:
+      [
+        "P201",
+        "P202",
+        "P210",
+        "P260",
+        "P264",
+        "P270",
+        "P271",
+        "P280",
+        "P284",
+        "P301+P316",
+        "P302+P352",
+        "P304+P340",
+        "P305+P351+P338",
+        "P308+P313",
+        "P312",
+        "P321",
+        "P330",
+        "P333+P317",
+        "P337+P317",
+        "P362+P364",
+        "P370+P376",
+        "P377",
+        "P381",
+        "P403+P233",
+        "P405",
+        "P501",
+      ][index] || `P${500 + index}`,
+    text_en:
+      "Dense precautionary instruction retained for continuation-page print QA, including handling, emergency response, storage, and disposal wording.",
+    text_zh:
+      "Dense precautionary instruction ZH retained for continuation-page print QA, including handling, emergency response, storage, and disposal wording.",
+  })),
+});
+
 export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
   cas_number: "7722-84-1",
   name_en: "Hydrogen Peroxide",
@@ -778,6 +855,7 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   sodiumHydroxide: PRINT_QA_SODIUM_HYDROXIDE,
   methanol: PRINT_QA_METHANOL,
   formaldehyde: PRINT_QA_FORMALDEHYDE,
+  ethyleneOxide: PRINT_QA_ETHYLENE_OXIDE,
   hydrogenPeroxide: PRINT_QA_HYDROGEN_PEROXIDE,
   nitrogen: PRINT_QA_NITROGEN,
   zincOxide: PRINT_QA_ZINC_OXIDE,
@@ -819,9 +897,15 @@ export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
   },
   formaldehyde: {
     source: "production",
-    riskTags: ["dense-hp", "continuation", "multi-page", "health-hazard"],
+    riskTags: ["dense-hp", "former-continuation", "health-hazard"],
     rationale:
-      "Very dense complete-primary case expected to route into continuation pages without clipping.",
+      "Dense complete-primary case that now verifies A4 can fit more content after layout compaction.",
+  },
+  ethyleneOxide: {
+    source: "production",
+    riskTags: ["dense-hp", "continuation", "multi-page", "six-pictogram"],
+    rationale:
+      "Production dense gas case that still requires complete-primary continuation and six single-row pictograms.",
   },
   hydrogenPeroxide: {
     source: "production",
@@ -1046,9 +1130,9 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
-    id: "formaldehyde-a4-primary-continuation",
-    label: "Formaldehyde A4 complete primary continuation",
-    chemicalId: "formaldehyde",
+    id: "ethylene-oxide-a4-primary-continuation",
+    label: "Ethylene oxide A4 complete primary continuation",
+    chemicalId: "ethyleneOxide",
     locale: "en-US",
     labelConfig: {
       labelPurpose: "shipping",
@@ -1073,8 +1157,8 @@ export const PRINT_QA_MATRIX = Object.freeze([
         hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
         precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
       },
-      productionExpectedIdentityTexts: ["Formaldehyde", "甲醛", "50-00-0"],
-      productionExpectedRequiredIdentityTexts: ["Formaldehyde", "甲醛"],
+      productionExpectedIdentityTexts: ["Ethylene Oxide", "75-21-8"],
+      productionExpectedRequiredIdentityTexts: ["Ethylene Oxide"],
     },
   },
   {

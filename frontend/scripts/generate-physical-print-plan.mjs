@@ -10,7 +10,7 @@ const DEFAULT_JSON_PATH = "build/physical-print-validation-plan.json";
 const DEFAULT_PHYSICAL_CASE_IDS = Object.freeze([
   "a4-primary",
   "letter-primary",
-  "formaldehyde-a4-primary-continuation",
+  "ethylene-oxide-a4-primary-continuation",
   "bottle-supplemental-with-case",
   "large-primary-front-label",
   "tube-vial-quick-id-with-case",
@@ -35,9 +35,9 @@ const PHYSICAL_CASE_NOTES = Object.freeze({
     evidence:
       "Same complete-primary expectations as A4, with the browser and driver set to Letter.",
   },
-  "formaldehyde-a4-primary-continuation": {
+  "ethylene-oxide-a4-primary-continuation": {
     family: "Continuation primary",
-    purpose: "Dense complete-primary output that may need continuation pages.",
+    purpose: "Dense complete-primary output that still needs continuation pages after A4 layout compaction.",
     evidence:
       "Every continuation page prints in order and repeats enough identity and pictogram context to stay usable.",
   },
