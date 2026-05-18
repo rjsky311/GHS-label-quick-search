@@ -1,6 +1,7 @@
 import {
   PRINT_READINESS_STATE,
   evaluatePrintReadiness,
+  getCompletePrimaryContinuationCapacity,
   getMaxSupplementalPictogramCount,
   getMaxSupplementalTextWeight,
   inspectPrintContentFit,
@@ -306,6 +307,33 @@ describe("printFitEngine", () => {
 
     expect(getMaxSupplementalTextWeight(roomy)).toBeGreaterThan(
       getMaxSupplementalTextWeight(compact),
+    );
+  });
+
+  it("tightens A4 continuation capacity after print auto-fit retries", () => {
+    const normal = getCompletePrimaryContinuationCapacity(
+      resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      }),
+    );
+    const strict = getCompletePrimaryContinuationCapacity(
+      resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+        autoFitLevel: 2,
+      }),
+    );
+
+    expect(strict.splitLineUnits).toBeLessThan(normal.splitLineUnits);
+    expect(strict.firstPageLineUnits).toBeLessThan(normal.firstPageLineUnits);
+    expect(strict.continuationPageLineUnits).toBeLessThan(
+      normal.continuationPageLineUnits,
+    );
+    expect(strict.continuationPageStatementCount).toBeLessThan(
+      normal.continuationPageStatementCount,
     );
   });
 

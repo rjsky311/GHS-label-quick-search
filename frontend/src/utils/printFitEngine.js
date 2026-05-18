@@ -38,6 +38,119 @@ export const PRINT_RECOMMENDED_ACTION = Object.freeze({
   SELECT_LABELS: "select_labels",
 });
 
+const clampAutoFitLevel = (value) =>
+  Math.max(0, Math.min(2, Math.trunc(Number(value) || 0)));
+
+const scaleFiniteLimit = (value, factor, minimum = 1) =>
+  Number.isFinite(value)
+    ? Math.max(minimum, Math.floor(value * factor))
+    : value;
+
+const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
+  const level = clampAutoFitLevel(layout.autoFitLevel);
+  if (level <= 0) return capacity;
+
+  const scale =
+    level >= 2
+      ? {
+          split: 0.68,
+          first: 0.7,
+          continuation: 0.72,
+          text: 0.72,
+          mixed: 0.74,
+        }
+      : {
+          split: 0.82,
+          first: 0.84,
+          continuation: 0.86,
+          text: 0.86,
+          mixed: 0.88,
+        };
+
+  return {
+    ...capacity,
+    splitStatementCount: scaleFiniteLimit(
+      capacity.splitStatementCount,
+      scale.split,
+      12,
+    ),
+    splitTextWeight: scaleFiniteLimit(capacity.splitTextWeight, scale.text, 1800),
+    splitLineUnits: scaleFiniteLimit(capacity.splitLineUnits, scale.split, 24),
+    pageStatementCount: scaleFiniteLimit(
+      capacity.pageStatementCount,
+      scale.first,
+      10,
+    ),
+    pageTextWeight: scaleFiniteLimit(capacity.pageTextWeight, scale.text, 1600),
+    pageLineUnits: scaleFiniteLimit(capacity.pageLineUnits, scale.first, 24),
+    firstPageStatementCount: scaleFiniteLimit(
+      capacity.firstPageStatementCount,
+      scale.first,
+      12,
+    ),
+    firstPageTextWeight: scaleFiniteLimit(
+      capacity.firstPageTextWeight,
+      scale.text,
+      1800,
+    ),
+    firstPageLineUnits: scaleFiniteLimit(
+      capacity.firstPageLineUnits,
+      scale.first,
+      24,
+    ),
+    continuationPageStatementCount: scaleFiniteLimit(
+      capacity.continuationPageStatementCount,
+      scale.continuation,
+      14,
+    ),
+    continuationPageTextWeight: scaleFiniteLimit(
+      capacity.continuationPageTextWeight,
+      scale.text,
+      1900,
+    ),
+    continuationPageLineUnits: scaleFiniteLimit(
+      capacity.continuationPageLineUnits,
+      scale.continuation,
+      28,
+    ),
+    precautionOnlyStatementCount: scaleFiniteLimit(
+      capacity.precautionOnlyStatementCount,
+      scale.continuation,
+      12,
+    ),
+    precautionOnlyTextWeight: scaleFiniteLimit(
+      capacity.precautionOnlyTextWeight,
+      scale.text,
+      1500,
+    ),
+    precautionOnlyLineUnits: scaleFiniteLimit(
+      capacity.precautionOnlyLineUnits,
+      scale.continuation,
+      28,
+    ),
+    mixedPrecautionStatementCount: scaleFiniteLimit(
+      capacity.mixedPrecautionStatementCount,
+      scale.mixed,
+      10,
+    ),
+    mixedPrecautionTextWeight: scaleFiniteLimit(
+      capacity.mixedPrecautionTextWeight,
+      scale.text,
+      1300,
+    ),
+    separatePrecautionsAfterHazardCount: scaleFiniteLimit(
+      capacity.separatePrecautionsAfterHazardCount,
+      scale.mixed,
+      8,
+    ),
+    separatePrecautionsAfterHazardTextWeight: scaleFiniteLimit(
+      capacity.separatePrecautionsAfterHazardTextWeight,
+      scale.text,
+      1300,
+    ),
+  };
+};
+
 export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
   const fullPageLike =
     isFullPagePrimaryStockId(layout.stockId) ||
@@ -59,7 +172,7 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     layout.pageSize === "Letter";
 
   if (isLetter) {
-    return {
+    return applyContinuationAutoFitCapacity({
       splitStatementCount: 44,
       splitTextWeight: 11000,
       splitLineUnits: 64,
@@ -81,10 +194,10 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
       mixedPrecautionTextWeight: 2350,
       separatePrecautionsAfterHazardCount: 18,
       separatePrecautionsAfterHazardTextWeight: 2600,
-    };
+    }, layout);
   }
 
-  return {
+  return applyContinuationAutoFitCapacity({
     splitStatementCount: 48,
     splitTextWeight: 12000,
     splitLineUnits: 72,
@@ -106,7 +219,7 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     mixedPrecautionTextWeight: 2600,
     separatePrecautionsAfterHazardCount: 20,
     separatePrecautionsAfterHazardTextWeight: 2900,
-  };
+  }, layout);
 };
 
 export const getMaxCompleteStatementCount = (layout) => {
