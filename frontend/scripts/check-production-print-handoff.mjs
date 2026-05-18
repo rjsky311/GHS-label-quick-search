@@ -1222,12 +1222,19 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     const nextPreviewPictograms = new Set(nextPreview.pictogramCodes || []);
     const nextClippedCriticalElements =
       nextPreview.clippedCriticalElements || [];
+    const expectsContinuationWithoutRepeatedPictograms =
+      testCase.expectedLabelKind === "complete-primary" &&
+      ["a4-primary", "letter-primary"].includes(
+        testCase.expectedStockPreset || "",
+      );
     assert("preview-page-controls", evidence.previewPageControlsVisible === true);
     assert("preview-next-page-changes", evidence.nextPreviewPageChanged === true);
     assert("preview-next-label-visible", nextPreview.labelVisible === true);
     assert(
       "preview-next-page-pictograms",
-      nextPreviewPictograms.size > 0,
+      expectsContinuationWithoutRepeatedPictograms
+        ? nextPreviewPictograms.size === 0
+        : nextPreviewPictograms.size > 0,
     );
     assert(
       "preview-next-critical-elements-visible",
