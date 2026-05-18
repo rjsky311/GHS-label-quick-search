@@ -2258,9 +2258,11 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml).toContain("print.continuationBadge");
       expect(documentBundle.pagesHtml).toContain(">H300</span>");
       expect(documentBundle.pagesHtml).toContain(">P329</span>");
-      expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(
-        documentBundle.model.expandedLabels.length,
-      );
+      expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(1);
+      expect(
+        documentBundle.pagesHtml.match(/class="pictograms compliance-pictograms"/g),
+      ).toHaveLength(1);
+      expect(documentBundle.pagesHtml).toContain("compliance-core-no-alert");
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
       expect(documentBundle.model.totalPages).toBe(
         documentBundle.model.expandedLabels.length,
@@ -2398,14 +2400,33 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
 
       expect(documentBundle.pagesHtml).toMatch(
-        /<div class="compliance-header-actions">[\s\S]*class="continuation-badge"[\s\S]*class="signal danger compliance-signal"/,
+        /<div class="compliance-header-actions">[\s\S]*class="meta-chip meta-chip-cas compliance-header-cas"[\s\S]*class="signal danger compliance-signal"[\s\S]*class="continuation-badge"/,
       );
+      expect(documentBundle.pagesHtml).not.toMatch(
+        /class="meta-ribbon"[\s\S]*CAS<\/span><span class="meta-chip-value">455-14-1/,
+      );
+      expect(
+        documentBundle.pagesHtml.match(
+          /class="pictograms compliance-pictograms"/g,
+        ),
+      ).toHaveLength(1);
       expect(documentBundle.pagesHtml).toMatch(
         /<div class="compliance-alert-panel">\s*<div class="pictograms compliance-pictograms">/,
       );
       expect(documentBundle.pagesHtml).not.toMatch(
         /<div class="compliance-alert-panel">\s*<div class="signal [^"]*compliance-signal"/,
       );
+      expect(documentBundle.html).toContain(
+        ".label-full-page-primary .pictograms.compliance-pictograms",
+      );
+      expect(documentBundle.html).toContain(
+        "justify-content: flex-start;",
+      );
+      expect(documentBundle.html).toContain(
+        ".label-full-page-primary .name-zh",
+      );
+      expect(documentBundle.html).toContain("font-size: 26px;");
+      expect(documentBundle.html).toContain("line-height: 1.18;");
     });
 
     it("can render a selected continuation page in print preview", () => {

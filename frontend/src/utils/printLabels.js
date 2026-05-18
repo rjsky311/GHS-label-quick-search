@@ -1386,9 +1386,16 @@ const getLabelContentForRender = (chemical, model) => {
     locale: model.locale,
   });
   if (!continuation) return content;
+  const continuationPictograms =
+    Array.isArray(continuation.pictograms)
+      ? continuation.pictograms
+      : isFullPagePrimaryLayout(model.layout) && continuation.current > 1
+        ? []
+        : content.pictograms;
+
   return {
     ...content,
-    pictograms: continuation.pictograms || content.pictograms,
+    pictograms: continuationPictograms,
     hazardStatements: continuation.hazardStatements || [],
     precautionaryStatements: continuation.precautionaryStatements || [],
   };
@@ -1520,6 +1527,15 @@ const renderFullTemplate = (chemical, model) => {
   const fullPagePrimary = isFullPagePrimaryLayout(model.layout);
   const fullPageClass = getFullPagePrimaryClass(model.layout);
   const continuationClass = continuation ? " label-continuation-page" : "";
+  const headerCasChip =
+    fullPagePrimary && effectiveChem.cas_number
+      ? renderMetaChip(
+          "CAS",
+          effectiveChem.cas_number,
+          "meta-chip-cas compliance-header-cas",
+        )
+      : "";
+  const showComplianceAlertPanel = !fullPagePrimary || pictograms.length > 0;
   const statementPanelStyle = [
     `--compliance-statement-gap:${hazardTier.marginBottom}`,
     `--compliance-code-gap:${hazardTier.codeGap || "1.1mm"}`,
@@ -1536,7 +1552,7 @@ const renderFullTemplate = (chemical, model) => {
           ${renderNameSection(effectiveChem, model, {
             showCasLine: false,
             metaRibbonHtml: renderMetaRibbon(effectiveChem, model, {
-              includeCas: true,
+              includeCas: !fullPagePrimary,
               includeBatch: true,
               includePrepared: false,
             }),
@@ -1553,22 +1569,27 @@ const renderFullTemplate = (chemical, model) => {
         ${
           fullPagePrimary
             ? `<div class="compliance-header-actions">
-                ${renderContinuationBadge(continuation, model)}
+                ${headerCasChip}
                 ${signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
+                ${renderContinuationBadge(continuation, model)}
               </div>`
             : ""
         }
       </div>
       ${purposeNotice}
-      <div class="compliance-core">
-        <div class="compliance-alert-panel">
-          ${!fullPagePrimary && signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
-          ${
-            pictograms.length > 0
-              ? renderPictograms(pictograms, "compliance-pictograms")
-              : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
-          }
-        </div>
+      <div class="compliance-core${showComplianceAlertPanel ? "" : " compliance-core-no-alert"}">
+        ${
+          showComplianceAlertPanel
+            ? `<div class="compliance-alert-panel">
+                ${!fullPagePrimary && signalWord ? renderSignal(signalWord, signalClass, "compliance-signal") : ""}
+                ${
+                  pictograms.length > 0
+                    ? renderPictograms(pictograms, "compliance-pictograms")
+                    : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
+                }
+              </div>`
+            : ""
+        }
         <div class="compliance-statements-panel" style="${statementPanelStyle}">
           ${
             hazards.length > 0 || !continuation
@@ -1860,6 +1881,16 @@ const buildStyles = (model) => {
       min-width: max-content;
       max-width: 50mm;
     }
+    .label-full-page-primary .compliance-header-actions .meta-chip {
+      margin: 0;
+      justify-content: flex-end;
+    }
+    .label-full-page-primary .compliance-header-actions .compliance-header-cas {
+      max-width: 50mm;
+      padding: 0.32mm 1mm;
+      font-size: 10.5px;
+      line-height: 1.08;
+    }
     .continuation-badge {
       display: inline-flex;
       width: fit-content;
@@ -1884,6 +1915,9 @@ const buildStyles = (model) => {
       align-items: stretch;
       min-height: 0;
       overflow: hidden;
+    }
+    .label-full-page-primary .compliance-core-no-alert {
+      grid-template-columns: minmax(0, 1fr);
     }
     .compliance-alert-panel {
       display: flex;
@@ -2105,8 +2139,8 @@ const buildStyles = (model) => {
       overflow: hidden;
     }
     .label-full-page-primary .name-en {
-      font-size: 28px;
-      line-height: 1.1;
+      font-size: 26px;
+      line-height: 1.18;
       -webkit-line-clamp: 1;
     }
     .name-zh {
@@ -2115,8 +2149,9 @@ const buildStyles = (model) => {
       margin-top: 0.5mm;
     }
     .label-full-page-primary .name-zh {
-      font-size: 19px;
-      line-height: 1.15;
+      font-size: 26px;
+      line-height: 1.18;
+      margin-top: 0.25mm;
     }
     .label-standard .name-en {
       font-size: max(${layout.typography.titleSize}, calc(${layout.typography.fontSize} + 2px));
@@ -2407,9 +2442,9 @@ const buildStyles = (model) => {
     .label-full-page-primary .pictograms.compliance-pictograms {
       display: flex;
       flex-wrap: nowrap;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
-      gap: 0.8mm;
+      gap: 1.2mm;
       width: 100%;
     }
     .pictograms.compliance-pictograms img {
@@ -2596,6 +2631,9 @@ const buildStyles = (model) => {
       grid-template-rows: auto minmax(0, 1fr);
       gap: 1.25mm;
       min-height: 0;
+    }
+    .label-full-page-primary .compliance-core.compliance-core-no-alert {
+      grid-template-rows: minmax(0, 1fr);
     }
     .label-full-page-primary .compliance-alert-panel {
       display: grid;
