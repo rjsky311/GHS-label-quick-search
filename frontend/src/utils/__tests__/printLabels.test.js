@@ -949,6 +949,62 @@ describe("printLabels", () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it("keeps tightening A4 continuation pages until rendered overflow clears", () => {
+    let labelQueryCount = 0;
+    const overflowingLabel = {
+      querySelector: jest.fn(() => null),
+      clientHeight: 100,
+      scrollHeight: 128,
+      clientWidth: 200,
+      scrollWidth: 200,
+    };
+    const fittingLabel = {
+      querySelector: jest.fn(() => null),
+      clientHeight: 100,
+      scrollHeight: 100,
+      clientWidth: 200,
+      scrollWidth: 200,
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (selector === ".label:not(.label-placeholder)") {
+        labelQueryCount += 1;
+        return [labelQueryCount < 5 ? overflowingLabel : fittingLabel];
+      }
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+        nameDisplay: "both",
+      },
+      {},
+    );
+    jest.advanceTimersByTime(300);
+
+    expect(mockIframeDoc.write).toHaveBeenCalledTimes(5);
+    expect(mockIframeDoc.write.mock.calls[1][0]).toContain("label-fit-level-1");
+    expect(mockIframeDoc.write.mock.calls[2][0]).toContain("label-fit-level-2");
+    expect(mockIframeDoc.write.mock.calls[3][0]).toContain("label-fit-level-3");
+    expect(mockIframeDoc.write.mock.calls[4][0]).toContain("label-fit-level-4");
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_autofit_retry",
+      expect.objectContaining({
+        status: "retry",
+        meta: expect.objectContaining({
+          nextAutoFitLevel: 4,
+          issueTypes: expect.arrayContaining(["label-overflow"]),
+        }),
+      }),
+    );
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it("blocks supplemental labels when the rendered layout clips", () => {
     const overflowLabel = {
       clientHeight: 20,

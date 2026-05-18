@@ -39,7 +39,7 @@ export const PRINT_RECOMMENDED_ACTION = Object.freeze({
 });
 
 const clampAutoFitLevel = (value) =>
-  Math.max(0, Math.min(2, Math.trunc(Number(value) || 0)));
+  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
 
 const scaleFiniteLimit = (value, factor, minimum = 1) =>
   Number.isFinite(value)
@@ -50,22 +50,37 @@ const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
   const level = clampAutoFitLevel(layout.autoFitLevel);
   if (level <= 0) return capacity;
 
-  const scale =
-    level >= 2
-      ? {
-          split: 0.68,
-          first: 0.7,
-          continuation: 0.72,
-          text: 0.72,
-          mixed: 0.74,
-        }
-      : {
-          split: 0.82,
-          first: 0.84,
-          continuation: 0.86,
-          text: 0.86,
-          mixed: 0.88,
-        };
+  const scales = {
+    1: {
+      split: 0.82,
+      first: 0.84,
+      continuation: 0.86,
+      text: 0.86,
+      mixed: 0.88,
+    },
+    2: {
+      split: 0.68,
+      first: 0.7,
+      continuation: 0.72,
+      text: 0.72,
+      mixed: 0.74,
+    },
+    3: {
+      split: 0.52,
+      first: 0.55,
+      continuation: 0.58,
+      text: 0.58,
+      mixed: 0.6,
+    },
+    4: {
+      split: 0.38,
+      first: 0.42,
+      continuation: 0.45,
+      text: 0.46,
+      mixed: 0.5,
+    },
+  };
+  const scale = scales[level] || scales[1];
 
   return {
     ...capacity,

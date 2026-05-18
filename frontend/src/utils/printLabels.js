@@ -575,7 +575,7 @@ const expandLabelsByQuantity = (selectedForLabel, labelQuantities) => {
 };
 
 const clampAutoFitLevel = (value) =>
-  Math.max(0, Math.min(2, Math.trunc(Number(value) || 0)));
+  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
 
 const getNameLoadForLayout = (chemical = {}, layout = {}) => {
   const names = [];
@@ -4282,7 +4282,7 @@ const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
 ]);
 
 const shouldRetryWithAutoFit = (preflightIssues = [], layout = {}) =>
-  clampAutoFitLevel(layout.autoFitLevel) < 2 &&
+  clampAutoFitLevel(layout.autoFitLevel) < 4 &&
   preflightIssues.some((issue) =>
     AUTO_FIT_RETRY_ISSUE_TYPES.has(issue?.type),
   ) &&

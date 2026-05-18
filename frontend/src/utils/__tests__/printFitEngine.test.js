@@ -323,7 +323,7 @@ describe("printFitEngine", () => {
         labelPurpose: "shipping",
         template: "full",
         stockPreset: "a4-primary",
-        autoFitLevel: 2,
+        autoFitLevel: 4,
       }),
     );
 
