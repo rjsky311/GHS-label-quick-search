@@ -929,30 +929,24 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     hazardItems.length > 0 &&
     precautionItems.length > capacity.mixedPrecautionStatementCount &&
     precautionTextWeight > capacity.mixedPrecautionTextWeight;
-  const retryMixedSectionCrowdedRisk =
-    hazardItems.length + precautionItems.length >
-      Math.max(16, (capacity.mixedPrecautionStatementCount || 0) * 0.65) &&
-    precautionTextWeight > (capacity.mixedPrecautionTextWeight || 0) * 0.45;
-  const shouldKeepPrecautionsOnSeparateRetryPages =
-    clampAutoFitLevel(renderModel.layout.autoFitLevel) > 0 &&
-    hazardItems.length > 0 &&
-    precautionItems.length > 0 &&
-    (shouldSeparatePrecautions ||
-      mixedPrecautionOverflowRisk ||
-      retryMixedSectionCrowdedRisk);
-
-  if (
+  const singlePageLineLimit =
+    capacity.splitLineUnits ||
+    capacity.firstPageLineUnits ||
+    capacity.pageLineUnits ||
+    Infinity;
+  const fitsSingleContinuationPage =
     statements.length <= capacity.splitStatementCount &&
     statementTextWeight <= capacity.splitTextWeight &&
-    statementLineUnits <=
-      (capacity.splitLineUnits ||
-        capacity.firstPageLineUnits ||
-        capacity.pageLineUnits ||
-        Infinity) &&
-    !shouldKeepPrecautionsOnSeparateRetryPages &&
-    !shouldSeparatePrecautions &&
-    !mixedPrecautionOverflowRisk
-  ) {
+    statementLineUnits <= singlePageLineLimit;
+  const materiallyExceedsSinglePage =
+    statements.length > capacity.splitStatementCount ||
+    statementTextWeight > capacity.splitTextWeight ||
+    statementLineUnits > singlePageLineLimit;
+  const shouldPreferFreshPrecautionPage =
+    materiallyExceedsSinglePage &&
+    (shouldSeparatePrecautions || mixedPrecautionOverflowRisk);
+
+  if (fitsSingleContinuationPage) {
     return [chemical];
   }
 
@@ -972,20 +966,16 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     lastPage.textWeight >= lastPageLimits.maxTextWeight * 0.75;
   if (
     precautionItems.length > 0 &&
-    (shouldKeepPrecautionsOnSeparateRetryPages ||
-      shouldSeparatePrecautions ||
-      mixedPrecautionOverflowRisk) &&
+    shouldPreferFreshPrecautionPage &&
     lastPageHasHazards &&
-    (shouldKeepPrecautionsOnSeparateRetryPages || lastPageNearCapacity)
+    lastPageNearCapacity
   ) {
     pages.push({ items: [], textWeight: 0, lineUnits: 0 });
   }
   precautionItems.forEach((item) =>
     appendContinuationStatement(pages, item, capacity, renderModel),
   );
-  const populatedPages = shouldKeepPrecautionsOnSeparateRetryPages
-    ? pages.filter((page) => page.items.length > 0)
-    : compactContinuationPages(pages, capacity, renderModel);
+  const populatedPages = compactContinuationPages(pages, capacity, renderModel);
   if (populatedPages.length <= 1) return [chemical];
 
   return populatedPages.map((page, index) => ({

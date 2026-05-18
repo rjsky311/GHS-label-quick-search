@@ -310,7 +310,7 @@ describe("printFitEngine", () => {
     );
   });
 
-  it("tightens A4 continuation capacity after print auto-fit retries", () => {
+  it("expands A4 continuation planning capacity after print auto-fit retries", () => {
     const normal = getCompletePrimaryContinuationCapacity(
       resolvePrintLayoutConfig({
         labelPurpose: "shipping",
@@ -327,12 +327,12 @@ describe("printFitEngine", () => {
       }),
     );
 
-    expect(strict.splitLineUnits).toBeLessThan(normal.splitLineUnits);
-    expect(strict.firstPageLineUnits).toBeLessThan(normal.firstPageLineUnits);
-    expect(strict.continuationPageLineUnits).toBeLessThan(
+    expect(strict.splitLineUnits).toBeGreaterThan(normal.splitLineUnits);
+    expect(strict.firstPageLineUnits).toBeGreaterThan(normal.firstPageLineUnits);
+    expect(strict.continuationPageLineUnits).toBeGreaterThan(
       normal.continuationPageLineUnits,
     );
-    expect(strict.continuationPageStatementCount).toBeLessThan(
+    expect(strict.continuationPageStatementCount).toBeGreaterThan(
       normal.continuationPageStatementCount,
     );
   });

@@ -50,34 +50,37 @@ const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
   const level = clampAutoFitLevel(layout.autoFitLevel);
   if (level <= 0) return capacity;
 
+  // Auto-fit reduces font size and padding. Its planning capacity must grow
+  // with that rendered space; shrinking these limits creates false
+  // continuations where labels split despite large blank areas.
   const scales = {
     1: {
-      split: 0.82,
-      first: 0.84,
-      continuation: 0.86,
-      text: 0.86,
-      mixed: 0.88,
+      split: 1.08,
+      first: 1.08,
+      continuation: 1.1,
+      text: 1.12,
+      mixed: 1.08,
     },
     2: {
-      split: 0.68,
-      first: 0.7,
-      continuation: 0.72,
-      text: 0.72,
-      mixed: 0.74,
+      split: 1.18,
+      first: 1.18,
+      continuation: 1.22,
+      text: 1.26,
+      mixed: 1.18,
     },
     3: {
-      split: 0.52,
-      first: 0.55,
-      continuation: 0.58,
-      text: 0.58,
-      mixed: 0.6,
+      split: 1.28,
+      first: 1.28,
+      continuation: 1.34,
+      text: 1.42,
+      mixed: 1.28,
     },
     4: {
-      split: 0.38,
-      first: 0.42,
-      continuation: 0.45,
-      text: 0.46,
-      mixed: 0.5,
+      split: 1.38,
+      first: 1.38,
+      continuation: 1.46,
+      text: 1.6,
+      mixed: 1.38,
     },
   };
   const scale = scales[level] || scales[1];

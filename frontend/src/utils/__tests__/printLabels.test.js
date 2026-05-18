@@ -2574,7 +2574,7 @@ describe("printLabels", () => {
       );
     });
 
-    it("separates H and P sections during A4 auto-fit retries so precautions get full-page height", () => {
+    it("keeps retry-fitted A4 H/P sections together when they still fit one page", () => {
       const mixedOverflowRiskChemical = {
         ...mockChemical,
         cas_number: "1003-09-4",
@@ -2617,14 +2617,11 @@ describe("printLabels", () => {
         { organization: "Lab A", phone: "02-1234", address: "Taipei" },
       );
 
-      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
-      const [hazardPage, precautionPage] = documentBundle.model.expandedLabels;
-      expect(hazardPage.continuation.hazardStatements.length).toBeGreaterThan(0);
-      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
-      expect(precautionPage.continuation.hazardStatements).toHaveLength(0);
-      expect(
-        precautionPage.continuation.precautionaryStatements.length,
-      ).toBeGreaterThan(0);
+      expect(documentBundle.html).toContain("label-fit-level-1");
+      expect(documentBundle.model.expandedLabels).toHaveLength(1);
+      expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).toContain(">H300</span>");
+      expect(documentBundle.pagesHtml).toContain(">P233</span>");
     });
 
     it("keeps moderate A4 H/P content on one retry-fitted page when it fits", () => {
@@ -2708,7 +2705,7 @@ describe("printLabels", () => {
       );
     });
 
-    it("keeps retry auto-fit level when batch item layout overrides were planned lower", () => {
+    it("keeps retry auto-fit level while avoiding false batch continuation splits", () => {
       const batchOverrideChemical = {
         ...mockChemical,
         cas_number: "1003-09-4",
@@ -2759,14 +2756,10 @@ describe("printLabels", () => {
       );
 
       expect(documentBundle.html).toContain("label-fit-level-1");
-      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
-      const [hazardPage, precautionPage] = documentBundle.model.expandedLabels;
-      expect(hazardPage.continuation.hazardStatements.length).toBeGreaterThan(0);
-      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
-      expect(precautionPage.continuation.hazardStatements).toHaveLength(0);
-      expect(
-        precautionPage.continuation.precautionaryStatements.length,
-      ).toBeGreaterThan(0);
+      expect(documentBundle.model.expandedLabels).toHaveLength(1);
+      expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).toContain(">H300</span>");
+      expect(documentBundle.pagesHtml).toContain(">P233</span>");
     });
 
     it("can render a selected continuation page in print preview", () => {

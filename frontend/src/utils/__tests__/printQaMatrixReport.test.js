@@ -111,6 +111,35 @@ const maybeWritePreviewArtifacts = () => {
   console.log(`Print QA previews written to ${absoluteDir}`);
 };
 
+const buildCompleteBatchA4Bundle = () => {
+  const completeBatchPlan = buildBatchPrintPlan({
+    selectedForLabel: batchPrintMixedFixture50,
+    layout: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    purpose: BATCH_PRINT_PURPOSE.COMPLETE,
+    resolvedLabProfile: PRINT_QA_PROFILE,
+    locale: "zh-TW",
+  });
+  const completeBatchItems = buildBatchPrintableItems(completeBatchPlan);
+  const completeBatchBundle = buildPrintDocument(
+    completeBatchItems,
+    completeBatchPlan.layout,
+    {},
+    {},
+    Object.fromEntries(
+      completeBatchItems.map((chemical) => [chemical.cas_number, 1]),
+    ),
+    PRINT_QA_PROFILE,
+  );
+
+  return { completeBatchBundle, completeBatchItems };
+};
+
 const maybeWritePrintArtifacts = () => {
   const outputDir = process.env.PRINT_QA_PRINT_HTML_DIR;
   if (!outputDir) return;
@@ -257,29 +286,9 @@ const maybeWritePrintArtifacts = () => {
     expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
   });
 
-  const completeBatchPlan = buildBatchPrintPlan({
-    selectedForLabel: batchPrintMixedFixture50,
-    layout: {
-      labelPurpose: "shipping",
-      template: "full",
-      stockPreset: "a4-primary",
-      nameDisplay: "both",
-      colorMode: "color",
-    },
-    purpose: BATCH_PRINT_PURPOSE.COMPLETE,
-    resolvedLabProfile: PRINT_QA_PROFILE,
-    locale: "zh-TW",
-  });
-  const completeBatchItems = buildBatchPrintableItems(completeBatchPlan);
-  const completeBatchBundle = buildPrintDocument(
-    completeBatchItems,
-    completeBatchPlan.layout,
-    {},
-    {},
-    Object.fromEntries(
-      completeBatchItems.map((chemical) => [chemical.cas_number, 1]),
-    ),
-    PRINT_QA_PROFILE,
+  const { completeBatchBundle, completeBatchItems } = buildCompleteBatchA4Bundle();
+  expect(completeBatchBundle.model.expandedLabels.length).toBeLessThanOrEqual(
+    completeBatchItems.length + 4,
   );
   const completeBatchFile = "batch-a4-complete-50.html";
   fs.writeFileSync(path.join(absoluteDir, completeBatchFile), completeBatchBundle.html);
@@ -963,6 +972,15 @@ describe("print QA matrix report", () => {
         { action: "selectStock", value: "small-strip" },
         { action: "assertQaStatus", elementId: "ghs-print-qa-status" },
       ]),
+    );
+  });
+
+  it("keeps fixed-stock A4 complete batches from doubling into false continuations", () => {
+    const { completeBatchBundle, completeBatchItems } =
+      buildCompleteBatchA4Bundle();
+
+    expect(completeBatchBundle.model.expandedLabels.length).toBeLessThanOrEqual(
+      completeBatchItems.length + 4,
     );
   });
 });

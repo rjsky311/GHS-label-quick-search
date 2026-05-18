@@ -2514,6 +2514,13 @@ export function buildPrintQaCaseResult({
     ]);
   }
 
+  if (Number.isFinite(expected.maxPrintTotalLabels)) {
+    checks.push([
+      "maxPrintTotalLabels",
+      actual.printTotalLabels <= expected.maxPrintTotalLabels,
+    ]);
+  }
+
   if (expected.planState) {
     checks.push(["planState", actual.planState === expected.planState]);
   }
