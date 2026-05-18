@@ -1005,6 +1005,70 @@ describe("printLabels", () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
+  it("replans A4 continuation pages when rendered precautions still overflow after auto-fit", () => {
+    let labelQueryCount = 0;
+    const makeLabel = (panel) => ({
+      querySelector: jest.fn((selector) =>
+        selector === ".compliance-precaution-panel" ? panel : null,
+      ),
+      clientHeight: 100,
+      scrollHeight: 100,
+      clientWidth: 200,
+      scrollWidth: 200,
+    });
+    const overflowingPanel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 180,
+      scrollWidth: 180,
+    };
+    const fittingPanel = {
+      clientHeight: 34,
+      scrollHeight: 34,
+      clientWidth: 180,
+      scrollWidth: 180,
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (selector === ".label:not(.label-placeholder)") {
+        labelQueryCount += 1;
+        return [makeLabel(labelQueryCount < 6 ? overflowingPanel : fittingPanel)];
+      }
+      return [];
+    });
+
+    printLabels(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+        nameDisplay: "both",
+      },
+      {},
+    );
+    jest.advanceTimersByTime(300);
+
+    expect(mockIframeDoc.write).toHaveBeenCalledTimes(6);
+    expect(mockIframeDoc.write.mock.calls[4][0]).toContain("label-fit-level-4");
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_continuation_tightening_retry",
+      expect.objectContaining({
+        status: "retry",
+        meta: expect.objectContaining({
+          autoFitLevel: 4,
+          nextContinuationTightnessLevel: 1,
+          issueTypes: expect.arrayContaining([
+            "compliance-precautions-overflow",
+          ]),
+          issueCasNumbers: expect.arrayContaining([mockChemical.cas_number]),
+        }),
+      }),
+    );
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
   it("blocks supplemental labels when the rendered layout clips", () => {
     const overflowLabel = {
       clientHeight: 20,

@@ -577,6 +577,17 @@ const expandLabelsByQuantity = (selectedForLabel, labelQuantities) => {
 const clampAutoFitLevel = (value) =>
   Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
 
+const clampContinuationTightnessLevel = (value) =>
+  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
+
+const withInternalPrintLayoutFlags = (layout, labelConfig = {}) => ({
+  ...layout,
+  continuationTightnessLevel: clampContinuationTightnessLevel(
+    labelConfig.__continuationTightnessLevel ??
+      labelConfig.continuationTightnessLevel,
+  ),
+});
+
 const getNameLoadForLayout = (chemical = {}, layout = {}) => {
   const names = [];
   if (layout.nameDisplay === "en" || layout.nameDisplay === "both") {
@@ -706,11 +717,16 @@ const resolveRenderModelForChemical = (chemical, model) => {
     template: normalizeTemplate(override.template || model.layout.template),
     autoFitLevel: Math.max(inheritedAutoFitLevel, overrideAutoFitLevel),
   });
+  const layoutWithFlags = withInternalPrintLayoutFlags(layout, {
+    __continuationTightnessLevel: model.layout.continuationTightnessLevel,
+  });
 
   return {
     ...model,
-    layout,
-    contentPolicy: resolvePrintContentPolicy(layout, { locale: model.locale }),
+    layout: layoutWithFlags,
+    contentPolicy: resolvePrintContentPolicy(layoutWithFlags, {
+      locale: model.locale,
+    }),
   };
 };
 
@@ -1011,6 +1027,7 @@ export function buildPrintDocumentModel(
     ...labelConfig,
     template: normalizeTemplate(labelConfig?.template),
   });
+  layout = withInternalPrintLayoutFlags(layout, labelConfig);
   const expandedLabels = expandLabelsByQuantity(
     selectedForLabel,
     labelQuantities,
@@ -1031,6 +1048,7 @@ export function buildPrintDocumentModel(
       template: normalizeTemplate(labelConfig?.template),
       autoFitLevel,
     });
+    layout = withInternalPrintLayoutFlags(layout, labelConfig);
   }
   const modelBase = {
     t,
@@ -3986,8 +4004,11 @@ export function inspectPrintLayoutDocument(documentLike) {
   ).filter((element) => typeof element.querySelector === "function");
 
   labels.forEach((label, index) => {
+    const issueMeta = {
+      index,
+    };
     if (elementVerticallyOverflows(label, 2)) {
-      issues.push({ type: "label-overflow", index });
+      issues.push({ type: "label-overflow", ...issueMeta });
     }
 
     [
@@ -4017,7 +4038,7 @@ export function inspectPrintLayoutDocument(documentLike) {
     ].forEach(([selector, type]) => {
       const element = label.querySelector(selector);
       if (elementOverflows(element, 2)) {
-        issues.push({ type, index });
+        issues.push({ type, ...issueMeta });
       }
     });
 
@@ -4027,7 +4048,7 @@ export function inspectPrintLayoutDocument(documentLike) {
       label.clientHeight > 0 &&
       footer.offsetTop + footer.offsetHeight > label.clientHeight + 2
     ) {
-      issues.push({ type: "compliance-footer-clipped", index });
+      issues.push({ type: "compliance-footer-clipped", ...issueMeta });
     }
   });
 
@@ -4067,11 +4088,27 @@ function buildPrintLifecycleMeta(documentBundle) {
     colorMode: layout.colorMode,
     nameDisplay: layout.nameDisplay,
     autoFitLevel: layout.autoFitLevel || 0,
+    continuationTightnessLevel: layout.continuationTightnessLevel || 0,
     casNumbers,
     totalLabels: model.expandedLabels.length,
     totalPages: model.totalPages,
     totalChemicals: model.selectedForLabel.length,
   };
+}
+
+function getPreflightIssueCasNumbers(documentBundle, preflightIssues = []) {
+  const labels = documentBundle?.model?.expandedLabels || [];
+  return [
+    ...new Set(
+      preflightIssues
+        .map((issue) => {
+          const label = labels[issue?.index];
+          const sourceChemical = label?.sourceChemical || label;
+          return sourceChemical?.cas_number || "";
+        })
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function isPrintHandoffQaMode() {
@@ -4297,6 +4334,27 @@ const shouldRetryWithAutoFit = (preflightIssues = [], layout = {}) =>
   ) &&
   !preflightIssues.some((issue) => issue?.type === "required-image-failed");
 
+const CONTINUATION_TIGHTENING_ISSUE_TYPES = new Set([
+  "label-overflow",
+  "compliance-core-overflow",
+  "compliance-statements-overflow",
+  "compliance-hazards-overflow",
+  "compliance-precautions-overflow",
+  "compliance-footer-clipped",
+  "statement-code-overflow",
+]);
+
+const shouldRetryWithContinuationTightening = (
+  preflightIssues = [],
+  layout = {},
+) =>
+  isFullPagePrimaryLayout(layout) &&
+  clampContinuationTightnessLevel(layout.continuationTightnessLevel) < 4 &&
+  preflightIssues.some((issue) =>
+    CONTINUATION_TIGHTENING_ISSUE_TYPES.has(issue?.type),
+  ) &&
+  !preflightIssues.some((issue) => issue?.type === "required-image-failed");
+
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -4403,6 +4461,45 @@ export function printLabels(
         );
         return;
       }
+      if (
+        shouldRetryWithContinuationTightening(
+          preflightIssues,
+          documentBundle.model.layout,
+        )
+      ) {
+        const nextContinuationTightnessLevel =
+          clampContinuationTightnessLevel(
+            documentBundle.model.layout.continuationTightnessLevel,
+          ) + 1;
+        recordObservabilityEvent("print_continuation_tightening_retry", {
+          status: "retry",
+          count: lifecycleMeta.totalLabels || 1,
+          meta: {
+            ...lifecycleMeta,
+            nextContinuationTightnessLevel,
+            issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
+            issueCasNumbers: getPreflightIssueCasNumbers(
+              documentBundle,
+              preflightIssues,
+            ),
+          },
+        });
+        iframe.remove();
+        printLabels(
+          selectedForLabel,
+          {
+            ...labelConfig,
+            autoFitLevel: documentBundle.model.layout.autoFitLevel,
+            __continuationTightnessLevel: nextContinuationTightnessLevel,
+          },
+          customGHSSettings,
+          customLabelFields,
+          labelQuantities,
+          labProfile,
+          lifecycleCallbacks,
+        );
+        return;
+      }
       if (isPrintHandoffQaMode()) {
         publishPrintBlockedQaStatus(documentBundle, preflightIssues);
       }
@@ -4413,6 +4510,10 @@ export function printLabels(
           ...lifecycleMeta,
           issueCount: preflightIssues.length,
           issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
+          issueCasNumbers: getPreflightIssueCasNumbers(
+            documentBundle,
+            preflightIssues,
+          ),
         },
       });
       if (

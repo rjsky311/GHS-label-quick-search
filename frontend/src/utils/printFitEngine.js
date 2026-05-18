@@ -169,6 +169,90 @@ const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
   };
 };
 
+const clampContinuationTightnessLevel = (value) =>
+  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
+
+const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
+  const level = clampContinuationTightnessLevel(
+    layout.continuationTightnessLevel,
+  );
+  if (level <= 0) return capacity;
+
+  const scales = {
+    1: { split: 0.88, page: 0.9, text: 0.9, mixed: 0.9 },
+    2: { split: 0.74, page: 0.78, text: 0.78, mixed: 0.8 },
+    3: { split: 0.62, page: 0.66, text: 0.68, mixed: 0.7 },
+    4: { split: 0.52, page: 0.58, text: 0.6, mixed: 0.62 },
+  };
+  const scale = scales[level] || scales[1];
+
+  return {
+    ...capacity,
+    splitStatementCount: scaleFiniteLimit(
+      capacity.splitStatementCount,
+      scale.split,
+      12,
+    ),
+    splitTextWeight: scaleFiniteLimit(capacity.splitTextWeight, scale.text, 1800),
+    splitLineUnits: scaleFiniteLimit(capacity.splitLineUnits, scale.split, 24),
+    firstPageStatementCount: scaleFiniteLimit(
+      capacity.firstPageStatementCount,
+      scale.page,
+      12,
+    ),
+    firstPageTextWeight: scaleFiniteLimit(
+      capacity.firstPageTextWeight,
+      scale.text,
+      1800,
+    ),
+    firstPageLineUnits: scaleFiniteLimit(
+      capacity.firstPageLineUnits,
+      scale.page,
+      24,
+    ),
+    continuationPageStatementCount: scaleFiniteLimit(
+      capacity.continuationPageStatementCount,
+      scale.page,
+      14,
+    ),
+    continuationPageTextWeight: scaleFiniteLimit(
+      capacity.continuationPageTextWeight,
+      scale.text,
+      1900,
+    ),
+    continuationPageLineUnits: scaleFiniteLimit(
+      capacity.continuationPageLineUnits,
+      scale.page,
+      28,
+    ),
+    precautionOnlyStatementCount: scaleFiniteLimit(
+      capacity.precautionOnlyStatementCount,
+      scale.page,
+      12,
+    ),
+    precautionOnlyTextWeight: scaleFiniteLimit(
+      capacity.precautionOnlyTextWeight,
+      scale.text,
+      1500,
+    ),
+    precautionOnlyLineUnits: scaleFiniteLimit(
+      capacity.precautionOnlyLineUnits,
+      scale.page,
+      28,
+    ),
+    mixedPrecautionStatementCount: scaleFiniteLimit(
+      capacity.mixedPrecautionStatementCount,
+      scale.mixed,
+      10,
+    ),
+    mixedPrecautionTextWeight: scaleFiniteLimit(
+      capacity.mixedPrecautionTextWeight,
+      scale.text,
+      1300,
+    ),
+  };
+};
+
 export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
   const fullPageLike =
     isFullPagePrimaryStockId(layout.stockId) ||
@@ -190,7 +274,7 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     layout.pageSize === "Letter";
 
   if (isLetter) {
-    return applyContinuationAutoFitCapacity({
+    return applyContinuationTightnessCapacity(applyContinuationAutoFitCapacity({
       splitStatementCount: 44,
       splitTextWeight: 11000,
       splitLineUnits: 64,
@@ -212,10 +296,10 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
       mixedPrecautionTextWeight: 2350,
       separatePrecautionsAfterHazardCount: 18,
       separatePrecautionsAfterHazardTextWeight: 2600,
-    }, layout);
+    }, layout), layout);
   }
 
-  return applyContinuationAutoFitCapacity({
+  return applyContinuationTightnessCapacity(applyContinuationAutoFitCapacity({
     splitStatementCount: 48,
     splitTextWeight: 12000,
     splitLineUnits: 72,
@@ -237,7 +321,7 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     mixedPrecautionTextWeight: 2600,
     separatePrecautionsAfterHazardCount: 20,
     separatePrecautionsAfterHazardTextWeight: 2900,
-  }, layout);
+  }, layout), layout);
 };
 
 export const getMaxCompleteStatementCount = (layout) => {
