@@ -866,7 +866,13 @@ describe("printLabels", () => {
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
     expect(html).toContain("width: 28.2mm");
-    expect(html).toContain("column-count: 3");
+    expect(html).not.toContain("column-count: 3");
+    expect(html).toMatch(
+      /\.label-full-page-primary \.compliance-precaution-list \{[\s\S]*display: flex;/,
+    );
+    expect(html).toMatch(
+      /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*grid-template-columns:/,
+    );
     expect(html).toContain("compliance-statements-panel");
     expect(html).toContain("--precaution-code-max:11.2mm");
     expect(html).not.toContain("font-size: 9px !important");
@@ -2197,7 +2203,10 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-a4-primary");
       expect(preview.html).toContain("width: 28.2mm");
       expect(preview.html).toContain("height: 28.2mm");
-      expect(preview.html).toContain("column-count: 3");
+      expect(preview.html).not.toContain("column-count: 3");
+      expect(preview.html).toMatch(
+        /\.label-full-page-primary \.compliance-precaution-list \{[\s\S]*display: flex;/,
+      );
       expect(preview.html).toContain("compliance-statements-panel");
       expect(preview.html).toContain(
         "grid-template-rows: auto minmax(0, 1fr) auto",
@@ -2363,7 +2372,7 @@ describe("printLabels", () => {
           { code: "H314", text_en: "Causes severe skin burns and eye damage." },
           { code: "H331", text_en: "Toxic if inhaled." },
         ],
-        precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+        precautionary_statements: Array.from({ length: 52 }, (_, index) => ({
           code: `P${300 + index}`,
           text_en:
             "Keep this precautionary instruction readable on the primary label, including handling, storage, emergency response, and disposal instructions that wrap over multiple lines.",
@@ -2427,6 +2436,86 @@ describe("printLabels", () => {
       );
       expect(documentBundle.html).toContain("font-size: 26px;");
       expect(documentBundle.html).toContain("line-height: 1.18;");
+    });
+
+    it("packs moderate H/P content onto one A4 page without CSS column balancing", () => {
+      const moderateContinuationChemical = {
+        ...mockChemical,
+        cas_number: "1003-09-4",
+        name_en: "2-Bromothiophene",
+        name_zh: "2-Bromothiophene ZH",
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        signal_word: "Danger",
+        hazard_statements: [
+          "Flammable liquid and vapor.",
+          "Fatal if swallowed.",
+          "Toxic if swallowed.",
+          "Fatal in contact with skin.",
+          "Causes skin irritation.",
+          "Causes serious eye damage.",
+          "Causes serious eye irritation.",
+          "Fatal if inhaled.",
+        ].map((text_en, index) => ({
+          code: `H${226 + index}`,
+          text_en:
+            `${text_en} Keep the hazard line readable and aligned with the same code and text rhythm.`,
+        })),
+        precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+          code:
+            index % 5 === 0
+              ? `P${300 + index}+P${350 + index}+P${380 + index}`
+              : `P${210 + index}`,
+          text_en:
+            "Keep this precautionary instruction readable with enough wording to exercise continuation packing, but do not force a short orphan third page.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [moderateContinuationChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels).toHaveLength(1);
+      expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).not.toContain('data-continuation-page="1"');
+      expect(documentBundle.pagesHtml).not.toContain('data-continuation-page="2"');
+      expect(documentBundle.pagesHtml).not.toContain(
+        'data-continuation-page="3"',
+      );
+      expect(
+        documentBundle.pagesHtml.match(
+          /class="pictograms compliance-pictograms"/g,
+        ),
+      ).toHaveLength(1);
+      expect(documentBundle.html).toContain(
+        ".label-full-page-primary .compliance-precaution-list",
+      );
+      expect(documentBundle.html).not.toContain(
+        "column-count: var(--compliance-columns",
+      );
+      expect(documentBundle.html).not.toContain(
+        "column-count: ${layout.typography.complianceColumns}",
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-precaution-list \{[\s\S]*display: flex;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*grid-template-columns:/,
+      );
     });
 
     it("can render a selected continuation page in print preview", () => {

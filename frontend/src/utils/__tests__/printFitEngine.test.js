@@ -159,7 +159,7 @@ describe("printFitEngine", () => {
 
   it("routes very dense complete labels to A4 continuation", () => {
     const readiness = evaluatePrintReadiness({
-      selectedForLabel: [makeChemical(42)],
+      selectedForLabel: [makeChemical(72)],
       layout: {
         labelPurpose: "shipping",
         template: "full",

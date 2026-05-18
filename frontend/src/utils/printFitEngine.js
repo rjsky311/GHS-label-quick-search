@@ -60,34 +60,52 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
 
   if (isLetter) {
     return {
-      splitStatementCount: 38,
-      splitTextWeight: 3900,
+      splitStatementCount: 44,
+      splitTextWeight: 11000,
+      splitLineUnits: 64,
       pageStatementCount: 32,
       pageTextWeight: 3150,
+      pageLineUnits: 64,
+      firstPageStatementCount: 42,
+      firstPageTextWeight: 7000,
+      firstPageLineUnits: 64,
+      continuationPageStatementCount: 66,
+      continuationPageTextWeight: 9000,
+      continuationPageLineUnits: 82,
       hazardOnlyStatementCount: 16,
       hazardOnlyTextWeight: 1850,
       precautionOnlyStatementCount: 30,
       precautionOnlyTextWeight: 2900,
+      precautionOnlyLineUnits: 82,
       mixedPrecautionStatementCount: 30,
       mixedPrecautionTextWeight: 2350,
-      separatePrecautionsAfterHazardCount: 13,
-      separatePrecautionsAfterHazardTextWeight: 1700,
+      separatePrecautionsAfterHazardCount: 18,
+      separatePrecautionsAfterHazardTextWeight: 2600,
     };
   }
 
   return {
-    splitStatementCount: 40,
-    splitTextWeight: 4200,
+    splitStatementCount: 48,
+    splitTextWeight: 12000,
+    splitLineUnits: 72,
     pageStatementCount: 34,
     pageTextWeight: 3400,
+    pageLineUnits: 72,
+    firstPageStatementCount: 48,
+    firstPageTextWeight: 8000,
+    firstPageLineUnits: 72,
+    continuationPageStatementCount: 72,
+    continuationPageTextWeight: 10000,
+    continuationPageLineUnits: 90,
     hazardOnlyStatementCount: 17,
     hazardOnlyTextWeight: 2000,
     precautionOnlyStatementCount: 32,
     precautionOnlyTextWeight: 3200,
+    precautionOnlyLineUnits: 90,
     mixedPrecautionStatementCount: 32,
     mixedPrecautionTextWeight: 2600,
-    separatePrecautionsAfterHazardCount: 14,
-    separatePrecautionsAfterHazardTextWeight: 1900,
+    separatePrecautionsAfterHazardCount: 20,
+    separatePrecautionsAfterHazardTextWeight: 2900,
   };
 };
 
@@ -199,9 +217,9 @@ export const getMaxCompleteTextWeight = (layout = {}) => {
   );
 
   if (isFullPage) {
-    return Math.min(
+    return Math.max(
       maxTextWeight,
-      getCompletePrimaryContinuationCapacity(layout).splitTextWeight + 520,
+      getCompletePrimaryContinuationCapacity(layout).splitTextWeight,
     );
   }
 
@@ -210,6 +228,44 @@ export const getMaxCompleteTextWeight = (layout = {}) => {
   }
 
   return maxTextWeight;
+};
+
+const getStatementLineCharacters = (layout = {}) =>
+  isFullPageLikeLayout(layout) ? 135 : 92;
+
+export const getMaxCompleteLineUnits = (layout = {}) => {
+  if (isFullPageLikeLayout(layout)) {
+    return (
+      getCompletePrimaryContinuationCapacity(layout).firstPageLineUnits ||
+      getCompletePrimaryContinuationCapacity(layout).pageLineUnits ||
+      Infinity
+    );
+  }
+  if (layout.size === "large") return 32;
+  if (layout.size === "medium") return 20;
+  return 12;
+};
+
+export const estimatePrintContentLineUnits = (
+  content,
+  layout = {},
+  locale = "zh",
+) => {
+  const lineCharacters = getStatementLineCharacters(layout);
+  return [
+    ...(content.hazardStatements || []),
+    ...(content.precautionaryStatements || []),
+  ].reduce((total, statement) => {
+    const codeLength = stringLength(statement?.code);
+    const codePenalty = codeLength > 10 ? 0.45 : codeLength > 7 ? 0.25 : 0;
+    const textLength = stringLength(
+      getRenderedStatementText(statement, layout, locale),
+    );
+    return (
+      total +
+      Math.max(1, Math.ceil(textLength / lineCharacters) + codePenalty)
+    );
+  }, 0);
 };
 
 export const getMaxSupplementalTextWeight = (layout = {}) => {
@@ -663,6 +719,7 @@ export function evaluatePrintReadiness({
   const hasProfile = hasResponsibleProfile(resolvedLabProfile);
   const maxStatements = getMaxCompleteStatementCount(layout || {});
   const maxTextWeight = getMaxCompleteTextWeight(layout || {});
+  const maxLineUnits = getMaxCompleteLineUnits(layout || {});
   const maxStatementCount = contents.reduce(
     (max, content) => Math.max(max, content.counts.statements),
     0,
@@ -675,10 +732,17 @@ export function evaluatePrintReadiness({
       ),
     0,
   );
+  const maxLineUnitsScore = contents.reduce(
+    (max, content) =>
+      Math.max(max, estimatePrintContentLineUnits(content, layout || {}, locale)),
+    0,
+  );
   const isCompletePrimary = isCompletePrimaryLayout(layout);
   const isDense =
     isCompletePrimary &&
-    (maxStatementCount > maxStatements || maxTextWeightScore > maxTextWeight);
+    (maxStatementCount > maxStatements ||
+      maxTextWeightScore > maxTextWeight ||
+      maxLineUnitsScore > maxLineUnits);
   const supplementalFitIssues = isCompletePrimary
     ? []
     : inspectSupplementalContentFitForContents(
@@ -711,6 +775,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues: [],
     };
   }
@@ -731,6 +797,13 @@ export function evaluatePrintReadiness({
         maxTextWeight,
       });
     }
+    if (maxLineUnitsScore > maxLineUnits) {
+      issues.push({
+        type: "content-line-too-dense",
+        lineUnits: maxLineUnitsScore,
+        maxLineUnits,
+      });
+    }
   }
   if (isCompletePrimary && !hasProfile) {
     issues.push({ type: "responsible-profile-missing" });
@@ -748,6 +821,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues,
     };
   }
@@ -764,6 +839,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues,
     };
   }
@@ -780,6 +857,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues,
     };
   }
@@ -796,6 +875,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues,
     };
   }
@@ -812,6 +893,8 @@ export function evaluatePrintReadiness({
       maxStatementCount,
       maxTextWeight,
       maxTextWeightScore,
+      maxLineUnits,
+      maxLineUnitsScore,
       issues,
     };
   }
@@ -827,6 +910,8 @@ export function evaluatePrintReadiness({
     maxStatementCount,
     maxTextWeight,
     maxTextWeightScore,
+    maxLineUnits,
+    maxLineUnitsScore,
     issues,
   };
 }

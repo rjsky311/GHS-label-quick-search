@@ -664,6 +664,76 @@ export const PRINT_QA_ETHYLENE_OXIDE = Object.freeze({
   })),
 });
 
+export const PRINT_QA_BROMOTHIOPHENE = Object.freeze({
+  cas_number: "1003-09-4",
+  name_en: "2-Bromothiophene",
+  name_zh: "2-溴噻吩",
+  cid: 13787,
+  ghs_pictograms: [
+    { code: "GHS02" },
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+  ],
+  signal_word: "Danger",
+  signal_word_zh: "危險",
+  hazard_statements: [
+    "Flammable liquid and vapor.",
+    "Fatal if swallowed.",
+    "Toxic if swallowed.",
+    "Fatal in contact with skin.",
+    "Causes skin irritation.",
+    "Causes serious eye damage.",
+    "Causes serious eye irritation.",
+    "Fatal if inhaled.",
+  ].map((text_en, index) => ({
+    code:
+      ["H226", "H300", "H301", "H310", "H315", "H318", "H319", "H330"][
+        index
+      ] || `H${300 + index}`,
+    text_en: `${text_en} Complete A4 continuation regression statement.`,
+    text_zh: `危害說明 ${index + 1}，用於 A4 續頁空間利用率回歸測試。`,
+  })),
+  precautionary_statements: [
+    "P210",
+    "P233",
+    "P240",
+    "P241",
+    "P242",
+    "P243",
+    "P260",
+    "P262",
+    "P264",
+    "P264+P265",
+    "P270",
+    "P271",
+    "P280",
+    "P284",
+    "P301+P316",
+    "P302+P352",
+    "P303+P361+P353",
+    "P304+P340",
+    "P305+P351+P338",
+    "P316",
+    "P317",
+    "P320",
+    "P321",
+    "P330",
+    "P332+P317",
+    "P337+P317",
+    "P361+P364",
+    "P370+P378",
+    "P403+P233",
+    "P405",
+    "P501",
+  ].map((code, index) => ({
+    code,
+    text_en:
+      "Retained precautionary wording for print QA packing, emergency response, storage, and disposal.",
+    text_zh: `預防措施 ${index + 1}，用於驗證續頁欄位可以穩定壓縮而不產生短頁。`,
+  })),
+});
+
 export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
   cas_number: "7722-84-1",
   name_en: "Hydrogen Peroxide",
@@ -856,6 +926,7 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   methanol: PRINT_QA_METHANOL,
   formaldehyde: PRINT_QA_FORMALDEHYDE,
   ethyleneOxide: PRINT_QA_ETHYLENE_OXIDE,
+  bromothiophene: PRINT_QA_BROMOTHIOPHENE,
   hydrogenPeroxide: PRINT_QA_HYDROGEN_PEROXIDE,
   nitrogen: PRINT_QA_NITROGEN,
   zincOxide: PRINT_QA_ZINC_OXIDE,
@@ -906,6 +977,12 @@ export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
     riskTags: ["dense-hp", "continuation", "multi-page", "six-pictogram"],
     rationale:
       "Production dense gas case that still requires complete-primary continuation and six single-row pictograms.",
+  },
+  bromothiophene: {
+    source: "production-regression",
+    riskTags: ["moderate-hp", "continuation-packing", "space-utilization"],
+    rationale:
+      "A4 complete-primary continuation regression for cases that should fit in two pages rather than creating a sparse orphan third page.",
   },
   hydrogenPeroxide: {
     source: "production",
@@ -1159,6 +1236,38 @@ export const PRINT_QA_MATRIX = Object.freeze([
       },
       productionExpectedIdentityTexts: ["Ethylene Oxide", "75-21-8"],
       productionExpectedRequiredIdentityTexts: ["Ethylene Oxide"],
+    },
+  },
+  {
+    id: "bromothiophene-a4-primary-packing-regression",
+    label: "2-Bromothiophene A4 packing regression",
+    chemicalId: "bromothiophene",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY,
+      outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
+      labelKind: "complete-primary",
+      stockPreset: "a4-primary",
+      template: "full",
+      hasQr: false,
+      hasFullPagePictograms: true,
+      hasSummaries: false,
+      printTotalLabels: 1,
+      contentPolicy: {
+        role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
+      },
+      productionExpectedIdentityTexts: ["2-Bromothiophene", "1003-09-4"],
+      productionExpectedRequiredIdentityTexts: ["2-Bromothiophene"],
     },
   },
   {

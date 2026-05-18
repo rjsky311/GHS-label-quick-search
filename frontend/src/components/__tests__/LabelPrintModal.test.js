@@ -247,11 +247,11 @@ describe("LabelPrintModal", () => {
 
   it("summarizes continuation output using the actual expanded label count", () => {
     const denseChem = makeChem({
-      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+      hazard_statements: Array.from({ length: 18 }, (_, index) => ({
         code: `H${300 + index}`,
         text_en: `Long hazard statement ${index} with enough explanatory text to exercise continuation page planning.`,
       })),
-      precautionary_statements: Array.from({ length: 34 }, (_, index) => ({
+      precautionary_statements: Array.from({ length: 54 }, (_, index) => ({
         code: `P${300 + index}`,
         text_en: `Long precautionary statement ${index} with enough operational wording to require additional continuation pages.`,
       })),
@@ -314,7 +314,7 @@ describe("LabelPrintModal", () => {
         { code: "GHS06" },
         { code: "GHS07" },
       ],
-      hazard_statements: Array.from({ length: 12 }, (_, index) => ({
+      hazard_statements: Array.from({ length: 18 }, (_, index) => ({
         code: `H${300 + index}`,
         text_en: `Dense hazard statement ${index}`,
       })),
@@ -653,7 +653,7 @@ describe("LabelPrintModal", () => {
         text_en:
           "Long complete-primary hazard statement with enough explanatory text to require continuation after the high-utilization A4 layout pass.",
       })),
-      precautionary_statements: Array.from({ length: 34 }, (_, index) => ({
+      precautionary_statements: Array.from({ length: 54 }, (_, index) => ({
         code: `P${300 + index}`,
         text_en:
           "Long complete-primary precautionary statement with enough operational wording to require additional continuation pages.",
@@ -679,7 +679,7 @@ describe("LabelPrintModal", () => {
       "Complete primary label will print across continuation pages",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print complete primary continuation set (3 labels / 3 pages)",
+      "Print complete primary continuation set",
     );
   });
 

@@ -130,14 +130,14 @@ const makeVeryDenseCompleteChemical = () => ({
     { code: "GHS07" },
     { code: "GHS08" },
   ],
-  hazard_statements: Array.from({ length: 10 }, (_, index) => ({
+  hazard_statements: Array.from({ length: 16 }, (_, index) => ({
     code: `H${300 + index}`,
     text_en:
       "Long hazard statement for complete shipped-container labelling with exposure, handling, and emergency details.",
     text_zh:
       "完整主標使用的長危害說明，包含暴露、操作與緊急應變細節。",
   })),
-  precautionary_statements: Array.from({ length: 16 }, (_, index) => ({
+  precautionary_statements: Array.from({ length: 40 }, (_, index) => ({
     code: `P${300 + index}`,
     text_en:
       "Long precautionary statement retained for printing across continuation pages without clipping critical text.",
@@ -191,7 +191,7 @@ describe("printOutputPlanner", () => {
 
   it("allows very dense content on full-page primary output as continuation", () => {
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [makeChemical(42)],
+      selectedForLabel: [makeChemical(72)],
       layout: resolvePrintLayoutConfig({
         labelPurpose: "shipping",
         template: "full",

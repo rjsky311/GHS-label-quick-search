@@ -611,6 +611,46 @@ describe("print QA matrix report", () => {
       expectedMinTotalLabels: 2,
       expectedMinTotalPages: 2,
     });
+    expect(
+      byId["bromothiophene-a4-primary-packing-regression"],
+    ).toMatchObject({
+      chemical: expect.objectContaining({
+        cas: "1003-09-4",
+        expectedPictograms: ["GHS02", "GHS05", "GHS06", "GHS07"],
+      }),
+      expected: expect.objectContaining({
+        canPrint: true,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY,
+        printTotalLabels: 1,
+      }),
+      actual: expect.objectContaining({
+        canPrint: true,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY,
+        printTotalLabels: 1,
+      }),
+      handoffExpectation: expect.objectContaining({
+        status: "qa_handoff",
+        labelKind: "complete-primary",
+        stockPreset: "a4-primary",
+        template: "full",
+        hasQr: true,
+      }),
+    });
+    expect(
+      browserCaseById["bromothiophene-a4-primary-packing-regression"],
+    ).toMatchObject({
+      expectedCanPrint: true,
+      expectedPrintButtonEnabled: true,
+      expectedStatus: "qa_handoff",
+      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.READY,
+      expectedLabelKind: "complete-primary",
+      expectedStockPreset: "a4-primary",
+      expectedPictograms: ["GHS02", "GHS05", "GHS06", "GHS07"],
+      expectedIdentityTexts: ["2-Bromothiophene", "1003-09-4"],
+      expectedRequiredIdentityTexts: ["2-Bromothiophene"],
+      expectedMinTotalLabels: 1,
+      expectedMinTotalPages: 1,
+    });
 
     expect(byId["bottle-supplemental"].handoffExpectation).toMatchObject({
       status: "qa_handoff",
