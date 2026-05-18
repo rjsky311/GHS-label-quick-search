@@ -698,10 +698,13 @@ const resolveRenderModelForChemical = (chemical, model) => {
   const override = getPrintLayoutOverride(chemical);
   if (!override) return model;
 
+  const inheritedAutoFitLevel = clampAutoFitLevel(model.layout.autoFitLevel);
+  const overrideAutoFitLevel = clampAutoFitLevel(override.autoFitLevel);
   const layout = resolvePrintLayoutConfig({
     ...model.layout,
     ...override,
     template: normalizeTemplate(override.template || model.layout.template),
+    autoFitLevel: Math.max(inheritedAutoFitLevel, overrideAutoFitLevel),
   });
 
   return {
@@ -926,6 +929,10 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     hazardItems.length > 0 &&
     precautionItems.length > capacity.mixedPrecautionStatementCount &&
     precautionTextWeight > capacity.mixedPrecautionTextWeight;
+  const shouldKeepPrecautionsOnSeparateRetryPages =
+    clampAutoFitLevel(renderModel.layout.autoFitLevel) > 0 &&
+    hazardItems.length > 0 &&
+    precautionItems.length > 0;
 
   if (
     statements.length <= capacity.splitStatementCount &&
@@ -935,6 +942,7 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
         capacity.firstPageLineUnits ||
         capacity.pageLineUnits ||
         Infinity) &&
+    !shouldKeepPrecautionsOnSeparateRetryPages &&
     !shouldSeparatePrecautions &&
     !mixedPrecautionOverflowRisk
   ) {
@@ -957,16 +965,20 @@ const buildContinuationLabelsForChemical = (chemical, model) => {
     lastPage.textWeight >= lastPageLimits.maxTextWeight * 0.75;
   if (
     precautionItems.length > 0 &&
-    (shouldSeparatePrecautions || mixedPrecautionOverflowRisk) &&
+    (shouldKeepPrecautionsOnSeparateRetryPages ||
+      shouldSeparatePrecautions ||
+      mixedPrecautionOverflowRisk) &&
     lastPageHasHazards &&
-    lastPageNearCapacity
+    (shouldKeepPrecautionsOnSeparateRetryPages || lastPageNearCapacity)
   ) {
     pages.push({ items: [], textWeight: 0, lineUnits: 0 });
   }
   precautionItems.forEach((item) =>
     appendContinuationStatement(pages, item, capacity, renderModel),
   );
-  const populatedPages = compactContinuationPages(pages, capacity, renderModel);
+  const populatedPages = shouldKeepPrecautionsOnSeparateRetryPages
+    ? pages.filter((page) => page.items.length > 0)
+    : compactContinuationPages(pages, capacity, renderModel);
   if (populatedPages.length <= 1) return [chemical];
 
   return populatedPages.map((page, index) => ({

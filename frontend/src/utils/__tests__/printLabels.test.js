@@ -2574,6 +2574,120 @@ describe("printLabels", () => {
       );
     });
 
+    it("separates H and P sections during A4 auto-fit retries so precautions get full-page height", () => {
+      const mixedOverflowRiskChemical = {
+        ...mockChemical,
+        cas_number: "1003-09-4",
+        name_en: "2-Bromothiophene",
+        name_zh: "2-Bromothiophene ZH",
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        signal_word: "Danger",
+        hazard_statements: Array.from({ length: 8 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en:
+            "Keep the hazard line readable and aligned with bilingual complete primary text.",
+        })),
+        precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+          code:
+            index % 4 === 0
+              ? `P${300 + index}+P${350 + index}+P${380 + index}`
+              : `P${210 + index}`,
+          text_en:
+            "Keep this long precautionary instruction readable on a continuation page without being squeezed under the hazard statement block.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [mixedOverflowRiskChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          autoFitLevel: 1,
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      const [hazardPage, precautionPage] = documentBundle.model.expandedLabels;
+      expect(hazardPage.continuation.hazardStatements.length).toBeGreaterThan(0);
+      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
+      expect(precautionPage.continuation.hazardStatements).toHaveLength(0);
+      expect(
+        precautionPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("keeps retry auto-fit level when batch item layout overrides were planned lower", () => {
+      const batchOverrideChemical = {
+        ...mockChemical,
+        cas_number: "1003-09-4",
+        name_en: "2-Bromothiophene",
+        name_zh: "2-Bromothiophene ZH",
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        signal_word: "Danger",
+        hazard_statements: Array.from({ length: 8 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en:
+            "Keep the hazard line readable and aligned with bilingual complete primary text.",
+        })),
+        precautionary_statements: Array.from({ length: 24 }, (_, index) => ({
+          code:
+            index % 4 === 0
+              ? `P${300 + index}+P${350 + index}+P${380 + index}`
+              : `P${210 + index}`,
+          text_en:
+            "Keep this long precautionary instruction readable on a continuation page without being squeezed under the hazard statement block.",
+        })),
+        __printLayoutOverride: resolvePrintLayoutConfig({
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          autoFitLevel: 0,
+        }),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [batchOverrideChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          autoFitLevel: 1,
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.html).toContain("label-fit-level-1");
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      const [hazardPage, precautionPage] = documentBundle.model.expandedLabels;
+      expect(hazardPage.continuation.hazardStatements.length).toBeGreaterThan(0);
+      expect(hazardPage.continuation.precautionaryStatements).toHaveLength(0);
+      expect(precautionPage.continuation.hazardStatements).toHaveLength(0);
+      expect(
+        precautionPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
+    });
+
     it("can render a selected continuation page in print preview", () => {
       const denseChemical = {
         ...mockChemical,
