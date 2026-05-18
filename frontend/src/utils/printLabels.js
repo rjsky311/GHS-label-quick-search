@@ -577,8 +577,16 @@ const expandLabelsByQuantity = (selectedForLabel, labelQuantities) => {
 const clampAutoFitLevel = (value) =>
   Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
 
+const MAX_CONTINUATION_TIGHTNESS_LEVEL = 8;
+
 const clampContinuationTightnessLevel = (value) =>
-  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
+  Math.max(
+    0,
+    Math.min(
+      MAX_CONTINUATION_TIGHTNESS_LEVEL,
+      Math.trunc(Number(value) || 0),
+    ),
+  );
 
 const withInternalPrintLayoutFlags = (layout, labelConfig = {}) => ({
   ...layout,
@@ -717,8 +725,13 @@ const resolveRenderModelForChemical = (chemical, model) => {
     template: normalizeTemplate(override.template || model.layout.template),
     autoFitLevel: Math.max(inheritedAutoFitLevel, overrideAutoFitLevel),
   });
+  const continuationTightnessLevel = clampContinuationTightnessLevel(
+    override.__continuationTightnessLevel ??
+      override.continuationTightnessLevel ??
+      model.layout.continuationTightnessLevel,
+  );
   const layoutWithFlags = withInternalPrintLayoutFlags(layout, {
-    __continuationTightnessLevel: model.layout.continuationTightnessLevel,
+    __continuationTightnessLevel: continuationTightnessLevel,
   });
 
   return {
@@ -4111,6 +4124,58 @@ function getPreflightIssueCasNumbers(documentBundle, preflightIssues = []) {
   ];
 }
 
+function getContinuationRetryIssueCasNumbers(
+  documentBundle,
+  preflightIssues = [],
+) {
+  const labels = documentBundle?.model?.expandedLabels || [];
+  return [
+    ...new Set(
+      preflightIssues
+        .filter((issue) => CONTINUATION_TIGHTENING_ISSUE_TYPES.has(issue?.type))
+        .map((issue) => {
+          const index = Number(issue?.index);
+          if (!Number.isInteger(index) || index < 0 || index >= labels.length) {
+            return "";
+          }
+          const label = labels[index];
+          const sourceChemical = label?.sourceChemical || label;
+          return sourceChemical?.cas_number || "";
+        })
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function getChemicalContinuationTightnessLevel(chemical) {
+  return clampContinuationTightnessLevel(
+    chemical?.__printLayoutOverride?.__continuationTightnessLevel ??
+      chemical?.__printLayoutOverride?.continuationTightnessLevel,
+  );
+}
+
+function applyTargetedContinuationTightness(
+  selectedForLabel,
+  issueCasNumbers,
+  nextContinuationTightnessLevel,
+) {
+  const issueCasSet = new Set(issueCasNumbers || []);
+  if (!issueCasSet.size) return selectedForLabel;
+
+  return selectedForLabel.map((chemical) => {
+    if (!issueCasSet.has(chemical?.cas_number)) return chemical;
+    const existingOverride = chemical.__printLayoutOverride || {};
+    return {
+      ...chemical,
+      __printLayoutOverride: {
+        ...existingOverride,
+        __continuationTightnessLevel: nextContinuationTightnessLevel,
+        continuationTightnessLevel: nextContinuationTightnessLevel,
+      },
+    };
+  });
+}
+
 function isPrintHandoffQaMode() {
   if (typeof window === "undefined") return false;
   try {
@@ -4349,11 +4414,52 @@ const shouldRetryWithContinuationTightening = (
   layout = {},
 ) =>
   isFullPagePrimaryLayout(layout) &&
-  clampContinuationTightnessLevel(layout.continuationTightnessLevel) < 4 &&
   preflightIssues.some((issue) =>
     CONTINUATION_TIGHTENING_ISSUE_TYPES.has(issue?.type),
   ) &&
   !preflightIssues.some((issue) => issue?.type === "required-image-failed");
+
+function getContinuationTighteningRetry(
+  documentBundle,
+  preflightIssues = [],
+  selectedForLabel = [],
+) {
+  if (
+    !shouldRetryWithContinuationTightening(
+      preflightIssues,
+      documentBundle?.model?.layout,
+    )
+  ) {
+    return null;
+  }
+
+  const issueCasNumbers = getContinuationRetryIssueCasNumbers(
+    documentBundle,
+    preflightIssues,
+  );
+  const currentContinuationTightnessLevel = issueCasNumbers.length
+    ? Math.max(
+        0,
+        ...selectedForLabel
+          .filter((chemical) => issueCasNumbers.includes(chemical?.cas_number))
+          .map(getChemicalContinuationTightnessLevel),
+      )
+    : clampContinuationTightnessLevel(
+        documentBundle.model.layout.continuationTightnessLevel,
+      );
+  const nextContinuationTightnessLevel =
+    currentContinuationTightnessLevel + 1;
+
+  if (nextContinuationTightnessLevel > MAX_CONTINUATION_TIGHTNESS_LEVEL) {
+    return null;
+  }
+
+  return {
+    issueCasNumbers,
+    nextContinuationTightnessLevel,
+    targeted: issueCasNumbers.length > 0,
+  };
+}
 
 export function printLabels(
   selectedForLabel,
@@ -4461,16 +4567,34 @@ export function printLabels(
         );
         return;
       }
-      if (
-        shouldRetryWithContinuationTightening(
-          preflightIssues,
-          documentBundle.model.layout,
-        )
-      ) {
-        const nextContinuationTightnessLevel =
-          clampContinuationTightnessLevel(
-            documentBundle.model.layout.continuationTightnessLevel,
-          ) + 1;
+      const continuationTighteningRetry = getContinuationTighteningRetry(
+        documentBundle,
+        preflightIssues,
+        selectedForLabel,
+      );
+      if (continuationTighteningRetry) {
+        const {
+          issueCasNumbers,
+          nextContinuationTightnessLevel,
+          targeted,
+        } = continuationTighteningRetry;
+        const nextSelectedForLabel = targeted
+          ? applyTargetedContinuationTightness(
+              selectedForLabel,
+              issueCasNumbers,
+              nextContinuationTightnessLevel,
+            )
+          : selectedForLabel;
+        const nextLabelConfig = targeted
+          ? {
+              ...labelConfig,
+              autoFitLevel: documentBundle.model.layout.autoFitLevel,
+            }
+          : {
+              ...labelConfig,
+              autoFitLevel: documentBundle.model.layout.autoFitLevel,
+              __continuationTightnessLevel: nextContinuationTightnessLevel,
+            };
         recordObservabilityEvent("print_continuation_tightening_retry", {
           status: "retry",
           count: lifecycleMeta.totalLabels || 1,
@@ -4478,20 +4602,14 @@ export function printLabels(
             ...lifecycleMeta,
             nextContinuationTightnessLevel,
             issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
-            issueCasNumbers: getPreflightIssueCasNumbers(
-              documentBundle,
-              preflightIssues,
-            ),
+            issueCasNumbers,
+            targeted,
           },
         });
         iframe.remove();
         printLabels(
-          selectedForLabel,
-          {
-            ...labelConfig,
-            autoFitLevel: documentBundle.model.layout.autoFitLevel,
-            __continuationTightnessLevel: nextContinuationTightnessLevel,
-          },
+          nextSelectedForLabel,
+          nextLabelConfig,
           customGHSSettings,
           customLabelFields,
           labelQuantities,

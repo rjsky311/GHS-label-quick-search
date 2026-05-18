@@ -10,7 +10,10 @@ import {
   resolvePrintContentPolicy,
   shouldUseHazardCodesOnly,
 } from "@/utils/printContentPolicy";
-import { isFullPagePrimaryStockId } from "@/constants/labelStocks";
+import {
+  isFullPagePrimaryStockId,
+  resolvePrintLayoutConfig,
+} from "@/constants/labelStocks";
 import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
@@ -169,8 +172,16 @@ const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
   };
 };
 
+const MAX_CONTINUATION_TIGHTNESS_LEVEL = 8;
+
 const clampContinuationTightnessLevel = (value) =>
-  Math.max(0, Math.min(4, Math.trunc(Number(value) || 0)));
+  Math.max(
+    0,
+    Math.min(
+      MAX_CONTINUATION_TIGHTNESS_LEVEL,
+      Math.trunc(Number(value) || 0),
+    ),
+  );
 
 const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
   const level = clampContinuationTightnessLevel(
@@ -183,22 +194,36 @@ const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
     2: { split: 0.74, page: 0.78, text: 0.78, mixed: 0.8 },
     3: { split: 0.62, page: 0.66, text: 0.68, mixed: 0.7 },
     4: { split: 0.52, page: 0.58, text: 0.6, mixed: 0.62 },
+    5: { split: 0.44, page: 0.5, text: 0.52, mixed: 0.54 },
+    6: { split: 0.36, page: 0.42, text: 0.45, mixed: 0.48 },
+    7: { split: 0.3, page: 0.35, text: 0.38, mixed: 0.42 },
+    8: { split: 0.24, page: 0.3, text: 0.32, mixed: 0.36 },
   };
   const scale = scales[level] || scales[1];
+  const minSplitStatements = level >= 7 ? 6 : level >= 5 ? 8 : 12;
+  const minPageStatements = level >= 7 ? 4 : level >= 5 ? 6 : 12;
+  const minContinuationStatements = level >= 7 ? 4 : level >= 5 ? 6 : 14;
+  const minSplitLineUnits = level >= 7 ? 10 : level >= 5 ? 16 : 24;
+  const minPageLineUnits = level >= 7 ? 10 : level >= 5 ? 16 : 24;
+  const minContinuationLineUnits = level >= 7 ? 10 : level >= 5 ? 16 : 28;
 
   return {
     ...capacity,
     splitStatementCount: scaleFiniteLimit(
       capacity.splitStatementCount,
       scale.split,
-      12,
+      minSplitStatements,
     ),
     splitTextWeight: scaleFiniteLimit(capacity.splitTextWeight, scale.text, 1800),
-    splitLineUnits: scaleFiniteLimit(capacity.splitLineUnits, scale.split, 24),
+    splitLineUnits: scaleFiniteLimit(
+      capacity.splitLineUnits,
+      scale.split,
+      minSplitLineUnits,
+    ),
     firstPageStatementCount: scaleFiniteLimit(
       capacity.firstPageStatementCount,
       scale.page,
-      12,
+      minPageStatements,
     ),
     firstPageTextWeight: scaleFiniteLimit(
       capacity.firstPageTextWeight,
@@ -208,12 +233,12 @@ const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
     firstPageLineUnits: scaleFiniteLimit(
       capacity.firstPageLineUnits,
       scale.page,
-      24,
+      minPageLineUnits,
     ),
     continuationPageStatementCount: scaleFiniteLimit(
       capacity.continuationPageStatementCount,
       scale.page,
-      14,
+      minContinuationStatements,
     ),
     continuationPageTextWeight: scaleFiniteLimit(
       capacity.continuationPageTextWeight,
@@ -223,12 +248,12 @@ const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
     continuationPageLineUnits: scaleFiniteLimit(
       capacity.continuationPageLineUnits,
       scale.page,
-      28,
+      minContinuationLineUnits,
     ),
     precautionOnlyStatementCount: scaleFiniteLimit(
       capacity.precautionOnlyStatementCount,
       scale.page,
-      12,
+      minPageStatements,
     ),
     precautionOnlyTextWeight: scaleFiniteLimit(
       capacity.precautionOnlyTextWeight,
@@ -238,7 +263,7 @@ const applyContinuationTightnessCapacity = (capacity, layout = {}) => {
     precautionOnlyLineUnits: scaleFiniteLimit(
       capacity.precautionOnlyLineUnits,
       scale.page,
-      28,
+      minContinuationLineUnits,
     ),
     mixedPrecautionStatementCount: scaleFiniteLimit(
       capacity.mixedPrecautionStatementCount,
@@ -752,6 +777,21 @@ const buildContentOptions = (model) => ({
   locale: model.locale || "zh",
 });
 
+const getEffectiveLabelLayoutForContentFit = (chemical, layout = {}) => {
+  const override =
+    chemical?.__printLayoutOverride ||
+    chemical?.sourceChemical?.__printLayoutOverride ||
+    null;
+
+  if (!override) return layout;
+
+  return resolvePrintLayoutConfig({
+    ...layout,
+    ...override,
+    template: override.template || layout.template,
+  });
+};
+
 const inspectSupplementalContentFitForContents = (
   contents,
   layout = {},
@@ -821,10 +861,7 @@ export function inspectPrintContentFit(model) {
   }
 
   const labelIssues = model.expandedLabels.flatMap((chemical, index) => {
-    const labelLayout =
-      chemical?.__printLayoutOverride ||
-      chemical?.sourceChemical?.__printLayoutOverride ||
-      layout;
+    const labelLayout = getEffectiveLabelLayoutForContentFit(chemical, layout);
     const content = {
       index,
       ...buildPrintLabelContent(chemical, {

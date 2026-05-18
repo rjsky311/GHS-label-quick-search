@@ -1048,6 +1048,8 @@ describe("printLabels", () => {
       {},
     );
     jest.advanceTimersByTime(300);
+    jest.advanceTimersByTime(300);
+    jest.runOnlyPendingTimers();
 
     expect(mockIframeDoc.write).toHaveBeenCalledTimes(6);
     expect(mockIframeDoc.write.mock.calls[4][0]).toContain("label-fit-level-4");
@@ -1062,6 +1064,80 @@ describe("printLabels", () => {
             "compliance-precautions-overflow",
           ]),
           issueCasNumbers: expect.arrayContaining([mockChemical.cas_number]),
+        }),
+      }),
+    );
+    expect(mockIframeWindow.print).toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("targets A4 continuation retries to the CAS numbers that actually overflow", () => {
+    let labelQueryCount = 0;
+    const makeLabel = (panel) => ({
+      querySelector: jest.fn((selector) =>
+        selector === ".compliance-precaution-panel" ? panel : null,
+      ),
+      clientHeight: 100,
+      scrollHeight: 100,
+      clientWidth: 200,
+      scrollWidth: 200,
+    });
+    const fittingPanel = {
+      clientHeight: 34,
+      scrollHeight: 34,
+      clientWidth: 180,
+      scrollWidth: 180,
+    };
+    const overflowingPanel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 180,
+      scrollWidth: 180,
+    };
+    const secondChemical = {
+      ...mockChemical,
+      cas_number: "1003-09-4",
+      name_en: "2-Bromothiophene",
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (selector === ".label:not(.label-placeholder)") {
+        labelQueryCount += 1;
+        return labelQueryCount === 1
+          ? [makeLabel(fittingPanel), makeLabel(overflowingPanel)]
+          : [makeLabel(fittingPanel), makeLabel(fittingPanel)];
+      }
+      return [];
+    });
+
+    printLabels(
+      [mockChemical, secondChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+        nameDisplay: "both",
+        autoFitLevel: 4,
+      },
+      {},
+    );
+    jest.advanceTimersByTime(300);
+    jest.advanceTimersByTime(300);
+    jest.runOnlyPendingTimers();
+
+    expect(mockIframeDoc.write).toHaveBeenCalledTimes(2);
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "print_continuation_tightening_retry",
+      expect.objectContaining({
+        status: "retry",
+        meta: expect.objectContaining({
+          autoFitLevel: 4,
+          nextContinuationTightnessLevel: 1,
+          targeted: true,
+          issueTypes: expect.arrayContaining([
+            "compliance-precautions-overflow",
+          ]),
+          issueCasNumbers: [secondChemical.cas_number],
         }),
       }),
     );
@@ -1096,14 +1172,13 @@ describe("printLabels", () => {
     expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
-    expect(recordObservabilityEvent).toHaveBeenCalledWith(
-      "print_blocked",
-      expect.objectContaining({
-        meta: expect.objectContaining({
-          issueTypes: ["label-overflow"],
-        }),
-      }),
-    );
+    expect(
+      recordObservabilityEvent.mock.calls.some(
+        ([eventName, payload]) =>
+          eventName === "print_blocked" &&
+          payload?.meta?.issueTypes?.includes("label-overflow"),
+      ),
+    ).toBe(true);
   });
 
   it("still blocks complete primary labels when the rendered layout clips", () => {
@@ -1136,14 +1211,13 @@ describe("printLabels", () => {
     expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
-    expect(recordObservabilityEvent).toHaveBeenCalledWith(
-      "print_blocked",
-      expect.objectContaining({
-        meta: expect.objectContaining({
-          issueTypes: ["label-overflow"],
-        }),
-      }),
-    );
+    expect(
+      recordObservabilityEvent.mock.calls.some(
+        ([eventName, payload]) =>
+          eventName === "print_blocked" &&
+          payload?.meta?.issueTypes?.includes("label-overflow"),
+      ),
+    ).toBe(true);
   });
 
   it("calls print immediately when no images (300ms delay)", () => {
@@ -1540,7 +1614,7 @@ describe("printLabels", () => {
       expect.objectContaining({
         status: "blocked",
         labelKind: "complete-primary",
-        issueTypes: ["label-overflow"],
+        issueTypes: expect.arrayContaining(["label-overflow"]),
       }),
     );
     const statusElements = appendChildSpy.mock.calls
@@ -1551,7 +1625,7 @@ describe("printLabels", () => {
       expect.objectContaining({
         status: "blocked",
         labelKind: "complete-primary",
-        issueTypes: "label-overflow",
+        issueTypes: expect.stringContaining("label-overflow"),
       }),
     );
   });
