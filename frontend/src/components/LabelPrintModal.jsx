@@ -1211,6 +1211,14 @@ export default function LabelPrintModal({
   const statementSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
       ? tx("label.decisionTextBlocked", "Do not print yet")
+      : isQrSupplementOutput
+        ? qrTargetInfo
+          ? tx(
+              "label.decisionTextQrScanSpecific",
+              "Details via QR: {{target}}",
+              { target: qrTargetRoleLabel },
+            )
+          : tx("label.decisionTextQrScan", "Details via QR/SDS")
       : isContinuationOutput ||
           contentPolicy.hazardTextMode ===
             PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION
