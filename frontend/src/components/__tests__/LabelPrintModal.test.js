@@ -706,7 +706,7 @@ describe("LabelPrintModal", () => {
       "trust.supplementalTitle",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
-      "Details via QR: Lookup page",
+      "Details via QR: GHS Label Quick Search",
     );
     const qrChecklist = screen.getByTestId("required-output-checklist");
     expect(qrChecklist).toHaveTextContent("This label prints");
