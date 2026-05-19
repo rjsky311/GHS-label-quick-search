@@ -879,6 +879,7 @@ export default function LabelPrintModal({
       : null;
   const qrTargetRoleLabel = getQrTargetRoleLabel(qrTargetInfo?.linkType, tx);
   const qrTargetSourceLabel = getQrTargetSourceLabel(qrTargetInfo?.source, tx);
+  const qrTargetSummaryLabel = qrTargetInfo?.label || qrTargetRoleLabel;
   const currentLocale = i18n.language;
   const effectiveNameDisplay = resolveEffectiveLabelNameDisplay(
     layoutProfile,
@@ -1216,7 +1217,7 @@ export default function LabelPrintModal({
           ? tx(
               "label.decisionTextQrScanSpecific",
               "Details via QR: {{target}}",
-              { target: qrTargetRoleLabel },
+              { target: qrTargetSummaryLabel },
             )
           : tx("label.decisionTextQrScan", "Details via QR/SDS")
       : isContinuationOutput ||
@@ -1231,7 +1232,7 @@ export default function LabelPrintModal({
               ? tx(
                   "label.decisionTextQrScanSpecific",
                   "Details via QR: {{target}}",
-                  { target: qrTargetRoleLabel },
+                  { target: qrTargetSummaryLabel },
                 )
               : tx("label.decisionTextQrScan", "Details via QR/SDS")
             : contentPolicy.hazardTextMode ===
