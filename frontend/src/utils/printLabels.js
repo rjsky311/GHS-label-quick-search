@@ -2201,14 +2201,15 @@ const buildStyles = (model) => {
     }
     .small-identity {
       display: grid;
-      gap: 0.45mm;
+      gap: 0.5mm;
       min-width: 0;
-      line-height: 1.06;
+      line-height: 1.16;
     }
     .small-cas {
       font-family: "Consolas", "Monaco", "Courier New", monospace;
       color: #334155;
       font-weight: 800;
+      line-height: 1.14;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: clip;
@@ -2216,6 +2217,7 @@ const buildStyles = (model) => {
     .small-name-en {
       color: #0f172a;
       font-weight: 850;
+      line-height: 1.16;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -2224,6 +2226,7 @@ const buildStyles = (model) => {
     .small-name-zh {
       color: #334155;
       font-weight: 750;
+      line-height: 1.16;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -2978,31 +2981,33 @@ const buildStyles = (model) => {
       margin-bottom: 0;
     }
     .label-icon.label-form-strip .small-identity {
-      gap: 0.18mm;
+      gap: 0.14mm;
     }
     .label-icon.label-form-strip .small-cas {
-      font-size: 6.2px;
-      line-height: 1;
+      font-size: 6.6px;
+      line-height: 1.14;
     }
     .label-icon.label-form-strip .small-name-en {
-      font-size: 6.8px;
-      line-height: 1;
+      font-size: 6.35px;
+      line-height: 1.16;
     }
-    .label-icon.label-form-strip .identity-density-medium .small-name-en {
-      font-size: 6.2px;
+    .label-icon.label-form-strip .identity-density-medium .small-name-en,
+    .label-icon.label-form-strip .identity-density-medium .small-name-zh {
+      font-size: 5.85px;
     }
-    .label-icon.label-form-strip .identity-density-high .small-name-en {
-      font-size: 5.6px;
+    .label-icon.label-form-strip .identity-density-high .small-name-en,
+    .label-icon.label-form-strip .identity-density-high .small-name-zh {
+      font-size: 5.3px;
     }
     .label-icon.label-form-strip .small-name-zh {
-      font-size: 6px;
-      line-height: 1;
+      font-size: 6.35px;
+      line-height: 1.16;
     }
-    .label-icon.label-form-strip .identity-density-medium .small-name-zh,
-    .label-icon.label-form-strip .identity-density-high .small-name-zh,
-    .label-icon.label-form-strip .identity-density-medium .small-cas,
+    .label-icon.label-form-strip .identity-density-medium .small-cas {
+      font-size: 6px;
+    }
     .label-icon.label-form-strip .identity-density-high .small-cas {
-      font-size: 5.4px;
+      font-size: 5.6px;
     }
     .label-icon.label-form-strip .cas {
       display: block;
@@ -3305,39 +3310,41 @@ const buildStyles = (model) => {
       min-width: 0;
     }
     .label-qr.label-form-strip .small-identity {
-      gap: 0.05mm;
+      gap: 0.12mm;
     }
     .label-qr.label-form-strip .small-cas {
-      font-size: 5.7px;
-      line-height: 0.98;
+      font-size: 6.15px;
+      line-height: 1.14;
     }
     .label-qr.label-form-strip .small-name-en {
-      font-size: 5.9px;
-      line-height: 0.98;
+      font-size: 6px;
+      line-height: 1.16;
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
       overflow-wrap: anywhere;
     }
-    .label-qr.label-form-strip .identity-density-medium .small-name-en {
-      font-size: 5.3px;
+    .label-qr.label-form-strip .identity-density-medium .small-name-en,
+    .label-qr.label-form-strip .identity-density-medium .small-name-zh {
+      font-size: 5.45px;
     }
-    .label-qr.label-form-strip .identity-density-high .small-name-en {
-      font-size: 4.9px;
+    .label-qr.label-form-strip .identity-density-high .small-name-en,
+    .label-qr.label-form-strip .identity-density-high .small-name-zh {
+      font-size: 5.05px;
     }
     .label-qr.label-form-strip .small-name-zh {
-      font-size: 5.9px;
-      line-height: 0.98;
+      font-size: 6px;
+      line-height: 1.16;
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
       overflow-wrap: anywhere;
     }
-    .label-qr.label-form-strip .identity-density-medium .small-name-zh,
-    .label-qr.label-form-strip .identity-density-high .small-name-zh,
-    .label-qr.label-form-strip .identity-density-medium .small-cas,
+    .label-qr.label-form-strip .identity-density-medium .small-cas {
+      font-size: 5.65px;
+    }
     .label-qr.label-form-strip .identity-density-high .small-cas {
-      font-size: 4.9px;
+      font-size: 5.25px;
     }
     .label-qr.label-form-strip .meta-ribbon {
       margin-top: 0.2mm;
@@ -3528,12 +3535,14 @@ const buildStyles = (model) => {
       gap: 0.35mm;
       padding-right: 0.55mm;
     }
-    .label-stock-small-rack.label-qr.label-form-strip .name-en {
-      font-size: 6.4px;
+    .label-stock-small-rack.label-qr.label-form-strip .small-name-en,
+    .label-stock-small-rack.label-qr.label-form-strip .small-name-zh {
+      font-size: 6.25px;
+      line-height: 1.16;
     }
-    .label-stock-small-rack.label-qr.label-form-strip .name-zh,
-    .label-stock-small-rack.label-qr.label-form-strip .cas {
-      font-size: 5.4px;
+    .label-stock-small-rack.label-qr.label-form-strip .small-cas {
+      font-size: 6.35px;
+      line-height: 1.14;
     }
     .label-stock-small-rack.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;

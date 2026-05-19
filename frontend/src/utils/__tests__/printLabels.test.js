@@ -1870,6 +1870,65 @@ describe("printLabels", () => {
       expect(preview.html).toContain("border-bottom: 0");
     });
 
+    it("uses readable small-label identity typography without clipping descenders", () => {
+      const descenderChemical = {
+        ...mockChemical,
+        cas_number: "107-18-6",
+        name_en: "Allyl Alcohol sample pyjamas",
+        name_zh: "烯丙醇樣品",
+      };
+
+      const quickIdPreview = buildPrintPreviewDocument(
+        [descenderChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+      const qrPreview = buildPrintPreviewDocument(
+        [descenderChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(quickIdPreview.fragmentHtml).toContain("Allyl Alcohol sample pyjamas");
+      expect(quickIdPreview.fragmentHtml).toContain("烯丙醇樣品");
+      expect(quickIdPreview.html).toContain(
+        ".label-icon.label-form-strip .small-name-en {\n      font-size: 6.35px;\n      line-height: 1.16;",
+      );
+      expect(quickIdPreview.html).toContain(
+        ".label-icon.label-form-strip .small-name-zh {\n      font-size: 6.35px;\n      line-height: 1.16;",
+      );
+      expect(quickIdPreview.html).toContain(
+        ".label-icon.label-form-strip .small-cas {\n      font-size: 6.6px;\n      line-height: 1.14;",
+      );
+      expect(qrPreview.html).toContain(
+        ".label-qr.label-form-strip .small-name-en {\n      font-size: 6px;\n      line-height: 1.16;",
+      );
+      expect(qrPreview.html).toContain(
+        ".label-qr.label-form-strip .small-name-zh {\n      font-size: 6px;\n      line-height: 1.16;",
+      );
+      expect(qrPreview.html).toContain(
+        ".label-qr.label-form-strip .small-cas {\n      font-size: 6.15px;\n      line-height: 1.14;",
+      );
+    });
+
     it("uses stock-specific horizontal pictogram rows for quick-ID labels", () => {
       const multiPictogramChemical = {
         ...mockChemical,
