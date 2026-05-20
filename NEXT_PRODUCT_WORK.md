@@ -65,6 +65,10 @@ Current mode:
   summaries, print preview/scoring, printed labels, export preview, backend
   export payloads, and frontend CSV fallback. English-only placeholders are
   omitted instead of being shown as Chinese.
+- Completed current slice: missing trusted Chinese names now have a contextual
+  Detail correction link that pre-fills CAS and English-name evidence context.
+  The admin manual-entry UI also blocks English-only `name_zh` before submit,
+  matching the backend validation boundary.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -77,7 +81,8 @@ Current mode:
    maintainer-side data lookup or evidence gathering. Keep source/QR/admin
    changes aligned with that policy and add tests when behavior changes. Keep
    missing Chinese names as a curation issue, not a display fallback that
-   repeats English.
+   repeats English; missing-name correction links should remain evidence-first
+   and admin-reviewed.
    Current baseline includes effective-classification source/report-count
    alignment and export-preview/CSV/XLSX trust columns.
 2. Harden and monitor the simplified three-output label workflow in

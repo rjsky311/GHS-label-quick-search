@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
+import { buildDataCorrectionUrl } from "@/constants/supportLinks";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
@@ -27,6 +28,8 @@ import {
   getLocalizedPictogramName,
   getLocalizedSignalWord,
   getLocalizedStatementText,
+  resolveEnglishName,
+  resolveTrustedChineseName,
 } from "@/utils/ghsText";
 
 const getSourceSummary = (source, t) => {
@@ -119,6 +122,16 @@ export default function DetailModal({
     allClassifications.length > 1 && allClassifications.some(hasGhsData);
   const referenceLinks = getReferenceLinks(result);
   const displayNames = getLocalizedNames(result, displayLocale);
+  const englishName = resolveEnglishName(result);
+  const trustedChineseName = resolveTrustedChineseName(result);
+  const missingChineseNameReportUrl =
+    result.found && englishName && !trustedChineseName
+      ? buildDataCorrectionUrl({
+          casNumber: result.cas_number,
+          nameEn: englishName,
+          issueType: "missing-chinese-name",
+        })
+      : "";
   const effectiveSource = effective?.source || result.primary_source;
   const effectiveReportCount = effective?.report_count || result.primary_report_count;
   const trustSummaryItems = [
@@ -281,6 +294,36 @@ export default function DetailModal({
         </div>
 
         <div className="p-6 space-y-6">
+          {missingChineseNameReportUrl ? (
+            <div
+              role="note"
+              data-testid="detail-missing-chinese-name-note"
+              className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 sm:flex-row sm:items-start sm:justify-between"
+            >
+              <span className="flex min-w-0 items-start gap-2">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                <span>
+                  <span className="block font-semibold">
+                    {t("detail.missingChineseNameTitle")}
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-amber-900">
+                    {t("detail.missingChineseNameHint")}
+                  </span>
+                </span>
+              </span>
+              <a
+                href={missingChineseNameReportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+                data-testid="detail-report-missing-chinese-name-link"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                {t("detail.reportChineseNameCta")}
+              </a>
+            </div>
+          ) : null}
+
           {/* Custom Classification Note Input */}
           {(result.has_multiple_classifications || result.other_classifications?.length > 0) && (
             <div className="rounded-md border border-blue-200 bg-blue-50 p-4">

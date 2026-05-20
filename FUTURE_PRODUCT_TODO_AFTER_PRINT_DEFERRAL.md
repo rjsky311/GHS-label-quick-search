@@ -233,6 +233,13 @@ Work items:
   fallback to that resolver.
 - Completed: added focused tests for trusted Chinese names, English-only
   placeholders, bilingual localized display, and CJK detection.
+- Completed: added a Detail-modal correction path for missing trusted Chinese
+  names. The generated GitHub data-correction link carries CAS and English
+  name context so maintainers can review a sourced Chinese name without asking
+  the user to retype the basics.
+- Completed: added frontend admin curation validation for manual dictionary
+  entries so English-only `name_zh` values are blocked before the backend write
+  request. The backend remains the final enforcement layer.
 - Keep missing Chinese names in the data-correction/admin-curation path rather
   than using automated translation as runtime label text.
 - Add examples when users find a CAS with a known Chinese name that is missing
@@ -248,6 +255,10 @@ Acceptance:
   English name, QR where applicable, and all GHS pictograms.
 - Exported `Chinese Name` cells follow the same trust boundary as the UI; CSV
   fallback still neutralizes spreadsheet formulas in the remaining cells.
+- Missing trusted Chinese names expose a contextual correction path in Detail
+  instead of being silently treated as translated or complete.
+- Admin manual-entry UI and backend validation both reject English-only
+  `name_zh` values.
 
 ## 2. User Guidance, Low-Noise UX, And First-Time Success
 

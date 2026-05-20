@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import { formatRelativeTime } from "@/utils/formatDate";
+import { hasCjkText } from "@/utils/ghsText";
 
 function SummaryCard({ label, value, accent = "text-blue-700", testId }) {
   return (
@@ -93,11 +94,22 @@ export default function PilotDashboardSidebar(props) {
 
   const submitManualEntry = async (event) => {
     event.preventDefault();
+    const trimmedChineseName = manualEntryForm.name_zh.trim();
+    if (trimmedChineseName && !hasCjkText(trimmedChineseName)) {
+      toast.error(
+        t("pilot.manualChineseNameRequiresCjk", {
+          defaultValue:
+            "Chinese name must contain Chinese characters. Put English aliases in the English name or alias fields.",
+        })
+      );
+      return;
+    }
+
     try {
       await onSaveManualEntry({
         cas_number: manualEntryForm.cas_number.trim(),
         name_en: manualEntryForm.name_en.trim() || null,
-        name_zh: manualEntryForm.name_zh.trim() || null,
+        name_zh: trimmedChineseName || null,
         notes: manualEntryForm.notes.trim(),
       });
       toast.success(
@@ -504,9 +516,19 @@ export default function PilotDashboardSidebar(props) {
                       setManualEntryForm((prev) => ({ ...prev, name_zh: event.target.value }))
                     }
                     placeholder={t("pilot.chineseNamePlaceholder", { defaultValue: "Chinese name" })}
+                    aria-describedby="manual-entry-name-zh-hint"
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     data-testid="manual-entry-name-zh-input"
                   />
+                  <p
+                    id="manual-entry-name-zh-hint"
+                    className="text-xs leading-5 text-slate-500 md:col-span-2"
+                  >
+                    {t("pilot.chineseNameCurationHint", {
+                      defaultValue:
+                        "Use this field only for verified Chinese names. English synonyms belong in the English name or alias fields.",
+                    })}
+                  </p>
                   <input
                     value={manualEntryForm.notes}
                     onChange={(event) =>

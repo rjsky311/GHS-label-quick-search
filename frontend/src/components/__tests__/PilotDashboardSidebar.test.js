@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import PilotDashboardSidebar from "../PilotDashboardSidebar";
+import { toast } from "sonner";
 
 jest.mock("sonner", () => ({
   toast: {
@@ -97,7 +98,7 @@ describe("PilotDashboardSidebar", () => {
       target: { value: "Pilot Solvent" },
     });
     fireEvent.change(screen.getByTestId("manual-entry-name-zh-input"), {
-      target: { value: "Ce shi rong ji" },
+      target: { value: "測試溶劑" },
     });
 
     fireEvent.click(screen.getByTestId("manual-entry-submit-btn"));
@@ -106,9 +107,33 @@ describe("PilotDashboardSidebar", () => {
       expect(baseProps.onSaveManualEntry).toHaveBeenCalledWith({
         cas_number: "321-54-7",
         name_en: "Pilot Solvent",
-        name_zh: "Ce shi rong ji",
+        name_zh: "測試溶劑",
         notes: "",
       });
     });
+  });
+
+  it("blocks manual Chinese names that do not contain Chinese characters", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.change(screen.getByTestId("manual-entry-cas-input"), {
+      target: { value: "321-54-7" },
+    });
+    fireEvent.change(screen.getByTestId("manual-entry-name-en-input"), {
+      target: { value: "Pilot Solvent" },
+    });
+    fireEvent.change(screen.getByTestId("manual-entry-name-zh-input"), {
+      target: { value: "Ce shi rong ji" },
+    });
+
+    fireEvent.click(screen.getByTestId("manual-entry-submit-btn"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "pilot.manualChineseNameRequiresCjk"
+      );
+    });
+    expect(baseProps.onSaveManualEntry).not.toHaveBeenCalled();
   });
 });

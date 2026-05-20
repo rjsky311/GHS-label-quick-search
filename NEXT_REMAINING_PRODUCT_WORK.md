@@ -79,7 +79,9 @@ implementation checklist.
   placeholders in `name_zh`/`name_zh_tw` are omitted rather than repeated as
   fake Chinese identity. Admin manual dictionary writes also reject English-only
   `name_zh`, so the curated source of truth can stay empty rather than becoming
-  polluted.
+  polluted. The Detail modal now gives missing trusted Chinese names a
+  contextual data-correction link, and the admin curation form blocks
+  English-only `name_zh` before submit.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.

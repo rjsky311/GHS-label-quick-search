@@ -50,6 +50,13 @@ Rules:
   evidence. Admin manual entries should accept an empty `name_zh` while the
   name is unknown, but must reject English-only `name_zh` values so the source
   of truth does not create fake Chinese identity.
+- Detail views may expose a contextual data-correction link when a result has
+  an English identity but no trusted Chinese name. That link should carry CAS
+  and English-name context, but the submitted correction still needs SDS,
+  supplier-label, or regulatory evidence before it becomes an accepted
+  dictionary/manual entry.
+- Admin curation UI should enforce the same Chinese-name boundary as the
+  backend: `name_zh` can be empty, but non-empty values must contain CJK text.
 - Future unknown-name support should treat Chinese-name discovery as a curation
   workflow: collect the missed CAS/name, suggest candidate names from trusted
   SDS/supplier/regulatory references when available, then require admin review

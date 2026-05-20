@@ -141,6 +141,27 @@ describe('DetailModal', () => {
       expect(screen.getByText('乙醇')).toBeInTheDocument();
     });
 
+    it('shows a contextual correction link when a trusted Chinese name is missing', () => {
+      const missingChineseName = {
+        ...mockFoundResult,
+        name_en: 'Allyl Alcohol',
+        name_zh: 'Allyl Alcohol',
+        name: 'Allyl Alcohol',
+        cas_number: '107-18-6',
+      };
+
+      render(<DetailModal {...defaultProps} result={missingChineseName} />);
+
+      expect(screen.getByTestId('detail-missing-chinese-name-note')).toBeInTheDocument();
+      const reportLink = screen.getByTestId('detail-report-missing-chinese-name-link');
+      const url = new URL(reportLink.getAttribute('href'));
+      expect(url.searchParams.get('template')).toBe('data-correction.yml');
+      expect(url.searchParams.get('labels')).toBe('data-correction');
+      expect(url.searchParams.get('title')).toBe('Missing Chinese name: 107-18-6');
+      expect(url.searchParams.get('body')).toContain('- CAS: 107-18-6');
+      expect(url.searchParams.get('body')).toContain('- English name: Allyl Alcohol');
+    });
+
     it('renders CAS number', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText(/64-17-5/)).toBeInTheDocument();

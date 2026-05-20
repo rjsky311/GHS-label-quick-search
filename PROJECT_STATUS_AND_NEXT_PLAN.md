@@ -152,6 +152,9 @@ Current completion snapshot:
   endpoints use the same CJK-only boundary for the `Chinese Name` column.
   Admin manual dictionary writes now also reject English-only `name_zh`, while
   still allowing the field to stay empty until a sourced Chinese name is known.
+  The Detail modal now exposes a contextual data-correction link for missing
+  trusted Chinese names, and the admin manual-entry UI blocks English-only
+  Chinese-name submissions before the backend request.
 
 ## 3. Next Priority Order
 
@@ -396,7 +399,9 @@ Do next:
 - Keep dictionary miss telemetry opt-in, bounded, and abuse-resistant.
 - Keep Chinese display names honest: show only dictionary/manual values that
   contain real CJK text, and route missing names into curation rather than
-  repeating English as fake Chinese.
+  repeating English as fake Chinese. Missing-name correction links should carry
+  CAS and English-name context, but accepted entries still require sourced
+  evidence and admin review.
 - Keep manual entries, aliases, and reference links admin-gated.
 - Make "unavailable upstream data" impossible to confuse with "no hazards."
 - Keep data-correction requests separate from workflow/business requests.
