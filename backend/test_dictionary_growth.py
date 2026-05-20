@@ -122,7 +122,7 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
             json={
                 "cas_number": "321-54-7",
                 "name_en": "Pilot Solvent",
-                "name_zh": "Pilot Solvent ZH",
+                "name_zh": "試驗溶劑",
                 "notes": "seeded from admin panel",
             },
             headers=ADMIN_HEADERS,
