@@ -26,7 +26,13 @@ import csv
 import random
 import re
 from cachetools import TTLCache
-from pilot_store import APPROVED_ALIAS_STATUS, PilotStore, infer_locale, normalize_compact_text
+from pilot_store import (
+    APPROVED_ALIAS_STATUS,
+    MISS_QUERY_STATUSES,
+    PilotStore,
+    infer_locale,
+    normalize_compact_text,
+)
 
 # Import expanded chemical dictionaries (1709 CAS entries, 1863 English entries)
 # + alias dictionaries for common/colloquial chemical names
@@ -744,6 +750,29 @@ class DictionaryMissQueryPayload(BaseModel):
         if len(encoded) > MAX_MISS_CONTEXT_JSON_CHARS:
             raise ValueError("context payload is too large")
         return _sanitize_dictionary_miss_context(value)
+
+
+class DictionaryMissQueryResolutionPayload(BaseModel):
+    resolution_status: str = Field(..., min_length=1, max_length=40)
+    resolved_cas: Optional[str] = Field(default=None, max_length=MAX_ADMIN_CAS_LENGTH)
+
+    @field_validator("resolution_status")
+    @classmethod
+    def status_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in MISS_QUERY_STATUSES:
+            raise ValueError(
+                "resolution_status must be open, needs_evidence, resolved, or ignored"
+            )
+        return normalized
+
+    @field_validator("resolved_cas")
+    @classmethod
+    def resolved_cas_is_trimmed(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = normalize_cas(value)
+        return normalized or None
 
 
 class DictionaryManualEntryPayload(BaseModel):
@@ -1964,6 +1993,27 @@ async def dictionary_miss_query(request: Request, payload: DictionaryMissQueryPa
             context=payload.context,
         ),
     }
+
+
+@api_router.post("/dictionary/miss-queries/{miss_id}/resolution")
+async def update_dictionary_miss_query_resolution(
+    request: Request,
+    miss_id: int,
+    payload: DictionaryMissQueryResolutionPayload,
+):
+    _require_admin(request)
+    try:
+        record = pilot_store.update_miss_query_resolution(
+            miss_id,
+            resolution_status=payload.resolution_status,
+            resolved_cas=payload.resolved_cas,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if record is None:
+        raise HTTPException(status_code=404, detail="Miss query not found.")
+    return {"ok": True, "record": record}
 
 
 @api_router.get("/workspace/{doc_type}")

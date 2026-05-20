@@ -134,6 +134,7 @@ function App() {
     saveManualEntry: savePilotManualEntry,
     saveAlias: savePilotAlias,
     saveReferenceLink: savePilotReferenceLink,
+    resolveMissQuery: resolvePilotMissQuery,
   } = usePilotDashboard({
     enabled: showPilotDashboard && PILOT_ADMIN_ENABLED && Boolean(pilotAdminKey),
     adminKey: pilotAdminKey,
@@ -840,6 +841,7 @@ function App() {
           onSaveManualEntry={savePilotManualEntry}
           onSaveAlias={savePilotAlias}
           onSaveReferenceLink={savePilotReferenceLink}
+          onResolveMissQuery={resolvePilotMissQuery}
         />
       )}
 

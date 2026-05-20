@@ -12,6 +12,7 @@ DEFAULT_SCOPE = "default"
 DEFAULT_DOC_KEY = "default"
 APPROVED_ALIAS_STATUS = "approved"
 ACTIVE_REFERENCE_STATUS = "active"
+MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -578,6 +579,21 @@ class PilotStore:
             )
 
     # Miss-query workflow -------------------------------------------------
+    def _miss_query_row_to_dict(self, row: sqlite3.Row) -> dict[str, Any]:
+        item = dict(row)
+        item["context"] = json.loads(item.pop("context_json") or "{}")
+        item["query"] = item.get("query_text")
+        item["queryKind"] = item.get("query_kind")
+        item["resolutionStatus"] = item.get("resolution_status")
+        item["resolvedCas"] = item.get("resolved_cas")
+        return item
+
+    def _normalize_miss_query_status(self, value: Optional[str]) -> str:
+        status = (value or "open").strip().lower()
+        if status not in MISS_QUERY_STATUSES:
+            raise ValueError("unsupported miss query resolution status")
+        return status
+
     def record_miss_query(
         self,
         query_text: str,
@@ -595,12 +611,14 @@ class PilotStore:
         query_norm = normalize_query_text(query_text, locale=locale)
         now = utc_now_iso()
         context_json = json.dumps(context or {}, ensure_ascii=False)
+        resolution_status = self._normalize_miss_query_status(resolution_status)
+        resolved_cas = (resolved_cas or "").strip() or None
 
         with self._lock:
             conn = self._require_conn()
             existing = conn.execute(
                 """
-                SELECT id, hit_count
+                SELECT id, hit_count, resolution_status, resolved_cas
                 FROM dictionary_miss_queries
                 WHERE query_norm = ? AND query_kind = ? AND endpoint = ?
                 """,
@@ -637,6 +655,15 @@ class PilotStore:
                     ),
                 )
             else:
+                next_status = resolution_status
+                next_resolved_cas = resolved_cas
+                if (
+                    resolution_status == "open"
+                    and not resolved_cas
+                    and existing["resolution_status"] != "open"
+                ):
+                    next_status = existing["resolution_status"]
+                    next_resolved_cas = existing["resolved_cas"]
                 conn.execute(
                     """
                     UPDATE dictionary_miss_queries
@@ -653,8 +680,8 @@ class PilotStore:
                         query_text,
                         now,
                         int(existing["hit_count"] or 0) + 1,
-                        resolution_status,
-                        resolved_cas,
+                        next_status,
+                        next_resolved_cas,
                         context_json,
                         query_norm,
                         query_kind,
@@ -663,19 +690,31 @@ class PilotStore:
                 )
             conn.commit()
 
-        return {
-            "query": query_text,
-            "queryNorm": query_norm,
-            "queryKind": query_kind,
-            "endpoint": endpoint,
-            "resolutionStatus": resolution_status,
-            "resolvedCas": resolved_cas,
-        }
+        row = self._fetchone(
+            """
+            SELECT
+              id,
+              query_text,
+              query_kind,
+              endpoint,
+              first_seen_at,
+              last_seen_at,
+              hit_count,
+              resolution_status,
+              resolved_cas,
+              context_json
+            FROM dictionary_miss_queries
+            WHERE query_norm = ? AND query_kind = ? AND endpoint = ?
+            """,
+            (query_norm, query_kind, endpoint),
+        )
+        return self._miss_query_row_to_dict(row) if row is not None else None
 
     def list_miss_queries(self, *, limit: int = 50) -> list[dict[str, Any]]:
         rows = self._fetchall(
             """
             SELECT
+              id,
               query_text,
               query_kind,
               endpoint,
@@ -691,12 +730,48 @@ class PilotStore:
             """,
             (limit,),
         )
-        result = []
-        for row in rows:
-            item = dict(row)
-            item["context"] = json.loads(item.pop("context_json") or "{}")
-            result.append(item)
-        return result
+        return [self._miss_query_row_to_dict(row) for row in rows]
+
+    def update_miss_query_resolution(
+        self,
+        miss_id: int,
+        *,
+        resolution_status: str,
+        resolved_cas: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
+        status = self._normalize_miss_query_status(resolution_status)
+        normalized_cas = (resolved_cas or "").strip() or None
+
+        if status == "resolved" and not normalized_cas:
+            raise ValueError("resolved miss queries require a CAS number")
+
+        self._execute(
+            """
+            UPDATE dictionary_miss_queries
+            SET resolution_status = ?, resolved_cas = ?
+            WHERE id = ?
+            """,
+            (status, normalized_cas, miss_id),
+        )
+        row = self._fetchone(
+            """
+            SELECT
+              id,
+              query_text,
+              query_kind,
+              endpoint,
+              first_seen_at,
+              last_seen_at,
+              hit_count,
+              resolution_status,
+              resolved_cas,
+              context_json
+            FROM dictionary_miss_queries
+            WHERE id = ?
+            """,
+            (miss_id,),
+        )
+        return self._miss_query_row_to_dict(row) if row is not None else None
 
     # Reference links -----------------------------------------------------
     def upsert_reference_link(

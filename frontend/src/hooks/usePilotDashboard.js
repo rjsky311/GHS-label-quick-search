@@ -118,6 +118,18 @@ export default function usePilotDashboard(options = {}) {
     [performMutation, requestConfig]
   );
 
+  const resolveMissQuery = useCallback(
+    async (missId, payload) =>
+      performMutation(() =>
+        axios.post(
+          `${API}/dictionary/miss-queries/${missId}/resolution`,
+          payload,
+          requestConfig
+        )
+      ),
+    [performMutation, requestConfig]
+  );
+
   return {
     report,
     aliases,
@@ -131,5 +143,6 @@ export default function usePilotDashboard(options = {}) {
     saveManualEntry,
     saveAlias,
     saveReferenceLink,
+    resolveMissQuery,
   };
 }

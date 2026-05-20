@@ -55,6 +55,7 @@ export default function PilotDashboardSidebar(props) {
     onSaveManualEntry,
     onSaveAlias,
     onSaveReferenceLink,
+    onResolveMissQuery,
   } = props;
   const { t } = useTranslation();
   const panelRef = useFocusTrap(onClose);
@@ -79,6 +80,7 @@ export default function PilotDashboardSidebar(props) {
     link_type: "reference",
     priority: "50",
   });
+  const [missResolutionDrafts, setMissResolutionDrafts] = useState({});
 
   const dictionary = report?.dictionary || {};
   const counters = report?.counters || {};
@@ -205,6 +207,48 @@ export default function PilotDashboardSidebar(props) {
           submitError?.message ||
           t("pilot.aliasDecisionFailed", {
             defaultValue: "Failed to update alias status.",
+          })
+      );
+    }
+  };
+
+  const handleMissQueryResolution = async (item, status) => {
+    const missId = item?.id;
+    if (!missId || !onResolveMissQuery) return;
+    const resolvedCas =
+      status === "resolved" ? (missResolutionDrafts[missId] || "").trim() : null;
+    if (status === "resolved" && !resolvedCas) {
+      toast.error(
+        t("pilot.missResolvedCasRequired", {
+          defaultValue: "Enter a CAS number before marking this query resolved.",
+        })
+      );
+      return;
+    }
+
+    try {
+      await onResolveMissQuery(missId, {
+        resolution_status: status,
+        resolved_cas: resolvedCas,
+      });
+      if (status === "resolved") {
+        setMissResolutionDrafts((prev) => ({ ...prev, [missId]: "" }));
+      }
+      toast.success(
+        status === "resolved"
+          ? t("pilot.missResolved", { defaultValue: "Miss query marked resolved." })
+          : status === "needs_evidence"
+            ? t("pilot.missNeedsEvidence", {
+                defaultValue: "Miss query marked as needs evidence.",
+              })
+            : t("pilot.missIgnored", { defaultValue: "Miss query ignored." })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.missDecisionFailed", {
+            defaultValue: "Failed to update miss query.",
           })
       );
     }
@@ -359,7 +403,9 @@ export default function PilotDashboardSidebar(props) {
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {missQueries.map((item, index) => (
+                    {missQueries.map((item, index) => {
+                      const missId = item.id || `${item.query_text}-${index}`;
+                      return (
                       <div
                         key={`${item.query_text}-${index}`}
                         className="rounded-lg border border-slate-200 bg-slate-50 p-3"
@@ -370,13 +416,64 @@ export default function PilotDashboardSidebar(props) {
                             <div className="mt-1 text-xs text-slate-500">
                               {item.query_kind} | {item.endpoint} | {item.hit_count}x
                             </div>
+                            <div className="mt-1 text-xs text-slate-500">
+                              {t("pilot.missStatus", { defaultValue: "Status" })}:{" "}
+                              {item.resolution_status || "open"}
+                              {item.resolved_cas ? ` | ${item.resolved_cas}` : ""}
+                            </div>
                           </div>
                           <div className="text-xs text-slate-500">
                             {formatRelativeTime(item.last_seen_at)}
                           </div>
                         </div>
+                        <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+                          <input
+                            value={missResolutionDrafts[missId] || ""}
+                            onChange={(event) =>
+                              setMissResolutionDrafts((prev) => ({
+                                ...prev,
+                                [missId]: event.target.value,
+                              }))
+                            }
+                            placeholder={t("pilot.missResolvedCasPlaceholder", {
+                              defaultValue: "Resolved CAS",
+                            })}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                            data-testid={`miss-query-resolved-cas-${missId}`}
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleMissQueryResolution(item, "resolved")}
+                              disabled={saving || !item.id}
+                              className="rounded bg-emerald-700 px-3 py-2 text-xs text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`resolve-miss-query-${missId}`}
+                            >
+                              {t("pilot.resolveMiss", { defaultValue: "Resolve" })}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMissQueryResolution(item, "needs_evidence")}
+                              disabled={saving || !item.id}
+                              className="rounded bg-amber-600 px-3 py-2 text-xs text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`needs-evidence-miss-query-${missId}`}
+                            >
+                              {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMissQueryResolution(item, "ignored")}
+                              disabled={saving || !item.id}
+                              className="rounded bg-slate-700 px-3 py-2 text-xs text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`ignore-miss-query-${missId}`}
+                            >
+                              {t("pilot.ignoreMiss", { defaultValue: "Ignore" })}
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 )}
               </section>

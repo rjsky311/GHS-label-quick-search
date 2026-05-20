@@ -203,6 +203,10 @@ Telemetry:
 - Telemetry must not become a public unbounded write path into SQLite.
 - Frontend miss reporting should be best-effort only. It must not block search
   UX, and it must send only the allow-listed context fields above.
+- Admin review can move miss-query rows through `open`, `needs_evidence`,
+  `resolved`, and `ignored`. `resolved` requires a reviewed CAS number; repeated
+  duplicate capture must not reopen a row that has already been marked
+  non-open.
 
 Retention and review rules:
 

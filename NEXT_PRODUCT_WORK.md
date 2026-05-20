@@ -81,6 +81,10 @@ Current mode:
   report count, source family, and pictogram/H/P coverage. The same evidence is
   rendered in desktop tables and narrow cards, with `qa:production-search-ui`
   checking deployed coverage.
+- Completed current slice: dictionary miss telemetry now has an admin review
+  closure path. The dashboard can mark captured misses as resolved with CAS,
+  needs-evidence, or ignored, and duplicate capture preserves already reviewed
+  non-open rows.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

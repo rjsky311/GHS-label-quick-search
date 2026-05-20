@@ -18,10 +18,14 @@ const baseProps = {
       referenceLinkCount: 4,
       topMissQueries: [
         {
+          id: 101,
           query_text: "mystery solvent",
           query_kind: "name",
           endpoint: "search_single",
           hit_count: 2,
+          resolution_status: "open",
+          resolved_cas: null,
+          context: {},
           last_seen_at: "2026-04-18T00:00:00+00:00",
         },
       ],
@@ -56,6 +60,7 @@ const baseProps = {
   onSaveManualEntry: jest.fn(async () => ({ ok: true })),
   onSaveAlias: jest.fn(async () => ({ ok: true })),
   onSaveReferenceLink: jest.fn(async () => ({ ok: true })),
+  onResolveMissQuery: jest.fn(async () => ({ ok: true })),
 };
 
 describe("PilotDashboardSidebar", () => {
@@ -85,6 +90,46 @@ describe("PilotDashboardSidebar", () => {
         notes: "",
       });
     });
+  });
+
+  it("marks a miss query as needing evidence from the overview tab", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("needs-evidence-miss-query-101"));
+
+    await waitFor(() => {
+      expect(baseProps.onResolveMissQuery).toHaveBeenCalledWith(101, {
+        resolution_status: "needs_evidence",
+        resolved_cas: null,
+      });
+    });
+  });
+
+  it("resolves a miss query with a reviewed CAS", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.change(screen.getByTestId("miss-query-resolved-cas-101"), {
+      target: { value: "64-17-5" },
+    });
+    fireEvent.click(screen.getByTestId("resolve-miss-query-101"));
+
+    await waitFor(() => {
+      expect(baseProps.onResolveMissQuery).toHaveBeenCalledWith(101, {
+        resolution_status: "resolved",
+        resolved_cas: "64-17-5",
+      });
+    });
+  });
+
+  it("does not resolve a miss query without CAS evidence", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("resolve-miss-query-101"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("pilot.missResolvedCasRequired");
+    });
+    expect(baseProps.onResolveMissQuery).not.toHaveBeenCalled();
   });
 
   it("submits a manual dictionary entry from the dictionary tab", async () => {

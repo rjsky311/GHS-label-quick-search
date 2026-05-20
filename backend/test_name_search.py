@@ -16,6 +16,7 @@ from server import (
     _classification_signature,
     _report_rank_key,
 )
+from pilot_store import PilotStore
 from chemical_dict import EN_TO_CAS, ZH_TO_CAS, CAS_TO_EN, CAS_TO_ZH, ALIASES_ZH, ALIASES_EN
 
 
@@ -282,6 +283,97 @@ def test_dictionary_miss_query_endpoint_is_rate_limited():
     )
 
 
+def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
+    store = PilotStore(tmp_path / "pilot.db").connect()
+    try:
+        first = store.record_miss_query(
+            "mystery solvent",
+            "name",
+            "frontend",
+            context={"locale": "en"},
+        )
+        assert first["resolution_status"] == "open"
+
+        reviewed = store.update_miss_query_resolution(
+            first["id"],
+            resolution_status="ignored",
+        )
+        assert reviewed["resolution_status"] == "ignored"
+
+        recaptured = store.record_miss_query(
+            "mystery solvent",
+            "name",
+            "frontend",
+            context={"locale": "en", "resultCount": 0},
+        )
+
+        assert recaptured["hit_count"] == 2
+        assert recaptured["resolution_status"] == "ignored"
+        assert recaptured["context"] == {"locale": "en", "resultCount": 0}
+    finally:
+        store.close()
+
+
+async def test_admin_can_update_dictionary_miss_query_resolution(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    captured = {}
+
+    def fake_update_miss_query_resolution(miss_id, *, resolution_status, resolved_cas=None):
+        captured["miss_id"] = miss_id
+        captured["resolution_status"] = resolution_status
+        captured["resolved_cas"] = resolved_cas
+        return {
+            "id": miss_id,
+            "query_text": "mystery solvent",
+            "query_kind": "name",
+            "endpoint": "frontend",
+            "resolution_status": resolution_status,
+            "resolved_cas": resolved_cas,
+            "context": {},
+        }
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "update_miss_query_resolution",
+        fake_update_miss_query_resolution,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-queries/12/resolution",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"resolution_status": "resolved", "resolved_cas": " 64 17 5 "},
+        )
+
+    assert response.status_code == 200
+    assert captured == {
+        "miss_id": 12,
+        "resolution_status": "resolved",
+        "resolved_cas": "64-17-5",
+    }
+    assert response.json()["record"]["resolved_cas"] == "64-17-5"
+
+
+async def test_admin_dictionary_miss_query_resolution_requires_known_row(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    monkeypatch.setattr(
+        server.pilot_store,
+        "update_miss_query_resolution",
+        lambda *args, **kwargs: None,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-queries/404/resolution",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"resolution_status": "ignored"},
+        )
+
+    assert response.status_code == 404
+
+
 def test_admin_dictionary_payloads_trim_safe_fields():
     manual = server.DictionaryManualEntryPayload(
         cas_number=" 64-17-5 ",
@@ -306,6 +398,10 @@ def test_admin_dictionary_payloads_trim_safe_fields():
         source=" ",
         status=" ACTIVE ",
     )
+    miss_resolution = server.DictionaryMissQueryResolutionPayload(
+        resolution_status=" RESOLVED ",
+        resolved_cas=" 64 17 5 ",
+    )
 
     assert manual.cas_number == "64-17-5"
     assert manual.name_en == "Ethanol"
@@ -321,6 +417,8 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     assert reference.url == "https://example.com/sds"
     assert reference.link_type == "sds"
     assert reference.status == "active"
+    assert miss_resolution.resolution_status == "resolved"
+    assert miss_resolution.resolved_cas == "64-17-5"
 
     manual_with_zh = server.DictionaryManualEntryPayload(
         cas_number="64-17-5",
@@ -374,6 +472,10 @@ def test_admin_dictionary_payloads_reject_unbounded_values():
             label="Supplier SDS",
             url="https://example.com/sds",
             status="script",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryMissQueryResolutionPayload(
+            resolution_status="done",
         )
 
 

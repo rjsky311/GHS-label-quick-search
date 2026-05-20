@@ -216,6 +216,10 @@ Work items:
   now only posts unresolved-search miss telemetry when
   `VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true`; payloads are trimmed, context is
   allow-listed, and failed telemetry never affects the search flow.
+- Completed: added an admin miss-query review loop. Admins can mark captured
+  miss queries as `resolved`, `needs_evidence`, or `ignored`; resolved rows
+  require a reviewed CAS number, and repeated capture preserves a non-open
+  review state instead of reopening already triaged rows.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should
@@ -227,6 +231,8 @@ Acceptance:
 
 - Public write paths are bounded.
 - Admin reports are useful but not over-collected.
+- Captured miss queries can be reviewed to closure without being reopened by
+  later duplicate searches.
 - Abuse and privacy assumptions are documented.
 
 ### 1.5 Chinese Name Display And Curation Boundary

@@ -149,6 +149,10 @@ Current completion snapshot:
   `CAPTURE_DICTIONARY_MISSES=true` in the backend). Public builds remain
   no-capture by default, and optional pilot payloads are trimmed and
   allow-listed before posting.
+- **Miss-query review checkpoint 2026-05-21**: pilot miss-query rows now have
+  an admin review closure path. The dashboard can mark a miss as resolved with
+  a CAS, needs-evidence, or ignored; duplicate capture preserves non-open
+  review status instead of turning a handled item back into an open task.
 - **Chinese-name trust checkpoint 2026-05-20**: frontend display and print
   surfaces now use a shared trusted-Chinese-name resolver. English-only
   placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small
