@@ -150,6 +150,8 @@ Current completion snapshot:
   labels omit the Chinese line rather than duplicating English. Export preview,
   backend export payloads, frontend CSV fallback, and backend CSV/XLSX export
   endpoints use the same CJK-only boundary for the `Chinese Name` column.
+  Admin manual dictionary writes now also reject English-only `name_zh`, while
+  still allowing the field to stay empty until a sourced Chinese name is known.
 
 ## 3. Next Priority Order
 

@@ -322,12 +322,25 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     assert reference.link_type == "sds"
     assert reference.status == "active"
 
+    manual_with_zh = server.DictionaryManualEntryPayload(
+        cas_number="64-17-5",
+        name_en="Ethanol",
+        name_zh=" 乙醇 ",
+    )
+    assert manual_with_zh.name_zh == "乙醇"
+
 
 def test_admin_dictionary_payloads_reject_unbounded_values():
     with pytest.raises(ValidationError):
         server.DictionaryManualEntryPayload(
             cas_number="64-17-5",
             name_en="x" * (server.MAX_ADMIN_NAME_LENGTH + 1),
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryManualEntryPayload(
+            cas_number="107-18-6",
+            name_en="Allyl Alcohol",
+            name_zh="Allyl Alcohol",
         )
     with pytest.raises(ValidationError):
         server.DictionaryAliasPayload(
@@ -396,8 +409,18 @@ async def test_admin_write_routes_reject_invalid_payloads(monkeypatch):
                 "priority": server.MAX_REFERENCE_PRIORITY + 1,
             },
         )
+        manual_name_response = await ac.post(
+            "/api/dictionary/manual-entries",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "cas_number": "107-18-6",
+                "name_en": "Allyl Alcohol",
+                "name_zh": "Allyl Alcohol",
+            },
+        )
 
     assert manual_response.status_code == 422
+    assert manual_name_response.status_code == 422
     assert alias_response.status_code == 422
     assert reference_response.status_code == 422
 

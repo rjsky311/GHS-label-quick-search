@@ -47,7 +47,9 @@ Rules:
   direct API callers.
 - When a known CAS/name pair is missing a Chinese display name, add it through
   the local dictionary or an admin-reviewed manual dictionary entry with source
-  evidence.
+  evidence. Admin manual entries should accept an empty `name_zh` while the
+  name is unknown, but must reject English-only `name_zh` values so the source
+  of truth does not create fake Chinese identity.
 - Future unknown-name support should treat Chinese-name discovery as a curation
   workflow: collect the missed CAS/name, suggest candidate names from trusted
   SDS/supplier/regulatory references when available, then require admin review

@@ -769,6 +769,13 @@ class DictionaryManualEntryPayload(BaseModel):
         value = value.strip()
         return value or None
 
+    @field_validator("name_zh")
+    @classmethod
+    def chinese_name_must_contain_cjk(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and not _has_cjk_text(value):
+            raise ValueError("name_zh must contain Chinese/CJK characters")
+        return value
+
     @field_validator("notes")
     @classmethod
     def notes_are_trimmed(cls, value: str) -> str:

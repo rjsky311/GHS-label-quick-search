@@ -77,7 +77,9 @@ implementation checklist.
   payloads, frontend CSV fallback, and backend CSV/XLSX export endpoints now
   share the same CJK-only boundary for Chinese display names. English-only
   placeholders in `name_zh`/`name_zh_tw` are omitted rather than repeated as
-  fake Chinese identity.
+  fake Chinese identity. Admin manual dictionary writes also reject English-only
+  `name_zh`, so the curated source of truth can stay empty rather than becoming
+  polluted.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
