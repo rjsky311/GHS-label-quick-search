@@ -316,6 +316,7 @@ def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
             "open": 0,
             "resolved": 0,
         }
+        assert store.get_dictionary_summary()["topMissQueries"] == []
     finally:
         store.close()
 

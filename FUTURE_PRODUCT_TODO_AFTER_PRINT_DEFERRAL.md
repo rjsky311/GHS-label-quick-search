@@ -223,6 +223,9 @@ Work items:
 - Completed: added miss-query status counts to the admin report/dashboard so
   pilots can distinguish open backlog, needs-evidence work, resolved items, and
   ignored noise.
+- Completed: limited the dashboard top-miss queue to open and needs-evidence
+  rows so resolved/ignored high-hit searches do not keep stealing review
+  attention.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should

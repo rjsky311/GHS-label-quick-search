@@ -154,7 +154,8 @@ Current completion snapshot:
   a CAS, needs-evidence, or ignored; duplicate capture preserves non-open
   review status instead of turning a handled item back into an open task. Admin
   reports also expose status-count totals so maintainers can tell whether the
-  queue is being reduced or merely accumulating.
+  queue is being reduced or merely accumulating, while the top-miss review list
+  stays focused on open and needs-evidence rows.
 - **Chinese-name trust checkpoint 2026-05-20**: frontend display and print
   surfaces now use a shared trusted-Chinese-name resolver. English-only
   placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small

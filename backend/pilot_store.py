@@ -710,9 +710,27 @@ class PilotStore:
         )
         return self._miss_query_row_to_dict(row) if row is not None else None
 
-    def list_miss_queries(self, *, limit: int = 50) -> list[dict[str, Any]]:
+    def list_miss_queries(
+        self,
+        *,
+        limit: int = 50,
+        statuses: Optional[Iterable[str]] = None,
+    ) -> list[dict[str, Any]]:
+        params: list[Any] = []
+        where_status = ""
+        if statuses:
+            normalized_statuses = [
+                self._normalize_miss_query_status(status) for status in statuses
+            ]
+            where_status = (
+                "WHERE resolution_status IN ("
+                + ",".join("?" for _ in normalized_statuses)
+                + ")"
+            )
+            params.extend(normalized_statuses)
+        params.append(limit)
         rows = self._fetchall(
-            """
+            f"""
             SELECT
               id,
               query_text,
@@ -725,10 +743,11 @@ class PilotStore:
               resolved_cas,
               context_json
             FROM dictionary_miss_queries
+            {where_status}
             ORDER BY hit_count DESC, last_seen_at DESC
             LIMIT ?
             """,
-            (limit,),
+            params,
         )
         return [self._miss_query_row_to_dict(row) for row in rows]
 
@@ -894,7 +913,10 @@ class PilotStore:
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
                 (ACTIVE_REFERENCE_STATUS,),
             ),
-            "topMissQueries": self.list_miss_queries(limit=limit),
+            "topMissQueries": self.list_miss_queries(
+                limit=limit,
+                statuses=("open", "needs_evidence"),
+            ),
             "pendingAliases": self.list_aliases(status="pending")[:limit],
         }
         return metrics
