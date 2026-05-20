@@ -64,6 +64,9 @@ implementation checklist.
   deduplicates, and checksum-checks pasted CAS lists before request. The UI
   summarizes ignored duplicates and invalid entries so repeated or malformed
   lines do not inflate print counts or create confusing missing labels later.
+  Search history and frontend observability now use the same normalized CAS
+  handoff, with bounded telemetry metadata that records counts and sent CAS
+  previews without storing raw invalid paste content.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
@@ -350,11 +353,17 @@ Implemented baseline:
   noisy wizard.
 - Keep the backend size limit based on valid unique CAS values, not raw pasted
   lines.
+- Preserve unresolved-search telemetry alignment by logging against the
+  normalized CAS values that were actually sent.
+- Store only bounded batch-input telemetry: counts, over-limit status, and a
+  capped preview of the normalized CAS list that reached the backend.
+- Keep search history on trimmed CAS values and ignore malformed successful
+  rows without a CAS identity.
 
 Work to continue:
 
-- Preserve unresolved-search telemetry alignment by logging against the
-  normalized CAS values that were actually sent.
+- Extend production QA only when a new screenshot or pilot workflow shows the
+  normalized batch path drifting from result counts, history, or print counts.
 
 Acceptance:
 
@@ -362,7 +371,8 @@ Acceptance:
   not trip the batch limit.
 - Invalid CAS entries such as `344-04-07` are not sent to `/api/search`.
 - The UI tells the user how many duplicates and invalid entries were ignored.
-- Batch print counts are based on searched, valid, unique CAS rows.
+- Batch print counts, recent history, and local observability are based on
+  searched, valid, unique CAS rows.
 
 Suggested verification:
 

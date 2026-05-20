@@ -23,6 +23,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import axios from 'axios';
 import App from '@/App';
 import { printLabels } from '@/utils/printLabels';
+import { OBSERVABILITY_STORAGE_KEY } from '@/utils/observability';
 
 jest.mock('axios');
 
@@ -195,6 +196,28 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
     expect(screen.getByTestId('batch-input-diagnostics')).toHaveTextContent(
       'search.batchInvalidSummary'
     );
+
+    const events = JSON.parse(
+      localStorage.getItem(OBSERVABILITY_STORAGE_KEY) || '[]'
+    );
+    const normalizationEvent = events.find(
+      (event) => event.type === 'batch_input_normalized'
+    );
+    expect(normalizationEvent).toEqual(
+      expect.objectContaining({
+        queryType: 'batch',
+        status: 'sent',
+        meta: expect.objectContaining({
+          inputCount: 4,
+          acceptedCount: 2,
+          duplicateCount: 1,
+          invalidCount: 1,
+          sentCasPreview: ['67-64-1', '90-90-4'],
+          sentCasOverflow: 0,
+        }),
+      })
+    );
+    expect(JSON.stringify(normalizationEvent.meta)).not.toContain('344-04-07');
   });
 
   it('opens the label modal with ONLY rows that have GHS data, excluding found-but-no-GHS and not-found rows', async () => {

@@ -1,4 +1,5 @@
 import {
+  buildBatchSearchTelemetryMeta,
   hasValidCasChecksum,
   normalizeCasToken,
   parseBatchSearchInput,
@@ -69,5 +70,27 @@ describe("batchSearchInput", () => {
     expect(summary.acceptedCount).toBe(1);
     expect(summary.duplicateCount).toBe(149);
     expect(summary.overLimit).toBe(false);
+  });
+
+  it("builds bounded telemetry from normalized CAS only", () => {
+    const summary = parseBatchSearchInput(
+      [
+        "90-90-4",
+        "90-90-4",
+        "344-04-07",
+        "CAS\uFF1A\uFF16\uFF17\uFF0D\uFF16\uFF14\uFF0D\uFF11",
+      ].join("\n"),
+    );
+
+    expect(buildBatchSearchTelemetryMeta(summary, { previewLimit: 1 })).toEqual({
+      inputCount: 4,
+      acceptedCount: 2,
+      duplicateCount: 1,
+      invalidCount: 1,
+      overLimit: false,
+      excess: 0,
+      sentCasPreview: ["90-90-4"],
+      sentCasOverflow: 1,
+    });
   });
 });

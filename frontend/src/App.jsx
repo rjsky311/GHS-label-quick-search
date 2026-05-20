@@ -24,7 +24,10 @@ import {
   resolveEffectiveChemicalForPrint,
 } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
-import { parseBatchSearchInput } from "@/utils/batchSearchInput";
+import {
+  buildBatchSearchTelemetryMeta,
+  parseBatchSearchInput,
+} from "@/utils/batchSearchInput";
 import {
   buildPreparedSolutionItem,
   buildPresetRecord,
@@ -334,6 +337,20 @@ function App() {
     [logObservabilityEvent]
   );
 
+  const logBatchInputNormalization = (status) => {
+    const hasDiagnostics =
+      batchSearchInput.duplicateCount > 0 ||
+      batchSearchInput.invalidCount > 0 ||
+      batchSearchInput.overLimit;
+    if (!hasDiagnostics) return;
+
+    logObservabilityEvent("batch_input_normalized", {
+      queryType: "batch",
+      status,
+      meta: buildBatchSearchTelemetryMeta(batchSearchInput),
+    });
+  };
+
   const searchSingle = async (directCas) => {
     const query =
       typeof directCas === "string" ? directCas.trim() : singleCas.trim();
@@ -370,6 +387,7 @@ function App() {
     const casNumbers = batchSearchInput.queries;
 
     if (casNumbers.length === 0) {
+      logBatchInputNormalization("no_valid_cas");
       setError(
         batchSearchInput.invalidCount > 0
           ? t("search.batchNoValidCas")
@@ -384,6 +402,7 @@ function App() {
     // call or rapid click cannot bypass the guard and hit the backend
     // (which would 422 on the same check).
     if (batchSearchInput.overLimit) {
+      logBatchInputNormalization("over_limit");
       setError(
         t("search.batchOverLimitDetail", {
           count: casNumbers.length,
@@ -395,6 +414,7 @@ function App() {
       return;
     }
 
+    logBatchInputNormalization("sent");
     setBatchProgress({ current: 0, total: casNumbers.length });
     try {
       const response = await axios.post(`${API}/search`, {

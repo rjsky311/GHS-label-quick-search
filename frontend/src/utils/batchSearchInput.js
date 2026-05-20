@@ -2,6 +2,7 @@ import { BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 
 const TOKEN_SPLIT_PATTERN = /[,\n\t;\uFF0C\u3001\uFF1B]+/;
 const CAS_FORMAT_PATTERN = /^\d{2,7}-\d{2}-\d$/;
+export const BATCH_TELEMETRY_PREVIEW_LIMIT = 20;
 
 const toHalfWidth = (value = "") =>
   String(value).replace(/[\uFF01-\uFF5E]/g, (char) =>
@@ -84,5 +85,27 @@ export const parseBatchSearchInput = (
     duplicateItems,
     invalidItems,
     queries,
+  };
+};
+
+export const buildBatchSearchTelemetryMeta = (
+  summary = {},
+  { previewLimit = BATCH_TELEMETRY_PREVIEW_LIMIT } = {},
+) => {
+  const queries = Array.isArray(summary.queries) ? summary.queries : [];
+  const safePreviewLimit =
+    Number.isFinite(previewLimit) && previewLimit > 0
+      ? Math.floor(previewLimit)
+      : BATCH_TELEMETRY_PREVIEW_LIMIT;
+
+  return {
+    inputCount: Number(summary.inputCount) || 0,
+    acceptedCount: Number(summary.acceptedCount) || 0,
+    duplicateCount: Number(summary.duplicateCount) || 0,
+    invalidCount: Number(summary.invalidCount) || 0,
+    overLimit: Boolean(summary.overLimit),
+    excess: Number(summary.excess) || 0,
+    sentCasPreview: queries.slice(0, safePreviewLimit),
+    sentCasOverflow: Math.max(0, queries.length - safePreviewLimit),
   };
 };

@@ -3,6 +3,9 @@ import { useState, useCallback, useEffect } from "react";
 const HISTORY_KEY = "ghs_search_history";
 const MAX_HISTORY = 50;
 
+const normalizeHistoryCas = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
 export default function useSearchHistory() {
   const [history, setHistory] = useState([]);
 
@@ -29,12 +32,15 @@ export default function useSearchHistory() {
     if (successfulResults.length === 0) return;
 
     const timestamp = new Date().toISOString();
-    const newHistoryItems = successfulResults.map((r) => ({
-      cas_number: r.cas_number,
-      name_en: r.name_en,
-      name_zh: r.name_zh,
-      timestamp,
-    }));
+    const newHistoryItems = successfulResults
+      .map((r) => ({
+        cas_number: normalizeHistoryCas(r.cas_number),
+        name_en: r.name_en,
+        name_zh: r.name_zh,
+        timestamp,
+      }))
+      .filter((item) => item.cas_number);
+    if (newHistoryItems.length === 0) return;
 
     setHistory((prev) => {
       const existingCas = new Set(newHistoryItems.map((h) => h.cas_number));

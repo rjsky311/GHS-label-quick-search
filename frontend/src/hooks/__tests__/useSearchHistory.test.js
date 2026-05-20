@@ -67,6 +67,18 @@ describe('useSearchHistory', () => {
     expect(result.current.history[0].cas_number).toBe('64-17-5');
   });
 
+  it('saveToHistory trims CAS numbers and ignores blank CAS rows', () => {
+    const { result } = renderHook(() => useSearchHistory());
+    act(() => {
+      result.current.saveToHistory([
+        makeResult(' 64-17-5 '),
+        makeResult('   '),
+      ]);
+    });
+    expect(result.current.history).toHaveLength(1);
+    expect(result.current.history[0].cas_number).toBe('64-17-5');
+  });
+
   it('saveToHistory caps at 50 items', () => {
     const { result } = renderHook(() => useSearchHistory());
     // Add 55 items

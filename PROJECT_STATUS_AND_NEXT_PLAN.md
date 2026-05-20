@@ -135,6 +135,10 @@ Current completion snapshot:
   `test:print-contract`, `qa:print-pdf`, `qa:production-batch-print`, and
   `qa:production-primary` pass, including A4, Letter, formaldehyde
   continuation, and 50+ item batch handoff artifacts.
+- **Batch input governance checkpoint**: pasted batch CAS input is normalized,
+  deduplicated, checksum-checked, and summarized before request. Search
+  history and frontend observability now follow the same normalized handoff,
+  with bounded telemetry metadata instead of raw invalid paste payloads.
 
 ## 3. Next Priority Order
 

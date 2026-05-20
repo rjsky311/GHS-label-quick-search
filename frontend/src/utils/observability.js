@@ -8,18 +8,57 @@ import { escapeCsvCell } from "@/utils/exportData";
 export const OBSERVABILITY_STORAGE_KEY = "ghs_observability_events";
 export const OBSERVABILITY_UPDATE_EVENT = "ghs:observability-updated";
 export const MAX_OBSERVABILITY_EVENTS = 250;
+export const MAX_OBSERVABILITY_STRING_LENGTH = 240;
+export const MAX_OBSERVABILITY_META_KEYS = 24;
+export const MAX_OBSERVABILITY_META_ARRAY_ITEMS = 25;
 
 const DEFAULT_SOURCE = "frontend";
 
-function sanitizeString(value) {
-  return typeof value === "string" ? value.trim() : "";
+function truncateString(value, maxLength = MAX_OBSERVABILITY_STRING_LENGTH) {
+  const text = String(value).trim();
+  return text.length > maxLength ? text.slice(0, maxLength) : text;
+}
+
+function sanitizeString(value, maxLength = MAX_OBSERVABILITY_STRING_LENGTH) {
+  return typeof value === "string" ? truncateString(value, maxLength) : "";
+}
+
+function sanitizeMetaValue(value) {
+  if (value === null) return null;
+  if (typeof value === "string") return sanitizeString(value);
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, MAX_OBSERVABILITY_META_ARRAY_ITEMS)
+      .map(sanitizeMetaValue)
+      .filter((item) => item !== undefined);
+  }
+  if (typeof value === "object") {
+    try {
+      return truncateString(JSON.stringify(value));
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
 }
 
 function sanitizeMeta(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
-  return value;
+  return Object.entries(value)
+    .slice(0, MAX_OBSERVABILITY_META_KEYS)
+    .reduce((meta, [rawKey, rawValue]) => {
+      const key = sanitizeString(rawKey, 80);
+      if (!key) return meta;
+      const sanitizedValue = sanitizeMetaValue(rawValue);
+      if (sanitizedValue !== undefined) {
+        meta[key] = sanitizedValue;
+      }
+      return meta;
+    }, {});
 }
 
 function buildEventId() {
