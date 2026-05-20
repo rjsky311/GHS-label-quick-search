@@ -59,6 +59,23 @@ describe('FavoritesSidebar', () => {
     expect(screen.getByText('Methanol')).toBeInTheDocument();
   });
 
+  it('does not render English-only placeholders as Chinese favorite names', () => {
+    render(
+      <FavoritesSidebar
+        {...defaultProps}
+        favorites={[
+          makeFav({
+            name_en: 'Allyl Alcohol',
+            name_zh: 'Allyl Alcohol',
+          }),
+        ]}
+      />
+    );
+
+    expect(screen.getByText('Allyl Alcohol')).toBeInTheDocument();
+    expect(screen.getAllByText('Allyl Alcohol')).toHaveLength(1);
+  });
+
   it('renders favorite pictograms with the shared tile strip', () => {
     render(<FavoritesSidebar {...defaultProps} favorites={[makeFav()]} />);
 

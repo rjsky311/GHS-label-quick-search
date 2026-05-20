@@ -100,6 +100,26 @@ describe('SearchAutocomplete', () => {
       expect(screen.getByText('67-64-1')).toBeInTheDocument();
     });
 
+    it('does not render English-only placeholders as Chinese suggestion text', () => {
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="allyl"
+          history={[
+            {
+              cas_number: '107-18-6',
+              name_en: 'Allyl Alcohol',
+              name_zh: 'Allyl Alcohol',
+            },
+          ]}
+        />
+      );
+      fireEvent.focus(screen.getByTestId('single-cas-input'));
+
+      expect(screen.getByText('Allyl Alcohol')).toBeInTheDocument();
+      expect(screen.getAllByText('Allyl Alcohol')).toHaveLength(1);
+    });
+
     it('deduplicates suggestions with favorites taking priority', () => {
       render(
         <SearchAutocomplete

@@ -54,6 +54,23 @@ describe('HistorySidebar', () => {
     expect(screen.getByText('ts:1800000000000')).toBeInTheDocument();
   });
 
+  it('does not render English-only placeholders as Chinese history names', () => {
+    render(
+      <HistorySidebar
+        {...defaultProps}
+        history={[
+          makeItem({
+            name_en: 'Allyl Alcohol',
+            name_zh: 'Allyl Alcohol',
+          }),
+        ]}
+      />
+    );
+
+    expect(screen.getByText('Allyl Alcohol')).toBeInTheDocument();
+    expect(screen.getAllByText('Allyl Alcohol')).toHaveLength(1);
+  });
+
   it('clicking a history item calls onSelectHistoryItem with the CAS', () => {
     const onSelectHistoryItem = jest.fn();
     const items = [makeItem({ cas_number: '64-17-5' })];

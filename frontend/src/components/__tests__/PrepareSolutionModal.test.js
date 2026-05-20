@@ -47,6 +47,24 @@ describe("PrepareSolutionModal", () => {
     expect(summary.textContent).toContain("乙醇");
   });
 
+  it("does not repeat English-only placeholders in the parent summary", () => {
+    render(
+      <PrepareSolutionModal
+        parent={{
+          ...baseParent,
+          name_en: "Allyl Alcohol",
+          name_zh: "Allyl Alcohol",
+        }}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    const summary = screen.getByTestId("prepare-solution-parent-summary");
+    expect(summary.textContent).toContain("Allyl Alcohol");
+    expect(summary.textContent.match(/Allyl Alcohol/g)).toHaveLength(1);
+  });
+
   it("submit button is disabled until both concentration AND solvent have content", () => {
     render(
       <PrepareSolutionModal parent={baseParent} onSubmit={jest.fn()} onClose={jest.fn()} />
