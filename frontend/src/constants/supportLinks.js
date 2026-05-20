@@ -7,6 +7,14 @@ export const SUPPORT_WORKFLOW_REQUEST_URL = `${SUPPORT_ISSUES_URL}/new?template=
 
 const normalizeField = (value) => String(value || "").trim();
 
+const DATA_CORRECTION_TITLES = {
+  "missing-chinese-name": "Missing Chinese name",
+  "no-ghs-data": "GHS data gap",
+  "ghs-text-no-pictograms": "GHS pictogram gap",
+  "source-conflict": "Source classification review",
+  "upstream-error": "Upstream data issue",
+};
+
 export function buildDataCorrectionUrl({
   casNumber = "",
   nameEn = "",
@@ -18,7 +26,7 @@ export function buildDataCorrectionUrl({
   const chineseName = normalizeField(nameZh);
   const issue = normalizeField(issueType) || "data-correction";
   const titleParts = [
-    issue === "missing-chinese-name" ? "Missing Chinese name" : "Data correction",
+    DATA_CORRECTION_TITLES[issue] || "Data correction",
     cas || englishName || chineseName,
   ].filter(Boolean);
 

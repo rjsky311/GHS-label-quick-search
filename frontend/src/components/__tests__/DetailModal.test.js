@@ -401,6 +401,12 @@ describe('DetailModal', () => {
       const note = screen.getByTestId('detail-source-conflict-note');
       expect(note).toHaveTextContent('detail.sourceConflictTitle');
       expect(note).toHaveTextContent('detail.sourceConflictHint');
+      const reportLink = screen.getByTestId('detail-report-source-conflict-link');
+      const url = new URL(reportLink.getAttribute('href'));
+      expect(reportLink).toHaveTextContent('detail.reportSourceConflictCta');
+      expect(url.searchParams.get('title')).toBe(
+        'Source classification review: 64-17-5',
+      );
     });
 
     it('shows restore default button when hasCustomClassification returns true', () => {
@@ -614,6 +620,10 @@ describe('DetailModal', () => {
         />
       );
       expect(screen.getByTestId('detail-no-ghs-data-banner')).toBeInTheDocument();
+      const reportLink = screen.getByTestId('detail-report-ghs-gap-link');
+      const url = new URL(reportLink.getAttribute('href'));
+      expect(reportLink).toHaveTextContent('detail.reportDataGapCta');
+      expect(url.searchParams.get('title')).toBe('GHS data gap: 64-17-5');
     });
 
     it('does NOT render the no-GHS banner when any GHS signal is present', () => {
@@ -646,6 +656,10 @@ describe('DetailModal', () => {
       ).toBeInTheDocument();
       expect(screen.getByText('detail.ghsDataNoPictograms')).toBeInTheDocument();
       expect(screen.getByText('detail.ghsDataNoPictogramsHint')).toBeInTheDocument();
+      const reportLink = screen.getByTestId('detail-report-pictogram-gap-link');
+      const url = new URL(reportLink.getAttribute('href'));
+      expect(reportLink).toHaveTextContent('detail.reportDataGapCta');
+      expect(url.searchParams.get('title')).toBe('GHS pictogram gap: 100-00-1');
     });
 
     it('keeps the classification comparison visible when the primary has no pictograms but alternates have data', () => {

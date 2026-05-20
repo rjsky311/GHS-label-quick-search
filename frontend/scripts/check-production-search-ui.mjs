@@ -78,6 +78,38 @@ const missingChineseNameFixture = {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const parseIssueUrl = (href) => {
+  try {
+    const url = href ? new URL(href) : null;
+    return {
+      template: url?.searchParams.get("template") || "",
+      labels: url?.searchParams.get("labels") || "",
+      title: url?.searchParams.get("title") || "",
+      body: url?.searchParams.get("body") || "",
+    };
+  } catch {
+    return {
+      template: "",
+      labels: "",
+      title: "",
+      body: "",
+    };
+  }
+};
+
+const inspectIssueLink = async (locator) => {
+  const count = await locator.count().catch(() => 0);
+  const href =
+    count > 0
+      ? (await locator.first().getAttribute("href").catch(() => "")) || ""
+      : "";
+  return {
+    count,
+    href,
+    ...parseIssueUrl(href),
+  };
+};
+
 const commonChromePaths = () => {
   if (process.platform === "win32") {
     return [
@@ -296,6 +328,9 @@ const inspectResultsTrustSurface = async (page) => {
   const panel = page.getByTestId("product-trust-panel-results");
   const decisionGuide = page.getByTestId("results-decision-guide");
   const sdsButton = page.getByTestId("sds-btn-0");
+  const sourceConflictCorrection = await inspectIssueLink(
+    page.locator('[data-testid^="data-quality-link-source-conflict-"]'),
+  );
   const sdsHref = (await sdsButton.getAttribute("href").catch(() => "")) || "";
   let sdsProtocol = "";
   let sdsHost = "";
@@ -339,6 +374,7 @@ const inspectResultsTrustSurface = async (page) => {
         .getByTestId("product-trust-workflow-link-results")
         .getAttribute("href")
         .catch(() => "")) || "",
+    sourceConflictCorrection,
     sourceBadges: await page
       .locator('[data-testid^="source-badge-"]')
       .evaluateAll((nodes) =>
@@ -387,6 +423,9 @@ const inspectDetailTrustSurface = async (detailModal) => {
     sourceConflictNoteCount: await detailModal
       .getByTestId("detail-source-conflict-note")
       .count(),
+    sourceConflictCorrection: await inspectIssueLink(
+      detailModal.getByTestId("detail-report-source-conflict-link"),
+    ),
     references,
   };
 };
@@ -796,6 +835,9 @@ const inspectNoGhsResultState = async (
   const textOnlyBanner = page.locator(
     '[data-testid^="ghs-data-no-pictograms-"]',
   );
+  const noGhsCorrection = await inspectIssueLink(
+    row.locator('[data-testid^="data-quality-link-no-ghs-data-"]'),
+  );
   const rowText = ((await row.textContent().catch(() => "")) || "")
     .replace(/\s+/g, " ")
     .trim();
@@ -809,6 +851,7 @@ const inspectNoGhsResultState = async (
       (node) => Boolean(node.disabled),
     ),
     resultPrintButtonTitle: (await printButton.getAttribute("title")) || "",
+    noGhsCorrection,
   };
 
   if (screenshotPath) {
@@ -833,6 +876,9 @@ const inspectNoGhsResultState = async (
       (node) => Boolean(node.disabled),
     ),
     printButtonTitle: (await detailPrintButton.getAttribute("title")) || "",
+    noGhsCorrection: await inspectIssueLink(
+      detailModal.getByTestId("detail-report-ghs-gap-link"),
+    ),
   };
 
   if (detailScreenshotPath) {
@@ -870,6 +916,11 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
       state: "visible",
       timeout: SEARCH_UI_TIMEOUT_MS,
     });
+    const rowCorrection = await inspectIssueLink(
+      page.getByTestId(
+        `data-quality-link-missing-chinese-name-${missingChineseNameFixture.cas_number}`,
+      ),
+    );
     await page.getByTestId("detail-btn-0").click();
     const detailModal = page.getByTestId("detail-modal");
     await detailModal.waitFor({ state: "visible", timeout: 10000 });
@@ -892,6 +943,11 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
       labels: issueUrl?.searchParams.get("labels") || "",
       title: issueUrl?.searchParams.get("title") || "",
       body: issueUrl?.searchParams.get("body") || "",
+      rowLinkCount: rowCorrection.count,
+      rowTemplate: rowCorrection.template,
+      rowLabels: rowCorrection.labels,
+      rowTitle: rowCorrection.title,
+      rowBody: rowCorrection.body,
     };
   } finally {
     await page.close();
@@ -968,6 +1024,8 @@ const summarizeSearchUiReportForConsole = (report) => {
           metrics.detailTrustSurface?.references?.length || 0,
         detailSourceConflictNotes:
           metrics.detailTrustSurface?.sourceConflictNoteCount || 0,
+        detailSourceConflictReportLinks:
+          metrics.detailTrustSurface?.sourceConflictCorrection?.count || 0,
         detailReferenceRoles: [
           ...new Set(
             (metrics.detailTrustSurface?.references || [])
@@ -1017,6 +1075,10 @@ const summarizeSearchUiReportForConsole = (report) => {
         ),
         noGhsCheckboxCount:
           metrics.noGhsState?.result?.resultCheckboxCount || 0,
+        noGhsResultReportLinks:
+          metrics.noGhsState?.result?.noGhsCorrection?.count || 0,
+        noGhsDetailReportLinks:
+          metrics.noGhsState?.detail?.noGhsCorrection?.count || 0,
         exportPreviewTrustColumns:
           metrics.exportPreviewSurface?.headers?.filter((header) =>
             /Data State|Primary Source|Classification Selection|資料狀態|主要來源|分類選擇/i.test(
@@ -1026,6 +1088,8 @@ const summarizeSearchUiReportForConsole = (report) => {
         missingChineseNameCorrection: {
           noteCount:
             metrics.missingChineseNameCorrection?.noteCount || 0,
+          rowLinkCount:
+            metrics.missingChineseNameCorrection?.rowLinkCount || 0,
           title: metrics.missingChineseNameCorrection?.title || "",
         },
       },
@@ -1079,6 +1143,23 @@ try {
   }
   if (resultsTrustSurface.authoritativeNoteMode !== "general") {
     failures.push("results-authoritative-note-mode-mismatch");
+  }
+  if (resultsTrustSurface.sourceConflictCorrection.count < 1) {
+    failures.push("results-source-conflict-correction-link-missing");
+  }
+  if (
+    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
+    (resultsTrustSurface.sourceConflictCorrection.template !==
+      "data-correction.yml" ||
+      resultsTrustSurface.sourceConflictCorrection.labels !== "data-correction")
+  ) {
+    failures.push("results-source-conflict-correction-template-mismatch");
+  }
+  if (
+    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
+    !resultsTrustSurface.sourceConflictCorrection.body.includes(searchTerm)
+  ) {
+    failures.push("results-source-conflict-correction-body-incomplete");
   }
   if (resultsTrustSurface.checklistCount < 3) {
     failures.push("results-authoritative-checklist-incomplete");
@@ -1289,6 +1370,23 @@ try {
   if (detailTrustSurface.sourceConflictNoteCount < 1) {
     failures.push("detail-source-conflict-note-missing");
   }
+  if (detailTrustSurface.sourceConflictCorrection.count < 1) {
+    failures.push("detail-source-conflict-correction-link-missing");
+  }
+  if (
+    detailTrustSurface.sourceConflictCorrection.count > 0 &&
+    (detailTrustSurface.sourceConflictCorrection.template !==
+      "data-correction.yml" ||
+      detailTrustSurface.sourceConflictCorrection.labels !== "data-correction")
+  ) {
+    failures.push("detail-source-conflict-correction-template-mismatch");
+  }
+  if (
+    detailTrustSurface.sourceConflictCorrection.count > 0 &&
+    !detailTrustSurface.sourceConflictCorrection.body.includes(searchTerm)
+  ) {
+    failures.push("detail-source-conflict-correction-body-incomplete");
+  }
   if (detailTrustSurface.references.length < 3) {
     failures.push("detail-reference-links-incomplete");
   }
@@ -1488,6 +1586,22 @@ try {
   if (noGhsState.result.noGhsBannerCount < 1) {
     failures.push("no-ghs-result-banner-missing");
   }
+  if (noGhsState.result.noGhsCorrection.count < 1) {
+    failures.push("no-ghs-result-correction-link-missing");
+  }
+  if (
+    noGhsState.result.noGhsCorrection.count > 0 &&
+    (noGhsState.result.noGhsCorrection.template !== "data-correction.yml" ||
+      noGhsState.result.noGhsCorrection.labels !== "data-correction")
+  ) {
+    failures.push("no-ghs-result-correction-template-mismatch");
+  }
+  if (
+    noGhsState.result.noGhsCorrection.count > 0 &&
+    !noGhsState.result.noGhsCorrection.body.includes(noGhsSearchTerm)
+  ) {
+    failures.push("no-ghs-result-correction-body-incomplete");
+  }
   if (noGhsState.result.textOnlyBannerCount > 0) {
     failures.push("no-ghs-result-misclassified-as-text-only");
   }
@@ -1499,6 +1613,22 @@ try {
   }
   if (noGhsState.detail.noGhsBannerCount < 1) {
     failures.push("no-ghs-detail-banner-missing");
+  }
+  if (noGhsState.detail.noGhsCorrection.count < 1) {
+    failures.push("no-ghs-detail-correction-link-missing");
+  }
+  if (
+    noGhsState.detail.noGhsCorrection.count > 0 &&
+    (noGhsState.detail.noGhsCorrection.template !== "data-correction.yml" ||
+      noGhsState.detail.noGhsCorrection.labels !== "data-correction")
+  ) {
+    failures.push("no-ghs-detail-correction-template-mismatch");
+  }
+  if (
+    noGhsState.detail.noGhsCorrection.count > 0 &&
+    !noGhsState.detail.noGhsCorrection.body.includes(noGhsSearchTerm)
+  ) {
+    failures.push("no-ghs-detail-correction-body-incomplete");
   }
   if (noGhsState.detail.textOnlyBannerCount > 0) {
     failures.push("no-ghs-detail-misclassified-as-text-only");
@@ -1512,15 +1642,22 @@ try {
   if (missingChineseNameCorrection.linkCount < 1) {
     failures.push("missing-chinese-name-correction-link-missing");
   }
+  if (missingChineseNameCorrection.rowLinkCount < 1) {
+    failures.push("missing-chinese-name-row-correction-link-missing");
+  }
   if (
     missingChineseNameCorrection.template !== "data-correction.yml" ||
-    missingChineseNameCorrection.labels !== "data-correction"
+    missingChineseNameCorrection.labels !== "data-correction" ||
+    missingChineseNameCorrection.rowTemplate !== "data-correction.yml" ||
+    missingChineseNameCorrection.rowLabels !== "data-correction"
   ) {
     failures.push("missing-chinese-name-correction-template-mismatch");
   }
   if (
     missingChineseNameCorrection.title !==
-    `Missing Chinese name: ${missingChineseNameFixture.cas_number}`
+      `Missing Chinese name: ${missingChineseNameFixture.cas_number}` ||
+    missingChineseNameCorrection.rowTitle !==
+      `Missing Chinese name: ${missingChineseNameFixture.cas_number}`
   ) {
     failures.push("missing-chinese-name-correction-title-mismatch");
   }
@@ -1534,6 +1671,17 @@ try {
     !/SDS|supplier|authoritative/i.test(missingChineseNameCorrection.body)
   ) {
     failures.push("missing-chinese-name-correction-body-incomplete");
+  }
+  if (
+    !missingChineseNameCorrection.rowBody.includes(
+      `- CAS: ${missingChineseNameFixture.cas_number}`,
+    ) ||
+    !missingChineseNameCorrection.rowBody.includes(
+      `- English name: ${missingChineseNameFixture.name_en}`,
+    ) ||
+    !/SDS|supplier|authoritative/i.test(missingChineseNameCorrection.rowBody)
+  ) {
+    failures.push("missing-chinese-name-row-correction-body-incomplete");
   }
 
   if (

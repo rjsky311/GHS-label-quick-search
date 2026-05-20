@@ -70,6 +70,12 @@ Current mode:
   The admin manual-entry UI also blocks English-only `name_zh` before submit,
   matching the backend validation boundary. `qa:production-search-ui` now
   includes a mocked production check for that correction path.
+- Completed current slice: data-quality issue links are now shared across
+  result rows and Detail for missing Chinese names, no-GHS data gaps,
+  text-only GHS without pictograms, and source-conflict review. Upstream
+  transient failures remain retry states and do not become correction links.
+  The production search UI gate now asserts those correction links keep their
+  data-correction template and CAS context.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -85,7 +91,8 @@ Current mode:
    repeats English; missing-name correction links should remain evidence-first
    and admin-reviewed.
    Current baseline includes effective-classification source/report-count
-   alignment and export-preview/CSV/XLSX trust columns.
+   alignment, export-preview/CSV/XLSX trust columns, and contextual
+   data-quality correction links.
 2. Harden and monitor the simplified three-output label workflow in
    `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
    label, and identification small label. New work should improve QA,

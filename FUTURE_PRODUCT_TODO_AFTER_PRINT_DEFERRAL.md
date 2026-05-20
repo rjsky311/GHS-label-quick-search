@@ -91,6 +91,11 @@ Work items:
 - Completed: defined the current baseline language for PubChem/ECHA/manual
   source context through result rows, Detail trust/provenance surfaces,
   print/export preparation, export preview, and CSV/XLSX exports.
+- Completed: added a shared frontend data-quality issue model so result rows
+  and Detail can consistently distinguish upstream retry states, no-GHS data
+  gaps, text-only GHS without pictograms, source-conflict review, and missing
+  trusted Chinese names. Correction links now prefill CAS/name context and the
+  specific issue type for maintainers.
 - Keep alternate GHS classifications inspectable and make their source/ranking
   logic easier to understand.
 - Add more regression cases when new examples appear for multiple
@@ -119,6 +124,13 @@ Work items:
 - Completed: added separate GitHub issue templates for data corrections and
   workflow requests.
 - Completed: routed frontend support links to the specific issue templates.
+- Completed: added contextual correction links from result rows and Detail for
+  no-GHS gaps, pictogram gaps, source conflicts, and missing trusted Chinese
+  names; upstream transient failures stay as retry guidance rather than a data
+  correction shortcut.
+- Completed: expanded production search UI QA so it fails when row/Detail
+  correction links stop using the data-correction issue template or lose CAS
+  context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Add admin-facing status fields if manual dictionary/reference curation needs

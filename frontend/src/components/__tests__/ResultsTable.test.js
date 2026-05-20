@@ -259,6 +259,38 @@ describe('ResultsTable', () => {
       expect(screen.getByText('乙醇')).toBeInTheDocument();
     });
 
+    it('shows a row-level correction link when the trusted Chinese name is missing', () => {
+      const missingChineseName = {
+        ...mockFoundResult,
+        cas_number: '107-18-6',
+        name_en: 'Allyl Alcohol',
+        name_zh: 'Allyl Alcohol',
+        name: 'Allyl Alcohol',
+        has_multiple_classifications: false,
+        other_classifications: [],
+      };
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[missingChineseName]}
+          getEffectiveClassification={createMockGetEffective()}
+        />,
+      );
+
+      const link = screen.getByTestId(
+        'data-quality-link-missing-chinese-name-107-18-6',
+      );
+      const url = new URL(link.getAttribute('href'));
+      expect(link).toHaveTextContent('results.dataIssueMissingChineseName');
+      expect(url.searchParams.get('title')).toBe(
+        'Missing Chinese name: 107-18-6',
+      );
+      expect(url.searchParams.get('body')).toContain(
+        '- English name: Allyl Alcohol',
+      );
+    });
+
     it('renders GHS pictograms via mocked GHSImage', () => {
       render(<ResultsTable {...defaultProps} />);
       expect(screen.getByTestId('ghs-img-GHS02')).toBeInTheDocument();
@@ -344,6 +376,9 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId(`no-ghs-data-${mockNoHazardResult.cas_number}`)
       ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`data-quality-link-no-ghs-data-${mockNoHazardResult.cas_number}`)
+      ).toHaveTextContent('results.dataIssueNoGhs');
     });
 
     it('shows a text-only GHS state when the classification has H/signal data but no pictograms', () => {
@@ -372,6 +407,9 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId(`ghs-data-no-pictograms-${signalOnly.cas_number}`)
       ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`data-quality-link-ghs-text-no-pictograms-${signalOnly.cas_number}`)
+      ).toHaveTextContent('results.dataIssueTextOnlyGhs');
     });
 
     it('shows a text-only GHS state when H/P/signal exist but nothing has pictograms (Codex PR #10 regression)', () => {
@@ -539,6 +577,9 @@ describe('ResultsTable', () => {
     it('shows toggle button when result has multiple classifications', () => {
       render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
       expect(screen.getByText(/results\.otherClassifications/)).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`data-quality-link-source-conflict-${mockFoundResult.cas_number}`)
+      ).toHaveTextContent('results.dataIssueSourceConflict');
     });
 
     it('renders expanded classifications as compact cards without status-dot clutter', () => {

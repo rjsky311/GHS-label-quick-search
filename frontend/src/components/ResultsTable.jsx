@@ -1,9 +1,10 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight, ExternalLink, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
+import { getDataQualityIssues } from "@/utils/dataQuality";
 import {
   getLocalizedNames,
   getLocalizedPictogramName,
@@ -33,6 +34,27 @@ const getSourceBadge = (source, t) => {
     label: t("results.sourceOther"),
     className: "border-slate-200 bg-slate-50 text-slate-700",
   };
+};
+
+const getDataQualityIssueLabel = (type, t) => {
+  const labels = {
+    "upstream-error": t("results.dataIssueUpstream"),
+    "no-ghs-data": t("results.dataIssueNoGhs"),
+    "ghs-text-no-pictograms": t("results.dataIssueTextOnlyGhs"),
+    "source-conflict": t("results.dataIssueSourceConflict"),
+    "missing-chinese-name": t("results.dataIssueMissingChineseName"),
+  };
+  return labels[type] || t("results.dataIssueNeedsReview");
+};
+
+const getDataQualityIssueClassName = (severity) => {
+  if (severity === "blocking") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+  if (severity === "curation") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+  return "border-slate-200 bg-slate-50 text-slate-700";
 };
 
 export default function ResultsTable({
@@ -379,63 +401,116 @@ export default function ResultsTable({
                       const effectiveReportCount =
                         effectiveForSource?.report_count ||
                         result.primary_report_count;
+                      const dataQualityIssues = getDataQualityIssues(
+                        result,
+                        effectiveForSource,
+                      );
                       return (
                         <div>
-                      <div className="break-words font-medium text-slate-950">
-                        {displayNames.primary || t("results.loadingName")}
-                      </div>
-                      {displayNames.secondary && (
-                        <div className="text-sm text-slate-500">
-                          {displayNames.secondary}
-                        </div>
-                      )}
-                      {/* Provenance chips (v1.8 M1). Compact, glanceable.
-                          Full provenance (timestamp, full source text) lives
-                          in the detail modal to keep the results table
-                          readable when many rows are shown. */}
-                      {(effectiveSource || effectiveReportCount || result.cache_hit) && (
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                          {(() => {
-                            const sourceBadge = getSourceBadge(effectiveSource, t);
-                            return sourceBadge ? (
-                              <span
-                                className={`inline-flex items-center rounded border px-1.5 py-0.5 ${sourceBadge.className}`}
-                                title={effectiveSource}
-                                data-testid={`source-badge-${sourceBadge.key}-${result.cas_number}`}
-                              >
-                                {sourceBadge.label}
-                              </span>
-                            ) : null;
-                          })()}
-                          {effectiveReportCount && (
-                            <span
-                              className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"
-                              title={t("detail.provenanceReportCountTooltip", {
-                                count: effectiveReportCount,
-                              })}
-                            >
-                              {t("results.reportCountBadge", {
-                                count: effectiveReportCount,
-                              })}
-                            </span>
+                          <div className="break-words font-medium text-slate-950">
+                            {displayNames.primary || t("results.loadingName")}
+                          </div>
+                          {displayNames.secondary && (
+                            <div className="text-sm text-slate-500">
+                              {displayNames.secondary}
+                            </div>
                           )}
-                          {result.cache_hit && (
-                            <span
-                              className="inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-amber-700"
-                              title={
-                                result.retrieved_at
-                                  ? t("detail.provenanceCacheTooltipWithAge", {
-                                      age: formatRelativeTime(result.retrieved_at),
-                                    })
-                                  : t("detail.provenanceCacheTooltip")
-                              }
+                          {/* Provenance chips (v1.8 M1). Compact, glanceable.
+                              Full provenance (timestamp, full source text) lives
+                              in the detail modal to keep the results table
+                              readable when many rows are shown. */}
+                          {(effectiveSource ||
+                            effectiveReportCount ||
+                            result.cache_hit) && (
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                              {(() => {
+                                const sourceBadge = getSourceBadge(
+                                  effectiveSource,
+                                  t,
+                                );
+                                return sourceBadge ? (
+                                  <span
+                                    className={`inline-flex items-center rounded border px-1.5 py-0.5 ${sourceBadge.className}`}
+                                    title={effectiveSource}
+                                    data-testid={`source-badge-${sourceBadge.key}-${result.cas_number}`}
+                                  >
+                                    {sourceBadge.label}
+                                  </span>
+                                ) : null;
+                              })()}
+                              {effectiveReportCount && (
+                                <span
+                                  className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"
+                                  title={t("detail.provenanceReportCountTooltip", {
+                                    count: effectiveReportCount,
+                                  })}
+                                >
+                                  {t("results.reportCountBadge", {
+                                    count: effectiveReportCount,
+                                  })}
+                                </span>
+                              )}
+                              {result.cache_hit && (
+                                <span
+                                  className="inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-amber-700"
+                                  title={
+                                    result.retrieved_at
+                                      ? t(
+                                          "detail.provenanceCacheTooltipWithAge",
+                                          {
+                                            age: formatRelativeTime(
+                                              result.retrieved_at,
+                                            ),
+                                          },
+                                        )
+                                      : t("detail.provenanceCacheTooltip")
+                                  }
+                                >
+                                  {t("results.cacheBadge")}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {dataQualityIssues.length > 0 && (
+                            <div
+                              className="mt-2 flex flex-wrap items-center gap-1.5"
+                              data-testid={`data-quality-issues-${result.cas_number}`}
                             >
-                              {t("results.cacheBadge")}
-                            </span>
+                              {dataQualityIssues.map((issue) => {
+                                const label = getDataQualityIssueLabel(
+                                  issue.type,
+                                  t,
+                                );
+                                const className = getDataQualityIssueClassName(
+                                  issue.severity,
+                                );
+                                const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
+                                return issue.correctionUrl ? (
+                                  <a
+                                    key={issue.type}
+                                    href={issue.correctionUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={chipClassName}
+                                    data-testid={`data-quality-link-${issue.type}-${result.cas_number}`}
+                                  >
+                                    <ExternalLink className="h-3 w-3 shrink-0" />
+                                    {label}
+                                  </a>
+                                ) : (
+                                  <span
+                                    key={issue.type}
+                                    className={chipClassName}
+                                    data-testid={`data-quality-chip-${issue.type}-${result.cas_number}`}
+                                  >
+                                    <Info className="h-3 w-3 shrink-0" />
+                                    {label}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
                       );
                     })()
                   ) : (

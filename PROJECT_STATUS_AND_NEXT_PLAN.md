@@ -155,6 +155,14 @@ Current completion snapshot:
   The Detail modal now exposes a contextual data-correction link for missing
   trusted Chinese names, and the admin manual-entry UI blocks English-only
   Chinese-name submissions before the backend request.
+- **Data-quality correction checkpoint 2026-05-21**: result rows and Detail
+  now share an explicit data-quality issue model for upstream failures,
+  confirmed no-GHS data gaps, text-only GHS records without pictograms,
+  source-conflict review, and missing trusted Chinese names. User-facing
+  correction links prefill CAS/name context and issue type, while upstream
+  transient failures remain retry states rather than correction requests.
+  `qa:production-search-ui` now verifies the row and Detail correction links
+  for missing Chinese names, no-GHS gaps, and source-conflict review.
 
 ## 3. Next Priority Order
 

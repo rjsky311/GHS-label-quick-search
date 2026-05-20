@@ -124,13 +124,29 @@ export default function DetailModal({
   const displayNames = getLocalizedNames(result, displayLocale);
   const englishName = resolveEnglishName(result);
   const trustedChineseName = resolveTrustedChineseName(result);
+  const buildDetailCorrectionUrl = (issueType) =>
+    buildDataCorrectionUrl({
+      casNumber: result.cas_number,
+      nameEn: englishName,
+      nameZh: trustedChineseName,
+      issueType,
+    });
   const missingChineseNameReportUrl =
     result.found && englishName && !trustedChineseName
-      ? buildDataCorrectionUrl({
-          casNumber: result.cas_number,
-          nameEn: englishName,
-          issueType: "missing-chinese-name",
-        })
+      ? buildDetailCorrectionUrl("missing-chinese-name")
+      : "";
+  const sourceConflictReportUrl =
+    result.found &&
+    (result.has_multiple_classifications || result.other_classifications?.length > 0)
+      ? buildDetailCorrectionUrl("source-conflict")
+      : "";
+  const ghsGapReportUrl =
+    result.found && !effectiveHasGhsData
+      ? buildDetailCorrectionUrl("no-ghs-data")
+      : "";
+  const pictogramGapReportUrl =
+    result.found && effectiveHasGhsData && !effectiveHasPictograms
+      ? buildDetailCorrectionUrl("ghs-text-no-pictograms")
       : "";
   const effectiveSource = effective?.source || result.primary_source;
   const effectiveReportCount = effective?.report_count || result.primary_report_count;
@@ -343,6 +359,18 @@ export default function DetailModal({
                     {t("detail.sourceConflictTitle")}
                   </span>
                   <span>{t("detail.sourceConflictHint")}</span>
+                  {sourceConflictReportUrl && (
+                    <a
+                      href={sourceConflictReportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+                      data-testid="detail-report-source-conflict-link"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {t("detail.reportSourceConflictCta")}
+                    </a>
+                  )}
                 </span>
               </div>
               <div className="flex gap-2 items-center">
@@ -402,6 +430,18 @@ export default function DetailModal({
                 <span className="mt-1 block text-xs leading-5 text-amber-800">
                   {t("detail.ghsDataNoPictogramsHint")}
                 </span>
+                {pictogramGapReportUrl && (
+                  <a
+                    href={pictogramGapReportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+                    data-testid="detail-report-pictogram-gap-link"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {t("detail.reportDataGapCta")}
+                  </a>
+                )}
               </span>
             </div>
           )}
@@ -555,7 +595,21 @@ export default function DetailModal({
               className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
             >
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-              <span>{t("detail.noGhsDataBanner")}</span>
+              <span>
+                <span>{t("detail.noGhsDataBanner")}</span>
+                {ghsGapReportUrl && (
+                  <a
+                    href={ghsGapReportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                    data-testid="detail-report-ghs-gap-link"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {t("detail.reportDataGapCta")}
+                  </a>
+                )}
+              </span>
             </div>
           )}
 
