@@ -68,7 +68,8 @@ Current mode:
 - Completed current slice: missing trusted Chinese names now have a contextual
   Detail correction link that pre-fills CAS and English-name evidence context.
   The admin manual-entry UI also blocks English-only `name_zh` before submit,
-  matching the backend validation boundary.
+  matching the backend validation boundary. `qa:production-search-ui` now
+  includes a mocked production check for that correction path.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

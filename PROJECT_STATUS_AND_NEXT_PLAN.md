@@ -231,6 +231,9 @@ Current status:
   `build/production-search-ui-report.json`, but prints a compact console
   summary so CI logs show the action, pictogram, trust, data-state, keyboard,
   mobile, and image-load checks without burying failures in raw DOM text.
+- `qa:production-search-ui` also covers the deployed missing-Chinese-name
+  correction path with a mocked search result, so the Detail data-correction
+  link cannot disappear without the production gate failing.
 - Local `qa:production-product` runs should be given at least a 12 minute
   timeout; a healthy full product pass can take several minutes because it runs
   deployed Chrome flows, print handoff checks, prepared workflow checks,

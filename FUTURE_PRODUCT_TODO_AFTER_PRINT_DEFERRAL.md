@@ -259,6 +259,9 @@ Acceptance:
   instead of being silently treated as translated or complete.
 - Admin manual-entry UI and backend validation both reject English-only
   `name_zh` values.
+- The deployed production search UI gate verifies the missing-Chinese-name
+  Detail correction path with CAS, English-name, template, label, and evidence
+  body checks.
 
 ## 2. User Guidance, Low-Noise UX, And First-Time Success
 

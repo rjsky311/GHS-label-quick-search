@@ -38,6 +38,43 @@ const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 const SUPPORT_WORKFLOW_REQUEST_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request";
+const missingChineseNameFixture = {
+  cas_number: "107-18-6",
+  cid: 7858,
+  name_en: "Allyl Alcohol",
+  name_zh: "Allyl Alcohol",
+  found: true,
+  upstream_error: false,
+  ghs_pictograms: [
+    {
+      code: "GHS02",
+      name: "Flammable",
+      image: "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS02.svg",
+    },
+    {
+      code: "GHS06",
+      name: "Toxic",
+      image: "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS06.svg",
+    },
+  ],
+  signal_word: "Danger",
+  signal_word_zh: "危險",
+  hazard_statements: [
+    {
+      code: "H225",
+      text_en: "Highly flammable liquid and vapor.",
+      text_zh: "高度易燃液體和蒸氣。",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P210",
+      text_en: "Keep away from heat.",
+      text_zh: "遠離熱源。",
+    },
+  ],
+  reference_links: [],
+};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -812,6 +849,55 @@ const inspectNoGhsResultState = async (
   };
 };
 
+const inspectMissingChineseNameCorrectionPath = async (context) => {
+  const page = await context.newPage();
+  try {
+    await page.route("**/api/search-single**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(missingChineseNameFixture),
+      });
+    });
+    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
+    await page.evaluate(() => localStorage.setItem("ghs_language", "en"));
+    await page.reload({ waitUntil: "networkidle" });
+    await page
+      .getByTestId("single-cas-input")
+      .fill(missingChineseNameFixture.cas_number);
+    await page.getByTestId("single-search-btn").click();
+    await page.getByTestId("result-row-0").waitFor({
+      state: "visible",
+      timeout: SEARCH_UI_TIMEOUT_MS,
+    });
+    await page.getByTestId("detail-btn-0").click();
+    const detailModal = page.getByTestId("detail-modal");
+    await detailModal.waitFor({ state: "visible", timeout: 10000 });
+    const note = detailModal.getByTestId("detail-missing-chinese-name-note");
+    const link = detailModal.getByTestId(
+      "detail-report-missing-chinese-name-link",
+    );
+    const href = (await link.getAttribute("href").catch(() => "")) || "";
+    let issueUrl = null;
+    try {
+      issueUrl = href ? new URL(href) : null;
+    } catch {
+      issueUrl = null;
+    }
+    return {
+      noteCount: await note.count(),
+      linkCount: await link.count(),
+      href,
+      template: issueUrl?.searchParams.get("template") || "",
+      labels: issueUrl?.searchParams.get("labels") || "",
+      title: issueUrl?.searchParams.get("title") || "",
+      body: issueUrl?.searchParams.get("body") || "",
+    };
+  } finally {
+    await page.close();
+  }
+};
+
 const summarizePictogramMetrics = (metrics) => {
   const tiles = metrics?.tiles || [];
   const minFrames = tiles.map((tile) =>
@@ -937,6 +1023,11 @@ const summarizeSearchUiReportForConsole = (report) => {
               header,
             ),
           ).length || 0,
+        missingChineseNameCorrection: {
+          noteCount:
+            metrics.missingChineseNameCorrection?.noteCount || 0,
+          title: metrics.missingChineseNameCorrection?.title || "",
+        },
       },
       images: {
         waitedContexts: metrics.imageWaits?.length || 0,
@@ -1385,6 +1476,9 @@ try {
   });
   await noGhsPage.close();
 
+  const missingChineseNameCorrection =
+    await inspectMissingChineseNameCorrectionPath(context);
+
   if (
     !noGhsState.result.rowText.includes(noGhsSearchTerm) &&
     !/Urea|尿素/i.test(noGhsState.result.rowText)
@@ -1411,6 +1505,35 @@ try {
   }
   if (!noGhsState.detail.printButtonDisabled) {
     failures.push("no-ghs-detail-print-button-enabled");
+  }
+  if (missingChineseNameCorrection.noteCount < 1) {
+    failures.push("missing-chinese-name-correction-note-missing");
+  }
+  if (missingChineseNameCorrection.linkCount < 1) {
+    failures.push("missing-chinese-name-correction-link-missing");
+  }
+  if (
+    missingChineseNameCorrection.template !== "data-correction.yml" ||
+    missingChineseNameCorrection.labels !== "data-correction"
+  ) {
+    failures.push("missing-chinese-name-correction-template-mismatch");
+  }
+  if (
+    missingChineseNameCorrection.title !==
+    `Missing Chinese name: ${missingChineseNameFixture.cas_number}`
+  ) {
+    failures.push("missing-chinese-name-correction-title-mismatch");
+  }
+  if (
+    !missingChineseNameCorrection.body.includes(
+      `- CAS: ${missingChineseNameFixture.cas_number}`,
+    ) ||
+    !missingChineseNameCorrection.body.includes(
+      `- English name: ${missingChineseNameFixture.name_en}`,
+    ) ||
+    !/SDS|supplier|authoritative/i.test(missingChineseNameCorrection.body)
+  ) {
+    failures.push("missing-chinese-name-correction-body-incomplete");
   }
 
   if (
@@ -1534,6 +1657,7 @@ try {
       mobileReadFirst,
       mobileDetailReadFirst,
       noGhsState,
+      missingChineseNameCorrection,
       mobileDetailComparisonCardCount,
       mobileDetailComparisonMetrics,
     },
