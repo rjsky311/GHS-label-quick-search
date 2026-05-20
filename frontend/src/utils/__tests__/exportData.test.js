@@ -26,6 +26,7 @@ import {
   exportToCSV,
   escapeCsvCell,
   buildExportPreview,
+  normalizeResultsForExport,
   resolveExportDataState,
 } from '../exportData';
 
@@ -152,6 +153,33 @@ describe('buildExportPreview', () => {
     expect(preview.hiddenRows).toBe(2);
     expect(preview.rows).toHaveLength(5);
   });
+
+  it('does not preview English-only placeholders as Chinese names', () => {
+    const preview = buildExportPreview(
+      [
+        {
+          ...mockResult,
+          name_en: 'Allyl Alcohol',
+          name_zh: 'Allyl Alcohol',
+        },
+      ],
+      { t: (key) => key }
+    );
+
+    expect(preview.rows[0].cells[1]).toBe('Allyl Alcohol');
+    expect(preview.rows[0].cells[2]).toBe('');
+  });
+});
+
+describe('normalizeResultsForExport', () => {
+  it('keeps trusted Chinese names and strips fake Chinese placeholders', () => {
+    expect(
+      normalizeResultsForExport([
+        { name_en: 'Acetone', name_zh: '丙酮' },
+        { name_en: 'Allyl Alcohol', name_zh: 'Allyl Alcohol' },
+      ]).map((result) => result.name_zh)
+    ).toEqual(['丙酮', '']);
+  });
 });
 
 describe('resolveExportDataState', () => {
@@ -200,6 +228,29 @@ describe('exportToExcel', () => {
       { responseType: 'blob' }
     );
     expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_results.xlsx');
+  });
+
+  it('sends normalized Chinese display names to the backend export endpoint', async () => {
+    const blob = new Blob(['test']);
+    axios.post.mockResolvedValueOnce({ data: blob });
+
+    await exportToExcel([
+      { ...mockResult, name_en: 'Allyl Alcohol', name_zh: 'Allyl Alcohol' },
+    ]);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://test-api/export/xlsx',
+      expect.objectContaining({
+        results: [
+          expect.objectContaining({
+            name_en: 'Allyl Alcohol',
+            name_zh: '',
+          }),
+        ],
+        format: 'xlsx',
+      }),
+      { responseType: 'blob' }
+    );
   });
 
   it('shows a toast error on server failure and does NOT emit a client-side file', async () => {
@@ -288,6 +339,7 @@ describe('exportToCSV', () => {
       cas_number: '64-17-5',
       name_en: '=HYPERLINK("http://bad","click")',
       name_zh: '+cmd',
+      signal_word: '@Danger',
       ghs_pictograms: null,
       hazard_statements: null,
     };
@@ -303,7 +355,8 @@ describe('exportToCSV', () => {
     // Dangerous prefixes must be neutralized. `=HYPERLINK(...)` also
     // gets CSV-quoted because it contains commas.
     expect(text).toContain("'=HYPERLINK");
-    expect(text).toContain("'+cmd");
+    expect(text).toContain("'@Danger");
+    expect(text).not.toContain("'+cmd");
     // BOM so Excel opens as UTF-8.
     expect(text.charCodeAt(0)).toBe(0xfeff);
   });

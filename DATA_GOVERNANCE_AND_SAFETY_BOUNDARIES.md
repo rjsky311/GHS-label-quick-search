@@ -41,7 +41,9 @@ Rules:
 - Results, detail/localized-name helpers, favorites, history, autocomplete,
   prepare-solution summaries, label previews, print layout scoring, and printed
   labels should share that resolver so the same chemical identity does not look
-  different across workflows.
+  different across workflows. Export preview and CSV/XLSX payload preparation
+  must use the same resolver before handing data to backend export endpoints or
+  frontend CSV fallback.
 - When a known CAS/name pair is missing a Chinese display name, add it through
   the local dictionary or an admin-reviewed manual dictionary entry with source
   evidence.
@@ -262,6 +264,9 @@ Frontend:
 - Display-name helpers reject fake Chinese names that are English-only
   placeholders, and small-label output omits the Chinese line instead of
   duplicating English.
+- Export preview, backend export payloads, and frontend CSV fallback apply the
+  same Chinese-name trust filter before a `Chinese Name` column is shown or
+  written.
 
 Production QA:
 

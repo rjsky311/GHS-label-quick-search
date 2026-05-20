@@ -62,8 +62,9 @@ Current mode:
   invalid raw paste content does not leak into later diagnostics.
 - Completed current slice: Chinese-name display now uses a shared trust helper
   across localized names, favorites/history/autocomplete, prepare-solution
-  summaries, print preview/scoring, and printed labels. English-only
-  placeholders are omitted instead of being shown as Chinese.
+  summaries, print preview/scoring, printed labels, export preview, backend
+  export payloads, and frontend CSV fallback. English-only placeholders are
+  omitted instead of being shown as Chinese.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

@@ -228,8 +228,9 @@ Work items:
   names only when they contain CJK text and are not the English name repeated
   through `name_zh`, `name_zh_tw`, or `name`.
 - Completed: aligned localized names, autocomplete, favorites/history,
-  prepare-solution summaries, print fit scoring, label preview display, and
-  printed small labels to that resolver.
+  prepare-solution summaries, print fit scoring, label preview display, printed
+  small labels, export preview, backend export payloads, and frontend CSV
+  fallback to that resolver.
 - Completed: added focused tests for trusted Chinese names, English-only
   placeholders, bilingual localized display, and CJK detection.
 - Keep missing Chinese names in the data-correction/admin-curation path rather
@@ -245,6 +246,8 @@ Acceptance:
   workflow expects it.
 - Small labels omit the Chinese line when it is not trusted, while keeping CAS,
   English name, QR where applicable, and all GHS pictograms.
+- Exported `Chinese Name` cells follow the same trust boundary as the UI; CSV
+  fallback still neutralizes spreadsheet formulas in the remaining cells.
 
 ## 2. User Guidance, Low-Noise UX, And First-Time Success
 

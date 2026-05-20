@@ -7,6 +7,7 @@ import {
   getLocalizedPictogramName,
   getLocalizedSignalWord,
   getLocalizedStatementText,
+  resolveTrustedChineseName,
 } from "@/utils/ghsText";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getReferenceLinks } from "@/utils/sdsLinks";
@@ -76,6 +77,13 @@ function buildExportTrustCells(result, t) {
   ];
 }
 
+export function normalizeResultsForExport(results = []) {
+  return results.map((result) => ({
+    ...result,
+    name_zh: resolveTrustedChineseName(result) || "",
+  }));
+}
+
 function buildCsvRows(results, t) {
   const displayLocale = i18n.language;
   const rows = [
@@ -133,7 +141,8 @@ function buildCsvRows(results, t) {
 export function buildExportPreview(results, options = {}) {
   const t = options.t || i18n.t.bind(i18n);
   const maxRows = Math.max(0, options.maxRows ?? 5);
-  const [headers, ...dataRows] = buildCsvRows(results, t);
+  const normalizedResults = normalizeResultsForExport(results);
+  const [headers, ...dataRows] = buildCsvRows(normalizedResults, t);
 
   return {
     headers,
@@ -155,11 +164,12 @@ export function buildExportPreview(results, options = {}) {
 export async function exportToExcel(results) {
   if (results.length === 0) return;
   const t = i18n.t.bind(i18n);
+  const normalizedResults = normalizeResultsForExport(results);
 
   try {
     const response = await axios.post(
       `${API}/export/xlsx`,
-      { results, format: "xlsx" },
+      { results: normalizedResults, format: "xlsx" },
       { responseType: "blob" }
     );
     saveAs(response.data, "ghs_results.xlsx");
@@ -178,11 +188,12 @@ export async function exportToExcel(results) {
 export async function exportToCSV(results) {
   if (results.length === 0) return;
   const t = i18n.t.bind(i18n);
+  const normalizedResults = normalizeResultsForExport(results);
 
   try {
     const response = await axios.post(
       `${API}/export/csv`,
-      { results, format: "csv" },
+      { results: normalizedResults, format: "csv" },
       { responseType: "blob" }
     );
     saveAs(response.data, "ghs_results.csv");
@@ -195,7 +206,7 @@ export async function exportToCSV(results) {
   // Client-side fallback. Escape every cell so a malicious CAS /
   // name / hazard string cannot break out into a formula when the
   // resulting file is opened in Excel / Sheets / Calc.
-  const rows = buildCsvRows(results, t);
+  const rows = buildCsvRows(normalizedResults, t);
   const csv = rows.map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
   const blob = new Blob(["\ufeff" + csv], {
     type: "text/csv;charset=utf-8",
