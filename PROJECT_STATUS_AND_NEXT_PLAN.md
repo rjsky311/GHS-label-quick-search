@@ -148,8 +148,8 @@ Current completion snapshot:
   surfaces now use a shared trusted-Chinese-name resolver. English-only
   placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small
   labels omit the Chinese line rather than duplicating English. Export preview,
-  backend export payloads, and frontend CSV fallback use the same resolver for
-  the `Chinese Name` column.
+  backend export payloads, frontend CSV fallback, and backend CSV/XLSX export
+  endpoints use the same CJK-only boundary for the `Chinese Name` column.
 
 ## 3. Next Priority Order
 

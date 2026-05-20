@@ -895,6 +895,27 @@ def spreadsheet_safe(value: Any) -> str:
         return "'" + text
     return text
 
+
+_CJK_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]")
+
+
+def _has_cjk_text(value: Any) -> bool:
+    return bool(_CJK_RE.search(str(value or "")))
+
+
+def _trusted_export_chinese_name(result: Dict[str, Any]) -> str:
+    """Return a Chinese display name only when the payload contains CJK text.
+
+    Frontend export already applies the same policy. Keeping this guard on
+    the backend prevents direct API callers from writing English-only
+    placeholders such as `name_zh: "Allyl Alcohol"` into CSV/XLSX outputs.
+    """
+    for key in ("name_zh", "name_zh_tw"):
+        value = str(result.get(key) or "").strip()
+        if value and _has_cjk_text(value):
+            return value
+    return ""
+
 # ─── PubChem resilience helper ──────────────────────────────
 #
 # Previously every PubChem call caught `Exception` and returned `{}`,
@@ -2156,7 +2177,7 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     for row, result in enumerate(payload.results, 2):
         ws.cell(row=row, column=1, value=spreadsheet_safe(result.get("cas_number", ""))).border = thin_border
         ws.cell(row=row, column=2, value=spreadsheet_safe(result.get("name_en", ""))).border = thin_border
-        ws.cell(row=row, column=3, value=spreadsheet_safe(result.get("name_zh", ""))).border = thin_border
+        ws.cell(row=row, column=3, value=spreadsheet_safe(_trusted_export_chinese_name(result))).border = thin_border
 
         # GHS pictograms
         pictograms = result.get("ghs_pictograms", [])
@@ -2257,7 +2278,7 @@ async def export_csv(request: Request, payload: ExportRequest):
         writer.writerow([
             spreadsheet_safe(result.get("cas_number", "")),
             spreadsheet_safe(result.get("name_en", "")),
-            spreadsheet_safe(result.get("name_zh", "")),
+            spreadsheet_safe(_trusted_export_chinese_name(result)),
             spreadsheet_safe(ghs_text),
             spreadsheet_safe(signal),
             spreadsheet_safe(hazard_text),

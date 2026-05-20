@@ -74,9 +74,10 @@ implementation checklist.
 - **Completed Chinese-name trust follow-up**: localized-name helpers,
   autocomplete, favorites/history, prepare-solution summaries, print fit
   scoring, print previews, printed labels, export preview, backend export
-  payloads, and frontend CSV fallback now share the same resolver for Chinese
-  display names. English-only placeholders in `name_zh`/`name_zh_tw` are
-  omitted rather than repeated as fake Chinese identity.
+  payloads, frontend CSV fallback, and backend CSV/XLSX export endpoints now
+  share the same CJK-only boundary for Chinese display names. English-only
+  placeholders in `name_zh`/`name_zh_tw` are omitted rather than repeated as
+  fake Chinese identity.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.

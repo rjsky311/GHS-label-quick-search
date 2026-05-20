@@ -41,9 +41,10 @@ Rules:
 - Results, detail/localized-name helpers, favorites, history, autocomplete,
   prepare-solution summaries, label previews, print layout scoring, and printed
   labels should share that resolver so the same chemical identity does not look
-  different across workflows. Export preview and CSV/XLSX payload preparation
-  must use the same resolver before handing data to backend export endpoints or
-  frontend CSV fallback.
+  different across workflows. Export preview, CSV/XLSX payload preparation, and
+  frontend CSV fallback must use the same resolver; backend CSV/XLSX export
+  endpoints must also enforce the same CJK-only Chinese-name boundary for
+  direct API callers.
 - When a known CAS/name pair is missing a Chinese display name, add it through
   the local dictionary or an admin-reviewed manual dictionary entry with source
   evidence.

@@ -1024,6 +1024,7 @@ async def test_export_xlsx_neutralizes_formula_injection():
                 "name_zh": "+test",
                 "ghs_pictograms": [],
                 "hazard_statements": [],
+                "signal_word_zh": "+test",
             }
         ]
     }
@@ -1035,7 +1036,62 @@ async def test_export_xlsx_neutralizes_formula_injection():
     ws = wb.active
     # Row 2 is the first data row. Columns: 1=CAS, 2=en, 3=zh ...
     assert ws.cell(row=2, column=2).value == "'=1+1"
-    assert ws.cell(row=2, column=3).value == "'+test"
+    assert ws.cell(row=2, column=3).value in (None, "")
+    assert ws.cell(row=2, column=5).value == "'+test"
+
+
+async def test_export_csv_omits_english_only_chinese_name():
+    """Direct backend CSV export should not preserve English placeholders
+    in the Chinese-name column."""
+    import csv as csv_module
+    from io import StringIO
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "107-18-6",
+                "name_en": "Allyl Alcohol",
+                "name_zh": "Allyl Alcohol",
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/csv", json=payload)
+    assert response.status_code == 200
+
+    rows = list(csv_module.reader(StringIO(response.content.decode("utf-8-sig"))))
+    assert rows[1][1] == "Allyl Alcohol"
+    assert rows[1][2] == ""
+
+
+async def test_export_xlsx_omits_english_only_chinese_name():
+    """XLSX export applies the same trusted Chinese-name boundary."""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "107-18-6",
+                "name_en": "Allyl Alcohol",
+                "name_zh": "Allyl Alcohol",
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+            }
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/xlsx", json=payload)
+    assert response.status_code == 200
+
+    wb = load_workbook(BytesIO(response.content))
+    ws = wb.active
+    assert ws.cell(row=2, column=2).value == "Allyl Alcohol"
+    assert ws.cell(row=2, column=3).value in (None, "")
 
 
 async def test_export_rejects_payload_exceeding_max_rows():
