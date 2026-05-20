@@ -1448,6 +1448,48 @@ try {
   if (detailComparisonColumnCount < 2) {
     failures.push("detail-comparison-columns-missing");
   }
+  const detailComparisonEvidencePanelCount = await detailComparisonTable
+    .locator('[data-testid^="comparison-evidence-panel-"]')
+    .count();
+  const detailComparisonEvidenceBadgeIds = await detailComparisonTable
+    .locator('[data-testid^="comparison-evidence-badge-"]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        testId: node.getAttribute("data-testid") || "",
+        text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+      })),
+    );
+  if (detailComparisonEvidencePanelCount < detailComparisonColumnCount) {
+    failures.push("detail-comparison-evidence-panels-missing");
+  }
+  if (
+    !detailComparisonEvidenceBadgeIds.some((badge) =>
+      badge.testId.startsWith("comparison-evidence-badge-selected-"),
+    )
+  ) {
+    failures.push("detail-comparison-current-evidence-missing");
+  }
+  if (
+    !detailComparisonEvidenceBadgeIds.some((badge) =>
+      badge.testId.startsWith("comparison-evidence-badge-report-count-"),
+    )
+  ) {
+    failures.push("detail-comparison-report-count-evidence-missing");
+  }
+  if (
+    !detailComparisonEvidenceBadgeIds.some((badge) =>
+      badge.testId.startsWith("comparison-evidence-badge-source-"),
+    )
+  ) {
+    failures.push("detail-comparison-source-evidence-missing");
+  }
+  if (
+    !detailComparisonEvidenceBadgeIds.some((badge) =>
+      badge.testId.startsWith("comparison-evidence-badge-coverage-"),
+    )
+  ) {
+    failures.push("detail-comparison-coverage-evidence-missing");
+  }
   for (let index = 0; index < detailComparisonColumnCount; index += 1) {
     const strip = detailComparisonColumns.nth(index).getByTestId(
       "ghs-pictogram-strip",
@@ -1528,6 +1570,12 @@ try {
     await mobileDetailComparisonCards.count();
   if (mobileDetailComparisonCardCount < 2) {
     failures.push("mobile-detail-comparison-cards-missing");
+  }
+  const mobileDetailComparisonEvidencePanelCount = await mobileDetailModal
+    .locator('[data-testid^="comparison-mobile-evidence-panel-"]')
+    .count();
+  if (mobileDetailComparisonEvidencePanelCount < mobileDetailComparisonCardCount) {
+    failures.push("mobile-detail-comparison-evidence-panels-missing");
   }
   for (let index = 0; index < mobileDetailComparisonCardCount; index += 1) {
     const strip = mobileDetailComparisonCards.nth(index).getByTestId(
@@ -1799,6 +1847,8 @@ try {
       detailKeyboardSurface,
       prepareStackingSurface,
       detailComparisonColumnCount,
+      detailComparisonEvidencePanelCount,
+      detailComparisonEvidenceBadgeIds,
       detailComparisonMetrics,
       imageWaits,
       verticalRisks,
@@ -1807,6 +1857,7 @@ try {
       noGhsState,
       missingChineseNameCorrection,
       mobileDetailComparisonCardCount,
+      mobileDetailComparisonEvidencePanelCount,
       mobileDetailComparisonMetrics,
     },
   };

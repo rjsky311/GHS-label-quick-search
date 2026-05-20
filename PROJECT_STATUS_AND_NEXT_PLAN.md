@@ -129,6 +129,11 @@ Current completion snapshot:
   CSV/XLSX exports. Export rows include data state, primary source, report
   count, cache state, reference-link count, and classification-selection
   context.
+- **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
+  now show compact selection evidence for each available public
+  classification: current selection, report count, source family, and
+  pictogram/H/P coverage. This keeps alternate reports inspectable without
+  making source conflicts look legally resolved.
 - **A4/Letter complete-primary print fix checkpoint 2026-05-18**: deployed
   production now uses resolved full-page typography metrics for H/P text and
   tighter continuation thresholds for dense complete-label content.
@@ -404,8 +409,10 @@ Do next:
   the whole `scientific-agent-skills` repo; only consider the documented
   whitelist (`database-lookup`, `paper-lookup`, and later `datamol`) as
   maintainer-only evidence tools.
-- Clarify source conflict handling between PubChem, ECHA, manual entries, SDS
-  links, and local dictionary aliases.
+- Keep source conflict handling clear between PubChem, ECHA, manual entries,
+  SDS links, and local dictionary aliases. Detail comparison now exposes the
+  report-count/source/coverage evidence that explains why alternate public GHS
+  reports differ.
 - Keep unsafe URLs filtered on frontend and backend.
 - Keep dictionary miss telemetry opt-in, bounded, and abuse-resistant.
 - Keep Chinese display names honest: show only dictionary/manual values that
@@ -501,6 +508,9 @@ Current status:
 - The detail modal's same-chemical classification comparison uses readable
   stacked cards on narrow viewports instead of a desktop-width comparison
   table, so alternate GHS reports can be inspected without horizontal dragging.
+- The same comparison now exposes source/ranking evidence on both desktop and
+  narrow layouts, so users can see report count, source family, and coverage
+  before changing the active classification.
 - `qa:production-search-ui` now captures 390px deployed screenshots for both
   search results and detail comparison, and fails when either area needs
   horizontal scrolling or when key actions/cards are outside the narrow

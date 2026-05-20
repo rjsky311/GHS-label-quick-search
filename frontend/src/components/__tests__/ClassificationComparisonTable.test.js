@@ -15,6 +15,7 @@ const cls1 = {
   signal_word: "Danger",
   signal_word_zh: "危險",
   source: null,
+  report_count: null,
 };
 
 const cls2 = {
@@ -27,6 +28,7 @@ const cls2 = {
   signal_word: "Warning",
   signal_word_zh: "警告",
   source: "ECHA C&L Inventory notification",
+  report_count: "236",
 };
 
 const cls3 = {
@@ -41,6 +43,7 @@ const cls3 = {
   signal_word: "Danger",
   signal_word_zh: "危險",
   source: "ECHA C&L alternative",
+  report_count: "4",
 };
 
 const makeColumns = (classifications, mode) =>
@@ -213,6 +216,35 @@ describe("ClassificationComparisonTable", () => {
       expect(screen.getByText("ECHA C&L Inventory notification")).toBeInTheDocument();
     });
 
+    it("shows ranking evidence in same-chemical mode", () => {
+      const columns = makeColumns([cls1, cls2], "same-chemical");
+      render(
+        <ClassificationComparisonTable
+          mode="same-chemical"
+          columns={columns}
+          selectedIndex={0}
+          onSelectClassification={jest.fn()}
+        />
+      );
+
+      expect(screen.getByText("compare.rowEvidence")).toBeInTheDocument();
+      expect(screen.getByTestId("comparison-evidence-panel-0")).toBeInTheDocument();
+      expect(screen.getByTestId("comparison-evidence-panel-1")).toBeInTheDocument();
+      expect(screen.getByTestId("comparison-evidence-badge-selected-0")).toBeInTheDocument();
+      expect(screen.getByTestId("comparison-evidence-badge-report-count-0")).toHaveTextContent(
+        "compare.evidenceNoReportCount",
+      );
+      expect(screen.getByTestId("comparison-evidence-badge-report-count-1")).toHaveTextContent(
+        "compare.evidenceReportCount",
+      );
+      expect(screen.getByTestId("comparison-evidence-badge-source-1")).toHaveTextContent(
+        "compare.evidenceSourceEcha",
+      );
+      expect(screen.getByTestId("comparison-evidence-badge-coverage-1")).toHaveTextContent(
+        "compare.evidenceCoverage",
+      );
+    });
+
     it("shows Current badge on selected column and Set as primary on others", () => {
       const columns = makeColumns([cls1, cls2], "same-chemical");
       render(
@@ -276,6 +308,8 @@ describe("ClassificationComparisonTable", () => {
         expect(screen.getByTestId("comparison-mobile-card-0")).toBeInTheDocument();
         expect(screen.getByTestId("comparison-mobile-card-1")).toBeInTheDocument();
         expect(screen.getByTestId("comparison-mobile-pictograms-0")).toBeInTheDocument();
+        expect(screen.getByTestId("comparison-mobile-evidence-panel-0")).toBeInTheDocument();
+        expect(screen.getByTestId("comparison-mobile-evidence-panel-1")).toBeInTheDocument();
         expect(screen.getByTestId("mobile-absent-GHS02-1")).toBeInTheDocument();
 
         fireEvent.click(screen.getByTestId("mobile-set-primary-1"));
@@ -312,6 +346,7 @@ describe("ClassificationComparisonTable", () => {
         />
       );
       expect(screen.queryByText("compare.rowSource")).not.toBeInTheDocument();
+      expect(screen.queryByText("compare.rowEvidence")).not.toBeInTheDocument();
     });
 
     it("does not show set-as-primary buttons", () => {

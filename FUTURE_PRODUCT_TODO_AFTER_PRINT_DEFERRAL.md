@@ -96,8 +96,11 @@ Work items:
   gaps, text-only GHS without pictograms, source-conflict review, and missing
   trusted Chinese names. Correction links now prefill CAS/name context and the
   specific issue type for maintainers.
-- Keep alternate GHS classifications inspectable and make their source/ranking
-  logic easier to understand.
+- Completed: made the Detail same-chemical comparison expose compact
+  source/ranking evidence per classification: currently selected report,
+  report count, source family, and pictogram/H/P coverage. Desktop and narrow
+  card layouts now share the same evidence model, and production search UI QA
+  fails if those evidence panels disappear.
 - Add more regression cases when new examples appear for multiple
   classifications, text-only GHS records, no GHS data, or upstream transient
   failures.
@@ -107,8 +110,8 @@ Acceptance:
 - A user can tell what came from the app, what came from PubChem/ECHA, and what
   must be verified against SDS/supplier/local rules.
 - No UI state presents missing upstream data as "no hazards."
-- `npm run qa:production-search-ui` or a focused test catches source-state
-  regressions.
+- `npm run qa:production-search-ui` or a focused test catches source-state and
+  comparison-evidence regressions.
 
 ### 1.2 Correction Intake And Review Flow
 
@@ -723,7 +726,7 @@ or user report points to a more urgent slice.
 
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
-| Data source conflicts | `Monitoring` | No-GHS deployed state is covered with Urea; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
+| Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |

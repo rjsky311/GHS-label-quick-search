@@ -146,6 +146,9 @@ When sources disagree:
   report count, ECHA/source signal, hazard count, then stable source order.
 - Preserve alternate classifications where available so users can inspect
   differences.
+- Same-chemical Detail comparisons should expose the main ranking/evidence
+  signals in a compact way: current selection, report count, source family, and
+  pictogram/H/P coverage. This is explanatory evidence, not legal approval.
 - Surface source labels and provenance close to the search/detail decision.
 - Keep the visible effective classification aligned across result rows,
   detail provenance, print/export preparation, and exported CSV/XLSX rows. If a
@@ -263,6 +266,8 @@ Frontend:
   supplier-label, or local-rule support.
 - Detail views keep alternate-classification comparison visible even when the
   current primary classification has GHS text but no pictograms.
+- Detail same-chemical comparison views expose source/ranking evidence for
+  each classification on desktop and narrow layouts.
 - Export preview, frontend CSV fallback, and backend CSV/XLSX rows include data
   state, primary source, report count, cache state, reference-link count, and
   classification-selection context.
@@ -282,8 +287,8 @@ Production QA:
 
 - `npm run qa:production-search-ui` must continue checking trust notes, source
   badges, no-GHS data-state behavior, export-preview trust columns, safe
-  reference link metadata, SDS link shape, and separated
-  data-correction/workflow support links.
+  reference link metadata, SDS link shape, Detail comparison evidence panels,
+  and separated data-correction/workflow support links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 

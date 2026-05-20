@@ -7,6 +7,10 @@ import {
   getLocalizedSignalWord,
   getLocalizedStatementText,
 } from "@/utils/ghsText";
+import {
+  SOURCE_CATEGORY,
+  buildClassificationEvidenceSummary,
+} from "@/utils/classificationEvidence";
 
 /**
  * Shared comparison table for GHS classifications.
@@ -100,6 +104,14 @@ export default function ClassificationComparisonTable({
     return new Set(words).size > 1;
   }, [columns]);
 
+  const evidenceSummaries = useMemo(
+    () =>
+      columns.map((col) =>
+        buildClassificationEvidenceSummary(col.classification),
+      ),
+    [columns],
+  );
+
   // ── Helpers ──
 
   const getColumnPictogramCodes = (col) =>
@@ -116,6 +128,69 @@ export default function ClassificationComparisonTable({
 
   const getPStatement = (col, code) =>
     (col.classification?.precautionary_statements || []).find((s) => s.code === code);
+
+  const getSourceEvidenceLabel = (summary) => {
+    switch (summary.sourceCategory) {
+      case SOURCE_CATEGORY.ECHA:
+        return t("compare.evidenceSourceEcha");
+      case SOURCE_CATEGORY.PUBCHEM:
+        return t("compare.evidenceSourcePubChem");
+      case SOURCE_CATEGORY.MANUAL:
+        return t("compare.evidenceSourceManual");
+      case SOURCE_CATEGORY.OTHER:
+        return t("compare.evidenceSourceOther");
+      default:
+        return t("compare.evidenceSourceUnknown");
+    }
+  };
+
+  const renderEvidenceBadges = (summary, colIdx, isSelected, testId) => (
+    <div
+      className="flex min-w-0 flex-wrap items-center gap-1.5"
+      data-testid={testId}
+      title={t("compare.evidenceHint")}
+    >
+      {isSelected && (
+        <span
+          className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700"
+          data-testid={`comparison-evidence-badge-selected-${colIdx}`}
+        >
+          {t("compare.evidenceSelected")}
+        </span>
+      )}
+      {summary.reportCount !== null ? (
+        <span
+          className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800"
+          data-testid={`comparison-evidence-badge-report-count-${colIdx}`}
+        >
+          {t("compare.evidenceReportCount", { count: summary.reportCount })}
+        </span>
+      ) : (
+        <span
+          className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+          data-testid={`comparison-evidence-badge-report-count-${colIdx}`}
+        >
+          {t("compare.evidenceNoReportCount")}
+        </span>
+      )}
+      <span
+        className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700"
+        data-testid={`comparison-evidence-badge-source-${colIdx}`}
+      >
+        {getSourceEvidenceLabel(summary)}
+      </span>
+      <span
+        className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700"
+        data-testid={`comparison-evidence-badge-coverage-${colIdx}`}
+      >
+        {t("compare.evidenceCoverage", {
+          pictograms: summary.pictogramCount,
+          hazards: summary.hazardCount,
+          precautions: summary.precautionCount,
+        })}
+      </span>
+    </div>
+  );
 
   if (isNarrowViewport) {
     return (
@@ -139,6 +214,7 @@ export default function ClassificationComparisonTable({
           const colHCodes = getColumnHCodes(col);
           const colPCodes = getColumnPCodes(col);
           const source = col.classification?.source;
+          const evidence = evidenceSummaries[colIdx];
 
           return (
             <article
@@ -255,6 +331,20 @@ export default function ClassificationComparisonTable({
                     <span className="text-slate-500">{t("compare.noSignalWord")}</span>
                   )}
                 </section>
+
+                {isSameChemical && (
+                  <section className="min-w-0">
+                    <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {t("compare.rowEvidence")}
+                    </h5>
+                    {renderEvidenceBadges(
+                      evidence,
+                      colIdx,
+                      isSelected,
+                      `comparison-mobile-evidence-panel-${colIdx}`,
+                    )}
+                  </section>
+                )}
 
                 <section className="min-w-0">
                   <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -518,6 +608,33 @@ export default function ClassificationComparisonTable({
               );
             })}
           </tr>
+
+          {/* Row: Evidence (same-chemical only) */}
+          {isSameChemical && (
+            <tr>
+              <td className="sticky left-0 z-10 border-r border-b border-slate-200 bg-slate-50 p-3 font-medium text-slate-600 align-top">
+                {t("compare.rowEvidence")}
+              </td>
+              {columns.map((col, colIdx) => {
+                const isSelected = selectedIndex === col.index;
+                return (
+                  <td
+                    key={colIdx}
+                    className={`border-b border-slate-200 p-3 align-top ${
+                      isSelected ? "bg-blue-50/70" : ""
+                    }`}
+                  >
+                    {renderEvidenceBadges(
+                      evidenceSummaries[colIdx],
+                      colIdx,
+                      isSelected,
+                      `comparison-evidence-panel-${colIdx}`,
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
 
           {/* ── Row: Hazard Statements ── */}
           <tr>

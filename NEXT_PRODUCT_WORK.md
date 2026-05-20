@@ -76,6 +76,11 @@ Current mode:
   transient failures remain retry states and do not become correction links.
   The production search UI gate now asserts those correction links keep their
   data-correction template and CAS context.
+- Completed current slice: Detail same-chemical comparison now shows compact
+  source/ranking evidence for each public classification: current selection,
+  report count, source family, and pictogram/H/P coverage. The same evidence is
+  rendered in desktop tables and narrow cards, with `qa:production-search-ui`
+  checking deployed coverage.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -92,7 +97,8 @@ Current mode:
    and admin-reviewed.
    Current baseline includes effective-classification source/report-count
    alignment, export-preview/CSV/XLSX trust columns, and contextual
-   data-quality correction links.
+   data-quality correction links. Detail comparison now also exposes
+   source/ranking evidence directly beside alternate classifications.
 2. Harden and monitor the simplified three-output label workflow in
    `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
    label, and identification small label. New work should improve QA,
