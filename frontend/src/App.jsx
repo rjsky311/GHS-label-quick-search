@@ -24,6 +24,7 @@ import {
   resolveEffectiveChemicalForPrint,
 } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
+import { parseBatchSearchInput } from "@/utils/batchSearchInput";
 import {
   buildPreparedSolutionItem,
   buildPresetRecord,
@@ -245,10 +246,11 @@ function App() {
   }, []);
 
   // ── Computed ──
-  const batchCount = batchCas
-    .split(/[,\n\t;]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0).length;
+  const batchSearchInput = useMemo(
+    () => parseBatchSearchInput(batchCas),
+    [batchCas]
+  );
+  const batchCount = batchSearchInput.acceptedCount;
 
   const filteredResults = useMemo(() => {
     let filtered = results;
@@ -365,13 +367,14 @@ function App() {
     setError("");
     setLoading(true);
 
-    const casNumbers = batchCas
-      .split(/[,\n\t;]+/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    const casNumbers = batchSearchInput.queries;
 
     if (casNumbers.length === 0) {
-      setError(t("search.errorNoValid"));
+      setError(
+        batchSearchInput.invalidCount > 0
+          ? t("search.batchNoValidCas")
+          : t("search.errorNoValid")
+      );
       setLoading(false);
       return;
     }
@@ -380,12 +383,12 @@ function App() {
     // batchCount > limit, but refuse here too so a stray programmatic
     // call or rapid click cannot bypass the guard and hit the backend
     // (which would 422 on the same check).
-    if (casNumbers.length > BATCH_SEARCH_LIMIT) {
+    if (batchSearchInput.overLimit) {
       setError(
         t("search.batchOverLimitDetail", {
           count: casNumbers.length,
           limit: BATCH_SEARCH_LIMIT,
-          excess: casNumbers.length - BATCH_SEARCH_LIMIT,
+          excess: batchSearchInput.excess,
         })
       );
       setLoading(false);
@@ -850,6 +853,7 @@ function App() {
           loading={loading}
           error={error}
           batchCount={batchCount}
+          batchSummary={batchSearchInput}
           searchInputRef={searchInputRef}
           onSetActiveTab={setActiveTab}
           onSetSingleCas={setSingleCas}

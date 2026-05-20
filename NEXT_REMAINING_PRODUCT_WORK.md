@@ -60,6 +60,10 @@ implementation checklist.
   dense continuation thresholds. `test:print-contract`, `qa:print-pdf`,
   `qa:production-batch-print`, and `qa:production-primary` pass. Keep this in
   monitoring unless a new screenshot or QA failure reopens it.
+- **Completed input-quality follow-up**: batch search now normalizes,
+  deduplicates, and checksum-checks pasted CAS lists before request. The UI
+  summarizes ignored duplicates and invalid entries so repeated or malformed
+  lines do not inflate print counts or create confusing missing labels later.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
@@ -327,6 +331,44 @@ Suggested verification:
 - Backend tests when source/reference validation changes
 - `npm run test:i18n`
 - `npm run qa:production-search-ui`
+
+## 3A. Batch Search Input Quality
+
+Why this matters: batch printing starts with pasted input. If duplicate CAS
+values, malformed lines, or checksum mistakes enter the result set silently, the
+user later sees wrong counts, missing labels, repeated labels, or blocked print
+flows that look like renderer failures.
+
+Implemented baseline:
+
+- Normalize pasted CAS input before backend search: full-width digits, CAS
+  prefixes, dash variants, and whitespace should collapse to canonical CAS
+  strings.
+- Deduplicate before request while keeping first-seen order.
+- Reject malformed CAS values and checksum failures before backend search.
+- Show duplicate and invalid counts near the batch textarea without adding a
+  noisy wizard.
+- Keep the backend size limit based on valid unique CAS values, not raw pasted
+  lines.
+
+Work to continue:
+
+- Preserve unresolved-search telemetry alignment by logging against the
+  normalized CAS values that were actually sent.
+
+Acceptance:
+
+- A repeated 100+ line paste of the same CAS sends one backend query and does
+  not trip the batch limit.
+- Invalid CAS entries such as `344-04-07` are not sent to `/api/search`.
+- The UI tells the user how many duplicates and invalid entries were ignored.
+- Batch print counts are based on searched, valid, unique CAS rows.
+
+Suggested verification:
+
+- `npm test -- --runInBand batchSearchInput.test.js SearchSection.test.js printAllWithGhs.integration.test.js`
+- `npm run test:i18n`
+- `npm run build`
 
 ## 4. Prepared Solution And Reprint Workflow Maturity
 

@@ -25,6 +25,7 @@ const defaultProps = {
   loading: false,
   error: null,
   batchCount: 0,
+  batchSummary: null,
   searchInputRef: React.createRef(),
   onSetActiveTab: jest.fn(),
   onSetSingleCas: jest.fn(),
@@ -152,6 +153,54 @@ describe('SearchSection', () => {
     it('does not show over-limit alert when batchCount is at the limit', () => {
       render(<SearchSection {...defaultProps} activeTab="batch" batchCount={100} />);
       expect(screen.queryByTestId('batch-over-limit-alert')).not.toBeInTheDocument();
+    });
+
+    it('shows duplicate and invalid CAS diagnostics without blocking valid unique entries', () => {
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchCount={2}
+          batchSummary={{
+            inputCount: 5,
+            acceptedCount: 2,
+            duplicateCount: 1,
+            invalidCount: 2,
+            invalidItems: [
+              { raw: '344-04-07' },
+              { raw: '67-64-2' },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByTestId('batch-input-diagnostics')).toBeInTheDocument();
+      expect(screen.getByTestId('batch-duplicate-summary')).toHaveTextContent(
+        'search.batchDuplicateSummary'
+      );
+      expect(screen.getByTestId('batch-invalid-summary')).toHaveTextContent(
+        'search.batchInvalidSummary'
+      );
+      expect(screen.getByTestId('batch-search-btn')).not.toBeDisabled();
+    });
+
+    it('disables submit when pasted batch input has no valid CAS values', () => {
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchCount={0}
+          batchSummary={{
+            inputCount: 2,
+            acceptedCount: 0,
+            duplicateCount: 0,
+            invalidCount: 2,
+            invalidItems: [{ raw: '344-04-07' }, { raw: 'not-a-cas' }],
+          }}
+        />
+      );
+
+      expect(screen.getByTestId('batch-search-btn')).toBeDisabled();
     });
 
     it('over-limit disables the submit button AND clicking it must not call onSearchBatch', () => {

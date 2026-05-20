@@ -54,6 +54,10 @@ Current mode:
   `qa:print-pdf`, `qa:production-batch-print`, and `qa:production-primary`.
   Keep monitoring this class of issue, but return the default continuation
   target to data governance / safety boundaries and low-noise UX polish.
+- Completed current slice: batch search input is normalized, deduplicated, and
+  checked for CAS format/checksum before the backend call. The UI summarizes
+  ignored duplicates and invalid entries early, because bad batch input is a
+  major source of later label-print confusion.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -74,6 +78,9 @@ Current mode:
    reintroducing old first-level complexity. Immediate focus: complete A4/Letter
    dense-content pagination must stay verified in PDF and deployed production
    QA.
+   Current related follow-up: keep the simplified batch input path covered in
+   regression QA so only valid, unique CAS values feed batch results and print
+   counts.
 3. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.

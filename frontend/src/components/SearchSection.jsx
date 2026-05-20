@@ -10,6 +10,7 @@ export default function SearchSection({
   loading,
   error,
   batchCount,
+  batchSummary,
   searchInputRef,
   onSetActiveTab,
   onSetSingleCas,
@@ -21,6 +22,14 @@ export default function SearchSection({
   batchProgress,
 }) {
   const { t } = useTranslation();
+  const hasBatchDiagnostics =
+    batchSummary &&
+    batchSummary.inputCount > 0 &&
+    (batchSummary.duplicateCount > 0 || batchSummary.invalidCount > 0);
+  const invalidPreview = (batchSummary?.invalidItems || [])
+    .slice(0, 3)
+    .map((item) => item.raw)
+    .join(", ");
   const progressPercent =
     batchProgress && batchProgress.total > 0
       ? Math.max(
@@ -128,6 +137,30 @@ export default function SearchSection({
                   </span>
                 )}
               </div>
+              {hasBatchDiagnostics && (
+                <div
+                  className="mt-3 grid gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:grid-cols-2"
+                  data-testid="batch-input-diagnostics"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {batchSummary.duplicateCount > 0 && (
+                    <p data-testid="batch-duplicate-summary">
+                      {t("search.batchDuplicateSummary", {
+                        count: batchSummary.duplicateCount,
+                      })}
+                    </p>
+                  )}
+                  {batchSummary.invalidCount > 0 && (
+                    <p data-testid="batch-invalid-summary">
+                      {t("search.batchInvalidSummary", {
+                        count: batchSummary.invalidCount,
+                        examples: invalidPreview,
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
               {batchCount > BATCH_SEARCH_LIMIT && (
                 <div
                   className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-red-700"
@@ -148,7 +181,11 @@ export default function SearchSection({
             <div className="flex gap-3">
               <button
                 onClick={onSearchBatch}
-                disabled={loading || batchCount > BATCH_SEARCH_LIMIT}
+                disabled={
+                  loading ||
+                  batchCount > BATCH_SEARCH_LIMIT ||
+                  (batchSummary?.inputCount > 0 && batchCount === 0)
+                }
                 className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                 data-testid="batch-search-btn"
               >

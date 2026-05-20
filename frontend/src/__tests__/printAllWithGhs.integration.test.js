@@ -149,6 +149,54 @@ async function runBatchSearch({ casInputs, mockResponses }) {
 }
 
 describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
+  it('normalizes, deduplicates, and filters invalid batch CAS input before hitting the backend', async () => {
+    const acetone = {
+      cas_number: '67-64-1',
+      name_en: 'Acetone',
+      name_zh: '丙酮',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS02' }],
+      hazard_statements: [{ code: 'H225', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Danger',
+      other_classifications: [],
+    };
+    const benzophenone = {
+      cas_number: '90-90-4',
+      name_en: '4-Bromobenzophenone',
+      name_zh: '4-溴二苯甲酮',
+      found: true,
+      ghs_pictograms: [{ code: 'GHS07' }],
+      hazard_statements: [{ code: 'H315', text_zh: 'x' }],
+      precautionary_statements: [],
+      signal_word: 'Warning',
+      other_classifications: [],
+    };
+
+    render(<App />);
+
+    await runBatchSearch({
+      casInputs: [
+        'CAS\uFF1A\uFF16\uFF17\uFF0D\uFF16\uFF14\uFF0D\uFF11',
+        '67-64-1',
+        '344-04-07',
+        '90\u201390\u20134',
+      ],
+      mockResponses: [acetone, benzophenone],
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/search$/),
+      { cas_numbers: ['67-64-1', '90-90-4'] }
+    );
+    expect(screen.getByTestId('batch-input-diagnostics')).toHaveTextContent(
+      'search.batchDuplicateSummary'
+    );
+    expect(screen.getByTestId('batch-input-diagnostics')).toHaveTextContent(
+      'search.batchInvalidSummary'
+    );
+  });
+
   it('opens the label modal with ONLY rows that have GHS data, excluding found-but-no-GHS and not-found rows', async () => {
     // Three-row scenario Codex specified:
     //   1. foundWithGhs  — included
