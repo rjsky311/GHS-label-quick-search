@@ -48,10 +48,11 @@ differences understandable and safe.
 
 Current baseline: the core data-trust surfaces now have regression gates for
 source conflicts, no-GHS states, selected-classification evidence, SDS/reference
-authority ordering, QR target metadata, correction links, and telemetry caps.
-Keep this section open as a monitoring prompt rather than as an unfinished
-feature list; add new implementation work only when a new source conflict,
-correction pattern, unsafe-link example, or upstream-data failure appears.
+authority ordering, QR target metadata, correction links, telemetry caps, and
+trusted Chinese-name display. Keep this section open as a monitoring prompt
+rather than as an unfinished feature list; add new implementation work only
+when a new source conflict, correction pattern, unsafe-link example,
+upstream-data failure, or missing-name curation example appears.
 
 ### 1.1 Source-Conflict Handling
 
@@ -212,6 +213,38 @@ Acceptance:
 - Public write paths are bounded.
 - Admin reports are useful but not over-collected.
 - Abuse and privacy assumptions are documented.
+
+### 1.5 Chinese Name Display And Curation Boundary
+
+Status: `Gate added` on 2026-05-20.
+
+Goal: Chinese names should help identity checks without creating false
+coverage. When the dictionary does not have a real Chinese name, the UI should
+not repeat English and make the user think a Chinese name was curated.
+
+Work items:
+
+- Completed: added a shared frontend resolver that accepts Chinese display
+  names only when they contain CJK text and are not the English name repeated
+  through `name_zh`, `name_zh_tw`, or `name`.
+- Completed: aligned localized names, autocomplete, favorites/history,
+  prepare-solution summaries, print fit scoring, label preview display, and
+  printed small labels to that resolver.
+- Completed: added focused tests for trusted Chinese names, English-only
+  placeholders, bilingual localized display, and CJK detection.
+- Keep missing Chinese names in the data-correction/admin-curation path rather
+  than using automated translation as runtime label text.
+- Add examples when users find a CAS with a known Chinese name that is missing
+  from the seed dictionary or manual entries.
+
+Acceptance:
+
+- A record with `name_zh: "Allyl Alcohol"` displays one English identity, not
+  two lines of the same English name.
+- A record with `name_zh: "丙酮"` still shows bilingual identity where the
+  workflow expects it.
+- Small labels omit the Chinese line when it is not trusted, while keeping CAS,
+  English name, QR where applicable, and all GHS pictograms.
 
 ## 2. User Guidance, Low-Noise UX, And First-Time Success
 

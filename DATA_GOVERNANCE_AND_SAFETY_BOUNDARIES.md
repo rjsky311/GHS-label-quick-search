@@ -34,6 +34,14 @@ Rules:
 - If a search result only has an English name, printed small labels should keep
   the English name and omit the Chinese line rather than repeating English as
   fake Chinese.
+- Frontend display surfaces must use the shared trusted-Chinese-name resolver:
+  a value is printable/displayable as Chinese only when it contains CJK text and
+  is not just the English name repeated through `name_zh`, `name_zh_tw`, or
+  `name`.
+- Results, detail/localized-name helpers, favorites, history, autocomplete,
+  prepare-solution summaries, label previews, print layout scoring, and printed
+  labels should share that resolver so the same chemical identity does not look
+  different across workflows.
 - When a known CAS/name pair is missing a Chinese display name, add it through
   the local dictionary or an admin-reviewed manual dictionary entry with source
   evidence.
@@ -251,6 +259,9 @@ Frontend:
   export preparation.
 - Print planner blocks unavailable/unverified source data from hazard-label
   output.
+- Display-name helpers reject fake Chinese names that are English-only
+  placeholders, and small-label output omits the Chinese line instead of
+  duplicating English.
 
 Production QA:
 

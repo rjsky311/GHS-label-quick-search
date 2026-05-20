@@ -3,6 +3,7 @@ import { Search, Clock, Star, X, Loader2, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "@/constants/ghs";
+import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 const isCasLike = (str) => /^[\d-]+$/.test(str.trim());
 
@@ -259,8 +260,10 @@ export default function SearchAutocomplete({
                   <span className="font-mono text-sm text-blue-700">{item.cas_number}</span>
                   <span className="truncate text-sm text-slate-950">{item.name_en}</span>
                 </div>
-                {item.name_zh && (
-                  <div className="truncate text-xs text-slate-500">{item.name_zh}</div>
+                {resolveTrustedChineseName(item) && (
+                  <div className="truncate text-xs text-slate-500">
+                    {resolveTrustedChineseName(item)}
+                  </div>
                 )}
               </div>
               <span className="shrink-0 text-xs text-slate-500">
@@ -303,9 +306,9 @@ export default function SearchAutocomplete({
                     <span className="font-mono text-sm text-blue-700">{item.cas_number}</span>
                     <span className="truncate text-sm text-slate-950">{item.name_en}</span>
                   </div>
-                  {item.name_zh && (
+                  {resolveTrustedChineseName(item) && (
                     <div className="truncate text-xs text-slate-500">
-                      {item.name_zh}
+                      {resolveTrustedChineseName(item)}
                       {isAlias && (
                         <span className="ml-1 text-emerald-700">← {item.alias}</span>
                       )}

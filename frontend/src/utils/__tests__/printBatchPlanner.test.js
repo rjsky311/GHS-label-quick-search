@@ -182,11 +182,11 @@ describe("printBatchPlanner", () => {
       expect.objectContaining({
         category: BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
         preferredPurpose: BATCH_PRINT_PURPOSE.COMPLETE,
-        effectivePurpose: BATCH_PRINT_PURPOSE.QUICK_ID,
+        effectivePurpose: BATCH_PRINT_PURPOSE.SUPPLEMENTAL,
       }),
     );
     expect(reducedItem.__printLayoutOverride.stockPreset).toBe("large-primary");
-    expect(reducedItem.__printLayoutOverride.template).toBe("icon");
+    expect(reducedItem.__printLayoutOverride.template).toBe("qrcode");
   });
 
   it("classifies very dense A4 complete labels as same-stock continuation", () => {

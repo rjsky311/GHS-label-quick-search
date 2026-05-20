@@ -6,6 +6,7 @@ import {
   evaluatePrintReadiness,
   getMaxSupplementalPictogramCount,
 } from "@/utils/printFitEngine";
+import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 export const BATCH_PRINT_PURPOSE = Object.freeze({
   QUICK_ID: "quick_id",
@@ -125,7 +126,7 @@ const identityText = (content = {}) =>
   [
     content.identity,
     content.effectiveChemical?.name_en,
-    content.effectiveChemical?.name_zh,
+    resolveTrustedChineseName(content.effectiveChemical),
     content.effectiveChemical?.name,
     content.cas,
   ]

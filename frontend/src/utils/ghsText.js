@@ -113,10 +113,50 @@ export function getLocalizedPictogramName(pictogram, languageLike = "zh") {
   return pictogram?.name_zh || pictogram?.name || "";
 }
 
+export const hasCjkText = (value) => /[\u3400-\u9fff]/.test(String(value || ""));
+
+export const normalizeIdentityText = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+export function resolveEnglishName(chemical = {}) {
+  const directEnglish = String(chemical?.name_en || "").trim();
+  if (directEnglish) return directEnglish;
+
+  const genericName = String(chemical?.name || "").trim();
+  return genericName && !hasCjkText(genericName) ? genericName : "";
+}
+
+export function resolveTrustedChineseName(chemical = {}) {
+  const candidates = [
+    chemical?.name_zh,
+    chemical?.name_zh_tw,
+    chemical?.name,
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  if (candidates.length === 0) return "";
+
+  const englishCandidates = [chemical?.name_en, chemical?.name]
+    .map(normalizeIdentityText)
+    .filter((value) => value && !hasCjkText(value))
+    .filter(Boolean);
+
+  return (
+    candidates.find((candidate) => {
+      if (!hasCjkText(candidate)) return false;
+      return !englishCandidates.includes(normalizeIdentityText(candidate));
+    }) || ""
+  );
+}
+
 export function getLocalizedNames(chemical, languageLike = "zh") {
   const locale = resolveDisplayLocale(languageLike);
-  const englishName = chemical?.name_en || chemical?.name || "";
-  const chineseName = chemical?.name_zh || chemical?.name_zh_tw || "";
+  const englishName = resolveEnglishName(chemical);
+  const chineseName = resolveTrustedChineseName(chemical);
   const fallbackName = chemical?.cas_number || "";
 
   if (locale === "en") {
@@ -129,6 +169,9 @@ export function getLocalizedNames(chemical, languageLike = "zh") {
 
   return {
     primary: chineseName || englishName || fallbackName,
-    secondary: englishName && englishName !== chineseName ? englishName : "",
+    secondary:
+      chineseName && englishName && englishName !== chineseName
+        ? englishName
+        : "",
   };
 }

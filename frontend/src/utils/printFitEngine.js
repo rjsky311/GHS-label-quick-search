@@ -18,6 +18,7 @@ import {
   resolveEffectiveLabelContentLocale,
   resolveEffectiveLabelNameDisplay,
   getLocalizedStatementText,
+  resolveTrustedChineseName,
   shouldRenderBilingualLabelText,
 } from "@/utils/ghsText";
 
@@ -589,16 +590,17 @@ const getRenderedStatementText = (statement, layout = {}, locale = "zh") => {
 
 const getRenderedIdentityText = (chemical = {}, layout = {}, locale = "zh") => {
   const nameDisplay = resolveEffectiveLabelNameDisplay(layout, locale);
+  const chineseName = resolveTrustedChineseName(chemical);
   if (nameDisplay === "both") {
-    return joinUniqueText(chemical.name_en || chemical.name, chemical.name_zh);
+    return joinUniqueText(chemical.name_en || chemical.name, chineseName);
   }
   if (nameDisplay === "en") {
-    return chemical.name_en || chemical.name || chemical.name_zh || "";
+    return chemical.name_en || chemical.name || chineseName || "";
   }
   if (nameDisplay === "zh") {
-    return chemical.name_zh || chemical.name_en || chemical.name || "";
+    return chineseName || chemical.name_en || chemical.name || "";
   }
-  return chemical.name_zh || chemical.name_en || chemical.name || "";
+  return chineseName || chemical.name_en || chemical.name || "";
 };
 
 const statementTextWeight = (

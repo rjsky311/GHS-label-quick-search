@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/formatDate";
 import useFocusTrap from "@/hooks/useFocusTrap";
+import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 export default function HistorySidebar({
   history,
@@ -67,9 +68,9 @@ export default function HistorySidebar({
                 <div className="truncate text-sm text-slate-950">
                   {item.name_en}
                 </div>
-                {item.name_zh && (
+                {resolveTrustedChineseName(item) && (
                   <div className="truncate text-xs text-slate-500">
-                    {item.name_zh}
+                    {resolveTrustedChineseName(item)}
                   </div>
                 )}
                 <div className="mt-1 text-xs text-slate-500">

@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import { hasGhsData } from "@/utils/ghsAvailability";
-import { getLocalizedPictogramName } from "@/utils/ghsText";
+import {
+  getLocalizedPictogramName,
+  resolveTrustedChineseName,
+} from "@/utils/ghsText";
 
 export default function FavoritesSidebar({
   favorites,
@@ -76,9 +79,9 @@ export default function FavoritesSidebar({
                     <div className="font-medium text-slate-950">
                       {item.name_en}
                     </div>
-                    {item.name_zh && (
+                    {resolveTrustedChineseName(item) && (
                       <div className="text-sm text-slate-500">
-                        {item.name_zh}
+                        {resolveTrustedChineseName(item)}
                       </div>
                     )}
                     {item.ghs_pictograms?.length > 0 && (

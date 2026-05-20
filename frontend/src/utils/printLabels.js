@@ -23,6 +23,7 @@ import {
   resolveEffectiveLabelNameDisplay,
   getLocalizedSignalWord,
   getLocalizedStatementText,
+  resolveTrustedChineseName,
   shouldRenderBilingualLabelText,
 } from "@/utils/ghsText";
 
@@ -54,29 +55,7 @@ export function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-const hasCjkText = (value) => /[\u3400-\u9fff]/.test(String(value || ""));
-
-const normalizeIdentityText = (value) =>
-  String(value || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-
-const resolvePrintableChineseName = (chemical = {}) => {
-  const chineseName = String(
-    chemical.name_zh || chemical.name_zh_tw || "",
-  ).trim();
-  if (!chineseName) return "";
-
-  const normalizedChineseName = normalizeIdentityText(chineseName);
-  const englishCandidates = [chemical.name_en, chemical.name]
-    .map(normalizeIdentityText)
-    .filter(Boolean);
-
-  if (englishCandidates.includes(normalizedChineseName)) return "";
-  if (!hasCjkText(chineseName)) return "";
-  return chineseName;
-};
+const resolvePrintableChineseName = resolveTrustedChineseName;
 
 export function getQRCodeUrl(text, size = 100) {
   const qr = qrcode(0, "M");

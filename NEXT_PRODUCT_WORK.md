@@ -60,6 +60,10 @@ Current mode:
   major source of later label-print confusion. The same normalized CAS path now
   feeds search history and bounded frontend observability, so duplicate or
   invalid raw paste content does not leak into later diagnostics.
+- Completed current slice: Chinese-name display now uses a shared trust helper
+  across localized names, favorites/history/autocomplete, prepare-solution
+  summaries, print preview/scoring, and printed labels. English-only
+  placeholders are omitted instead of being shown as Chinese.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -70,7 +74,9 @@ Current mode:
    `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`; do not install the full
    `scientific-agent-skills` repo, and only reopen its whitelist for
    maintainer-side data lookup or evidence gathering. Keep source/QR/admin
-   changes aligned with that policy and add tests when behavior changes.
+   changes aligned with that policy and add tests when behavior changes. Keep
+   missing Chinese names as a curation issue, not a display fallback that
+   repeats English.
    Current baseline includes effective-classification source/report-count
    alignment and export-preview/CSV/XLSX trust columns.
 2. Harden and monitor the simplified three-output label workflow in

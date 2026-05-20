@@ -1,4 +1,5 @@
 import { resolvePrintContentPolicy } from "@/utils/printContentPolicy";
+import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 export const PRINT_LABEL_ELEMENT_STATUS = Object.freeze({
   PRESENT: "present",
@@ -96,7 +97,7 @@ export function buildPrintLabelContent(chemical, options = {}) {
     effectiveChemical.signal_word || effectiveChemical.signal_word_zh || "";
   const identity =
     effectiveChemical.name_en ||
-    effectiveChemical.name_zh ||
+    resolveTrustedChineseName(effectiveChemical) ||
     effectiveChemical.name ||
     effectiveChemical.cas_number ||
     "";

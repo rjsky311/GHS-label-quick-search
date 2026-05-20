@@ -144,6 +144,10 @@ Current completion snapshot:
   `CAPTURE_DICTIONARY_MISSES=true` in the backend). Public builds remain
   no-capture by default, and optional pilot payloads are trimmed and
   allow-listed before posting.
+- **Chinese-name trust checkpoint 2026-05-20**: frontend display and print
+  surfaces now use a shared trusted-Chinese-name resolver. English-only
+  placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small
+  labels omit the Chinese line rather than duplicating English.
 
 ## 3. Next Priority Order
 
@@ -386,6 +390,9 @@ Do next:
   links, and local dictionary aliases.
 - Keep unsafe URLs filtered on frontend and backend.
 - Keep dictionary miss telemetry opt-in, bounded, and abuse-resistant.
+- Keep Chinese display names honest: show only dictionary/manual values that
+  contain real CJK text, and route missing names into curation rather than
+  repeating English as fake Chinese.
 - Keep manual entries, aliases, and reference links admin-gated.
 - Make "unavailable upstream data" impossible to confuse with "no hazards."
 - Keep data-correction requests separate from workflow/business requests.

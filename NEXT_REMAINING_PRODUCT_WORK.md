@@ -71,6 +71,11 @@ implementation checklist.
   now explicitly opt-in and still requires backend capture to be enabled. When
   enabled for a pilot, unresolved-search payloads are trimmed, context is
   allow-listed, and telemetry failures do not affect search UX.
+- **Completed Chinese-name trust follow-up**: localized-name helpers,
+  autocomplete, favorites/history, prepare-solution summaries, print fit
+  scoring, print previews, and printed labels now share the same resolver for
+  Chinese display names. English-only placeholders in `name_zh`/`name_zh_tw`
+  are omitted rather than repeated as fake Chinese identity.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.

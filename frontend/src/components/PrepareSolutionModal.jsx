@@ -7,6 +7,7 @@ import {
   getPreparedExpiryStatus,
   todayDateString,
 } from "@/utils/preparedSolution";
+import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 function getRecentExpiryStatus(expiryDate) {
   const expiryStatus = getPreparedExpiryStatus(expiryDate);
@@ -296,8 +297,10 @@ export default function PrepareSolutionModal({
             <div className="font-medium text-slate-950">
               {parent.name_en || ""}
             </div>
-            {parent.name_zh && (
-              <div className="text-sm text-slate-500">{parent.name_zh}</div>
+            {resolveTrustedChineseName(parent) && (
+              <div className="text-sm text-slate-500">
+                {resolveTrustedChineseName(parent)}
+              </div>
             )}
           </div>
 

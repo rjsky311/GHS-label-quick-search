@@ -62,7 +62,9 @@ import {
   getLocalizedNames,
   getLocalizedSignalWord,
   getLocalizedStatementText,
+  resolveEnglishName,
   resolveEffectiveLabelNameDisplay,
+  resolveTrustedChineseName,
 } from "@/utils/ghsText";
 
 const TEMPLATE_OPTIONS = [
@@ -417,12 +419,11 @@ function buildDisplayNames(chem, nameDisplay, languageLike = "en") {
   const localizedNames = getLocalizedNames(chem, languageLike);
   const englishName =
     preparedName ||
-    chem.name_en ||
-    chem.name ||
+    resolveEnglishName(chem) ||
     localizedNames.primary ||
     chem.cas_number;
   const chineseName =
-    chem.name_zh || chem.name_zh_tw || localizedNames.secondary || "";
+    resolveTrustedChineseName(chem) || localizedNames.secondary || "";
 
   if (nameDisplay === "en") return [englishName].filter(Boolean);
   if (nameDisplay === "zh") return [chineseName || englishName].filter(Boolean);
