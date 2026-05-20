@@ -196,6 +196,10 @@ Work items:
   aggregation, exports are not analytics storage, identity/free-form payloads
   stay out of miss context, and abuse is handled by disabling capture before
   loosening caps.
+- Completed: added a frontend opt-in gate for dictionary miss capture. The app
+  now only posts unresolved-search miss telemetry when
+  `VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true`; payloads are trimmed, context is
+  allow-listed, and failed telemetry never affects the search flow.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should

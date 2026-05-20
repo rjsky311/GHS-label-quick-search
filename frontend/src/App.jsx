@@ -39,6 +39,7 @@ import {
   persistPilotAdminKey,
   PILOT_ADMIN_ENABLED,
 } from "@/constants/admin";
+import { recordDictionaryMissQuery } from "@/utils/workspaceDocuments";
 
 // Components
 import AdminAccessDialog from "@/components/AdminAccessDialog";
@@ -326,15 +327,31 @@ function App() {
     (query, queryType, result, meta = {}) => {
       if (!result || result.found) return;
 
+      const normalizedCas = String(result.cas_number || query || "").trim();
       logObservabilityEvent("search_unresolved", {
         query,
         queryType,
-        cas: result.cas_number || query,
+        cas: normalizedCas,
         status: result.upstream_error ? "upstream_error" : "not_found",
         meta,
       });
+
+      void recordDictionaryMissQuery({
+        query,
+        queryKind: queryType,
+        endpoint: "frontend-search",
+        context: {
+          locale: i18n.language,
+          normalizedCas,
+          resultCount: 0,
+          searchMode: queryType,
+          source: "frontend",
+        },
+      }).catch(() => {
+        // Optional pilot telemetry must never affect search UX.
+      });
     },
-    [logObservabilityEvent]
+    [i18n.language, logObservabilityEvent]
   );
 
   const logBatchInputNormalization = (status) => {

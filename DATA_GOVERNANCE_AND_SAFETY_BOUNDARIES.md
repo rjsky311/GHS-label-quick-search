@@ -168,6 +168,9 @@ size. Admin-gated does not mean unbounded.
 Telemetry:
 
 - Dictionary miss capture is opt-in via `CAPTURE_DICTIONARY_MISSES=true`.
+- Frontend miss reporting is also opt-in via
+  `VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true`; public builds should keep this
+  disabled unless a pilot owner explicitly enables backend capture too.
 - Miss-query payloads must remain length-limited, context-size-limited, and
   rate-limited.
 - Miss-query context is limited to an allow-list of non-freeform metadata keys:
@@ -175,6 +178,8 @@ Telemetry:
   Unsupported keys and nested objects must be dropped before persistence, and
   long allowed scalar values must be rejected.
 - Telemetry must not become a public unbounded write path into SQLite.
+- Frontend miss reporting should be best-effort only. It must not block search
+  UX, and it must send only the allow-listed context fields above.
 
 Retention and review rules:
 

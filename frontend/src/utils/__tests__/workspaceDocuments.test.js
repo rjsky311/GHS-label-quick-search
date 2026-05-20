@@ -5,6 +5,7 @@ describe("workspaceDocuments", () => {
     jest.resetModules();
     process.env = { ...originalEnv };
     delete globalThis.__APP_WORKSPACE_SYNC_ENABLED__;
+    delete globalThis.__APP_DICTIONARY_MISS_CAPTURE_ENABLED__;
     sessionStorage.clear();
   });
 
@@ -16,6 +17,7 @@ describe("workspaceDocuments", () => {
   function loadModule() {
     const axios = {
       get: jest.fn(),
+      post: jest.fn(),
       put: jest.fn(),
     };
     jest.doMock("axios", () => ({
@@ -83,6 +85,60 @@ describe("workspaceDocuments", () => {
       expect.stringMatching(/\/api\/workspace\/lab_profile$/),
       { payload: { organization: "Lab B" } },
       { headers: { "x-ghs-admin-key": "secret" } }
+    );
+  });
+
+  it("keeps dictionary miss capture disabled unless explicitly enabled", async () => {
+    const { axios, workspaceDocuments } = loadModule();
+
+    await expect(
+      workspaceDocuments.recordDictionaryMissQuery({
+        query: "mystery solvent",
+        context: { source: "frontend" },
+      })
+    ).resolves.toBeNull();
+
+    expect(workspaceDocuments.DICTIONARY_MISS_CAPTURE_ENABLED).toBe(false);
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  it("sanitizes dictionary miss payloads before posting when capture is enabled", async () => {
+    process.env.VITE_ENABLE_DICTIONARY_MISS_CAPTURE = "true";
+    const { axios, workspaceDocuments } = loadModule();
+    axios.post.mockResolvedValue({ data: { captured: true } });
+
+    await expect(
+      workspaceDocuments.recordDictionaryMissQuery({
+        query: "x".repeat(200),
+        queryKind: "batch",
+        endpoint: "frontend-search",
+        context: {
+          locale: "zh-TW",
+          normalizedCas: "64-17-5",
+          resultCount: 0,
+          searchMode: "batch",
+          source: "frontend",
+          email: "user@example.test",
+          nested: { freeform: true },
+        },
+      })
+    ).resolves.toEqual({ captured: true });
+
+    expect(workspaceDocuments.DICTIONARY_MISS_CAPTURE_ENABLED).toBe(true);
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/dictionary\/miss-query$/),
+      {
+        query: "x".repeat(workspaceDocuments.MAX_DICTIONARY_MISS_QUERY_LENGTH),
+        query_kind: "batch",
+        endpoint: "frontend-search",
+        context: {
+          locale: "zh-TW",
+          normalizedCas: "64-17-5",
+          resultCount: 0,
+          searchMode: "batch",
+          source: "frontend",
+        },
+      }
     );
   });
 });

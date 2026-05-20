@@ -139,6 +139,11 @@ Current completion snapshot:
   deduplicated, checksum-checked, and summarized before request. Search
   history and frontend observability now follow the same normalized handoff,
   with bounded telemetry metadata instead of raw invalid paste payloads.
+- **Dictionary miss telemetry checkpoint**: unresolved-search miss reporting is
+  double opt-in (`VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true` in the frontend and
+  `CAPTURE_DICTIONARY_MISSES=true` in the backend). Public builds remain
+  no-capture by default, and optional pilot payloads are trimmed and
+  allow-listed before posting.
 
 ## 3. Next Priority Order
 

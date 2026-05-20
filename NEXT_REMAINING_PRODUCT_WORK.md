@@ -67,6 +67,10 @@ implementation checklist.
   Search history and frontend observability now use the same normalized CAS
   handoff, with bounded telemetry metadata that records counts and sent CAS
   previews without storing raw invalid paste content.
+- **Completed telemetry-gate follow-up**: frontend dictionary miss reporting is
+  now explicitly opt-in and still requires backend capture to be enabled. When
+  enabled for a pilot, unresolved-search payloads are trimmed, context is
+  allow-listed, and telemetry failures do not affect search UX.
 - **Do not reopen by default**: the v1.10 print workflow baseline and completed
   five workstreams are historical context unless new evidence proves a
   regression.
