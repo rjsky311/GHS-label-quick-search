@@ -310,6 +310,12 @@ def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
         assert recaptured["hit_count"] == 2
         assert recaptured["resolution_status"] == "ignored"
         assert recaptured["context"] == {"locale": "en", "resultCount": 0}
+        assert store.get_dictionary_summary()["missQueryStatusCounts"] == {
+            "ignored": 1,
+            "needs_evidence": 0,
+            "open": 0,
+            "resolved": 0,
+        }
     finally:
         store.close()
 

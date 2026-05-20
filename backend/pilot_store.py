@@ -732,6 +732,19 @@ class PilotStore:
         )
         return [self._miss_query_row_to_dict(row) for row in rows]
 
+    def get_miss_query_status_counts(self) -> dict[str, int]:
+        rows = self._fetchall(
+            """
+            SELECT resolution_status, COUNT(*) AS count
+            FROM dictionary_miss_queries
+            GROUP BY resolution_status
+            """
+        )
+        counts = {status: 0 for status in sorted(MISS_QUERY_STATUSES)}
+        for row in rows:
+            counts[row["resolution_status"]] = int(row["count"])
+        return counts
+
     def update_miss_query_resolution(
         self,
         miss_id: int,
@@ -876,6 +889,7 @@ class PilotStore:
                 "SELECT COUNT(*) FROM dictionary_miss_queries WHERE resolution_status = ?",
                 ("open",),
             ),
+            "missQueryStatusCounts": self.get_miss_query_status_counts(),
             "referenceLinkCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
                 (ACTIVE_REFERENCE_STATUS,),

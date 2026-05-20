@@ -220,6 +220,9 @@ Work items:
   miss queries as `resolved`, `needs_evidence`, or `ignored`; resolved rows
   require a reviewed CAS number, and repeated capture preserves a non-open
   review state instead of reopening already triaged rows.
+- Completed: added miss-query status counts to the admin report/dashboard so
+  pilots can distinguish open backlog, needs-evidence work, resolved items, and
+  ignored noise.
 - Review dictionary miss telemetry retention, payload caps, rate limits, and
   admin export scope.
 - Decide what data is worth collecting for a public free tool and what should

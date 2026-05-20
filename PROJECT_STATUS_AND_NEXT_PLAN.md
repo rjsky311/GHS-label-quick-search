@@ -152,7 +152,9 @@ Current completion snapshot:
 - **Miss-query review checkpoint 2026-05-21**: pilot miss-query rows now have
   an admin review closure path. The dashboard can mark a miss as resolved with
   a CAS, needs-evidence, or ignored; duplicate capture preserves non-open
-  review status instead of turning a handled item back into an open task.
+  review status instead of turning a handled item back into an open task. Admin
+  reports also expose status-count totals so maintainers can tell whether the
+  queue is being reduced or merely accumulating.
 - **Chinese-name trust checkpoint 2026-05-20**: frontend display and print
   surfaces now use a shared trusted-Chinese-name resolver. English-only
   placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small

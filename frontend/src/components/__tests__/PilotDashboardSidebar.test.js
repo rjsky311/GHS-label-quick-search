@@ -16,6 +16,12 @@ const baseProps = {
       openMissQueryCount: 2,
       manualEntryCount: 3,
       referenceLinkCount: 4,
+      missQueryStatusCounts: {
+        open: 2,
+        needs_evidence: 1,
+        resolved: 3,
+        ignored: 4,
+      },
       topMissQueries: [
         {
           id: 101,
@@ -73,6 +79,10 @@ describe("PilotDashboardSidebar", () => {
 
     expect(screen.getByTestId("pilot-summary-pending-aliases")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
+    expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
+    expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
+    expect(screen.getByTestId("miss-query-status-count-resolved")).toHaveTextContent("3");
+    expect(screen.getByTestId("miss-query-status-count-ignored")).toHaveTextContent("4");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
   });
 

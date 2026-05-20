@@ -86,6 +86,7 @@ export default function PilotDashboardSidebar(props) {
   const counters = report?.counters || {};
   const recentEvents = report?.recentEvents || [];
   const missQueries = dictionary.topMissQueries || [];
+  const missStatusCounts = dictionary.missQueryStatusCounts || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const recentManualEntries = useMemo(() => [...manualEntries].slice(0, 8), [manualEntries]);
   const recentAliases = useMemo(() => [...aliases].slice(0, 8), [aliases]);
@@ -395,6 +396,27 @@ export default function PilotDashboardSidebar(props) {
                       "These are the unresolved searches that are most worth backfilling into the dictionary.",
                   })}
                 />
+                <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                  {[
+                    ["open", t("pilot.missStatusOpen", { defaultValue: "Open" })],
+                    [
+                      "needs_evidence",
+                      t("pilot.missStatusNeedsEvidence", {
+                        defaultValue: "Needs evidence",
+                      }),
+                    ],
+                    ["resolved", t("pilot.missStatusResolved", { defaultValue: "Resolved" })],
+                    ["ignored", t("pilot.missStatusIgnored", { defaultValue: "Ignored" })],
+                  ].map(([status, label]) => (
+                    <span
+                      key={status}
+                      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-600"
+                      data-testid={`miss-query-status-count-${status}`}
+                    >
+                      {label}: {missStatusCounts[status] || 0}
+                    </span>
+                  ))}
+                </div>
                 {missQueries.length === 0 ? (
                   <p className="text-sm text-slate-500">
                     {t("pilot.noMissQueries", {
