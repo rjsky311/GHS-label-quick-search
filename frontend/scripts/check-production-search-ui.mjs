@@ -135,6 +135,30 @@ const inspectIssueLink = async (locator) => {
   };
 };
 
+const hasStructuredCorrectionContext = (
+  issue,
+  { issueType, currentOutputIncludes, expectedOutputIncludes, casNumber },
+) => {
+  if (!issue || issue.count < 1) return false;
+  if (issue.template !== "data-correction.yml") return false;
+  if (issue.labels !== "data-correction") return false;
+  if (issueType && issue.issueType !== issueType) return false;
+  if (casNumber && issue.casNumber !== casNumber) return false;
+  if (
+    currentOutputIncludes &&
+    !issue.currentOutput.includes(currentOutputIncludes)
+  ) {
+    return false;
+  }
+  if (
+    expectedOutputIncludes &&
+    !issue.expectedOutput.includes(expectedOutputIncludes)
+  ) {
+    return false;
+  }
+  return true;
+};
+
 const commonChromePaths = () => {
   if (process.platform === "win32") {
     return [
@@ -1307,6 +1331,22 @@ try {
   ) {
     failures.push("results-source-conflict-correction-body-incomplete");
   }
+  if (
+    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
+    !hasStructuredCorrectionContext(
+      resultsTrustSurface.sourceConflictCorrection,
+      {
+        issueType: "source-conflict",
+        casNumber: searchTerm,
+        currentOutputIncludes: "multiple public GHS classifications",
+        expectedOutputIncludes: "preferred classification",
+      },
+    )
+  ) {
+    failures.push(
+      "results-source-conflict-correction-structured-context-missing",
+    );
+  }
   if (resultsTrustSurface.checklistCount < 3) {
     failures.push("results-authoritative-checklist-incomplete");
   }
@@ -1543,6 +1583,19 @@ try {
     !detailTrustSurface.sourceConflictCorrection.body.includes(searchTerm)
   ) {
     failures.push("detail-source-conflict-correction-body-incomplete");
+  }
+  if (
+    detailTrustSurface.sourceConflictCorrection.count > 0 &&
+    !hasStructuredCorrectionContext(detailTrustSurface.sourceConflictCorrection, {
+      issueType: "source-conflict",
+      casNumber: searchTerm,
+      currentOutputIncludes: "multiple public GHS classifications",
+      expectedOutputIncludes: "preferred classification",
+    })
+  ) {
+    failures.push(
+      "detail-source-conflict-correction-structured-context-missing",
+    );
   }
   if (detailTrustSurface.references.length < 3) {
     failures.push("detail-reference-links-incomplete");
@@ -1824,6 +1877,17 @@ try {
   ) {
     failures.push("no-ghs-result-correction-body-incomplete");
   }
+  if (
+    noGhsState.result.noGhsCorrection.count > 0 &&
+    !hasStructuredCorrectionContext(noGhsState.result.noGhsCorrection, {
+      issueType: "no-ghs-data",
+      casNumber: noGhsSearchTerm,
+      currentOutputIncludes: "no GHS hazard content",
+      expectedOutputIncludes: "missing GHS classification",
+    })
+  ) {
+    failures.push("no-ghs-result-correction-structured-context-missing");
+  }
   if (noGhsState.result.textOnlyBannerCount > 0) {
     failures.push("no-ghs-result-misclassified-as-text-only");
   }
@@ -1851,6 +1915,17 @@ try {
     !noGhsState.detail.noGhsCorrection.body.includes(noGhsSearchTerm)
   ) {
     failures.push("no-ghs-detail-correction-body-incomplete");
+  }
+  if (
+    noGhsState.detail.noGhsCorrection.count > 0 &&
+    !hasStructuredCorrectionContext(noGhsState.detail.noGhsCorrection, {
+      issueType: "no-ghs-data",
+      casNumber: noGhsSearchTerm,
+      currentOutputIncludes: "no GHS hazard content",
+      expectedOutputIncludes: "missing GHS classification",
+    })
+  ) {
+    failures.push("no-ghs-detail-correction-structured-context-missing");
   }
   if (noGhsState.detail.textOnlyBannerCount > 0) {
     failures.push("no-ghs-detail-misclassified-as-text-only");

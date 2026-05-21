@@ -211,7 +211,10 @@ Current completion snapshot:
   footer links remain low-pressure. This keeps safety-data corrections and
   workflow requests auditable without adding another in-app form.
   `qa:production-search-ui` now checks the structured workflow and
-  missing-Chinese-name correction fields on the deployed frontend.
+  missing-Chinese-name correction fields on the deployed frontend. The same
+  production gate also checks structured no-GHS and source-conflict correction
+  fields in both result-row and Detail paths, so all public data-quality
+  correction links keep actionable issue-form context.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

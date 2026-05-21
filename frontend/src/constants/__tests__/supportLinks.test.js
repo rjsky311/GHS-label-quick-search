@@ -44,6 +44,58 @@ describe("supportLinks", () => {
     );
   });
 
+  it("adds default structured context for each data-quality correction type", () => {
+    const cases = [
+      {
+        issueType: "missing-chinese-name",
+        current: "does not have a trusted Chinese name",
+        expected: "Traditional Chinese name",
+        evidence: "SDS, supplier label, catalog, or regulatory source",
+      },
+      {
+        issueType: "no-ghs-data",
+        current: "no GHS hazard content",
+        expected: "missing GHS classification",
+        evidence: "SDS, supplier label, or regulatory source",
+      },
+      {
+        issueType: "ghs-text-no-pictograms",
+        current: "no renderable GHS pictograms",
+        expected: "expected pictograms",
+        evidence: "SDS, supplier label, or regulatory source",
+      },
+      {
+        issueType: "source-conflict",
+        current: "multiple public GHS classifications",
+        expected: "preferred classification",
+        evidence: "SDS, supplier label, or local regulatory source",
+      },
+    ];
+
+    cases.forEach(({ issueType, current, expected, evidence }) => {
+      const url = new URL(
+        buildDataCorrectionUrl({
+          casNumber: "7647-01-0",
+          nameEn: "Hydrochloric Acid",
+          issueType,
+        }),
+      );
+
+      expect(url.searchParams.get("issue_type")).toBe(issueType);
+      expect(url.searchParams.get("current_output")).toContain(current);
+      expect(url.searchParams.get("expected_output")).toContain(expected);
+      expect(url.searchParams.get("evidence_type")).toBe(evidence);
+      expect(url.searchParams.get("local_context")).toContain(
+        "safety-data corrections",
+      );
+      expect(url.searchParams.get("body")).toContain(
+        "- CAS: 7647-01-0",
+      );
+      expect(url.searchParams.get("body")).toContain(current);
+      expect(url.searchParams.get("body")).toContain(expected);
+    });
+  });
+
   it("builds a structured workflow request URL without changing the generic link", () => {
     const url = new URL(
       buildWorkflowRequestUrl({

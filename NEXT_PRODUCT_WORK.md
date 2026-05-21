@@ -101,7 +101,9 @@ Current mode:
   evidence type, and local context; product-trust workflow help carries the
   workflow area, goal, current problem, desired behavior, and examples while
   generic footer links stay low-pressure. Production search UI QA now checks
-  those structured fields where deployed context exists.
+  those structured fields where deployed context exists. The deployed gate now
+  specifically covers missing Chinese names, no-GHS data gaps, and
+  source-conflict review in both result-row and Detail paths.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is

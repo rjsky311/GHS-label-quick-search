@@ -14,6 +14,20 @@ const baseChemical = {
   signal_word: "Danger",
 };
 
+const expectStructuredCorrectionUrl = (
+  issue,
+  { issueType, currentOutput, expectedOutput },
+) => {
+  const url = new URL(issue.correctionUrl);
+  expect(url.searchParams.get("issue_type")).toBe(issueType);
+  expect(url.searchParams.get("cas_number")).toBe(baseChemical.cas_number);
+  expect(url.searchParams.get("current_output")).toContain(currentOutput);
+  expect(url.searchParams.get("expected_output")).toContain(expectedOutput);
+  expect(url.searchParams.get("local_context")).toContain(
+    "safety-data corrections",
+  );
+};
+
 describe("data quality issue helpers", () => {
   it("flags missing trusted Chinese names without faking the English name", () => {
     const issues = getDataQualityIssues({
@@ -70,6 +84,27 @@ describe("data quality issue helpers", () => {
     expect(textOnly.map((issue) => issue.type)).not.toContain(
       DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
     );
+    expectStructuredCorrectionUrl(
+      noGhs.find(
+        (issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
+      ),
+      {
+        issueType: "no-ghs-data",
+        currentOutput: "no GHS hazard content",
+        expectedOutput: "missing GHS classification",
+      },
+    );
+    expectStructuredCorrectionUrl(
+      textOnly.find(
+        (issue) =>
+          issue.type === DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
+      ),
+      {
+        issueType: "ghs-text-no-pictograms",
+        currentOutput: "no renderable GHS pictograms",
+        expectedOutput: "expected pictograms",
+      },
+    );
   });
 
   it("keeps source conflicts and upstream failures as separate issues", () => {
@@ -91,5 +126,15 @@ describe("data quality issue helpers", () => {
       issues.find((issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR)
         .correctionUrl,
     ).toBeUndefined();
+    expectStructuredCorrectionUrl(
+      issues.find(
+        (issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+      ),
+      {
+        issueType: "source-conflict",
+        currentOutput: "multiple public GHS classifications",
+        expectedOutput: "preferred classification",
+      },
+    );
   });
 });
