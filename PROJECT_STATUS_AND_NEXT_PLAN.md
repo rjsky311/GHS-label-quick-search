@@ -206,7 +206,11 @@ Current completion snapshot:
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
-  entries directly from the review queue.
+  entries directly from the review queue. Recent manual entries and aliases now
+  use newest-first ordering with visible status badges, matching the reference
+  link curation list and reducing the chance that stale approved rows look like
+  current review work. Alias review also exposes approved/pending/rejected
+  counts in the admin summary.
 - **Reference-link curation checkpoint 2026-05-21**: admin reference links now
   carry active/inactive status through backend validation, dashboard fetches,
   overview counts, and dictionary snapshots. Public lookup, Detail, QR target

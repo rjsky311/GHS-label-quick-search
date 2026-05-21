@@ -14,6 +14,7 @@ APPROVED_MANUAL_ENTRY_STATUS = "approved"
 MANUAL_ENTRY_STATUSES = {"approved", "pending", "needs_evidence", "rejected"}
 MANUAL_ENTRY_REVIEW_STATUSES = ("pending", "needs_evidence")
 APPROVED_ALIAS_STATUS = "approved"
+ALIAS_STATUSES = ("approved", "pending", "rejected")
 ACTIVE_REFERENCE_STATUS = "active"
 REFERENCE_LINK_STATUSES = {"active", "inactive"}
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
@@ -1070,6 +1071,7 @@ class PilotStore:
                 "SELECT COUNT(*) FROM dictionary_aliases WHERE status = ?",
                 ("pending",),
             ),
+            "aliasStatusCounts": self.get_alias_status_counts(),
             "missQueryCount": self._scalar("SELECT COUNT(*) FROM dictionary_miss_queries"),
             "openMissQueryCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_miss_queries WHERE resolution_status = ?",
@@ -1105,6 +1107,19 @@ class PilotStore:
             """
         )
         return {str(row["status"]): int(row["count"]) for row in rows}
+
+    def get_alias_status_counts(self) -> dict[str, int]:
+        rows = self._fetchall(
+            """
+            SELECT status, COUNT(*) AS count
+            FROM dictionary_aliases
+            GROUP BY status
+            """
+        )
+        counts = {status: 0 for status in ALIAS_STATUSES}
+        for row in rows:
+            counts[str(row["status"])] = int(row["count"])
+        return counts
 
     def get_reference_link_status_counts(self) -> dict[str, int]:
         rows = self._fetchall(

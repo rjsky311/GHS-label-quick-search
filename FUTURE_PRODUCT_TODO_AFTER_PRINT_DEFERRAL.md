@@ -144,6 +144,14 @@ Work items:
 - Completed: exposed manual-entry status counts in the admin overview so the
   review queue shows whether approved, pending, needs-evidence, or rejected
   rows are accumulating.
+- Completed: aligned the admin curation recency view across manual entries,
+  aliases, and reference links. Recent rows now sort by latest update first and
+  show explicit status badges, so maintainers can distinguish fresh
+  needs-evidence work from older approved or rejected records without opening
+  separate exports.
+- Completed: added alias status counts to the admin summary, matching manual
+  entry and reference-link status reporting. This keeps alias review visible as
+  a governed queue instead of only showing the pending total.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Keep manual dictionary review status usage consistent with the correction

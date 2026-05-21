@@ -29,6 +29,12 @@ display-name resolution, labels, or exports. `pending` and `needs_evidence`
 entries are admin curation records only; they can preserve work-in-progress
 candidate names without making those candidates visible to users.
 
+Admin curation lists should preserve that boundary visually. Manual entries,
+aliases, and reference links should sort recent rows by latest update first and
+show explicit status badges. Admin summaries should expose review-state counts
+for manual entries, aliases, and reference links so maintainers do not mistake
+stale approved or retired records for active review work.
+
 ### Chinese Name Coverage
 
 Chinese chemical names are identity aids, not hazard authority. The local seed

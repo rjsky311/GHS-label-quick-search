@@ -113,6 +113,12 @@ Current mode:
   and snapshots, but public lookup, Detail, QR target selection, labels, and
   exports keep active-only defaults. Recent links can be activated or
   deactivated directly without retyping the same URL.
+- Completed current slice: admin curation lists now share the same newest-first
+  review posture. Recent manual entries, aliases, and reference links show
+  explicit status badges so maintainers can spot fresh pending or
+  needs-evidence work without confusing it with older approved records. Alias
+  review counts are now visible beside manual-entry and reference-link status
+  counts in the admin overview.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

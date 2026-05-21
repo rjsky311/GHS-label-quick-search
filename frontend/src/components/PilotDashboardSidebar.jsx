@@ -64,6 +64,24 @@ const MANUAL_ENTRY_STATUS_OPTIONS = [
   },
 ];
 
+const ALIAS_STATUS_OPTIONS = [
+  {
+    value: "approved",
+    labelKey: "pilot.manualStatusApproved",
+    defaultLabel: "Approved",
+  },
+  {
+    value: "pending",
+    labelKey: "pilot.manualStatusPending",
+    defaultLabel: "Pending review",
+  },
+  {
+    value: "rejected",
+    labelKey: "pilot.manualStatusRejected",
+    defaultLabel: "Rejected",
+  },
+];
+
 const REFERENCE_LINK_STATUS_OPTIONS = [
   {
     value: "active",
@@ -76,6 +94,86 @@ const REFERENCE_LINK_STATUS_OPTIONS = [
     defaultLabel: "Inactive",
   },
 ];
+
+const CURATION_STATUS_META = {
+  approved: {
+    labelKey: "pilot.manualStatusApproved",
+    defaultLabel: "Approved",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  },
+  pending: {
+    labelKey: "pilot.manualStatusPending",
+    defaultLabel: "Pending review",
+    className: "border-blue-200 bg-blue-50 text-blue-700",
+  },
+  needs_evidence: {
+    labelKey: "pilot.manualStatusNeedsEvidence",
+    defaultLabel: "Needs evidence",
+    className: "border-amber-200 bg-amber-50 text-amber-700",
+  },
+  rejected: {
+    labelKey: "pilot.manualStatusRejected",
+    defaultLabel: "Rejected",
+    className: "border-red-200 bg-red-50 text-red-700",
+  },
+  active: {
+    labelKey: "pilot.referenceStatusActive",
+    defaultLabel: "Active",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  },
+  inactive: {
+    labelKey: "pilot.referenceStatusInactive",
+    defaultLabel: "Inactive",
+    className: "border-slate-200 bg-slate-100 text-slate-600",
+  },
+};
+
+function curationTimestamp(item) {
+  return (
+    item?.updatedAt ||
+      item?.updated_at ||
+      item?.lastSeenAt ||
+      item?.last_seen_at ||
+      item?.createdAt ||
+      item?.created_at ||
+      item?.firstSeenAt ||
+      item?.first_seen_at ||
+      ""
+  );
+}
+
+function parseUpdatedAt(item) {
+  const parsed = Date.parse(curationTimestamp(item));
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function sortNewestFirst(items, fallbackSelector) {
+  return [...items].sort((a, b) => {
+    const updatedDiff = parseUpdatedAt(b) - parseUpdatedAt(a);
+    if (updatedDiff !== 0) return updatedDiff;
+    return String(fallbackSelector(a) || "").localeCompare(
+      String(fallbackSelector(b) || "")
+    );
+  });
+}
+
+function CurationStatusBadge({ status = "approved", testId }) {
+  const { t } = useTranslation();
+  const meta = CURATION_STATUS_META[status] || {
+    labelKey: "",
+    defaultLabel: status,
+    className: "border-slate-200 bg-slate-50 text-slate-600",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${meta.className}`}
+      data-testid={testId}
+    >
+      {meta.labelKey ? t(meta.labelKey, { defaultValue: meta.defaultLabel }) : status}
+    </span>
+  );
+}
 
 export default function PilotDashboardSidebar(props) {
   const {
@@ -128,27 +226,29 @@ export default function PilotDashboardSidebar(props) {
   const missQueries = dictionary.topMissQueries || [];
   const missStatusCounts = dictionary.missQueryStatusCounts || {};
   const manualEntryStatusCounts = dictionary.manualEntryStatusCounts || {};
+  const aliasStatusCounts = dictionary.aliasStatusCounts || {};
   const referenceLinkStatusCounts = dictionary.referenceLinkStatusCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
-  const recentManualEntries = useMemo(() => [...manualEntries].slice(0, 8), [manualEntries]);
-  const recentAliases = useMemo(() => [...aliases].slice(0, 8), [aliases]);
+  const recentManualEntries = useMemo(
+    () => sortNewestFirst(manualEntries, (entry) => entry.cas_number).slice(0, 8),
+    [manualEntries]
+  );
+  const recentAliases = useMemo(
+    () =>
+      sortNewestFirst(
+        aliases,
+        (alias) => `${alias.alias_text || ""}-${alias.cas_number || ""}`
+      ).slice(0, 8),
+    [aliases]
+  );
   const recentReferenceLinks = useMemo(
     () =>
-      [...referenceLinks]
-        .sort((a, b) => {
-          const updatedA = Date.parse(a.updatedAt || a.updated_at || "");
-          const updatedB = Date.parse(b.updatedAt || b.updated_at || "");
-          if (!Number.isNaN(updatedA) || !Number.isNaN(updatedB)) {
-            return (
-              (Number.isNaN(updatedB) ? 0 : updatedB) -
-              (Number.isNaN(updatedA) ? 0 : updatedA)
-            );
-          }
-          return String(a.casNumber || "").localeCompare(String(b.casNumber || ""));
-        })
-        .slice(0, 8),
+      sortNewestFirst(referenceLinks, (link) => link.casNumber || link.cas_number).slice(
+        0,
+        8
+      ),
     [referenceLinks]
   );
 
@@ -591,6 +691,23 @@ export default function PilotDashboardSidebar(props) {
                   >
                     {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
                     {manualEntryStatusCounts[option.value] || 0}
+                  </span>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                <span className="font-medium text-slate-800">
+                  {t("pilot.aliasStatusSummary", {
+                    defaultValue: "Alias review",
+                  })}
+                </span>
+                {ALIAS_STATUS_OPTIONS.map((option) => (
+                  <span
+                    key={option.value}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
+                    data-testid={`alias-status-count-${option.value}`}
+                  >
+                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
+                    {aliasStatusCounts[option.value] || 0}
                   </span>
                 ))}
               </div>
@@ -1058,9 +1175,11 @@ export default function PilotDashboardSidebar(props) {
                     }
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
                   >
-                    <option value="approved">approved</option>
-                    <option value="pending">pending</option>
-                    <option value="rejected">rejected</option>
+                    {ALIAS_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
+                      </option>
+                    ))}
                   </select>
                   <input
                     value={aliasForm.notes}
@@ -1181,15 +1300,25 @@ export default function PilotDashboardSidebar(props) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {recentAliases.map((alias) => (
+                      {recentAliases.map((alias, index) => (
                         <div
                           key={`${alias.id || alias.alias_text}-${alias.locale}-${alias.cas_number}`}
                           className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                          data-testid={`alias-row-${alias.id || index}`}
                         >
-                          <div className="font-medium text-slate-900">{alias.alias_text}</div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="font-medium text-slate-900">{alias.alias_text}</div>
+                            <CurationStatusBadge
+                              status={alias.status || "approved"}
+                              testId={`alias-status-${alias.id || index}`}
+                            />
+                          </div>
                           <div className="mt-1 font-mono text-blue-700">{alias.cas_number}</div>
-                          <div className="mt-1 text-xs text-slate-500">
-                            {alias.locale} | {alias.status}
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <span>{alias.locale}</span>
+                            {curationTimestamp(alias) ? (
+                              <span>{formatRelativeTime(curationTimestamp(alias))}</span>
+                            ) : null}
                           </div>
                         </div>
                       ))}
@@ -1208,12 +1337,19 @@ export default function PilotDashboardSidebar(props) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {recentManualEntries.map((entry) => (
+                      {recentManualEntries.map((entry, index) => (
                         <div
-                          key={entry.cas_number}
+                          key={`${entry.id || entry.cas_number}-${entry.status || "approved"}`}
                           className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                          data-testid={`manual-entry-row-${entry.id || index}`}
                         >
-                          <div className="font-mono text-blue-700">{entry.cas_number}</div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="font-mono text-blue-700">{entry.cas_number}</div>
+                            <CurationStatusBadge
+                              status={entry.status || "approved"}
+                              testId={`manual-entry-status-${entry.id || index}`}
+                            />
+                          </div>
                           <div className="mt-1 text-slate-900">
                             {entry.name_en ||
                               t("pilot.noEnglishName", { defaultValue: "No English name" })}
@@ -1222,9 +1358,11 @@ export default function PilotDashboardSidebar(props) {
                             {entry.name_zh ||
                               t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
                           </div>
-                          <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                            {entry.status || "approved"}
-                          </div>
+                          {curationTimestamp(entry) ? (
+                            <div className="mt-1 text-xs text-slate-500">
+                              {formatRelativeTime(curationTimestamp(entry))}
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -1255,18 +1393,17 @@ export default function PilotDashboardSidebar(props) {
                           >
                             <div className="font-mono text-blue-700">{link.casNumber}</div>
                             <div className="mt-1 text-slate-900">{link.label}</div>
-                            <div className="text-xs text-slate-500">
-                              {link.linkType} | priority {link.priority} |{" "}
-                              <span
-                                className={
-                                  currentStatus === "inactive"
-                                    ? "font-medium text-amber-700"
-                                    : "font-medium text-emerald-700"
-                                }
-                                data-testid={`reference-link-status-${link.id || index}`}
-                              >
-                                {currentStatus}
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                              <span>
+                                {link.linkType} | priority {link.priority}
                               </span>
+                              <CurationStatusBadge
+                                status={currentStatus}
+                                testId={`reference-link-status-${link.id || index}`}
+                              />
+                              {curationTimestamp(link) ? (
+                                <span>{formatRelativeTime(curationTimestamp(link))}</span>
+                              ) : null}
                             </div>
                             <button
                               type="button"

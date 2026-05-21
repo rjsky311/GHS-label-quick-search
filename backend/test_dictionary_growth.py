@@ -112,6 +112,22 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
     assert any(alias["alias_text"] == "Dimethyl ketone" for alias in pending_aliases)
 
 
+def test_dictionary_summary_tracks_alias_statuses(temp_store):
+    temp_store.upsert_alias("Approved Alias", "en", "111-11-1", status="approved")
+    temp_store.upsert_alias("Pending Alias", "en", "222-22-2", status="pending")
+    temp_store.upsert_alias("Rejected Alias", "en", "333-33-3", status="rejected")
+
+    summary = temp_store.get_dictionary_summary()
+
+    assert summary["approvedAliasCount"] == 1
+    assert summary["pendingAliasCount"] == 1
+    assert summary["aliasStatusCounts"] == {
+        "approved": 1,
+        "pending": 1,
+        "rejected": 1,
+    }
+
+
 async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_store):
     temp_store.upsert_reference_link(
         "64-17-5",

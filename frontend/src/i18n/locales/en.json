@@ -789,6 +789,7 @@
   "pilot.manualEntriesNeedReviewHint": "Pending entries are kept for curation, but do not affect public lookup, labels, or exports until approved.",
   "pilot.manualEntryStatus": "Manual entry status",
   "pilot.manualEntryStatusSummary": "Manual entry review",
+  "pilot.aliasStatusSummary": "Alias review",
   "pilot.manualStatusApproved": "Approved",
   "pilot.manualStatusPending": "Pending review",
   "pilot.manualStatusNeedsEvidence": "Needs evidence",

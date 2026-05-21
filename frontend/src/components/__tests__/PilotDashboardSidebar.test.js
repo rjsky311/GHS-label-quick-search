@@ -22,6 +22,11 @@ const baseProps = {
         needs_evidence: 1,
         rejected: 0,
       },
+      aliasStatusCounts: {
+        approved: 1,
+        pending: 1,
+        rejected: 0,
+      },
       referenceLinkCount: 4,
       inactiveReferenceLinkCount: 1,
       referenceLinkStatusCounts: {
@@ -81,7 +86,42 @@ const baseProps = {
       },
     ],
   },
-  manualEntries: [],
+  aliases: [
+    {
+      id: 21,
+      alias_text: "legacy solvent",
+      locale: "en",
+      cas_number: "111-11-1",
+      status: "approved",
+      last_seen_at: "2026-04-18T08:00:00+00:00",
+    },
+    {
+      id: 22,
+      alias_text: "new review alias",
+      locale: "zh",
+      cas_number: "222-22-2",
+      status: "pending",
+      last_seen_at: "2026-04-18T11:00:00+00:00",
+    },
+  ],
+  manualEntries: [
+    {
+      id: 31,
+      cas_number: "111-11-1",
+      name_en: "Older Solvent",
+      name_zh: "舊溶劑",
+      status: "approved",
+      updatedAt: "2026-04-18T07:00:00+00:00",
+    },
+    {
+      id: 32,
+      cas_number: "222-22-2",
+      name_en: "Needs Evidence Solvent",
+      name_zh: "待佐證溶劑",
+      status: "needs_evidence",
+      updatedAt: "2026-04-18T12:00:00+00:00",
+    },
+  ],
   referenceLinks: [
     {
       id: 10,
@@ -136,6 +176,9 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("manual-entry-status-count-pending")).toHaveTextContent("1");
     expect(screen.getByTestId("manual-entry-status-count-needs_evidence")).toHaveTextContent("1");
     expect(screen.getByTestId("manual-entry-status-count-rejected")).toHaveTextContent("0");
+    expect(screen.getByTestId("alias-status-count-approved")).toHaveTextContent("1");
+    expect(screen.getByTestId("alias-status-count-pending")).toHaveTextContent("1");
+    expect(screen.getByTestId("alias-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("reference-link-status-count-active")).toHaveTextContent("4");
     expect(screen.getByTestId("reference-link-status-count-inactive")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
@@ -352,8 +395,12 @@ describe("PilotDashboardSidebar", () => {
     fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
     const rows = screen.getAllByTestId(/^reference-link-row-/);
     expect(rows[0]).toHaveTextContent("Retired SDS");
-    expect(screen.getByTestId("reference-link-status-11")).toHaveTextContent("inactive");
-    expect(screen.getByTestId("reference-link-status-10")).toHaveTextContent("active");
+    expect(screen.getByTestId("reference-link-status-11")).toHaveTextContent(
+      "pilot.referenceStatusInactive"
+    );
+    expect(screen.getByTestId("reference-link-status-10")).toHaveTextContent(
+      "pilot.referenceStatusActive"
+    );
 
     fireEvent.click(screen.getByTestId("reference-link-inactive-10"));
 
@@ -382,5 +429,25 @@ describe("PilotDashboardSidebar", () => {
         cid: 702,
       });
     });
+  });
+
+  it("sorts recent curation rows by newest update and shows review status", () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+
+    const aliasRows = screen.getAllByTestId(/^alias-row-/);
+    expect(aliasRows[0]).toHaveTextContent("new review alias");
+    expect(aliasRows[1]).toHaveTextContent("legacy solvent");
+    expect(screen.getByTestId("alias-status-22")).toHaveTextContent(
+      "pilot.manualStatusPending"
+    );
+
+    const manualRows = screen.getAllByTestId(/^manual-entry-row-/);
+    expect(manualRows[0]).toHaveTextContent("Needs Evidence Solvent");
+    expect(manualRows[1]).toHaveTextContent("Older Solvent");
+    expect(screen.getByTestId("manual-entry-status-32")).toHaveTextContent(
+      "pilot.manualStatusNeedsEvidence"
+    );
   });
 });
