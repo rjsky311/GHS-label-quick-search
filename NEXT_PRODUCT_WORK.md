@@ -63,7 +63,9 @@ Current mode:
   names the exact valid unique CAS count that will be submitted. The same
   normalized CAS path now feeds search history and bounded frontend
   observability, so duplicate or invalid raw paste content does not leak into
-  later diagnostics.
+  later diagnostics. `qa:production-search-ui` now covers that deployed
+  messy-paste path, including the ready summary, duplicate/invalid diagnostics,
+  and enabled search handoff.
 - Completed current slice: Chinese-name display now uses a shared trust helper
   across localized names, favorites/history/autocomplete, prepare-solution
   summaries, print preview/scoring, printed labels, export preview, backend
@@ -121,7 +123,9 @@ Current mode:
    Current related follow-up: keep the simplified batch input path covered in
    regression QA so only valid, unique CAS values feed batch results, history,
    telemetry, and print counts; add new messy-paste fixtures when real batch
-   lists expose another separator or formatting pattern.
+   lists expose another separator or formatting pattern. The current deployed
+   production-search UI gate already checks same-line CAS, `CAS No.` / `CAS:`
+   prefixes, duplicates, and invalid checksum examples.
 3. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.

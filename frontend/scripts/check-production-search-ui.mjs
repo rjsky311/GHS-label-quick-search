@@ -954,6 +954,47 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
   }
 };
 
+const inspectBatchInputNormalizationPath = async (context) => {
+  const page = await context.newPage();
+  try {
+    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
+    await page.evaluate(() => localStorage.clear());
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByTestId("batch-search-tab").click();
+    await page.getByTestId("batch-cas-input").fill(
+      [
+        "90-41-5 84-65-1 CAS No. 462-08-8 CAS: 123-30-8",
+        "90-41-5",
+        "344-04-07",
+        "CAS No. 62 - 53 - 3",
+      ].join("\n"),
+    );
+    const readySummary = page.getByTestId("batch-ready-summary");
+    await readySummary.waitFor({
+      state: "visible",
+      timeout: SEARCH_UI_TIMEOUT_MS,
+    });
+    const diagnostics = page.getByTestId("batch-input-diagnostics");
+    return {
+      readySummary:
+        ((await readySummary.textContent()) || "").replace(/\s+/g, " ").trim(),
+      diagnostics:
+        ((await diagnostics.textContent().catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim(),
+      searchButtonDisabled: await page
+        .getByTestId("batch-search-btn")
+        .isDisabled(),
+      overLimitAlertCount: await page
+        .getByTestId("batch-over-limit-alert")
+        .count()
+        .catch(() => 0),
+    };
+  } finally {
+    await page.close();
+  }
+};
+
 const summarizePictogramMetrics = (metrics) => {
   const tiles = metrics?.tiles || [];
   const minFrames = tiles.map((tile) =>
@@ -1092,6 +1133,15 @@ const summarizeSearchUiReportForConsole = (report) => {
             metrics.missingChineseNameCorrection?.rowLinkCount || 0,
           title: metrics.missingChineseNameCorrection?.title || "",
         },
+      },
+      batchInput: {
+        readySummary: metrics.batchInputNormalization?.readySummary || "",
+        diagnostics: metrics.batchInputNormalization?.diagnostics || "",
+        searchButtonDisabled: Boolean(
+          metrics.batchInputNormalization?.searchButtonDisabled,
+        ),
+        overLimitAlertCount:
+          metrics.batchInputNormalization?.overLimitAlertCount || 0,
       },
       images: {
         waitedContexts: metrics.imageWaits?.length || 0,
@@ -1624,6 +1674,8 @@ try {
 
   const missingChineseNameCorrection =
     await inspectMissingChineseNameCorrectionPath(context);
+  const batchInputNormalization =
+    await inspectBatchInputNormalizationPath(context);
 
   if (
     !noGhsState.result.rowText.includes(noGhsSearchTerm) &&
@@ -1730,6 +1782,24 @@ try {
     !/SDS|supplier|authoritative/i.test(missingChineseNameCorrection.rowBody)
   ) {
     failures.push("missing-chinese-name-row-correction-body-incomplete");
+  }
+  if (
+    !/\b5\b/.test(batchInputNormalization.readySummary) ||
+    !/\b7\b/.test(batchInputNormalization.readySummary)
+  ) {
+    failures.push("batch-input-ready-summary-mismatch");
+  }
+  if (
+    !/\b1\b/.test(batchInputNormalization.diagnostics) ||
+    !/344-04-07/.test(batchInputNormalization.diagnostics)
+  ) {
+    failures.push("batch-input-diagnostics-missing");
+  }
+  if (batchInputNormalization.searchButtonDisabled) {
+    failures.push("batch-input-search-button-disabled");
+  }
+  if (batchInputNormalization.overLimitAlertCount > 0) {
+    failures.push("batch-input-overlimit-alert-unexpected");
   }
 
   if (
@@ -1856,6 +1926,7 @@ try {
       mobileDetailReadFirst,
       noGhsState,
       missingChineseNameCorrection,
+      batchInputNormalization,
       mobileDetailComparisonCardCount,
       mobileDetailComparisonEvidencePanelCount,
       mobileDetailComparisonMetrics,
