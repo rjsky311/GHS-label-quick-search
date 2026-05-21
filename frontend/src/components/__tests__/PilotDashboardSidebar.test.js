@@ -82,7 +82,28 @@ const baseProps = {
     ],
   },
   manualEntries: [],
-  referenceLinks: [],
+  referenceLinks: [
+    {
+      id: 10,
+      casNumber: "64-17-5",
+      cid: 702,
+      linkType: "sds",
+      label: "Current SDS",
+      url: "https://lab.example/sds/current",
+      priority: 1,
+      status: "active",
+    },
+    {
+      id: 11,
+      casNumber: "64-17-5",
+      cid: 702,
+      linkType: "sds",
+      label: "Retired SDS",
+      url: "https://lab.example/sds/retired",
+      priority: 0,
+      status: "inactive",
+    },
+  ],
   loading: false,
   saving: false,
   error: "",
@@ -319,6 +340,39 @@ describe("PilotDashboardSidebar", () => {
         link_type: "reference",
         priority: 50,
         status: "inactive",
+      });
+    });
+  });
+
+  it("updates reference link status from the recent links list", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.click(screen.getByTestId("reference-link-inactive-10"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveReferenceLink).toHaveBeenCalledWith({
+        cas_number: "64-17-5",
+        label: "Current SDS",
+        url: "https://lab.example/sds/current",
+        link_type: "sds",
+        priority: 1,
+        status: "inactive",
+        cid: 702,
+      });
+    });
+
+    fireEvent.click(screen.getByTestId("reference-link-active-11"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveReferenceLink).toHaveBeenLastCalledWith({
+        cas_number: "64-17-5",
+        label: "Retired SDS",
+        url: "https://lab.example/sds/retired",
+        link_type: "sds",
+        priority: 0,
+        status: "active",
+        cid: 702,
       });
     });
   });

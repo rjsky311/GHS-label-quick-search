@@ -186,6 +186,9 @@ Work items:
   exports keep using active links by default, while admin fetches include
   inactive links and the overview shows active/inactive counts so retired SDS
   or obsolete reference links remain auditable without becoming user-facing.
+  Recent reference links can also be activated or deactivated directly from the
+  admin list, so maintainers do not need to retype a URL just to retire or
+  restore it.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.

@@ -132,7 +132,8 @@ Rules:
   or QR targets unless a maintainer reactivates them.
 - The admin dashboard may fetch inactive reference links for curation, and it
   should show active/inactive counts so retired SDS or obsolete regulatory
-  links do not disappear from review history.
+  links do not disappear from review history. It should also let maintainers
+  reactivate or deactivate recent links without re-entering the same URL.
 - QR target selection prefers link type before generic priority:
   1. SDS
   2. Regulatory

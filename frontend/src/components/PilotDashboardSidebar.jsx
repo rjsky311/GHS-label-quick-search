@@ -244,6 +244,37 @@ export default function PilotDashboardSidebar(props) {
     }
   };
 
+  const handleReferenceLinkStatusUpdate = async (link, status) => {
+    try {
+      await onSaveReferenceLink({
+        cas_number: link.casNumber,
+        label: link.label,
+        url: link.url,
+        link_type: link.linkType || "reference",
+        priority: Number(link.priority ?? 50),
+        status,
+        cid: link.cid ?? undefined,
+      });
+      toast.success(
+        status === "active"
+          ? t("pilot.referenceActivated", {
+              defaultValue: "Reference link activated.",
+            })
+          : t("pilot.referenceDeactivated", {
+              defaultValue: "Reference link deactivated.",
+            })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.referenceStatusFailed", {
+            defaultValue: "Failed to update reference link status.",
+          })
+      );
+    }
+  };
+
   const handlePendingAliasDecision = async (alias, status) => {
     try {
       await onSaveAlias({
@@ -1200,19 +1231,38 @@ export default function PilotDashboardSidebar(props) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {recentReferenceLinks.map((link) => (
-                        <div
-                          key={`${link.casNumber}-${link.url}`}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                        >
-                          <div className="font-mono text-blue-700">{link.casNumber}</div>
-                          <div className="mt-1 text-slate-900">{link.label}</div>
-                          <div className="text-xs text-slate-500">
-                            {link.linkType} | priority {link.priority} |{" "}
-                            {link.status || "active"}
+                      {recentReferenceLinks.map((link, index) => {
+                        const currentStatus = link.status || "active";
+                        const nextStatus = currentStatus === "inactive" ? "active" : "inactive";
+                        return (
+                          <div
+                            key={`${link.casNumber}-${link.url}`}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                          >
+                            <div className="font-mono text-blue-700">{link.casNumber}</div>
+                            <div className="mt-1 text-slate-900">{link.label}</div>
+                            <div className="text-xs text-slate-500">
+                              {link.linkType} | priority {link.priority} |{" "}
+                              {currentStatus}
+                            </div>
+                            <button
+                              type="button"
+                              disabled={saving}
+                              onClick={() => handleReferenceLinkStatusUpdate(link, nextStatus)}
+                              className="mt-2 rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`reference-link-${nextStatus}-${link.id || index}`}
+                            >
+                              {nextStatus === "active"
+                                ? t("pilot.activateReference", {
+                                    defaultValue: "Activate",
+                                  })
+                                : t("pilot.deactivateReference", {
+                                    defaultValue: "Deactivate",
+                                  })}
+                            </button>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

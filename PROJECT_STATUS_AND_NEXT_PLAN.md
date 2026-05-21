@@ -212,6 +212,8 @@ Current completion snapshot:
   overview counts, and dictionary snapshots. Public lookup, Detail, QR target
   selection, labels, and exports keep active-only defaults so retired SDS or
   obsolete reference links remain auditable without becoming user-facing.
+  Maintainers can also activate or deactivate recent reference links directly
+  from the admin list.
 
 ## 3. Next Priority Order
 
