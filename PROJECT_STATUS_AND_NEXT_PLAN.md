@@ -267,6 +267,10 @@ Current status:
   `build/production-search-ui-report.json`, but prints a compact console
   summary so CI logs show the action, pictogram, trust, data-state, keyboard,
   mobile, and image-load checks without burying failures in raw DOM text.
+- `qa:production-search-ui` writes screenshots for the deployed batch
+  messy-paste path and `?cas=` QR-return hydration path, so regressions in
+  those non-print lookup flows are reviewable without manually replaying the
+  browser steps.
 - `qa:production-search-ui` also covers the deployed missing-Chinese-name
   correction path with a mocked search result, so the Detail data-correction
   link cannot disappear without the production gate failing.

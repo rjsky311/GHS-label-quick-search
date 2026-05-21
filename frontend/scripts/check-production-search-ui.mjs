@@ -961,7 +961,10 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
   }
 };
 
-const inspectBatchInputNormalizationPath = async (context) => {
+const inspectBatchInputNormalizationPath = async (
+  context,
+  { screenshotPath = null } = {},
+) => {
   const page = await context.newPage();
   try {
     await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
@@ -981,6 +984,9 @@ const inspectBatchInputNormalizationPath = async (context) => {
       state: "visible",
       timeout: SEARCH_UI_TIMEOUT_MS,
     });
+    if (screenshotPath) {
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+    }
     const diagnostics = page.getByTestId("batch-input-diagnostics");
     return {
       readySummary:
@@ -1002,7 +1008,11 @@ const inspectBatchInputNormalizationPath = async (context) => {
   }
 };
 
-const inspectUrlQueryHydrationPath = async (context, term) => {
+const inspectUrlQueryHydrationPath = async (
+  context,
+  term,
+  { screenshotPath = null } = {},
+) => {
   const page = await context.newPage();
   const queryUrl = withQaParams(productionUrl, { cas: term });
   try {
@@ -1013,6 +1023,9 @@ const inspectUrlQueryHydrationPath = async (context, term) => {
       state: "visible",
       timeout: SEARCH_UI_TIMEOUT_MS,
     });
+    if (screenshotPath) {
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+    }
     return {
       queryUrl,
       inputValue: await page.getByTestId("single-cas-input").inputValue(),
@@ -1072,6 +1085,8 @@ const summarizeSearchUiReportForConsole = (report) => {
       search: report.screenshotPath,
       expandedClassifications: report.expandedScreenshotPath,
       detail: report.detailScreenshotPath,
+      batchInput: report.batchInputScreenshotPath,
+      urlQueryHydration: report.urlQueryHydrationScreenshotPath,
       mobileSearch: report.mobileScreenshotPath,
       mobileDetail: report.mobileDetailScreenshotPath,
       noGhsSearch: report.noGhsScreenshotPath,
@@ -1721,13 +1736,24 @@ try {
   });
   await noGhsPage.close();
 
+  const batchInputScreenshotPath = path.join(
+    screenshotDir,
+    "batch-input-normalization.png",
+  );
+  const urlQueryHydrationScreenshotPath = path.join(
+    screenshotDir,
+    "url-query-hydration.png",
+  );
   const missingChineseNameCorrection =
     await inspectMissingChineseNameCorrectionPath(context);
-  const batchInputNormalization =
-    await inspectBatchInputNormalizationPath(context);
+  const batchInputNormalization = await inspectBatchInputNormalizationPath(
+    context,
+    { screenshotPath: batchInputScreenshotPath },
+  );
   const urlQueryHydration = await inspectUrlQueryHydrationPath(
     context,
     searchTerm,
+    { screenshotPath: urlQueryHydrationScreenshotPath },
   );
 
   if (
@@ -1966,6 +1992,8 @@ try {
     mobileDetailScreenshotPath,
     noGhsScreenshotPath,
     noGhsDetailScreenshotPath,
+    batchInputScreenshotPath,
+    urlQueryHydrationScreenshotPath,
     failures,
     searchAttempts,
     mobileSearchAttempts,

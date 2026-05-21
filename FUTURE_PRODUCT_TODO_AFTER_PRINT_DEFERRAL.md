@@ -339,6 +339,9 @@ Work items:
 - Completed: `qa:production-search-ui` now opens the deployed app with
   `?cas=<CAS>` and verifies that the QR return path hydrates the single-search
   input and renders the matching result row.
+- Completed: the same production gate now stores screenshots for both the
+  messy-paste batch path and QR return-path hydration, so future failures can
+  be reviewed from artifacts instead of relying on memory.
 - Keep reducing wording that explains implementation details instead of user
   decisions when copy changes.
 - Keep production QA or screenshot review for first-screen readability when UI
