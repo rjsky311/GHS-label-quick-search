@@ -38,6 +38,15 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
 );
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
+const DATA_CORRECTION_FORM_EVIDENCE_TYPES = new Set([
+  "Supplier SDS",
+  "Supplier label",
+  "Official regulatory source",
+  "PubChem page",
+  "ECHA page",
+  "Internal lab evidence",
+  "Other",
+]);
 const missingChineseNameFixture = {
   cas_number: "107-18-6",
   cid: 7858,
@@ -151,13 +160,25 @@ const hasStructuredCorrectionContext = (
     currentOutputIncludes,
     expectedOutputIncludes,
     casNumber,
+    evidenceType,
+    evidencePromptIncludes,
   },
 ) => {
   if (!issue || issue.count < 1) return false;
   if (issue.template !== "data-correction.yml") return false;
   if (issue.labels !== "data-correction") return false;
   if (formIssueType && issue.issueType !== formIssueType) return false;
+  if (!DATA_CORRECTION_FORM_EVIDENCE_TYPES.has(issue.evidenceType)) {
+    return false;
+  }
+  if (evidenceType && issue.evidenceType !== evidenceType) return false;
   if (issueKey && !issue.body.includes(`- Issue key: ${issueKey}`)) return false;
+  if (
+    evidencePromptIncludes &&
+    !issue.body.includes(`- Evidence prompt: ${evidencePromptIncludes}`)
+  ) {
+    return false;
+  }
   if (casNumber && issue.casNumber !== casNumber) return false;
   if (
     currentOutputIncludes &&
@@ -1015,6 +1036,7 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
       body: detailCorrection.body,
       casNumber: detailCorrection.casNumber,
       issueType: detailCorrection.issueType,
+      evidenceType: detailCorrection.evidenceType,
       currentOutput: detailCorrection.currentOutput,
       expectedOutput: detailCorrection.expectedOutput,
       rowLinkCount: rowCorrection.count,
@@ -1024,6 +1046,7 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
       rowBody: rowCorrection.body,
       rowCasNumber: rowCorrection.casNumber,
       rowIssueType: rowCorrection.issueType,
+      rowEvidenceType: rowCorrection.evidenceType,
       rowCurrentOutput: rowCorrection.currentOutput,
       rowExpectedOutput: rowCorrection.expectedOutput,
     };
@@ -1400,6 +1423,8 @@ try {
         formIssueType: "Source/provenance display",
         issueKey: "source-conflict",
         casNumber: searchTerm,
+        evidenceType: "Other",
+        evidencePromptIncludes: "SDS, supplier label, or local regulatory source",
         currentOutputIncludes: "multiple public GHS classifications",
         expectedOutputIncludes: "preferred classification",
       },
@@ -1655,6 +1680,8 @@ try {
       formIssueType: "Source/provenance display",
       issueKey: "source-conflict",
       casNumber: searchTerm,
+      evidenceType: "Other",
+      evidencePromptIncludes: "SDS, supplier label, or local regulatory source",
       currentOutputIncludes: "multiple public GHS classifications",
       expectedOutputIncludes: "preferred classification",
     })
@@ -1957,6 +1984,8 @@ try {
       formIssueType: "Other data issue",
       issueKey: "no-ghs-data",
       casNumber: noGhsSearchTerm,
+      evidenceType: "Other",
+      evidencePromptIncludes: "SDS, supplier label, or regulatory source",
       currentOutputIncludes: "no GHS hazard content",
       expectedOutputIncludes: "missing GHS classification",
     })
@@ -1997,6 +2026,8 @@ try {
       formIssueType: "Other data issue",
       issueKey: "no-ghs-data",
       casNumber: noGhsSearchTerm,
+      evidenceType: "Other",
+      evidencePromptIncludes: "SDS, supplier label, or regulatory source",
       currentOutputIncludes: "no GHS hazard content",
       expectedOutputIncludes: "missing GHS classification",
     })
@@ -2038,9 +2069,11 @@ try {
     missingChineseNameCorrection.casNumber !==
       missingChineseNameFixture.cas_number ||
     missingChineseNameCorrection.issueType !== "Chemical identity or alias" ||
+    missingChineseNameCorrection.evidenceType !== "Other" ||
     missingChineseNameCorrection.rowCasNumber !==
       missingChineseNameFixture.cas_number ||
-    missingChineseNameCorrection.rowIssueType !== "Chemical identity or alias"
+    missingChineseNameCorrection.rowIssueType !== "Chemical identity or alias" ||
+    missingChineseNameCorrection.rowEvidenceType !== "Other"
   ) {
     failures.push("missing-chinese-name-correction-fields-mismatch");
   }
@@ -2060,8 +2093,16 @@ try {
     !missingChineseNameCorrection.body.includes(
       "- Issue key: missing-chinese-name",
     ) ||
+    !missingChineseNameCorrection.body.includes("- Evidence type: Other") ||
+    !missingChineseNameCorrection.body.includes(
+      "- Evidence prompt: SDS, supplier label, catalog, or regulatory source",
+    ) ||
     !missingChineseNameCorrection.rowBody.includes(
       "- Issue key: missing-chinese-name",
+    ) ||
+    !missingChineseNameCorrection.rowBody.includes("- Evidence type: Other") ||
+    !missingChineseNameCorrection.rowBody.includes(
+      "- Evidence prompt: SDS, supplier label, catalog, or regulatory source",
     )
   ) {
     failures.push("missing-chinese-name-correction-structured-context-missing");
@@ -2121,6 +2162,8 @@ try {
       formIssueType: "Chemical identity or alias",
       issueKey: "unresolved-search",
       casNumber: unresolvedSearchTerm,
+      evidenceType: "Other",
+      evidencePromptIncludes: "SDS, supplier label, catalog, or regulatory source",
       currentOutputIncludes: "could not resolve this lookup",
       expectedOutputIncludes: "reviewed CAS/name mapping",
     })

@@ -203,7 +203,10 @@ When sources disagree:
   issue-template schema. Machine-readable app issue keys such as
   `missing-chinese-name`, `source-conflict`, or `unresolved-search` should stay
   in the generated body/context, while the `issue_type` query parameter uses
-  the matching human dropdown option.
+  the matching human dropdown option. Evidence prompts that mention several
+  acceptable source types should stay in the generated body as `Evidence
+  prompt`; the `evidence_type` query parameter must use a single dropdown value
+  such as `Supplier SDS`, `Official regulatory source`, or `Other`.
 - Do not claim the app has resolved legal compliance conflicts.
 
 If a future feature adds stronger manual hazard overrides, it must be explicitly
@@ -226,8 +229,11 @@ reduce repeated typing and improve review quality:
 - Data correction: `cas_number`, `chemical_name`, `issue_type`,
   `current_output`, `expected_output`, `evidence_url`, `evidence_type`, and
   `local_context`. The `issue_type` value must be one of the
-  `.github/ISSUE_TEMPLATE/data-correction.yml` dropdown options; the app's
-  internal issue key belongs in the generated body as `Issue key`.
+  `.github/ISSUE_TEMPLATE/data-correction.yml` dropdown options; the
+  `evidence_type` value must also be one of that template's evidence dropdown
+  options. The app's internal issue key belongs in the generated body as
+  `Issue key`, and broader source guidance belongs in the generated body as
+  `Evidence prompt`.
 - Workflow request: `workflow_area`, `goal`, `current_problem`,
   `desired_behavior`, and `examples`. The `workflow_area` value must be one of
   the `.github/ISSUE_TEMPLATE/workflow-request.yml` dropdown options; any more

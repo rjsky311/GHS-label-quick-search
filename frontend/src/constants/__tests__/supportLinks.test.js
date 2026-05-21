@@ -98,7 +98,7 @@ describe("supportLinks", () => {
       expect(url.searchParams.get("issue_type")).toBe(formIssueType);
       expect(url.searchParams.get("current_output")).toContain(current);
       expect(url.searchParams.get("expected_output")).toContain(expected);
-      expect(url.searchParams.get("evidence_type")).toBe(evidence);
+      expect(url.searchParams.get("evidence_type")).toBe("Other");
       expect(url.searchParams.get("local_context")).toContain(
         "safety-data corrections",
       );
@@ -110,7 +110,41 @@ describe("supportLinks", () => {
       );
       expect(url.searchParams.get("body")).toContain(current);
       expect(url.searchParams.get("body")).toContain(expected);
+      expect(url.searchParams.get("body")).toContain(
+        "- Evidence type: Other",
+      );
+      expect(url.searchParams.get("body")).toContain(
+        `- Evidence prompt: ${evidence}`,
+      );
     });
+  });
+
+  it("normalizes correction evidence type hints to issue-form dropdown values", () => {
+    const exactUrl = new URL(
+      buildDataCorrectionUrl({
+        casNumber: "7647-01-0",
+        nameEn: "Hydrochloric Acid",
+        issueType: "source-conflict",
+        evidenceType: "Supplier SDS",
+      }),
+    );
+    const hintedUrl = new URL(
+      buildDataCorrectionUrl({
+        casNumber: "7647-01-0",
+        nameEn: "Hydrochloric Acid",
+        issueType: "source-conflict",
+        evidenceType: "ECHA classification page",
+      }),
+    );
+
+    expect(exactUrl.searchParams.get("evidence_type")).toBe("Supplier SDS");
+    expect(exactUrl.searchParams.get("body")).not.toContain(
+      "- Evidence prompt:",
+    );
+    expect(hintedUrl.searchParams.get("evidence_type")).toBe("ECHA page");
+    expect(hintedUrl.searchParams.get("body")).toContain(
+      "- Evidence prompt: ECHA classification page",
+    );
   });
 
   it("builds a structured workflow request URL without changing the generic link", () => {

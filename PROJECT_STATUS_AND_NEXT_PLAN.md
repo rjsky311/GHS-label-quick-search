@@ -228,7 +228,10 @@ Current completion snapshot:
   `missing-chinese-name`, `source-conflict`, `no-ghs-data`, and
   `unresolved-search` remain in the generated issue body as `Issue key`, while
   `issue_type` and `workflow_area` use human template options so the actual
-  GitHub form can prefill reliably.
+  GitHub form can prefill reliably. Data-correction evidence prompts are also
+  split from the dropdown value: broad guidance such as SDS/supplier
+  label/regulatory source stays in the body as `Evidence prompt`, while
+  `evidence_type` uses a valid single option such as `Other`.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

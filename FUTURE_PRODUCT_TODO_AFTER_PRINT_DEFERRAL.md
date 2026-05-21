@@ -141,7 +141,9 @@ Work items:
   `Chemical identity or alias`, `Source/provenance display`, or
   `Search and results`, while the app's internal keys such as
   `missing-chinese-name`, `source-conflict`, and `unresolved-search` remain in
-  the generated issue body as `Issue key`.
+  the generated issue body as `Issue key`. Data-correction links also keep
+  broad source guidance in the generated body as `Evidence prompt`, while the
+  `evidence_type` query parameter uses one valid template dropdown option.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.

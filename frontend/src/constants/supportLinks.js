@@ -78,6 +78,43 @@ const DATA_CORRECTION_FORM_ISSUE_TYPES = {
   "upstream-error": "Other data issue",
 };
 
+const DATA_CORRECTION_FORM_EVIDENCE_TYPES = new Set([
+  "Supplier SDS",
+  "Supplier label",
+  "Official regulatory source",
+  "PubChem page",
+  "ECHA page",
+  "Internal lab evidence",
+  "Other",
+]);
+
+const DATA_CORRECTION_EVIDENCE_TYPE_HINTS = [
+  {
+    pattern: /\bsupplier\s+sds\b|\bsds\b/i,
+    value: "Supplier SDS",
+  },
+  {
+    pattern: /\bsupplier\s+label\b|\blabel\b/i,
+    value: "Supplier label",
+  },
+  {
+    pattern: /\bofficial\b|\bregulatory\b|\blocal\s+regulation\b|\blocal\s+rule\b/i,
+    value: "Official regulatory source",
+  },
+  {
+    pattern: /\bpubchem\b/i,
+    value: "PubChem page",
+  },
+  {
+    pattern: /\becha\b/i,
+    value: "ECHA page",
+  },
+  {
+    pattern: /\binternal\b|\blab\b|\blaboratory\b/i,
+    value: "Internal lab evidence",
+  },
+];
+
 const WORKFLOW_FORM_AREAS = new Set([
   "Search and results",
   "Chemical detail and comparison",
@@ -129,6 +166,20 @@ const WORKFLOW_AREA_HINTS = [
 const normalizeDataCorrectionFormIssueType = (issue) =>
   DATA_CORRECTION_FORM_ISSUE_TYPES[issue] || "Other data issue";
 
+const isBroadEvidencePrompt = (value) =>
+  /,|\/|\b(or|and)\b/i.test(value);
+
+const normalizeDataCorrectionFormEvidenceType = (evidenceType) => {
+  const value = normalizeField(evidenceType);
+  if (!value) return "";
+  if (DATA_CORRECTION_FORM_EVIDENCE_TYPES.has(value)) return value;
+  if (isBroadEvidencePrompt(value)) return "Other";
+  const matched = DATA_CORRECTION_EVIDENCE_TYPE_HINTS.find(({ pattern }) =>
+    pattern.test(value),
+  );
+  return matched?.value || "Other";
+};
+
 const normalizeWorkflowFormArea = (area) => {
   if (!area) return "";
   if (WORKFLOW_FORM_AREAS.has(area)) return area;
@@ -156,7 +207,8 @@ export function buildDataCorrectionUrl({
   const current = normalizeField(currentOutput || defaultContext.currentOutput);
   const expected = normalizeField(expectedOutput || defaultContext.expectedOutput);
   const evidence = normalizeField(evidenceUrl);
-  const evidenceKind = normalizeField(evidenceType || defaultContext.evidenceType);
+  const evidencePrompt = normalizeField(evidenceType || defaultContext.evidenceType);
+  const evidenceKind = normalizeDataCorrectionFormEvidenceType(evidencePrompt);
   const context = normalizeField(localContext || defaultContext.localContext);
   const formIssueType = normalizeDataCorrectionFormIssueType(issue);
   const titleParts = [
@@ -176,6 +228,9 @@ export function buildDataCorrectionUrl({
     expected ? `- Expected output: ${expected}` : "",
     evidence ? `- Evidence URL: ${evidence}` : "",
     evidenceKind ? `- Evidence type: ${evidenceKind}` : "",
+    evidencePrompt && evidencePrompt !== evidenceKind
+      ? `- Evidence prompt: ${evidencePrompt}`
+      : "",
     context ? `- Local context: ${context}` : "",
     "",
     "## Evidence / source",
