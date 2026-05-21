@@ -239,6 +239,9 @@ reduce repeated typing and improve review quality:
   the `.github/ISSUE_TEMPLATE/workflow-request.yml` dropdown options; any more
   specific original workflow wording should remain in `current_problem` or
   `examples`.
+- Regression tests should compare generated support-link dropdown values
+  against the actual issue-template option lists, so future template edits do
+  not silently break prefill.
 
 Generic footer links should remain low-pressure and can stay unfilled. Result,
 Detail, and product-trust links may add context when it clarifies the user's

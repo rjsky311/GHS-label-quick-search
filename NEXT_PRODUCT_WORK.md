@@ -115,8 +115,9 @@ Current mode:
   body, but `issue_type` uses a valid issue-template option; product-trust
   workflow links do the same for `workflow_area`. Data-correction evidence
   prompts now stay in the body, while `evidence_type` uses one valid dropdown
-  option. The production search UI gate now treats this as part of the deployed
-  support-link contract.
+  option. Unit tests now compare generated dropdown values with the actual
+  issue-template options, and the production search UI gate treats this as part
+  of the deployed support-link contract.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is

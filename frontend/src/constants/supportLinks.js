@@ -208,7 +208,7 @@ export function buildDataCorrectionUrl({
   const expected = normalizeField(expectedOutput || defaultContext.expectedOutput);
   const evidence = normalizeField(evidenceUrl);
   const evidencePrompt = normalizeField(evidenceType || defaultContext.evidenceType);
-  const evidenceKind = normalizeDataCorrectionFormEvidenceType(evidencePrompt);
+  const evidenceKind = normalizeDataCorrectionFormEvidenceType(evidencePrompt) || "Other";
   const context = normalizeField(localContext || defaultContext.localContext);
   const formIssueType = normalizeDataCorrectionFormIssueType(issue);
   const titleParts = [

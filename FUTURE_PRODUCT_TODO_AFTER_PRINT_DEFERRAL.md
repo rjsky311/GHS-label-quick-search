@@ -144,6 +144,8 @@ Work items:
   the generated issue body as `Issue key`. Data-correction links also keep
   broad source guidance in the generated body as `Evidence prompt`, while the
   `evidence_type` query parameter uses one valid template dropdown option.
+  Unit tests now read the actual issue-template dropdown options and fail if
+  generated support-link values drift from the repository forms.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
