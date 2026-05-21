@@ -358,8 +358,11 @@ describe('ResultsTable', () => {
       expect(url.searchParams.get('title')).toBe(
         'Unresolved lookup: 999-99-9',
       );
-      expect(url.searchParams.get('issue_type')).toBe('unresolved-search');
+      expect(url.searchParams.get('issue_type')).toBe('Chemical identity or alias');
       expect(url.searchParams.get('cas_number')).toBe('999-99-9');
+      expect(url.searchParams.get('body')).toContain(
+        '- Issue key: unresolved-search',
+      );
       expect(url.searchParams.get('current_output')).toContain(
         'could not resolve this lookup',
       );

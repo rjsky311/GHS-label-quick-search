@@ -109,6 +109,12 @@ Current mode:
   instead of ending at a dead error message. Upstream transient failures remain
   retry-only states. Production search UI QA now includes a mocked deployed
   unresolved lookup to keep this correction path from regressing.
+- Completed current slice: structured support links now match the GitHub
+  issue-form dropdown schemas instead of sending internal app keys as dropdown
+  values. Data-correction links keep machine issue keys in the generated issue
+  body, but `issue_type` uses a valid issue-template option; product-trust
+  workflow links do the same for `workflow_area`. The production search UI gate
+  now treats this as part of the deployed support-link contract.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is

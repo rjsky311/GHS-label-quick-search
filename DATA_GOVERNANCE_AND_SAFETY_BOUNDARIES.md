@@ -199,6 +199,11 @@ When sources disagree:
   when the app already knows the CAS, chemical name, issue type, current
   output, expected output, evidence type, or local context. Prefill is a triage
   aid only; it is not accepted curation evidence by itself.
+- Issue-form dropdown fields must receive values that exist in the repository
+  issue-template schema. Machine-readable app issue keys such as
+  `missing-chinese-name`, `source-conflict`, or `unresolved-search` should stay
+  in the generated body/context, while the `issue_type` query parameter uses
+  the matching human dropdown option.
 - Do not claim the app has resolved legal compliance conflicts.
 
 If a future feature adds stronger manual hazard overrides, it must be explicitly
@@ -220,9 +225,14 @@ reduce repeated typing and improve review quality:
 
 - Data correction: `cas_number`, `chemical_name`, `issue_type`,
   `current_output`, `expected_output`, `evidence_url`, `evidence_type`, and
-  `local_context`.
+  `local_context`. The `issue_type` value must be one of the
+  `.github/ISSUE_TEMPLATE/data-correction.yml` dropdown options; the app's
+  internal issue key belongs in the generated body as `Issue key`.
 - Workflow request: `workflow_area`, `goal`, `current_problem`,
-  `desired_behavior`, and `examples`.
+  `desired_behavior`, and `examples`. The `workflow_area` value must be one of
+  the `.github/ISSUE_TEMPLATE/workflow-request.yml` dropdown options; any more
+  specific original workflow wording should remain in `current_problem` or
+  `examples`.
 
 Generic footer links should remain low-pressure and can stay unfilled. Result,
 Detail, and product-trust links may add context when it clarifies the user's
@@ -346,8 +356,9 @@ Frontend:
 - Detail views surface a source-conflict note when multiple classifications are
   available, and the copy must say switching reports requires SDS,
   supplier-label, or local-rule support.
-- Unresolved lookup result rows expose a structured correction link with
-  `issue_type=unresolved-search`, CAS/query context, current output, expected
+- Unresolved lookup result rows expose a structured correction link with the
+  form-compatible `issue_type=Chemical identity or alias`, body
+  `Issue key: unresolved-search`, CAS/query context, current output, expected
   output, and dictionary-curation local context. Upstream transient failures
   must remain retry states and must not become unresolved-search correction
   reports.
@@ -375,8 +386,9 @@ Production QA:
 - `npm run qa:production-search-ui` must continue checking trust notes, source
   badges, no-GHS data-state behavior, export-preview trust columns, safe
   reference link metadata, SDS link shape, Detail comparison evidence panels,
-  unresolved-lookup correction intake, and separated data-correction/workflow
-  support links.
+  unresolved-lookup correction intake, issue-form dropdown-compatible
+  structured support links, and separated data-correction/workflow support
+  links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 

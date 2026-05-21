@@ -145,12 +145,19 @@ const inspectIssueLink = async (locator) => {
 
 const hasStructuredCorrectionContext = (
   issue,
-  { issueType, currentOutputIncludes, expectedOutputIncludes, casNumber },
+  {
+    formIssueType,
+    issueKey,
+    currentOutputIncludes,
+    expectedOutputIncludes,
+    casNumber,
+  },
 ) => {
   if (!issue || issue.count < 1) return false;
   if (issue.template !== "data-correction.yml") return false;
   if (issue.labels !== "data-correction") return false;
-  if (issueType && issue.issueType !== issueType) return false;
+  if (formIssueType && issue.issueType !== formIssueType) return false;
+  if (issueKey && !issue.body.includes(`- Issue key: ${issueKey}`)) return false;
   if (casNumber && issue.casNumber !== casNumber) return false;
   if (
     currentOutputIncludes &&
@@ -1390,7 +1397,8 @@ try {
     !hasStructuredCorrectionContext(
       resultsTrustSurface.sourceConflictCorrection,
       {
-        issueType: "source-conflict",
+        formIssueType: "Source/provenance display",
+        issueKey: "source-conflict",
         casNumber: searchTerm,
         currentOutputIncludes: "multiple public GHS classifications",
         expectedOutputIncludes: "preferred classification",
@@ -1428,7 +1436,10 @@ try {
   }
   if (
     resultsTrustSurface.productTrustWorkflow.workflowArea !==
-      "Search results, SDS review, export, or label handoff" ||
+      "Search and results" ||
+    !resultsTrustSurface.productTrustWorkflow.currentProblem.includes(
+      "Search results, SDS review, export, or label handoff",
+    ) ||
     !resultsTrustSurface.productTrustWorkflow.desiredBehavior.includes(
       "safety-data correction",
     ) ||
@@ -1641,7 +1652,8 @@ try {
   if (
     detailTrustSurface.sourceConflictCorrection.count > 0 &&
     !hasStructuredCorrectionContext(detailTrustSurface.sourceConflictCorrection, {
-      issueType: "source-conflict",
+      formIssueType: "Source/provenance display",
+      issueKey: "source-conflict",
       casNumber: searchTerm,
       currentOutputIncludes: "multiple public GHS classifications",
       expectedOutputIncludes: "preferred classification",
@@ -1942,7 +1954,8 @@ try {
   if (
     noGhsState.result.noGhsCorrection.count > 0 &&
     !hasStructuredCorrectionContext(noGhsState.result.noGhsCorrection, {
-      issueType: "no-ghs-data",
+      formIssueType: "Other data issue",
+      issueKey: "no-ghs-data",
       casNumber: noGhsSearchTerm,
       currentOutputIncludes: "no GHS hazard content",
       expectedOutputIncludes: "missing GHS classification",
@@ -1981,7 +1994,8 @@ try {
   if (
     noGhsState.detail.noGhsCorrection.count > 0 &&
     !hasStructuredCorrectionContext(noGhsState.detail.noGhsCorrection, {
-      issueType: "no-ghs-data",
+      formIssueType: "Other data issue",
+      issueKey: "no-ghs-data",
       casNumber: noGhsSearchTerm,
       currentOutputIncludes: "no GHS hazard content",
       expectedOutputIncludes: "missing GHS classification",
@@ -2023,10 +2037,10 @@ try {
   if (
     missingChineseNameCorrection.casNumber !==
       missingChineseNameFixture.cas_number ||
-    missingChineseNameCorrection.issueType !== "missing-chinese-name" ||
+    missingChineseNameCorrection.issueType !== "Chemical identity or alias" ||
     missingChineseNameCorrection.rowCasNumber !==
       missingChineseNameFixture.cas_number ||
-    missingChineseNameCorrection.rowIssueType !== "missing-chinese-name"
+    missingChineseNameCorrection.rowIssueType !== "Chemical identity or alias"
   ) {
     failures.push("missing-chinese-name-correction-fields-mismatch");
   }
@@ -2042,6 +2056,12 @@ try {
     ) ||
     !missingChineseNameCorrection.rowExpectedOutput.includes(
       "Traditional Chinese name",
+    ) ||
+    !missingChineseNameCorrection.body.includes(
+      "- Issue key: missing-chinese-name",
+    ) ||
+    !missingChineseNameCorrection.rowBody.includes(
+      "- Issue key: missing-chinese-name",
     )
   ) {
     failures.push("missing-chinese-name-correction-structured-context-missing");
@@ -2098,7 +2118,8 @@ try {
   if (
     unresolvedSearchCorrection.correction.count > 0 &&
     !hasStructuredCorrectionContext(unresolvedSearchCorrection.correction, {
-      issueType: "unresolved-search",
+      formIssueType: "Chemical identity or alias",
+      issueKey: "unresolved-search",
       casNumber: unresolvedSearchTerm,
       currentOutputIncludes: "could not resolve this lookup",
       expectedOutputIncludes: "reviewed CAS/name mapping",

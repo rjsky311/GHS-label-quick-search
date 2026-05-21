@@ -34,7 +34,7 @@ describe("supportLinks", () => {
     );
     expect(url.searchParams.get("cas_number")).toBe("107-18-6");
     expect(url.searchParams.get("chemical_name")).toBe("Allyl Alcohol");
-    expect(url.searchParams.get("issue_type")).toBe("missing-chinese-name");
+    expect(url.searchParams.get("issue_type")).toBe("Chemical identity or alias");
     expect(url.searchParams.get("body")).toContain("- CAS: 107-18-6");
     expect(url.searchParams.get("body")).toContain(
       "- English name: Allyl Alcohol",
@@ -42,43 +42,51 @@ describe("supportLinks", () => {
     expect(url.searchParams.get("body")).toContain(
       "- Chinese name: (please fill in)",
     );
+    expect(url.searchParams.get("body")).toContain(
+      "- Issue key: missing-chinese-name",
+    );
   });
 
   it("adds default structured context for each data-quality correction type", () => {
     const cases = [
       {
         issueType: "missing-chinese-name",
+        formIssueType: "Chemical identity or alias",
         current: "does not have a trusted Chinese name",
         expected: "Traditional Chinese name",
         evidence: "SDS, supplier label, catalog, or regulatory source",
       },
       {
         issueType: "no-ghs-data",
+        formIssueType: "Other data issue",
         current: "no GHS hazard content",
         expected: "missing GHS classification",
         evidence: "SDS, supplier label, or regulatory source",
       },
       {
         issueType: "ghs-text-no-pictograms",
+        formIssueType: "GHS pictogram",
         current: "no renderable GHS pictograms",
         expected: "expected pictograms",
         evidence: "SDS, supplier label, or regulatory source",
       },
       {
         issueType: "source-conflict",
+        formIssueType: "Source/provenance display",
         current: "multiple public GHS classifications",
         expected: "preferred classification",
         evidence: "SDS, supplier label, or local regulatory source",
       },
       {
         issueType: "unresolved-search",
+        formIssueType: "Chemical identity or alias",
         current: "could not resolve this lookup",
         expected: "reviewed CAS/name mapping",
         evidence: "SDS, supplier label, catalog, or regulatory source",
       },
     ];
 
-    cases.forEach(({ issueType, current, expected, evidence }) => {
+    cases.forEach(({ issueType, formIssueType, current, expected, evidence }) => {
       const url = new URL(
         buildDataCorrectionUrl({
           casNumber: "7647-01-0",
@@ -87,7 +95,7 @@ describe("supportLinks", () => {
         }),
       );
 
-      expect(url.searchParams.get("issue_type")).toBe(issueType);
+      expect(url.searchParams.get("issue_type")).toBe(formIssueType);
       expect(url.searchParams.get("current_output")).toContain(current);
       expect(url.searchParams.get("expected_output")).toContain(expected);
       expect(url.searchParams.get("evidence_type")).toBe(evidence);
@@ -96,6 +104,9 @@ describe("supportLinks", () => {
       );
       expect(url.searchParams.get("body")).toContain(
         "- CAS: 7647-01-0",
+      );
+      expect(url.searchParams.get("body")).toContain(
+        `- Issue key: ${issueType}`,
       );
       expect(url.searchParams.get("body")).toContain(current);
       expect(url.searchParams.get("body")).toContain(expected);
@@ -119,11 +130,14 @@ describe("supportLinks", () => {
     expect(url.searchParams.get("template")).toBe("workflow-request.yml");
     expect(url.searchParams.get("labels")).toBe("workflow-request");
     expect(url.searchParams.get("title")).toBe("Workflow request: Batch labels");
-    expect(url.searchParams.get("workflow_area")).toBe("Batch labels");
+    expect(url.searchParams.get("workflow_area")).toBe("Label printing");
     expect(url.searchParams.get("goal")).toBe(
       "Print one fixed-stock batch without layout guessing.",
     );
-    expect(url.searchParams.get("current_problem")).toBe(
+    expect(url.searchParams.get("current_problem")).toContain(
+      "Original workflow area: Batch labels",
+    );
+    expect(url.searchParams.get("current_problem")).toContain(
       "The current flow is hard to explain.",
     );
     expect(url.searchParams.get("desired_behavior")).toBe(

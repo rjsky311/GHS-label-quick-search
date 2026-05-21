@@ -16,13 +16,14 @@ const baseChemical = {
 
 const expectStructuredCorrectionUrl = (
   issue,
-  { issueType, currentOutput, expectedOutput },
+  { formIssueType, issueKey, currentOutput, expectedOutput },
 ) => {
   const url = new URL(issue.correctionUrl);
-  expect(url.searchParams.get("issue_type")).toBe(issueType);
+  expect(url.searchParams.get("issue_type")).toBe(formIssueType);
   expect(url.searchParams.get("cas_number")).toBe(baseChemical.cas_number);
   expect(url.searchParams.get("current_output")).toContain(currentOutput);
   expect(url.searchParams.get("expected_output")).toContain(expectedOutput);
+  expect(url.searchParams.get("body")).toContain(`- Issue key: ${issueKey}`);
   expect(url.searchParams.get("local_context")).toContain(
     "safety-data corrections",
   );
@@ -45,7 +46,10 @@ describe("data quality issue helpers", () => {
     const correctionUrl = new URL(issues[0].correctionUrl);
     expect(correctionUrl.searchParams.get("cas_number")).toBe("999-99-9");
     expect(correctionUrl.searchParams.get("issue_type")).toBe(
-      "unresolved-search",
+      "Chemical identity or alias",
+    );
+    expect(correctionUrl.searchParams.get("body")).toContain(
+      "- Issue key: unresolved-search",
     );
     expect(correctionUrl.searchParams.get("current_output")).toContain(
       "could not resolve this lookup",
@@ -94,7 +98,10 @@ describe("data quality issue helpers", () => {
     const correctionUrl = new URL(missingChineseName.correctionUrl);
     expect(correctionUrl.searchParams.get("cas_number")).toBe("107-18-6");
     expect(correctionUrl.searchParams.get("issue_type")).toBe(
-      "missing-chinese-name",
+      "Chemical identity or alias",
+    );
+    expect(correctionUrl.searchParams.get("body")).toContain(
+      "- Issue key: missing-chinese-name",
     );
     expect(correctionUrl.searchParams.get("current_output")).toContain(
       "does not have a trusted Chinese name",
@@ -134,7 +141,8 @@ describe("data quality issue helpers", () => {
         (issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
       ),
       {
-        issueType: "no-ghs-data",
+        formIssueType: "Other data issue",
+        issueKey: "no-ghs-data",
         currentOutput: "no GHS hazard content",
         expectedOutput: "missing GHS classification",
       },
@@ -145,7 +153,8 @@ describe("data quality issue helpers", () => {
           issue.type === DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
       ),
       {
-        issueType: "ghs-text-no-pictograms",
+        formIssueType: "GHS pictogram",
+        issueKey: "ghs-text-no-pictograms",
         currentOutput: "no renderable GHS pictograms",
         expectedOutput: "expected pictograms",
       },
@@ -176,7 +185,8 @@ describe("data quality issue helpers", () => {
         (issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
       ),
       {
-        issueType: "source-conflict",
+        formIssueType: "Source/provenance display",
+        issueKey: "source-conflict",
         currentOutput: "multiple public GHS classifications",
         expectedOutput: "preferred classification",
       },

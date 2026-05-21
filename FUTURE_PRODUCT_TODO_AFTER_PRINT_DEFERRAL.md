@@ -136,6 +136,12 @@ Work items:
   evidence type, and local context. Workflow-help links can also prefill the
   workflow area, user goal, current problem, desired behavior, and examples, so
   support requests stay actionable without mixing into safety-data corrections.
+- Completed: structured support links now respect the actual GitHub
+  issue-form dropdown schemas. Public links send human dropdown values such as
+  `Chemical identity or alias`, `Source/provenance display`, or
+  `Search and results`, while the app's internal keys such as
+  `missing-chinese-name`, `source-conflict`, and `unresolved-search` remain in
+  the generated issue body as `Issue key`.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
@@ -665,6 +671,9 @@ Work items:
   prompts such as CAS, source/evidence type, current output, expected output,
   and local context. Workflow-help links carry workflow area, goal, current
   problem, desired behavior, and examples.
+- Completed: issue-form prefill now uses dropdown-compatible field values
+  instead of internal app keys for `issue_type` and `workflow_area`, keeping the
+  real GitHub form aligned with the repository templates.
 - Keep the low-noise workflow request path as a support link, not a first-level
   product control. Expand it only when real requests show missing categories
   such as batch labels, prepared-solution workflows, QR flows, or lab template

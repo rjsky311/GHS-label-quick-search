@@ -222,6 +222,13 @@ Current completion snapshot:
   production gate also checks structured no-GHS and source-conflict correction
   fields in both result-row and Detail paths, so all public data-quality
   correction links keep actionable issue-form context.
+- **Issue-form schema checkpoint 2026-05-22**: structured correction and
+  workflow links now normalize dropdown-backed query fields to values that
+  exist in the GitHub issue templates. Internal issue keys such as
+  `missing-chinese-name`, `source-conflict`, `no-ghs-data`, and
+  `unresolved-search` remain in the generated issue body as `Issue key`, while
+  `issue_type` and `workflow_area` use human template options so the actual
+  GitHub form can prefill reliably.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
@@ -573,6 +580,9 @@ Do next:
 - Use brand/support surfaces only after the safety task has been served:
   footer, support band, help/education, optional exports, and correction
   requests.
+- Keep data-correction and workflow-request issue links compatible with the
+  GitHub issue-form dropdown schema; do not use internal issue keys as
+  dropdown field values.
 - Improve first-time orientation without adding marketing-style noise or
   instructions that compete with the main task.
 - Review narrow-width and mobile read-only usage for search/SDS/reference

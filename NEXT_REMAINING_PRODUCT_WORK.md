@@ -76,6 +76,11 @@ implementation checklist.
   CAS/query context and dictionary-curation guidance. This keeps user-visible
   lookup misses aligned with optional miss-query telemetry without turning
   upstream transient failures into correction reports.
+- **Completed issue-form schema follow-up**: contextual correction and
+  workflow links now normalize dropdown-backed query parameters to values that
+  actually exist in the repository issue templates. Internal app issue keys
+  stay in the generated issue body as `Issue key`, so maintainers retain
+  machine-readable context without breaking GitHub issue-form prefill.
 - **Completed Chinese-name trust follow-up**: localized-name helpers,
   autocomplete, favorites/history, prepare-solution summaries, print fit
   scoring, print previews, printed labels, export preview, backend export

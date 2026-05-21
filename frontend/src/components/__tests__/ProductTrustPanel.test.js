@@ -20,7 +20,8 @@ describe('ProductTrustPanel', () => {
     );
     expect(emptyWorkflowUrl.searchParams.get('template')).toBe('workflow-request.yml');
     expect(emptyWorkflowUrl.searchParams.get('labels')).toBe('workflow-request');
-    expect(emptyWorkflowUrl.searchParams.get('workflow_area')).toBe(
+    expect(emptyWorkflowUrl.searchParams.get('workflow_area')).toBe('Search and results');
+    expect(emptyWorkflowUrl.searchParams.get('current_problem')).toContain(
       'First-time search and label workflow'
     );
     expect(emptyWorkflowUrl.searchParams.get('current_problem')).toContain(
@@ -48,7 +49,8 @@ describe('ProductTrustPanel', () => {
     const resultsWorkflowUrl = new URL(workflowLink.getAttribute('href'));
     expect(resultsWorkflowUrl.searchParams.get('template')).toBe('workflow-request.yml');
     expect(resultsWorkflowUrl.searchParams.get('labels')).toBe('workflow-request');
-    expect(resultsWorkflowUrl.searchParams.get('workflow_area')).toBe(
+    expect(resultsWorkflowUrl.searchParams.get('workflow_area')).toBe('Search and results');
+    expect(resultsWorkflowUrl.searchParams.get('current_problem')).toContain(
       'Search results, SDS review, export, or label handoff'
     );
     expect(resultsWorkflowUrl.searchParams.get('desired_behavior')).toContain(

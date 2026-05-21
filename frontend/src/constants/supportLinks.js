@@ -69,6 +69,73 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
   },
 };
 
+const DATA_CORRECTION_FORM_ISSUE_TYPES = {
+  "missing-chinese-name": "Chemical identity or alias",
+  "no-ghs-data": "Other data issue",
+  "ghs-text-no-pictograms": "GHS pictogram",
+  "source-conflict": "Source/provenance display",
+  "unresolved-search": "Chemical identity or alias",
+  "upstream-error": "Other data issue",
+};
+
+const WORKFLOW_FORM_AREAS = new Set([
+  "Search and results",
+  "Chemical detail and comparison",
+  "SDS/reference verification",
+  "Label preview",
+  "Label printing",
+  "Prepared-solution workflow",
+  "Export",
+  "Admin/pilot workflow",
+  "Mobile or narrow-screen usage",
+  "Other",
+]);
+
+const WORKFLOW_AREA_HINTS = [
+  {
+    pattern: /search|result|first-time/i,
+    value: "Search and results",
+  },
+  {
+    pattern: /label|print|qr|stock/i,
+    value: "Label printing",
+  },
+  {
+    pattern: /sds|reference|regulatory/i,
+    value: "SDS/reference verification",
+  },
+  {
+    pattern: /detail|comparison/i,
+    value: "Chemical detail and comparison",
+  },
+  {
+    pattern: /export|spreadsheet|csv|excel/i,
+    value: "Export",
+  },
+  {
+    pattern: /prepared|solution|dilution/i,
+    value: "Prepared-solution workflow",
+  },
+  {
+    pattern: /admin|pilot|curation|dictionary/i,
+    value: "Admin/pilot workflow",
+  },
+  {
+    pattern: /mobile|narrow/i,
+    value: "Mobile or narrow-screen usage",
+  },
+];
+
+const normalizeDataCorrectionFormIssueType = (issue) =>
+  DATA_CORRECTION_FORM_ISSUE_TYPES[issue] || "Other data issue";
+
+const normalizeWorkflowFormArea = (area) => {
+  if (!area) return "";
+  if (WORKFLOW_FORM_AREAS.has(area)) return area;
+  const matched = WORKFLOW_AREA_HINTS.find(({ pattern }) => pattern.test(area));
+  return matched?.value || "Other";
+};
+
 export function buildDataCorrectionUrl({
   casNumber = "",
   chemicalName = "",
@@ -91,6 +158,7 @@ export function buildDataCorrectionUrl({
   const evidence = normalizeField(evidenceUrl);
   const evidenceKind = normalizeField(evidenceType || defaultContext.evidenceType);
   const context = normalizeField(localContext || defaultContext.localContext);
+  const formIssueType = normalizeDataCorrectionFormIssueType(issue);
   const titleParts = [
     DATA_CORRECTION_TITLES[issue] || "Data correction",
     cas || englishName || chineseName,
@@ -102,7 +170,8 @@ export function buildDataCorrectionUrl({
     `- CAS: ${cas || "(not provided)"}`,
     `- English name: ${englishName || "(not provided)"}`,
     `- Chinese name: ${chineseName || "(please fill in)"}`,
-    `- Issue type: ${issue}`,
+    `- Issue type: ${formIssueType}`,
+    `- Issue key: ${issue}`,
     current ? `- Current output: ${current}` : "",
     expected ? `- Expected output: ${expected}` : "",
     evidence ? `- Evidence URL: ${evidence}` : "",
@@ -126,7 +195,7 @@ export function buildDataCorrectionUrl({
     "chemical_name",
     [englishName, chineseName].filter(Boolean).join(" / "),
   );
-  appendIfPresent(params, "issue_type", issue);
+  appendIfPresent(params, "issue_type", formIssueType);
   appendIfPresent(params, "current_output", current);
   appendIfPresent(params, "expected_output", expected);
   appendIfPresent(params, "evidence_url", evidence);
@@ -145,6 +214,7 @@ export function buildWorkflowRequestUrl({
   title = "",
 } = {}) {
   const area = normalizeField(workflowArea);
+  const formArea = normalizeWorkflowFormArea(area);
   const normalizedTitle = normalizeField(title);
   const titleParts = [
     normalizedTitle || "Workflow request",
@@ -156,9 +226,15 @@ export function buildWorkflowRequestUrl({
   });
 
   appendIfPresent(params, "title", titleParts.join(": "));
-  appendIfPresent(params, "workflow_area", area);
+  appendIfPresent(params, "workflow_area", formArea);
   appendIfPresent(params, "goal", goal);
-  appendIfPresent(params, "current_problem", currentProblem);
+  appendIfPresent(
+    params,
+    "current_problem",
+    [area && formArea !== area ? `Original workflow area: ${area}` : "", currentProblem]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
   appendIfPresent(params, "desired_behavior", desiredBehavior);
   appendIfPresent(params, "examples", examples);
 
