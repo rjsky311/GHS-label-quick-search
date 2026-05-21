@@ -42,8 +42,10 @@ Use this loop when continuing autonomously:
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
    the relevant project docs before editing.
 2. Pick one coherent product slice with a clear user-facing acceptance goal.
-   The default order is renderer/stock fit, result-table/GHS visual unity,
-   trust/SDS flow, prepared reprint maturity, then whole-product UX polish.
+   The current default order is trust/source/SDS safety boundaries, low-noise
+   whole-product UX, print renderer/stock fit only when a fresh screenshot or
+   regression points there, result-table/GHS visual unity, prepared reprint
+   maturity, then fixed-stock batch monitoring.
 3. If the slice is broad, ambiguous, repeated-rework-prone, or changes product
    direction, run the project scope gate in `PRODUCT_SCOPE_GATE.md` before
    editing.
