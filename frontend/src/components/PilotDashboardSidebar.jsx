@@ -251,6 +251,41 @@ export default function PilotDashboardSidebar(props) {
     }
   };
 
+  const handlePendingManualEntryDecision = async (entry, status) => {
+    if (!entry?.cas_number || !onSaveManualEntry) return;
+    try {
+      await onSaveManualEntry({
+        cas_number: entry.cas_number,
+        name_en: entry.name_en || null,
+        name_zh: entry.name_zh || null,
+        notes: entry.notes || "",
+        source: entry.source || "manual",
+        status,
+      });
+      toast.success(
+        status === "approved"
+          ? t("pilot.manualEntryApproved", {
+              defaultValue: "Manual dictionary entry approved.",
+            })
+          : status === "needs_evidence"
+            ? t("pilot.manualEntryNeedsEvidence", {
+                defaultValue: "Manual dictionary entry marked as needs evidence.",
+              })
+            : t("pilot.manualEntryRejected", {
+                defaultValue: "Manual dictionary entry rejected.",
+              })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.manualEntryDecisionFailed", {
+            defaultValue: "Failed to update manual dictionary entry status.",
+          })
+      );
+    }
+  };
+
   const handleMissQueryResolution = async (item, status) => {
     const missId = item?.id;
     if (!missId || !onResolveMissQuery) return;
@@ -698,13 +733,56 @@ export default function PilotDashboardSidebar(props) {
                         key={`${entry.cas_number}-${entry.status}`}
                         className="rounded-lg border border-orange-200 bg-white p-3 text-sm"
                       >
-                        <div className="font-mono font-medium text-orange-800">
-                          {entry.cas_number}
-                        </div>
-                        <div className="mt-1 text-slate-900">{entry.name_en || "-"}</div>
-                        <div className="text-slate-500">{entry.name_zh || "-"}</div>
-                        <div className="mt-1 text-xs font-medium uppercase tracking-wide text-orange-700">
-                          {entry.status}
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-mono font-medium text-orange-800">
+                              {entry.cas_number}
+                            </div>
+                            <div className="mt-1 text-slate-900">{entry.name_en || "-"}</div>
+                            <div className="text-slate-500">{entry.name_zh || "-"}</div>
+                            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-orange-700">
+                              {entry.status}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 flex-col gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handlePendingManualEntryDecision(entry, "approved")
+                              }
+                              disabled={saving}
+                              className="rounded bg-emerald-700 px-3 py-1 text-xs text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`approve-manual-entry-${entry.cas_number}`}
+                            >
+                              {t("pilot.approve", { defaultValue: "Approve" })}
+                            </button>
+                            {entry.status !== "needs_evidence" ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handlePendingManualEntryDecision(entry, "needs_evidence")
+                                }
+                                disabled={saving}
+                                className="rounded bg-amber-700 px-3 py-1 text-xs text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`needs-evidence-manual-entry-${entry.cas_number}`}
+                              >
+                                {t("pilot.needsEvidence", {
+                                  defaultValue: "Needs evidence",
+                                })}
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handlePendingManualEntryDecision(entry, "rejected")
+                              }
+                              disabled={saving}
+                              className="rounded bg-red-700 px-3 py-1 text-xs text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`reject-manual-entry-${entry.cas_number}`}
+                            >
+                              {t("pilot.reject", { defaultValue: "Reject" })}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}

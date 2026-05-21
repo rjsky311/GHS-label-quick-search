@@ -138,6 +138,23 @@ describe("PilotDashboardSidebar", () => {
     });
   });
 
+  it("approves a manual dictionary entry from the overview tab", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("approve-manual-entry-555-55-5"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveManualEntry).toHaveBeenCalledWith({
+        cas_number: "555-55-5",
+        name_en: "Review Solvent",
+        name_zh: "審核溶劑",
+        notes: "",
+        source: "manual",
+        status: "approved",
+      });
+    });
+  });
+
   it("marks a miss query as needing evidence from the overview tab", async () => {
     render(<PilotDashboardSidebar {...baseProps} />);
 

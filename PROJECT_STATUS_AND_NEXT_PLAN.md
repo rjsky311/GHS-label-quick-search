@@ -203,6 +203,10 @@ Current completion snapshot:
   transient failures remain retry states rather than correction requests.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
+- **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
+  now carry review status, public surfaces consume approved rows only, and the
+  admin dashboard can approve, mark needs-evidence, or reject pending manual
+  entries directly from the review queue.
 
 ## 3. Next Priority Order
 

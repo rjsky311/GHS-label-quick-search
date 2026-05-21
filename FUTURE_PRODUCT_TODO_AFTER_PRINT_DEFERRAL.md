@@ -138,6 +138,9 @@ Work items:
   `pending`, `needs_evidence`, `rejected`). Only approved entries affect public
   lookup, trusted display names, labels, or exports; pending/needs-evidence
   records stay visible in admin review and exports.
+- Completed: made pending/needs-evidence manual entries actionable from the
+  admin overview. Maintainers can approve, mark needs-evidence, or reject a
+  candidate without copying it back into the manual-entry form.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Keep manual dictionary review status usage consistent with the correction
