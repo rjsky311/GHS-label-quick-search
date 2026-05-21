@@ -203,6 +203,15 @@ Current completion snapshot:
   transient failures remain retry states rather than correction requests.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
+- **Structured support intake checkpoint 2026-05-22**: contextual
+  data-correction links now prefill repository issue-form fields for CAS,
+  chemical name, issue type, current output, expected output, evidence type,
+  and local context. Product-trust workflow links can prefill workflow area,
+  user goal, current problem, desired behavior, and examples while the generic
+  footer links remain low-pressure. This keeps safety-data corrections and
+  workflow requests auditable without adding another in-app form.
+  `qa:production-search-ui` now checks the structured workflow and
+  missing-Chinese-name correction fields on the deployed frontend.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

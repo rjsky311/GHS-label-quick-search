@@ -15,9 +15,16 @@ describe('ProductTrustPanel', () => {
       'href',
       'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
-    expect(screen.getByTestId('product-trust-workflow-link-empty')).toHaveAttribute(
-      'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request'
+    const emptyWorkflowUrl = new URL(
+      screen.getByTestId('product-trust-workflow-link-empty').getAttribute('href')
+    );
+    expect(emptyWorkflowUrl.searchParams.get('template')).toBe('workflow-request.yml');
+    expect(emptyWorkflowUrl.searchParams.get('labels')).toBe('workflow-request');
+    expect(emptyWorkflowUrl.searchParams.get('workflow_area')).toBe(
+      'First-time search and label workflow'
+    );
+    expect(emptyWorkflowUrl.searchParams.get('current_problem')).toContain(
+      'search-to-decision path'
     );
   });
 
@@ -38,9 +45,14 @@ describe('ProductTrustPanel', () => {
       'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
     expect(workflowLink).toHaveTextContent('productTrust.requestWorkflowCta');
-    expect(workflowLink).toHaveAttribute(
-      'href',
-      'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request'
+    const resultsWorkflowUrl = new URL(workflowLink.getAttribute('href'));
+    expect(resultsWorkflowUrl.searchParams.get('template')).toBe('workflow-request.yml');
+    expect(resultsWorkflowUrl.searchParams.get('labels')).toBe('workflow-request');
+    expect(resultsWorkflowUrl.searchParams.get('workflow_area')).toBe(
+      'Search results, SDS review, export, or label handoff'
+    );
+    expect(resultsWorkflowUrl.searchParams.get('desired_behavior')).toContain(
+      'Keep the safety-data correction path separate'
     );
     for (const link of [reportLink, workflowLink]) {
       expect(link).toHaveAttribute('target', '_blank');

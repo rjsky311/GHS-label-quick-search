@@ -191,6 +191,10 @@ When sources disagree:
   follow that selected report instead of silently keeping the original primary
   source.
 - Keep correction/report links separate from workflow/business request links.
+- Contextual correction links should prefill structured issue-template fields
+  when the app already knows the CAS, chemical name, issue type, current
+  output, expected output, evidence type, or local context. Prefill is a triage
+  aid only; it is not accepted curation evidence by itself.
 - Do not claim the app has resolved legal compliance conflicts.
 
 If a future feature adds stronger manual hazard overrides, it must be explicitly
@@ -206,6 +210,19 @@ Data-correction reports should include source evidence such as SDS, supplier
 label, official regulatory page, current app output, and expected correction.
 Workflow requests should describe the operational task and should not be used
 to request hazard-data changes.
+
+Frontend support surfaces may prefill these repository issue-form fields to
+reduce repeated typing and improve review quality:
+
+- Data correction: `cas_number`, `chemical_name`, `issue_type`,
+  `current_output`, `expected_output`, `evidence_url`, `evidence_type`, and
+  `local_context`.
+- Workflow request: `workflow_area`, `goal`, `current_problem`,
+  `desired_behavior`, and `examples`.
+
+Generic footer links should remain low-pressure and can stay unfilled. Result,
+Detail, and product-trust links may add context when it clarifies the user's
+task and keeps data corrections separate from workflow help.
 
 ## 5. Admin And Telemetry Boundaries
 

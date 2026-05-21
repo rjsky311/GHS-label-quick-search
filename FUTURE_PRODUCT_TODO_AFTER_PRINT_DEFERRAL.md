@@ -131,9 +131,18 @@ Work items:
   no-GHS gaps, pictogram gaps, source conflicts, and missing trusted Chinese
   names; upstream transient failures stay as retry guidance rather than a data
   correction shortcut.
+- Completed: data-correction links now prefill the structured issue-template
+  fields for CAS, chemical name, issue type, current output, expected output,
+  evidence type, and local context. Workflow-help links can also prefill the
+  workflow area, user goal, current problem, desired behavior, and examples, so
+  support requests stay actionable without mixing into safety-data corrections.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
+- Completed: expanded production search UI QA so the deployed product-trust
+  workflow link must keep structured workflow-request fields, and missing
+  Chinese-name correction links must keep structured CAS/issue/current-output
+  fields in both result-row and Detail paths.
 - Completed: added admin manual-dictionary review statuses (`approved`,
   `pending`, `needs_evidence`, `rejected`). Only approved entries affect public
   lookup, trusted display names, labels, or exports; pending/needs-evidence
@@ -642,10 +651,15 @@ Work items:
   `BRANDED_UTILITY_STRATEGY.md`; existing ProductTrustPanel/Footer tests and
   production search UI QA cover the separated issue-template links.
 - Keep data-correction requests separate from workflow/product requests.
-- Consider adding structured prompts for correction evidence: CAS, SDS URL,
-  supplier label, observed mismatch, local regulation context.
-- Consider adding a low-noise "request workflow help" path for users who need
-  batch labels, prepared-solution workflows, or lab template support.
+- Completed: frontend support links now use structured issue-template
+  prefill when context is available. Data-correction links carry evidence
+  prompts such as CAS, source/evidence type, current output, expected output,
+  and local context. Workflow-help links carry workflow area, goal, current
+  problem, desired behavior, and examples.
+- Keep the low-noise workflow request path as a support link, not a first-level
+  product control. Expand it only when real requests show missing categories
+  such as batch labels, prepared-solution workflows, QR flows, or lab template
+  support.
 
 Acceptance:
 
@@ -796,7 +810,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
+| Correction intake | `Gate added` | Structured issue-template prefill is in place; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
@@ -807,6 +821,6 @@ or user report points to a more urgent slice.
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |
 | Maintainer doc split | `Shipped` | Keep `CLAUDE.md` as a pointer only | Docs-only checks |
 | Documentation drift checks | `Gate added` | Keep `test:docs` aligned when canonical docs change | `npm run test:docs` |
-| Brand/support rules | `Shipped` | Apply the commercial-copy review gate to any future conversion change | Docs + production UX review |
+| Brand/support rules | `Shipped` | Structured support prefill is in place; apply the commercial-copy review gate to any future conversion change | Docs + production UX review |
 | Education/help content | `Monitoring` | Add only task-supporting help where confusion persists | i18n + production walkthrough |
 | Scientific lookup skills | `Planned` | Do not install now; trial only `database-lookup`, `paper-lookup`, and later `datamol` in an isolated maintainer workflow | `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md` + sandbox dry run |

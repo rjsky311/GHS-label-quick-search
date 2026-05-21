@@ -95,6 +95,13 @@ Current mode:
   transient failures remain retry states and do not become correction links.
   The production search UI gate now asserts those correction links keep their
   data-correction template and CAS context.
+- Completed current slice: contextual support links now prefill the structured
+  GitHub issue-form fields instead of relying only on free-form bodies. Data
+  corrections carry CAS/name, issue type, current output, expected output,
+  evidence type, and local context; product-trust workflow help carries the
+  workflow area, goal, current problem, desired behavior, and examples while
+  generic footer links stay low-pressure. Production search UI QA now checks
+  those structured fields where deployed context exists.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is
@@ -138,8 +145,9 @@ Current mode:
    and admin-reviewed.
    Current baseline includes effective-classification source/report-count
    alignment, export-preview/CSV/XLSX trust columns, and contextual
-   data-quality correction links. Detail comparison now also exposes
-   source/ranking evidence directly beside alternate classifications.
+   data-quality correction links with structured issue-form prefill. Detail
+   comparison now also exposes source/ranking evidence directly beside
+   alternate classifications.
 2. Harden and monitor the simplified three-output label workflow in
    `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete A4/Letter label, QR small
    label, and identification small label. New work should improve QA,

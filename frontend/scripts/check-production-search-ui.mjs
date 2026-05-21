@@ -36,8 +36,6 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
 );
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
-const SUPPORT_WORKFLOW_REQUEST_URL =
-  "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request";
 const missingChineseNameFixture = {
   cas_number: "107-18-6",
   cid: 7858,
@@ -81,11 +79,25 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const parseIssueUrl = (href) => {
   try {
     const url = href ? new URL(href) : null;
+    const field = (key) => url?.searchParams.get(key) || "";
     return {
-      template: url?.searchParams.get("template") || "",
-      labels: url?.searchParams.get("labels") || "",
-      title: url?.searchParams.get("title") || "",
-      body: url?.searchParams.get("body") || "",
+      template: field("template"),
+      labels: field("labels"),
+      title: field("title"),
+      body: field("body"),
+      casNumber: field("cas_number"),
+      chemicalName: field("chemical_name"),
+      issueType: field("issue_type"),
+      currentOutput: field("current_output"),
+      expectedOutput: field("expected_output"),
+      evidenceUrl: field("evidence_url"),
+      evidenceType: field("evidence_type"),
+      localContext: field("local_context"),
+      workflowArea: field("workflow_area"),
+      goal: field("goal"),
+      currentProblem: field("current_problem"),
+      desiredBehavior: field("desired_behavior"),
+      examples: field("examples"),
     };
   } catch {
     return {
@@ -93,6 +105,19 @@ const parseIssueUrl = (href) => {
       labels: "",
       title: "",
       body: "",
+      casNumber: "",
+      chemicalName: "",
+      issueType: "",
+      currentOutput: "",
+      expectedOutput: "",
+      evidenceUrl: "",
+      evidenceType: "",
+      localContext: "",
+      workflowArea: "",
+      goal: "",
+      currentProblem: "",
+      desiredBehavior: "",
+      examples: "",
     };
   }
 };
@@ -349,6 +374,16 @@ const inspectResultsTrustSurface = async (page) => {
     sdsProtocol = "";
     sdsHost = "";
   }
+  const productTrustReportHref =
+    (await page
+      .getByTestId("product-trust-report-link-results")
+      .getAttribute("href")
+      .catch(() => "")) || "";
+  const productTrustWorkflowHref =
+    (await page
+      .getByTestId("product-trust-workflow-link-results")
+      .getAttribute("href")
+      .catch(() => "")) || "";
 
   return {
     authoritativeNoteCount: await note.count(),
@@ -371,16 +406,10 @@ const inspectResultsTrustSurface = async (page) => {
       .locator('[data-testid^="results-decision-step-"]')
       .count()
       .catch(() => 0),
-    productTrustReportHref:
-      (await page
-        .getByTestId("product-trust-report-link-results")
-        .getAttribute("href")
-        .catch(() => "")) || "",
-    productTrustWorkflowHref:
-      (await page
-        .getByTestId("product-trust-workflow-link-results")
-        .getAttribute("href")
-        .catch(() => "")) || "",
+    productTrustReportHref,
+    productTrustReport: parseIssueUrl(productTrustReportHref),
+    productTrustWorkflowHref,
+    productTrustWorkflow: parseIssueUrl(productTrustWorkflowHref),
     sourceConflictCorrection,
     sourceBadges: await page
       .locator('[data-testid^="source-badge-"]')
@@ -936,25 +965,28 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
       "detail-report-missing-chinese-name-link",
     );
     const href = (await link.getAttribute("href").catch(() => "")) || "";
-    let issueUrl = null;
-    try {
-      issueUrl = href ? new URL(href) : null;
-    } catch {
-      issueUrl = null;
-    }
+    const detailCorrection = parseIssueUrl(href);
     return {
       noteCount: await note.count(),
       linkCount: await link.count(),
       href,
-      template: issueUrl?.searchParams.get("template") || "",
-      labels: issueUrl?.searchParams.get("labels") || "",
-      title: issueUrl?.searchParams.get("title") || "",
-      body: issueUrl?.searchParams.get("body") || "",
+      template: detailCorrection.template,
+      labels: detailCorrection.labels,
+      title: detailCorrection.title,
+      body: detailCorrection.body,
+      casNumber: detailCorrection.casNumber,
+      issueType: detailCorrection.issueType,
+      currentOutput: detailCorrection.currentOutput,
+      expectedOutput: detailCorrection.expectedOutput,
       rowLinkCount: rowCorrection.count,
       rowTemplate: rowCorrection.template,
       rowLabels: rowCorrection.labels,
       rowTitle: rowCorrection.title,
       rowBody: rowCorrection.body,
+      rowCasNumber: rowCorrection.casNumber,
+      rowIssueType: rowCorrection.issueType,
+      rowCurrentOutput: rowCorrection.currentOutput,
+      rowExpectedOutput: rowCorrection.expectedOutput,
     };
   } finally {
     await page.close();
@@ -1294,10 +1326,21 @@ try {
     failures.push("results-product-trust-report-link-mismatch");
   }
   if (
-    resultsTrustSurface.productTrustWorkflowHref !==
-    SUPPORT_WORKFLOW_REQUEST_URL
+    resultsTrustSurface.productTrustWorkflow.template !==
+      "workflow-request.yml" ||
+    resultsTrustSurface.productTrustWorkflow.labels !== "workflow-request"
   ) {
     failures.push("results-product-trust-workflow-link-mismatch");
+  }
+  if (
+    resultsTrustSurface.productTrustWorkflow.workflowArea !==
+      "Search results, SDS review, export, or label handoff" ||
+    !resultsTrustSurface.productTrustWorkflow.desiredBehavior.includes(
+      "safety-data correction",
+    ) ||
+    !resultsTrustSurface.productTrustWorkflow.examples.includes("batch labels")
+  ) {
+    failures.push("results-product-trust-workflow-context-missing");
   }
   if (resultsTrustSurface.sourceBadges.length < 1) {
     failures.push("results-source-badge-missing");
@@ -1839,6 +1882,32 @@ try {
       `Missing Chinese name: ${missingChineseNameFixture.cas_number}`
   ) {
     failures.push("missing-chinese-name-correction-title-mismatch");
+  }
+  if (
+    missingChineseNameCorrection.casNumber !==
+      missingChineseNameFixture.cas_number ||
+    missingChineseNameCorrection.issueType !== "missing-chinese-name" ||
+    missingChineseNameCorrection.rowCasNumber !==
+      missingChineseNameFixture.cas_number ||
+    missingChineseNameCorrection.rowIssueType !== "missing-chinese-name"
+  ) {
+    failures.push("missing-chinese-name-correction-fields-mismatch");
+  }
+  if (
+    !missingChineseNameCorrection.currentOutput.includes(
+      "does not have a trusted Chinese name",
+    ) ||
+    !missingChineseNameCorrection.expectedOutput.includes(
+      "Traditional Chinese name",
+    ) ||
+    !missingChineseNameCorrection.rowCurrentOutput.includes(
+      "does not have a trusted Chinese name",
+    ) ||
+    !missingChineseNameCorrection.rowExpectedOutput.includes(
+      "Traditional Chinese name",
+    )
+  ) {
+    failures.push("missing-chinese-name-correction-structured-context-missing");
   }
   if (
     !missingChineseNameCorrection.body.includes(

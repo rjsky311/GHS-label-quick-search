@@ -8,12 +8,35 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   SUPPORT_REPORT_DATA_URL,
-  SUPPORT_WORKFLOW_REQUEST_URL,
+  buildWorkflowRequestUrl,
 } from "@/constants/supportLinks";
 
 export default function ProductTrustPanel({ variant = "empty" }) {
   const { t } = useTranslation();
   const isCompact = variant === "results";
+  const workflowRequestUrl = buildWorkflowRequestUrl(
+    isCompact
+      ? {
+          workflowArea: "Search results, SDS review, export, or label handoff",
+          goal: "I need help completing the next step after search results appear.",
+          currentProblem:
+            "The current result, SDS/reference, export, or label path is hard to complete from the results view.",
+          desiredBehavior:
+            "Keep the safety-data correction path separate, and describe the workflow improvement that would make the task easier.",
+          examples:
+            "Examples: batch labels, prepared-solution reprint, SDS review, export columns, or label preview handoff.",
+        }
+      : {
+          workflowArea: "First-time search and label workflow",
+          goal: "I need help using the tool for a repeated lab or operations workflow.",
+          currentProblem:
+            "The current search-to-decision path, label output, or support flow does not match the workflow I need.",
+          desiredBehavior:
+            "Describe the workflow outcome without mixing it with a data-correction request.",
+          examples:
+            "Examples: batch search, QR lookup, complete labels, small identification labels, or lab template support.",
+        },
+  );
 
   const cards = [
     {
@@ -66,7 +89,7 @@ export default function ProductTrustPanel({ variant = "empty" }) {
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
             <a
-              href={SUPPORT_WORKFLOW_REQUEST_URL}
+              href={workflowRequestUrl}
               target="_blank"
               rel="noopener noreferrer"
               data-testid={`product-trust-workflow-link-${variant}`}

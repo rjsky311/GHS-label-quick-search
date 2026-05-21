@@ -19,6 +19,8 @@ Current shipped surfaces:
 - Footer attribution and correction/request links.
 - Product trust panel on the empty/results states.
 - Separate GitHub issue templates for data corrections and workflow requests.
+- Structured support-link prefill for contextual data corrections and workflow
+  help, while keeping generic footer links low-pressure.
 - Generated/printed label trust footer copy that stays safety-focused rather
   than promotional.
 
@@ -27,7 +29,8 @@ Regression expectation:
 - `qa:production-search-ui` must keep data-correction and workflow-request
   links separated.
 - Footer/ProductTrustPanel tests must keep support links pointed to the correct
-  issue templates.
+  issue templates and preserve structured context when a surface knows enough
+  to prefill it.
 - Print QA must keep promotional or unrelated content out of hazard labels.
 
 ## What This Means For Design
@@ -98,6 +101,17 @@ Data corrections and workflow help must remain separate:
   deployment, lab templates, or printer/stock setup.
 
 Do not route safety-data corrections into a commercial lead path.
+
+When a support surface already has context, prefer prefilled issue-template
+fields over free-form prose:
+
+- Data-correction links may carry CAS, chemical name, issue type, current
+  output, expected output, evidence type, and local context.
+- Workflow-help links may carry workflow area, goal, current problem, desired
+  behavior, and examples.
+
+Keep generic footer links unfilled so they do not feel like another form before
+the user has a concrete task.
 
 ### Print Completion
 

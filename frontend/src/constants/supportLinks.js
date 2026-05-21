@@ -7,6 +7,11 @@ export const SUPPORT_WORKFLOW_REQUEST_URL = `${SUPPORT_ISSUES_URL}/new?template=
 
 const normalizeField = (value) => String(value || "").trim();
 
+const appendIfPresent = (params, key, value) => {
+  const normalized = normalizeField(value);
+  if (normalized) params.set(key, normalized);
+};
+
 const DATA_CORRECTION_TITLES = {
   "missing-chinese-name": "Missing Chinese name",
   "no-ghs-data": "GHS data gap",
@@ -17,14 +22,25 @@ const DATA_CORRECTION_TITLES = {
 
 export function buildDataCorrectionUrl({
   casNumber = "",
+  chemicalName = "",
   nameEn = "",
   nameZh = "",
   issueType = "data-correction",
+  currentOutput = "",
+  expectedOutput = "",
+  evidenceUrl = "",
+  evidenceType = "",
+  localContext = "",
 } = {}) {
   const cas = normalizeField(casNumber);
-  const englishName = normalizeField(nameEn);
+  const englishName = normalizeField(nameEn || chemicalName);
   const chineseName = normalizeField(nameZh);
   const issue = normalizeField(issueType) || "data-correction";
+  const current = normalizeField(currentOutput);
+  const expected = normalizeField(expectedOutput);
+  const evidence = normalizeField(evidenceUrl);
+  const evidenceKind = normalizeField(evidenceType);
+  const context = normalizeField(localContext);
   const titleParts = [
     DATA_CORRECTION_TITLES[issue] || "Data correction",
     cas || englishName || chineseName,
@@ -37,11 +53,16 @@ export function buildDataCorrectionUrl({
     `- English name: ${englishName || "(not provided)"}`,
     `- Chinese name: ${chineseName || "(please fill in)"}`,
     `- Issue type: ${issue}`,
+    current ? `- Current output: ${current}` : "",
+    expected ? `- Expected output: ${expected}` : "",
+    evidence ? `- Evidence URL: ${evidence}` : "",
+    evidenceKind ? `- Evidence type: ${evidenceKind}` : "",
+    context ? `- Local context: ${context}` : "",
     "",
     "## Evidence / source",
     "",
     "Please include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
-  ];
+  ].filter((line) => line !== "");
 
   const params = new URLSearchParams({
     template: "data-correction.yml",
@@ -49,6 +70,47 @@ export function buildDataCorrectionUrl({
     title: titleParts.join(": "),
     body: bodyLines.join("\n"),
   });
+  appendIfPresent(params, "cas_number", cas);
+  appendIfPresent(
+    params,
+    "chemical_name",
+    [englishName, chineseName].filter(Boolean).join(" / "),
+  );
+  appendIfPresent(params, "issue_type", issue);
+  appendIfPresent(params, "current_output", current);
+  appendIfPresent(params, "expected_output", expected);
+  appendIfPresent(params, "evidence_url", evidence);
+  appendIfPresent(params, "evidence_type", evidenceKind);
+  appendIfPresent(params, "local_context", context);
+
+  return `${SUPPORT_ISSUES_URL}/new?${params.toString()}`;
+}
+
+export function buildWorkflowRequestUrl({
+  workflowArea = "",
+  goal = "",
+  currentProblem = "",
+  desiredBehavior = "",
+  examples = "",
+  title = "",
+} = {}) {
+  const area = normalizeField(workflowArea);
+  const normalizedTitle = normalizeField(title);
+  const titleParts = [
+    normalizedTitle || "Workflow request",
+    area,
+  ].filter(Boolean);
+  const params = new URLSearchParams({
+    template: "workflow-request.yml",
+    labels: "workflow-request",
+  });
+
+  appendIfPresent(params, "title", titleParts.join(": "));
+  appendIfPresent(params, "workflow_area", area);
+  appendIfPresent(params, "goal", goal);
+  appendIfPresent(params, "current_problem", currentProblem);
+  appendIfPresent(params, "desired_behavior", desiredBehavior);
+  appendIfPresent(params, "examples", examples);
 
   return `${SUPPORT_ISSUES_URL}/new?${params.toString()}`;
 }

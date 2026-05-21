@@ -13,13 +13,53 @@ export const DATA_QUALITY_ISSUE_TYPES = Object.freeze({
 const getPictograms = (classification = {}) =>
   classification?.pictograms || classification?.ghs_pictograms || [];
 
-const getCorrectionUrl = (result, issueType) =>
-  buildDataCorrectionUrl({
+const CORRECTION_CONTEXT_BY_TYPE = Object.freeze({
+  [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: {
+    currentOutput: "The app found this chemical identity, but no GHS hazard content was available.",
+    expectedOutput:
+      "Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.",
+    evidenceType: "SDS, supplier label, or regulatory source",
+  },
+  [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: {
+    currentOutput:
+      "The app has GHS text for this chemical, but no renderable GHS pictograms.",
+    expectedOutput:
+      "Provide evidence for the expected pictograms or confirm that text-only hazard data is correct.",
+    evidenceType: "SDS, supplier label, or regulatory source",
+  },
+  [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: {
+    currentOutput:
+      "The app found multiple public GHS classifications or source variants for this chemical.",
+    expectedOutput:
+      "Identify the SDS/supplier/local-rule evidence that should guide the preferred classification.",
+    evidenceType: "SDS, supplier label, or local regulatory source",
+  },
+  [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: {
+    currentOutput:
+      "The app does not have a trusted Chinese name, or the available Chinese field repeats English.",
+    expectedOutput:
+      "Provide a reviewed Traditional Chinese name with source evidence before dictionary approval.",
+    evidenceType: "SDS, supplier label, catalog, or regulatory source",
+  },
+});
+
+const getCorrectionUrl = (result, issueType) => {
+  const context = CORRECTION_CONTEXT_BY_TYPE[issueType] || {};
+
+  return buildDataCorrectionUrl({
     casNumber: result?.cas_number,
     nameEn: resolveEnglishName(result),
     nameZh: resolveTrustedChineseName(result),
     issueType,
+    ...context,
+    localContext: [
+      context.localContext,
+      "Please keep safety-data corrections separate from workflow or product requests.",
+    ]
+      .filter(Boolean)
+      .join(" "),
   });
+};
 
 export function getDataQualityIssues(result = {}, effectiveClassification = null) {
   if (!result?.found) return [];

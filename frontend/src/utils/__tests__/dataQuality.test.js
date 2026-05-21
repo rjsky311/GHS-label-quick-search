@@ -32,6 +32,17 @@ describe("data quality issue helpers", () => {
     );
     expect(missingChineseName.correctionUrl).toContain("missing-chinese-name");
     expect(missingChineseName.correctionUrl).toContain("107-18-6");
+    const correctionUrl = new URL(missingChineseName.correctionUrl);
+    expect(correctionUrl.searchParams.get("cas_number")).toBe("107-18-6");
+    expect(correctionUrl.searchParams.get("issue_type")).toBe(
+      "missing-chinese-name",
+    );
+    expect(correctionUrl.searchParams.get("current_output")).toContain(
+      "does not have a trusted Chinese name",
+    );
+    expect(correctionUrl.searchParams.get("expected_output")).toContain(
+      "Traditional Chinese name",
+    );
   });
 
   it("distinguishes no GHS data from text-only GHS data", () => {
