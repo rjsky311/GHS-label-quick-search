@@ -135,7 +135,20 @@ export default function PilotDashboardSidebar(props) {
   const recentManualEntries = useMemo(() => [...manualEntries].slice(0, 8), [manualEntries]);
   const recentAliases = useMemo(() => [...aliases].slice(0, 8), [aliases]);
   const recentReferenceLinks = useMemo(
-    () => [...referenceLinks].slice(0, 8),
+    () =>
+      [...referenceLinks]
+        .sort((a, b) => {
+          const updatedA = Date.parse(a.updatedAt || a.updated_at || "");
+          const updatedB = Date.parse(b.updatedAt || b.updated_at || "");
+          if (!Number.isNaN(updatedA) || !Number.isNaN(updatedB)) {
+            return (
+              (Number.isNaN(updatedB) ? 0 : updatedB) -
+              (Number.isNaN(updatedA) ? 0 : updatedA)
+            );
+          }
+          return String(a.casNumber || "").localeCompare(String(b.casNumber || ""));
+        })
+        .slice(0, 8),
     [referenceLinks]
   );
 
@@ -1238,12 +1251,22 @@ export default function PilotDashboardSidebar(props) {
                           <div
                             key={`${link.casNumber}-${link.url}`}
                             className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                            data-testid={`reference-link-row-${link.id || index}`}
                           >
                             <div className="font-mono text-blue-700">{link.casNumber}</div>
                             <div className="mt-1 text-slate-900">{link.label}</div>
                             <div className="text-xs text-slate-500">
                               {link.linkType} | priority {link.priority} |{" "}
-                              {currentStatus}
+                              <span
+                                className={
+                                  currentStatus === "inactive"
+                                    ? "font-medium text-amber-700"
+                                    : "font-medium text-emerald-700"
+                                }
+                                data-testid={`reference-link-status-${link.id || index}`}
+                              >
+                                {currentStatus}
+                              </span>
                             </div>
                             <button
                               type="button"

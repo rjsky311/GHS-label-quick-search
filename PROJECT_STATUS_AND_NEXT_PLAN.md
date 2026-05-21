@@ -213,7 +213,7 @@ Current completion snapshot:
   selection, labels, and exports keep active-only defaults so retired SDS or
   obsolete reference links remain auditable without becoming user-facing.
   Maintainers can also activate or deactivate recent reference links directly
-  from the admin list.
+  from a newest-first admin list.
 
 ## 3. Next Priority Order
 

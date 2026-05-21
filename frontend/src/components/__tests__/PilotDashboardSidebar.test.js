@@ -92,6 +92,7 @@ const baseProps = {
       url: "https://lab.example/sds/current",
       priority: 1,
       status: "active",
+      updatedAt: "2026-04-18T09:00:00+00:00",
     },
     {
       id: 11,
@@ -102,6 +103,7 @@ const baseProps = {
       url: "https://lab.example/sds/retired",
       priority: 0,
       status: "inactive",
+      updatedAt: "2026-04-18T10:00:00+00:00",
     },
   ],
   loading: false,
@@ -348,6 +350,11 @@ describe("PilotDashboardSidebar", () => {
     render(<PilotDashboardSidebar {...baseProps} />);
 
     fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    const rows = screen.getAllByTestId(/^reference-link-row-/);
+    expect(rows[0]).toHaveTextContent("Retired SDS");
+    expect(screen.getByTestId("reference-link-status-11")).toHaveTextContent("inactive");
+    expect(screen.getByTestId("reference-link-status-10")).toHaveTextContent("active");
+
     fireEvent.click(screen.getByTestId("reference-link-inactive-10"));
 
     await waitFor(() => {
