@@ -153,11 +153,18 @@ const resolveChromeExecutable = () => {
   return found;
 };
 
-const withQaParam = (url) => {
+const withQaParams = (url, params = {}) => {
   const nextUrl = new URL(url);
   nextUrl.searchParams.set("productionSearchUiQa", Date.now().toString());
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value).trim()) {
+      nextUrl.searchParams.set(key, String(value));
+    }
+  });
   return nextUrl.toString();
 };
+
+const withQaParam = (url) => withQaParams(url);
 
 const inspectActionButton = async (page, testId) =>
   page.getByTestId(testId).evaluate((node) => {
@@ -995,6 +1002,37 @@ const inspectBatchInputNormalizationPath = async (context) => {
   }
 };
 
+const inspectUrlQueryHydrationPath = async (context, term) => {
+  const page = await context.newPage();
+  const queryUrl = withQaParams(productionUrl, { cas: term });
+  try {
+    await page.goto(queryUrl, { waitUntil: "networkidle" });
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(queryUrl, { waitUntil: "networkidle" });
+    await page.getByTestId("result-row-0").waitFor({
+      state: "visible",
+      timeout: SEARCH_UI_TIMEOUT_MS,
+    });
+    return {
+      queryUrl,
+      inputValue: await page.getByTestId("single-cas-input").inputValue(),
+      rowText:
+        ((await page.getByTestId("result-row-0").textContent()) || "")
+          .replace(/\s+/g, " ")
+          .trim(),
+      singleTabClass: (await page.getByTestId("single-search-tab").getAttribute(
+        "class",
+      )) || "",
+      batchReadySummaryCount: await page
+        .getByTestId("batch-ready-summary")
+        .count()
+        .catch(() => 0),
+    };
+  } finally {
+    await page.close();
+  }
+};
+
 const summarizePictogramMetrics = (metrics) => {
   const tiles = metrics?.tiles || [];
   const minFrames = tiles.map((tile) =>
@@ -1142,6 +1180,17 @@ const summarizeSearchUiReportForConsole = (report) => {
         ),
         overLimitAlertCount:
           metrics.batchInputNormalization?.overLimitAlertCount || 0,
+      },
+      urlQueryHydration: {
+        inputValue: metrics.urlQueryHydration?.inputValue || "",
+        resultHasSearchTerm: Boolean(
+          metrics.urlQueryHydration?.rowText?.includes(report.searchTerm),
+        ),
+        singleTabActive: /border-blue-700|bg-blue-50/.test(
+          metrics.urlQueryHydration?.singleTabClass || "",
+        ),
+        batchReadySummaryCount:
+          metrics.urlQueryHydration?.batchReadySummaryCount || 0,
       },
       images: {
         waitedContexts: metrics.imageWaits?.length || 0,
@@ -1676,6 +1725,10 @@ try {
     await inspectMissingChineseNameCorrectionPath(context);
   const batchInputNormalization =
     await inspectBatchInputNormalizationPath(context);
+  const urlQueryHydration = await inspectUrlQueryHydrationPath(
+    context,
+    searchTerm,
+  );
 
   if (
     !noGhsState.result.rowText.includes(noGhsSearchTerm) &&
@@ -1800,6 +1853,18 @@ try {
   }
   if (batchInputNormalization.overLimitAlertCount > 0) {
     failures.push("batch-input-overlimit-alert-unexpected");
+  }
+  if (urlQueryHydration.inputValue !== searchTerm) {
+    failures.push("url-query-hydration-input-mismatch");
+  }
+  if (!urlQueryHydration.rowText.includes(searchTerm)) {
+    failures.push("url-query-hydration-result-missing");
+  }
+  if (!/border-blue-700|bg-blue-50/.test(urlQueryHydration.singleTabClass)) {
+    failures.push("url-query-hydration-single-tab-inactive");
+  }
+  if (urlQueryHydration.batchReadySummaryCount > 0) {
+    failures.push("url-query-hydration-batch-summary-visible");
   }
 
   if (
@@ -1927,6 +1992,7 @@ try {
       noGhsState,
       missingChineseNameCorrection,
       batchInputNormalization,
+      urlQueryHydration,
       mobileDetailComparisonCardCount,
       mobileDetailComparisonEvidencePanelCount,
       mobileDetailComparisonMetrics,

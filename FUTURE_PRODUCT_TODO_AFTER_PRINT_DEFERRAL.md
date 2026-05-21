@@ -336,6 +336,9 @@ Work items:
   batch path with same-line CAS values, `CAS No.` / `CAS:` prefixes, duplicate
   entries, and an invalid checksum example. The gate fails if the ready
   summary, duplicate/invalid diagnostics, or enabled search handoff regress.
+- Completed: `qa:production-search-ui` now opens the deployed app with
+  `?cas=<CAS>` and verifies that the QR return path hydrates the single-search
+  input and renders the matching result row.
 - Keep reducing wording that explains implementation details instead of user
   decisions when copy changes.
 - Keep production QA or screenshot review for first-screen readability when UI
@@ -756,7 +759,7 @@ or user report points to a more urgent slice.
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
-| Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; production search UI now covers the current messy-paste parser fixture, and new fixtures should be added when real lists expose new separators or prefixes | Batch parser/integration tests + production search UI + print PDF artifact + production batch QA |
+| Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; production search UI now covers the current messy-paste parser fixture and QR `?cas=` return path, and new fixtures should be added when real lists expose new separators or prefixes | Batch parser/integration tests + production search UI + print PDF artifact + production batch QA |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Gate added` | Extend focus tests for new complex dialogs | Unit tests + production search UI |

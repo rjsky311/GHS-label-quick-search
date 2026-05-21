@@ -90,8 +90,8 @@ Current validation gates:
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust columns, detail-to-prepared modal keyboard/focus checks,
-  batch messy-paste normalization, plus 390px narrow read-first result and
-  detail-comparison checks)
+  batch messy-paste normalization, `?cas=` QR-return hydration, plus 390px
+  narrow read-first result and detail-comparison checks)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -150,6 +150,11 @@ Current completion snapshot:
   of raw invalid paste payloads. `qa:production-search-ui` now exercises the
   deployed messy-paste path and fails if the ready summary, duplicate/invalid
   diagnostics, or enabled search handoff regress.
+- **QR return-path checkpoint**: `qa:production-search-ui` now opens the
+  deployed app with `?cas=<CAS>` and fails if the app does not hydrate the
+  single-search input, stay on the single-search path, and render the matching
+  result row. This keeps QR labels tied to an actual lookup workflow rather
+  than only proving that a QR image can be generated.
 - **Dictionary miss telemetry checkpoint**: unresolved-search miss reporting is
   double opt-in (`VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true` in the frontend and
   `CAPTURE_DICTIONARY_MISSES=true` in the backend). Public builds remain

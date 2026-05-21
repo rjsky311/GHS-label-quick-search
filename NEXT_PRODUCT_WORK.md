@@ -66,6 +66,11 @@ Current mode:
   later diagnostics. `qa:production-search-ui` now covers that deployed
   messy-paste path, including the ready summary, duplicate/invalid diagnostics,
   and enabled search handoff.
+- Completed current slice: the production search UI gate now covers the QR
+  return path by opening the deployed app with `?cas=<CAS>`, checking that the
+  single-search input hydrates, and verifying the matching result row appears.
+  QR labels therefore stay connected to a real lookup path, not just a
+  printable QR bitmap.
 - Completed current slice: Chinese-name display now uses a shared trust helper
   across localized names, favorites/history/autocomplete, prepare-solution
   summaries, print preview/scoring, printed labels, export preview, backend
@@ -125,7 +130,8 @@ Current mode:
    telemetry, and print counts; add new messy-paste fixtures when real batch
    lists expose another separator or formatting pattern. The current deployed
    production-search UI gate already checks same-line CAS, `CAS No.` / `CAS:`
-   prefixes, duplicates, and invalid checksum examples.
+   prefixes, duplicates, and invalid checksum examples. It also checks
+   `?cas=` hydration so QR labels scan back into the single-search workflow.
 3. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
