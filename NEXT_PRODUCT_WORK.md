@@ -9,6 +9,9 @@ current priority is chosen. Use `AUTONOMOUS_WORKFLOW.md` for standing approval,
 stop conditions, verification, pushing, deployment, and production QA rules.
 For the next label-printing refactor, use
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the active product contract.
+For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
+implementation so the goal, non-goals, acceptance criteria, and verification
+gates are explicit.
 
 ## Product North Star
 
@@ -136,7 +139,9 @@ Current mode:
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
 4. Keep documentation consolidation and autonomous continuation hygiene healthy.
-   `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point.
+   `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical planning entry point, and
+   `PRODUCT_SCOPE_GATE.md` is the project-level alignment process for broad
+   slices where "what good looks like" is not already explicit.
 5. Fixed-stock batch label printing. Keep this in monitoring unless a new
    screenshot, QA failure, or product change reopens it. The current baseline
    supports one physical stock, Quick ID / Supplemental / Complete purpose,
@@ -171,6 +176,8 @@ The detailed execution backlog lives in
    `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
 7. Optional scientific lookup skill trials, tracked in
    `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
+8. Product scope gate decisions, tracked in `PRODUCT_SCOPE_GATE.md` when a
+   future slice needs pre-implementation alignment.
 
 Treat the older `NEXT_PRINT_WORKSTREAMS.md` and
 `PRINT_OUTPUT_REFACTOR_PLAN.md` as v1.10 baseline context unless a new failure

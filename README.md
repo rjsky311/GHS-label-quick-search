@@ -147,6 +147,9 @@ Use these files before starting product or safety-critical changes:
 - [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md) -
   canonical current status, priority order, and done criteria.
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
+- [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
+  workflow for aligning broad or ambiguous product decisions before
+  implementation.
 - [FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md](./FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md) -
   future non-physical-print tracker while real-printer validation is deferred.
 - [SCIENTIFIC_AGENT_SKILLS_EVALUATION.md](./SCIENTIFIC_AGENT_SKILLS_EVALUATION.md) -

@@ -37,6 +37,7 @@ const docs = {
   "AGENTS.md": readText("AGENTS.md"),
   "CLAUDE.md": readText("CLAUDE.md"),
   "PROJECT_STATUS_AND_NEXT_PLAN.md": readText("PROJECT_STATUS_AND_NEXT_PLAN.md"),
+  "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
   "NEXT_PRODUCT_WORK.md": readText("NEXT_PRODUCT_WORK.md"),
   "NEXT_REMAINING_PRODUCT_WORK.md": readText("NEXT_REMAINING_PRODUCT_WORK.md"),
@@ -130,6 +131,27 @@ requireIncludes(
   "Stop Conditions",
   "continuation rules need explicit stopping criteria",
 );
+requireIncludes(
+  "PRODUCT_SCOPE_GATE.md",
+  docs["PRODUCT_SCOPE_GATE.md"],
+  "Decision Packet",
+  "scope gate must produce a bounded implementation decision",
+);
+for (const relativePath of [
+  "README.md",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  "AUTONOMOUS_WORKFLOW.md",
+  "NEXT_PRODUCT_WORK.md",
+]) {
+  requireIncludes(
+    relativePath,
+    docs[relativePath],
+    "PRODUCT_SCOPE_GATE.md",
+    "project-level scope gate must stay discoverable",
+  );
+}
 requireIncludes(
   "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md",
   docs["FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md"],

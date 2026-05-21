@@ -15,6 +15,12 @@ current decision to avoid full installation. Reopen that file only for future
 data-governance, dictionary-cleanup, SDS/reference, or literature-checking
 work.
 
+Product scope gate: `PRODUCT_SCOPE_GATE.md` defines the project-level
+"grill me" workflow for large or ambiguous product decisions. Use it before
+changing product direction, label-printing models, data trust boundaries,
+workflow simplification, or multi-surface UX behavior when the acceptance
+standard is not already clear.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -79,6 +85,8 @@ Current baseline capabilities:
   current product work blocks.
 - `AUTONOMOUS_WORKFLOW.md` defines when to continue, verify, push, deploy, and
   stop for user input.
+- `PRODUCT_SCOPE_GATE.md` defines how to align broad or ambiguous work before
+  implementation without relying on hidden memory or repeated chat context.
 
 Current validation gates:
 
@@ -110,6 +118,10 @@ Current completion snapshot:
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
+- **Scope-gate baseline**: `PRODUCT_SCOPE_GATE.md` is the decision process for
+  large ambiguous product slices. It is not a global Codex memory or installed
+  skill; it keeps the "grill me" pattern inside the repo where decisions are
+  reviewable.
 - **Intentionally deferred**: real-printer validation remains deferred until
   physical paper/stock/printer access is available. Automated Browser/PDF
   checks are strong preconditions, not proof of real printer behavior.
@@ -196,6 +208,10 @@ Current completion snapshot:
 
 Use this order unless a fresh production screenshot, failing CI/QA run, security
 finding, or user-reported blocker clearly points elsewhere.
+
+Before starting a broad slice, use `PRODUCT_SCOPE_GATE.md` when the goal,
+non-goals, required content, or acceptance criteria are not already clear. Do
+not use it to delay obvious bug fixes or CI/security blockers.
 
 ### 0. Simplified Label Output Model
 
@@ -615,6 +631,7 @@ Docs-only closure:
 - `npm run test:docs` from `frontend/` when canonical docs, version strings,
   status labels, or planning links changed
 - `rg "PROJECT_STATUS_AND_NEXT_PLAN" .`
+- `rg "PRODUCT_SCOPE_GATE" .`
 - Confirm the changed docs do not contradict the canonical planning role of
   this file.
 
@@ -628,6 +645,8 @@ Use these files by role:
   this file, `AUTONOMOUS_WORKFLOW.md`, and the future tracker.
 - `AUTONOMOUS_WORKFLOW.md`: standing approval, default work loop, stop
   conditions, and verification rules.
+- `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
+  product decisions and repeated rework risks.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
 - `NEXT_REMAINING_PRODUCT_WORK.md`: detailed execution backlog and
   current status.

@@ -17,6 +17,10 @@ stop condition below applies:
   findings for the detailed work context. Prefer the canonical plan when there
   is no fresh regression because the original print workstreams are now the
   baseline.
+- Use `PRODUCT_SCOPE_GATE.md` before broad or ambiguous product slices where
+  the user goal, non-goals, required content, or acceptance criteria are not
+  already clear. Do not use it to delay clear bug fixes, CI failures, or
+  security/data-loss blockers.
 - Simplify the UI when doing so reduces user hesitation, avoids unsafe choices,
   or makes the print workflow more task-first.
 - Move rare controls into secondary or advanced areas when the default workflow
@@ -40,18 +44,21 @@ Use this loop when continuing autonomously:
 2. Pick one coherent product slice with a clear user-facing acceptance goal.
    The default order is renderer/stock fit, result-table/GHS visual unity,
    trust/SDS flow, prepared reprint maturity, then whole-product UX polish.
-3. Break the slice into sub-problems when the path is not obvious.
-4. Research current references when the decision depends on standards, browser
+3. If the slice is broad, ambiguous, repeated-rework-prone, or changes product
+   direction, run the project scope gate in `PRODUCT_SCOPE_GATE.md` before
+   editing.
+4. Break the slice into sub-problems when the path is not obvious.
+5. Research current references when the decision depends on standards, browser
    behavior, accessibility, UI patterns, print/PDF behavior, or safety workflow
    best practices.
-5. Implement the smallest complete change that genuinely improves the product.
-6. Add or update tests at the same layer that would have caught the failure.
-7. Run targeted tests first, then broader tests based on blast radius.
-8. For production-facing frontend changes, build, push, wait for CI/deploy, and
+6. Implement the smallest complete change that genuinely improves the product.
+7. Add or update tests at the same layer that would have caught the failure.
+8. Run targeted tests first, then broader tests based on blast radius.
+9. For production-facing frontend changes, build, push, wait for CI/deploy, and
    run production QA against `https://ghs-frontend.zeabur.app`.
-9. Update the relevant docs when behavior, acceptance criteria, or workflow
+10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
-10. Report what changed, what was verified, and what remains next.
+11. Report what changed, what was verified, and what remains next.
 
 ## Stop Conditions
 
@@ -69,6 +76,10 @@ Pause and ask the user only when one of these applies:
   verification.
 - Two valid approaches conflict and the choice would materially affect the
   product's positioning, monetization, or safety posture.
+
+Use `PRODUCT_SCOPE_GATE.md` instead of an open-ended discussion when the only
+problem is unclear scope. The gate should produce a compact decision packet and
+then resume implementation once the critical choice is settled.
 
 ## Research Rules
 

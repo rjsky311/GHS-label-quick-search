@@ -248,6 +248,13 @@ The current project-level planning entry is
 slice; it consolidates current status, should-do items, blind spots, priority
 order, and done criteria.
 
+The project-level scope alignment workflow is pinned in
+`PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,
+multi-surface UX changes, label-printing model changes, data-trust changes, or
+repeated-rework situations where the goal, non-goals, required content, or
+acceptance criteria are not already clear. It is a repo-tracked workflow, not a
+global memory or installed skill.
+
 The current label-printing product baseline is pinned in
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`. Use it before changing `LabelPrintModal`,
 print output planning, stock presets, batch print UX, or print QA. The
@@ -307,9 +314,10 @@ live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
 execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user
 asks to "continue" or otherwise delegates the next work round, start from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`, pick the highest-value product slice,
-implement it, verify it, push to `main` when stable, and track
-CI/Zeabur/production QA for user-facing changes. Stop only for the explicit
-stop conditions in `AUTONOMOUS_WORKFLOW.md`.
+run `PRODUCT_SCOPE_GATE.md` first if the slice is broad or ambiguous, implement
+it, verify it, push to `main` when stable, and track CI/Zeabur/production QA
+for user-facing changes. Stop only for the explicit stop conditions in
+`AUTONOMOUS_WORKFLOW.md`.
 
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset

@@ -11,9 +11,11 @@ Read these files in order before choosing or continuing work:
    order, blind spots, and definition of done.
 3. `AUTONOMOUS_WORKFLOW.md` - standing approval, stop conditions,
    verification, push/deploy, and production QA rules.
-4. `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` - active non-physical-print
+4. `PRODUCT_SCOPE_GATE.md` - project-level "grill me" scope alignment for
+   broad or ambiguous product decisions.
+5. `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` - active non-physical-print
    product tracker while real-printer validation is deferred.
-5. `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` - fixed-stock, purpose-first batch
+6. `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` - fixed-stock, purpose-first batch
    label printing contract when the selected work touches batch print flows.
 
 Maintenance rule:
@@ -22,5 +24,6 @@ Maintenance rule:
 - Keep current priority and completion criteria in
   `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 - Keep continuation workflow rules in `AUTONOMOUS_WORKFLOW.md`.
+- Keep broad-scope decision alignment rules in `PRODUCT_SCOPE_GATE.md`.
 - Do not duplicate those sections here. Update this file only when the
   canonical entry-point order changes.
