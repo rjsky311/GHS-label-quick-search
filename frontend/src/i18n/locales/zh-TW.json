@@ -780,6 +780,7 @@
   "pilot.manualEntriesNeedReview": "手動項目待審",
   "pilot.manualEntriesNeedReviewHint": "待審項目只供管理者校對；核准前不會影響公開查詢、標籤或匯出。",
   "pilot.manualEntryStatus": "手動項目狀態",
+  "pilot.manualEntryStatusSummary": "手動項目審查",
   "pilot.manualStatusApproved": "已核准",
   "pilot.manualStatusPending": "待審",
   "pilot.manualStatusNeedsEvidence": "需佐證",

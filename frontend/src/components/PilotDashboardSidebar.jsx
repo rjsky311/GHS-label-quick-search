@@ -113,6 +113,7 @@ export default function PilotDashboardSidebar(props) {
   const recentEvents = report?.recentEvents || [];
   const missQueries = dictionary.topMissQueries || [];
   const missStatusCounts = dictionary.missQueryStatusCounts || {};
+  const manualEntryStatusCounts = dictionary.manualEntryStatusCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
@@ -514,6 +515,23 @@ export default function PilotDashboardSidebar(props) {
                   accent="text-orange-700"
                   testId="pilot-summary-stale-miss-rows"
                 />
+              </div>
+              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                <span className="font-medium text-slate-800">
+                  {t("pilot.manualEntryStatusSummary", {
+                    defaultValue: "Manual entry review",
+                  })}
+                </span>
+                {MANUAL_ENTRY_STATUS_OPTIONS.map((option) => (
+                  <span
+                    key={option.value}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
+                    data-testid={`manual-entry-status-count-${option.value}`}
+                  >
+                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
+                    {manualEntryStatusCounts[option.value] || 0}
+                  </span>
+                ))}
               </div>
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">

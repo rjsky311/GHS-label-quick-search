@@ -16,6 +16,12 @@ const baseProps = {
       pendingManualEntryCount: 1,
       openMissQueryCount: 2,
       manualEntryCount: 3,
+      manualEntryStatusCounts: {
+        approved: 2,
+        pending: 1,
+        needs_evidence: 1,
+        rejected: 0,
+      },
       referenceLinkCount: 4,
       missQueryStatusCounts: {
         open: 2,
@@ -98,6 +104,10 @@ describe("PilotDashboardSidebar", () => {
 
     expect(screen.getByTestId("pilot-summary-pending-aliases")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-pending-manual-entries")).toHaveTextContent("1");
+    expect(screen.getByTestId("manual-entry-status-count-approved")).toHaveTextContent("2");
+    expect(screen.getByTestId("manual-entry-status-count-pending")).toHaveTextContent("1");
+    expect(screen.getByTestId("manual-entry-status-count-needs_evidence")).toHaveTextContent("1");
+    expect(screen.getByTestId("manual-entry-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");

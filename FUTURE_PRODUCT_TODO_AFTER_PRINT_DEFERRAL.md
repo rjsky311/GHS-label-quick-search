@@ -141,6 +141,9 @@ Work items:
 - Completed: made pending/needs-evidence manual entries actionable from the
   admin overview. Maintainers can approve, mark needs-evidence, or reject a
   candidate without copying it back into the manual-entry form.
+- Completed: exposed manual-entry status counts in the admin overview so the
+  review queue shows whether approved, pending, needs-evidence, or rejected
+  rows are accumulating.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Keep manual dictionary review status usage consistent with the correction
