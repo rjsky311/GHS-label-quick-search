@@ -104,6 +104,11 @@ Current mode:
   those structured fields where deployed context exists. The deployed gate now
   specifically covers missing Chinese names, no-GHS data gaps, and
   source-conflict review in both result-row and Detail paths.
+- Completed current slice: unresolved not-found search rows now expose a
+  structured `unresolved-search` correction link for dictionary curation
+  instead of ending at a dead error message. Upstream transient failures remain
+  retry-only states. Production search UI QA now includes a mocked deployed
+  unresolved lookup to keep this correction path from regressing.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is

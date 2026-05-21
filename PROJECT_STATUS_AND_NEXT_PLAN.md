@@ -203,6 +203,13 @@ Current completion snapshot:
   transient failures remain retry states rather than correction requests.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
+- **Unresolved lookup intake checkpoint 2026-05-22**: not-found search rows
+  now use the same data-quality issue model instead of ending at a dead error
+  message. They expose an `unresolved-search` correction link with CAS/query
+  context, current output, expected output, and dictionary-curation local
+  context, while upstream transient failures remain retry-only states.
+  `qa:production-search-ui` includes a mocked deployed not-found lookup so the
+  correction path cannot disappear from production unnoticed.
 - **Structured support intake checkpoint 2026-05-22**: contextual
   data-correction links now prefill repository issue-form fields for CAS,
   chemical name, issue type, current output, expected output, evidence type,
@@ -495,6 +502,9 @@ Do next:
   repeating English as fake Chinese. Missing-name correction links should carry
   CAS and English-name context, but accepted entries still require sourced
   evidence and admin review.
+- Keep unresolved lookup rows connected to dictionary curation with structured
+  correction links, while keeping transient upstream outages out of correction
+  intake.
 - Keep manual entries, aliases, and reference links admin-gated.
 - Make "unavailable upstream data" impossible to confuse with "no hazards."
 - Keep data-correction requests separate from workflow/business requests.

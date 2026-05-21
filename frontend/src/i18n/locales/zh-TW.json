@@ -77,6 +77,7 @@
   "results.dataIssueTextOnlyGhs": "檢查圖示缺口",
   "results.dataIssueSourceConflict": "檢查來源差異",
   "results.dataIssueMissingChineseName": "回報中文名",
+  "results.dataIssueUnresolvedSearch": "回報查詢缺口",
   "results.dataIssueNeedsReview": "檢查資料",
   "results.reportCountBadge": "{{count}} 筆通報",
   "results.cacheBadge": "快取",

@@ -86,6 +86,10 @@ Rules:
   workflow: collect the missed CAS/name, suggest candidate names from trusted
   SDS/supplier/regulatory references when available, then require admin review
   before using the name in labels.
+- Unresolved lookup rows should expose a contextual data-correction link that
+  keeps the current query/CAS and issue type. This is a dictionary-curation
+  entry point, not a claim that PubChem has no hazards and not an automatic
+  approval path.
 - Automated translation may be used only as a candidate suggestion. It must not
   silently become the printed Chinese identity because chemical common names,
   salts, hydrates, isomers, and mixtures can translate ambiguously.
@@ -342,6 +346,11 @@ Frontend:
 - Detail views surface a source-conflict note when multiple classifications are
   available, and the copy must say switching reports requires SDS,
   supplier-label, or local-rule support.
+- Unresolved lookup result rows expose a structured correction link with
+  `issue_type=unresolved-search`, CAS/query context, current output, expected
+  output, and dictionary-curation local context. Upstream transient failures
+  must remain retry states and must not become unresolved-search correction
+  reports.
 - Detail views keep alternate-classification comparison visible even when the
   current primary classification has GHS text but no pictograms.
 - Detail same-chemical comparison views expose source/ranking evidence for
@@ -366,7 +375,8 @@ Production QA:
 - `npm run qa:production-search-ui` must continue checking trust notes, source
   badges, no-GHS data-state behavior, export-preview trust columns, safe
   reference link metadata, SDS link shape, Detail comparison evidence panels,
-  and separated data-correction/workflow support links.
+  unresolved-lookup correction intake, and separated data-correction/workflow
+  support links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 

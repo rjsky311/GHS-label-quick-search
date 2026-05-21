@@ -347,6 +347,27 @@ describe('ResultsTable', () => {
       expect(screen.getByText('CAS number not found in PubChem')).toBeInTheDocument();
     });
 
+    it('renders a structured correction link for unresolved lookups', () => {
+      render(<ResultsTable {...defaultProps} results={[mockNotFoundResult]} />);
+
+      const link = screen.getByTestId(
+        'data-quality-link-unresolved-search-999-99-9',
+      );
+      const url = new URL(link.getAttribute('href'));
+      expect(link).toHaveTextContent('results.dataIssueUnresolvedSearch');
+      expect(url.searchParams.get('title')).toBe(
+        'Unresolved lookup: 999-99-9',
+      );
+      expect(url.searchParams.get('issue_type')).toBe('unresolved-search');
+      expect(url.searchParams.get('cas_number')).toBe('999-99-9');
+      expect(url.searchParams.get('current_output')).toContain(
+        'could not resolve this lookup',
+      );
+      expect(url.searchParams.get('expected_output')).toContain(
+        'reviewed CAS/name mapping',
+      );
+    });
+
     it('does not render checkbox for not-found result', () => {
       render(<ResultsTable {...defaultProps} results={[mockNotFoundResult]} />);
       expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();

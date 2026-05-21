@@ -8,6 +8,7 @@ export const DATA_QUALITY_ISSUE_TYPES = Object.freeze({
   GHS_TEXT_NO_PICTOGRAMS: "ghs-text-no-pictograms",
   SOURCE_CONFLICT: "source-conflict",
   MISSING_CHINESE_NAME: "missing-chinese-name",
+  UNRESOLVED_SEARCH: "unresolved-search",
 });
 
 const getPictograms = (classification = {}) =>
@@ -22,7 +23,27 @@ const getCorrectionUrl = (result, issueType) =>
   });
 
 export function getDataQualityIssues(result = {}, effectiveClassification = null) {
-  if (!result?.found) return [];
+  if (!result?.found) {
+    if (result?.upstream_error) {
+      return [
+        {
+          type: DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR,
+          severity: "blocking",
+        },
+      ];
+    }
+
+    return [
+      {
+        type: DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+        severity: "curation",
+        correctionUrl: getCorrectionUrl(
+          result,
+          DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+        ),
+      },
+    ];
+  }
 
   const effective = effectiveClassification || {
     pictograms: result.ghs_pictograms || [],

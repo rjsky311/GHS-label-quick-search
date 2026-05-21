@@ -71,6 +71,11 @@ implementation checklist.
   now explicitly opt-in and still requires backend capture to be enabled. When
   enabled for a pilot, unresolved-search payloads are trimmed, context is
   allow-listed, and telemetry failures do not affect search UX.
+- **Completed unresolved-lookup correction follow-up**: public not-found result
+  rows now route to a structured `unresolved-search` correction link with
+  CAS/query context and dictionary-curation guidance. This keeps user-visible
+  lookup misses aligned with optional miss-query telemetry without turning
+  upstream transient failures into correction reports.
 - **Completed Chinese-name trust follow-up**: localized-name helpers,
   autocomplete, favorites/history, prepare-solution summaries, print fit
   scoring, print previews, printed labels, export preview, backend export

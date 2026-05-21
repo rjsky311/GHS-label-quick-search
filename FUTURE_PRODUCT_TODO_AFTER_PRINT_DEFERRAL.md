@@ -148,6 +148,10 @@ Work items:
   current output, and expected output fields. This keeps all public
   data-quality correction links actionable instead of only testing the
   missing-Chinese-name path.
+- Completed: added unresolved lookup rows to the same correction intake model.
+  A not-found search now exposes a structured `unresolved-search` correction
+  link for dictionary curation, while upstream transient failures remain retry
+  states. `qa:production-search-ui` covers this with a mocked deployed lookup.
 - Completed: added admin manual-dictionary review statuses (`approved`,
   `pending`, `needs_evidence`, `rejected`). Only approved entries affect public
   lookup, trusted display names, labels, or exports; pending/needs-evidence
@@ -815,7 +819,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Structured issue-template prefill is in place and the production gate covers missing Chinese names, no-GHS gaps, and source conflicts; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests + `qa:production-search-ui` |
+| Correction intake | `Gate added` | Structured issue-template prefill is in place and the production gate covers missing Chinese names, no-GHS gaps, source conflicts, and unresolved lookups; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests + `qa:production-search-ui` |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |

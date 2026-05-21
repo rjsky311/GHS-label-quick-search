@@ -17,6 +17,7 @@ const DATA_CORRECTION_TITLES = {
   "no-ghs-data": "GHS data gap",
   "ghs-text-no-pictograms": "GHS pictogram gap",
   "source-conflict": "Source classification review",
+  "unresolved-search": "Unresolved lookup",
   "upstream-error": "Upstream data issue",
 };
 
@@ -56,6 +57,15 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
     evidenceType: "SDS, supplier label, or local regulatory source",
     localContext:
       "Please keep safety-data corrections separate from workflow or product requests.",
+  },
+  "unresolved-search": {
+    currentOutput:
+      "The app could not resolve this lookup to a reviewed chemical identity.",
+    expectedOutput:
+      "Provide a reviewed CAS/name mapping with source evidence before dictionary approval.",
+    evidenceType: "SDS, supplier label, catalog, or regulatory source",
+    localContext:
+      "Do not treat unresolved lookup as no hazards; route it to admin dictionary curation and keep safety-data corrections separate from workflow requests.",
   },
 };
 

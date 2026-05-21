@@ -29,6 +29,51 @@ const expectStructuredCorrectionUrl = (
 };
 
 describe("data quality issue helpers", () => {
+  it("turns unresolved lookups into a dictionary-curation correction path", () => {
+    const issues = getDataQualityIssues({
+      found: false,
+      cas_number: "999-99-9",
+      error: "CAS number not found in PubChem",
+    });
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      type: DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+      severity: "curation",
+    });
+
+    const correctionUrl = new URL(issues[0].correctionUrl);
+    expect(correctionUrl.searchParams.get("cas_number")).toBe("999-99-9");
+    expect(correctionUrl.searchParams.get("issue_type")).toBe(
+      "unresolved-search",
+    );
+    expect(correctionUrl.searchParams.get("current_output")).toContain(
+      "could not resolve this lookup",
+    );
+    expect(correctionUrl.searchParams.get("expected_output")).toContain(
+      "reviewed CAS/name mapping",
+    );
+    expect(correctionUrl.searchParams.get("local_context")).toContain(
+      "admin dictionary curation",
+    );
+  });
+
+  it("keeps unresolved upstream failures out of correction intake", () => {
+    const issues = getDataQualityIssues({
+      found: false,
+      cas_number: "999-99-9",
+      upstream_error: true,
+      error: "PubChem temporarily unavailable",
+    });
+
+    expect(issues).toEqual([
+      {
+        type: DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR,
+        severity: "blocking",
+      },
+    ]);
+  });
+
   it("flags missing trusted Chinese names without faking the English name", () => {
     const issues = getDataQualityIssues({
       ...baseChemical,

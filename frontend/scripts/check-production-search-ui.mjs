@@ -21,6 +21,8 @@ const mobileViewport = {
 const browserLocale = env.PRODUCTION_SEARCH_UI_LOCALE || "en-US";
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
 const noGhsSearchTerm = env.PRODUCTION_SEARCH_UI_NO_GHS_TERM || "57-13-6";
+const unresolvedSearchTerm =
+  env.PRODUCTION_SEARCH_UI_UNRESOLVED_TERM || "999-99-9";
 const headless = env.PRINT_QA_HEADLESS !== "0";
 const SEARCH_UI_ATTEMPTS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_ATTEMPTS || "3",
@@ -72,6 +74,12 @@ const missingChineseNameFixture = {
     },
   ],
   reference_links: [],
+};
+const unresolvedSearchFixture = {
+  cas_number: unresolvedSearchTerm,
+  found: false,
+  upstream_error: false,
+  error: "CAS number not found in PubChem",
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -1017,6 +1025,52 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
   }
 };
 
+const inspectUnresolvedSearchCorrectionPath = async (
+  context,
+  { screenshotPath = null } = {},
+) => {
+  const page = await context.newPage();
+  try {
+    await page.route("**/api/search-single**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(unresolvedSearchFixture),
+      });
+    });
+    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
+    await page.evaluate(() => localStorage.setItem("ghs_language", "en"));
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByTestId("single-cas-input").fill(unresolvedSearchTerm);
+    await page.getByTestId("single-search-btn").click();
+    const row = page.getByTestId("result-row-0");
+    await row.waitFor({
+      state: "visible",
+      timeout: SEARCH_UI_TIMEOUT_MS,
+    });
+    const correction = await inspectIssueLink(
+      row.getByTestId(
+        `data-quality-link-unresolved-search-${unresolvedSearchTerm}`,
+      ),
+    );
+
+    if (screenshotPath) {
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+    }
+
+    return {
+      rowText: ((await row.textContent().catch(() => "")) || "")
+        .replace(/\s+/g, " ")
+        .trim(),
+      correction,
+      checkboxCount: await row.locator('input[type="checkbox"]').count(),
+      detailButtonCount: await row.locator('[data-testid^="detail-btn-"]').count(),
+    };
+  } finally {
+    await page.close();
+  }
+};
+
 const inspectBatchInputNormalizationPath = async (
   context,
   { screenshotPath = null } = {},
@@ -1840,8 +1894,16 @@ try {
     screenshotDir,
     "url-query-hydration.png",
   );
+  const unresolvedSearchScreenshotPath = path.join(
+    screenshotDir,
+    "search-results-unresolved-lookup.png",
+  );
   const missingChineseNameCorrection =
     await inspectMissingChineseNameCorrectionPath(context);
+  const unresolvedSearchCorrection =
+    await inspectUnresolvedSearchCorrectionPath(context, {
+      screenshotPath: unresolvedSearchScreenshotPath,
+    });
   const batchInputNormalization = await inspectBatchInputNormalizationPath(
     context,
     { screenshotPath: batchInputScreenshotPath },
@@ -2006,6 +2068,52 @@ try {
   ) {
     failures.push("missing-chinese-name-row-correction-body-incomplete");
   }
+  if (!unresolvedSearchCorrection.rowText.includes(unresolvedSearchTerm)) {
+    failures.push("unresolved-search-row-identity-missing");
+  }
+  if (
+    !unresolvedSearchCorrection.rowText.includes(
+      unresolvedSearchFixture.error,
+    )
+  ) {
+    failures.push("unresolved-search-row-error-missing");
+  }
+  if (unresolvedSearchCorrection.checkboxCount > 0) {
+    failures.push("unresolved-search-checkbox-present");
+  }
+  if (unresolvedSearchCorrection.detailButtonCount > 0) {
+    failures.push("unresolved-search-detail-button-present");
+  }
+  if (unresolvedSearchCorrection.correction.count < 1) {
+    failures.push("unresolved-search-correction-link-missing");
+  }
+  if (
+    unresolvedSearchCorrection.correction.count > 0 &&
+    (unresolvedSearchCorrection.correction.template !==
+      "data-correction.yml" ||
+      unresolvedSearchCorrection.correction.labels !== "data-correction")
+  ) {
+    failures.push("unresolved-search-correction-template-mismatch");
+  }
+  if (
+    unresolvedSearchCorrection.correction.count > 0 &&
+    !hasStructuredCorrectionContext(unresolvedSearchCorrection.correction, {
+      issueType: "unresolved-search",
+      casNumber: unresolvedSearchTerm,
+      currentOutputIncludes: "could not resolve this lookup",
+      expectedOutputIncludes: "reviewed CAS/name mapping",
+    })
+  ) {
+    failures.push("unresolved-search-correction-structured-context-missing");
+  }
+  if (
+    unresolvedSearchCorrection.correction.count > 0 &&
+    !unresolvedSearchCorrection.correction.localContext.includes(
+      "admin dictionary curation",
+    )
+  ) {
+    failures.push("unresolved-search-correction-curation-context-missing");
+  }
   if (
     !/\b5\b/.test(batchInputNormalization.readySummary) ||
     !/\b7\b/.test(batchInputNormalization.readySummary)
@@ -2135,9 +2243,10 @@ try {
     mobileScreenshotPath,
     mobileDetailScreenshotPath,
     noGhsScreenshotPath,
-    noGhsDetailScreenshotPath,
-    batchInputScreenshotPath,
-    urlQueryHydrationScreenshotPath,
+      noGhsDetailScreenshotPath,
+      batchInputScreenshotPath,
+      unresolvedSearchScreenshotPath,
+      urlQueryHydrationScreenshotPath,
     failures,
     searchAttempts,
     mobileSearchAttempts,
@@ -2163,6 +2272,7 @@ try {
       mobileDetailReadFirst,
       noGhsState,
       missingChineseNameCorrection,
+      unresolvedSearchCorrection,
       batchInputNormalization,
       urlQueryHydration,
       mobileDetailComparisonCardCount,

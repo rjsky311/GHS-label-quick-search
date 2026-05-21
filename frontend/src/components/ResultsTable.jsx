@@ -43,6 +43,7 @@ const getDataQualityIssueLabel = (type, t) => {
     "ghs-text-no-pictograms": t("results.dataIssueTextOnlyGhs"),
     "source-conflict": t("results.dataIssueSourceConflict"),
     "missing-chinese-name": t("results.dataIssueMissingChineseName"),
+    "unresolved-search": t("results.dataIssueUnresolvedSearch"),
   };
   return labels[type] || t("results.dataIssueNeedsReview");
 };
@@ -115,6 +116,45 @@ export default function ResultsTable({
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
   // here — the parent owns the action scope and count together.
+
+  const renderDataQualityIssues = (issues, testIdKey) => {
+    if (!issues.length) return null;
+
+    return (
+      <div
+        className="mt-2 flex flex-wrap items-center gap-1.5"
+        data-testid={`data-quality-issues-${testIdKey}`}
+      >
+        {issues.map((issue) => {
+          const label = getDataQualityIssueLabel(issue.type, t);
+          const className = getDataQualityIssueClassName(issue.severity);
+          const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
+          return issue.correctionUrl ? (
+            <a
+              key={issue.type}
+              href={issue.correctionUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={chipClassName}
+              data-testid={`data-quality-link-${issue.type}-${testIdKey}`}
+            >
+              <ExternalLink className="h-3 w-3 shrink-0" />
+              {label}
+            </a>
+          ) : (
+            <span
+              key={issue.type}
+              className={chipClassName}
+              data-testid={`data-quality-chip-${issue.type}-${testIdKey}`}
+            >
+              <Info className="h-3 w-3 shrink-0" />
+              {label}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
 
   const SortIcon = ({ columnKey }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-slate-400" />;
@@ -351,7 +391,17 @@ export default function ResultsTable({
             </tr>
           </thead>
           <tbody className="block space-y-3 md:table-row-group md:space-y-0 md:divide-y md:divide-slate-200">
-            {results.map((result, idx) => (
+            {results.map((result, idx) => {
+              const rowKey = result.cas_number || result.query || `row-${idx}`;
+              const effectiveForRow = result.found
+                ? getEffectiveClassification(result)
+                : null;
+              const dataQualityIssues = getDataQualityIssues(
+                result,
+                effectiveForRow,
+              );
+
+              return (
               <tr
                 key={idx}
                 className={`block rounded-lg border border-slate-200 p-4 shadow-sm transition-colors hover:bg-blue-50/60 md:table-row md:rounded-none md:border-0 md:p-0 md:shadow-none ${
@@ -395,16 +445,12 @@ export default function ResultsTable({
                   {result.found ? (
                     (() => {
                       const displayNames = getLocalizedNames(result, displayLocale);
-                      const effectiveForSource = getEffectiveClassification(result);
+                      const effectiveForSource = effectiveForRow;
                       const effectiveSource =
                         effectiveForSource?.source || result.primary_source;
                       const effectiveReportCount =
                         effectiveForSource?.report_count ||
                         result.primary_report_count;
-                      const dataQualityIssues = getDataQualityIssues(
-                        result,
-                        effectiveForSource,
-                      );
                       return (
                         <div>
                           <div className="break-words font-medium text-slate-950">
@@ -471,50 +517,15 @@ export default function ResultsTable({
                               )}
                             </div>
                           )}
-                          {dataQualityIssues.length > 0 && (
-                            <div
-                              className="mt-2 flex flex-wrap items-center gap-1.5"
-                              data-testid={`data-quality-issues-${result.cas_number}`}
-                            >
-                              {dataQualityIssues.map((issue) => {
-                                const label = getDataQualityIssueLabel(
-                                  issue.type,
-                                  t,
-                                );
-                                const className = getDataQualityIssueClassName(
-                                  issue.severity,
-                                );
-                                const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
-                                return issue.correctionUrl ? (
-                                  <a
-                                    key={issue.type}
-                                    href={issue.correctionUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={chipClassName}
-                                    data-testid={`data-quality-link-${issue.type}-${result.cas_number}`}
-                                  >
-                                    <ExternalLink className="h-3 w-3 shrink-0" />
-                                    {label}
-                                  </a>
-                                ) : (
-                                  <span
-                                    key={issue.type}
-                                    className={chipClassName}
-                                    data-testid={`data-quality-chip-${issue.type}-${result.cas_number}`}
-                                  >
-                                    <Info className="h-3 w-3 shrink-0" />
-                                    {label}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
+                          {renderDataQualityIssues(dataQualityIssues, rowKey)}
                         </div>
                       );
                     })()
                   ) : (
-                    <span className="text-red-700">{result.error}</span>
+                    <div>
+                      <span className="text-red-700">{result.error}</span>
+                      {renderDataQualityIssues(dataQualityIssues, rowKey)}
+                    </div>
                   )}
                 </td>
                 <td className="mt-3 block px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
@@ -523,7 +534,7 @@ export default function ResultsTable({
                     // there is no pictogram to draw"; neither should be
                     // mistaken for a no-hazard result.
                     if (!result.found) return "-";
-                    const effectiveForGhsCheck = getEffectiveClassification(result);
+                    const effectiveForGhsCheck = effectiveForRow;
                     if (!hasGhsData(effectiveForGhsCheck)) {
                       return (
                         <div
@@ -563,7 +574,7 @@ export default function ResultsTable({
                     return (
                       <div className="space-y-2">
                         {(() => {
-                          const effective = getEffectiveClassification(result);
+                          const effective = effectiveForRow;
                           const allClassifications = [
                             {
                               pictograms: result.ghs_pictograms || [],
@@ -703,7 +714,7 @@ export default function ResultsTable({
                 <td className="mt-3 block px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
                   {result.found ? (
                     (() => {
-                      const effective = getEffectiveClassification(result);
+                      const effective = effectiveForRow;
                       return effective?.signal_word ? (
                         <span
                           className={`px-2 py-1 rounded text-sm font-medium ${
@@ -748,7 +759,8 @@ export default function ResultsTable({
                   )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

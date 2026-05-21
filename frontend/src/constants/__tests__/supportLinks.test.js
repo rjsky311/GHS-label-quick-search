@@ -70,6 +70,12 @@ describe("supportLinks", () => {
         expected: "preferred classification",
         evidence: "SDS, supplier label, or local regulatory source",
       },
+      {
+        issueType: "unresolved-search",
+        current: "could not resolve this lookup",
+        expected: "reviewed CAS/name mapping",
+        evidence: "SDS, supplier label, catalog, or regulatory source",
+      },
     ];
 
     cases.forEach(({ issueType, current, expected, evidence }) => {
