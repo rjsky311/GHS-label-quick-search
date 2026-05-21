@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from pilot_store import PilotStore
@@ -86,6 +87,70 @@ def test_pending_dictionary_entry_is_kept_out_of_default_lookup(tmp_path):
             == "pending"
         )
         assert store.get_dictionary_summary()["pendingManualEntryCount"] == 1
+    finally:
+        store.close()
+
+
+def test_dictionary_entry_status_migration_defaults_legacy_rows(tmp_path):
+    db_path = tmp_path / "legacy-pilot.db"
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE dictionary_entries (
+              cas_number TEXT PRIMARY KEY,
+              name_en TEXT,
+              name_zh TEXT,
+              name_en_norm TEXT,
+              name_zh_norm TEXT,
+              name_en_compact TEXT,
+              name_zh_compact TEXT,
+              notes TEXT,
+              source TEXT NOT NULL DEFAULT 'manual',
+              updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO dictionary_entries(
+              cas_number,
+              name_en,
+              name_zh,
+              name_en_norm,
+              name_zh_norm,
+              name_en_compact,
+              name_zh_compact,
+              notes,
+              source,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "777-77-7",
+                "Legacy Buffer",
+                "\u820a\u7de9\u885d\u6db2",
+                "legacy buffer",
+                "\u820a\u7de9\u885d\u6db2",
+                "legacybuffer",
+                "\u820a\u7de9\u885d\u6db2",
+                "legacy row",
+                "manual",
+                "2026-05-21T00:00:00+00:00",
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    store = PilotStore(db_path).connect()
+    try:
+        migrated = store.get_manual_entry_by_cas("777-77-7")
+
+        assert migrated is not None
+        assert migrated["status"] == "approved"
+        assert store.get_dictionary_summary()["approvedManualEntryCount"] == 1
     finally:
         store.close()
 
