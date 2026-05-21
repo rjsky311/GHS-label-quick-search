@@ -20,6 +20,45 @@ const DATA_CORRECTION_TITLES = {
   "upstream-error": "Upstream data issue",
 };
 
+const DATA_CORRECTION_DEFAULT_CONTEXT = {
+  "missing-chinese-name": {
+    currentOutput:
+      "The app does not have a trusted Chinese name, or the available Chinese field repeats English.",
+    expectedOutput:
+      "Provide a reviewed Traditional Chinese name with source evidence before dictionary approval.",
+    evidenceType: "SDS, supplier label, catalog, or regulatory source",
+    localContext:
+      "Please keep safety-data corrections separate from workflow or product requests.",
+  },
+  "no-ghs-data": {
+    currentOutput:
+      "The app found this chemical identity, but no GHS hazard content was available.",
+    expectedOutput:
+      "Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.",
+    evidenceType: "SDS, supplier label, or regulatory source",
+    localContext:
+      "Please keep safety-data corrections separate from workflow or product requests.",
+  },
+  "ghs-text-no-pictograms": {
+    currentOutput:
+      "The app has GHS text for this chemical, but no renderable GHS pictograms.",
+    expectedOutput:
+      "Provide evidence for the expected pictograms or confirm that text-only hazard data is correct.",
+    evidenceType: "SDS, supplier label, or regulatory source",
+    localContext:
+      "Please keep safety-data corrections separate from workflow or product requests.",
+  },
+  "source-conflict": {
+    currentOutput:
+      "The app found multiple public GHS classifications or source variants for this chemical.",
+    expectedOutput:
+      "Identify the SDS/supplier/local-rule evidence that should guide the preferred classification.",
+    evidenceType: "SDS, supplier label, or local regulatory source",
+    localContext:
+      "Please keep safety-data corrections separate from workflow or product requests.",
+  },
+};
+
 export function buildDataCorrectionUrl({
   casNumber = "",
   chemicalName = "",
@@ -36,11 +75,12 @@ export function buildDataCorrectionUrl({
   const englishName = normalizeField(nameEn || chemicalName);
   const chineseName = normalizeField(nameZh);
   const issue = normalizeField(issueType) || "data-correction";
-  const current = normalizeField(currentOutput);
-  const expected = normalizeField(expectedOutput);
+  const defaultContext = DATA_CORRECTION_DEFAULT_CONTEXT[issue] || {};
+  const current = normalizeField(currentOutput || defaultContext.currentOutput);
+  const expected = normalizeField(expectedOutput || defaultContext.expectedOutput);
   const evidence = normalizeField(evidenceUrl);
-  const evidenceKind = normalizeField(evidenceType);
-  const context = normalizeField(localContext);
+  const evidenceKind = normalizeField(evidenceType || defaultContext.evidenceType);
+  const context = normalizeField(localContext || defaultContext.localContext);
   const titleParts = [
     DATA_CORRECTION_TITLES[issue] || "Data correction",
     cas || englishName || chineseName,
