@@ -450,4 +450,33 @@ describe("PilotDashboardSidebar", () => {
       "pilot.manualStatusNeedsEvidence"
     );
   });
+
+  it("updates alias status from the recent aliases list", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.click(screen.getByTestId("alias-reject-21"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveAlias).toHaveBeenCalledWith({
+        alias_text: "legacy solvent",
+        locale: "en",
+        cas_number: "111-11-1",
+        status: "rejected",
+        notes: "",
+      });
+    });
+
+    fireEvent.click(screen.getByTestId("alias-approve-22"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveAlias).toHaveBeenLastCalledWith({
+        alias_text: "new review alias",
+        locale: "zh",
+        cas_number: "222-22-2",
+        status: "approved",
+        notes: "",
+      });
+    });
+  });
 });

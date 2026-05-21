@@ -152,6 +152,10 @@ Work items:
 - Completed: added alias status counts to the admin summary, matching manual
   entry and reference-link status reporting. This keeps alias review visible as
   a governed queue instead of only showing the pending total.
+- Completed: made recent aliases directly actionable from the admin curation
+  list. Maintainers can approve or reject aliases without retyping the alias
+  payload, while automated synonym capture still cannot downgrade an already
+  approved or rejected alias.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Keep manual dictionary review status usage consistent with the correction

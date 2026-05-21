@@ -35,6 +35,10 @@ show explicit status badges. Admin summaries should expose review-state counts
 for manual entries, aliases, and reference links so maintainers do not mistake
 stale approved or retired records for active review work.
 
+Manual alias changes are explicit curation actions. Admin updates may change a
+final alias status when the maintainer approves or rejects it, but automated
+synonym capture must not downgrade an already approved or rejected alias.
+
 ### Chinese Name Coverage
 
 Chinese chemical names are identity aids, not hazard authority. The local seed

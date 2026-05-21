@@ -512,7 +512,9 @@ class PilotStore:
                 )
             else:
                 next_status = existing["status"]
-                if next_status not in {"approved", "rejected"} and status:
+                if status and source == "manual":
+                    next_status = status
+                elif next_status not in {"approved", "rejected"} and status:
                     next_status = status
                 conn.execute(
                     """

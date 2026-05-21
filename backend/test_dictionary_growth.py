@@ -128,6 +128,27 @@ def test_dictionary_summary_tracks_alias_statuses(temp_store):
     }
 
 
+def test_manual_alias_update_can_change_final_status(temp_store):
+    temp_store.upsert_alias("Retired Alias", "en", "444-44-4", status="approved")
+    temp_store.upsert_alias("Retired Alias", "en", "444-44-4", status="rejected")
+
+    assert temp_store.get_alias_exact("Retired Alias", "en", statuses=None)["status"] == "rejected"
+    assert temp_store.get_alias_exact("Retired Alias", "en") is None
+
+
+def test_automated_alias_capture_does_not_override_final_status(temp_store):
+    temp_store.upsert_alias("Stable Alias", "en", "555-55-5", status="approved")
+    temp_store.upsert_alias(
+        "Stable Alias",
+        "en",
+        "555-55-5",
+        source="pubchem_synonym",
+        status="pending",
+    )
+
+    assert temp_store.get_alias_exact("Stable Alias", "en", statuses=None)["status"] == "approved"
+
+
 async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_store):
     temp_store.upsert_reference_link(
         "64-17-5",

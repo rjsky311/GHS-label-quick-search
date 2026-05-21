@@ -210,7 +210,9 @@ Current completion snapshot:
   use newest-first ordering with visible status badges, matching the reference
   link curation list and reducing the chance that stale approved rows look like
   current review work. Alias review also exposes approved/pending/rejected
-  counts in the admin summary.
+  counts in the admin summary, and recent aliases can be approved or rejected
+  directly while automated synonym capture remains unable to overwrite an
+  already final manual alias decision.
 - **Reference-link curation checkpoint 2026-05-21**: admin reference links now
   carry active/inactive status through backend validation, dashboard fetches,
   overview counts, and dictionary snapshots. Public lookup, Detail, QR target

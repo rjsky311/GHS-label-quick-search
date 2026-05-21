@@ -413,6 +413,31 @@ export default function PilotDashboardSidebar(props) {
     }
   };
 
+  const handleAliasStatusUpdate = async (alias, status) => {
+    try {
+      await onSaveAlias({
+        alias_text: alias.alias_text,
+        locale: alias.locale,
+        cas_number: alias.cas_number,
+        status,
+        notes: alias.notes || "",
+      });
+      toast.success(
+        status === "approved"
+          ? t("pilot.aliasApproved", { defaultValue: "Alias approved." })
+          : t("pilot.aliasRejected", { defaultValue: "Alias rejected." })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.aliasDecisionFailed", {
+            defaultValue: "Failed to update alias status.",
+          })
+      );
+    }
+  };
+
   const handlePendingManualEntryDecision = async (entry, status) => {
     if (!entry?.cas_number || !onSaveManualEntry) return;
     try {
@@ -1300,7 +1325,9 @@ export default function PilotDashboardSidebar(props) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {recentAliases.map((alias, index) => (
+                      {recentAliases.map((alias, index) => {
+                        const currentStatus = alias.status || "approved";
+                        return (
                         <div
                           key={`${alias.id || alias.alias_text}-${alias.locale}-${alias.cas_number}`}
                           className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
@@ -1309,7 +1336,7 @@ export default function PilotDashboardSidebar(props) {
                           <div className="flex items-start justify-between gap-2">
                             <div className="font-medium text-slate-900">{alias.alias_text}</div>
                             <CurationStatusBadge
-                              status={alias.status || "approved"}
+                              status={currentStatus}
                               testId={`alias-status-${alias.id || index}`}
                             />
                           </div>
@@ -1320,8 +1347,33 @@ export default function PilotDashboardSidebar(props) {
                               <span>{formatRelativeTime(curationTimestamp(alias))}</span>
                             ) : null}
                           </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {currentStatus !== "approved" ? (
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => handleAliasStatusUpdate(alias, "approved")}
+                                className="rounded border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`alias-approve-${alias.id || index}`}
+                              >
+                                {t("pilot.approve", { defaultValue: "Approve" })}
+                              </button>
+                            ) : null}
+                            {currentStatus !== "rejected" ? (
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => handleAliasStatusUpdate(alias, "rejected")}
+                                className="rounded border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`alias-reject-${alias.id || index}`}
+                              >
+                                {t("pilot.reject", { defaultValue: "Reject" })}
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 </div>
