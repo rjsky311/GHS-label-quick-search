@@ -2,6 +2,8 @@ import { BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 
 const TOKEN_SPLIT_PATTERN = /[,\n\t;\uFF0C\u3001\uFF1B]+/;
 const CAS_FORMAT_PATTERN = /^\d{2,7}-\d{2}-\d$/;
+const CAS_NEXT_TOKEN_PATTERN =
+  /(\d)\s+(?=(?:cas\s*(?:no\.?|number|#|[:\uFF1A])?\s*)?\d{2,7}\s*[-\u2010-\u2015\u2212\uFE58\uFE63\uFF0D])/gi;
 export const BATCH_TELEMETRY_PREVIEW_LIMIT = 20;
 
 const toHalfWidth = (value = "") =>
@@ -10,7 +12,8 @@ const toHalfWidth = (value = "") =>
   );
 
 export const splitBatchSearchInput = (input = "") =>
-  String(input)
+  toHalfWidth(input)
+    .replace(CAS_NEXT_TOKEN_PATTERN, "$1\n")
     .split(TOKEN_SPLIT_PATTERN)
     .map((token) => token.trim())
     .filter(Boolean);

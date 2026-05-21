@@ -161,6 +161,19 @@ export default function SearchSection({
                   )}
                 </div>
               )}
+              {batchSummary?.inputCount > 0 && (
+                <div
+                  className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                  data-testid="batch-ready-summary"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {t("search.batchReadySummary", {
+                    count: batchSummary.acceptedCount,
+                    inputCount: batchSummary.inputCount,
+                  })}
+                </div>
+              )}
               {batchCount > BATCH_SEARCH_LIMIT && (
                 <div
                   className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-red-700"

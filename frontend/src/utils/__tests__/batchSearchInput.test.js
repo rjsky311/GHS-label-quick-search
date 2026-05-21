@@ -15,6 +15,20 @@ describe("batchSearchInput", () => {
     ).toEqual(["64-17-5", "67-64-1", "90-90-4", "62-53-3", "84-65-1"]);
   });
 
+  it("splits CAS values that users paste on one line with spaces", () => {
+    expect(
+      splitBatchSearchInput(
+        "90-41-5 84-65-1 CAS No. 462-08-8 CAS: 123-30-8",
+      ),
+    ).toEqual(["90-41-5", "84-65-1", "CAS No. 462-08-8", "CAS: 123-30-8"]);
+  });
+
+  it("does not split spaces that belong to a single CAS token", () => {
+    expect(splitBatchSearchInput("CAS No. 62 \u2013 53 \u2013 3")).toEqual([
+      "CAS No. 62 \u2013 53 \u2013 3",
+    ]);
+  });
+
   it("normalizes CAS prefixes, full-width characters, spaces, and dash variants", () => {
     expect(normalizeCasToken(" CAS\uFF1A\uFF16\uFF17\uFF0D\uFF16\uFF14\uFF0D\uFF11 ")).toBe(
       "67-64-1",
@@ -57,6 +71,32 @@ describe("batchSearchInput", () => {
     expect(summary.invalidItems).toEqual([
       expect.objectContaining({ normalized: "344-04-07", reason: "format" }),
       expect.objectContaining({ normalized: "67-64-2", reason: "checksum" }),
+    ]);
+  });
+
+  it("accepts messy same-line pasted CAS lists without forwarding duplicates or invalid values", () => {
+    const summary = parseBatchSearchInput(
+      [
+        "90-41-5 84-65-1 CAS No. 462-08-8 CAS: 123-30-8",
+        "90-41-5",
+        "344-04-07",
+        "CAS No. 62 \u2013 53 \u2013 3",
+      ].join("\n"),
+    );
+
+    expect(summary.queries).toEqual([
+      "90-41-5",
+      "84-65-1",
+      "462-08-8",
+      "123-30-8",
+      "62-53-3",
+    ]);
+    expect(summary.inputCount).toBe(7);
+    expect(summary.duplicateItems).toEqual([
+      expect.objectContaining({ normalized: "90-41-5", reason: "duplicate" }),
+    ]);
+    expect(summary.invalidItems).toEqual([
+      expect.objectContaining({ normalized: "344-04-07", reason: "format" }),
     ]);
   });
 

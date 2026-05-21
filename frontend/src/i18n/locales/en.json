@@ -24,6 +24,7 @@
   "search.batchOverLimitDetail": "Batch search is limited to {{limit}} entries; you have {{count}}. Please remove {{excess}} entries before submitting.",
   "search.batchDuplicateSummary": "{{count}} duplicate CAS value(s) ignored. Batch search sends only the first occurrence.",
   "search.batchInvalidSummary": "{{count}} invalid CAS value(s) were not sent: {{examples}}",
+  "search.batchReadySummary": "{{count}} valid unique CAS value(s) ready from {{inputCount}} pasted item(s).",
   "search.batchNoValidCas": "No valid CAS numbers are ready to search. Check the format, for example 64-17-5.",
   "search.batchSearchBtn": "Batch Search",
   "search.clear": "Clear",

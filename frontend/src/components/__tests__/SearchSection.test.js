@@ -184,6 +184,30 @@ describe('SearchSection', () => {
       expect(screen.getByTestId('batch-search-btn')).not.toBeDisabled();
     });
 
+    it('summarizes the exact valid unique CAS count that will be submitted', () => {
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchCount={2}
+          batchSummary={{
+            inputCount: 5,
+            acceptedCount: 2,
+            duplicateCount: 1,
+            invalidCount: 2,
+            invalidItems: [
+              { raw: '344-04-07' },
+              { raw: '67-64-2' },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByTestId('batch-ready-summary')).toHaveTextContent(
+        'search.batchReadySummary'
+      );
+    });
+
     it('disables submit when pasted batch input has no valid CAS values', () => {
       render(
         <SearchSection

@@ -329,6 +329,9 @@ Work items:
 - Completed: made common paths explicit through the result decision guide,
   result actions, SDS/detail paths, print entry, export preview, and support
   links.
+- Completed: batch input now shows the exact valid unique CAS count that will
+  be submitted, so duplicates and invalid paste noise do not make users expect
+  a different result/history/print count.
 - Keep reducing wording that explains implementation details instead of user
   decisions when copy changes.
 - Keep production QA or screenshot review for first-screen readability when UI
@@ -747,9 +750,9 @@ or user report points to a more urgent slice.
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
 | SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
-| Telemetry/privacy | `Gate added` | Retention/export-review policy is documented; next step is enforcing it if capture is ever enabled in production | Backend tests |
+| Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
-| Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; re-run production batch/product gates after changes | Batch planner tests + print PDF artifact + production batch QA |
+| Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; add messy-paste parser fixtures when real lists expose new separators or prefixes | Batch parser/integration tests + print PDF artifact + production batch QA |
 | Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Gate added` | Extend focus tests for new complex dialogs | Unit tests + production search UI |

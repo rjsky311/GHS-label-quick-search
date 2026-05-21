@@ -141,9 +141,12 @@ Current completion snapshot:
   `qa:production-primary` pass, including A4, Letter, formaldehyde
   continuation, and 50+ item batch handoff artifacts.
 - **Batch input governance checkpoint**: pasted batch CAS input is normalized,
-  deduplicated, checksum-checked, and summarized before request. Search
-  history and frontend observability now follow the same normalized handoff,
-  with bounded telemetry metadata instead of raw invalid paste payloads.
+  deduplicated, checksum-checked, and summarized before request. The parser
+  accepts common spreadsheet separators plus same-line space-separated CAS
+  values with `CAS No.` / `CAS:` prefixes, while preserving spaces that belong
+  inside a single CAS token. Search history and frontend observability now
+  follow the same normalized handoff, with bounded telemetry metadata instead
+  of raw invalid paste payloads.
 - **Dictionary miss telemetry checkpoint**: unresolved-search miss reporting is
   double opt-in (`VITE_ENABLE_DICTIONARY_MISS_CAPTURE=true` in the frontend and
   `CAPTURE_DICTIONARY_MISSES=true` in the backend). Public builds remain

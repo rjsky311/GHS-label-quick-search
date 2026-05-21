@@ -57,9 +57,13 @@ Current mode:
 - Completed current slice: batch search input is normalized, deduplicated, and
   checked for CAS format/checksum before the backend call. The UI summarizes
   ignored duplicates and invalid entries early, because bad batch input is a
-  major source of later label-print confusion. The same normalized CAS path now
-  feeds search history and bounded frontend observability, so duplicate or
-  invalid raw paste content does not leak into later diagnostics.
+  major source of later label-print confusion. The parser now also accepts
+  same-line space-separated CAS values with `CAS No.` / `CAS:` prefixes without
+  splitting the spaces that belong inside one CAS token. The batch panel now
+  names the exact valid unique CAS count that will be submitted. The same
+  normalized CAS path now feeds search history and bounded frontend
+  observability, so duplicate or invalid raw paste content does not leak into
+  later diagnostics.
 - Completed current slice: Chinese-name display now uses a shared trust helper
   across localized names, favorites/history/autocomplete, prepare-solution
   summaries, print preview/scoring, printed labels, export preview, backend
@@ -116,7 +120,8 @@ Current mode:
    QA.
    Current related follow-up: keep the simplified batch input path covered in
    regression QA so only valid, unique CAS values feed batch results, history,
-   telemetry, and print counts.
+   telemetry, and print counts; add new messy-paste fixtures when real batch
+   lists expose another separator or formatting pattern.
 3. Keep CI and production QA operationalization healthy. The GitHub Actions
    `Production Print QA` workflow now defaults to the product-level closure
    gate, with split modes for focused reruns.
