@@ -260,6 +260,8 @@ Current status:
 
 Suggested verification:
 
+Run frontend commands from `frontend/`.
+
 - `npm test -- --runInBand`
 - `npm run test:i18n` when copy changes
 - `npm run build`

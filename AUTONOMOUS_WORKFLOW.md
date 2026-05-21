@@ -155,8 +155,8 @@ work.
 
 Choose the verification level by blast radius:
 
-- Frontend logic/UI: `npm test -- --runInBand`, `npm run test:i18n` when copy or
-  locale keys change, and `npm run build`.
+- Frontend logic/UI: run from `frontend/`: `npm test -- --runInBand`,
+  `npm run test:i18n` when copy or locale keys change, and `npm run build`.
 - Backend/API: `python -m py_compile server.py` and
   `python -m pytest test_name_search.py -v`.
 - Security or storage changes: add regression tests for malformed data,

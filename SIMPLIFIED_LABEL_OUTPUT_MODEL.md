@@ -336,6 +336,7 @@ Visual/readability:
 Verification:
 
 - `git diff --check`
+- Run frontend npm commands from `frontend/`.
 - `npm test -- --runInBand`
 - `npm run test:i18n`
 - `npm run build`
