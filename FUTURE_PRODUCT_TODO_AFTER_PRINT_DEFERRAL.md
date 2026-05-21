@@ -147,8 +147,7 @@ Work items:
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
 - Keep manual dictionary review status usage consistent with the correction
-  path; add equivalent status handling to reference-link curation only if real
-  review examples need it.
+  path.
 - Keep workflow/business requests separate from safety-data corrections.
 
 Acceptance:
@@ -182,6 +181,11 @@ Work items:
   attributes for QA and troubleshooting.
 - Completed: production print handoff QA now enforces QR target metadata and
   visible QR target role copy for QR supplement cases.
+- Completed: admin reference-link curation now supports explicit `active` and
+  `inactive` statuses. Public lookup, Detail, QR target selection, labels, and
+  exports keep using active links by default, while admin fetches include
+  inactive links and the overview shows active/inactive counts so retired SDS
+  or obsolete reference links remain auditable without becoming user-facing.
 - Keep role-first ordering (`SDS`, `Regulatory`, `Occupational`, `Reference`)
   aligned across backend, frontend, QR target selection, detail views, and
   exports.
@@ -774,7 +778,7 @@ or user report points to a more urgent slice.
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
 | Correction intake | `Gate added` | Watch issue-template usage before adding admin review states | Issue templates + support-link tests |
-| SDS/reference authority | `Gate added` | Keep role-first ordering aligned as links change | Existing reference-link tests + production search UI |
+| SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; production search UI now covers the current messy-paste parser fixture and QR `?cas=` return path, and new fixtures should be added when real lists expose new separators or prefixes | Batch parser/integration tests + production search UI + print PDF artifact + production batch QA |

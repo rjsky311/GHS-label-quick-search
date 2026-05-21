@@ -36,7 +36,7 @@ export default function usePilotDashboard(options = {}) {
           axios.get(`${API}/ops/report`, requestConfig),
           axios.get(`${API}/dictionary/aliases`, requestConfig),
           axios.get(`${API}/dictionary/manual-entries`, requestConfig),
-          axios.get(`${API}/dictionary/reference-links`, requestConfig),
+          axios.get(`${API}/dictionary/reference-links?include_inactive=true`, requestConfig),
         ]);
       setReport(reportResponse.data);
       setAliases(

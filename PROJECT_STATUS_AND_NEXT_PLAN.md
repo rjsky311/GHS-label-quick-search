@@ -207,6 +207,11 @@ Current completion snapshot:
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
   entries directly from the review queue.
+- **Reference-link curation checkpoint 2026-05-21**: admin reference links now
+  carry active/inactive status through backend validation, dashboard fetches,
+  overview counts, and dictionary snapshots. Public lookup, Detail, QR target
+  selection, labels, and exports keep active-only defaults so retired SDS or
+  obsolete reference links remain auditable without becoming user-facing.
 
 ## 3. Next Priority Order
 

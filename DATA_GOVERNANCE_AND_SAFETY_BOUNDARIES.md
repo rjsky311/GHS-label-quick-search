@@ -121,9 +121,18 @@ Rules:
 
 - Frontend and backend accept only `http` and `https` reference URLs.
 - Backend writes reject unknown reference link roles.
+- Backend writes reject unknown reference link statuses. Supported statuses are
+  `active` and `inactive`.
 - Frontend read paths downgrade legacy/unknown roles to `reference` rather than
   rendering them as privileged SDS/regulatory links.
 - Unsafe backend/manual links are dropped before rendering, QR reuse, or export.
+- Public lookup, Detail, QR target selection, labels, and exports consume active
+  reference links by default. Inactive links are retained for admin review and
+  dictionary snapshots, but they must not become user-facing verification links
+  or QR targets unless a maintainer reactivates them.
+- The admin dashboard may fetch inactive reference links for curation, and it
+  should show active/inactive counts so retired SDS or obsolete regulatory
+  links do not disappear from review history.
 - QR target selection prefers link type before generic priority:
   1. SDS
   2. Regulatory
@@ -202,6 +211,10 @@ size. Admin-gated does not mean unbounded.
 Manual-entry status is part of that boundary. Unknown statuses must be rejected,
 legacy entries default to `approved`, and public lookup helpers must filter to
 approved manual entries by default.
+
+Reference-link status is part of the same boundary. Inactive reference links
+remain auditable admin records, but public lookup helpers must filter to active
+links by default and admin summaries must make inactive counts visible.
 
 Telemetry:
 

@@ -64,6 +64,19 @@ const MANUAL_ENTRY_STATUS_OPTIONS = [
   },
 ];
 
+const REFERENCE_LINK_STATUS_OPTIONS = [
+  {
+    value: "active",
+    labelKey: "pilot.referenceStatusActive",
+    defaultLabel: "Active",
+  },
+  {
+    value: "inactive",
+    labelKey: "pilot.referenceStatusInactive",
+    defaultLabel: "Inactive",
+  },
+];
+
 export default function PilotDashboardSidebar(props) {
   const {
     report,
@@ -105,6 +118,7 @@ export default function PilotDashboardSidebar(props) {
     url: "",
     link_type: "reference",
     priority: "50",
+    status: "active",
   });
   const [missResolutionDrafts, setMissResolutionDrafts] = useState({});
 
@@ -114,6 +128,7 @@ export default function PilotDashboardSidebar(props) {
   const missQueries = dictionary.topMissQueries || [];
   const missStatusCounts = dictionary.missQueryStatusCounts || {};
   const manualEntryStatusCounts = dictionary.manualEntryStatusCounts || {};
+  const referenceLinkStatusCounts = dictionary.referenceLinkStatusCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
@@ -205,6 +220,7 @@ export default function PilotDashboardSidebar(props) {
         url: referenceForm.url.trim(),
         link_type: referenceForm.link_type,
         priority: Number(referenceForm.priority || 50),
+        status: referenceForm.status,
       });
       toast.success(
         t("pilot.referenceSaved", { defaultValue: "Reference link saved." })
@@ -215,6 +231,7 @@ export default function PilotDashboardSidebar(props) {
         url: "",
         link_type: referenceForm.link_type,
         priority: "50",
+        status: "active",
       });
     } catch (submitError) {
       toast.error(
@@ -530,6 +547,23 @@ export default function PilotDashboardSidebar(props) {
                   >
                     {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
                     {manualEntryStatusCounts[option.value] || 0}
+                  </span>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                <span className="font-medium text-slate-800">
+                  {t("pilot.referenceLinkStatusSummary", {
+                    defaultValue: "Reference link status",
+                  })}
+                </span>
+                {REFERENCE_LINK_STATUS_OPTIONS.map((option) => (
+                  <span
+                    key={option.value}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
+                    data-testid={`reference-link-status-count-${option.value}`}
+                  >
+                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
+                    {referenceLinkStatusCounts[option.value] || 0}
                   </span>
                 ))}
               </div>
@@ -1017,6 +1051,7 @@ export default function PilotDashboardSidebar(props) {
                     }
                     placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    data-testid="reference-link-cas-input"
                     required
                   />
                   <input
@@ -1026,6 +1061,7 @@ export default function PilotDashboardSidebar(props) {
                     }
                     placeholder={t("pilot.referenceLabelPlaceholder", { defaultValue: "Link label" })}
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                    data-testid="reference-link-label-input"
                     required
                   />
                   <input
@@ -1035,6 +1071,7 @@ export default function PilotDashboardSidebar(props) {
                     }
                     placeholder="https://..."
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:col-span-2"
+                    data-testid="reference-link-url-input"
                     required
                   />
                   <select
@@ -1048,6 +1085,23 @@ export default function PilotDashboardSidebar(props) {
                     <option value="sds">sds</option>
                     <option value="regulatory">regulatory</option>
                     <option value="occupational">occupational</option>
+                  </select>
+                  <select
+                    value={referenceForm.status}
+                    onChange={(event) =>
+                      setReferenceForm((prev) => ({ ...prev, status: event.target.value }))
+                    }
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                    data-testid="reference-link-status-select"
+                    aria-label={t("pilot.referenceLinkStatus", {
+                      defaultValue: "Reference link status",
+                    })}
+                  >
+                    {REFERENCE_LINK_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
+                      </option>
+                    ))}
                   </select>
                   <input
                     value={referenceForm.priority}
@@ -1063,6 +1117,7 @@ export default function PilotDashboardSidebar(props) {
                       type="submit"
                       disabled={saving}
                       className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                      data-testid="reference-link-submit-btn"
                     >
                       {t("pilot.saveReference", { defaultValue: "Save reference link" })}
                     </button>
@@ -1153,7 +1208,8 @@ export default function PilotDashboardSidebar(props) {
                           <div className="font-mono text-blue-700">{link.casNumber}</div>
                           <div className="mt-1 text-slate-900">{link.label}</div>
                           <div className="text-xs text-slate-500">
-                            {link.linkType} | priority {link.priority}
+                            {link.linkType} | priority {link.priority} |{" "}
+                            {link.status || "active"}
                           </div>
                         </div>
                       ))}

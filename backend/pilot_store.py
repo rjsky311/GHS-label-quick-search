@@ -15,6 +15,7 @@ MANUAL_ENTRY_STATUSES = {"approved", "pending", "needs_evidence", "rejected"}
 MANUAL_ENTRY_REVIEW_STATUSES = ("pending", "needs_evidence")
 APPROVED_ALIAS_STATUS = "approved"
 ACTIVE_REFERENCE_STATUS = "active"
+REFERENCE_LINK_STATUSES = {"active", "inactive"}
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
 DEFAULT_MISS_QUERY_RETENTION_DAYS = 90
 
@@ -67,6 +68,13 @@ def normalize_manual_entry_status(status: Optional[str]) -> str:
     normalized = (status or APPROVED_MANUAL_ENTRY_STATUS).strip().lower()
     if normalized not in MANUAL_ENTRY_STATUSES:
         raise ValueError("manual entry status must be approved, pending, needs_evidence, or rejected")
+    return normalized
+
+
+def normalize_reference_link_status(status: Optional[str]) -> str:
+    normalized = (status or ACTIVE_REFERENCE_STATUS).strip().lower()
+    if normalized not in REFERENCE_LINK_STATUSES:
+        raise ValueError("reference link status must be active or inactive")
     return normalized
 
 
@@ -966,6 +974,7 @@ class PilotStore:
         link_type = (link_type or "").strip()
         if not cas_number or not url or not label or not link_type:
             return None
+        status = normalize_reference_link_status(status)
         updated_at = utc_now_iso()
         self._execute(
             """
@@ -991,7 +1000,7 @@ class PilotStore:
             """,
             (cas_number, cid, link_type, label, url, source, priority, status, updated_at),
         )
-        links = self.list_reference_links(cas_number)
+        links = self.list_reference_links(cas_number, include_inactive=True)
         for link in links:
             if link["url"] == url and link["linkType"] == link_type:
                 return link
@@ -1072,6 +1081,11 @@ class PilotStore:
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
                 (ACTIVE_REFERENCE_STATUS,),
             ),
+            "inactiveReferenceLinkCount": self._scalar(
+                "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
+                ("inactive",),
+            ),
+            "referenceLinkStatusCounts": self.get_reference_link_status_counts(),
             "topMissQueries": self.list_miss_queries(
                 limit=limit,
                 statuses=("open", "needs_evidence"),
@@ -1091,6 +1105,19 @@ class PilotStore:
             """
         )
         return {str(row["status"]): int(row["count"]) for row in rows}
+
+    def get_reference_link_status_counts(self) -> dict[str, int]:
+        rows = self._fetchall(
+            """
+            SELECT status, COUNT(*) AS count
+            FROM dictionary_reference_links
+            GROUP BY status
+            """
+        )
+        counts = {status: 0 for status in sorted(REFERENCE_LINK_STATUSES)}
+        for row in rows:
+            counts[str(row["status"])] = int(row["count"])
+        return counts
 
     def export_dictionary_snapshot(
         self,

@@ -23,6 +23,11 @@ const baseProps = {
         rejected: 0,
       },
       referenceLinkCount: 4,
+      inactiveReferenceLinkCount: 1,
+      referenceLinkStatusCounts: {
+        active: 4,
+        inactive: 1,
+      },
       missQueryStatusCounts: {
         open: 2,
         needs_evidence: 1,
@@ -108,6 +113,8 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("manual-entry-status-count-pending")).toHaveTextContent("1");
     expect(screen.getByTestId("manual-entry-status-count-needs_evidence")).toHaveTextContent("1");
     expect(screen.getByTestId("manual-entry-status-count-rejected")).toHaveTextContent("0");
+    expect(screen.getByTestId("reference-link-status-count-active")).toHaveTextContent("4");
+    expect(screen.getByTestId("reference-link-status-count-inactive")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
@@ -283,5 +290,36 @@ describe("PilotDashboardSidebar", () => {
       );
     });
     expect(baseProps.onSaveManualEntry).not.toHaveBeenCalled();
+  });
+
+  it("submits an inactive reference link from the dictionary tab", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.change(screen.getByTestId("reference-link-cas-input"), {
+      target: { value: "64-17-5" },
+    });
+    fireEvent.change(screen.getByTestId("reference-link-label-input"), {
+      target: { value: "Retired SDS" },
+    });
+    fireEvent.change(screen.getByTestId("reference-link-url-input"), {
+      target: { value: "https://lab.example/sds/retired" },
+    });
+    fireEvent.change(screen.getByTestId("reference-link-status-select"), {
+      target: { value: "inactive" },
+    });
+
+    fireEvent.click(screen.getByTestId("reference-link-submit-btn"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveReferenceLink).toHaveBeenCalledWith({
+        cas_number: "64-17-5",
+        label: "Retired SDS",
+        url: "https://lab.example/sds/retired",
+        link_type: "reference",
+        priority: 50,
+        status: "inactive",
+      });
+    });
   });
 });

@@ -108,6 +108,10 @@ Current mode:
   Admin reports show purgeable stale rows, the dashboard and maintainer CLI can
   clean stale telemetry, and dictionary exports redact miss-query context unless
   explicitly requested.
+- Completed current slice: admin reference links now have active/inactive
+  curation status. Inactive links stay visible in admin lists, overview counts,
+  and snapshots, but public lookup, Detail, QR target selection, labels, and
+  exports keep active-only defaults.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

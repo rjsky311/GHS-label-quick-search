@@ -142,6 +142,36 @@ async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_s
     assert any(link["label"] == "NIOSH Pocket Guide" for link in result.reference_links)
 
 
+def test_inactive_reference_links_stay_out_of_default_lookup(temp_store):
+    temp_store.upsert_reference_link(
+        "64-17-5",
+        label="Current SDS",
+        url="https://lab.example/sds/current",
+        link_type="sds",
+        priority=1,
+        status="active",
+    )
+    inactive_record = temp_store.upsert_reference_link(
+        "64-17-5",
+        label="Retired SDS",
+        url="https://lab.example/sds/retired",
+        link_type="sds",
+        priority=0,
+        status="inactive",
+    )
+
+    active_links = temp_store.list_reference_links("64-17-5")
+    all_links = temp_store.list_reference_links("64-17-5", include_inactive=True)
+    summary = temp_store.get_dictionary_summary()
+
+    assert inactive_record is not None
+    assert inactive_record["status"] == "inactive"
+    assert [link["label"] for link in active_links] == ["Current SDS"]
+    assert {link["label"] for link in all_links} == {"Current SDS", "Retired SDS"}
+    assert summary["referenceLinkStatusCounts"] == {"active": 1, "inactive": 1}
+    assert summary["inactiveReferenceLinkCount"] == 1
+
+
 async def test_dictionary_admin_endpoints_roundtrip(temp_store):
     transport = ASGITransport(app=server.app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
