@@ -808,6 +808,7 @@
   "pilot.activateReference": "Activate",
   "pilot.deactivateReference": "Deactivate",
   "pilot.aliasApproved": "Alias approved.",
+  "pilot.aliasNeedsEvidence": "Alias marked as needs evidence.",
   "pilot.aliasRejected": "Alias rejected.",
   "pilot.aliasDecisionFailed": "Failed to update alias status.",
   "pilot.manualEntryApproved": "Manual dictionary entry approved.",

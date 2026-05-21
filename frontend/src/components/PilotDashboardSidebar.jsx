@@ -76,6 +76,11 @@ const ALIAS_STATUS_OPTIONS = [
     defaultLabel: "Pending review",
   },
   {
+    value: "needs_evidence",
+    labelKey: "pilot.manualStatusNeedsEvidence",
+    defaultLabel: "Needs evidence",
+  },
+  {
     value: "rejected",
     labelKey: "pilot.manualStatusRejected",
     defaultLabel: "Rejected",
@@ -397,11 +402,17 @@ export default function PilotDashboardSidebar(props) {
         status,
         notes: alias.notes || "",
       });
-      toast.success(
-        status === "approved"
-          ? t("pilot.aliasApproved", { defaultValue: "Alias approved." })
-          : t("pilot.aliasRejected", { defaultValue: "Alias rejected." })
-      );
+      if (status === "approved") {
+        toast.success(t("pilot.aliasApproved", { defaultValue: "Alias approved." }));
+      } else if (status === "needs_evidence") {
+        toast.success(
+          t("pilot.aliasNeedsEvidence", {
+            defaultValue: "Alias marked as needs evidence.",
+          })
+        );
+      } else {
+        toast.success(t("pilot.aliasRejected", { defaultValue: "Alias rejected." }));
+      }
     } catch (submitError) {
       toast.error(
         submitError?.response?.data?.detail ||
@@ -422,11 +433,17 @@ export default function PilotDashboardSidebar(props) {
         status,
         notes: alias.notes || "",
       });
-      toast.success(
-        status === "approved"
-          ? t("pilot.aliasApproved", { defaultValue: "Alias approved." })
-          : t("pilot.aliasRejected", { defaultValue: "Alias rejected." })
-      );
+      if (status === "approved") {
+        toast.success(t("pilot.aliasApproved", { defaultValue: "Alias approved." }));
+      } else if (status === "needs_evidence") {
+        toast.success(
+          t("pilot.aliasNeedsEvidence", {
+            defaultValue: "Alias marked as needs evidence.",
+          })
+        );
+      } else {
+        toast.success(t("pilot.aliasRejected", { defaultValue: "Alias rejected." }));
+      }
     } catch (submitError) {
       toast.error(
         submitError?.response?.data?.detail ||
@@ -938,6 +955,15 @@ export default function PilotDashboardSidebar(props) {
                             </button>
                             <button
                               type="button"
+                              onClick={() => handlePendingAliasDecision(alias, "needs_evidence")}
+                              disabled={saving}
+                              className="rounded bg-amber-600 px-3 py-1 text-xs text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
+                              data-testid={`needs-evidence-alias-${alias.alias_text}`}
+                            >
+                              {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handlePendingAliasDecision(alias, "rejected")}
                               disabled={saving}
                               className="rounded bg-red-700 px-3 py-1 text-xs text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1359,6 +1385,17 @@ export default function PilotDashboardSidebar(props) {
                                 {t("pilot.approve", { defaultValue: "Approve" })}
                               </button>
                             ) : null}
+                            {currentStatus !== "needs_evidence" ? (
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => handleAliasStatusUpdate(alias, "needs_evidence")}
+                                className="rounded border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`alias-needs-evidence-${alias.id || index}`}
+                              >
+                                {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
+                              </button>
+                            ) : null}
                             {currentStatus !== "rejected" ? (
                               <button
                                 type="button"
@@ -1389,34 +1426,78 @@ export default function PilotDashboardSidebar(props) {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {recentManualEntries.map((entry, index) => (
-                        <div
-                          key={`${entry.id || entry.cas_number}-${entry.status || "approved"}`}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                          data-testid={`manual-entry-row-${entry.id || index}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="font-mono text-blue-700">{entry.cas_number}</div>
-                            <CurationStatusBadge
-                              status={entry.status || "approved"}
-                              testId={`manual-entry-status-${entry.id || index}`}
-                            />
-                          </div>
-                          <div className="mt-1 text-slate-900">
-                            {entry.name_en ||
-                              t("pilot.noEnglishName", { defaultValue: "No English name" })}
-                          </div>
-                          <div className="text-slate-500">
-                            {entry.name_zh ||
-                              t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
-                          </div>
-                          {curationTimestamp(entry) ? (
-                            <div className="mt-1 text-xs text-slate-500">
-                              {formatRelativeTime(curationTimestamp(entry))}
+                      {recentManualEntries.map((entry, index) => {
+                        const currentStatus = entry.status || "approved";
+                        return (
+                          <div
+                            key={`${entry.id || entry.cas_number}-${entry.status || "approved"}`}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                            data-testid={`manual-entry-row-${entry.id || index}`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-mono text-blue-700">{entry.cas_number}</div>
+                              <CurationStatusBadge
+                                status={currentStatus}
+                                testId={`manual-entry-status-${entry.id || index}`}
+                              />
                             </div>
-                          ) : null}
-                        </div>
-                      ))}
+                            <div className="mt-1 text-slate-900">
+                              {entry.name_en ||
+                                t("pilot.noEnglishName", { defaultValue: "No English name" })}
+                            </div>
+                            <div className="text-slate-500">
+                              {entry.name_zh ||
+                                t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
+                            </div>
+                            {curationTimestamp(entry) ? (
+                              <div className="mt-1 text-xs text-slate-500">
+                                {formatRelativeTime(curationTimestamp(entry))}
+                              </div>
+                            ) : null}
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {currentStatus !== "approved" ? (
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  onClick={() =>
+                                    handlePendingManualEntryDecision(entry, "approved")
+                                  }
+                                  className="rounded border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                  data-testid={`manual-entry-approve-${entry.id || index}`}
+                                >
+                                  {t("pilot.approve", { defaultValue: "Approve" })}
+                                </button>
+                              ) : null}
+                              {currentStatus !== "needs_evidence" ? (
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  onClick={() =>
+                                    handlePendingManualEntryDecision(entry, "needs_evidence")
+                                  }
+                                  className="rounded border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                  data-testid={`manual-entry-needs-evidence-${entry.id || index}`}
+                                >
+                                  {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
+                                </button>
+                              ) : null}
+                              {currentStatus !== "rejected" ? (
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  onClick={() =>
+                                    handlePendingManualEntryDecision(entry, "rejected")
+                                  }
+                                  className="rounded border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                  data-testid={`manual-entry-reject-${entry.id || index}`}
+                                >
+                                  {t("pilot.reject", { defaultValue: "Reject" })}
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

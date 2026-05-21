@@ -118,8 +118,10 @@ Current mode:
   explicit status badges so maintainers can spot fresh pending or
   needs-evidence work without confusing it with older approved records. Alias
   review counts are now visible beside manual-entry and reference-link status
-  counts in the admin overview, and recent aliases can be approved or rejected
-  directly from the list.
+  counts in the admin overview, and pending or recent aliases can be approved,
+  marked needs-evidence, or rejected directly from the list. Recent manual
+  dictionary rows can also be approved, marked needs-evidence, or rejected
+  directly without retyping the same CAS/name payload.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

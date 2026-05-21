@@ -11,10 +11,12 @@ from typing import Any, Iterable, Optional
 DEFAULT_SCOPE = "default"
 DEFAULT_DOC_KEY = "default"
 APPROVED_MANUAL_ENTRY_STATUS = "approved"
-MANUAL_ENTRY_STATUSES = {"approved", "pending", "needs_evidence", "rejected"}
+MANUAL_ENTRY_STATUS_ORDER = ("approved", "pending", "needs_evidence", "rejected")
+MANUAL_ENTRY_STATUSES = set(MANUAL_ENTRY_STATUS_ORDER)
 MANUAL_ENTRY_REVIEW_STATUSES = ("pending", "needs_evidence")
 APPROVED_ALIAS_STATUS = "approved"
-ALIAS_STATUSES = ("approved", "pending", "rejected")
+ALIAS_STATUSES = ("approved", "pending", "needs_evidence", "rejected")
+ALIAS_REVIEW_STATUSES = ("pending", "needs_evidence")
 ACTIVE_REFERENCE_STATUS = "active"
 REFERENCE_LINK_STATUSES = {"active", "inactive"}
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
@@ -514,7 +516,7 @@ class PilotStore:
                 next_status = existing["status"]
                 if status and source == "manual":
                     next_status = status
-                elif next_status not in {"approved", "rejected"} and status:
+                elif next_status == "pending" and status:
                     next_status = status
                 conn.execute(
                     """
@@ -579,7 +581,8 @@ class PilotStore:
               CASE status
                 WHEN 'approved' THEN 0
                 WHEN 'pending' THEN 1
-                ELSE 2
+                WHEN 'needs_evidence' THEN 2
+                ELSE 3
               END,
               confidence DESC,
               hit_count DESC
@@ -1050,6 +1053,9 @@ class PilotStore:
         pending_manual_entries = []
         for status in MANUAL_ENTRY_REVIEW_STATUSES:
             pending_manual_entries.extend(self.list_manual_entries(status=status))
+        pending_aliases = []
+        for status in ALIAS_REVIEW_STATUSES:
+            pending_aliases.extend(self.list_aliases(status=status))
         metrics = {
             "manualEntryCount": self._scalar("SELECT COUNT(*) FROM dictionary_entries"),
             "approvedManualEntryCount": self._scalar(
@@ -1070,8 +1076,12 @@ class PilotStore:
                 (APPROVED_ALIAS_STATUS,),
             ),
             "pendingAliasCount": self._scalar(
-                "SELECT COUNT(*) FROM dictionary_aliases WHERE status = ?",
-                ("pending",),
+                """
+                SELECT COUNT(*)
+                FROM dictionary_aliases
+                WHERE status IN (?, ?)
+                """,
+                ALIAS_REVIEW_STATUSES,
             ),
             "aliasStatusCounts": self.get_alias_status_counts(),
             "missQueryCount": self._scalar("SELECT COUNT(*) FROM dictionary_miss_queries"),
@@ -1095,7 +1105,7 @@ class PilotStore:
                 statuses=("open", "needs_evidence"),
                 include_context=False,
             ),
-            "pendingAliases": self.list_aliases(status="pending")[:limit],
+            "pendingAliases": pending_aliases[:limit],
             "pendingManualEntries": pending_manual_entries[:limit],
         }
         return metrics
@@ -1108,7 +1118,10 @@ class PilotStore:
             GROUP BY status
             """
         )
-        return {str(row["status"]): int(row["count"]) for row in rows}
+        counts = {status: 0 for status in MANUAL_ENTRY_STATUS_ORDER}
+        for row in rows:
+            counts[str(row["status"])] = int(row["count"])
+        return counts
 
     def get_alias_status_counts(self) -> dict[str, int]:
         rows = self._fetchall(

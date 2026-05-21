@@ -25,6 +25,7 @@ const baseProps = {
       aliasStatusCounts: {
         approved: 1,
         pending: 1,
+        needs_evidence: 0,
         rejected: 0,
       },
       referenceLinkCount: 4,
@@ -178,6 +179,7 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("manual-entry-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("alias-status-count-approved")).toHaveTextContent("1");
     expect(screen.getByTestId("alias-status-count-pending")).toHaveTextContent("1");
+    expect(screen.getByTestId("alias-status-count-needs_evidence")).toHaveTextContent("0");
     expect(screen.getByTestId("alias-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("reference-link-status-count-active")).toHaveTextContent("4");
     expect(screen.getByTestId("reference-link-status-count-inactive")).toHaveTextContent("1");
@@ -216,6 +218,22 @@ describe("PilotDashboardSidebar", () => {
         locale: "en",
         cas_number: "123-45-6",
         status: "approved",
+        notes: "",
+      });
+    });
+  });
+
+  it("marks a pending alias as needing evidence from the overview tab", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("needs-evidence-alias-buffer x"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveAlias).toHaveBeenCalledWith({
+        alias_text: "buffer x",
+        locale: "en",
+        cas_number: "123-45-6",
+        status: "needs_evidence",
         notes: "",
       });
     });
@@ -467,6 +485,18 @@ describe("PilotDashboardSidebar", () => {
       });
     });
 
+    fireEvent.click(screen.getByTestId("alias-needs-evidence-21"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveAlias).toHaveBeenLastCalledWith({
+        alias_text: "legacy solvent",
+        locale: "en",
+        cas_number: "111-11-1",
+        status: "needs_evidence",
+        notes: "",
+      });
+    });
+
     fireEvent.click(screen.getByTestId("alias-approve-22"));
 
     await waitFor(() => {
@@ -476,6 +506,37 @@ describe("PilotDashboardSidebar", () => {
         cas_number: "222-22-2",
         status: "approved",
         notes: "",
+      });
+    });
+  });
+
+  it("updates manual entry status from the recent manual entries list", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.click(screen.getByTestId("manual-entry-reject-31"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveManualEntry).toHaveBeenCalledWith({
+        cas_number: "111-11-1",
+        name_en: "Older Solvent",
+        name_zh: "舊溶劑",
+        notes: "",
+        source: "manual",
+        status: "rejected",
+      });
+    });
+
+    fireEvent.click(screen.getByTestId("manual-entry-approve-32"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveManualEntry).toHaveBeenLastCalledWith({
+        cas_number: "222-22-2",
+        name_en: "Needs Evidence Solvent",
+        name_zh: "待佐證溶劑",
+        notes: "",
+        source: "manual",
+        status: "approved",
       });
     });
   });

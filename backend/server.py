@@ -87,7 +87,7 @@ MAX_ADMIN_SOURCE_LENGTH = 80
 MAX_ALIAS_TEXT_LENGTH = 240
 MAX_REFERENCE_PRIORITY = 1000
 ALLOWED_ALIAS_LOCALES = {"en", "zh"}
-ALLOWED_ALIAS_STATUSES = {APPROVED_ALIAS_STATUS, "pending", "rejected"}
+ALLOWED_ALIAS_STATUSES = {APPROVED_ALIAS_STATUS, "pending", "needs_evidence", "rejected"}
 ALLOWED_MANUAL_ENTRY_STATUSES = MANUAL_ENTRY_STATUSES
 ALLOWED_REFERENCE_STATUSES = {"active", "inactive"}
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
@@ -870,7 +870,7 @@ class DictionaryAliasPayload(BaseModel):
     def status_must_be_supported(cls, value: str) -> str:
         normalized = str(value or "").strip().lower()
         if normalized not in ALLOWED_ALIAS_STATUSES:
-            raise ValueError("alias status must be approved, pending, or rejected")
+            raise ValueError("alias status must be approved, pending, needs_evidence, or rejected")
         return normalized
 
     @field_validator("source")

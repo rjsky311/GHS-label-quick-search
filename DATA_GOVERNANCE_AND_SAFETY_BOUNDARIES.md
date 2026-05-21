@@ -36,8 +36,12 @@ for manual entries, aliases, and reference links so maintainers do not mistake
 stale approved or retired records for active review work.
 
 Manual alias changes are explicit curation actions. Admin updates may change a
-final alias status when the maintainer approves or rejects it, but automated
-synonym capture must not downgrade an already approved or rejected alias.
+final alias status when the maintainer approves, marks needs-evidence, or
+rejects it, but automated synonym capture must not downgrade an already
+approved, needs-evidence, or rejected alias. Manual dictionary status changes
+should also be explicit curation actions: approved entries may affect public
+identity helpers, while needs-evidence or rejected entries remain admin-only
+records.
 
 ### Chinese Name Coverage
 

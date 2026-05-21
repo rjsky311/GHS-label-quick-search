@@ -115,16 +115,22 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
 def test_dictionary_summary_tracks_alias_statuses(temp_store):
     temp_store.upsert_alias("Approved Alias", "en", "111-11-1", status="approved")
     temp_store.upsert_alias("Pending Alias", "en", "222-22-2", status="pending")
-    temp_store.upsert_alias("Rejected Alias", "en", "333-33-3", status="rejected")
+    temp_store.upsert_alias("Evidence Alias", "en", "333-33-3", status="needs_evidence")
+    temp_store.upsert_alias("Rejected Alias", "en", "444-44-4", status="rejected")
 
     summary = temp_store.get_dictionary_summary()
 
     assert summary["approvedAliasCount"] == 1
-    assert summary["pendingAliasCount"] == 1
+    assert summary["pendingAliasCount"] == 2
     assert summary["aliasStatusCounts"] == {
         "approved": 1,
         "pending": 1,
+        "needs_evidence": 1,
         "rejected": 1,
+    }
+    assert {alias["alias_text"] for alias in summary["pendingAliases"]} == {
+        "Pending Alias",
+        "Evidence Alias",
     }
 
 
@@ -147,6 +153,20 @@ def test_automated_alias_capture_does_not_override_final_status(temp_store):
     )
 
     assert temp_store.get_alias_exact("Stable Alias", "en", statuses=None)["status"] == "approved"
+
+    temp_store.upsert_alias("Needs Review Alias", "en", "666-66-6", status="needs_evidence")
+    temp_store.upsert_alias(
+        "Needs Review Alias",
+        "en",
+        "666-66-6",
+        source="pubchem_synonym",
+        status="pending",
+    )
+
+    assert (
+        temp_store.get_alias_exact("Needs Review Alias", "en", statuses=None)["status"]
+        == "needs_evidence"
+    )
 
 
 async def test_search_chemical_merges_manual_reference_links(monkeypatch, temp_store):

@@ -209,10 +209,13 @@ Current completion snapshot:
   entries directly from the review queue. Recent manual entries and aliases now
   use newest-first ordering with visible status badges, matching the reference
   link curation list and reducing the chance that stale approved rows look like
-  current review work. Alias review also exposes approved/pending/rejected
-  counts in the admin summary, and recent aliases can be approved or rejected
+  current review work. Alias review also exposes
+  approved/pending/needs-evidence/rejected counts in the admin summary, and
+  pending or recent aliases can be approved, marked needs-evidence, or rejected
   directly while automated synonym capture remains unable to overwrite an
-  already final manual alias decision.
+  already final manual alias decision. Recent manual entries can also be
+  approved, marked needs-evidence, or rejected directly from the curation list
+  without retyping the CAS/name payload.
 - **Reference-link curation checkpoint 2026-05-21**: admin reference links now
   carry active/inactive status through backend validation, dashboard fetches,
   overview counts, and dictionary snapshots. Public lookup, Detail, QR target

@@ -800,6 +800,7 @@
   "pilot.activateReference": "啟用",
   "pilot.deactivateReference": "停用",
   "pilot.aliasApproved": "已核准別名。",
+  "pilot.aliasNeedsEvidence": "別名已標記為需佐證。",
   "pilot.aliasRejected": "已拒絕別名。",
   "pilot.aliasDecisionFailed": "別名狀態更新失敗。",
   "pilot.manualEntryApproved": "已核准手動字典項目。",
