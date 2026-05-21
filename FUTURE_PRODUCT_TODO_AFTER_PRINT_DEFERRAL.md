@@ -226,8 +226,14 @@ Work items:
 - Completed: limited the dashboard top-miss queue to open and needs-evidence
   rows so resolved/ignored high-hit searches do not keep stealing review
   attention.
-- Review dictionary miss telemetry retention, payload caps, rate limits, and
-  admin export scope.
+- Completed: enforced miss-query retention/export scope. Admin reports now show
+  purgeable stale rows, the dashboard can trigger retention cleanup, the
+  maintainer CLI exposes `purge-miss-queries`, and dictionary snapshot exports
+  redact miss-query context unless explicitly requested. Summary/report payloads
+  also redact miss-query context because the dashboard does not need raw
+  telemetry metadata for triage.
+- Continue reviewing dictionary miss telemetry payload caps and rate limits
+  only if a future pilot shows real abuse or storage growth.
 - Decide what data is worth collecting for a public free tool and what should
   never be stored.
 - Keep observability exports admin-gated and avoid user-identifying payloads

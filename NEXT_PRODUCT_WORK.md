@@ -85,6 +85,10 @@ Current mode:
   closure path. The dashboard can mark captured misses as resolved with CAS,
   needs-evidence, or ignored, and duplicate capture preserves already reviewed
   non-open rows.
+- Completed current slice: miss-query retention/export scope is now enforceable.
+  Admin reports show purgeable stale rows, the dashboard and maintainer CLI can
+  clean stale telemetry, and dictionary exports redact miss-query context unless
+  explicitly requested.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is

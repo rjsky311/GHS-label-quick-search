@@ -4,7 +4,7 @@ import json
 import re
 import sqlite3
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -13,6 +13,7 @@ DEFAULT_DOC_KEY = "default"
 APPROVED_ALIAS_STATUS = "approved"
 ACTIVE_REFERENCE_STATUS = "active"
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
+DEFAULT_MISS_QUERY_RETENTION_DAYS = 90
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -23,6 +24,20 @@ _CAS_LIKE_RE = re.compile(r"^\d{2,7}-\d{2}-\d$")
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _miss_query_retention_cutoff(
+    retention_days: int = DEFAULT_MISS_QUERY_RETENTION_DAYS,
+    *,
+    now: Optional[datetime] = None,
+) -> str:
+    days = int(retention_days)
+    if days < 1:
+        raise ValueError("retention_days must be at least 1")
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    return (current - timedelta(days=days)).isoformat()
 
 
 def infer_locale(text: Optional[str]) -> str:
@@ -715,6 +730,7 @@ class PilotStore:
         *,
         limit: int = 50,
         statuses: Optional[Iterable[str]] = None,
+        include_context: bool = True,
     ) -> list[dict[str, Any]]:
         params: list[Any] = []
         where_status = ""
@@ -749,7 +765,14 @@ class PilotStore:
             """,
             params,
         )
-        return [self._miss_query_row_to_dict(row) for row in rows]
+        items = [self._miss_query_row_to_dict(row) for row in rows]
+        if include_context:
+            return items
+        return [
+            {key: value for key, value in item.items() if key != "context"}
+            | {"contextRedacted": True}
+            for item in items
+        ]
 
     def get_miss_query_status_counts(self) -> dict[str, int]:
         rows = self._fetchall(
@@ -804,6 +827,66 @@ class PilotStore:
             (miss_id,),
         )
         return self._miss_query_row_to_dict(row) if row is not None else None
+
+    def get_miss_query_retention_summary(
+        self,
+        *,
+        retention_days: int = DEFAULT_MISS_QUERY_RETENTION_DAYS,
+        now: Optional[datetime] = None,
+    ) -> dict[str, Any]:
+        cutoff_at = _miss_query_retention_cutoff(retention_days, now=now)
+        purgeable_count = self._scalar(
+            """
+            SELECT COUNT(*)
+            FROM dictionary_miss_queries
+            WHERE last_seen_at < ?
+              AND resolution_status != ?
+            """,
+            (cutoff_at, "needs_evidence"),
+        )
+        retained_needs_evidence_count = self._scalar(
+            """
+            SELECT COUNT(*)
+            FROM dictionary_miss_queries
+            WHERE last_seen_at < ?
+              AND resolution_status = ?
+            """,
+            (cutoff_at, "needs_evidence"),
+        )
+        return {
+            "retentionDays": int(retention_days),
+            "cutoffAt": cutoff_at,
+            "purgeableCount": purgeable_count,
+            "retainedNeedsEvidenceCount": retained_needs_evidence_count,
+        }
+
+    def purge_stale_miss_queries(
+        self,
+        *,
+        retention_days: int = DEFAULT_MISS_QUERY_RETENTION_DAYS,
+        now: Optional[datetime] = None,
+    ) -> dict[str, Any]:
+        summary = self.get_miss_query_retention_summary(
+            retention_days=retention_days,
+            now=now,
+        )
+        with self._lock:
+            conn = self._require_conn()
+            cursor = conn.execute(
+                """
+                DELETE FROM dictionary_miss_queries
+                WHERE last_seen_at < ?
+                  AND resolution_status != ?
+                """,
+                (summary["cutoffAt"], "needs_evidence"),
+            )
+            conn.commit()
+            deleted_count = int(cursor.rowcount or 0)
+        return {
+            **summary,
+            "deletedCount": deleted_count,
+            "purgedAt": utc_now_iso(),
+        }
 
     # Reference links -----------------------------------------------------
     def upsert_reference_link(
@@ -909,6 +992,7 @@ class PilotStore:
                 ("open",),
             ),
             "missQueryStatusCounts": self.get_miss_query_status_counts(),
+            "missQueryRetention": self.get_miss_query_retention_summary(),
             "referenceLinkCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
                 (ACTIVE_REFERENCE_STATUS,),
@@ -916,17 +1000,30 @@ class PilotStore:
             "topMissQueries": self.list_miss_queries(
                 limit=limit,
                 statuses=("open", "needs_evidence"),
+                include_context=False,
             ),
             "pendingAliases": self.list_aliases(status="pending")[:limit],
         }
         return metrics
 
-    def export_dictionary_snapshot(self) -> dict[str, Any]:
+    def export_dictionary_snapshot(
+        self,
+        *,
+        include_miss_context: bool = False,
+    ) -> dict[str, Any]:
+        miss_queries = self.list_miss_queries(
+            limit=500,
+            include_context=include_miss_context,
+        )
         return {
             "exportedAt": utc_now_iso(),
+            "missQueryExportScope": {
+                "contextIncluded": include_miss_context,
+                "limit": 500,
+            },
             "manualEntries": self.list_manual_entries(),
             "aliases": self.list_aliases(),
-            "missQueries": self.list_miss_queries(limit=500),
+            "missQueries": miss_queries,
             "referenceLinks": [
                 dict(row)
                 for row in self._fetchall(

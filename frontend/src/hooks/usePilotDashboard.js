@@ -130,6 +130,18 @@ export default function usePilotDashboard(options = {}) {
     [performMutation, requestConfig]
   );
 
+  const purgeStaleMissQueries = useCallback(
+    async (payload = {}) =>
+      performMutation(() =>
+        axios.post(
+          `${API}/dictionary/miss-queries/retention/purge`,
+          payload,
+          requestConfig
+        )
+      ),
+    [performMutation, requestConfig]
+  );
+
   return {
     report,
     aliases,
@@ -144,5 +156,6 @@ export default function usePilotDashboard(options = {}) {
     saveAlias,
     saveReferenceLink,
     resolveMissQuery,
+    purgeStaleMissQueries,
   };
 }

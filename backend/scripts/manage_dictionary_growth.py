@@ -26,6 +26,17 @@ def main() -> int:
 
     export_parser = subparsers.add_parser("export", help="Export full dictionary-growth data.")
     export_parser.add_argument("--output", help="Write JSON to a file instead of stdout.")
+    export_parser.add_argument(
+        "--include-miss-context",
+        action="store_true",
+        help="Include raw miss-query context in the export. Defaults to redacted.",
+    )
+
+    purge_parser = subparsers.add_parser(
+        "purge-miss-queries",
+        help="Delete stale miss-query telemetry outside the retention window.",
+    )
+    purge_parser.add_argument("--retention-days", type=int, default=90)
 
     entry_parser = subparsers.add_parser("add-entry", help="Add or update a manual dictionary entry.")
     entry_parser.add_argument("--cas", required=True)
@@ -62,12 +73,19 @@ def main() -> int:
             return 0
 
         if args.command == "export":
-            snapshot = store.export_dictionary_snapshot()
+            snapshot = store.export_dictionary_snapshot(
+                include_miss_context=args.include_miss_context,
+            )
             payload = json.dumps(snapshot, ensure_ascii=False, indent=2)
             if args.output:
                 Path(args.output).write_text(payload, encoding="utf-8")
             else:
                 print(payload)
+            return 0
+
+        if args.command == "purge-miss-queries":
+            result = store.purge_stale_miss_queries(retention_days=args.retention_days)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
 
         if args.command == "add-entry":

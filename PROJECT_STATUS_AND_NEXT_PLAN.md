@@ -155,7 +155,12 @@ Current completion snapshot:
   review status instead of turning a handled item back into an open task. Admin
   reports also expose status-count totals so maintainers can tell whether the
   queue is being reduced or merely accumulating, while the top-miss review list
-  stays focused on open and needs-evidence rows.
+  stays focused on open and needs-evidence rows. Retention enforcement is now
+  actionable: reports show purgeable stale rows, admin/CLI cleanup keeps raw
+  miss telemetry inside the review window, and dictionary snapshot exports
+  redact miss-query context unless a maintainer explicitly requests it. Admin
+  summary/report payloads also redact miss-query context because dashboard
+  triage only needs query, status, count, endpoint, and timing.
 - **Chinese-name trust checkpoint 2026-05-20**: frontend display and print
   surfaces now use a shared trusted-Chinese-name resolver. English-only
   placeholders in `name_zh`/`name_zh_tw` are not shown as Chinese, and small

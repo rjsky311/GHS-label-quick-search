@@ -8,6 +8,7 @@ Tests for name search functionality:
 """
 import pytest
 import server
+from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient, ASGITransport
 from pydantic import ValidationError
 from server import (
@@ -321,6 +322,100 @@ def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
         store.close()
 
 
+def test_dictionary_miss_query_retention_purges_only_unprotected_stale_rows(tmp_path):
+    now = datetime(2026, 5, 21, tzinfo=timezone.utc)
+    old_seen_at = (now - timedelta(days=120)).isoformat()
+    fresh_seen_at = (now - timedelta(days=10)).isoformat()
+    store = PilotStore(tmp_path / "pilot.db").connect()
+    try:
+        old_open = store.record_miss_query("old open", "name", "frontend")
+        old_resolved = store.record_miss_query("old resolved", "name", "frontend")
+        old_needs_evidence = store.record_miss_query(
+            "old needs evidence",
+            "name",
+            "frontend",
+        )
+        fresh_open = store.record_miss_query("fresh open", "name", "frontend")
+        store.update_miss_query_resolution(
+            old_resolved["id"],
+            resolution_status="resolved",
+            resolved_cas="64-17-5",
+        )
+        store.update_miss_query_resolution(
+            old_needs_evidence["id"],
+            resolution_status="needs_evidence",
+        )
+        for record in (old_open, old_resolved, old_needs_evidence):
+            store._execute(
+                """
+                UPDATE dictionary_miss_queries
+                SET first_seen_at = ?, last_seen_at = ?
+                WHERE id = ?
+                """,
+                (old_seen_at, old_seen_at, record["id"]),
+            )
+        store._execute(
+            """
+            UPDATE dictionary_miss_queries
+            SET first_seen_at = ?, last_seen_at = ?
+            WHERE id = ?
+            """,
+            (fresh_seen_at, fresh_seen_at, fresh_open["id"]),
+        )
+
+        summary = store.get_miss_query_retention_summary(now=now)
+        assert summary["retentionDays"] == 90
+        assert summary["purgeableCount"] == 2
+        assert summary["retainedNeedsEvidenceCount"] == 1
+        dictionary_summary = store.get_dictionary_summary()
+        assert dictionary_summary["missQueryRetention"]["purgeableCount"] == 2
+        fresh_summary_row = next(
+            item
+            for item in dictionary_summary["topMissQueries"]
+            if item["query_text"] == "fresh open"
+        )
+        assert "context" not in fresh_summary_row
+        assert fresh_summary_row["contextRedacted"] is True
+
+        result = store.purge_stale_miss_queries(now=now)
+        assert result["deletedCount"] == 2
+        remaining = store.list_miss_queries(limit=10)
+        assert {item["query_text"] for item in remaining} == {
+            "old needs evidence",
+            "fresh open",
+        }
+    finally:
+        store.close()
+
+
+def test_dictionary_export_redacts_miss_query_context_by_default(tmp_path):
+    store = PilotStore(tmp_path / "pilot.db").connect()
+    try:
+        store.record_miss_query(
+            "mystery solvent",
+            "name",
+            "frontend",
+            context={"locale": "en", "resultCount": 0},
+        )
+
+        default_snapshot = store.export_dictionary_snapshot()
+        assert default_snapshot["missQueryExportScope"] == {
+            "contextIncluded": False,
+            "limit": 500,
+        }
+        assert "context" not in default_snapshot["missQueries"][0]
+        assert default_snapshot["missQueries"][0]["contextRedacted"] is True
+
+        raw_snapshot = store.export_dictionary_snapshot(include_miss_context=True)
+        assert raw_snapshot["missQueryExportScope"]["contextIncluded"] is True
+        assert raw_snapshot["missQueries"][0]["context"] == {
+            "locale": "en",
+            "resultCount": 0,
+        }
+    finally:
+        store.close()
+
+
 async def test_admin_can_update_dictionary_miss_query_resolution(monkeypatch):
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
     captured = {}
@@ -379,6 +474,71 @@ async def test_admin_dictionary_miss_query_resolution_requires_known_row(monkeyp
         )
 
     assert response.status_code == 404
+
+
+async def test_admin_can_view_and_purge_miss_query_retention(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    captured = {}
+
+    def fake_retention_summary():
+        return {
+            "retentionDays": 90,
+            "cutoffAt": "2026-02-20T00:00:00+00:00",
+            "purgeableCount": 2,
+            "retainedNeedsEvidenceCount": 1,
+        }
+
+    def fake_purge_stale_miss_queries(*, retention_days):
+        captured["retention_days"] = retention_days
+        return {
+            **fake_retention_summary(),
+            "retentionDays": retention_days,
+            "deletedCount": 2,
+            "purgedAt": "2026-05-21T00:00:00+00:00",
+        }
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "get_miss_query_retention_summary",
+        fake_retention_summary,
+    )
+    monkeypatch.setattr(
+        server.pilot_store,
+        "purge_stale_miss_queries",
+        fake_purge_stale_miss_queries,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        view_response = await ac.get(
+            "/api/dictionary/miss-queries/retention",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        purge_response = await ac.post(
+            "/api/dictionary/miss-queries/retention/purge",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"retention_days": 30},
+        )
+
+    assert view_response.status_code == 200
+    assert view_response.json()["retention"]["purgeableCount"] == 2
+    assert purge_response.status_code == 200
+    assert captured == {"retention_days": 30}
+    assert purge_response.json()["retention"]["deletedCount"] == 2
+
+
+async def test_admin_miss_query_retention_rejects_unbounded_window(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/miss-queries/retention/purge",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"retention_days": 9999},
+        )
+
+    assert response.status_code == 422
 
 
 def test_admin_dictionary_payloads_trim_safe_fields():

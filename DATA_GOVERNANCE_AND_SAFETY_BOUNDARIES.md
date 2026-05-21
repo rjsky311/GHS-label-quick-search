@@ -207,6 +207,15 @@ Telemetry:
   `resolved`, and `ignored`. `resolved` requires a reviewed CAS number; repeated
   duplicate capture must not reopen a row that has already been marked
   non-open.
+- Admin reports expose miss-query retention status. Rows older than the
+  retention window are purgeable unless they are explicitly marked
+  `needs_evidence`, which represents an active correction task that still needs
+  supporting evidence.
+- Dictionary snapshot exports redact miss-query `context` by default. Raw
+  context can be included only through an explicit maintainer-side export flag.
+- Admin summary/report payloads also redact miss-query context by default; the
+  dashboard only needs query text, status, hit count, endpoint, and timing for
+  triage.
 
 Retention and review rules:
 
@@ -215,6 +224,8 @@ Retention and review rules:
 - When miss capture is enabled for a pilot, raw miss-query rows should be
   reviewed at least monthly and deleted or aggregated within 90 days unless a
   specific correction task still needs the evidence.
+- Use the admin purge endpoint or `manage_dictionary_growth.py
+  purge-miss-queries` after monthly review to delete stale raw miss-query rows.
 - Admin exports are for review, triage, and audit only. Do not use them as a
   long-term analytics warehouse or copy raw miss telemetry into public docs.
 - Do not add email, names, free-form lab notes, file paths, or nested user

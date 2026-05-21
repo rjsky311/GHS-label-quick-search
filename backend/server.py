@@ -28,6 +28,7 @@ import re
 from cachetools import TTLCache
 from pilot_store import (
     APPROVED_ALIAS_STATUS,
+    DEFAULT_MISS_QUERY_RETENTION_DAYS,
     MISS_QUERY_STATUSES,
     PilotStore,
     infer_locale,
@@ -773,6 +774,14 @@ class DictionaryMissQueryResolutionPayload(BaseModel):
             return None
         normalized = normalize_cas(value)
         return normalized or None
+
+
+class DictionaryMissQueryRetentionPayload(BaseModel):
+    retention_days: int = Field(
+        DEFAULT_MISS_QUERY_RETENTION_DAYS,
+        ge=1,
+        le=365,
+    )
 
 
 class DictionaryManualEntryPayload(BaseModel):
@@ -1991,6 +2000,29 @@ async def dictionary_miss_query(request: Request, payload: DictionaryMissQueryPa
             payload.query_kind,
             payload.endpoint,
             context=payload.context,
+        ),
+    }
+
+
+@api_router.get("/dictionary/miss-queries/retention")
+async def dictionary_miss_query_retention(request: Request):
+    _require_admin(request)
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "retention": pilot_store.get_miss_query_retention_summary(),
+    }
+
+
+@api_router.post("/dictionary/miss-queries/retention/purge")
+async def purge_dictionary_miss_queries(
+    request: Request,
+    payload: DictionaryMissQueryRetentionPayload,
+):
+    _require_admin(request)
+    return {
+        "ok": True,
+        "retention": pilot_store.purge_stale_miss_queries(
+            retention_days=payload.retention_days,
         ),
     }
 

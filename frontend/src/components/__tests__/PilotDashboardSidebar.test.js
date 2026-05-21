@@ -22,6 +22,12 @@ const baseProps = {
         resolved: 3,
         ignored: 4,
       },
+      missQueryRetention: {
+        retentionDays: 90,
+        cutoffAt: "2026-01-19T00:00:00+00:00",
+        purgeableCount: 5,
+        retainedNeedsEvidenceCount: 1,
+      },
       topMissQueries: [
         {
           id: 101,
@@ -67,6 +73,10 @@ const baseProps = {
   onSaveAlias: jest.fn(async () => ({ ok: true })),
   onSaveReferenceLink: jest.fn(async () => ({ ok: true })),
   onResolveMissQuery: jest.fn(async () => ({ ok: true })),
+  onPurgeStaleMissQueries: jest.fn(async () => ({
+    ok: true,
+    retention: { deletedCount: 5 },
+  })),
 };
 
 describe("PilotDashboardSidebar", () => {
@@ -83,7 +93,23 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
     expect(screen.getByTestId("miss-query-status-count-resolved")).toHaveTextContent("3");
     expect(screen.getByTestId("miss-query-status-count-ignored")).toHaveTextContent("4");
+    expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
+  });
+
+  it("purges stale miss-query telemetry after confirmation", async () => {
+    const confirmSpy = jest.spyOn(window, "confirm").mockReturnValue(true);
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("purge-stale-miss-queries-btn"));
+
+    await waitFor(() => {
+      expect(baseProps.onPurgeStaleMissQueries).toHaveBeenCalledWith({
+        retention_days: 90,
+      });
+    });
+    expect(toast.success).toHaveBeenCalledWith("pilot.purgeMissDone");
+    confirmSpy.mockRestore();
   });
 
   it("approves a pending alias from the overview tab", async () => {

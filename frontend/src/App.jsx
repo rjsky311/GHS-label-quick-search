@@ -135,6 +135,7 @@ function App() {
     saveAlias: savePilotAlias,
     saveReferenceLink: savePilotReferenceLink,
     resolveMissQuery: resolvePilotMissQuery,
+    purgeStaleMissQueries: purgePilotStaleMissQueries,
   } = usePilotDashboard({
     enabled: showPilotDashboard && PILOT_ADMIN_ENABLED && Boolean(pilotAdminKey),
     adminKey: pilotAdminKey,
@@ -842,6 +843,7 @@ function App() {
           onSaveAlias={savePilotAlias}
           onSaveReferenceLink={savePilotReferenceLink}
           onResolveMissQuery={resolvePilotMissQuery}
+          onPurgeStaleMissQueries={purgePilotStaleMissQueries}
         />
       )}
 
