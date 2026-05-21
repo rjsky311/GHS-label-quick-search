@@ -13,6 +13,7 @@ const baseProps = {
   report: {
     dictionary: {
       pendingAliasCount: 1,
+      pendingManualEntryCount: 1,
       openMissQueryCount: 2,
       manualEntryCount: 3,
       referenceLinkCount: 4,
@@ -47,6 +48,14 @@ const baseProps = {
           locale: "en",
           cas_number: "123-45-6",
           hit_count: 3,
+        },
+      ],
+      pendingManualEntries: [
+        {
+          cas_number: "555-55-5",
+          name_en: "Review Solvent",
+          name_zh: "審核溶劑",
+          status: "needs_evidence",
         },
       ],
     },
@@ -88,6 +97,7 @@ describe("PilotDashboardSidebar", () => {
     render(<PilotDashboardSidebar {...baseProps} />);
 
     expect(screen.getByTestId("pilot-summary-pending-aliases")).toHaveTextContent("1");
+    expect(screen.getByTestId("pilot-summary-pending-manual-entries")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
@@ -190,6 +200,36 @@ describe("PilotDashboardSidebar", () => {
         name_en: "Pilot Solvent",
         name_zh: "測試溶劑",
         notes: "",
+      });
+    });
+  });
+
+  it("submits a pending manual entry status when selected", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.change(screen.getByTestId("manual-entry-cas-input"), {
+      target: { value: "555-55-5" },
+    });
+    fireEvent.change(screen.getByTestId("manual-entry-name-en-input"), {
+      target: { value: "Review Solvent" },
+    });
+    fireEvent.change(screen.getByTestId("manual-entry-name-zh-input"), {
+      target: { value: "審核溶劑" },
+    });
+    fireEvent.change(screen.getByTestId("manual-entry-status-select"), {
+      target: { value: "pending" },
+    });
+
+    fireEvent.click(screen.getByTestId("manual-entry-submit-btn"));
+
+    await waitFor(() => {
+      expect(baseProps.onSaveManualEntry).toHaveBeenCalledWith({
+        cas_number: "555-55-5",
+        name_en: "Review Solvent",
+        name_zh: "審核溶劑",
+        notes: "",
+        status: "pending",
       });
     });
   });

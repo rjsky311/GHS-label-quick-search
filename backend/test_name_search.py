@@ -548,6 +548,7 @@ def test_admin_dictionary_payloads_trim_safe_fields():
         name_zh=" ",
         notes=" Pilot note ",
         source=" ",
+        status=" NEEDS_EVIDENCE ",
     )
     alias = server.DictionaryAliasPayload(
         alias_text=" EtOH ",
@@ -575,6 +576,7 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     assert manual.name_zh is None
     assert manual.notes == "Pilot note"
     assert manual.source == "manual"
+    assert manual.status == "needs_evidence"
     assert alias.alias_text == "EtOH"
     assert alias.locale == "en"
     assert alias.status == "pending"
@@ -606,6 +608,11 @@ def test_admin_dictionary_payloads_reject_unbounded_values():
             cas_number="107-18-6",
             name_en="Allyl Alcohol",
             name_zh="Allyl Alcohol",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryManualEntryPayload(
+            cas_number="64-17-5",
+            status="published",
         )
     with pytest.raises(ValidationError):
         server.DictionaryAliasPayload(

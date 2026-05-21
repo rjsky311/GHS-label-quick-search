@@ -27,8 +27,10 @@ import random
 import re
 from cachetools import TTLCache
 from pilot_store import (
+    APPROVED_MANUAL_ENTRY_STATUS,
     APPROVED_ALIAS_STATUS,
     DEFAULT_MISS_QUERY_RETENTION_DAYS,
+    MANUAL_ENTRY_STATUSES,
     MISS_QUERY_STATUSES,
     PilotStore,
     infer_locale,
@@ -86,6 +88,7 @@ MAX_ALIAS_TEXT_LENGTH = 240
 MAX_REFERENCE_PRIORITY = 1000
 ALLOWED_ALIAS_LOCALES = {"en", "zh"}
 ALLOWED_ALIAS_STATUSES = {APPROVED_ALIAS_STATUS, "pending", "rejected"}
+ALLOWED_MANUAL_ENTRY_STATUSES = MANUAL_ENTRY_STATUSES
 ALLOWED_REFERENCE_STATUSES = {"active", "inactive"}
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
@@ -259,7 +262,7 @@ def _is_cas_like_query(query: str) -> bool:
 
 def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
     pairs = []
-    for entry in pilot_store.list_manual_entries():
+    for entry in pilot_store.list_manual_entries(status=APPROVED_MANUAL_ENTRY_STATUS):
         if locale == "zh":
             name = (entry.get("name_zh") or "").strip()
         else:
@@ -790,6 +793,7 @@ class DictionaryManualEntryPayload(BaseModel):
     name_zh: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NAME_LENGTH)
     notes: str = Field(default="", max_length=MAX_ADMIN_NOTES_LENGTH)
     source: str = Field(default="manual", max_length=MAX_ADMIN_SOURCE_LENGTH)
+    status: str = Field(default=APPROVED_MANUAL_ENTRY_STATUS, max_length=40)
 
     @field_validator("cas_number")
     @classmethod
@@ -824,6 +828,16 @@ class DictionaryManualEntryPayload(BaseModel):
     def source_defaults_to_manual(cls, value: str) -> str:
         value = (value or "").strip()
         return value or "manual"
+
+    @field_validator("status")
+    @classmethod
+    def status_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_MANUAL_ENTRY_STATUSES:
+            raise ValueError(
+                "manual entry status must be approved, pending, needs_evidence, or rejected"
+            )
+        return normalized
 
 
 class DictionaryAliasPayload(BaseModel):
@@ -1911,6 +1925,7 @@ async def upsert_dictionary_manual_entry(request: Request, payload: DictionaryMa
         name_zh=payload.name_zh,
         notes=payload.notes,
         source=payload.source,
+        status=payload.status,
     )
     return {"ok": True, "record": record}
 

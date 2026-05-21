@@ -30,6 +30,34 @@ def test_manual_entry_and_approved_alias_resolve_name(temp_store):
     assert server.resolve_name_to_cas("Custom Buffer ZH") == "123-45-6"
 
 
+def test_pending_manual_entries_do_not_resolve_public_lookup(temp_store):
+    temp_store.upsert_dictionary_entry(
+        "555-55-5",
+        name_en="Review Buffer",
+        name_zh="\u5be9\u6838\u7de9\u885d\u6db2",
+        status="pending",
+    )
+
+    assert temp_store.get_manual_entry_by_name(
+        "Review Buffer",
+        "en",
+        include_unapproved=True,
+    ) is not None
+    assert temp_store.get_manual_entry_by_name("Review Buffer", "en") is None
+    assert server.resolve_name_to_cas("Review Buffer") is None
+    assert server.resolve_name_to_cas("\u5be9\u6838\u7de9\u885d\u6db2") is None
+
+    temp_store.upsert_dictionary_entry(
+        "555-55-5",
+        name_en="Review Buffer",
+        name_zh="\u5be9\u6838\u7de9\u885d\u6db2",
+        status="approved",
+    )
+
+    assert server.resolve_name_to_cas("Review Buffer") == "555-55-5"
+    assert server.resolve_name_to_cas("\u5be9\u6838\u7de9\u885d\u6db2") == "555-55-5"
+
+
 async def test_search_by_name_logs_autocomplete_miss(temp_store):
     transport = ASGITransport(app=server.app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

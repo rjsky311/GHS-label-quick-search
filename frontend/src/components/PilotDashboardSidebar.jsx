@@ -41,6 +41,29 @@ function SectionHeading({ icon: Icon, title, subtitle }) {
   );
 }
 
+const MANUAL_ENTRY_STATUS_OPTIONS = [
+  {
+    value: "approved",
+    labelKey: "pilot.manualStatusApproved",
+    defaultLabel: "Approved",
+  },
+  {
+    value: "pending",
+    labelKey: "pilot.manualStatusPending",
+    defaultLabel: "Pending review",
+  },
+  {
+    value: "needs_evidence",
+    labelKey: "pilot.manualStatusNeedsEvidence",
+    defaultLabel: "Needs evidence",
+  },
+  {
+    value: "rejected",
+    labelKey: "pilot.manualStatusRejected",
+    defaultLabel: "Rejected",
+  },
+];
+
 export default function PilotDashboardSidebar(props) {
   const {
     report,
@@ -67,6 +90,7 @@ export default function PilotDashboardSidebar(props) {
     name_en: "",
     name_zh: "",
     notes: "",
+    status: "approved",
   });
   const [aliasForm, setAliasForm] = useState({
     alias_text: "",
@@ -91,6 +115,7 @@ export default function PilotDashboardSidebar(props) {
   const missStatusCounts = dictionary.missQueryStatusCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
+  const pendingManualEntries = dictionary.pendingManualEntries || [];
   const recentManualEntries = useMemo(() => [...manualEntries].slice(0, 8), [manualEntries]);
   const recentAliases = useMemo(() => [...aliases].slice(0, 8), [aliases]);
   const recentReferenceLinks = useMemo(
@@ -112,16 +137,26 @@ export default function PilotDashboardSidebar(props) {
     }
 
     try {
-      await onSaveManualEntry({
+      const payload = {
         cas_number: manualEntryForm.cas_number.trim(),
         name_en: manualEntryForm.name_en.trim() || null,
         name_zh: trimmedChineseName || null,
         notes: manualEntryForm.notes.trim(),
-      });
+      };
+      if (manualEntryForm.status !== "approved") {
+        payload.status = manualEntryForm.status;
+      }
+      await onSaveManualEntry(payload);
       toast.success(
         t("pilot.manualEntrySaved", { defaultValue: "Manual dictionary entry saved." })
       );
-      setManualEntryForm({ cas_number: "", name_en: "", name_zh: "", notes: "" });
+      setManualEntryForm({
+        cas_number: "",
+        name_en: "",
+        name_zh: "",
+        notes: "",
+        status: "approved",
+      });
     } catch (submitError) {
       toast.error(
         submitError?.response?.data?.detail ||
@@ -414,6 +449,14 @@ export default function PilotDashboardSidebar(props) {
                   testId="pilot-summary-manual-entries"
                 />
                 <SummaryCard
+                  label={t("pilot.pendingManualEntries", {
+                    defaultValue: "Manual entries in review",
+                  })}
+                  value={dictionary.pendingManualEntryCount || 0}
+                  accent="text-orange-700"
+                  testId="pilot-summary-pending-manual-entries"
+                />
+                <SummaryCard
                   label={t("pilot.referenceLinks", { defaultValue: "Reference links" })}
                   value={dictionary.referenceLinkCount || 0}
                   accent="text-violet-700"
@@ -637,6 +680,38 @@ export default function PilotDashboardSidebar(props) {
                 )}
               </section>
 
+              {pendingManualEntries.length > 0 ? (
+                <section className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                  <SectionHeading
+                    icon={Database}
+                    title={t("pilot.manualEntriesNeedReview", {
+                      defaultValue: "Manual entries need review",
+                    })}
+                    subtitle={t("pilot.manualEntriesNeedReviewHint", {
+                      defaultValue:
+                        "Pending entries are kept for curation, but do not affect public lookup, labels, or exports until approved.",
+                    })}
+                  />
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {pendingManualEntries.map((entry) => (
+                      <div
+                        key={`${entry.cas_number}-${entry.status}`}
+                        className="rounded-lg border border-orange-200 bg-white p-3 text-sm"
+                      >
+                        <div className="font-mono font-medium text-orange-800">
+                          {entry.cas_number}
+                        </div>
+                        <div className="mt-1 text-slate-900">{entry.name_en || "-"}</div>
+                        <div className="text-slate-500">{entry.name_zh || "-"}</div>
+                        <div className="mt-1 text-xs font-medium uppercase tracking-wide text-orange-700">
+                          {entry.status}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
                   icon={Database}
@@ -738,6 +813,23 @@ export default function PilotDashboardSidebar(props) {
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                     data-testid="manual-entry-notes-input"
                   />
+                  <select
+                    value={manualEntryForm.status}
+                    onChange={(event) =>
+                      setManualEntryForm((prev) => ({ ...prev, status: event.target.value }))
+                    }
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                    data-testid="manual-entry-status-select"
+                    aria-label={t("pilot.manualEntryStatus", {
+                      defaultValue: "Manual entry status",
+                    })}
+                  >
+                    {MANUAL_ENTRY_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
+                      </option>
+                    ))}
+                  </select>
                   <div className="md:col-span-2">
                     <button
                       type="submit"
@@ -934,6 +1026,9 @@ export default function PilotDashboardSidebar(props) {
                           <div className="text-slate-500">
                             {entry.name_zh ||
                               t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
+                          </div>
+                          <div className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                            {entry.status || "approved"}
                           </div>
                         </div>
                       ))}

@@ -7,7 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from pilot_store import PilotStore  # noqa: E402
+from pilot_store import MANUAL_ENTRY_STATUSES, PilotStore  # noqa: E402
 
 
 def build_store(db_path: str | None) -> PilotStore:
@@ -44,6 +44,12 @@ def main() -> int:
     entry_parser.add_argument("--name-zh", default="")
     entry_parser.add_argument("--notes", default="")
     entry_parser.add_argument("--source", default="manual")
+    entry_parser.add_argument(
+        "--status",
+        choices=sorted(MANUAL_ENTRY_STATUSES),
+        default="approved",
+        help="Only approved entries affect lookup and labels.",
+    )
 
     alias_parser = subparsers.add_parser("add-alias", help="Add or approve a dictionary alias.")
     alias_parser.add_argument("--alias", required=True)
@@ -95,6 +101,7 @@ def main() -> int:
                 name_zh=args.name_zh or None,
                 notes=args.notes,
                 source=args.source,
+                status=args.status,
             )
             print(json.dumps(record, ensure_ascii=False, indent=2))
             return 0

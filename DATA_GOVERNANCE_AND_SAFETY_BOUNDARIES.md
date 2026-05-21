@@ -22,6 +22,13 @@ Manual entries and aliases can help users find a CAS number. They must not
 silently replace PubChem/ECHA hazard classifications or weaken upstream-error
 handling.
 
+Manual dictionary entries now carry an explicit review status:
+`approved`, `pending`, `needs_evidence`, or `rejected`. Only `approved`
+manual entries are allowed to participate in public name/CAS lookup, Chinese
+display-name resolution, labels, or exports. `pending` and `needs_evidence`
+entries are admin curation records only; they can preserve work-in-progress
+candidate names without making those candidates visible to users.
+
 ### Chinese Name Coverage
 
 Chinese chemical names are identity aids, not hazard authority. The local seed
@@ -57,6 +64,10 @@ Rules:
   dictionary/manual entry.
 - Admin curation UI should enforce the same Chinese-name boundary as the
   backend: `name_zh` can be empty, but non-empty values must contain CJK text.
+- Admin manual entries should default to `approved` when the maintainer is
+  directly adding a reviewed name, but the UI and API must also support
+  `pending`, `needs_evidence`, and `rejected` so candidate names can be tracked
+  without affecting public lookup or printed labels.
 - Future unknown-name support should treat Chinese-name discovery as a curation
   workflow: collect the missed CAS/name, suggest candidate names from trusted
   SDS/supplier/regulatory references when available, then require admin review
@@ -188,6 +199,10 @@ names, constrain source/status/locale values, and keep priority/confidence in a
 small numeric range. Workspace document writes must also cap serialized JSON
 size. Admin-gated does not mean unbounded.
 
+Manual-entry status is part of that boundary. Unknown statuses must be rejected,
+legacy entries default to `approved`, and public lookup helpers must filter to
+approved manual entries by default.
+
 Telemetry:
 
 - Dictionary miss capture is opt-in via `CAPTURE_DICTIONARY_MISSES=true`.
@@ -251,6 +266,9 @@ Backend:
 - Miss-query endpoint keeps its public write route rate-limited.
 - Manual dictionary entry and alias payloads reject oversized or unsupported
   admin values before writing to SQLite.
+- Manual dictionary entries with `pending`, `needs_evidence`, or `rejected`
+  status remain visible to admin review/export paths but do not resolve public
+  lookup, display names, labels, or exports until changed to `approved`.
 - Reference-link payloads reject unsupported statuses or out-of-range
   priorities in addition to unsafe URLs and unknown roles.
 - Reference-link reads order SDS/regulatory/occupational links before generic

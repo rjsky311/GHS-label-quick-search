@@ -10,6 +10,9 @@ from typing import Any, Iterable, Optional
 
 DEFAULT_SCOPE = "default"
 DEFAULT_DOC_KEY = "default"
+APPROVED_MANUAL_ENTRY_STATUS = "approved"
+MANUAL_ENTRY_STATUSES = {"approved", "pending", "needs_evidence", "rejected"}
+MANUAL_ENTRY_REVIEW_STATUSES = ("pending", "needs_evidence")
 APPROVED_ALIAS_STATUS = "approved"
 ACTIVE_REFERENCE_STATUS = "active"
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
@@ -58,6 +61,13 @@ def normalize_compact_text(text: Optional[str], *, locale: Optional[str] = None)
     if locale == "en":
         return _EN_COMPACT_RE.sub("", normalized)
     return _ZH_COMPACT_RE.sub("", normalized)
+
+
+def normalize_manual_entry_status(status: Optional[str]) -> str:
+    normalized = (status or APPROVED_MANUAL_ENTRY_STATUS).strip().lower()
+    if normalized not in MANUAL_ENTRY_STATUSES:
+        raise ValueError("manual entry status must be approved, pending, needs_evidence, or rejected")
+    return normalized
 
 
 class PilotStore:
@@ -110,6 +120,7 @@ class PilotStore:
               name_zh_compact TEXT,
               notes TEXT,
               source TEXT NOT NULL DEFAULT 'manual',
+              status TEXT NOT NULL DEFAULT 'approved',
               updated_at TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_dictionary_entries_name_en_norm
@@ -172,7 +183,28 @@ class PilotStore:
               ON dictionary_reference_links(cas_number, status, priority);
             """
         )
+        self._ensure_dictionary_entry_schema_locked()
         conn.commit()
+
+    def _ensure_dictionary_entry_schema_locked(self) -> None:
+        conn = self._require_conn()
+        columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(dictionary_entries)").fetchall()
+        }
+        if "status" not in columns:
+            conn.execute(
+                "ALTER TABLE dictionary_entries "
+                "ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'"
+            )
+        conn.execute(
+            """
+            UPDATE dictionary_entries
+            SET status = ?
+            WHERE status IS NULL OR TRIM(status) = ''
+            """,
+            (APPROVED_MANUAL_ENTRY_STATUS,),
+        )
 
     def _require_conn(self) -> sqlite3.Connection:
         if self._conn is None:
@@ -265,8 +297,10 @@ class PilotStore:
         name_zh: Optional[str] = None,
         notes: str = "",
         source: str = "manual",
+        status: str = APPROVED_MANUAL_ENTRY_STATUS,
     ) -> dict[str, Any]:
         updated_at = utc_now_iso()
+        status = normalize_manual_entry_status(status)
         name_en_norm = normalize_query_text(name_en, locale="en") if name_en else ""
         name_zh_norm = normalize_query_text(name_zh, locale="zh") if name_zh else ""
         name_en_compact = normalize_compact_text(name_en, locale="en") if name_en else ""
@@ -283,9 +317,10 @@ class PilotStore:
               name_zh_compact,
               notes,
               source,
+              status,
               updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(cas_number) DO UPDATE SET
               name_en = excluded.name_en,
               name_zh = excluded.name_zh,
@@ -295,6 +330,7 @@ class PilotStore:
               name_zh_compact = excluded.name_zh_compact,
               notes = excluded.notes,
               source = excluded.source,
+              status = excluded.status,
               updated_at = excluded.updated_at
             """,
             (
@@ -307,19 +343,30 @@ class PilotStore:
                 name_zh_compact,
                 notes,
                 source,
+                status,
                 updated_at,
             ),
         )
-        return self.get_manual_entry_by_cas(cas_number) or {}
+        return self.get_manual_entry_by_cas(cas_number, include_unapproved=True) or {}
 
-    def get_manual_entry_by_cas(self, cas_number: str) -> Optional[dict[str, Any]]:
-        row = self._fetchone(
-            """
-            SELECT cas_number, name_en, name_zh, notes, source, updated_at
+    def get_manual_entry_by_cas(
+        self,
+        cas_number: str,
+        *,
+        include_unapproved: bool = False,
+    ) -> Optional[dict[str, Any]]:
+        sql = """
+            SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
             FROM dictionary_entries
             WHERE cas_number = ?
-            """,
-            (cas_number,),
+        """
+        params: list[Any] = [cas_number]
+        if not include_unapproved:
+            sql += " AND status = ?"
+            params.append(APPROVED_MANUAL_ENTRY_STATUS)
+        row = self._fetchone(
+            sql,
+            params,
         )
         return dict(row) if row is not None else None
 
@@ -329,6 +376,7 @@ class PilotStore:
         locale: str,
         *,
         allow_compact: bool = True,
+        include_unapproved: bool = False,
     ) -> Optional[dict[str, Any]]:
         if not name:
             return None
@@ -343,14 +391,18 @@ class PilotStore:
             normalized = normalize_query_text(name, locale="en")
             compact = normalize_compact_text(name, locale="en")
 
+        status_clause = "" if include_unapproved else " AND status = ?"
+        status_params: list[Any] = [] if include_unapproved else [APPROVED_MANUAL_ENTRY_STATUS]
+
         row = self._fetchone(
             f"""
-            SELECT cas_number, name_en, name_zh, notes, source, updated_at
+            SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
             FROM dictionary_entries
             WHERE {norm_column} = ?
+              {status_clause}
             LIMIT 1
             """,
-            (normalized,),
+            [normalized, *status_params],
         )
         if row is not None:
             return dict(row)
@@ -358,24 +410,31 @@ class PilotStore:
         if allow_compact and compact:
             row = self._fetchone(
                 f"""
-                SELECT cas_number, name_en, name_zh, notes, source, updated_at
+                SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
                 FROM dictionary_entries
                 WHERE {compact_column} = ?
+                  {status_clause}
                 LIMIT 1
                 """,
-                (compact,),
+                [compact, *status_params],
             )
             if row is not None:
                 return dict(row)
         return None
 
-    def list_manual_entries(self) -> list[dict[str, Any]]:
-        rows = self._fetchall(
-            """
-            SELECT cas_number, name_en, name_zh, notes, source, updated_at
+    def list_manual_entries(self, *, status: Optional[str] = None) -> list[dict[str, Any]]:
+        sql = """
+            SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
             FROM dictionary_entries
-            ORDER BY cas_number
-            """
+        """
+        params: list[Any] = []
+        if status:
+            sql += " WHERE status = ?"
+            params.append(normalize_manual_entry_status(status))
+        sql += " ORDER BY cas_number"
+        rows = self._fetchall(
+            sql,
+            params,
         )
         return [dict(row) for row in rows]
 
@@ -976,8 +1035,24 @@ class PilotStore:
 
     # Reporting -----------------------------------------------------------
     def get_dictionary_summary(self, *, limit: int = 10) -> dict[str, Any]:
+        pending_manual_entries = []
+        for status in MANUAL_ENTRY_REVIEW_STATUSES:
+            pending_manual_entries.extend(self.list_manual_entries(status=status))
         metrics = {
             "manualEntryCount": self._scalar("SELECT COUNT(*) FROM dictionary_entries"),
+            "approvedManualEntryCount": self._scalar(
+                "SELECT COUNT(*) FROM dictionary_entries WHERE status = ?",
+                (APPROVED_MANUAL_ENTRY_STATUS,),
+            ),
+            "pendingManualEntryCount": self._scalar(
+                """
+                SELECT COUNT(*)
+                FROM dictionary_entries
+                WHERE status IN (?, ?)
+                """,
+                MANUAL_ENTRY_REVIEW_STATUSES,
+            ),
+            "manualEntryStatusCounts": self.get_manual_entry_status_counts(),
             "approvedAliasCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_aliases WHERE status = ?",
                 (APPROVED_ALIAS_STATUS,),
@@ -1003,8 +1078,19 @@ class PilotStore:
                 include_context=False,
             ),
             "pendingAliases": self.list_aliases(status="pending")[:limit],
+            "pendingManualEntries": pending_manual_entries[:limit],
         }
         return metrics
+
+    def get_manual_entry_status_counts(self) -> dict[str, int]:
+        rows = self._fetchall(
+            """
+            SELECT status, COUNT(*) AS count
+            FROM dictionary_entries
+            GROUP BY status
+            """
+        )
+        return {str(row["status"]): int(row["count"]) for row in rows}
 
     def export_dictionary_snapshot(
         self,

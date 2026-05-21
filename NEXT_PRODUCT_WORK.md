@@ -84,6 +84,11 @@ Current mode:
   The admin manual-entry UI also blocks English-only `name_zh` before submit,
   matching the backend validation boundary. `qa:production-search-ui` now
   includes a mocked production check for that correction path.
+- Completed current slice: admin manual dictionary entries now carry review
+  status (`approved`, `pending`, `needs_evidence`, `rejected`). Only approved
+  manual entries affect public lookup, display names, labels, or exports;
+  pending/needs-evidence rows remain visible for admin curation and dictionary
+  snapshot review.
 - Completed current slice: data-quality issue links are now shared across
   result rows and Detail for missing Chinese names, no-GHS data gaps,
   text-only GHS without pictograms, and source-conflict review. Upstream

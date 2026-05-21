@@ -501,6 +501,11 @@ Current status:
   locale/status values, and constrain numeric priority/confidence before data
   reaches SQLite. Optional workspace document writes also reject oversized JSON
   payloads.
+- Manual dictionary entries now have explicit review states (`approved`,
+  `pending`, `needs_evidence`, `rejected`). Public lookup/name resolution,
+  labels, and exports only consume approved entries; pending and
+  needs-evidence rows remain available to admin review and dictionary snapshot
+  export without changing user-facing chemistry identity.
 - Optional miss-query telemetry remains opt-in and now stores only allow-listed
   non-freeform context metadata, so public capture cannot persist arbitrary
   email/free-text/nested payloads.

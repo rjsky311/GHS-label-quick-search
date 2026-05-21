@@ -134,10 +134,15 @@ Work items:
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
+- Completed: added admin manual-dictionary review statuses (`approved`,
+  `pending`, `needs_evidence`, `rejected`). Only approved entries affect public
+  lookup, trusted display names, labels, or exports; pending/needs-evidence
+  records stay visible in admin review and exports.
 - Keep deciding whether correction requests remain GitHub issue links, move to
   a form, or are mirrored into admin review after usage evidence appears.
-- Add admin-facing status fields if manual dictionary/reference curation needs
-  review states such as `pending`, `accepted`, `rejected`, or `needs evidence`.
+- Keep manual dictionary review status usage consistent with the correction
+  path; add equivalent status handling to reference-link curation only if real
+  review examples need it.
 - Keep workflow/business requests separate from safety-data corrections.
 
 Acceptance:
@@ -273,6 +278,10 @@ Work items:
 - Completed: added frontend admin curation validation for manual dictionary
   entries so English-only `name_zh` values are blocked before the backend write
   request. The backend remains the final enforcement layer.
+- Completed: manual dictionary entries can now be saved as pending,
+  needs-evidence, rejected, or approved. Non-approved entries remain
+  admin-visible review records and are filtered out of public name/CAS lookup
+  and printed/exported identity surfaces.
 - Keep missing Chinese names in the data-correction/admin-curation path rather
   than using automated translation as runtime label text.
 - Add examples when users find a CAS with a known Chinese name that is missing

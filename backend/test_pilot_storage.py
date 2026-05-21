@@ -48,14 +48,44 @@ def test_dictionary_entry_alias_and_reference_roundtrip(tmp_path):
         )
 
         manual = store.get_manual_entry_by_name("Custom Buffer", "en")
+        manual_admin = store.get_manual_entry_by_name(
+            "Custom Buffer",
+            "en",
+            include_unapproved=True,
+        )
         alias = store.get_alias_exact("buffer x", "en")
         links = store.list_reference_links("123-45-6")
 
         assert manual is not None
         assert manual["cas_number"] == "123-45-6"
+        assert manual_admin["status"] == "approved"
         assert alias is not None
         assert alias["cas_number"] == "123-45-6"
         assert links[0]["label"] == "Internal SDS"
+    finally:
+        store.close()
+
+
+def test_pending_dictionary_entry_is_kept_out_of_default_lookup(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        store.upsert_dictionary_entry(
+            "555-55-5",
+            name_en="Review Buffer",
+            name_zh="\u5be9\u6838\u7de9\u885d\u6db2",
+            status="pending",
+        )
+
+        assert store.get_manual_entry_by_name("Review Buffer", "en") is None
+        assert (
+            store.get_manual_entry_by_name(
+                "Review Buffer",
+                "en",
+                include_unapproved=True,
+            )["status"]
+            == "pending"
+        )
+        assert store.get_dictionary_summary()["pendingManualEntryCount"] == 1
     finally:
         store.close()
 
