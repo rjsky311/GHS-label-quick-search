@@ -1,4 +1,7 @@
-import { buildDataCorrectionUrl } from "@/constants/supportLinks";
+import {
+  buildDataCorrectionContext,
+  buildDataCorrectionUrl,
+} from "@/constants/supportLinks";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { resolveEnglishName, resolveTrustedChineseName } from "@/utils/ghsText";
 
@@ -22,6 +25,15 @@ const getCorrectionUrl = (result, issueType) =>
     issueType,
   });
 
+const getCorrectionContext = (result, issueType) =>
+  buildDataCorrectionContext({
+    casNumber: result?.cas_number,
+    nameEn: resolveEnglishName(result),
+    nameZh: resolveTrustedChineseName(result),
+    issueType,
+    queryText: result?.query || result?.cas_number,
+  });
+
 export function getDataQualityIssues(result = {}, effectiveClassification = null) {
   if (!result?.found) {
     if (result?.upstream_error) {
@@ -38,6 +50,10 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
         type: DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
         severity: "curation",
         correctionUrl: getCorrectionUrl(
+          result,
+          DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+        ),
+        correctionContext: getCorrectionContext(
           result,
           DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
         ),
@@ -65,12 +81,20 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
       type: DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
       severity: "review",
       correctionUrl: getCorrectionUrl(result, DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA),
+      correctionContext: getCorrectionContext(
+        result,
+        DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
+      ),
     });
   } else if (getPictograms(effective).length === 0) {
     issues.push({
       type: DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
       severity: "review",
       correctionUrl: getCorrectionUrl(
+        result,
+          DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
+      ),
+      correctionContext: getCorrectionContext(
         result,
         DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
       ),
@@ -82,6 +106,10 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
       type: DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
       severity: "review",
       correctionUrl: getCorrectionUrl(result, DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT),
+      correctionContext: getCorrectionContext(
+        result,
+        DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+      ),
     });
   }
 
@@ -90,6 +118,10 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
       type: DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
       severity: "curation",
       correctionUrl: getCorrectionUrl(
+        result,
+        DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+      ),
+      correctionContext: getCorrectionContext(
         result,
         DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
       ),

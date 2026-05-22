@@ -119,8 +119,8 @@ Acceptance:
 ### 1.2 Correction Intake And Review Flow
 
 Status: `Gate added` for in-app/backend intake on 2026-05-22; backend/API/admin
-queue are in place, while the public form wiring remains the next slice.
-Existing GitHub issue-form prefill remains `Gate added` as fallback.
+queue and the public in-app correction dialog are in place. Existing GitHub
+issue-form prefill remains `Gate added` as fallback.
 
 Goal: data-correction requests should become an auditable improvement path, not
 an unstructured support inbox.
@@ -178,9 +178,10 @@ Work items:
   coding agents to process: `open`, `candidate_found`, `approved`, `rejected`,
   and `ignored`. Approved requests must still convert into the relevant curated
   record before affecting public lookup, labels, or exports.
-- Planned: wire the user-facing station/in-app correction form to the new API
-  so GitHub issue links become fallback or maintainer-edge intake instead of
-  the main public path.
+- Completed: wired user-facing station/in-app correction actions to the new
+  backend correction-request API from result rows, Detail, and the product
+  trust panel. Contextual links still preserve their GitHub issue-form URL as a
+  visible fallback if the API is unavailable.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills remain
   candidate evidence until admin-approved. Existing Gemini-generated seed
@@ -211,8 +212,9 @@ Work items:
 - Completed: made recent manual dictionary entries directly actionable from
   the admin curation list. Maintainers can approve, mark needs-evidence, or
   reject visible recent rows without retyping the same CAS/name payload.
-- Implement in-app correction intake as the next closeable data-governance
-  slice when product work resumes here.
+- Implement candidate evidence support for missing Chinese names and
+  unresolved searches as the next closeable data-governance slice when product
+  work resumes here.
 - Keep manual dictionary review status usage consistent with the correction
   path.
 - Keep workflow/business requests separate from safety-data corrections.
@@ -862,7 +864,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Backend correction-request storage/API and admin review queue are in place; next closeable slice is wiring the public station/in-app correction form to that API so GitHub issues become fallback rather than primary intake | Backend storage/API tests + focused frontend tests + `qa:production-search-ui` |
+| Correction intake | `Gate added` | Backend correction-request storage/API, admin review queue, and public in-app correction dialog are in place; next closeable slice is candidate evidence support for missing Chinese names and unresolved searches | Backend storage/API tests + focused frontend tests + `qa:production-search-ui` |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |

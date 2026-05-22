@@ -86,6 +86,7 @@ export default function ResultsTable({
   onClearCustomClassification,
   onViewDetail,
   onOpenComparison,
+  onOpenDataCorrection,
 }) {
   const { t, i18n } = useTranslation();
   const displayLocale = i18n.language;
@@ -129,6 +130,24 @@ export default function ResultsTable({
           const label = getDataQualityIssueLabel(issue.type, t);
           const className = getDataQualityIssueClassName(issue.severity);
           const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
+          if (issue.correctionUrl && onOpenDataCorrection && issue.correctionContext) {
+            return (
+              <a
+                key={issue.type}
+                href={issue.correctionUrl}
+                onClick={(event) => {
+                  event.preventDefault();
+                  onOpenDataCorrection(issue.correctionContext);
+                }}
+                className={chipClassName}
+                data-testid={`data-quality-link-${issue.type}-${testIdKey}`}
+              >
+                <ExternalLink className="h-3 w-3 shrink-0" />
+                {label}
+              </a>
+            );
+          }
+
           return issue.correctionUrl ? (
             <a
               key={issue.type}

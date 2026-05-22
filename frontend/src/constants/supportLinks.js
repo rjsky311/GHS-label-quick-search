@@ -78,6 +78,16 @@ const DATA_CORRECTION_FORM_ISSUE_TYPES = {
   "upstream-error": "Other data issue",
 };
 
+const DATA_CORRECTION_REQUEST_TYPES = new Set([
+  "missing-chinese-name",
+  "unresolved-search",
+  "no-ghs-data",
+  "ghs-text-no-pictograms",
+  "source-conflict",
+  "reference-link",
+  "other-data-quality",
+]);
+
 const DATA_CORRECTION_FORM_EVIDENCE_TYPES = new Set([
   "Supplier SDS",
   "Supplier label",
@@ -166,6 +176,9 @@ const WORKFLOW_AREA_HINTS = [
 const normalizeDataCorrectionFormIssueType = (issue) =>
   DATA_CORRECTION_FORM_ISSUE_TYPES[issue] || "Other data issue";
 
+const normalizeDataCorrectionRequestType = (issue) =>
+  DATA_CORRECTION_REQUEST_TYPES.has(issue) ? issue : "other-data-quality";
+
 const isBroadEvidencePrompt = (value) =>
   /,|\/|\b(or|and)\b/i.test(value);
 
@@ -199,10 +212,38 @@ export function buildDataCorrectionUrl({
   evidenceType = "",
   localContext = "",
 } = {}) {
+  return buildDataCorrectionContext({
+    casNumber,
+    chemicalName,
+    nameEn,
+    nameZh,
+    issueType,
+    currentOutput,
+    expectedOutput,
+    evidenceUrl,
+    evidenceType,
+    localContext,
+  }).fallbackUrl;
+}
+
+export function buildDataCorrectionContext({
+  casNumber = "",
+  chemicalName = "",
+  nameEn = "",
+  nameZh = "",
+  issueType = "other-data-quality",
+  currentOutput = "",
+  expectedOutput = "",
+  evidenceUrl = "",
+  evidenceType = "",
+  localContext = "",
+  queryText = "",
+} = {}) {
   const cas = normalizeField(casNumber);
   const englishName = normalizeField(nameEn || chemicalName);
   const chineseName = normalizeField(nameZh);
-  const issue = normalizeField(issueType) || "data-correction";
+  const issue = normalizeField(issueType) || "other-data-quality";
+  const requestIssueType = normalizeDataCorrectionRequestType(issue);
   const defaultContext = DATA_CORRECTION_DEFAULT_CONTEXT[issue] || {};
   const current = normalizeField(currentOutput || defaultContext.currentOutput);
   const expected = normalizeField(expectedOutput || defaultContext.expectedOutput);
@@ -210,6 +251,7 @@ export function buildDataCorrectionUrl({
   const evidencePrompt = normalizeField(evidenceType || defaultContext.evidenceType);
   const evidenceKind = normalizeDataCorrectionFormEvidenceType(evidencePrompt) || "Other";
   const context = normalizeField(localContext || defaultContext.localContext);
+  const query = normalizeField(queryText || cas || englishName || chineseName);
   const formIssueType = normalizeDataCorrectionFormIssueType(issue);
   const titleParts = [
     DATA_CORRECTION_TITLES[issue] || "Data correction",
@@ -257,7 +299,46 @@ export function buildDataCorrectionUrl({
   appendIfPresent(params, "evidence_type", evidenceKind);
   appendIfPresent(params, "local_context", context);
 
-  return `${SUPPORT_ISSUES_URL}/new?${params.toString()}`;
+  const fallbackUrl = `${SUPPORT_ISSUES_URL}/new?${params.toString()}`;
+  const chemicalIdentity = [englishName, chineseName].filter(Boolean).join(" / ");
+  const candidate = {
+    issue_key: issue,
+    name_en: englishName || undefined,
+    name_zh: chineseName || undefined,
+    github_issue_type: formIssueType,
+  };
+  Object.keys(candidate).forEach((key) => {
+    if (!candidate[key]) delete candidate[key];
+  });
+
+  return {
+    issueType: issue,
+    requestIssueType,
+    title: titleParts.join(": "),
+    casNumber: cas,
+    chemicalName: chemicalIdentity,
+    nameEn: englishName,
+    nameZh: chineseName,
+    currentOutput: current,
+    expectedOutput: expected,
+    evidenceUrl: evidence,
+    evidenceType: evidencePrompt || evidenceKind,
+    localContext: context,
+    fallbackUrl,
+    payload: {
+      issue_type: requestIssueType,
+      cas_number: cas || undefined,
+      chemical_name: chemicalIdentity || undefined,
+      query_text: query || undefined,
+      current_output: current || undefined,
+      expected_output: expected || undefined,
+      evidence_url: evidence || undefined,
+      evidence_type: evidencePrompt || evidenceKind || undefined,
+      local_context: context || undefined,
+      candidate,
+      source: "public-in-app",
+    },
+  };
 }
 
 export function buildWorkflowRequestUrl({

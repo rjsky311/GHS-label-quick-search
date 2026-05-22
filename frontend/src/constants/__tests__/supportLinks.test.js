@@ -1,6 +1,7 @@
 import {
   SUPPORT_REPORT_DATA_URL,
   SUPPORT_WORKFLOW_REQUEST_URL,
+  buildDataCorrectionContext,
   buildDataCorrectionUrl,
   buildWorkflowRequestUrl,
 } from "../supportLinks";
@@ -43,6 +44,34 @@ describe("supportLinks", () => {
       "- Chinese name: (please fill in)",
     );
     expect(url.searchParams.get("body")).toContain(
+      "- Issue key: missing-chinese-name",
+    );
+  });
+
+  it("builds a backend correction-request context with GitHub fallback", () => {
+    const context = buildDataCorrectionContext({
+      casNumber: "107-18-6",
+      nameEn: "Allyl Alcohol",
+      nameZh: "Allyl alcohol",
+      issueType: "missing-chinese-name",
+      queryText: "107-18-6",
+    });
+
+    expect(context.payload).toMatchObject({
+      issue_type: "missing-chinese-name",
+      cas_number: "107-18-6",
+      chemical_name: "Allyl Alcohol / Allyl alcohol",
+      query_text: "107-18-6",
+      source: "public-in-app",
+    });
+    expect(context.payload.candidate).toMatchObject({
+      issue_key: "missing-chinese-name",
+      name_en: "Allyl Alcohol",
+      name_zh: "Allyl alcohol",
+    });
+    const fallback = new URL(context.fallbackUrl);
+    expect(fallback.searchParams.get("template")).toBe("data-correction.yml");
+    expect(fallback.searchParams.get("body")).toContain(
       "- Issue key: missing-chinese-name",
     );
   });

@@ -162,6 +162,38 @@ describe('DetailModal', () => {
       expect(url.searchParams.get('body')).toContain('- English name: Allyl Alcohol');
     });
 
+    it('opens the in-app correction dialog handler from the missing-name note', () => {
+      const onOpenDataCorrection = jest.fn();
+      const missingChineseName = {
+        ...mockFoundResult,
+        name_en: 'Allyl Alcohol',
+        name_zh: 'Allyl Alcohol',
+        name: 'Allyl Alcohol',
+        cas_number: '107-18-6',
+      };
+
+      render(
+        <DetailModal
+          {...defaultProps}
+          result={missingChineseName}
+          onOpenDataCorrection={onOpenDataCorrection}
+        />,
+      );
+
+      const reportLink = screen.getByTestId('detail-report-missing-chinese-name-link');
+      expect(reportLink.getAttribute('href')).toContain('data-correction.yml');
+      fireEvent.click(reportLink);
+      expect(onOpenDataCorrection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueType: 'missing-chinese-name',
+          payload: expect.objectContaining({
+            issue_type: 'missing-chinese-name',
+            cas_number: '107-18-6',
+          }),
+        }),
+      );
+    });
+
     it('renders CAS number', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText(/64-17-5/)).toBeInTheDocument();

@@ -46,10 +46,11 @@ Current mode:
   unless a gate fails or a workflow assumption changes.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
-  The correction-request backend store/API and admin review queue are now in
-  place. The next closeable non-print slice is wiring the public station/in-app
-  correction form to that API, with GitHub issues kept as fallback rather than
-  the primary public correction workflow.
+  The correction-request backend store/API, admin review queue, and public
+  in-app correction dialog are now in place. The next closeable non-print slice
+  is candidate evidence support for missing Chinese names and unresolved
+  searches, with all generated or external suggestions kept as admin-reviewed
+  candidates before they can affect public lookup, labels, or exports.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now

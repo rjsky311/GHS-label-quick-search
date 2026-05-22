@@ -123,9 +123,11 @@ authority.
 
 Preferred storage and workflow:
 
-- Build station/in-app correction intake first.
+- Build station/in-app correction intake first. This is now implemented for
+  public result-row, Detail, and product-trust correction actions.
 - Store correction requests in the existing backend pilot/admin SQLite store
-  (backend storage/API and admin review queue landed on 2026-05-22).
+  (backend storage/API, admin review queue, and public in-app dialog landed on
+  2026-05-22).
 - Show correction requests in the admin dashboard as part of data governance.
 - Keep GitHub issue links as fallback/maintainer escape hatches, not the
   primary user-facing correction path.
@@ -204,7 +206,7 @@ required.
 | Workstream | Status | Next closeable slice | Done gate |
 | --- | --- | --- | --- |
 | Requirements decisions | `Shipped` | Keep this file cross-linked from owner docs as decisions evolve | `npm run test:docs`, `git diff --check` |
-| In-app correction intake | `Gate added` | Backend correction-request storage/API and admin queue are in place; next slice is wiring the public station/in-app form entry | Backend tests, focused frontend tests, production search UI |
+| In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, and public in-app form entry are in place; next slice is candidate evidence support for missing Chinese names and unresolved searches | Backend tests, focused frontend tests, production search UI |
 | Candidate lookup support | `Planned` | Add maintainer-only candidate evidence plan before wiring external services | Data-governance docs + sandbox/dry-run evidence |
 | Batch lookup/print/export | `Monitoring` | Add fixtures only when real batch lists expose new separators, fit cases, or export gaps | Parser tests, print PDF QA, production batch/search QA |
 | Low-noise UX | `Monitoring` | Improve only when production screenshots or user feedback show confusion | Production search UI screenshots |

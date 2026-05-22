@@ -17,7 +17,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
-import { buildDataCorrectionUrl } from "@/constants/supportLinks";
+import {
+  buildDataCorrectionContext,
+  buildDataCorrectionUrl,
+} from "@/constants/supportLinks";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
@@ -62,6 +65,7 @@ export default function DetailModal({
   onClearCustomClassification,
   onPrintLabel,
   onPrepareSolution,
+  onOpenDataCorrection,
   // When another modal (e.g. PrepareSolutionModal) is stacked on top
   // of this one, the parent passes `suppressed={true}` so this dialog:
   //   - becomes `inert` (nothing inside is focusable / clickable /
@@ -131,23 +135,81 @@ export default function DetailModal({
       nameZh: trustedChineseName,
       issueType,
     });
+  const buildDetailCorrectionContext = (issueType) =>
+    buildDataCorrectionContext({
+      casNumber: result.cas_number,
+      nameEn: englishName,
+      nameZh: trustedChineseName,
+      issueType,
+      queryText: result.query || result.cas_number,
+    });
+  const renderCorrectionAction = ({
+    context,
+    href,
+    testId,
+    className,
+    label,
+    iconClassName,
+  }) =>
+    onOpenDataCorrection && context ? (
+      <a
+        href={href}
+        onClick={(event) => {
+          event.preventDefault();
+          onOpenDataCorrection(context);
+        }}
+        className={className}
+        data-testid={testId}
+      >
+        <ExternalLink className={iconClassName} />
+        {label}
+      </a>
+    ) : (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        data-testid={testId}
+      >
+        <ExternalLink className={iconClassName} />
+        {label}
+      </a>
+    );
   const missingChineseNameReportUrl =
     result.found && englishName && !trustedChineseName
       ? buildDetailCorrectionUrl("missing-chinese-name")
       : "";
+  const missingChineseNameReportContext =
+    result.found && englishName && !trustedChineseName
+      ? buildDetailCorrectionContext("missing-chinese-name")
+      : null;
   const sourceConflictReportUrl =
     result.found &&
     (result.has_multiple_classifications || result.other_classifications?.length > 0)
       ? buildDetailCorrectionUrl("source-conflict")
       : "";
+  const sourceConflictReportContext =
+    result.found &&
+    (result.has_multiple_classifications || result.other_classifications?.length > 0)
+      ? buildDetailCorrectionContext("source-conflict")
+      : null;
   const ghsGapReportUrl =
     result.found && !effectiveHasGhsData
       ? buildDetailCorrectionUrl("no-ghs-data")
       : "";
+  const ghsGapReportContext =
+    result.found && !effectiveHasGhsData
+      ? buildDetailCorrectionContext("no-ghs-data")
+      : null;
   const pictogramGapReportUrl =
     result.found && effectiveHasGhsData && !effectiveHasPictograms
       ? buildDetailCorrectionUrl("ghs-text-no-pictograms")
       : "";
+  const pictogramGapReportContext =
+    result.found && effectiveHasGhsData && !effectiveHasPictograms
+      ? buildDetailCorrectionContext("ghs-text-no-pictograms")
+      : null;
   const effectiveSource = effective?.source || result.primary_source;
   const effectiveReportCount = effective?.report_count || result.primary_report_count;
   const trustSummaryItems = [
@@ -327,16 +389,15 @@ export default function DetailModal({
                   </span>
                 </span>
               </span>
-              <a
-                href={missingChineseNameReportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
-                data-testid="detail-report-missing-chinese-name-link"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                {t("detail.reportChineseNameCta")}
-              </a>
+              {renderCorrectionAction({
+                context: missingChineseNameReportContext,
+                href: missingChineseNameReportUrl,
+                testId: "detail-report-missing-chinese-name-link",
+                className:
+                  "inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                iconClassName: "h-3.5 w-3.5",
+                label: t("detail.reportChineseNameCta"),
+              })}
             </div>
           ) : null}
 
@@ -360,16 +421,15 @@ export default function DetailModal({
                   </span>
                   <span>{t("detail.sourceConflictHint")}</span>
                   {sourceConflictReportUrl && (
-                    <a
-                      href={sourceConflictReportUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 font-semibold text-amber-900 transition-colors hover:bg-amber-100"
-                      data-testid="detail-report-source-conflict-link"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {t("detail.reportSourceConflictCta")}
-                    </a>
+                    renderCorrectionAction({
+                      context: sourceConflictReportContext,
+                      href: sourceConflictReportUrl,
+                      testId: "detail-report-source-conflict-link",
+                      className:
+                        "mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                      iconClassName: "h-3 w-3",
+                      label: t("detail.reportSourceConflictCta"),
+                    })
                   )}
                 </span>
               </div>
@@ -431,16 +491,15 @@ export default function DetailModal({
                   {t("detail.ghsDataNoPictogramsHint")}
                 </span>
                 {pictogramGapReportUrl && (
-                  <a
-                    href={pictogramGapReportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
-                    data-testid="detail-report-pictogram-gap-link"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    {t("detail.reportDataGapCta")}
-                  </a>
+                  renderCorrectionAction({
+                    context: pictogramGapReportContext,
+                    href: pictogramGapReportUrl,
+                    testId: "detail-report-pictogram-gap-link",
+                    className:
+                      "mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                    iconClassName: "h-3 w-3",
+                    label: t("detail.reportDataGapCta"),
+                  })
                 )}
               </span>
             </div>
@@ -598,16 +657,15 @@ export default function DetailModal({
               <span>
                 <span>{t("detail.noGhsDataBanner")}</span>
                 {ghsGapReportUrl && (
-                  <a
-                    href={ghsGapReportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-                    data-testid="detail-report-ghs-gap-link"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    {t("detail.reportDataGapCta")}
-                  </a>
+                  renderCorrectionAction({
+                    context: ghsGapReportContext,
+                    href: ghsGapReportUrl,
+                    testId: "detail-report-ghs-gap-link",
+                    className:
+                      "mt-2 inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100",
+                    iconClassName: "h-3 w-3",
+                    label: t("detail.reportDataGapCta"),
+                  })
                 )}
               </span>
             </div>

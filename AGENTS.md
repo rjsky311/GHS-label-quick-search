@@ -257,9 +257,9 @@ lookup/print/export, keep three public label outputs, store future public
 correction requests in the backend pilot/admin SQLite flow, and treat future
 LLM/external Chinese-name suggestions as candidates until admin-approved.
 Backend correction-request storage/API and admin dashboard review are now in
-place; public correction forms should be wired to that queue before GitHub
-issues are treated as the main intake again. Approved correction requests do
-not change public data by themselves; convert them into approved manual
+place, and public correction actions now open the in-app queue dialog first
+while preserving GitHub issue links as fallback. Approved correction requests
+do not change public data by themselves; convert them into approved manual
 entries, aliases, reference links, or other curated records first.
 
 The project-level scope alignment workflow is pinned in

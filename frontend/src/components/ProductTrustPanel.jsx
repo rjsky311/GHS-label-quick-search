@@ -8,12 +8,26 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   SUPPORT_REPORT_DATA_URL,
+  buildDataCorrectionContext,
   buildWorkflowRequestUrl,
 } from "@/constants/supportLinks";
 
-export default function ProductTrustPanel({ variant = "empty" }) {
+export default function ProductTrustPanel({
+  variant = "empty",
+  onOpenDataCorrection,
+}) {
   const { t } = useTranslation();
   const isCompact = variant === "results";
+  const dataCorrectionContext = buildDataCorrectionContext({
+    issueType: "other-data-quality",
+    currentOutput:
+      "I found a possible data problem while using the public search tool.",
+    expectedOutput:
+      "Route this report into the admin correction queue before any dictionary or reference change is approved.",
+    evidenceType: "SDS, supplier label, catalog, or regulatory source",
+    localContext:
+      "General data-quality report from the product trust surface.",
+  });
   const workflowRequestUrl = buildWorkflowRequestUrl(
     isCompact
       ? {
@@ -80,6 +94,14 @@ export default function ProductTrustPanel({ variant = "empty" }) {
           <div className="mt-3 flex flex-wrap gap-2">
             <a
               href={SUPPORT_REPORT_DATA_URL}
+              onClick={
+                onOpenDataCorrection
+                  ? (event) => {
+                      event.preventDefault();
+                      onOpenDataCorrection(dataCorrectionContext);
+                    }
+                  : undefined
+              }
               target="_blank"
               rel="noopener noreferrer"
               data-testid={`product-trust-report-link-${variant}`}

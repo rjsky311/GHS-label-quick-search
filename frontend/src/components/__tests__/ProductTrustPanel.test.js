@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ProductTrustPanel from '../ProductTrustPanel';
 
 describe('ProductTrustPanel', () => {
@@ -60,5 +60,28 @@ describe('ProductTrustPanel', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
+  });
+
+  it('opens the in-app correction handler while preserving the fallback link', () => {
+    const onOpenDataCorrection = jest.fn();
+    render(
+      <ProductTrustPanel
+        variant="results"
+        onOpenDataCorrection={onOpenDataCorrection}
+      />,
+    );
+
+    const reportLink = screen.getByTestId('product-trust-report-link-results');
+    expect(reportLink.getAttribute('href')).toContain('data-correction.yml');
+    fireEvent.click(reportLink);
+    expect(onOpenDataCorrection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issueType: 'other-data-quality',
+        payload: expect.objectContaining({
+          issue_type: 'other-data-quality',
+          source: 'public-in-app',
+        }),
+      }),
+    );
   });
 });

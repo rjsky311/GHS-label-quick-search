@@ -210,12 +210,13 @@ When sources disagree:
   when the app already knows the CAS, chemical name, issue type, current
   output, expected output, evidence type, or local context. Prefill is a triage
   aid only; it is not accepted curation evidence by itself.
-- In-app correction intake is now partially implemented. Public correction
-  requests can be stored in the existing backend pilot/admin SQLite store, and
-  admins can review/status them from the dashboard before any manual entries,
-  aliases, or reference links are created or updated. GitHub issue links remain
-  useful as maintainer fallbacks and repository-edge intake; the remaining
-  product step is wiring the public station/in-app form to the correction API.
+- In-app correction intake is now implemented for public correction actions.
+  Public correction requests are stored in the existing backend pilot/admin
+  SQLite store, and admins can review/status them from the dashboard before any
+  manual entries, aliases, or reference links are created or updated. Result
+  rows, Detail, and product-trust correction actions should open the in-app
+  queue dialog first while keeping GitHub issue links as maintainer fallbacks
+  and repository-edge intake.
 - Issue-form dropdown fields must receive values that exist in the repository
   issue-template schema. Machine-readable app issue keys such as
   `missing-chinese-name`, `source-conflict`, or `unresolved-search` should stay

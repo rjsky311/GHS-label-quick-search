@@ -291,6 +291,43 @@ describe('ResultsTable', () => {
       );
     });
 
+    it('opens the in-app correction dialog handler while preserving fallback href', () => {
+      const onOpenDataCorrection = jest.fn();
+      const missingChineseName = {
+        ...mockFoundResult,
+        cas_number: '107-18-6',
+        name_en: 'Allyl Alcohol',
+        name_zh: 'Allyl Alcohol',
+        name: 'Allyl Alcohol',
+        has_multiple_classifications: false,
+        other_classifications: [],
+      };
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[missingChineseName]}
+          getEffectiveClassification={createMockGetEffective()}
+          onOpenDataCorrection={onOpenDataCorrection}
+        />,
+      );
+
+      const link = screen.getByTestId(
+        'data-quality-link-missing-chinese-name-107-18-6',
+      );
+      expect(link.getAttribute('href')).toContain('data-correction.yml');
+      fireEvent.click(link);
+      expect(onOpenDataCorrection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueType: 'missing-chinese-name',
+          payload: expect.objectContaining({
+            issue_type: 'missing-chinese-name',
+            cas_number: '107-18-6',
+          }),
+        }),
+      );
+    });
+
     it('renders GHS pictograms via mocked GHSImage', () => {
       render(<ResultsTable {...defaultProps} />);
       expect(screen.getByTestId('ghs-img-GHS02')).toBeInTheDocument();

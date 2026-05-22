@@ -55,6 +55,7 @@ import ProductTrustPanel from "@/components/ProductTrustPanel";
 import UpstreamErrorBanner from "@/components/UpstreamErrorBanner";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import DetailModal from "@/components/DetailModal";
+import DataCorrectionDialog from "@/components/DataCorrectionDialog";
 import ComparisonModal from "@/components/ComparisonModal";
 import LabelPrintModal from "@/components/LabelPrintModal";
 import PrepareSolutionModal from "@/components/PrepareSolutionModal";
@@ -104,6 +105,7 @@ function App() {
   const [resultFilter, setResultFilter] = useState("all");
   const [advancedFilter, setAdvancedFilter] = useState({ minPictograms: 0, hCodeSearch: "" });
   const [preparedReprintingId, setPreparedReprintingId] = useState(null);
+  const [dataCorrectionContext, setDataCorrectionContext] = useState(null);
 
   useEffect(() => {
     document.title = t("header.title");
@@ -691,6 +693,16 @@ function App() {
     setPrepareSolutionParent(chem);
   }, []);
 
+  const handleOpenDataCorrection = useCallback((context) => {
+    setDataCorrectionContext(context);
+  }, []);
+
+  const handleCorrectionSubmitted = useCallback(() => {
+    if (showPilotDashboard && pilotAdminKey) {
+      refreshPilotDashboard();
+    }
+  }, [pilotAdminKey, refreshPilotDashboard, showPilotDashboard]);
+
   // Cancel / close the PrepareSolutionModal without submitting.
   // Must not touch any selection state: user intent was "never mind".
   const handleClosePrepareSolution = useCallback(() => {
@@ -957,17 +969,24 @@ function App() {
               onClearCustomClassification={clearCustomClassification}
               onViewDetail={setSelectedResult}
               onOpenComparison={() => setShowComparisonModal(true)}
+              onOpenDataCorrection={handleOpenDataCorrection}
             />
             {/* v1.8 M1: trust-boundary disclaimer */}
             <AuthoritativeSourceNote variant="results" />
-            <ProductTrustPanel variant="results" />
+            <ProductTrustPanel
+              variant="results"
+              onOpenDataCorrection={handleOpenDataCorrection}
+            />
           </>
         )}
 
         {results.length === 0 && !loading && (
           <>
             <EmptyState onQuickSearch={handleQuickSearch} />
-            <ProductTrustPanel variant="empty" />
+            <ProductTrustPanel
+              variant="empty"
+              onOpenDataCorrection={handleOpenDataCorrection}
+            />
           </>
         )}
       </main>
@@ -985,11 +1004,20 @@ function App() {
           onClearCustomClassification={clearCustomClassification}
           onPrintLabel={handlePrintLabelFromDetail}
           onPrepareSolution={handleOpenPrepareSolution}
+          onOpenDataCorrection={handleOpenDataCorrection}
           // When PrepareSolutionModal is stacked on top, mark the
           // DetailModal as inert / aria-hidden so screen readers see
           // only one active modal at a time and pointer/keyboard
           // interaction is suppressed on this layer.
-          suppressed={Boolean(prepareSolutionParent)}
+          suppressed={Boolean(prepareSolutionParent || dataCorrectionContext)}
+        />
+      )}
+
+      {dataCorrectionContext && (
+        <DataCorrectionDialog
+          context={dataCorrectionContext}
+          onClose={() => setDataCorrectionContext(null)}
+          onSubmitted={handleCorrectionSubmitted}
         />
       )}
 
