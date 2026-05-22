@@ -206,7 +206,7 @@ required.
 | Workstream | Status | Next closeable slice | Done gate |
 | --- | --- | --- | --- |
 | Requirements decisions | `Shipped` | Keep this file cross-linked from owner docs as decisions evolve | `npm run test:docs`, `git diff --check` |
-| In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, public in-app form entry, and admin-only candidate evidence bundles are in place | Backend tests, focused frontend tests, production search UI |
+| In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, public in-app form entry, admin-only candidate evidence bundles, and pending manual-entry conversion are in place | Backend tests, focused frontend tests, production search UI |
 | Candidate lookup support | `Gate added` for local evidence bundle; external discovery `Planned` | Trial external candidate discovery only after scope/cost/source review, and keep all outputs review-only until curated | Candidate helper tests + data-governance docs + sandbox/dry-run evidence |
 | Batch lookup/print/export | `Monitoring` | Add fixtures only when real batch lists expose new separators, fit cases, or export gaps | Parser tests, print PDF QA, production batch/search QA |
 | Low-noise UX | `Monitoring` | Improve only when production screenshots or user feedback show confusion | Production search UI screenshots |

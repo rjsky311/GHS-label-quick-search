@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   buildCorrectionCandidateEvidence,
+  buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
 } from "@/utils/correctionCandidates";
 import { formatRelativeTime } from "@/utils/formatDate";
@@ -45,10 +46,19 @@ function SectionHeading({ icon: Icon, title, subtitle }) {
   );
 }
 
-function CorrectionCandidateEvidence({ candidate, requestId }) {
+function CorrectionCandidateEvidence({
+  candidate,
+  requestId,
+  onCreateManualEntry,
+  saving = false,
+}) {
   const { t } = useTranslation();
   const rows = getCorrectionCandidateDisplayRows(candidate);
   if (rows.length === 0) return null;
+  const canCreateManualEntry =
+    Boolean(candidate?.cas_number) &&
+    Boolean(candidate?.name_en || candidate?.name_zh) &&
+    typeof onCreateManualEntry === "function";
 
   return (
     <div
@@ -78,6 +88,19 @@ function CorrectionCandidateEvidence({ candidate, requestId }) {
           </div>
         ))}
       </dl>
+      {canCreateManualEntry ? (
+        <button
+          type="button"
+          onClick={onCreateManualEntry}
+          disabled={saving}
+          className="mt-3 rounded bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-40"
+          data-testid={`create-manual-entry-from-candidate-${requestId}`}
+        >
+          {t("pilot.createManualEntryFromCandidate", {
+            defaultValue: "Create review entry",
+          })}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -663,6 +686,44 @@ export default function PilotDashboardSidebar(props) {
     }
   };
 
+  const handleCreateManualEntryFromCandidate = async (item) => {
+    if (!onSaveManualEntry) return;
+    const requestId = item?.id;
+    const draftNotes = requestId
+      ? (correctionReviewDrafts[requestId] || "").trim()
+      : "";
+    const payload = buildManualEntryPayloadFromCorrectionCandidate(
+      item,
+      draftNotes,
+    );
+    if (!payload) {
+      toast.error(
+        t("pilot.candidateManualEntryMissingIdentity", {
+          defaultValue:
+            "Candidate needs a CAS number and at least one name before it can become a review entry.",
+        })
+      );
+      return;
+    }
+
+    try {
+      await onSaveManualEntry(payload);
+      toast.success(
+        t("pilot.candidateManualEntryCreated", {
+          defaultValue: "Pending manual dictionary review entry created.",
+        })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.manualEntryFailed", {
+            defaultValue: "Failed to save manual dictionary entry.",
+          })
+      );
+    }
+  };
+
   const handlePurgeStaleMissQueries = async () => {
     if (!onPurgeStaleMissQueries) return;
     const purgeableCount = Number(missRetention.purgeableCount || 0);
@@ -998,6 +1059,10 @@ export default function PilotDashboardSidebar(props) {
                               <CorrectionCandidateEvidence
                                 candidate={item.candidate}
                                 requestId={requestId}
+                                saving={saving}
+                                onCreateManualEntry={() =>
+                                  handleCreateManualEntryFromCandidate(item)
+                                }
                               />
                             </div>
                             <div className="text-xs text-slate-500">
@@ -1706,6 +1771,10 @@ export default function PilotDashboardSidebar(props) {
                           <CorrectionCandidateEvidence
                             candidate={item.candidate}
                             requestId={`recent-${requestId}`}
+                            saving={saving}
+                            onCreateManualEntry={() =>
+                              handleCreateManualEntryFromCandidate(item)
+                            }
                           />
                           {curationTimestamp(item) ? (
                             <div className="mt-2 text-xs text-slate-500">

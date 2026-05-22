@@ -187,6 +187,7 @@ const baseProps = {
       candidate: {
         cas_number: "67-64-1",
         name_en: "Acetone",
+        name_zh: "丙酮",
         source: "admin-correction-request",
         approved_for_public_use: false,
       },
@@ -382,6 +383,26 @@ describe("PilotDashboardSidebar", () => {
     expect(
       screen.getByTestId("correction-request-candidate-recent-202-source"),
     ).toHaveTextContent("admin-correction-request");
+  });
+
+  it("creates a pending manual entry from stored correction candidate evidence", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+    fireEvent.click(
+      screen.getByTestId("create-manual-entry-from-candidate-recent-202"),
+    );
+
+    await waitFor(() => {
+      expect(baseProps.onSaveManualEntry).toHaveBeenCalledWith({
+        cas_number: "67-64-1",
+        name_en: "Acetone",
+        name_zh: "丙酮",
+        notes: expect.stringContaining("Correction request #202"),
+        source: "correction-request",
+        status: "pending",
+      });
+    });
   });
 
   it("does not resolve a miss query without CAS evidence", async () => {

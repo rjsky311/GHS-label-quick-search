@@ -114,6 +114,19 @@ const compactObject = (value) =>
     }),
   );
 
+const candidateNotes = (candidate = {}) =>
+  [
+    candidate.request_id
+      ? `Correction request #${candidate.request_id}`
+      : "Correction request candidate",
+    candidate.issue_type ? `Issue: ${candidate.issue_type}` : "",
+    candidate.evidence_type ? `Evidence type: ${candidate.evidence_type}` : "",
+    candidate.evidence_url ? `Evidence: ${candidate.evidence_url}` : "",
+    candidate.review_notes ? `Review: ${candidate.review_notes}` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
 export function buildCorrectionCandidateEvidence(item = {}, reviewNotes = "") {
   const existingCandidate =
     item.candidate && typeof item.candidate === "object" ? item.candidate : {};
@@ -141,6 +154,27 @@ export function buildCorrectionCandidateEvidence(item = {}, reviewNotes = "") {
   });
 
   return candidate;
+}
+
+export function buildManualEntryPayloadFromCorrectionCandidate(
+  item = {},
+  reviewNotes = "",
+) {
+  const candidate = buildCorrectionCandidateEvidence(item, reviewNotes);
+  const casNumber = normalizeText(candidate.cas_number);
+  const nameEn = normalizeText(candidate.name_en);
+  const nameZh = normalizeText(candidate.name_zh);
+
+  if (!casNumber || (!nameEn && !nameZh)) return null;
+
+  return {
+    cas_number: casNumber,
+    name_en: nameEn || null,
+    name_zh: nameZh && hasCjkText(nameZh) ? nameZh : null,
+    notes: candidateNotes(candidate),
+    source: "correction-request",
+    status: "pending",
+  };
 }
 
 export function getCorrectionCandidateDisplayRows(candidate = {}) {

@@ -264,8 +264,9 @@ Current completion snapshot:
   submission first while preserving GitHub issue URLs as fallback. Public
   submissions are bounded and rate-limited, admin review can list and status
   requests, candidate bundles remain `approved_for_public_use: false`, and
-  approved requests still need conversion into manual dictionary, alias, or
-  reference-link records before changing public lookup, labels, or exports.
+  stored candidate bundles can now seed pending manual-dictionary review
+  entries. Public lookup, labels, and exports still change only after a
+  maintainer approves the resulting curated record.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

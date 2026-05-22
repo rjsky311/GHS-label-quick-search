@@ -1,5 +1,6 @@
 import {
   buildCorrectionCandidateEvidence,
+  buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
 } from "@/utils/correctionCandidates";
 
@@ -81,5 +82,31 @@ describe("correction candidate evidence helpers", () => {
       ["ZH", "乙醇"],
       ["Source", "admin-correction-request"],
     ]);
+  });
+
+  it("builds a pending manual-entry payload from candidate evidence", () => {
+    const ethanolZh = "\u4e59\u9187";
+    const payload = buildManualEntryPayloadFromCorrectionCandidate(
+      {
+        id: 204,
+        issue_type: "missing-chinese-name",
+        cas_number: "64-17-5",
+        chemical_name: "Ethanol",
+        expected_output: `Chinese: ${ethanolZh}`,
+        evidence_url: "https://example.com/sds",
+      },
+      "Reviewed supplier SDS",
+    );
+
+    expect(payload).toMatchObject({
+      cas_number: "64-17-5",
+      name_en: "Ethanol",
+      name_zh: ethanolZh,
+      source: "correction-request",
+      status: "pending",
+    });
+    expect(payload.notes).toContain("Correction request #204");
+    expect(payload.notes).toContain("Evidence: https://example.com/sds");
+    expect(payload.notes).toContain("Review: Reviewed supplier SDS");
   });
 });

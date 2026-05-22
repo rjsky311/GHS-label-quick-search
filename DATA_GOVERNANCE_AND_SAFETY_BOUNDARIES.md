@@ -103,6 +103,10 @@ Rules:
   review notes, but it is explicitly not approved for public lookup, labels, or
   exports until a maintainer converts it into an approved manual entry, alias,
   or reference record.
+- Stored correction candidate evidence may create a pending manual-dictionary
+  review entry from the admin dashboard. That pending entry is still
+  admin-only; public lookup, labels, QR targets, and exports may use it only
+  after a maintainer explicitly approves the manual entry.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic

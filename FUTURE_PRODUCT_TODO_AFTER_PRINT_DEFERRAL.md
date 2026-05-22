@@ -189,6 +189,11 @@ Work items:
   text, evidence link/type, and review notes, and it is explicitly
   `approved_for_public_use: false` until a maintainer converts it into an
   approved curated record.
+- Completed: stored correction candidate evidence can now create a pending
+  manual-dictionary review entry from the admin dashboard. The conversion
+  preserves request/evidence notes and still keeps the entry out of public
+  lookup, labels, and exports until a maintainer explicitly approves the manual
+  entry.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same
