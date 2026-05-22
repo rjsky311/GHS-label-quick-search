@@ -304,7 +304,9 @@ source guidance stays in the body as `Evidence prompt`, while `evidence_type`
 uses a template option such as `Other`. Keep
 `frontend/src/constants/__tests__/supportLinksIssueTemplate.test.js` and
 `npm run qa:production-search-ui` aligned with this contract whenever issue
-templates or support links change.
+templates or support links change; the production search UI gate reads the
+repository issue-template dropdown options at run time, so do not reintroduce
+duplicated hard-coded option lists in QA scripts.
 
 Future non-physical-print work while real-printer validation is deferred is
 tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data

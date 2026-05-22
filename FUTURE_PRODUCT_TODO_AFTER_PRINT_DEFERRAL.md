@@ -145,7 +145,10 @@ Work items:
   broad source guidance in the generated body as `Evidence prompt`, while the
   `evidence_type` query parameter uses one valid template dropdown option.
   Unit tests now read the actual issue-template dropdown options and fail if
-  generated support-link values drift from the repository forms.
+  generated support-link values drift from the repository forms. Production
+  search UI QA now reads those same repository issue templates at run time, so
+  the deployed gate validates current form schemas instead of a duplicated
+  option list.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.

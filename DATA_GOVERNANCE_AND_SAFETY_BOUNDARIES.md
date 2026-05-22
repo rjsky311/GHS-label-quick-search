@@ -241,7 +241,9 @@ reduce repeated typing and improve review quality:
   `examples`.
 - Regression tests should compare generated support-link dropdown values
   against the actual issue-template option lists, so future template edits do
-  not silently break prefill.
+  not silently break prefill. Production QA scripts should also read the
+  repository issue templates directly when validating deployed support links;
+  avoid maintaining a second hard-coded dropdown list inside QA scripts.
 
 Generic footer links should remain low-pressure and can stay unfilled. Result,
 Detail, and product-trust links may add context when it clarifies the user's

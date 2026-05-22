@@ -38,15 +38,66 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
 );
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
-const DATA_CORRECTION_FORM_EVIDENCE_TYPES = new Set([
-  "Supplier SDS",
-  "Supplier label",
-  "Official regulatory source",
-  "PubChem page",
-  "ECHA page",
-  "Internal lab evidence",
-  "Other",
-]);
+
+const findRepoRoot = (startDir) => {
+  let current = path.resolve(startDir);
+  while (true) {
+    if (fs.existsSync(path.join(current, ".github", "ISSUE_TEMPLATE"))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      throw new Error(
+        `Could not find repository root from ${path.resolve(startDir)}`,
+      );
+    }
+    current = parent;
+  }
+};
+
+const repoRoot = findRepoRoot(process.cwd());
+
+const readIssueTemplate = (name) =>
+  fs.readFileSync(
+    path.join(repoRoot, ".github", "ISSUE_TEMPLATE", name),
+    "utf8",
+  );
+
+const extractDropdownOptions = (templateText, fieldId) => {
+  const idIndex = templateText.indexOf(`id: ${fieldId}`);
+  if (idIndex < 0) {
+    throw new Error(`Could not find issue-template field: ${fieldId}`);
+  }
+  const fieldBlock = templateText.slice(idIndex);
+  const optionsIndex = fieldBlock.indexOf("options:");
+  if (optionsIndex < 0) {
+    throw new Error(`Could not find dropdown options for: ${fieldId}`);
+  }
+  const optionsBlock = fieldBlock.slice(optionsIndex);
+  const nextFieldIndex = optionsBlock.search(/\n\s{2}- type:|\n\s+validations:/);
+  const boundedOptionsBlock =
+    nextFieldIndex >= 0 ? optionsBlock.slice(0, nextFieldIndex) : optionsBlock;
+  return new Set(
+    [...boundedOptionsBlock.matchAll(/^\s+-\s+(.+?)\s*$/gm)].map((match) =>
+      match[1].replace(/^["']|["']$/g, "").trim(),
+    ),
+  );
+};
+
+const dataCorrectionTemplate = readIssueTemplate("data-correction.yml");
+const workflowRequestTemplate = readIssueTemplate("workflow-request.yml");
+const DATA_CORRECTION_FORM_ISSUE_TYPES = extractDropdownOptions(
+  dataCorrectionTemplate,
+  "issue_type",
+);
+const DATA_CORRECTION_FORM_EVIDENCE_TYPES = extractDropdownOptions(
+  dataCorrectionTemplate,
+  "evidence_type",
+);
+const WORKFLOW_FORM_AREAS = extractDropdownOptions(
+  workflowRequestTemplate,
+  "workflow_area",
+);
 const missingChineseNameFixture = {
   cas_number: "107-18-6",
   cid: 7858,
@@ -167,6 +218,7 @@ const hasStructuredCorrectionContext = (
   if (!issue || issue.count < 1) return false;
   if (issue.template !== "data-correction.yml") return false;
   if (issue.labels !== "data-correction") return false;
+  if (!DATA_CORRECTION_FORM_ISSUE_TYPES.has(issue.issueType)) return false;
   if (formIssueType && issue.issueType !== formIssueType) return false;
   if (!DATA_CORRECTION_FORM_EVIDENCE_TYPES.has(issue.evidenceType)) {
     return false;
@@ -190,6 +242,38 @@ const hasStructuredCorrectionContext = (
     expectedOutputIncludes &&
     !issue.expectedOutput.includes(expectedOutputIncludes)
   ) {
+    return false;
+  }
+  return true;
+};
+
+const hasStructuredWorkflowContext = (
+  issue,
+  {
+    workflowArea,
+    currentProblemIncludes,
+    desiredBehaviorIncludes,
+    examplesIncludes,
+  },
+) => {
+  if (!issue || issue.count < 1) return false;
+  if (issue.template !== "workflow-request.yml") return false;
+  if (issue.labels !== "workflow-request") return false;
+  if (!WORKFLOW_FORM_AREAS.has(issue.workflowArea)) return false;
+  if (workflowArea && issue.workflowArea !== workflowArea) return false;
+  if (
+    currentProblemIncludes &&
+    !issue.currentProblem.includes(currentProblemIncludes)
+  ) {
+    return false;
+  }
+  if (
+    desiredBehaviorIncludes &&
+    !issue.desiredBehavior.includes(desiredBehaviorIncludes)
+  ) {
+    return false;
+  }
+  if (examplesIncludes && !issue.examples.includes(examplesIncludes)) {
     return false;
   }
   return true;
@@ -1453,22 +1537,13 @@ try {
     failures.push("results-product-trust-report-link-mismatch");
   }
   if (
-    resultsTrustSurface.productTrustWorkflow.template !==
-      "workflow-request.yml" ||
-    resultsTrustSurface.productTrustWorkflow.labels !== "workflow-request"
-  ) {
-    failures.push("results-product-trust-workflow-link-mismatch");
-  }
-  if (
-    resultsTrustSurface.productTrustWorkflow.workflowArea !==
-      "Search and results" ||
-    !resultsTrustSurface.productTrustWorkflow.currentProblem.includes(
-      "Search results, SDS review, export, or label handoff",
-    ) ||
-    !resultsTrustSurface.productTrustWorkflow.desiredBehavior.includes(
-      "safety-data correction",
-    ) ||
-    !resultsTrustSurface.productTrustWorkflow.examples.includes("batch labels")
+    !hasStructuredWorkflowContext(resultsTrustSurface.productTrustWorkflow, {
+      workflowArea: "Search and results",
+      currentProblemIncludes:
+        "Search results, SDS review, export, or label handoff",
+      desiredBehaviorIncludes: "safety-data correction",
+      examplesIncludes: "batch labels",
+    })
   ) {
     failures.push("results-product-trust-workflow-context-missing");
   }
