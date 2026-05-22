@@ -15,6 +15,7 @@ const baseProps = {
       pendingAliasCount: 1,
       pendingManualEntryCount: 1,
       openMissQueryCount: 2,
+      openCorrectionRequestCount: 1,
       manualEntryCount: 3,
       manualEntryStatusCounts: {
         approved: 2,
@@ -33,6 +34,13 @@ const baseProps = {
       referenceLinkStatusCounts: {
         active: 4,
         inactive: 1,
+      },
+      correctionRequestStatusCounts: {
+        open: 1,
+        candidate_found: 1,
+        approved: 2,
+        rejected: 0,
+        ignored: 1,
       },
       missQueryStatusCounts: {
         open: 2,
@@ -57,6 +65,18 @@ const baseProps = {
           resolved_cas: null,
           context: {},
           last_seen_at: "2026-04-18T00:00:00+00:00",
+        },
+      ],
+      topCorrectionRequests: [
+        {
+          id: 201,
+          issue_type: "missing-chinese-name",
+          cas_number: "64-17-5",
+          chemical_name: "Ethanol",
+          current_output: "English name only",
+          evidence_url: "https://example.com/evidence",
+          status: "open",
+          updated_at: "2026-04-18T13:00:00+00:00",
         },
       ],
       pendingAliases: [
@@ -147,6 +167,26 @@ const baseProps = {
       updatedAt: "2026-04-18T10:00:00+00:00",
     },
   ],
+  correctionRequests: [
+    {
+      id: 201,
+      issue_type: "missing-chinese-name",
+      cas_number: "64-17-5",
+      chemical_name: "Ethanol",
+      expected_output: "乙醇",
+      status: "open",
+      updated_at: "2026-04-18T13:00:00+00:00",
+    },
+    {
+      id: 202,
+      issue_type: "source-conflict",
+      cas_number: "67-64-1",
+      chemical_name: "Acetone",
+      expected_output: "Review ECHA source",
+      status: "candidate_found",
+      updated_at: "2026-04-18T14:00:00+00:00",
+    },
+  ],
   loading: false,
   saving: false,
   error: "",
@@ -157,6 +197,7 @@ const baseProps = {
   onSaveAlias: jest.fn(async () => ({ ok: true })),
   onSaveReferenceLink: jest.fn(async () => ({ ok: true })),
   onResolveMissQuery: jest.fn(async () => ({ ok: true })),
+  onUpdateCorrectionRequestStatus: jest.fn(async () => ({ ok: true })),
   onPurgeStaleMissQueries: jest.fn(async () => ({
     ok: true,
     retention: { deletedCount: 5 },
@@ -184,12 +225,19 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("reference-link-status-count-active")).toHaveTextContent("4");
     expect(screen.getByTestId("reference-link-status-count-inactive")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-summary-open-correction-requests")).toHaveTextContent("1");
     expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
     expect(screen.getByTestId("miss-query-status-count-resolved")).toHaveTextContent("3");
     expect(screen.getByTestId("miss-query-status-count-ignored")).toHaveTextContent("4");
+    expect(screen.getByTestId("correction-request-status-count-open")).toHaveTextContent("1");
+    expect(screen.getByTestId("correction-request-status-count-candidate_found")).toHaveTextContent("1");
+    expect(screen.getByTestId("correction-request-status-count-approved")).toHaveTextContent("2");
+    expect(screen.getByTestId("correction-request-status-count-rejected")).toHaveTextContent("0");
+    expect(screen.getByTestId("correction-request-status-count-ignored")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
+    expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
   });
 
   it("purges stale miss-query telemetry after confirmation", async () => {
@@ -281,6 +329,22 @@ describe("PilotDashboardSidebar", () => {
       expect(baseProps.onResolveMissQuery).toHaveBeenCalledWith(101, {
         resolution_status: "resolved",
         resolved_cas: "64-17-5",
+      });
+    });
+  });
+
+  it("updates a correction request from the overview tab", async () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.change(screen.getByTestId("correction-request-notes-201"), {
+      target: { value: "Found supplier SDS evidence" },
+    });
+    fireEvent.click(screen.getByTestId("candidate-correction-request-201"));
+
+    await waitFor(() => {
+      expect(baseProps.onUpdateCorrectionRequestStatus).toHaveBeenCalledWith(201, {
+        status: "candidate_found",
+        review_notes: "Found supplier SDS evidence",
       });
     });
   });
@@ -466,6 +530,13 @@ describe("PilotDashboardSidebar", () => {
     expect(manualRows[1]).toHaveTextContent("Older Solvent");
     expect(screen.getByTestId("manual-entry-status-32")).toHaveTextContent(
       "pilot.manualStatusNeedsEvidence"
+    );
+
+    const correctionRows = screen.getAllByTestId(/^correction-request-recent-row-/);
+    expect(correctionRows[0]).toHaveTextContent("source-conflict");
+    expect(correctionRows[1]).toHaveTextContent("missing-chinese-name");
+    expect(screen.getByTestId("correction-request-recent-status-202")).toHaveTextContent(
+      "pilot.correctionStatusCandidateFound"
     );
   });
 

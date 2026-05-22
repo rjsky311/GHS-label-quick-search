@@ -284,6 +284,64 @@ def test_dictionary_miss_query_endpoint_is_rate_limited():
     )
 
 
+async def test_dictionary_correction_request_records_public_intake(monkeypatch):
+    captured = {}
+
+    def fake_record_correction_request(**payload):
+        captured.update(payload)
+        return {"id": 7, **payload, "status": "open"}
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "record_correction_request",
+        fake_record_correction_request,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/correction-requests",
+            json={
+                "issue_type": "missing-chinese-name",
+                "cas_number": " 107 18 6 ",
+                "chemical_name": "Allyl Alcohol",
+                "current_output": "Chinese name missing",
+                "expected_output": "Reviewed Traditional Chinese name",
+                "evidence_url": "https://example.com/sds",
+                "evidence_type": "Supplier SDS",
+                "local_context": " Detail modal ",
+                "candidate": {"name_zh": "candidate only"},
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert captured == {
+        "issue_type": "missing-chinese-name",
+        "cas_number": "107-18-6",
+        "chemical_name": "Allyl Alcohol",
+        "query_text": None,
+        "current_output": "Chinese name missing",
+        "expected_output": "Reviewed Traditional Chinese name",
+        "evidence_url": "https://example.com/sds",
+        "evidence_type": "Supplier SDS",
+        "local_context": "Detail modal",
+        "candidate": {"name_zh": "candidate only"},
+        "source": "public",
+    }
+
+
+def test_dictionary_correction_request_endpoint_is_rate_limited():
+    limits = server.limiter._route_limits.get(
+        "server.create_dictionary_correction_request",
+        [],
+    )
+    assert any(
+        limit.limit.amount == 20 and limit.limit.GRANULARITY.name == "minute"
+        for limit in limits
+    )
+
+
 def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
     store = PilotStore(tmp_path / "pilot.db").connect()
     try:
@@ -476,6 +534,100 @@ async def test_admin_dictionary_miss_query_resolution_requires_known_row(monkeyp
     assert response.status_code == 404
 
 
+async def test_admin_can_view_and_update_correction_requests(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    captured = {}
+
+    def fake_list_correction_requests(*, statuses=None, include_context=True):
+        captured["list_statuses"] = statuses
+        captured["include_context"] = include_context
+        return [
+            {
+                "id": 8,
+                "issue_type": "missing-chinese-name",
+                "cas_number": "107-18-6",
+                "status": "open",
+            }
+        ]
+
+    def fake_update_correction_request_status(
+        request_id,
+        *,
+        status,
+        review_notes=None,
+        candidate=None,
+    ):
+        captured["request_id"] = request_id
+        captured["status"] = status
+        captured["review_notes"] = review_notes
+        captured["candidate"] = candidate
+        return {
+            "id": request_id,
+            "issue_type": "missing-chinese-name",
+            "status": status,
+            "review_notes": review_notes,
+            "candidate": candidate or {},
+        }
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "list_correction_requests",
+        fake_list_correction_requests,
+    )
+    monkeypatch.setattr(
+        server.pilot_store,
+        "update_correction_request_status",
+        fake_update_correction_request_status,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        view_response = await ac.get(
+            "/api/dictionary/correction-requests?status=open,candidate_found",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        update_response = await ac.post(
+            "/api/dictionary/correction-requests/8/status",
+            headers={"x-ghs-admin-key": "secret"},
+            json={
+                "status": "candidate_found",
+                "review_notes": "Found Wikidata candidate.",
+                "candidate": {"name_zh": "candidate only"},
+            },
+        )
+
+    assert view_response.status_code == 200
+    assert view_response.json()["items"][0]["id"] == 8
+    assert update_response.status_code == 200
+    assert captured == {
+        "list_statuses": ["open", "candidate_found"],
+        "include_context": True,
+        "request_id": 8,
+        "status": "candidate_found",
+        "review_notes": "Found Wikidata candidate.",
+        "candidate": {"name_zh": "candidate only"},
+    }
+
+
+async def test_admin_correction_request_status_requires_known_row(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    monkeypatch.setattr(
+        server.pilot_store,
+        "update_correction_request_status",
+        lambda *args, **kwargs: None,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/correction-requests/404/status",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"status": "ignored"},
+        )
+
+    assert response.status_code == 404
+
+
 async def test_admin_can_view_and_purge_miss_query_retention(monkeypatch):
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
     captured = {}
@@ -570,6 +722,21 @@ def test_admin_dictionary_payloads_trim_safe_fields():
         resolution_status=" RESOLVED ",
         resolved_cas=" 64 17 5 ",
     )
+    correction = server.DictionaryCorrectionRequestPayload(
+        issue_type=" Missing-Chinese-Name ",
+        cas_number=" 107 18 6 ",
+        chemical_name=" Allyl Alcohol ",
+        current_output=" Missing Chinese name ",
+        expected_output=" Reviewed Traditional Chinese name ",
+        evidence_url=" https://example.com/sds ",
+        evidence_type=" Supplier SDS ",
+        local_context=" Detail modal ",
+        source=" ",
+    )
+    correction_status = server.DictionaryCorrectionRequestStatusPayload(
+        status=" Candidate_Found ",
+        review_notes=" Candidate needs evidence. ",
+    )
 
     assert manual.cas_number == "64-17-5"
     assert manual.name_en == "Ethanol"
@@ -588,6 +755,14 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     assert reference.status == "active"
     assert miss_resolution.resolution_status == "resolved"
     assert miss_resolution.resolved_cas == "64-17-5"
+    assert correction.issue_type == "missing-chinese-name"
+    assert correction.cas_number == "107-18-6"
+    assert correction.chemical_name == "Allyl Alcohol"
+    assert correction.evidence_url == "https://example.com/sds"
+    assert correction.local_context == "Detail modal"
+    assert correction.source == "public"
+    assert correction_status.status == "candidate_found"
+    assert correction_status.review_notes == "Candidate needs evidence."
 
     manual_with_zh = server.DictionaryManualEntryPayload(
         cas_number="64-17-5",
@@ -650,6 +825,24 @@ def test_admin_dictionary_payloads_reject_unbounded_values():
     with pytest.raises(ValidationError):
         server.DictionaryMissQueryResolutionPayload(
             resolution_status="done",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryCorrectionRequestPayload(
+            issue_type="unsafe-kind",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryCorrectionRequestPayload(
+            issue_type="missing-chinese-name",
+            evidence_url="javascript:alert(1)",
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryCorrectionRequestPayload(
+            issue_type="missing-chinese-name",
+            candidate={"blob": "x" * (server.MAX_CORRECTION_CANDIDATE_JSON_CHARS + 1)},
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryCorrectionRequestStatusPayload(
+            status="done",
         )
 
 

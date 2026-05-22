@@ -126,6 +126,7 @@ function App() {
     aliases: pilotAliases,
     manualEntries: pilotManualEntries,
     referenceLinks: pilotReferenceLinks,
+    correctionRequests: pilotCorrectionRequests,
     loading: pilotLoading,
     saving: pilotSaving,
     error: pilotError,
@@ -136,6 +137,7 @@ function App() {
     saveReferenceLink: savePilotReferenceLink,
     resolveMissQuery: resolvePilotMissQuery,
     purgeStaleMissQueries: purgePilotStaleMissQueries,
+    updateCorrectionRequestStatus: updatePilotCorrectionRequestStatus,
   } = usePilotDashboard({
     enabled: showPilotDashboard && PILOT_ADMIN_ENABLED && Boolean(pilotAdminKey),
     adminKey: pilotAdminKey,
@@ -624,7 +626,11 @@ function App() {
 
   const pilotAttentionCount = useMemo(() => {
     const dictionary = pilotReport?.dictionary || {};
-    return (dictionary.pendingAliasCount || 0) + (dictionary.openMissQueryCount || 0);
+    return (
+      (dictionary.pendingAliasCount || 0) +
+      (dictionary.openMissQueryCount || 0) +
+      (dictionary.openCorrectionRequestCount || 0)
+    );
   }, [pilotReport]);
 
   const handlePrintLabels = useCallback((configOverride, itemOverride) => {
@@ -833,6 +839,7 @@ function App() {
           aliases={pilotAliases}
           manualEntries={pilotManualEntries}
           referenceLinks={pilotReferenceLinks}
+          correctionRequests={pilotCorrectionRequests}
           loading={pilotLoading}
           saving={pilotSaving}
           error={pilotError}
@@ -844,6 +851,7 @@ function App() {
           onSaveReferenceLink={savePilotReferenceLink}
           onResolveMissQuery={resolvePilotMissQuery}
           onPurgeStaleMissQueries={purgePilotStaleMissQueries}
+          onUpdateCorrectionRequestStatus={updatePilotCorrectionRequestStatus}
         />
       )}
 

@@ -29,6 +29,8 @@ from cachetools import TTLCache
 from pilot_store import (
     APPROVED_MANUAL_ENTRY_STATUS,
     APPROVED_ALIAS_STATUS,
+    CORRECTION_REQUEST_STATUSES,
+    CORRECTION_REQUEST_TYPES,
     DEFAULT_MISS_QUERY_RETENTION_DAYS,
     MANUAL_ENTRY_STATUSES,
     MISS_QUERY_STATUSES,
@@ -86,10 +88,16 @@ MAX_ADMIN_NOTES_LENGTH = 1000
 MAX_ADMIN_SOURCE_LENGTH = 80
 MAX_ALIAS_TEXT_LENGTH = 240
 MAX_REFERENCE_PRIORITY = 1000
+MAX_CORRECTION_TEXT_LENGTH = 2000
+MAX_CORRECTION_CONTEXT_CHARS = 2000
+MAX_CORRECTION_CANDIDATE_JSON_CHARS = 4000
+MAX_CORRECTION_SOURCE_LENGTH = 80
 ALLOWED_ALIAS_LOCALES = {"en", "zh"}
 ALLOWED_ALIAS_STATUSES = {APPROVED_ALIAS_STATUS, "pending", "needs_evidence", "rejected"}
 ALLOWED_MANUAL_ENTRY_STATUSES = MANUAL_ENTRY_STATUSES
 ALLOWED_REFERENCE_STATUSES = {"active", "inactive"}
+ALLOWED_CORRECTION_REQUEST_STATUSES = CORRECTION_REQUEST_STATUSES
+ALLOWED_CORRECTION_REQUEST_TYPES = CORRECTION_REQUEST_TYPES
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -785,6 +793,124 @@ class DictionaryMissQueryRetentionPayload(BaseModel):
         ge=1,
         le=365,
     )
+
+
+class DictionaryCorrectionRequestPayload(BaseModel):
+    issue_type: str = Field(..., min_length=1, max_length=80)
+    cas_number: Optional[str] = Field(default=None, max_length=MAX_ADMIN_CAS_LENGTH)
+    chemical_name: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NAME_LENGTH)
+    query_text: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NAME_LENGTH)
+    current_output: Optional[str] = Field(
+        default=None,
+        max_length=MAX_CORRECTION_TEXT_LENGTH,
+    )
+    expected_output: Optional[str] = Field(
+        default=None,
+        max_length=MAX_CORRECTION_TEXT_LENGTH,
+    )
+    evidence_url: Optional[str] = Field(default=None, max_length=2048)
+    evidence_type: Optional[str] = Field(default=None, max_length=160)
+    local_context: Optional[str] = Field(
+        default=None,
+        max_length=MAX_CORRECTION_CONTEXT_CHARS,
+    )
+    candidate: Dict[str, Any] = Field(default_factory=dict)
+    source: str = Field(default="public", max_length=MAX_CORRECTION_SOURCE_LENGTH)
+
+    @field_validator("issue_type")
+    @classmethod
+    def issue_type_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_CORRECTION_REQUEST_TYPES:
+            raise ValueError("unsupported correction request type")
+        return normalized
+
+    @field_validator(
+        "chemical_name",
+        "query_text",
+        "current_output",
+        "expected_output",
+        "evidence_type",
+        "local_context",
+        mode="before",
+    )
+    @classmethod
+    def optional_text_is_trimmed(cls, value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @field_validator("cas_number")
+    @classmethod
+    def correction_cas_is_trimmed(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = normalize_cas(value)
+        return normalized or None
+
+    @field_validator("evidence_url")
+    @classmethod
+    def correction_evidence_url_must_be_safe(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            return None
+        if not _is_safe_reference_url(normalized):
+            raise ValueError("evidence URL must use http or https")
+        return normalized
+
+    @field_validator("source")
+    @classmethod
+    def correction_source_defaults_to_public(cls, value: str) -> str:
+        value = (value or "").strip()
+        return value or "public"
+
+    @field_validator("candidate")
+    @classmethod
+    def correction_candidate_must_stay_small(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
+        if len(encoded) > MAX_CORRECTION_CANDIDATE_JSON_CHARS:
+            raise ValueError("candidate payload is too large")
+        return value or {}
+
+
+class DictionaryCorrectionRequestStatusPayload(BaseModel):
+    status: str = Field(..., min_length=1, max_length=40)
+    review_notes: Optional[str] = Field(default=None, max_length=MAX_ADMIN_NOTES_LENGTH)
+    candidate: Optional[Dict[str, Any]] = None
+
+    @field_validator("status")
+    @classmethod
+    def correction_status_must_be_supported(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in ALLOWED_CORRECTION_REQUEST_STATUSES:
+            raise ValueError(
+                "correction request status must be open, candidate_found, approved, rejected, or ignored"
+            )
+        return normalized
+
+    @field_validator("review_notes")
+    @classmethod
+    def correction_review_notes_are_trimmed(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @field_validator("candidate")
+    @classmethod
+    def correction_status_candidate_must_stay_small(
+        cls,
+        value: Optional[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        if value is None:
+            return None
+        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
+        if len(encoded) > MAX_CORRECTION_CANDIDATE_JSON_CHARS:
+            raise ValueError("candidate payload is too large")
+        return value or {}
 
 
 class DictionaryManualEntryPayload(BaseModel):
@@ -1995,6 +2121,74 @@ async def upsert_dictionary_reference_link(
         status=payload.status,
         cid=payload.cid,
     )
+    return {"ok": True, "record": record}
+
+
+@api_router.post("/dictionary/correction-requests")
+@limiter.limit("20/minute")
+async def create_dictionary_correction_request(
+    request: Request,
+    payload: DictionaryCorrectionRequestPayload,
+):
+    record = pilot_store.record_correction_request(
+        issue_type=payload.issue_type,
+        cas_number=payload.cas_number,
+        chemical_name=payload.chemical_name,
+        query_text=payload.query_text,
+        current_output=payload.current_output,
+        expected_output=payload.expected_output,
+        evidence_url=payload.evidence_url,
+        evidence_type=payload.evidence_type,
+        local_context=payload.local_context,
+        candidate=payload.candidate,
+        source=payload.source,
+    )
+    _record_ops_counter("dictionary.correction_request.created")
+    return {"ok": True, "record": record}
+
+
+@api_router.get("/dictionary/correction-requests")
+async def dictionary_correction_requests(
+    request: Request,
+    status: Optional[str] = None,
+):
+    _require_admin(request)
+    statuses = None
+    if status:
+        statuses = [part.strip() for part in status.split(",") if part.strip()]
+    try:
+        items = pilot_store.list_correction_requests(
+            statuses=statuses,
+            include_context=True,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "items": items,
+    }
+
+
+@api_router.post("/dictionary/correction-requests/{request_id}/status")
+async def update_dictionary_correction_request_status(
+    request: Request,
+    request_id: int,
+    payload: DictionaryCorrectionRequestStatusPayload,
+):
+    _require_admin(request)
+    try:
+        record = pilot_store.update_correction_request_status(
+            request_id,
+            status=payload.status,
+            review_notes=payload.review_notes,
+            candidate=payload.candidate,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if record is None:
+        raise HTTPException(status_code=404, detail="Correction request not found.")
     return {"ok": True, "record": record}
 
 

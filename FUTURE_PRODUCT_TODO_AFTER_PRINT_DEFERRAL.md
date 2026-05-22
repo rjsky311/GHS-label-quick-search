@@ -10,6 +10,9 @@ and brand/support surfaces that do not interfere with safety-critical work.
 Fixed-stock batch label printing is now tracked as a first-class product slice
 in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` because it is a non-physical-print
 workflow gap that affects daily usability before real-printer validation.
+Current user-confirmed product requirements and closure rules are pinned in
+`PRODUCT_REQUIREMENTS_DECISIONS.md`; use that file before expanding this
+backlog or implementing correction-intake work.
 
 ## Scope And Status Model
 
@@ -115,7 +118,9 @@ Acceptance:
 
 ### 1.2 Correction Intake And Review Flow
 
-Status: `Gate added` on 2026-05-15.
+Status: `Gate added` for in-app/backend intake on 2026-05-22; backend/API/admin
+queue are in place, while the public form wiring remains the next slice.
+Existing GitHub issue-form prefill remains `Gate added` as fallback.
 
 Goal: data-correction requests should become an auditable improvement path, not
 an unstructured support inbox.
@@ -165,6 +170,22 @@ Work items:
   A not-found search now exposes a structured `unresolved-search` correction
   link for dictionary curation, while upstream transient failures remain retry
   states. `qa:production-search-ui` covers this with a mocked deployed lookup.
+- Completed: added backend correction-request storage/API in the existing
+  pilot/admin SQLite store. Public submissions are bounded, rate-limited, and
+  source/evidence fields are normalized before persistence. Admin users can
+  list correction requests and update status from the dashboard.
+- Completed: added a small correction-request status model that is easy for
+  coding agents to process: `open`, `candidate_found`, `approved`, `rejected`,
+  and `ignored`. Approved requests must still convert into the relevant curated
+  record before affecting public lookup, labels, or exports.
+- Planned: wire the user-facing station/in-app correction form to the new API
+  so GitHub issue links become fallback or maintainer-edge intake instead of
+  the main public path.
+- Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
+  synonyms, NCI resolver, EPA CompTox, or scientific lookup skills remain
+  candidate evidence until admin-approved. Existing Gemini-generated seed
+  dictionary names remain the current project baseline and should not be bulk
+  invalidated without a dedicated dictionary review.
 - Completed: added admin manual-dictionary review statuses (`approved`,
   `pending`, `needs_evidence`, `rejected`). Only approved entries affect public
   lookup, trusted display names, labels, or exports; pending/needs-evidence
@@ -190,8 +211,8 @@ Work items:
 - Completed: made recent manual dictionary entries directly actionable from
   the admin curation list. Maintainers can approve, mark needs-evidence, or
   reject visible recent rows without retyping the same CAS/name payload.
-- Keep deciding whether correction requests remain GitHub issue links, move to
-  a form, or are mirrored into admin review after usage evidence appears.
+- Implement in-app correction intake as the next closeable data-governance
+  slice when product work resumes here.
 - Keep manual dictionary review status usage consistent with the correction
   path.
 - Keep workflow/business requests separate from safety-data corrections.
@@ -841,7 +862,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Structured issue-template prefill is in place and the production gate covers missing Chinese names, no-GHS gaps, source conflicts, unresolved lookups, dropdown values, and prefill field ids; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests + `qa:production-search-ui` |
+| Correction intake | `Gate added` | Backend correction-request storage/API and admin review queue are in place; next closeable slice is wiring the public station/in-app correction form to that API so GitHub issues become fallback rather than primary intake | Backend storage/API tests + focused frontend tests + `qa:production-search-ui` |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |

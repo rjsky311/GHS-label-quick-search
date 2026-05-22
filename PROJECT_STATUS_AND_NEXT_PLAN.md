@@ -21,6 +21,12 @@ changing product direction, label-printing models, data trust boundaries,
 workflow simplification, or multi-surface UX behavior when the acceptance
 standard is not already clear.
 
+Current product requirements decisions: `PRODUCT_REQUIREMENTS_DECISIONS.md`
+pins the 2026-05-22 requirements alignment for target users, priority order,
+three-output labels, Chinese-name candidate handling, in-app correction intake,
+batch workflow acceptance, and completion standard. Read it before converting
+the current data-governance or correction-intake direction into code.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -36,6 +42,10 @@ Core product promises:
 
 - Search should quickly return useful chemical identity, GHS classification,
   SDS/reference paths, and export/print actions.
+- Batch lookup is the highest-value daily workflow: users should be able to
+  paste a chemical list and understand valid, duplicate, invalid, unresolved,
+  printable, continuation, and exportable items without learning the internal
+  data model.
 - Preview should show the actual output role: complete primary label,
   supplemental label, quick-ID label, QR supplement, continuation output, or
   blocked output with a concrete recovery path.
@@ -62,6 +72,8 @@ Production:
 Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
+- Product priority is now explicit: batch lookup -> batch print, batch export,
+  data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first
   screen: Complete A4/Letter label, QR small label, and Identification small
   label. Legacy stock/template complexity remains internal or advanced only.
@@ -239,6 +251,19 @@ Current completion snapshot:
   repository issue templates at run time, so production QA no longer depends on
   a stale hard-coded copy of the GitHub form dropdown options or prefill field
   ids.
+- **Requirements decision checkpoint 2026-05-22**:
+  `PRODUCT_REQUIREMENTS_DECISIONS.md` records the user-confirmed product
+  direction: prioritize batch lookup/print/export, keep three public label
+  outputs, use same-output continuation, treat generated/external Chinese names
+  as candidates until admin review, and move future data-correction intake
+  toward an in-app/backend-admin flow with GitHub issues as fallback.
+- **Correction intake checkpoint 2026-05-22**: backend correction-request
+  storage/API and admin dashboard review are now in place. Public submissions
+  are bounded and rate-limited, admin review can list and status requests, and
+  approved requests still need conversion into manual dictionary, alias, or
+  reference-link records before changing public lookup, labels, or exports.
+  The next product step is wiring the public station/in-app form to this API so
+  GitHub issue links become fallback rather than the main correction path.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
@@ -370,6 +395,9 @@ Goal: future work should have one entry point and no competing roadmaps.
 Do next:
 
 - Keep this file as the canonical current planning file.
+- Keep `PRODUCT_REQUIREMENTS_DECISIONS.md` as the current product-decision and
+  completion-standard packet for batch-first utility work, correction intake,
+  and Chinese-name candidate policy.
 - Keep `NEXT_PRODUCT_WORK.md` as a short live queue only.
 - Keep `NEXT_REMAINING_PRODUCT_WORK.md` as the detailed execution backlog.
 - Keep historical documents such as `NEXT_PRINT_WORKSTREAMS.md`,

@@ -7,6 +7,8 @@ against the official SDS, supplier label, and local regulations.
 
 Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
 and done criteria before changing these boundaries.
+Use `PRODUCT_REQUIREMENTS_DECISIONS.md` for the current batch-first product
+priority, in-app correction-intake direction, and Chinese-name candidate policy.
 
 ## 1. Source Roles
 
@@ -53,6 +55,12 @@ dictionary and admin manual entries can provide Traditional Chinese display
 names, but the app must not invent or fake a Chinese name when coverage is
 missing.
 
+The existing seed dictionary includes Chinese names that were generated with
+Gemini 3.1 Pro. Treat that seed as the current project baseline, but do not
+extend that precedent into unreviewed runtime behavior: future LLM,
+translation, Wikidata, PubChem synonym, NCI resolver, EPA CompTox, or other
+external suggestions are candidate evidence until admin-approved.
+
 Rules:
 
 - If a search result only has an English name, printed small labels should keep
@@ -87,8 +95,8 @@ Rules:
   without affecting public lookup or printed labels.
 - Future unknown-name support should treat Chinese-name discovery as a curation
   workflow: collect the missed CAS/name, suggest candidate names from trusted
-  SDS/supplier/regulatory references when available, then require admin review
-  before using the name in labels.
+  SDS/supplier/regulatory references or candidate lookup helpers when
+  available, then require admin review before using the name in labels.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic
@@ -202,6 +210,12 @@ When sources disagree:
   when the app already knows the CAS, chemical name, issue type, current
   output, expected output, evidence type, or local context. Prefill is a triage
   aid only; it is not accepted curation evidence by itself.
+- In-app correction intake is now partially implemented. Public correction
+  requests can be stored in the existing backend pilot/admin SQLite store, and
+  admins can review/status them from the dashboard before any manual entries,
+  aliases, or reference links are created or updated. GitHub issue links remain
+  useful as maintainer fallbacks and repository-edge intake; the remaining
+  product step is wiring the public station/in-app form to the correction API.
 - Issue-form dropdown fields must receive values that exist in the repository
   issue-template schema. Machine-readable app issue keys such as
   `missing-chinese-name`, `source-conflict`, or `unresolved-search` should stay
@@ -249,6 +263,17 @@ reduce repeated typing and improve review quality:
   validating deployed support links; avoid maintaining a second hard-coded
   dropdown or field-id list inside QA scripts.
 
+The backend correction-request queue is the preferred in-app/station storage
+path. Public intake uses `POST /api/dictionary/correction-requests` with
+bounded text/context/candidate payloads, http/https-only evidence URLs, and a
+rate limit. Admin review uses
+`GET /api/dictionary/correction-requests` and
+`POST /api/dictionary/correction-requests/{request_id}/status`; statuses are
+limited to `open`, `candidate_found`, `approved`, `rejected`, and `ignored`.
+Approval is a review marker only until a maintainer or coding agent converts
+the request into an approved manual entry, alias, reference link, or other
+curated data record.
+
 Generic footer links should remain low-pressure and can stay unfilled. Result,
 Detail, and product-trust links may add context when it clarifies the user's
 task and keeps data corrections separate from workflow help.
@@ -260,6 +285,7 @@ Admin-gated surfaces:
 - Manual dictionary entries.
 - Aliases.
 - Reference links.
+- Correction requests.
 - Workspace documents.
 - Pilot observability/export reports.
 

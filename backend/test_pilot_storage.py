@@ -167,3 +167,74 @@ def test_miss_query_aggregates_hits(tmp_path):
         assert misses[0]["query_kind"] == "name"
     finally:
         store.close()
+
+
+def test_correction_request_roundtrip_and_summary(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        record = store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="107-18-6",
+            chemical_name="Allyl Alcohol",
+            current_output="Chinese name is missing.",
+            expected_output="Review a Traditional Chinese name before approval.",
+            evidence_url="https://example.com/sds",
+            evidence_type="Supplier SDS",
+            local_context="Submitted from detail modal.",
+            candidate={"name_zh": "candidate only"},
+        )
+
+        assert record["issue_type"] == "missing-chinese-name"
+        assert record["cas_number"] == "107-18-6"
+        assert record["status"] == "open"
+        assert record["candidate"] == {"name_zh": "candidate only"}
+
+        summary = store.get_dictionary_summary()
+        assert summary["correctionRequestCount"] == 1
+        assert summary["openCorrectionRequestCount"] == 1
+        assert summary["correctionRequestStatusCounts"]["open"] == 1
+        assert summary["topCorrectionRequests"][0]["localContextRedacted"] is True
+
+        updated = store.update_correction_request_status(
+            record["id"],
+            status="candidate_found",
+            review_notes="Candidate needs source evidence.",
+            candidate={"name_zh": "reviewed candidate"},
+        )
+        assert updated["status"] == "candidate_found"
+        assert updated["review_notes"] == "Candidate needs source evidence."
+        assert updated["candidate"] == {"name_zh": "reviewed candidate"}
+
+        listed = store.list_correction_requests(statuses=("candidate_found",))
+        assert [item["id"] for item in listed] == [record["id"]]
+    finally:
+        store.close()
+
+
+def test_dictionary_export_redacts_correction_context_by_default(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        store.record_correction_request(
+            issue_type="unresolved-search",
+            query_text="unknown solvent",
+            local_context="Submitted from a lab workstation.",
+        )
+
+        default_snapshot = store.export_dictionary_snapshot()
+        assert default_snapshot["correctionRequestExportScope"] == {
+            "contextIncluded": False,
+            "limit": 500,
+        }
+        assert default_snapshot["correctionRequests"][0]["localContextRedacted"] is True
+        assert "local_context" not in default_snapshot["correctionRequests"][0]
+
+        raw_snapshot = store.export_dictionary_snapshot(
+            include_correction_context=True,
+        )
+        assert raw_snapshot["correctionRequestExportScope"]["contextIncluded"] is True
+        assert (
+            raw_snapshot["correctionRequests"][0]["local_context"]
+            == "Submitted from a lab workstation."
+        )
+    finally:
+        store.close()

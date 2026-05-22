@@ -20,6 +20,24 @@ ALIAS_REVIEW_STATUSES = ("pending", "needs_evidence")
 ACTIVE_REFERENCE_STATUS = "active"
 REFERENCE_LINK_STATUSES = {"active", "inactive"}
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
+CORRECTION_REQUEST_STATUS_ORDER = (
+    "open",
+    "candidate_found",
+    "approved",
+    "rejected",
+    "ignored",
+)
+CORRECTION_REQUEST_STATUSES = set(CORRECTION_REQUEST_STATUS_ORDER)
+CORRECTION_REQUEST_REVIEW_STATUSES = ("open", "candidate_found")
+CORRECTION_REQUEST_TYPES = {
+    "missing-chinese-name",
+    "unresolved-search",
+    "no-ghs-data",
+    "ghs-text-no-pictograms",
+    "source-conflict",
+    "reference-link",
+    "other-data-quality",
+}
 DEFAULT_MISS_QUERY_RETENTION_DAYS = 90
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
@@ -78,6 +96,22 @@ def normalize_reference_link_status(status: Optional[str]) -> str:
     normalized = (status or ACTIVE_REFERENCE_STATUS).strip().lower()
     if normalized not in REFERENCE_LINK_STATUSES:
         raise ValueError("reference link status must be active or inactive")
+    return normalized
+
+
+def normalize_correction_request_status(status: Optional[str]) -> str:
+    normalized = (status or "open").strip().lower()
+    if normalized not in CORRECTION_REQUEST_STATUSES:
+        raise ValueError(
+            "correction request status must be open, candidate_found, approved, rejected, or ignored"
+        )
+    return normalized
+
+
+def normalize_correction_request_type(issue_type: Optional[str]) -> str:
+    normalized = (issue_type or "other-data-quality").strip().lower()
+    if normalized not in CORRECTION_REQUEST_TYPES:
+        raise ValueError("unsupported correction request type")
     return normalized
 
 
@@ -192,6 +226,31 @@ class PilotStore:
             );
             CREATE INDEX IF NOT EXISTS idx_dictionary_reference_links_lookup
               ON dictionary_reference_links(cas_number, status, priority);
+
+            CREATE TABLE IF NOT EXISTS dictionary_correction_requests (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              issue_type TEXT NOT NULL,
+              cas_number TEXT,
+              chemical_name TEXT,
+              query_text TEXT,
+              current_output TEXT,
+              expected_output TEXT,
+              evidence_url TEXT,
+              evidence_type TEXT,
+              local_context TEXT,
+              candidate_json TEXT,
+              source TEXT NOT NULL DEFAULT 'public',
+              status TEXT NOT NULL DEFAULT 'open',
+              review_notes TEXT,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_dictionary_correction_requests_review
+              ON dictionary_correction_requests(status, updated_at);
+            CREATE INDEX IF NOT EXISTS idx_dictionary_correction_requests_cas
+              ON dictionary_correction_requests(cas_number, status);
+            CREATE INDEX IF NOT EXISTS idx_dictionary_correction_requests_issue_type
+              ON dictionary_correction_requests(issue_type, status);
             """
         )
         self._ensure_dictionary_entry_schema_locked()
@@ -1048,6 +1107,237 @@ class PilotStore:
             for row in rows
         ]
 
+    # Correction requests ------------------------------------------------
+    def _correction_request_row_to_dict(
+        self,
+        row: sqlite3.Row,
+        *,
+        include_context: bool = True,
+    ) -> dict[str, Any]:
+        item = dict(row)
+        item["candidate"] = json.loads(item.pop("candidate_json") or "{}")
+        item["issueType"] = item.get("issue_type")
+        item["casNumber"] = item.get("cas_number")
+        item["chemicalName"] = item.get("chemical_name")
+        item["queryText"] = item.get("query_text")
+        item["currentOutput"] = item.get("current_output")
+        item["expectedOutput"] = item.get("expected_output")
+        item["evidenceUrl"] = item.get("evidence_url")
+        item["evidenceType"] = item.get("evidence_type")
+        item["reviewNotes"] = item.get("review_notes")
+        item["createdAt"] = item.get("created_at")
+        item["updatedAt"] = item.get("updated_at")
+        if include_context:
+            item["localContext"] = item.get("local_context")
+            return item
+        item.pop("local_context", None)
+        item["localContextRedacted"] = True
+        return item
+
+    def _fetch_correction_request_by_id(
+        self,
+        request_id: int,
+        *,
+        include_context: bool = True,
+    ) -> Optional[dict[str, Any]]:
+        row = self._fetchone(
+            """
+            SELECT
+              id,
+              issue_type,
+              cas_number,
+              chemical_name,
+              query_text,
+              current_output,
+              expected_output,
+              evidence_url,
+              evidence_type,
+              local_context,
+              candidate_json,
+              source,
+              status,
+              review_notes,
+              created_at,
+              updated_at
+            FROM dictionary_correction_requests
+            WHERE id = ?
+            """,
+            (request_id,),
+        )
+        return (
+            self._correction_request_row_to_dict(row, include_context=include_context)
+            if row is not None
+            else None
+        )
+
+    def record_correction_request(
+        self,
+        *,
+        issue_type: str,
+        cas_number: Optional[str] = None,
+        chemical_name: Optional[str] = None,
+        query_text: Optional[str] = None,
+        current_output: Optional[str] = None,
+        expected_output: Optional[str] = None,
+        evidence_url: Optional[str] = None,
+        evidence_type: Optional[str] = None,
+        local_context: Optional[str] = None,
+        candidate: Optional[dict[str, Any]] = None,
+        source: str = "public",
+        status: str = "open",
+    ) -> dict[str, Any]:
+        now = utc_now_iso()
+        normalized_issue_type = normalize_correction_request_type(issue_type)
+        normalized_status = normalize_correction_request_status(status)
+        candidate_json = json.dumps(candidate or {}, ensure_ascii=False)
+        source = (source or "public").strip() or "public"
+
+        with self._lock:
+            conn = self._require_conn()
+            cursor = conn.execute(
+                """
+                INSERT INTO dictionary_correction_requests(
+                  issue_type,
+                  cas_number,
+                  chemical_name,
+                  query_text,
+                  current_output,
+                  expected_output,
+                  evidence_url,
+                  evidence_type,
+                  local_context,
+                  candidate_json,
+                  source,
+                  status,
+                  review_notes,
+                  created_at,
+                  updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?)
+                """,
+                (
+                    normalized_issue_type,
+                    (cas_number or "").strip() or None,
+                    (chemical_name or "").strip() or None,
+                    (query_text or "").strip() or None,
+                    (current_output or "").strip() or None,
+                    (expected_output or "").strip() or None,
+                    (evidence_url or "").strip() or None,
+                    (evidence_type or "").strip() or None,
+                    (local_context or "").strip() or None,
+                    candidate_json,
+                    source,
+                    normalized_status,
+                    now,
+                    now,
+                ),
+            )
+            conn.commit()
+            request_id = int(cursor.lastrowid)
+
+        record = self._fetch_correction_request_by_id(request_id)
+        assert record is not None
+        return record
+
+    def list_correction_requests(
+        self,
+        *,
+        limit: int = 100,
+        statuses: Optional[Iterable[str]] = None,
+        include_context: bool = True,
+    ) -> list[dict[str, Any]]:
+        params: list[Any] = []
+        where_status = ""
+        if statuses:
+            normalized_statuses = [
+                normalize_correction_request_status(status) for status in statuses
+            ]
+            where_status = (
+                "WHERE status IN ("
+                + ",".join("?" for _ in normalized_statuses)
+                + ")"
+            )
+            params.extend(normalized_statuses)
+        params.append(limit)
+        rows = self._fetchall(
+            f"""
+            SELECT
+              id,
+              issue_type,
+              cas_number,
+              chemical_name,
+              query_text,
+              current_output,
+              expected_output,
+              evidence_url,
+              evidence_type,
+              local_context,
+              candidate_json,
+              source,
+              status,
+              review_notes,
+              created_at,
+              updated_at
+            FROM dictionary_correction_requests
+            {where_status}
+            ORDER BY updated_at DESC, id DESC
+            LIMIT ?
+            """,
+            params,
+        )
+        return [
+            self._correction_request_row_to_dict(
+                row,
+                include_context=include_context,
+            )
+            for row in rows
+        ]
+
+    def get_correction_request_status_counts(self) -> dict[str, int]:
+        rows = self._fetchall(
+            """
+            SELECT status, COUNT(*) AS count
+            FROM dictionary_correction_requests
+            GROUP BY status
+            """
+        )
+        counts = {status: 0 for status in CORRECTION_REQUEST_STATUS_ORDER}
+        for row in rows:
+            counts[str(row["status"])] = int(row["count"])
+        return counts
+
+    def update_correction_request_status(
+        self,
+        request_id: int,
+        *,
+        status: str,
+        review_notes: Optional[str] = None,
+        candidate: Optional[dict[str, Any]] = None,
+    ) -> Optional[dict[str, Any]]:
+        normalized_status = normalize_correction_request_status(status)
+        candidate_json = (
+            json.dumps(candidate, ensure_ascii=False) if candidate is not None else None
+        )
+        self._execute(
+            """
+            UPDATE dictionary_correction_requests
+            SET
+              status = ?,
+              review_notes = COALESCE(?, review_notes),
+              candidate_json = COALESCE(?, candidate_json),
+              updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                normalized_status,
+                (review_notes or "").strip() if review_notes is not None else None,
+                candidate_json,
+                utc_now_iso(),
+                request_id,
+            ),
+        )
+        return self._fetch_correction_request_by_id(request_id)
+
     # Reporting -----------------------------------------------------------
     def get_dictionary_summary(self, *, limit: int = 10) -> dict[str, Any]:
         pending_manual_entries = []
@@ -1091,6 +1381,23 @@ class PilotStore:
             ),
             "missQueryStatusCounts": self.get_miss_query_status_counts(),
             "missQueryRetention": self.get_miss_query_retention_summary(),
+            "correctionRequestCount": self._scalar(
+                "SELECT COUNT(*) FROM dictionary_correction_requests"
+            ),
+            "openCorrectionRequestCount": self._scalar(
+                """
+                SELECT COUNT(*)
+                FROM dictionary_correction_requests
+                WHERE status IN (?, ?)
+                """,
+                CORRECTION_REQUEST_REVIEW_STATUSES,
+            ),
+            "correctionRequestStatusCounts": self.get_correction_request_status_counts(),
+            "topCorrectionRequests": self.list_correction_requests(
+                limit=limit,
+                statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                include_context=False,
+            ),
             "referenceLinkCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",
                 (ACTIVE_REFERENCE_STATUS,),
@@ -1153,10 +1460,15 @@ class PilotStore:
         self,
         *,
         include_miss_context: bool = False,
+        include_correction_context: bool = False,
     ) -> dict[str, Any]:
         miss_queries = self.list_miss_queries(
             limit=500,
             include_context=include_miss_context,
+        )
+        correction_requests = self.list_correction_requests(
+            limit=500,
+            include_context=include_correction_context,
         )
         return {
             "exportedAt": utc_now_iso(),
@@ -1164,9 +1476,14 @@ class PilotStore:
                 "contextIncluded": include_miss_context,
                 "limit": 500,
             },
+            "correctionRequestExportScope": {
+                "contextIncluded": include_correction_context,
+                "limit": 500,
+            },
             "manualEntries": self.list_manual_entries(),
             "aliases": self.list_aliases(),
             "missQueries": miss_queries,
+            "correctionRequests": correction_requests,
             "referenceLinks": [
                 dict(row)
                 for row in self._fetchall(

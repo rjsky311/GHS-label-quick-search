@@ -7,6 +7,9 @@ choosing what to do next.
 Use `NEXT_REMAINING_PRODUCT_WORK.md` for detailed execution notes after the
 current priority is chosen. Use `AUTONOMOUS_WORKFLOW.md` for standing approval,
 stop conditions, verification, pushing, deployment, and production QA rules.
+Use `PRODUCT_REQUIREMENTS_DECISIONS.md` for the current product decisions,
+priority order, correction-intake direction, Chinese-name candidate policy, and
+done criteria.
 For the next label-printing refactor, use
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the active product contract.
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
@@ -41,6 +44,12 @@ Current mode:
 - CI / production QA and documentation consolidation are in **maintenance**
   state: keep them healthy, but do not treat them as unfinished product work
   unless a gate fails or a workflow assumption changes.
+- Product priority is now explicit: batch lookup -> batch print, batch export,
+  data correction/governance, single lookup polish, then brand/support polish.
+  The correction-request backend store/API and admin review queue are now in
+  place. The next closeable non-print slice is wiring the public station/in-app
+  correction form to that API, with GitHub issues kept as fallback rather than
+  the primary public correction workflow.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now
@@ -121,6 +130,17 @@ Current mode:
   search UI gate now also reads the issue-template dropdown options and field
   ids directly instead of keeping separate hard-coded lists, and treats schema
   compatibility as part of the deployed support-link contract.
+- Completed current slice: user requirements were pinned in
+  `PRODUCT_REQUIREMENTS_DECISIONS.md`. The project now treats batch
+  lookup/print/export as the highest-value workflow, keeps three public label
+  outputs, routes future generated Chinese names through candidate/admin review,
+  and prefers in-app correction intake stored in the backend pilot/admin SQLite
+  store over GitHub issue-first correction.
+- Completed current slice: correction-request storage/API now exists in the
+  backend pilot/admin SQLite flow, with public bounded submissions, admin list
+  and status update endpoints, dashboard status counts, and an admin review
+  queue. This turns data-quality reports into reviewable records before any
+  public dictionary, label, or export output can change.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

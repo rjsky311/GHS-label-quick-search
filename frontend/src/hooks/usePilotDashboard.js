@@ -13,6 +13,7 @@ export default function usePilotDashboard(options = {}) {
   const [aliases, setAliases] = useState([]);
   const [manualEntries, setManualEntries] = useState([]);
   const [referenceLinks, setReferenceLinks] = useState([]);
+  const [correctionRequests, setCorrectionRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -31,13 +32,19 @@ export default function usePilotDashboard(options = {}) {
     setAuthError("");
 
     try {
-      const [reportResponse, aliasesResponse, entriesResponse, linksResponse] =
-        await Promise.all([
-          axios.get(`${API}/ops/report`, requestConfig),
-          axios.get(`${API}/dictionary/aliases`, requestConfig),
-          axios.get(`${API}/dictionary/manual-entries`, requestConfig),
-          axios.get(`${API}/dictionary/reference-links?include_inactive=true`, requestConfig),
-        ]);
+      const [
+        reportResponse,
+        aliasesResponse,
+        entriesResponse,
+        linksResponse,
+        correctionRequestsResponse,
+      ] = await Promise.all([
+        axios.get(`${API}/ops/report`, requestConfig),
+        axios.get(`${API}/dictionary/aliases`, requestConfig),
+        axios.get(`${API}/dictionary/manual-entries`, requestConfig),
+        axios.get(`${API}/dictionary/reference-links?include_inactive=true`, requestConfig),
+        axios.get(`${API}/dictionary/correction-requests`, requestConfig),
+      ]);
       setReport(reportResponse.data);
       setAliases(
         Array.isArray(aliasesResponse.data?.items) ? aliasesResponse.data.items : []
@@ -47,6 +54,11 @@ export default function usePilotDashboard(options = {}) {
       );
       setReferenceLinks(
         Array.isArray(linksResponse.data?.items) ? linksResponse.data.items : []
+      );
+      setCorrectionRequests(
+        Array.isArray(correctionRequestsResponse.data?.items)
+          ? correctionRequestsResponse.data.items
+          : []
       );
       return reportResponse.data;
     } catch (fetchError) {
@@ -142,11 +154,24 @@ export default function usePilotDashboard(options = {}) {
     [performMutation, requestConfig]
   );
 
+  const updateCorrectionRequestStatus = useCallback(
+    async (requestId, payload) =>
+      performMutation(() =>
+        axios.post(
+          `${API}/dictionary/correction-requests/${requestId}/status`,
+          payload,
+          requestConfig
+        )
+      ),
+    [performMutation, requestConfig]
+  );
+
   return {
     report,
     aliases,
     manualEntries,
     referenceLinks,
+    correctionRequests,
     loading,
     saving,
     error,
@@ -157,5 +182,6 @@ export default function usePilotDashboard(options = {}) {
     saveReferenceLink,
     resolveMissQuery,
     purgeStaleMissQueries,
+    updateCorrectionRequestStatus,
   };
 }

@@ -100,6 +100,34 @@ const REFERENCE_LINK_STATUS_OPTIONS = [
   },
 ];
 
+const CORRECTION_REQUEST_STATUS_OPTIONS = [
+  {
+    value: "open",
+    labelKey: "pilot.correctionStatusOpen",
+    defaultLabel: "Open",
+  },
+  {
+    value: "candidate_found",
+    labelKey: "pilot.correctionStatusCandidateFound",
+    defaultLabel: "Candidate found",
+  },
+  {
+    value: "approved",
+    labelKey: "pilot.correctionStatusApproved",
+    defaultLabel: "Approved",
+  },
+  {
+    value: "rejected",
+    labelKey: "pilot.correctionStatusRejected",
+    defaultLabel: "Rejected",
+  },
+  {
+    value: "ignored",
+    labelKey: "pilot.correctionStatusIgnored",
+    defaultLabel: "Ignored",
+  },
+];
+
 const CURATION_STATUS_META = {
   approved: {
     labelKey: "pilot.manualStatusApproved",
@@ -129,6 +157,21 @@ const CURATION_STATUS_META = {
   inactive: {
     labelKey: "pilot.referenceStatusInactive",
     defaultLabel: "Inactive",
+    className: "border-slate-200 bg-slate-100 text-slate-600",
+  },
+  open: {
+    labelKey: "pilot.correctionStatusOpen",
+    defaultLabel: "Open",
+    className: "border-blue-200 bg-blue-50 text-blue-700",
+  },
+  candidate_found: {
+    labelKey: "pilot.correctionStatusCandidateFound",
+    defaultLabel: "Candidate found",
+    className: "border-amber-200 bg-amber-50 text-amber-700",
+  },
+  ignored: {
+    labelKey: "pilot.correctionStatusIgnored",
+    defaultLabel: "Ignored",
     className: "border-slate-200 bg-slate-100 text-slate-600",
   },
 };
@@ -186,6 +229,7 @@ export default function PilotDashboardSidebar(props) {
     aliases = [],
     manualEntries = [],
     referenceLinks = [],
+    correctionRequests = [],
     loading,
     saving = false,
     error = "",
@@ -197,6 +241,7 @@ export default function PilotDashboardSidebar(props) {
     onSaveReferenceLink,
     onResolveMissQuery,
     onPurgeStaleMissQueries,
+    onUpdateCorrectionRequestStatus,
   } = props;
   const { t } = useTranslation();
   const panelRef = useFocusTrap(onClose);
@@ -224,6 +269,7 @@ export default function PilotDashboardSidebar(props) {
     status: "active",
   });
   const [missResolutionDrafts, setMissResolutionDrafts] = useState({});
+  const [correctionReviewDrafts, setCorrectionReviewDrafts] = useState({});
 
   const dictionary = report?.dictionary || {};
   const counters = report?.counters || {};
@@ -233,9 +279,12 @@ export default function PilotDashboardSidebar(props) {
   const manualEntryStatusCounts = dictionary.manualEntryStatusCounts || {};
   const aliasStatusCounts = dictionary.aliasStatusCounts || {};
   const referenceLinkStatusCounts = dictionary.referenceLinkStatusCounts || {};
+  const correctionRequestStatusCounts =
+    dictionary.correctionRequestStatusCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
+  const topCorrectionRequests = dictionary.topCorrectionRequests || [];
   const recentManualEntries = useMemo(
     () => sortNewestFirst(manualEntries, (entry) => entry.cas_number).slice(0, 8),
     [manualEntries]
@@ -255,6 +304,15 @@ export default function PilotDashboardSidebar(props) {
         8
       ),
     [referenceLinks]
+  );
+  const recentCorrectionRequests = useMemo(
+    () =>
+      sortNewestFirst(
+        correctionRequests,
+        (item) =>
+          `${item.issue_type || item.issueType || ""}-${item.cas_number || item.casNumber || ""}`
+      ).slice(0, 8),
+    [correctionRequests]
   );
 
   const submitManualEntry = async (event) => {
@@ -532,6 +590,34 @@ export default function PilotDashboardSidebar(props) {
     }
   };
 
+  const handleCorrectionRequestStatusUpdate = async (item, status) => {
+    const requestId = item?.id;
+    if (!requestId || !onUpdateCorrectionRequestStatus) return;
+    const draftNotes = (correctionReviewDrafts[requestId] || "").trim();
+    try {
+      await onUpdateCorrectionRequestStatus(requestId, {
+        status,
+        review_notes: draftNotes || item?.review_notes || item?.reviewNotes || null,
+      });
+      if (draftNotes) {
+        setCorrectionReviewDrafts((prev) => ({ ...prev, [requestId]: "" }));
+      }
+      toast.success(
+        t("pilot.correctionRequestUpdated", {
+          defaultValue: "Correction request updated.",
+        })
+      );
+    } catch (submitError) {
+      toast.error(
+        submitError?.response?.data?.detail ||
+          submitError?.message ||
+          t("pilot.correctionRequestUpdateFailed", {
+            defaultValue: "Failed to update correction request.",
+          })
+      );
+    }
+  };
+
   const handlePurgeStaleMissQueries = async () => {
     if (!onPurgeStaleMissQueries) return;
     const purgeableCount = Number(missRetention.purgeableCount || 0);
@@ -682,6 +768,14 @@ export default function PilotDashboardSidebar(props) {
                   testId="pilot-summary-open-miss-queries"
                 />
                 <SummaryCard
+                  label={t("pilot.openCorrectionRequests", {
+                    defaultValue: "Open corrections",
+                  })}
+                  value={dictionary.openCorrectionRequestCount || 0}
+                  accent="text-orange-700"
+                  testId="pilot-summary-open-correction-requests"
+                />
+                <SummaryCard
                   label={t("pilot.manualEntries", { defaultValue: "Manual entries" })}
                   value={dictionary.manualEntryCount || 0}
                   accent="text-emerald-700"
@@ -770,6 +864,170 @@ export default function PilotDashboardSidebar(props) {
                   </span>
                 ))}
               </div>
+              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                <span className="font-medium text-slate-800">
+                  {t("pilot.correctionRequestStatusSummary", {
+                    defaultValue: "Correction intake",
+                  })}
+                </span>
+                {CORRECTION_REQUEST_STATUS_OPTIONS.map((option) => (
+                  <span
+                    key={option.value}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
+                    data-testid={`correction-request-status-count-${option.value}`}
+                  >
+                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
+                    {correctionRequestStatusCounts[option.value] || 0}
+                  </span>
+                ))}
+              </div>
+
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <SectionHeading
+                  icon={ShieldAlert}
+                  title={t("pilot.correctionRequests", {
+                    defaultValue: "Correction requests",
+                  })}
+                  subtitle={t("pilot.correctionRequestsHint", {
+                    defaultValue:
+                      "Station and in-app reports land here first. Approve only after source evidence is reviewed.",
+                  })}
+                />
+                {topCorrectionRequests.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    {t("pilot.noCorrectionRequests", {
+                      defaultValue: "No open correction requests yet.",
+                    })}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {topCorrectionRequests.map((item) => {
+                      const requestId = item.id;
+                      const issueType = item.issue_type || item.issueType || "other";
+                      const casNumber = item.cas_number || item.casNumber || "";
+                      const chemicalName =
+                        item.chemical_name || item.chemicalName || item.query_text || "";
+                      const evidenceUrl = item.evidence_url || item.evidenceUrl || "";
+                      const status = item.status || "open";
+                      return (
+                        <div
+                          key={`correction-${requestId}`}
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                          data-testid={`correction-request-row-${requestId}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-medium text-slate-900">
+                                  {issueType}
+                                </span>
+                                <CurationStatusBadge
+                                  status={status}
+                                  testId={`correction-request-status-${requestId}`}
+                                />
+                              </div>
+                              <div className="mt-1 text-sm text-slate-700">
+                                {[casNumber, chemicalName].filter(Boolean).join(" | ") ||
+                                  t("pilot.correctionUnknownTarget", {
+                                    defaultValue: "No target identity provided",
+                                  })}
+                              </div>
+                              {item.current_output || item.currentOutput ? (
+                                <div className="mt-1 text-xs text-slate-500">
+                                  {item.current_output || item.currentOutput}
+                                </div>
+                              ) : null}
+                              {evidenceUrl ? (
+                                <a
+                                  href={evidenceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
+                                >
+                                  {t("pilot.evidenceLink", {
+                                    defaultValue: "Evidence link",
+                                  })}
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : null}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {formatRelativeTime(item.updated_at || item.updatedAt)}
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+                            <input
+                              value={correctionReviewDrafts[requestId] || ""}
+                              onChange={(event) =>
+                                setCorrectionReviewDrafts((prev) => ({
+                                  ...prev,
+                                  [requestId]: event.target.value,
+                                }))
+                              }
+                              placeholder={t("pilot.correctionReviewNotesPlaceholder", {
+                                defaultValue: "Review note",
+                              })}
+                              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
+                              data-testid={`correction-request-notes-${requestId}`}
+                            />
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCorrectionRequestStatusUpdate(
+                                    item,
+                                    "candidate_found"
+                                  )
+                                }
+                                disabled={saving || !requestId}
+                                className="rounded bg-amber-600 px-3 py-2 text-xs text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`candidate-correction-request-${requestId}`}
+                              >
+                                {t("pilot.candidateFound", {
+                                  defaultValue: "Candidate",
+                                })}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCorrectionRequestStatusUpdate(item, "approved")
+                                }
+                                disabled={saving || !requestId}
+                                className="rounded bg-emerald-700 px-3 py-2 text-xs text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`approve-correction-request-${requestId}`}
+                              >
+                                {t("pilot.approve", { defaultValue: "Approve" })}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCorrectionRequestStatusUpdate(item, "rejected")
+                                }
+                                disabled={saving || !requestId}
+                                className="rounded bg-red-700 px-3 py-2 text-xs text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`reject-correction-request-${requestId}`}
+                              >
+                                {t("pilot.reject", { defaultValue: "Reject" })}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCorrectionRequestStatusUpdate(item, "ignored")
+                                }
+                                disabled={saving || !requestId}
+                                className="rounded bg-slate-700 px-3 py-2 text-xs text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                data-testid={`ignore-correction-request-${requestId}`}
+                              >
+                                {t("pilot.ignoreMiss", { defaultValue: "Ignore" })}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
@@ -1337,6 +1595,75 @@ export default function PilotDashboardSidebar(props) {
                     </button>
                   </div>
                 </form>
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <SectionHeading
+                  icon={ShieldAlert}
+                  title={t("pilot.correctionRequestList", {
+                    defaultValue: "Recent correction requests",
+                  })}
+                  subtitle={t("pilot.correctionRequestListHint", {
+                    defaultValue:
+                      "Data-quality reports stay here until an admin finds evidence and applies the approved dictionary or reference change.",
+                  })}
+                />
+                {recentCorrectionRequests.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    {t("pilot.noCorrectionRequests", {
+                      defaultValue: "No open correction requests yet.",
+                    })}
+                  </p>
+                ) : (
+                  <div className="grid gap-2 lg:grid-cols-2">
+                    {recentCorrectionRequests.map((item, index) => {
+                      const requestId = item.id || index;
+                      const issueType = item.issue_type || item.issueType || "other";
+                      const casNumber = item.cas_number || item.casNumber || "";
+                      const chemicalName =
+                        item.chemical_name || item.chemicalName || item.query_text || "";
+                      const expectedOutput =
+                        item.expected_output || item.expectedOutput || "";
+                      const status = item.status || "open";
+                      return (
+                        <div
+                          key={`recent-correction-${requestId}`}
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
+                          data-testid={`correction-request-recent-row-${requestId}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="font-medium text-slate-900">{issueType}</div>
+                              <div className="mt-1 font-mono text-blue-700">
+                                {casNumber ||
+                                  t("pilot.noCasProvided", {
+                                    defaultValue: "No CAS provided",
+                                  })}
+                              </div>
+                            </div>
+                            <CurationStatusBadge
+                              status={status}
+                              testId={`correction-request-recent-status-${requestId}`}
+                            />
+                          </div>
+                          {chemicalName ? (
+                            <div className="mt-1 text-slate-700">{chemicalName}</div>
+                          ) : null}
+                          {expectedOutput ? (
+                            <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                              {expectedOutput}
+                            </div>
+                          ) : null}
+                          {curationTimestamp(item) ? (
+                            <div className="mt-2 text-xs text-slate-500">
+                              {formatRelativeTime(curationTimestamp(item))}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
 
               <section className="grid gap-4 xl:grid-cols-3">

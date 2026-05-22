@@ -128,6 +128,7 @@ User Browser
 | `/api/dictionary/manual-entries`  | GET/POST | admin-gated         | Manual dictionary entries                                                                                         |
 | `/api/dictionary/aliases`         | GET/POST | admin-gated         | Alias curation                                                                                                    |
 | `/api/dictionary/reference-links` | GET/POST | admin-gated         | Reference/SDS link curation                                                                                       |
+| `/api/dictionary/correction-requests` | GET/POST | POST 20/min, GET admin-gated | Public bounded correction intake and admin review queue                                                           |
 | `/api/dictionary/miss-query`      | POST     | —                   | Optional search miss telemetry; no-op unless `CAPTURE_DICTIONARY_MISSES=true`                                     |
 | `/api/workspace/{doc_type}`       | GET/PUT  | admin-gated         | Optional shared workspace persistence for prepared/print/lab-profile docs; public frontend defaults to local-only |
 | `/api/search-by-name/{query}`     | GET      | 60/min              | Name search (EN/ZH substring + aliases, max 20)                                                                   |
@@ -247,6 +248,19 @@ The current project-level planning entry is
 `PROJECT_STATUS_AND_NEXT_PLAN.md`. Read it first when choosing the next product
 slice; it consolidates current status, should-do items, blind spots, priority
 order, and done criteria.
+
+The current product-requirements decision packet is
+`PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction
+intake, Chinese-name candidate handling, batch-first product priority, or the
+definition of done. It records the 2026-05-22 alignment: prioritize batch
+lookup/print/export, keep three public label outputs, store future public
+correction requests in the backend pilot/admin SQLite flow, and treat future
+LLM/external Chinese-name suggestions as candidates until admin-approved.
+Backend correction-request storage/API and admin dashboard review are now in
+place; public correction forms should be wired to that queue before GitHub
+issues are treated as the main intake again. Approved correction requests do
+not change public data by themselves; convert them into approved manual
+entries, aliases, reference links, or other curated records first.
 
 The project-level scope alignment workflow is pinned in
 `PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,
