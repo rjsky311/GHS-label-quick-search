@@ -411,7 +411,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 ### Test Results (latest known v1.10 baseline)
 
-- **Frontend**: 888 tests across 52 suites; 0 known React `act(...)` warnings
+- **Frontend**: 966 tests across 58 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
 - **Docs drift**: `npm run test:docs` checks runtime version alignment, canonical planning links, doc role statements, physical-print deferral wording, future-tracker statuses, and active owner-doc contracts across 16 docs.
 - **Print contract**: `npm run test:print-contract` covers 248 focused print/planner/renderer assertions
