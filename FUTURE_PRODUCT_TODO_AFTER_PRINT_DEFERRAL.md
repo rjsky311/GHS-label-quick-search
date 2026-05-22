@@ -198,6 +198,9 @@ Work items:
   originating correction request as `candidate_found` with manual-review
   metadata. This keeps the admin queue traceable while still recording
   `public_data_changed: false` until the manual entry itself is approved.
+- Completed: admin dictionary summary now counts correction candidates that
+  have already entered manual review, so maintainers can see conversion
+  throughput without opening each request.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

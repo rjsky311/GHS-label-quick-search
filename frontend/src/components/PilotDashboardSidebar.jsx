@@ -921,6 +921,14 @@ export default function PilotDashboardSidebar(props) {
                   testId="pilot-summary-pending-manual-entries"
                 />
                 <SummaryCard
+                  label={t("pilot.convertedCorrectionCandidates", {
+                    defaultValue: "Corrections in manual review",
+                  })}
+                  value={dictionary.convertedCorrectionCandidateCount || 0}
+                  accent="text-amber-700"
+                  testId="pilot-summary-converted-correction-candidates"
+                />
+                <SummaryCard
                   label={t("pilot.referenceLinks", { defaultValue: "Reference links" })}
                   value={dictionary.referenceLinkCount || 0}
                   accent="text-violet-700"

@@ -887,6 +887,7 @@
   "pilot.pendingAliases": "待審別名",
   "pilot.openMissQueries": "未解查詢",
   "pilot.manualEntries": "手動項目",
+  "pilot.convertedCorrectionCandidates": "已轉待審修正",
   "pilot.referenceLinks": "參考連結",
   "pilot.cacheStaleHits": "過期快取命中",
   "pilot.upstreamErrors": "上游錯誤",

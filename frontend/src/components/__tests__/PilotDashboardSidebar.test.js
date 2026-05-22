@@ -42,6 +42,7 @@ const baseProps = {
         rejected: 0,
         ignored: 1,
       },
+      convertedCorrectionCandidateCount: 1,
       missQueryStatusCounts: {
         open: 2,
         needs_evidence: 1,
@@ -234,6 +235,9 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("reference-link-status-count-inactive")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-open-miss-queries")).toHaveTextContent("2");
     expect(screen.getByTestId("pilot-summary-open-correction-requests")).toHaveTextContent("1");
+    expect(
+      screen.getByTestId("pilot-summary-converted-correction-candidates"),
+    ).toHaveTextContent("1");
     expect(screen.getByTestId("miss-query-status-count-open")).toHaveTextContent("2");
     expect(screen.getByTestId("miss-query-status-count-needs_evidence")).toHaveTextContent("1");
     expect(screen.getByTestId("miss-query-status-count-resolved")).toHaveTextContent("3");

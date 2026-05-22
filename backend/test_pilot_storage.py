@@ -193,6 +193,7 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert summary["correctionRequestCount"] == 1
         assert summary["openCorrectionRequestCount"] == 1
         assert summary["correctionRequestStatusCounts"]["open"] == 1
+        assert summary["convertedCorrectionCandidateCount"] == 0
         assert summary["topCorrectionRequests"][0]["localContextRedacted"] is True
 
         updated = store.update_correction_request_status(
@@ -204,6 +205,18 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert updated["status"] == "candidate_found"
         assert updated["review_notes"] == "Candidate needs source evidence."
         assert updated["candidate"] == {"name_zh": "reviewed candidate"}
+
+        converted = store.update_correction_request_status(
+            record["id"],
+            status="candidate_found",
+            candidate={
+                "name_zh": "reviewed candidate",
+                "converted_to_manual_entry": True,
+            },
+        )
+        assert converted["candidate"]["converted_to_manual_entry"] is True
+        summary = store.get_dictionary_summary()
+        assert summary["convertedCorrectionCandidateCount"] == 1
 
         listed = store.list_correction_requests(statuses=("candidate_found",))
         assert [item["id"] for item in listed] == [record["id"]]

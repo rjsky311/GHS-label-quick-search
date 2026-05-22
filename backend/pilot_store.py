@@ -1306,6 +1306,26 @@ class PilotStore:
             counts[str(row["status"])] = int(row["count"])
         return counts
 
+    def get_converted_correction_candidate_count(self) -> int:
+        rows = self._fetchall(
+            """
+            SELECT candidate_json
+            FROM dictionary_correction_requests
+            WHERE status = ?
+              AND candidate_json IS NOT NULL
+            """,
+            ("candidate_found",),
+        )
+        count = 0
+        for row in rows:
+            try:
+                candidate = json.loads(row["candidate_json"] or "{}")
+            except json.JSONDecodeError:
+                continue
+            if candidate.get("converted_to_manual_entry") is True:
+                count += 1
+        return count
+
     def update_correction_request_status(
         self,
         request_id: int,
@@ -1393,6 +1413,7 @@ class PilotStore:
                 CORRECTION_REQUEST_REVIEW_STATUSES,
             ),
             "correctionRequestStatusCounts": self.get_correction_request_status_counts(),
+            "convertedCorrectionCandidateCount": self.get_converted_correction_candidate_count(),
             "topCorrectionRequests": self.list_correction_requests(
                 limit=limit,
                 statuses=CORRECTION_REQUEST_REVIEW_STATUSES,

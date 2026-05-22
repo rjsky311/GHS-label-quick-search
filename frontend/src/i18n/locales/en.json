@@ -895,6 +895,7 @@
   "pilot.pendingAliases": "Pending aliases",
   "pilot.openMissQueries": "Open miss queries",
   "pilot.manualEntries": "Manual entries",
+  "pilot.convertedCorrectionCandidates": "Corrections in manual review",
   "pilot.referenceLinks": "Reference links",
   "pilot.cacheStaleHits": "Stale cache hits",
   "pilot.upstreamErrors": "Upstream errors",
