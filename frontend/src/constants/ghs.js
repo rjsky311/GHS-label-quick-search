@@ -1,13 +1,3 @@
-import GHS01 from "@/assets/ghs/GHS01.svg";
-import GHS02 from "@/assets/ghs/GHS02.svg";
-import GHS03 from "@/assets/ghs/GHS03.svg";
-import GHS04 from "@/assets/ghs/GHS04.svg";
-import GHS05 from "@/assets/ghs/GHS05.svg";
-import GHS06 from "@/assets/ghs/GHS06.svg";
-import GHS07 from "@/assets/ghs/GHS07.svg";
-import GHS08 from "@/assets/ghs/GHS08.svg";
-import GHS09 from "@/assets/ghs/GHS09.svg";
-
 const rawBackendUrl =
   (typeof globalThis.__APP_BACKEND_URL__ === "string"
     ? globalThis.__APP_BACKEND_URL__
@@ -25,16 +15,16 @@ export const API = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
 // lets the frontend provide a friendlier preemptive experience.
 export const BATCH_SEARCH_LIMIT = 100;
 
-// GHS pictograms are checked-in SVG assets so print preflight never
-// depends on third-party image availability.
+// GHS pictograms are checked-in public SVG assets so print preflight never
+// depends on third-party image availability or Vite's hashed asset splitting.
 export const GHS_IMAGES = {
-  GHS01,
-  GHS02,
-  GHS03,
-  GHS04,
-  GHS05,
-  GHS06,
-  GHS07,
-  GHS08,
-  GHS09,
+  GHS01: "/ghs/GHS01.svg",
+  GHS02: "/ghs/GHS02.svg",
+  GHS03: "/ghs/GHS03.svg",
+  GHS04: "/ghs/GHS04.svg",
+  GHS05: "/ghs/GHS05.svg",
+  GHS06: "/ghs/GHS06.svg",
+  GHS07: "/ghs/GHS07.svg",
+  GHS08: "/ghs/GHS08.svg",
+  GHS09: "/ghs/GHS09.svg",
 };

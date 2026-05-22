@@ -280,11 +280,6 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: "build",
-      // Keep every official GHS SVG embedded in the app bundle. Vite's
-      // default inline limit split larger pictograms into secondary SVG
-      // requests, which made production image-readiness QA flaky even though
-      // the assets are project-local.
-      assetsInlineLimit: 20000,
       rollupOptions: {
         output: {
           manualChunks(id) {
