@@ -206,8 +206,8 @@ required.
 | Workstream | Status | Next closeable slice | Done gate |
 | --- | --- | --- | --- |
 | Requirements decisions | `Shipped` | Keep this file cross-linked from owner docs as decisions evolve | `npm run test:docs`, `git diff --check` |
-| In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, and public in-app form entry are in place; next slice is candidate evidence support for missing Chinese names and unresolved searches | Backend tests, focused frontend tests, production search UI |
-| Candidate lookup support | `Planned` | Add maintainer-only candidate evidence plan before wiring external services | Data-governance docs + sandbox/dry-run evidence |
+| In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, public in-app form entry, and admin-only candidate evidence bundles are in place | Backend tests, focused frontend tests, production search UI |
+| Candidate lookup support | `Gate added` for local evidence bundle; external discovery `Planned` | Trial external candidate discovery only after scope/cost/source review, and keep all outputs review-only until curated | Candidate helper tests + data-governance docs + sandbox/dry-run evidence |
 | Batch lookup/print/export | `Monitoring` | Add fixtures only when real batch lists expose new separators, fit cases, or export gaps | Parser tests, print PDF QA, production batch/search QA |
 | Low-noise UX | `Monitoring` | Improve only when production screenshots or user feedback show confusion | Production search UI screenshots |
 | Physical print validation | `Deferred` | Resume only when printer/stock/QR-scan evidence is available | Physical checklist |

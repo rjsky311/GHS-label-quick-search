@@ -97,6 +97,12 @@ Rules:
   workflow: collect the missed CAS/name, suggest candidate names from trusted
   SDS/supplier/regulatory references or candidate lookup helpers when
   available, then require admin review before using the name in labels.
+- Admin correction requests now support a structured review-only candidate
+  evidence bundle for missing Chinese names and unresolved searches. The bundle
+  may capture CAS, English name, Chinese candidate, evidence link/type, and
+  review notes, but it is explicitly not approved for public lookup, labels, or
+  exports until a maintainer converts it into an approved manual entry, alias,
+  or reference record.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic

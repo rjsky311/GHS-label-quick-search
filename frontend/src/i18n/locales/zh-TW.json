@@ -860,6 +860,8 @@
   "pilot.evidenceLink": "佐證連結",
   "pilot.correctionReviewNotesPlaceholder": "審查備註",
   "pilot.candidateFound": "候選",
+  "pilot.candidateEvidenceTitle": "候選證據",
+  "pilot.candidateEvidenceHint": "僅供審查。正式核准成 curated record 前，不會影響公開查詢、標籤或匯出。",
   "pilot.correctionRequestUpdated": "已更新修正回報。",
   "pilot.correctionRequestUpdateFailed": "修正回報更新失敗。",
   "pilot.correctionRequestList": "近期修正回報",

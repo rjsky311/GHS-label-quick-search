@@ -257,10 +257,12 @@ lookup/print/export, keep three public label outputs, store future public
 correction requests in the backend pilot/admin SQLite flow, and treat future
 LLM/external Chinese-name suggestions as candidates until admin-approved.
 Backend correction-request storage/API and admin dashboard review are now in
-place, and public correction actions now open the in-app queue dialog first
-while preserving GitHub issue links as fallback. Approved correction requests
-do not change public data by themselves; convert them into approved manual
-entries, aliases, reference links, or other curated records first.
+place, public correction actions now open the in-app queue dialog first while
+preserving GitHub issue links as fallback, and admin `candidate_found` updates
+now store review-only candidate evidence bundles. Approved correction requests
+and candidate bundles do not change public data by themselves; convert them
+into approved manual entries, aliases, reference links, or other curated
+records first.
 
 The project-level scope alignment workflow is pinned in
 `PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,

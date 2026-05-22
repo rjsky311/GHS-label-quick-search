@@ -47,10 +47,13 @@ Current mode:
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
   The correction-request backend store/API, admin review queue, and public
-  in-app correction dialog are now in place. The next closeable non-print slice
-  is candidate evidence support for missing Chinese names and unresolved
-  searches, with all generated or external suggestions kept as admin-reviewed
-  candidates before they can affect public lookup, labels, or exports.
+  in-app correction dialog are now in place. Admin correction requests can now
+  carry review-only candidate evidence bundles for missing Chinese names and
+  unresolved searches; generated or external suggestions must still remain
+  admin-reviewed candidates before they can affect public lookup, labels, or
+  exports. The next data-governance slice is either assisted conversion from a
+  candidate bundle into an approved curated record, or an external discovery
+  sandbox after a scope/cost/source decision.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now

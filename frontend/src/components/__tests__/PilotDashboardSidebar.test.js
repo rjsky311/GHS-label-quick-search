@@ -74,6 +74,7 @@ const baseProps = {
           cas_number: "64-17-5",
           chemical_name: "Ethanol",
           current_output: "English name only",
+          expected_output: "中文名稱：乙醇",
           evidence_url: "https://example.com/evidence",
           status: "open",
           updated_at: "2026-04-18T13:00:00+00:00",
@@ -183,6 +184,12 @@ const baseProps = {
       cas_number: "67-64-1",
       chemical_name: "Acetone",
       expected_output: "Review ECHA source",
+      candidate: {
+        cas_number: "67-64-1",
+        name_en: "Acetone",
+        source: "admin-correction-request",
+        approved_for_public_use: false,
+      },
       status: "candidate_found",
       updated_at: "2026-04-18T14:00:00+00:00",
     },
@@ -345,8 +352,36 @@ describe("PilotDashboardSidebar", () => {
       expect(baseProps.onUpdateCorrectionRequestStatus).toHaveBeenCalledWith(201, {
         status: "candidate_found",
         review_notes: "Found supplier SDS evidence",
+        candidate: expect.objectContaining({
+          schema_version: 1,
+          review_required: true,
+          approved_for_public_use: false,
+          source: "admin-correction-request",
+          candidate_type: "missing-chinese-name",
+          cas_number: "64-17-5",
+          name_en: "Ethanol",
+          name_zh: "乙醇",
+          evidence_url: "https://example.com/evidence",
+          review_notes: "Found supplier SDS evidence",
+        }),
       });
     });
+  });
+
+  it("renders stored correction candidate evidence as review-only", () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+
+    expect(
+      screen.getByTestId("correction-request-candidate-recent-202"),
+    ).toHaveTextContent("pilot.candidateEvidenceTitle");
+    expect(
+      screen.getByTestId("correction-request-candidate-recent-202-en"),
+    ).toHaveTextContent("Acetone");
+    expect(
+      screen.getByTestId("correction-request-candidate-recent-202-source"),
+    ).toHaveTextContent("admin-correction-request");
   });
 
   it("does not resolve a miss query without CAS evidence", async () => {

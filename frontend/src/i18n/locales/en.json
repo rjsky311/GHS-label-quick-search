@@ -868,6 +868,8 @@
   "pilot.evidenceLink": "Evidence link",
   "pilot.correctionReviewNotesPlaceholder": "Review note",
   "pilot.candidateFound": "Candidate",
+  "pilot.candidateEvidenceTitle": "Candidate evidence",
+  "pilot.candidateEvidenceHint": "Review-only. This does not affect public lookup, labels, or exports until approved into a curated record.",
   "pilot.correctionRequestUpdated": "Correction request updated.",
   "pilot.correctionRequestUpdateFailed": "Failed to update correction request.",
   "pilot.correctionRequestList": "Recent correction requests",

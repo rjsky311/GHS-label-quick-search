@@ -14,6 +14,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
+import {
+  buildCorrectionCandidateEvidence,
+  getCorrectionCandidateDisplayRows,
+} from "@/utils/correctionCandidates";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasCjkText } from "@/utils/ghsText";
 
@@ -37,6 +41,43 @@ function SectionHeading({ icon: Icon, title, subtitle }) {
         <h3 className="text-sm font-semibold uppercase tracking-wide">{title}</h3>
       </div>
       {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
+    </div>
+  );
+}
+
+function CorrectionCandidateEvidence({ candidate, requestId }) {
+  const { t } = useTranslation();
+  const rows = getCorrectionCandidateDisplayRows(candidate);
+  if (rows.length === 0) return null;
+
+  return (
+    <div
+      className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950"
+      data-testid={`correction-request-candidate-${requestId}`}
+    >
+      <div className="font-semibold">
+        {t("pilot.candidateEvidenceTitle", {
+          defaultValue: "Candidate evidence",
+        })}
+      </div>
+      <div className="mt-1 text-amber-800">
+        {t("pilot.candidateEvidenceHint", {
+          defaultValue:
+            "Review-only. This does not affect public lookup, labels, or exports until approved into a curated record.",
+        })}
+      </div>
+      <dl className="mt-2 grid gap-1">
+        {rows.map(([label, value]) => (
+          <div
+            key={`${label}-${value}`}
+            className="grid grid-cols-[4rem_minmax(0,1fr)] gap-2"
+            data-testid={`correction-request-candidate-${requestId}-${label.toLowerCase()}`}
+          >
+            <dt className="font-mono font-semibold text-amber-900">{label}</dt>
+            <dd className="min-w-0 break-words text-slate-800">{value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
@@ -595,10 +636,14 @@ export default function PilotDashboardSidebar(props) {
     if (!requestId || !onUpdateCorrectionRequestStatus) return;
     const draftNotes = (correctionReviewDrafts[requestId] || "").trim();
     try {
-      await onUpdateCorrectionRequestStatus(requestId, {
+      const payload = {
         status,
         review_notes: draftNotes || item?.review_notes || item?.reviewNotes || null,
-      });
+      };
+      if (status === "candidate_found") {
+        payload.candidate = buildCorrectionCandidateEvidence(item, draftNotes);
+      }
+      await onUpdateCorrectionRequestStatus(requestId, payload);
       if (draftNotes) {
         setCorrectionReviewDrafts((prev) => ({ ...prev, [requestId]: "" }));
       }
@@ -950,6 +995,10 @@ export default function PilotDashboardSidebar(props) {
                                   <ExternalLink className="h-3 w-3" />
                                 </a>
                               ) : null}
+                              <CorrectionCandidateEvidence
+                                candidate={item.candidate}
+                                requestId={requestId}
+                              />
                             </div>
                             <div className="text-xs text-slate-500">
                               {formatRelativeTime(item.updated_at || item.updatedAt)}
@@ -1654,6 +1703,10 @@ export default function PilotDashboardSidebar(props) {
                               {expectedOutput}
                             </div>
                           ) : null}
+                          <CorrectionCandidateEvidence
+                            candidate={item.candidate}
+                            requestId={`recent-${requestId}`}
+                          />
                           {curationTimestamp(item) ? (
                             <div className="mt-2 text-xs text-slate-500">
                               {formatRelativeTime(curationTimestamp(item))}

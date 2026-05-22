@@ -258,13 +258,14 @@ Current completion snapshot:
   as candidates until admin review, and move future data-correction intake
   toward an in-app/backend-admin flow with GitHub issues as fallback.
 - **Correction intake checkpoint 2026-05-22**: backend correction-request
-  storage/API, admin dashboard review, and the public in-app correction dialog
-  are now in place. Contextual result-row, Detail, and product-trust correction
-  links open the in-app queue submission first while preserving GitHub issue
-  URLs as fallback. Public submissions are bounded and rate-limited, admin
-  review can list and status requests, and approved requests still need
-  conversion into manual dictionary, alias, or reference-link records before
-  changing public lookup, labels, or exports.
+  storage/API, admin dashboard review, the public in-app correction dialog, and
+  admin-only candidate evidence bundles are now in place. Contextual
+  result-row, Detail, and product-trust correction links open the in-app queue
+  submission first while preserving GitHub issue URLs as fallback. Public
+  submissions are bounded and rate-limited, admin review can list and status
+  requests, candidate bundles remain `approved_for_public_use: false`, and
+  approved requests still need conversion into manual dictionary, alias, or
+  reference-link records before changing public lookup, labels, or exports.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
