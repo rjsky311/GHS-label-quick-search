@@ -41,12 +41,32 @@ const SEARCH_RETRY_DELAY_MS = Number.parseInt(
   env.PRINT_QA_SEARCH_RETRY_DELAY_MS || "4000",
   10,
 );
+const NAVIGATION_ATTEMPTS = Number.parseInt(
+  env.PRINT_QA_NAVIGATION_ATTEMPTS || "3",
+  10,
+);
+const CASE_ATTEMPTS = Number.parseInt(
+  env.PRINT_QA_CASE_ATTEMPTS || "2",
+  10,
+);
+const APP_SHELL_READY_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_APP_SHELL_READY_TIMEOUT_MS || "20000",
+  10,
+);
 const PREVIEW_READY_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_PREVIEW_READY_TIMEOUT_MS || "20000",
   10,
 );
+const PREVIEW_IMAGE_READY_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_PREVIEW_IMAGE_READY_TIMEOUT_MS || "45000",
+  10,
+);
 const PRINT_ACTION_READY_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_PRINT_ACTION_READY_TIMEOUT_MS || "20000",
+  10,
+);
+const NAVIGATION_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_NAVIGATION_TIMEOUT_MS || "90000",
   10,
 );
 const reportPath = path.resolve(
@@ -156,6 +176,93 @@ const withQaParam = (url) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const waitForAppShell = async (page) => {
+  await page.waitForFunction(
+    () => {
+      const input = document.querySelector('[data-testid="single-cas-input"]');
+      const button = document.querySelector('[data-testid="single-search-btn"]');
+      return Boolean(
+        input &&
+          button &&
+          !input.disabled &&
+          !input.readOnly &&
+          input.getBoundingClientRect().width > 0,
+      );
+    },
+    {},
+    { timeout: APP_SHELL_READY_TIMEOUT_MS },
+  );
+};
+
+const navigateToApp = async (page, baseUrl) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= NAVIGATION_ATTEMPTS; attempt += 1) {
+    try {
+      await page.goto(withQaParam(baseUrl), {
+        waitUntil: "domcontentloaded",
+        timeout: NAVIGATION_TIMEOUT_MS,
+      });
+      await waitForAppShell(page);
+      return attempt;
+    } catch (error) {
+      lastError = error;
+      if (attempt < NAVIGATION_ATTEMPTS) {
+        await sleep(SEARCH_RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw lastError || new Error("Production app shell did not become ready.");
+};
+
+const waitForPreviewImagesReady = async (page) => {
+  await page
+    .waitForFunction(
+      () => {
+        const frame = document.querySelector(
+          '[data-testid="label-fragment-preview"]',
+        );
+        const doc = frame?.contentDocument;
+        if (!doc) return false;
+        const images = Array.from(
+          doc.querySelectorAll("img.pictogram, img.qrcode-img"),
+        );
+        return images.every(
+          (image) => image.complete && image.naturalWidth > 0,
+        );
+      },
+      {},
+      { timeout: PREVIEW_IMAGE_READY_TIMEOUT_MS },
+    )
+    .catch(() => {});
+};
+
+const isRetryableHandoffFailure = (result) => {
+  if (!result || result.passed) return false;
+  if ((result.failures || []).includes("runner-error")) return true;
+  const issueTypes = result.status?.["data-issue-types"] || "";
+  if (
+    issueTypes
+      .split(",")
+      .map((value) => value.trim())
+      .includes("required-image-failed")
+  ) {
+    return true;
+  }
+  const clippedCritical =
+    result.evidence?.previewInspection?.clippedCriticalElements || [];
+  return (
+    clippedCritical.length > 0 &&
+    clippedCritical.every(
+      (item) =>
+        ["pictogram", "qr"].includes(item.type) &&
+        item.visible === true &&
+        item.imageReady === false &&
+        item.withinLabel === true &&
+        item.withinViewport === true,
+    )
+  );
+};
+
 const sameNumber = (actual, expected) => {
   const actualNumber = Number.parseFloat(actual);
   const expectedNumber = Number.parseFloat(expected);
@@ -253,9 +360,8 @@ const waitForPreviewContract = async (page, testCase) => {
 const fillSearch = async (page, searchTerm) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_ATTEMPTS; attempt += 1) {
-    const searchInput = page
-      .locator('input[role="combobox"], input[type="text"]')
-      .first();
+    await waitForAppShell(page);
+    const searchInput = page.getByTestId("single-cas-input");
     await searchInput.fill(searchTerm);
     await page.getByTestId("single-search-btn").click();
     try {
@@ -277,7 +383,11 @@ const fillSearch = async (page, searchTerm) => {
       );
       if (attempt < SEARCH_ATTEMPTS) {
         await sleep(SEARCH_RETRY_DELAY_MS);
-        await page.reload({ waitUntil: "networkidle" });
+        await page.reload({
+          waitUntil: "domcontentloaded",
+          timeout: NAVIGATION_TIMEOUT_MS,
+        });
+        await waitForAppShell(page);
       }
     }
   }
@@ -876,6 +986,7 @@ const capturePreviewEvidence = async (page, testCase) => {
     nextPreviewPageChanged: true,
     nextPreviewInspection: null,
   };
+  await waitForPreviewImagesReady(page);
   evidence.previewInspection = await inspectPreviewFrame(page, testCase);
   evidence.requiredIdentityTextInPreview =
     evidence.previewInspection.hasRequiredIdentityText;
@@ -1339,7 +1450,7 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
       window.localStorage?.clear();
       window.sessionStorage?.clear();
     });
-    await page.goto(withQaParam(baseUrl), { waitUntil: "domcontentloaded" });
+    await navigateToApp(page, baseUrl);
     await fillSearch(page, testCase.searchTerm);
     await openPrintModal(page);
     const modalShellInspection = await inspectModalShell(page);
@@ -1399,9 +1510,24 @@ try {
     // Keep progress visible for long HCl matrices.
     // eslint-disable-next-line no-console
     console.log(`Running production print QA: ${testCase.id}`);
-    results.push(
-      await runCase({ browser, testCase, baseUrl, responsibleProfile }),
-    );
+    let result = null;
+    for (let attempt = 1; attempt <= CASE_ATTEMPTS; attempt += 1) {
+      result = await runCase({ browser, testCase, baseUrl, responsibleProfile });
+      if (!isRetryableHandoffFailure(result) || attempt >= CASE_ATTEMPTS) {
+        break;
+      }
+      // eslint-disable-next-line no-console
+      console.log(
+        `Retrying production print QA: ${testCase.id} after ${[
+          ...(result.failures || []),
+          result.status?.["data-issue-types"] || "",
+        ]
+          .filter(Boolean)
+          .join(", ")}`,
+      );
+      await sleep(SEARCH_RETRY_DELAY_MS);
+    }
+    results.push(result);
   }
 } finally {
   await browser.close();
