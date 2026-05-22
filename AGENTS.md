@@ -313,6 +313,13 @@ tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data
 trust/correction workflow, first-time UX guidance, public README/docs cleanup,
 and brand/support surfaces.
 
+Documentation drift checks now cover the active owner docs, not only the short
+roadmap files. `npm run test:docs` checks that data governance, simplified
+labels, print contract, physical print deferral, brand/support strategy, and
+scientific-skill evaluation docs keep a visible path back to
+`PROJECT_STATUS_AND_NEXT_PLAN.md` plus their local non-negotiable contract
+phrases.
+
 Optional scientific lookup skill evaluation is recorded in
 `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`. The current decision is not to install
 the full `K-Dense-AI/scientific-agent-skills` repository. If a future
@@ -339,6 +346,8 @@ print modal entry.
 ### Git History (key commits)
 
 ```
+a9c1ddb Expand docs drift coverage for owner docs
+1ed736c Read issue templates in production support QA
 8bf6e03 Guard support links against issue template drift
 8f2197d Align correction evidence type prefill
 67fbec3 Cover prepared reprint production QA
@@ -402,6 +411,7 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
 
 - **Frontend**: 888 tests across 52 suites; 0 known React `act(...)` warnings
 - **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
+- **Docs drift**: `npm run test:docs` checks runtime version alignment, canonical planning links, doc role statements, physical-print deferral wording, future-tracker statuses, and active owner-doc contracts across 16 docs.
 - **Print contract**: `npm run test:print-contract` covers 248 focused print/planner/renderer assertions
 - **Print PDF QA**: `npm run qa:print-pdf` covers 35 print cases, including custom tiny supplemental stock, prepared-solution A4 primary, bottle supplemental, tube quick-ID outputs, sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs, and a fixed-stock 50-item Quick ID batch print artifact; it fails on compact visual-overlap regressions, stock mismatch, missing batch-category metadata, clipping, or hidden pictograms
 - **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
