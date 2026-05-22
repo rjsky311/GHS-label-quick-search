@@ -872,6 +872,8 @@
   "pilot.candidateEvidenceHint": "Review-only. This does not affect public lookup, labels, or exports until approved into a curated record.",
   "pilot.createManualEntryFromCandidate": "Create review entry",
   "pilot.candidateManualEntryCreated": "Pending manual dictionary review entry created.",
+  "pilot.candidateManualEntryPendingHint": "A pending manual dictionary review entry has already been created from this candidate.",
+  "pilot.candidateManualEntryFailed": "Failed to create or link the pending manual dictionary entry.",
   "pilot.candidateManualEntryMissingIdentity": "Candidate needs a CAS number and at least one name before it can become a review entry.",
   "pilot.correctionRequestUpdated": "Correction request updated.",
   "pilot.correctionRequestUpdateFailed": "Failed to update correction request.",

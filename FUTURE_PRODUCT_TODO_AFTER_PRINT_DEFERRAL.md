@@ -194,6 +194,10 @@ Work items:
   preserves request/evidence notes and still keeps the entry out of public
   lookup, labels, and exports until a maintainer explicitly approves the manual
   entry.
+- Completed: candidate-to-manual-entry conversion now writes back to the
+  originating correction request as `candidate_found` with manual-review
+  metadata. This keeps the admin queue traceable while still recording
+  `public_data_changed: false` until the manual entry itself is approved.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

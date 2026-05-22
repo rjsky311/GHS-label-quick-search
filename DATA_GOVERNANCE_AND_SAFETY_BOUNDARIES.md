@@ -107,6 +107,11 @@ Rules:
   review entry from the admin dashboard. That pending entry is still
   admin-only; public lookup, labels, QR targets, and exports may use it only
   after a maintainer explicitly approves the manual entry.
+- Candidate-to-manual-entry conversion must also leave a trace on the original
+  correction request. The request should remain `candidate_found` with
+  manual-review metadata and `public_data_changed: false`, not `approved`,
+  until the resulting manual entry, alias, or reference record is separately
+  approved.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic

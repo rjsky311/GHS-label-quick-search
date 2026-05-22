@@ -403,6 +403,53 @@ describe("PilotDashboardSidebar", () => {
         status: "pending",
       });
     });
+    expect(baseProps.onUpdateCorrectionRequestStatus).toHaveBeenCalledWith(
+      202,
+      expect.objectContaining({
+        status: "candidate_found",
+        candidate: expect.objectContaining({
+          cas_number: "67-64-1",
+          converted_to_manual_entry: true,
+          manual_entry_status: "pending",
+          public_data_changed: false,
+        }),
+      }),
+    );
+  });
+
+  it("does not create duplicate manual entries from converted candidates", () => {
+    const props = {
+      ...baseProps,
+      correctionRequests: [
+        {
+          id: 303,
+          issue_type: "missing-chinese-name",
+          cas_number: "64-17-5",
+          chemical_name: "Ethanol",
+          candidate: {
+            cas_number: "64-17-5",
+            name_en: "Ethanol",
+            name_zh: "\u4e59\u9187",
+            source: "admin-correction-request",
+            converted_to_manual_entry: true,
+            manual_entry_status: "pending",
+          },
+          status: "candidate_found",
+          updated_at: "2026-04-18T14:00:00+00:00",
+        },
+      ],
+    };
+
+    render(<PilotDashboardSidebar {...props} />);
+
+    fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+
+    expect(
+      screen.getByTestId("correction-request-candidate-recent-303-manual-pending"),
+    ).toHaveTextContent("pilot.candidateManualEntryPendingHint");
+    expect(
+      screen.queryByTestId("create-manual-entry-from-candidate-recent-303"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not resolve a miss query without CAS evidence", async () => {

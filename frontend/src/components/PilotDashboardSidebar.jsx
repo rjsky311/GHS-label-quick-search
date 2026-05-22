@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   buildCorrectionCandidateEvidence,
+  buildCorrectionRequestManualEntryConversionPayload,
   buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
 } from "@/utils/correctionCandidates";
@@ -55,7 +56,9 @@ function CorrectionCandidateEvidence({
   const { t } = useTranslation();
   const rows = getCorrectionCandidateDisplayRows(candidate);
   if (rows.length === 0) return null;
+  const isConvertedToManualEntry = Boolean(candidate?.converted_to_manual_entry);
   const canCreateManualEntry =
+    !isConvertedToManualEntry &&
     Boolean(candidate?.cas_number) &&
     Boolean(candidate?.name_en || candidate?.name_zh) &&
     typeof onCreateManualEntry === "function";
@@ -76,6 +79,17 @@ function CorrectionCandidateEvidence({
             "Review-only. This does not affect public lookup, labels, or exports until approved into a curated record.",
         })}
       </div>
+      {isConvertedToManualEntry ? (
+        <div
+          className="mt-2 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-900"
+          data-testid={`correction-request-candidate-${requestId}-manual-pending`}
+        >
+          {t("pilot.candidateManualEntryPendingHint", {
+            defaultValue:
+              "A pending manual dictionary review entry has already been created from this candidate.",
+          })}
+        </div>
+      ) : null}
       <dl className="mt-2 grid gap-1">
         {rows.map(([label, value]) => (
           <div
@@ -708,6 +722,16 @@ export default function PilotDashboardSidebar(props) {
 
     try {
       await onSaveManualEntry(payload);
+      if (requestId && onUpdateCorrectionRequestStatus) {
+        const statusPayload = buildCorrectionRequestManualEntryConversionPayload(
+          item,
+          draftNotes,
+        );
+        await onUpdateCorrectionRequestStatus(requestId, statusPayload);
+        if (draftNotes) {
+          setCorrectionReviewDrafts((prev) => ({ ...prev, [requestId]: "" }));
+        }
+      }
       toast.success(
         t("pilot.candidateManualEntryCreated", {
           defaultValue: "Pending manual dictionary review entry created.",
@@ -717,8 +741,9 @@ export default function PilotDashboardSidebar(props) {
       toast.error(
         submitError?.response?.data?.detail ||
           submitError?.message ||
-          t("pilot.manualEntryFailed", {
-            defaultValue: "Failed to save manual dictionary entry.",
+          t("pilot.candidateManualEntryFailed", {
+            defaultValue:
+              "Failed to create or link the pending manual dictionary entry.",
           })
       );
     }

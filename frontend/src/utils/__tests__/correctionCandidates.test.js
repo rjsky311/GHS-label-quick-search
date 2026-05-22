@@ -1,5 +1,6 @@
 import {
   buildCorrectionCandidateEvidence,
+  buildCorrectionRequestManualEntryConversionPayload,
   buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
 } from "@/utils/correctionCandidates";
@@ -108,5 +109,56 @@ describe("correction candidate evidence helpers", () => {
     expect(payload.notes).toContain("Correction request #204");
     expect(payload.notes).toContain("Evidence: https://example.com/sds");
     expect(payload.notes).toContain("Review: Reviewed supplier SDS");
+  });
+
+  it("marks display rows when candidate evidence has entered manual review", () => {
+    expect(
+      getCorrectionCandidateDisplayRows({
+        cas_number: "64-17-5",
+        name_en: "Ethanol",
+        name_zh: "\u4e59\u9187",
+        source: "admin-correction-request",
+        converted_to_manual_entry: true,
+        manual_entry_status: "pending",
+      }),
+    ).toEqual([
+      ["CAS", "64-17-5"],
+      ["EN", "Ethanol"],
+      ["ZH", "\u4e59\u9187"],
+      ["Source", "admin-correction-request"],
+      ["Manual", "pending"],
+    ]);
+  });
+
+  it("builds a correction-request update when a candidate becomes manual review", () => {
+    const payload = buildCorrectionRequestManualEntryConversionPayload(
+      {
+        id: 205,
+        issue_type: "missing-chinese-name",
+        cas_number: "64-17-5",
+        chemical_name: "Ethanol",
+        expected_output: "Chinese: \u4e59\u9187",
+        review_notes: "Candidate checked",
+      },
+      "",
+    );
+
+    expect(payload).toMatchObject({
+      status: "candidate_found",
+      candidate: {
+        request_id: 205,
+        cas_number: "64-17-5",
+        name_en: "Ethanol",
+        name_zh: "\u4e59\u9187",
+        converted_to_manual_entry: true,
+        manual_entry_status: "pending",
+        manual_entry_source: "correction-request",
+        public_data_changed: false,
+      },
+    });
+    expect(payload.review_notes).toContain("Candidate checked");
+    expect(payload.review_notes).toContain(
+      "public data remains unchanged until that manual entry is approved",
+    );
   });
 });

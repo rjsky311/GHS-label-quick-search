@@ -864,6 +864,8 @@
   "pilot.candidateEvidenceHint": "僅供審查。正式核准成 curated record 前，不會影響公開查詢、標籤或匯出。",
   "pilot.createManualEntryFromCandidate": "建立審查項目",
   "pilot.candidateManualEntryCreated": "已建立待審查的手動字典項目。",
+  "pilot.candidateManualEntryPendingHint": "這筆候選資料已建立待審查的手動字典項目。",
+  "pilot.candidateManualEntryFailed": "無法建立或連結待審查的手動字典項目。",
   "pilot.candidateManualEntryMissingIdentity": "候選資料需要 CAS 與至少一個名稱，才能建立審查項目。",
   "pilot.correctionRequestUpdated": "已更新修正回報。",
   "pilot.correctionRequestUpdateFailed": "修正回報更新失敗。",

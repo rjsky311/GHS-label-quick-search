@@ -2,7 +2,10 @@ import { hasCjkText } from "@/utils/ghsText";
 
 const CANDIDATE_SCHEMA_VERSION = 1;
 const MAX_FIELD_LENGTH = 240;
+const MAX_REVIEW_NOTES_LENGTH = 1000;
 const CAS_PATTERN = /\b\d{2,7}-\d{2}-\d\b/;
+const MANUAL_ENTRY_CONVERSION_NOTE =
+  "Pending manual dictionary review entry created; public data remains unchanged until that manual entry is approved.";
 
 const normalizeText = (value, maxLength = MAX_FIELD_LENGTH) => {
   const text = String(value || "")
@@ -127,6 +130,13 @@ const candidateNotes = (candidate = {}) =>
     .filter(Boolean)
     .join(" | ");
 
+const appendReviewNote = (baseNote = "", nextNote = "") => {
+  const notes = [normalizeText(baseNote, MAX_REVIEW_NOTES_LENGTH), nextNote]
+    .filter(Boolean)
+    .join(" | ");
+  return normalizeText(notes, MAX_REVIEW_NOTES_LENGTH);
+};
+
 export function buildCorrectionCandidateEvidence(item = {}, reviewNotes = "") {
   const existingCandidate =
     item.candidate && typeof item.candidate === "object" ? item.candidate : {};
@@ -177,6 +187,27 @@ export function buildManualEntryPayloadFromCorrectionCandidate(
   };
 }
 
+export function buildCorrectionRequestManualEntryConversionPayload(
+  item = {},
+  reviewNotes = "",
+) {
+  const candidate = buildCorrectionCandidateEvidence(item, reviewNotes);
+  return {
+    status: "candidate_found",
+    review_notes: appendReviewNote(
+      reviewNotes || item.review_notes || item.reviewNotes,
+      MANUAL_ENTRY_CONVERSION_NOTE,
+    ),
+    candidate: compactObject({
+      ...candidate,
+      converted_to_manual_entry: true,
+      manual_entry_status: "pending",
+      manual_entry_source: "correction-request",
+      public_data_changed: false,
+    }),
+  };
+}
+
 export function getCorrectionCandidateDisplayRows(candidate = {}) {
   const rows = [
     ["CAS", candidate.cas_number],
@@ -184,6 +215,12 @@ export function getCorrectionCandidateDisplayRows(candidate = {}) {
     ["ZH", candidate.name_zh],
     ["Evidence", candidate.evidence_type || candidate.evidence_url],
     ["Source", candidate.source],
+    [
+      "Manual",
+      candidate.converted_to_manual_entry
+        ? candidate.manual_entry_status || "pending"
+        : "",
+    ],
   ];
   return rows
     .filter(([, value]) => normalizeText(value))

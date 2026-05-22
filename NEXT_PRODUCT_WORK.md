@@ -50,11 +50,12 @@ Current mode:
   in-app correction dialog are now in place. Admin correction requests can now
   carry review-only candidate evidence bundles for missing Chinese names and
   unresolved searches, and stored bundles can now create pending manual-entry
-  review records from the dashboard; generated or external suggestions must
-  still remain admin-reviewed candidates before they can affect public lookup,
-  labels, or exports. The next data-governance slice is either a clearer admin
-  closure/report for converted correction requests, or an external discovery
-  sandbox after a scope/cost/source decision.
+  review records from the dashboard and write conversion metadata back to the
+  originating correction request; generated or external suggestions must still
+  remain admin-reviewed candidates before they can affect public lookup,
+  labels, or exports. The next data-governance slice is an external discovery
+  sandbox only after a scope/cost/source decision, or further admin reporting
+  if real queue evidence shows maintainers still cannot tell what happened.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now

@@ -266,7 +266,10 @@ Current completion snapshot:
   requests, candidate bundles remain `approved_for_public_use: false`, and
   stored candidate bundles can now seed pending manual-dictionary review
   entries. Public lookup, labels, and exports still change only after a
-  maintainer approves the resulting curated record.
+  maintainer approves the resulting curated record. When a candidate bundle is
+  used to create a pending manual dictionary entry, the originating correction
+  request is also written back with conversion metadata so the queue remains
+  traceable without implying that public data changed.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
