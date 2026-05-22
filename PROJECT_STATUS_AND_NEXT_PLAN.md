@@ -233,10 +233,10 @@ Current completion snapshot:
   label/regulatory source stays in the body as `Evidence prompt`, while
   `evidence_type` uses a valid single option such as `Other`. A focused unit
   test now reads the repository issue templates and fails if generated
-  support-link dropdown values drift from those option lists. The deployed
-  production search UI gate also reads the repository issue templates at run
-  time, so production QA no longer depends on a stale hard-coded copy of the
-  GitHub form dropdown options.
+  support-link dropdown values or prefill field ids drift from those option and
+  field-id lists. The deployed production search UI gate also reads the
+  repository issue templates at run time, so production QA no longer depends on
+  a stale hard-coded copy of the GitHub form dropdown options.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

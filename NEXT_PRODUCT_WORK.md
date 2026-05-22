@@ -115,11 +115,11 @@ Current mode:
   body, but `issue_type` uses a valid issue-template option; product-trust
   workflow links do the same for `workflow_area`. Data-correction evidence
   prompts now stay in the body, while `evidence_type` uses one valid dropdown
-  option. Unit tests now compare generated dropdown values with the actual
-  issue-template options. The production search UI gate now also reads the
-  issue-template dropdown options directly instead of keeping a separate
-  hard-coded list, and treats schema compatibility as part of the deployed
-  support-link contract.
+  option. Unit tests now compare generated dropdown values and prefill field
+  ids with the actual issue-template option and field-id lists. The production
+  search UI gate now also reads the issue-template dropdown options directly
+  instead of keeping a separate hard-coded list, and treats schema
+  compatibility as part of the deployed support-link contract.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

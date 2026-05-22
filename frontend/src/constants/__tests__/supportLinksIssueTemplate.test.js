@@ -33,6 +33,28 @@ const extractDropdownOptions = (templateText, fieldId) => {
   );
 };
 
+const extractFieldIds = (templateText) =>
+  new Set(
+    [...templateText.matchAll(/^\s+id:\s+([A-Za-z0-9_-]+)\s*$/gm)].map(
+      (match) => match[1].trim(),
+    ),
+  );
+
+const genericIssueQueryFields = new Set([
+  "template",
+  "labels",
+  "title",
+  "body",
+]);
+
+const expectOnlyTemplateFields = (url, templateFieldIds) => {
+  [...url.searchParams.keys()].forEach((key) => {
+    expect(
+      genericIssueQueryFields.has(key) || templateFieldIds.has(key),
+    ).toBe(true);
+  });
+};
+
 const dataCorrectionCases = [
   "missing-chinese-name",
   "no-ghs-data",
@@ -70,6 +92,8 @@ describe("support link issue-template schema compatibility", () => {
     workflowTemplate,
     "workflow_area",
   );
+  const dataCorrectionFieldIds = extractFieldIds(dataCorrectionTemplate);
+  const workflowFieldIds = extractFieldIds(workflowTemplate);
 
   it("keeps data-correction dropdown prefill values inside the GitHub template schema", () => {
     dataCorrectionCases.forEach((issueType) => {
@@ -90,6 +114,21 @@ describe("support link issue-template schema compatibility", () => {
     });
   });
 
+  it("keeps data-correction prefill field ids inside the GitHub template schema", () => {
+    dataCorrectionCases.forEach((issueType) => {
+      const url = new URL(
+        buildDataCorrectionUrl({
+          casNumber: "7647-01-0",
+          nameEn: "Hydrochloric Acid",
+          issueType,
+          evidenceUrl: "https://example.com/sds.pdf",
+        }),
+      );
+
+      expectOnlyTemplateFields(url, dataCorrectionFieldIds);
+    });
+  });
+
   it("keeps workflow-request dropdown prefill values inside the GitHub template schema", () => {
     workflowAreaCases.forEach((workflowArea) => {
       const url = new URL(
@@ -104,6 +143,22 @@ describe("support link issue-template schema compatibility", () => {
       expect(workflowAreas.has(url.searchParams.get("workflow_area"))).toBe(
         true,
       );
+    });
+  });
+
+  it("keeps workflow-request prefill field ids inside the GitHub template schema", () => {
+    workflowAreaCases.forEach((workflowArea) => {
+      const url = new URL(
+        buildWorkflowRequestUrl({
+          workflowArea,
+          goal: "Reduce repeated triage steps.",
+          currentProblem: "The user has to explain scope manually.",
+          desiredBehavior: "Route the request with structured context.",
+          examples: "One batch print workflow.",
+        }),
+      );
+
+      expectOnlyTemplateFields(url, workflowFieldIds);
     });
   });
 });
