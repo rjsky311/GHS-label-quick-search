@@ -8,6 +8,9 @@ installation decision and it is not a product dependency. Use it when future
 data-governance, dictionary-cleanup, SDS/reference, or literature-checking work
 needs a scientific-agent skill shortlist.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria before turning this evaluation into a trial or installation.
+
 Primary sources reviewed:
 
 - Repository: https://github.com/K-Dense-AI/scientific-agent-skills

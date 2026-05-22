@@ -8,6 +8,10 @@ The strategic stance is:
 
 > Give users real safety workflow value first. Create trust and recall through usefulness. Offer the next step only after the tool has helped them.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria before changing brand, support, education, or conversion
+surfaces.
+
 ## Current Product Contract
 
 As of v1.10, brand/support surfaces are allowed only when they clarify

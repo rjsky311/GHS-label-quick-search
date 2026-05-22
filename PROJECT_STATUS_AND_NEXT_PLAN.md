@@ -375,6 +375,9 @@ Do next:
   historical context, not active priority selectors.
 - Update docs whenever behavior, acceptance criteria, QA gates, or workflow
   assumptions change.
+- Keep `npm run test:docs` covering the active owner docs, including data
+  governance, simplified labels, print contract, physical print deferral,
+  brand/support strategy, and scientific-skill evaluation.
 
 Done means:
 
@@ -382,6 +385,8 @@ Done means:
   `AUTONOMOUS_WORKFLOW.md` and know exactly how to continue.
 - No active doc contradicts the canonical queue or claims that completed
   baseline work is still the next product target.
+- Owner docs keep a visible pointer back to this canonical plan before they
+  define local product, safety, support, or QA rules.
 
 Current status:
 

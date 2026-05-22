@@ -120,6 +120,11 @@ Current mode:
   issue-template dropdown options directly instead of keeping a separate
   hard-coded list, and treats schema compatibility as part of the deployed
   support-link contract.
+- Completed current slice: documentation drift checks now cover the active
+  owner docs for data governance, simplified labels, print contract, physical
+  print deferral, brand/support strategy, and scientific-skill evaluation. Each
+  owner doc now points back to `PROJECT_STATUS_AND_NEXT_PLAN.md`, reducing the
+  chance that future continuation work starts from a stale local plan.
 - Completed current slice: Detail same-chemical comparison now shows compact
   source/ranking evidence for each public classification: current selection,
   report count, source family, and pictogram/H/P coverage. The same evidence is

@@ -9,6 +9,9 @@ batch-print contract lives in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`. Keep this
 contract authoritative for safety boundaries, and use those plans for planner,
 stock, typography, preview, batch, and UI sequencing decisions.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria before changing this contract.
+
 ## North Star
 
 The best path is a label workflow that a lab user can print without guessing:

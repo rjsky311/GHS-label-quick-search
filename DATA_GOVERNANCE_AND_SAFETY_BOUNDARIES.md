@@ -5,6 +5,9 @@ SDS/reference links, manual curation, telemetry, and source conflicts. It is a
 product and engineering guardrail, not legal advice. Users must still verify
 against the official SDS, supplier label, and local regulations.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria before changing these boundaries.
+
 ## 1. Source Roles
 
 The app uses multiple data sources with different roles:

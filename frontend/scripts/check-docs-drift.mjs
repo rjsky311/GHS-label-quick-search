@@ -44,8 +44,20 @@ const docs = {
   "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md": readText(
     "FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md",
   ),
+  "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md": readText(
+    "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md",
+  ),
+  "SIMPLIFIED_LABEL_OUTPUT_MODEL.md": readText("SIMPLIFIED_LABEL_OUTPUT_MODEL.md"),
+  "PRINT_LABEL_CONTRACT.md": readText("PRINT_LABEL_CONTRACT.md"),
   "BATCH_LABEL_PRINT_REFACTOR_PLAN.md": readText(
     "BATCH_LABEL_PRINT_REFACTOR_PLAN.md",
+  ),
+  "PHYSICAL_PRINT_VALIDATION_CHECKLIST.md": readText(
+    "PHYSICAL_PRINT_VALIDATION_CHECKLIST.md",
+  ),
+  "BRANDED_UTILITY_STRATEGY.md": readText("BRANDED_UTILITY_STRATEGY.md"),
+  "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md": readText(
+    "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",
   ),
 };
 
@@ -175,6 +187,36 @@ requireIncludes(
   docs["BATCH_LABEL_PRINT_REFACTOR_PLAN.md"],
   "50-item",
   "batch plan must include the mixed batch QA target",
+);
+requireIncludes(
+  "DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md",
+  docs["DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md"],
+  "issue-template option",
+  "data governance must keep support-link schema compatibility visible",
+);
+requireIncludes(
+  "SIMPLIFIED_LABEL_OUTPUT_MODEL.md",
+  docs["SIMPLIFIED_LABEL_OUTPUT_MODEL.md"],
+  "Complete labels support A4 and Letter",
+  "simplified label model must preserve the three-output contract",
+);
+requireIncludes(
+  "PRINT_LABEL_CONTRACT.md",
+  docs["PRINT_LABEL_CONTRACT.md"],
+  "GHS pictograms are never summarized",
+  "print safety contract must keep pictogram non-omission visible",
+);
+requireIncludes(
+  "BRANDED_UTILITY_STRATEGY.md",
+  docs["BRANDED_UTILITY_STRATEGY.md"],
+  "safety decision",
+  "brand strategy must preserve the low-noise safety boundary",
+);
+requireIncludes(
+  "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",
+  docs["SCIENTIFIC_AGENT_SKILLS_EVALUATION.md"],
+  "Do not install the full repository",
+  "scientific skill evaluation must keep the install boundary visible",
 );
 
 const allowedStatuses = new Set([

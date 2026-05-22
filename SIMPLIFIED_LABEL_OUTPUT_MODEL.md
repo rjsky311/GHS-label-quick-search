@@ -5,6 +5,9 @@ of 2026-05-16. Keep this file as the canonical reference before changing
 `LabelPrintModal`, stock presets, compact print renderers, QR targets, batch
 print planning, or print QA.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria before reopening this contract.
+
 This document replaces the prior first-level print workflow model for future
 work. Older documents such as `PRINT_OUTPUT_REFACTOR_PLAN.md` and
 `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` remain useful for implementation history,

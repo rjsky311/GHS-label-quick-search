@@ -9,6 +9,10 @@ Use this checklist after meaningful print-renderer changes, stock-preset
 changes, QR changes, label-size changes, or before treating a new physical stock
 family as production-ready.
 
+Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
+and done criteria. Physical print execution is deferred there until real
+paper/stock/printer evidence is available.
+
 ## 1. Preconditions
 
 Run automated gates first so the physical print pass is not debugging basic

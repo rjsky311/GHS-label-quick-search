@@ -618,6 +618,10 @@ Work items:
   wording, and future-tracker status labels.
 - Completed: added the docs drift gate to CI so future pushes catch broken
   planning links or unsupported tracker status values.
+- Completed: expanded `npm run test:docs` to include the active owner docs for
+  data governance, simplified labels, print contract, physical print deferral,
+  brand/support strategy, and scientific-skill evaluation, so those files keep
+  a visible path back to `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 - Keep docs-only closure to `git diff --check` plus targeted `rg` checks unless
   generated docs are involved.
 - When a behavior changes, update the closest owner doc instead of adding a new
