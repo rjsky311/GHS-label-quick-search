@@ -40,6 +40,10 @@ const PAGE_NAVIGATION_TIMEOUT_MS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_NAVIGATION_TIMEOUT_MS || "60000",
   10,
 );
+const APP_SHELL_TIMEOUT_MS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_APP_SHELL_TIMEOUT_MS || "60000",
+  10,
+);
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 
@@ -378,7 +382,7 @@ const waitForAppShell = async (page) => {
   await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
   await page.getByTestId("single-cas-input").waitFor({
     state: "visible",
-    timeout: 30000,
+    timeout: APP_SHELL_TIMEOUT_MS,
   });
 };
 
