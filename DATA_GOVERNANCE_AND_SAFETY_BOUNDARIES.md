@@ -247,7 +247,7 @@ reduce repeated typing and improve review quality:
   lists, so future template edits do not silently break prefill. Production QA
   scripts should also read the repository issue templates directly when
   validating deployed support links; avoid maintaining a second hard-coded
-  dropdown list inside QA scripts.
+  dropdown or field-id list inside QA scripts.
 
 Generic footer links should remain low-pressure and can stay unfilled. Result,
 Detail, and product-trust links may add context when it clarifies the user's
@@ -401,9 +401,9 @@ Production QA:
 - `npm run qa:production-search-ui` must continue checking trust notes, source
   badges, no-GHS data-state behavior, export-preview trust columns, safe
   reference link metadata, SDS link shape, Detail comparison evidence panels,
-  unresolved-lookup correction intake, issue-form dropdown-compatible
-  structured support links, and separated data-correction/workflow support
-  links.
+  unresolved-lookup correction intake, issue-form dropdown- and
+  field-id-compatible structured support links, and separated
+  data-correction/workflow support links.
 - `npm run qa:production-product` should remain the closure gate when a data
   governance change affects user-facing behavior.
 

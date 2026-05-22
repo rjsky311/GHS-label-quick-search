@@ -99,7 +99,8 @@ Current validation gates:
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust columns, detail-to-prepared modal keyboard/focus checks,
   batch messy-paste normalization, `?cas=` QR-return hydration, plus 390px
-  narrow read-first result and detail-comparison checks)
+  narrow read-first result and detail-comparison checks; bounded first-search
+  retry for transient deployed load/search delays)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -236,7 +237,8 @@ Current completion snapshot:
   support-link dropdown values or prefill field ids drift from those option and
   field-id lists. The deployed production search UI gate also reads the
   repository issue templates at run time, so production QA no longer depends on
-  a stale hard-coded copy of the GitHub form dropdown options.
+  a stale hard-coded copy of the GitHub form dropdown options or prefill field
+  ids.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual
@@ -594,8 +596,8 @@ Do next:
   footer, support band, help/education, optional exports, and correction
   requests.
 - Keep data-correction and workflow-request issue links compatible with the
-  GitHub issue-form dropdown schema; do not use internal issue keys as
-  dropdown field values.
+  GitHub issue-form dropdown and field-id schema; do not use internal issue
+  keys as dropdown field values or stale query parameters.
 - Improve first-time orientation without adding marketing-style noise or
   instructions that compete with the main task.
 - Review narrow-width and mobile read-only usage for search/SDS/reference

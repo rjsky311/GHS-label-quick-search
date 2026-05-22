@@ -148,7 +148,7 @@ Work items:
   and fail if generated support-link values or query keys drift from the
   repository forms. Production search UI QA now reads those same repository
   issue templates at run time, so the deployed gate validates current form
-  schemas instead of a duplicated option list.
+  schemas instead of duplicated option or field-id lists.
 - Completed: expanded production search UI QA so it fails when row/Detail
   correction links stop using the data-correction issue template or lose CAS
   context for no-GHS gaps, source conflicts, or missing trusted Chinese names.
@@ -684,7 +684,9 @@ Work items:
   problem, desired behavior, and examples.
 - Completed: issue-form prefill now uses dropdown-compatible field values
   instead of internal app keys for `issue_type` and `workflow_area`, keeping the
-  real GitHub form aligned with the repository templates.
+  real GitHub form aligned with the repository templates. Production QA also
+  rejects deployed support links that send query keys not declared by the
+  selected issue form.
 - Keep the low-noise workflow request path as a support link, not a first-level
   product control. Expand it only when real requests show missing categories
   such as batch labels, prepared-solution workflows, QR flows, or lab template
@@ -839,7 +841,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Structured issue-template prefill is in place and the production gate covers missing Chinese names, no-GHS gaps, source conflicts, and unresolved lookups; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests + `qa:production-search-ui` |
+| Correction intake | `Gate added` | Structured issue-template prefill is in place and the production gate covers missing Chinese names, no-GHS gaps, source conflicts, unresolved lookups, dropdown values, and prefill field ids; watch issue usage before adding admin mirroring or a custom form | Issue templates + support-link tests + `qa:production-search-ui` |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |

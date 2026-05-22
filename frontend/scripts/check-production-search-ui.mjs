@@ -36,6 +36,10 @@ const SEARCH_UI_RETRY_DELAY_MS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_RETRY_DELAY_MS || "4000",
   10,
 );
+const PAGE_NAVIGATION_TIMEOUT_MS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_NAVIGATION_TIMEOUT_MS || "60000",
+  10,
+);
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 
@@ -84,6 +88,13 @@ const extractDropdownOptions = (templateText, fieldId) => {
   );
 };
 
+const extractFieldIds = (templateText) =>
+  new Set(
+    [...templateText.matchAll(/^\s+id:\s+([A-Za-z0-9_-]+)\s*$/gm)].map(
+      (match) => match[1].trim(),
+    ),
+  );
+
 const dataCorrectionTemplate = readIssueTemplate("data-correction.yml");
 const workflowRequestTemplate = readIssueTemplate("workflow-request.yml");
 const DATA_CORRECTION_FORM_ISSUE_TYPES = extractDropdownOptions(
@@ -98,6 +109,14 @@ const WORKFLOW_FORM_AREAS = extractDropdownOptions(
   workflowRequestTemplate,
   "workflow_area",
 );
+const DATA_CORRECTION_FORM_FIELD_IDS = extractFieldIds(dataCorrectionTemplate);
+const WORKFLOW_FORM_FIELD_IDS = extractFieldIds(workflowRequestTemplate);
+const GENERIC_ISSUE_QUERY_FIELDS = new Set([
+  "template",
+  "labels",
+  "title",
+  "body",
+]);
 const missingChineseNameFixture = {
   cas_number: "107-18-6",
   cid: 7858,
@@ -149,6 +168,7 @@ const parseIssueUrl = (href) => {
     const url = href ? new URL(href) : null;
     const field = (key) => url?.searchParams.get(key) || "";
     return {
+      href: href || "",
       template: field("template"),
       labels: field("labels"),
       title: field("title"),
@@ -169,6 +189,7 @@ const parseIssueUrl = (href) => {
     };
   } catch {
     return {
+      href: href || "",
       template: "",
       labels: "",
       title: "",
@@ -203,6 +224,18 @@ const inspectIssueLink = async (locator) => {
   };
 };
 
+const hasOnlyIssueTemplateFields = (href, templateFieldIds) => {
+  try {
+    const url = new URL(href);
+    return [...url.searchParams.keys()].every(
+      (key) =>
+        GENERIC_ISSUE_QUERY_FIELDS.has(key) || templateFieldIds.has(key),
+    );
+  } catch {
+    return false;
+  }
+};
+
 const hasStructuredCorrectionContext = (
   issue,
   {
@@ -216,6 +249,9 @@ const hasStructuredCorrectionContext = (
   },
 ) => {
   if (!issue || issue.count < 1) return false;
+  if (!hasOnlyIssueTemplateFields(issue.href, DATA_CORRECTION_FORM_FIELD_IDS)) {
+    return false;
+  }
   if (issue.template !== "data-correction.yml") return false;
   if (issue.labels !== "data-correction") return false;
   if (!DATA_CORRECTION_FORM_ISSUE_TYPES.has(issue.issueType)) return false;
@@ -257,6 +293,9 @@ const hasStructuredWorkflowContext = (
   },
 ) => {
   if (!issue || issue.count < 1) return false;
+  if (!hasOnlyIssueTemplateFields(issue.href, WORKFLOW_FORM_FIELD_IDS)) {
+    return false;
+  }
   if (issue.template !== "workflow-request.yml") return false;
   if (issue.labels !== "workflow-request") return false;
   if (!WORKFLOW_FORM_AREAS.has(issue.workflowArea)) return false;
@@ -334,6 +373,65 @@ const withQaParams = (url, params = {}) => {
 };
 
 const withQaParam = (url) => withQaParams(url);
+
+const waitForAppShell = async (page) => {
+  await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+  await page.getByTestId("single-cas-input").waitFor({
+    state: "visible",
+    timeout: 30000,
+  });
+};
+
+const gotoApp = async (page, url) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
+    try {
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: PAGE_NAVIGATION_TIMEOUT_MS,
+      });
+      await waitForAppShell(page);
+      return;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error || "unknown");
+      lastError = new Error(`Page navigation attempt ${attempt} failed: ${errorMessage}`);
+      if (attempt < SEARCH_UI_ATTEMPTS) {
+        await sleep(SEARCH_UI_RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw lastError || new Error(`Page navigation failed: ${url}`);
+};
+
+const reloadApp = async (page) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
+    try {
+      if (attempt === 1) {
+        await page.reload({
+          waitUntil: "domcontentloaded",
+          timeout: PAGE_NAVIGATION_TIMEOUT_MS,
+        });
+      } else {
+        await page.goto(page.url(), {
+          waitUntil: "domcontentloaded",
+          timeout: PAGE_NAVIGATION_TIMEOUT_MS,
+        });
+      }
+      await waitForAppShell(page);
+      return;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error || "unknown");
+      lastError = new Error(`Page reload attempt ${attempt} failed: ${errorMessage}`);
+      if (attempt < SEARCH_UI_ATTEMPTS) {
+        await sleep(SEARCH_UI_RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw lastError || new Error("Page reload failed.");
+};
 
 const inspectActionButton = async (page, testId) =>
   page.getByTestId(testId).evaluate((node) => {
@@ -887,31 +985,39 @@ const inspectDetailPrepareStacking = async (page) => {
 const searchUntilUsableResult = async (page, term = searchTerm) => {
   let lastError = null;
   for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
-    await page.getByTestId("single-cas-input").fill(term);
-    await page.getByTestId("single-search-btn").click();
-    await page.getByTestId("result-row-0").waitFor({
-      timeout: SEARCH_UI_TIMEOUT_MS,
-    });
-    const detailButton = page.getByTestId("detail-btn-0");
-    if (
-      (await detailButton
-        .waitFor({ state: "visible", timeout: 15000 })
-        .then(() => true)
-        .catch(() => false)) === true
-    ) {
-      return attempt;
+    try {
+      await page.getByTestId("single-cas-input").fill(term);
+      await page.getByTestId("single-search-btn").click();
+      await page.getByTestId("result-row-0").waitFor({
+        timeout: SEARCH_UI_TIMEOUT_MS,
+      });
+      const detailButton = page.getByTestId("detail-btn-0");
+      if (
+        (await detailButton
+          .waitFor({ state: "visible", timeout: 15000 })
+          .then(() => true)
+          .catch(() => false)) === true
+      ) {
+        return attempt;
+      }
+      const rowText =
+        ((await page
+          .getByTestId("result-row-0")
+          .textContent()
+          .catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      lastError = new Error(
+        `Search attempt ${attempt} did not produce a usable detail action: ${rowText}`,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error || "unknown");
+      lastError = new Error(`Search attempt ${attempt} failed: ${errorMessage}`);
     }
-    const rowText =
-      ((await page.getByTestId("result-row-0").textContent().catch(() => "")) ||
-        "")
-        .replace(/\s+/g, " ")
-        .trim();
-    lastError = new Error(
-      `Search attempt ${attempt} did not produce a usable detail action: ${rowText}`,
-    );
     if (attempt < SEARCH_UI_ATTEMPTS) {
       await sleep(SEARCH_UI_RETRY_DELAY_MS);
-      await page.reload({ waitUntil: "networkidle" });
+      await reloadApp(page);
     }
   }
   throw lastError || new Error("Search did not produce a usable result.");
@@ -1078,6 +1184,7 @@ const inspectNoGhsResultState = async (
 const inspectMissingChineseNameCorrectionPath = async (context) => {
   const page = await context.newPage();
   try {
+    await page.addInitScript(() => localStorage.setItem("ghs_language", "en"));
     await page.route("**/api/search-single**", async (route) => {
       await route.fulfill({
         status: 200,
@@ -1085,9 +1192,7 @@ const inspectMissingChineseNameCorrectionPath = async (context) => {
         body: JSON.stringify(missingChineseNameFixture),
       });
     });
-    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-    await page.evaluate(() => localStorage.setItem("ghs_language", "en"));
-    await page.reload({ waitUntil: "networkidle" });
+    await gotoApp(page, withQaParam(productionUrl));
     await page
       .getByTestId("single-cas-input")
       .fill(missingChineseNameFixture.cas_number);
@@ -1145,6 +1250,7 @@ const inspectUnresolvedSearchCorrectionPath = async (
 ) => {
   const page = await context.newPage();
   try {
+    await page.addInitScript(() => localStorage.setItem("ghs_language", "en"));
     await page.route("**/api/search-single**", async (route) => {
       await route.fulfill({
         status: 200,
@@ -1152,9 +1258,7 @@ const inspectUnresolvedSearchCorrectionPath = async (
         body: JSON.stringify(unresolvedSearchFixture),
       });
     });
-    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-    await page.evaluate(() => localStorage.setItem("ghs_language", "en"));
-    await page.reload({ waitUntil: "networkidle" });
+    await gotoApp(page, withQaParam(productionUrl));
     await page.getByTestId("single-cas-input").fill(unresolvedSearchTerm);
     await page.getByTestId("single-search-btn").click();
     const row = page.getByTestId("result-row-0");
@@ -1191,9 +1295,8 @@ const inspectBatchInputNormalizationPath = async (
 ) => {
   const page = await context.newPage();
   try {
-    await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-    await page.evaluate(() => localStorage.clear());
-    await page.reload({ waitUntil: "networkidle" });
+    await page.addInitScript(() => localStorage.clear());
+    await gotoApp(page, withQaParam(productionUrl));
     await page.getByTestId("batch-search-tab").click();
     await page.getByTestId("batch-cas-input").fill(
       [
@@ -1240,15 +1343,37 @@ const inspectUrlQueryHydrationPath = async (
   const page = await context.newPage();
   const queryUrl = withQaParams(productionUrl, { cas: term });
   try {
-    await page.goto(queryUrl, { waitUntil: "networkidle" });
-    await page.evaluate(() => localStorage.clear());
-    await page.goto(queryUrl, { waitUntil: "networkidle" });
-    await page.getByTestId("result-row-0").waitFor({
-      state: "visible",
-      timeout: SEARCH_UI_TIMEOUT_MS,
-    });
-    if (screenshotPath) {
-      await page.screenshot({ path: screenshotPath, fullPage: false });
+    await page.addInitScript(() => localStorage.clear());
+    let lastError = null;
+    for (let attempt = 1; attempt <= SEARCH_UI_ATTEMPTS; attempt += 1) {
+      try {
+        await gotoApp(page, queryUrl);
+        await page.getByTestId("result-row-0").waitFor({
+          state: "visible",
+          timeout: SEARCH_UI_TIMEOUT_MS,
+        });
+        if (screenshotPath) {
+          await page.screenshot({ path: screenshotPath, fullPage: false });
+        }
+        break;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error || "unknown");
+        lastError = new Error(
+          `URL query hydration attempt ${attempt} failed: ${errorMessage}`,
+        );
+        if (attempt < SEARCH_UI_ATTEMPTS) {
+          await sleep(SEARCH_UI_RETRY_DELAY_MS);
+        }
+      }
+    }
+    if (
+      !(await page
+        .getByTestId("result-row-0")
+        .isVisible()
+        .catch(() => false))
+    ) {
+      throw lastError || new Error("URL query hydration did not render a row.");
     }
     return {
       queryUrl,
@@ -1462,9 +1587,7 @@ try {
   });
   const page = await context.newPage();
 
-  await page.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-  await page.evaluate(() => localStorage.clear());
-  await page.reload({ waitUntil: "networkidle" });
+  await gotoApp(page, withQaParam(productionUrl));
   const searchAttempts = await searchUntilUsableResult(page, searchTerm);
 
   const screenshotPath = path.join(screenshotDir, "search-results.png");
@@ -1903,9 +2026,7 @@ try {
     locale: browserLocale,
   });
   const mobilePage = await mobileContext.newPage();
-  await mobilePage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-  await mobilePage.evaluate(() => localStorage.clear());
-  await mobilePage.reload({ waitUntil: "networkidle" });
+  await gotoApp(mobilePage, withQaParam(productionUrl));
   const mobileSearchAttempts = await searchUntilUsableResult(
     mobilePage,
     searchTerm,
@@ -1982,10 +2103,13 @@ try {
   }
   await mobileContext.close();
 
-  const noGhsPage = await context.newPage();
-  await noGhsPage.goto(withQaParam(productionUrl), { waitUntil: "networkidle" });
-  await noGhsPage.evaluate(() => localStorage.clear());
-  await noGhsPage.reload({ waitUntil: "networkidle" });
+  const noGhsContext = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    deviceScaleFactor: 1,
+    locale: browserLocale,
+  });
+  const noGhsPage = await noGhsContext.newPage();
+  await gotoApp(noGhsPage, withQaParam(productionUrl));
   const noGhsScreenshotPath = path.join(
     screenshotDir,
     "search-results-no-ghs-state.png",
@@ -1998,7 +2122,7 @@ try {
     screenshotPath: noGhsScreenshotPath,
     detailScreenshotPath: noGhsDetailScreenshotPath,
   });
-  await noGhsPage.close();
+  await noGhsContext.close();
 
   const batchInputScreenshotPath = path.join(
     screenshotDir,

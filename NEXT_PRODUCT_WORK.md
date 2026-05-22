@@ -73,7 +73,8 @@ Current mode:
   return path by opening the deployed app with `?cas=<CAS>`, checking that the
   single-search input hydrates, and verifying the matching result row appears.
   QR labels therefore stay connected to a real lookup path, not just a
-  printable QR bitmap.
+  printable QR bitmap. The same gate now also retries the initial deployed
+  search attempt instead of aborting on one transient result-row timeout.
 - Completed current slice: Chinese-name display now uses a shared trust helper
   across localized names, favorites/history/autocomplete, prepare-solution
   summaries, print preview/scoring, printed labels, export preview, backend
@@ -117,8 +118,8 @@ Current mode:
   prompts now stay in the body, while `evidence_type` uses one valid dropdown
   option. Unit tests now compare generated dropdown values and prefill field
   ids with the actual issue-template option and field-id lists. The production
-  search UI gate now also reads the issue-template dropdown options directly
-  instead of keeping a separate hard-coded list, and treats schema
+  search UI gate now also reads the issue-template dropdown options and field
+  ids directly instead of keeping separate hard-coded lists, and treats schema
   compatibility as part of the deployed support-link contract.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
