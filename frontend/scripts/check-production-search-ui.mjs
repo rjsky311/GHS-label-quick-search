@@ -1329,6 +1329,8 @@ const inspectBatchInputNormalizationPath = async (
       reviewValue: "",
       exportValue: "",
       filteredScopeCount: 0,
+      reviewReasonCount: 0,
+      reviewReasonText: "",
     };
 
     if (!searchButtonDisabled) {
@@ -1370,6 +1372,12 @@ const inspectBatchInputNormalizationPath = async (
         .getByTestId("results-workflow-filtered-scope")
         .count()
         .catch(() => 0);
+      const reviewReasons = page.getByTestId("results-workflow-review-reasons");
+      resultSummary.reviewReasonCount = await reviewReasons.count().catch(() => 0);
+      resultSummary.reviewReasonText =
+        ((await reviewReasons.textContent().catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
     }
 
     return {
@@ -2467,6 +2475,14 @@ try {
   }
   if (batchResultSummary.filteredScopeCount > 0) {
     failures.push("batch-results-filtered-scope-unexpected");
+  }
+  if (Number(batchResultSummary.reviewValue || 0) > 0) {
+    if (batchResultSummary.reviewReasonCount < 1) {
+      failures.push("batch-results-review-reasons-missing");
+    }
+    if (!/\d/.test(batchResultSummary.reviewReasonText || "")) {
+      failures.push("batch-results-review-reasons-count-missing");
+    }
   }
   if (urlQueryHydration.inputValue !== searchTerm) {
     failures.push("url-query-hydration-input-mismatch");

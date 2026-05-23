@@ -54,6 +54,7 @@
   "results.workflowLabelReadyBody": "These can enter label printing.",
   "results.workflowReviewLabel": "Needs review",
   "results.workflowReviewBody": "Includes lookup gaps, source conflicts, missing Chinese names, or GHS data gaps.",
+  "results.workflowReviewReasonsLabel": "Review reasons",
   "results.workflowExportLabel": "Batch rows",
   "results.workflowExportBody": "Full batch size before filters; exports follow the current visible scope.",
   "results.workflowFilteredScope": "Currently showing {{shown}} / {{total}} rows after filters.",

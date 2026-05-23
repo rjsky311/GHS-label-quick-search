@@ -195,6 +195,16 @@ describe('ResultsTable', () => {
         screen.getByTestId('results-workflow-summary-export-value')
       ).toHaveTextContent('4');
       expect(screen.getByText('results.workflowSummaryTitle')).toBeInTheDocument();
+      expect(screen.getByTestId('results-workflow-review-reasons')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('results-workflow-review-reason-source-conflict')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-reason-no-ghs-data')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-reason-unresolved-search')
+      ).toHaveTextContent('1');
     });
 
     it('shows when filters reduce the visible batch scope', () => {

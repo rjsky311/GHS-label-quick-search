@@ -58,6 +58,15 @@ const getDataQualityIssueClassName = (severity) => {
   return "border-slate-200 bg-slate-50 text-slate-700";
 };
 
+const BATCH_REVIEW_ISSUE_ORDER = [
+  "upstream-error",
+  "unresolved-search",
+  "no-ghs-data",
+  "ghs-text-no-pictograms",
+  "source-conflict",
+  "missing-chinese-name",
+];
+
 export default function ResultsTable({
   results,
   allResults,
@@ -120,6 +129,21 @@ export default function ResultsTable({
       exportRows: 0,
     },
   );
+  const workflowIssueCounts = workflowSummarySource.reduce((counts, result) => {
+    const effective = result.found ? getEffectiveClassification(result) : null;
+    const issues = getDataQualityIssues(result, effective);
+    issues.forEach((issue) => {
+      counts[issue.type] = (counts[issue.type] || 0) + 1;
+    });
+    return counts;
+  }, {});
+  const workflowIssueSummaries = BATCH_REVIEW_ISSUE_ORDER
+    .map((type) => ({
+      type,
+      count: workflowIssueCounts[type] || 0,
+      label: getDataQualityIssueLabel(type, t),
+    }))
+    .filter((issue) => issue.count > 0);
   const showWorkflowSummary = workflowSummaryTotal > 1;
   const decisionSteps = [
     {
@@ -392,6 +416,28 @@ export default function ResultsTable({
               </div>
             ))}
           </div>
+          {workflowIssueSummaries.length > 0 && (
+            <div
+              className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600"
+              data-testid="results-workflow-review-reasons"
+            >
+              <span className="font-semibold text-slate-700">
+                {t("results.workflowReviewReasonsLabel")}
+              </span>
+              {workflowIssueSummaries.map((issue) => (
+                <span
+                  key={issue.type}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 font-medium text-slate-700"
+                  data-testid={`results-workflow-review-reason-${issue.type}`}
+                >
+                  <span>{issue.label}</span>
+                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
+                    {issue.count}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

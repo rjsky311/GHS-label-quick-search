@@ -246,6 +246,11 @@ Current mode:
   card "Batch rows" instead of "Export scope" because the cards summarize the
   whole batch while export buttons still follow the currently visible filtered
   scope.
+- Completed current slice: batch results now show compact review-reason chips
+  under the workflow summary, so a high "Needs review" count is immediately
+  explainable as unresolved lookup, no GHS data, source conflict, missing
+  Chinese name, upstream error, or text-only GHS data. Production search UI QA
+  now fails if a nonzero review count has no reason breakdown.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

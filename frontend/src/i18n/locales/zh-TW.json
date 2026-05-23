@@ -54,6 +54,7 @@
   "results.workflowLabelReadyBody": "這些可以進入標籤列印。",
   "results.workflowReviewLabel": "需要檢查",
   "results.workflowReviewBody": "包含查不到、來源衝突、缺中文名或 GHS 資料缺口。",
+  "results.workflowReviewReasonsLabel": "需要檢查的原因",
   "results.workflowExportLabel": "整批筆數",
   "results.workflowExportBody": "這是篩選前的整批大小；匯出會依目前可見範圍執行。",
   "results.workflowFilteredScope": "套用篩選後目前顯示 {{shown}} / {{total}} 筆。",
