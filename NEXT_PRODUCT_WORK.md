@@ -242,6 +242,10 @@ Current mode:
   `workflow_dispatch` fallback. If future pushes show Zeabur deployment checks
   but no automatic GitHub Actions `CI` run, trigger `gh workflow run CI --ref
   main` and watch that run instead of treating the missing run as a pass.
+- Completed current slice: the batch workflow summary now calls the final
+  card "Batch rows" instead of "Export scope" because the cards summarize the
+  whole batch while export buttons still follow the currently visible filtered
+  scope.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each
