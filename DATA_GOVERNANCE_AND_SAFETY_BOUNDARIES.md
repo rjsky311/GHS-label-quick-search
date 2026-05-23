@@ -142,6 +142,10 @@ evidence discovery tools. The current review lives in
 `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
 The candidate-discovery dry-run contract lives in
 `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`.
+The current maintainer-only dry-run implementation lives in
+`backend/scripts/discover_candidates.py`; it defaults to approved manual
+entries plus the local seed dictionary and requires explicit `wikidata` source
+selection before any network lookup.
 
 Rules:
 

@@ -12,9 +12,27 @@ This plan defines how future candidate discovery can help with missing Chinese
 names, unresolved searches, aliases, and reference links without polluting
 public lookup, labels, exports, or QR targets.
 
-The first implementation must be dry-run only. It may collect candidate
-evidence, but it must not write approved manual entries, aliases, reference
-links, or public dictionary data.
+The first implementation is dry-run only. It may collect candidate evidence,
+but it must not write approved manual entries, aliases, reference links, or
+public dictionary data.
+
+Current implementation:
+
+- `backend/candidate_discovery.py` builds review-only candidate evidence
+  bundles for missing Chinese names and unresolved-search correction requests.
+- `backend/scripts/discover_candidates.py` is the maintainer CLI. It can run
+  against one CAS number or against open/candidate correction requests in the
+  pilot SQLite store.
+- Supported sources are `manual`, `local`, and optional `wikidata`.
+  `manual` reads approved manual dictionary entries only; `local` reads the
+  current seed dictionary. The maintainer CLI defaults to `manual,local`;
+  `wikidata` performs a bounded network lookup by CAS only when explicitly
+  requested, treats Chinese labels as candidates only, normalizes Wikidata item
+  URLs to HTTPS wiki pages, and deduplicates repeated language-label rows for
+  the same item.
+- The CLI output includes a suggested admin status-update payload, but the
+  command itself does not attach it to correction requests and does not create
+  manual entries.
 
 ## Non-Goals
 
@@ -83,6 +101,15 @@ admin-only.
 6. Public lookup, labels, exports, and QR targets change only after the manual
    entry, alias, or reference link is explicitly approved.
 
+Example maintainer commands:
+
+```bash
+cd backend
+python scripts/discover_candidates.py --cas 62-53-3 --sources manual,local
+python scripts/discover_candidates.py --cas 64-17-5 --sources manual,local,wikidata
+python scripts/discover_candidates.py --from-correction-requests --sources manual,local --output build/candidate-discovery-dry-run.json
+```
+
 ## Acceptance Criteria
 
 - Candidate discovery has no public-data side effect.
@@ -93,11 +120,16 @@ admin-only.
   request.
 - Tests cover public sanitization, admin conversion metadata, unsafe URL
   rejection, and docs drift.
+- The dry-run CLI has focused tests proving that generated candidates are
+  review-only, pending manual entries are ignored as public evidence, Wikidata
+  output is CJK-filtered, and correction-request discovery has no write side
+  effects.
 
 ## Verification Gates
 
 - `python -m pytest test_name_search.py -q`
 - `python -m pytest test_pilot_storage.py -q`
+- `python -m pytest test_candidate_discovery.py -q`
 - `npm run test:docs`
 - `git diff --check`
 

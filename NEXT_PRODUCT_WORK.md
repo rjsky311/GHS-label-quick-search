@@ -169,6 +169,13 @@ Current mode:
   included it in the docs drift gate. Future Wikidata, PubChem synonym, NCI,
   LLM, or scientific-skill candidate discovery now has a dry-run-first contract
   with review-only evidence bundles and no public-data side effects.
+- Completed current slice: added a maintainer-only candidate discovery dry-run
+  implementation. `backend/candidate_discovery.py` builds review-only
+  candidate evidence bundles; `backend/scripts/discover_candidates.py` can
+  inspect one CAS or open/candidate correction requests. It reads approved
+  manual entries and the local seed dictionary by default, requires explicit
+  opt-in for Wikidata network lookup, and never writes approved data or changes
+  public lookup, labels, exports, or QR targets.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

@@ -217,12 +217,20 @@ Work items:
   so public submissions cannot mark themselves as converted or approved.
 - Completed: added `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` as the implementation
   contract for future Wikidata/PubChem synonym/NCI/LLM/scientific-skill
-  candidate discovery. The first implementation must be dry-run only and must
-  emit review-only candidate evidence bundles.
-- Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
-  synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
-  later as external discovery helpers, but their output must use the same
-  candidate evidence bundle and remain admin-approved only. Existing
+  candidate discovery. Candidate discovery must be dry-run first and must emit
+  review-only candidate evidence bundles.
+- Completed: added the first maintainer-only dry-run discovery tool:
+  `backend/candidate_discovery.py` and
+  `backend/scripts/discover_candidates.py`. The CLI can inspect a single CAS or
+  open/candidate correction requests, reads approved manual entries plus the
+  local seed dictionary by default, and can optionally query Wikidata by CAS
+  when `--sources manual,local,wikidata` is explicitly requested. It emits
+  suggested admin candidate payloads but performs no database write and changes
+  no public lookup, label, export, or QR output.
+- Planned: candidate Chinese names from LLM/translation, PubChem synonyms, NCI
+  resolver, EPA CompTox, scientific lookup skills, or richer Wikidata fields
+  can be added later as external discovery helpers, but their output must use
+  the same candidate evidence bundle and remain admin-approved only. Existing
   Gemini-generated seed dictionary names remain the current project baseline
   and should not be bulk invalidated without a dedicated dictionary review.
 - Completed: added admin manual-dictionary review statuses (`approved`,
@@ -902,7 +910,7 @@ or user report points to a more urgent slice.
 | Area | Current status | Next concrete step | Suggested gate |
 | --- | --- | --- | --- |
 | Data source conflicts | `Monitoring` | Source/ranking evidence is now visible in Detail comparison; keep expanding text-only GHS and upstream-degraded examples only when real cases appear | Backend/frontend focused tests + `qa:production-search-ui` |
-| Correction intake | `Gate added` | Backend correction-request storage/API, admin review queue, public in-app correction dialog, and admin-only candidate evidence bundles are in place; external candidate discovery remains planned and must stay review-only | Backend storage/API tests + focused frontend tests + `qa:production-search-ui` |
+| Correction intake | `Gate added` | Backend correction-request storage/API, admin review queue, public in-app correction dialog, and admin-only candidate evidence bundles are in place; maintainer dry-run candidate discovery now covers approved manual entries, local seed names, and optional Wikidata, while richer external discovery remains planned and review-only | Backend storage/API tests + focused frontend tests + `qa:production-search-ui` |
 | SDS/reference authority | `Gate added` | Active/inactive reference-link curation is now visible in admin; keep role-first ordering and active-only public defaults aligned as links change | Existing reference-link tests + production search UI |
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |

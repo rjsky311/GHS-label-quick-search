@@ -265,7 +265,11 @@ bundles can seed pending manual-entry review records, but those records must be
 explicitly approved before public lookup, labels, exports, or QR targets use
 them.
 Candidate evidence payloads are sanitized at the backend boundary and forced
-to remain review-only. Future Wikidata/PubChem synonym/NCI/LLM/scientific-skill
+to remain review-only. The current maintainer-only discovery path is
+`backend/scripts/discover_candidates.py`, backed by
+`backend/candidate_discovery.py`; it reads approved manual entries and the
+local seed dictionary by default, requires explicit opt-in for Wikidata, and
+does not write public data. Future PubChem synonym/NCI/LLM/scientific-skill
 discovery work must follow `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`: dry-run first,
 evidence bundle only, no public-data side effects.
 
