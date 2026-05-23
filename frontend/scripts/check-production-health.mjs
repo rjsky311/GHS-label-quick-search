@@ -16,9 +16,9 @@ const outputPath = path.resolve(
   process.env.PRODUCTION_HEALTH_REPORT_PATH ||
     "build/production-health-report.json",
 );
-const maxAttempts = Number(process.env.PRODUCTION_HEALTH_ATTEMPTS || 3);
-const timeoutMs = Number(process.env.PRODUCTION_HEALTH_TIMEOUT_MS || 10000);
-const retryDelayMs = Number(process.env.PRODUCTION_HEALTH_RETRY_DELAY_MS || 750);
+const maxAttempts = Number(process.env.PRODUCTION_HEALTH_ATTEMPTS || 6);
+const timeoutMs = Number(process.env.PRODUCTION_HEALTH_TIMEOUT_MS || 15000);
+const retryDelayMs = Number(process.env.PRODUCTION_HEALTH_RETRY_DELAY_MS || 1000);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -82,7 +82,7 @@ const runAttemptedCheck = async (name, check) => {
       });
     }
     if (index < maxAttempts) {
-      await sleep(retryDelayMs);
+      await sleep(retryDelayMs * Math.min(index, 5));
     }
   }
   return {

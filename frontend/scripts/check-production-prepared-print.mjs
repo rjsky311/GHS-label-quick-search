@@ -190,6 +190,51 @@ const withQaParam = (url) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const waitForFirstVisible = async (page, locators, timeout = 60000) => {
+  const deadline = Date.now() + timeout;
+  let lastError = null;
+  while (Date.now() < deadline) {
+    for (const locator of locators) {
+      try {
+        if (await locator.isVisible({ timeout: 500 })) {
+          return locator;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    await sleep(250);
+  }
+  throw new Error(
+    `Timed out waiting for any expected locator to become visible.${
+      lastError ? ` Last error: ${lastError.message}` : ""
+    }`,
+  );
+};
+
+const gotoProductionPage = async (page) => {
+  let lastError = null;
+  const attempts = Number(env.PRINT_QA_PREPARED_PAGE_ATTEMPTS || 6);
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const url = withQaParam(productionUrl);
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: attempt === 1 ? 45000 : 60000,
+      });
+      await page.getByTestId("single-search-btn").waitFor({
+        state: "visible",
+        timeout: 30000,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      await sleep(1000 * Math.min(attempt, 5));
+    }
+  }
+  throw lastError || new Error("Failed to open production prepared QA page.");
+};
+
 const getAttributeMap = async (locator, attributes) => {
   const result = {};
   for (const attribute of attributes) {
@@ -220,12 +265,57 @@ const normalizeText = (value) =>
 
 const fillSearch = async (page, searchTerm) => {
   const searchInput = page.locator('input[role="combobox"], input[type="text"]').first();
-  await searchInput.fill(searchTerm);
-  await page.getByTestId("single-search-btn").click();
-  await page.locator('input[type="checkbox"]').first().waitFor({
-    state: "visible",
-    timeout: 60000,
-  });
+  let lastErrorText = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await searchInput.fill("");
+    await searchInput.fill(searchTerm);
+    await page.getByTestId("single-search-btn").click();
+    await page
+      .getByTestId("error-message")
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    await page
+      .waitForFunction(
+        () => {
+          const button = document.querySelector('[data-testid="single-search-btn"]');
+          return Boolean(button?.disabled);
+        },
+        { timeout: 5000 },
+      )
+      .catch(() => {});
+    const firstVisible = await waitForFirstVisible(
+      page,
+      [
+        page.getByTestId("detail-btn-0"),
+        page.getByTestId("result-row-0"),
+        page.getByTestId("error-message"),
+        page.getByTestId("upstream-error-banner"),
+      ],
+      60000,
+    );
+    const errorVisible = await page
+      .getByTestId("error-message")
+      .isVisible()
+      .catch(() => false);
+    const upstreamVisible = await page
+      .getByTestId("upstream-error-banner")
+      .isVisible()
+      .catch(() => false);
+    if (!errorVisible && !upstreamVisible) {
+      await page.getByTestId("detail-btn-0").waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+      return;
+    }
+    lastErrorText =
+      ((await firstVisible.textContent().catch(() => "")) || "").trim() ||
+      "production search returned an error state";
+    await sleep(1000 * attempt);
+  }
+  throw new Error(
+    `Production prepared QA search did not produce a result after retries: ${lastErrorText}`,
+  );
 };
 
 const openPrepareSolutionForm = async (page) => {
@@ -819,11 +909,12 @@ const evaluateCase = ({
 const runCase = async ({ browser, testCase }) => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
   try {
+    page.setDefaultTimeout(60000);
     await page.addInitScript(() => {
       localStorage.removeItem("ghs_prepared_recents");
       localStorage.removeItem("ghs_prepared_presets");
     });
-    await page.goto(withQaParam(productionUrl), { waitUntil: "domcontentloaded" });
+    await gotoProductionPage(page);
     let entryEvidence = {};
     if (testCase.entryMode === "reprint") {
       entryEvidence = await openPreparedReprintModal(page);
