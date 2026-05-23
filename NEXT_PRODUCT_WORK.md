@@ -56,6 +56,9 @@ Current mode:
   labels, or exports. The next data-governance slice is an external discovery
   sandbox only after a scope/cost/source decision, or further admin reporting
   if real queue evidence shows maintainers still cannot tell what happened.
+  The backend candidate-evidence payload boundary is now hardened first:
+  candidate bundles are allow-listed, bounded, safe-url-only, and forced to
+  review-only flags before storage.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now
@@ -153,6 +156,13 @@ Current mode:
   maintainer can continue curation without implying public data has changed.
   The ordinary open correction summary excludes those converted rows, keeping
   the overview focused on unconverted next-action items.
+- Completed current slice: correction candidate evidence payloads are now
+  sanitized at the backend API boundary. Unknown fields are dropped, candidate
+  evidence URLs must use `http` or `https`, text fields are capped, CAS values
+  are normalized, and the stored payload always remains review-only
+  (`approved_for_public_use: false`, `public_data_changed: false`). Public
+  submissions cannot set manual-review conversion metadata; only admin
+  status-update flows can mark a candidate as converted to manual review.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

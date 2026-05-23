@@ -98,6 +98,44 @@ ALLOWED_MANUAL_ENTRY_STATUSES = MANUAL_ENTRY_STATUSES
 ALLOWED_REFERENCE_STATUSES = {"active", "inactive"}
 ALLOWED_CORRECTION_REQUEST_STATUSES = CORRECTION_REQUEST_STATUSES
 ALLOWED_CORRECTION_REQUEST_TYPES = CORRECTION_REQUEST_TYPES
+ALLOWED_CORRECTION_CANDIDATE_KEYS = {
+    "schema_version",
+    "review_required",
+    "approved_for_public_use",
+    "source",
+    "candidate_type",
+    "issue_type",
+    "request_id",
+    "cas_number",
+    "name_en",
+    "name_zh",
+    "query_text",
+    "evidence_type",
+    "evidence_url",
+    "review_notes",
+    "current_output",
+    "expected_output",
+    "converted_to_manual_entry",
+    "manual_entry_status",
+    "manual_entry_source",
+    "public_data_changed",
+}
+CORRECTION_CANDIDATE_TEXT_LIMITS = {
+    "name_en": MAX_ADMIN_NAME_LENGTH,
+    "name_zh": MAX_ADMIN_NAME_LENGTH,
+    "query_text": MAX_ADMIN_NAME_LENGTH,
+    "cas_number": MAX_ADMIN_CAS_LENGTH,
+    "source": MAX_ADMIN_SOURCE_LENGTH,
+    "candidate_type": 80,
+    "issue_type": 80,
+    "evidence_type": 160,
+    "evidence_url": 2048,
+    "review_notes": MAX_ADMIN_NOTES_LENGTH,
+    "current_output": MAX_CORRECTION_TEXT_LENGTH,
+    "expected_output": MAX_CORRECTION_TEXT_LENGTH,
+    "manual_entry_status": 40,
+    "manual_entry_source": MAX_ADMIN_SOURCE_LENGTH,
+}
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -206,6 +244,86 @@ def _is_safe_reference_url(value: str) -> bool:
 def _safe_reference_link_type(value: Any) -> str:
     normalized = str(value or "").strip().lower()
     return normalized if normalized in REFERENCE_LINK_TYPES else "reference"
+
+
+def _coerce_candidate_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def _sanitize_correction_candidate_payload(
+    value: Optional[Dict[str, Any]],
+    *,
+    allow_manual_review_metadata: bool = False,
+) -> Dict[str, Any]:
+    """Normalize candidate evidence so it can never imply public approval."""
+    encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
+    if len(encoded) > MAX_CORRECTION_CANDIDATE_JSON_CHARS:
+        raise ValueError("candidate payload is too large")
+    if not value:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError("candidate payload must be an object")
+
+    sanitized: Dict[str, Any] = {}
+    for raw_key, raw_value in value.items():
+        key = str(raw_key or "").strip()
+        if key not in ALLOWED_CORRECTION_CANDIDATE_KEYS:
+            continue
+        if raw_value is None:
+            continue
+        if key == "converted_to_manual_entry":
+            if allow_manual_review_metadata:
+                sanitized[key] = _coerce_candidate_bool(raw_value)
+            continue
+        if key in {"manual_entry_status", "manual_entry_source", "request_id"}:
+            if not allow_manual_review_metadata:
+                continue
+            if key in {"manual_entry_status", "manual_entry_source"}:
+                text = str(raw_value).replace("\x00", "").strip()
+                if not text:
+                    continue
+                max_length = CORRECTION_CANDIDATE_TEXT_LIMITS.get(key, 80)
+                if len(text) > max_length:
+                    raise ValueError(f"{key} is too large")
+                sanitized[key] = text
+                continue
+        if key == "request_id":
+            try:
+                request_id = int(raw_value)
+            except (TypeError, ValueError):
+                continue
+            if request_id > 0:
+                sanitized[key] = request_id
+            continue
+        if key == "schema_version":
+            continue
+        if key in {"review_required", "approved_for_public_use", "public_data_changed"}:
+            continue
+
+        text = str(raw_value).replace("\x00", "").strip()
+        if not text:
+            continue
+        max_length = CORRECTION_CANDIDATE_TEXT_LIMITS.get(
+            key,
+            MAX_CORRECTION_TEXT_LENGTH,
+        )
+        if len(text) > max_length:
+            raise ValueError(f"{key} is too large")
+        if key == "cas_number":
+            text = normalize_cas(text) or text
+        if key == "evidence_url" and not _is_safe_reference_url(text):
+            raise ValueError("candidate evidence URL must use http or https")
+        sanitized[key] = text
+
+    sanitized["schema_version"] = 1
+    sanitized["review_required"] = True
+    sanitized["approved_for_public_use"] = False
+    sanitized["public_data_changed"] = False
+    return sanitized
 
 
 def _sanitize_dictionary_miss_context(value: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -870,10 +988,7 @@ class DictionaryCorrectionRequestPayload(BaseModel):
     @field_validator("candidate")
     @classmethod
     def correction_candidate_must_stay_small(cls, value: Dict[str, Any]) -> Dict[str, Any]:
-        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
-        if len(encoded) > MAX_CORRECTION_CANDIDATE_JSON_CHARS:
-            raise ValueError("candidate payload is too large")
-        return value or {}
+        return _sanitize_correction_candidate_payload(value)
 
 
 class DictionaryCorrectionRequestStatusPayload(BaseModel):
@@ -907,10 +1022,10 @@ class DictionaryCorrectionRequestStatusPayload(BaseModel):
     ) -> Optional[Dict[str, Any]]:
         if value is None:
             return None
-        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True)
-        if len(encoded) > MAX_CORRECTION_CANDIDATE_JSON_CHARS:
-            raise ValueError("candidate payload is too large")
-        return value or {}
+        return _sanitize_correction_candidate_payload(
+            value,
+            allow_manual_review_metadata=True,
+        )
 
 
 class DictionaryManualEntryPayload(BaseModel):

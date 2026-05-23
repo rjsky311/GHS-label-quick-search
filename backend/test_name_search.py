@@ -310,7 +310,15 @@ async def test_dictionary_correction_request_records_public_intake(monkeypatch):
                 "evidence_url": "https://example.com/sds",
                 "evidence_type": "Supplier SDS",
                 "local_context": " Detail modal ",
-                "candidate": {"name_zh": "candidate only"},
+                "candidate": {
+                    "name_zh": "candidate only",
+                    "converted_to_manual_entry": True,
+                    "manual_entry_status": "approved",
+                    "manual_entry_source": "spoofed-public",
+                    "request_id": 999,
+                    "approved_for_public_use": True,
+                    "public_data_changed": True,
+                },
             },
         )
 
@@ -326,7 +334,13 @@ async def test_dictionary_correction_request_records_public_intake(monkeypatch):
         "evidence_url": "https://example.com/sds",
         "evidence_type": "Supplier SDS",
         "local_context": "Detail modal",
-        "candidate": {"name_zh": "candidate only"},
+        "candidate": {
+            "name_zh": "candidate only",
+            "schema_version": 1,
+            "review_required": True,
+            "approved_for_public_use": False,
+            "public_data_changed": False,
+        },
         "source": "public",
     }
 
@@ -605,7 +619,13 @@ async def test_admin_can_view_and_update_correction_requests(monkeypatch):
         "request_id": 8,
         "status": "candidate_found",
         "review_notes": "Found Wikidata candidate.",
-        "candidate": {"name_zh": "candidate only"},
+        "candidate": {
+            "name_zh": "candidate only",
+            "schema_version": 1,
+            "review_required": True,
+            "approved_for_public_use": False,
+            "public_data_changed": False,
+        },
     }
 
 
@@ -736,6 +756,18 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     correction_status = server.DictionaryCorrectionRequestStatusPayload(
         status=" Candidate_Found ",
         review_notes=" Candidate needs evidence. ",
+        candidate={
+            "name_zh": "\u4e59\u9187",
+            "source": "wikidata",
+            "evidence_url": "https://www.wikidata.org/wiki/Q153",
+            "approved_for_public_use": True,
+            "public_data_changed": True,
+            "converted_to_manual_entry": "true",
+            "manual_entry_status": "pending",
+            "manual_entry_source": "correction-request",
+            "request_id": "8",
+            "unknown": "must be dropped",
+        },
     )
 
     assert manual.cas_number == "64-17-5"
@@ -763,6 +795,19 @@ def test_admin_dictionary_payloads_trim_safe_fields():
     assert correction.source == "public"
     assert correction_status.status == "candidate_found"
     assert correction_status.review_notes == "Candidate needs evidence."
+    assert correction_status.candidate == {
+        "name_zh": "\u4e59\u9187",
+        "source": "wikidata",
+        "evidence_url": "https://www.wikidata.org/wiki/Q153",
+        "schema_version": 1,
+        "review_required": True,
+        "approved_for_public_use": False,
+        "public_data_changed": False,
+        "converted_to_manual_entry": True,
+        "manual_entry_status": "pending",
+        "manual_entry_source": "correction-request",
+        "request_id": 8,
+    }
 
     manual_with_zh = server.DictionaryManualEntryPayload(
         cas_number="64-17-5",
@@ -839,6 +884,11 @@ def test_admin_dictionary_payloads_reject_unbounded_values():
         server.DictionaryCorrectionRequestPayload(
             issue_type="missing-chinese-name",
             candidate={"blob": "x" * (server.MAX_CORRECTION_CANDIDATE_JSON_CHARS + 1)},
+        )
+    with pytest.raises(ValidationError):
+        server.DictionaryCorrectionRequestStatusPayload(
+            status="candidate_found",
+            candidate={"evidence_url": "data:text/plain,unsafe"},
         )
     with pytest.raises(ValidationError):
         server.DictionaryCorrectionRequestStatusPayload(

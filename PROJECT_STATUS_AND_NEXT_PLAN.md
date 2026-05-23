@@ -274,7 +274,14 @@ Current completion snapshot:
   admin overview now lists those converted requests with their review-only
   candidate evidence so maintainers do not have to dig through the full queue.
   Converted candidates are separated from the ordinary open correction list to
-  keep the admin overview focused on the next action.
+  keep the admin overview focused on the next action. Candidate evidence
+  payloads are now also sanitized at the backend boundary: unknown keys are
+  dropped, unsafe evidence URL schemes and oversized fields are rejected, CAS is
+  normalized, and stored payloads are forced to review-only flags so future
+  external or LLM candidate discovery cannot bypass admin approval. Public
+  submissions cannot set manual-review conversion metadata; only admin
+  status-update flows can mark candidate evidence as converted into manual
+  review.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

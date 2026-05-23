@@ -209,6 +209,12 @@ Work items:
   open correction-request summary list and shown only in the manual-review
   section. This keeps the admin overview low-noise while preserving the full
   correction history in the detailed queue/export paths.
+- Completed: correction candidate evidence payloads are now sanitized at the
+  backend boundary. Candidate bundles accept only known fields, reject unsafe
+  evidence URL schemes, cap free text, normalize CAS values, and always store
+  review-only flags so future external/LLM lookup helpers cannot imply public
+  approval by payload shape. Manual-review conversion metadata is admin-only,
+  so public submissions cannot mark themselves as converted or approved.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

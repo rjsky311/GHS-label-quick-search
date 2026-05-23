@@ -103,6 +103,17 @@ Rules:
   review notes, but it is explicitly not approved for public lookup, labels, or
   exports until a maintainer converts it into an approved manual entry, alias,
   or reference record.
+- Backend correction candidate payloads are allow-listed, bounded, and
+  normalized before storage. Unknown keys are dropped, candidate evidence URLs
+  must be `http` or `https`, oversized text is rejected, and the backend always
+  forces `review_required: true`, `approved_for_public_use: false`, and
+  `public_data_changed: false` on stored candidate evidence. Future LLM,
+  Wikidata, PubChem synonym, resolver, or scientific-skill outputs must pass
+  through this same boundary before they can enter the admin queue. Public
+  submissions cannot set manual-review conversion metadata such as
+  `converted_to_manual_entry`, `manual_entry_status`, `manual_entry_source`, or
+  a correction `request_id`; those fields are accepted only through admin
+  status-update flows.
 - Stored correction candidate evidence may create a pending manual-dictionary
   review entry from the admin dashboard. That pending entry is still
   admin-only; public lookup, labels, QR targets, and exports may use it only
