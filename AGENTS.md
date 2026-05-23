@@ -268,10 +268,11 @@ Candidate evidence payloads are sanitized at the backend boundary and forced
 to remain review-only. The current maintainer-only discovery path is
 `backend/scripts/discover_candidates.py`, backed by
 `backend/candidate_discovery.py`; it reads approved manual entries and the
-local seed dictionary by default, requires explicit opt-in for Wikidata, and
-does not write public data. Future PubChem synonym/NCI/LLM/scientific-skill
-discovery work must follow `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`: dry-run first,
-evidence bundle only, no public-data side effects.
+local seed dictionary by default, can resolve exact local names to CAS for
+unresolved-search rows, requires explicit opt-in for Wikidata, and does not
+write public data. Future PubChem synonym/NCI/LLM/scientific-skill discovery
+work must follow `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`: dry-run first, evidence
+bundle only, no public-data side effects.
 
 The project-level scope alignment workflow is pinned in
 `PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,

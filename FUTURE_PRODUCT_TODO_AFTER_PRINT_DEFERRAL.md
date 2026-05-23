@@ -223,8 +223,9 @@ Work items:
   `backend/candidate_discovery.py` and
   `backend/scripts/discover_candidates.py`. The CLI can inspect a single CAS or
   open/candidate correction requests, reads approved manual entries plus the
-  local seed dictionary by default, and can optionally query Wikidata by CAS
-  when `--sources manual,local,wikidata` is explicitly requested. It emits
+  local seed dictionary by default, can resolve exact local English/Chinese
+  names to CAS for unresolved-search rows, and can optionally query Wikidata by
+  CAS when `--sources manual,local,wikidata` is explicitly requested. It emits
   suggested admin candidate payloads but performs no database write and changes
   no public lookup, label, export, or QR output.
 - Planned: candidate Chinese names from LLM/translation, PubChem synonyms, NCI

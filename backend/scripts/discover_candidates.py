@@ -61,6 +61,7 @@ def main() -> int:
     parser.add_argument("--output", help="Write the dry-run report JSON to this file.")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--cas", help="Discover candidates for one CAS number.")
+    mode.add_argument("--query", help="Discover candidates for one unresolved search query.")
     mode.add_argument(
         "--from-correction-requests",
         action="store_true",
@@ -83,6 +84,17 @@ def main() -> int:
                 cas_number=args.cas,
                 name_en=args.name_en,
                 query_text=args.query_text,
+                store=store,
+                sources=args.sources,
+            )
+            payload = build_discovery_report([item], sources=args.sources)
+            write_payload(payload, args.output)
+            return 0
+
+        if args.query:
+            item = discover_candidates_for_item(
+                query_text=args.query,
+                name_en=args.name_en,
                 store=store,
                 sources=args.sources,
             )

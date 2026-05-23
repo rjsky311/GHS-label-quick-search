@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterable, Optional
 
-from chemical_dict import CAS_TO_EN, CAS_TO_ZH
+from chemical_dict import CAS_TO_EN, CAS_TO_ZH, EN_TO_CAS, ZH_TO_CAS
 from pilot_store import PilotStore
 
 DRY_RUN_SOURCE = "candidate-discovery-dry-run"
@@ -39,6 +39,20 @@ def first_cas_from_text(*values: Optional[str]) -> str:
         match = _CAS_RE.search(value or "")
         if match:
             return match.group(0)
+    return ""
+
+
+def resolve_local_cas_from_name(*values: Optional[str]) -> str:
+    for value in values:
+        text = clean_text(value, max_length=240)
+        if not text:
+            continue
+        zh_match = ZH_TO_CAS.get(text)
+        if zh_match:
+            return zh_match
+        en_match = EN_TO_CAS.get(text.lower())
+        if en_match:
+            return en_match
     return ""
 
 
@@ -116,6 +130,7 @@ def _local_dictionary_candidate(
     *,
     cas_number: str,
     name_en: str = "",
+    query_text: str = "",
 ) -> Optional[dict[str, Any]]:
     name_zh = CAS_TO_ZH.get(cas_number, "")
     if not has_cjk(name_zh):
@@ -125,6 +140,7 @@ def _local_dictionary_candidate(
         cas_number=cas_number,
         name_en=name_en or CAS_TO_EN.get(cas_number, ""),
         name_zh=name_zh,
+        query_text=query_text,
         evidence_type="Local seed dictionary",
         review_notes=(
             "Existing local seed dictionary candidate. Treat as current project baseline, "
@@ -139,6 +155,7 @@ def _approved_manual_candidate(
     *,
     cas_number: str,
     name_en: str = "",
+    query_text: str = "",
 ) -> Optional[dict[str, Any]]:
     if store is None or not cas_number:
         return None
@@ -150,6 +167,7 @@ def _approved_manual_candidate(
         cas_number=cas_number,
         name_en=name_en or record.get("name_en") or CAS_TO_EN.get(cas_number, ""),
         name_zh=record.get("name_zh") or "",
+        query_text=query_text,
         evidence_type="Approved manual dictionary entry",
         review_notes=(
             "Approved manual dictionary entry already exists. If a correction request still "
@@ -226,8 +244,10 @@ def discover_candidates_for_item(
     sources: Iterable[str] = DEFAULT_SOURCE_ORDER,
     wikidata_opener: Optional[Callable[[urllib.request.Request, float], bytes]] = None,
 ) -> dict[str, Any]:
-    normalized_cas = normalize_cas(cas_number) or first_cas_from_text(query_text, name_en)
     normalized_sources = tuple(source.strip().lower() for source in sources if source.strip())
+    normalized_cas = normalize_cas(cas_number) or first_cas_from_text(query_text, name_en)
+    if not normalized_cas and "local" in normalized_sources:
+        normalized_cas = resolve_local_cas_from_name(name_en, query_text)
     candidates: list[dict[str, Any]] = []
 
     if "manual" in normalized_sources:
@@ -235,6 +255,7 @@ def discover_candidates_for_item(
             store,
             cas_number=normalized_cas,
             name_en=name_en,
+            query_text=query_text,
         )
         if candidate:
             candidates.append(candidate)
@@ -243,6 +264,7 @@ def discover_candidates_for_item(
         candidate = _local_dictionary_candidate(
             cas_number=normalized_cas,
             name_en=name_en,
+            query_text=query_text,
         )
         if candidate:
             candidates.append(candidate)

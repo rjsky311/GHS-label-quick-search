@@ -289,10 +289,11 @@ Current completion snapshot:
   discovery: dry-run first, evidence bundle only, no public-data side effects.
   The first maintainer CLI implementation now exists in
   `backend/scripts/discover_candidates.py`: it reads approved manual entries
-  and the local seed dictionary by default, can optionally query Wikidata by
-  CAS when explicitly requested, and emits suggested admin candidate payloads
-  without writing approved data or changing public lookup, labels, exports, or
-  QR targets.
+  and the local seed dictionary by default, can resolve exact local names to
+  CAS for unresolved-search rows, can optionally query Wikidata by CAS when
+  explicitly requested, and emits suggested admin candidate payloads without
+  writing approved data or changing public lookup, labels, exports, or QR
+  targets.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

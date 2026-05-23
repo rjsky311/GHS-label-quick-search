@@ -144,8 +144,9 @@ The candidate-discovery dry-run contract lives in
 `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`.
 The current maintainer-only dry-run implementation lives in
 `backend/scripts/discover_candidates.py`; it defaults to approved manual
-entries plus the local seed dictionary and requires explicit `wikidata` source
-selection before any network lookup.
+entries plus the local seed dictionary, can resolve exact local English/Chinese
+names to CAS for unresolved-search rows, and requires explicit `wikidata`
+source selection before any network lookup.
 
 Rules:
 

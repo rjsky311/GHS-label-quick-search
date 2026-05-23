@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from candidate_discovery import (
@@ -7,6 +9,7 @@ from candidate_discovery import (
     discover_candidates_from_correction_requests,
     fetch_wikidata_chinese_name_candidates,
     normalize_wikidata_item_url,
+    resolve_local_cas_from_name,
 )
 from pilot_store import PilotStore
 
@@ -49,6 +52,51 @@ def test_discovers_local_dictionary_chinese_name_candidate(tmp_path):
         assert result["suggestedAdminUpdate"]["status"] == "candidate_found"
     finally:
         store.close()
+
+
+def test_resolves_local_name_to_cas_for_unresolved_search_candidate(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        result = discover_candidates_for_item(
+            query_text="Aniline",
+            store=store,
+            sources=("local",),
+        )
+
+        assert result["casNumber"] == "62-53-3"
+        assert result["candidateCount"] == 1
+        assert result["candidates"][0]["query_text"] == "Aniline"
+        assert result["candidates"][0]["name_zh"] == "\u82ef\u80fa"
+    finally:
+        store.close()
+
+
+def test_resolves_local_chinese_name_to_cas():
+    assert resolve_local_cas_from_name("\u82ef\u80fa") == "62-53-3"
+
+
+def test_cli_supports_query_only_discovery(tmp_path):
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/discover_candidates.py",
+            "--db-path",
+            str(tmp_path / "pilot.db"),
+            "--query",
+            "Aniline",
+            "--sources",
+            "local",
+        ],
+        cwd=Path(__file__).parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(completed.stdout)
+
+    assert payload["dryRun"] is True
+    assert payload["items"][0]["casNumber"] == "62-53-3"
+    assert payload["items"][0]["candidates"][0]["name_zh"] == "\u82ef\u80fa"
 
 
 def test_discovers_approved_manual_candidate_but_ignores_pending(tmp_path):

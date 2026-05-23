@@ -25,11 +25,12 @@ Current implementation:
   pilot SQLite store.
 - Supported sources are `manual`, `local`, and optional `wikidata`.
   `manual` reads approved manual dictionary entries only; `local` reads the
-  current seed dictionary. The maintainer CLI defaults to `manual,local`;
-  `wikidata` performs a bounded network lookup by CAS only when explicitly
-  requested, treats Chinese labels as candidates only, normalizes Wikidata item
-  URLs to HTTPS wiki pages, and deduplicates repeated language-label rows for
-  the same item.
+  current seed dictionary and can resolve exact English/Chinese local names to
+  CAS for unresolved-search requests. The maintainer CLI defaults to
+  `manual,local`; `wikidata` performs a bounded network lookup by CAS only when
+  explicitly requested, treats Chinese labels as candidates only, normalizes
+  Wikidata item URLs to HTTPS wiki pages, and deduplicates repeated
+  language-label rows for the same item.
 - The CLI output includes a suggested admin status-update payload, but the
   command itself does not attach it to correction requests and does not create
   manual entries.
@@ -106,6 +107,7 @@ Example maintainer commands:
 ```bash
 cd backend
 python scripts/discover_candidates.py --cas 62-53-3 --sources manual,local
+python scripts/discover_candidates.py --query Aniline --sources manual,local
 python scripts/discover_candidates.py --cas 64-17-5 --sources manual,local,wikidata
 python scripts/discover_candidates.py --from-correction-requests --sources manual,local --output build/candidate-discovery-dry-run.json
 ```
@@ -121,7 +123,8 @@ python scripts/discover_candidates.py --from-correction-requests --sources manua
 - Tests cover public sanitization, admin conversion metadata, unsafe URL
   rejection, and docs drift.
 - The dry-run CLI has focused tests proving that generated candidates are
-  review-only, pending manual entries are ignored as public evidence, Wikidata
+  review-only, pending manual entries are ignored as public evidence, exact
+  local name-to-CAS resolution can seed unresolved-search candidates, Wikidata
   output is CJK-filtered, and correction-request discovery has no write side
   effects.
 
