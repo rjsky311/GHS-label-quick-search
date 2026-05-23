@@ -225,6 +225,14 @@ Current mode:
   count, rows needing data review, and export scope before the user starts
   selecting labels or downloading files. This makes the batch path easier to
   judge without opening the print modal first.
+- Completed current slice: the batch workflow summary now stays batch-wide
+  even when the table is filtered. The visible-row scope is still shown
+  separately, so users can distinguish "what is in the whole batch" from
+  "what the next print/export action will affect."
+- Completed current slice: `qa:production-search-ui` now follows the deployed
+  batch input normalization path through an actual batch search result and
+  fails if the batch workflow summary disappears, reports the wrong total row
+  scope, or shows a filtered-scope note when no filter is active.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

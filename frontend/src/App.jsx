@@ -936,6 +936,7 @@ function App() {
             />
             <ResultsTable
               results={sortedResults}
+              allResults={results}
               totalCount={results.length}
               resultFilter={resultFilter}
               onSetResultFilter={setResultFilter}

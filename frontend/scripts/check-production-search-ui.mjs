@@ -1319,6 +1319,59 @@ const inspectBatchInputNormalizationPath = async (
       await page.screenshot({ path: screenshotPath, fullPage: false });
     }
     const diagnostics = page.getByTestId("batch-input-diagnostics");
+    const searchButton = page.getByTestId("batch-search-btn");
+    const searchButtonDisabled = await searchButton.isDisabled();
+    const resultSummary = {
+      rowCount: 0,
+      workflowSummaryVisible: false,
+      foundValue: "",
+      labelReadyValue: "",
+      reviewValue: "",
+      exportValue: "",
+      filteredScopeCount: 0,
+    };
+
+    if (!searchButtonDisabled) {
+      await searchButton.click();
+      await page.getByTestId("result-row-0").waitFor({
+        state: "visible",
+        timeout: SEARCH_UI_TIMEOUT_MS,
+      });
+      const workflowSummary = page.getByTestId("results-workflow-summary");
+      await workflowSummary.waitFor({
+        state: "visible",
+        timeout: SEARCH_UI_TIMEOUT_MS,
+      });
+      resultSummary.rowCount = await page
+        .locator('[data-testid^="result-row-"]')
+        .count();
+      resultSummary.workflowSummaryVisible = await workflowSummary.isVisible();
+      resultSummary.foundValue =
+        ((await page
+          .getByTestId("results-workflow-summary-found-value")
+          .textContent()
+          .catch(() => "")) || "").trim();
+      resultSummary.labelReadyValue =
+        ((await page
+          .getByTestId("results-workflow-summary-label-ready-value")
+          .textContent()
+          .catch(() => "")) || "").trim();
+      resultSummary.reviewValue =
+        ((await page
+          .getByTestId("results-workflow-summary-needs-review-value")
+          .textContent()
+          .catch(() => "")) || "").trim();
+      resultSummary.exportValue =
+        ((await page
+          .getByTestId("results-workflow-summary-export-value")
+          .textContent()
+          .catch(() => "")) || "").trim();
+      resultSummary.filteredScopeCount = await page
+        .getByTestId("results-workflow-filtered-scope")
+        .count()
+        .catch(() => 0);
+    }
+
     return {
       readySummary:
         ((await readySummary.textContent()) || "").replace(/\s+/g, " ").trim(),
@@ -1326,13 +1379,12 @@ const inspectBatchInputNormalizationPath = async (
         ((await diagnostics.textContent().catch(() => "")) || "")
           .replace(/\s+/g, " ")
           .trim(),
-      searchButtonDisabled: await page
-        .getByTestId("batch-search-btn")
-        .isDisabled(),
+      searchButtonDisabled,
       overLimitAlertCount: await page
         .getByTestId("batch-over-limit-alert")
         .count()
         .catch(() => 0),
+      resultSummary,
     };
   } finally {
     await page.close();
@@ -1548,6 +1600,7 @@ const summarizeSearchUiReportForConsole = (report) => {
         ),
         overLimitAlertCount:
           metrics.batchInputNormalization?.overLimitAlertCount || 0,
+        resultSummary: metrics.batchInputNormalization?.resultSummary || {},
       },
       urlQueryHydration: {
         inputValue: metrics.urlQueryHydration?.inputValue || "",
@@ -2398,6 +2451,22 @@ try {
   }
   if (batchInputNormalization.overLimitAlertCount > 0) {
     failures.push("batch-input-overlimit-alert-unexpected");
+  }
+  const batchResultSummary = batchInputNormalization.resultSummary || {};
+  if (!batchResultSummary.workflowSummaryVisible) {
+    failures.push("batch-results-workflow-summary-missing");
+  }
+  if (batchResultSummary.rowCount !== 5) {
+    failures.push("batch-results-row-count-mismatch");
+  }
+  if (!/\/\s*5\b/.test(batchResultSummary.foundValue || "")) {
+    failures.push("batch-results-found-summary-total-mismatch");
+  }
+  if (!/\b5\b/.test(batchResultSummary.exportValue || "")) {
+    failures.push("batch-results-export-summary-mismatch");
+  }
+  if (batchResultSummary.filteredScopeCount > 0) {
+    failures.push("batch-results-filtered-scope-unexpected");
   }
   if (urlQueryHydration.inputValue !== searchTerm) {
     failures.push("url-query-hydration-input-mismatch");

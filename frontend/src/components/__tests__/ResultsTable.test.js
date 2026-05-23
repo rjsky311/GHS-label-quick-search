@@ -202,11 +202,26 @@ describe('ResultsTable', () => {
         <ResultsTable
           {...defaultProps}
           results={[mockFoundResult, mockWarningResult]}
+          allResults={[
+            mockFoundResult,
+            mockWarningResult,
+            mockNoHazardResult,
+            mockNotFoundResult,
+          ]}
           totalCount={4}
           getEffectiveClassification={createMockGetEffective()}
         />
       );
 
+      expect(
+        screen.getByTestId('results-workflow-summary-found-value')
+      ).toHaveTextContent('3/4');
+      expect(
+        screen.getByTestId('results-workflow-summary-label-ready-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-needs-review-value')
+      ).toHaveTextContent('3');
       expect(screen.getByTestId('results-workflow-filtered-scope')).toHaveTextContent(
         'results.workflowFilteredScope'
       );

@@ -60,6 +60,7 @@ const getDataQualityIssueClassName = (severity) => {
 
 export default function ResultsTable({
   results,
+  allResults,
   totalCount,
   resultFilter,
   onSetResultFilter,
@@ -96,7 +97,9 @@ export default function ResultsTable({
   const hasPrintableLabelResults = results.some(isPrintableForLabel);
   const selectedPrintableCount = selectedForLabel.filter(isPrintableForLabel)
     .length;
-  const workflowSummary = results.reduce(
+  const workflowSummarySource = Array.isArray(allResults) ? allResults : results;
+  const workflowSummaryTotal = totalCount || workflowSummarySource.length;
+  const workflowSummary = workflowSummarySource.reduce(
     (summary, result) => {
       const effective = result.found ? getEffectiveClassification(result) : null;
       const issues = getDataQualityIssues(result, effective);
@@ -117,7 +120,7 @@ export default function ResultsTable({
       exportRows: 0,
     },
   );
-  const showWorkflowSummary = totalCount > 1;
+  const showWorkflowSummary = workflowSummaryTotal > 1;
   const decisionSteps = [
     {
       key: "identity",
@@ -138,7 +141,7 @@ export default function ResultsTable({
   const workflowSummaryCards = [
     {
       key: "found",
-      value: `${workflowSummary.found}/${totalCount}`,
+      value: `${workflowSummary.found}/${workflowSummaryTotal}`,
       label: t("results.workflowFoundLabel"),
       body: t("results.workflowFoundBody"),
       className: "border-blue-100 bg-blue-50 text-blue-950",
