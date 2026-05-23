@@ -38,6 +38,9 @@ stop condition below applies:
   direction feels under-specified.
 - Record important findings as docs, tests, or acceptance criteria so the
   learning becomes part of the project.
+- Surface proactive observations at the end of meaningful work slices: name
+  any newly noticed blind spot, workstream imbalance, repeated-fix pattern, or
+  QA/user-purpose mismatch before choosing the next slice.
 
 ## Default Work Loop
 
@@ -65,7 +68,8 @@ Use this loop when continuing autonomously:
    run production QA against `https://ghs-frontend.zeabur.app`.
 10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
-11. Report what changed, what was verified, and what remains next.
+11. Report what changed, what was verified, proactive observations from the
+   slice, and what remains next.
 
 ## Next-Step Decision Loop
 
@@ -98,6 +102,8 @@ Re-rank explicitly when any of these triggers appear:
 - 10-20 recent commits mostly touch one workstream.
 - A repeated fix pattern suggests symptom-chasing rather than a model-level
   solution.
+- Automated QA is green, but screenshots, PDFs, production use, or user
+  feedback still show that the intended user job is not actually solved.
 - A user asks whether the current order still makes sense.
 - A production screenshot, PDF, CI failure, or support report changes the risk
   picture.
@@ -133,6 +139,24 @@ then resume implementation once the critical choice is settled.
   or implementation note.
 - Do not let research delay obvious bug fixes. Fix the known problem first when
   it has a clear acceptance standard.
+
+## Proactive Insight Habit
+
+Use this habit to avoid quiet drift during long autonomous work:
+
+- After each meaningful implementation or planning slice, identify 1-3
+  concrete observations that the user did not explicitly ask for but should
+  know. Prefer evidence-based items such as a repeated failure class, a stale
+  doc assumption, a QA gap, a workstream imbalance, or a mismatch between
+  passing tests and actual user usefulness.
+- Convert actionable observations into one of: a test, a QA checklist item, a
+  scope-gate question, a backlog entry, or a short note in the relevant owner
+  doc. Do not leave important observations only in chat.
+- If the same symptom needs more than two fixes, stop treating it as a local
+  bug until the underlying product model, renderer model, or acceptance
+  standard has been reviewed.
+- If no new observation is worth raising, say so briefly in the final report
+  instead of inventing speculative risks.
 
 ## Print Workflow Quality Bar
 
@@ -218,5 +242,8 @@ Final updates should be concise and include:
 - The user-facing outcome.
 - Files changed when useful.
 - Verification performed.
+- Proactive observations: 1-3 risks, stale assumptions, or next-step insights
+  noticed during the slice, or a brief note that no new untracked risk appeared.
 - CI/deploy/production status when pushed.
 - The next highest-value follow-up when it is not obvious.
+- Whether a user decision is needed before that follow-up.

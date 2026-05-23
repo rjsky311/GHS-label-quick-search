@@ -19,6 +19,8 @@ Typical triggers:
   "continue toward the product goal", or "what should we build next?"
 - A previous fix has failed more than once, or screenshots show the issue is
   about the model of use rather than one CSS bug.
+- Automated QA passes, but user screenshots, generated PDFs, or production use
+  still show that the intended job is not solved.
 - The last 10-20 commits are concentrated in one workstream and the user asks
   whether that direction is still the best whole-product move.
 - A workstream keeps producing follow-up tasks, but the next visible product
@@ -111,6 +113,9 @@ Include:
 Use this check when work has been moving for several rounds but the overall
 product direction feels questionable.
 
+Also use it when the same symptom has needed more than two fixes, or when a
+passing QA gate repeatedly fails to match the user's lived experience.
+
 1. Summarize the last 10-20 commits by category: user-visible UX,
    print/rendering, data governance/admin, QA/CI, docs, or infrastructure.
 2. Name the user-visible value those commits created.
@@ -118,6 +123,8 @@ product direction feels questionable.
 4. Name the product surface that did not improve during that period.
 5. Decide whether the next closeable slice should continue the same category
    or switch to a higher-value surface.
+6. Name the proactive observation that triggered the check and decide where it
+   should live next: tests, QA checklist, backlog, scope question, or owner doc.
 
 Do not use this check to reopen every settled decision. Use it to prevent
 local optimization: for example, repeatedly expanding admin tooling while the
@@ -188,5 +195,7 @@ A scope-gated slice is complete only when:
 - Acceptance criteria have corresponding tests, QA scripts, screenshots, PDFs,
   or manual checklist items.
 - Canonical docs still point to the right source of truth.
+- Proactive observations discovered during the slice have been either recorded
+  in docs/tests/backlog or explicitly dismissed as non-actionable.
 - For production-facing UI changes, deployed production QA has been run after
   the change is pushed and deployed.

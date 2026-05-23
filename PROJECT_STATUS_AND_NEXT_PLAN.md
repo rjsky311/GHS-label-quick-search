@@ -26,6 +26,11 @@ changing product direction, label-printing models, data trust boundaries,
 workflow simplification, or multi-surface UX behavior when the acceptance
 standard is not already clear.
 
+Proactive insight habit: `AUTONOMOUS_WORKFLOW.md` requires each meaningful
+work slice to surface newly noticed blind spots, repeated-fix patterns,
+workstream imbalance, or QA/user-purpose mismatches, then record actionable
+insights in docs, tests, QA checks, or the backlog.
+
 Current product requirements decisions: `PRODUCT_REQUIREMENTS_DECISIONS.md`
 pins the 2026-05-22 requirements alignment for target users, priority order,
 three-output labels, Chinese-name candidate handling, in-app correction intake,
@@ -763,6 +768,9 @@ complete.
   labels should stay aligned as UI is simplified.
 - Documentation drift: old roadmap documents can become misleading if they are
   not explicitly marked as baseline, backlog, or historical.
+- Collaboration drift: long autonomous runs can become task execution without a
+  fresh hypothesis about the highest-value next slice. Re-rank after clustered
+  commits, repeated fixes, or QA/user-purpose mismatch.
 
 ## 5. Definition Of Done
 
@@ -783,6 +791,9 @@ Minimum closure requirements:
   no QR/supplemental label presented as a complete primary label.
 - If a slice cannot be fully verified, record the exact blocker and do not
   claim it as complete.
+- Include proactive observations in the final report: newly noticed risks,
+  stale assumptions, repeated-fix patterns, or the absence of new untracked
+  risk.
 
 Docs-only closure:
 

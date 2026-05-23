@@ -41,6 +41,11 @@ next autonomous slice is, why it matters now, when to stop, and when to switch
 workstreams. Use `AUTONOMOUS_WORKFLOW.md` for the dynamic re-rank loop; do not
 treat this queue as a permanent order.
 
+When closing a slice, include proactive observations from the work: what newly
+noticed risk, stale assumption, repeated pattern, or QA/user-purpose mismatch
+should affect the next slice. If there is no new observation, say that instead
+of expanding the queue by inertia.
+
 ### Current Product Thesis
 
 The last 10-20 commits were weighted toward data governance, admin review,

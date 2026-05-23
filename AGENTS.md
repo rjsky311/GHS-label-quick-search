@@ -367,6 +367,11 @@ slice is broad or ambiguous, implement it, verify it, push to `main` when
 stable, and track CI/Zeabur/production QA for user-facing changes. Stop only
 for the explicit stop conditions in `AUTONOMOUS_WORKFLOW.md`.
 
+Meaningful work slices should also end with proactive observations. Name any
+newly noticed blind spot, stale assumption, repeated-fix pattern, or mismatch
+between passing QA and the user's actual goal, then record actionable findings
+in docs, tests, QA checks, or backlog instead of leaving them only in chat.
+
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset
 refresh, backend health/search, the trust panel, detail workflow, and label
