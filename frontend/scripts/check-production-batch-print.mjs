@@ -249,11 +249,19 @@ const run = async () => {
         review: textOf("batch-fit-review"),
         excluded: textOf("batch-fit-excluded"),
         active: textOf("batch-active-preview-summary"),
+        multipleGhsWarning: textOf("print-multiple-ghs-warning"),
         printAction: textOf("print-label-action"),
         labelClass: label?.className || "",
       };
     });
     if (!fitReport.ready.includes("Ready")) failures.push("missing-ready-count");
+    if (
+      !/multiple GHS versions|多個 GHS 版本/i.test(
+        fitReport.multipleGhsWarning || "",
+      )
+    ) {
+      failures.push("batch-print-multiple-ghs-warning-missing");
+    }
     const initialActionNamesBatch =
       actionNamesReadyScope(fitReport.printAction) ||
       /complete primary continuation set|完整|continuation/i.test(

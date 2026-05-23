@@ -128,14 +128,16 @@ Current validation gates:
   the deployment to reach `RUNNING` before heavier production QA.
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
-  export-preview trust columns, detail-to-prepared modal keyboard/focus checks,
-  batch messy-paste normalization, `?cas=` QR-return hydration, plus 390px
-  narrow read-first result and detail-comparison checks; bounded first-search
-  retry for transient deployed load/search delays)
+  export-preview trust/review columns, row-level multiple-GHS confirmation
+  action, detail-to-prepared modal keyboard/focus checks, batch messy-paste
+  normalization, `?cas=` QR-return hydration, plus 390px narrow read-first
+  result and detail-comparison checks; bounded first-search retry for
+  transient deployed load/search delays)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
 - Production fixed-stock batch print: `npm run qa:production-batch-print`
+  (fixed-stock scope, print handoff, and multiple-GHS pre-handoff warning)
 - Prepared production workflow: `npm run qa:production-prepared`
 - Whole product closure: `npm run qa:production-product`
 - Backend: `python -m py_compile server.py` and
@@ -174,6 +176,18 @@ Current completion snapshot:
   CSV/XLSX exports. Export rows include data state, primary source, report
   count, cache state, reference-link count, and classification-selection
   context.
+- **Batch-output confidence checkpoint 2026-05-24**: batch result review
+  reasons now separate `multiple-classifications` from true `source-conflict`
+  states. Review reason chips can filter the table directly, and
+  multiple-GHS row chips open the existing classification choices instead of
+  pretending this is a data-correction-only issue. Export preview, frontend CSV
+  fallback, and backend CSV/XLSX exports now preserve printable status, review
+  required, review reasons, source-conflict state, missing trusted Chinese name,
+  and multiple-GHS confirmation status so downstream cleanup does not lose the
+  trust context. The label-print modal now also surfaces a pre-handoff warning
+  when selected items still have unconfirmed multiple-GHS versions, while
+  preserving the non-blocking "use the system-suggested primary unless changed"
+  workflow.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and

@@ -781,11 +781,17 @@ class ExportRequest(BaseModel):
 
 EXPORT_TRUST_HEADERS = [
     "Data State",
+    "Printable",
+    "Needs Review",
+    "Review Reasons",
     "Primary Source",
     "Report Count",
     "Retrieved At",
     "Cache State",
     "Reference Links",
+    "Source Conflict",
+    "Missing Trusted Chinese Name",
+    "Multiple GHS Status",
     "Classification Selection",
 ]
 
@@ -814,13 +820,60 @@ def _export_data_state(result: Dict[str, Any]) -> str:
     return "Found with renderable GHS pictograms"
 
 
+def _has_multiple_classifications(result: Dict[str, Any]) -> bool:
+    return bool(
+        result.get("has_multiple_classifications")
+        or result.get("other_classifications")
+    )
+
+
+def _has_manual_classification_selection(result: Dict[str, Any]) -> bool:
+    return result.get("selected_classification_index") is not None or bool(
+        result.get("customNote")
+    )
+
+
+def _export_review_reasons(result: Dict[str, Any]) -> List[str]:
+    reasons: List[str] = []
+    if result.get("upstream_error"):
+        reasons.append("Upstream transient failure")
+    if result.get("found") is False:
+        reasons.append("Unresolved search")
+        return reasons
+
+    if not _has_export_ghs_data(result):
+        reasons.append("No GHS data")
+    elif not (result.get("ghs_pictograms") or result.get("pictograms")):
+        reasons.append("GHS text without pictogram")
+
+    if result.get("source_conflict") or result.get("source_conflicts"):
+        reasons.append("Source conflict")
+    if _has_multiple_classifications(result) and not _has_manual_classification_selection(result):
+        reasons.append("Multiple GHS classifications need primary confirmation")
+    if result.get("name_en") and not _trusted_export_chinese_name(result):
+        reasons.append("Missing trusted Chinese name")
+    return reasons
+
+
+def _export_multiple_ghs_status(result: Dict[str, Any]) -> str:
+    if not _has_multiple_classifications(result):
+        return "Single or no alternate classification"
+    if _has_manual_classification_selection(result):
+        return "User-selected primary classification"
+    return "Multiple classifications; using system-suggested primary"
+
+
 def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
     reference_links = result.get("reference_links")
     reference_count = (
         len(reference_links) if isinstance(reference_links, list) else 0
     )
+    review_reasons = _export_review_reasons(result)
     return [
         _export_data_state(result),
+        "Yes" if result.get("found") is not False and _has_export_ghs_data(result) else "No",
+        "Yes" if review_reasons else "No",
+        "; ".join(review_reasons) if review_reasons else "No review reasons",
         result.get("primary_source") or "Not recorded",
         result.get("primary_report_count") or "-",
         result.get("retrieved_at") or "Not recorded",
@@ -828,6 +881,9 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
         f"{reference_count} reference link(s)"
         if reference_count
         else "No reference links",
+        "Yes" if result.get("source_conflict") or result.get("source_conflicts") else "No",
+        "Yes" if result.get("name_en") and not _trusted_export_chinese_name(result) else "No",
+        _export_multiple_ghs_status(result),
         f"User-selected classification: {result.get('customNote')}"
         if result.get("customNote")
         else "Default primary classification",
@@ -2633,12 +2689,18 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     ws.column_dimensions['F'].width = 50
     ws.column_dimensions['G'].width = 55
     ws.column_dimensions['H'].width = 34
-    ws.column_dimensions['I'].width = 36
-    ws.column_dimensions['J'].width = 18
-    ws.column_dimensions['K'].width = 24
-    ws.column_dimensions['L'].width = 18
-    ws.column_dimensions['M'].width = 24
-    ws.column_dimensions['N'].width = 34
+    ws.column_dimensions['I'].width = 14
+    ws.column_dimensions['J'].width = 16
+    ws.column_dimensions['K'].width = 44
+    ws.column_dimensions['L'].width = 36
+    ws.column_dimensions['M'].width = 18
+    ws.column_dimensions['N'].width = 24
+    ws.column_dimensions['O'].width = 18
+    ws.column_dimensions['P'].width = 24
+    ws.column_dimensions['Q'].width = 18
+    ws.column_dimensions['R'].width = 26
+    ws.column_dimensions['S'].width = 36
+    ws.column_dimensions['T'].width = 34
     
     # Save to BytesIO
     output = BytesIO()

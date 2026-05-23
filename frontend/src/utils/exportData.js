@@ -11,6 +11,10 @@ import {
 } from "@/utils/ghsText";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getReferenceLinks } from "@/utils/sdsLinks";
+import {
+  DATA_QUALITY_ISSUE_TYPES,
+  getDataQualityIssues,
+} from "@/utils/dataQuality";
 
 // The `xlsx` package (SheetJS) has unpatched vulnerabilities in the
 // 0.18.x line shipped via npm. We previously used it as a client-side
@@ -50,6 +54,44 @@ function hasDirectPictogramVisual(result) {
   return (result?.ghs_pictograms || result?.pictograms || []).length > 0;
 }
 
+function getExportReviewReasonLabel(type, t) {
+  const labels = {
+    [DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]: t("export.reviewReasonUpstream"),
+    [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]: t("export.reviewReasonUnresolved"),
+    [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: t("export.reviewReasonNoGhs"),
+    [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: t(
+      "export.reviewReasonTextOnlyGhs",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: t("export.reviewReasonSourceConflict"),
+    [DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS]: t(
+      "export.reviewReasonMultipleClassifications",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: t(
+      "export.reviewReasonMissingChineseName",
+    ),
+  };
+  return labels[type] || t("export.reviewReasonNeedsReview");
+}
+
+function hasMultipleClassifications(result) {
+  return Boolean(
+    result?.has_multiple_classifications || result?.other_classifications?.length > 0,
+  );
+}
+
+function hasManualClassificationSelection(result) {
+  return (
+    result?.selected_classification_index !== undefined ||
+    result?.customNote
+  );
+}
+
+function resolveMultipleGhsStatus(result, t) {
+  if (!hasMultipleClassifications(result)) return t("export.multipleGhsNone");
+  if (hasManualClassificationSelection(result)) return t("export.multipleGhsManual");
+  return t("export.multipleGhsSystemSuggested");
+}
+
 export function resolveExportDataState(result, t) {
   if (result?.upstream_error) return t("export.dataStateUpstreamError");
   if (result?.found === false) return t("export.dataStateNotFound");
@@ -62,8 +104,24 @@ export function resolveExportDataState(result, t) {
 
 function buildExportTrustCells(result, t) {
   const references = getReferenceLinks(result);
+  const reviewIssues = getDataQualityIssues(result, result);
+  const sourceConflict = Boolean(
+    result?.source_conflict || result?.source_conflicts?.length > 0,
+  );
+  const missingChineseName = Boolean(
+    reviewIssues.find(
+      (issue) => issue.type === DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+    ),
+  );
   return [
     resolveExportDataState(result, t),
+    result?.found !== false && hasGhsData(result) ? t("export.yes") : t("export.no"),
+    reviewIssues.length ? t("export.yes") : t("export.no"),
+    reviewIssues.length
+      ? reviewIssues
+          .map((issue) => getExportReviewReasonLabel(issue.type, t))
+          .join("; ")
+      : t("export.noReviewReasons"),
     result?.primary_source || t("export.notRecorded"),
     result?.primary_report_count || "-",
     result?.retrieved_at || t("export.notRecorded"),
@@ -71,6 +129,9 @@ function buildExportTrustCells(result, t) {
     references.length
       ? t("export.referenceCount", { count: references.length })
       : t("export.noReferences"),
+    sourceConflict ? t("export.yes") : t("export.no"),
+    missingChineseName ? t("export.yes") : t("export.no"),
+    resolveMultipleGhsStatus(result, t),
     result?.customNote
       ? t("export.customClassification", { note: result.customNote })
       : t("export.defaultClassification"),
@@ -96,11 +157,17 @@ function buildCsvRows(results, t) {
       t("export.hazardStatements"),
       t("export.precautionaryStatements"),
       t("export.dataState"),
+      t("export.printable"),
+      t("export.reviewRequired"),
+      t("export.reviewReasons"),
       t("export.primarySource"),
       t("export.reportCount"),
       t("export.retrievedAt"),
       t("export.cacheState"),
       t("export.referenceLinks"),
+      t("export.sourceConflict"),
+      t("export.missingChineseName"),
+      t("export.multipleGhsStatus"),
       t("export.classificationSelection"),
     ],
   ];

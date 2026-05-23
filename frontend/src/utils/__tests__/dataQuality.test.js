@@ -166,8 +166,7 @@ describe("data quality issue helpers", () => {
       ...baseChemical,
       name_zh: "烯丙醇",
       upstream_error: true,
-      has_multiple_classifications: true,
-      other_classifications: [{ pictograms: [], hazard_statements: [] }],
+      source_conflict: true,
     });
 
     expect(issues.map((issue) => issue.type)).toEqual(
@@ -190,6 +189,43 @@ describe("data quality issue helpers", () => {
         currentOutput: "multiple public GHS classifications",
         expectedOutput: "preferred classification",
       },
+    );
+  });
+
+  it("flags unconfirmed multiple GHS classifications separately from source conflicts", () => {
+    const issues = getDataQualityIssues({
+      ...baseChemical,
+      name_zh: "烯丙醇",
+      has_multiple_classifications: true,
+      other_classifications: [{ pictograms: [], hazard_statements: [] }],
+    });
+
+    expect(issues.map((issue) => issue.type)).toContain(
+      DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
+    );
+    expect(issues.map((issue) => issue.type)).not.toContain(
+      DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+    );
+    expect(
+      issues.find(
+        (issue) =>
+          issue.type === DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
+      ).correctionUrl,
+    ).toBeUndefined();
+  });
+
+  it("does not keep multiple classifications in review after a manual primary selection", () => {
+    const result = {
+      ...baseChemical,
+      name_zh: "烯丙醇",
+      has_multiple_classifications: true,
+      other_classifications: [{ pictograms: [], hazard_statements: [] }],
+    };
+
+    const issues = getDataQualityIssues(result, { isCustom: true });
+
+    expect(issues.map((issue) => issue.type)).not.toContain(
+      DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
     );
   });
 });

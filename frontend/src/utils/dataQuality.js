@@ -10,6 +10,7 @@ export const DATA_QUALITY_ISSUE_TYPES = Object.freeze({
   NO_GHS_DATA: "no-ghs-data",
   GHS_TEXT_NO_PICTOGRAMS: "ghs-text-no-pictograms",
   SOURCE_CONFLICT: "source-conflict",
+  MULTIPLE_CLASSIFICATIONS: "multiple-classifications",
   MISSING_CHINESE_NAME: "missing-chinese-name",
   UNRESOLVED_SEARCH: "unresolved-search",
 });
@@ -92,7 +93,7 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
       severity: "review",
       correctionUrl: getCorrectionUrl(
         result,
-          DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
+        DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
       ),
       correctionContext: getCorrectionContext(
         result,
@@ -101,7 +102,7 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
     });
   }
 
-  if (result.has_multiple_classifications || result.other_classifications?.length > 0) {
+  if (result.source_conflict || result.source_conflicts?.length > 0) {
     issues.push({
       type: DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
       severity: "review",
@@ -110,6 +111,19 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
         result,
         DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
       ),
+    });
+  }
+
+  const hasMultipleClassifications =
+    result.has_multiple_classifications || result.other_classifications?.length > 0;
+  const hasManualClassificationSelection =
+    effectiveClassification?.isCustom ||
+    result.selected_classification_index !== undefined ||
+    Boolean(result.customNote);
+  if (hasMultipleClassifications && !hasManualClassificationSelection) {
+    issues.push({
+      type: DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
+      severity: "review",
     });
   }
 

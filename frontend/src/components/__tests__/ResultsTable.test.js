@@ -26,7 +26,7 @@ const defaultProps = {
   totalCount: 1,
   resultFilter: 'all',
   onSetResultFilter: jest.fn(),
-  advancedFilter: { minPictograms: 0, hCodeSearch: '' },
+  advancedFilter: { minPictograms: 0, hCodeSearch: '', reviewIssueType: '' },
   onSetAdvancedFilter: jest.fn(),
   sortConfig: { key: null, direction: null },
   onRequestSort: jest.fn(),
@@ -197,7 +197,7 @@ describe('ResultsTable', () => {
       expect(screen.getByText('results.workflowSummaryTitle')).toBeInTheDocument();
       expect(screen.getByTestId('results-workflow-review-reasons')).toBeInTheDocument();
       expect(
-        screen.getByTestId('results-workflow-review-reason-source-conflict')
+        screen.getByTestId('results-workflow-review-reason-multiple-classifications')
       ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-review-reason-no-ghs-data')
@@ -205,6 +205,35 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-review-reason-unresolved-search')
       ).toHaveTextContent('1');
+    });
+
+    it('lets review reason chips filter the batch table', () => {
+      const onSetAdvancedFilter = jest.fn();
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[
+            mockFoundResult,
+            mockWarningResult,
+            mockNoHazardResult,
+            mockNotFoundResult,
+          ]}
+          totalCount={4}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      fireEvent.click(
+        screen.getByTestId('results-workflow-review-reason-multiple-classifications'),
+      );
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'multiple-classifications',
+      });
     });
 
     it('shows when filters reduce the visible batch scope', () => {
@@ -715,8 +744,22 @@ describe('ResultsTable', () => {
       render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
       expect(screen.getByText(/results\.otherClassifications/)).toBeInTheDocument();
       expect(
-        screen.getByTestId(`data-quality-link-source-conflict-${mockFoundResult.cas_number}`)
-      ).toHaveTextContent('results.dataIssueSourceConflict');
+        screen.getByTestId(`data-quality-action-multiple-classifications-${mockFoundResult.cas_number}`)
+      ).toHaveTextContent('results.dataIssueMultipleClassifications');
+    });
+
+    it('clicking the multiple-classifications review chip expands alternatives', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} />);
+
+      fireEvent.click(
+        screen.getByTestId(
+          `data-quality-action-multiple-classifications-${mockFoundResult.cas_number}`,
+        ),
+      );
+
+      expect(defaultProps.onToggleOtherClassifications).toHaveBeenCalledWith(
+        mockFoundResult.cas_number,
+      );
     });
 
     it('renders expanded classifications as compact cards without status-dot clutter', () => {

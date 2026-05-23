@@ -225,6 +225,16 @@ Current mode:
   count, rows needing data review, and export scope before the user starts
   selecting labels or downloading files. This makes the batch path easier to
   judge without opening the print modal first.
+- Completed current slice: batch review reasons are now actionable instead of
+  passive warnings. The summary separates source conflicts from multiple GHS
+  classifications, lets users filter the table by a specific review reason,
+  and makes the multiple-GHS row chip open the alternate-classification chooser
+  so the user can confirm the primary version before print/export. CSV/XLSX
+  exports now keep printable/review state, review reasons, source conflict,
+  missing trusted Chinese name, and multiple-GHS confirmation status. The print
+  modal also warns before handoff when the selected batch still contains
+  unconfirmed multiple-GHS items, without blocking users who accept the
+  system-suggested primary version.
 - Completed current slice: the batch workflow summary now stays batch-wide
   even when the table is filtered. The visible-row scope is still shown
   separately, so users can distinguish "what is in the whole batch" from

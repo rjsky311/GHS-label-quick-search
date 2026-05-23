@@ -1752,6 +1752,8 @@ async def test_export_csv_includes_data_trust_columns():
                 "reference_links": [
                     {"label": "Supplier SDS", "url": "https://example.com/sds"}
                 ],
+                "has_multiple_classifications": True,
+                "other_classifications": [{"pictograms": [], "hazard_statements": []}],
                 "customNote": "Use alternate supplier-confirmed report",
             }
         ]
@@ -1762,12 +1764,17 @@ async def test_export_csv_includes_data_trust_columns():
     body = response.content.decode("utf-8-sig")
 
     assert "Data State" in body
+    assert "Printable" in body
+    assert "Needs Review" in body
+    assert "Review Reasons" in body
     assert "Primary Source" in body
     assert "Found with renderable GHS pictograms" in body
+    assert "Yes,No,No review reasons" in body
     assert "ECHA C&L Notifications Summary" in body
     assert "236" in body
     assert "Cached" in body
     assert "1 reference link(s)" in body
+    assert "User-selected primary classification" in body
     assert "User-selected classification: Use alternate supplier-confirmed report" in body
 
 
@@ -1796,9 +1803,12 @@ async def test_export_xlsx_includes_data_trust_columns():
     wb = load_workbook(BytesIO(response.content))
     ws = wb.active
     assert ws.cell(row=1, column=8).value == "Data State"
-    assert ws.cell(row=1, column=14).value == "Classification Selection"
+    assert ws.cell(row=1, column=20).value == "Classification Selection"
     assert ws.cell(row=2, column=8).value == "Not found"
-    assert ws.cell(row=2, column=14).value == "Default primary classification"
+    assert ws.cell(row=2, column=9).value == "No"
+    assert ws.cell(row=2, column=10).value == "Yes"
+    assert ws.cell(row=2, column=11).value == "Unresolved search"
+    assert ws.cell(row=2, column=20).value == "Default primary classification"
 
 
 async def test_export_csv_neutralizes_formula_injection_in_p_code_text():

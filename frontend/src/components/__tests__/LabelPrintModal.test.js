@@ -245,6 +245,66 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("warns before printing when a selected chemical has unconfirmed multiple GHS versions", () => {
+    renderModal({
+      selectedForLabel: [
+        makeChem({
+          cas_number: "7647-01-0",
+          name_en: "Hydrochloric acid",
+          has_multiple_classifications: true,
+          other_classifications: [
+            {
+              pictograms: [{ code: "GHS05" }],
+              hazard_statements: [{ code: "H314", text_en: "Causes burns." }],
+              precautionary_statements: [],
+              signal_word: "Danger",
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(screen.getByTestId("print-multiple-ghs-warning")).toHaveTextContent(
+      "1 item(s) have multiple GHS versions",
+    );
+    expect(
+      screen.getByTestId("print-multiple-ghs-warning-items"),
+    ).toHaveTextContent("7647-01-0");
+    expect(
+      screen.getByTestId("print-multiple-ghs-warning-items"),
+    ).toHaveTextContent("Hydrochloric acid");
+  });
+
+  it("does not warn after the primary GHS version has been manually confirmed", () => {
+    renderModal({
+      selectedForLabel: [
+        makeChem({
+          cas_number: "7647-01-0",
+          name_en: "Hydrochloric acid",
+          has_multiple_classifications: true,
+          other_classifications: [
+            {
+              pictograms: [{ code: "GHS05" }],
+              hazard_statements: [{ code: "H314", text_en: "Causes burns." }],
+              precautionary_statements: [],
+              signal_word: "Danger",
+            },
+          ],
+        }),
+      ],
+      customGHSSettings: {
+        "7647-01-0": {
+          selectedIndex: 0,
+          note: "confirmed default",
+        },
+      },
+    });
+
+    expect(
+      screen.queryByTestId("print-multiple-ghs-warning"),
+    ).not.toBeInTheDocument();
+  });
+
   it("summarizes continuation output using the actual expanded label count", () => {
     const denseChem = makeChem({
       hazard_statements: Array.from({ length: 18 }, (_, index) => ({

@@ -24,6 +24,7 @@ import {
   resolveEffectiveChemicalForPrint,
 } from "@/utils/printLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
+import { getDataQualityIssues } from "@/utils/dataQuality";
 import {
   buildBatchSearchTelemetryMeta,
   parseBatchSearchInput,
@@ -103,7 +104,11 @@ function App() {
   const [expandedOtherClassifications, setExpandedOtherClassifications] = useState({});
   const [batchProgress, setBatchProgress] = useState(null);
   const [resultFilter, setResultFilter] = useState("all");
-  const [advancedFilter, setAdvancedFilter] = useState({ minPictograms: 0, hCodeSearch: "" });
+  const [advancedFilter, setAdvancedFilter] = useState({
+    minPictograms: 0,
+    hCodeSearch: "",
+    reviewIssueType: "",
+  });
   const [preparedReprintingId, setPreparedReprintingId] = useState(null);
   const [dataCorrectionContext, setDataCorrectionContext] = useState(null);
 
@@ -295,6 +300,15 @@ function App() {
         const effective = getEffectiveClassification(r);
         return effective?.hazard_statements?.some((s) =>
           s.code?.toUpperCase().includes(hQuery)
+        );
+      });
+    }
+
+    if (advancedFilter.reviewIssueType) {
+      filtered = filtered.filter((r) => {
+        const effective = r.found ? getEffectiveClassification(r) : null;
+        return getDataQualityIssues(r, effective).some(
+          (issue) => issue.type === advancedFilter.reviewIssueType,
         );
       });
     }

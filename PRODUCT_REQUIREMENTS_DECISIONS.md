@@ -114,6 +114,15 @@ Default UX:
 - Detail shows source differences, report count, and alternate classifications.
 - Print uses the recommended classification by default, but warns when a
   source-conflict or missing-data state requires user verification.
+- Multiple public GHS classifications are not automatically the same thing as
+  a source conflict. They are a confirmation task: the app may use its
+  deterministic recommendation, but batch/result UX should label the row as
+  needing primary-version confirmation until the user accepts or changes the
+  main classification.
+- True source conflicts remain data-quality/source-governance issues and can
+  route to correction/admin review. Multiple-classification confirmation should
+  first route the user to the classification chooser, not to a generic
+  correction report.
 - Missing upstream data must never be presented as "no hazards."
 - Upstream transient failure remains a retry state, not a data-correction
   request.
@@ -174,9 +183,18 @@ Acceptance for batch lookup -> print/export:
 - A pasted batch clearly reports valid unique items, ignored duplicates,
   invalid inputs, and unresolved items.
 - Users can see how many items are printable, excluded, or require continuation.
+- Users can see how many items need review, why they need review, and can
+  filter or locate rows by review reason.
+- Multiple GHS classifications are flagged separately from source conflicts;
+  users can see whether the current primary version is system-suggested or
+  manually selected. Print handoff remains non-blocking but must warn when the
+  selected batch still contains unconfirmed multiple-GHS items.
 - A selected batch output uses one output type and one physical stock.
 - Continuation stays on the same output/stock.
-- Export includes enough trust/source context for later review.
+- Export includes enough trust/source context for later review, including
+  printable state, review-required state, review reasons, source conflict,
+  missing trusted Chinese name, multiple-GHS status, and classification
+  selection.
 - The deployed production QA covers representative messy paste, QR return path,
   and fixed-stock batch print behavior.
 

@@ -4,7 +4,10 @@ import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
-import { getDataQualityIssues } from "@/utils/dataQuality";
+import {
+  DATA_QUALITY_ISSUE_TYPES,
+  getDataQualityIssues,
+} from "@/utils/dataQuality";
 import {
   getLocalizedNames,
   getLocalizedPictogramName,
@@ -42,6 +45,7 @@ const getDataQualityIssueLabel = (type, t) => {
     "no-ghs-data": t("results.dataIssueNoGhs"),
     "ghs-text-no-pictograms": t("results.dataIssueTextOnlyGhs"),
     "source-conflict": t("results.dataIssueSourceConflict"),
+    "multiple-classifications": t("results.dataIssueMultipleClassifications"),
     "missing-chinese-name": t("results.dataIssueMissingChineseName"),
     "unresolved-search": t("results.dataIssueUnresolvedSearch"),
   };
@@ -64,6 +68,7 @@ const BATCH_REVIEW_ISSUE_ORDER = [
   "no-ghs-data",
   "ghs-text-no-pictograms",
   "source-conflict",
+  "multiple-classifications",
   "missing-chinese-name",
 ];
 
@@ -144,6 +149,17 @@ export default function ResultsTable({
       label: getDataQualityIssueLabel(type, t),
     }))
     .filter((issue) => issue.count > 0);
+  const activeReviewIssueType = advancedFilter.reviewIssueType || "";
+  const activeReviewIssueLabel = activeReviewIssueType
+    ? getDataQualityIssueLabel(activeReviewIssueType, t)
+    : "";
+  const setReviewIssueFilter = (type) => {
+    if (!onSetAdvancedFilter) return;
+    onSetAdvancedFilter({
+      ...advancedFilter,
+      reviewIssueType: activeReviewIssueType === type ? "" : type,
+    });
+  };
   const showWorkflowSummary = workflowSummaryTotal > 1;
   const decisionSteps = [
     {
@@ -197,7 +213,7 @@ export default function ResultsTable({
   // and sorted subset the table is currently rendering. Don't recompute
   // here — the parent owns the action scope and count together.
 
-  const renderDataQualityIssues = (issues, testIdKey) => {
+  const renderDataQualityIssues = (issues, testIdKey, result) => {
     if (!issues.length) return null;
 
     return (
@@ -209,6 +225,23 @@ export default function ResultsTable({
           const label = getDataQualityIssueLabel(issue.type, t);
           const className = getDataQualityIssueClassName(issue.severity);
           const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
+          if (
+            issue.type === DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS &&
+            result?.cas_number
+          ) {
+            return (
+              <button
+                key={issue.type}
+                type="button"
+                onClick={() => onToggleOtherClassifications(result.cas_number)}
+                className={`${chipClassName} transition-colors hover:bg-blue-50 hover:text-blue-800`}
+                data-testid={`data-quality-action-${issue.type}-${testIdKey}`}
+              >
+                <Info className="h-3 w-3 shrink-0" />
+                {label}
+              </button>
+            );
+          }
           if (issue.correctionUrl && onOpenDataCorrection && issue.correctionContext) {
             return (
               <a
@@ -425,16 +458,23 @@ export default function ResultsTable({
                 {t("results.workflowReviewReasonsLabel")}
               </span>
               {workflowIssueSummaries.map((issue) => (
-                <span
+                <button
                   key={issue.type}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 font-medium text-slate-700"
+                  type="button"
+                  onClick={() => setReviewIssueFilter(issue.type)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 font-medium transition-colors ${
+                    activeReviewIssueType === issue.type
+                      ? "border-blue-200 bg-blue-50 text-blue-800"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800"
+                  }`}
                   data-testid={`results-workflow-review-reason-${issue.type}`}
+                  aria-pressed={activeReviewIssueType === issue.type}
                 >
                   <span>{issue.label}</span>
                   <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                     {issue.count}
                   </span>
-                </span>
+                </button>
               ))}
             </div>
           )}
@@ -512,7 +552,18 @@ export default function ResultsTable({
               className="w-24 rounded-full border border-slate-300 bg-white py-1 pl-6 pr-2 text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
-          {(resultFilter !== "all" || advancedFilter.minPictograms > 0 || advancedFilter.hCodeSearch) && (
+          {activeReviewIssueType && (
+            <button
+              type="button"
+              onClick={() => onSetAdvancedFilter({ ...advancedFilter, reviewIssueType: "" })}
+              className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100 transition-colors hover:bg-blue-100"
+              data-testid="active-review-reason-filter"
+            >
+              {t("filter.reviewReason", { reason: activeReviewIssueLabel })}
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          {(resultFilter !== "all" || advancedFilter.minPictograms > 0 || advancedFilter.hCodeSearch || activeReviewIssueType) && (
             <span className="ml-2 text-slate-500">
               {t("filter.showing", { shown: results.length, total: totalCount })}
             </span>
@@ -688,14 +739,14 @@ export default function ResultsTable({
                               )}
                             </div>
                           )}
-                          {renderDataQualityIssues(dataQualityIssues, rowKey)}
+                          {renderDataQualityIssues(dataQualityIssues, rowKey, result)}
                         </div>
                       );
                     })()
                   ) : (
                     <div>
                       <span className="text-red-700">{result.error}</span>
-                      {renderDataQualityIssues(dataQualityIssues, rowKey)}
+                      {renderDataQualityIssues(dataQualityIssues, rowKey, result)}
                     </div>
                   )}
                 </td>

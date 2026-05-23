@@ -609,6 +609,15 @@ const inspectResultsTrustSurface = async (page) => {
   const sourceConflictCorrection = await inspectIssueLink(
     page.locator('[data-testid^="data-quality-link-source-conflict-"]'),
   );
+  const multipleClassificationReviewActions = await page
+    .locator('[data-testid^="data-quality-action-multiple-classifications-"]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        testId: node.getAttribute("data-testid") || "",
+        text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+      })),
+    )
+    .catch(() => []);
   const sdsHref = (await sdsButton.getAttribute("href").catch(() => "")) || "";
   let sdsProtocol = "";
   let sdsHost = "";
@@ -657,6 +666,7 @@ const inspectResultsTrustSurface = async (page) => {
     productTrustWorkflowHref,
     productTrustWorkflow: parseIssueUrl(productTrustWorkflowHref),
     sourceConflictCorrection,
+    multipleClassificationReviewActions,
     sourceBadges: await page
       .locator('[data-testid^="source-badge-"]')
       .evaluateAll((nodes) =>
@@ -736,6 +746,12 @@ const inspectExportPreviewSurface = async (page) => {
       bodyText,
     ),
     hasSourceEvidence: /ECHA|PubChem/i.test(bodyText),
+    hasPrintable: headers.some((header) => /Printable/i.test(header)),
+    hasReviewRequired: headers.some((header) => /Needs Review/i.test(header)),
+    hasReviewReasons: headers.some((header) => /Review Reasons/i.test(header)),
+    hasMultipleGhsStatus: headers.some((header) =>
+      /Multiple GHS Status|多 GHS 狀態/i.test(header),
+    ),
   };
 };
 
@@ -1670,41 +1686,8 @@ try {
   if (resultsTrustSurface.authoritativeNoteMode !== "general") {
     failures.push("results-authoritative-note-mode-mismatch");
   }
-  if (resultsTrustSurface.sourceConflictCorrection.count < 1) {
-    failures.push("results-source-conflict-correction-link-missing");
-  }
-  if (
-    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
-    (resultsTrustSurface.sourceConflictCorrection.template !==
-      "data-correction.yml" ||
-      resultsTrustSurface.sourceConflictCorrection.labels !== "data-correction")
-  ) {
-    failures.push("results-source-conflict-correction-template-mismatch");
-  }
-  if (
-    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
-    !resultsTrustSurface.sourceConflictCorrection.body.includes(searchTerm)
-  ) {
-    failures.push("results-source-conflict-correction-body-incomplete");
-  }
-  if (
-    resultsTrustSurface.sourceConflictCorrection.count > 0 &&
-    !hasStructuredCorrectionContext(
-      resultsTrustSurface.sourceConflictCorrection,
-      {
-        formIssueType: "Source/provenance display",
-        issueKey: "source-conflict",
-        casNumber: searchTerm,
-        evidenceType: "Other",
-        evidencePromptIncludes: "SDS, supplier label, or local regulatory source",
-        currentOutputIncludes: "multiple public GHS classifications",
-        expectedOutputIncludes: "preferred classification",
-      },
-    )
-  ) {
-    failures.push(
-      "results-source-conflict-correction-structured-context-missing",
-    );
+  if (resultsTrustSurface.multipleClassificationReviewActions.length < 1) {
+    failures.push("results-multiple-ghs-review-action-missing");
   }
   if (resultsTrustSurface.checklistCount < 3) {
     failures.push("results-authoritative-checklist-incomplete");
@@ -1753,6 +1736,18 @@ try {
   }
   if (!exportPreviewSurface.hasClassificationSelection) {
     failures.push("export-preview-classification-selection-column-missing");
+  }
+  if (!exportPreviewSurface.hasPrintable) {
+    failures.push("export-preview-printable-column-missing");
+  }
+  if (!exportPreviewSurface.hasReviewRequired) {
+    failures.push("export-preview-review-required-column-missing");
+  }
+  if (!exportPreviewSurface.hasReviewReasons) {
+    failures.push("export-preview-review-reasons-column-missing");
+  }
+  if (!exportPreviewSurface.hasMultipleGhsStatus) {
+    failures.push("export-preview-multiple-ghs-status-column-missing");
   }
   if (!exportPreviewSurface.hasRenderableState) {
     failures.push("export-preview-renderable-state-missing");

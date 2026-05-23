@@ -117,11 +117,17 @@ describe('buildExportPreview', () => {
       'export.hazardStatements',
       'export.precautionaryStatements',
       'export.dataState',
+      'export.printable',
+      'export.reviewRequired',
+      'export.reviewReasons',
       'export.primarySource',
       'export.reportCount',
       'export.retrievedAt',
       'export.cacheState',
       'export.referenceLinks',
+      'export.sourceConflict',
+      'export.missingChineseName',
+      'export.multipleGhsStatus',
       'export.classificationSelection',
     ]);
     expect(preview.totalRows).toBe(1);
@@ -131,10 +137,14 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].cells[0]).toBe('64-17-5');
     expect(preview.rows[0].cells[1]).toBe('Ethanol');
     expect(preview.rows[0].cells[7]).toBe('export.dataStateRenderable');
-    expect(preview.rows[0].cells[8]).toBe('ECHA C&L Notifications Summary');
-    expect(preview.rows[0].cells[9]).toBe('120');
-    expect(preview.rows[0].cells[11]).toBe('export.cacheHit');
-    expect(preview.rows[0].cells[12]).toBe('export.referenceCount');
+    expect(preview.rows[0].cells[8]).toBe('export.yes');
+    expect(preview.rows[0].cells[9]).toBe('export.no');
+    expect(preview.rows[0].cells[10]).toBe('export.noReviewReasons');
+    expect(preview.rows[0].cells[11]).toBe('ECHA C&L Notifications Summary');
+    expect(preview.rows[0].cells[12]).toBe('120');
+    expect(preview.rows[0].cells[14]).toBe('export.cacheHit');
+    expect(preview.rows[0].cells[15]).toBe('export.referenceCount');
+    expect(preview.rows[0].cells[18]).toBe('export.multipleGhsNone');
   });
 
   it('limits preview rows and reports hidden rows', () => {
@@ -168,6 +178,32 @@ describe('buildExportPreview', () => {
 
     expect(preview.rows[0].cells[1]).toBe('Allyl Alcohol');
     expect(preview.rows[0].cells[2]).toBe('');
+  });
+
+  it('preserves review reasons and multiple-GHS confirmation state in preview rows', () => {
+    const preview = buildExportPreview(
+      [
+        {
+          ...mockResult,
+          name_zh: 'Ethanol',
+          has_multiple_classifications: true,
+          other_classifications: [
+            { pictograms: [], hazard_statements: [], signal_word: 'Warning' },
+          ],
+        },
+      ],
+      { t: (key) => key },
+    );
+
+    expect(preview.rows[0].cells[9]).toBe('export.yes');
+    expect(preview.rows[0].cells[10]).toContain(
+      'export.reviewReasonMultipleClassifications',
+    );
+    expect(preview.rows[0].cells[10]).toContain(
+      'export.reviewReasonMissingChineseName',
+    );
+    expect(preview.rows[0].cells[17]).toBe('export.yes');
+    expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
   });
 });
 

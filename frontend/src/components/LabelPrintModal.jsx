@@ -431,6 +431,24 @@ function buildDisplayNames(chem, nameDisplay, languageLike = "en") {
   return [englishName, chineseName].filter(Boolean);
 }
 
+function hasMultipleGhsClassificationOptions(chem = {}) {
+  return Boolean(
+    chem?.has_multiple_classifications || chem?.other_classifications?.length > 0,
+  );
+}
+
+function hasManualGhsClassificationChoice(chem = {}, customGHSSettings = {}) {
+  const customSetting = chem?.cas_number
+    ? customGHSSettings?.[chem.cas_number]
+    : null;
+
+  return Boolean(
+    customSetting?.selectedIndex !== undefined ||
+      chem?.selected_classification_index !== undefined ||
+      chem?.customNote,
+  );
+}
+
 function buildHazardPreview(chem, template, tx, contentLocale) {
   if (!chem) {
     return [
@@ -909,6 +927,26 @@ export default function LabelPrintModal({
     t,
   );
   const visibleRecentPrints = recentPrints.slice(0, 5);
+  const unconfirmedMultipleGhsItems = useMemo(
+    () =>
+      selectedForLabel.filter(
+        (chem) =>
+          hasMultipleGhsClassificationOptions(chem) &&
+          !hasManualGhsClassificationChoice(chem, customGHSSettings),
+      ),
+    [selectedForLabel, customGHSSettings],
+  );
+  const multipleGhsWarningExamples = unconfirmedMultipleGhsItems
+    .slice(0, 3)
+    .map((chem) => {
+      const names = buildDisplayNames(chem, "both", currentLocale);
+      return [chem.cas_number, names[0]].filter(Boolean).join(" · ");
+    })
+    .filter(Boolean);
+  const multipleGhsWarningRemainingCount = Math.max(
+    0,
+    unconfirmedMultipleGhsItems.length - multipleGhsWarningExamples.length,
+  );
   const readyPreviewMessage = tx(
     "label.previewRiskReady",
     "This combination looks balanced for the current content load.",
@@ -3623,6 +3661,58 @@ export default function LabelPrintModal({
                     </div>
                     {renderBatchFitReport()}
                   </details>
+
+                  {unconfirmedMultipleGhsItems.length > 0 && (
+                    <div
+                      className="mt-3 rounded-md border border-amber-200 bg-amber-50/80 p-3 text-amber-950"
+                      data-testid="print-multiple-ghs-warning"
+                    >
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold">
+                            {tx(
+                              "label.multipleGhsPrintWarningTitle",
+                              "{{count}} item(s) have multiple GHS versions",
+                              { count: unconfirmedMultipleGhsItems.length },
+                            )}
+                          </div>
+                          <p className="mt-1 text-xs leading-5 text-amber-900">
+                            {tx(
+                              "label.multipleGhsPrintWarningBody",
+                              "This print will use the system-suggested primary classification unless you confirm a different version in the result row or detail view before printing.",
+                            )}
+                          </p>
+                          {multipleGhsWarningExamples.length > 0 && (
+                            <div
+                              className="mt-2 flex flex-wrap gap-1.5"
+                              data-testid="print-multiple-ghs-warning-items"
+                            >
+                              {multipleGhsWarningExamples.map((item) => (
+                                <span
+                                  key={item}
+                                  className="rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-200"
+                                >
+                                  {item}
+                                </span>
+                              ))}
+                              {multipleGhsWarningRemainingCount > 0 && (
+                                <span className="rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-200">
+                                  {tx(
+                                    "label.multipleGhsPrintWarningMore",
+                                    "+{{count}} more",
+                                    {
+                                      count: multipleGhsWarningRemainingCount,
+                                    },
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {shouldShowPrintTrustNote && (
                     <AuthoritativeSourceNote

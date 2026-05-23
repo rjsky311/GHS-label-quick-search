@@ -66,12 +66,20 @@ Status as of 2026-05-16:
   verifies the batch fit report, switches the worst-fit representative preview,
   checks that the print action names purpose, stock, selected count, and
   exclusions, exercises an acknowledged reduced/continuation scope when
-  available, and writes
+  available, fails if the expected multiple-GHS pre-handoff warning is missing,
+  and writes
   `build/production-batch-print-report.json` plus a modal screenshot.
 - `qa:production-batch-print` is now part of `qa:production-product` and the
   production QA summary includes a `fixed-stock-batch-printing` block.
 - Deployed 50-item batch evidence was captured on commit `37cdff9` by local
   production QA and GitHub Actions `Production Print QA` run `25947899331`.
+- Batch result review is now part of the same confidence loop. The result
+  summary separates multiple-GHS primary confirmation from source-conflict
+  correction, review reason chips filter the table, and exports preserve
+  printable/review/reason/multiple-GHS status so downstream batch cleanup keeps
+  the same trust context as the in-app table. The print modal carries that
+  state forward by warning before handoff when selected items still use
+  unconfirmed system-suggested primary classifications.
 
 ## 1. Problem Statement
 

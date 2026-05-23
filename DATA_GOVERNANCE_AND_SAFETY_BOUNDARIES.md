@@ -233,6 +233,11 @@ When sources disagree:
   report count, ECHA/source signal, hazard count, then stable source order.
 - Preserve alternate classifications where available so users can inspect
   differences.
+- Treat "multiple available public classifications" as a primary-selection
+  confirmation state unless there is explicit evidence of a true source
+  conflict. Result rows and batch summaries should ask users to confirm the
+  main GHS version; source-conflict correction/admin review remains reserved
+  for provenance or source disagreement that needs curation.
 - Same-chemical Detail comparisons should expose the main ranking/evidence
   signals in a compact way: current selection, report count, source family, and
   pictogram/H/P coverage. This is explanatory evidence, not legal approval.
@@ -448,6 +453,13 @@ Frontend:
 - Export preview, frontend CSV fallback, and backend CSV/XLSX rows include data
   state, primary source, report count, cache state, reference-link count, and
   classification-selection context.
+- Export preview, frontend CSV fallback, and backend CSV/XLSX rows preserve
+  batch review context: printable state, review-required state, review reasons,
+  source-conflict state, missing trusted Chinese name, and multiple-GHS
+  confirmation status.
+- Batch/result review reason chips include multiple-GHS confirmation separately
+  from source-conflict correction, and selecting a review reason filters the
+  table to the affected rows.
 - Effective custom classification choices carry their own source/report-count
   evidence through result rows, Detail provenance, print preparation, and
   export preparation.
