@@ -151,6 +151,8 @@ Current mode:
   the admin overview as a traceable list, not only as a summary count. Each row
   keeps its review-only candidate evidence and pending-manual-entry state, so a
   maintainer can continue curation without implying public data has changed.
+  The ordinary open correction summary excludes those converted rows, keeping
+  the overview focused on unconverted next-action items.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

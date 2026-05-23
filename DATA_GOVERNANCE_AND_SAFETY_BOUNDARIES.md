@@ -114,6 +114,8 @@ Rules:
   approved. The admin overview should surface both the count and the converted
   request list so maintainers can continue from the correction report to the
   pending manual review record without assuming public data has changed.
+  Converted requests should be separated from the ordinary open correction
+  summary so the next-action queue is not duplicated.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic

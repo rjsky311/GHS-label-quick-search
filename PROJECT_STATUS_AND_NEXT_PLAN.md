@@ -273,6 +273,8 @@ Current completion snapshot:
   expose how many correction candidates have entered manual review, and the
   admin overview now lists those converted requests with their review-only
   candidate evidence so maintainers do not have to dig through the full queue.
+  Converted candidates are separated from the ordinary open correction list to
+  keep the admin overview focused on the next action.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

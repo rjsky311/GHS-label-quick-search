@@ -1245,6 +1245,7 @@ class PilotStore:
         limit: int = 100,
         statuses: Optional[Iterable[str]] = None,
         include_context: bool = True,
+        exclude_converted_manual_entries: bool = False,
     ) -> list[dict[str, Any]]:
         params: list[Any] = []
         where_status = ""
@@ -1258,7 +1259,9 @@ class PilotStore:
                 + ")"
             )
             params.extend(normalized_statuses)
-        params.append(limit)
+        limit_clause = "" if exclude_converted_manual_entries else "LIMIT ?"
+        if not exclude_converted_manual_entries:
+            params.append(limit)
         rows = self._fetchall(
             f"""
             SELECT
@@ -1281,17 +1284,25 @@ class PilotStore:
             FROM dictionary_correction_requests
             {where_status}
             ORDER BY updated_at DESC, id DESC
-            LIMIT ?
+            {limit_clause}
             """,
             params,
         )
-        return [
-            self._correction_request_row_to_dict(
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            item = self._correction_request_row_to_dict(
                 row,
                 include_context=include_context,
             )
-            for row in rows
-        ]
+            if (
+                exclude_converted_manual_entries
+                and item.get("candidate", {}).get("converted_to_manual_entry") is True
+            ):
+                continue
+            items.append(item)
+            if len(items) >= limit:
+                break
+        return items
 
     def get_correction_request_status_counts(self) -> dict[str, int]:
         rows = self._fetchall(
@@ -1472,6 +1483,7 @@ class PilotStore:
                 limit=limit,
                 statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
                 include_context=False,
+                exclude_converted_manual_entries=True,
             ),
             "referenceLinkCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_reference_links WHERE status = ?",

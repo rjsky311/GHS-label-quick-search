@@ -205,6 +205,10 @@ Work items:
   that are waiting in manual review, including their review-only candidate
   evidence and pending-manual-entry hint. This keeps the report-to-manual-entry
   trail visible without implying that public lookup, labels, or exports changed.
+- Completed: converted correction candidates are filtered out of the ordinary
+  open correction-request summary list and shown only in the manual-review
+  section. This keeps the admin overview low-noise while preserving the full
+  correction history in the detailed queue/export paths.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

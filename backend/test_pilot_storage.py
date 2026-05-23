@@ -227,6 +227,7 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
             ]
             == "pending"
         )
+        assert summary["topCorrectionRequests"] == []
 
         listed = store.list_correction_requests(statuses=("candidate_found",))
         assert [item["id"] for item in listed] == [record["id"]]
