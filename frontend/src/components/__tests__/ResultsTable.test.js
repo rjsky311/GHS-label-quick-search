@@ -165,6 +165,57 @@ describe('ResultsTable', () => {
       render(<ResultsTable {...defaultProps} results={[mockNotFoundResult]} />);
       expect(screen.queryByTestId('results-decision-guide')).not.toBeInTheDocument();
     });
+
+    it('renders a batch workflow summary for multi-row result sets', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[
+            mockFoundResult,
+            mockWarningResult,
+            mockNoHazardResult,
+            mockNotFoundResult,
+          ]}
+          totalCount={4}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('results-workflow-summary')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('results-workflow-summary-found-value')
+      ).toHaveTextContent('3/4');
+      expect(
+        screen.getByTestId('results-workflow-summary-label-ready-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-needs-review-value')
+      ).toHaveTextContent('3');
+      expect(
+        screen.getByTestId('results-workflow-summary-export-value')
+      ).toHaveTextContent('4');
+      expect(screen.getByText('results.workflowSummaryTitle')).toBeInTheDocument();
+    });
+
+    it('shows when filters reduce the visible batch scope', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockWarningResult]}
+          totalCount={4}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('results-workflow-filtered-scope')).toHaveTextContent(
+        'results.workflowFilteredScope'
+      );
+    });
+
+    it('does not render the batch workflow summary for a single result', () => {
+      render(<ResultsTable {...defaultProps} results={[mockFoundResult]} totalCount={1} />);
+      expect(screen.queryByTestId('results-workflow-summary')).not.toBeInTheDocument();
+    });
   });
 
   describe('Selection controls', () => {

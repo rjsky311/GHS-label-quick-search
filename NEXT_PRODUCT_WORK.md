@@ -220,6 +220,11 @@ Current mode:
   local names to CAS for unresolved-search rows, requires explicit opt-in for
   Wikidata network lookup, and never writes approved data or changes public
   lookup, labels, exports, or QR targets.
+- Completed current slice: batch result pages now include a low-noise workflow
+  summary above the table. Multi-row results show found count, label-ready
+  count, rows needing data review, and export scope before the user starts
+  selecting labels or downloading files. This makes the batch path easier to
+  judge without opening the print modal first.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

@@ -96,6 +96,28 @@ export default function ResultsTable({
   const hasPrintableLabelResults = results.some(isPrintableForLabel);
   const selectedPrintableCount = selectedForLabel.filter(isPrintableForLabel)
     .length;
+  const workflowSummary = results.reduce(
+    (summary, result) => {
+      const effective = result.found ? getEffectiveClassification(result) : null;
+      const issues = getDataQualityIssues(result, effective);
+      const hasAnyIssue = issues.length > 0;
+      const labelReady = result.found && hasGhsData(effective);
+
+      return {
+        found: summary.found + (result.found ? 1 : 0),
+        labelReady: summary.labelReady + (labelReady ? 1 : 0),
+        needsReview: summary.needsReview + (hasAnyIssue ? 1 : 0),
+        exportRows: summary.exportRows + 1,
+      };
+    },
+    {
+      found: 0,
+      labelReady: 0,
+      needsReview: 0,
+      exportRows: 0,
+    },
+  );
+  const showWorkflowSummary = totalCount > 1;
   const decisionSteps = [
     {
       key: "identity",
@@ -111,6 +133,36 @@ export default function ResultsTable({
       key: "output",
       icon: Printer,
       label: t("results.decisionOutput"),
+    },
+  ];
+  const workflowSummaryCards = [
+    {
+      key: "found",
+      value: `${workflowSummary.found}/${totalCount}`,
+      label: t("results.workflowFoundLabel"),
+      body: t("results.workflowFoundBody"),
+      className: "border-blue-100 bg-blue-50 text-blue-950",
+    },
+    {
+      key: "label-ready",
+      value: workflowSummary.labelReady,
+      label: t("results.workflowLabelReadyLabel"),
+      body: t("results.workflowLabelReadyBody"),
+      className: "border-emerald-100 bg-emerald-50 text-emerald-950",
+    },
+    {
+      key: "needs-review",
+      value: workflowSummary.needsReview,
+      label: t("results.workflowReviewLabel"),
+      body: t("results.workflowReviewBody"),
+      className: "border-amber-100 bg-amber-50 text-amber-950",
+    },
+    {
+      key: "export",
+      value: workflowSummary.exportRows,
+      label: t("results.workflowExportLabel"),
+      body: t("results.workflowExportBody"),
+      className: "border-slate-200 bg-slate-50 text-slate-950",
     },
   ];
 
@@ -284,6 +336,57 @@ export default function ResultsTable({
                 <Icon className="h-3.5 w-3.5 shrink-0 text-blue-700" />
                 {label}
               </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showWorkflowSummary && (
+        <div
+          className="border-b border-slate-200 bg-white px-4 py-4"
+          data-testid="results-workflow-summary"
+        >
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-950">
+                {t("results.workflowSummaryTitle")}
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                {t("results.workflowSummaryBody")}
+              </p>
+            </div>
+            {results.length !== totalCount && (
+              <p
+                className="text-xs font-medium text-slate-500"
+                data-testid="results-workflow-filtered-scope"
+              >
+                {t("results.workflowFilteredScope", {
+                  shown: results.length,
+                  total: totalCount,
+                })}
+              </p>
+            )}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {workflowSummaryCards.map((card) => (
+              <div
+                key={card.key}
+                className={`rounded-md border px-3 py-2 ${card.className}`}
+                data-testid={`results-workflow-summary-${card.key}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                    {card.label}
+                  </span>
+                  <span
+                    className="text-lg font-semibold"
+                    data-testid={`results-workflow-summary-${card.key}-value`}
+                  >
+                    {card.value}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs opacity-75">{card.body}</p>
+              </div>
             ))}
           </div>
         </div>
