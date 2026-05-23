@@ -251,6 +251,12 @@ Current mode:
   explainable as unresolved lookup, no GHS data, source conflict, missing
   Chinese name, upstream error, or text-only GHS data. Production search UI QA
   now fails if a nonzero review count has no reason breakdown.
+- Completed current slice: Zeabur deploy freshness is now part of the working
+  agreement. This round showed GitHub CI can pass while the frontend production
+  service remains on the previous Vite asset because no Zeabur deployment was
+  created for the latest commit. `AUTONOMOUS_WORKFLOW.md` and
+  `PROJECT_STATUS_AND_NEXT_PLAN.md` now document the Zeabur CLI deployment
+  check and safe frontend `service redeploy` fallback before production QA.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

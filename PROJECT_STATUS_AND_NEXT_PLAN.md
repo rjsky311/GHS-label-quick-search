@@ -120,6 +120,12 @@ Current validation gates:
 - Production availability: `npm run qa:production-health` (frontend HTML,
   current Vite asset, backend `/api/health`, bounded retries, Zeabur request
   IDs)
+- Production deploy freshness: after frontend pushes, combine the production
+  asset marker with Zeabur CLI deployment checks. If production remains on an
+  older Vite asset and Zeabur has no deployment for the latest `main` commit,
+  use `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
+  696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
+  the deployment to reach `RUNNING` before heavier production QA.
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust columns, detail-to-prepared modal keyboard/focus checks,

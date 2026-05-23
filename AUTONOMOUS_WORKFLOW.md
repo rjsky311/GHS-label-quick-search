@@ -176,6 +176,16 @@ For print workflow changes, the default validation stack is:
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker string from the new
   bundle when you need to prove production has refreshed instead of validating
   an older deployed asset.
+- If the expected asset marker stays on the previous Vite bundle after CI
+  passes, verify Zeabur's own deployment state instead of waiting blindly:
+  `npx zeabur deployment list --service-id 69626873d9479ab33ad4590e --env-id
+  696262d9a7aaff0c1152b3d6 --json --interactive=false`. If the latest `main`
+  commit is missing, trigger the existing frontend service with
+  `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
+  696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
+  `npx zeabur deployment get --service-id 69626873d9479ab33ad4590e --env-id
+  696262d9a7aaff0c1152b3d6 --json --interactive=false` to report `RUNNING`
+  before rerunning production QA.
 - `npm run qa:production-bundle` after Zeabur deploy
 - `npm run qa:production-search-ui` after Zeabur deploy when search results,
   result actions, GHS result strips, or first-screen polish changed.
