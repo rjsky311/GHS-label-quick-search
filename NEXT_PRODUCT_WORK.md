@@ -147,6 +147,10 @@ Current mode:
   and status update endpoints, dashboard status counts, and an admin review
   queue. This turns data-quality reports into reviewable records before any
   public dictionary, label, or export output can change.
+- Completed current slice: converted correction candidates are now visible from
+  the admin overview as a traceable list, not only as a summary count. Each row
+  keeps its review-only candidate evidence and pending-manual-entry state, so a
+  maintainer can continue curation without implying public data has changed.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

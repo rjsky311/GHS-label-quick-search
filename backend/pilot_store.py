@@ -1326,6 +1326,56 @@ class PilotStore:
                 count += 1
         return count
 
+    def list_converted_correction_candidates(
+        self,
+        *,
+        limit: int = 10,
+        include_context: bool = False,
+    ) -> list[dict[str, Any]]:
+        rows = self._fetchall(
+            """
+            SELECT
+              id,
+              issue_type,
+              cas_number,
+              chemical_name,
+              query_text,
+              current_output,
+              expected_output,
+              evidence_url,
+              evidence_type,
+              local_context,
+              candidate_json,
+              source,
+              status,
+              review_notes,
+              created_at,
+              updated_at
+            FROM dictionary_correction_requests
+            WHERE status = ?
+              AND candidate_json IS NOT NULL
+            ORDER BY updated_at DESC, id DESC
+            """,
+            ("candidate_found",),
+        )
+        converted: list[dict[str, Any]] = []
+        for row in rows:
+            try:
+                candidate = json.loads(row["candidate_json"] or "{}")
+            except json.JSONDecodeError:
+                continue
+            if candidate.get("converted_to_manual_entry") is not True:
+                continue
+            converted.append(
+                self._correction_request_row_to_dict(
+                    row,
+                    include_context=include_context,
+                )
+            )
+            if len(converted) >= limit:
+                break
+        return converted
+
     def update_correction_request_status(
         self,
         request_id: int,
@@ -1414,6 +1464,10 @@ class PilotStore:
             ),
             "correctionRequestStatusCounts": self.get_correction_request_status_counts(),
             "convertedCorrectionCandidateCount": self.get_converted_correction_candidate_count(),
+            "convertedCorrectionCandidates": self.list_converted_correction_candidates(
+                limit=limit,
+                include_context=False,
+            ),
             "topCorrectionRequests": self.list_correction_requests(
                 limit=limit,
                 statuses=CORRECTION_REQUEST_REVIEW_STATUSES,

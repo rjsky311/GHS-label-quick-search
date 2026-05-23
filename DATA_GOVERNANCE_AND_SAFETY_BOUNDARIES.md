@@ -111,7 +111,9 @@ Rules:
   correction request. The request should remain `candidate_found` with
   manual-review metadata and `public_data_changed: false`, not `approved`,
   until the resulting manual entry, alias, or reference record is separately
-  approved.
+  approved. The admin overview should surface both the count and the converted
+  request list so maintainers can continue from the correction report to the
+  pending manual review record without assuming public data has changed.
 - Unresolved lookup rows should expose a contextual data-correction link that
   keeps the current query/CAS and issue type. This is a dictionary-curation
   entry point, not a claim that PubChem has no hazards and not an automatic

@@ -270,7 +270,9 @@ Current completion snapshot:
   used to create a pending manual dictionary entry, the originating correction
   request is also written back with conversion metadata so the queue remains
   traceable without implying that public data changed. Admin summary metrics
-  expose how many correction candidates have entered manual review.
+  expose how many correction candidates have entered manual review, and the
+  admin overview now lists those converted requests with their review-only
+  candidate evidence so maintainers do not have to dig through the full queue.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

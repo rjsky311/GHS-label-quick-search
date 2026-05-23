@@ -212,11 +212,21 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
             candidate={
                 "name_zh": "reviewed candidate",
                 "converted_to_manual_entry": True,
+                "manual_entry_status": "pending",
+                "public_data_changed": False,
             },
         )
         assert converted["candidate"]["converted_to_manual_entry"] is True
         summary = store.get_dictionary_summary()
         assert summary["convertedCorrectionCandidateCount"] == 1
+        assert summary["convertedCorrectionCandidates"][0]["id"] == record["id"]
+        assert summary["convertedCorrectionCandidates"][0]["localContextRedacted"] is True
+        assert (
+            summary["convertedCorrectionCandidates"][0]["candidate"][
+                "manual_entry_status"
+            ]
+            == "pending"
+        )
 
         listed = store.list_correction_requests(statuses=("candidate_found",))
         assert [item["id"] for item in listed] == [record["id"]]

@@ -201,6 +201,10 @@ Work items:
 - Completed: admin dictionary summary now counts correction candidates that
   have already entered manual review, so maintainers can see conversion
   throughput without opening each request.
+- Completed: admin overview now also lists the converted correction candidates
+  that are waiting in manual review, including their review-only candidate
+  evidence and pending-manual-entry hint. This keeps the report-to-manual-entry
+  trail visible without implying that public lookup, labels, or exports changed.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

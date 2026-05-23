@@ -43,6 +43,26 @@ const baseProps = {
         ignored: 1,
       },
       convertedCorrectionCandidateCount: 1,
+      convertedCorrectionCandidates: [
+        {
+          id: 202,
+          issue_type: "source-conflict",
+          cas_number: "67-64-1",
+          chemical_name: "Acetone",
+          candidate: {
+            cas_number: "67-64-1",
+            name_en: "Acetone",
+            name_zh: "Acetone zh",
+            source: "admin-correction-request",
+            approved_for_public_use: false,
+            converted_to_manual_entry: true,
+            manual_entry_status: "pending",
+            public_data_changed: false,
+          },
+          status: "candidate_found",
+          updated_at: "2026-04-18T14:00:00+00:00",
+        },
+      ],
       missQueryStatusCounts: {
         open: 2,
         needs_evidence: 1,
@@ -250,6 +270,12 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
     expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("converted-correction-candidate-row-202"),
+    ).toHaveTextContent("67-64-1");
+    expect(
+      screen.getByTestId("correction-request-candidate-converted-202-manual-pending"),
+    ).toBeInTheDocument();
   });
 
   it("purges stale miss-query telemetry after confirmation", async () => {

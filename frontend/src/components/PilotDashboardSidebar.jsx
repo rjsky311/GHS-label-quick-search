@@ -363,6 +363,8 @@ export default function PilotDashboardSidebar(props) {
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
   const topCorrectionRequests = dictionary.topCorrectionRequests || [];
+  const convertedCorrectionCandidates =
+    dictionary.convertedCorrectionCandidates || [];
   const recentManualEntries = useMemo(
     () => sortNewestFirst(manualEntries, (entry) => entry.cas_number).slice(0, 8),
     [manualEntries]
@@ -1020,6 +1022,73 @@ export default function PilotDashboardSidebar(props) {
                   </span>
                 ))}
               </div>
+
+              <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <SectionHeading
+                  icon={BookPlus}
+                  title={t("pilot.convertedCorrectionCandidateList", {
+                    defaultValue: "Corrections in manual review",
+                  })}
+                  subtitle={t("pilot.convertedCorrectionCandidateListHint", {
+                    defaultValue:
+                      "These reports already created pending manual dictionary entries. Public lookup, labels, and exports are unchanged until the manual entry is approved.",
+                  })}
+                />
+                {convertedCorrectionCandidates.length === 0 ? (
+                  <p className="text-sm text-amber-800">
+                    {t("pilot.noConvertedCorrectionCandidates", {
+                      defaultValue:
+                        "No converted correction candidates are waiting in manual review.",
+                    })}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {convertedCorrectionCandidates.map((item) => {
+                      const requestId = item.id;
+                      const issueType = item.issue_type || item.issueType || "other";
+                      const casNumber = item.cas_number || item.casNumber || "";
+                      const chemicalName =
+                        item.chemical_name || item.chemicalName || item.query_text || "";
+                      const status = item.status || "candidate_found";
+                      return (
+                        <div
+                          key={`converted-correction-${requestId}`}
+                          className="rounded-lg border border-amber-200 bg-white p-3"
+                          data-testid={`converted-correction-candidate-row-${requestId}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-medium text-slate-900">
+                                  {issueType}
+                                </span>
+                                <CurationStatusBadge
+                                  status={status}
+                                  testId={`converted-correction-candidate-status-${requestId}`}
+                                />
+                              </div>
+                              <div className="mt-1 text-sm text-slate-700">
+                                {[casNumber, chemicalName].filter(Boolean).join(" | ") ||
+                                  t("pilot.correctionUnknownTarget", {
+                                    defaultValue: "No target identity provided",
+                                  })}
+                              </div>
+                              <CorrectionCandidateEvidence
+                                candidate={item.candidate}
+                                requestId={`converted-${requestId}`}
+                                saving={saving}
+                              />
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {formatRelativeTime(item.updated_at || item.updatedAt)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
