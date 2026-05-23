@@ -62,6 +62,7 @@ const run = (args, extraEnv = {}) =>
     });
   });
 
+await run(["run", "qa:production-health"]);
 await run(["run", "qa:production-bundle"]);
 await run(["run", "qa:production-search-ui"]);
 await run(["run", "qa:print-report"]);

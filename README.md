@@ -107,6 +107,7 @@ Production QA:
 
 ```bash
 cd frontend
+npm run qa:production-health
 npm run qa:production-search-ui
 npm run qa:production-product
 ```

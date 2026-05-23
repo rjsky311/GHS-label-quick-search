@@ -101,6 +101,9 @@ For print workflow changes, the default validation stack is:
 - `npm run test:print-contract`
 - `PRINT_QA_PRINT_HTML_DIR=build/print-qa-html npm run qa:print-report`
 - `npm run qa:print-pdf`
+- `npm run qa:production-health` after Zeabur deploy, before heavier
+  production QA, to confirm frontend HTML, current Vite asset, and backend
+  health are reachable and to capture Zeabur request IDs for 502 triage.
 - `npm run qa:production-bundle` after Zeabur deploy
 - `npm run qa:production-search-ui` after Zeabur deploy when search results,
   result actions, GHS result strips, or first-screen polish changed.

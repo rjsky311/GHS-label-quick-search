@@ -131,6 +131,11 @@ const bundlePath = path.resolve(
   env.PRINT_QA_BUNDLE_REPORT_PATH ||
     "build/production-print-bundle-report.json",
 );
+const healthPath = path.resolve(
+  process.cwd(),
+  env.PRODUCTION_HEALTH_REPORT_PATH ||
+    "build/production-health-report.json",
+);
 const searchUiPath = path.resolve(
   process.cwd(),
   env.PRODUCTION_SEARCH_UI_REPORT_PATH ||
@@ -159,6 +164,11 @@ const handoffReportPaths = findReports(/^production-print-.*report\.json$/)
   .filter((filePath) => !/production-print-qa-summary\.json$/.test(filePath));
 
 const reports = {
+  health: summarizeGenericReport(
+    "production-health",
+    healthPath,
+    readJsonIfExists(healthPath),
+  ),
   bundle: summarizeGenericReport(
     "bundle-freshness",
     bundlePath,
@@ -195,6 +205,7 @@ const reports = {
 };
 
 const presentReports = [
+  reports.health,
   reports.bundle,
   reports.searchUi,
   reports.printQa,
@@ -218,6 +229,14 @@ const handoffReportsPassing =
   reports.handoff.length > 0 && reports.handoff.every(isPassingReport);
 
 const buildProductBlocks = () => [
+  {
+    id: "production-availability",
+    name: "Production frontend/backend availability",
+    reports: [reports.health.name],
+    ok: isPassingReport(reports.health),
+    evidence:
+      "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and Zeabur request-id capture.",
+  },
   {
     id: "print-renderer-stock-fit",
     name: "Print renderer and stock fit robustness",
@@ -270,12 +289,14 @@ const buildProductBlocks = () => [
     name: "Whole-product UX and brand-utility convergence",
     reports: [
       reports.searchUi.name,
+      reports.health.name,
       reports.bundle.name,
       ...reports.handoff.map((report) => report.name),
       reports.prepared.name,
       reports.batch.name,
     ],
     ok:
+      isPassingReport(reports.health) &&
       isPassingReport(reports.searchUi) &&
       isPassingReport(reports.bundle) &&
       handoffReportsPassing &&
@@ -287,7 +308,8 @@ const buildProductBlocks = () => [
 ];
 
 const productBlocks = buildProductBlocks();
-const failedProductBlocks = productBlocks.filter((block) => !block.ok);
+const incompleteProductBlocks = productBlocks.filter((block) => !block.ok);
+const failedProductBlocks = requireProductBlocks ? incompleteProductBlocks : [];
 
 const result = {
   ok:
@@ -303,6 +325,7 @@ const result = {
     failedReports: failedReports.length,
     failedReportNames: failedReports.map((report) => report.name),
     failedProductBlocks: failedProductBlocks.map((block) => block.id),
+    incompleteProductBlocks: incompleteProductBlocks.map((block) => block.id),
     actionableFailures,
   },
 };

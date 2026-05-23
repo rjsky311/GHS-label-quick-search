@@ -70,6 +70,7 @@
     "qa:print-pdf": "node scripts/check-print-pdf-artifacts.mjs",
     "qa:physical-print-plan": "node scripts/generate-physical-print-plan.mjs",
     "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
+    "qa:production-health": "node scripts/check-production-health.mjs",
     "qa:production-handoff": "node scripts/check-production-print-handoff.mjs",
     "qa:production-search-ui": "node scripts/check-production-search-ui.mjs",
     "qa:production-batch-print": "node scripts/check-production-batch-print.mjs",

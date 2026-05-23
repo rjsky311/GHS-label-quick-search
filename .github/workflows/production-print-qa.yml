@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - product
+          - health
           - smoke
           - primary
           - compact
@@ -71,6 +72,10 @@ jobs:
             product)
               npm run qa:production-product
               ;;
+            health)
+              npm run qa:production-health
+              npm run qa:production-summary
+              ;;
             smoke)
               npm run qa:production-smoke
               ;;
@@ -84,11 +89,13 @@ jobs:
               npm run qa:production-multi-chemical
               ;;
             prepared)
+              npm run qa:production-health
               npm run qa:production-bundle
               npm run qa:production-prepared
               npm run qa:production-summary
               ;;
             batch)
+              npm run qa:production-health
               npm run qa:production-bundle
               npm run qa:production-batch-print
               npm run qa:production-summary

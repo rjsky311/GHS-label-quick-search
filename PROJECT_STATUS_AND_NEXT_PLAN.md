@@ -107,6 +107,9 @@ Current validation gates:
 - Frontend: `npm test -- --runInBand`, `npm run test:i18n`, `npm run build`
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
+- Production availability: `npm run qa:production-health` (frontend HTML,
+  current Vite asset, backend `/api/health`, bounded retries, Zeabur request
+  IDs)
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust columns, detail-to-prepared modal keyboard/focus checks,
@@ -124,10 +127,10 @@ Current validation gates:
 
 Current completion snapshot:
 
-- **Stable automated baseline**: CI, production product QA, production search
-  UI QA, production print handoff, prepared production QA, print contract/PDF
-  QA, reference-link safety checks, and modal keyboard containment are all
-  represented by repeatable gates.
+- **Stable automated baseline**: CI, production availability QA, production
+  product QA, production search UI QA, production print handoff, prepared
+  production QA, print contract/PDF QA, reference-link safety checks, and
+  modal keyboard containment are all represented by repeatable gates.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
@@ -371,6 +374,9 @@ Do next:
   generated PDFs, print HTML, and summary reports.
 - Keep stale-deploy checks and bundle markers strict enough that production QA
   cannot accidentally validate an old frontend asset.
+- Keep a fast production availability gate before heavy browser QA so transient
+  or persistent 502/health failures are captured with response status,
+  latency, and Zeabur request IDs.
 
 Current status:
 
@@ -378,8 +384,13 @@ Current status:
   the manual default and scheduled fallback.
 - Workflow job summaries include product-block pass/fail status when product
   block evidence is present.
-- Split modes remain available for focused reruns: `smoke`, `primary`,
-  `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and `all`.
+- `qa:production-health` checks the deployed frontend HTML, current Vite index
+  asset, and backend `/api/health` with bounded retries. It writes
+  `build/production-health-report.json` with request IDs and timing so a 502
+  incident can be diagnosed without replaying ad hoc curl commands.
+- Split modes remain available for focused reruns: `health`, `smoke`,
+  `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
+  `all`.
 - `qa:production-search-ui` keeps the full deployed evidence in
   `build/production-search-ui-report.json`, but prints a compact console
   summary so CI logs show the action, pictogram, trust, data-state, keyboard,
