@@ -162,6 +162,10 @@ Use this habit to avoid quiet drift during long autonomous work:
 
 For print workflow changes, the default validation stack is:
 
+- `gh workflow run CI --ref main` followed by `gh run watch <run-id>
+  --exit-status` when a pushed commit does not receive an automatic `CI` run.
+  The workflow keeps normal `push`/`pull_request` triggers, but manual dispatch
+  is the fallback when GitHub creates deployment checks without an Actions run.
 - `npm run test:print-contract`
 - `PRINT_QA_PRINT_HTML_DIR=build/print-qa-html npm run qa:print-report`
 - `npm run qa:print-pdf`

@@ -238,6 +238,10 @@ Current mode:
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT`. Use this after frontend UI changes
   when Zeabur reports success but the production URL may still be serving an
   older Vite asset.
+- Completed current slice: the main `CI` workflow now has a manual
+  `workflow_dispatch` fallback. If future pushes show Zeabur deployment checks
+  but no automatic GitHub Actions `CI` run, trigger `gh workflow run CI --ref
+  main` and watch that run instead of treating the missing run as a pass.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

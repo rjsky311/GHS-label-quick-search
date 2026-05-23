@@ -415,6 +415,10 @@ Current status:
 
 - The `Production Print QA` GitHub Actions workflow exposes `product` mode as
   the manual default and scheduled fallback.
+- The main `CI` workflow now supports manual dispatch in addition to normal
+  `push` and `pull_request` triggers, so a pushed commit can still receive the
+  full frontend/backend CI gate if GitHub creates deployment checks but no
+  automatic Actions run.
 - Workflow job summaries include product-block pass/fail status when product
   block evidence is present.
 - `qa:production-health` checks the deployed frontend HTML, current Vite index
