@@ -618,8 +618,8 @@ Suggested verification:
 
 ## Default Next Order
 
-Unless a fresh bug report or failing check points elsewhere, continue in this
-order:
+Unless a fresh bug report, failing check, or dynamic re-rank points elsewhere,
+use this as the fallback order:
 
 1. Trust/source/SDS safety boundaries.
 2. Whole-product UX and brand-utility convergence.
@@ -628,7 +628,10 @@ order:
 5. Prepared solution and reprint workflow maturity.
 6. Fixed-stock batch label printing monitoring.
 
-This order reflects the current state after batch-print gate coverage shipped:
-keep batch monitored, then prioritize trust/data-state clarity and low-noise
-daily-use UX unless a fresh print screenshot or failing QA run points back to
-the renderer.
+This order reflects the current state after batch-print gate coverage shipped,
+but it is not meant to run indefinitely without reassessment. Use
+`AUTONOMOUS_WORKFLOW.md` to re-rank after several completed slices, after
+10-20 commits cluster in one workstream, or when the user asks whether the
+current direction still makes sense. Keep batch monitored, then prioritize
+trust/data-state clarity and low-noise daily-use UX unless a fresh print
+screenshot, failing QA run, or product-level re-rank points elsewhere.

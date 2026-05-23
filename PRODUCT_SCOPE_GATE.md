@@ -19,6 +19,10 @@ Typical triggers:
   "continue toward the product goal", or "what should we build next?"
 - A previous fix has failed more than once, or screenshots show the issue is
   about the model of use rather than one CSS bug.
+- The last 10-20 commits are concentrated in one workstream and the user asks
+  whether that direction is still the best whole-product move.
+- A workstream keeps producing follow-up tasks, but the next visible product
+  bottleneck may be somewhere else.
 - The change touches label printing, batch printing, source ranking, Chinese
   name governance, SDS/reference links, QR targets, admin telemetry, or public
   trust copy.
@@ -101,6 +105,24 @@ Include:
 - **Docs to update**: canonical and domain-specific documents that must stay in
   sync.
 - **Implementation order**: a small sequence of complete, testable slices.
+
+## Repeated-Workstream Check
+
+Use this check when work has been moving for several rounds but the overall
+product direction feels questionable.
+
+1. Summarize the last 10-20 commits by category: user-visible UX,
+   print/rendering, data governance/admin, QA/CI, docs, or infrastructure.
+2. Name the user-visible value those commits created.
+3. Name the risk they reduced.
+4. Name the product surface that did not improve during that period.
+5. Decide whether the next closeable slice should continue the same category
+   or switch to a higher-value surface.
+
+Do not use this check to reopen every settled decision. Use it to prevent
+local optimization: for example, repeatedly expanding admin tooling while the
+daily batch/search workflow still feels rough, or repeatedly adjusting print
+layout after the real issue is the output model.
 
 ## Default Project Decisions
 

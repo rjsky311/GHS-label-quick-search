@@ -36,8 +36,46 @@ The product should be:
 
 ## Live Queue
 
-Unless a fresh bug report, production screenshot, CI failure, security finding,
-or user request points elsewhere, continue in this order:
+This file is intentionally short and operational. It should answer what the
+next autonomous slice is, why it matters now, when to stop, and when to switch
+workstreams. Use `AUTONOMOUS_WORKFLOW.md` for the dynamic re-rank loop; do not
+treat this queue as a permanent order.
+
+### Current Product Thesis
+
+The last 10-20 commits were weighted toward data governance, admin review,
+candidate discovery, GHS asset stability, and production QA hardening. That was
+reasonable foundation work, but the next product rounds should avoid staying in
+admin/tooling by inertia. Finish only the data-governance pieces that close the
+current correction loop, then bias back toward user-visible batch/search/results
+UX unless a blocker appears.
+
+### Active Slice
+
+Current default active slice: close the data-correction/candidate-discovery
+loop only where it makes the maintainer workflow meaningfully smoother. The
+current dry-run path already finds review-only candidates; the next work should
+not add more external discovery unless a scope/cost/source decision justifies
+it.
+
+### Exit Condition
+
+Stop extending this slice when maintainers can tell, from the existing queue and
+dry-run output, what candidate was found, whether it entered manual review, and
+whether public data changed. Further admin reporting becomes nice-to-have unless
+real queue evidence shows confusion.
+
+### Next Likely Switch
+
+After the correction/candidate loop is closed enough, switch to user-visible
+batch/search/results-table UX: clearer batch input states, lower-noise result
+rows, consistent GHS icon presentation, and more obvious print/export readiness.
+Return to print renderer work only for fresh PDF/screenshot/QA evidence.
+
+### Default Order
+
+Unless a blocker, fresh evidence, or the re-rank loop points elsewhere, continue
+in this order:
 
 Current mode:
 

@@ -247,7 +247,10 @@ provided. Dictionary miss capture is also opt-in via
 The current project-level planning entry is
 `PROJECT_STATUS_AND_NEXT_PLAN.md`. Read it first when choosing the next product
 slice; it consolidates current status, should-do items, blind spots, priority
-order, and done criteria.
+order, and done criteria. The priority order is a default, not a permanent
+autopilot: use the next-step decision loop in `AUTONOMOUS_WORKFLOW.md` after
+several completed slices, after 10-20 commits cluster in one workstream, or
+when the user asks whether the recent order still makes product sense.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction
@@ -358,11 +361,11 @@ Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
 live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
 execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user
 asks to "continue" or otherwise delegates the next work round, start from
-`PROJECT_STATUS_AND_NEXT_PLAN.md`, pick the highest-value product slice,
-run `PRODUCT_SCOPE_GATE.md` first if the slice is broad or ambiguous, implement
-it, verify it, push to `main` when stable, and track CI/Zeabur/production QA
-for user-facing changes. Stop only for the explicit stop conditions in
-`AUTONOMOUS_WORKFLOW.md`.
+`PROJECT_STATUS_AND_NEXT_PLAN.md`, run the dynamic next-step decision loop,
+pick the highest-value product slice, run `PRODUCT_SCOPE_GATE.md` first if the
+slice is broad or ambiguous, implement it, verify it, push to `main` when
+stable, and track CI/Zeabur/production QA for user-facing changes. Stop only
+for the explicit stop conditions in `AUTONOMOUS_WORKFLOW.md`.
 
 PR #23 (`6b67061`) landed the productized free-utility redesign and is
 deployed on Zeabur. Production smoke after merge covered frontend asset

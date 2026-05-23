@@ -4,6 +4,11 @@ This is the canonical planning entry point for the project. Read this file
 first when choosing the next autonomous product slice. Use the linked planning
 and QA files only after this file has set the priority.
 
+The priority order below is a default decision system, not a permanent
+autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
+slices, after 10-20 commits cluster around one workstream, or when user
+feedback shows that another product bottleneck has become more important.
+
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
 first-level print UI model with exactly three outputs: complete A4/Letter
@@ -319,6 +324,22 @@ Current completion snapshot:
 
 Use this order unless a fresh production screenshot, failing CI/QA run, security
 finding, or user-reported blocker clearly points elsewhere.
+
+Before continuing the same workstream for another round, apply the next-step
+decision loop from `AUTONOMOUS_WORKFLOW.md` when:
+
+- The last 3-5 slices have landed without a product-level re-rank.
+- The last 10-20 commits are mostly admin/tooling/docs/QA instead of
+  user-visible product work, or mostly print-rendering fixes instead of the
+  broader workflow.
+- The current workstream still has follow-ups, but the main user job would get
+  more value from a different surface.
+- The user asks whether the recent order was correct.
+
+When re-ranking, keep blockers first, then choose the next closeable slice by
+user-visible value, safety/data-risk reduction, loop closure, testability, and
+blast radius. Update `NEXT_PRODUCT_WORK.md` with the active slice, exit
+condition, and likely switch point.
 
 Before starting a broad slice, use `PRODUCT_SCOPE_GATE.md` when the goal,
 non-goals, required content, or acceptance criteria are not already clear. Do

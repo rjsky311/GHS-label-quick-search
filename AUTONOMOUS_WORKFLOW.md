@@ -17,6 +17,10 @@ stop condition below applies:
   findings for the detailed work context. Prefer the canonical plan when there
   is no fresh regression because the original print workstreams are now the
   baseline.
+- Treat the documented priority order as a default, not a permanent autopilot.
+  After several completed slices or when recent commits cluster around one
+  workstream, re-rank from the whole product view before continuing the same
+  type of work.
 - Use `PRODUCT_SCOPE_GATE.md` before broad or ambiguous product slices where
   the user goal, non-goals, required content, or acceptance criteria are not
   already clear. Do not use it to delay clear bug fixes, CI failures, or
@@ -41,7 +45,8 @@ Use this loop when continuing autonomously:
 
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
    the relevant project docs before editing.
-2. Pick one coherent product slice with a clear user-facing acceptance goal.
+2. Run the next-step decision loop below, then pick one coherent product slice
+   with a clear user-facing acceptance goal.
    The current default order is trust/source/SDS safety boundaries, low-noise
    whole-product UX, print renderer/stock fit only when a fresh screenshot or
    regression points there, result-table/GHS visual unity, prepared reprint
@@ -61,6 +66,41 @@ Use this loop when continuing autonomously:
 10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
 11. Report what changed, what was verified, and what remains next.
+
+## Next-Step Decision Loop
+
+Use this loop before choosing a new slice, especially after the user says
+"continue", "what next", or delegates the next round:
+
+1. Check blockers first: failing CI, production 502/health failure, security or
+   data-loss risk, safety-critical print regression, or user-provided
+   screenshot/PDF evidence. Blockers override the default priority order.
+2. Review the last 10-20 commits when the recent direction is unclear or the
+   last several slices have been in the same category. Classify the work as
+   user-visible UX, print/rendering, data governance/admin, QA/CI, docs, or
+   infrastructure.
+3. If recent work is over-concentrated in one category, ask whether continuing
+   that category still improves the main user job. If not, switch to the next
+   highest-value category even if the previous category still has nice-to-have
+   follow-ups.
+4. Prefer slices that either close an already-started loop or improve a daily
+   user path. Avoid opening a new admin/tooling branch when the next visible
+   product bottleneck is search, batch, results-table clarity, or label
+   confidence.
+5. Choose the next slice by weighing: user-visible value, safety/data-risk
+   reduction, whether it closes a loop, testability, and blast radius.
+6. Update `NEXT_PRODUCT_WORK.md` when the active slice, exit condition, or
+   likely switch point changes.
+
+Re-rank explicitly when any of these triggers appear:
+
+- 3-5 completed slices have landed since the last re-rank.
+- 10-20 recent commits mostly touch one workstream.
+- A repeated fix pattern suggests symptom-chasing rather than a model-level
+  solution.
+- A user asks whether the current order still makes sense.
+- A production screenshot, PDF, CI failure, or support report changes the risk
+  picture.
 
 ## Stop Conditions
 
