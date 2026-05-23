@@ -59,6 +59,9 @@ const docs = {
   "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md": readText(
     "SCIENTIFIC_AGENT_SKILLS_EVALUATION.md",
   ),
+  "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md": readText(
+    "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
+  ),
 };
 
 const frontendPackage = JSON.parse(fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"));
@@ -217,6 +220,18 @@ requireIncludes(
   docs["SCIENTIFIC_AGENT_SKILLS_EVALUATION.md"],
   "Do not install the full repository",
   "scientific skill evaluation must keep the install boundary visible",
+);
+requireIncludes(
+  "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
+  docs["CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md"],
+  "Dry-Run Output Contract",
+  "candidate discovery must stay evidence-only before implementation",
+);
+requireIncludes(
+  "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
+  docs["CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md"],
+  "approved_for_public_use",
+  "candidate discovery must preserve review-only output flags",
 );
 
 const allowedStatuses = new Set([

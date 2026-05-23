@@ -281,7 +281,9 @@ Current completion snapshot:
   external or LLM candidate discovery cannot bypass admin approval. Public
   submissions cannot set manual-review conversion metadata; only admin
   status-update flows can mark candidate evidence as converted into manual
-  review.
+  review. `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` now defines the next safe
+  implementation contract for future external/LLM/scientific-skill candidate
+  discovery: dry-run first, evidence bundle only, no public-data side effects.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

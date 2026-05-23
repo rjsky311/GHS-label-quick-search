@@ -83,6 +83,8 @@ Future rule:
 - Automated translation, LLM output, Wikidata labels, PubChem synonyms, NCI
   resolver output, EPA CompTox identifiers, or any external scientific lookup
   result are candidate evidence only.
+- `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` defines the dry-run contract for adding
+  those sources without creating public-data side effects.
 - Candidate names must not become printed Chinese identity, export values, or
   public dictionary entries until they are admin-approved.
 - Missing Chinese names should be routed into the correction/admin curation
@@ -207,7 +209,7 @@ required.
 | --- | --- | --- | --- |
 | Requirements decisions | `Shipped` | Keep this file cross-linked from owner docs as decisions evolve | `npm run test:docs`, `git diff --check` |
 | In-app correction intake | `Gate added` | Backend correction-request storage/API, admin queue, public in-app form entry, admin-only candidate evidence bundles, pending manual-entry conversion, conversion trace-back to the originating correction request, and admin overview visibility for converted candidates are in place | Backend tests, focused frontend tests, production search UI |
-| Candidate lookup support | `Gate added` for sanitized local evidence bundle; external discovery `Planned` | Trial external candidate discovery only after scope/cost/source review; all candidate payloads must stay allow-listed, bounded, safe-url-only, backend-forced to review-only, and manual-review conversion metadata must remain admin-only until curated | Candidate helper tests + data-governance docs + sandbox/dry-run evidence |
+| Candidate lookup support | `Gate added` for sanitized local evidence bundle and dry-run contract; external discovery `Planned` | Trial external candidate discovery only after scope/cost/source review; all candidate payloads must stay allow-listed, bounded, safe-url-only, backend-forced to review-only, and manual-review conversion metadata must remain admin-only until curated | Candidate helper tests + data-governance docs + sandbox/dry-run evidence |
 | Batch lookup/print/export | `Monitoring` | Add fixtures only when real batch lists expose new separators, fit cases, or export gaps | Parser tests, print PDF QA, production batch/search QA |
 | Low-noise UX | `Monitoring` | Improve only when production screenshots or user feedback show confusion | Production search UI screenshots |
 | Physical print validation | `Deferred` | Resume only when printer/stock/QR-scan evidence is available | Physical checklist |

@@ -140,6 +140,8 @@ Rules:
 Future maintainer work may use external scientific-agent skills only as
 evidence discovery tools. The current review lives in
 `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
+The candidate-discovery dry-run contract lives in
+`CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`.
 
 Rules:
 

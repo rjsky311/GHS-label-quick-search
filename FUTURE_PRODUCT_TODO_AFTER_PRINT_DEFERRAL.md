@@ -215,6 +215,10 @@ Work items:
   review-only flags so future external/LLM lookup helpers cannot imply public
   approval by payload shape. Manual-review conversion metadata is admin-only,
   so public submissions cannot mark themselves as converted or approved.
+- Completed: added `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` as the implementation
+  contract for future Wikidata/PubChem synonym/NCI/LLM/scientific-skill
+  candidate discovery. The first implementation must be dry-run only and must
+  emit review-only candidate evidence bundles.
 - Planned: candidate Chinese names from LLM/translation, Wikidata, PubChem
   synonyms, NCI resolver, EPA CompTox, or scientific lookup skills can be added
   later as external discovery helpers, but their output must use the same

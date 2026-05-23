@@ -264,6 +264,10 @@ and candidate bundles do not change public data by themselves; stored candidate
 bundles can seed pending manual-entry review records, but those records must be
 explicitly approved before public lookup, labels, exports, or QR targets use
 them.
+Candidate evidence payloads are sanitized at the backend boundary and forced
+to remain review-only. Future Wikidata/PubChem synonym/NCI/LLM/scientific-skill
+discovery work must follow `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`: dry-run first,
+evidence bundle only, no public-data side effects.
 
 The project-level scope alignment workflow is pinned in
 `PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,
@@ -334,8 +338,8 @@ Documentation drift checks now cover the active owner docs, not only the short
 roadmap files. `npm run test:docs` checks that data governance, simplified
 labels, print contract, physical print deferral, brand/support strategy, and
 scientific-skill evaluation docs keep a visible path back to
-`PROJECT_STATUS_AND_NEXT_PLAN.md` plus their local non-negotiable contract
-phrases.
+`PROJECT_STATUS_AND_NEXT_PLAN.md`; it also checks the candidate-discovery
+dry-run contract before any external source is wired into the product.
 
 Optional scientific lookup skill evaluation is recorded in
 `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`. The current decision is not to install

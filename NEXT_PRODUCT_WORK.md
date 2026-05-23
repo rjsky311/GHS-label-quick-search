@@ -58,7 +58,9 @@ Current mode:
   if real queue evidence shows maintainers still cannot tell what happened.
   The backend candidate-evidence payload boundary is now hardened first:
   candidate bundles are allow-listed, bounded, safe-url-only, and forced to
-  review-only flags before storage.
+  review-only flags before storage. `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`
+  now pins the future external-discovery contract before any service or skill
+  is wired into the app.
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now
@@ -163,6 +165,10 @@ Current mode:
   (`approved_for_public_use: false`, `public_data_changed: false`). Public
   submissions cannot set manual-review conversion metadata; only admin
   status-update flows can mark a candidate as converted to manual review.
+- Completed current slice: added `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` and
+  included it in the docs drift gate. Future Wikidata, PubChem synonym, NCI,
+  LLM, or scientific-skill candidate discovery now has a dry-run-first contract
+  with review-only evidence bundles and no public-data side effects.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each
