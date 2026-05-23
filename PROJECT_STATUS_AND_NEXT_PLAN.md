@@ -421,6 +421,10 @@ Current status:
   asset, and backend `/api/health` with bounded retries. It writes
   `build/production-health-report.json` with request IDs and timing so a 502
   incident can be diagnosed without replaying ad hoc curl commands.
+  Set `PRINT_QA_EXPECTED_ASSET_TEXT` or
+  `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker from the new UI
+  when a production-facing change needs proof that Zeabur is serving the
+  refreshed frontend bundle, not only a reachable older asset.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

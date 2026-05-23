@@ -233,6 +233,11 @@ Current mode:
   batch input normalization path through an actual batch search result and
   fails if the batch workflow summary disappears, reports the wrong total row
   scope, or shows a filtered-scope note when no filter is active.
+- Completed current slice: `qa:production-health` can now require an expected
+  frontend bundle marker via `PRINT_QA_EXPECTED_ASSET_TEXT` or
+  `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT`. Use this after frontend UI changes
+  when Zeabur reports success but the production URL may still be serving an
+  older Vite asset.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

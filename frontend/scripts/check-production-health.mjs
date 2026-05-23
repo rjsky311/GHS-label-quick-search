@@ -19,6 +19,14 @@ const outputPath = path.resolve(
 const maxAttempts = Number(process.env.PRODUCTION_HEALTH_ATTEMPTS || 6);
 const timeoutMs = Number(process.env.PRODUCTION_HEALTH_TIMEOUT_MS || 15000);
 const retryDelayMs = Number(process.env.PRODUCTION_HEALTH_RETRY_DELAY_MS || 1000);
+const expectedAssetTexts = (
+  process.env.PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT ||
+  process.env.PRINT_QA_EXPECTED_ASSET_TEXT ||
+  ""
+)
+  .split("||")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -135,6 +143,26 @@ const checkFrontend = () =>
       };
     }
 
+    const assetBody = expectedAssetTexts.length ? await assetResponse.text() : "";
+    const missingExpectedAssetTexts = expectedAssetTexts.filter(
+      (text) => !assetBody.includes(text),
+    );
+    if (missingExpectedAssetTexts.length) {
+      return {
+        ok: false,
+        frontendUrl,
+        htmlUrl,
+        assetUrl,
+        html: htmlMeta,
+        asset: assetMeta,
+        expectedAssetText: {
+          requiredCount: expectedAssetTexts.length,
+          missing: missingExpectedAssetTexts,
+        },
+        error: "frontend index asset did not include the expected deployed marker text",
+      };
+    }
+
     return {
       ok: true,
       frontendUrl,
@@ -142,6 +170,12 @@ const checkFrontend = () =>
       assetUrl,
       html: htmlMeta,
       asset: assetMeta,
+      expectedAssetText: expectedAssetTexts.length
+        ? {
+            requiredCount: expectedAssetTexts.length,
+            missing: [],
+          }
+        : undefined,
     };
   });
 
@@ -184,6 +218,7 @@ const result = {
   maxAttempts,
   timeoutMs,
   retryDelayMs,
+  expectedAssetTextCount: expectedAssetTexts.length,
   checks,
   failures,
 };
