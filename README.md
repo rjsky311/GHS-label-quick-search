@@ -64,8 +64,10 @@ current post-95 target ranking is
 [POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The shipped
 post-95 target owner doc is
 [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md), with pilot
-operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The shipped 95%
-lab-ready pilot evidence packet is
+operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The active
+short-term follow-up is
+[PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md).
+The shipped 95% lab-ready pilot evidence packet is
 [LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
 [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
 changes.
@@ -161,11 +163,15 @@ Use these files before starting product or safety-critical changes:
   current runtime state.
 - [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md) -
   canonical current status, priority order, and done criteria.
-- [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md) - active
+- [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md) - shipped
   post-95 product target for small pilot operations, triage, export utility,
   and QA cadence.
 - [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md) - pilot operator checklist and
   finding-classification guide.
+- [PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md) -
+  active short-term target for representative pilot evidence, export usability,
+  data-quality next steps, maintainability boundaries, and historical-doc
+  cleanup.
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
 - [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
   workflow for aligning broad or ambiguous product decisions before

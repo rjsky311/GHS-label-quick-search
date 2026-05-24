@@ -15,15 +15,18 @@ Read these files in order before choosing or continuing work:
    completion audit for small pilot operations.
 5. `PILOT_RUNBOOK.md` - pilot operator checklist and finding-classification
    guide.
-6. `LAB_READY_PILOT_95_PLAN.md` - shipped 95% lab-ready pilot evidence packet,
+6. `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` - active short-term owner doc
+   for pilot evidence, export usability, data-quality next steps,
+   maintainability boundaries, and historical-doc cleanup.
+7. `LAB_READY_PILOT_95_PLAN.md` - shipped 95% lab-ready pilot evidence packet,
    workstreams, non-goals, closure gates, and final audit checklist.
-7. `AUTONOMOUS_WORKFLOW.md` - standing approval, stop conditions,
+8. `AUTONOMOUS_WORKFLOW.md` - standing approval, stop conditions,
    verification, push/deploy, and production QA rules.
-8. `PRODUCT_SCOPE_GATE.md` - project-level "grill me" scope alignment for
+9. `PRODUCT_SCOPE_GATE.md` - project-level "grill me" scope alignment for
    broad or ambiguous product decisions.
-9. `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` - active non-physical-print
+10. `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md` - active non-physical-print
    product tracker while real-printer validation is deferred.
-10. `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` - fixed-stock, purpose-first batch
+11. `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` - fixed-stock, purpose-first batch
    label printing contract when the selected work touches batch print flows.
 
 Maintenance rule:
@@ -35,6 +38,8 @@ Maintenance rule:
 - Keep the shipped post-95 target definition in
   `PILOT_OPERATIONS_READY_PLAN.md`.
 - Keep pilot operating instructions in `PILOT_RUNBOOK.md`.
+- Keep the current short-term evidence and maintainability pass in
+  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
 - Keep the shipped 95% product-maturity evidence in `LAB_READY_PILOT_95_PLAN.md`.
 - Keep continuation workflow rules in `AUTONOMOUS_WORKFLOW.md`.
 - Keep broad-scope decision alignment rules in `PRODUCT_SCOPE_GATE.md`.

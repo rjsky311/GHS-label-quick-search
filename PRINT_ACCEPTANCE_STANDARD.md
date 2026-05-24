@@ -1,5 +1,10 @@
 # Print Acceptance Standard
 
+Supporting note: this remains the print acceptance bar, but it is not the
+active product roadmap. Start current planning from
+`PROJECT_STATUS_AND_NEXT_PLAN.md`; use this file only when the selected work
+touches print behavior or print QA.
+
 This document defines the product acceptance bar for GHS label output. It is a product and engineering standard, not legal advice. Final use still requires the official SDS, supplier label, and local regulations.
 
 Deployment and Browser Use verification steps live in

@@ -45,6 +45,12 @@ baseline, with the operator-facing checklist in `PILOT_RUNBOOK.md`.
 `LAB_READY_PILOT_95_PLAN.md` is the shipped 95% evidence packet, not an active
 unfinished target.
 
+Current short-term target: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` is the
+active owner doc for the evidence-driven pilot follow-up. Use it after the
+shipped pilot operations docs when continuing work that checks real pilot
+smoothness, batch export usability, data-quality next steps, large-module
+maintainability, or historical-doc cleanup.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -176,6 +182,11 @@ Current completion snapshot:
   real pilots. This target is shipped as the post-95 baseline. The next product
   slice should be selected from pilot evidence, admin/export usability gaps, or
   blockers, not from the old P0-P4 list by inertia.
+- **Pilot Evidence And Maintainability checkpoint 2026-05-25**:
+  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` is the active short-term owner
+  doc. It ties the next round to representative pilot evidence, data-quality
+  next-step selection, batch export usability, low-risk maintainability
+  boundaries, and historical-doc cleanup.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
@@ -874,6 +885,9 @@ Use these files by role:
   product decisions and repeated rework risks.
 - `POST_95_REPRIORITIZATION.md`: current post-95 decision packet and active
   next-target ranking after the Lab-Ready Pilot shipped.
+- `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`: active short-term owner doc for
+  pilot evidence, export usability, data-quality next-step selection,
+  maintainability boundaries, and historical-doc cleanup.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
 - `NEXT_REMAINING_PRODUCT_WORK.md`: detailed execution backlog and
   current status.
@@ -892,7 +906,10 @@ Use these files by role:
 - `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`: future work tracker for data
   trust, UX guidance, public docs, and brand/support surfaces while real
   physical printing is deferred.
-- `PRINT_OUTPUT_REFACTOR_PLAN.md`: v1.10 print refactor baseline.
-- `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline.
+- `PRINT_OUTPUT_REFACTOR_PLAN.md`: v1.10 print refactor baseline; supporting
+  history, not the active user-facing print model.
+- `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline; supporting
+  history, not the active live queue.
 - `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:
-  productized utility design direction.
+  productized utility design direction; supporting history after the current
+  pilot evidence target is selected.

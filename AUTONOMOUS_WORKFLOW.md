@@ -20,8 +20,10 @@ stop condition below applies:
 - When the active work is about reaching the next major product maturity target,
   read the active owner doc after `PROJECT_STATUS_AND_NEXT_PLAN.md`. For the
   current post-95 target, read `PILOT_OPERATIONS_READY_PLAN.md` and
-  `PILOT_RUNBOOK.md`. `LAB_READY_PILOT_95_PLAN.md` is the shipped evidence
-  packet for the previous 95% target, not the current unfinished milestone.
+  `PILOT_RUNBOOK.md`. For the current short-term follow-up, read
+  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`. `LAB_READY_PILOT_95_PLAN.md`
+  is the shipped evidence packet for the previous 95% target, not the current
+  unfinished milestone.
 - Treat the documented priority order as a default, not a permanent autopilot.
   After several completed slices or when recent commits cluster around one
   workstream, re-rank from the whole product view before continuing the same
@@ -53,7 +55,9 @@ Use this loop when continuing autonomously:
 
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
    the relevant project docs before editing. For current product-maturity work,
-   include `PILOT_OPERATIONS_READY_PLAN.md` and `PILOT_RUNBOOK.md`; use
+   include `PILOT_OPERATIONS_READY_PLAN.md`, `PILOT_RUNBOOK.md`, and
+   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` when that short-term target is
+   active; use
    `LAB_READY_PILOT_95_PLAN.md` as prior milestone evidence only.
 2. Run the next-step decision loop below, then pick one coherent product slice
    with a clear user-facing acceptance goal.
@@ -85,6 +89,12 @@ the final completion audit in `LAB_READY_PILOT_95_PLAN.md`.
 For Pilot Operations Ready work, do not call the target complete until
 `PILOT_OPERATIONS_READY_PLAN.md` has local checks, CI, deployment, production
 QA, remaining risks, and next re-rank evidence recorded.
+
+For Pilot Evidence And Maintainability Pass work, do not call the target
+complete until `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` has representative
+pilot evidence, admin/report triage conclusions, batch export usability
+conclusions, data-quality next-step selection, maintainability boundaries,
+historical-doc cleanup, and passing docs/affected tests recorded.
 
 ## Next-Step Decision Loop
 

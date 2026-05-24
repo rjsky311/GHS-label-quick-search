@@ -1,5 +1,10 @@
 # Productized Redesign Roadmap
 
+Historical note: this roadmap is superseded as an active queue. Keep it as
+design and productization context only. Start current planning from
+`PROJECT_STATUS_AND_NEXT_PLAN.md` and the active short-term owner doc
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
+
 ## North Star
 
 Turn GHS Label Quick Search into a polished free safety workspace that users trust and return to:

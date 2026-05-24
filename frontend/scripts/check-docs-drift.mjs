@@ -40,6 +40,9 @@ const docs = {
   "POST_95_REPRIORITIZATION.md": readText("POST_95_REPRIORITIZATION.md"),
   "PILOT_OPERATIONS_READY_PLAN.md": readText("PILOT_OPERATIONS_READY_PLAN.md"),
   "PILOT_RUNBOOK.md": readText("PILOT_RUNBOOK.md"),
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md": readText(
+    "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  ),
   "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
   "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
@@ -145,6 +148,12 @@ requireIncludes(
   "active pilot-operations target must stay discoverable from the canonical plan",
 );
 requireIncludes(
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  "active short-term pilot evidence target must stay discoverable from the canonical plan",
+);
+requireIncludes(
   "POST_95_REPRIORITIZATION.md",
   docs["POST_95_REPRIORITIZATION.md"],
   "Small Pilot Observation And Operator Loop",
@@ -181,10 +190,40 @@ requireIncludes(
   "pilot runbook must include daily operating checks",
 );
 requireIncludes(
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  docs["PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md"],
+  "Pilot Evidence And Maintainability Pass",
+  "active short-term target role statement",
+);
+requireIncludes(
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  docs["PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md"],
+  "Batch Export Usability",
+  "short-term target must cover export usability",
+);
+requireIncludes(
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  docs["PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md"],
+  "Maintainability Refactor Audit",
+  "short-term target must cover maintainability boundaries",
+);
+requireIncludes(
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  docs["PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md"],
+  "Completion Audit",
+  "short-term target must define closure evidence",
+);
+requireIncludes(
   "NEXT_PRODUCT_WORK.md",
   docs["NEXT_PRODUCT_WORK.md"],
   "PILOT_OPERATIONS_READY_PLAN.md",
   "short queue must point to the active pilot-operations owner doc",
+);
+requireIncludes(
+  "NEXT_PRODUCT_WORK.md",
+  docs["NEXT_PRODUCT_WORK.md"],
+  "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
+  "short queue must point to the active short-term owner doc",
 );
 requireIncludes(
   "LAB_READY_PILOT_95_PLAN.md",

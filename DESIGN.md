@@ -1,5 +1,11 @@
 # GHS Quick Safety Workspace Design System
 
+Historical/supporting note: this document records the product design language
+and remains useful for visual direction. It is not the active roadmap. Start
+current planning from `PROJECT_STATUS_AND_NEXT_PLAN.md`, then use
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` while that short-term target is
+active.
+
 ## Product Position
 
 GHS Label Quick Search is a free, public chemical safety utility. Its first job is to help lab and operations users quickly find GHS hazard information, produce usable secondary-container labels, and verify source context before work continues.

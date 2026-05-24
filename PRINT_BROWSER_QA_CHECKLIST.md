@@ -1,5 +1,10 @@
 # Print Browser QA Checklist
 
+Supporting note: this remains the Browser QA checklist for print work, but it
+is not the active product queue. Start current planning from
+`PROJECT_STATUS_AND_NEXT_PLAN.md`; use this file only when a selected slice
+changes print UI, preview, or rendered output behavior.
+
 This checklist turns the print acceptance contract into repeatable Browser Use
 verification after meaningful print-workflow changes and after Zeabur deploys.
 It is not a legal compliance certificate; it verifies that the app UI, preview,

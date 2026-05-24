@@ -263,6 +263,10 @@ the Pilot Operations Ready baseline for small real pilots, admin/report triage,
 data-quality loop closure, batch export utility, and pilot QA cadence. Use
 `PILOT_RUNBOOK.md` as the operator-facing checklist before changing pilot
 reporting, admin triage, or evidence-driven continuation rules.
+The active short-term follow-up is
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`; read it before continuing pilot
+evidence, batch export usability, data-quality next-step selection,
+large-module maintainability, or historical-document cleanup work.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction

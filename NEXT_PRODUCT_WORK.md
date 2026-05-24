@@ -19,6 +19,8 @@ For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
 The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
 operator checklist is `PILOT_RUNBOOK.md`.
+The active short-term owner doc is
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
 `LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
 Lab-Ready Pilot milestone, not the active unfinished target.
 
@@ -54,44 +56,42 @@ of expanding the queue by inertia.
 
 ### Current Product Thesis
 
-The 95% Lab-Ready Pilot target has shipped. The last 10-20 commits were
-weighted toward closure docs, production QA/deploy reliability, batch result
-trust, and review-only candidate discovery. That was reasonable milestone
-closure work, but the next product round should not keep adding QA or print
-polish by inertia. The next highest-value target is a small pilot observation
-and operator loop: real trial usage should create clear maintenance decisions
-instead of another open-ended backlog.
+The 95% Lab-Ready Pilot and Pilot Operations Ready targets have shipped. The
+next product round should not keep adding QA or print polish by inertia. The
+highest-value short-term target is now `Pilot Evidence And Maintainability
+Pass`: use representative pilot evidence to decide the next data/export/admin
+work, while making historical docs and large-module boundaries clear enough
+that future work remains maintainable.
 
 ### Active Slice
 
-Current default active slice: evidence-driven pilot follow-up.
-Use `POST_95_REPRIORITIZATION.md` as the decision packet,
-`PILOT_OPERATIONS_READY_PLAN.md` as the shipped owner doc, and
-`PILOT_RUNBOOK.md` as the operator checklist. Pilot Operations Ready is now
-the baseline: admin/report triage, XLSX pilot summary, runbook, and QA cadence
-exist. The next slice should come from real pilot evidence, an admin/export
-usability gap, or a blocker, not from continuing the P0-P4 list by inertia.
+Current default active slice: `Pilot Evidence And Maintainability Pass`.
+Use `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the owner doc. Use
+`POST_95_REPRIORITIZATION.md` as the decision packet,
+`PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
+`PILOT_RUNBOOK.md` as the operator checklist. The slice should check
+representative batch lookup, batch print, export, correction flow, admin
+triage, data-quality next steps, and maintainability boundaries before
+choosing more feature work.
 
 ### Exit Condition
 
-Stop extending this slice when the pilot operator can answer, from repo docs
-and existing or updated reports, what happened in the pilot, which correction
-or data-quality items need action, which batch/export/UX issues appeared, and
-which gate or checklist proves the app is still safe to continue using.
-The target is not closed until `PILOT_OPERATIONS_READY_PLAN.md` has local,
-CI, deployment, production-QA, remaining-risk, and next-rank evidence filled in.
+Stop extending this slice when `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`
+has direct evidence for the representative pilot pass, a clear admin/report
+triage conclusion, a batch export usability conclusion, a data-quality next-step
+recommendation, a large-file maintainability plan or safe split, historical-doc
+cleanup, and passing docs/affected tests.
 
-Current closure note: `PILOT_OPERATIONS_READY_PLAN.md` is marked `Shipped`.
-Do not reopen it unless admin triage, export summary, or pilot runbook evidence
-shows a gap. Otherwise use the runbook to collect a pilot round and then
-re-rank from the evidence.
+Current closure note: `PILOT_OPERATIONS_READY_PLAN.md` remains `Shipped`; do
+not reopen it unless this evidence pass proves a gap in the pilot operations
+baseline.
 
 ### Next Likely Switch
 
-Likely switch points after the pilot operator loop are: review-only
-data-quality expansion for Chinese names/source evidence, batch export
-usefulness, evidence-triggered low-noise UX or narrow polish, and physical
-print validation once real stock and printer access are available.
+Likely switch points after this short-term pass are: review-only data-quality
+expansion for Chinese names/source evidence, a narrow batch export utility
+improvement, evidence-triggered low-noise UX/narrow polish, or physical print
+validation once real stock and printer access are available.
 
 ### Default Order
 

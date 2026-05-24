@@ -1,5 +1,11 @@
 # GHS Label Quick Search — v1.8 Real-World Roadmap
 
+Historical note: this v1.8 working roadmap is retained for context only and is
+not the active planning source. Start current planning from
+`PROJECT_STATUS_AND_NEXT_PLAN.md`; use
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` for the active short-term pilot
+evidence and maintainability pass.
+
 > Status: working document
 > Last updated: 2026-04-16
 > Intended readers: maintainers, Codex, Claude Code
