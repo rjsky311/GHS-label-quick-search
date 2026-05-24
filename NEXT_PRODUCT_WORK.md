@@ -60,26 +60,25 @@ UX unless a blocker appears.
 
 ### Active Slice
 
-Current default active slice: continue the 95% Lab-Ready Pilot target in
-`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate, first low-noise
-batch next-action UX slice, focused three-output label stability audit, and
-data-trust/admin closure audit now have repeatable evidence. The next priority
-is the final low-noise and closure round: review print/export/correction copy
-for remaining internal wording, run the full 95% closure gate list, and record
-requirement-by-requirement evidence before calling the pilot target complete.
+Current default active slice: post-95% target re-rank. `LAB_READY_PILOT_95_PLAN.md`
+is now the shipped evidence packet for the 95% Lab-Ready Pilot target: local
+closure gates, GitHub CI, and Zeabur production QA are green. The next priority
+is not another automatic label-printing loop by inertia; re-read
+`PROJECT_STATUS_AND_NEXT_PLAN.md` and choose the next product target from the
+current weakest user-facing or maintenance risk.
 
 ### Exit Condition
 
-Stop extending this slice when the 95% closure audit has current evidence for
-all gates listed in `LAB_READY_PILOT_95_PLAN.md`, any remaining low-noise copy
-issues have either been fixed or explicitly deferred, and the final audit
-section records which requirement lines are satisfied.
+Stop extending this slice when the next target is explicitly named with scope,
+non-goals, acceptance gates, and a first implementation slice. Do not restart a
+broad "improve everything" loop without `PRODUCT_SCOPE_GATE.md`.
 
 ### Next Likely Switch
 
-After the final 95% closure round, switch back to the canonical project plan and
-re-rank the next product target. Keep physical print validation deferred until
-real stock and printer access are available.
+Likely candidates are: production pilot observation, correction/admin queue
+operator ergonomics, data-quality expansion for Chinese names and source
+evidence, narrow/mobile workflow polish, or physical print validation once real
+stock and printer access are available.
 
 ### Default Order
 

@@ -29,11 +29,9 @@ Use these labels when updating this file:
 | `Monitoring` | Stable enough for the pilot target; add cases when new evidence appears. |
 | `Deferred` | Explicitly outside the 95% target. |
 
-The current overall status is `In progress`. The realistic lab-batch gate, the
-first low-noise next-action batch UX slice, the focused three-output label
-stability audit, the data-trust/admin closure audit, and the final low-noise
-copy pass now have repeatable evidence. The 95% target still needs the shipped
-commit CI result and production QA evidence before it can move to `Shipped`.
+The current overall status is `Shipped`. The 95% pilot target has repeatable
+local gates, a green shipped-commit CI run, and current Zeabur production QA
+evidence. Physical printer/stock validation remains explicitly deferred.
 
 ## Scope
 
@@ -344,6 +342,16 @@ Current evidence:
   `PRINT_QA_PRINT_HTML_DIR=build/print-html-artifacts npm run qa:print-report`,
   `npm run qa:print-pdf`, `python -m py_compile server.py`, and
   `python -m pytest test_name_search.py -v`.
+- GitHub Actions `CI` passed on shipped implementation commit
+  `f4fffa19c38396494b997e12f07474165d7dee7a`.
+- Zeabur production QA passed on 2026-05-24 with deployed frontend asset
+  `assets/index-D7TAojN3.js` containing the closure copy markers
+  `Needs compact label` and `Label output`. The completed gates were
+  `npm run qa:production-health`,
+  `npm run qa:production-search-ui`,
+  `npm run qa:production-batch-print`,
+  `npm run qa:production-lab-ready-batch`, and
+  `npm run qa:production-product`.
 
 Required pilot behavior:
 
@@ -363,10 +371,9 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Record the shipped commit CI and production QA run once the current closure
-   changes are pushed and deployed.
-2. After production QA is green, move the overall target status to `Shipped`
-   and re-rank the next product target from `PROJECT_STATUS_AND_NEXT_PLAN.md`.
+1. Use this file as the shipped 95% evidence packet.
+2. Re-rank the next product target from `PROJECT_STATUS_AND_NEXT_PLAN.md`
+   before starting another large slice.
 
 ## Required Gates For 95% Closure
 
@@ -411,3 +418,9 @@ Before this target is marked complete, collect evidence for each line:
 - Docs and QA explain how a future agent should continue without chat memory.
 - Physical print validation remains explicitly deferred, not accidentally
   claimed as done.
+
+2026-05-24 closure result: all lines above have current evidence in this file,
+the QA reports under `frontend/build/`, or the GitHub Actions run for
+`f4fffa19c38396494b997e12f07474165d7dee7a`. The only intentionally incomplete
+area is physical printer/stock validation, which is outside this 95% target and
+tracked separately.
