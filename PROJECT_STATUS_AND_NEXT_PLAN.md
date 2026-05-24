@@ -39,10 +39,11 @@ the current data-governance or correction-intake direction into code.
 
 Post-95 target selection: `POST_95_REPRIORITIZATION.md` records the current
 re-rank after the 95% Lab-Ready Pilot target shipped. Use it after this file
-when choosing the next major product slice. The active post-95 owner doc is
-`PILOT_OPERATIONS_READY_PLAN.md`, with the operator-facing checklist in
-`PILOT_RUNBOOK.md`. `LAB_READY_PILOT_95_PLAN.md` is now the shipped 95%
-evidence packet, not the active unfinished target.
+when choosing the next major product slice. The latest post-95 owner doc is
+`PILOT_OPERATIONS_READY_PLAN.md`; it is now the shipped Pilot Operations Ready
+baseline, with the operator-facing checklist in `PILOT_RUNBOOK.md`.
+`LAB_READY_PILOT_95_PLAN.md` is the shipped 95% evidence packet, not an active
+unfinished target.
 
 ## 1. Product Positioning
 
@@ -91,10 +92,10 @@ Current baseline capabilities:
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
   the evidence packet for that milestone. The active post-95 target selection
-  now lives in `POST_95_REPRIORITIZATION.md`, and the active target owner doc
-  is `PILOT_OPERATIONS_READY_PLAN.md`. The current target is Pilot Operations
-  Ready: a small pilot observation and operator loop before more broad feature
-  work.
+  now lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target
+  owner doc is `PILOT_OPERATIONS_READY_PLAN.md`. The current baseline is Pilot
+  Operations Ready: small pilot observation can now produce admin triage,
+  export summary, and documented QA evidence before more broad feature work.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first
@@ -169,12 +170,12 @@ Current completion snapshot:
   green; the next product risk is whether real pilot usage creates actionable
   correction, data-quality, export, UX, or production-reliability work without
   manual chat-driven triage.
-- **Active Pilot Operations Ready checkpoint**:
+- **Pilot Operations Ready checkpoint 2026-05-24**:
   `PILOT_OPERATIONS_READY_PLAN.md` owns the next major product target, and
   `PILOT_RUNBOOK.md` defines the daily/weekly maintainer checklist for small
-  real pilots. The target is not "do all P0-P4"; it is the bounded milestone
-  where real trial usage becomes observable, triageable, exportable, and
-  evidence-driven.
+  real pilots. This target is shipped as the post-95 baseline. The next product
+  slice should be selected from pilot evidence, admin/export usability gaps, or
+  blockers, not from the old P0-P4 list by inertia.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.

@@ -11,7 +11,7 @@ Read these files in order before choosing or continuing work:
    order, blind spots, and definition of done.
 3. `POST_95_REPRIORITIZATION.md` - current post-95 target ranking and active
    next-slice decision packet.
-4. `PILOT_OPERATIONS_READY_PLAN.md` - active post-95 target owner doc and
+4. `PILOT_OPERATIONS_READY_PLAN.md` - shipped post-95 target owner doc and
    completion audit for small pilot operations.
 5. `PILOT_RUNBOOK.md` - pilot operator checklist and finding-classification
    guide.
@@ -32,7 +32,7 @@ Maintenance rule:
 - Keep current priority and completion criteria in
   `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 - Keep the current post-95 target ranking in `POST_95_REPRIORITIZATION.md`.
-- Keep the active post-95 target definition in
+- Keep the shipped post-95 target definition in
   `PILOT_OPERATIONS_READY_PLAN.md`.
 - Keep pilot operating instructions in `PILOT_RUNBOOK.md`.
 - Keep the shipped 95% product-maturity evidence in `LAB_READY_PILOT_95_PLAN.md`.

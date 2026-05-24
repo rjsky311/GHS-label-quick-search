@@ -6,9 +6,9 @@ post-95% re-rank after `LAB_READY_PILOT_95_PLAN.md` reached `Shipped`.
 This is a decision packet, not a second canonical roadmap. Use it to choose the
 next target after the 95% Lab-Ready Pilot closure, then keep the short live
 queue in `NEXT_PRODUCT_WORK.md` aligned with the chosen target.
-The active owner doc produced from this decision is
-`PILOT_OPERATIONS_READY_PLAN.md`, with the operator checklist in
-`PILOT_RUNBOOK.md`.
+The owner doc produced from this decision is `PILOT_OPERATIONS_READY_PLAN.md`,
+with the operator checklist in `PILOT_RUNBOOK.md`. That target is now shipped
+as the post-95 pilot-operations baseline.
 
 ## Re-Rank Trigger
 
@@ -71,7 +71,7 @@ Continue to handle these before any planned target:
 
 ### P1. Small Pilot Observation And Operator Loop
 
-Status: active next target.
+Status: shipped baseline.
 
 Goal: let a small lab pilot run with low developer supervision, while making
 the resulting problems visible and actionable.
@@ -240,9 +240,9 @@ Why this is last:
 - Conversion experiments should wait until pilot usage clarifies what users
   actually need.
 
-## Active Next Target
+## Shipped Next Target
 
-Use this target for the next autonomous round unless a P0 blocker appears:
+This target is now the post-95 baseline:
 
 > Build the small pilot observation and operator loop so real trial usage
 > produces clear maintenance decisions instead of another open-ended backlog.
@@ -254,7 +254,7 @@ Recommended first slice:
 3. Name any missing report fields or dashboard actions as the next
    implementation slice.
 
-Current owner docs:
+Shipped owner docs:
 
 - `PILOT_OPERATIONS_READY_PLAN.md` - active target definition and completion
   audit.

@@ -17,7 +17,7 @@ implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
 For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
-The active post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
+The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
 operator checklist is `PILOT_RUNBOOK.md`.
 `LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
 Lab-Ready Pilot milestone, not the active unfinished target.
@@ -64,12 +64,13 @@ instead of another open-ended backlog.
 
 ### Active Slice
 
-Current default active slice: Pilot Operations Ready.
+Current default active slice: evidence-driven pilot follow-up.
 Use `POST_95_REPRIORITIZATION.md` as the decision packet,
-`PILOT_OPERATIONS_READY_PLAN.md` as the owner doc, and `PILOT_RUNBOOK.md` as
-the operator checklist. This slice should make small real pilot usage visible
-through admin/report triage, export summary, and documented QA cadence instead
-of relying on screenshots and chat memory.
+`PILOT_OPERATIONS_READY_PLAN.md` as the shipped owner doc, and
+`PILOT_RUNBOOK.md` as the operator checklist. Pilot Operations Ready is now
+the baseline: admin/report triage, XLSX pilot summary, runbook, and QA cadence
+exist. The next slice should come from real pilot evidence, an admin/export
+usability gap, or a blocker, not from continuing the P0-P4 list by inertia.
 
 ### Exit Condition
 
@@ -79,6 +80,11 @@ or data-quality items need action, which batch/export/UX issues appeared, and
 which gate or checklist proves the app is still safe to continue using.
 The target is not closed until `PILOT_OPERATIONS_READY_PLAN.md` has local,
 CI, deployment, production-QA, remaining-risk, and next-rank evidence filled in.
+
+Current closure note: `PILOT_OPERATIONS_READY_PLAN.md` is marked `Shipped`.
+Do not reopen it unless admin triage, export summary, or pilot runbook evidence
+shows a gap. Otherwise use the runbook to collect a pilot round and then
+re-rank from the evidence.
 
 ### Next Likely Switch
 

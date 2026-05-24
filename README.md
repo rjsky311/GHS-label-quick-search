@@ -61,7 +61,7 @@ and telemetry limits are documented in
 The canonical planning entry point is
 [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md). The
 current post-95 target ranking is
-[POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The active
+[POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The shipped
 post-95 target owner doc is
 [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md), with pilot
 operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The shipped 95%

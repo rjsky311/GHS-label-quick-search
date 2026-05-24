@@ -181,13 +181,48 @@ This target is complete only when all are true:
 
 Record final closure here before marking the target shipped.
 
-Status: `In progress`
+Status: `Shipped`
 
-Evidence to fill at closure:
+Evidence:
 
 - Local checks:
+  - `git diff --check`
+  - `python -m py_compile server.py pilot_store.py`
+  - `python -m pytest test_pilot_storage.py test_observability.py -v`
+  - `python -m pytest test_name_search.py -v`
+  - `npm run test:docs`
+  - `npm run test:i18n`
+  - `npm test -- --runInBand`
+  - `npm run build`
 - GitHub CI:
+  - Commit `20b8acb` (`Add pilot operations triage loop`)
+  - CI run `26366757456`: passed.
 - Zeabur deploy:
+  - Frontend deployment `6a1328b4ee46afa34b34ed67`
+  - Commit SHA `20b8acbe9fcfa43244d24debcdd14a8701f76b3e`
+  - Status `RUNNING`.
 - Production QA:
+  - `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT=pilot-triage-panel npm run
+    qa:production-health`
+  - `npm run qa:production-search-ui`
+  - `npm run qa:production-lab-ready-batch`
+- What shipped:
+  - Pilot owner doc and operator runbook.
+  - Admin/report `pilotTriage` summary with attention counts and recommended
+    focus.
+  - Dashboard pilot triage panel.
+  - XLSX `Pilot Summary` sheet for batch/export review.
+  - Docs drift coverage for the new target docs.
 - Remaining risks:
+  - Real-printer validation remains deferred to
+    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`.
+  - Pilot triage is count-based and queue-based; trend analysis should wait for
+    real pilot data instead of inventing metrics.
+  - The XLSX summary improves the first pilot export pass, but split sheets,
+    filtered export modes, and filename/scope naming should be added only if
+    pilot evidence shows the current export remains hard to use.
 - Next re-rank recommendation:
+  - Start the next round from actual pilot evidence. If no pilot evidence is
+    available yet, the next practical slice is a narrow admin/export usability
+    pass: confirm whether the pilot triage panel and XLSX summary are enough
+    for a maintainer to decide the next data-quality action.

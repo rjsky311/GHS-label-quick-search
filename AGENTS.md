@@ -258,10 +258,10 @@ three stable label outputs, correction/admin governance, low-noise next-step
 UX, and repeatable QA closure. The current post-95 target selection lives in
 `POST_95_REPRIORITIZATION.md`; read it after
 `PROJECT_STATUS_AND_NEXT_PLAN.md` when choosing the next major product slice.
-The active post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`; it defines
-the Pilot Operations Ready milestone for small real pilots, admin/report
-triage, data-quality loop closure, batch export utility, and pilot QA cadence.
-Use `PILOT_RUNBOOK.md` as the operator-facing checklist before changing pilot
+The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`; it defines
+the Pilot Operations Ready baseline for small real pilots, admin/report triage,
+data-quality loop closure, batch export utility, and pilot QA cadence. Use
+`PILOT_RUNBOOK.md` as the operator-facing checklist before changing pilot
 reporting, admin triage, or evidence-driven continuation rules.
 
 The current product-requirements decision packet is
