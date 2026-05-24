@@ -59,10 +59,11 @@ and telemetry limits are documented in
 ## Maintainer Planning
 
 The canonical planning entry point is
-[PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md). The next
-major maturity target is
-[LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md), which defines the
-95% lab-ready pilot scope, workstreams, non-goals, and closure gates. Use
+[PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md). The
+current post-95 target ranking is
+[POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The shipped 95%
+lab-ready pilot evidence packet is
+[LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
 [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
 changes.
 

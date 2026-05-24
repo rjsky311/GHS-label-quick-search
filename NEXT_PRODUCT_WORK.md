@@ -15,9 +15,10 @@ For the next label-printing refactor, use
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
 implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
-For the next major product target, use `LAB_READY_PILOT_95_PLAN.md` after the
-canonical project entry point. That file is the owner doc for moving the
-current productized baseline to a 95% lab-ready pilot.
+For the current post-95 target selection, use
+`POST_95_REPRIORITIZATION.md` after the canonical project entry point.
+`LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
+Lab-Ready Pilot milestone, not the active unfinished target.
 
 ## Product North Star
 
@@ -51,34 +52,35 @@ of expanding the queue by inertia.
 
 ### Current Product Thesis
 
-The last 10-20 commits were weighted toward data governance, admin review,
-candidate discovery, GHS asset stability, and production QA hardening. That was
-reasonable foundation work, but the next product rounds should avoid staying in
-admin/tooling by inertia. Finish only the data-governance pieces that close the
-current correction loop, then bias back toward user-visible batch/search/results
-UX unless a blocker appears.
+The 95% Lab-Ready Pilot target has shipped. The last 10-20 commits were
+weighted toward closure docs, production QA/deploy reliability, batch result
+trust, and review-only candidate discovery. That was reasonable milestone
+closure work, but the next product round should not keep adding QA or print
+polish by inertia. The next highest-value target is a small pilot observation
+and operator loop: real trial usage should create clear maintenance decisions
+instead of another open-ended backlog.
 
 ### Active Slice
 
-Current default active slice: post-95% target re-rank. `LAB_READY_PILOT_95_PLAN.md`
-is now the shipped evidence packet for the 95% Lab-Ready Pilot target: local
-closure gates, GitHub CI, and Zeabur production QA are green. The next priority
-is not another automatic label-printing loop by inertia; re-read
-`PROJECT_STATUS_AND_NEXT_PLAN.md` and choose the next product target from the
-current weakest user-facing or maintenance risk.
+Current default active slice: small pilot observation and operator loop.
+Use `POST_95_REPRIORITIZATION.md` as the decision packet. The first slice is to
+create a pilot runbook/checklist, audit current admin and reporting outputs
+against that checklist, and name the smallest missing report/dashboard gaps
+needed for pilot triage.
 
 ### Exit Condition
 
-Stop extending this slice when the next target is explicitly named with scope,
-non-goals, acceptance gates, and a first implementation slice. Do not restart a
-broad "improve everything" loop without `PRODUCT_SCOPE_GATE.md`.
+Stop extending this slice when the pilot operator can answer, from repo docs
+and existing or updated reports, what happened in the pilot, which correction
+or data-quality items need action, which batch/export/UX issues appeared, and
+which gate or checklist proves the app is still safe to continue using.
 
 ### Next Likely Switch
 
-Likely candidates are: production pilot observation, correction/admin queue
-operator ergonomics, data-quality expansion for Chinese names and source
-evidence, narrow/mobile workflow polish, or physical print validation once real
-stock and printer access are available.
+Likely switch points after the pilot operator loop are: review-only
+data-quality expansion for Chinese names/source evidence, batch export
+usefulness, evidence-triggered low-noise UX or narrow polish, and physical
+print validation once real stock and printer access are available.
 
 ### Default Order
 

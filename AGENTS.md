@@ -252,12 +252,12 @@ autopilot: use the next-step decision loop in `AUTONOMOUS_WORKFLOW.md` after
 several completed slices, after 10-20 commits cluster in one workstream, or
 when the user asks whether the recent order still makes product sense.
 
-The next major maturity target is `LAB_READY_PILOT_95_PLAN.md`. Read it after
-`PROJECT_STATUS_AND_NEXT_PLAN.md` when continuing productization work. It
-defines the 95% Lab-Ready Pilot scope: realistic 50-100 item batch confidence,
+The 95% Lab-Ready Pilot target is shipped. `LAB_READY_PILOT_95_PLAN.md` is now
+the evidence packet for that milestone: realistic 50-100 item batch confidence,
 three stable label outputs, correction/admin governance, low-noise next-step
-UX, and repeatable QA closure. Do not mark that target complete without the
-file's final completion audit evidence.
+UX, and repeatable QA closure. The current post-95 target selection lives in
+`POST_95_REPRIORITIZATION.md`; read it after
+`PROJECT_STATUS_AND_NEXT_PLAN.md` when choosing the next major product slice.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction

@@ -37,11 +37,10 @@ three-output labels, Chinese-name candidate handling, in-app correction intake,
 batch workflow acceptance, and completion standard. Read it before converting
 the current data-governance or correction-intake direction into code.
 
-Next major product target: `LAB_READY_PILOT_95_PLAN.md` defines the 95%
-Lab-Ready Pilot goal. Use it after this file when choosing work that should
-move the product from the current productized baseline toward repeated daily
-lab use: realistic batch confidence, the three stable label outputs, data
-correction governance, low-noise next-step UX, and repeatable QA closure.
+Post-95 target selection: `POST_95_REPRIORITIZATION.md` records the current
+re-rank after the 95% Lab-Ready Pilot target shipped. Use it after this file
+when choosing the next major product slice. `LAB_READY_PILOT_95_PLAN.md` is now
+the shipped 95% evidence packet, not the active unfinished target.
 
 ## 1. Product Positioning
 
@@ -88,10 +87,10 @@ Production:
 Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
-- The next major target is now explicit: `LAB_READY_PILOT_95_PLAN.md` is the
-  owner doc for getting from the current roughly 80% productized baseline to a
-  95% lab-ready pilot. Do not treat the 95% target as complete until that file's
-  five workstreams and final completion audit have current evidence.
+- The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
+  the evidence packet for that milestone. The active post-95 target selection
+  now lives in `POST_95_REPRIORITIZATION.md`, which currently prioritizes a
+  small pilot observation and operator loop before more broad feature work.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first
@@ -159,6 +158,13 @@ Current completion snapshot:
   product QA, production search UI QA, production print handoff, prepared
   production QA, print contract/PDF QA, reference-link safety checks, and
   modal keyboard containment are all represented by repeatable gates.
+- **Post-95 re-rank checkpoint 2026-05-24**:
+  `POST_95_REPRIORITIZATION.md` reviewed the last 20 commits and moved the
+  next default target from broad lab-ready closure to a small pilot observation
+  and operator loop. The main reason is that the controlled 95% gates are now
+  green; the next product risk is whether real pilot usage creates actionable
+  correction, data-quality, export, UX, or production-reliability work without
+  manual chat-driven triage.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
@@ -855,6 +861,8 @@ Use these files by role:
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
+- `POST_95_REPRIORITIZATION.md`: current post-95 decision packet and active
+  next-target ranking after the Lab-Ready Pilot shipped.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
 - `NEXT_REMAINING_PRODUCT_WORK.md`: detailed execution backlog and
   current status.

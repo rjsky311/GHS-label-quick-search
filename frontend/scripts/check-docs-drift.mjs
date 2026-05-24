@@ -37,6 +37,7 @@ const docs = {
   "AGENTS.md": readText("AGENTS.md"),
   "CLAUDE.md": readText("CLAUDE.md"),
   "PROJECT_STATUS_AND_NEXT_PLAN.md": readText("PROJECT_STATUS_AND_NEXT_PLAN.md"),
+  "POST_95_REPRIORITIZATION.md": readText("POST_95_REPRIORITIZATION.md"),
   "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
   "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
@@ -128,6 +129,18 @@ requireIncludes(
   docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
   "LAB_READY_PILOT_95_PLAN.md",
   "next major product target must stay discoverable from the canonical plan",
+);
+requireIncludes(
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
+  "POST_95_REPRIORITIZATION.md",
+  "post-95 target selection must stay discoverable from the canonical plan",
+);
+requireIncludes(
+  "POST_95_REPRIORITIZATION.md",
+  docs["POST_95_REPRIORITIZATION.md"],
+  "Small Pilot Observation And Operator Loop",
+  "post-95 re-rank must name the active next target",
 );
 requireIncludes(
   "LAB_READY_PILOT_95_PLAN.md",
