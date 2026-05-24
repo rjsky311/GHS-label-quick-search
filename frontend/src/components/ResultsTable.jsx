@@ -161,6 +161,57 @@ export default function ResultsTable({
     });
   };
   const showWorkflowSummary = workflowSummaryTotal > 1;
+  const primaryWorkflowIssue = workflowIssueSummaries[0] || null;
+  const nextAction = showWorkflowSummary
+    ? (() => {
+        if (workflowSummary.needsReview > 0 && primaryWorkflowIssue) {
+          return {
+            tone: "review",
+            title: t("results.nextActionReviewTitle", {
+              count: workflowSummary.needsReview,
+            }),
+            body: t("results.nextActionReviewBody", {
+              reason: primaryWorkflowIssue.label,
+              count: primaryWorkflowIssue.count,
+              ready: workflowSummary.labelReady,
+            }),
+            cta: t("results.nextActionReviewCta"),
+            onClick: () => setReviewIssueFilter(primaryWorkflowIssue.type),
+          };
+        }
+        if (workflowSummary.labelReady > 0) {
+          return {
+            tone: "ready",
+            title: t("results.nextActionReadyTitle"),
+            body: t("results.nextActionReadyBody", {
+              count: workflowSummary.labelReady,
+            }),
+            cta:
+              onPrintAllWithGhs && printAllWithGhsCount > 0
+                ? t("results.nextActionPrintCta")
+                : "",
+            onClick:
+              onPrintAllWithGhs && printAllWithGhsCount > 0
+                ? onPrintAllWithGhs
+                : undefined,
+          };
+        }
+        if (workflowSummary.found > 0) {
+          return {
+            tone: "review",
+            title: t("results.nextActionNoLabelTitle"),
+            body: t("results.nextActionNoLabelBody"),
+            cta: "",
+          };
+        }
+        return {
+          tone: "blocked",
+          title: t("results.nextActionNotFoundTitle"),
+          body: t("results.nextActionNotFoundBody"),
+          cta: "",
+        };
+      })()
+    : null;
   const decisionSteps = [
     {
       key: "identity",
@@ -427,6 +478,49 @@ export default function ResultsTable({
               </p>
             )}
           </div>
+          {nextAction && (
+            <div
+              className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-3 ${
+                nextAction.tone === "ready"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                  : nextAction.tone === "blocked"
+                    ? "border-red-200 bg-red-50 text-red-900"
+                    : "border-amber-200 bg-amber-50 text-amber-950"
+              }`}
+              data-testid="results-next-action"
+            >
+              <div className="min-w-0 flex-1">
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-wide opacity-75"
+                  data-testid="results-next-action-eyebrow"
+                >
+                  {t("results.nextActionEyebrow")}
+                </p>
+                <h4
+                  className="mt-0.5 text-sm font-semibold"
+                  data-testid="results-next-action-title"
+                >
+                  {nextAction.title}
+                </h4>
+                <p
+                  className="mt-1 text-xs opacity-80"
+                  data-testid="results-next-action-body"
+                >
+                  {nextAction.body}
+                </p>
+              </div>
+              {nextAction.cta && nextAction.onClick && (
+                <button
+                  type="button"
+                  onClick={nextAction.onClick}
+                  className="shrink-0 rounded-md border border-current/20 bg-white/70 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white"
+                  data-testid="results-next-action-primary"
+                >
+                  {nextAction.cta}
+                </button>
+              )}
+            </div>
+          )}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {workflowSummaryCards.map((card) => (
               <div

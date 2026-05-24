@@ -33,6 +33,7 @@ const defaultProps = {
   selectedForLabel: [],
   expandedOtherClassifications: {},
   onOpenLabelModal: jest.fn(),
+  onPrintAllWithGhs: jest.fn(),
   onExportToExcel: jest.fn(),
   onExportToCSV: jest.fn(),
   onSelectAllForLabel: jest.fn(),
@@ -205,6 +206,16 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-review-reason-unresolved-search')
       ).toHaveTextContent('1');
+      expect(screen.getByTestId('results-next-action')).toBeInTheDocument();
+      expect(screen.getByTestId('results-next-action-eyebrow')).toHaveTextContent(
+        'results.nextActionEyebrow'
+      );
+      expect(screen.getByTestId('results-next-action-title')).toHaveTextContent(
+        'results.nextActionReviewTitle'
+      );
+      expect(screen.getByTestId('results-next-action-body')).toHaveTextContent(
+        'results.nextActionReviewBody'
+      );
     });
 
     it('lets review reason chips filter the batch table', () => {
@@ -234,6 +245,53 @@ describe('ResultsTable', () => {
         hCodeSearch: '',
         reviewIssueType: 'multiple-classifications',
       });
+    });
+
+    it('lets the next-action CTA filter the highest-priority review rows', () => {
+      const onSetAdvancedFilter = jest.fn();
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockNoHazardResult, mockNotFoundResult]}
+          totalCount={3}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      fireEvent.click(screen.getByTestId('results-next-action-primary'));
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'unresolved-search',
+      });
+    });
+
+    it('uses the next action to print when a batch has only ready rows', () => {
+      const onPrintAllWithGhs = jest.fn();
+      const secondReady = {
+        ...mockWarningResult,
+        cas_number: '67-56-1',
+        name_en: 'Methanol',
+      };
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockWarningResult, secondReady]}
+          totalCount={2}
+          getEffectiveClassification={createMockGetEffective()}
+          printAllWithGhsCount={2}
+          onPrintAllWithGhs={onPrintAllWithGhs}
+        />
+      );
+
+      expect(screen.getByTestId('results-next-action-title')).toHaveTextContent(
+        'results.nextActionReadyTitle'
+      );
+      fireEvent.click(screen.getByTestId('results-next-action-primary'));
+      expect(onPrintAllWithGhs).toHaveBeenCalledTimes(1);
     });
 
     it('shows when filters reduce the visible batch scope', () => {

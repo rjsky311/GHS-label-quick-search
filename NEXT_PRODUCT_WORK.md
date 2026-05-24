@@ -15,6 +15,9 @@ For the next label-printing refactor, use
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
 implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
+For the next major product target, use `LAB_READY_PILOT_95_PLAN.md` after the
+canonical project entry point. That file is the owner doc for moving the
+current productized baseline to a 95% lab-ready pilot.
 
 ## Product North Star
 
@@ -57,25 +60,28 @@ UX unless a blocker appears.
 
 ### Active Slice
 
-Current default active slice: close the data-correction/candidate-discovery
-loop only where it makes the maintainer workflow meaningfully smoother. The
-current dry-run path already finds review-only candidates; the next work should
-not add more external discovery unless a scope/cost/source decision justifies
-it.
+Current default active slice: continue the 95% Lab-Ready Pilot target in
+`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate now exists and
+has passed once against production, so the next priority is low-noise
+next-step UX for batch/search/results-table surfaces. A local next-action panel
+and QA assertions now exist; finish the slice by shipping it, proving the
+deployed asset is current, and re-running production search/lab-ready batch
+gates. Do not add more label sizes, external discovery, or admin tooling unless
+that target exposes a concrete gap.
 
 ### Exit Condition
 
-Stop extending this slice when maintainers can tell, from the existing queue and
-dry-run output, what candidate was found, whether it entered manual review, and
-whether public data changed. Further admin reporting becomes nice-to-have unless
-real queue evidence shows confusion.
+Stop extending this slice when the deployed batch/results surface has an
+evidence-backed next-step summary for the lab-ready workflow, production search
+UI and lab-ready batch gates both pass against the current asset, and the result
+is recorded in `LAB_READY_PILOT_95_PLAN.md`. Then re-rank the next 95%
+workstream from the same plan.
 
 ### Next Likely Switch
 
-After the correction/candidate loop is closed enough, switch to user-visible
-batch/search/results-table UX: clearer batch input states, lower-noise result
-rows, consistent GHS icon presentation, and more obvious print/export readiness.
-Return to print renderer work only for fresh PDF/screenshot/QA evidence.
+After the low-noise next-step UX has evidence, switch to any fresh
+three-output label regression shown by PDF/screenshot/QA evidence. Keep
+data-governance work scoped to real correction/admin queue gaps.
 
 ### Default Order
 

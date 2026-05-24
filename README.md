@@ -56,6 +56,16 @@ Source ranking, authority boundaries, SDS/reference behavior, QR target rules,
 and telemetry limits are documented in
 [DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md](./DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md).
 
+## Maintainer Planning
+
+The canonical planning entry point is
+[PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md). The next
+major maturity target is
+[LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md), which defines the
+95% lab-ready pilot scope, workstreams, non-goals, and closure gates. Use
+[PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
+changes.
+
 ## Local Development
 
 ### Backend

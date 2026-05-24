@@ -37,6 +37,12 @@ three-output labels, Chinese-name candidate handling, in-app correction intake,
 batch workflow acceptance, and completion standard. Read it before converting
 the current data-governance or correction-intake direction into code.
 
+Next major product target: `LAB_READY_PILOT_95_PLAN.md` defines the 95%
+Lab-Ready Pilot goal. Use it after this file when choosing work that should
+move the product from the current productized baseline toward repeated daily
+lab use: realistic batch confidence, the three stable label outputs, data
+correction governance, low-noise next-step UX, and repeatable QA closure.
+
 ## 1. Product Positioning
 
 GHS Label Quick Search is a free public GHS lookup and label-printing utility.
@@ -82,6 +88,10 @@ Production:
 Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
+- The next major target is now explicit: `LAB_READY_PILOT_95_PLAN.md` is the
+  owner doc for getting from the current roughly 80% productized baseline to a
+  95% lab-ready pilot. Do not treat the 95% target as complete until that file's
+  five workstreams and final completion audit have current evidence.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first

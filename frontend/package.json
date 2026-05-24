@@ -74,6 +74,7 @@
     "qa:production-handoff": "node scripts/check-production-print-handoff.mjs",
     "qa:production-search-ui": "node scripts/check-production-search-ui.mjs",
     "qa:production-batch-print": "node scripts/check-production-batch-print.mjs",
+    "qa:production-lab-ready-batch": "node scripts/check-production-batch-print.mjs --fixture=lab-ready",
     "qa:production-smoke": "node scripts/run-production-print-smoke.mjs",
     "qa:production-product": "node scripts/run-production-product-qa.mjs",
     "qa:production-primary": "node scripts/run-production-print-layer.mjs primary",

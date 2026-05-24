@@ -1347,6 +1347,9 @@ const inspectBatchInputNormalizationPath = async (
       filteredScopeCount: 0,
       reviewReasonCount: 0,
       reviewReasonText: "",
+      nextActionTitle: "",
+      nextActionBody: "",
+      nextActionCta: "",
     };
 
     if (!searchButtonDisabled) {
@@ -1392,6 +1395,27 @@ const inspectBatchInputNormalizationPath = async (
       resultSummary.reviewReasonCount = await reviewReasons.count().catch(() => 0);
       resultSummary.reviewReasonText =
         ((await reviewReasons.textContent().catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      resultSummary.nextActionTitle =
+        ((await page
+          .getByTestId("results-next-action-title")
+          .textContent()
+          .catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      resultSummary.nextActionBody =
+        ((await page
+          .getByTestId("results-next-action-body")
+          .textContent()
+          .catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      resultSummary.nextActionCta =
+        ((await page
+          .getByTestId("results-next-action-primary")
+          .textContent()
+          .catch(() => "")) || "")
           .replace(/\s+/g, " ")
           .trim();
     }
@@ -2471,12 +2495,21 @@ try {
   if (batchResultSummary.filteredScopeCount > 0) {
     failures.push("batch-results-filtered-scope-unexpected");
   }
+  if (!batchResultSummary.nextActionTitle) {
+    failures.push("batch-results-next-action-title-missing");
+  }
+  if (!batchResultSummary.nextActionBody) {
+    failures.push("batch-results-next-action-body-missing");
+  }
   if (Number(batchResultSummary.reviewValue || 0) > 0) {
     if (batchResultSummary.reviewReasonCount < 1) {
       failures.push("batch-results-review-reasons-missing");
     }
     if (!/\d/.test(batchResultSummary.reviewReasonText || "")) {
       failures.push("batch-results-review-reasons-count-missing");
+    }
+    if (!batchResultSummary.nextActionCta) {
+      failures.push("batch-results-next-action-cta-missing");
     }
   }
   if (urlQueryHydration.inputValue !== searchTerm) {

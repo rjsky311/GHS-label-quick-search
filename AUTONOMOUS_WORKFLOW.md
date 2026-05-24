@@ -17,6 +17,12 @@ stop condition below applies:
   findings for the detailed work context. Prefer the canonical plan when there
   is no fresh regression because the original print workstreams are now the
   baseline.
+- When the active work is about reaching the next major product maturity target,
+  read `LAB_READY_PILOT_95_PLAN.md` after `PROJECT_STATUS_AND_NEXT_PLAN.md`.
+  Use its five workstreams and final completion audit to decide whether the
+  next slice should be realistic batch QA, three-output label stability, data
+  trust/correction governance, low-noise next-step UX, or maintenance/QA
+  hardening.
 - Treat the documented priority order as a default, not a permanent autopilot.
   After several completed slices or when recent commits cluster around one
   workstream, re-rank from the whole product view before continuing the same
@@ -47,7 +53,8 @@ stop condition below applies:
 Use this loop when continuing autonomously:
 
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
-   the relevant project docs before editing.
+   the relevant project docs before editing. For current product-maturity work,
+   include `LAB_READY_PILOT_95_PLAN.md`.
 2. Run the next-step decision loop below, then pick one coherent product slice
    with a clear user-facing acceptance goal.
    The current default order is trust/source/SDS safety boundaries, low-noise
@@ -69,7 +76,11 @@ Use this loop when continuing autonomously:
 10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
 11. Report what changed, what was verified, proactive observations from the
-   slice, and what remains next.
+    slice, and what remains next.
+
+For 95% Lab-Ready Pilot work, do not call the target complete only because the
+latest slice passed. Match the current evidence against every workstream and
+the final completion audit in `LAB_READY_PILOT_95_PLAN.md`.
 
 ## Next-Step Decision Loop
 

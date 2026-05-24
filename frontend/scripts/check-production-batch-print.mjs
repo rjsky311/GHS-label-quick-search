@@ -3,8 +3,6 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 
 const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app";
-const DEFAULT_REPORT_PATH = "build/production-batch-print-report.json";
-const DEFAULT_SCREENSHOT_DIR = "build/production-batch-print-screenshots";
 const SEARCH_TIMEOUT_MS = Number.parseInt(
   process.env.BATCH_PRINT_QA_SEARCH_TIMEOUT_MS || "120000",
   10,
@@ -13,6 +11,17 @@ const MODAL_TIMEOUT_MS = Number.parseInt(
   process.env.BATCH_PRINT_QA_MODAL_TIMEOUT_MS || "30000",
   10,
 );
+
+const args = process.argv.slice(2);
+
+const cliOption = (name) => {
+  const flag = `--${name}`;
+  const assignment = `${flag}=`;
+  const assigned = args.find((arg) => arg.startsWith(assignment));
+  if (assigned) return assigned.slice(assignment.length);
+  const index = args.indexOf(flag);
+  return index >= 0 ? args[index + 1] || "" : "";
+};
 
 const actionNamesStockAndExclusion = (text = "") =>
   (text.includes("labels on") || text.includes("列印")) &&
@@ -80,6 +89,106 @@ const DEFAULT_BATCH_CAS = [
   "7439-92-1",
 ];
 
+const LAB_READY_BATCH_CAS = [
+  "90-41-5",
+  "84-65-1",
+  "462-08-8",
+  "123-30-8",
+  "635-12-1",
+  "455-14-1",
+  "67-64-1",
+  "78-67-1",
+  "62-53-3",
+  "107-18-6",
+  "504-24-5",
+  "586-78-7",
+  "90-90-4",
+  "1122-91-4",
+  "135999-16-5",
+  "443-81-2",
+  "2040-89-3",
+  "28165-49-3",
+  "576-83-0",
+  "99-90-1",
+  "24596-19-8",
+  "43192-33-2",
+  "106-40-1",
+  "623-00-7",
+  "90-90-4",
+  "106-41-2",
+  "106-41-2",
+  "106-41-2",
+  "106-41-2",
+  "110046-60-1",
+  "34598-49-7",
+  "103966-66-1",
+  "31181-90-5",
+  "95-14-7",
+  "111-25-1",
+  "111-25-1",
+  "583-69-7",
+  "74-96-4",
+  "3132-99-8",
+  "25013-16-5",
+  "458-50-4",
+  "104-92-7",
+  "29504-81-2",
+  "589-87-7",
+  "119-61-9",
+  "2357-52-0",
+  "104-95-0",
+  "1003-09-4",
+  "19524-06-2",
+  "1878-68-8",
+  "69249-61-2",
+  "586-76-5",
+  "106-38-7",
+  "73870-24-3",
+  "20469-65-2",
+  "591-20-8",
+  "112-89-0",
+  "111-83-1",
+  "143-15-7",
+  "366-18-7",
+  "626-55-1",
+  "589-15-1",
+  "492-97-7",
+  "693-58-3",
+  "23703-22-2",
+  "4482-03-5",
+  "556-96-7",
+  "109-63-7",
+  "73183-34-3",
+  "73183-34-3",
+  "872-31-1",
+  "4701-17-1",
+  "203302-95-8",
+  "100-39-0",
+  "3163-76-6",
+  "344-04-07",
+  "110-53-2",
+  "112-29-8",
+  "112-29-8",
+  "106-94-5",
+  "3511-90-8",
+  "138526-69-9",
+  "160976-02-3",
+  "112-82-3",
+  "104-92-7",
+  "2857-97-8",
+  "2857-97-8",
+  "5467-74-3",
+  "4224-70-8",
+  "2398-37-0",
+];
+
+const NAMED_BATCH_FIXTURES = {
+  default: DEFAULT_BATCH_CAS,
+  "lab-ready": LAB_READY_BATCH_CAS,
+};
+
+const CAS_LIKE_PATTERN = /^\d{1,7}-\d{2}-\d$/;
+
 const commonChromePaths = () => {
   if (process.platform === "win32") {
     return [
@@ -139,16 +248,118 @@ const clickRepresentativePreview = async (page, representative) => {
   }
 };
 
+const inspectBatchResultsState = async (page) =>
+  page.evaluate(() => {
+    const textOf = (testId) =>
+      document
+        .querySelector(`[data-testid="${testId}"]`)
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim() || "";
+    const workflowSummary = Array.from(
+      document.querySelectorAll('[data-testid^="results-workflow-summary-"]'),
+    )
+      .map((node) => {
+        const testId = node.getAttribute("data-testid") || "";
+        if (testId.endsWith("-value")) return null;
+        const key = testId.replace("results-workflow-summary-", "");
+        return {
+          key,
+          text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+          value: textOf(`${testId}-value`),
+        };
+      })
+      .filter(Boolean);
+    const reviewReasons = Array.from(
+      document.querySelectorAll(
+        '[data-testid^="results-workflow-review-reason-"]',
+      ),
+    ).map((node) => ({
+      type: (node.getAttribute("data-testid") || "").replace(
+        "results-workflow-review-reason-",
+        "",
+      ),
+      text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+    }));
+    return {
+      workflowSummary,
+      nextAction: {
+        title: textOf("results-next-action-title"),
+        body: textOf("results-next-action-body"),
+        cta: textOf("results-next-action-primary"),
+      },
+      reviewReasonText: textOf("results-workflow-review-reasons"),
+      reviewReasons,
+    };
+  });
+
+const inspectExportPreviewSurface = async (page) => {
+  const exportButton = page.getByTestId("export-csv-btn");
+  if (!(await exportButton.count())) {
+    return {
+      available: false,
+      headers: [],
+      bodyText: "",
+    };
+  }
+  await exportButton.click();
+  const modal = page.getByTestId("export-preview-modal");
+  await modal.waitFor({ state: "visible", timeout: 10000 });
+  const headers = await modal.locator("thead th").evaluateAll((nodes) =>
+    nodes.map((node) => (node.textContent || "").replace(/\s+/g, " ").trim()),
+  );
+  const bodyText = ((await modal.textContent()) || "").replace(/\s+/g, " ");
+  await modal.getByTestId("export-preview-cancel").click();
+  await modal.waitFor({ state: "hidden", timeout: 10000 });
+  return {
+    available: true,
+    headers,
+    bodyText,
+    hasPrintable: headers.some((header) => /Printable/i.test(header)),
+    hasReviewRequired: headers.some((header) => /Needs Review/i.test(header)),
+    hasReviewReasons: headers.some((header) => /Review Reasons/i.test(header)),
+    hasMultipleGhsStatus: headers.some((header) =>
+      /Multiple GHS Status/i.test(header),
+    ),
+    hasClassificationSelection: headers.some((header) =>
+      /Classification Selection/i.test(header),
+    ),
+    hasSourceEvidence: /ECHA|PubChem/i.test(bodyText),
+  };
+};
+
 const parseBatchCas = () => {
   const raw = (process.env.BATCH_PRINT_QA_CAS || "").trim();
-  const list = raw
+  const requestedFixture =
+    process.env.BATCH_PRINT_QA_FIXTURE || cliOption("fixture") || "default";
+  const fixtureName = raw ? "env" : requestedFixture;
+  const baseList = raw
     ? raw.split(/[\s,;\t]+/).filter(Boolean)
-    : DEFAULT_BATCH_CAS;
+    : NAMED_BATCH_FIXTURES[fixtureName];
+  if (!baseList) {
+    throw new Error(
+      `Unknown batch-print QA fixture "${fixtureName}". Available fixtures: ${Object.keys(
+        NAMED_BATCH_FIXTURES,
+      ).join(", ")}`,
+    );
+  }
   const limit = Number.parseInt(
-    process.env.BATCH_PRINT_QA_LIMIT || String(list.length),
+    cliOption("limit") ||
+      process.env.BATCH_PRINT_QA_LIMIT ||
+      String(baseList.length),
     10,
   );
-  return list.slice(0, Math.max(1, limit));
+  const list = baseList.slice(0, Math.max(1, limit));
+  const uniqueCas = new Set(list);
+  const invalidLike = list.filter((cas) => !CAS_LIKE_PATTERN.test(cas));
+  return {
+    fixtureName,
+    list,
+    rawCount: list.length,
+    uniqueCount: uniqueCas.size,
+    duplicateCount: list.length - uniqueCas.size,
+    invalidLikeCount: invalidLike.length,
+    invalidLike,
+  };
 };
 
 const withQaParam = (url) => {
@@ -169,15 +380,22 @@ const run = async () => {
     process.env.BATCH_PRINT_QA_PRODUCTION_URL ||
     process.env.PRINT_QA_PRODUCTION_URL ||
     DEFAULT_PRODUCTION_URL;
+  const batchFixture = parseBatchCas();
+  const fixtureSuffix =
+    batchFixture.fixtureName && batchFixture.fixtureName !== "default"
+      ? `-${batchFixture.fixtureName}`
+      : "";
   const reportPath = path.resolve(
     process.cwd(),
-    process.env.BATCH_PRINT_QA_REPORT_PATH || DEFAULT_REPORT_PATH,
+    process.env.BATCH_PRINT_QA_REPORT_PATH ||
+      `build/production-batch-print${fixtureSuffix}-report.json`,
   );
   const screenshotDir = path.resolve(
     process.cwd(),
-    process.env.BATCH_PRINT_QA_SCREENSHOT_DIR || DEFAULT_SCREENSHOT_DIR,
+    process.env.BATCH_PRINT_QA_SCREENSHOT_DIR ||
+      `build/production-batch-print${fixtureSuffix}-screenshots`,
   );
-  const casList = parseBatchCas();
+  const casList = batchFixture.list;
   const browser = await chromium.launch({
     executablePath: resolveChromeExecutable(),
     headless: process.env.BATCH_PRINT_QA_HEADLESS !== "0",
@@ -200,6 +418,32 @@ const run = async () => {
     });
     await page.getByTestId("batch-search-tab").click();
     await page.getByTestId("batch-cas-input").fill(casList.join("\n"));
+    const batchInputState = await page.evaluate(() => {
+      const textOf = (testId) =>
+        document
+          .querySelector(`[data-testid="${testId}"]`)
+          ?.textContent?.replace(/\s+/g, " ")
+          .trim() || "";
+      return {
+        readySummary: textOf("batch-ready-summary"),
+        duplicateSummary: textOf("batch-duplicate-summary"),
+        invalidSummary: textOf("batch-invalid-summary"),
+      };
+    });
+    if (
+      batchFixture.fixtureName === "lab-ready" &&
+      batchFixture.duplicateCount > 0 &&
+      !batchInputState.duplicateSummary
+    ) {
+      failures.push("lab-ready-duplicate-diagnostics-missing");
+    }
+    if (
+      batchFixture.fixtureName === "lab-ready" &&
+      batchFixture.invalidLikeCount > 0 &&
+      !batchInputState.invalidSummary
+    ) {
+      failures.push("lab-ready-invalid-diagnostics-missing");
+    }
     await page.getByTestId("batch-search-btn").click();
     await page.getByTestId("print-all-with-ghs-btn").waitFor({
       state: "visible",
@@ -213,6 +457,60 @@ const run = async () => {
     const printableCount = printableMatch ? Number(printableMatch[1]) : 0;
     if (printableCount < Math.min(10, casList.length)) {
       failures.push(`too-few-printable-results:${printableCount}`);
+    }
+    const expectedLabReadyPrintable = Math.min(50, batchFixture.rawCount);
+    if (
+      batchFixture.fixtureName === "lab-ready" &&
+      printableCount < expectedLabReadyPrintable
+    ) {
+      failures.push(`lab-ready-too-few-printable-results:${printableCount}`);
+    }
+
+    const batchResultsState = await inspectBatchResultsState(page);
+    const exportPreviewSurface = await inspectExportPreviewSurface(page);
+    if (batchFixture.fixtureName === "lab-ready") {
+      if (batchResultsState.workflowSummary.length < 3) {
+        failures.push("lab-ready-workflow-summary-missing");
+      }
+      if (!batchResultsState.nextAction?.title) {
+        failures.push("lab-ready-next-action-title-missing");
+      }
+      if (!batchResultsState.nextAction?.body) {
+        failures.push("lab-ready-next-action-body-missing");
+      }
+      if (batchResultsState.reviewReasons.length < 1) {
+        failures.push("lab-ready-review-reasons-missing");
+      }
+      if (
+        batchResultsState.reviewReasons.some(
+          (reason) => !/\d/.test(reason.text || ""),
+        )
+      ) {
+        failures.push("lab-ready-review-reason-count-missing");
+      }
+      if (!exportPreviewSurface.available) {
+        failures.push("lab-ready-export-preview-unavailable");
+      }
+      if (!exportPreviewSurface.hasPrintable) {
+        failures.push("lab-ready-export-printable-column-missing");
+      }
+      if (!exportPreviewSurface.hasReviewRequired) {
+        failures.push("lab-ready-export-review-required-column-missing");
+      }
+      if (!exportPreviewSurface.hasReviewReasons) {
+        failures.push("lab-ready-export-review-reasons-column-missing");
+      }
+      if (!exportPreviewSurface.hasMultipleGhsStatus) {
+        failures.push("lab-ready-export-multiple-ghs-status-column-missing");
+      }
+      if (!exportPreviewSurface.hasClassificationSelection) {
+        failures.push(
+          "lab-ready-export-classification-selection-column-missing",
+        );
+      }
+      if (!exportPreviewSurface.hasSourceEvidence) {
+        failures.push("lab-ready-export-source-evidence-missing");
+      }
     }
 
     await page.getByTestId("print-all-with-ghs-btn").click();
@@ -451,9 +749,20 @@ const run = async () => {
       ok: failures.length === 0,
       generatedAt: new Date().toISOString(),
       productionUrl,
+      fixtureName: batchFixture.fixtureName,
+      fixture: {
+        rawCount: batchFixture.rawCount,
+        uniqueCount: batchFixture.uniqueCount,
+        duplicateCount: batchFixture.duplicateCount,
+        invalidLikeCount: batchFixture.invalidLikeCount,
+        invalidLike: batchFixture.invalidLike,
+      },
       casCount: casList.length,
       casList,
+      batchInputState,
       printableCount,
+      batchResultsState,
+      exportPreviewSurface,
       fitReport,
       initialActionNamesBatch,
       scopeBefore,
