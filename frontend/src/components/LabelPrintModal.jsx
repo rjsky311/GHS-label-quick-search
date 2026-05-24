@@ -176,7 +176,7 @@ const PRINT_TARGET_OPTIONS = [
     descKey: "label.targetQrSmallDesc",
     fallbackLabel: "QR small label",
     fallbackDesc:
-      "Small label with CAS, English, Chinese, QR, and all GHS pictograms across continuation labels.",
+      "Small label with CAS, English, Chinese, QR, and all GHS pictograms across extra labels.",
     icon: QrCode,
     presetId: "brother-62mm-continuous",
     template: "qrcode",
@@ -188,7 +188,7 @@ const PRINT_TARGET_OPTIONS = [
     descKey: "label.targetIdentitySmallDesc",
     fallbackLabel: "Identification small label",
     fallbackDesc:
-      "Small label with CAS, English, Chinese, and all GHS pictograms across continuation labels.",
+      "Small label with CAS, English, Chinese, and all GHS pictograms across extra labels.",
     icon: Target,
     presetId: "small-strip",
     template: "icon",
@@ -218,9 +218,9 @@ const getBatchCategoryLabel = (category, tx) => {
     case BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT:
       return tx("label.batchCategoryReadyTight", "Ready, tightened");
     case BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE:
-      return tx("label.batchCategoryReducedPurpose", "Needs reduced output");
+      return tx("label.batchCategoryReducedPurpose", "Needs compact label");
     case BATCH_PRINT_ITEM_CATEGORY.SAME_STOCK_CONTINUATION:
-      return tx("label.batchCategoryContinuation", "Needs continuation");
+      return tx("label.batchCategoryContinuation", "Needs extra label");
     case BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_DATA:
       return tx("label.batchCategoryExcludedData", "Excluded: data");
     case BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT:
@@ -257,7 +257,7 @@ const getBatchReasonLabel = (reason, tx) => {
     case "responsible-profile-missing":
       return tx("label.batchReasonProfile", "Responsible profile is incomplete");
     case "complete-content-needs-continuation":
-      return tx("label.batchReasonContinuation", "Full H/P text needs continuation");
+      return tx("label.batchReasonContinuation", "Full H/P text needs extra pages");
     case "complete-content-too-dense-for-stock":
       return tx(
         "label.batchReasonCompleteTooDense",
@@ -1057,7 +1057,7 @@ export default function LabelPrintModal({
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx(
             "label.outputPlanContinuationNotice",
-            "This content is too dense for one physical label, so the app will print it as a complete continuation set.",
+            "This content is too dense for one physical label, so the app will print the complete label with extra pages.",
           )
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
         ? tx(
@@ -1217,7 +1217,10 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
     : isContinuationOutput
-      ? tx("label.decisionRoleContinuation", "Complete primary with continuation")
+      ? tx(
+          "label.decisionRoleContinuation",
+          "Complete A4/Letter with extra pages",
+        )
     : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
         outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
       ? tx("label.decisionRoleQrSupplement", "QR supplement")
@@ -1227,11 +1230,11 @@ export default function LabelPrintModal({
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? isContainerFrontOutput
           ? tx("label.decisionRoleContainerFront", "Container front label")
-          : tx("label.decisionRoleSupplemental", "Supplemental label")
+          : tx("label.decisionRoleSupplemental", "Small label")
           : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
-            ? tx("label.decisionRoleUseFullPage", "Use full-page primary")
+            ? tx("label.decisionRoleUseFullPage", "Use A4/Letter label")
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
-              ? tx("label.decisionRoleBlockedHazards", "Hazard label blocked")
+              ? tx("label.decisionRoleBlockedHazards", "Needs hazard data")
               : outputPlan.state ===
                   PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
                 ? tx("label.decisionRoleBlockedProfile", "Profile required")
@@ -1258,7 +1261,7 @@ export default function LabelPrintModal({
               "Details via QR: {{target}}",
               { target: qrTargetSummaryLabel },
             )
-          : tx("label.decisionTextQrScan", "Details via QR/SDS")
+          : tx("label.decisionTextQrScan", "QR/SDS for details")
       : isContinuationOutput ||
           contentPolicy.hazardTextMode ===
             PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION
@@ -1273,16 +1276,16 @@ export default function LabelPrintModal({
                   "Details via QR: {{target}}",
                   { target: qrTargetSummaryLabel },
                 )
-              : tx("label.decisionTextQrScan", "Details via QR/SDS")
+              : tx("label.decisionTextQrScan", "QR/SDS for details")
             : contentPolicy.hazardTextMode ===
                 PRINT_HAZARD_TEXT_MODE.OMITTED
-              ? tx("label.decisionTextIdentityOnly", "No full H/P text")
+              ? tx("label.decisionTextIdentityOnly", "No H/P on small label")
               : contentPolicy.hazardTextMode ===
                   PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY
-                ? tx("label.decisionTextHCodesOnly", "H codes only")
+                ? tx("label.decisionTextHCodesOnly", "H-code list only")
                 : contentPolicy.hazardTextMode ===
                     PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY
-                  ? tx("label.decisionTextPriorityHOnly", "Priority H only")
+                  ? tx("label.decisionTextPriorityHOnly", "Short H summary")
                   : contentPolicy.hazardTextMode ===
                       PRINT_HAZARD_TEXT_MODE.SHORT_H_SUMMARY
                     ? tx("label.decisionTextSummaryOnly", "Short hazard summary")
@@ -1290,7 +1293,7 @@ export default function LabelPrintModal({
   const decisionSummaryItems = [
     {
       key: "role",
-      label: tx("label.decisionRoleLabel", "Output role"),
+      label: tx("label.decisionRoleLabel", "Label output"),
       value: outputRoleSummary,
       tone: outputPlanTone,
     },
@@ -1381,11 +1384,11 @@ export default function LabelPrintModal({
         ? {
             key: "hazard-statements",
             label: tx("label.outputHazardSummary", "Hazard summary"),
-            value: tx("label.outputHCodesOnly", "H codes only"),
+            value: tx("label.outputHCodesOnly", "H-code list only"),
             tone: "caution",
             description: tx(
               "label.outputHCodesOnlyHint",
-              "Compact labels print priority H codes only; full H/P belongs on A4/Letter, SDS/QR, or a back label.",
+              "Small labels stay identity-first. Use A4/Letter or SDS/QR for full H/P text.",
             ),
           }
         : {
@@ -1394,12 +1397,12 @@ export default function LabelPrintModal({
           value:
             contentPolicy.hazardTextMode ===
             PRINT_HAZARD_TEXT_MODE.PRIORITY_H_SUMMARY
-            ? tx("label.outputPriorityHOnly", "Priority H only")
+            ? tx("label.outputPriorityHOnly", "Short H summary")
             : tx("label.outputSummaryOnly", "Summary only"),
           tone: "caution",
           description: tx(
             "label.outputSummaryOnlyHint",
-            "Container and bottle front labels print priority H summaries only. Full H/P belongs on A4/Letter, SDS/QR, or a back label.",
+            "Small labels stay identity-first. Use A4/Letter or SDS/QR for full H/P text.",
           ),
         };
   const supplementalChecklistItems = [
@@ -1512,7 +1515,7 @@ export default function LabelPrintModal({
     : outputPlanHasUpstreamError
       ? tx("label.printFixVerifyHazards", "Verify hazard data first")
     : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
-      ? tx("label.printFixContinuationRequired", "Create a continuation plan first")
+      ? tx("label.printFixContinuationRequired", "Use extra pages first")
       : tx("label.printFixRequired", "Choose a printable stock first");
   const canUseFullPagePrimary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
@@ -1539,7 +1542,7 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.outputPlanReadyTitle", "Complete output ready")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
-        ? tx("label.outputPlanContinuationTitle", "Continuation output ready")
+        ? tx("label.outputPlanContinuationTitle", "Extra-page output ready")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? isContainerFrontOutput
           ? tx("label.outputPlanContainerFrontTitle", "Container front label ready")
@@ -1562,7 +1565,7 @@ export default function LabelPrintModal({
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx(
             "label.outputPlanContinuationBody",
-            "This complete primary label is split across continuation pages so all available pictograms and H/P text remain printable.",
+            "This complete A4/Letter label uses extra pages so all available pictograms and H/P text remain printable.",
           )
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? plannerPreviewRisk
@@ -1575,7 +1578,7 @@ export default function LabelPrintModal({
               : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
                 ? tx(
                     "label.outputPlanInvalidBody",
-                    "Even this complete stock is too dense for one label. Use a continuation workflow before printing.",
+                    "Even this complete stock is too dense for one label. Use extra pages before printing.",
                   )
                 : tx(
                     "label.outputPlanPendingBody",
@@ -1640,13 +1643,13 @@ export default function LabelPrintModal({
                 label: tx("label.recoveryRouteLabel", "Recommended recovery"),
                 value: tx(
                   "label.recoveryInvalidStockValue",
-                  "Use a larger stock or continuation output",
+                  "Use a larger stock or extra pages",
                 ),
                 currentStock: currentStockName,
                 targetStock: "",
                 description: tx(
                   "label.recoveryInvalidStockBody",
-                  "{{stock}} cannot carry this output truthfully. Keep every available GHS pictogram visible, then move dense H/P detail to a larger complete label or continuation output.",
+                  "{{stock}} cannot carry this output truthfully. Keep every available GHS pictogram visible, then move dense H/P detail to a larger complete label or extra pages.",
                   { stock: currentStockName },
                 ),
               }
@@ -1677,7 +1680,7 @@ export default function LabelPrintModal({
               : isContinuationOutput
                 ? tx(
                     "label.outputOutcomeContinuationTitle",
-                    "Complete primary label will print across continuation pages",
+                    "Complete A4/Letter label will print with extra pages",
                   )
               : isQrSupplementOutput
                 ? tx("label.outputOutcomeQrSmallTitle", "QR small label is printable")
@@ -1729,7 +1732,7 @@ export default function LabelPrintModal({
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
               ? tx(
                   "label.outputOutcomeInvalidBody",
-                  "This stock cannot produce a truthful label. Use a larger primary label or create a continuation plan.",
+                  "This stock cannot produce a truthful label. Use a larger primary label or extra pages.",
                 )
               : isContinuationOutput
                 ? tx(
@@ -1851,7 +1854,7 @@ export default function LabelPrintModal({
         : isContinuationOutput
           ? tx(
               "label.printContinuationAction",
-              "Print complete primary continuation set ({{labels}} labels / {{pages}} pages)",
+              "Print complete A4/Letter set ({{labels}} labels / {{pages}} pages)",
               {
                 labels: plannedPrintLabelCount,
                 pages: plannedPrintPageCount,
@@ -3030,7 +3033,7 @@ export default function LabelPrintModal({
             <p className="mt-1 text-xs leading-5 text-amber-900/80">
               {tx(
                 "label.batchPrintScopeBody",
-                "Ready and same-stock continuation labels are included by default. Add reduced-purpose items only when that output role is acceptable for this batch.",
+                "Ready labels and required extra labels are included by default. Add compact fallback labels only if that is acceptable for this batch.",
               )}
             </p>
             <div className="mt-3 grid gap-2">
@@ -3049,7 +3052,7 @@ export default function LabelPrintModal({
                     <span className="font-semibold text-slate-900">
                       {tx(
                         "label.batchIncludeReducedPurpose",
-                        "Include reduced-purpose labels",
+                        "Include compact fallback labels",
                       )}
                     </span>
                     <span className="ml-1 text-slate-500">
@@ -3058,7 +3061,7 @@ export default function LabelPrintModal({
                     <span className="block leading-5 text-slate-500">
                       {tx(
                         "label.batchIncludeReducedPurposeHint",
-                        "These keep identity, signal word, and pictograms on the same stock, but do not claim complete-primary output.",
+                        "These keep identity and pictograms on the chosen stock, but they are not complete A4/Letter labels.",
                       )}
                     </span>
                   </span>
@@ -3186,7 +3189,7 @@ export default function LabelPrintModal({
             },
             {
               key: "role",
-              label: tx("label.outputRole", "Output role"),
+              label: tx("label.outputRole", "Label output"),
               value: outputRoleSummary,
             },
             {
@@ -3974,7 +3977,7 @@ export default function LabelPrintModal({
                           ? hasContinuationExpansion
                             ? tx(
                                 "label.selectedLabelsContinuationSummary",
-                                "{{sourceLabels}} selected label(s) expands to {{labels}} continuation label(s), about {{pages}} page(s).",
+                                "{{sourceLabels}} selected label(s) expands to {{labels}} extra label(s), about {{pages}} page(s).",
                                 {
                                   sourceLabels: totalLabels,
                                   labels: plannedPrintLabelCount,

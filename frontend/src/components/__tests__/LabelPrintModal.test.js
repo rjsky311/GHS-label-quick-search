@@ -110,7 +110,7 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.queryByTestId("print-workflow-steps")).not.toBeInTheDocument();
     expect(screen.getByTestId("recommended-output-role")).toHaveTextContent(
-      "Output role",
+      "Label output",
     );
     expect(screen.getByTestId("recommended-output-statements")).toHaveTextContent(
       "Hazard text",
@@ -128,7 +128,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
     expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
-      "Output role",
+      "Label output",
     );
     expect(screen.getByTestId("print-decision-icons")).toHaveTextContent(
       "All pictograms kept",
@@ -333,13 +333,13 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
-      "Continuation output ready",
+      "Extra-page output ready",
     );
     expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
       "1 selected label(s) expands to",
     );
     expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
-      "continuation label(s)",
+      "extra label(s)",
     );
     expect(screen.getByTestId("selected-labels-controls")).toHaveTextContent(
       "output label(s)",
@@ -736,10 +736,10 @@ describe("LabelPrintModal", () => {
     });
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "Complete primary label will print across continuation pages",
+      "Complete A4/Letter label will print with extra pages",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
-      "Print complete primary continuation set",
+      "Print complete A4/Letter set",
     );
   });
 

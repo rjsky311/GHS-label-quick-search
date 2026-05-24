@@ -29,11 +29,11 @@ Use these labels when updating this file:
 | `Monitoring` | Stable enough for the pilot target; add cases when new evidence appears. |
 | `Deferred` | Explicitly outside the 95% target. |
 
-The current overall status is `In progress`. The realistic lab-batch gate and
-the first low-noise next-action batch UX slice have shipped to production, but
-the 95% target still needs a focused three-output label stability audit, any
-remaining data-trust/admin closure gaps, and a final acceptance audit against
-this file.
+The current overall status is `In progress`. The realistic lab-batch gate, the
+first low-noise next-action batch UX slice, the focused three-output label
+stability audit, the data-trust/admin closure audit, and the final low-noise
+copy pass now have repeatable evidence. The 95% target still needs the shipped
+commit CI result and production QA evidence before it can move to `Shipped`.
 
 ## Scope
 
@@ -127,7 +127,7 @@ Next implementation slices:
 
 ## Workstream 2: Three Label Outputs Stabilization
 
-Status: `Monitoring`.
+Status: `Gate added`.
 
 Goal: the three supported outputs stay readable and stable without reopening
 the old stock/template sprawl.
@@ -140,6 +140,20 @@ Current evidence:
   `npm run qa:production-batch-print` cover the main renderer paths.
 - A4/Letter complete labels, QR small labels, and identification small labels
   are implemented.
+- The 2026-05-24 local print artifact audit passed
+  `PRINT_QA_PRINT_HTML_DIR=build/print-html-artifacts npm run qa:print-report`
+  and `npm run qa:print-pdf`. The PDF gate rendered 40 cases with 40 passed and
+  0 failed.
+- That PDF gate currently covers 9 complete-primary cases, 8 QR small-label
+  cases, 11 identification small-label cases, and 12 legacy supplemental or
+  compatibility cases. The covered stocks include A4 primary, Letter primary,
+  small strip, Brother 62 mm continuous, small rack, medium rack, medium bottle,
+  large primary, Avery 5163/5164, and a custom tiny case.
+- The same gate includes dense A4/Letter labels, long-name labels, bilingual
+  and English-only labels, black-and-white output, prepared-solution labels,
+  continuation labels, and three batch artifacts:
+  `batch-a4-complete-50`, `batch-qr-50-brother-62mm`, and
+  `batch-quick-id-50-small-strip`.
 
 Required pilot behavior:
 
@@ -166,15 +180,16 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Review print PDF artifacts for the three output types and record any
-   evidence-backed readability regressions.
-2. Add focused fixtures before changing renderer rules.
+1. Keep the 40-case `qa:print-pdf` report as the default three-output closure
+   gate after renderer or stock changes.
+2. Add focused fixtures before changing renderer rules when a new screenshot,
+   PDF, or production alert shows a concrete readability regression.
 3. Keep physical-printer validation deferred to
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`.
 
 ## Workstream 3: Data Trust And Correction/Admin Queue
 
-Status: `Monitoring`.
+Status: `Gate added`.
 
 Goal: data uncertainty becomes a reviewable workflow instead of a dead end or a
 false assurance.
@@ -191,6 +206,23 @@ Current evidence:
 - Candidate evidence is sanitized and forced to review-only flags.
 - Approved manual entries and aliases are the only curated records that affect
   public lookup, labels, and exports.
+- The 2026-05-24 data-trust/admin audit passed backend checks with
+  `python -m py_compile server.py` and
+  `python -m pytest test_name_search.py test_pilot_storage.py test_candidate_discovery.py -v`
+  (175 passed). The covered backend paths include public correction intake,
+  rate limits, admin correction status updates, candidate payload sanitization,
+  unsafe URL rejection, pending manual entries staying out of public lookup,
+  candidate discovery dry-run behavior, and approved-only candidate behavior.
+- The same audit passed the focused frontend correction/admin suite with
+  `npm test -- --runInBand DataCorrectionDialog.test.js PilotDashboardSidebar.test.js ResultsTable.test.js DetailModal.test.js ProductTrustPanel.test.js correctionCandidates.test.js`
+  (166 passed). The covered frontend paths include the in-app correction dialog,
+  GitHub fallback preservation, product trust correction entry points, row/detail
+  correction entry points, candidate evidence display, and pending manual-entry
+  conversion from candidate evidence.
+- The latest `qa:production-search-ui` report is green and records production
+  evidence for no-GHS states, missing Chinese name correction links,
+  unresolved-search correction links, source evidence, multiple-GHS review
+  actions, and export trust columns.
 
 Required pilot behavior:
 
@@ -216,10 +248,12 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Add new correction/admin cases only when a real data issue or QA gap appears.
-2. Avoid external discovery integration until a scope, cost, and source-quality
+1. Keep the backend correction/candidate/manual-entry focused suite as the
+   default gate after data-governance changes.
+2. Add new correction/admin cases only when a real data issue or QA gap appears.
+3. Avoid external discovery integration until a scope, cost, and source-quality
    decision is recorded.
-3. Keep `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` as the boundary for future
+4. Keep `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` as the boundary for future
    external suggestions.
 
 ## Workstream 4: Low-Noise Next-Step UX
@@ -249,6 +283,12 @@ Current evidence:
   production search UI report included the batch next-action title/body/CTA;
   the lab-ready batch report included the 90-item fixture, review reason counts,
   and print/export handoff evidence.
+- The 2026-05-24 low-noise copy pass removed remaining visible planner terms
+  from the print modal summary path. User-facing copy now says "Label output",
+  "Needs compact label", "Needs extra label", and "extra pages/labels" instead
+  of exposing "output role", "reduced-purpose", or "continuation" as first-line
+  concepts. The pass is covered by `npm run test:i18n` and
+  `npm test -- --runInBand LabelPrintModal.test.js`.
 
 Required pilot behavior:
 
@@ -277,8 +317,9 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Review the print modal, export preview, and correction dialog for any
-   remaining internal wording that should be converted into task language.
+1. Keep this copy gate focused on user-facing terms in the print/export/
+   correction flow; avoid changing planner identifiers unless the underlying
+   behavior changes.
 2. Add screenshots or compact report excerpts for the batch next-action panel
    if production failures are still hard to triage from JSON alone.
 3. Keep the production search UI next-action assertions active as the closure
@@ -286,7 +327,7 @@ Next implementation slices:
 
 ## Workstream 5: QA, Docs, And Maintenance Loop
 
-Status: `In progress`.
+Status: `Gate added`.
 
 Goal: future work can continue from repo evidence instead of chat memory.
 
@@ -297,6 +338,12 @@ Current evidence:
 - `PROJECT_STATUS_AND_NEXT_PLAN.md` is the canonical project entry point.
 - `PRODUCT_SCOPE_GATE.md` captures broad-scope alignment before implementation.
 - `AUTONOMOUS_WORKFLOW.md` defines the next-step re-rank loop.
+- The 2026-05-24 local closure gate passed `git diff --check`,
+  `npm run test:docs`, `npm run test:i18n`, `npm test -- --runInBand`,
+  `npm run build`, `npm run test:print-contract`,
+  `PRINT_QA_PRINT_HTML_DIR=build/print-html-artifacts npm run qa:print-report`,
+  `npm run qa:print-pdf`, `python -m py_compile server.py`, and
+  `python -m pytest test_name_search.py -v`.
 
 Required pilot behavior:
 
@@ -316,10 +363,10 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Wire this file into the canonical docs and docs drift check.
-2. Re-rank `NEXT_PRODUCT_WORK.md` around this target.
-3. Add a final 95% audit checklist section once the lab-ready batch QA fixture
-   exists.
+1. Record the shipped commit CI and production QA run once the current closure
+   changes are pushed and deployed.
+2. After production QA is green, move the overall target status to `Shipped`
+   and re-rank the next product target from `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 
 ## Required Gates For 95% Closure
 

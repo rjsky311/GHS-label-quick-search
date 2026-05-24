@@ -61,29 +61,25 @@ UX unless a blocker appears.
 ### Active Slice
 
 Current default active slice: continue the 95% Lab-Ready Pilot target in
-`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate and first
-low-noise batch next-action UX slice are now deployed and production-verified.
-The next priority is a three-output label stability audit: review the complete
-A4/Letter label, QR small label, and identification small label from existing
-PDF/production artifacts, then add or tighten focused fixtures only where the
-evidence shows readability, overflow, continuation, QR, or pictogram layout can
-still regress. Do not add more label sizes, external discovery, or admin tooling
-unless that target exposes a concrete gap.
+`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate, first low-noise
+batch next-action UX slice, focused three-output label stability audit, and
+data-trust/admin closure audit now have repeatable evidence. The next priority
+is the final low-noise and closure round: review print/export/correction copy
+for remaining internal wording, run the full 95% closure gate list, and record
+requirement-by-requirement evidence before calling the pilot target complete.
 
 ### Exit Condition
 
-Stop extending this slice when the three public label outputs have current
-evidence from PDF, screenshot, or production gate artifacts; any discovered
-regression has either been fixed or recorded with a focused fixture; and
-`LAB_READY_PILOT_95_PLAN.md` records the evidence. Then re-rank the next 95%
-workstream from the same plan.
+Stop extending this slice when the 95% closure audit has current evidence for
+all gates listed in `LAB_READY_PILOT_95_PLAN.md`, any remaining low-noise copy
+issues have either been fixed or explicitly deferred, and the final audit
+section records which requirement lines are satisfied.
 
 ### Next Likely Switch
 
-After the three-output label stability audit, switch to the next weakest 95%
-workstream: either remaining data-governance/admin queue closure gaps or
-lower-noise wording in print/export/correction surfaces. Keep physical print
-validation deferred.
+After the final 95% closure round, switch back to the canonical project plan and
+re-rank the next product target. Keep physical print validation deferred until
+real stock and printer access are available.
 
 ### Default Order
 
