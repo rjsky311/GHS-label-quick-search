@@ -51,7 +51,7 @@ User Browser
 | `LabelPrintModal.jsx`               | Purpose-first label printing config (shipped-container style primary label / QR supplement / quick ID, stock presets, 4 templates, saved presets); renders prepared-solution rows with blue tint + "Prepared" badge + concentration/solvent meta |
 | `PrepareSolutionModal.jsx`          | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1                                                                                                                   |
 | `PreparedSidebar.jsx`               | Recent prepared-solution reprint sidebar                                                                                                                                                                                                         |
-| `PilotDashboardSidebar.jsx`         | Admin-gated pilot dashboard for observability, dictionary growth, aliases, manual entries, and reference links                                                                                                                                   |
+| `PilotDashboardSidebar.jsx`         | Admin-gated pilot dashboard for observability, pilot triage, dictionary growth, aliases, manual entries, and reference links                                                                                                                    |
 | `AdminAccessDialog.jsx`             | Admin unlock dialog for pilot dashboard                                                                                                                                                                                                          |
 | `AuthoritativeSourceNote.jsx`       | Persistent SDS/supplier/local-regulation authority note                                                                                                                                                                                          |
 | `UpstreamErrorBanner.jsx`           | PubChem transient-error warning banner                                                                                                                                                                                                           |
@@ -258,6 +258,11 @@ three stable label outputs, correction/admin governance, low-noise next-step
 UX, and repeatable QA closure. The current post-95 target selection lives in
 `POST_95_REPRIORITIZATION.md`; read it after
 `PROJECT_STATUS_AND_NEXT_PLAN.md` when choosing the next major product slice.
+The active post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`; it defines
+the Pilot Operations Ready milestone for small real pilots, admin/report
+triage, data-quality loop closure, batch export utility, and pilot QA cadence.
+Use `PILOT_RUNBOOK.md` as the operator-facing checklist before changing pilot
+reporting, admin triage, or evidence-driven continuation rules.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction

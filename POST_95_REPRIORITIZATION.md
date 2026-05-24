@@ -6,6 +6,9 @@ post-95% re-rank after `LAB_READY_PILOT_95_PLAN.md` reached `Shipped`.
 This is a decision packet, not a second canonical roadmap. Use it to choose the
 next target after the 95% Lab-Ready Pilot closure, then keep the short live
 queue in `NEXT_PRODUCT_WORK.md` aligned with the chosen target.
+The active owner doc produced from this decision is
+`PILOT_OPERATIONS_READY_PLAN.md`, with the operator checklist in
+`PILOT_RUNBOOK.md`.
 
 ## Re-Rank Trigger
 
@@ -251,6 +254,12 @@ Recommended first slice:
 3. Name any missing report fields or dashboard actions as the next
    implementation slice.
 
+Current owner docs:
+
+- `PILOT_OPERATIONS_READY_PLAN.md` - active target definition and completion
+  audit.
+- `PILOT_RUNBOOK.md` - pilot operator and maintainer checklist.
+
 ## Verification Plan For The Re-Rank Itself
 
 This document-only re-rank is complete when:
@@ -262,4 +271,3 @@ This document-only re-rank is complete when:
   as unfinished.
 - `npm run test:docs` passes.
 - `git diff --check` passes.
-

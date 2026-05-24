@@ -1317,6 +1317,37 @@ class PilotStore:
             counts[str(row["status"])] = int(row["count"])
         return counts
 
+    def get_correction_request_issue_type_counts(
+        self,
+        *,
+        statuses: Optional[Iterable[str]] = None,
+    ) -> dict[str, int]:
+        params: list[Any] = []
+        where_status = ""
+        if statuses:
+            normalized_statuses = [
+                normalize_correction_request_status(status) for status in statuses
+            ]
+            where_status = (
+                "WHERE status IN ("
+                + ",".join("?" for _ in normalized_statuses)
+                + ")"
+            )
+            params.extend(normalized_statuses)
+        rows = self._fetchall(
+            f"""
+            SELECT issue_type, COUNT(*) AS count
+            FROM dictionary_correction_requests
+            {where_status}
+            GROUP BY issue_type
+            """,
+            params,
+        )
+        counts = {issue_type: 0 for issue_type in sorted(CORRECTION_REQUEST_TYPES)}
+        for row in rows:
+            counts[str(row["issue_type"])] = int(row["count"])
+        return counts
+
     def get_converted_correction_candidate_count(self) -> int:
         rows = self._fetchall(
             """
@@ -1386,6 +1417,119 @@ class PilotStore:
             if len(converted) >= limit:
                 break
         return converted
+
+    def get_pilot_triage_summary(self) -> dict[str, Any]:
+        correction_status_counts = self.get_correction_request_status_counts()
+        correction_issue_type_counts = self.get_correction_request_issue_type_counts(
+            statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+        )
+        miss_query_status_counts = self.get_miss_query_status_counts()
+        manual_entry_status_counts = self.get_manual_entry_status_counts()
+        alias_status_counts = self.get_alias_status_counts()
+        reference_link_status_counts = self.get_reference_link_status_counts()
+        miss_retention = self.get_miss_query_retention_summary()
+
+        candidate_found_count = correction_status_counts.get("candidate_found", 0)
+        converted_candidate_count = self.get_converted_correction_candidate_count()
+        unconverted_candidate_count = max(
+            candidate_found_count - converted_candidate_count,
+            0,
+        )
+        pending_manual_count = sum(
+            manual_entry_status_counts.get(status, 0)
+            for status in MANUAL_ENTRY_REVIEW_STATUSES
+        )
+        pending_alias_count = sum(
+            alias_status_counts.get(status, 0) for status in ALIAS_REVIEW_STATUSES
+        )
+        unresolved_search_count = sum(
+            miss_query_status_counts.get(status, 0)
+            for status in ("open", "needs_evidence")
+        )
+        open_correction_count = sum(
+            correction_status_counts.get(status, 0)
+            for status in CORRECTION_REQUEST_REVIEW_STATUSES
+        )
+
+        attention_counts = {
+            "openCorrectionRequests": open_correction_count,
+            "candidateFoundAwaitingManualReview": unconverted_candidate_count,
+            "manualEntriesInReview": pending_manual_count,
+            "aliasesInReview": pending_alias_count,
+            "unresolvedSearches": unresolved_search_count,
+            "missingChineseNameReports": correction_issue_type_counts.get(
+                "missing-chinese-name",
+                0,
+            ),
+            "noGhsReports": correction_issue_type_counts.get("no-ghs-data", 0),
+            "sourceConflictReports": correction_issue_type_counts.get(
+                "source-conflict",
+                0,
+            ),
+            "staleMissQueryRows": int(miss_retention.get("purgeableCount", 0)),
+            "inactiveReferenceLinks": reference_link_status_counts.get("inactive", 0),
+        }
+
+        recommended_focus_rules = (
+            (
+                "correction_intake",
+                "Review open correction requests before adding new data sources.",
+                attention_counts["openCorrectionRequests"],
+            ),
+            (
+                "manual_review",
+                "Approve or reject pending manual entries before public lookup changes.",
+                attention_counts["manualEntriesInReview"],
+            ),
+            (
+                "unresolved_searches",
+                "Resolve high-frequency search misses or mark them needs-evidence.",
+                attention_counts["unresolvedSearches"],
+            ),
+            (
+                "missing_chinese_names",
+                "Backfill trusted Traditional Chinese names with source evidence.",
+                attention_counts["missingChineseNameReports"],
+            ),
+            (
+                "source_conflicts",
+                "Inspect source conflicts and keep SDS/local verification visible.",
+                attention_counts["sourceConflictReports"],
+            ),
+            (
+                "telemetry_retention",
+                "Purge stale miss-query telemetry outside the retention window.",
+                attention_counts["staleMissQueryRows"],
+            ),
+        )
+        recommended_focus = [
+            {"key": key, "message": message, "count": int(count)}
+            for key, message, count in recommended_focus_rules
+            if int(count) > 0
+        ]
+        if not recommended_focus:
+            recommended_focus.append(
+                {
+                    "key": "healthy",
+                    "message": "No queued pilot curation work requires immediate action.",
+                    "count": 0,
+                }
+            )
+
+        open_work_item_count = sum(attention_counts.values())
+        return {
+            "openWorkItemCount": int(open_work_item_count),
+            "attentionCounts": attention_counts,
+            "correctionIssueTypeCounts": correction_issue_type_counts,
+            "recommendedFocus": recommended_focus,
+            "signals": {
+                "hasCorrectionBacklog": open_correction_count > 0,
+                "hasUnresolvedSearchBacklog": unresolved_search_count > 0,
+                "hasManualReviewBacklog": pending_manual_count > 0,
+                "hasSourceConflictReports": attention_counts["sourceConflictReports"] > 0,
+                "hasRetentionWork": attention_counts["staleMissQueryRows"] > 0,
+            },
+        }
 
     def update_correction_request_status(
         self,
@@ -1502,6 +1646,7 @@ class PilotStore:
             "pendingAliases": pending_aliases[:limit],
             "pendingManualEntries": pending_manual_entries[:limit],
         }
+        metrics["pilotTriage"] = self.get_pilot_triage_summary()
         return metrics
 
     def get_manual_entry_status_counts(self) -> dict[str, int]:

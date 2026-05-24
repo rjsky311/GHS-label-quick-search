@@ -38,6 +38,8 @@ const docs = {
   "CLAUDE.md": readText("CLAUDE.md"),
   "PROJECT_STATUS_AND_NEXT_PLAN.md": readText("PROJECT_STATUS_AND_NEXT_PLAN.md"),
   "POST_95_REPRIORITIZATION.md": readText("POST_95_REPRIORITIZATION.md"),
+  "PILOT_OPERATIONS_READY_PLAN.md": readText("PILOT_OPERATIONS_READY_PLAN.md"),
+  "PILOT_RUNBOOK.md": readText("PILOT_RUNBOOK.md"),
   "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
   "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
@@ -137,10 +139,52 @@ requireIncludes(
   "post-95 target selection must stay discoverable from the canonical plan",
 );
 requireIncludes(
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  "active pilot-operations target must stay discoverable from the canonical plan",
+);
+requireIncludes(
   "POST_95_REPRIORITIZATION.md",
   docs["POST_95_REPRIORITIZATION.md"],
   "Small Pilot Observation And Operator Loop",
   "post-95 re-rank must name the active next target",
+);
+requireIncludes(
+  "POST_95_REPRIORITIZATION.md",
+  docs["POST_95_REPRIORITIZATION.md"],
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  "post-95 re-rank must point to the active owner doc",
+);
+requireIncludes(
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  docs["PILOT_OPERATIONS_READY_PLAN.md"],
+  "Pilot Operations Ready",
+  "pilot-operations target role statement",
+);
+requireIncludes(
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  docs["PILOT_OPERATIONS_READY_PLAN.md"],
+  "PILOT_RUNBOOK.md",
+  "pilot-operations owner doc must point to the runbook",
+);
+requireIncludes(
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  docs["PILOT_OPERATIONS_READY_PLAN.md"],
+  "Completion Audit",
+  "pilot-operations target must define closure evidence",
+);
+requireIncludes(
+  "PILOT_RUNBOOK.md",
+  docs["PILOT_RUNBOOK.md"],
+  "Daily Operator Checklist",
+  "pilot runbook must include daily operating checks",
+);
+requireIncludes(
+  "NEXT_PRODUCT_WORK.md",
+  docs["NEXT_PRODUCT_WORK.md"],
+  "PILOT_OPERATIONS_READY_PLAN.md",
+  "short queue must point to the active pilot-operations owner doc",
 );
 requireIncludes(
   "LAB_READY_PILOT_95_PLAN.md",

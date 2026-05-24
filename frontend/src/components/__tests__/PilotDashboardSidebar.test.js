@@ -75,6 +75,21 @@ const baseProps = {
         purgeableCount: 5,
         retainedNeedsEvidenceCount: 1,
       },
+      pilotTriage: {
+        openWorkItemCount: 14,
+        attentionCounts: {
+          unresolvedSearches: 3,
+          missingChineseNameReports: 1,
+          sourceConflictReports: 2,
+        },
+        recommendedFocus: [
+          {
+            key: "correction_intake",
+            message: "Review open correction requests before adding new data sources.",
+            count: 2,
+          },
+        ],
+      },
       topMissQueries: [
         {
           id: 101,
@@ -268,6 +283,13 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("correction-request-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("correction-request-status-count-ignored")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
+    expect(screen.getByTestId("pilot-triage-open-work-items")).toHaveTextContent("14");
+    expect(screen.getByTestId("pilot-triage-unresolved-searches")).toHaveTextContent("3");
+    expect(screen.getByTestId("pilot-triage-missing-chinese-names")).toHaveTextContent("1");
+    expect(screen.getByTestId("pilot-triage-source-conflicts")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
+      "Review open correction requests",
+    );
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
     expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
     expect(

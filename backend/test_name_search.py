@@ -1811,6 +1811,62 @@ async def test_export_xlsx_includes_data_trust_columns():
     assert ws.cell(row=2, column=20).value == "Default primary classification"
 
 
+async def test_export_xlsx_includes_pilot_summary_sheet():
+    """XLSX export includes a compact pilot summary for downstream triage."""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": "Ethanol",
+                "name_zh": "\u4e59\u9187",
+                "found": True,
+                "ghs_pictograms": [{"code": "GHS02", "name_zh": "\u706b\u7130"}],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
+                "cas_number": "999-99-9",
+                "name_en": "Unknown",
+                "found": False,
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
+                "cas_number": "107-18-6",
+                "name_en": "Allyl Alcohol",
+                "name_zh": "Allyl Alcohol",
+                "found": True,
+                "ghs_pictograms": [{"code": "GHS06", "name_zh": "\u9ab7\u9acf"}],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+                "has_multiple_classifications": True,
+            },
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/xlsx", json=payload)
+    assert response.status_code == 200
+
+    wb = load_workbook(BytesIO(response.content))
+    assert "Pilot Summary" in wb.sheetnames
+    summary = wb["Pilot Summary"]
+    rows = {
+        summary.cell(row=row, column=1).value: summary.cell(row=row, column=2).value
+        for row in range(2, summary.max_row + 1)
+    }
+    assert rows["Total rows"] == 3
+    assert rows["Printable rows"] == 2
+    assert rows["Needs review rows"] == 2
+    assert rows["Unresolved searches"] == 1
+    assert rows["Missing trusted Chinese names"] == 1
+    assert rows["Multiple GHS classifications"] == 1
+
+
 async def test_export_csv_neutralizes_formula_injection_in_p_code_text():
     """P-code text starting with a formula trigger must be neutralized
     the same way as other exported cells."""

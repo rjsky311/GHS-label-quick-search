@@ -44,6 +44,8 @@ async def test_ops_report_endpoint_returns_current_counters(monkeypatch):
     assert data["counters"]["cache.ghs.hit"] == 1
     assert data["recentEvents"][0]["type"] == "cache_stale_hit"
     assert "dictionary" in data
+    assert "pilotTriage" in data["dictionary"]
+    assert "attentionCounts" in data["dictionary"]["pilotTriage"]
     assert "generatedAt" in data
 
 

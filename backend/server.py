@@ -890,6 +890,100 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
     ]
 
 
+def _build_export_pilot_summary(results: List[Dict[str, Any]]) -> List[tuple[str, int, str]]:
+    review_reason_counts: Counter[str] = Counter()
+    printable_count = 0
+    for result in results:
+        if result.get("found") is not False and _has_export_ghs_data(result):
+            printable_count += 1
+        review_reason_counts.update(_export_review_reasons(result))
+
+    needs_review_count = sum(
+        1 for result in results if _export_review_reasons(result)
+    )
+    return [
+        (
+            "Total rows",
+            len(results),
+            "Rows included in this export payload.",
+        ),
+        (
+            "Printable rows",
+            printable_count,
+            "Rows with GHS content available for downstream label planning.",
+        ),
+        (
+            "Needs review rows",
+            needs_review_count,
+            "Rows that should be checked before relying on the export.",
+        ),
+        (
+            "Unresolved searches",
+            review_reason_counts["Unresolved search"],
+            "Queries that need dictionary curation or corrected input.",
+        ),
+        (
+            "Missing trusted Chinese names",
+            review_reason_counts["Missing trusted Chinese name"],
+            "Rows where Chinese name display is intentionally blank until reviewed.",
+        ),
+        (
+            "Multiple GHS classifications",
+            review_reason_counts["Multiple GHS classifications need primary confirmation"],
+            "Rows where the user or maintainer should confirm the primary classification.",
+        ),
+        (
+            "Source conflicts",
+            review_reason_counts["Source conflict"],
+            "Rows where PubChem/ECHA/manual evidence should remain visible.",
+        ),
+        (
+            "No GHS data",
+            review_reason_counts["No GHS data"],
+            "Found records without GHS hazard data in the current result.",
+        ),
+        (
+            "Text-only GHS without pictograms",
+            review_reason_counts["GHS text without pictogram"],
+            "Rows with hazard text but no renderable pictogram in the result.",
+        ),
+        (
+            "Upstream transient failures",
+            review_reason_counts["Upstream transient failure"],
+            "Rows that should be retried before drawing a safety conclusion.",
+        ),
+    ]
+
+
+def _add_export_pilot_summary_sheet(
+    workbook: Workbook,
+    results: List[Dict[str, Any]],
+    thin_border: Border,
+) -> None:
+    summary_ws = workbook.create_sheet("Pilot Summary")
+    headers = ["Metric", "Value", "Pilot use"]
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for col, header in enumerate(headers, 1):
+        cell = summary_ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    for row, (metric, value, note) in enumerate(_build_export_pilot_summary(results), 2):
+        summary_ws.cell(row=row, column=1, value=spreadsheet_safe(metric)).border = thin_border
+        summary_ws.cell(row=row, column=2, value=value).border = thin_border
+        note_cell = summary_ws.cell(row=row, column=3, value=spreadsheet_safe(note))
+        note_cell.border = thin_border
+        note_cell.alignment = Alignment(wrap_text=True)
+
+    summary_ws.column_dimensions["A"].width = 34
+    summary_ws.column_dimensions["B"].width = 14
+    summary_ws.column_dimensions["C"].width = 72
+
+
 class WorkspaceDocumentPayload(BaseModel):
     payload: Any
 
@@ -2701,6 +2795,8 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     ws.column_dimensions['R'].width = 26
     ws.column_dimensions['S'].width = 36
     ws.column_dimensions['T'].width = 34
+
+    _add_export_pilot_summary_sheet(wb, payload.results, thin_border)
     
     # Save to BytesIO
     output = BytesIO()

@@ -17,6 +17,8 @@ implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
 For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
+The active post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
+operator checklist is `PILOT_RUNBOOK.md`.
 `LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
 Lab-Ready Pilot milestone, not the active unfinished target.
 
@@ -62,11 +64,12 @@ instead of another open-ended backlog.
 
 ### Active Slice
 
-Current default active slice: small pilot observation and operator loop.
-Use `POST_95_REPRIORITIZATION.md` as the decision packet. The first slice is to
-create a pilot runbook/checklist, audit current admin and reporting outputs
-against that checklist, and name the smallest missing report/dashboard gaps
-needed for pilot triage.
+Current default active slice: Pilot Operations Ready.
+Use `POST_95_REPRIORITIZATION.md` as the decision packet,
+`PILOT_OPERATIONS_READY_PLAN.md` as the owner doc, and `PILOT_RUNBOOK.md` as
+the operator checklist. This slice should make small real pilot usage visible
+through admin/report triage, export summary, and documented QA cadence instead
+of relying on screenshots and chat memory.
 
 ### Exit Condition
 
@@ -74,6 +77,8 @@ Stop extending this slice when the pilot operator can answer, from repo docs
 and existing or updated reports, what happened in the pilot, which correction
 or data-quality items need action, which batch/export/UX issues appeared, and
 which gate or checklist proves the app is still safe to continue using.
+The target is not closed until `PILOT_OPERATIONS_READY_PLAN.md` has local,
+CI, deployment, production-QA, remaining-risk, and next-rank evidence filled in.
 
 ### Next Likely Switch
 

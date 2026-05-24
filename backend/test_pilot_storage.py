@@ -193,6 +193,9 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert summary["correctionRequestCount"] == 1
         assert summary["openCorrectionRequestCount"] == 1
         assert summary["correctionRequestStatusCounts"]["open"] == 1
+        assert summary["pilotTriage"]["attentionCounts"]["openCorrectionRequests"] == 1
+        assert summary["pilotTriage"]["attentionCounts"]["missingChineseNameReports"] == 1
+        assert summary["pilotTriage"]["recommendedFocus"][0]["key"] == "correction_intake"
         assert summary["convertedCorrectionCandidateCount"] == 0
         assert summary["topCorrectionRequests"][0]["localContextRedacted"] is True
 
@@ -219,6 +222,13 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert converted["candidate"]["converted_to_manual_entry"] is True
         summary = store.get_dictionary_summary()
         assert summary["convertedCorrectionCandidateCount"] == 1
+        assert (
+            summary["pilotTriage"]["attentionCounts"][
+                "candidateFoundAwaitingManualReview"
+            ]
+            == 0
+        )
+        assert summary["pilotTriage"]["attentionCounts"]["manualEntriesInReview"] == 0
         assert summary["convertedCorrectionCandidates"][0]["id"] == record["id"]
         assert summary["convertedCorrectionCandidates"][0]["localContextRedacted"] is True
         assert (
