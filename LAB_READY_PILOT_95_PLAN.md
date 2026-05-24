@@ -29,9 +29,11 @@ Use these labels when updating this file:
 | `Monitoring` | Stable enough for the pilot target; add cases when new evidence appears. |
 | `Deferred` | Explicitly outside the 95% target. |
 
-The current overall status is `In progress`. The batch-output confidence loop
-has shipped, but the 95% target still needs a focused real-batch QA fixture,
-lower-noise workflow polish, and a final acceptance audit against this file.
+The current overall status is `In progress`. The realistic lab-batch gate and
+the first low-noise next-action batch UX slice have shipped to production, but
+the 95% target still needs a focused three-output label stability audit, any
+remaining data-trust/admin closure gaps, and a final acceptance audit against
+this file.
 
 ## Scope
 
@@ -61,7 +63,7 @@ The 95% Lab-Ready Pilot excludes:
 
 ## Workstream 1: Real Batch Workflow Hardening
 
-Status: `In progress`.
+Status: `Gate added`.
 
 Goal: a user can paste a realistic 50-100 item list and understand the batch
 without learning the internal data model.
@@ -81,6 +83,11 @@ Current evidence:
   80 submitted unique valid CAS values, 76 label-ready rows, 20 review rows,
   duplicate/invalid diagnostics, review-reason distribution, export trust
   columns, multiple-GHS warning state, and fixed-stock print handoff.
+- The 2026-05-24 production run after deploying the 95% target slice passed
+  again with the same fixture shape: 90 pasted values, 80 submitted unique
+  valid CAS values, 76 label-ready rows, 20 review rows, next-action copy,
+  review-reason distribution, export trust columns, multiple-GHS warning state,
+  and fixed-stock print handoff.
 
 Required pilot behavior:
 
@@ -113,7 +120,7 @@ Next implementation slices:
 
 1. Keep `npm run qa:production-lab-ready-batch` as the heavy deployed closure
    gate after batch/search/label changes.
-2. Add screenshot or report summary review to make failures easier to inspect
+2. Add screenshot or compact report summary review to make failures easier to inspect
    without reading the full JSON body.
 3. Re-run this fixture after any production deployment that changes search,
    result review state, export trust columns, or label print handoff.
@@ -217,7 +224,7 @@ Next implementation slices:
 
 ## Workstream 4: Low-Noise Next-Step UX
 
-Status: `In progress`.
+Status: `Gate added`.
 
 Goal: the user sees the next action, not the internal architecture.
 
@@ -236,6 +243,12 @@ Current evidence:
 - A local browser smoke run against the built app, with mocked backend search
   results, verified that the batch next-action panel, CTA, row count, and
   review-reason list render together in the real page.
+- The 2026-05-24 deployed gate run verified production freshness with
+  next-action asset text, then passed `qa:production-search-ui`,
+  `qa:production-lab-ready-batch`, and `qa:production-batch-print`. The
+  production search UI report included the batch next-action title/body/CTA;
+  the lab-ready batch report included the 90-item fixture, review reason counts,
+  and print/export handoff evidence.
 
 Required pilot behavior:
 
@@ -264,13 +277,12 @@ Acceptance criteria:
 
 Next implementation slices:
 
-1. Deploy the next-action batch result panel, then run
-   `npm run qa:production-search-ui` and
-   `npm run qa:production-lab-ready-batch` against the current asset.
-2. Review the print modal, export preview, and correction dialog for any
+1. Review the print modal, export preview, and correction dialog for any
    remaining internal wording that should be converted into task language.
-3. Add screenshots or compact report excerpts for the batch next-action panel
+2. Add screenshots or compact report excerpts for the batch next-action panel
    if production failures are still hard to triage from JSON alone.
+3. Keep the production search UI next-action assertions active as the closure
+   gate for this slice.
 
 ## Workstream 5: QA, Docs, And Maintenance Loop
 

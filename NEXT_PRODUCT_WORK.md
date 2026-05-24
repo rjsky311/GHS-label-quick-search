@@ -61,27 +61,29 @@ UX unless a blocker appears.
 ### Active Slice
 
 Current default active slice: continue the 95% Lab-Ready Pilot target in
-`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate now exists and
-has passed once against production, so the next priority is low-noise
-next-step UX for batch/search/results-table surfaces. A local next-action panel
-and QA assertions now exist; finish the slice by shipping it, proving the
-deployed asset is current, and re-running production search/lab-ready batch
-gates. Do not add more label sizes, external discovery, or admin tooling unless
-that target exposes a concrete gap.
+`LAB_READY_PILOT_95_PLAN.md`. The realistic lab-batch QA gate and first
+low-noise batch next-action UX slice are now deployed and production-verified.
+The next priority is a three-output label stability audit: review the complete
+A4/Letter label, QR small label, and identification small label from existing
+PDF/production artifacts, then add or tighten focused fixtures only where the
+evidence shows readability, overflow, continuation, QR, or pictogram layout can
+still regress. Do not add more label sizes, external discovery, or admin tooling
+unless that target exposes a concrete gap.
 
 ### Exit Condition
 
-Stop extending this slice when the deployed batch/results surface has an
-evidence-backed next-step summary for the lab-ready workflow, production search
-UI and lab-ready batch gates both pass against the current asset, and the result
-is recorded in `LAB_READY_PILOT_95_PLAN.md`. Then re-rank the next 95%
+Stop extending this slice when the three public label outputs have current
+evidence from PDF, screenshot, or production gate artifacts; any discovered
+regression has either been fixed or recorded with a focused fixture; and
+`LAB_READY_PILOT_95_PLAN.md` records the evidence. Then re-rank the next 95%
 workstream from the same plan.
 
 ### Next Likely Switch
 
-After the low-noise next-step UX has evidence, switch to any fresh
-three-output label regression shown by PDF/screenshot/QA evidence. Keep
-data-governance work scoped to real correction/admin queue gaps.
+After the three-output label stability audit, switch to the next weakest 95%
+workstream: either remaining data-governance/admin queue closure gaps or
+lower-noise wording in print/export/correction surfaces. Keep physical print
+validation deferred.
 
 ### Default Order
 
