@@ -98,26 +98,74 @@ const fetchTextWithRetry = async (url, label) => {
   throw error;
 };
 
-const resolveAssetUrl = (html, baseUrl) => {
-  const match = html.match(/(?:src|href)="([^"]*assets\/index-[^"]+\.js)"/);
-  if (!match) {
-    throw new Error("Could not find production index asset in frontend HTML.");
+const collectJsAssetUrls = (text, baseUrl) => {
+  const urls = new Set();
+  const patterns = [
+    /(?:src|href)="([^"]*assets\/[^"]+\.js)"/g,
+    /["'`]([^"'`]*assets\/[^"'`]+\.js)["'`]/g,
+  ];
+
+  patterns.forEach((pattern) => {
+    let match = pattern.exec(text);
+    while (match) {
+      urls.add(new URL(match[1], baseUrl).toString());
+      match = pattern.exec(text);
+    }
+  });
+
+  return [...urls].sort();
+};
+
+const fetchProductionJsBundle = async (html, baseUrl) => {
+  const queued = collectJsAssetUrls(html, baseUrl);
+  if (queued.length === 0) {
+    throw new Error("Could not find production JS assets in frontend HTML.");
   }
-  return new URL(match[1], baseUrl).toString();
+
+  const seen = new Set();
+  const assetResults = [];
+  let combinedText = "";
+
+  while (queued.length > 0) {
+    const url = queued.shift();
+    if (seen.has(url)) {
+      continue;
+    }
+
+    seen.add(url);
+    const asset = await fetchTextWithRetry(url, "production asset");
+    assetResults.push({
+      url,
+      attempts: asset.attempts,
+      bytes: asset.text.length,
+    });
+    combinedText += `\n/* ${url} */\n${asset.text}`;
+
+    collectJsAssetUrls(asset.text, baseUrl).forEach((nestedUrl) => {
+      if (!seen.has(nestedUrl)) {
+        queued.push(nestedUrl);
+      }
+    });
+  }
+
+  return {
+    text: combinedText,
+    assets: assetResults,
+  };
 };
 
 const htmlUrl = withCacheBuster(productionUrl);
 let htmlResult = null;
-let assetResult = null;
+let bundleResult = null;
 let assetUrl = "";
 let missingMarkers = [];
 let failure = "";
 try {
   htmlResult = await fetchTextWithRetry(htmlUrl, "production HTML");
-  assetUrl = resolveAssetUrl(htmlResult.text, htmlUrl);
-  assetResult = await fetchTextWithRetry(assetUrl, "production asset");
+  bundleResult = await fetchProductionJsBundle(htmlResult.text, htmlUrl);
+  assetUrl = bundleResult.assets[0]?.url || "";
   missingMarkers = requiredMarkers.filter(
-    (marker) => !assetResult.text.includes(marker),
+    (marker) => !bundleResult.text.includes(marker),
   );
 } catch (error) {
   failure = error?.message || String(error);
@@ -135,8 +183,11 @@ const result = {
   retryDelayMs,
   attempts: {
     html: htmlResult?.attempts || [],
-    asset: assetResult?.attempts || [],
+    asset: bundleResult?.assets?.[0]?.attempts || [],
   },
+  assetUrls: bundleResult?.assets?.map((asset) => asset.url) || [],
+  assetCount: bundleResult?.assets?.length || 0,
+  assetBytes: bundleResult?.assets?.reduce((sum, asset) => sum + asset.bytes, 0) || 0,
   requiredMarkers,
   missingMarkers,
   failure,
