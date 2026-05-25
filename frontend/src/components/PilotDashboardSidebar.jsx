@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Activity,
-  BookPlus,
   Database,
-  ExternalLink,
-  Link2,
   RefreshCw,
   ShieldAlert,
   Tags,
@@ -15,291 +12,32 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
+  ConvertedCorrectionCandidatesSection,
+  RecentCorrectionRequestsSection,
+  TopCorrectionRequestsSection,
+} from "@/components/pilot/PilotCorrectionRequestSections";
+import PilotDictionaryForms from "@/components/pilot/PilotDictionaryForms";
+import PilotRecentCurationLists from "@/components/pilot/PilotRecentCurationLists";
+import PilotTriagePanel from "@/components/pilot/PilotTriagePanel";
+import {
+  CurationStatusSummary,
+  SectionHeading,
+  SummaryCard,
+} from "@/components/pilot/PilotDashboardPrimitives";
+import {
+  ALIAS_STATUS_OPTIONS,
+  CORRECTION_REQUEST_STATUS_OPTIONS,
+  MANUAL_ENTRY_STATUS_OPTIONS,
+  REFERENCE_LINK_STATUS_OPTIONS,
+  sortNewestFirst,
+} from "@/components/pilot/pilotDashboardHelpers";
+import {
   buildCorrectionCandidateEvidence,
   buildCorrectionRequestManualEntryConversionPayload,
   buildManualEntryPayloadFromCorrectionCandidate,
-  getCorrectionCandidateDisplayRows,
 } from "@/utils/correctionCandidates";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasCjkText } from "@/utils/ghsText";
-
-function SummaryCard({ label, value, accent = "text-blue-700", testId }) {
-  return (
-    <div
-      className="rounded-lg border border-slate-200 bg-white p-3"
-      data-testid={testId}
-    >
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold ${accent}`}>{value}</div>
-    </div>
-  );
-}
-
-function SectionHeading({ icon: Icon, title, subtitle }) {
-  return (
-    <div className="mb-3">
-      <div className="flex items-center gap-2 text-slate-900">
-        <Icon className="h-4 w-4 text-blue-600" />
-        <h3 className="text-sm font-semibold uppercase tracking-wide">{title}</h3>
-      </div>
-      {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
-    </div>
-  );
-}
-
-function CorrectionCandidateEvidence({
-  candidate,
-  requestId,
-  onCreateManualEntry,
-  saving = false,
-}) {
-  const { t } = useTranslation();
-  const rows = getCorrectionCandidateDisplayRows(candidate);
-  if (rows.length === 0) return null;
-  const isConvertedToManualEntry = Boolean(candidate?.converted_to_manual_entry);
-  const canCreateManualEntry =
-    !isConvertedToManualEntry &&
-    Boolean(candidate?.cas_number) &&
-    Boolean(candidate?.name_en || candidate?.name_zh) &&
-    typeof onCreateManualEntry === "function";
-
-  return (
-    <div
-      className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950"
-      data-testid={`correction-request-candidate-${requestId}`}
-    >
-      <div className="font-semibold">
-        {t("pilot.candidateEvidenceTitle", {
-          defaultValue: "Candidate evidence",
-        })}
-      </div>
-      <div className="mt-1 text-amber-800">
-        {t("pilot.candidateEvidenceHint", {
-          defaultValue:
-            "Review-only. This does not affect public lookup, labels, or exports until approved into a curated record.",
-        })}
-      </div>
-      {isConvertedToManualEntry ? (
-        <div
-          className="mt-2 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-900"
-          data-testid={`correction-request-candidate-${requestId}-manual-pending`}
-        >
-          {t("pilot.candidateManualEntryPendingHint", {
-            defaultValue:
-              "A pending manual dictionary review entry has already been created from this candidate.",
-          })}
-        </div>
-      ) : null}
-      <dl className="mt-2 grid gap-1">
-        {rows.map(([label, value]) => (
-          <div
-            key={`${label}-${value}`}
-            className="grid grid-cols-[4rem_minmax(0,1fr)] gap-2"
-            data-testid={`correction-request-candidate-${requestId}-${label.toLowerCase()}`}
-          >
-            <dt className="font-mono font-semibold text-amber-900">{label}</dt>
-            <dd className="min-w-0 break-words text-slate-800">{value}</dd>
-          </div>
-        ))}
-      </dl>
-      {canCreateManualEntry ? (
-        <button
-          type="button"
-          onClick={onCreateManualEntry}
-          disabled={saving}
-          className="mt-3 rounded bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-40"
-          data-testid={`create-manual-entry-from-candidate-${requestId}`}
-        >
-          {t("pilot.createManualEntryFromCandidate", {
-            defaultValue: "Create review entry",
-          })}
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
-const MANUAL_ENTRY_STATUS_OPTIONS = [
-  {
-    value: "approved",
-    labelKey: "pilot.manualStatusApproved",
-    defaultLabel: "Approved",
-  },
-  {
-    value: "pending",
-    labelKey: "pilot.manualStatusPending",
-    defaultLabel: "Pending review",
-  },
-  {
-    value: "needs_evidence",
-    labelKey: "pilot.manualStatusNeedsEvidence",
-    defaultLabel: "Needs evidence",
-  },
-  {
-    value: "rejected",
-    labelKey: "pilot.manualStatusRejected",
-    defaultLabel: "Rejected",
-  },
-];
-
-const ALIAS_STATUS_OPTIONS = [
-  {
-    value: "approved",
-    labelKey: "pilot.manualStatusApproved",
-    defaultLabel: "Approved",
-  },
-  {
-    value: "pending",
-    labelKey: "pilot.manualStatusPending",
-    defaultLabel: "Pending review",
-  },
-  {
-    value: "needs_evidence",
-    labelKey: "pilot.manualStatusNeedsEvidence",
-    defaultLabel: "Needs evidence",
-  },
-  {
-    value: "rejected",
-    labelKey: "pilot.manualStatusRejected",
-    defaultLabel: "Rejected",
-  },
-];
-
-const REFERENCE_LINK_STATUS_OPTIONS = [
-  {
-    value: "active",
-    labelKey: "pilot.referenceStatusActive",
-    defaultLabel: "Active",
-  },
-  {
-    value: "inactive",
-    labelKey: "pilot.referenceStatusInactive",
-    defaultLabel: "Inactive",
-  },
-];
-
-const CORRECTION_REQUEST_STATUS_OPTIONS = [
-  {
-    value: "open",
-    labelKey: "pilot.correctionStatusOpen",
-    defaultLabel: "Open",
-  },
-  {
-    value: "candidate_found",
-    labelKey: "pilot.correctionStatusCandidateFound",
-    defaultLabel: "Candidate found",
-  },
-  {
-    value: "approved",
-    labelKey: "pilot.correctionStatusApproved",
-    defaultLabel: "Approved",
-  },
-  {
-    value: "rejected",
-    labelKey: "pilot.correctionStatusRejected",
-    defaultLabel: "Rejected",
-  },
-  {
-    value: "ignored",
-    labelKey: "pilot.correctionStatusIgnored",
-    defaultLabel: "Ignored",
-  },
-];
-
-const CURATION_STATUS_META = {
-  approved: {
-    labelKey: "pilot.manualStatusApproved",
-    defaultLabel: "Approved",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  },
-  pending: {
-    labelKey: "pilot.manualStatusPending",
-    defaultLabel: "Pending review",
-    className: "border-blue-200 bg-blue-50 text-blue-700",
-  },
-  needs_evidence: {
-    labelKey: "pilot.manualStatusNeedsEvidence",
-    defaultLabel: "Needs evidence",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
-  },
-  rejected: {
-    labelKey: "pilot.manualStatusRejected",
-    defaultLabel: "Rejected",
-    className: "border-red-200 bg-red-50 text-red-700",
-  },
-  active: {
-    labelKey: "pilot.referenceStatusActive",
-    defaultLabel: "Active",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  },
-  inactive: {
-    labelKey: "pilot.referenceStatusInactive",
-    defaultLabel: "Inactive",
-    className: "border-slate-200 bg-slate-100 text-slate-600",
-  },
-  open: {
-    labelKey: "pilot.correctionStatusOpen",
-    defaultLabel: "Open",
-    className: "border-blue-200 bg-blue-50 text-blue-700",
-  },
-  candidate_found: {
-    labelKey: "pilot.correctionStatusCandidateFound",
-    defaultLabel: "Candidate found",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
-  },
-  ignored: {
-    labelKey: "pilot.correctionStatusIgnored",
-    defaultLabel: "Ignored",
-    className: "border-slate-200 bg-slate-100 text-slate-600",
-  },
-};
-
-function curationTimestamp(item) {
-  return (
-    item?.updatedAt ||
-      item?.updated_at ||
-      item?.lastSeenAt ||
-      item?.last_seen_at ||
-      item?.createdAt ||
-      item?.created_at ||
-      item?.firstSeenAt ||
-      item?.first_seen_at ||
-      ""
-  );
-}
-
-function parseUpdatedAt(item) {
-  const parsed = Date.parse(curationTimestamp(item));
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function sortNewestFirst(items, fallbackSelector) {
-  return [...items].sort((a, b) => {
-    const updatedDiff = parseUpdatedAt(b) - parseUpdatedAt(a);
-    if (updatedDiff !== 0) return updatedDiff;
-    return String(fallbackSelector(a) || "").localeCompare(
-      String(fallbackSelector(b) || "")
-    );
-  });
-}
-
-function CurationStatusBadge({ status = "approved", testId }) {
-  const { t } = useTranslation();
-  const meta = CURATION_STATUS_META[status] || {
-    labelKey: "",
-    defaultLabel: status,
-    className: "border-slate-200 bg-slate-50 text-slate-600",
-  };
-
-  return (
-    <span
-      className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${meta.className}`}
-      data-testid={testId}
-    >
-      {meta.labelKey ? t(meta.labelKey, { defaultValue: meta.defaultLabel }) : status}
-    </span>
-  );
-}
 
 export default function PilotDashboardSidebar(props) {
   const {
@@ -355,10 +93,6 @@ export default function PilotDashboardSidebar(props) {
   const missQueries = dictionary.topMissQueries || [];
   const missStatusCounts = dictionary.missQueryStatusCounts || {};
   const pilotTriage = dictionary.pilotTriage || {};
-  const pilotAttentionCounts = pilotTriage.attentionCounts || {};
-  const pilotRecommendedFocus = Array.isArray(pilotTriage.recommendedFocus)
-    ? pilotTriage.recommendedFocus
-    : [];
   const manualEntryStatusCounts = dictionary.manualEntryStatusCounts || {};
   const aliasStatusCounts = dictionary.aliasStatusCounts || {};
   const referenceLinkStatusCounts = dictionary.referenceLinkStatusCounts || {};
@@ -959,359 +693,52 @@ export default function PilotDashboardSidebar(props) {
                   testId="pilot-summary-stale-miss-rows"
                 />
               </div>
-              <section
-                className="rounded-lg border border-emerald-200 bg-emerald-50 p-4"
-                data-testid="pilot-triage-panel"
-              >
-                <SectionHeading
-                  icon={Activity}
-                  title={t("pilot.triageTitle", {
-                    defaultValue: "Pilot triage",
-                  })}
-                  subtitle={t("pilot.triageHint", {
-                    defaultValue:
-                      "Compact operator view for deciding whether the next pilot action is data review, unresolved search cleanup, source review, or telemetry maintenance.",
-                  })}
-                />
-                <div className="grid gap-2 md:grid-cols-4">
-                  <SummaryCard
-                    label={t("pilot.openWorkItems", {
-                      defaultValue: "Open work items",
-                    })}
-                    value={pilotTriage.openWorkItemCount || 0}
-                    accent="text-emerald-800"
-                    testId="pilot-triage-open-work-items"
-                  />
-                  <SummaryCard
-                    label={t("pilot.triageUnresolvedSearches", {
-                      defaultValue: "Unresolved searches",
-                    })}
-                    value={pilotAttentionCounts.unresolvedSearches || 0}
-                    accent="text-amber-700"
-                    testId="pilot-triage-unresolved-searches"
-                  />
-                  <SummaryCard
-                    label={t("pilot.triageMissingChineseNames", {
-                      defaultValue: "Missing Chinese names",
-                    })}
-                    value={pilotAttentionCounts.missingChineseNameReports || 0}
-                    accent="text-orange-700"
-                    testId="pilot-triage-missing-chinese-names"
-                  />
-                  <SummaryCard
-                    label={t("pilot.triageSourceConflicts", {
-                      defaultValue: "Source conflicts",
-                    })}
-                    value={pilotAttentionCounts.sourceConflictReports || 0}
-                    accent="text-red-700"
-                    testId="pilot-triage-source-conflicts"
-                  />
-                </div>
-                <div className="mt-3 space-y-2">
-                  {pilotRecommendedFocus.map((focus) => (
-                    <div
-                      key={focus.key}
-                      className="flex items-start justify-between gap-3 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700"
-                      data-testid={`pilot-triage-focus-${focus.key}`}
-                    >
-                      <span>{focus.message}</span>
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-                        {focus.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                <span className="font-medium text-slate-800">
-                  {t("pilot.manualEntryStatusSummary", {
-                    defaultValue: "Manual entry review",
-                  })}
-                </span>
-                {MANUAL_ENTRY_STATUS_OPTIONS.map((option) => (
-                  <span
-                    key={option.value}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
-                    data-testid={`manual-entry-status-count-${option.value}`}
-                  >
-                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
-                    {manualEntryStatusCounts[option.value] || 0}
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                <span className="font-medium text-slate-800">
-                  {t("pilot.aliasStatusSummary", {
-                    defaultValue: "Alias review",
-                  })}
-                </span>
-                {ALIAS_STATUS_OPTIONS.map((option) => (
-                  <span
-                    key={option.value}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
-                    data-testid={`alias-status-count-${option.value}`}
-                  >
-                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
-                    {aliasStatusCounts[option.value] || 0}
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                <span className="font-medium text-slate-800">
-                  {t("pilot.referenceLinkStatusSummary", {
-                    defaultValue: "Reference link status",
-                  })}
-                </span>
-                {REFERENCE_LINK_STATUS_OPTIONS.map((option) => (
-                  <span
-                    key={option.value}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
-                    data-testid={`reference-link-status-count-${option.value}`}
-                  >
-                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
-                    {referenceLinkStatusCounts[option.value] || 0}
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                <span className="font-medium text-slate-800">
-                  {t("pilot.correctionRequestStatusSummary", {
-                    defaultValue: "Correction intake",
-                  })}
-                </span>
-                {CORRECTION_REQUEST_STATUS_OPTIONS.map((option) => (
-                  <span
-                    key={option.value}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1"
-                    data-testid={`correction-request-status-count-${option.value}`}
-                  >
-                    {t(option.labelKey, { defaultValue: option.defaultLabel })}:{" "}
-                    {correctionRequestStatusCounts[option.value] || 0}
-                  </span>
-                ))}
-              </div>
+              <PilotTriagePanel pilotTriage={pilotTriage} />
+              <CurationStatusSummary
+                title={t("pilot.manualEntryStatusSummary", {
+                  defaultValue: "Manual entry review",
+                })}
+                options={MANUAL_ENTRY_STATUS_OPTIONS}
+                counts={manualEntryStatusCounts}
+                testIdPrefix="manual-entry-status-count"
+              />
+              <CurationStatusSummary
+                title={t("pilot.aliasStatusSummary", {
+                  defaultValue: "Alias review",
+                })}
+                options={ALIAS_STATUS_OPTIONS}
+                counts={aliasStatusCounts}
+                testIdPrefix="alias-status-count"
+              />
+              <CurationStatusSummary
+                title={t("pilot.referenceLinkStatusSummary", {
+                  defaultValue: "Reference link status",
+                })}
+                options={REFERENCE_LINK_STATUS_OPTIONS}
+                counts={referenceLinkStatusCounts}
+                testIdPrefix="reference-link-status-count"
+              />
+              <CurationStatusSummary
+                title={t("pilot.correctionRequestStatusSummary", {
+                  defaultValue: "Correction intake",
+                })}
+                options={CORRECTION_REQUEST_STATUS_OPTIONS}
+                counts={correctionRequestStatusCounts}
+                testIdPrefix="correction-request-status-count"
+              />
 
-              <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <SectionHeading
-                  icon={BookPlus}
-                  title={t("pilot.convertedCorrectionCandidateList", {
-                    defaultValue: "Corrections in manual review",
-                  })}
-                  subtitle={t("pilot.convertedCorrectionCandidateListHint", {
-                    defaultValue:
-                      "These reports already created pending manual dictionary entries. Public lookup, labels, and exports are unchanged until the manual entry is approved.",
-                  })}
-                />
-                {convertedCorrectionCandidates.length === 0 ? (
-                  <p className="text-sm text-amber-800">
-                    {t("pilot.noConvertedCorrectionCandidates", {
-                      defaultValue:
-                        "No converted correction candidates are waiting in manual review.",
-                    })}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {convertedCorrectionCandidates.map((item) => {
-                      const requestId = item.id;
-                      const issueType = item.issue_type || item.issueType || "other";
-                      const casNumber = item.cas_number || item.casNumber || "";
-                      const chemicalName =
-                        item.chemical_name || item.chemicalName || item.query_text || "";
-                      const status = item.status || "candidate_found";
-                      return (
-                        <div
-                          key={`converted-correction-${requestId}`}
-                          className="rounded-lg border border-amber-200 bg-white p-3"
-                          data-testid={`converted-correction-candidate-row-${requestId}`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-medium text-slate-900">
-                                  {issueType}
-                                </span>
-                                <CurationStatusBadge
-                                  status={status}
-                                  testId={`converted-correction-candidate-status-${requestId}`}
-                                />
-                              </div>
-                              <div className="mt-1 text-sm text-slate-700">
-                                {[casNumber, chemicalName].filter(Boolean).join(" | ") ||
-                                  t("pilot.correctionUnknownTarget", {
-                                    defaultValue: "No target identity provided",
-                                  })}
-                              </div>
-                              <CorrectionCandidateEvidence
-                                candidate={item.candidate}
-                                requestId={`converted-${requestId}`}
-                                saving={saving}
-                              />
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {formatRelativeTime(item.updated_at || item.updatedAt)}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <SectionHeading
-                  icon={ShieldAlert}
-                  title={t("pilot.correctionRequests", {
-                    defaultValue: "Correction requests",
-                  })}
-                  subtitle={t("pilot.correctionRequestsHint", {
-                    defaultValue:
-                      "Station and in-app reports land here first. Approve only after source evidence is reviewed.",
-                  })}
-                />
-                {topCorrectionRequests.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    {t("pilot.noCorrectionRequests", {
-                      defaultValue: "No open correction requests yet.",
-                    })}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {topCorrectionRequests.map((item) => {
-                      const requestId = item.id;
-                      const issueType = item.issue_type || item.issueType || "other";
-                      const casNumber = item.cas_number || item.casNumber || "";
-                      const chemicalName =
-                        item.chemical_name || item.chemicalName || item.query_text || "";
-                      const evidenceUrl = item.evidence_url || item.evidenceUrl || "";
-                      const status = item.status || "open";
-                      return (
-                        <div
-                          key={`correction-${requestId}`}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-                          data-testid={`correction-request-row-${requestId}`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-medium text-slate-900">
-                                  {issueType}
-                                </span>
-                                <CurationStatusBadge
-                                  status={status}
-                                  testId={`correction-request-status-${requestId}`}
-                                />
-                              </div>
-                              <div className="mt-1 text-sm text-slate-700">
-                                {[casNumber, chemicalName].filter(Boolean).join(" | ") ||
-                                  t("pilot.correctionUnknownTarget", {
-                                    defaultValue: "No target identity provided",
-                                  })}
-                              </div>
-                              {item.current_output || item.currentOutput ? (
-                                <div className="mt-1 text-xs text-slate-500">
-                                  {item.current_output || item.currentOutput}
-                                </div>
-                              ) : null}
-                              {evidenceUrl ? (
-                                <a
-                                  href={evidenceUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
-                                >
-                                  {t("pilot.evidenceLink", {
-                                    defaultValue: "Evidence link",
-                                  })}
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              ) : null}
-                              <CorrectionCandidateEvidence
-                                candidate={item.candidate}
-                                requestId={requestId}
-                                saving={saving}
-                                onCreateManualEntry={() =>
-                                  handleCreateManualEntryFromCandidate(item)
-                                }
-                              />
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {formatRelativeTime(item.updated_at || item.updatedAt)}
-                            </div>
-                          </div>
-                          <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
-                            <input
-                              value={correctionReviewDrafts[requestId] || ""}
-                              onChange={(event) =>
-                                setCorrectionReviewDrafts((prev) => ({
-                                  ...prev,
-                                  [requestId]: event.target.value,
-                                }))
-                              }
-                              placeholder={t("pilot.correctionReviewNotesPlaceholder", {
-                                defaultValue: "Review note",
-                              })}
-                              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                              data-testid={`correction-request-notes-${requestId}`}
-                            />
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCorrectionRequestStatusUpdate(
-                                    item,
-                                    "candidate_found"
-                                  )
-                                }
-                                disabled={saving || !requestId}
-                                className="rounded bg-amber-600 px-3 py-2 text-xs text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`candidate-correction-request-${requestId}`}
-                              >
-                                {t("pilot.candidateFound", {
-                                  defaultValue: "Candidate",
-                                })}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCorrectionRequestStatusUpdate(item, "approved")
-                                }
-                                disabled={saving || !requestId}
-                                className="rounded bg-emerald-700 px-3 py-2 text-xs text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`approve-correction-request-${requestId}`}
-                              >
-                                {t("pilot.approve", { defaultValue: "Approve" })}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCorrectionRequestStatusUpdate(item, "rejected")
-                                }
-                                disabled={saving || !requestId}
-                                className="rounded bg-red-700 px-3 py-2 text-xs text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`reject-correction-request-${requestId}`}
-                              >
-                                {t("pilot.reject", { defaultValue: "Reject" })}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCorrectionRequestStatusUpdate(item, "ignored")
-                                }
-                                disabled={saving || !requestId}
-                                className="rounded bg-slate-700 px-3 py-2 text-xs text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`ignore-correction-request-${requestId}`}
-                              >
-                                {t("pilot.ignoreMiss", { defaultValue: "Ignore" })}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
+              <ConvertedCorrectionCandidatesSection
+                items={convertedCorrectionCandidates}
+                saving={saving}
+              />
+              <TopCorrectionRequestsSection
+                items={topCorrectionRequests}
+                saving={saving}
+                correctionReviewDrafts={correctionReviewDrafts}
+                setCorrectionReviewDrafts={setCorrectionReviewDrafts}
+                onStatusUpdate={handleCorrectionRequestStatusUpdate}
+                onCreateManualEntry={handleCreateManualEntryFromCandidate}
+              />
 
               <section className="rounded-lg border border-slate-200 bg-white p-4">
                 <SectionHeading
@@ -1640,545 +1067,35 @@ export default function PilotDashboardSidebar(props) {
 
           {!loading && activeTab === "dictionary" ? (
             <>
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <SectionHeading
-                  icon={BookPlus}
-                  title={t("pilot.addManualEntry", { defaultValue: "Add manual entry" })}
-                  subtitle={t("pilot.addManualEntryHint", {
-                    defaultValue:
-                      "Use this when the static seed dictionary needs a lab-specific name override or missing chemical.",
-                  })}
-                />
-                <form className="grid gap-3 md:grid-cols-2" onSubmit={submitManualEntry}>
-                  <input
-                    value={manualEntryForm.cas_number}
-                    onChange={(event) =>
-                      setManualEntryForm((prev) => ({ ...prev, cas_number: event.target.value }))
-                    }
-                    placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    required
-                    data-testid="manual-entry-cas-input"
-                  />
-                  <input
-                    value={manualEntryForm.name_en}
-                    onChange={(event) =>
-                      setManualEntryForm((prev) => ({ ...prev, name_en: event.target.value }))
-                    }
-                    placeholder={t("pilot.englishNamePlaceholder", { defaultValue: "English name" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    data-testid="manual-entry-name-en-input"
-                  />
-                  <input
-                    value={manualEntryForm.name_zh}
-                    onChange={(event) =>
-                      setManualEntryForm((prev) => ({ ...prev, name_zh: event.target.value }))
-                    }
-                    placeholder={t("pilot.chineseNamePlaceholder", { defaultValue: "Chinese name" })}
-                    aria-describedby="manual-entry-name-zh-hint"
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    data-testid="manual-entry-name-zh-input"
-                  />
-                  <p
-                    id="manual-entry-name-zh-hint"
-                    className="text-xs leading-5 text-slate-500 md:col-span-2"
-                  >
-                    {t("pilot.chineseNameCurationHint", {
-                      defaultValue:
-                        "Use this field only for verified Chinese names. English synonyms belong in the English name or alias fields.",
-                    })}
-                  </p>
-                  <input
-                    value={manualEntryForm.notes}
-                    onChange={(event) =>
-                      setManualEntryForm((prev) => ({ ...prev, notes: event.target.value }))
-                    }
-                    placeholder={t("pilot.notesPlaceholder", { defaultValue: "Notes" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    data-testid="manual-entry-notes-input"
-                  />
-                  <select
-                    value={manualEntryForm.status}
-                    onChange={(event) =>
-                      setManualEntryForm((prev) => ({ ...prev, status: event.target.value }))
-                    }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                    data-testid="manual-entry-status-select"
-                    aria-label={t("pilot.manualEntryStatus", {
-                      defaultValue: "Manual entry status",
-                    })}
-                  >
-                    {MANUAL_ENTRY_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="md:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
-                      data-testid="manual-entry-submit-btn"
-                    >
-                      {t("pilot.saveEntry", { defaultValue: "Save manual entry" })}
-                    </button>
-                  </div>
-                </form>
-              </section>
+              <PilotDictionaryForms
+                manualEntryForm={manualEntryForm}
+                setManualEntryForm={setManualEntryForm}
+                submitManualEntry={submitManualEntry}
+                aliasForm={aliasForm}
+                setAliasForm={setAliasForm}
+                submitAlias={submitAlias}
+                referenceForm={referenceForm}
+                setReferenceForm={setReferenceForm}
+                submitReferenceLink={submitReferenceLink}
+                saving={saving}
+              />
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <SectionHeading
-                  icon={Tags}
-                  title={t("pilot.addAlias", { defaultValue: "Add or approve alias" })}
-                />
-                <form className="grid gap-3 md:grid-cols-2" onSubmit={submitAlias}>
-                  <input
-                    value={aliasForm.alias_text}
-                    onChange={(event) =>
-                      setAliasForm((prev) => ({ ...prev, alias_text: event.target.value }))
-                    }
-                    placeholder={t("pilot.aliasPlaceholder", { defaultValue: "Alias text" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    required
-                  />
-                  <input
-                    value={aliasForm.cas_number}
-                    onChange={(event) =>
-                      setAliasForm((prev) => ({ ...prev, cas_number: event.target.value }))
-                    }
-                    placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    required
-                  />
-                  <select
-                    value={aliasForm.locale}
-                    onChange={(event) =>
-                      setAliasForm((prev) => ({ ...prev, locale: event.target.value }))
-                    }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                  >
-                    <option value="en">English</option>
-                    <option value="zh">Chinese</option>
-                  </select>
-                  <select
-                    value={aliasForm.status}
-                    onChange={(event) =>
-                      setAliasForm((prev) => ({ ...prev, status: event.target.value }))
-                    }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                  >
-                    {ALIAS_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={aliasForm.notes}
-                    onChange={(event) =>
-                      setAliasForm((prev) => ({ ...prev, notes: event.target.value }))
-                    }
-                    placeholder={t("pilot.notesPlaceholder", { defaultValue: "Notes" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:col-span-2"
-                  />
-                  <div className="md:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      {t("pilot.saveAlias", { defaultValue: "Save alias" })}
-                    </button>
-                  </div>
-                </form>
-              </section>
+              <RecentCorrectionRequestsSection
+                items={recentCorrectionRequests}
+                saving={saving}
+                onCreateManualEntry={handleCreateManualEntryFromCandidate}
+              />
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <SectionHeading
-                  icon={Link2}
-                  title={t("pilot.addReference", { defaultValue: "Add reference link" })}
-                />
-                <form className="grid gap-3 md:grid-cols-2" onSubmit={submitReferenceLink}>
-                  <input
-                    value={referenceForm.cas_number}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, cas_number: event.target.value }))
-                    }
-                    placeholder={t("pilot.casPlaceholder", { defaultValue: "CAS number" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    data-testid="reference-link-cas-input"
-                    required
-                  />
-                  <input
-                    value={referenceForm.label}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, label: event.target.value }))
-                    }
-                    placeholder={t("pilot.referenceLabelPlaceholder", { defaultValue: "Link label" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                    data-testid="reference-link-label-input"
-                    required
-                  />
-                  <input
-                    value={referenceForm.url}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, url: event.target.value }))
-                    }
-                    placeholder="https://..."
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:col-span-2"
-                    data-testid="reference-link-url-input"
-                    required
-                  />
-                  <select
-                    value={referenceForm.link_type}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, link_type: event.target.value }))
-                    }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                  >
-                    <option value="reference">reference</option>
-                    <option value="sds">sds</option>
-                    <option value="regulatory">regulatory</option>
-                    <option value="occupational">occupational</option>
-                  </select>
-                  <select
-                    value={referenceForm.status}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, status: event.target.value }))
-                    }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                    data-testid="reference-link-status-select"
-                    aria-label={t("pilot.referenceLinkStatus", {
-                      defaultValue: "Reference link status",
-                    })}
-                  >
-                    {REFERENCE_LINK_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(option.labelKey, { defaultValue: option.defaultLabel })}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={referenceForm.priority}
-                    onChange={(event) =>
-                      setReferenceForm((prev) => ({ ...prev, priority: event.target.value }))
-                    }
-                    inputMode="numeric"
-                    placeholder={t("pilot.priorityPlaceholder", { defaultValue: "Priority" })}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
-                  />
-                  <div className="md:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-md bg-blue-700 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
-                      data-testid="reference-link-submit-btn"
-                    >
-                      {t("pilot.saveReference", { defaultValue: "Save reference link" })}
-                    </button>
-                  </div>
-                </form>
-              </section>
-
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
-                <SectionHeading
-                  icon={ShieldAlert}
-                  title={t("pilot.correctionRequestList", {
-                    defaultValue: "Recent correction requests",
-                  })}
-                  subtitle={t("pilot.correctionRequestListHint", {
-                    defaultValue:
-                      "Data-quality reports stay here until an admin finds evidence and applies the approved dictionary or reference change.",
-                  })}
-                />
-                {recentCorrectionRequests.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    {t("pilot.noCorrectionRequests", {
-                      defaultValue: "No open correction requests yet.",
-                    })}
-                  </p>
-                ) : (
-                  <div className="grid gap-2 lg:grid-cols-2">
-                    {recentCorrectionRequests.map((item, index) => {
-                      const requestId = item.id || index;
-                      const issueType = item.issue_type || item.issueType || "other";
-                      const casNumber = item.cas_number || item.casNumber || "";
-                      const chemicalName =
-                        item.chemical_name || item.chemicalName || item.query_text || "";
-                      const expectedOutput =
-                        item.expected_output || item.expectedOutput || "";
-                      const status = item.status || "open";
-                      return (
-                        <div
-                          key={`recent-correction-${requestId}`}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                          data-testid={`correction-request-recent-row-${requestId}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="font-medium text-slate-900">{issueType}</div>
-                              <div className="mt-1 font-mono text-blue-700">
-                                {casNumber ||
-                                  t("pilot.noCasProvided", {
-                                    defaultValue: "No CAS provided",
-                                  })}
-                              </div>
-                            </div>
-                            <CurationStatusBadge
-                              status={status}
-                              testId={`correction-request-recent-status-${requestId}`}
-                            />
-                          </div>
-                          {chemicalName ? (
-                            <div className="mt-1 text-slate-700">{chemicalName}</div>
-                          ) : null}
-                          {expectedOutput ? (
-                            <div className="mt-1 line-clamp-2 text-xs text-slate-500">
-                              {expectedOutput}
-                            </div>
-                          ) : null}
-                          <CorrectionCandidateEvidence
-                            candidate={item.candidate}
-                            requestId={`recent-${requestId}`}
-                            saving={saving}
-                            onCreateManualEntry={() =>
-                              handleCreateManualEntryFromCandidate(item)
-                            }
-                          />
-                          {curationTimestamp(item) ? (
-                            <div className="mt-2 text-xs text-slate-500">
-                              {formatRelativeTime(curationTimestamp(item))}
-                            </div>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-
-              <section className="grid gap-4 xl:grid-cols-3">
-                <div className="rounded-lg border border-slate-200 bg-white p-4">
-                  <SectionHeading
-                    icon={Tags}
-                    title={t("pilot.aliasList", { defaultValue: "Recent aliases" })}
-                  />
-                  {recentAliases.length === 0 ? (
-                    <p className="text-sm text-slate-500">
-                      {t("pilot.noAliases", { defaultValue: "No aliases yet." })}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {recentAliases.map((alias, index) => {
-                        const currentStatus = alias.status || "approved";
-                        return (
-                        <div
-                          key={`${alias.id || alias.alias_text}-${alias.locale}-${alias.cas_number}`}
-                          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                          data-testid={`alias-row-${alias.id || index}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="font-medium text-slate-900">{alias.alias_text}</div>
-                            <CurationStatusBadge
-                              status={currentStatus}
-                              testId={`alias-status-${alias.id || index}`}
-                            />
-                          </div>
-                          <div className="mt-1 font-mono text-blue-700">{alias.cas_number}</div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            <span>{alias.locale}</span>
-                            {curationTimestamp(alias) ? (
-                              <span>{formatRelativeTime(curationTimestamp(alias))}</span>
-                            ) : null}
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {currentStatus !== "approved" ? (
-                              <button
-                                type="button"
-                                disabled={saving}
-                                onClick={() => handleAliasStatusUpdate(alias, "approved")}
-                                className="rounded border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`alias-approve-${alias.id || index}`}
-                              >
-                                {t("pilot.approve", { defaultValue: "Approve" })}
-                              </button>
-                            ) : null}
-                            {currentStatus !== "needs_evidence" ? (
-                              <button
-                                type="button"
-                                disabled={saving}
-                                onClick={() => handleAliasStatusUpdate(alias, "needs_evidence")}
-                                className="rounded border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`alias-needs-evidence-${alias.id || index}`}
-                              >
-                                {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
-                              </button>
-                            ) : null}
-                            {currentStatus !== "rejected" ? (
-                              <button
-                                type="button"
-                                disabled={saving}
-                                onClick={() => handleAliasStatusUpdate(alias, "rejected")}
-                                className="rounded border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                data-testid={`alias-reject-${alias.id || index}`}
-                              >
-                                {t("pilot.reject", { defaultValue: "Reject" })}
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-lg border border-slate-200 bg-white p-4">
-                  <SectionHeading
-                    icon={Database}
-                    title={t("pilot.manualEntryList", { defaultValue: "Recent manual entries" })}
-                  />
-                  {recentManualEntries.length === 0 ? (
-                    <p className="text-sm text-slate-500">
-                      {t("pilot.noManualEntries", { defaultValue: "No manual entries yet." })}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {recentManualEntries.map((entry, index) => {
-                        const currentStatus = entry.status || "approved";
-                        return (
-                          <div
-                            key={`${entry.id || entry.cas_number}-${entry.status || "approved"}`}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                            data-testid={`manual-entry-row-${entry.id || index}`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="font-mono text-blue-700">{entry.cas_number}</div>
-                              <CurationStatusBadge
-                                status={currentStatus}
-                                testId={`manual-entry-status-${entry.id || index}`}
-                              />
-                            </div>
-                            <div className="mt-1 text-slate-900">
-                              {entry.name_en ||
-                                t("pilot.noEnglishName", { defaultValue: "No English name" })}
-                            </div>
-                            <div className="text-slate-500">
-                              {entry.name_zh ||
-                                t("pilot.noChineseName", { defaultValue: "No Chinese name" })}
-                            </div>
-                            {curationTimestamp(entry) ? (
-                              <div className="mt-1 text-xs text-slate-500">
-                                {formatRelativeTime(curationTimestamp(entry))}
-                              </div>
-                            ) : null}
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {currentStatus !== "approved" ? (
-                                <button
-                                  type="button"
-                                  disabled={saving}
-                                  onClick={() =>
-                                    handlePendingManualEntryDecision(entry, "approved")
-                                  }
-                                  className="rounded border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                  data-testid={`manual-entry-approve-${entry.id || index}`}
-                                >
-                                  {t("pilot.approve", { defaultValue: "Approve" })}
-                                </button>
-                              ) : null}
-                              {currentStatus !== "needs_evidence" ? (
-                                <button
-                                  type="button"
-                                  disabled={saving}
-                                  onClick={() =>
-                                    handlePendingManualEntryDecision(entry, "needs_evidence")
-                                  }
-                                  className="rounded border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                  data-testid={`manual-entry-needs-evidence-${entry.id || index}`}
-                                >
-                                  {t("pilot.needsEvidence", { defaultValue: "Needs evidence" })}
-                                </button>
-                              ) : null}
-                              {currentStatus !== "rejected" ? (
-                                <button
-                                  type="button"
-                                  disabled={saving}
-                                  onClick={() =>
-                                    handlePendingManualEntryDecision(entry, "rejected")
-                                  }
-                                  className="rounded border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                  data-testid={`manual-entry-reject-${entry.id || index}`}
-                                >
-                                  {t("pilot.reject", { defaultValue: "Reject" })}
-                                </button>
-                              ) : null}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-lg border border-slate-200 bg-white p-4">
-                  <SectionHeading
-                    icon={ExternalLink}
-                    title={t("pilot.referenceList", { defaultValue: "Recent reference links" })}
-                  />
-                  {recentReferenceLinks.length === 0 ? (
-                    <p className="text-sm text-slate-500">
-                      {t("pilot.noReferenceLinks", {
-                        defaultValue: "No custom reference links yet.",
-                      })}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {recentReferenceLinks.map((link, index) => {
-                        const currentStatus = link.status || "active";
-                        const nextStatus = currentStatus === "inactive" ? "active" : "inactive";
-                        return (
-                          <div
-                            key={`${link.casNumber}-${link.url}`}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm"
-                            data-testid={`reference-link-row-${link.id || index}`}
-                          >
-                            <div className="font-mono text-blue-700">{link.casNumber}</div>
-                            <div className="mt-1 text-slate-900">{link.label}</div>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                              <span>
-                                {link.linkType} | priority {link.priority}
-                              </span>
-                              <CurationStatusBadge
-                                status={currentStatus}
-                                testId={`reference-link-status-${link.id || index}`}
-                              />
-                              {curationTimestamp(link) ? (
-                                <span>{formatRelativeTime(curationTimestamp(link))}</span>
-                              ) : null}
-                            </div>
-                            <button
-                              type="button"
-                              disabled={saving}
-                              onClick={() => handleReferenceLinkStatusUpdate(link, nextStatus)}
-                              className="mt-2 rounded border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                              data-testid={`reference-link-${nextStatus}-${link.id || index}`}
-                            >
-                              {nextStatus === "active"
-                                ? t("pilot.activateReference", {
-                                    defaultValue: "Activate",
-                                  })
-                                : t("pilot.deactivateReference", {
-                                    defaultValue: "Deactivate",
-                                  })}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </section>
+              <PilotRecentCurationLists
+                recentAliases={recentAliases}
+                recentManualEntries={recentManualEntries}
+                recentReferenceLinks={recentReferenceLinks}
+                saving={saving}
+                onAliasStatusUpdate={handleAliasStatusUpdate}
+                onManualEntryStatusUpdate={handlePendingManualEntryDecision}
+                onReferenceLinkStatusUpdate={handleReferenceLinkStatusUpdate}
+                t={t}
+              />
             </>
           ) : null}
         </div>
