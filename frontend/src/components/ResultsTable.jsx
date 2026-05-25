@@ -72,10 +72,44 @@ const BATCH_REVIEW_ISSUE_ORDER = [
   "missing-chinese-name",
 ];
 
+const asCount = (value, fallback = 0) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const getPrimaryReviewIssue = (issues = []) =>
+  BATCH_REVIEW_ISSUE_ORDER.map((type) =>
+    issues.find((issue) => issue.type === type),
+  ).find(Boolean) || issues[0] || null;
+
+const getReviewNextActionLabel = (type, t) => {
+  const labels = {
+    "upstream-error": t("results.reviewActionRetryUpstream"),
+    "unresolved-search": t("results.reviewActionReportLookupGap"),
+    "no-ghs-data": t("results.reviewActionReportNoGhs"),
+    "ghs-text-no-pictograms": t("results.reviewActionReviewPictograms"),
+    "source-conflict": t("results.reviewActionReviewSourceConflict"),
+    "multiple-classifications": t("results.reviewActionConfirmMultipleGhs"),
+    "missing-chinese-name": t("results.reviewActionReportChineseName"),
+  };
+  return labels[type] || t("results.reviewActionReviewData");
+};
+
+const hasMultipleClassifications = (result = {}) =>
+  Boolean(result.has_multiple_classifications || result.other_classifications?.length > 0);
+
+const hasManualClassificationSelection = (result = {}, effective = null) =>
+  Boolean(
+    effective?.isCustom ||
+      result.selected_classification_index != null ||
+      result.customNote,
+  );
+
 export default function ResultsTable({
   results,
   allResults,
   totalCount,
+  batchSummary,
   resultFilter,
   onSetResultFilter,
   advancedFilter,
@@ -122,6 +156,7 @@ export default function ResultsTable({
 
       return {
         found: summary.found + (result.found ? 1 : 0),
+        unresolved: summary.unresolved + (!result.found ? 1 : 0),
         labelReady: summary.labelReady + (labelReady ? 1 : 0),
         needsReview: summary.needsReview + (hasAnyIssue ? 1 : 0),
         exportRows: summary.exportRows + 1,
@@ -129,11 +164,16 @@ export default function ResultsTable({
     },
     {
       found: 0,
+      unresolved: 0,
       labelReady: 0,
       needsReview: 0,
       exportRows: 0,
     },
   );
+  const batchInputTotal = asCount(batchSummary?.inputCount, workflowSummaryTotal);
+  const batchValidUnique = asCount(batchSummary?.acceptedCount, workflowSummaryTotal);
+  const batchDuplicateIgnored = asCount(batchSummary?.duplicateCount);
+  const batchInvalidRejected = asCount(batchSummary?.invalidCount);
   const workflowIssueCounts = workflowSummarySource.reduce((counts, result) => {
     const effective = result.found ? getEffectiveClassification(result) : null;
     const issues = getDataQualityIssues(result, effective);
@@ -231,11 +271,52 @@ export default function ResultsTable({
   ];
   const workflowSummaryCards = [
     {
+      key: "input-total",
+      value: batchInputTotal,
+      label: t("results.workflowInputTotalLabel"),
+      body: t("results.workflowInputTotalBody"),
+      className: "border-slate-200 bg-slate-50 text-slate-950",
+    },
+    {
+      key: "valid-unique",
+      value: batchValidUnique,
+      label: t("results.workflowValidUniqueLabel"),
+      body: t("results.workflowValidUniqueBody"),
+      className: "border-blue-100 bg-blue-50 text-blue-950",
+    },
+    {
+      key: "duplicate-ignored",
+      value: batchDuplicateIgnored,
+      label: t("results.workflowDuplicateIgnoredLabel"),
+      body: t("results.workflowDuplicateIgnoredBody"),
+      className: "border-slate-200 bg-white text-slate-950",
+    },
+    {
+      key: "invalid-rejected",
+      value: batchInvalidRejected,
+      label: t("results.workflowInvalidRejectedLabel"),
+      body: t("results.workflowInvalidRejectedBody"),
+      className:
+        batchInvalidRejected > 0
+          ? "border-red-100 bg-red-50 text-red-950"
+          : "border-slate-200 bg-white text-slate-950",
+    },
+    {
       key: "found",
       value: `${workflowSummary.found}/${workflowSummaryTotal}`,
       label: t("results.workflowFoundLabel"),
       body: t("results.workflowFoundBody"),
       className: "border-blue-100 bg-blue-50 text-blue-950",
+    },
+    {
+      key: "unresolved",
+      value: workflowSummary.unresolved,
+      label: t("results.workflowUnresolvedLabel"),
+      body: t("results.workflowUnresolvedBody"),
+      className:
+        workflowSummary.unresolved > 0
+          ? "border-amber-100 bg-amber-50 text-amber-950"
+          : "border-slate-200 bg-white text-slate-950",
     },
     {
       key: "label-ready",
@@ -334,6 +415,58 @@ export default function ResultsTable({
             </span>
           );
         })}
+      </div>
+    );
+  };
+
+  const renderReviewGuidance = (issues, testIdKey, result) => {
+    const primaryIssue = getPrimaryReviewIssue(issues);
+    if (!primaryIssue) return null;
+    const label = getDataQualityIssueLabel(primaryIssue.type, t);
+    const nextAction = getReviewNextActionLabel(primaryIssue.type, t);
+
+    return (
+      <div
+        className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-2 py-1.5 text-xs text-amber-950"
+        data-testid={`data-quality-next-action-${testIdKey}`}
+      >
+        <span className="font-semibold">{t("results.reviewPrimaryReason")}</span>{" "}
+        {label}
+        <span className="mx-1 text-amber-700">·</span>
+        <span className="font-semibold">{t("results.reviewNextAction")}</span>{" "}
+        {primaryIssue.type === DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS &&
+        result?.cas_number ? (
+          <button
+            type="button"
+            onClick={() => onToggleOtherClassifications(result.cas_number)}
+            className="font-semibold text-blue-700 underline-offset-2 hover:underline"
+            data-testid={`data-quality-next-action-open-chooser-${testIdKey}`}
+          >
+            {nextAction}
+          </button>
+        ) : (
+          <span>{nextAction}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderClassificationState = (result, effective, testIdKey) => {
+    if (!hasMultipleClassifications(result)) return null;
+    const confirmed = hasManualClassificationSelection(result, effective);
+
+    return (
+      <div
+        className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+          confirmed
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : "border-amber-200 bg-amber-50 text-amber-700"
+        }`}
+        data-testid={`classification-state-${testIdKey}`}
+      >
+        {confirmed
+          ? t("results.classificationStateUserConfirmed")
+          : t("results.classificationStateSystemSuggested")}
       </div>
     );
   };
@@ -477,6 +610,17 @@ export default function ResultsTable({
                 })}
               </p>
             )}
+            <p
+              className="text-xs font-medium text-slate-500"
+              data-testid="results-workflow-output-scope"
+            >
+              {t("results.workflowOutputScope", {
+                visible: results.length,
+                total: totalCount,
+                selected: selectedPrintableCount,
+                printable: printAllWithGhsCount,
+              })}
+            </p>
           </div>
           {nextAction && (
             <div
@@ -834,6 +978,8 @@ export default function ResultsTable({
                             </div>
                           )}
                           {renderDataQualityIssues(dataQualityIssues, rowKey, result)}
+                          {renderClassificationState(result, effectiveForRow, rowKey)}
+                          {renderReviewGuidance(dataQualityIssues, rowKey, result)}
                         </div>
                       );
                     })()
@@ -841,6 +987,7 @@ export default function ResultsTable({
                     <div>
                       <span className="text-red-700">{result.error}</span>
                       {renderDataQualityIssues(dataQualityIssues, rowKey, result)}
+                      {renderReviewGuidance(dataQualityIssues, rowKey, result)}
                     </div>
                   )}
                 </td>

@@ -346,6 +346,13 @@ function App() {
       ),
     [sortedResults, customGHSSettings]
   );
+  const allExportResults = useMemo(
+    () =>
+      results.map((result) =>
+        resolveEffectiveChemicalForPrint(result, customGHSSettings)
+      ),
+    [results, customGHSSettings]
+  );
 
   // ── Handlers ──
   const toggleOtherClassifications = (casNumber) => {
@@ -651,13 +658,13 @@ function App() {
   }, []);
 
   const handleConfirmExport = useCallback(
-    async (format) => {
+    async (format, scopedResults = exportResults, scopeMeta = {}) => {
       const { exportToCSV, exportToExcel } = await import("@/utils/exportData");
       if (format === "csv") {
-        await exportToCSV(exportResults);
+        await exportToCSV(scopedResults, scopeMeta);
         return;
       }
-      await exportToExcel(exportResults);
+      await exportToExcel(scopedResults, scopeMeta);
     },
     [exportResults]
   );
@@ -939,6 +946,7 @@ function App() {
         {showExportPreview && (
           <ExportPreviewModal
             results={exportResults}
+            allResults={allExportResults}
             initialFormat={exportPreviewFormat}
             onClose={() => setShowExportPreview(false)}
             onConfirm={handleConfirmExport}
@@ -979,6 +987,7 @@ function App() {
                 results={sortedResults}
                 allResults={results}
                 totalCount={results.length}
+                batchSummary={activeTab === "batch" ? batchSearchInput : null}
                 resultFilter={resultFilter}
                 onSetResultFilter={setResultFilter}
                 advancedFilter={advancedFilter}

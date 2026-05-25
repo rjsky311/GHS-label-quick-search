@@ -118,7 +118,7 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
     result.has_multiple_classifications || result.other_classifications?.length > 0;
   const hasManualClassificationSelection =
     effectiveClassification?.isCustom ||
-    result.selected_classification_index !== undefined ||
+    result.selected_classification_index != null ||
     Boolean(result.customNote);
   if (hasMultipleClassifications && !hasManualClassificationSelection) {
     issues.push({

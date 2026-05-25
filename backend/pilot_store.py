@@ -1442,6 +1442,11 @@ class PilotStore:
         pending_alias_count = sum(
             alias_status_counts.get(status, 0) for status in ALIAS_REVIEW_STATUSES
         )
+        needs_evidence_count = (
+            miss_query_status_counts.get("needs_evidence", 0)
+            + manual_entry_status_counts.get("needs_evidence", 0)
+            + alias_status_counts.get("needs_evidence", 0)
+        )
         unresolved_search_count = sum(
             miss_query_status_counts.get(status, 0)
             for status in ("open", "needs_evidence")
@@ -1456,6 +1461,7 @@ class PilotStore:
             "candidateFoundAwaitingManualReview": unconverted_candidate_count,
             "manualEntriesInReview": pending_manual_count,
             "aliasesInReview": pending_alias_count,
+            "needsEvidenceWorkItems": needs_evidence_count,
             "unresolvedSearches": unresolved_search_count,
             "missingChineseNameReports": correction_issue_type_counts.get(
                 "missing-chinese-name",
@@ -1474,37 +1480,78 @@ class PilotStore:
             (
                 "correction_intake",
                 "Review open correction requests before adding new data sources.",
+                "Open the correction queue, then approve, reject, mark ignored, or add review notes.",
                 attention_counts["openCorrectionRequests"],
+            ),
+            (
+                "candidate_found",
+                "Convert candidate-found evidence only when it should become a manual review entry.",
+                "Convert to pending manual entry or keep the candidate review-only.",
+                attention_counts["candidateFoundAwaitingManualReview"],
             ),
             (
                 "manual_review",
                 "Approve or reject pending manual entries before public lookup changes.",
+                "Approve, reject, or request evidence before public lookup/labels/exports use the row.",
                 attention_counts["manualEntriesInReview"],
+            ),
+            (
+                "needs_evidence",
+                "Clear needs-evidence rows before treating the queue as resolved.",
+                "Add source evidence, leave review-only, or reject stale work.",
+                attention_counts["needsEvidenceWorkItems"],
             ),
             (
                 "unresolved_searches",
                 "Resolve high-frequency search misses or mark them needs-evidence.",
+                "Resolve to reviewed CAS, mark needs-evidence, or ignore low-signal misses.",
                 attention_counts["unresolvedSearches"],
             ),
             (
                 "missing_chinese_names",
                 "Backfill trusted Traditional Chinese names with source evidence.",
+                "Create candidate evidence first; approve only through manual dictionary review.",
                 attention_counts["missingChineseNameReports"],
+            ),
+            (
+                "no_ghs_gaps",
+                "Review no-GHS reports without treating them as no-hazard conclusions.",
+                "Check SDS/source evidence, then keep as report, reject, or route to data correction.",
+                attention_counts["noGhsReports"],
             ),
             (
                 "source_conflicts",
                 "Inspect source conflicts and keep SDS/local verification visible.",
+                "Confirm the public primary selection separately from safety-data correction.",
                 attention_counts["sourceConflictReports"],
+            ),
+            (
+                "alias_review",
+                "Review alias changes before they affect search resolution.",
+                "Approve, reject, or request evidence for pending aliases.",
+                attention_counts["aliasesInReview"],
+            ),
+            (
+                "reference_link_review",
+                "Review inactive reference links so stale SDS links do not look authoritative.",
+                "Reactivate safe links, keep inactive for audit, or add a better reviewed source.",
+                attention_counts["inactiveReferenceLinks"],
             ),
             (
                 "telemetry_retention",
                 "Purge stale miss-query telemetry outside the retention window.",
+                "Export or review the queue first, then purge rows outside retention.",
                 attention_counts["staleMissQueryRows"],
             ),
         )
         recommended_focus = [
-            {"key": key, "message": message, "count": int(count)}
-            for key, message, count in recommended_focus_rules
+            {
+                "key": key,
+                "message": message,
+                "nextAction": next_action,
+                "count": int(count),
+            }
+            for key, message, next_action, count in recommended_focus_rules
             if int(count) > 0
         ]
         if not recommended_focus:

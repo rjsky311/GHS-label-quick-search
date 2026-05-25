@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, FileSpreadsheet, FileText, Info, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
-import { buildExportPreview } from "@/utils/exportRows";
+import {
+  EXPORT_SCOPE_KEYS,
+  buildExportPreview,
+  getExportScopeOptions,
+} from "@/utils/exportRows";
 
 const FORMAT_OPTIONS = [
   { value: "xlsx", icon: FileSpreadsheet, labelKey: "exportPreview.xlsx" },
@@ -11,12 +15,14 @@ const FORMAT_OPTIONS = [
 
 export default function ExportPreviewModal({
   results,
+  allResults,
   initialFormat = "xlsx",
   onClose,
   onConfirm,
 }) {
   const { t } = useTranslation();
   const [format, setFormat] = useState(initialFormat);
+  const [selectedScope, setSelectedScope] = useState(EXPORT_SCOPE_KEYS.VISIBLE);
   const [submitting, setSubmitting] = useState(false);
   const handleClose = useCallback(() => {
     if (!submitting) {
@@ -24,22 +30,45 @@ export default function ExportPreviewModal({
     }
   }, [onClose, submitting]);
   const dialogRef = useFocusTrap(handleClose);
-  const foundCount = results.filter((result) => result.found).length;
+  const scopeOptions = useMemo(
+    () =>
+      getExportScopeOptions({
+        allResults,
+        visibleResults: results,
+      }),
+    [allResults, results],
+  );
+  const selectedScopeOption =
+    scopeOptions.find((option) => option.key === selectedScope) ||
+    scopeOptions.find((option) => option.key === EXPORT_SCOPE_KEYS.VISIBLE) ||
+    scopeOptions[0];
+  const scopedResults = selectedScopeOption?.results || [];
+  const foundCount = scopedResults.filter((result) => result.found).length;
 
   useEffect(() => {
     setFormat(initialFormat);
   }, [initialFormat]);
 
+  useEffect(() => {
+    if (!scopeOptions.some((option) => option.key === selectedScope)) {
+      setSelectedScope(EXPORT_SCOPE_KEYS.VISIBLE);
+    }
+  }, [scopeOptions, selectedScope]);
+
   const preview = useMemo(
-    () => buildExportPreview(results, { t, maxRows: 5 }),
-    [results, t]
+    () => buildExportPreview(scopedResults, { t, maxRows: 5 }),
+    [scopedResults, t]
   );
 
   const handleConfirm = async () => {
     setSubmitting(true);
     let completed = false;
     try {
-      await onConfirm(format);
+      await onConfirm(format, scopedResults, {
+        scopeKey: selectedScopeOption.key,
+        scopeLabel: t(selectedScopeOption.labelKey),
+        count: scopedResults.length,
+      });
       completed = true;
     } finally {
       setSubmitting(false);
@@ -72,6 +101,8 @@ export default function ExportPreviewModal({
             <p className="mt-1 text-sm text-slate-500">
               {t("exportPreview.subtitle", {
                 format: format.toUpperCase(),
+                scope: t(selectedScopeOption.labelKey),
+                count: preview.totalRows,
               })}
             </p>
           </div>
@@ -92,8 +123,14 @@ export default function ExportPreviewModal({
               <div className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
                 {t("exportPreview.scopeLabel")}
               </div>
-              <div className="mt-1 text-sm font-semibold text-slate-950">
-                {t("exportPreview.scopeValue", { count: preview.totalRows })}
+              <div
+                className="mt-1 text-sm font-semibold text-slate-950"
+                data-testid="export-preview-scope-value"
+              >
+                {t("exportPreview.scopeValue", {
+                  scope: t(selectedScopeOption.labelKey),
+                  count: preview.totalRows,
+                })}
               </div>
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
@@ -111,6 +148,38 @@ export default function ExportPreviewModal({
               <div className="mt-1 text-sm font-semibold text-slate-950">
                 {t("exportPreview.columnCount", { count: preview.headers.length })}
               </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-700">
+              {t("exportPreview.scopePicker")}
+            </div>
+            <div className="grid gap-2 md:grid-cols-5">
+              {scopeOptions.map((option) => {
+                const selected = option.key === selectedScope;
+                const count = option.results.length;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => setSelectedScope(option.key)}
+                    className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                      selected
+                        ? "border-blue-700 bg-blue-50 text-blue-900"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50"
+                    }`}
+                    data-testid={`export-preview-scope-${option.key}`}
+                  >
+                    <span className="block font-semibold">
+                      {t(option.labelKey)}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500">
+                      {t(option.bodyKey, { count })}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

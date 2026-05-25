@@ -252,6 +252,7 @@ describe("LabelPrintModal", () => {
           cas_number: "7647-01-0",
           name_en: "Hydrochloric acid",
           has_multiple_classifications: true,
+          selected_classification_index: null,
           other_classifications: [
             {
               pictograms: [{ code: "GHS05" }],

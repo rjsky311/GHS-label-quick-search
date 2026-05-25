@@ -12,6 +12,14 @@ import {
   getDataQualityIssues,
 } from "@/utils/dataQuality";
 
+export const EXPORT_SCOPE_KEYS = Object.freeze({
+  ALL: "all",
+  VISIBLE: "visible",
+  READY: "ready",
+  NEEDS_REVIEW: "needs-review",
+  UNRESOLVED: "unresolved",
+});
+
 function hasDirectPictogramVisual(result) {
   return (result?.ghs_pictograms || result?.pictograms || []).length > 0;
 }
@@ -42,13 +50,59 @@ function hasMultipleClassifications(result) {
 }
 
 function hasManualClassificationSelection(result) {
-  return result?.selected_classification_index !== undefined || result?.customNote;
+  return result?.selected_classification_index != null || result?.customNote;
 }
 
 function resolveMultipleGhsStatus(result, t) {
   if (!hasMultipleClassifications(result)) return t("export.multipleGhsNone");
   if (hasManualClassificationSelection(result)) return t("export.multipleGhsManual");
   return t("export.multipleGhsSystemSuggested");
+}
+
+export function isExportReadyRow(result) {
+  return result?.found !== false && hasGhsData(result);
+}
+
+export function isExportNeedsReviewRow(result) {
+  return getDataQualityIssues(result, result).length > 0;
+}
+
+export function getExportScopeOptions({ allResults = [], visibleResults = [] } = {}) {
+  const visible = Array.isArray(visibleResults) ? visibleResults : [];
+  const all = Array.isArray(allResults) && allResults.length > 0 ? allResults : visible;
+
+  return [
+    {
+      key: EXPORT_SCOPE_KEYS.ALL,
+      labelKey: "exportPreview.scopeAll",
+      bodyKey: "exportPreview.scopeAllBody",
+      results: all,
+    },
+    {
+      key: EXPORT_SCOPE_KEYS.VISIBLE,
+      labelKey: "exportPreview.scopeVisible",
+      bodyKey: "exportPreview.scopeVisibleBody",
+      results: visible,
+    },
+    {
+      key: EXPORT_SCOPE_KEYS.READY,
+      labelKey: "exportPreview.scopeReady",
+      bodyKey: "exportPreview.scopeReadyBody",
+      results: all.filter(isExportReadyRow),
+    },
+    {
+      key: EXPORT_SCOPE_KEYS.NEEDS_REVIEW,
+      labelKey: "exportPreview.scopeNeedsReview",
+      bodyKey: "exportPreview.scopeNeedsReviewBody",
+      results: all.filter(isExportNeedsReviewRow),
+    },
+    {
+      key: EXPORT_SCOPE_KEYS.UNRESOLVED,
+      labelKey: "exportPreview.scopeUnresolved",
+      bodyKey: "exportPreview.scopeUnresolvedBody",
+      results: all.filter((result) => result?.found === false),
+    },
+  ];
 }
 
 export function resolveExportDataState(result, t) {

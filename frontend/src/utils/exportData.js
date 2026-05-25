@@ -18,6 +18,28 @@ export {
   resolveExportDataState,
 } from "@/utils/exportRows";
 
+export function buildExportFilename(format, options = {}) {
+  const safeFormat = format === "csv" ? "csv" : "xlsx";
+  const safeScope = String(options.scopeKey || "visible")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "visible";
+  const count = Number.isFinite(Number(options.count))
+    ? Number(options.count)
+    : 0;
+  return `ghs_batch_${safeScope}_${count}.${safeFormat}`;
+}
+
+function buildExportPayload(normalizedResults, format, options = {}) {
+  return {
+    results: normalizedResults,
+    format,
+    export_scope: options.scopeKey || "visible",
+    export_scope_label: options.scopeLabel || options.scopeKey || "Visible filtered",
+    export_count: normalizedResults.length,
+  };
+}
+
 // The `xlsx` package (SheetJS) has unpatched vulnerabilities in the
 // 0.18.x line shipped via npm. We previously used it as a client-side
 // fallback if the backend export endpoint failed, but that fallback
@@ -34,7 +56,7 @@ export {
  * On server error, surface a toast error and return; do not emit an
  * unsanitized file from the browser.
  */
-export async function exportToExcel(results) {
+export async function exportToExcel(results, options = {}) {
   if (results.length === 0) return;
   const t = i18n.t.bind(i18n);
   const normalizedResults = normalizeResultsForExport(results);
@@ -42,10 +64,13 @@ export async function exportToExcel(results) {
   try {
     const response = await axios.post(
       `${API}/export/xlsx`,
-      { results: normalizedResults, format: "xlsx" },
+      buildExportPayload(normalizedResults, "xlsx", options),
       { responseType: "blob" }
     );
-    saveAs(response.data, "ghs_results.xlsx");
+    saveAs(response.data, buildExportFilename("xlsx", {
+      ...options,
+      count: normalizedResults.length,
+    }));
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error("Excel export failed:", e);
@@ -58,7 +83,7 @@ export async function exportToExcel(results) {
  * formula-injection neutralization is applied. If the backend is
  * unreachable, falls back to a native CSV build using escapeCsvCell.
  */
-export async function exportToCSV(results) {
+export async function exportToCSV(results, options = {}) {
   if (results.length === 0) return;
   const t = i18n.t.bind(i18n);
   const normalizedResults = normalizeResultsForExport(results);
@@ -66,10 +91,13 @@ export async function exportToCSV(results) {
   try {
     const response = await axios.post(
       `${API}/export/csv`,
-      { results: normalizedResults, format: "csv" },
+      buildExportPayload(normalizedResults, "csv", options),
       { responseType: "blob" }
     );
-    saveAs(response.data, "ghs_results.csv");
+    saveAs(response.data, buildExportFilename("csv", {
+      ...options,
+      count: normalizedResults.length,
+    }));
     return;
   } catch (e) {
     // eslint-disable-next-line no-console
@@ -84,6 +112,9 @@ export async function exportToCSV(results) {
   const blob = new Blob(["\ufeff" + csv], {
     type: "text/csv;charset=utf-8",
   });
-  saveAs(blob, "ghs_results.csv");
+  saveAs(blob, buildExportFilename("csv", {
+    ...options,
+    count: normalizedResults.length,
+  }));
   toast.info(t("export.csvFallbackHint"));
 }

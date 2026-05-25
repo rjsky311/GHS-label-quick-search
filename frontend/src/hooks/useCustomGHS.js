@@ -35,7 +35,7 @@ export default function useCustomGHS() {
 
       const customSetting = customGHSSettings[result.cas_number];
 
-      if (customSetting && customSetting.selectedIndex !== undefined) {
+      if (customSetting && customSetting.selectedIndex != null) {
         const allClassifications = [
           {
             pictograms: result.ghs_pictograms || [],
@@ -102,7 +102,7 @@ export default function useCustomGHS() {
   }, []);
 
   const hasCustomClassification = useCallback(
-    (casNumber) => customGHSSettings[casNumber]?.selectedIndex !== undefined,
+    (casNumber) => customGHSSettings[casNumber]?.selectedIndex != null,
     [customGHSSettings]
   );
 

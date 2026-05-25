@@ -1650,17 +1650,27 @@ async def export_xlsx(request: Request, payload: ExportRequest):
     ws.column_dimensions['S'].width = 36
     ws.column_dimensions['T'].width = 34
 
-    _add_export_pilot_summary_sheet(wb, payload.results, thin_border)
+    _add_export_pilot_summary_sheet(
+        wb,
+        payload.results,
+        thin_border,
+        export_scope=payload.export_scope,
+        export_scope_label=payload.export_scope_label,
+        export_count=payload.export_count,
+    )
     
     # Save to BytesIO
     output = BytesIO()
     wb.save(output)
     output.seek(0)
     
+    safe_scope = re.sub(r"[^a-zA-Z0-9_-]+", "-", payload.export_scope or "visible").strip("-")
+    safe_scope = safe_scope or "visible"
+    filename = f"ghs_batch_{safe_scope}_{len(payload.results)}.xlsx"
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=ghs_results.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 @api_router.post("/export/csv")
@@ -1718,10 +1728,13 @@ async def export_csv(request: Request, payload: ExportRequest):
     output.write(csv_content.encode('utf-8'))
     output.seek(0)
     
+    safe_scope = re.sub(r"[^a-zA-Z0-9_-]+", "-", payload.export_scope or "visible").strip("-")
+    safe_scope = safe_scope or "visible"
+    filename = f"ghs_batch_{safe_scope}_{len(payload.results)}.csv"
     return StreamingResponse(
         output,
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=ghs_results.csv"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 @api_router.get("/ghs-pictograms")

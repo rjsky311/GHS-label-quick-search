@@ -103,8 +103,8 @@ export function hasManualGhsClassificationChoice(chem = {}, customGHSSettings = 
     : null;
 
   return Boolean(
-    customSetting?.selectedIndex !== undefined ||
-      chem?.selected_classification_index !== undefined ||
+    customSetting?.selectedIndex != null ||
+      chem?.selected_classification_index != null ||
       chem?.customNote,
   );
 }

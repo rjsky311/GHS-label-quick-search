@@ -79,6 +79,9 @@ class ChemicalResult(BaseModel):
 class ExportRequest(BaseModel):
     results: List[Dict[str, Any]] = Field(..., max_length=MAX_EXPORT_ROWS)
     format: str = "xlsx"
+    export_scope: str = Field("visible", max_length=40)
+    export_scope_label: str = Field("Visible filtered", max_length=80)
+    export_count: Optional[int] = None
 
 
 class WorkspaceDocumentPayload(BaseModel):

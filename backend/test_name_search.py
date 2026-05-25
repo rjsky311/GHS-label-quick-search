@@ -1822,6 +1822,9 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
 
     transport = ASGITransport(app=app)
     payload = {
+        "export_scope": "needs-review",
+        "export_scope_label": "=Needs review",
+        "export_count": 3,
         "results": [
             {
                 "cas_number": "64-17-5",
@@ -1864,6 +1867,8 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
         for row in range(2, summary.max_row + 1)
     }
     assert rows["Total rows"] == 3
+    assert rows["Export scope"] == "'=Needs review"
+    assert rows["Exported row count"] == 3
     assert rows["Printable rows"] == 2
     assert rows["Needs review rows"] == 2
     assert rows["Unresolved searches"] == 1

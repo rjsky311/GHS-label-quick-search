@@ -25,6 +25,7 @@ import {
   exportToExcel,
   exportToCSV,
   escapeCsvCell,
+  buildExportFilename,
   buildExportPreview,
   normalizeResultsForExport,
   resolveExportDataState,
@@ -187,6 +188,7 @@ describe('buildExportPreview', () => {
           ...mockResult,
           name_zh: 'Ethanol',
           has_multiple_classifications: true,
+          selected_classification_index: null,
           other_classifications: [
             { pictograms: [], hazard_statements: [], signal_word: 'Warning' },
           ],
@@ -241,6 +243,21 @@ describe('resolveExportDataState', () => {
   });
 });
 
+describe('buildExportFilename', () => {
+  it('builds scope-aware export filenames', () => {
+    expect(buildExportFilename('xlsx', { scopeKey: 'needs-review', count: 12 })).toBe(
+      'ghs_batch_needs-review_12.xlsx'
+    );
+    expect(buildExportFilename('csv', { scopeKey: 'Ready Rows!', count: 3 })).toBe(
+      'ghs_batch_ready-rows_3.csv'
+    );
+  });
+
+  it('falls back to visible scope and safe xlsx extension', () => {
+    expect(buildExportFilename('pdf', {})).toBe('ghs_batch_visible_0.xlsx');
+  });
+});
+
 describe('exportToExcel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -260,10 +277,39 @@ describe('exportToExcel', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       'http://test-api/export/xlsx',
-      expect.objectContaining({ results: [mockResult], format: 'xlsx' }),
+      expect.objectContaining({
+        results: [mockResult],
+        format: 'xlsx',
+        export_scope: 'visible',
+        export_scope_label: 'Visible filtered',
+        export_count: 1,
+      }),
       { responseType: 'blob' }
     );
-    expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_results.xlsx');
+    expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_batch_visible_1.xlsx');
+  });
+
+  it('sends selected export scope metadata with the actual row count to the backend export endpoint', async () => {
+    const blob = new Blob(['test']);
+    axios.post.mockResolvedValueOnce({ data: blob });
+
+    await exportToExcel([mockResult], {
+      scopeKey: 'needs-review',
+      scopeLabel: 'Needs review',
+      count: 99,
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://test-api/export/xlsx',
+      expect.objectContaining({
+        format: 'xlsx',
+        export_scope: 'needs-review',
+        export_scope_label: 'Needs review',
+        export_count: 1,
+      }),
+      { responseType: 'blob' }
+    );
+    expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_batch_needs-review_1.xlsx');
   });
 
   it('sends normalized Chinese display names to the backend export endpoint', async () => {
@@ -320,10 +366,15 @@ describe('exportToCSV', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       'http://test-api/export/csv',
-      expect.objectContaining({ format: 'csv' }),
+      expect.objectContaining({
+        format: 'csv',
+        export_scope: 'visible',
+        export_scope_label: 'Visible filtered',
+        export_count: 1,
+      }),
       { responseType: 'blob' }
     );
-    expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_results.csv');
+    expect(saveAs).toHaveBeenCalledWith(blob, 'ghs_batch_visible_1.csv');
     // Happy path should not show a toast
     expect(toast.info).not.toHaveBeenCalled();
   });
@@ -364,7 +415,7 @@ describe('exportToCSV', () => {
     }
 
     expect(saveAs).toHaveBeenCalledTimes(1);
-    expect(saveAs.mock.calls[0][1]).toBe('ghs_results.csv');
+    expect(saveAs.mock.calls[0][1]).toBe('ghs_batch_visible_1.csv');
     expect(capture.type).toBe('text/csv;charset=utf-8');
     expect(toast.info).toHaveBeenCalledWith('export.csvFallbackHint');
   });

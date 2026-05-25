@@ -271,6 +271,96 @@ This target is complete only when all applicable criteria are satisfied:
 - Current docs point to this file as the active major target.
 - Relevant tests and production QA gates pass.
 
+## Execution Metrics And Closeable Objective
+
+Use this section as the measurable execution target for the next Codex work
+round. The target is not "add more UI." The target is a batch-first workflow
+where a lab user can paste 50-100 items, know what happened, act on review
+items, print one of the three approved outputs, export useful handoff data,
+and route data problems into admin triage.
+
+### Success Metrics
+
+Batch review clarity:
+
+- The batch summary separates input total, valid unique submitted rows,
+  ignored duplicates, invalid rejected rows, found rows, unresolved rows,
+  label-ready rows, needs-review rows, selected rows, visible rows, and
+  printable rows.
+- Every needs-review row shows one primary reason and one next action.
+- Multiple-GHS rows visibly distinguish system-suggested primary
+  classification from user-confirmed classification.
+- Multiple-GHS rows can route directly to the classification chooser.
+- Unresolved, missing Chinese name, no-GHS, text-only GHS, source-conflict,
+  upstream-error, and multiple-GHS reasons remain separate.
+
+Batch print confidence:
+
+- The public model stays limited to complete A4/Letter, QR small label, and
+  identification small label.
+- Batch print uses one chosen output and one chosen stock per handoff.
+- Same-output continuation is allowed; silent stock/type switching is not.
+- All required GHS pictograms and identity content remain visible across
+  printable labels.
+- Print preview, print button copy, blocked/recovery copy, and print handoff
+  report the same output and page count.
+
+Batch export usefulness:
+
+- Export preview lets the user choose a clear scope: all, visible, ready,
+  needs-review, or unresolved.
+- Download filenames include batch scope and row count.
+- XLSX `Pilot Summary` includes export scope, exported row count, total rows,
+  printable rows, needs-review rows, unresolved searches, missing trusted
+  Chinese names, and multiple-GHS rows.
+- CSV/XLSX preserve formula-injection protection and data-trust columns.
+- A lab manager can open the file and immediately know which rows are ready,
+  which need review, and why.
+
+Admin/correction triage:
+
+- The admin triage summary shows open work items, unresolved searches,
+  candidate-found rows, manual entries in review, needs-evidence work items,
+  missing Chinese names, source conflicts, and no-GHS reports.
+- Recommended focus rows include a concrete next action, not just a count.
+- Candidate evidence remains review-only until an admin approves a manual
+  entry or alias.
+- Public lookup, labels, exports, and QR targets never consume unapproved
+  generated/external candidate data.
+
+### Short Execution Objective
+
+Implement and verify the Batch-First Lab Pilot v1 clarity slice:
+
+1. Improve batch review UI so a 50-100 item batch exposes input cleanup,
+   row status, review reasons, next actions, and multiple-GHS confirmation
+   state without requiring users to inspect every row manually.
+2. Improve batch export v1 so export scope is explicit in the preview,
+   backend payload, filename, and XLSX pilot summary.
+3. Improve admin triage so maintainers can see the next data-quality action
+   from the dashboard summary.
+4. Keep the three-output label model unchanged unless a regression blocks the
+   batch path.
+5. Update tests and docs in the same slice; do not call the objective complete
+   until the relevant frontend, backend, i18n, docs, and build gates pass.
+
+### Verification Gates
+
+Minimum gates for this clarity slice:
+
+- `npm test -- --runInBand ResultsTable ExportPreviewModal exportData PilotDashboardSidebar`
+- `npm run test:i18n`
+- `python -m pytest test_name_search.py::test_export_xlsx_includes_pilot_summary_sheet -v`
+- `npm run build`
+- `git diff --check`
+- `npm run test:docs`
+
+Additional gates before claiming deployed completion:
+
+- `npm run qa:production-search-ui`
+- `npm run qa:production-lab-ready-batch`
+- `npm run qa:production-product`
+
 ## Suggested Execution Order
 
 1. Update canonical docs so this target is the active major goal.
@@ -510,3 +600,13 @@ For admin/correction changes:
   product work from the five batch-first workstreams after this maintenance
   pass is committed. If work continues before commit, keep it limited to
   verification or review-scope cleanup so the current diff stays auditable.
+- 2026-05-25: Batch-first clarity slice started. Result rows now expose
+  batch-input cleanup counts, review primary reason, row-level next action,
+  and multiple-GHS confirmation state. Export preview now supports explicit
+  export scopes, scope-aware payloads/filenames, and XLSX pilot-summary scope
+  rows. Admin triage now includes candidate-found, manual-review,
+  needs-evidence, and no-GHS attention cards plus concrete next-action copy.
+  Focused frontend tests, full frontend tests, backend tests, i18n parity,
+  production build, docs drift, Python compile, and diff checks passed locally.
+  Production gates still need to run after commit/push/deployment before this
+  slice can be called shipped.

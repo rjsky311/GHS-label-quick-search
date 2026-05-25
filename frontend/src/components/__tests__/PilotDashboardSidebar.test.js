@@ -79,13 +79,18 @@ const baseProps = {
         openWorkItemCount: 14,
         attentionCounts: {
           unresolvedSearches: 3,
+          candidateFoundAwaitingManualReview: 1,
+          manualEntriesInReview: 2,
+          needsEvidenceWorkItems: 4,
           missingChineseNameReports: 1,
           sourceConflictReports: 2,
+          noGhsReports: 5,
         },
         recommendedFocus: [
           {
             key: "correction_intake",
             message: "Review open correction requests before adding new data sources.",
+            nextAction: "Open correction queue and decide approve, reject, or needs evidence.",
             count: 2,
           },
         ],
@@ -285,11 +290,18 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-open-work-items")).toHaveTextContent("14");
     expect(screen.getByTestId("pilot-triage-unresolved-searches")).toHaveTextContent("3");
+    expect(screen.getByTestId("pilot-triage-candidate-found")).toHaveTextContent("1");
+    expect(screen.getByTestId("pilot-triage-manual-entries")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-triage-needs-evidence")).toHaveTextContent("4");
     expect(screen.getByTestId("pilot-triage-missing-chinese-names")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-triage-source-conflicts")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-triage-no-ghs")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
       "Review open correction requests",
     );
+    expect(
+      screen.getByTestId("pilot-triage-focus-correction_intake-next-action"),
+    ).toHaveTextContent("pilot.triageNextAction");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
     expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
     expect(

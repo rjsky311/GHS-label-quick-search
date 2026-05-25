@@ -33,6 +33,10 @@ describe('ExportPreviewModal', () => {
     expect(screen.getByTestId('export-preview-modal')).toBeInTheDocument();
     expect(screen.getByText('exportPreview.title')).toBeInTheDocument();
     expect(screen.getAllByTestId('export-preview-row')).toHaveLength(2);
+    expect(screen.getByTestId('export-preview-scope-visible')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-scope-ready')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-scope-needs-review')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-scope-unresolved')).toBeInTheDocument();
     expect(screen.getByText('64-17-5')).toBeInTheDocument();
     expect(screen.getByText('999-99-9')).toBeInTheDocument();
     expect(screen.getByText('export.dataState')).toBeInTheDocument();
@@ -54,7 +58,14 @@ describe('ExportPreviewModal', () => {
     fireEvent.click(screen.getByTestId('export-preview-confirm'));
 
     await waitFor(() => {
-      expect(onConfirm).toHaveBeenCalledWith('xlsx');
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        results,
+        expect.objectContaining({
+          scopeKey: 'visible',
+          count: 2,
+        }),
+      );
     });
   });
 
@@ -73,7 +84,41 @@ describe('ExportPreviewModal', () => {
     fireEvent.click(screen.getByTestId('export-preview-confirm'));
 
     await waitFor(() => {
-      expect(onConfirm).toHaveBeenCalledWith('csv');
+      expect(onConfirm).toHaveBeenCalledWith(
+        'csv',
+        results,
+        expect.objectContaining({
+          scopeKey: 'visible',
+          count: 2,
+        }),
+      );
+    });
+  });
+
+  it('exports only the selected scope', async () => {
+    const onConfirm = jest.fn().mockResolvedValue(undefined);
+    render(
+      <ExportPreviewModal
+        results={[results[0]]}
+        allResults={results}
+        initialFormat="xlsx"
+        onClose={jest.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('export-preview-scope-unresolved'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [results[1]],
+        expect.objectContaining({
+          scopeKey: 'unresolved',
+          count: 1,
+        }),
+      );
     });
   });
 

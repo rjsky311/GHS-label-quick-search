@@ -187,6 +187,15 @@ describe('ResultsTable', () => {
         screen.getByTestId('results-workflow-summary-found-value')
       ).toHaveTextContent('3/4');
       expect(
+        screen.getByTestId('results-workflow-summary-input-total-value')
+      ).toHaveTextContent('4');
+      expect(
+        screen.getByTestId('results-workflow-summary-valid-unique-value')
+      ).toHaveTextContent('4');
+      expect(
+        screen.getByTestId('results-workflow-summary-unresolved-value')
+      ).toHaveTextContent('1');
+      expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
       ).toHaveTextContent('2');
       expect(
@@ -216,6 +225,61 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('results-next-action-body')).toHaveTextContent(
         'results.nextActionReviewBody'
       );
+      expect(screen.getByTestId('results-workflow-output-scope')).toHaveTextContent(
+        'results.workflowOutputScope'
+      );
+    });
+
+    it('includes batch input cleanup counts when available', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockNotFoundResult]}
+          totalCount={2}
+          batchSummary={{
+            inputCount: 5,
+            acceptedCount: 2,
+            duplicateCount: 2,
+            invalidCount: 1,
+          }}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(
+        screen.getByTestId('results-workflow-summary-input-total-value')
+      ).toHaveTextContent('5');
+      expect(
+        screen.getByTestId('results-workflow-summary-valid-unique-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-duplicate-ignored-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-invalid-rejected-value')
+      ).toHaveTextContent('1');
+    });
+
+    it('shows the primary review reason and next action on rows needing review', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          totalCount={1}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(
+        screen.getByTestId(
+          `classification-state-${mockFoundResult.cas_number}`,
+        ),
+      ).toHaveTextContent('results.classificationStateSystemSuggested');
+      expect(
+        screen.getByTestId(
+          `data-quality-next-action-${mockFoundResult.cas_number}`,
+        ),
+      ).toHaveTextContent('results.reviewActionConfirmMultipleGhs');
     });
 
     it('lets review reason chips filter the batch table', () => {

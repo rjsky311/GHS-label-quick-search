@@ -74,11 +74,11 @@ Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the owner doc. Use
 `PILOT_RUNBOOK.md` as the operator checklist.
 
 Current housekeeping state: the Repository Hygiene / Code Splitting / Docs
-Consolidation pass is complete. The worktree is still intentionally dirty until
-it is staged/committed, so avoid mixing new product behavior into that same
-review scope. The next product slice should return to the batch-first
-workstreams below unless CI, deployment, or user-provided evidence creates a
-blocker.
+Consolidation pass is complete. The active unshipped worktree scope is now a
+Batch-First Lab Pilot v1 clarity slice: batch review reasons/next actions,
+export scope/readability, and admin triage next-action visibility. Keep further
+changes inside that scope until it is verified, documented, and made
+reviewable.
 
 The next closeable slice should come from one of these five workstreams:
 

@@ -42,6 +42,30 @@ export default function PilotTriagePanel({ pilotTriage = {} }) {
           testId="pilot-triage-unresolved-searches"
         />
         <SummaryCard
+          label={t("pilot.triageCandidateFound", {
+            defaultValue: "Candidates to convert",
+          })}
+          value={attentionCounts.candidateFoundAwaitingManualReview || 0}
+          accent="text-blue-700"
+          testId="pilot-triage-candidate-found"
+        />
+        <SummaryCard
+          label={t("pilot.triagePendingManualEntries", {
+            defaultValue: "Manual entries in review",
+          })}
+          value={attentionCounts.manualEntriesInReview || 0}
+          accent="text-violet-700"
+          testId="pilot-triage-manual-entries"
+        />
+        <SummaryCard
+          label={t("pilot.triageNeedsEvidence", {
+            defaultValue: "Needs evidence",
+          })}
+          value={attentionCounts.needsEvidenceWorkItems || 0}
+          accent="text-yellow-700"
+          testId="pilot-triage-needs-evidence"
+        />
+        <SummaryCard
           label={t("pilot.triageMissingChineseNames", {
             defaultValue: "Missing Chinese names",
           })}
@@ -57,16 +81,37 @@ export default function PilotTriagePanel({ pilotTriage = {} }) {
           accent="text-red-700"
           testId="pilot-triage-source-conflicts"
         />
+        <SummaryCard
+          label={t("pilot.triageNoGhsReports", {
+            defaultValue: "No-GHS reports",
+          })}
+          value={attentionCounts.noGhsReports || 0}
+          accent="text-red-700"
+          testId="pilot-triage-no-ghs"
+        />
       </div>
       <div className="mt-3 space-y-2">
         {recommendedFocus.map((focus) => (
           <div
             key={focus.key}
-            className="flex items-start justify-between gap-3 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700"
+            className="grid gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700 md:grid-cols-[minmax(0,1fr)_auto]"
             data-testid={`pilot-triage-focus-${focus.key}`}
           >
-            <span>{focus.message}</span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+            <div>
+              <div>{focus.message}</div>
+              {focus.nextAction && (
+                <div
+                  className="mt-1 text-xs font-medium text-emerald-800"
+                  data-testid={`pilot-triage-focus-${focus.key}-next-action`}
+                >
+                  {t("pilot.triageNextAction", {
+                    defaultValue: "Next action: {{action}}",
+                    action: focus.nextAction,
+                  })}
+                </div>
+              )}
+            </div>
+            <span className="self-start rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
               {focus.count}
             </span>
           </div>

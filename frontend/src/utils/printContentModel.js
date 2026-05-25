@@ -25,7 +25,7 @@ export function resolveEffectiveChemicalForPrint(
 ) {
   const customSetting = customGHSSettings?.[chemical.cas_number];
 
-  if (customSetting && customSetting.selectedIndex !== undefined) {
+  if (customSetting && customSetting.selectedIndex != null) {
     const allClassifications = [
       {
         pictograms: chemical.ghs_pictograms || [],

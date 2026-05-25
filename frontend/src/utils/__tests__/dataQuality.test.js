@@ -214,6 +214,19 @@ describe("data quality issue helpers", () => {
     ).toBeUndefined();
   });
 
+  it("treats a null selected classification as unconfirmed", () => {
+    const issues = getDataQualityIssues({
+      ...baseChemical,
+      has_multiple_classifications: true,
+      selected_classification_index: null,
+      other_classifications: [{ pictograms: [], hazard_statements: [] }],
+    });
+
+    expect(issues.map((issue) => issue.type)).toContain(
+      DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
+    );
+  });
+
   it("does not keep multiple classifications in review after a manual primary selection", () => {
     const result = {
       ...baseChemical,

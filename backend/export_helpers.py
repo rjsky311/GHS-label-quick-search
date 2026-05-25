@@ -144,7 +144,13 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
     ]
 
 
-def _build_export_pilot_summary(results: List[Dict[str, Any]]) -> List[tuple[str, int, str]]:
+def _build_export_pilot_summary(
+    results: List[Dict[str, Any]],
+    *,
+    export_scope: str = "visible",
+    export_scope_label: str = "Visible filtered",
+    export_count: int | None = None,
+) -> List[tuple[str, Any, str]]:
     review_reason_counts: Counter[str] = Counter()
     printable_count = 0
     for result in results:
@@ -155,7 +161,18 @@ def _build_export_pilot_summary(results: List[Dict[str, Any]]) -> List[tuple[str
     needs_review_count = sum(
         1 for result in results if _export_review_reasons(result)
     )
+    exported_count = len(results)
     return [
+        (
+            "Export scope",
+            export_scope_label or export_scope or "Visible filtered",
+            "The user-selected scope for this workbook handoff.",
+        ),
+        (
+            "Exported row count",
+            exported_count,
+            "Rows included in this exported file after scope filtering.",
+        ),
         (
             "Total rows",
             len(results),
@@ -213,6 +230,10 @@ def _add_export_pilot_summary_sheet(
     workbook: Workbook,
     results: List[Dict[str, Any]],
     thin_border: Border,
+    *,
+    export_scope: str = "visible",
+    export_scope_label: str = "Visible filtered",
+    export_count: int | None = None,
 ) -> None:
     summary_ws = workbook.create_sheet("Pilot Summary")
     headers = ["Metric", "Value", "Pilot use"]
@@ -226,9 +247,18 @@ def _add_export_pilot_summary_sheet(
         cell.alignment = header_alignment
         cell.border = thin_border
 
-    for row, (metric, value, note) in enumerate(_build_export_pilot_summary(results), 2):
+    for row, (metric, value, note) in enumerate(
+        _build_export_pilot_summary(
+            results,
+            export_scope=export_scope,
+            export_scope_label=export_scope_label,
+            export_count=export_count,
+        ),
+        2,
+    ):
         summary_ws.cell(row=row, column=1, value=spreadsheet_safe(metric)).border = thin_border
-        summary_ws.cell(row=row, column=2, value=value).border = thin_border
+        safe_value = spreadsheet_safe(value) if isinstance(value, str) else value
+        summary_ws.cell(row=row, column=2, value=safe_value).border = thin_border
         note_cell = summary_ws.cell(row=row, column=3, value=spreadsheet_safe(note))
         note_cell.border = thin_border
         note_cell.alignment = Alignment(wrap_text=True)
