@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, FileSpreadsheet, FileText, Info, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
-import { buildExportPreview } from "@/utils/exportData";
+import { buildExportPreview } from "@/utils/exportRows";
 
 const FORMAT_OPTIONS = [
   { value: "xlsx", icon: FileSpreadsheet, labelKey: "exportPreview.xlsx" },

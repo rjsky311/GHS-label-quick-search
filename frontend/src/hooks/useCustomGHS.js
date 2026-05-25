@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 
 const CUSTOM_GHS_KEY = "ghs_custom_settings";
 
+function normalizeCustomSettings(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value;
+}
+
 export default function useCustomGHS() {
   const [customGHSSettings, setCustomGHSSettings] = useState({});
 
@@ -10,7 +17,11 @@ export default function useCustomGHS() {
     const saved = localStorage.getItem(CUSTOM_GHS_KEY);
     if (saved) {
       try {
-        setCustomGHSSettings(JSON.parse(saved));
+        const parsed = normalizeCustomSettings(JSON.parse(saved));
+        setCustomGHSSettings(parsed);
+        if (Object.keys(parsed).length === 0) {
+          localStorage.removeItem(CUSTOM_GHS_KEY);
+        }
       } catch (e) {
         console.error("Failed to parse custom GHS settings", e);
       }

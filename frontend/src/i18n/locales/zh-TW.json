@@ -841,6 +841,7 @@
   "label.previewIconFocus": "精簡模板應讓圖示與警示語保持主導。",
   "label.previewScanFocus": "掃碼優先模板只保留 QR 旁邊的必要資訊。",
   "label.densityHint": "這裡控制的是內容密度，不是紙材的實體尺寸。",
+  "common.loading": "載入中...",
   "common.close": "關閉",
   "common.cancel": "取消",
   "pilot.manualEntrySaved": "已儲存手動字典項目。",

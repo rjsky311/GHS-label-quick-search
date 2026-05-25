@@ -35,6 +35,15 @@ describe('useCustomGHS', () => {
     expect(result.current.customGHSSettings).toEqual({});
   });
 
+  it('resets invalid stored settings shape', () => {
+    localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(['not-a-settings-map']));
+    const { result } = renderHook(() => useCustomGHS());
+
+    expect(result.current.customGHSSettings).toEqual({});
+    expect(localStorage.getItem(CUSTOM_GHS_KEY)).toBeNull();
+    expect(result.current.getEffectiveClassification(mockResult).isCustom).toBe(false);
+  });
+
   it('getEffectiveClassification returns null for null result', () => {
     const { result } = renderHook(() => useCustomGHS());
     expect(result.current.getEffectiveClassification(null)).toBeNull();

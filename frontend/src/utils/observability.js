@@ -3,7 +3,7 @@ import { saveAs } from "file-saver";
 import { toast } from "sonner";
 import { API } from "@/constants/ghs";
 import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
-import { escapeCsvCell } from "@/utils/exportData";
+import { escapeCsvCell } from "@/utils/csvCell";
 
 export const OBSERVABILITY_STORAGE_KEY = "ghs_observability_events";
 export const OBSERVABILITY_UPDATE_EVENT = "ghs:observability-updated";

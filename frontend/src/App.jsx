@@ -1,4 +1,12 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  lazy,
+  Suspense,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import "@/App.css";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
@@ -18,11 +26,7 @@ import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
 import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
-import { exportToExcel, exportToCSV } from "@/utils/exportData";
-import {
-  printLabels,
-  resolveEffectiveChemicalForPrint,
-} from "@/utils/printLabels";
+import { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getDataQualityIssues } from "@/utils/dataQuality";
 import {
@@ -45,24 +49,41 @@ import { recordDictionaryMissQuery } from "@/utils/workspaceDocuments";
 // Components
 import AdminAccessDialog from "@/components/AdminAccessDialog";
 import Header from "@/components/Header";
-import FavoritesSidebar from "@/components/FavoritesSidebar";
-import HistorySidebar from "@/components/HistorySidebar";
-import PilotDashboardSidebar from "@/components/PilotDashboardSidebar";
-import PreparedSidebar from "@/components/PreparedSidebar";
 import SearchSection from "@/components/SearchSection";
-import ResultsTable from "@/components/ResultsTable";
 import EmptyState from "@/components/EmptyState";
 import ProductTrustPanel from "@/components/ProductTrustPanel";
 import UpstreamErrorBanner from "@/components/UpstreamErrorBanner";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
-import DetailModal from "@/components/DetailModal";
-import DataCorrectionDialog from "@/components/DataCorrectionDialog";
-import ComparisonModal from "@/components/ComparisonModal";
-import LabelPrintModal from "@/components/LabelPrintModal";
-import PrepareSolutionModal from "@/components/PrepareSolutionModal";
-import ExportPreviewModal from "@/components/ExportPreviewModal";
 import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
+
+const ResultsTable = lazy(() => import("@/components/ResultsTable"));
+const FavoritesSidebar = lazy(() => import("@/components/FavoritesSidebar"));
+const HistorySidebar = lazy(() => import("@/components/HistorySidebar"));
+const PilotDashboardSidebar = lazy(() => import("@/components/PilotDashboardSidebar"));
+const PreparedSidebar = lazy(() => import("@/components/PreparedSidebar"));
+const DetailModal = lazy(() => import("@/components/DetailModal"));
+const DataCorrectionDialog = lazy(() => import("@/components/DataCorrectionDialog"));
+const ComparisonModal = lazy(() => import("@/components/ComparisonModal"));
+const LabelPrintModal = lazy(() => import("@/components/LabelPrintModal"));
+const PrepareSolutionModal = lazy(() => import("@/components/PrepareSolutionModal"));
+const ExportPreviewModal = lazy(() => import("@/components/ExportPreviewModal"));
+
+function DeferredOverlayFallback() {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/10"
+      role="status"
+      aria-live="polite"
+      data-testid="deferred-overlay-loading"
+    >
+      <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg">
+        {t("common.loading", { defaultValue: "Loading..." })}
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -631,6 +652,7 @@ function App() {
 
   const handleConfirmExport = useCallback(
     async (format) => {
+      const { exportToCSV, exportToExcel } = await import("@/utils/exportData");
       if (format === "csv") {
         await exportToCSV(exportResults);
         return;
@@ -649,12 +671,14 @@ function App() {
     );
   }, [pilotReport]);
 
-  const handlePrintLabels = useCallback((configOverride, itemOverride) => {
+  const handlePrintLabels = useCallback(async (configOverride, itemOverride) => {
     const effectiveLabelConfig = configOverride || labelConfig;
     const sourceSelection = itemOverride || selectedForLabel;
     const printableSelection = sourceSelection.map((chemical) =>
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
     );
+
+    const { printLabels } = await import("@/utils/printLabels");
 
     printLabels(
       printableSelection,
@@ -859,66 +883,68 @@ function App() {
         />
       )}
 
-      {showPilotDashboard && (
-        <PilotDashboardSidebar
-          report={pilotReport}
-          aliases={pilotAliases}
-          manualEntries={pilotManualEntries}
-          referenceLinks={pilotReferenceLinks}
-          correctionRequests={pilotCorrectionRequests}
-          loading={pilotLoading}
-          saving={pilotSaving}
-          error={pilotError}
-          onClose={() => setShowPilotDashboard(false)}
-          onRefresh={refreshPilotDashboard}
-          onExportObservabilityReport={() => exportObservabilityReport()}
-          onSaveManualEntry={savePilotManualEntry}
-          onSaveAlias={savePilotAlias}
-          onSaveReferenceLink={savePilotReferenceLink}
-          onResolveMissQuery={resolvePilotMissQuery}
-          onPurgeStaleMissQueries={purgePilotStaleMissQueries}
-          onUpdateCorrectionRequestStatus={updatePilotCorrectionRequestStatus}
-        />
-      )}
+      <Suspense fallback={<DeferredOverlayFallback />}>
+        {showPilotDashboard && (
+          <PilotDashboardSidebar
+            report={pilotReport}
+            aliases={pilotAliases}
+            manualEntries={pilotManualEntries}
+            referenceLinks={pilotReferenceLinks}
+            correctionRequests={pilotCorrectionRequests}
+            loading={pilotLoading}
+            saving={pilotSaving}
+            error={pilotError}
+            onClose={() => setShowPilotDashboard(false)}
+            onRefresh={refreshPilotDashboard}
+            onExportObservabilityReport={() => exportObservabilityReport()}
+            onSaveManualEntry={savePilotManualEntry}
+            onSaveAlias={savePilotAlias}
+            onSaveReferenceLink={savePilotReferenceLink}
+            onResolveMissQuery={resolvePilotMissQuery}
+            onPurgeStaleMissQueries={purgePilotStaleMissQueries}
+            onUpdateCorrectionRequestStatus={updatePilotCorrectionRequestStatus}
+          />
+        )}
 
-      {showFavorites && (
-        <FavoritesSidebar
-          favorites={favorites}
-          onClose={() => setShowFavorites(false)}
-          onClearFavorites={clearFavorites}
-          onToggleFavorite={toggleFavorite}
-          onViewDetail={handleViewDetailFromFavorites}
-          onPrintLabel={handlePrintLabelFromFavorites}
-        />
-      )}
+        {showFavorites && (
+          <FavoritesSidebar
+            favorites={favorites}
+            onClose={() => setShowFavorites(false)}
+            onClearFavorites={clearFavorites}
+            onToggleFavorite={toggleFavorite}
+            onViewDetail={handleViewDetailFromFavorites}
+            onPrintLabel={handlePrintLabelFromFavorites}
+          />
+        )}
 
-      {showHistory && (
-        <HistorySidebar
-          history={history}
-          onClose={() => setShowHistory(false)}
-          onClearHistory={clearHistory}
-          onSelectHistoryItem={handleSelectHistoryItem}
-        />
-      )}
+        {showHistory && (
+          <HistorySidebar
+            history={history}
+            onClose={() => setShowHistory(false)}
+            onClearHistory={clearHistory}
+            onSelectHistoryItem={handleSelectHistoryItem}
+          />
+        )}
 
-      {showPrepared && (
-        <PreparedSidebar
-          recents={preparedRecents}
-          onClose={() => setShowPrepared(false)}
-          onClearRecents={clearPreparedRecents}
-          onReprint={handleReprintPreparedRecent}
-          reprintingId={preparedReprintingId}
-        />
-      )}
+        {showPrepared && (
+          <PreparedSidebar
+            recents={preparedRecents}
+            onClose={() => setShowPrepared(false)}
+            onClearRecents={clearPreparedRecents}
+            onReprint={handleReprintPreparedRecent}
+            reprintingId={preparedReprintingId}
+          />
+        )}
 
-      {showExportPreview && (
-        <ExportPreviewModal
-          results={exportResults}
-          initialFormat={exportPreviewFormat}
-          onClose={() => setShowExportPreview(false)}
-          onConfirm={handleConfirmExport}
-        />
-      )}
+        {showExportPreview && (
+          <ExportPreviewModal
+            results={exportResults}
+            initialFormat={exportPreviewFormat}
+            onClose={() => setShowExportPreview(false)}
+            onConfirm={handleConfirmExport}
+          />
+        )}
+      </Suspense>
 
       <main id="main-content" className="max-w-7xl mx-auto px-4 py-6">
         <SearchSection
@@ -948,44 +974,46 @@ function App() {
             <UpstreamErrorBanner
               count={results.filter((r) => r.upstream_error).length}
             />
-            <ResultsTable
-              results={sortedResults}
-              allResults={results}
-              totalCount={results.length}
-              resultFilter={resultFilter}
-              onSetResultFilter={setResultFilter}
-              advancedFilter={advancedFilter}
-              onSetAdvancedFilter={setAdvancedFilter}
-              sortConfig={sortConfig}
-              onRequestSort={requestSort}
-              selectedForLabel={selectedForLabel}
-              expandedOtherClassifications={expandedOtherClassifications}
-              onOpenLabelModal={handleOpenLabelModal}
-              onPrintAllWithGhs={handlePrintAllWithGhs}
-              printAllWithGhsCount={printableWithGhsCount}
-              onExportToExcel={() => handleOpenExportPreview("xlsx")}
-              onExportToCSV={() => handleOpenExportPreview("csv")}
-              onSelectAllForLabel={() =>
-                selectAllForLabel(
-                  sortedResults.filter(
-                    (r) =>
-                      r.found && hasGhsData(getEffectiveClassification(r)),
-                  ),
-                )
-              }
-              onClearLabelSelection={clearLabelSelection}
-              onToggleSelectForLabel={toggleSelectForLabel}
-              isSelectedForLabel={isSelectedForLabel}
-              onToggleFavorite={toggleFavorite}
-              isFavorited={isFavorited}
-              getEffectiveClassification={getEffectiveClassification}
-              onToggleOtherClassifications={toggleOtherClassifications}
-              onSetCustomClassification={setCustomClassification}
-              onClearCustomClassification={clearCustomClassification}
-              onViewDetail={setSelectedResult}
-              onOpenComparison={() => setShowComparisonModal(true)}
-              onOpenDataCorrection={handleOpenDataCorrection}
-            />
+            <Suspense fallback={<SkeletonTable rows={3} />}>
+              <ResultsTable
+                results={sortedResults}
+                allResults={results}
+                totalCount={results.length}
+                resultFilter={resultFilter}
+                onSetResultFilter={setResultFilter}
+                advancedFilter={advancedFilter}
+                onSetAdvancedFilter={setAdvancedFilter}
+                sortConfig={sortConfig}
+                onRequestSort={requestSort}
+                selectedForLabel={selectedForLabel}
+                expandedOtherClassifications={expandedOtherClassifications}
+                onOpenLabelModal={handleOpenLabelModal}
+                onPrintAllWithGhs={handlePrintAllWithGhs}
+                printAllWithGhsCount={printableWithGhsCount}
+                onExportToExcel={() => handleOpenExportPreview("xlsx")}
+                onExportToCSV={() => handleOpenExportPreview("csv")}
+                onSelectAllForLabel={() =>
+                  selectAllForLabel(
+                    sortedResults.filter(
+                      (r) =>
+                        r.found && hasGhsData(getEffectiveClassification(r)),
+                    ),
+                  )
+                }
+                onClearLabelSelection={clearLabelSelection}
+                onToggleSelectForLabel={toggleSelectForLabel}
+                isSelectedForLabel={isSelectedForLabel}
+                onToggleFavorite={toggleFavorite}
+                isFavorited={isFavorited}
+                getEffectiveClassification={getEffectiveClassification}
+                onToggleOtherClassifications={toggleOtherClassifications}
+                onSetCustomClassification={setCustomClassification}
+                onClearCustomClassification={clearCustomClassification}
+                onViewDetail={setSelectedResult}
+                onOpenComparison={() => setShowComparisonModal(true)}
+                onOpenDataCorrection={handleOpenDataCorrection}
+              />
+            </Suspense>
             {/* v1.8 M1: trust-boundary disclaimer */}
             <AuthoritativeSourceNote variant="results" />
             <ProductTrustPanel
@@ -1006,82 +1034,86 @@ function App() {
         )}
       </main>
 
-      {selectedResult && (
-        <DetailModal
-          result={selectedResult}
-          onClose={() => setSelectedResult(null)}
-          onToggleFavorite={toggleFavorite}
-          isFavorited={isFavorited}
-          getEffectiveClassification={getEffectiveClassification}
-          customGHSSettings={customGHSSettings}
-          onSetCustomClassification={setCustomClassification}
-          hasCustomClassification={hasCustomClassification}
-          onClearCustomClassification={clearCustomClassification}
-          onPrintLabel={handlePrintLabelFromDetail}
-          onPrepareSolution={handleOpenPrepareSolution}
-          onOpenDataCorrection={handleOpenDataCorrection}
-          // When PrepareSolutionModal is stacked on top, mark the
-          // DetailModal as inert / aria-hidden so screen readers see
-          // only one active modal at a time and pointer/keyboard
-          // interaction is suppressed on this layer.
-          suppressed={Boolean(prepareSolutionParent || dataCorrectionContext)}
-        />
-      )}
+      <Suspense fallback={<DeferredOverlayFallback />}>
+        {selectedResult && (
+          <DetailModal
+            result={selectedResult}
+            onClose={() => setSelectedResult(null)}
+            onToggleFavorite={toggleFavorite}
+            isFavorited={isFavorited}
+            getEffectiveClassification={getEffectiveClassification}
+            customGHSSettings={customGHSSettings}
+            onSetCustomClassification={setCustomClassification}
+            hasCustomClassification={hasCustomClassification}
+            onClearCustomClassification={clearCustomClassification}
+            onPrintLabel={handlePrintLabelFromDetail}
+            onPrepareSolution={handleOpenPrepareSolution}
+            onOpenDataCorrection={handleOpenDataCorrection}
+            // When PrepareSolutionModal is stacked on top, mark the
+            // DetailModal as inert / aria-hidden so screen readers see
+            // only one active modal at a time and pointer/keyboard
+            // interaction is suppressed on this layer.
+            suppressed={Boolean(prepareSolutionParent || dataCorrectionContext)}
+          />
+        )}
 
-      {dataCorrectionContext && (
-        <DataCorrectionDialog
-          context={dataCorrectionContext}
-          onClose={() => setDataCorrectionContext(null)}
-          onSubmitted={handleCorrectionSubmitted}
-        />
-      )}
+        {dataCorrectionContext && (
+          <DataCorrectionDialog
+            context={dataCorrectionContext}
+            onClose={() => setDataCorrectionContext(null)}
+            onSubmitted={handleCorrectionSubmitted}
+          />
+        )}
 
-      {prepareSolutionParent && (
-        <PrepareSolutionModal
-          parent={prepareSolutionParent}
-          onSubmit={handleSubmitPrepareSolution}
-          onClose={handleClosePrepareSolution}
-          recents={preparedRecents}
-          presets={preparedPresets}
-          onSavePreset={handleSavePreparedPreset}
-          presetNameValue={preparedPresetNameDraft}
-          onPresetNameChange={setPreparedPresetNameDraft}
-        />
-      )}
+        {prepareSolutionParent && (
+          <PrepareSolutionModal
+            parent={prepareSolutionParent}
+            onSubmit={handleSubmitPrepareSolution}
+            onClose={handleClosePrepareSolution}
+            recents={preparedRecents}
+            presets={preparedPresets}
+            onSavePreset={handleSavePreparedPreset}
+            presetNameValue={preparedPresetNameDraft}
+            onPresetNameChange={setPreparedPresetNameDraft}
+          />
+        )}
 
-      {showComparisonModal && (
-        <ComparisonModal
-          chemicals={selectedForLabel.filter((r) => r.found && r.ghs_pictograms?.length > 0).slice(0, 5)}
-          getEffectiveClassification={getEffectiveClassification}
-          onClose={() => setShowComparisonModal(false)}
-        />
-      )}
+        {showComparisonModal && (
+          <ComparisonModal
+            chemicals={selectedForLabel
+              .filter((r) => r.found && r.ghs_pictograms?.length > 0)
+              .slice(0, 5)}
+            getEffectiveClassification={getEffectiveClassification}
+            onClose={() => setShowComparisonModal(false)}
+          />
+        )}
 
-      {showLabelModal && (
-        <LabelPrintModal
-          selectedForLabel={selectedForLabel}
-          labelConfig={labelConfig}
-          customGHSSettings={customGHSSettings}
-          onLabelConfigChange={setLabelConfig}
-          customLabelFields={customLabelFields}
-          onCustomLabelFieldsChange={setCustomLabelFields}
-          labProfile={labProfile}
-          onLabProfileChange={setLabProfile}
-          onClearLabProfile={clearLabProfile}
-          labelQuantities={labelQuantities}
-          onLabelQuantitiesChange={setLabelQuantities}
-          onPrintLabels={handlePrintLabels}
-          onToggleSelectForLabel={toggleSelectForLabel}
-          printTemplates={printTemplates}
-          onSaveTemplate={saveTemplate}
-          onLoadTemplate={loadTemplate}
-          onDeleteTemplate={deleteTemplate}
-          recentPrints={recentPrints}
-          onLoadRecentPrint={handleLoadRecentPrint}
-          onClearRecentPrints={clearRecentPrints}
-          onClose={handleCloseLabelModal}
-        />
-      )}
+        {showLabelModal && (
+          <LabelPrintModal
+            selectedForLabel={selectedForLabel}
+            labelConfig={labelConfig}
+            customGHSSettings={customGHSSettings}
+            onLabelConfigChange={setLabelConfig}
+            customLabelFields={customLabelFields}
+            onCustomLabelFieldsChange={setCustomLabelFields}
+            labProfile={labProfile}
+            onLabProfileChange={setLabProfile}
+            onClearLabProfile={clearLabProfile}
+            labelQuantities={labelQuantities}
+            onLabelQuantitiesChange={setLabelQuantities}
+            onPrintLabels={handlePrintLabels}
+            onToggleSelectForLabel={toggleSelectForLabel}
+            printTemplates={printTemplates}
+            onSaveTemplate={saveTemplate}
+            onLoadTemplate={loadTemplate}
+            onDeleteTemplate={deleteTemplate}
+            recentPrints={recentPrints}
+            onLoadRecentPrint={handleLoadRecentPrint}
+            onClearRecentPrints={clearRecentPrints}
+            onClose={handleCloseLabelModal}
+          />
+        )}
+      </Suspense>
 
       <Footer />
     </div>

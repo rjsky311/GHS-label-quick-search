@@ -849,6 +849,7 @@
   "correctionDialog.fallbackLink": "Open fallback",
   "a11y.skipToContent": "Skip to main content",
   "label.densityHint": "This controls content density, not the physical stock dimensions.",
+  "common.loading": "Loading...",
   "common.close": "Close",
   "common.cancel": "Cancel",
   "pilot.manualEntrySaved": "Manual dictionary entry saved.",
