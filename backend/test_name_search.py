@@ -21,6 +21,13 @@ from pilot_store import PilotStore
 from chemical_dict import EN_TO_CAS, ZH_TO_CAS, CAS_TO_EN, CAS_TO_ZH, ALIASES_ZH, ALIASES_EN
 
 
+def route_limits_for(endpoint_name):
+    for key, limits in server.limiter._route_limits.items():
+        if key.endswith(f".{endpoint_name}"):
+            return limits
+    return []
+
+
 # ─── Unit tests: resolve_name_to_cas ───────────────────────
 
 class TestResolveNameToCas:
@@ -277,7 +284,7 @@ async def test_dictionary_miss_query_rejects_long_allowed_context_scalar(monkeyp
 
 
 def test_dictionary_miss_query_endpoint_is_rate_limited():
-    limits = server.limiter._route_limits.get("server.dictionary_miss_query", [])
+    limits = route_limits_for("dictionary_miss_query")
     assert any(
         limit.limit.amount == 30 and limit.limit.GRANULARITY.name == "minute"
         for limit in limits
@@ -346,10 +353,7 @@ async def test_dictionary_correction_request_records_public_intake(monkeypatch):
 
 
 def test_dictionary_correction_request_endpoint_is_rate_limited():
-    limits = server.limiter._route_limits.get(
-        "server.create_dictionary_correction_request",
-        [],
-    )
+    limits = route_limits_for("create_dictionary_correction_request")
     assert any(
         limit.limit.amount == 20 and limit.limit.GRANULARITY.name == "minute"
         for limit in limits
