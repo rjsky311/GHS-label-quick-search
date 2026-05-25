@@ -203,8 +203,8 @@ Current completion snapshot:
   the active in-progress scope is batch review clarity, batch export scope,
   and admin triage next-action visibility. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`
   now records measurable success indicators and verification gates for this
-  slice. Local tests/build/docs checks have passed; do not mark it shipped
-  until the relevant production batch/search gates pass after deployment.
+  slice. Local tests/build/docs checks and deployed production health, bundle,
+  search UI, lab-ready batch, and product QA gates passed after `20b5745`.
 - **Maintainability extraction checkpoint 2026-05-25**:
   bounded low-risk slices are shipped. Admin triage, candidate evidence,
   curation status helpers, print-modal helper/config, print advanced controls,

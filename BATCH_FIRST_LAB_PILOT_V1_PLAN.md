@@ -608,5 +608,6 @@ For admin/correction changes:
   needs-evidence, and no-GHS attention cards plus concrete next-action copy.
   Focused frontend tests, full frontend tests, backend tests, i18n parity,
   production build, docs drift, Python compile, and diff checks passed locally.
-  Production gates still need to run after commit/push/deployment before this
-  slice can be called shipped.
+  The slice was committed as `20b5745`, pushed to `main`, deployed on Zeabur,
+  and production health, bundle, search UI, lab-ready batch, and product QA
+  gates passed.
