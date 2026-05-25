@@ -200,11 +200,11 @@ Current completion snapshot:
   batch export, correction/admin triage, and one low-risk maintainability
   slice.
 - **Batch-first clarity slice checkpoint 2026-05-25**:
-  the active in-progress scope is batch review clarity, batch export scope,
-  and admin triage next-action visibility. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`
-  now records measurable success indicators and verification gates for this
-  slice. Local tests/build/docs checks and deployed production health, bundle,
-  search UI, lab-ready batch, and product QA gates passed after `20b5745`.
+  batch review clarity, batch export scope, and admin triage next-action
+  visibility shipped in `20b5745`. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` records
+  measurable success indicators and verification gates for that slice. Local
+  tests/build/docs checks and deployed production health, bundle, search UI,
+  lab-ready batch, and product QA gates passed after `20b5745`.
 - **Maintainability extraction checkpoint 2026-05-25**:
   bounded low-risk slices are shipped. Admin triage, candidate evidence,
   curation status helpers, print-modal helper/config, print advanced controls,
@@ -311,6 +311,14 @@ Current completion snapshot:
   `GHS Results`, `Ready Rows`, `Needs Review`, `Unresolved`, and
   `Pilot Summary` sheets, while the frontend export preview explains that XLSX
   downloads are already separated for lab-manager triage.
+- **Batch handoff/export closure checkpoint 2026-05-25**: `5195b3a` shipped
+  the fixed-stock batch handoff/export closure scope and `5d51401` fixed the
+  production batch QA ordering so the handoff contract is asserted after the
+  required lab/supplier profile is present. CI passed, Zeabur production
+  refreshed, and production health, batch-print, and product QA gates passed.
+  The next Batch-First work should be a final owner-doc closure audit or admin
+  triage improvement, not another handoff/export implementation pass unless
+  new evidence reopens it.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -971,12 +979,10 @@ Use these files by role:
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
-- Current dirty-worktree commit scope should remain reviewable as:
-  maintainability extraction, backend/API boundary extraction, frontend
-  print/admin component extraction, tests, and docs. Avoid mixing unrelated
-  product changes into that scope before it is committed. This housekeeping and
-  code-splitting slice is complete; while these files remain uncommitted, the
-  next operational risk is reviewability, not more maintenance work.
+- Repository hygiene, code splitting, and the Batch-First handoff/export
+  closure scope have been committed and pushed. Future work should start from a
+  new reviewable slice rather than accumulating more cleanup in the shipped
+  scope.
 - `POST_95_REPRIORITIZATION.md`: post-95 decision packet and shipped
   pilot-operations/evidence target history after the Lab-Ready Pilot shipped.
 - `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: active major owner doc for the next

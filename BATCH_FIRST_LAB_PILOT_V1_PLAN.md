@@ -23,6 +23,39 @@ This is not a broad redesign. It is a focused productization target:
 - Maintainability work is included only where it lowers risk for the selected
   workflow.
 
+## Current Closure Audit Snapshot
+
+Status remains `Open`, but the largest implementation slices are now shipped
+and production-gated:
+
+- Batch review clarity, export-scope handling, and admin triage next-action
+  visibility shipped in `20b5745` and passed local tests/build/docs checks plus
+  deployed production health, bundle, search UI, lab-ready batch, and product
+  QA gates.
+- The fixed-stock batch output contract and Batch Export v1 closure shipped in
+  `5195b3a`: the print modal and print action now expose selected item count,
+  physical label count, physical page count, and selected stock/purpose; CSV
+  and XLSX exports share the same trust/review row contract; XLSX separates
+  ready, needs-review, unresolved, and pilot-summary sheets.
+- The production batch handoff QA ordering fix shipped in `5d51401`, after
+  which production health, batch-print, and product QA passed against Zeabur.
+- The required low-risk maintainability criterion is satisfied by the bounded
+  extraction slices already listed in this file.
+
+Remaining open work is now narrower:
+
+- Run one final owner-doc closure audit that maps the latest production
+  evidence to every acceptance criterion below. If all criteria pass, this
+  target can move from `Open` to `Shipped / Monitoring`.
+- Use real pilot/admin queue evidence, or a representative seeded admin queue,
+  to decide whether admin triage is truly fast enough for maintainers to know
+  the next data-quality action. If not, make admin triage the next product
+  slice.
+- Keep external candidate discovery review-only and dry-run-only until a
+  separate scope/cost/source decision approves a specific source.
+- Keep physical printer/stock validation deferred; it is not required to close
+  this software target.
+
 ## Why This Is The Right Next Major Goal
 
 The previous milestones proved that the app can pass controlled production QA
@@ -637,3 +670,12 @@ For admin/correction changes:
   The slice was committed as `20b5745`, pushed to `main`, deployed on Zeabur,
   and production health, bundle, search UI, lab-ready batch, and product QA
   gates passed.
+- 2026-05-25: Batch output/export closure shipped. `5195b3a` aligned the print
+  modal, print button, and backend export workbook around one fixed-stock
+  batch handoff contract: selected items, physical labels, physical pages,
+  stock/purpose, shared CSV/XLSX trust rows, and XLSX ready/review/unresolved
+  triage sheets. `5d51401` fixed the production batch QA ordering so the gate
+  asserts the handoff contract after the required lab/supplier profile is
+  present. CI passed, Zeabur production refreshed, and production health,
+  batch-print, and product QA passed. The remaining step is a final
+  owner-doc closure audit, not another handoff/export implementation slice.

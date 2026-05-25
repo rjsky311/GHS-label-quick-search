@@ -74,20 +74,29 @@ Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the owner doc. Use
 `PILOT_RUNBOOK.md` as the operator checklist.
 
 Current housekeeping state: the Repository Hygiene / Code Splitting / Docs
-Consolidation pass is complete. The current unshipped worktree scope is a
-Batch-First Lab Pilot v1 handoff-closure slice. It combines fixed-stock batch
-label output confidence with Batch Export v1 closure: the print modal shows
+Consolidation pass is complete. The Batch-First Lab Pilot v1
+handoff/export closure slice has shipped on `main`: the print modal shows
 selected item count, physical label count, physical page count, and stock
-purpose consistently, while backend XLSX exports split the same batch into
-ready, needs-review, unresolved, and summary sheets for lab-manager triage.
+purpose consistently, backend XLSX exports split the same batch into ready,
+needs-review, unresolved, and summary sheets for lab-manager triage, CI passed,
+Zeabur production refreshed, and the production health, batch-print, and
+product QA gates passed after `5d51401`.
 
 The next closeable slice should come from one of these five workstreams:
 
-1. Batch review flow.
-2. Batch label output confidence. Current worktree slice is closing this.
-3. Batch export v1. Current worktree slice is closing this.
-4. Data correction and admin triage.
-5. Maintainability slice.
+1. Batch review flow closure audit: confirm the latest production behavior
+   satisfies the owner-doc acceptance criteria for a representative 50-100 item
+   batch instead of only passing individual gates.
+2. Batch label output confidence monitoring: add cases only when a new batch
+   list, screenshot, PDF, or production gate exposes a mismatch.
+3. Batch export v1 monitoring: add scope/filename/sheet improvements only when
+   a lab-manager handoff example shows confusion.
+4. Data correction and admin triage: this is the next likely product slice if
+   the closure audit shows maintainers still cannot identify the next
+   data-quality action quickly.
+5. Maintainability slice: the required low-risk extraction criterion is
+   already satisfied; reopen only when the next batch/admin/data change needs a
+   narrower boundary.
 
 ### Exit Condition
 
@@ -103,10 +112,11 @@ conclusions.
 
 ### Next Likely Switch
 
-Likely switch points inside this target are: multiple-GHS confirmation clarity,
-batch export scope/readability, correction/admin queue triage, first low-risk
-dashboard extraction, or a new production/user-provided blocker. Physical print
-validation remains deferred until real stock and printer access are available.
+Likely switch points inside this target are: a failed Batch-First closure
+audit, multiple-GHS confirmation clarity, correction/admin queue triage,
+export-handoff confusion from real use, or a new production/user-provided
+blocker. Physical print validation remains deferred until real stock and
+printer access are available.
 
 ### Default Order
 

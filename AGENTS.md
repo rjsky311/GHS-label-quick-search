@@ -291,7 +291,12 @@ large-module maintainability, and historical-document cleanup. The active
 major target is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`; read it before continuing
 batch review flow, batch label confidence, batch export, correction/admin
 triage, or bounded maintainability work that directly supports those
-workflows.
+workflows. As of 2026-05-25, the batch review clarity slice, fixed-stock
+handoff/output contract, Batch Export v1 workbook split, and production batch
+handoff QA ordering fix are shipped and pushed on `main`; the target remains
+`Open` only for final owner-doc closure audit, admin-triage product evidence,
+review-only external candidate discovery decisions, and deferred physical
+printer validation.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction
