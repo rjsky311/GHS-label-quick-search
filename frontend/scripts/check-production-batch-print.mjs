@@ -542,10 +542,19 @@ const run = async () => {
         '[data-testid="label-fragment-preview"]',
       );
       const label = frame?.contentDocument?.querySelector(".label");
+      const outputContract = document.querySelector(
+        '[data-testid="batch-output-contract"]',
+      );
       return {
         ready: textOf("batch-fit-ready"),
         review: textOf("batch-fit-review"),
         excluded: textOf("batch-fit-excluded"),
+        outputContract: {
+          text: textOf("batch-output-contract"),
+          selectedItems: outputContract?.getAttribute("data-selected-items") || "",
+          outputLabels: outputContract?.getAttribute("data-output-labels") || "",
+          outputPages: outputContract?.getAttribute("data-output-pages") || "",
+        },
         active: textOf("batch-active-preview-summary"),
         multipleGhsWarning: textOf("print-multiple-ghs-warning"),
         printAction: textOf("print-label-action"),
@@ -553,6 +562,21 @@ const run = async () => {
       };
     });
     if (!fitReport.ready.includes("Ready")) failures.push("missing-ready-count");
+    if (!fitReport.outputContract.text) {
+      failures.push("batch-output-contract-missing");
+    }
+    if (Number.parseInt(fitReport.outputContract.selectedItems || "0", 10) < 1) {
+      failures.push("batch-output-contract-empty-selected");
+    }
+    if (
+      Number.parseInt(fitReport.outputContract.outputLabels || "0", 10) <
+      Number.parseInt(fitReport.outputContract.selectedItems || "0", 10)
+    ) {
+      failures.push("batch-output-contract-label-count-mismatch");
+    }
+    if (Number.parseInt(fitReport.outputContract.outputPages || "0", 10) < 1) {
+      failures.push("batch-output-contract-empty-pages");
+    }
     if (
       !/multiple GHS versions|多個 GHS 版本/i.test(
         fitReport.multipleGhsWarning || "",
@@ -565,6 +589,9 @@ const run = async () => {
       /complete primary continuation set|完整|continuation/i.test(
         fitReport.printAction || "",
       );
+    if (!/labels\s*\/.*pages/i.test(fitReport.printAction || "")) {
+      failures.push("batch-action-missing-physical-counts");
+    }
     if (!fitReport.labelClass.includes("label")) {
       failures.push("missing-preview-label-fragment");
     }

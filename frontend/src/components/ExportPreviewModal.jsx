@@ -208,6 +208,19 @@ export default function ExportPreviewModal({
                 );
               })}
             </div>
+            {format === "xlsx" ? (
+              <div
+                className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950"
+                data-testid="export-preview-workbook-layout"
+              >
+                <div className="font-semibold">
+                  {t("exportPreview.workbookLayoutTitle")}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-emerald-900">
+                  {t("exportPreview.workbookLayoutBody")}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="overflow-hidden rounded-md border border-slate-200">

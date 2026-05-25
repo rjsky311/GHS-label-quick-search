@@ -1122,10 +1122,12 @@ export default function LabelPrintModal({
           ? batchAcknowledgedPrintCount > 0
             ? tx(
                 "label.printAcknowledgedBatchAction",
-                "Print {{count}} selected {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
+                "Print {{count}} selected {{purpose}} labels on {{stock}} ({{labels}} labels / {{pages}} pages; {{excluded}} excluded)",
                 {
                   count: batchSelectedPrintItems.length,
                   total: batchPrintPlan.summary.total,
+                  labels: plannedPrintLabelCount,
+                  pages: plannedPrintPageCount,
                   purpose: batchPrintPurposeLabel,
                   stock: currentStockName,
                   excluded: batchPrintPlan.summary.excluded,
@@ -1133,10 +1135,12 @@ export default function LabelPrintModal({
               )
             : tx(
                 "label.printReadyBatchAction",
-                "Print {{ready}} ready {{purpose}} labels on {{stock}} ({{excluded}} excluded)",
+                "Print {{ready}} ready {{purpose}} labels on {{stock}} ({{labels}} labels / {{pages}} pages; {{excluded}} excluded)",
                 {
                   ready: batchPrintPlan.summary.printableByDefault,
                   total: batchPrintPlan.summary.total,
+                  labels: plannedPrintLabelCount,
+                  pages: plannedPrintPageCount,
                   purpose: batchPrintPurposeLabel,
                   stock: currentStockName,
                   excluded: batchPrintPlan.summary.excluded,
@@ -1595,6 +1599,8 @@ export default function LabelPrintModal({
                     outputPlanTitle={outputPlanTitle}
                     outputPlanTone={outputPlanTone}
                     outputRoleSummary={outputRoleSummary}
+                    plannedPrintLabelCount={plannedPrintLabelCount}
+                    plannedPrintPageCount={plannedPrintPageCount}
                     recoveryRoute={recoveryRoute}
                     setBatchIncludeReducedPurpose={setBatchIncludeReducedPurpose}
                     setBatchPreviewItemIndex={setBatchPreviewItemIndex}

@@ -1728,7 +1728,9 @@ async def test_export_xlsx_includes_precautionary_column():
     ws = wb.active
     # Column 7 is precautionary statements (headers row)
     header = ws.cell(row=1, column=7).value
-    assert "\u9810\u9632\u63aa\u65bd" in (header or "")
+    assert "\u9810\u9632\u63aa\u65bd" in (header or "") or "precautionary" in (
+        header or ""
+    ).lower()
     # Data row 2 column 7 has the P-code content
     data = ws.cell(row=2, column=7).value
     assert data is not None
@@ -1874,6 +1876,63 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
     assert rows["Unresolved searches"] == 1
     assert rows["Missing trusted Chinese names"] == 1
     assert rows["Multiple GHS classifications"] == 1
+
+
+async def test_export_xlsx_includes_lab_manager_triage_sheets():
+    """XLSX export should partition a batch into ready/review/unresolved sheets."""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    transport = ASGITransport(app=app)
+    payload = {
+        "results": [
+            {
+                "cas_number": "64-17-5",
+                "name_en": "Ethanol",
+                "name_zh": "\u4e59\u9187",
+                "found": True,
+                "ghs_pictograms": [{"code": "GHS02", "name_zh": "\u706b\u7130"}],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
+                "cas_number": "999-99-9",
+                "name_en": "Unknown",
+                "found": False,
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
+                "cas_number": "107-18-6",
+                "name_en": "Allyl Alcohol",
+                "name_zh": "Allyl Alcohol",
+                "found": True,
+                "ghs_pictograms": [{"code": "GHS06", "name_zh": "\u9ab7\u9acf"}],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+                "has_multiple_classifications": True,
+            },
+        ]
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post("/api/export/xlsx", json=payload)
+    assert response.status_code == 200
+
+    wb = load_workbook(BytesIO(response.content))
+    assert wb.sheetnames == [
+        "GHS Results",
+        "Ready Rows",
+        "Needs Review",
+        "Unresolved",
+        "Pilot Summary",
+    ]
+    assert wb["Ready Rows"].max_row == 2
+    assert wb["Ready Rows"].cell(row=2, column=1).value == "64-17-5"
+    assert wb["Needs Review"].max_row == 2
+    assert wb["Needs Review"].cell(row=2, column=1).value == "107-18-6"
+    assert wb["Unresolved"].max_row == 2
+    assert wb["Unresolved"].cell(row=2, column=1).value == "999-99-9"
 
 
 async def test_export_csv_neutralizes_formula_injection_in_p_code_text():

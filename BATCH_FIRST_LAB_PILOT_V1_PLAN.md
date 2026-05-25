@@ -120,6 +120,21 @@ Done means:
 - No label marked printable hides required pictograms or clips required
   identity content.
 
+Current checkpoint:
+
+- The batch label modal now exposes a fixed-stock output contract before
+  handoff: selected print items, physical labels, physical pages, and selected
+  stock/purpose. The print action repeats the same physical counts.
+- `qa:production-batch-print` now asserts the output contract exists, selected
+  count is non-zero, physical labels are at least selected items, page count is
+  non-zero, and the print action includes physical labels/pages.
+- Batch export v1 now uses a shared backend export row contract for CSV and
+  XLSX, with readable trust/review columns kept aligned across formats.
+- XLSX export now includes lab-manager triage sheets: `GHS Results`,
+  `Ready Rows`, `Needs Review`, `Unresolved`, and `Pilot Summary`.
+- Export preview now tells maintainers that XLSX separates ready, review, and
+  unresolved rows before download, while CSV remains a single flat sheet.
+
 ### 3. Batch Export v1
 
 Goal: exports should be useful to a lab manager, not merely a raw dump.
@@ -148,6 +163,17 @@ Done means:
 - A maintainer can open the export and understand what happened in the batch,
   which rows are ready, and which rows require review.
 - Any export contract change has backend/frontend tests.
+
+Current checkpoint:
+
+- Backend CSV/XLSX exports now share `EXPORT_DATA_HEADERS` and
+  `build_export_data_row`, reducing drift between flat CSV and workbook export.
+- XLSX exports now split rows into `Ready Rows`, `Needs Review`, and
+  `Unresolved` sheets in addition to the complete `GHS Results` sheet and the
+  existing `Pilot Summary`.
+- Frontend export preview now explains the XLSX workbook layout so a lab
+  manager knows the downloaded file is already triaged.
+- Tests cover the triage workbook sheets and the XLSX-only preview note.
 
 ### 4. Data Correction And Admin Triage
 

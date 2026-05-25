@@ -4,7 +4,18 @@ from typing import Any, Dict, List
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill
+from openpyxl.utils import get_column_letter
 
+
+EXPORT_BASE_HEADERS = [
+    "CAS No.",
+    "English Name",
+    "Chinese Name",
+    "GHS Pictograms",
+    "Signal Word",
+    "Hazard Statements",
+    "Precautionary Statements",
+]
 
 EXPORT_TRUST_HEADERS = [
     "Data State",
@@ -21,6 +32,17 @@ EXPORT_TRUST_HEADERS = [
     "Multiple GHS Status",
     "Classification Selection",
 ]
+
+EXPORT_DATA_HEADERS = [
+    *EXPORT_BASE_HEADERS,
+    *EXPORT_TRUST_HEADERS,
+]
+
+EXPORT_TRIAGE_SHEET_NAMES = {
+    "ready": "Ready Rows",
+    "needs_review": "Needs Review",
+    "unresolved": "Unresolved",
+}
 
 
 _FORMULA_TRIGGER_CHARS = ("=", "+", "-", "@", "\t", "\r")
@@ -142,6 +164,172 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
         if result.get("customNote")
         else "Default primary classification",
     ]
+
+
+def _statement_text(statement: Dict[str, Any]) -> str:
+    return (
+        statement.get("text_zh")
+        or statement.get("text_en")
+        or statement.get("text")
+        or ""
+    )
+
+
+def _format_pictograms(result: Dict[str, Any]) -> str:
+    pictograms = result.get("ghs_pictograms") or result.get("pictograms") or []
+    if not pictograms:
+        return "None"
+
+    def pictogram_label(pictogram: Dict[str, Any]) -> str:
+        name = (
+            pictogram.get("name_zh")
+            or pictogram.get("name_en")
+            or pictogram.get("name")
+            or ""
+        )
+        return f"{pictogram.get('code', '')} ({name})"
+
+    return ", ".join(
+        pictogram_label(pictogram) for pictogram in pictograms
+    )
+
+
+def _format_statements(
+    statements: List[Dict[str, Any]] | None,
+    *,
+    empty_value: str,
+    separator: str,
+) -> str:
+    if not statements:
+        return empty_value
+    return separator.join(
+        f"{statement.get('code', '')}: {_statement_text(statement)}"
+        for statement in statements
+    )
+
+
+def build_export_data_row(result: Dict[str, Any], *, multiline: bool = False) -> List[str]:
+    separator = "\n" if multiline else "; "
+    return [
+        result.get("cas_number", ""),
+        result.get("name_en", ""),
+        _trusted_export_chinese_name(result),
+        _format_pictograms(result),
+        result.get("signal_word_zh") or result.get("signal_word") or "-",
+        _format_statements(
+            result.get("hazard_statements"),
+            empty_value="No hazard statements",
+            separator=separator,
+        ),
+        _format_statements(
+            result.get("precautionary_statements"),
+            empty_value="No precautionary statements",
+            separator=separator,
+        ),
+        *_export_trust_cells(result),
+    ]
+
+
+def _is_export_ready_without_review(result: Dict[str, Any]) -> bool:
+    return (
+        result.get("found") is not False
+        and _has_export_ghs_data(result)
+        and not _export_review_reasons(result)
+    )
+
+
+def build_export_triage_sheets(
+    results: List[Dict[str, Any]],
+) -> dict[str, List[Dict[str, Any]]]:
+    """Partition export rows into lab-manager triage sheets without overlap."""
+    return {
+        EXPORT_TRIAGE_SHEET_NAMES["ready"]: [
+            result for result in results if _is_export_ready_without_review(result)
+        ],
+        EXPORT_TRIAGE_SHEET_NAMES["needs_review"]: [
+            result
+            for result in results
+            if result.get("found") is not False and _export_review_reasons(result)
+        ],
+        EXPORT_TRIAGE_SHEET_NAMES["unresolved"]: [
+            result for result in results if result.get("found") is False
+        ],
+    }
+
+
+def _apply_export_column_widths(worksheet) -> None:
+    widths = [
+        15,
+        30,
+        20,
+        35,
+        14,
+        55,
+        58,
+        34,
+        14,
+        16,
+        44,
+        36,
+        18,
+        24,
+        18,
+        24,
+        18,
+        28,
+        38,
+        36,
+    ]
+    for index, width in enumerate(widths, 1):
+        worksheet.column_dimensions[get_column_letter(index)].width = width
+
+
+def _style_results_header(worksheet, thin_border: Border) -> None:
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color="4472C4",
+        end_color="4472C4",
+        fill_type="solid",
+    )
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for col, header in enumerate(EXPORT_DATA_HEADERS, 1):
+        cell = worksheet.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+
+def add_export_results_sheet(
+    workbook: Workbook,
+    title: str,
+    results: List[Dict[str, Any]],
+    thin_border: Border,
+    *,
+    worksheet=None,
+) -> None:
+    sheet = worksheet or workbook.create_sheet(title)
+    sheet.title = title
+    _style_results_header(sheet, thin_border)
+    sheet.freeze_panes = "A2"
+
+    for row_index, result in enumerate(results, 2):
+        for col_index, value in enumerate(
+            build_export_data_row(result, multiline=True),
+            1,
+        ):
+            cell = sheet.cell(
+                row=row_index,
+                column=col_index,
+                value=spreadsheet_safe(value),
+            )
+            cell.border = thin_border
+            if col_index >= 4:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    if results:
+        sheet.auto_filter.ref = sheet.dimensions
+    _apply_export_column_widths(sheet)
 
 
 def _build_export_pilot_summary(

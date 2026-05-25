@@ -23,6 +23,8 @@ export default function PrintOutputPlanDetails({
   outputPlanTitle,
   outputPlanTone,
   outputRoleSummary,
+  plannedPrintLabelCount,
+  plannedPrintPageCount,
   recoveryRoute,
   setBatchIncludeReducedPurpose,
   setBatchPreviewItemIndex,
@@ -120,6 +122,8 @@ export default function PrintOutputPlanDetails({
         batchUnselectedReviewCount={batchUnselectedReviewCount}
         currentStockName={currentStockName}
         handleExportBatchReviewList={handleExportBatchReviewList}
+        plannedPrintLabelCount={plannedPrintLabelCount}
+        plannedPrintPageCount={plannedPrintPageCount}
         setBatchIncludeReducedPurpose={setBatchIncludeReducedPurpose}
         setBatchPreviewItemIndex={setBatchPreviewItemIndex}
         setBatchPreviewRepresentative={setBatchPreviewRepresentative}

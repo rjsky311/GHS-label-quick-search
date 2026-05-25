@@ -74,17 +74,18 @@ Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the owner doc. Use
 `PILOT_RUNBOOK.md` as the operator checklist.
 
 Current housekeeping state: the Repository Hygiene / Code Splitting / Docs
-Consolidation pass is complete. The active unshipped worktree scope is now a
-Batch-First Lab Pilot v1 clarity slice: batch review reasons/next actions,
-export scope/readability, and admin triage next-action visibility. Keep further
-changes inside that scope until it is verified, documented, and made
-reviewable.
+Consolidation pass is complete. The current unshipped worktree scope is a
+Batch-First Lab Pilot v1 handoff-closure slice. It combines fixed-stock batch
+label output confidence with Batch Export v1 closure: the print modal shows
+selected item count, physical label count, physical page count, and stock
+purpose consistently, while backend XLSX exports split the same batch into
+ready, needs-review, unresolved, and summary sheets for lab-manager triage.
 
 The next closeable slice should come from one of these five workstreams:
 
 1. Batch review flow.
-2. Batch label output confidence.
-3. Batch export v1.
+2. Batch label output confidence. Current worktree slice is closing this.
+3. Batch export v1. Current worktree slice is closing this.
 4. Data correction and admin triage.
 5. Maintainability slice.
 

@@ -22,6 +22,8 @@ export default function BatchFitReport({
   batchUnselectedReviewCount,
   currentStockName,
   handleExportBatchReviewList,
+  plannedPrintLabelCount,
+  plannedPrintPageCount,
   setBatchIncludeReducedPurpose,
   setBatchPreviewItemIndex,
   setBatchPreviewRepresentative,
@@ -73,7 +75,7 @@ export default function BatchFitReport({
           className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
           data-testid="batch-fit-stock-purpose"
         >
-          {batchPrintPurposeLabel} · {currentStockName}
+          {batchPrintPurposeLabel} / {currentStockName}
         </span>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -91,6 +93,49 @@ export default function BatchFitReport({
           </div>
         ))}
       </div>
+      {batchSelectedPrintItems.length > 0 && (
+        <div
+          className="mt-3 grid gap-2 rounded-md border border-blue-100 bg-blue-50/70 p-2 text-xs text-blue-950 sm:grid-cols-3"
+          data-testid="batch-output-contract"
+          data-selected-items={batchSelectedPrintItems.length}
+          data-output-labels={plannedPrintLabelCount}
+          data-output-pages={plannedPrintPageCount}
+        >
+          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+            <div className="font-medium opacity-70">
+              {tx("label.batchOutputSelected", "Selected to print")}
+            </div>
+            <div className="mt-0.5 font-semibold">
+              {tx("label.batchOutputSelectedValue", "{{count}} item(s)", {
+                count: batchSelectedPrintItems.length,
+              })}
+            </div>
+          </div>
+          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+            <div className="font-medium opacity-70">
+              {tx("label.batchOutputPhysical", "Physical output")}
+            </div>
+            <div className="mt-0.5 font-semibold">
+              {tx(
+                "label.batchOutputPhysicalValue",
+                "{{labels}} label(s) / {{pages}} page(s)",
+                {
+                  labels: plannedPrintLabelCount,
+                  pages: plannedPrintPageCount,
+                },
+              )}
+            </div>
+          </div>
+          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+            <div className="font-medium opacity-70">
+              {tx("label.batchOutputStock", "Fixed stock")}
+            </div>
+            <div className="mt-0.5 font-semibold">
+              {batchPrintPurposeLabel} / {currentStockName}
+            </div>
+          </div>
+        </div>
+      )}
       {batchPrintPlan.representatives.worstFit && (
         <p
           className="mt-2 text-xs leading-5 text-slate-500"
@@ -157,7 +202,7 @@ export default function BatchFitReport({
               <div className="mt-1 leading-5">
                 {getBatchCategoryLabel(activeBatchPreviewItem.category, tx)}
                 {activeBatchPreviewItem.reason
-                  ? ` · ${getBatchReasonLabel(activeBatchPreviewItem.reason, tx)}`
+                  ? ` / ${getBatchReasonLabel(activeBatchPreviewItem.reason, tx)}`
                   : ""}
               </div>
             </div>
@@ -254,7 +299,7 @@ export default function BatchFitReport({
                     #{item.index + 1} {item.identity || item.cas}
                   </div>
                   <div className="mt-1 leading-5 text-slate-600">
-                    {getBatchCategoryLabel(item.category, tx)} ·{" "}
+                    {getBatchCategoryLabel(item.category, tx)} /{" "}
                     {getBatchReasonLabel(item.reason, tx)}
                   </div>
                 </div>

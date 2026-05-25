@@ -18,7 +18,7 @@ import httpx
 import asyncio
 from io import BytesIO
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.styles import Border, Side
 import csv
 import random
 import re
@@ -72,10 +72,11 @@ from chemical_dict import (
 )
 from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
 from export_helpers import (
-    EXPORT_TRUST_HEADERS,
+    EXPORT_DATA_HEADERS,
     _add_export_pilot_summary_sheet,
-    _export_trust_cells,
-    _trusted_export_chinese_name,
+    add_export_results_sheet,
+    build_export_data_row,
+    build_export_triage_sheets,
     spreadsheet_safe,
 )
 from pilot_admin_routes import create_pilot_admin_router
@@ -1553,102 +1554,27 @@ async def search_single_chemical(request: Request, cas_number: str):
 @api_router.post("/export/xlsx")
 @limiter.limit("10/minute")
 async def export_xlsx(request: Request, payload: ExportRequest):
-    """Export results to Excel file"""
+    """Export results to an XLSX workbook with lab-manager triage sheets."""
     wb = Workbook()
     ws = wb.active
-    ws.title = "GHS查詢結果"
-    
-    # Header style
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
     )
-    
-    # Headers
-    headers = [
-        "CAS No.",
-        "英文名稱",
-        "中文名稱",
-        "GHS標示",
-        "警示語",
-        "危害說明",
-        "預防措施",
-        *EXPORT_TRUST_HEADERS,
-    ]
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = header_alignment
-        cell.border = thin_border
 
-    # Data — every cell value is routed through spreadsheet_safe() to
-    # neutralize values that start with a formula prefix (e.g.
-    # `=HYPERLINK(...)`, `+cmd`, `@SUM(...)`), preventing CSV/XLSX
-    # injection when the file is opened in Excel / Sheets / Calc.
-    for row, result in enumerate(payload.results, 2):
-        ws.cell(row=row, column=1, value=spreadsheet_safe(result.get("cas_number", ""))).border = thin_border
-        ws.cell(row=row, column=2, value=spreadsheet_safe(result.get("name_en", ""))).border = thin_border
-        ws.cell(row=row, column=3, value=spreadsheet_safe(_trusted_export_chinese_name(result))).border = thin_border
-
-        # GHS pictograms
-        pictograms = result.get("ghs_pictograms", [])
-        ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
-        ws.cell(row=row, column=4, value=spreadsheet_safe(ghs_text)).border = thin_border
-
-        # Signal word
-        signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
-        ws.cell(row=row, column=5, value=spreadsheet_safe(signal)).border = thin_border
-
-        # Hazard statements
-        statements = result.get("hazard_statements", [])
-        hazard_text = "\n".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-        hazard_cell = ws.cell(row=row, column=6, value=spreadsheet_safe(hazard_text))
-        hazard_cell.border = thin_border
-        hazard_cell.alignment = Alignment(wrap_text=True)
-
-        # Precautionary statements (v1.8 M0)
-        precautions = result.get("precautionary_statements", [])
-        precaution_text = (
-            "\n".join([f"{p.get('code', '')}: {p.get('text_zh', '')}" for p in precautions])
-            if precautions
-            else "無預防措施說明"
-        )
-        prec_cell = ws.cell(row=row, column=7, value=spreadsheet_safe(precaution_text))
-        prec_cell.border = thin_border
-        prec_cell.alignment = Alignment(wrap_text=True)
-
-        for offset, value in enumerate(_export_trust_cells(result), start=8):
-            cell = ws.cell(row=row, column=offset, value=spreadsheet_safe(value))
-            cell.border = thin_border
-            cell.alignment = Alignment(wrap_text=True)
-
-    # Adjust column widths
-    ws.column_dimensions['A'].width = 15
-    ws.column_dimensions['B'].width = 30
-    ws.column_dimensions['C'].width = 20
-    ws.column_dimensions['D'].width = 35
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 50
-    ws.column_dimensions['G'].width = 55
-    ws.column_dimensions['H'].width = 34
-    ws.column_dimensions['I'].width = 14
-    ws.column_dimensions['J'].width = 16
-    ws.column_dimensions['K'].width = 44
-    ws.column_dimensions['L'].width = 36
-    ws.column_dimensions['M'].width = 18
-    ws.column_dimensions['N'].width = 24
-    ws.column_dimensions['O'].width = 18
-    ws.column_dimensions['P'].width = 24
-    ws.column_dimensions['Q'].width = 18
-    ws.column_dimensions['R'].width = 26
-    ws.column_dimensions['S'].width = 36
-    ws.column_dimensions['T'].width = 34
+    # All worksheet cells are routed through spreadsheet_safe() inside the
+    # shared export helper before writing to the workbook.
+    add_export_results_sheet(
+        wb,
+        "GHS Results",
+        payload.results,
+        thin_border,
+        worksheet=ws,
+    )
+    for sheet_name, rows in build_export_triage_sheets(payload.results).items():
+        add_export_results_sheet(wb, sheet_name, rows, thin_border)
 
     _add_export_pilot_summary_sheet(
         wb,
@@ -1658,83 +1584,57 @@ async def export_xlsx(request: Request, payload: ExportRequest):
         export_scope_label=payload.export_scope_label,
         export_count=payload.export_count,
     )
-    
-    # Save to BytesIO
+
     output = BytesIO()
     wb.save(output)
     output.seek(0)
-    
-    safe_scope = re.sub(r"[^a-zA-Z0-9_-]+", "-", payload.export_scope or "visible").strip("-")
+
+    safe_scope = re.sub(
+        r"[^a-zA-Z0-9_-]+",
+        "-",
+        payload.export_scope or "visible",
+    ).strip("-")
     safe_scope = safe_scope or "visible"
     filename = f"ghs_batch_{safe_scope}_{len(payload.results)}.xlsx"
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
 
 @api_router.post("/export/csv")
 @limiter.limit("10/minute")
 async def export_csv(request: Request, payload: ExportRequest):
-    """Export results to CSV file"""
+    """Export results to CSV with the same readable data columns as XLSX."""
     from io import StringIO
+
     string_output = StringIO()
     writer = csv.writer(string_output)
-    
-    # Headers
-    writer.writerow([
-        "CAS No.",
-        "英文名稱",
-        "中文名稱",
-        "GHS標示",
-        "警示語",
-        "危害說明",
-        "預防措施",
-        *EXPORT_TRUST_HEADERS,
-    ])
+    writer.writerow(EXPORT_DATA_HEADERS)
 
-    # Data
     for result in payload.results:
-        pictograms = result.get("ghs_pictograms", [])
-        ghs_text = ", ".join([f"{p.get('code', '')} ({p.get('name_zh', '')})" for p in pictograms]) if pictograms else "無"
-
-        signal = result.get("signal_word_zh") or result.get("signal_word") or "-"
-
-        statements = result.get("hazard_statements", [])
-        hazard_text = "; ".join([f"{s.get('code', '')}: {s.get('text_zh', '')}" for s in statements]) if statements else "無危害說明"
-
-        precautions = result.get("precautionary_statements", [])
-        precaution_text = (
-            "; ".join([f"{p.get('code', '')}: {p.get('text_zh', '')}" for p in precautions])
-            if precautions
-            else "無預防措施說明"
+        writer.writerow(
+            [spreadsheet_safe(value) for value in build_export_data_row(result)]
         )
 
-        writer.writerow([
-            spreadsheet_safe(result.get("cas_number", "")),
-            spreadsheet_safe(result.get("name_en", "")),
-            spreadsheet_safe(_trusted_export_chinese_name(result)),
-            spreadsheet_safe(ghs_text),
-            spreadsheet_safe(signal),
-            spreadsheet_safe(hazard_text),
-            spreadsheet_safe(precaution_text),
-            *[spreadsheet_safe(value) for value in _export_trust_cells(result)],
-        ])
-    
-    # Convert to bytes with BOM
     csv_content = string_output.getvalue()
     output = BytesIO()
-    output.write(b'\xef\xbb\xbf')  # BOM
-    output.write(csv_content.encode('utf-8'))
+    output.write(bytes([0xEF, 0xBB, 0xBF]))
+    output.write(csv_content.encode("utf-8"))
     output.seek(0)
-    
-    safe_scope = re.sub(r"[^a-zA-Z0-9_-]+", "-", payload.export_scope or "visible").strip("-")
+
+    safe_scope = re.sub(
+        r"[^a-zA-Z0-9_-]+",
+        "-",
+        payload.export_scope or "visible",
+    ).strip("-")
     safe_scope = safe_scope or "visible"
     filename = f"ghs_batch_{safe_scope}_{len(payload.results)}.csv"
     return StreamingResponse(
         output,
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 @api_router.get("/ghs-pictograms")

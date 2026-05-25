@@ -300,6 +300,17 @@ Current completion snapshot:
   when selected items still have unconfirmed multiple-GHS versions, while
   preserving the non-blocking "use the system-suggested primary unless changed"
   workflow.
+- **Batch-output contract checkpoint 2026-05-25**: the batch label modal now
+  shows a fixed-stock output contract before handoff: selected item count,
+  physical label count, physical page count, and selected stock/purpose. The
+  print action repeats the same physical counts, and the deployed
+  `qa:production-batch-print` gate now fails if those counts are missing or
+  internally inconsistent.
+- **Batch-export v1 checkpoint 2026-05-25**: backend CSV/XLSX exports now share
+  one readable row contract for trust/review columns. XLSX exports include
+  `GHS Results`, `Ready Rows`, `Needs Review`, `Unresolved`, and
+  `Pilot Summary` sheets, while the frontend export preview explains that XLSX
+  downloads are already separated for lab-manager triage.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -677,9 +688,10 @@ Current status:
   the batch fit report, aligns the sheet preview to the current selected print
   scope, and exposes review/excluded items with CSV export before print
   handoff.
-- Batch print actions and scope summaries name the selected purpose, physical
-  stock, selected count, excluded count, and unselected review count so the
-  user can understand the handoff before pressing print.
+- Batch print actions and the batch output contract now name selected item
+  count, physical label count, physical page count, selected purpose, and
+  physical stock. Scope summaries still name excluded count and unselected
+  review count, so the user can understand the handoff before pressing print.
 - Batch print handoff now defaults to ready items but can explicitly include
   acknowledged `reduced-purpose` and `same-stock-continuation` items on the
   same physical stock. The renderer records per-label batch metadata and

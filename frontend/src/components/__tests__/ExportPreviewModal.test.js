@@ -42,6 +42,9 @@ describe('ExportPreviewModal', () => {
     expect(screen.getByText('export.dataState')).toBeInTheDocument();
     expect(screen.getByText('export.primarySource')).toBeInTheDocument();
     expect(screen.getByText('export.classificationSelection')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-workbook-layout')).toHaveTextContent(
+      'exportPreview.workbookLayoutTitle',
+    );
   });
 
   it('confirms the initial xlsx format', async () => {
@@ -81,6 +84,7 @@ describe('ExportPreviewModal', () => {
     );
 
     fireEvent.click(screen.getByTestId('export-preview-format-csv'));
+    expect(screen.queryByTestId('export-preview-workbook-layout')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('export-preview-confirm'));
 
     await waitFor(() => {

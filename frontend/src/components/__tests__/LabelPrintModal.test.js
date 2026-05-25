@@ -419,8 +419,32 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("batch-fit-stock-purpose")).toHaveTextContent(
       "A4 Primary",
     );
+    expect(screen.getByTestId("batch-fit-stock-purpose")).toHaveTextContent(
+      "Complete / A4 Primary",
+    );
+    const outputContract = screen.getByTestId("batch-output-contract");
+    expect(outputContract).toHaveTextContent("Selected to print");
+    expect(outputContract).toHaveTextContent("Physical output");
+    expect(outputContract).toHaveTextContent("Fixed stock");
+    expect(
+      Number(outputContract.getAttribute("data-selected-items")),
+    ).toBeGreaterThan(0);
+    expect(
+      Number(outputContract.getAttribute("data-output-labels")),
+    ).toBeGreaterThanOrEqual(
+      Number(outputContract.getAttribute("data-selected-items")),
+    );
+    expect(
+      Number(outputContract.getAttribute("data-output-pages")),
+    ).toBeGreaterThan(0);
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "A4 Primary",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "labels /",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "pages",
     );
 
     fireEvent.click(screen.getByTestId("print-label-action"));
