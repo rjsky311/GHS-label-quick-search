@@ -19,8 +19,9 @@ For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
 The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
 operator checklist is `PILOT_RUNBOOK.md`.
-The active short-term owner doc is
+The shipped short-term evidence owner doc is
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
+The active major owner doc is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
 `LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
 Lab-Ready Pilot milestone, not the active unfinished target.
 
@@ -56,42 +57,55 @@ of expanding the queue by inertia.
 
 ### Current Product Thesis
 
-The 95% Lab-Ready Pilot and Pilot Operations Ready targets have shipped. The
-next product round should not keep adding QA or print polish by inertia. The
-highest-value short-term target is now `Pilot Evidence And Maintainability
-Pass`: use representative pilot evidence to decide the next data/export/admin
-work, while making historical docs and large-module boundaries clear enough
-that future work remains maintainable.
+The 95% Lab-Ready Pilot, Pilot Operations Ready, and Pilot Evidence And
+Maintainability Pass targets have shipped. The next product round should not
+keep adding QA, print polish, or admin tooling by inertia. The highest-value
+major target is now `Batch-First Lab Pilot v1`: make the daily 50-100 item lab
+batch workflow clear enough that users can lookup, review, print, export, and
+route data issues without understanding the internal data model.
 
 ### Active Slice
 
-Current default active slice: `Pilot Evidence And Maintainability Pass`.
-Use `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the owner doc. Use
-`POST_95_REPRIORITIZATION.md` as the decision packet,
+Current default active slice: `Batch-First Lab Pilot v1`.
+Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the owner doc. Use
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the shipped evidence packet,
+`POST_95_REPRIORITIZATION.md` as the post-95 decision history,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
-`PILOT_RUNBOOK.md` as the operator checklist. The slice should check
-representative batch lookup, batch print, export, correction flow, admin
-triage, data-quality next steps, and maintainability boundaries before
-choosing more feature work.
+`PILOT_RUNBOOK.md` as the operator checklist.
+
+Current housekeeping state: the Repository Hygiene / Code Splitting / Docs
+Consolidation pass is complete. The worktree is still intentionally dirty until
+it is staged/committed, so avoid mixing new product behavior into that same
+review scope. The next product slice should return to the batch-first
+workstreams below unless CI, deployment, or user-provided evidence creates a
+blocker.
+
+The next closeable slice should come from one of these five workstreams:
+
+1. Batch review flow.
+2. Batch label output confidence.
+3. Batch export v1.
+4. Data correction and admin triage.
+5. Maintainability slice.
 
 ### Exit Condition
 
-Stop extending this slice when `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`
-has direct evidence for the representative pilot pass, a clear admin/report
-triage conclusion, a batch export usability conclusion, a data-quality next-step
-recommendation, a large-file maintainability plan or safe split, historical-doc
-cleanup, and passing docs/affected tests.
+Stop extending this target when `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` has shipped
+evidence that a representative 50-100 item batch can complete lookup, review,
+selected label print handoff, export, and correction/admin routing with clear
+review reasons and no hidden data/print state. The target also needs at least
+one low-risk maintainability extraction or a recorded reason to defer it.
 
-Current closure note: `PILOT_OPERATIONS_READY_PLAN.md` remains `Shipped`; do
-not reopen it unless this evidence pass proves a gap in the pilot operations
-baseline.
+Current closure note: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` remains
+`Shipped`; do not reopen it unless new pilot evidence contradicts its
+conclusions.
 
 ### Next Likely Switch
 
-Likely switch points after this short-term pass are: review-only data-quality
-expansion for Chinese names/source evidence, a narrow batch export utility
-improvement, evidence-triggered low-noise UX/narrow polish, or physical print
-validation once real stock and printer access are available.
+Likely switch points inside this target are: multiple-GHS confirmation clarity,
+batch export scope/readability, correction/admin queue triage, first low-risk
+dashboard extraction, or a new production/user-provided blocker. Physical print
+validation remains deferred until real stock and printer access are available.
 
 ### Default Order
 
@@ -103,8 +117,16 @@ Current mode:
 - CI / production QA and documentation consolidation are in **maintenance**
   state: keep them healthy, but do not treat them as unfinished product work
   unless a gate fails or a workflow assumption changes.
-- Product priority is now explicit: batch lookup -> batch print, batch export,
-  data correction/governance, single lookup polish, then brand/support polish.
+- Code splitting is also now in **maintenance** state after the lazy-loading
+  pass: `npm run build` should stay free of the 500 kB chunk warning, with the
+  heavy print/admin/detail/export surfaces outside the initial app chunk. Do
+  not continue splitting solely for line-count or bundle aesthetics unless a
+  measured regression appears.
+- Product priority is now active through `Batch-First Lab Pilot v1`: batch
+  lookup -> batch review clarity -> batch print -> batch export -> correction
+  and admin triage -> one maintainability slice. Single lookup polish and
+  brand/support polish should wait unless new evidence proves they block the
+  batch path.
   The correction-request backend store/API, admin review queue, and public
   in-app correction dialog are now in place. Admin correction requests can now
   carry review-only candidate evidence bundles for missing Chinese names and
@@ -315,6 +337,160 @@ Current mode:
   marked needs-evidence, or rejected directly from the list. Recent manual
   dictionary rows can also be approved, marked needs-evidence, or rejected
   directly without retyping the same CAS/name payload.
+- Completed current slice: the first maintainability extraction pass landed
+  without changing product behavior. Admin triage UI now lives in
+  `PilotTriagePanel`, print modal helper/config logic lives in
+  `labelPrintModalHelpers.js`, rendered print overflow inspection lives in
+  `printLayoutInspection.js`, and backend export trust/summary logic lives in
+  `export_helpers.py`. Focused frontend and backend tests passed; future
+  refactors should now be pulled by a specific batch/data/print slice rather
+  than by line count alone.
+- Completed current slice: the maintainability extraction pass was extended
+  one bounded step. More `LabelPrintModal` pure helpers now live in
+  `labelPrintModalHelpers.js`, correction candidate evidence UI now lives in
+  `CorrectionCandidateEvidence.jsx`, and admin curation status/sort helpers
+  now live in `pilotDashboardHelpers.js`. `LabelPrintModal.jsx` is now 3,871
+  lines and `PilotDashboardSidebar.jsx` is now 1,824 lines. The combined
+  focused frontend test run passed for label print, pilot dashboard, and print
+  labels.
+- Completed current slice: a further bounded maintainability pass split
+  complete-label continuation pagination into `printContinuationPagination.js`
+  and H/P statement print-priority scoring into `printStatementPriority.js`.
+  Admin curation status-count summaries now share `CurationStatusSummary`.
+- Completed current slice: print stylesheet, preview stylesheet generation,
+  print-render text/identity/pictogram helpers, required print-image
+  preflight, and print document layout/model helpers moved out of
+  `printLabels.js`. Current worktree counts are `printLabels.js` 1,472 lines,
+  `printDocumentLayoutHelpers.js` 483 lines, `printImagePreflight.js` 80
+  lines, `printRenderHelpers.js` 148 lines, `printLifecycle.js` 239 lines,
+  `printLabelStyles.js` 1,847 lines, `printPreviewStyles.js` 164 lines,
+  `LabelPrintModal.jsx` 1,750 lines,
+  `LabelPrintFooter.jsx` 49 lines, `MultipleGhsPrintWarning.jsx` 56 lines,
+  `LabelPreviewPanel.jsx` 235 lines, `SelectedLabelsControls.jsx` 245 lines,
+  `PreviewDiagnosticsPanel.jsx` 168 lines, `StockSizeSelector.jsx` 104 lines,
+  `PrintOutputPlanDetails.jsx` 129 lines, `LabelOutputSelector.jsx` 72 lines,
+  `BatchFitReport.jsx` 291 lines, `LabelAdvancedPrintOptions.jsx` 411 lines,
+  `LabelPrintOutcomeSections.jsx` 179 lines, `LabelPreviewSection.jsx` 162
+  lines, `labelPrintModalOptions.js` 113 lines,
+  `LabelPrintConfigControls.jsx` 115 lines,
+  `ResponsibleProfileControls.jsx` 120 lines, `SavedPrintControls.jsx` 237
+  lines, `PilotDashboardSidebar.jsx` 1,076 lines,
+  `PilotDictionaryForms.jsx` 306 lines, `PilotRecentCurationLists.jsx` 280
+  lines, `PilotCorrectionRequestSections.jsx` 330 lines, `server.py` 1,613
+  lines, `pilot_admin_routes.py` 281 lines, `api_models.py` 363 lines,
+  `api_validation.py` 229 lines, `export_helpers.py` 204 lines, and
+  `pilot_store.py` 1,639 lines.
+- Completed current slice: backend pilot/admin endpoints for ops reports,
+  dictionary curation, correction intake/review, miss-query retention, and
+  workspace documents now live in `backend/pilot_admin_routes.py`. `server.py`
+  is down to 1,613 lines while keeping shared admin verification, limiter
+  setup, cache state, and public search/export routes in the main orchestrator.
+- Completed current slice: preview-only print stylesheet sizing/scaling now
+  lives in `frontend/src/utils/printPreviewStyles.js`. `printLabelStyles.js`
+  is down to 1,847 lines and remains focused on printable CSS.
+- Completed current slice: print lifecycle metadata, layout-blocked alert text,
+  and QA handoff pending/blocked/ready status publishing moved out of
+  `printLabels.js` into `frontend/src/utils/printLifecycle.js`, reducing the
+  print orchestrator to 2,287 lines while preserving print contract tests and
+  QA handoff status behavior.
+- Completed current slice: compact pictogram pagination, print-template
+  normalization, localized statement/signal text, identity density, and
+  renderer text truncation moved into
+  `frontend/src/utils/printRenderHelpers.js`, reducing the print orchestrator
+  to 2,134 lines while preserving focused print-label and print QA tests.
+- Completed current slice: the live preview panel shell, outcome summary
+  composition, preview warning banner, and diagnostics composition moved out of
+  `LabelPrintModal.jsx` into `components/label-print/LabelPreviewPanel.jsx`.
+  Selected-label quantity/removal controls moved into
+  `components/label-print/SelectedLabelsControls.jsx`. The modal is now 1,865
+  lines while preserving existing `LabelPrintModal` tests.
+- Completed current slice: multiple-GHS print warning UI and the sticky modal
+  footer/action bar moved into `MultipleGhsPrintWarning.jsx` and
+  `LabelPrintFooter.jsx`. The modal is now 1,750 lines while preserving
+  existing `LabelPrintModal` and print-all integration tests.
+- Completed current slice: fixed-stock batch fit report, representative preview
+  selector, compact-fallback inclusion control, and batch review/export list
+  moved out of `LabelPrintModal.jsx` into
+  `components/label-print/BatchFitReport.jsx`, reducing the modal to 2,614
+  lines while preserving the batch-print test surface.
+- Completed current slice: simplified output-type selector moved out of
+  `LabelPrintModal.jsx` into
+  `components/label-print/LabelOutputSelector.jsx`, reducing the modal to 2,554
+  lines while preserving the three-output test ids and selection behavior.
+- Completed current slice: output-plan explanation, recovery route, decision
+  summary, and embedded batch fit report moved out of `LabelPrintModal.jsx`
+  into `components/label-print/PrintOutputPlanDetails.jsx`, reducing the modal
+  to 2,476 lines while preserving the existing plan/recovery/decision test ids.
+- Completed current slice: selected-stock summary, first-level stock picker,
+  and secondary stock controls moved out of `LabelPrintModal.jsx` into
+  `components/label-print/StockSizeSelector.jsx`, reducing the modal to 2,395
+  lines while preserving existing stock summary and picker test ids.
+- Completed current slice: preview output checks, preview checklist, hint
+  panel, and sheet-layout preview details moved out of `LabelPrintModal.jsx`
+  into `components/label-print/PreviewDiagnosticsPanel.jsx`, reducing the modal
+  to 2,248 lines while preserving preview diagnostics and sheet-preview test
+  ids.
+- Completed current slice: the real print-fragment preview panel moved out of
+  `LabelPrintModal.jsx` into
+  `components/label-print/LabelPreviewSection.jsx`, reducing the modal to
+  2,868 lines while preserving preview page navigation, Fit/Inspect zoom, iframe
+  rendering, and inspection metadata.
+- Completed current slice: recommended-output and print-outcome summaries
+  moved out of `LabelPrintModal.jsx` into
+  `components/label-print/LabelPrintOutcomeSections.jsx`, reducing the modal
+  to 2,926 lines without changing readiness tone, profile-blocked actions,
+  or supplemental-label routing. Focused `LabelPrintModal` tests, docs drift,
+  diff check, and frontend build passed.
+- Completed current slice: documentation audit refreshed the active planning
+  docs after the latest extraction slices. `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`
+  now treats `?cas=` QR return hydration as implemented baseline, the active
+  batch owner doc no longer lists already-split pagination/stylesheet work as
+  remaining candidate work, and the detailed backlog scopes compact renderer
+  checks to the three public outputs before reopening older internal stock
+  families.
+- Completed current slice: advanced print options moved out of
+  `LabelPrintModal.jsx` into
+  `components/label-print/LabelAdvancedPrintOptions.jsx`, reducing the modal
+  to 3,047 lines without changing template, density, calibration, custom
+  field, saved-template, or recent-print handlers. Focused `LabelPrintModal`
+  tests, docs drift, diff check, and frontend build passed.
+- Completed current slice: admin dictionary add forms moved out of
+  `PilotDashboardSidebar.jsx` into
+  `components/pilot/PilotDictionaryForms.jsx`, reducing the sidebar to 1,563
+  lines without changing admin save handlers, payloads, or API behavior.
+  Focused `PilotDashboardSidebar` tests and docs drift checks passed.
+- Completed current slice: recent alias, manual-entry, and reference-link
+  review lists moved out of `PilotDashboardSidebar.jsx` into
+  `components/pilot/PilotRecentCurationLists.jsx`, reducing the sidebar to
+  1,385 lines while preserving existing row test ids and decision handlers.
+  Focused `PilotDashboardSidebar` tests passed.
+- Completed current slice: converted correction candidates, top correction
+  request review, and recent correction-request rendering moved out of
+  `PilotDashboardSidebar.jsx` into
+  `components/pilot/PilotCorrectionRequestSections.jsx`, reducing the sidebar
+  to 1,076 lines while preserving existing correction-request test ids and
+  decision handlers. Focused `PilotDashboardSidebar` tests passed.
+- Completed current slice: saved print presets and recent print queue controls
+  moved out of `LabelPrintModal.jsx` into
+  `components/label-print/SavedPrintControls.jsx`. Focused
+  `LabelPrintModal` tests passed.
+- Completed current slice: static label-print option definitions moved out of
+  `LabelPrintModal.jsx` into
+  `components/label-print/labelPrintModalOptions.js`. Focused
+  `LabelPrintModal` tests passed.
+- Completed current slice: config button grid and stock-choice card UI moved
+  out of `LabelPrintModal.jsx` into
+  `components/label-print/LabelPrintConfigControls.jsx`. Focused
+  `LabelPrintModal` tests passed.
+- Completed current slice: responsible-profile controls moved out of
+  `LabelPrintModal.jsx` into
+  `components/label-print/ResponsibleProfileControls.jsx`. Focused
+  `LabelPrintModal` tests passed.
+- Completed current slice: backend API payload models and bounded validation
+  helpers moved out of `backend/server.py` into `backend/api_models.py` and
+  `backend/api_validation.py`. `server.py` re-exports the existing model and
+  constant names for compatibility. Backend compile and full backend pytest
+  passed.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
    flows. Use this as the active continuation target while physical printing is
@@ -357,12 +533,13 @@ Current mode:
    slices where "what good looks like" is not already explicit.
 5. Fixed-stock batch label printing. Keep this in monitoring unless a new
    screenshot, QA failure, or product change reopens it. The current baseline
-   supports one physical stock, Quick ID / Supplemental / Complete purpose,
-   per-item fit results, representative previews, acknowledged
-   reduced/continuation scope, PDF artifact coverage for a 50-item Quick ID
-   batch, and deployed `qa:production-batch-print` / `qa:production-product`
-   evidence. Future changes should converge toward the simplified batch rules:
-   one output type, one stock, and same-output continuation labels.
+   supports one physical stock, the three public outputs (Complete A4/Letter,
+   QR small label, Identification small label), per-item fit results,
+   representative previews, acknowledged reduced/continuation scope, PDF
+   artifact coverage for a 50-item compact batch, and deployed
+   `qa:production-batch-print` / `qa:production-product` evidence. Future
+   changes should converge toward the simplified batch rules: one output type,
+   one stock, and same-output continuation labels.
 6. Physical print validation for real paper, label stock, printer scaling, QR
    scan success, and pictogram readability. The checklist now lives in
    `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md`, and

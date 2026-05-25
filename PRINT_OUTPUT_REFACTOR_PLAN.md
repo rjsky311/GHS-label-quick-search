@@ -4,7 +4,7 @@ Historical/supporting note: this file remains useful for v1.10 renderer and
 fit-engine history, but it is not the active user-facing print model or live
 queue. Start current planning from `PROJECT_STATUS_AND_NEXT_PLAN.md`; use
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` for current label-product decisions and
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` for the active short-term target.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active major target.
 
 This document is the implementation guide for the v1.10 print-workflow refactor
 baseline and follow-on print changes. It turns the product decisions into a

@@ -25,8 +25,8 @@ Important boundaries:
 
 - Missing upstream data must not be treated as "no hazards."
 - Printed hazard labels must preserve available GHS pictograms.
-- QR codes, quick-ID labels, and supplemental labels do not replace a complete
-  shipped-container style primary label.
+- QR small labels and identification small labels do not replace a complete
+  A4/Letter label with full H/P content.
 - Brand, support, education, or conversion surfaces must stay outside
   safety-critical printed label content.
 
@@ -38,9 +38,9 @@ Important boundaries:
 - SDS/reference links with role-aware ordering.
 - Excel and CSV export.
 - Bilingual English/Traditional Chinese UI.
-- Purpose-first label print flow with A4/Letter primary labels, smaller
-  supplemental labels, QR supplements, live preview, recent prints, lab profile,
-  and prepared-solution support.
+- Purpose-first label print flow with three public outputs: A4/Letter complete
+  labels, QR small labels, and identification small labels, with live preview,
+  recent prints, lab profile, and prepared-solution support.
 - Admin-gated pilot tools for dictionary/manual-reference maintenance and
   optional workspace sync.
 
@@ -64,9 +64,11 @@ current post-95 target ranking is
 [POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The shipped
 post-95 target owner doc is
 [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md), with pilot
-operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The active
-short-term follow-up is
+operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The shipped
+short-term evidence pass is
 [PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md).
+The active major target is
+[BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md).
 The shipped 95% lab-ready pilot evidence packet is
 [LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
 [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
@@ -104,8 +106,8 @@ Backend:
 
 ```bash
 cd backend
-python -m py_compile server.py
-python -m pytest test_name_search.py -v
+python -m py_compile server.py api_models.py api_validation.py export_helpers.py
+python -m pytest -q
 ```
 
 Frontend:
@@ -140,7 +142,10 @@ npm run test:docs
 
 ```text
 backend/
-  server.py              FastAPI app, PubChem client, exports, admin APIs
+  server.py              FastAPI routes, PubChem client, admin APIs
+  api_models.py          Pydantic API payload/response models
+  api_validation.py      Bounded payload constants and validation helpers
+  export_helpers.py      CSV/XLSX export safety and pilot summary helpers
   chemical_dict.py       Local CAS/name dictionaries and aliases
   test_name_search.py    Backend regression tests
 
@@ -169,9 +174,13 @@ Use these files before starting product or safety-critical changes:
 - [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md) - pilot operator checklist and
   finding-classification guide.
 - [PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md) -
-  active short-term target for representative pilot evidence, export usability,
-  data-quality next steps, maintainability boundaries, and historical-doc
-  cleanup.
+  shipped short-term evidence pass for representative pilot evidence, export
+  usability, data-quality next steps, maintainability boundaries, and
+  historical-doc cleanup.
+- [BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md) -
+  active major target for batch review flow, batch label confidence, batch
+  export, correction/admin triage, and bounded maintainability work that
+  supports those workflows.
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
 - [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
   workflow for aligning broad or ambiguous product decisions before

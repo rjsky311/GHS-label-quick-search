@@ -45,11 +45,17 @@ baseline, with the operator-facing checklist in `PILOT_RUNBOOK.md`.
 `LAB_READY_PILOT_95_PLAN.md` is the shipped 95% evidence packet, not an active
 unfinished target.
 
-Current short-term target: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` is the
-active owner doc for the evidence-driven pilot follow-up. Use it after the
-shipped pilot operations docs when continuing work that checks real pilot
-smoothness, batch export usability, data-quality next steps, large-module
-maintainability, or historical-doc cleanup.
+Current major target: `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is the active owner
+doc for the next productization round. Use it after the shipped pilot evidence
+docs when continuing work on batch review flow, batch label confidence, batch
+export usefulness, correction/admin triage, or bounded maintainability work
+that directly supports those workflows.
+
+Shipped short-term evidence: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`
+records the representative pilot-evidence audit, export conclusion,
+data-quality next-step recommendation, maintainability audit, and historical
+doc cleanup. Treat it as evidence for the current target, not as the active
+unfinished slice.
 
 ## 1. Product Positioning
 
@@ -70,8 +76,8 @@ Core product promises:
   paste a chemical list and understand valid, duplicate, invalid, unresolved,
   printable, continuation, and exportable items without learning the internal
   data model.
-- Preview should show the actual output role: complete primary label,
-  supplemental label, quick-ID label, QR supplement, continuation output, or
+- Preview should show the actual output role: Complete A4/Letter label,
+  QR small label, Identification small label, same-output continuation, or
   blocked output with a concrete recovery path.
 - Print output must preserve available GHS pictograms on hazard labels. QR,
   brand surfaces, or supplemental labels must not replace required visual
@@ -97,11 +103,11 @@ Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
-  the evidence packet for that milestone. The active post-95 target selection
-  now lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target
-  owner doc is `PILOT_OPERATIONS_READY_PLAN.md`. The current baseline is Pilot
-  Operations Ready: small pilot observation can now produce admin triage,
-  export summary, and documented QA evidence before more broad feature work.
+  the evidence packet for that milestone. The shipped post-95 target selection
+  lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target owner
+  doc is `PILOT_OPERATIONS_READY_PLAN.md`. The current active target is
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: small pilot evidence should now improve
+  the batch-first lookup/review/print/export/correction path.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first
@@ -160,8 +166,8 @@ Current validation gates:
   (fixed-stock scope, print handoff, and multiple-GHS pre-handoff warning)
 - Prepared production workflow: `npm run qa:production-prepared`
 - Whole product closure: `npm run qa:production-product`
-- Backend: `python -m py_compile server.py` and
-  `python -m pytest test_name_search.py -v`
+- Backend: `python -m py_compile server.py api_models.py api_validation.py export_helpers.py`
+  and `python -m pytest -q`
 
 Current completion snapshot:
 
@@ -177,16 +183,78 @@ Current completion snapshot:
   correction, data-quality, export, UX, or production-reliability work without
   manual chat-driven triage.
 - **Pilot Operations Ready checkpoint 2026-05-24**:
-  `PILOT_OPERATIONS_READY_PLAN.md` owns the next major product target, and
+  `PILOT_OPERATIONS_READY_PLAN.md` owned the post-95 product target, and
   `PILOT_RUNBOOK.md` defines the daily/weekly maintainer checklist for small
   real pilots. This target is shipped as the post-95 baseline. The next product
   slice should be selected from pilot evidence, admin/export usability gaps, or
   blockers, not from the old P0-P4 list by inertia.
 - **Pilot Evidence And Maintainability checkpoint 2026-05-25**:
-  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` is the active short-term owner
-  doc. It ties the next round to representative pilot evidence, data-quality
-  next-step selection, batch export usability, low-risk maintainability
-  boundaries, and historical-doc cleanup.
+  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` shipped. It recorded
+  representative production/pilot evidence, data-quality next-step selection,
+  batch export usability, low-risk maintainability boundaries, and
+  historical-doc cleanup.
+- **Batch-First Lab Pilot v1 checkpoint 2026-05-25**:
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the active major owner doc. It
+  converts the shipped evidence into a closeable productization target:
+  batch-first review clarity, three-output batch label confidence, practical
+  batch export, correction/admin triage, and one low-risk maintainability
+  slice.
+- **Maintainability extraction checkpoint 2026-05-25**:
+  bounded low-risk slices are shipped. Admin triage, candidate evidence,
+  curation status helpers, print-modal helper/config, print advanced controls,
+  print output/readiness summaries, print continuation pagination, H/P
+  statement prioritization, print stylesheet generation, print overflow
+  inspection, print lifecycle/QA handoff helpers, required image preflight,
+  label output selection, stock-size summary/picker rendering,
+  output-plan detail rendering, label preview panel rendering,
+  selected-label controls, preview diagnostics, batch fit/report UI,
+  correction request review sections, backend export trust/summary code,
+  backend API schemas, backend bounded payload validation, and backend
+  pilot/admin routes now have separate modules while preserving existing
+  API/test contracts. Current worktree counts
+  are `printLabels.js` 1,472 lines, `printDocumentLayoutHelpers.js` 483
+  lines, `printImagePreflight.js` 80 lines, `printRenderHelpers.js` 148
+  lines, `printLifecycle.js` 239 lines, `printLabelStyles.js` 1,847 lines,
+  `printPreviewStyles.js` 164 lines,
+  `LabelPrintModal.jsx` 1,750 lines,
+  `LabelPrintFooter.jsx` 49 lines, `MultipleGhsPrintWarning.jsx` 56 lines,
+  `LabelPreviewPanel.jsx` 235 lines, `SelectedLabelsControls.jsx` 245 lines,
+  `PreviewDiagnosticsPanel.jsx` 168 lines, `StockSizeSelector.jsx` 104 lines,
+  `PrintOutputPlanDetails.jsx` 129 lines, `LabelOutputSelector.jsx` 72 lines,
+  `BatchFitReport.jsx` 291 lines, `LabelAdvancedPrintOptions.jsx` 411 lines,
+  `LabelPrintOutcomeSections.jsx` 179 lines, `LabelPreviewSection.jsx` 162
+  lines, `labelPrintModalOptions.js` 113 lines,
+  `LabelPrintConfigControls.jsx` 115 lines,
+  `ResponsibleProfileControls.jsx` 120 lines, `SavedPrintControls.jsx` 237
+  lines, `PilotDashboardSidebar.jsx` 1,076 lines,
+  `PilotDictionaryForms.jsx` 306 lines, `PilotRecentCurationLists.jsx` 280
+  lines, `PilotCorrectionRequestSections.jsx` 330 lines, `server.py` 1,613
+  lines, `pilot_admin_routes.py` 281 lines, `api_models.py` 363 lines,
+  `api_validation.py` 229 lines, `export_helpers.py` 204 lines, and
+  `pilot_store.py` 1,639 lines.
+  Remaining large-file work should be selected only when it directly supports
+  the next batch, data-governance, print, or admin workflow change.
+- **Documentation audit checkpoint 2026-05-25**:
+  active docs were refreshed after the latest extraction slices. The simplified
+  label model now treats `?cas=` QR return hydration as implemented baseline,
+  the remaining maintainability candidates no longer list already-split
+  pagination/stylesheet/print-lifecycle/output-plan/stock-size
+  selector/selected-label-controls/preview-panel/preview-diagnostics work as
+  unfinished, and future compact renderer checks are scoped to the three public
+  outputs before reopening older internal stock families.
+- **Repository hygiene and bundle checkpoint 2026-05-25**:
+  the dirty worktree has been classified into reviewable scopes:
+  maintainability extraction, backend/API boundary extraction, frontend
+  print/admin component extraction, tests, and docs. The frontend app shell now
+  lazy-loads non-first-screen surfaces such as result tables, sidebars, detail
+  and comparison modals, export preview, prepared-solution modal, print modal,
+  and admin dashboard. Export download logic is also isolated behind a dynamic
+  import while CSV escaping and export preview rows stay in light shared utils.
+  `npm run build` now emits no 500 kB chunk warning: the main `index` chunk is
+  246.08 kB, with `LabelPrintModal` 114.66 kB, `printLabels` 112.84 kB,
+  `PilotDashboardSidebar` 56.31 kB, and `exportData` 1.24 kB as separate
+  chunks. Keep future code-splitting work evidence-based rather than splitting
+  stable first-screen code by default.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
@@ -505,8 +573,8 @@ Current status:
   timeout; a healthy full product pass can take several minutes because it runs
   deployed Chrome flows, print handoff checks, prepared workflow checks,
   fixed-stock batch checks, and summary generation.
-- Production print handoff QA now checks QR supplement scan-target metadata and
-  visible QR target role copy, so the SDS/regulatory/reference scan path is not
+- Production print handoff QA now checks QR small-label scan-target metadata
+  and visible QR target role copy, so the lookup/reference scan path is not
   only manually inspected.
 - Production print handoff QA also includes a blocked A4 complete-primary
   recovery case with missing responsible profile, so blocked print states must
@@ -564,7 +632,8 @@ complete-primary/A4 logic.
 Do next:
 
 - Use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the implementation contract.
-- Treat batch printing as purpose-first: Quick ID, Supplemental, or Complete.
+- Treat batch printing as purpose-first inside the current three-output model:
+  Complete A4/Letter label, QR small label, or Identification small label.
 - Keep one selected physical stock for the batch. Do not silently split a batch
   across A4, Letter, tube, rack, and QR stocks.
 - Add a batch fit report that classifies each item as ready, ready-tight,
@@ -581,8 +650,9 @@ Done means:
 - A user can select one stock and one purpose, then understand exactly which
   items will print, which are reduced, which need same-stock continuation, and
   which are excluded before pressing print.
-- Quick ID and Supplemental batches remain printable when truthful, even when a
-  complete primary label would not fit.
+- QR small-label and Identification small-label batches remain printable when
+  truthful, even when a complete A4/Letter label would not be the selected
+  output.
 - Complete batches never silently omit required content; they continue,
   exclude, or ask the user to choose a different purpose/stock.
 
@@ -616,7 +686,7 @@ Current status:
 - Deployed 50-item batch evidence was captured on commit `37cdff9` by
   `qa:production-batch-print`, `qa:production-product`, and GitHub Actions
   `Production Print QA` run `25947899331`.
-- `qa:print-report` now also writes a 50-item fixed-stock Quick ID batch print
+- `qa:print-report` now also writes a 50-item fixed-stock compact batch print
   artifact, and `qa:print-pdf` checks that artifact for stock metadata, batch
   categories, required pictograms, identity text, clipping, and visual overlap.
   Re-run the deployed batch/product gates after each production-facing batch
@@ -633,8 +703,8 @@ Do next:
   supplement, and prepared-solution outputs.
 - Check browser print scaling, printer margins, orientation, paper/label stock,
   thermal/label-printer legibility, QR scan success, and pictogram readability.
-- Record when the expected outcome is a complete primary label versus a
-  truthful supplemental or quick-ID label.
+- Record when the expected outcome is a complete A4/Letter label versus a
+  truthful QR small label or Identification small label.
 - Convert repeated manual findings into automated geometry/PDF/production QA
   assertions where possible.
 
@@ -713,10 +783,10 @@ Current status:
   authoritative than verification links.
 - Backend reference-link payloads now use the same role-first source order, so
   the API, frontend display, and QR target selection share one authority model.
-- QR supplement planning now uses the same source model for scan targets: the
+- QR small-label planning now uses the same source model for scan targets: the
   UI shows the target role/source before printing, and printed QR images carry
   target URL/type/source/label metadata for QA and troubleshooting.
-- The deployed print handoff gate now fails QR supplement cases if that target
+- The deployed print handoff gate now fails QR small-label cases if that target
   metadata or visible role copy disappears.
 - Admin curation writes are bounded on the backend: manual dictionary entries,
   aliases, and reference links trim text, cap long fields, reject unsupported
@@ -883,9 +953,18 @@ Use these files by role:
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
-- `POST_95_REPRIORITIZATION.md`: current post-95 decision packet and active
-  next-target ranking after the Lab-Ready Pilot shipped.
-- `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`: active short-term owner doc for
+- Current dirty-worktree commit scope should remain reviewable as:
+  maintainability extraction, backend/API boundary extraction, frontend
+  print/admin component extraction, tests, and docs. Avoid mixing unrelated
+  product changes into that scope before it is committed. This housekeeping and
+  code-splitting slice is complete; while these files remain uncommitted, the
+  next operational risk is reviewability, not more maintenance work.
+- `POST_95_REPRIORITIZATION.md`: post-95 decision packet and shipped
+  pilot-operations/evidence target history after the Lab-Ready Pilot shipped.
+- `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: active major owner doc for the next
+  productization round: batch review flow, batch label confidence, batch export,
+  correction/admin triage, and maintainability.
+- `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`: shipped evidence packet for
   pilot evidence, export usability, data-quality next-step selection,
   maintainability boundaries, and historical-doc cleanup.
 - `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
@@ -911,5 +990,5 @@ Use these files by role:
 - `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline; supporting
   history, not the active live queue.
 - `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:
-  productized utility design direction; supporting history after the current
-  pilot evidence target is selected.
+  productized utility design direction; supporting history for the active
+  batch-first pilot target.

@@ -115,9 +115,11 @@ Work to continue:
 - Align the modal preview, print button copy, hidden print iframe, PDF artifact,
   and production handoff inspection so they all agree on page count and
   continuation status.
-- Add stock-specific renderer checks for compact families: small strip,
-  small rack, medium rack, 62 mm continuous, standard bottle, large front label,
-  A4 primary, and Letter primary.
+- Add stock-specific renderer checks for the simplified public families first:
+  A4/Letter complete labels, 62 x 40 mm QR small labels, and 70 x 24 mm
+  identification labels. Only reopen older internal stock-family checks
+  (small rack, medium rack, standard bottle, large front label, and custom
+  strips) when production evidence or a pilot example proves they still matter.
 - Turn every observed visual issue into a geometry assertion or QA matrix case:
   CAS/case chips, product name, signal word, pictograms, QR block, H summaries,
   continuation labels, and prepared-solution metadata.

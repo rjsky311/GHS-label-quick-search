@@ -2,8 +2,8 @@
 
 Historical note: this roadmap is superseded as an active queue. Keep it as
 design and productization context only. Start current planning from
-`PROJECT_STATUS_AND_NEXT_PLAN.md` and the active short-term owner doc
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
+`PROJECT_STATUS_AND_NEXT_PLAN.md` and the active major owner doc
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
 
 ## North Star
 
@@ -20,7 +20,7 @@ As of the v1.10 codebase:
 
 - Frontend is React 19, Vite 6, Tailwind 3.4, Radix/shadcn primitives.
 - Runtime version is `1.10.0`.
-- Print workflow includes purpose-first label modes, stock presets, QR supplement labels, live preview, recent print reload, lab profile, template save/load, and calibration controls.
+- Print workflow now exposes three public outputs: Complete A4/Letter labels, QR small labels, and Identification small labels. Stock/template/calibration complexity stays internal, advanced, or maintainer-facing.
 - Admin/pilot surfaces exist behind configuration.
 - Current redesign pass has moved the main app to a light-first utility shell, added trust/feedback surfaces, fixed local Vite CORS for browser QA, split Vite vendor bundles, and started the generated visual asset system with a first-use workflow illustration. Remaining work is deeper workflow polish and deployment QA.
 
@@ -101,26 +101,31 @@ Acceptance:
 
 Goal: make label printing feel like a confident workflow.
 
-Detailed print-workflow refactor scope is tracked in `PRINT_OUTPUT_REFACTOR_PLAN.md`. That document is the implementation guide for the output planner, A4/Letter primary labels, curated stock presets, typography scaling, supplemental-label rules, and browser QA matrix.
+Detailed print-workflow history is tracked in `PRINT_OUTPUT_REFACTOR_PLAN.md`,
+but the active public-output contract is now `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`:
+Complete A4/Letter label, QR small label, and Identification small label.
 
 Scope:
 
 - `LabelPrintModal.jsx` hierarchy.
-- Print purpose selection before stock/template choices.
-- Stock preset selection.
-- Template/content density language.
+- Three-output selection before any advanced stock/template controls.
+- A4/Letter stock choice only for complete labels; supported small-label stock
+  is selected automatically unless future evidence justifies an advanced
+  override.
+- Remove old density/template language from ordinary user flow.
 - Live preview sizing and warnings.
 - Recent print/template/lab profile surfaces.
-- Printed full primary-label hierarchy plus compact `standard` / `qrcode` supplemental label hierarchy.
+- Printed complete-label hierarchy plus compact QR and Identification label
+  hierarchy.
 - Print behavior pinned by `PRINT_LABEL_CONTRACT.md`.
 
 Acceptance:
 
-- Users can choose purpose/stock/template without guessing.
-- Shipped-container style labels keep product identifier, pictograms, signal word, H/P statements, and responsible contact together.
+- Users can choose one of the three outputs without guessing.
+- Complete A4/Letter labels keep product identifier, pictograms, signal word, H/P statements, QR lookup link, and responsible contact together.
 - Printed hazard labels never summarize or omit available GHS pictograms.
-- Compact labels do not pretend to carry full hazard detail.
-- QR labels make scan behavior obvious.
+- QR small labels and Identification small labels do not pretend to carry full hazard detail.
+- QR labels scan back to this product's lookup page.
 - Printed labels remain free of ads and unrelated brand content.
 
 ## Phase 6: Soft Brand And Growth Surfaces

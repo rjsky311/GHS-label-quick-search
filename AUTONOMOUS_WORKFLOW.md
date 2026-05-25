@@ -19,11 +19,12 @@ stop condition below applies:
   baseline.
 - When the active work is about reaching the next major product maturity target,
   read the active owner doc after `PROJECT_STATUS_AND_NEXT_PLAN.md`. For the
-  current post-95 target, read `PILOT_OPERATIONS_READY_PLAN.md` and
-  `PILOT_RUNBOOK.md`. For the current short-term follow-up, read
-  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`. `LAB_READY_PILOT_95_PLAN.md`
-  is the shipped evidence packet for the previous 95% target, not the current
-  unfinished milestone.
+  current major target, read `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`. Use
+  `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`,
+  `PILOT_OPERATIONS_READY_PLAN.md`, and `PILOT_RUNBOOK.md` as shipped evidence
+  and pilot-operation context. `LAB_READY_PILOT_95_PLAN.md` is the shipped
+  evidence packet for the previous 95% target, not the current unfinished
+  milestone.
 - Treat the documented priority order as a default, not a permanent autopilot.
   After several completed slices or when recent commits cluster around one
   workstream, re-rank from the whole product view before continuing the same
@@ -36,8 +37,9 @@ stop condition below applies:
   or makes the print workflow more task-first.
 - Move rare controls into secondary or advanced areas when the default workflow
   can make a reliable decision.
-- Treat too-small physical stocks as supplemental, quick-ID, or QR supplement
-  outputs instead of pretending they are complete primary labels.
+- Treat too-small physical stocks as QR small-label or Identification
+  small-label outputs, or block them with a clear recovery path, instead of
+  pretending they are complete A4/Letter labels.
 - Push stable changes to `main` when tests pass, then track GitHub Actions,
   Zeabur deployment, and production QA for user-facing changes.
 - Search current best practices proactively when the answer may have changed,
@@ -55,16 +57,18 @@ Use this loop when continuing autonomously:
 
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
    the relevant project docs before editing. For current product-maturity work,
-   include `PILOT_OPERATIONS_READY_PLAN.md`, `PILOT_RUNBOOK.md`, and
-   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` when that short-term target is
-   active; use
-   `LAB_READY_PILOT_95_PLAN.md` as prior milestone evidence only.
+   include `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`, then use
+   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`,
+   `PILOT_OPERATIONS_READY_PLAN.md`, and `PILOT_RUNBOOK.md` as shipped
+   evidence/context; use `LAB_READY_PILOT_95_PLAN.md` as prior milestone
+   evidence only.
 2. Run the next-step decision loop below, then pick one coherent product slice
    with a clear user-facing acceptance goal.
-   The current default order is trust/source/SDS safety boundaries, low-noise
-   whole-product UX, print renderer/stock fit only when a fresh screenshot or
-   regression points there, result-table/GHS visual unity, prepared reprint
-   maturity, then fixed-stock batch monitoring.
+   The current default order is batch review flow, batch label confidence,
+   batch export, correction/admin triage, then one low-risk maintainability
+   slice. Trust/source/SDS safety, low-noise UX, print renderer fit, and
+   result-table polish should enter only when evidence shows they block that
+   batch-first path.
 3. If the slice is broad, ambiguous, repeated-rework-prone, or changes product
    direction, run the project scope gate in `PRODUCT_SCOPE_GATE.md` before
    editing.
@@ -95,6 +99,12 @@ complete until `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` has representative
 pilot evidence, admin/report triage conclusions, batch export usability
 conclusions, data-quality next-step selection, maintainability boundaries,
 historical-doc cleanup, and passing docs/affected tests recorded.
+
+For Batch-First Lab Pilot v1 work, do not call the target complete until
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` has shipped evidence for representative
+50-100 item batch lookup, review, selected print handoff, export, and
+correction/admin routing, plus a completed low-risk maintainability slice or a
+recorded reason to defer that slice.
 
 ## Next-Step Decision Loop
 
@@ -216,7 +226,7 @@ For print workflow changes, the default validation stack is:
   result actions, GHS result strips, or first-screen polish changed.
 - `npm run qa:production-smoke` after Zeabur deploy for routine frontend or
   print-flow iterations; it covers complete primary, continuation,
-  case-number quick ID, 62 mm, QR supplement handoff, and the search-results
+  identification small-label, 62 mm QR small-label handoff, and the search-results
   UI readability check in production Chrome.
 - `npm run qa:production-primary`, `npm run qa:production-compact`, and
   `npm run qa:production-multi-chemical` when the full production matrix is too
@@ -225,8 +235,8 @@ For print workflow changes, the default validation stack is:
 - `npm run qa:production-prepared` after prepared-solution workflow changes.
   This is a deployed Chrome clickthrough from search result to detail to
   prepare-solution form to label print modal to print handoff, plus prepared
-  sidebar reprint to label print modal to print handoff, for A4 primary, bottle
-  supplemental, and tube quick-ID prepared outputs. It also covers prepared
+  sidebar reprint to label print modal to print handoff, for A4 primary and
+  compact prepared outputs. It also covers prepared
   preset creation/reuse and verifies that stale operational fields are cleared
   before a new prepared print job is submitted.
 - `npm run qa:production-product` when closing or revalidating all product

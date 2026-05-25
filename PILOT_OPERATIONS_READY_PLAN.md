@@ -1,6 +1,6 @@
 # Pilot Operations Ready Plan
 
-Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first. This file owns the next major
+Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first. This file is the shipped
 post-95 product target selected by `POST_95_REPRIORITIZATION.md`.
 
 ## Goal
@@ -13,7 +13,7 @@ The product should let a lab, teaching unit, or lab manager run a realistic
 batch, print or export the intended output, report data issues, and leave the
 maintainer with a clear operator view of what to fix next.
 
-## Why This Is The Next Large Target
+## Why This Was The Post-95 Target
 
 The 95% milestone proved that controlled search, batch, print, export, data
 correction, and production QA paths are mostly stable. The next risk is

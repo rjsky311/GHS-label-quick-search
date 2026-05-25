@@ -43,6 +43,9 @@ const docs = {
   "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md": readText(
     "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
   ),
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md": readText(
+    "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  ),
   "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
   "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
@@ -133,7 +136,7 @@ requireIncludes(
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
   docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
   "LAB_READY_PILOT_95_PLAN.md",
-  "next major product target must stay discoverable from the canonical plan",
+  "shipped 95% evidence packet must stay discoverable from the canonical plan",
 );
 requireIncludes(
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
@@ -145,13 +148,19 @@ requireIncludes(
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
   docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
   "PILOT_OPERATIONS_READY_PLAN.md",
-  "active pilot-operations target must stay discoverable from the canonical plan",
+  "shipped pilot-operations target must stay discoverable from the canonical plan",
 );
 requireIncludes(
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
   docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
   "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
-  "active short-term pilot evidence target must stay discoverable from the canonical plan",
+  "shipped short-term pilot evidence target must stay discoverable from the canonical plan",
+);
+requireIncludes(
+  "PROJECT_STATUS_AND_NEXT_PLAN.md",
+  docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  "active batch-first target must stay discoverable from the canonical plan",
 );
 requireIncludes(
   "POST_95_REPRIORITIZATION.md",
@@ -214,6 +223,30 @@ requireIncludes(
   "short-term target must define closure evidence",
 );
 requireIncludes(
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
+  "Batch-First Lab Pilot v1",
+  "active major target role statement",
+);
+requireIncludes(
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
+  "Batch Review Flow",
+  "active major target must cover batch review flow",
+);
+requireIncludes(
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
+  "Batch Export v1",
+  "active major target must cover batch export",
+);
+requireIncludes(
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
+  "Maintainability Slice",
+  "active major target must cover the bounded maintainability work",
+);
+requireIncludes(
   "NEXT_PRODUCT_WORK.md",
   docs["NEXT_PRODUCT_WORK.md"],
   "PILOT_OPERATIONS_READY_PLAN.md",
@@ -223,7 +256,13 @@ requireIncludes(
   "NEXT_PRODUCT_WORK.md",
   docs["NEXT_PRODUCT_WORK.md"],
   "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
-  "short queue must point to the active short-term owner doc",
+  "short queue must point to the shipped short-term evidence doc",
+);
+requireIncludes(
+  "NEXT_PRODUCT_WORK.md",
+  docs["NEXT_PRODUCT_WORK.md"],
+  "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
+  "short queue must point to the active batch-first owner doc",
 );
 requireIncludes(
   "LAB_READY_PILOT_95_PLAN.md",
@@ -317,6 +356,12 @@ requireIncludes(
   docs["SIMPLIFIED_LABEL_OUTPUT_MODEL.md"],
   "Complete labels support A4 and Letter",
   "simplified label model must preserve the three-output contract",
+);
+requireIncludes(
+  "SIMPLIFIED_LABEL_OUTPUT_MODEL.md",
+  docs["SIMPLIFIED_LABEL_OUTPUT_MODEL.md"],
+  "Direct CAS query hydration from URL params is now part of the product",
+  "QR labels must stay connected to the deployed ?cas= lookup return path",
 );
 requireIncludes(
   "PRINT_LABEL_CONTRACT.md",

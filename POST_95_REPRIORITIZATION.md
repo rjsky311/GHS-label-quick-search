@@ -9,10 +9,11 @@ queue in `NEXT_PRODUCT_WORK.md` aligned with the chosen target.
 The owner doc produced from this decision is `PILOT_OPERATIONS_READY_PLAN.md`,
 with the operator checklist in `PILOT_RUNBOOK.md`. That target is now shipped
 as the post-95 pilot-operations baseline.
-The active short-term follow-up is
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`, which turns that baseline into a
-representative evidence pass and maintainability cleanup before any broader
-feature work.
+The short-term follow-up
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` also shipped. The active major
+target after that evidence pass is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`, which
+turns the pilot evidence into a batch-first lab workflow target before any
+broader feature work.
 
 ## Re-Rank Trigger
 
@@ -260,15 +261,21 @@ Recommended first slice:
 
 Shipped owner docs:
 
-- `PILOT_OPERATIONS_READY_PLAN.md` - active target definition and completion
+- `PILOT_OPERATIONS_READY_PLAN.md` - shipped target definition and completion
   audit.
 - `PILOT_RUNBOOK.md` - pilot operator and maintainer checklist.
 
-Active short-term follow-up:
+Shipped short-term follow-up:
 
 - `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` - representative pilot
   evidence, data-quality next-step selection, export usability check,
   maintainability boundaries, and historical-doc cleanup.
+
+Active major follow-up:
+
+- `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` - batch-first lab pilot workflow:
+  batch review flow, three-output batch label confidence, batch export,
+  correction/admin triage, and one maintainability slice.
 
 ## Verification Plan For The Re-Rank Itself
 

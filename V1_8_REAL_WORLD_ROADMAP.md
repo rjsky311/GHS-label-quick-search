@@ -3,8 +3,7 @@
 Historical note: this v1.8 working roadmap is retained for context only and is
 not the active planning source. Start current planning from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`; use
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` for the active short-term pilot
-evidence and maintainability pass.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active major target.
 
 > Status: working document
 > Last updated: 2026-04-16

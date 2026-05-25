@@ -3,8 +3,7 @@
 Historical/supporting note: this document records the product design language
 and remains useful for visual direction. It is not the active roadmap. Start
 current planning from `PROJECT_STATUS_AND_NEXT_PLAN.md`, then use
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` while that short-term target is
-active.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active batch-first target.
 
 ## Product Position
 
@@ -163,16 +162,14 @@ Detail view should be a hazard summary, not a raw data dump:
 
 ### LabelPrintModal
 
-Print configuration should behave like a workflow:
+Print configuration should behave like a simple output workflow:
 
-1. Print purpose: shipped-container style primary label, QR supplement, or quick ID.
-2. Stock preset.
-3. Template / content density.
-4. Label fields and lab profile.
-5. Live preview and readiness warnings.
-6. Print / save / recent reload.
+1. Choose one public output: Complete A4/Letter label, QR small label, or Identification small label.
+2. Confirm the selected physical stock only when the output has A4/Letter variants or a supported small-label size.
+3. Review the live preview, generated page/label count, and any continuation or blocked-item warnings.
+4. Print, save/reload recent jobs, or adjust advanced maintainer-only controls when needed.
 
-The default path is safety-conservative: primary labels use the roomy full template and keep product identifier, signal word, pictograms, H-statements, P-statements, and responsible lab/supplier information in one label hierarchy. Compact QR and quick-ID labels may be useful, but must be visibly treated as supplemental in the workflow rather than complete shipped-container labels. The printed compact label itself should reserve space for hazard content instead of verbose explanatory copy.
+The default path is safety-conservative: Complete A4/Letter labels use the roomy full-page layout and keep product identifier, signal word, pictograms, H-statements, P-statements, QR lookup link, and responsible lab/supplier information in one hierarchy. QR small labels and Identification small labels are compact identity outputs: they keep CAS, English name, Chinese name, and every available GHS pictogram across same-output continuation labels, but do not carry H/P text or signal-word chips.
 
 GHS pictograms are non-negotiable output: if pictogram data exists, printed hazard labels must render every pictogram. Do not replace pictograms with `+N`, hide them behind QR, or silently omit them to make a compact layout fit.
 
