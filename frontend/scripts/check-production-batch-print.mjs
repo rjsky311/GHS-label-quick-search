@@ -532,7 +532,7 @@ const run = async () => {
       timeout: MODAL_TIMEOUT_MS,
     });
 
-    const fitReport = await page.evaluate(() => {
+    const readFitReport = () => page.evaluate(() => {
       const textOf = (testId) =>
         document
           .querySelector(`[data-testid="${testId}"]`)
@@ -561,22 +561,8 @@ const run = async () => {
         labelClass: label?.className || "",
       };
     });
+    let fitReport = await readFitReport();
     if (!fitReport.ready.includes("Ready")) failures.push("missing-ready-count");
-    if (!fitReport.outputContract.text) {
-      failures.push("batch-output-contract-missing");
-    }
-    if (Number.parseInt(fitReport.outputContract.selectedItems || "0", 10) < 1) {
-      failures.push("batch-output-contract-empty-selected");
-    }
-    if (
-      Number.parseInt(fitReport.outputContract.outputLabels || "0", 10) <
-      Number.parseInt(fitReport.outputContract.selectedItems || "0", 10)
-    ) {
-      failures.push("batch-output-contract-label-count-mismatch");
-    }
-    if (Number.parseInt(fitReport.outputContract.outputPages || "0", 10) < 1) {
-      failures.push("batch-output-contract-empty-pages");
-    }
     if (
       !/multiple GHS versions|多個 GHS 版本/i.test(
         fitReport.multipleGhsWarning || "",
@@ -584,14 +570,11 @@ const run = async () => {
     ) {
       failures.push("batch-print-multiple-ghs-warning-missing");
     }
-    const initialActionNamesBatch =
+    let initialActionNamesBatch =
       actionNamesReadyScope(fitReport.printAction) ||
       /complete primary continuation set|完整|continuation/i.test(
         fitReport.printAction || "",
       );
-    if (!/labels\s*\/.*pages/i.test(fitReport.printAction || "")) {
-      failures.push("batch-action-missing-physical-counts");
-    }
     if (!fitReport.labelClass.includes("label")) {
       failures.push("missing-preview-label-fragment");
     }
@@ -651,6 +634,32 @@ const run = async () => {
       scopeExerciseStock = "a4-primary";
       scopeBefore = await readScopeState();
     }
+
+    fitReport = await readFitReport();
+    if (!fitReport.outputContract.text) {
+      failures.push("batch-output-contract-missing");
+    }
+    if (Number.parseInt(fitReport.outputContract.selectedItems || "0", 10) < 1) {
+      failures.push("batch-output-contract-empty-selected");
+    }
+    if (
+      Number.parseInt(fitReport.outputContract.outputLabels || "0", 10) <
+      Number.parseInt(fitReport.outputContract.selectedItems || "0", 10)
+    ) {
+      failures.push("batch-output-contract-label-count-mismatch");
+    }
+    if (Number.parseInt(fitReport.outputContract.outputPages || "0", 10) < 1) {
+      failures.push("batch-output-contract-empty-pages");
+    }
+    initialActionNamesBatch =
+      actionNamesReadyScope(fitReport.printAction) ||
+      /complete primary continuation set|continuation/i.test(
+        fitReport.printAction || "",
+      );
+    if (!/labels\s*\/.*pages/i.test(fitReport.printAction || "")) {
+      failures.push("batch-action-missing-physical-counts");
+    }
+
     let scopeAfter = null;
     if (scopeBefore.hasReducedControl || scopeBefore.hasContinuationControl) {
       const controlTestId = scopeBefore.hasReducedControl
