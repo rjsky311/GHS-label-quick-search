@@ -1583,6 +1583,8 @@ async def export_xlsx(request: Request, payload: ExportRequest):
         export_scope=payload.export_scope,
         export_scope_label=payload.export_scope_label,
         export_count=payload.export_count,
+        source_total_count=payload.source_total_count,
+        visible_count=payload.visible_count,
     )
 
     output = BytesIO()

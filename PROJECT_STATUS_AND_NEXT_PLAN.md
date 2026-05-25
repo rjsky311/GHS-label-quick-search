@@ -193,12 +193,14 @@ Current completion snapshot:
   representative production/pilot evidence, data-quality next-step selection,
   batch export usability, low-risk maintainability boundaries, and
   historical-doc cleanup.
-- **Batch-First Lab Pilot v1 checkpoint 2026-05-25**:
-  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the active major owner doc. It
-  converts the shipped evidence into a closeable productization target:
+- **Batch-First Lab Pilot v1 checkpoint 2026-05-26**:
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the shipped/monitoring owner doc.
+  It converted the shipped evidence into a closeable productization target:
   batch-first review clarity, three-output batch label confidence, practical
   batch export, correction/admin triage, and one low-risk maintainability
-  slice.
+  slice. The closure audit moved this target from `Open` to
+  `Shipped / Monitoring`; future work should come from new monitoring
+  evidence, not from continuing Batch-First implementation by inertia.
 - **Batch-first clarity slice checkpoint 2026-05-25**:
   batch review clarity, batch export scope, and admin triage next-action
   visibility shipped in `20b5745`. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` records
@@ -316,9 +318,14 @@ Current completion snapshot:
   production batch QA ordering so the handoff contract is asserted after the
   required lab/supplier profile is present. CI passed, Zeabur production
   refreshed, and production health, batch-print, and product QA gates passed.
-  The next Batch-First work should be a final owner-doc closure audit or admin
-  triage improvement, not another handoff/export implementation pass unless
-  new evidence reopens it.
+- **Batch-First closure audit checkpoint 2026-05-26**: the final owner-doc
+  audit closed the target as `Shipped / Monitoring`. The audit patched two
+  evidence gaps: XLSX `Pilot Summary` now receives original batch total and
+  visible-row context from the frontend export payload, and admin triage now
+  exposes open corrections plus stale telemetry cleanup as first-level cards.
+  The next Batch-First work should be a new evidence-driven monitoring slice,
+  not another implementation pass unless user, QA, CI, or pilot evidence
+  reopens a specific workflow.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -979,15 +986,15 @@ Use these files by role:
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
-- Repository hygiene, code splitting, and the Batch-First handoff/export
-  closure scope have been committed and pushed. Future work should start from a
-  new reviewable slice rather than accumulating more cleanup in the shipped
-  scope.
+- Repository hygiene, code splitting, the Batch-First handoff/export closure
+  scope, and the Batch-First closure-audit patch have reviewable scopes.
+  Future work should start from a new evidence-driven slice rather than
+  accumulating more cleanup in the shipped Batch-First scope.
 - `POST_95_REPRIORITIZATION.md`: post-95 decision packet and shipped
   pilot-operations/evidence target history after the Lab-Ready Pilot shipped.
-- `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: active major owner doc for the next
-  productization round: batch review flow, batch label confidence, batch export,
-  correction/admin triage, and maintainability.
+- `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: shipped/monitoring owner doc for the
+  Batch-First productization round: batch review flow, batch label confidence,
+  batch export, correction/admin triage, and maintainability.
 - `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`: shipped evidence packet for
   pilot evidence, export usability, data-quality next-step selection,
   maintainability boundaries, and historical-doc cleanup.

@@ -31,12 +31,20 @@ export function buildExportFilename(format, options = {}) {
 }
 
 function buildExportPayload(normalizedResults, format, options = {}) {
+  const sourceTotalCount = Number.isFinite(Number(options.totalCount))
+    ? Number(options.totalCount)
+    : normalizedResults.length;
+  const visibleCount = Number.isFinite(Number(options.visibleCount))
+    ? Number(options.visibleCount)
+    : normalizedResults.length;
   return {
     results: normalizedResults,
     format,
     export_scope: options.scopeKey || "visible",
     export_scope_label: options.scopeLabel || options.scopeKey || "Visible filtered",
     export_count: normalizedResults.length,
+    source_total_count: sourceTotalCount,
+    visible_count: visibleCount,
   };
 }
 

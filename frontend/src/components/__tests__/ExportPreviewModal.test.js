@@ -67,6 +67,8 @@ describe('ExportPreviewModal', () => {
         expect.objectContaining({
           scopeKey: 'visible',
           count: 2,
+          totalCount: 2,
+          visibleCount: 2,
         }),
       );
     });
@@ -94,6 +96,8 @@ describe('ExportPreviewModal', () => {
         expect.objectContaining({
           scopeKey: 'visible',
           count: 2,
+          totalCount: 2,
+          visibleCount: 2,
         }),
       );
     });
@@ -121,6 +125,8 @@ describe('ExportPreviewModal', () => {
         expect.objectContaining({
           scopeKey: 'unresolved',
           count: 1,
+          totalCount: 2,
+          visibleCount: 1,
         }),
       );
     });

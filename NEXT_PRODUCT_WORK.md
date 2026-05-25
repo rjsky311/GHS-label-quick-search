@@ -21,7 +21,8 @@ The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
 operator checklist is `PILOT_RUNBOOK.md`.
 The shipped short-term evidence owner doc is
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
-The active major owner doc is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
+The Batch-First shipped/monitoring owner doc is
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
 `LAB_READY_PILOT_95_PLAN.md` is now the shipped evidence packet for the 95%
 Lab-Ready Pilot milestone, not the active unfinished target.
 
@@ -57,17 +58,18 @@ of expanding the queue by inertia.
 
 ### Current Product Thesis
 
-The 95% Lab-Ready Pilot, Pilot Operations Ready, and Pilot Evidence And
-Maintainability Pass targets have shipped. The next product round should not
-keep adding QA, print polish, or admin tooling by inertia. The highest-value
-major target is now `Batch-First Lab Pilot v1`: make the daily 50-100 item lab
-batch workflow clear enough that users can lookup, review, print, export, and
-route data issues without understanding the internal data model.
+The 95% Lab-Ready Pilot, Pilot Operations Ready, Pilot Evidence And
+Maintainability Pass, and Batch-First Lab Pilot v1 targets have shipped. The
+next product round should not keep adding QA, print polish, or admin tooling by
+inertia. Choose the next major target from monitoring evidence: user-provided
+batch lists, production QA failures, admin queue evidence, export handoff
+confusion, or a recurring data-governance issue.
 
 ### Active Slice
 
-Current default active slice: `Batch-First Lab Pilot v1`.
-Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the owner doc. Use
+Current default active slice: none from Batch-First by default. Select a new
+evidence-driven slice from the shipped Batch-First monitoring baseline. Use
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the Batch-First owner doc. Use
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the shipped evidence packet,
 `POST_95_REPRIORITIZATION.md` as the post-95 decision history,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
@@ -82,17 +84,20 @@ needs-review, unresolved, and summary sheets for lab-manager triage, CI passed,
 Zeabur production refreshed, and the production health, batch-print, and
 product QA gates passed after `5d51401`.
 
-The next closeable slice should come from one of these five workstreams:
+The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
+`Shipped / Monitoring`. The next slice should now be selected from monitoring
+evidence instead of continuing Batch-First implementation by inertia:
 
-1. Batch review flow closure audit: confirm the latest production behavior
-   satisfies the owner-doc acceptance criteria for a representative 50-100 item
-   batch instead of only passing individual gates.
+1. Batch review flow monitoring: add cases only when a real batch list,
+   production QA failure, or user screenshot shows review reasons or next
+   actions are still unclear.
 2. Batch label output confidence monitoring: add cases only when a new batch
    list, screenshot, PDF, or production gate exposes a mismatch.
 3. Batch export v1 monitoring: add scope/filename/sheet improvements only when
-   a lab-manager handoff example shows confusion.
+   a lab-manager handoff example shows confusion after the new total-row and
+   visible-row summary evidence.
 4. Data correction and admin triage: this is the next likely product slice if
-   the closure audit shows maintainers still cannot identify the next
+   real admin queue evidence shows maintainers still cannot identify the next
    data-quality action quickly.
 5. Maintainability slice: the required low-risk extraction criterion is
    already satisfied; reopen only when the next batch/admin/data change needs a
@@ -100,11 +105,12 @@ The next closeable slice should come from one of these five workstreams:
 
 ### Exit Condition
 
-Stop extending this target when `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` has shipped
-evidence that a representative 50-100 item batch can complete lookup, review,
-selected label print handoff, export, and correction/admin routing with clear
-review reasons and no hidden data/print state. The target also needs at least
-one low-risk maintainability extraction or a recorded reason to defer it.
+Stop extending this target: `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` now records
+shipped evidence that a representative 50-100 item batch can complete lookup,
+review, selected label print handoff, export, and correction/admin routing with
+clear review reasons and no hidden data/print state. The target also satisfied
+the maintainability criterion. Future work should be a new evidence-driven
+slice, not more Batch-First closure work.
 
 Current closure note: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` remains
 `Shipped`; do not reopen it unless new pilot evidence contradicts its
@@ -133,11 +139,12 @@ Current mode:
   heavy print/admin/detail/export surfaces outside the initial app chunk. Do
   not continue splitting solely for line-count or bundle aesthetics unless a
   measured regression appears.
-- Product priority is now active through `Batch-First Lab Pilot v1`: batch
-  lookup -> batch review clarity -> batch print -> batch export -> correction
-  and admin triage -> one maintainability slice. Single lookup polish and
-  brand/support polish should wait unless new evidence proves they block the
-  batch path.
+- Product priority should now be selected from monitoring evidence after
+  `Batch-First Lab Pilot v1`: batch lookup, batch review clarity, batch print,
+  batch export, correction/admin triage, and maintainability are shipped
+  baselines. Single lookup polish and brand/support polish should wait unless
+  new evidence proves they block the batch path or a newly selected product
+  slice.
   The correction-request backend store/API, admin review queue, and public
   in-app correction dialog are now in place. Admin correction requests can now
   carry review-only candidate evidence bundles for missing Chinese names and

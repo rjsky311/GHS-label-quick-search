@@ -43,6 +43,13 @@ export default function ExportPreviewModal({
     scopeOptions.find((option) => option.key === EXPORT_SCOPE_KEYS.VISIBLE) ||
     scopeOptions[0];
   const scopedResults = selectedScopeOption?.results || [];
+  const sourceTotalCount =
+    Array.isArray(allResults) && allResults.length > 0
+      ? allResults.length
+      : Array.isArray(results)
+        ? results.length
+        : 0;
+  const visibleCount = Array.isArray(results) ? results.length : 0;
   const foundCount = scopedResults.filter((result) => result.found).length;
 
   useEffect(() => {
@@ -68,6 +75,8 @@ export default function ExportPreviewModal({
         scopeKey: selectedScopeOption.key,
         scopeLabel: t(selectedScopeOption.labelKey),
         count: scopedResults.length,
+        totalCount: sourceTotalCount,
+        visibleCount,
       });
       completed = true;
     } finally {

@@ -34,6 +34,14 @@ export default function PilotTriagePanel({ pilotTriage = {} }) {
           testId="pilot-triage-open-work-items"
         />
         <SummaryCard
+          label={t("pilot.triageOpenCorrections", {
+            defaultValue: "Open corrections",
+          })}
+          value={attentionCounts.openCorrectionRequests || 0}
+          accent="text-emerald-800"
+          testId="pilot-triage-open-corrections"
+        />
+        <SummaryCard
           label={t("pilot.triageUnresolvedSearches", {
             defaultValue: "Unresolved searches",
           })}
@@ -88,6 +96,14 @@ export default function PilotTriagePanel({ pilotTriage = {} }) {
           value={attentionCounts.noGhsReports || 0}
           accent="text-red-700"
           testId="pilot-triage-no-ghs"
+        />
+        <SummaryCard
+          label={t("pilot.triageStaleTelemetry", {
+            defaultValue: "Stale telemetry",
+          })}
+          value={attentionCounts.staleMissQueryRows || 0}
+          accent="text-slate-700"
+          testId="pilot-triage-stale-telemetry"
         />
       </div>
       <div className="mt-3 space-y-2">

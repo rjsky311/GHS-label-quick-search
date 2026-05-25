@@ -82,6 +82,8 @@ class ExportRequest(BaseModel):
     export_scope: str = Field("visible", max_length=40)
     export_scope_label: str = Field("Visible filtered", max_length=80)
     export_count: Optional[int] = None
+    source_total_count: Optional[int] = Field(default=None, ge=0, le=MAX_EXPORT_ROWS)
+    visible_count: Optional[int] = Field(default=None, ge=0, le=MAX_EXPORT_ROWS)
 
 
 class WorkspaceDocumentPayload(BaseModel):

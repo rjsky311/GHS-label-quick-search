@@ -283,6 +283,8 @@ describe('exportToExcel', () => {
         export_scope: 'visible',
         export_scope_label: 'Visible filtered',
         export_count: 1,
+        source_total_count: 1,
+        visible_count: 1,
       }),
       { responseType: 'blob' }
     );
@@ -297,6 +299,8 @@ describe('exportToExcel', () => {
       scopeKey: 'needs-review',
       scopeLabel: 'Needs review',
       count: 99,
+      totalCount: 12,
+      visibleCount: 4,
     });
 
     expect(axios.post).toHaveBeenCalledWith(
@@ -306,6 +310,8 @@ describe('exportToExcel', () => {
         export_scope: 'needs-review',
         export_scope_label: 'Needs review',
         export_count: 1,
+        source_total_count: 12,
+        visible_count: 4,
       }),
       { responseType: 'blob' }
     );
@@ -371,6 +377,8 @@ describe('exportToCSV', () => {
         export_scope: 'visible',
         export_scope_label: 'Visible filtered',
         export_count: 1,
+        source_total_count: 1,
+        visible_count: 1,
       }),
       { responseType: 'blob' }
     );

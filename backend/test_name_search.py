@@ -1827,6 +1827,8 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
         "export_scope": "needs-review",
         "export_scope_label": "=Needs review",
         "export_count": 3,
+        "source_total_count": 9,
+        "visible_count": 4,
         "results": [
             {
                 "cas_number": "64-17-5",
@@ -1868,7 +1870,8 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
         summary.cell(row=row, column=1).value: summary.cell(row=row, column=2).value
         for row in range(2, summary.max_row + 1)
     }
-    assert rows["Total rows"] == 3
+    assert rows["Total rows"] == 9
+    assert rows["Visible filtered rows"] == 4
     assert rows["Export scope"] == "'=Needs review"
     assert rows["Exported row count"] == 3
     assert rows["Printable rows"] == 2

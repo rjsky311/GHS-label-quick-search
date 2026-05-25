@@ -6,7 +6,7 @@ Pilot Evidence And Maintainability Pass targets shipped.
 
 ## Status
 
-Status: `Open`
+Status: `Shipped / Monitoring`
 
 Target: make the batch-first lab workflow reliable enough for a practical
 small pilot where a lab user can paste 50-100 chemicals, understand what needs
@@ -25,8 +25,13 @@ This is not a broad redesign. It is a focused productization target:
 
 ## Current Closure Audit Snapshot
 
-Status remains `Open`, but the largest implementation slices are now shipped
-and production-gated:
+2026-05-26 closure decision: this target can move from `Open` to
+`Shipped / Monitoring`. The final audit found two small closure gaps and
+patched them in this slice: export payloads now preserve original batch total
+and visible-row count for the XLSX `Pilot Summary`, and the admin triage panel
+now exposes open corrections plus stale telemetry cleanup as first-level cards.
+
+The largest implementation slices were already shipped and production-gated:
 
 - Batch review clarity, export-scope handling, and admin triage next-action
   visibility shipped in `20b5745` and passed local tests/build/docs checks plus
@@ -41,20 +46,34 @@ and production-gated:
   which production health, batch-print, and product QA passed against Zeabur.
 - The required low-risk maintainability criterion is satisfied by the bounded
   extraction slices already listed in this file.
+- The 2026-05-26 audit patch closed the remaining evidence gaps for export
+  batch context and admin triage visibility. Focused frontend and backend tests
+  cover the new export/admin contract.
 
-Remaining open work is now narrower:
+Post-closure monitoring work:
 
-- Run one final owner-doc closure audit that maps the latest production
-  evidence to every acceptance criterion below. If all criteria pass, this
-  target can move from `Open` to `Shipped / Monitoring`.
-- Use real pilot/admin queue evidence, or a representative seeded admin queue,
-  to decide whether admin triage is truly fast enough for maintainers to know
-  the next data-quality action. If not, make admin triage the next product
-  slice.
 - Keep external candidate discovery review-only and dry-run-only until a
   separate scope/cost/source decision approves a specific source.
 - Keep physical printer/stock validation deferred; it is not required to close
   this software target.
+- Use real pilot/admin queue evidence to decide the next product slice, but do
+  not reopen this target unless users cannot complete the batch lookup,
+  review, export, print-handoff, or correction/admin routing path.
+
+## Closure Criteria Audit
+
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| Representative 50-100 item batch can complete lookup, review, export, and selected print handoff. | Passed | `qa:production-lab-ready-batch`, `qa:production-batch-print`, and `qa:production-product` cover the lab-ready batch fixture; `frontend/scripts/check-production-batch-print.mjs` exercises the 50+ item CAS list, print modal handoff contract, export preview, and review summary. |
+| Batch-wide state, visible filtered state, review reasons, and next actions are clear. | Passed | `ResultsTable` keeps batch-wide counts separate from visible scope, renders review-reason chips and next-action copy, and focused `ResultsTable` tests cover filtering and summary behavior. |
+| Multiple-GHS rows show system-suggested vs user-confirmed state and route to the chooser. | Passed | Result rows and export rows preserve multiple-GHS status; multiple-GHS chips open the existing classification chooser; production search UI QA checks the deployed action. |
+| Missing names, unresolved searches, no-GHS states, and source conflicts route into correction/admin review. | Passed | Data-quality issue links, in-app correction requests, admin correction queue, and pilot triage attention counts cover these paths; candidate evidence remains review-only. |
+| Candidate discovery stays review-only and ready for a future sandbox decision. | Passed | `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`, `backend/candidate_discovery.py`, and `backend/scripts/discover_candidates.py` keep discovery maintainer-side and dry-run-only. Default sources are approved manual entries plus the local seed dictionary; optional Wikidata is explicit by CAS. PubChem synonyms, NCI, LLM, and scientific skills remain planned and cannot affect public lookup, labels, exports, or QR. |
+| Exports preserve trust/review context and remain readable for lab-manager triage. | Passed | CSV/XLSX share trust headers, XLSX includes `GHS Results`, `Ready Rows`, `Needs Review`, `Unresolved`, and `Pilot Summary`; the audit patch adds original total-row and visible-row context to the summary. |
+| Three-output label model remains intact. | Passed | The public print model remains Complete A4/Letter, QR small label, and Identification small label; small labels remain identity/GHS/QR only and complete labels carry full H/P content. |
+| At least one low-risk maintainability extraction or bounded refactor is complete. | Passed | Multiple bounded extraction slices are recorded in this file, including print lifecycle, print styles, preview panels, admin triage sections, backend API schemas, and backend pilot/admin routes. |
+| Current docs point to this file as the shipped/monitoring Batch-First owner doc. | Passed | `PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md` name this file as the Batch-First owner doc; after closure, they route future work to post-closure monitoring slices. |
+| Relevant tests and production QA gates pass. | Passed / monitor | Latest shipped production gates passed after `5d51401`; this audit slice added focused export/admin tests. Re-run production gates after deployment when this closure patch is pushed. |
 
 ## Why This Is The Right Next Major Goal
 
@@ -327,16 +346,17 @@ This target is complete only when all applicable criteria are satisfied:
 - The three-output label model remains intact.
 - At least one low-risk maintainability extraction or bounded refactor plan is
   completed.
-- Current docs point to this file as the active major target.
+- Current docs point to this file as the shipped/monitoring Batch-First owner
+  doc.
 - Relevant tests and production QA gates pass.
 
-## Execution Metrics And Closeable Objective
+## Execution Metrics And Closure Record
 
-Use this section as the measurable execution target for the next Codex work
-round. The target is not "add more UI." The target is a batch-first workflow
-where a lab user can paste 50-100 items, know what happened, act on review
-items, print one of the three approved outputs, export useful handoff data,
-and route data problems into admin triage.
+Use this section as the measurable closure record for this target. The target
+was not "add more UI." The target was a batch-first workflow where a lab user
+can paste 50-100 items, know what happened, act on review items, print one of
+the three approved outputs, export useful handoff data, and route data problems
+into admin triage.
 
 ### Success Metrics
 
@@ -387,21 +407,21 @@ Admin/correction triage:
 - Public lookup, labels, exports, and QR targets never consume unapproved
   generated/external candidate data.
 
-### Short Execution Objective
+### Shipped Execution Objective
 
-Implement and verify the Batch-First Lab Pilot v1 clarity slice:
+The Batch-First Lab Pilot v1 clarity slice is shipped/monitoring:
 
-1. Improve batch review UI so a 50-100 item batch exposes input cleanup,
+1. Batch review UI exposes input cleanup,
    row status, review reasons, next actions, and multiple-GHS confirmation
    state without requiring users to inspect every row manually.
-2. Improve batch export v1 so export scope is explicit in the preview,
+2. Batch export v1 makes export scope explicit in the preview,
    backend payload, filename, and XLSX pilot summary.
-3. Improve admin triage so maintainers can see the next data-quality action
+3. Admin triage lets maintainers see the next data-quality action
    from the dashboard summary.
-4. Keep the three-output label model unchanged unless a regression blocks the
+4. The three-output label model stays unchanged unless a regression blocks the
    batch path.
-5. Update tests and docs in the same slice; do not call the objective complete
-   until the relevant frontend, backend, i18n, docs, and build gates pass.
+5. Tests and docs were updated in the same slice; future work should only
+   reopen this target if monitoring evidence contradicts the closure audit.
 
 ### Verification Gates
 
@@ -420,20 +440,22 @@ Additional gates before claiming deployed completion:
 - `npm run qa:production-lab-ready-batch`
 - `npm run qa:production-product`
 
-## Suggested Execution Order
+## Future Monitoring Order
 
-1. Update canonical docs so this target is the active major goal.
-2. Run current docs, production health, and production search/batch gates to
-   confirm the baseline before changing code.
-3. Choose the next closeable slice:
-   - further maintainability extraction only when it supports an active
-     batch/admin/data/print change; the first low-risk extraction slice is
-     already complete.
-   - Multiple-GHS confirmation clarity if real batch evidence shows users are
+1. Keep canonical docs pointing to this file as the shipped Batch-First owner
+   doc and monitoring baseline.
+2. Run docs, production health, and production search/batch gates when a new
+   Batch-First-adjacent patch is pushed.
+3. Choose a new closeable slice only from evidence:
+   - maintainability extraction only when it supports an active
+     batch/admin/data/print change.
+   - multiple-GHS confirmation clarity if real batch evidence shows users are
      unsure what to confirm.
-   - Export-scope/readability improvement if lab-manager handoff is confusing.
-4. Implement one slice at a time.
-5. Update this file's progress notes after each shipped slice.
+   - export-scope/readability improvement if lab-manager handoff is confusing.
+   - admin triage if real queue evidence shows maintainers cannot identify
+     the next data-quality action quickly.
+4. Implement one slice at a time in a new reviewable scope.
+5. Add a progress note only when monitoring evidence changes the status.
 6. Re-rank if a blocker, production QA failure, or real pilot finding changes
    the highest-value next action.
 
@@ -679,3 +701,11 @@ For admin/correction changes:
   present. CI passed, Zeabur production refreshed, and production health,
   batch-print, and product QA passed. The remaining step is a final
   owner-doc closure audit, not another handoff/export implementation slice.
+- 2026-05-26: Final closure audit moved this target to
+  `Shipped / Monitoring`. The audit patched two small evidence gaps instead of
+  expanding scope: export payloads now carry original batch total and visible
+  row counts into XLSX `Pilot Summary`, and admin triage shows open
+  corrections plus stale telemetry as first-level cards. Focused
+  `ExportPreviewModal`, `exportData`, `PilotDashboardSidebar`, backend export,
+  and pilot-storage tests passed. Remaining work is monitoring and future
+  evidence-driven slices, not an unfinished Batch-First implementation item.

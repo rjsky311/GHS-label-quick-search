@@ -338,6 +338,8 @@ def _build_export_pilot_summary(
     export_scope: str = "visible",
     export_scope_label: str = "Visible filtered",
     export_count: int | None = None,
+    source_total_count: int | None = None,
+    visible_count: int | None = None,
 ) -> List[tuple[str, Any, str]]:
     review_reason_counts: Counter[str] = Counter()
     printable_count = 0
@@ -350,6 +352,16 @@ def _build_export_pilot_summary(
         1 for result in results if _export_review_reasons(result)
     )
     exported_count = len(results)
+    total_rows = (
+        max(int(source_total_count), exported_count)
+        if source_total_count is not None
+        else exported_count
+    )
+    visible_rows = (
+        max(int(visible_count), 0)
+        if visible_count is not None
+        else exported_count
+    )
     return [
         (
             "Export scope",
@@ -363,8 +375,13 @@ def _build_export_pilot_summary(
         ),
         (
             "Total rows",
-            len(results),
-            "Rows included in this export payload.",
+            total_rows,
+            "Rows in the original batch/export context before scope filtering.",
+        ),
+        (
+            "Visible filtered rows",
+            visible_rows,
+            "Rows visible in the table when the export preview was opened.",
         ),
         (
             "Printable rows",
@@ -422,6 +439,8 @@ def _add_export_pilot_summary_sheet(
     export_scope: str = "visible",
     export_scope_label: str = "Visible filtered",
     export_count: int | None = None,
+    source_total_count: int | None = None,
+    visible_count: int | None = None,
 ) -> None:
     summary_ws = workbook.create_sheet("Pilot Summary")
     headers = ["Metric", "Value", "Pilot use"]
@@ -441,6 +460,8 @@ def _add_export_pilot_summary_sheet(
             export_scope=export_scope,
             export_scope_label=export_scope_label,
             export_count=export_count,
+            source_total_count=source_total_count,
+            visible_count=visible_count,
         ),
         2,
     ):
