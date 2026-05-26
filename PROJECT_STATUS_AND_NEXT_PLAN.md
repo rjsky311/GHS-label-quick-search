@@ -660,8 +660,10 @@ Current status:
   SHA and fails when the expected deployment is missing, not `RUNNING`, stuck
   before build start (`startedAt` unset), or when the latest `RUNNING`
   deployment is still an older commit. It writes
-  `build/zeabur-deployment-report.json` so stale production and platform
-  scheduling failures can be reported without manually comparing CLI JSON.
+  `build/zeabur-deployment-report.json` with deployment status, service
+  metadata, build-log availability, and local `zeabur.yaml`/`zbpack` config
+  evidence so stale production and platform scheduling failures can be reported
+  without manually comparing CLI JSON.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

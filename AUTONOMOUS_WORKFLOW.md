@@ -226,8 +226,10 @@ For print workflow changes, the default validation stack is:
   `npm run qa:zeabur-deployment`. This writes
   `build/zeabur-deployment-report.json` and fails when the expected commit is
   missing, not `RUNNING`, stuck before build start (`startedAt` unset), or when
-  production still runs an older commit. If the latest `main` commit is
-  missing, trigger the existing frontend service with
+  production still runs an older commit. Use the report's service metadata,
+  build-log entry count, and local `zeabur.yaml`/`zbpack` evidence before
+  changing product code in response to a stale deployment. If the latest `main`
+  commit is missing, trigger the existing frontend service with
   `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
   696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
   `npm run qa:zeabur-deployment` to report `ok: true` before rerunning

@@ -108,6 +108,65 @@ const runZeaburDeploymentList = () => {
   };
 };
 
+const runZeaburServiceGet = () => {
+  const args = [
+    "zeabur",
+    "service",
+    "get",
+    "--id",
+    serviceId,
+    "--env-id",
+    environmentId,
+    "--json",
+    "--interactive=false",
+  ];
+  const result = runCommand("npx", args, {
+    cwd: repoRoot,
+  });
+  return {
+    command: `npx ${args.join(" ")}`,
+    status: result.status,
+    stdout: stripAnsi(result.stdout),
+    stderr: stripAnsi(result.stderr),
+    error: result.error?.message || "",
+  };
+};
+
+const runZeaburDeploymentLog = (deploymentId) => {
+  if (!deploymentId) {
+    return {
+      command: "",
+      status: null,
+      stdout: "",
+      stderr: "",
+      error: "",
+      skipped: true,
+    };
+  }
+  const args = [
+    "zeabur",
+    "deployment",
+    "log",
+    "--deployment-id",
+    deploymentId,
+    "--type",
+    "build",
+    "--json",
+    "--interactive=false",
+  ];
+  const result = runCommand("npx", args, {
+    cwd: repoRoot,
+  });
+  return {
+    command: `npx ${args.join(" ")}`,
+    status: result.status,
+    stdout: stripAnsi(result.stdout),
+    stderr: stripAnsi(result.stderr),
+    error: result.error?.message || "",
+    skipped: false,
+  };
+};
+
 const deploymentStarted = (deployment) =>
   Boolean(deployment?.startedAt && deployment.startedAt !== ZERO_TIME);
 
@@ -128,6 +187,43 @@ const summarizeDeployment = (deployment) => {
     finishedAt: deployment.finishedAt || "",
     started: deploymentStarted(deployment),
     finished: deploymentFinished(deployment),
+  };
+};
+
+const safeJsonParse = (text, fallback) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return fallback;
+  }
+};
+
+const readLocalZeaburConfig = () => {
+  const yamlPath = path.resolve(repoRoot, "zeabur.yaml");
+  const zbpackPath = path.resolve(repoRoot, "zbpack.ghs-frontend.json");
+  const yaml = fs.existsSync(yamlPath) ? fs.readFileSync(yamlPath, "utf8") : "";
+  const zbpack = fs.existsSync(zbpackPath)
+    ? safeJsonParse(fs.readFileSync(zbpackPath, "utf8"), null)
+    : null;
+
+  return {
+    zeaburYaml: {
+      exists: Boolean(yaml),
+      hasFrontendServiceName: /\bname:\s*ghs-frontend\b/.test(yaml),
+      hasBackendServiceName: /\bname:\s*ghs-backend\b/.test(yaml),
+      hasLegacyFrontendName: /\bname:\s*frontend\b/.test(yaml),
+      hasLegacyBackendName: /\bname:\s*backend\b/.test(yaml),
+    },
+    frontendZbpack: {
+      exists: Boolean(zbpack),
+      appDir: zbpack?.app_dir || "",
+      buildCommand: zbpack?.build_command || "",
+      outputDir: zbpack?.output_dir || "",
+      matchesExpected:
+        zbpack?.app_dir === "frontend" &&
+        zbpack?.build_command === "npm ci && npm run build" &&
+        zbpack?.output_dir === "build",
+    },
   };
 };
 
@@ -156,6 +252,16 @@ const expectedDeployment = expectedDeployments[0] || null;
 const expectedRunning = expectedDeployments.find(
   (deployment) => deployment.status === "RUNNING",
 );
+const serviceGet = runZeaburServiceGet();
+const service = serviceGet.status === 0 ? safeJsonParse(serviceGet.stdout, null) : null;
+const buildLog = runZeaburDeploymentLog(
+  expectedDeployment?.ID || expectedDeployment?.id || latestDeployment?.ID || latestDeployment?.id,
+);
+const buildLogEntries =
+  buildLog.status === 0 && buildLog.stdout.trim()
+    ? safeJsonParse(buildLog.stdout, [])
+    : [];
+const localConfig = readLocalZeaburConfig();
 
 const failures = [];
 const guidance = [];
@@ -167,6 +273,10 @@ if (!expectedGitSha) {
 if (zeabur.status !== 0) {
   failures.push("Zeabur CLI deployment list command failed.");
   guidance.push("Confirm Zeabur CLI auth and network access, then rerun this gate.");
+}
+
+if (serviceGet.status !== 0) {
+  guidance.push("Zeabur service metadata could not be read; verify CLI auth before changing product code.");
 }
 
 if (parseError) {
@@ -196,6 +306,21 @@ if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
     guidance.push(
       "Treat this as a Zeabur/GitHub integration or platform scheduling blocker, not a frontend build regression.",
     );
+    if (buildLog.status === 0 && buildLogEntries.length === 0) {
+      guidance.push(
+        "No build logs were returned for the stuck deployment; inspect the Zeabur service queue/integration in the dashboard.",
+      );
+    }
+    if (
+      service &&
+      !service.RootDirectory &&
+      !service.CustomBuildCommand &&
+      !service.OutputDir
+    ) {
+      guidance.push(
+        "Zeabur service metadata still shows empty root/build/output fields; confirm the dashboard is consuming zeabur.yaml or zbpack.ghs-frontend.json.",
+      );
+    }
   } else {
     failures.push(
       `Expected deployment ${expectedDeployment.ID} is ${expectedDeployment.status}, not RUNNING.`,
@@ -235,6 +360,33 @@ const result = {
     error: zeabur.error,
     parseError,
   },
+  zeaburServiceCommand: serviceGet.command,
+  zeaburServiceCli: {
+    status: serviceGet.status,
+    stderr: serviceGet.stderr.trim(),
+    error: serviceGet.error,
+  },
+  service: service
+    ? {
+        id: service.ID || service.id || "",
+        name: service.Name || service.name || "",
+        template: service.Template || service.template || "",
+        status: service.Status || service.status || "",
+        rootDirectory: service.RootDirectory ?? "",
+        customBuildCommand: service.CustomBuildCommand ?? "",
+        outputDir: service.OutputDir ?? "",
+        watchPaths: service.WatchPaths || [],
+      }
+    : null,
+  buildLogCommand: buildLog.command,
+  buildLogCli: {
+    status: buildLog.status,
+    stderr: buildLog.stderr.trim(),
+    error: buildLog.error,
+    skipped: buildLog.skipped,
+    entryCount: Array.isArray(buildLogEntries) ? buildLogEntries.length : 0,
+  },
+  localConfig,
   latestDeployment: summarizeDeployment(latestDeployment),
   runningDeployment: summarizeDeployment(runningDeployment),
   expectedDeployment: summarizeDeployment(expectedDeployment),
