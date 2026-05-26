@@ -99,10 +99,10 @@ Production:
 - Backend: https://ghs-backend.zeabur.app
 - Zeabur auto-deploys on push to `main`.
 - Zeabur's live service names are `ghs-frontend` and `ghs-backend`. The
-  frontend service has a root-level `zbpack.ghs-frontend.json` so Zeabur can
-  resolve the monorepo app directory (`frontend`), build command, and static
-  output directory even when the dashboard service name does not match the
-  `frontend` entry in `zeabur.yaml`.
+  `zeabur.yaml` service names now match those live names. The frontend service
+  also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
+  monorepo app directory (`frontend`), build command, and static output
+  directory for the actual frontend service.
 
 Current baseline capabilities:
 
@@ -170,9 +170,10 @@ Current validation gates:
   Zeabur/GitHub integration or platform-scheduling blocker and keep production
   verification blocked until `/build-info.json` proves the expected git SHA.
   If Zeabur creates a deployment before build start while the service metadata
-  shows an empty root directory or missing build/output settings, confirm the
-  service-name-specific `zbpack.ghs-frontend.json` is present on `main`, then
-  redeploy and re-run this gate.
+  shows an empty root directory or missing build/output settings, confirm
+  `zeabur.yaml` uses the live service names and the service-name-specific
+  `zbpack.ghs-frontend.json` is present on `main`, then redeploy and re-run
+  this gate.
   If GitHub Actions fails during `actions/checkout` with a 403/account access
   message, treat CI as externally blocked and rerun only after repository or
   account access is restored.

@@ -1,7 +1,7 @@
 # Zeabur deployment configuration for GHS Label Quick Search
 
 services:
-  - name: backend
+  - name: ghs-backend
     type: docker
     context: ./backend
     dockerfile: Dockerfile
@@ -16,7 +16,7 @@ services:
       path: /api/health
       port: 8001
 
-  - name: frontend
+  - name: ghs-frontend
     type: static
     build:
       command: npm ci && npm run build

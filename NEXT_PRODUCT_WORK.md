@@ -112,9 +112,10 @@ Current monitoring slice opened from real roster evidence:
   the latest frontend commit but showed the `ghs-frontend` deployment stuck
   before build start with no build log and empty service build metadata. A
   service-name-specific `zbpack.ghs-frontend.json` now pins `frontend` as the
-  app directory and `build` as the static output; after push, re-run
-  `npm run qa:zeabur-deployment` and expected-SHA `npm run
-  qa:production-health` before treating production QA as authoritative.
+  app directory and `build` as the static output, and `zeabur.yaml` now uses
+  the live service names (`ghs-frontend`, `ghs-backend`); after push, re-run
+  `npm run qa:zeabur-deployment` and expected-SHA `npm run qa:production-health`
+  before treating production QA as authoritative.
 - Batch paste cleanup now includes pure numeric CAS rehyphenation, while
   duplicate, invalid-format, and checksum-failed rows remain separate. The
   representative roster fixture now also covers Chinese `CAS編號` headers,
