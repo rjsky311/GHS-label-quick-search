@@ -1,6 +1,7 @@
 import {
   DATA_QUALITY_ISSUE_TYPES,
   findDataQualityIssue,
+  getDataQualityIssueDisplayLabel,
   getDataQualityIssues,
 } from "@/utils/dataQuality";
 
@@ -30,6 +31,23 @@ const expectStructuredCorrectionUrl = (
 };
 
 describe("data quality issue helpers", () => {
+  it("maps shared issue keys to operator-friendly display labels", () => {
+    const t = jest.fn((key, { defaultValue } = {}) => `${defaultValue} (${key})`);
+
+    expect(
+      getDataQualityIssueDisplayLabel(
+        DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+        t,
+      ),
+    ).toBe("Missing trusted Chinese name (dataQuality.issue.missingChineseName)");
+    expect(getDataQualityIssueDisplayLabel("reference-link", t)).toBe(
+      "Reference link review (dataQuality.issue.referenceLink)",
+    );
+    expect(getDataQualityIssueDisplayLabel("unknown-kind", t)).toBe(
+      "Other data-quality issue (dataQuality.issue.otherDataQuality)",
+    );
+  });
+
   it("turns unresolved lookups into a dictionary-curation correction path", () => {
     const issues = getDataQualityIssues({
       found: false,

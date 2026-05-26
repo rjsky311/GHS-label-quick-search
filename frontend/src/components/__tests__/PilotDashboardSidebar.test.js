@@ -325,6 +325,7 @@ describe("PilotDashboardSidebar", () => {
       screen.getByTestId("pilot-triage-focus-correction_intake-next-action"),
     ).toHaveTextContent("pilot.triageNextAction");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
+    expect(screen.getByText("dataQuality.issue.missingChineseName")).toBeInTheDocument();
     expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
     expect(
       screen.getByTestId("converted-correction-candidate-row-202"),
@@ -881,7 +882,11 @@ describe("PilotDashboardSidebar", () => {
     );
 
     const correctionRows = screen.getAllByTestId(/^correction-request-recent-row-/);
+    expect(correctionRows[0]).toHaveTextContent("dataQuality.issue.sourceConflict");
     expect(correctionRows[0]).toHaveTextContent("source-conflict");
+    expect(correctionRows[1]).toHaveTextContent(
+      "dataQuality.issue.missingChineseName"
+    );
     expect(correctionRows[1]).toHaveTextContent("missing-chinese-name");
     expect(screen.getByTestId("correction-request-recent-status-202")).toHaveTextContent(
       "pilot.correctionStatusCandidateFound"

@@ -6,6 +6,7 @@ import {
   SectionHeading,
 } from "@/components/pilot/PilotDashboardPrimitives";
 import { curationTimestamp } from "@/components/pilot/pilotDashboardHelpers";
+import { getDataQualityIssueDisplayLabel } from "@/utils/dataQuality";
 import { formatRelativeTime } from "@/utils/formatDate";
 
 const correctionRequestIdentity = (item = {}) => ({
@@ -26,6 +27,21 @@ function CorrectionTargetSummary({ casNumber, chemicalName }) {
         t("pilot.correctionUnknownTarget", {
           defaultValue: "No target identity provided",
         })}
+    </div>
+  );
+}
+
+function CorrectionIssueTypeLabel({ issueType }) {
+  const { t } = useTranslation();
+  const normalizedIssueType = issueType || "other-data-quality";
+  const label = getDataQualityIssueDisplayLabel(normalizedIssueType, t);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="font-medium text-slate-900">{label}</span>
+      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-500">
+        {normalizedIssueType}
+      </span>
     </div>
   );
 }
@@ -72,9 +88,7 @@ export function ConvertedCorrectionCandidatesSection({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-slate-900">
-                        {issueType}
-                      </span>
+                      <CorrectionIssueTypeLabel issueType={issueType} />
                       <CurationStatusBadge
                         status={status}
                         testId={`converted-correction-candidate-status-${requestId}`}
@@ -146,9 +160,7 @@ export function TopCorrectionRequestsSection({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-slate-900">
-                        {issueType}
-                      </span>
+                      <CorrectionIssueTypeLabel issueType={issueType} />
                       <CurationStatusBadge
                         status={status}
                         testId={`correction-request-status-${requestId}`}
@@ -295,9 +307,7 @@ export function RecentCorrectionRequestsSection({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="font-medium text-slate-900">
-                      {issueType}
-                    </div>
+                    <CorrectionIssueTypeLabel issueType={issueType} />
                     <div className="mt-1 font-mono text-blue-700">
                       {casNumber ||
                         t("pilot.noCasProvided", {
