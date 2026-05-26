@@ -136,8 +136,11 @@ Current monitoring slice opened from real roster evidence:
 - Upstream/source outages stay in needs-review retry scope instead of
   unresolved identity scope, matching the data-quality rule that transient
   PubChem failures should not become correction requests.
-- Production Print QA should distinguish upstream/source outage from real
-  print/layout regression so scheduled failures are actionable.
+- Production Print QA now writes a failure triage bucket into the summary JSON
+  and GitHub job summary, separating upstream/source outages, image/QR asset
+  load failures, deployment freshness problems, QA-runner failures, and true
+  product print/layout regressions. Use that bucket before opening another
+  product fix from a scheduled QA email.
 
 ### Exit Condition
 

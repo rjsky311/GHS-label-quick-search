@@ -141,6 +141,9 @@ jobs:
           const failedBlocks = Array.isArray(r.summary?.failedProductBlocks)
             ? r.summary.failedProductBlocks
             : [];
+          const failureTriage = Array.isArray(r.summary?.failureTriage)
+            ? r.summary.failureTriage
+            : [];
           const lines = [
             "## Production Print QA",
             "",
@@ -151,6 +154,15 @@ jobs:
             `Failed product blocks: ${failedBlocks.length ? failedBlocks.join(", ") : "none"}`,
             "",
           ];
+          if (failureTriage.length) {
+            lines.push("| Failure bucket | Count | Reports | Next action |", "| --- | ---: | --- | --- |");
+            for (const item of failureTriage) {
+              lines.push(
+                `| ${item.label || item.bucket} | ${item.count || 0} | ${(item.reports || []).join(", ") || "-"} | ${item.nextAction || "-"} |`,
+              );
+            }
+            lines.push("");
+          }
           if (blocks.length) {
             lines.push("| Product block | Status |", "| --- | --- |");
             for (const block of blocks) {

@@ -14,7 +14,7 @@ const outputPath = path.resolve(
 const readJsonIfExists = (filePath) => {
   if (!fs.existsSync(filePath)) return null;
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, ""));
   } catch (error) {
     return {
       ok: false,
@@ -48,6 +48,141 @@ const splitIssueTypes = (value) =>
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+
+const compactText = (value) =>
+  String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const uniqueStrings = (values = []) =>
+  [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+
+const failureText = (failure = {}) =>
+  compactText(
+    [
+      failure.report,
+      failure.id,
+      failure.searchTerm,
+      ...(failure.issueTypes || []),
+      ...(failure.failures || []),
+      failure.searchFailure,
+      failure.statusText,
+      failure.previewText,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  ).toLowerCase();
+
+const classifyFailure = (failure = {}) => {
+  const text = failureText(failure);
+  const failures = new Set(failure.failures || []);
+  const issueTypes = new Set(failure.issueTypes || []);
+
+  if (
+    failures.has("source-upstream-unavailable") ||
+    /upstream|pubchem|timeout|timed out|429|502|503|temporarily unavailable|temporary unavailable|source outage/.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "external-source",
+      label: "External source / upstream",
+      nextAction:
+        "Re-run after the upstream service stabilizes; do not treat this as a print-layout regression unless it repeats with stable source data.",
+    };
+  }
+
+  if (
+    failures.has("required-image-failed") ||
+    issueTypes.has("required-image-failed") ||
+    /required-image-failed|image.*failed|naturalwidth|imageReady|qr.*failed|pictogram.*failed/.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "external-asset",
+      label: "External image / QR asset",
+      nextAction:
+        "Check pictogram or QR asset loading first; product layout work is secondary unless the asset loads and still clips.",
+    };
+  }
+
+  if (
+    /deployment|zeabur|build-info|expected git sha|expected.*sha|stale|freshness|vite asset|asset url|commit/i.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "deployment-freshness",
+      label: "Deployment freshness",
+      nextAction:
+        "Verify Zeabur reached a running deployment for the expected commit before debugging product behavior.",
+    };
+  }
+
+  if (
+    failures.has("runner-error") ||
+    /runner-error|parse-error|browser executable|app shell|navigation|locator|strict mode violation|target closed/.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "qa-runner",
+      label: "QA runner / harness",
+      nextAction:
+        "Inspect the runner trace and retry once; fix the harness only if the production page is otherwise healthy.",
+    };
+  }
+
+  if (
+    /overflow|clipped|clip|label-overflow|standard-grid-overflow|layout|pictogram|cas|qr|printButtonEnabled/.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "product-layout",
+      label: "Product print/layout regression",
+      nextAction:
+        "Treat as product work: inspect the screenshot/PDF/HTML artifact and fix the print renderer or fit rule.",
+    };
+  }
+
+  return {
+    bucket: "product-or-unknown",
+    label: "Product or unknown",
+    nextAction:
+      "Inspect the linked report artifact; classify manually before adding another product fix.",
+  };
+};
+
+const buildFailureTriage = (failures = []) => {
+  const buckets = new Map();
+  for (const failure of failures) {
+    const classification = classifyFailure(failure);
+    const current =
+      buckets.get(classification.bucket) ||
+      {
+        bucket: classification.bucket,
+        label: classification.label,
+        count: 0,
+        reports: new Set(),
+        caseIds: new Set(),
+        nextAction: classification.nextAction,
+      };
+    current.count += 1;
+    if (failure.report) current.reports.add(failure.report);
+    if (failure.id) current.caseIds.add(failure.id);
+    buckets.set(classification.bucket, current);
+  }
+
+  return [...buckets.values()]
+    .map((bucket) => ({
+      ...bucket,
+      reports: uniqueStrings([...bucket.reports]),
+      caseIds: uniqueStrings([...bucket.caseIds]),
+    }))
+    .sort((left, right) => right.count - left.count || left.bucket.localeCompare(right.bucket));
+};
 
 const failureFromResult = (result = {}) => {
   const status = result.status || {};
@@ -91,11 +226,15 @@ const summarizeGenericReport = (name, reportPath, report) => {
     (Array.isArray(report.results)
       ? report.results.filter((item) => item && item.passed === false)
       : []);
+  const reportFailures = normalizeFailureList(report.failures);
+  if (report.parseError) {
+    reportFailures.push(`parse-error: ${report.parseError}`);
+  }
   const derivedOk =
     typeof report.ok === "boolean"
       ? report.ok
       : !report.parseError &&
-        normalizeFailureList(report.failures).length === 0 &&
+        reportFailures.length === 0 &&
         failedCases.length === 0 &&
         Number(report.summary?.failed || 0) === 0;
   return {
@@ -108,7 +247,7 @@ const summarizeGenericReport = (name, reportPath, report) => {
     summary: report.summary || null,
     selectedCases: report.selectedCases || null,
     missingMarkers: report.missingMarkers || [],
-    failures: normalizeFailureList(report.failures),
+    failures: reportFailures,
     failedCases: failedCases.map(failureFromResult),
   };
 };
@@ -223,6 +362,26 @@ const actionableFailures = presentReports.flatMap((report) =>
     ...failure,
   })),
 );
+const reportLevelFailures = presentReports.flatMap((report) =>
+  (report.failures || []).map((failure) => ({
+    report: report.name,
+    id: "",
+    searchTerm: "",
+    labelKind: "",
+    stockPreset: "",
+    template: "",
+    issueTypes: [],
+    failures: [failure],
+    searchFailure: null,
+    printButtonEnabled: null,
+    statusText: failure,
+    previewText: "",
+  })),
+);
+const failureTriage = buildFailureTriage([
+  ...actionableFailures,
+  ...reportLevelFailures,
+]);
 
 const isPassingReport = (report) => Boolean(report?.present && report.ok === true);
 
@@ -328,6 +487,8 @@ const result = {
     failedProductBlocks: failedProductBlocks.map((block) => block.id),
     incompleteProductBlocks: incompleteProductBlocks.map((block) => block.id),
     actionableFailures,
+    reportLevelFailures,
+    failureTriage,
   },
 };
 
@@ -340,6 +501,7 @@ console.log(
       ok: result.ok,
       reportPath: outputPath,
       summary: result.summary,
+      failureTriage,
     },
     null,
     2,

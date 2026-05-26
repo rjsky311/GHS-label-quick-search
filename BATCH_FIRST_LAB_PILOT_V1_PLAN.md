@@ -399,6 +399,10 @@ Batch export usefulness:
 - Upstream/source outage rows are treated as needs-review retry work, not as
   unresolved identity gaps. This keeps source failures out of dictionary
   cleanup queues and XLSX `Unresolved` sheets.
+- Production Print QA summary output now classifies failed runs into
+  upstream/source, external image or QR asset, deployment freshness, QA-runner,
+  product print/layout, or unknown buckets. A scheduled QA failure should use
+  this triage before turning into product work.
 - Download filenames include batch scope and row count.
 - XLSX `Pilot Summary` includes export scope, exported row count, total rows,
   printable rows, needs-review rows, unresolved searches, missing trusted

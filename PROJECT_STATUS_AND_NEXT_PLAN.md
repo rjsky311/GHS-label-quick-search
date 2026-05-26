@@ -616,6 +616,11 @@ Current status:
   automatic Actions run.
 - Workflow job summaries include product-block pass/fail status when product
   block evidence is present.
+- Workflow job summaries and `build/production-print-qa-summary.json` also
+  include failure triage buckets. Scheduled print failures are grouped as
+  upstream/source, external image or QR asset, deployment freshness, QA-runner,
+  product print/layout, or unknown, with a suggested next action for each
+  bucket.
 - `qa:production-health` checks the deployed frontend HTML, current Vite index
   asset, generated `/build-info.json`, and backend `/api/health` with bounded
   retries. It writes `build/production-health-report.json` with request IDs,
