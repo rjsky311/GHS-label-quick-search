@@ -357,6 +357,11 @@ Current mode:
   created for the latest commit. `AUTONOMOUS_WORKFLOW.md` and
   `PROJECT_STATUS_AND_NEXT_PLAN.md` now document the Zeabur CLI deployment
   check and safe frontend `service redeploy` fallback before production QA.
+- Completed current slice: Zeabur deploy freshness now has a repeatable
+  `npm run qa:zeabur-deployment` gate. The report distinguishes missing
+  deployments, expected commits stuck before build start, non-`RUNNING`
+  deployments, and stale `RUNNING` production commits, so future work does not
+  rely on manual CLI JSON comparison before production QA.
 - Completed current slice: production verification now explicitly separates
   code failures from external platform/access failures. If GitHub Actions fails
   at checkout with 403/account access, or Zeabur creates a deployment that

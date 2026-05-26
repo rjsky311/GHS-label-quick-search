@@ -149,12 +149,17 @@ Current validation gates:
   `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or
   `GITHUB_SHA` is present, this gate fails if the deployed build metadata does
   not match the expected commit.
-- Production deploy freshness: after frontend pushes, combine the production
-  asset marker with Zeabur CLI deployment checks. If production remains on an
-  older Vite asset and Zeabur has no deployment for the latest `main` commit,
+- Production deploy freshness: `npm run qa:zeabur-deployment` checks whether
+  Zeabur has a `RUNNING` frontend deployment for the expected git SHA and
+  writes `build/zeabur-deployment-report.json`. Run it before heavier
+  production QA when `qa:production-health` reports stale `/build-info.json`
+  metadata or when Zeabur deployment status is uncertain. If production remains
+  on an older Vite asset and Zeabur has no deployment for the latest `main`
+  commit,
   use `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
   696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
-  the deployment to reach `RUNNING` before heavier production QA.
+  `npm run qa:zeabur-deployment` to report `ok: true` before heavier
+  production QA.
   If the new deployment stays before build start (`startedAt` unset) or has no
   build log, do not treat that as a frontend build failure; classify it as a
   Zeabur/GitHub integration or platform-scheduling blocker and keep production
@@ -617,6 +622,12 @@ Current status:
   refreshed frontend bundle, not only a reachable older asset.
   Prefer `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` or the
   GitHub workflow-provided `PRINT_QA_EXPECTED_GIT_SHA` for commit-level proof.
+- `qa:zeabur-deployment` checks Zeabur's deployment list for the expected git
+  SHA and fails when the expected deployment is missing, not `RUNNING`, stuck
+  before build start (`startedAt` unset), or when the latest `RUNNING`
+  deployment is still an older commit. It writes
+  `build/zeabur-deployment-report.json` so stale production and platform
+  scheduling failures can be reported without manually comparing CLI JSON.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

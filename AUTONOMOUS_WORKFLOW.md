@@ -223,14 +223,15 @@ For print workflow changes, the default validation stack is:
   an older deployed asset.
 - If the expected asset marker stays on the previous Vite bundle after CI
   passes, verify Zeabur's own deployment state instead of waiting blindly:
-  `npx zeabur deployment list --service-id 69626873d9479ab33ad4590e --env-id
-  696262d9a7aaff0c1152b3d6 --json --interactive=false`. If the latest `main`
-  commit is missing, trigger the existing frontend service with
+  `npm run qa:zeabur-deployment`. This writes
+  `build/zeabur-deployment-report.json` and fails when the expected commit is
+  missing, not `RUNNING`, stuck before build start (`startedAt` unset), or when
+  production still runs an older commit. If the latest `main` commit is
+  missing, trigger the existing frontend service with
   `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
   696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
-  `npx zeabur deployment get --service-id 69626873d9479ab33ad4590e --env-id
-  696262d9a7aaff0c1152b3d6 --json --interactive=false` to report `RUNNING`
-  before rerunning production QA.
+  `npm run qa:zeabur-deployment` to report `ok: true` before rerunning
+  production QA.
 - `npm run qa:production-bundle` after Zeabur deploy
 - `npm run qa:production-search-ui` after Zeabur deploy when search results,
   result actions, GHS result strips, or first-screen polish changed.
