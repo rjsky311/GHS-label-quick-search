@@ -250,6 +250,72 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         store.close()
 
 
+def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="90-41-5",
+            chemical_name="2-Aminobiphenyl",
+            current_output="English name only.",
+            expected_output="Needs reviewed Traditional Chinese name.",
+        )
+        store.record_correction_request(
+            issue_type="no-ghs-data",
+            cas_number="57-13-6",
+            chemical_name="Urea",
+            current_output="No GHS pictograms or statements.",
+            expected_output="Keep as no-GHS review item, not no-hazard.",
+        )
+        store.record_correction_request(
+            issue_type="source-conflict",
+            cas_number="100-00-5",
+            chemical_name="4-Nitrochlorobenzene",
+            current_output="PubChem/ECHA classifications differ.",
+            expected_output="Review source conflict before changing public data.",
+        )
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="84-65-1",
+            chemical_name="Anthraquinone",
+            current_output="Candidate found, not approved.",
+            expected_output="Convert only through manual dictionary review.",
+            status="candidate_found",
+            candidate={
+                "cas_number": "84-65-1",
+                "name_en": "Anthraquinone",
+                "name_zh": "review-only candidate",
+                "approved_for_public_use": False,
+            },
+        )
+        store.record_miss_query("unknown roster additive", "name", "batch_search")
+        store.record_miss_query("9999-99-9", "cas", "batch_search")
+
+        summary = store.get_dictionary_summary()
+        triage = summary["pilotTriage"]
+        counts = triage["attentionCounts"]
+
+        assert counts["openCorrectionRequests"] == 4
+        assert counts["candidateFoundAwaitingManualReview"] == 1
+        assert counts["missingChineseNameReports"] == 2
+        assert counts["noGhsReports"] == 1
+        assert counts["sourceConflictReports"] == 1
+        assert counts["unresolvedSearches"] == 2
+
+        focus_by_key = {item["key"]: item for item in triage["recommendedFocus"]}
+        assert focus_by_key["correction_intake"]["targetKey"] == "correction_requests"
+        assert focus_by_key["candidate_found"]["targetKey"] == "converted_candidates"
+        assert focus_by_key["unresolved_searches"]["targetKey"] == "miss_queries"
+        assert focus_by_key["missing_chinese_names"]["targetKey"] == "correction_requests"
+        assert focus_by_key["no_ghs_gaps"]["targetKey"] == "correction_requests"
+        assert focus_by_key["source_conflicts"]["targetKey"] == "correction_requests"
+        assert focus_by_key["missing_chinese_names"]["count"] == 2
+        assert focus_by_key["no_ghs_gaps"]["count"] == 1
+        assert focus_by_key["source_conflicts"]["count"] == 1
+    finally:
+        store.close()
+
+
 def test_dictionary_export_redacts_correction_context_by_default(tmp_path):
     store = make_store(tmp_path)
     try:

@@ -165,6 +165,10 @@ Current monitoring slice opened from real roster evidence:
   related admin section, keeping the dashboard oriented around "what should I
   handle next?" rather than summary-only reporting. Keep future admin work
   oriented around this operator-first pattern.
+- Admin triage monitoring now has regression coverage for the real-roster
+  data-quality split: missing Chinese names, No-GHS reports, source conflicts,
+  unresolved searches, and candidate-found evidence must stay as distinct
+  next-action queues instead of collapsing into one generic correction state.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

@@ -390,6 +390,92 @@ describe("PilotDashboardSidebar", () => {
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(2, "miss_queries");
   });
 
+  it("keeps roster data-quality focus rows routed to the right admin queues", () => {
+    const onOpenFocusTarget = jest.fn();
+    render(
+      <PilotTriagePanel
+        pilotTriage={{
+          openWorkItemCount: 9,
+          attentionCounts: {
+            missingChineseNameReports: 2,
+            noGhsReports: 1,
+            sourceConflictReports: 1,
+            unresolvedSearches: 2,
+            candidateFoundAwaitingManualReview: 1,
+          },
+          recommendedFocus: [
+            {
+              key: "missing_chinese_names",
+              targetKey: "correction_requests",
+              targetLabel: "Correction requests",
+              message: "Backfill trusted Traditional Chinese names.",
+              nextAction: "Create candidate evidence before approval.",
+              count: 2,
+            },
+            {
+              key: "no_ghs_gaps",
+              targetKey: "correction_requests",
+              targetLabel: "Correction requests",
+              message: "Review no-GHS reports.",
+              nextAction: "Keep no-GHS separate from no-hazard.",
+              count: 1,
+            },
+            {
+              key: "source_conflicts",
+              targetKey: "correction_requests",
+              targetLabel: "Correction requests",
+              message: "Inspect source conflicts.",
+              nextAction: "Confirm public primary selection separately.",
+              count: 1,
+            },
+            {
+              key: "unresolved_searches",
+              targetKey: "miss_queries",
+              targetLabel: "Miss-query cleanup",
+              message: "Resolve search misses.",
+              nextAction: "Resolve to reviewed CAS or mark needs-evidence.",
+              count: 2,
+            },
+            {
+              key: "candidate_found",
+              targetKey: "converted_candidates",
+              targetLabel: "Converted candidates",
+              message: "Convert candidate evidence.",
+              nextAction: "Create a manual entry only after review.",
+              count: 1,
+            },
+          ],
+        }}
+        observabilityCounters={{}}
+        onOpenFocusTarget={onOpenFocusTarget}
+      />,
+    );
+
+    expect(screen.getByTestId("pilot-triage-focus-missing_chinese_names")).toHaveTextContent(
+      "Backfill trusted Traditional Chinese names.",
+    );
+    expect(screen.getByTestId("pilot-triage-focus-no_ghs_gaps")).toHaveTextContent(
+      "Review no-GHS reports.",
+    );
+    expect(screen.getByTestId("pilot-triage-focus-source_conflicts")).toHaveTextContent(
+      "Inspect source conflicts.",
+    );
+
+    fireEvent.click(
+      screen.getByTestId("pilot-triage-focus-missing_chinese_names-open-target"),
+    );
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-no_ghs_gaps-open-target"));
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-source_conflicts-open-target"));
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-unresolved_searches-open-target"));
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-candidate_found-open-target"));
+
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(1, "correction_requests");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(2, "correction_requests");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(3, "correction_requests");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(4, "miss_queries");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(5, "converted_candidates");
+  });
+
   it("scrolls to the related admin queue from the primary triage action", async () => {
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = jest.fn();
