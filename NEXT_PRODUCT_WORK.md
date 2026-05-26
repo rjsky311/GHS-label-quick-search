@@ -202,7 +202,9 @@ Current mode:
   `npm run build` as the local guardrail: it records
   `build/bundle-budget-report.json` and fails if the initial app chunk or the
   critical lazy print/admin chunks cross their explicit raw/gzip budgets or get
-  accidentally merged back into the app shell.
+  accidentally merged back into the app shell. CI now runs this budget gate
+  after frontend build, so future code-splitting work should start from a
+  failing or drifting budget report rather than a general cleanup instinct.
 - Product priority should now be selected from monitoring evidence after
   `Batch-First Lab Pilot v1`: batch lookup, batch review clarity, batch print,
   batch export, correction/admin triage, and maintainability are shipped

@@ -38,6 +38,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check bundle budget
+        run: npm run qa:bundle-budget
+
       # Informational only: we want visibility on production
       # dependency advisories without blocking every change while the
       # remaining transitive packages are reviewed.

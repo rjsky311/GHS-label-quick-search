@@ -294,7 +294,9 @@ Current completion snapshot:
   the initial app chunk, lazy print modal, lazy print engine, and lazy pilot
   dashboard must stay within explicit raw/gzip budgets and remain separate
   chunks. Use this as the code-splitting guardrail instead of reopening
-  maintainability work solely because the bundle "feels large".
+  maintainability work solely because the bundle "feels large". GitHub CI runs
+  this gate after the frontend production build so the boundary is enforced on
+  push and PRs, not just as a local suggestion.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.

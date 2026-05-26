@@ -530,13 +530,14 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
   after build when touching app-shell imports, lazy routes, print/admin
   surfaces, or Vite chunking; it writes `build/bundle-budget-report.json` and
   fails on meaningful chunk-boundary regressions instead of encouraging
-  open-ended code splitting.
+  open-ended code splitting. CI now runs this gate after the production build.
 - **CI**: GitHub Actions runs both on every push to main and on PRs; workflow
   actions use v6 / Node 24-compatible runtimes
 
 ### CI/CD (`.github/workflows/ci.yml`)
 
-- **Frontend job**: `npm ci` ??`npm run test:i18n` ??`npm test -- --runInBand` ??`npm run build`
+- **Frontend job**: `npm ci` ??`npm run test:i18n` ??`npm run test:docs` ??
+  `npm test -- --runInBand` ??`npm run build` ??`npm run qa:bundle-budget`
 - **Backend job**: `pip install -r requirements.txt` ??`py_compile server.py api_models.py api_validation.py export_helpers.py` ??`pytest -q`
 - Triggers: push to main, pull requests
 

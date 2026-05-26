@@ -122,6 +122,10 @@ npm run qa:bundle-budget
 npm run test:print-contract
 ```
 
+`qa:bundle-budget` runs after `npm run build` in CI and guards the initial app
+chunk plus the critical lazy print/admin chunks. Treat a failure as evidence
+for targeted code splitting; do not split stable first-screen code by default.
+
 Production QA:
 
 ```bash
