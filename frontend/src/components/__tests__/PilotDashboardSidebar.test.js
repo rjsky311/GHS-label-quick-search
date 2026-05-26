@@ -348,8 +348,8 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.queryByTestId("pilot-triage-primary-action-count")).not.toBeInTheDocument();
   });
 
-  it("calls the primary triage target handler when a target is available", () => {
-    const onOpenPrimaryActionTarget = jest.fn();
+  it("calls the triage target handler from the primary and focus-row actions", () => {
+    const onOpenFocusTarget = jest.fn();
     render(
       <PilotTriagePanel
         pilotTriage={{
@@ -363,16 +363,25 @@ describe("PilotDashboardSidebar", () => {
               nextAction: "Open candidate queue.",
               count: 1,
             },
+            {
+              key: "unresolved_searches",
+              targetKey: "miss_queries",
+              message: "Resolve search misses.",
+              nextAction: "Open miss query queue.",
+              count: 3,
+            },
           ],
         }}
         observabilityCounters={{}}
-        onOpenPrimaryActionTarget={onOpenPrimaryActionTarget}
+        onOpenFocusTarget={onOpenFocusTarget}
       />,
     );
 
     fireEvent.click(screen.getByTestId("pilot-triage-primary-action-open-target"));
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-unresolved_searches-open-target"));
 
-    expect(onOpenPrimaryActionTarget).toHaveBeenCalledWith("converted_candidates");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(1, "converted_candidates");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(2, "miss_queries");
   });
 
   it("scrolls to the related admin queue from the primary triage action", async () => {

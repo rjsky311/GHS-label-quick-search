@@ -349,9 +349,9 @@ Current completion snapshot:
   action above the counter grid. Detailed correction, unresolved-search,
   candidate, manual-entry, and telemetry counters remain available, but the
   operator first sees the next data-quality action instead of deriving it from
-  multiple cards. The primary action now carries a stable target queue and can
-  jump directly to the related admin section, so this surface is an action
-  launcher rather than another summary-only card.
+  multiple cards. The primary action and each recommended focus row now carry
+  stable target queues and can jump directly to the related admin section, so
+  this surface is an action launcher rather than another summary-only card.
 - **Candidate discovery dry-run summary checkpoint 2026-05-27**: maintainer
   dry-run discovery reports now summarize candidate-found rows, no-candidate
   rows, skipped rows, and evidence-type counts before the item payloads. This

@@ -6,6 +6,7 @@ export default function PilotTriagePanel({
   pilotTriage = {},
   observabilityCounters = {},
   onOpenPrimaryActionTarget,
+  onOpenFocusTarget,
 }) {
   const { t } = useTranslation();
   const attentionCounts = pilotTriage.attentionCounts || {};
@@ -15,9 +16,10 @@ export default function PilotTriagePanel({
     ? pilotTriage.recommendedFocus
     : [];
   const primaryFocus = recommendedFocus[0] || null;
+  const openFocusTarget = onOpenFocusTarget || onOpenPrimaryActionTarget;
   const canOpenPrimaryTarget =
     Boolean(primaryFocus?.targetKey) &&
-    typeof onOpenPrimaryActionTarget === "function";
+    typeof openFocusTarget === "function";
 
   return (
     <section
@@ -76,7 +78,7 @@ export default function PilotTriagePanel({
               {canOpenPrimaryTarget ? (
                 <button
                   type="button"
-                  onClick={() => onOpenPrimaryActionTarget(primaryFocus.targetKey)}
+                  onClick={() => openFocusTarget(primaryFocus.targetKey)}
                   className="rounded-md border border-emerald-300 bg-emerald-700 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
                   data-testid="pilot-triage-primary-action-open-target"
                 >
@@ -186,7 +188,10 @@ export default function PilotTriagePanel({
         />
       </div>
       <div className="mt-3 space-y-2">
-        {recommendedFocus.map((focus) => (
+        {recommendedFocus.map((focus) => {
+          const canOpenFocusTarget =
+            Boolean(focus.targetKey) && typeof openFocusTarget === "function";
+          return (
           <div
             key={focus.key}
             className="grid gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700 md:grid-cols-[minmax(0,1fr)_auto]"
@@ -206,11 +211,26 @@ export default function PilotTriagePanel({
                 </div>
               )}
             </div>
-            <span className="self-start rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-              {focus.count}
-            </span>
+            <div className="flex items-center gap-2 self-start">
+              {canOpenFocusTarget ? (
+                <button
+                  type="button"
+                  onClick={() => openFocusTarget(focus.targetKey)}
+                  className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+                  data-testid={`pilot-triage-focus-${focus.key}-open-target`}
+                >
+                  {t("pilot.triageOpenTarget", {
+                    defaultValue: "Open related queue",
+                  })}
+                </button>
+              ) : null}
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                {focus.count}
+              </span>
+            </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

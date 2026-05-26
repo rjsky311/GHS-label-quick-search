@@ -740,7 +740,7 @@ export default function PilotDashboardSidebar(props) {
               <PilotTriagePanel
                 pilotTriage={pilotTriage}
                 observabilityCounters={counters}
-                onOpenPrimaryActionTarget={openTriageTarget}
+                onOpenFocusTarget={openTriageTarget}
               />
               <CurationStatusSummary
                 title={t("pilot.manualEntryStatusSummary", {
