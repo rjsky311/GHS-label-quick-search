@@ -77,6 +77,9 @@ const asCount = (value, fallback = 0) => {
   return Number.isFinite(numeric) ? numeric : fallback;
 };
 
+const isUnresolvedSearchResult = (result = {}) =>
+  result?.found === false && !result?.upstream_error;
+
 const getPrimaryReviewIssue = (issues = []) =>
   BATCH_REVIEW_ISSUE_ORDER.map((type) =>
     issues.find((issue) => issue.type === type),
@@ -156,7 +159,7 @@ export default function ResultsTable({
 
       return {
         found: summary.found + (result.found ? 1 : 0),
-        unresolved: summary.unresolved + (!result.found ? 1 : 0),
+        unresolved: summary.unresolved + (isUnresolvedSearchResult(result) ? 1 : 0),
         labelReady: summary.labelReady + (labelReady ? 1 : 0),
         needsReview: summary.needsReview + (hasAnyIssue ? 1 : 0),
         exportRows: summary.exportRows + 1,
@@ -174,6 +177,7 @@ export default function ResultsTable({
   const batchValidUnique = asCount(batchSummary?.acceptedCount, workflowSummaryTotal);
   const batchDuplicateIgnored = asCount(batchSummary?.duplicateCount);
   const batchInvalidRejected = asCount(batchSummary?.invalidCount);
+  const batchRehyphenated = asCount(batchSummary?.rehyphenatedCount);
   const workflowIssueCounts = workflowSummarySource.reduce((counts, result) => {
     const effective = result.found ? getEffectiveClassification(result) : null;
     const issues = getDataQualityIssues(result, effective);
@@ -187,6 +191,7 @@ export default function ResultsTable({
       type,
       count: workflowIssueCounts[type] || 0,
       label: getDataQualityIssueLabel(type, t),
+      action: getReviewNextActionLabel(type, t),
     }))
     .filter((issue) => issue.count > 0);
   const activeReviewIssueType = advancedFilter.reviewIssueType || "";
@@ -284,6 +289,17 @@ export default function ResultsTable({
       body: t("results.workflowValidUniqueBody"),
       className: "border-blue-100 bg-blue-50 text-blue-950",
     },
+    ...(batchRehyphenated > 0
+      ? [
+          {
+            key: "rehyphenated",
+            value: batchRehyphenated,
+            label: t("results.workflowRehyphenatedLabel"),
+            body: t("results.workflowRehyphenatedBody"),
+            className: "border-blue-100 bg-white text-blue-950",
+          },
+        ]
+      : []),
     {
       key: "duplicate-ignored",
       value: batchDuplicateIgnored,
@@ -432,7 +448,7 @@ export default function ResultsTable({
       >
         <span className="font-semibold">{t("results.reviewPrimaryReason")}</span>{" "}
         {label}
-        <span className="mx-1 text-amber-700">·</span>
+        <span className="mx-1 text-amber-700">/</span>
         <span className="font-semibold">{t("results.reviewNextAction")}</span>{" "}
         {primaryIssue.type === DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS &&
         result?.cas_number ? (
@@ -714,6 +730,45 @@ export default function ResultsTable({
                   </span>
                 </button>
               ))}
+            </div>
+          )}
+          {workflowIssueSummaries.length > 0 && (
+            <div
+              className="mt-3 border-t border-slate-100 pt-3"
+              data-testid="results-workflow-review-action-queue"
+            >
+              <p className="mb-2 text-xs font-semibold text-slate-700">
+                {t("results.workflowReviewActionQueueLabel")}
+              </p>
+              <div className="grid gap-2 md:grid-cols-2">
+                {workflowIssueSummaries.map((issue) => (
+                  <button
+                    key={issue.type}
+                    type="button"
+                    onClick={() => setReviewIssueFilter(issue.type)}
+                    disabled={!onSetAdvancedFilter}
+                    className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                      activeReviewIssueType === issue.type
+                        ? "border-blue-200 bg-blue-50 text-blue-950"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-950"
+                    } disabled:cursor-default disabled:hover:border-slate-200 disabled:hover:bg-slate-50 disabled:hover:text-slate-700`}
+                    data-testid={`results-workflow-review-action-${issue.type}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">{issue.label}</span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                        {issue.count}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-slate-600">
+                      <span className="font-medium">
+                        {t("results.workflowReviewActionQueueNext")}
+                      </span>{" "}
+                      {issue.action}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

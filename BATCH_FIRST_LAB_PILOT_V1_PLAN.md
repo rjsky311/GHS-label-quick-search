@@ -139,6 +139,8 @@ Done means:
 - A 50-100 item batch can be understood from the summary, review chips, filters,
   and row actions.
 - A user can tell why a row needs review and what the next action is.
+- The batch summary shows a review action queue so every review reason has a
+  visible next action, not only the highest-priority warning.
 - The batch QA fixture and production-search UI gate cover the main summary and
   review-reason behavior.
 
@@ -363,9 +365,9 @@ into admin triage.
 Batch review clarity:
 
 - The batch summary separates input total, valid unique submitted rows,
-  ignored duplicates, invalid rejected rows, found rows, unresolved rows,
-  label-ready rows, needs-review rows, selected rows, visible rows, and
-  printable rows.
+  ignored duplicates, invalid rejected rows, found rows, unresolved lookup gaps
+  (excluding upstream outages), label-ready rows, needs-review rows, selected
+  rows, visible rows, and printable rows.
 - Every needs-review row shows one primary reason and one next action.
 - Multiple-GHS rows visibly distinguish system-suggested primary
   classification from user-confirmed classification.
@@ -388,6 +390,12 @@ Batch export usefulness:
 
 - Export preview lets the user choose a clear scope: all, visible, ready,
   needs-review, or unresolved.
+- The frontend ready scope now matches the backend XLSX `Ready Rows` sheet:
+  found rows with GHS data and no review reasons. Rows needing review and
+  unresolved rows stay in their own scopes.
+- Upstream/source outage rows are treated as needs-review retry work, not as
+  unresolved identity gaps. This keeps source failures out of dictionary
+  cleanup queues and XLSX `Unresolved` sheets.
 - Download filenames include batch scope and row count.
 - XLSX `Pilot Summary` includes export scope, exported row count, total rows,
   printable rows, needs-review rows, unresolved searches, missing trusted
@@ -400,7 +408,8 @@ Admin/correction triage:
 
 - The admin triage summary shows open work items, unresolved searches,
   candidate-found rows, manual entries in review, needs-evidence work items,
-  missing Chinese names, source conflicts, and no-GHS reports.
+  missing Chinese names, source conflicts, upstream retry/source outage counts,
+  and no-GHS reports.
 - Recommended focus rows include a concrete next action, not just a count.
 - Candidate evidence remains review-only until an admin approves a manual
   entry or alias.
@@ -447,6 +456,8 @@ Additional gates before claiming deployed completion:
 2. Run docs, production health, and production search/batch gates when a new
    Batch-First-adjacent patch is pushed.
 3. Choose a new closeable slice only from evidence:
+   - inventory-derived QA hardening when a real roster exposes paste cleanup,
+     translation-quality, upstream/source, or batch triage gaps.
    - maintainability extraction only when it supports an active
      batch/admin/data/print change.
    - multiple-GHS confirmation clarity if real batch evidence shows users are
@@ -472,6 +483,7 @@ Minimum for docs-only changes:
 For batch/review UI changes:
 
 - `npm test -- --runInBand ResultsTable.test.js`
+- `npm test -- --runInBand batchSearchInput inventoryDataQualityFixtures SearchSection ResultsTable`
 - `npm run qa:production-search-ui` after deployment.
 
 For label print changes:
@@ -501,6 +513,11 @@ For admin/correction changes:
   `PilotDashboardSidebar.jsx`, `server.py`, and `pilot_store.py`.
 - Current production gates prove representative flows, not every possible
   real-world batch list.
+- Real inventory files can include pure numeric CAS cells, duplicates,
+  checksum-bad CAS values, unresolved names, missing trusted Chinese names,
+  multiple public GHS classifications, and transient upstream source failures.
+  Use small representative fixtures for these categories instead of importing
+  whole customer/lab rosters into the app.
 - Physical print validation is still deferred.
 - Existing seed Chinese names were LLM-generated and accepted as the current
   project baseline, but future generated/external names must remain candidates
@@ -508,6 +525,19 @@ For admin/correction changes:
 
 ## Progress Notes
 
+- 2026-05-26: Inventory-derived batch hardening slice opened from real roster
+  evidence without changing the 100-item product limit or importing full
+  rosters. Batch input now treats pure numeric CAS values copied from
+  spreadsheets as fixable input, reports the rehyphenation count in UI and
+  telemetry, and keeps duplicates/checksum failures separate. A small
+  `inventoryDataQualityFixtures` regression fixture captures the representative
+  roster categories: numeric CAS cleanup, duplicates, invalid checksum,
+  multiple-GHS review, missing trusted Chinese name, no-GHS data, upstream
+  retry, and unresolved lookup. Production print handoff QA now labels
+  PubChem/backend source outages as `source-upstream-unavailable` instead of
+  collapsing them into generic print `runner-error`. The batch workflow
+  summary also includes a compact review action queue so each review bucket
+  exposes its next step before users print or export.
 - 2026-05-25: Target opened from the post-evidence-pass re-rank. The first
   immediate cleanup is canonical-doc alignment so `continue` starts here rather
   than in the already shipped pilot evidence pass.

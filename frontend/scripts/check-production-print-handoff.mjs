@@ -82,6 +82,7 @@ const outputPath = env.PRINT_QA_HANDOFF_REPORT_PATH
   ? path.resolve(process.cwd(), env.PRINT_QA_HANDOFF_REPORT_PATH)
   : path.resolve(process.cwd(), DEFAULT_HANDOFF_REPORT_PATH);
 const verboseConsole = env.PRINT_QA_VERBOSE === "1";
+const SOURCE_UPSTREAM_FAILURE = "source-upstream-unavailable";
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 
@@ -236,8 +237,41 @@ const waitForPreviewImagesReady = async (page) => {
     .catch(() => {});
 };
 
+const getLocatorText = async (locator) =>
+  ((await locator.textContent().catch(() => "")) || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const buildQaFailureError = (message, failures, details = {}) => {
+  const error = new Error(message);
+  error.qaFailures = failures;
+  error.qaDetails = details;
+  return error;
+};
+
+const classifySearchFailure = ({
+  rowText = "",
+  upstreamText = "",
+  errorText = "",
+  errorMessage = "",
+} = {}) => {
+  const combined = [rowText, upstreamText, errorText, errorMessage]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (
+    /upstream|pubchem|cid lookup|temporarily unavailable|temporary unavailable|timeout|timed out|429|503|502|暫時|上游|無法回應/.test(
+      combined,
+    )
+  ) {
+    return SOURCE_UPSTREAM_FAILURE;
+  }
+  return "";
+};
+
 const isRetryableHandoffFailure = (result) => {
   if (!result || result.passed) return false;
+  if ((result.failures || []).includes(SOURCE_UPSTREAM_FAILURE)) return true;
   if ((result.failures || []).includes("runner-error")) return true;
   const issueTypes = result.status?.["data-issue-types"] || "";
   if (
@@ -371,16 +405,25 @@ const fillSearch = async (page, searchTerm) => {
       });
       return attempt;
     } catch (error) {
-      const rowText =
-        ((await page
-          .getByTestId("result-row-0")
-          .textContent()
-          .catch(() => "")) || "")
-          .replace(/\s+/g, " ")
-          .trim();
-      lastError = new Error(
-        `Search attempt ${attempt} did not produce a selectable print result: ${rowText || error?.message || String(error)}`,
+      const rowText = await getLocatorText(page.getByTestId("result-row-0"));
+      const upstreamText = await getLocatorText(
+        page.getByTestId("upstream-error-banner"),
       );
+      const errorText = await getLocatorText(page.getByTestId("error-message"));
+      const errorMessage = error?.message || String(error);
+      const classifiedFailure = classifySearchFailure({
+        rowText,
+        upstreamText,
+        errorText,
+        errorMessage,
+      });
+      const details = { rowText, upstreamText, errorText };
+      const message = `Search attempt ${attempt} did not produce a selectable print result: ${
+        rowText || upstreamText || errorText || errorMessage
+      }`;
+      lastError = classifiedFailure
+        ? buildQaFailureError(message, [classifiedFailure], details)
+        : new Error(message);
       if (attempt < SEARCH_ATTEMPTS) {
         await sleep(SEARCH_RETRY_DELAY_MS);
         await page.reload({
@@ -1470,7 +1513,7 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
       id: testCase.id,
       searchTerm: testCase.searchTerm,
       passed: false,
-      failures: ["runner-error"],
+      failures: error?.qaFailures || ["runner-error"],
       error: error?.message || String(error),
     };
     if (screenshotDir) {
@@ -1478,6 +1521,12 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
       const targetPath = path.join(screenshotDir, `${testCase.id}-error.png`);
       await page.screenshot({ path: targetPath, fullPage: true }).catch(() => {});
       failure.evidence = { screenshotPath: targetPath };
+    }
+    if (error?.qaDetails) {
+      failure.evidence = {
+        ...(failure.evidence || {}),
+        searchFailure: error.qaDetails,
+      };
     }
     return failure;
   } finally {
@@ -1538,6 +1587,7 @@ const failedCaseSummary = failed.map(({ id, searchTerm, failures, status, eviden
   id,
   searchTerm,
   failures,
+  searchFailure: evidence?.searchFailure || null,
   printButtonEnabled: status?.printButtonEnabled,
   statusText: status?.text || "",
   labelKind: evidence?.previewInspection?.labelKind || "",

@@ -65,6 +65,7 @@ const failureFromResult = (result = {}) => {
     template: status["data-template"] || "",
     issueTypes: splitIssueTypes(status["data-issue-types"]),
     failures: normalizeFailureList(result.failures),
+    searchFailure: result.searchFailure || evidence.searchFailure || null,
     printButtonEnabled: result.printButtonEnabled ?? status.printButtonEnabled,
     statusText: result.statusText || status.text || "",
     previewText:

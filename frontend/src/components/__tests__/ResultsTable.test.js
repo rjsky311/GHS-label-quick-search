@@ -215,6 +215,17 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-review-reason-unresolved-search')
       ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-action-queue')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(
+          'results-workflow-review-action-multiple-classifications',
+        ),
+      ).toHaveTextContent('results.reviewActionConfirmMultipleGhs');
+      expect(
+        screen.getByTestId('results-workflow-review-action-unresolved-search'),
+      ).toHaveTextContent('results.reviewActionReportLookupGap');
       expect(screen.getByTestId('results-next-action')).toBeInTheDocument();
       expect(screen.getByTestId('results-next-action-eyebrow')).toHaveTextContent(
         'results.nextActionEyebrow'
@@ -230,6 +241,54 @@ describe('ResultsTable', () => {
       );
     });
 
+    it('keeps upstream retry rows out of unresolved lookup counts', () => {
+      const onSetAdvancedFilter = jest.fn();
+      const upstreamResult = {
+        ...mockNotFoundResult,
+        cas_number: '75-21-8',
+        upstream_error: true,
+        error: 'PubChem temporarily unavailable',
+      };
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockWarningResult, mockNotFoundResult, upstreamResult]}
+          totalCount={3}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(
+        screen.getByTestId('results-workflow-summary-found-value')
+      ).toHaveTextContent('1/3');
+      expect(
+        screen.getByTestId('results-workflow-summary-unresolved-value')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-summary-needs-review-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-review-reason-upstream-error')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-reason-unresolved-search')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-action-upstream-error'),
+      ).toHaveTextContent('results.reviewActionRetryUpstream');
+
+      fireEvent.click(screen.getByTestId('results-next-action-primary'));
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'upstream-error',
+      });
+    });
+
     it('includes batch input cleanup counts when available', () => {
       render(
         <ResultsTable
@@ -241,6 +300,7 @@ describe('ResultsTable', () => {
             acceptedCount: 2,
             duplicateCount: 2,
             invalidCount: 1,
+            rehyphenatedCount: 1,
           }}
           getEffectiveClassification={createMockGetEffective()}
         />
@@ -252,6 +312,9 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-summary-valid-unique-value')
       ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-rehyphenated-value')
+      ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-duplicate-ignored-value')
       ).toHaveTextContent('2');

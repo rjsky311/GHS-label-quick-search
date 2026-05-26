@@ -298,6 +298,7 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-triage-needs-evidence")).toHaveTextContent("4");
     expect(screen.getByTestId("pilot-triage-missing-chinese-names")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-triage-source-conflicts")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-triage-upstream-retries")).toHaveTextContent("6");
     expect(screen.getByTestId("pilot-triage-no-ghs")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-stale-telemetry")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(

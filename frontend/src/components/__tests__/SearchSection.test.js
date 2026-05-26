@@ -166,10 +166,12 @@ describe('SearchSection', () => {
             acceptedCount: 2,
             duplicateCount: 1,
             invalidCount: 2,
+            rehyphenatedCount: 1,
             invalidItems: [
               { raw: '344-04-07' },
               { raw: '67-64-2' },
             ],
+            rehyphenatedItems: [{ raw: '67641', normalized: '67-64-1' }],
           }}
         />
       );
@@ -180,6 +182,9 @@ describe('SearchSection', () => {
       );
       expect(screen.getByTestId('batch-invalid-summary')).toHaveTextContent(
         'search.batchInvalidSummary'
+      );
+      expect(screen.getByTestId('batch-rehyphenated-summary')).toHaveTextContent(
+        'search.batchRehyphenatedSummary'
       );
       expect(screen.getByTestId('batch-search-btn')).not.toBeDisabled();
     });

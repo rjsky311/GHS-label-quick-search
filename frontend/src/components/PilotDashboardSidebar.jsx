@@ -693,7 +693,10 @@ export default function PilotDashboardSidebar(props) {
                   testId="pilot-summary-stale-miss-rows"
                 />
               </div>
-              <PilotTriagePanel pilotTriage={pilotTriage} />
+              <PilotTriagePanel
+                pilotTriage={pilotTriage}
+                observabilityCounters={counters}
+              />
               <CurationStatusSummary
                 title={t("pilot.manualEntryStatusSummary", {
                   defaultValue: "Manual entry review",

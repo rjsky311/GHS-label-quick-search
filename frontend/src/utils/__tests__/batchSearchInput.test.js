@@ -2,7 +2,9 @@ import {
   buildBatchSearchTelemetryMeta,
   hasValidCasChecksum,
   normalizeCasToken,
+  normalizeCasTokenDetailed,
   parseBatchSearchInput,
+  rehyphenateCasDigits,
   splitBatchSearchInput,
 } from "@/utils/batchSearchInput";
 
@@ -37,6 +39,17 @@ describe("batchSearchInput", () => {
     expect(normalizeCasToken("CAS No. 62 \u2013 53 \u2013 3")).toBe("62-53-3");
   });
 
+  it("rehyphenates numeric CAS values copied from spreadsheets", () => {
+    expect(rehyphenateCasDigits("67641")).toBe("67-64-1");
+    expect(rehyphenateCasDigits("902084")).toBe("902-08-4");
+    expect(normalizeCasToken("CAS 67641")).toBe("67-64-1");
+    expect(normalizeCasTokenDetailed("67641")).toEqual({
+      rawNormalized: "67641",
+      normalized: "67-64-1",
+      wasRehyphenated: true,
+    });
+  });
+
   it("validates CAS checksums", () => {
     expect(hasValidCasChecksum("67-64-1")).toBe(true);
     expect(hasValidCasChecksum("90-90-4")).toBe(true);
@@ -51,6 +64,7 @@ describe("batchSearchInput", () => {
         "84-65-1",
         "90-90-4",
         "90-90-4",
+        "67641",
         "CAS\uFF1A\uFF16\uFF17\uFF0D\uFF16\uFF14\uFF0D\uFF11",
         "344-04-07",
         "67-64-2",
@@ -63,10 +77,18 @@ describe("batchSearchInput", () => {
       "90-90-4",
       "67-64-1",
     ]);
-    expect(summary.inputCount).toBe(7);
+    expect(summary.inputCount).toBe(8);
     expect(summary.acceptedCount).toBe(4);
     expect(summary.duplicateItems).toEqual([
       expect.objectContaining({ normalized: "90-90-4", reason: "duplicate" }),
+      expect.objectContaining({ normalized: "67-64-1", reason: "duplicate" }),
+    ]);
+    expect(summary.rehyphenatedItems).toEqual([
+      expect.objectContaining({
+        raw: "67641",
+        normalized: "67-64-1",
+        reason: "numeric-cas",
+      }),
     ]);
     expect(summary.invalidItems).toEqual([
       expect.objectContaining({ normalized: "344-04-07", reason: "format" }),
@@ -118,15 +140,17 @@ describe("batchSearchInput", () => {
         "90-90-4",
         "90-90-4",
         "344-04-07",
+        "67641",
         "CAS\uFF1A\uFF16\uFF17\uFF0D\uFF16\uFF14\uFF0D\uFF11",
       ].join("\n"),
     );
 
     expect(buildBatchSearchTelemetryMeta(summary, { previewLimit: 1 })).toEqual({
-      inputCount: 4,
+      inputCount: 5,
       acceptedCount: 2,
-      duplicateCount: 1,
+      duplicateCount: 2,
       invalidCount: 1,
+      rehyphenatedCount: 1,
       overLimit: false,
       excess: 0,
       sentCasPreview: ["90-90-4"],

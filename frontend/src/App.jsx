@@ -406,6 +406,7 @@ function App() {
     const hasDiagnostics =
       batchSearchInput.duplicateCount > 0 ||
       batchSearchInput.invalidCount > 0 ||
+      batchSearchInput.rehyphenatedCount > 0 ||
       batchSearchInput.overLimit;
     if (!hasDiagnostics) return;
 

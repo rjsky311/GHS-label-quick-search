@@ -103,6 +103,28 @@ evidence instead of continuing Batch-First implementation by inertia:
    already satisfied; reopen only when the next batch/admin/data change needs a
    narrower boundary.
 
+Current monitoring slice opened from real roster evidence:
+
+- Excel/roster data should be used as a representative QA corpus, not imported
+  wholesale into the product. Users still run bounded batches, usually up to
+  100 rows.
+- Batch paste cleanup now includes pure numeric CAS rehyphenation, while
+  duplicate, invalid-format, and checksum-failed rows remain separate.
+- Batch review fixtures should keep missing Chinese names, unresolved searches,
+  no-GHS rows, multiple-GHS rows, and upstream retry states separate.
+- Batch result summaries now include a review action queue and keep upstream
+  retry rows out of the unresolved lookup count; use that as the baseline for
+  future "what should I do next?" UI instead of adding another competing review
+  surface.
+- Export preview ready scope is aligned with the backend XLSX `Ready Rows`
+  sheet: ready means GHS data with no review reason, while needs-review and
+  unresolved rows remain separate scopes.
+- Upstream/source outages stay in needs-review retry scope instead of
+  unresolved identity scope, matching the data-quality rule that transient
+  PubChem failures should not become correction requests.
+- Production Print QA should distinguish upstream/source outage from real
+  print/layout regression so scheduled failures are actionable.
+
 ### Exit Condition
 
 Stop extending this target: `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` now records

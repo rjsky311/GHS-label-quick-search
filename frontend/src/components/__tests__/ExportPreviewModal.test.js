@@ -5,7 +5,7 @@ const results = [
   {
     cas_number: '64-17-5',
     name_en: 'Ethanol',
-    name_zh: 'Ethanol ZH',
+    name_zh: '乙醇',
     found: true,
     ghs_pictograms: [{ code: 'GHS02', name_en: 'Flame' }],
     hazard_statements: [{ code: 'H225', text_en: 'Highly flammable liquid and vapor.' }],
@@ -127,6 +127,95 @@ describe('ExportPreviewModal', () => {
           count: 1,
           totalCount: 2,
           visibleCount: 1,
+        }),
+      );
+    });
+  });
+
+  it('routes upstream failures to needs-review instead of unresolved export scope', async () => {
+    const upstreamRow = {
+      cas_number: '777-77-7',
+      found: false,
+      upstream_error: true,
+      error: 'PubChem temporarily unavailable',
+    };
+    const onConfirm = jest.fn().mockResolvedValue(undefined);
+    render(
+      <ExportPreviewModal
+        results={[results[0], results[1], upstreamRow]}
+        allResults={[results[0], results[1], upstreamRow]}
+        initialFormat="xlsx"
+        onClose={jest.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('export-preview-scope-needs-review'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [upstreamRow],
+        expect.objectContaining({
+          scopeKey: 'needs-review',
+          count: 1,
+          totalCount: 3,
+          visibleCount: 3,
+        }),
+      );
+    });
+
+    onConfirm.mockClear();
+    fireEvent.click(screen.getByTestId('export-preview-scope-unresolved'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [results[1]],
+        expect.objectContaining({
+          scopeKey: 'unresolved',
+          count: 1,
+          totalCount: 3,
+          visibleCount: 3,
+        }),
+      );
+    });
+  });
+
+  it('keeps the ready export scope free of review and unresolved rows', async () => {
+    const reviewRow = {
+      ...results[0],
+      cas_number: '67-64-1',
+      name_en: 'Acetone',
+      name_zh: '',
+      has_multiple_classifications: true,
+      other_classifications: [{ signal_word: 'Warning', pictograms: [] }],
+    };
+    const onConfirm = jest.fn().mockResolvedValue(undefined);
+    render(
+      <ExportPreviewModal
+        results={[results[0], reviewRow, results[1]]}
+        allResults={[results[0], reviewRow, results[1]]}
+        initialFormat="xlsx"
+        onClose={jest.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('export-preview-scope-ready'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [results[0]],
+        expect.objectContaining({
+          scopeKey: 'ready',
+          count: 1,
+          totalCount: 3,
+          visibleCount: 3,
         }),
       );
     });

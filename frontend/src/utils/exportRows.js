@@ -59,12 +59,17 @@ function resolveMultipleGhsStatus(result, t) {
   return t("export.multipleGhsSystemSuggested");
 }
 
-export function isExportReadyRow(result) {
-  return result?.found !== false && hasGhsData(result);
+export function isExportNeedsReviewRow(result) {
+  if (isExportUnresolvedRow(result)) return false;
+  return getDataQualityIssues(result, result).length > 0;
 }
 
-export function isExportNeedsReviewRow(result) {
-  return getDataQualityIssues(result, result).length > 0;
+export function isExportReadyRow(result) {
+  return result?.found !== false && hasGhsData(result) && !isExportNeedsReviewRow(result);
+}
+
+export function isExportUnresolvedRow(result) {
+  return result?.found === false && !result?.upstream_error;
 }
 
 export function getExportScopeOptions({ allResults = [], visibleResults = [] } = {}) {
@@ -100,7 +105,7 @@ export function getExportScopeOptions({ allResults = [], visibleResults = [] } =
       key: EXPORT_SCOPE_KEYS.UNRESOLVED,
       labelKey: "exportPreview.scopeUnresolved",
       bodyKey: "exportPreview.scopeUnresolvedBody",
-      results: all.filter((result) => result?.found === false),
+      results: all.filter(isExportUnresolvedRow),
     },
   ];
 }

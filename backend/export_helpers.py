@@ -114,7 +114,8 @@ def _export_review_reasons(result: Dict[str, Any]) -> List[str]:
     if result.get("upstream_error"):
         reasons.append("Upstream transient failure")
     if result.get("found") is False:
-        reasons.append("Unresolved search")
+        if not result.get("upstream_error"):
+            reasons.append("Unresolved search")
         return reasons
 
     if not _has_export_ghs_data(result):
@@ -249,10 +250,18 @@ def build_export_triage_sheets(
         EXPORT_TRIAGE_SHEET_NAMES["needs_review"]: [
             result
             for result in results
-            if result.get("found") is not False and _export_review_reasons(result)
+            if (
+                result.get("upstream_error")
+                or (
+                    result.get("found") is not False
+                    and _export_review_reasons(result)
+                )
+            )
         ],
         EXPORT_TRIAGE_SHEET_NAMES["unresolved"]: [
-            result for result in results if result.get("found") is False
+            result
+            for result in results
+            if result.get("found") is False and not result.get("upstream_error")
         ],
     }
 

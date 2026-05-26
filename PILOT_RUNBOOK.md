@@ -41,6 +41,10 @@ Out of scope for this runbook:
 3. Confirm the pilot operator has the intended test list:
    - 10-20 rows for a first smoke pilot.
    - 50-100 rows for a realistic batch pilot.
+   - If the source file comes from Excel, expect pure numeric CAS cells,
+     duplicate rows, checksum mistakes, unresolved names, and missing trusted
+     Chinese names. Review these through the batch summary/admin queue rather
+     than treating the workbook as a whole-roster import.
 4. Confirm no one is treating the app as the legal authority. SDS, supplier
    labels, local law, and workplace rules remain the authority.
 
@@ -55,14 +59,17 @@ Ask the pilot user to perform these in order:
    - label-ready rows,
    - rows needing review,
    - duplicate/invalid inputs.
-3. Open rows with multiple GHS classifications and confirm whether the
+3. Use the batch review action queue as the operator's checklist. If a review
+   bucket exists, resolve, confirm, retry, or intentionally defer that bucket
+   before treating the batch as ready.
+4. Open rows with multiple GHS classifications and confirm whether the
    system-suggested primary is acceptable.
-4. Try the three label outputs where relevant:
+5. Try the three label outputs where relevant:
    - complete A4/Letter label,
    - QR small label,
    - identification small label.
-5. Export Excel and CSV.
-6. Submit correction reports for:
+6. Export Excel and CSV.
+7. Submit correction reports for:
    - missing trusted Chinese names,
    - unresolved searches,
    - no-GHS data gaps,
@@ -115,6 +122,7 @@ Treat these as P0 and stop normal pilot expansion:
    - unresolved searches,
    - missing Chinese-name reports,
    - source-conflict reports,
+   - upstream retry/source outage count,
    - recommended focus.
 3. Check correction requests:
    - mark false reports ignored,
@@ -141,6 +149,9 @@ Treat these as P0 and stop normal pilot expansion:
    - are source conflicts blocking print/export confidence.
 3. Review batch export usefulness:
    - can the summary sheet explain the batch,
+   - does `Ready` exclude rows with review reasons and unresolved searches,
+   - are upstream/source outages kept in retry review instead of unresolved
+     identity cleanup,
    - do review reasons guide cleanup,
    - are columns understandable to a lab manager.
 4. Re-run production gates before any wider pilot:
@@ -163,6 +174,7 @@ Use this classification when turning pilot evidence into work:
 | Label output clipped | P0 print regression | Do not print clipped required content. |
 | Physical printer mismatch | Physical print checklist | Deferred until real materials exist. |
 | Production 502 or stale deploy | P0 production reliability | Use Zeabur health/deploy workflow. |
+| Production Print QA source/upstream outage | Source reliability / retry | Distinguish this from a print-layout regression before changing renderer code. |
 
 ## Closure Evidence For A Pilot Round
 

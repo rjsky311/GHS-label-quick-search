@@ -2,9 +2,14 @@ import { Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SectionHeading, SummaryCard } from "./PilotDashboardPrimitives";
 
-export default function PilotTriagePanel({ pilotTriage = {} }) {
+export default function PilotTriagePanel({
+  pilotTriage = {},
+  observabilityCounters = {},
+}) {
   const { t } = useTranslation();
   const attentionCounts = pilotTriage.attentionCounts || {};
+  const upstreamRetryCount =
+    attentionCounts.upstreamRetryRows || observabilityCounters["upstream.total"] || 0;
   const recommendedFocus = Array.isArray(pilotTriage.recommendedFocus)
     ? pilotTriage.recommendedFocus
     : [];
@@ -88,6 +93,14 @@ export default function PilotTriagePanel({ pilotTriage = {} }) {
           value={attentionCounts.sourceConflictReports || 0}
           accent="text-red-700"
           testId="pilot-triage-source-conflicts"
+        />
+        <SummaryCard
+          label={t("pilot.triageUpstreamRetries", {
+            defaultValue: "Upstream retries",
+          })}
+          value={upstreamRetryCount}
+          accent="text-red-700"
+          testId="pilot-triage-upstream-retries"
         />
         <SummaryCard
           label={t("pilot.triageNoGhsReports", {

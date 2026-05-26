@@ -1826,7 +1826,7 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
     payload = {
         "export_scope": "needs-review",
         "export_scope_label": "=Needs review",
-        "export_count": 3,
+        "export_count": 4,
         "source_total_count": 9,
         "visible_count": 4,
         "results": [
@@ -1843,6 +1843,15 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
                 "cas_number": "999-99-9",
                 "name_en": "Unknown",
                 "found": False,
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
+                "cas_number": "777-77-7",
+                "name_en": "Temporary PubChem outage",
+                "found": False,
+                "upstream_error": True,
                 "ghs_pictograms": [],
                 "hazard_statements": [],
                 "precautionary_statements": [],
@@ -1873,10 +1882,11 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
     assert rows["Total rows"] == 9
     assert rows["Visible filtered rows"] == 4
     assert rows["Export scope"] == "'=Needs review"
-    assert rows["Exported row count"] == 3
+    assert rows["Exported row count"] == 4
     assert rows["Printable rows"] == 2
-    assert rows["Needs review rows"] == 2
+    assert rows["Needs review rows"] == 3
     assert rows["Unresolved searches"] == 1
+    assert rows["Upstream transient failures"] == 1
     assert rows["Missing trusted Chinese names"] == 1
     assert rows["Multiple GHS classifications"] == 1
 
@@ -1907,6 +1917,15 @@ async def test_export_xlsx_includes_lab_manager_triage_sheets():
                 "precautionary_statements": [],
             },
             {
+                "cas_number": "777-77-7",
+                "name_en": "Temporary PubChem outage",
+                "found": False,
+                "upstream_error": True,
+                "ghs_pictograms": [],
+                "hazard_statements": [],
+                "precautionary_statements": [],
+            },
+            {
                 "cas_number": "107-18-6",
                 "name_en": "Allyl Alcohol",
                 "name_zh": "Allyl Alcohol",
@@ -1932,8 +1951,10 @@ async def test_export_xlsx_includes_lab_manager_triage_sheets():
     ]
     assert wb["Ready Rows"].max_row == 2
     assert wb["Ready Rows"].cell(row=2, column=1).value == "64-17-5"
-    assert wb["Needs Review"].max_row == 2
-    assert wb["Needs Review"].cell(row=2, column=1).value == "107-18-6"
+    assert wb["Needs Review"].max_row == 3
+    assert wb["Needs Review"].cell(row=2, column=1).value == "777-77-7"
+    assert wb["Needs Review"].cell(row=2, column=11).value == "Upstream transient failure"
+    assert wb["Needs Review"].cell(row=3, column=1).value == "107-18-6"
     assert wb["Unresolved"].max_row == 2
     assert wb["Unresolved"].cell(row=2, column=1).value == "999-99-9"
 

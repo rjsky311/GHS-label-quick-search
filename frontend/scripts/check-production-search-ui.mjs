@@ -1323,6 +1323,7 @@ const inspectBatchInputNormalizationPath = async (
         "90-41-5 84-65-1 CAS No. 462-08-8 CAS: 123-30-8",
         "90-41-5",
         "344-04-07",
+        "67641",
         "CAS No. 62 - 53 - 3",
       ].join("\n"),
     );
@@ -2462,14 +2463,15 @@ try {
     failures.push("unresolved-search-correction-curation-context-missing");
   }
   if (
-    !/\b5\b/.test(batchInputNormalization.readySummary) ||
-    !/\b7\b/.test(batchInputNormalization.readySummary)
+    !/\b6\b/.test(batchInputNormalization.readySummary) ||
+    !/\b8\b/.test(batchInputNormalization.readySummary)
   ) {
     failures.push("batch-input-ready-summary-mismatch");
   }
   if (
     !/\b1\b/.test(batchInputNormalization.diagnostics) ||
-    !/344-04-07/.test(batchInputNormalization.diagnostics)
+    !/344-04-07/.test(batchInputNormalization.diagnostics) ||
+    !/67641/.test(batchInputNormalization.diagnostics)
   ) {
     failures.push("batch-input-diagnostics-missing");
   }

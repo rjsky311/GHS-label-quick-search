@@ -326,6 +326,18 @@ Current completion snapshot:
   The next Batch-First work should be a new evidence-driven monitoring slice,
   not another implementation pass unless user, QA, CI, or pilot evidence
   reopens a specific workflow.
+- **Inventory-derived batch hardening checkpoint 2026-05-26**: a real roster
+  sample reopened a narrow monitoring slice without changing the product's
+  100-item batch model. The app now rehyphenates pure numeric CAS values copied
+  from spreadsheets, reports that cleanup in UI/telemetry, keeps a small
+  representative inventory data-quality fixture for review buckets, and
+  classifies production print handoff source outages separately from true
+  print/layout regressions. Batch review summaries now also show a compact
+  action queue so every active review bucket exposes its next step. Export
+  preview ready scope also matches the backend XLSX `Ready Rows` sheet, so
+  review and unresolved rows cannot be mixed into a "ready" export. Upstream
+  outage rows are routed to needs-review retry work instead of unresolved
+  identity cleanup.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and

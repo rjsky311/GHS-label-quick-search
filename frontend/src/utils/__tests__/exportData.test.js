@@ -30,6 +30,7 @@ import {
   normalizeResultsForExport,
   resolveExportDataState,
 } from '../exportData';
+import { getExportScopeOptions } from '../exportRows';
 
 const mockResult = {
   cas_number: '64-17-5',
@@ -206,6 +207,63 @@ describe('buildExportPreview', () => {
     );
     expect(preview.rows[0].cells[17]).toBe('export.yes');
     expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
+  });
+});
+
+describe('getExportScopeOptions', () => {
+  it('keeps ready, needs-review, and unresolved export scopes mutually clear', () => {
+    const ready = {
+      ...mockResult,
+      cas_number: '64-17-5',
+      name_zh: '乙醇',
+    };
+    const needsReview = {
+      ...mockResult,
+      cas_number: '67-64-1',
+      name_en: 'Acetone',
+      name_zh: '',
+      has_multiple_classifications: true,
+      other_classifications: [{ signal_word: 'Warning', pictograms: [] }],
+    };
+    const noGhs = {
+      cas_number: '7732-18-5',
+      name_en: 'Water',
+      name_zh: '水',
+      found: true,
+      ghs_pictograms: [],
+      hazard_statements: [],
+    };
+    const unresolved = {
+      cas_number: '999-99-9',
+      found: false,
+      error: 'Not found',
+    };
+    const upstream = {
+      cas_number: '777-77-7',
+      found: false,
+      upstream_error: true,
+      error: 'PubChem temporarily unavailable',
+    };
+
+    const options = getExportScopeOptions({
+      allResults: [ready, needsReview, noGhs, unresolved, upstream],
+      visibleResults: [ready, needsReview],
+    });
+
+    const byKey = Object.fromEntries(
+      options.map((option) => [option.key, option.results.map((row) => row.cas_number)]),
+    );
+    expect(byKey.ready).toEqual(['64-17-5']);
+    expect(byKey['needs-review']).toEqual(['67-64-1', '7732-18-5', '777-77-7']);
+    expect(byKey.unresolved).toEqual(['999-99-9']);
+    expect(byKey.visible).toEqual(['64-17-5', '67-64-1']);
+    expect(byKey.all).toEqual([
+      '64-17-5',
+      '67-64-1',
+      '7732-18-5',
+      '999-99-9',
+      '777-77-7',
+    ]);
   });
 });
 

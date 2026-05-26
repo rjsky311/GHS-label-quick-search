@@ -25,10 +25,16 @@ export default function SearchSection({
   const hasBatchDiagnostics =
     batchSummary &&
     batchSummary.inputCount > 0 &&
-    (batchSummary.duplicateCount > 0 || batchSummary.invalidCount > 0);
+    (batchSummary.duplicateCount > 0 ||
+      batchSummary.invalidCount > 0 ||
+      batchSummary.rehyphenatedCount > 0);
   const invalidPreview = (batchSummary?.invalidItems || [])
     .slice(0, 3)
     .map((item) => item.raw)
+    .join(", ");
+  const rehyphenatedPreview = (batchSummary?.rehyphenatedItems || [])
+    .slice(0, 3)
+    .map((item) => `${item.raw} -> ${item.normalized}`)
     .join(", ");
   const progressPercent =
     batchProgress && batchProgress.total > 0
@@ -156,6 +162,14 @@ export default function SearchSection({
                       {t("search.batchInvalidSummary", {
                         count: batchSummary.invalidCount,
                         examples: invalidPreview,
+                      })}
+                    </p>
+                  )}
+                  {batchSummary.rehyphenatedCount > 0 && (
+                    <p data-testid="batch-rehyphenated-summary">
+                      {t("search.batchRehyphenatedSummary", {
+                        count: batchSummary.rehyphenatedCount,
+                        examples: rehyphenatedPreview,
                       })}
                     </p>
                   )}
