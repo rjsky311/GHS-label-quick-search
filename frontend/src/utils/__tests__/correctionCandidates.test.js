@@ -107,6 +107,9 @@ describe("correction candidate evidence helpers", () => {
       status: "pending",
     });
     expect(payload.notes).toContain("Correction request #204");
+    expect(payload.notes).toContain(
+      "Issue: Missing trusted Chinese name (missing-chinese-name)"
+    );
     expect(payload.notes).toContain("Evidence: https://example.com/sds");
     expect(payload.notes).toContain("Review: Reviewed supplier SDS");
   });

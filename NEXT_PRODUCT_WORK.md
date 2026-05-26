@@ -178,7 +178,9 @@ Current monitoring slice opened from real roster evidence:
   while preserving the raw issue key beside them. Keep future user-facing
   review reasons, export review columns, and admin correction issue labels
   aligned through the shared data-quality vocabulary instead of inventing a
-  new wording layer for each surface.
+  new wording layer for each surface. Manual-entry notes created from
+  correction candidates now use the same label plus the raw key, so downstream
+  review records stay readable and traceable.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

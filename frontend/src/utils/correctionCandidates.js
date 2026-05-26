@@ -1,3 +1,4 @@
+import { getDataQualityIssueDisplayLabel } from "@/utils/dataQuality";
 import { hasCjkText } from "@/utils/ghsText";
 
 const CANDIDATE_SCHEMA_VERSION = 1;
@@ -122,7 +123,9 @@ const candidateNotes = (candidate = {}) =>
     candidate.request_id
       ? `Correction request #${candidate.request_id}`
       : "Correction request candidate",
-    candidate.issue_type ? `Issue: ${candidate.issue_type}` : "",
+    candidate.issue_type
+      ? `Issue: ${getDataQualityIssueDisplayLabel(candidate.issue_type)} (${candidate.issue_type})`
+      : "",
     candidate.evidence_type ? `Evidence type: ${candidate.evidence_type}` : "",
     candidate.evidence_url ? `Evidence: ${candidate.evidence_url}` : "",
     candidate.review_notes ? `Review: ${candidate.review_notes}` : "",
