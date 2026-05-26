@@ -109,13 +109,17 @@ Current monitoring slice opened from real roster evidence:
   wholesale into the product. Users still run bounded batches, usually up to
   100 rows.
 - Batch paste cleanup now includes pure numeric CAS rehyphenation, while
-  duplicate, invalid-format, and checksum-failed rows remain separate.
+  duplicate, invalid-format, and checksum-failed rows remain separate. The
+  representative roster fixture now also covers Chinese `CAS編號` headers,
+  Excel-style decimal CAS cells such as `73183343.0`, harmless trailing
+  punctuation such as `7719-09-7.`, and spreadsheet formula/date errors that
+  must stay invalid.
 - Real roster evidence showed a tabular-paste false-positive risk: dates,
   supplier IDs, and item numbers can pass CAS checksum after naive numeric
-  rehyphenation. Batch parsing now treats spreadsheet rows with a `CAS`/`CAS
-  No.` header as a CAS-column extraction, and headerless multi-column rows only
-  accept explicit CAS-prefixed or hyphenated CAS cells instead of rehyphenating
-  every unrelated numeric cell.
+  rehyphenation. Batch parsing now treats spreadsheet rows with a `CAS`,
+  `CAS No.`, `Cas`, or `CAS編號` header as a CAS-column extraction, and
+  headerless multi-column rows only accept explicit CAS-prefixed or hyphenated
+  CAS cells instead of rehyphenating every unrelated numeric cell.
 - Batch review fixtures should keep missing Chinese names, unresolved searches,
   no-GHS rows, multiple-GHS rows, and upstream retry states separate.
 - Batch result summaries now include a review action queue and keep upstream

@@ -31,8 +31,21 @@ const normalizeHeaderCell = (value = "") =>
     .toLowerCase()
     .replace(/[\s.:\uFF1A#_-]+/g, "");
 
+const KNOWN_CAS_HEADER_CELLS = new Set([
+  "cas",
+  "casno",
+  "casnumber",
+  "cas編號",
+  "cas编号",
+  "cas號",
+  "cas号",
+  "cas登錄號",
+  "cas登录号",
+]);
+
 const isCasHeaderCell = (value = "") => {
   const normalized = normalizeHeaderCell(value);
+  if (KNOWN_CAS_HEADER_CELLS.has(normalized)) return true;
   return [
     "cas",
     "casno",
@@ -107,6 +120,8 @@ const normalizeCasTokenBase = (token = "") =>
     .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
     .replace(CAS_PREFIX_PATTERN, "")
     .replace(/\s+/g, "")
+    .replace(/[.,;:，。；：]+$/g, "")
+    .replace(/\.0+$/g, "")
     .trim();
 
 export const rehyphenateCasDigits = (value = "") => {

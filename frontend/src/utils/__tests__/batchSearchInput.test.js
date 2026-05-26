@@ -43,11 +43,42 @@ describe("batchSearchInput", () => {
     expect(rehyphenateCasDigits("67641")).toBe("67-64-1");
     expect(rehyphenateCasDigits("902084")).toBe("902-08-4");
     expect(normalizeCasToken("CAS 67641")).toBe("67-64-1");
+    expect(normalizeCasToken("73183343.0")).toBe("73183-34-3");
+    expect(normalizeCasToken("7719-09-7.")).toBe("7719-09-7");
     expect(normalizeCasTokenDetailed("67641")).toEqual({
       rawNormalized: "67641",
       normalized: "67-64-1",
       wasRehyphenated: true,
     });
+  });
+
+  it("extracts Chinese CAS-number columns from inventory sheets", () => {
+    const summary = parseBatchSearchInput(
+      [
+        "項次\tCAS編號\t英文名稱\t中文名稱",
+        "1\t7719-09-7.\tThionyl chloride\t氯亞硫醯",
+        "2\t73183343.0\tBis(pinacolato)diboron\t雙戊醯二硼",
+        "3\t#VALUE!\tHydrogen bromide\t溴化氫",
+        "4\t7440-05-03 00:00:00\tPalladium\t鈀",
+      ].join("\n"),
+    );
+
+    expect(summary.queries).toEqual(["7719-09-7", "73183-34-3"]);
+    expect(summary.inputCount).toBe(4);
+    expect(summary.rehyphenatedItems).toEqual([
+      expect.objectContaining({
+        raw: "73183343.0",
+        normalized: "73183-34-3",
+        reason: "numeric-cas",
+      }),
+    ]);
+    expect(summary.invalidItems).toEqual([
+      expect.objectContaining({ raw: "#VALUE!", reason: "format" }),
+      expect.objectContaining({
+        raw: "7440-05-03 00:00:00",
+        reason: "format",
+      }),
+    ]);
   });
 
   it("extracts only the CAS column from tabular spreadsheet pastes with a header", () => {

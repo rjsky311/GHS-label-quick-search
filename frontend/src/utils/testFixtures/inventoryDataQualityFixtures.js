@@ -21,6 +21,37 @@ export const inventoryTabularPasteFixture = [
   "20200815\t1003094\t2-Bromothiophene\t75989",
 ].join("\n");
 
+export const inventoryChineseHeaderPasteFixture = [
+  "項次\tCAS編號\t危害性化學品\t英文名稱\t中文名稱",
+  "1\t7719-09-7.\tN\tThionyl chloride\t氯亞硫醯",
+  "2\t73183343.0\tN\tBis(pinacolato)diboron\t雙戊醯二硼",
+  "3\t#VALUE!\tY\tHydrogen bromide\t溴化氫",
+  "4\t7440-05-03 00:00:00\tN\tPalladium\t鈀",
+].join("\n");
+
+export const inventoryRosterEvidenceSummary = Object.freeze([
+  {
+    evidence: "Chinese CAS header",
+    example: "CAS編號",
+    expectedBehavior: "extract only the CAS column from inventory-style sheets",
+  },
+  {
+    evidence: "numeric Excel CAS",
+    example: "73183343.0",
+    expectedBehavior: "normalize to 73183-34-3 when it appears in a CAS column",
+  },
+  {
+    evidence: "trailing punctuation",
+    example: "7719-09-7.",
+    expectedBehavior: "trim harmless terminal punctuation before validation",
+  },
+  {
+    evidence: "spreadsheet formula/date errors",
+    example: "#VALUE!, 7440-05-03 00:00:00",
+    expectedBehavior: "keep them invalid instead of guessing a CAS number",
+  },
+]);
+
 export const inventoryDataQualityFixtureResults = [
   {
     found: true,

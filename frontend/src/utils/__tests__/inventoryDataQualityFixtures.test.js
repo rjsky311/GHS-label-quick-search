@@ -2,7 +2,9 @@ import { getDataQualityIssues } from "@/utils/dataQuality";
 import { parseBatchSearchInput } from "@/utils/batchSearchInput";
 import {
   inventoryBatchPasteFixture,
+  inventoryChineseHeaderPasteFixture,
   inventoryDataQualityFixtureResults,
+  inventoryRosterEvidenceSummary,
   inventoryTabularPasteFixture,
 } from "@/utils/testFixtures/inventoryDataQualityFixtures";
 
@@ -29,6 +31,33 @@ describe("inventory data-quality fixtures", () => {
     expect(summary.inputCount).toBe(3);
     expect(summary.rehyphenatedCount).toBe(2);
     expect(summary.invalidItems).toEqual([]);
+  });
+
+  it("covers Chinese headers and Excel-shaped CAS cells from inventory files", () => {
+    const summary = parseBatchSearchInput(inventoryChineseHeaderPasteFixture);
+
+    expect(summary.queries).toEqual(["7719-09-7", "73183-34-3"]);
+    expect(summary.inputCount).toBe(4);
+    expect(summary.rehyphenatedItems).toEqual([
+      expect.objectContaining({ raw: "73183343.0", normalized: "73183-34-3" }),
+    ]);
+    expect(summary.invalidItems).toEqual([
+      expect.objectContaining({ raw: "#VALUE!", reason: "format" }),
+      expect.objectContaining({
+        raw: "7440-05-03 00:00:00",
+        reason: "format",
+      }),
+    ]);
+  });
+
+  it("documents real-roster evidence without importing the whole workbook", () => {
+    expect(inventoryRosterEvidenceSummary).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ example: "CAS編號" }),
+        expect.objectContaining({ example: "73183343.0" }),
+        expect.objectContaining({ example: "7719-09-7." }),
+      ]),
+    );
   });
 
   it("keeps batch review buckets separate for lab-manager triage", () => {

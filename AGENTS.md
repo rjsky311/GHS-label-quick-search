@@ -287,16 +287,23 @@ reporting, admin triage, or evidence-driven continuation rules.
 The shipped short-term follow-up is
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`; use it as evidence for pilot
 smoothness, batch export usability, data-quality next-step selection,
-large-module maintainability, and historical-document cleanup. The active
-major target is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`; read it before continuing
-batch review flow, batch label confidence, batch export, correction/admin
-triage, or bounded maintainability work that directly supports those
-workflows. As of 2026-05-25, the batch review clarity slice, fixed-stock
-handoff/output contract, Batch Export v1 workbook split, and production batch
-handoff QA ordering fix are shipped and pushed on `main`; the target remains
-`Open` only for final owner-doc closure audit, admin-triage product evidence,
-review-only external candidate discovery decisions, and deferred physical
-printer validation.
+large-module maintainability, and historical-document cleanup.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the shipped/monitoring Batch-First
+owner doc, not an open implementation target. Read it before continuing batch
+review flow, batch label confidence, batch export, correction/admin triage, or
+bounded maintainability work that directly supports those workflows. As of
+2026-05-26, the batch review clarity slice, fixed-stock handoff/output
+contract, Batch Export v1 workbook split, production batch handoff QA ordering
+fix, owner-doc closure audit, admin-triage product evidence, and repository
+hygiene/code-splitting/docs consolidation work are shipped on `main`; the next
+Batch-First work should be selected from new monitoring evidence. Current real
+roster evidence is treated as a representative QA corpus, not as a whole-roster
+product import: parser/fixture coverage includes Chinese `CAS編號` headers,
+Excel numeric/decimal CAS cells, harmless trailing punctuation, formula/date
+errors that must stay invalid, duplicates, checksum failures, missing Chinese
+names, no-GHS rows, multiple-GHS rows, upstream retry states, and unresolved
+lookups. Physical printer validation remains deferred until real stock/printer
+evidence is available.
 
 The current product-requirements decision packet is
 `PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction

@@ -42,10 +42,11 @@ Out of scope for this runbook:
 3. Confirm the pilot operator has the intended test list:
    - 10-20 rows for a first smoke pilot.
    - 50-100 rows for a realistic batch pilot.
-   - If the source file comes from Excel, expect pure numeric CAS cells,
-     duplicate rows, checksum mistakes, unresolved names, and missing trusted
-     Chinese names. Review these through the batch summary/admin queue rather
-     than treating the workbook as a whole-roster import.
+   - If the source file comes from Excel, expect Chinese `CAS編號` headers,
+     pure numeric or decimal-style CAS cells, trailing punctuation, formula/date
+     errors, duplicate rows, checksum mistakes, unresolved names, and missing
+     trusted Chinese names. Review these through the batch summary/admin queue
+     rather than treating the workbook as a whole-roster import.
 4. Confirm no one is treating the app as the legal authority. SDS, supplier
    labels, local law, and workplace rules remain the authority.
 

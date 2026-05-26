@@ -344,15 +344,17 @@ Current completion snapshot:
 - **Inventory-derived batch hardening checkpoint 2026-05-26**: a real roster
   sample reopened a narrow monitoring slice without changing the product's
   100-item batch model. The app now rehyphenates pure numeric CAS values copied
-  from spreadsheets, reports that cleanup in UI/telemetry, keeps a small
-  representative inventory data-quality fixture for review buckets, and
+  from spreadsheets, accepts Chinese `CAS編號` inventory columns, trims harmless
+  terminal punctuation from CAS cells, reports cleanup in UI/telemetry, keeps a
+  small representative inventory data-quality fixture for review buckets, and
   classifies production print handoff source outages separately from true
-  print/layout regressions. Batch review summaries now also show a compact
-  action queue so every active review bucket exposes its next step. Export
-  preview ready scope also matches the backend XLSX `Ready Rows` sheet, so
-  review and unresolved rows cannot be mixed into a "ready" export. Upstream
-  outage rows are routed to needs-review retry work instead of unresolved
-  identity cleanup.
+  print/layout regressions. Spreadsheet formula/date errors such as `#VALUE!`
+  and date-coerced cells remain invalid instead of being guessed. Batch review
+  summaries now also show a compact action queue so every active review bucket
+  exposes its next step. Export preview ready scope also matches the backend
+  XLSX `Ready Rows` sheet, so review and unresolved rows cannot be mixed into a
+  "ready" export. Upstream outage rows are routed to needs-review retry work
+  instead of unresolved identity cleanup.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -369,14 +371,14 @@ Current completion snapshot:
   accepts common spreadsheet separators plus same-line space-separated CAS
   values with `CAS No.` / `CAS:` prefixes, while preserving spaces that belong
   inside a single CAS token. Real roster evidence added a stricter
-  tabular-paste rule: if a spreadsheet paste has a `CAS`/`CAS No.` header, only
-  that column is parsed; if a multi-column paste has no CAS header, unrelated
-  numeric cells such as dates, item numbers, and supplier IDs are not
-  rehyphenated into CAS values unless they are explicitly CAS-prefixed or
-  already hyphenated. Search history and frontend observability now follow the
-  same normalized handoff, with bounded telemetry metadata instead of raw
-  invalid paste payloads. `qa:production-search-ui` now exercises the deployed
-  messy-paste path and fails if the ready summary, duplicate/invalid
+  tabular-paste rule: if a spreadsheet paste has a `CAS`, `CAS No.`, `Cas`, or
+  `CAS編號` header, only that column is parsed; if a multi-column paste has no
+  CAS header, unrelated numeric cells such as dates, item numbers, and supplier
+  IDs are not rehyphenated into CAS values unless they are explicitly
+  CAS-prefixed or already hyphenated. Search history and frontend observability
+  now follow the same normalized handoff, with bounded telemetry metadata
+  instead of raw invalid paste payloads. `qa:production-search-ui` now exercises
+  the deployed messy-paste path and fails if the ready summary, duplicate/invalid
   diagnostics, or enabled search handoff regress.
 - **QR return-path checkpoint**: `qa:production-search-ui` now opens the
   deployed app with `?cas=<CAS>` and fails if the app does not hydrate the

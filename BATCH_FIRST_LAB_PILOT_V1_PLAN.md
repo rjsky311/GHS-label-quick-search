@@ -473,9 +473,12 @@ Deploy freshness hardening added after closure:
    - inventory-derived QA hardening when a real roster exposes paste cleanup,
      translation-quality, upstream/source, or batch triage gaps.
      Current roster-derived paste cleanup evidence: tabular spreadsheet pastes
-     with a `CAS`/`CAS No.` header must parse only that column, and headerless
-     multi-column pastes must not rehyphenate dates, supplier IDs, item numbers,
-     or other unrelated numeric cells into valid-looking CAS queries.
+     with a `CAS`, `CAS No.`, `Cas`, or `CAS編號` header must parse only that
+     column. CAS-column values may need safe cleanup for Excel numeric-decimal
+     cells such as `73183343.0` and trailing punctuation such as `7719-09-7.`,
+     while formula/date errors must remain invalid. Headerless multi-column
+     pastes must not rehyphenate dates, supplier IDs, item numbers, or other
+     unrelated numeric cells into valid-looking CAS queries.
    - maintainability extraction only when it supports an active
      batch/admin/data/print change.
    - multiple-GHS confirmation clarity if real batch evidence shows users are
@@ -532,10 +535,12 @@ For admin/correction changes:
 - Current production gates prove representative flows, not every possible
   real-world batch list.
 - Real inventory files can include pure numeric CAS cells, duplicates,
-  checksum-bad CAS values, unresolved names, missing trusted Chinese names,
-  multiple public GHS classifications, and transient upstream source failures.
-  Use small representative fixtures for these categories instead of importing
-  whole customer/lab rosters into the app.
+  Chinese `CAS編號` headers, Excel numeric-decimal CAS cells, trailing
+  punctuation, formula/date errors, duplicates, checksum-bad CAS values,
+  unresolved names, missing trusted Chinese names, multiple public GHS
+  classifications, and transient upstream source failures. Use small
+  representative fixtures for these categories instead of importing whole
+  customer/lab rosters into the app.
 - Physical print validation is still deferred.
 - Existing seed Chinese names were LLM-generated and accepted as the current
   project baseline, but future generated/external names must remain candidates
@@ -546,16 +551,19 @@ For admin/correction changes:
 - 2026-05-26: Inventory-derived batch hardening slice opened from real roster
   evidence without changing the 100-item product limit or importing full
   rosters. Batch input now treats pure numeric CAS values copied from
-  spreadsheets as fixable input, reports the rehyphenation count in UI and
-  telemetry, and keeps duplicates/checksum failures separate. A small
+  spreadsheets as fixable input, also handles Chinese `CAS編號` columns,
+  Excel-style decimal CAS cells, and harmless trailing punctuation, reports the
+  rehyphenation count in UI and telemetry, and keeps formula/date errors,
+  duplicates, and checksum failures separate. A small
   `inventoryDataQualityFixtures` regression fixture captures the representative
-  roster categories: numeric CAS cleanup, duplicates, invalid checksum,
+  roster categories: numeric CAS cleanup, Chinese headers, trailing
+  punctuation, invalid spreadsheet cells, duplicates, invalid checksum,
   multiple-GHS review, missing trusted Chinese name, no-GHS data, upstream
   retry, and unresolved lookup. Production print handoff QA now labels
   PubChem/backend source outages as `source-upstream-unavailable` instead of
-  collapsing them into generic print `runner-error`. The batch workflow
-  summary also includes a compact review action queue so each review bucket
-  exposes its next step before users print or export.
+  collapsing them into generic print `runner-error`. The batch workflow summary
+  also includes a compact review action queue so each review bucket exposes its
+  next step before users print or export.
 - 2026-05-25: Target opened from the post-evidence-pass re-rank. The first
   immediate cleanup is canonical-doc alignment so `continue` starts here rather
   than in the already shipped pilot evidence pass.
