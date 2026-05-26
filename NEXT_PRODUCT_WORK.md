@@ -129,7 +129,8 @@ Current monitoring slice opened from real roster evidence:
   headerless multi-column rows only accept explicit CAS-prefixed or hyphenated
   CAS cells instead of rehyphenating every unrelated numeric cell.
 - Batch review fixtures should keep missing Chinese names, unresolved searches,
-  no-GHS rows, multiple-GHS rows, and upstream retry states separate.
+  no-GHS rows, text-only GHS rows, source conflicts, multiple-GHS rows, and
+  upstream retry states separate.
 - The real-roster review fixture is now also wired into the batch result
   workflow summary test. The UI must keep found, unresolved, label-ready,
   needs-review, and each review-action bucket separate before this monitoring

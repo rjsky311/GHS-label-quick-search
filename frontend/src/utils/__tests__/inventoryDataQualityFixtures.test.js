@@ -70,6 +70,8 @@ describe("inventory data-quality fixtures", () => {
 
     expect(issueMap["90-41-5"]).toContain("multiple-classifications");
     expect(issueMap["84-65-1"]).toContain("missing-chinese-name");
+    expect(issueMap["50-00-0"]).toContain("ghs-text-no-pictograms");
+    expect(issueMap["100-00-5"]).toContain("source-conflict");
     expect(issueMap["57-13-6"]).toContain("no-ghs-data");
     expect(issueMap["75-21-8"]).toEqual(["upstream-error"]);
     expect(issueMap["9999-99-9"]).toContain("unresolved-search");

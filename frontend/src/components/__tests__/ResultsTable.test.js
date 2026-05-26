@@ -308,21 +308,23 @@ describe('ResultsTable', () => {
 
       expect(
         screen.getByTestId('results-workflow-summary-found-value')
-      ).toHaveTextContent('3/5');
+      ).toHaveTextContent('5/7');
       expect(
         screen.getByTestId('results-workflow-summary-unresolved-value')
       ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
-      ).toHaveTextContent('2');
+      ).toHaveTextContent('4');
       expect(
         screen.getByTestId('results-workflow-summary-needs-review-value')
-      ).toHaveTextContent('5');
+      ).toHaveTextContent('7');
 
       [
         ['upstream-error', 'results.reviewActionRetryUpstream'],
         ['unresolved-search', 'results.reviewActionReportLookupGap'],
         ['no-ghs-data', 'results.reviewActionReportNoGhs'],
+        ['ghs-text-no-pictograms', 'results.reviewActionReviewPictograms'],
+        ['source-conflict', 'results.reviewActionReviewSourceConflict'],
         ['multiple-classifications', 'results.reviewActionConfirmMultipleGhs'],
         ['missing-chinese-name', 'results.reviewActionReportChineseName'],
       ].forEach(([issueType, actionKey]) => {
