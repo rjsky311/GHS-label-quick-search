@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Database,
@@ -39,6 +39,19 @@ import {
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasCjkText } from "@/utils/ghsText";
 
+const TRIAGE_TARGET_TABS = {
+  correction_requests: "overview",
+  converted_candidates: "overview",
+  manual_entries: "overview",
+  needs_evidence: "overview",
+  miss_queries: "overview",
+  alias_review: "overview",
+  reference_links: "dictionary",
+};
+
+const normalizeTriageTargetKey = (targetKey = "") =>
+  String(targetKey).replace(/[^A-Za-z0-9_-]/g, "");
+
 export default function PilotDashboardSidebar(props) {
   const {
     report,
@@ -62,6 +75,7 @@ export default function PilotDashboardSidebar(props) {
   const { t } = useTranslation();
   const panelRef = useFocusTrap(onClose);
   const [activeTab, setActiveTab] = useState("overview");
+  const [pendingTriageTarget, setPendingTriageTarget] = useState("");
   const [manualEntryForm, setManualEntryForm] = useState({
     cas_number: "",
     name_en: "",
@@ -133,6 +147,36 @@ export default function PilotDashboardSidebar(props) {
       ).slice(0, 8),
     [correctionRequests]
   );
+
+  const openTriageTarget = (targetKey) => {
+    const normalizedTargetKey = normalizeTriageTargetKey(targetKey);
+    if (!normalizedTargetKey) {
+      return;
+    }
+    setPendingTriageTarget(normalizedTargetKey);
+    setActiveTab(TRIAGE_TARGET_TABS[normalizedTargetKey] || "overview");
+  };
+
+  useEffect(() => {
+    if (!pendingTriageTarget) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const target = document.querySelector(
+        `[data-triage-targets~="${pendingTriageTarget}"]`
+      );
+      if (target) {
+        target.scrollIntoView({ block: "start", behavior: "smooth" });
+        if (typeof target.focus === "function") {
+          target.focus({ preventScroll: true });
+        }
+      }
+      setPendingTriageTarget("");
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab, pendingTriageTarget]);
 
   const submitManualEntry = async (event) => {
     event.preventDefault();
@@ -696,6 +740,7 @@ export default function PilotDashboardSidebar(props) {
               <PilotTriagePanel
                 pilotTriage={pilotTriage}
                 observabilityCounters={counters}
+                onOpenPrimaryActionTarget={openTriageTarget}
               />
               <CurationStatusSummary
                 title={t("pilot.manualEntryStatusSummary", {
@@ -730,20 +775,34 @@ export default function PilotDashboardSidebar(props) {
                 testIdPrefix="correction-request-status-count"
               />
 
-              <ConvertedCorrectionCandidatesSection
-                items={convertedCorrectionCandidates}
-                saving={saving}
-              />
-              <TopCorrectionRequestsSection
-                items={topCorrectionRequests}
-                saving={saving}
-                correctionReviewDrafts={correctionReviewDrafts}
-                setCorrectionReviewDrafts={setCorrectionReviewDrafts}
-                onStatusUpdate={handleCorrectionRequestStatusUpdate}
-                onCreateManualEntry={handleCreateManualEntryFromCandidate}
-              />
+              <div
+                data-triage-targets="converted_candidates candidate_found"
+                tabIndex={-1}
+              >
+                <ConvertedCorrectionCandidatesSection
+                  items={convertedCorrectionCandidates}
+                  saving={saving}
+                />
+              </div>
+              <div
+                data-triage-targets="correction_requests correction_intake missing_chinese_names no_ghs_gaps source_conflicts needs_evidence"
+                tabIndex={-1}
+              >
+                <TopCorrectionRequestsSection
+                  items={topCorrectionRequests}
+                  saving={saving}
+                  correctionReviewDrafts={correctionReviewDrafts}
+                  setCorrectionReviewDrafts={setCorrectionReviewDrafts}
+                  onStatusUpdate={handleCorrectionRequestStatusUpdate}
+                  onCreateManualEntry={handleCreateManualEntryFromCandidate}
+                />
+              </div>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <section
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-triage-targets="miss_queries unresolved_searches telemetry_retention"
+                tabIndex={-1}
+              >
                 <SectionHeading
                   icon={ShieldAlert}
                   title={t("pilot.missQueries", { defaultValue: "Top miss queries" })}
@@ -886,7 +945,11 @@ export default function PilotDashboardSidebar(props) {
                 )}
               </section>
 
-              <section className="rounded-lg border border-slate-200 bg-white p-4">
+              <section
+                className="rounded-lg border border-slate-200 bg-white p-4"
+                data-triage-targets="alias_review"
+                tabIndex={-1}
+              >
                 <SectionHeading
                   icon={Tags}
                   title={t("pilot.pendingAliasReview", { defaultValue: "Pending alias review" })}
@@ -952,7 +1015,11 @@ export default function PilotDashboardSidebar(props) {
               </section>
 
               {pendingManualEntries.length > 0 ? (
-                <section className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                <section
+                  className="rounded-lg border border-orange-200 bg-orange-50 p-4"
+                  data-triage-targets="manual_entries manual_review needs_evidence"
+                  tabIndex={-1}
+                >
                   <SectionHeading
                     icon={Database}
                     title={t("pilot.manualEntriesNeedReview", {
@@ -1070,18 +1137,20 @@ export default function PilotDashboardSidebar(props) {
 
           {!loading && activeTab === "dictionary" ? (
             <>
-              <PilotDictionaryForms
-                manualEntryForm={manualEntryForm}
-                setManualEntryForm={setManualEntryForm}
-                submitManualEntry={submitManualEntry}
-                aliasForm={aliasForm}
-                setAliasForm={setAliasForm}
-                submitAlias={submitAlias}
-                referenceForm={referenceForm}
-                setReferenceForm={setReferenceForm}
-                submitReferenceLink={submitReferenceLink}
-                saving={saving}
-              />
+              <div data-triage-targets="reference_links reference_link_review" tabIndex={-1}>
+                <PilotDictionaryForms
+                  manualEntryForm={manualEntryForm}
+                  setManualEntryForm={setManualEntryForm}
+                  submitManualEntry={submitManualEntry}
+                  aliasForm={aliasForm}
+                  setAliasForm={setAliasForm}
+                  submitAlias={submitAlias}
+                  referenceForm={referenceForm}
+                  setReferenceForm={setReferenceForm}
+                  submitReferenceLink={submitReferenceLink}
+                  saving={saving}
+                />
+              </div>
 
               <RecentCorrectionRequestsSection
                 items={recentCorrectionRequests}

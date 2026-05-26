@@ -273,6 +273,11 @@ Current checkpoint:
   into a primary admin action above the metric grid. The detailed counters and
   focus rows remain available, but the first maintainer read is now "what do I
   do next?" rather than "which of these counters matters most?".
+- Recommended-focus rows now include stable target queues, and the primary
+  admin action can open the related dashboard section. This keeps the
+  maintainer loop actionable from the first card instead of requiring manual
+  scanning for the matching correction, candidate, miss-query, alias, manual
+  entry, or reference-link queue.
 - Candidate discovery dry-run reports now include status and evidence-type
   summary counts, including rows without candidates. This keeps maintainer-side
   data cleanup measurable without letting generated or external candidates

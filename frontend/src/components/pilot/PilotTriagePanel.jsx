@@ -5,6 +5,7 @@ import { SectionHeading, SummaryCard } from "./PilotDashboardPrimitives";
 export default function PilotTriagePanel({
   pilotTriage = {},
   observabilityCounters = {},
+  onOpenPrimaryActionTarget,
 }) {
   const { t } = useTranslation();
   const attentionCounts = pilotTriage.attentionCounts || {};
@@ -14,6 +15,9 @@ export default function PilotTriagePanel({
     ? pilotTriage.recommendedFocus
     : [];
   const primaryFocus = recommendedFocus[0] || null;
+  const canOpenPrimaryTarget =
+    Boolean(primaryFocus?.targetKey) &&
+    typeof onOpenPrimaryActionTarget === "function";
 
   return (
     <section
@@ -68,12 +72,26 @@ export default function PilotTriagePanel({
             </div>
           </div>
           {primaryFocus ? (
-            <span
-              className="inline-flex self-start rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800"
-              data-testid="pilot-triage-primary-action-count"
-            >
-              {primaryFocus.count}
-            </span>
+            <div className="flex shrink-0 items-center gap-2 self-start">
+              {canOpenPrimaryTarget ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenPrimaryActionTarget(primaryFocus.targetKey)}
+                  className="rounded-md border border-emerald-300 bg-emerald-700 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
+                  data-testid="pilot-triage-primary-action-open-target"
+                >
+                  {t("pilot.triageOpenTarget", {
+                    defaultValue: "Open related queue",
+                  })}
+                </button>
+              ) : null}
+              <span
+                className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800"
+                data-testid="pilot-triage-primary-action-count"
+              >
+                {primaryFocus.count}
+              </span>
+            </div>
           ) : null}
         </div>
       </div>

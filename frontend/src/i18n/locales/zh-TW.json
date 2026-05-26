@@ -969,6 +969,7 @@
   "pilot.triageUpstreamRetries": "上游重試",
   "pilot.triageNoGhsReports": "No-GHS 回報",
   "pilot.triageStaleTelemetry": "逾期 telemetry",
+  "pilot.triageOpenTarget": "開啟相關佇列",
   "pilot.triageNextAction": "下一步：{{action}}",
   "pilot.correctionRequestStatusSummary": "修正回報",
   "pilot.correctionRequests": "資料修正回報",

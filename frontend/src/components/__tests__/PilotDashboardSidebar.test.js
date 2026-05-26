@@ -92,6 +92,7 @@ const baseProps = {
         recommendedFocus: [
           {
             key: "correction_intake",
+            targetKey: "correction_requests",
             message: "Review open correction requests before adding new data sources.",
             nextAction: "Open correction queue and decide approve, reject, or needs evidence.",
             count: 2,
@@ -309,6 +310,9 @@ describe("PilotDashboardSidebar", () => {
       "pilot.triageNextAction",
     );
     expect(screen.getByTestId("pilot-triage-primary-action-count")).toHaveTextContent("2");
+    expect(
+      screen.getByTestId("pilot-triage-primary-action-open-target"),
+    ).toHaveTextContent("pilot.triageOpenTarget");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
       "Review open correction requests",
     );
@@ -342,6 +346,49 @@ describe("PilotDashboardSidebar", () => {
       "pilot.triageNoPrimaryAction",
     );
     expect(screen.queryByTestId("pilot-triage-primary-action-count")).not.toBeInTheDocument();
+  });
+
+  it("calls the primary triage target handler when a target is available", () => {
+    const onOpenPrimaryActionTarget = jest.fn();
+    render(
+      <PilotTriagePanel
+        pilotTriage={{
+          openWorkItemCount: 1,
+          attentionCounts: {},
+          recommendedFocus: [
+            {
+              key: "candidate_found",
+              targetKey: "converted_candidates",
+              message: "Convert candidate evidence.",
+              nextAction: "Open candidate queue.",
+              count: 1,
+            },
+          ],
+        }}
+        observabilityCounters={{}}
+        onOpenPrimaryActionTarget={onOpenPrimaryActionTarget}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("pilot-triage-primary-action-open-target"));
+
+    expect(onOpenPrimaryActionTarget).toHaveBeenCalledWith("converted_candidates");
+  });
+
+  it("scrolls to the related admin queue from the primary triage action", async () => {
+    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = jest.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("pilot-triage-primary-action-open-target"));
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalled();
+    });
+
+    window.HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
   });
 
   it("purges stale miss-query telemetry after confirmation", async () => {
