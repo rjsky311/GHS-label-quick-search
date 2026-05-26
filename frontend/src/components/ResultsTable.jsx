@@ -6,6 +6,7 @@ import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
 import {
   DATA_QUALITY_ISSUE_TYPES,
+  getDataQualityIssueDisplayLabel as getDataQualityIssueLabel,
   getDataQualityIssues,
 } from "@/utils/dataQuality";
 import {
@@ -37,19 +38,6 @@ const getSourceBadge = (source, t) => {
     label: t("results.sourceOther"),
     className: "border-slate-200 bg-slate-50 text-slate-700",
   };
-};
-
-const getDataQualityIssueLabel = (type, t) => {
-  const labels = {
-    "upstream-error": t("results.dataIssueUpstream"),
-    "no-ghs-data": t("results.dataIssueNoGhs"),
-    "ghs-text-no-pictograms": t("results.dataIssueTextOnlyGhs"),
-    "source-conflict": t("results.dataIssueSourceConflict"),
-    "multiple-classifications": t("results.dataIssueMultipleClassifications"),
-    "missing-chinese-name": t("results.dataIssueMissingChineseName"),
-    "unresolved-search": t("results.dataIssueUnresolvedSearch"),
-  };
-  return labels[type] || t("results.dataIssueNeedsReview");
 };
 
 const getDataQualityIssueClassName = (severity) => {

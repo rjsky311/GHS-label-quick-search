@@ -628,7 +628,7 @@ describe('ResultsTable', () => {
         'data-quality-link-missing-chinese-name-107-18-6',
       );
       const url = new URL(link.getAttribute('href'));
-      expect(link).toHaveTextContent('results.dataIssueMissingChineseName');
+      expect(link).toHaveTextContent('dataQuality.issue.missingChineseName');
       expect(url.searchParams.get('title')).toBe(
         'Missing Chinese name: 107-18-6',
       );
@@ -737,7 +737,7 @@ describe('ResultsTable', () => {
         'data-quality-link-unresolved-search-999-99-9',
       );
       const url = new URL(link.getAttribute('href'));
-      expect(link).toHaveTextContent('results.dataIssueUnresolvedSearch');
+      expect(link).toHaveTextContent('dataQuality.issue.unresolvedSearch');
       expect(url.searchParams.get('title')).toBe(
         'Unresolved lookup: 999-99-9',
       );
@@ -785,7 +785,7 @@ describe('ResultsTable', () => {
       ).toBeInTheDocument();
       expect(
         screen.getByTestId(`data-quality-link-no-ghs-data-${mockNoHazardResult.cas_number}`)
-      ).toHaveTextContent('results.dataIssueNoGhs');
+      ).toHaveTextContent('dataQuality.issue.noGhsData');
     });
 
     it('shows a text-only GHS state when the classification has H/signal data but no pictograms', () => {
@@ -816,7 +816,7 @@ describe('ResultsTable', () => {
       ).toBeInTheDocument();
       expect(
         screen.getByTestId(`data-quality-link-ghs-text-no-pictograms-${signalOnly.cas_number}`)
-      ).toHaveTextContent('results.dataIssueTextOnlyGhs');
+      ).toHaveTextContent('dataQuality.issue.ghsTextNoPictograms');
     });
 
     it('shows a text-only GHS state when H/P/signal exist but nothing has pictograms (Codex PR #10 regression)', () => {
@@ -986,7 +986,7 @@ describe('ResultsTable', () => {
       expect(screen.getByText(/results\.otherClassifications/)).toBeInTheDocument();
       expect(
         screen.getByTestId(`data-quality-action-multiple-classifications-${mockFoundResult.cas_number}`)
-      ).toHaveTextContent('results.dataIssueMultipleClassifications');
+      ).toHaveTextContent('dataQuality.issue.multipleClassifications');
     });
 
     it('clicking the multiple-classifications review chip expands alternatives', () => {
