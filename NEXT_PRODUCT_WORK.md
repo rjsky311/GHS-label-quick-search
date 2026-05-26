@@ -194,6 +194,10 @@ Current monitoring slice opened from real roster evidence:
   the same shared data-quality vocabulary. Keep future correction-link,
   issue-template, export, results, and admin wording changes behind that shared
   issue-label contract instead of adding another surface-specific wording map.
+- Batch review issue priority is now a shared data-quality constant used by
+  results workflow summaries, row primary review actions, and export review
+  reason ordering. Keep future review-priority changes in that shared contract
+  so screen and workbook triage do not drift.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

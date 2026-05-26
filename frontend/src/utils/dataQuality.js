@@ -5,11 +5,20 @@ import {
 import {
   DATA_QUALITY_DISPLAY_LABELS,
   DATA_QUALITY_ISSUE_TYPES,
+  DATA_QUALITY_REVIEW_ISSUE_ORDER,
 } from "@/constants/dataQualityIssueLabels";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { resolveEnglishName, resolveTrustedChineseName } from "@/utils/ghsText";
 
-export { DATA_QUALITY_DISPLAY_LABELS, DATA_QUALITY_ISSUE_TYPES };
+export {
+  DATA_QUALITY_DISPLAY_LABELS,
+  DATA_QUALITY_ISSUE_TYPES,
+  DATA_QUALITY_REVIEW_ISSUE_ORDER,
+};
+
+const REVIEW_ISSUE_ORDER_INDEX = new Map(
+  DATA_QUALITY_REVIEW_ISSUE_ORDER.map((type, index) => [type, index]),
+);
 
 export function getDataQualityIssueDisplayLabel(issueType, t) {
   const normalizedType = String(issueType || "other-data-quality").trim();
@@ -22,6 +31,19 @@ export function getDataQualityIssueDisplayLabel(issueType, t) {
   }
 
   return t(labelConfig.key, { defaultValue: labelConfig.defaultValue });
+}
+
+export function sortDataQualityIssuesForReview(issues = []) {
+  const normalizedIssues = Array.isArray(issues) ? issues : [];
+  return [...normalizedIssues].sort((a, b) => {
+    const orderA = REVIEW_ISSUE_ORDER_INDEX.has(a?.type)
+      ? REVIEW_ISSUE_ORDER_INDEX.get(a.type)
+      : Number.MAX_SAFE_INTEGER;
+    const orderB = REVIEW_ISSUE_ORDER_INDEX.has(b?.type)
+      ? REVIEW_ISSUE_ORDER_INDEX.get(b.type)
+      : Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
 }
 
 const getPictograms = (classification = {}) =>

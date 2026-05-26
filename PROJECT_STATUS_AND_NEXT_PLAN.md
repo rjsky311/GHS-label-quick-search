@@ -464,6 +464,9 @@ Current completion snapshot:
   shared data-quality labels, keeping batch review, admin correction queues,
   structured correction/support issue titles, and downloaded handoff wording
   aligned.
+  Results workflow summaries, row primary review actions, and frontend export
+  preview review reasons now also share the same data-quality review-priority
+  order.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
 - **Unresolved lookup intake checkpoint 2026-05-22**: not-found search rows

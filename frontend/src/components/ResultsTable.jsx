@@ -6,8 +6,10 @@ import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
 import {
   DATA_QUALITY_ISSUE_TYPES,
+  DATA_QUALITY_REVIEW_ISSUE_ORDER,
   getDataQualityIssueDisplayLabel as getDataQualityIssueLabel,
   getDataQualityIssues,
+  sortDataQualityIssuesForReview,
 } from "@/utils/dataQuality";
 import {
   getLocalizedNames,
@@ -50,16 +52,6 @@ const getDataQualityIssueClassName = (severity) => {
   return "border-slate-200 bg-slate-50 text-slate-700";
 };
 
-const BATCH_REVIEW_ISSUE_ORDER = [
-  "upstream-error",
-  "unresolved-search",
-  "no-ghs-data",
-  "ghs-text-no-pictograms",
-  "source-conflict",
-  "multiple-classifications",
-  "missing-chinese-name",
-];
-
 const asCount = (value, fallback = 0) => {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
@@ -69,9 +61,7 @@ const isUnresolvedSearchResult = (result = {}) =>
   result?.found === false && !result?.upstream_error;
 
 const getPrimaryReviewIssue = (issues = []) =>
-  BATCH_REVIEW_ISSUE_ORDER.map((type) =>
-    issues.find((issue) => issue.type === type),
-  ).find(Boolean) || issues[0] || null;
+  sortDataQualityIssuesForReview(issues)[0] || null;
 
 const getReviewNextActionLabel = (type, t) => {
   const labels = {
@@ -174,7 +164,7 @@ export default function ResultsTable({
     });
     return counts;
   }, {});
-  const workflowIssueSummaries = BATCH_REVIEW_ISSUE_ORDER
+  const workflowIssueSummaries = DATA_QUALITY_REVIEW_ISSUE_ORDER
     .map((type) => ({
       type,
       count: workflowIssueCounts[type] || 0,

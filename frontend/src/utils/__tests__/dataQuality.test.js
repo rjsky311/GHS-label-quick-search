@@ -1,8 +1,10 @@
 import {
+  DATA_QUALITY_REVIEW_ISSUE_ORDER,
   DATA_QUALITY_ISSUE_TYPES,
   findDataQualityIssue,
   getDataQualityIssueDisplayLabel,
   getDataQualityIssues,
+  sortDataQualityIssuesForReview,
 } from "@/utils/dataQuality";
 
 const baseChemical = {
@@ -46,6 +48,40 @@ describe("data quality issue helpers", () => {
     expect(getDataQualityIssueDisplayLabel("unknown-kind", t)).toBe(
       "Other data-quality issue (dataQuality.issue.otherDataQuality)",
     );
+  });
+
+  it("keeps batch review issue ordering shared across results and exports", () => {
+    expect(DATA_QUALITY_REVIEW_ISSUE_ORDER).toEqual([
+      DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR,
+      DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+      DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
+      DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
+      DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+      DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS,
+      DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+    ]);
+
+    const unorderedIssues = [
+      { type: DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME },
+      { type: "future-review-issue" },
+      { type: DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT },
+      { type: DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR },
+    ];
+
+    expect(
+      sortDataQualityIssuesForReview(unorderedIssues).map((issue) => issue.type),
+    ).toEqual([
+      DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR,
+      DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+      DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+      "future-review-issue",
+    ]);
+    expect(unorderedIssues.map((issue) => issue.type)).toEqual([
+      DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+      "future-review-issue",
+      DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
+      DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR,
+    ]);
   });
 
   it("turns unresolved lookups into a dictionary-curation correction path", () => {

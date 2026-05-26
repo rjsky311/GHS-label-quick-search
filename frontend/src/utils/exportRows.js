@@ -11,6 +11,7 @@ import {
   DATA_QUALITY_ISSUE_TYPES,
   getDataQualityIssueDisplayLabel,
   getDataQualityIssues,
+  sortDataQualityIssuesForReview,
 } from "@/utils/dataQuality";
 
 export const EXPORT_SCOPE_KEYS = Object.freeze({
@@ -131,7 +132,9 @@ export function resolveExportDataState(result, t) {
 
 function buildExportTrustCells(result, t) {
   const references = getReferenceLinks(result);
-  const reviewIssues = getDataQualityIssues(result, result);
+  const reviewIssues = sortDataQualityIssuesForReview(
+    getDataQualityIssues(result, result),
+  );
   const sourceConflict = Boolean(
     result?.source_conflict || result?.source_conflicts?.length > 0
   );
