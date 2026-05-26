@@ -129,6 +129,10 @@ Current baseline capabilities:
   per-item fit categories, representative previews, acknowledged
   reduced/continuation scope, and deployed production QA evidence. Keep future
   changes aligned with `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- Batch review, export preview, and admin triage now share the same
+  data-quality terminology for missing trusted Chinese names, upstream retry
+  states, no-GHS data, and source conflicts so users and maintainers do not
+  see different names for the same action bucket.
 - The simplified print UX baseline follows `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`:
   one batch output type at a time, no first-level purpose/card sprawl, and
   small-label continuation on the same output instead of recommending mixed A4

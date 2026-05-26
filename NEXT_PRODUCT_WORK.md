@@ -173,6 +173,10 @@ Current monitoring slice opened from real roster evidence:
   data-quality split: missing Chinese names, No-GHS reports, source conflicts,
   unresolved searches, and candidate-found evidence must stay as distinct
   next-action queues instead of collapsing into one generic correction state.
+- Admin triage metric labels now mirror the shared data-quality labels used by
+  batch review and export previews. Keep missing trusted Chinese name,
+  upstream retry needed, no GHS data, and source conflict terminology aligned
+  across user-facing review surfaces.
 - Admin triage totals now separate primary queue items from overlapping
   attention signals. The first triage metric should not double-count
   candidate-found, missing-name, No-GHS, source-conflict, and needs-evidence

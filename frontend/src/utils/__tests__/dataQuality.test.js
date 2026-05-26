@@ -6,6 +6,8 @@ import {
   getDataQualityIssues,
   sortDataQualityIssuesForReview,
 } from "@/utils/dataQuality";
+import en from "@/i18n/locales/en.json";
+import zhTW from "@/i18n/locales/zh-TW.json";
 
 const baseChemical = {
   found: true,
@@ -48,6 +50,20 @@ describe("data quality issue helpers", () => {
     expect(getDataQualityIssueDisplayLabel("unknown-kind", t)).toBe(
       "Other data-quality issue (dataQuality.issue.otherDataQuality)",
     );
+  });
+
+  it("keeps pilot triage data-quality labels aligned with shared labels", () => {
+    const sharedPilotLabelKeys = [
+      ["pilot.triageMissingChineseNames", "dataQuality.issue.missingChineseName"],
+      ["pilot.triageSourceConflicts", "dataQuality.issue.sourceConflict"],
+      ["pilot.triageUpstreamRetries", "dataQuality.issue.upstreamError"],
+      ["pilot.triageNoGhsReports", "dataQuality.issue.noGhsData"],
+    ];
+
+    for (const [pilotKey, dataQualityKey] of sharedPilotLabelKeys) {
+      expect(en[pilotKey]).toBe(en[dataQualityKey]);
+      expect(zhTW[pilotKey]).toBe(zhTW[dataQualityKey]);
+    }
   });
 
   it("keeps batch review issue ordering shared across results and exports", () => {
