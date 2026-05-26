@@ -130,6 +130,10 @@ Current monitoring slice opened from real roster evidence:
   CAS cells instead of rehyphenating every unrelated numeric cell.
 - Batch review fixtures should keep missing Chinese names, unresolved searches,
   no-GHS rows, multiple-GHS rows, and upstream retry states separate.
+- The real-roster review fixture is now also wired into the batch result
+  workflow summary test. The UI must keep found, unresolved, label-ready,
+  needs-review, and each review-action bucket separate before this monitoring
+  slice can be treated as still healthy.
 - Batch result summaries now include a review action queue and keep upstream
   retry rows out of the unresolved lookup count; use that as the baseline for
   future "what should I do next?" UI instead of adding another competing review

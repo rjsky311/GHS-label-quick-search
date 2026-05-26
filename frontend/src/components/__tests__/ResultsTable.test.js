@@ -8,6 +8,9 @@ import {
   mockWarningResult,
   createMockGetEffective,
 } from '../../__fixtures__/testData';
+import {
+  inventoryDataQualityFixtureResults,
+} from '../../utils/testFixtures/inventoryDataQualityFixtures';
 
 // Mock GHSImage to a simple span
 jest.mock('../GHSImage', () => {
@@ -279,6 +282,57 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-review-action-upstream-error'),
       ).toHaveTextContent('results.reviewActionRetryUpstream');
+
+      fireEvent.click(screen.getByTestId('results-next-action-primary'));
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'upstream-error',
+      });
+    });
+
+    it('keeps real-roster review buckets and next actions separated in the batch summary', () => {
+      const onSetAdvancedFilter = jest.fn();
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={inventoryDataQualityFixtureResults}
+          totalCount={inventoryDataQualityFixtureResults.length}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(
+        screen.getByTestId('results-workflow-summary-found-value')
+      ).toHaveTextContent('3/5');
+      expect(
+        screen.getByTestId('results-workflow-summary-unresolved-value')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-summary-label-ready-value')
+      ).toHaveTextContent('2');
+      expect(
+        screen.getByTestId('results-workflow-summary-needs-review-value')
+      ).toHaveTextContent('5');
+
+      [
+        ['upstream-error', 'results.reviewActionRetryUpstream'],
+        ['unresolved-search', 'results.reviewActionReportLookupGap'],
+        ['no-ghs-data', 'results.reviewActionReportNoGhs'],
+        ['multiple-classifications', 'results.reviewActionConfirmMultipleGhs'],
+        ['missing-chinese-name', 'results.reviewActionReportChineseName'],
+      ].forEach(([issueType, actionKey]) => {
+        expect(
+          screen.getByTestId(`results-workflow-review-reason-${issueType}`)
+        ).toHaveTextContent('1');
+        expect(
+          screen.getByTestId(`results-workflow-review-action-${issueType}`)
+        ).toHaveTextContent(actionKey);
+      });
 
       fireEvent.click(screen.getByTestId('results-next-action-primary'));
 
