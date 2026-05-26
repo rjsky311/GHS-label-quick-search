@@ -75,6 +75,7 @@ const docs = {
 };
 
 const frontendPackage = JSON.parse(fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"));
+const ciWorkflow = readText(".github/workflows/ci.yml");
 const versionSources = {
   "frontend/package.json": frontendPackage.version,
   "frontend/src/constants/version.js": extract(
@@ -115,6 +116,23 @@ for (const [source, version] of Object.entries(versionSources)) {
     failures.push(`${source} version ${version} does not match ${expectedVersion}.`);
   }
 }
+
+if (frontendPackage.scripts?.["qa:bundle-budget"] !== "node scripts/check-bundle-budget.mjs") {
+  failures.push("frontend/package.json must keep qa:bundle-budget wired to check-bundle-budget.mjs.");
+}
+
+requireIncludes(
+  ".github/workflows/ci.yml",
+  ciWorkflow,
+  "Check bundle budget",
+  "CI must name the bundle budget gate explicitly",
+);
+requireIncludes(
+  ".github/workflows/ci.yml",
+  ciWorkflow,
+  "npm run qa:bundle-budget",
+  "CI must run the bundle budget gate after frontend build",
+);
 
 for (const [relativePath, text] of Object.entries(docs)) {
   if (relativePath === "PROJECT_STATUS_AND_NEXT_PLAN.md") continue;
