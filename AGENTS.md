@@ -199,8 +199,10 @@ in those smaller modules.
   has root-level `zbpack.ghs-frontend.json` to pin the monorepo app directory
   (`frontend`), build command, and static output (`build`) for that actual
   service name. `zeabur.yaml` service names should stay aligned with the live
-  `ghs-frontend` / `ghs-backend` services. Keep these in sync with build
-  changes.
+  `ghs-frontend` / `ghs-backend` services. The live frontend service also has
+  non-sensitive `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`,
+  and `VITE_BACKEND_URL` variables as a dashboard-level mirror for the same
+  build settings. Keep these in sync with build changes.
 - Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*` config unless explicitly asked.
 - Current i18n packages remain intentionally conservative: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x.
 

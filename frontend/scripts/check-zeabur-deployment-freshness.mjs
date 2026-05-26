@@ -132,6 +132,30 @@ const runZeaburServiceGet = () => {
   };
 };
 
+const runZeaburVariableList = () => {
+  const args = [
+    "zeabur",
+    "variable",
+    "list",
+    "--id",
+    serviceId,
+    "--env-id",
+    environmentId,
+    "--json",
+    "--interactive=false",
+  ];
+  const result = runCommand("npx", args, {
+    cwd: repoRoot,
+  });
+  return {
+    command: `npx ${args.join(" ")}`,
+    status: result.status,
+    stdout: stripAnsi(result.stdout),
+    stderr: stripAnsi(result.stderr),
+    error: result.error?.message || "",
+  };
+};
+
 const runZeaburDeploymentLog = (deploymentId) => {
   if (!deploymentId) {
     return {
@@ -254,6 +278,9 @@ const expectedRunning = expectedDeployments.find(
 );
 const serviceGet = runZeaburServiceGet();
 const service = serviceGet.status === 0 ? safeJsonParse(serviceGet.stdout, null) : null;
+const variableList = runZeaburVariableList();
+const variablePayload =
+  variableList.status === 0 ? safeJsonParse(variableList.stdout, null) : null;
 const buildLog = runZeaburDeploymentLog(
   expectedDeployment?.ID || expectedDeployment?.id || latestDeployment?.ID || latestDeployment?.id,
 );
@@ -262,6 +289,34 @@ const buildLogEntries =
     ? safeJsonParse(buildLog.stdout, [])
     : [];
 const localConfig = readLocalZeaburConfig();
+
+const allServiceVariables = [
+  ...(Array.isArray(variablePayload?.readonlyVariables)
+    ? variablePayload.readonlyVariables
+    : []),
+  ...(Array.isArray(variablePayload?.variables) ? variablePayload.variables : []),
+];
+const getVariableValue = (key) =>
+  allServiceVariables.find((variable) => variable?.key === key)?.value || "";
+const serviceBuildVariables = {
+  keys: allServiceVariables
+    .map((variable) => variable?.key)
+    .filter(Boolean)
+    .filter((key) => !/(password|secret|token|key|credential)/i.test(key))
+    .sort(),
+  expected: {
+    ZBPACK_APP_DIR: getVariableValue("ZBPACK_APP_DIR"),
+    ZBPACK_BUILD_COMMAND: getVariableValue("ZBPACK_BUILD_COMMAND"),
+    ZBPACK_OUTPUT_DIR: getVariableValue("ZBPACK_OUTPUT_DIR"),
+    VITE_BACKEND_URL: getVariableValue("VITE_BACKEND_URL"),
+  },
+};
+serviceBuildVariables.matchesExpected =
+  serviceBuildVariables.expected.ZBPACK_APP_DIR === "frontend" &&
+  serviceBuildVariables.expected.ZBPACK_BUILD_COMMAND ===
+    "npm ci && npm run build" &&
+  serviceBuildVariables.expected.ZBPACK_OUTPUT_DIR === "build" &&
+  Boolean(serviceBuildVariables.expected.VITE_BACKEND_URL);
 
 const failures = [];
 const guidance = [];
@@ -277,6 +332,12 @@ if (zeabur.status !== 0) {
 
 if (serviceGet.status !== 0) {
   guidance.push("Zeabur service metadata could not be read; verify CLI auth before changing product code.");
+}
+
+if (variableList.status !== 0) {
+  guidance.push(
+    "Zeabur service variables could not be read; verify CLI auth before changing product code.",
+  );
 }
 
 if (parseError) {
@@ -317,9 +378,15 @@ if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
       !service.CustomBuildCommand &&
       !service.OutputDir
     ) {
-      guidance.push(
-        "Zeabur service metadata still shows empty root/build/output fields; confirm the dashboard is consuming zeabur.yaml or zbpack.ghs-frontend.json.",
-      );
+      if (serviceBuildVariables.matchesExpected) {
+        guidance.push(
+          "Zeabur service metadata still shows empty root/build/output fields, but service build variables now provide ZBPACK_APP_DIR, ZBPACK_BUILD_COMMAND, ZBPACK_OUTPUT_DIR, and VITE_BACKEND_URL. If the next deployment still never starts, inspect Zeabur's queue/integration rather than product code.",
+        );
+      } else {
+        guidance.push(
+          "Zeabur service metadata still shows empty root/build/output fields; confirm the dashboard is consuming zeabur.yaml, zbpack.ghs-frontend.json, or the ZBPACK_* service variables.",
+        );
+      }
     }
   } else {
     failures.push(
@@ -366,6 +433,13 @@ const result = {
     stderr: serviceGet.stderr.trim(),
     error: serviceGet.error,
   },
+  zeaburVariableCommand: variableList.command,
+  zeaburVariableCli: {
+    status: variableList.status,
+    stderr: variableList.stderr.trim(),
+    error: variableList.error,
+  },
+  serviceBuildVariables,
   service: service
     ? {
         id: service.ID || service.id || "",
