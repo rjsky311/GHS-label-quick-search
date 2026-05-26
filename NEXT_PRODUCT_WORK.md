@@ -174,13 +174,13 @@ Current monitoring slice opened from real roster evidence:
   candidate-found, missing-name, No-GHS, source-conflict, and needs-evidence
   signals that are already represented inside correction, miss-query, manual,
   or alias queues.
-- Admin correction queues now show shared human-readable data-quality labels
-  while preserving the raw issue key beside them. Keep future user-facing
-  review reasons, export review columns, and admin correction issue labels
-  aligned through the shared data-quality vocabulary instead of inventing a
-  new wording layer for each surface. Manual-entry notes created from
-  correction candidates now use the same label plus the raw key, so downstream
-  review records stay readable and traceable.
+- Admin correction queues, results-table review chips, and manual-entry notes
+  created from correction candidates now use shared human-readable
+  data-quality labels while preserving raw issue keys where reviewer
+  traceability matters. Keep future user-facing review reasons, export review
+  columns, and admin correction issue labels aligned through the shared
+  data-quality vocabulary instead of inventing a new wording layer for each
+  surface.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,
