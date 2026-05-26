@@ -1813,7 +1813,7 @@ async def test_export_xlsx_includes_data_trust_columns():
     assert ws.cell(row=2, column=8).value == "Not found"
     assert ws.cell(row=2, column=9).value == "No"
     assert ws.cell(row=2, column=10).value == "Yes"
-    assert ws.cell(row=2, column=11).value == "Unresolved search"
+    assert ws.cell(row=2, column=11).value == "Unresolved lookup"
     assert ws.cell(row=2, column=20).value == "Default primary classification"
 
 
@@ -1953,7 +1953,7 @@ async def test_export_xlsx_includes_lab_manager_triage_sheets():
     assert wb["Ready Rows"].cell(row=2, column=1).value == "64-17-5"
     assert wb["Needs Review"].max_row == 3
     assert wb["Needs Review"].cell(row=2, column=1).value == "777-77-7"
-    assert wb["Needs Review"].cell(row=2, column=11).value == "Upstream transient failure"
+    assert wb["Needs Review"].cell(row=2, column=11).value == "Upstream retry needed"
     assert wb["Needs Review"].cell(row=3, column=1).value == "107-18-6"
     assert wb["Unresolved"].max_row == 2
     assert wb["Unresolved"].cell(row=2, column=1).value == "999-99-9"

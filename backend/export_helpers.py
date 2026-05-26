@@ -44,6 +44,16 @@ EXPORT_TRIAGE_SHEET_NAMES = {
     "unresolved": "Unresolved",
 }
 
+EXPORT_REVIEW_REASON_LABELS = {
+    "upstream_error": "Upstream retry needed",
+    "unresolved_search": "Unresolved lookup",
+    "no_ghs_data": "No GHS data",
+    "ghs_text_no_pictograms": "GHS pictogram gap",
+    "source_conflict": "Source conflict",
+    "multiple_classifications": "Multiple GHS classifications",
+    "missing_chinese_name": "Missing trusted Chinese name",
+}
+
 
 _FORMULA_TRIGGER_CHARS = ("=", "+", "-", "@", "\t", "\r")
 _CJK_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]")
@@ -112,23 +122,23 @@ def _has_manual_classification_selection(result: Dict[str, Any]) -> bool:
 def _export_review_reasons(result: Dict[str, Any]) -> List[str]:
     reasons: List[str] = []
     if result.get("upstream_error"):
-        reasons.append("Upstream transient failure")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["upstream_error"])
     if result.get("found") is False:
         if not result.get("upstream_error"):
-            reasons.append("Unresolved search")
+            reasons.append(EXPORT_REVIEW_REASON_LABELS["unresolved_search"])
         return reasons
 
     if not _has_export_ghs_data(result):
-        reasons.append("No GHS data")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["no_ghs_data"])
     elif not (result.get("ghs_pictograms") or result.get("pictograms")):
-        reasons.append("GHS text without pictogram")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["ghs_text_no_pictograms"])
 
     if result.get("source_conflict") or result.get("source_conflicts"):
-        reasons.append("Source conflict")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["source_conflict"])
     if _has_multiple_classifications(result) and not _has_manual_classification_selection(result):
-        reasons.append("Multiple GHS classifications need primary confirmation")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["multiple_classifications"])
     if result.get("name_en") and not _trusted_export_chinese_name(result):
-        reasons.append("Missing trusted Chinese name")
+        reasons.append(EXPORT_REVIEW_REASON_LABELS["missing_chinese_name"])
     return reasons
 
 
@@ -404,37 +414,37 @@ def _build_export_pilot_summary(
         ),
         (
             "Unresolved searches",
-            review_reason_counts["Unresolved search"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["unresolved_search"]],
             "Queries that need dictionary curation or corrected input.",
         ),
         (
             "Missing trusted Chinese names",
-            review_reason_counts["Missing trusted Chinese name"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["missing_chinese_name"]],
             "Rows where Chinese name display is intentionally blank until reviewed.",
         ),
         (
             "Multiple GHS classifications",
-            review_reason_counts["Multiple GHS classifications need primary confirmation"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["multiple_classifications"]],
             "Rows where the user or maintainer should confirm the primary classification.",
         ),
         (
             "Source conflicts",
-            review_reason_counts["Source conflict"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["source_conflict"]],
             "Rows where PubChem/ECHA/manual evidence should remain visible.",
         ),
         (
             "No GHS data",
-            review_reason_counts["No GHS data"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["no_ghs_data"]],
             "Found records without GHS hazard data in the current result.",
         ),
         (
             "Text-only GHS without pictograms",
-            review_reason_counts["GHS text without pictogram"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["ghs_text_no_pictograms"]],
             "Rows with hazard text but no renderable pictogram in the result.",
         ),
         (
             "Upstream transient failures",
-            review_reason_counts["Upstream transient failure"],
+            review_reason_counts[EXPORT_REVIEW_REASON_LABELS["upstream_error"]],
             "Rows that should be retried before drawing a safety conclusion.",
         ),
     ]
