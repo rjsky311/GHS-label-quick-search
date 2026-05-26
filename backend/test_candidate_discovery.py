@@ -239,6 +239,10 @@ def test_discovers_candidates_from_correction_requests_without_writes(tmp_path):
         assert report["publicDataChanged"] is False
         assert report["summary"]["checked"] == 1
         assert report["summary"]["candidateCount"] == 1
+        assert report["summary"]["itemsWithCandidates"] == 1
+        assert report["summary"]["itemsWithoutCandidates"] == 0
+        assert report["summary"]["statusCounts"] == {"candidate_found": 1}
+        assert report["summary"]["evidenceTypeCounts"] == {"Local seed dictionary": 1}
         assert report["items"][0]["requestId"] == request["id"]
         assert report["items"][0]["suggestedAdminUpdate"]["candidate"]["name_zh"] == "\u82ef\u80fa"
         assert report["skipped"] == [{"id": ignored["id"], "reason": "unsupported_issue_type"}]

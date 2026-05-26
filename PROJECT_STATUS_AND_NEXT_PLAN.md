@@ -350,6 +350,11 @@ Current completion snapshot:
   candidate, manual-entry, and telemetry counters remain available, but the
   operator first sees the next data-quality action instead of deriving it from
   multiple cards.
+- **Candidate discovery dry-run summary checkpoint 2026-05-27**: maintainer
+  dry-run discovery reports now summarize candidate-found rows, no-candidate
+  rows, skipped rows, and evidence-type counts before the item payloads. This
+  improves admin/data-governance triage without changing the review-only
+  boundary for generated or external suggestions.
 - **Inventory-derived batch hardening checkpoint 2026-05-26**: a real roster
   sample reopened a narrow monitoring slice without changing the product's
   100-item batch model. The app now rehyphenates pure numeric CAS values copied

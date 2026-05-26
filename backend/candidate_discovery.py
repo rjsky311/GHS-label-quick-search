@@ -360,6 +360,19 @@ def build_discovery_report(
     sources: Iterable[str] = DEFAULT_SOURCE_ORDER,
 ) -> dict[str, Any]:
     candidate_count = sum(int(item.get("candidateCount") or 0) for item in items)
+    status_counts: dict[str, int] = {}
+    evidence_type_counts: dict[str, int] = {}
+    for item in items:
+        status = clean_text(str(item.get("status") or "unknown"), max_length=80)
+        status_counts[status] = status_counts.get(status, 0) + 1
+        for candidate in item.get("candidates") or []:
+            evidence_type = clean_text(
+                str(candidate.get("evidence_type") or "unknown"),
+                max_length=160,
+            )
+            evidence_type_counts[evidence_type] = (
+                evidence_type_counts.get(evidence_type, 0) + 1
+            )
     return {
         "ok": True,
         "dryRun": True,
@@ -371,6 +384,11 @@ def build_discovery_report(
             "checked": len(items),
             "candidateCount": candidate_count,
             "itemsWithCandidates": sum(1 for item in items if item.get("candidateCount")),
+            "itemsWithoutCandidates": sum(
+                1 for item in items if not item.get("candidateCount")
+            ),
+            "statusCounts": status_counts,
+            "evidenceTypeCounts": evidence_type_counts,
             "skipped": len(skipped or []),
         },
         "items": items,

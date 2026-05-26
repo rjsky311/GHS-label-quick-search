@@ -34,6 +34,10 @@ Current implementation:
 - The CLI output includes a suggested admin status-update payload, but the
   command itself does not attach it to correction requests and does not create
   manual entries.
+- The dry-run report summary includes checked items, candidate count,
+  items-with/without-candidates counts, per-status counts, evidence-type
+  counts, and skipped count so maintainers can judge the queue before reading
+  every item.
 
 ## Non-Goals
 
@@ -89,6 +93,29 @@ normalized, and public approval flags are forced back to review-only values.
 Manual-review conversion metadata such as `converted_to_manual_entry`,
 `manual_entry_status`, `manual_entry_source`, and correction `request_id` is
 admin-only.
+
+The surrounding report must stay review-oriented:
+
+```json
+{
+  "dryRun": true,
+  "publicDataChanged": false,
+  "summary": {
+    "checked": 2,
+    "candidateCount": 1,
+    "itemsWithCandidates": 1,
+    "itemsWithoutCandidates": 1,
+    "statusCounts": {
+      "candidate_found": 1,
+      "no_candidate": 1
+    },
+    "evidenceTypeCounts": {
+      "Local seed dictionary": 1
+    },
+    "skipped": 0
+  }
+}
+```
 
 ## Workflow
 

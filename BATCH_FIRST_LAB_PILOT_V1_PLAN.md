@@ -273,6 +273,10 @@ Current checkpoint:
   into a primary admin action above the metric grid. The detailed counters and
   focus rows remain available, but the first maintainer read is now "what do I
   do next?" rather than "which of these counters matters most?".
+- Candidate discovery dry-run reports now include status and evidence-type
+  summary counts, including rows without candidates. This keeps maintainer-side
+  data cleanup measurable without letting generated or external candidates
+  change public lookup, labels, QR, or exports automatically.
 
 ### 5. Maintainability Slice
 

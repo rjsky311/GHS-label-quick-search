@@ -146,6 +146,11 @@ Current monitoring slice opened from real roster evidence:
   action without scanning every correction, unresolved-search, candidate, and
   telemetry counter first. Keep future admin work oriented around this
   operator-first pattern.
+- Candidate discovery dry-run reports now summarize no-candidate rows,
+  candidate-found rows, and evidence-type counts before the item list. Use
+  those summary counts when deciding whether a queue needs manual review,
+  source expansion, or no action; do not wire external discovery into runtime
+  lookup without a separate source/cost decision.
 
 ### Exit Condition
 
