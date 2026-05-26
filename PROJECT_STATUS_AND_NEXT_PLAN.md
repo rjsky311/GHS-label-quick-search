@@ -288,6 +288,13 @@ Current completion snapshot:
   `PilotDashboardSidebar` 56.31 kB, and `exportData` 1.24 kB as separate
   chunks. Keep future code-splitting work evidence-based rather than splitting
   stable first-screen code by default.
+- **Bundle-budget gate checkpoint 2026-05-27**:
+  `npm run qa:bundle-budget` now records `build/bundle-budget-report.json`
+  after `npm run build` and fails only on meaningful chunk-boundary regressions:
+  the initial app chunk, lazy print modal, lazy print engine, and lazy pilot
+  dashboard must stay within explicit raw/gzip budgets and remain separate
+  chunks. Use this as the code-splitting guardrail instead of reopening
+  maintainability work solely because the bundle "feels large".
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the continuation order and done criteria.
@@ -1048,6 +1055,7 @@ Docs-only closure:
   status labels, or planning links changed
 - `rg "PROJECT_STATUS_AND_NEXT_PLAN" .`
 - `rg "PRODUCT_SCOPE_GATE" .`
+- `cd frontend && npm run build && npm run qa:bundle-budget`
 - Confirm the changed docs do not contradict the canonical planning role of
   this file.
 

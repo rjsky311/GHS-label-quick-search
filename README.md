@@ -118,6 +118,7 @@ npm test -- --runInBand
 npm run test:i18n
 npm run test:docs
 npm run build
+npm run qa:bundle-budget
 npm run test:print-contract
 ```
 

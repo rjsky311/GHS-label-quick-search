@@ -198,7 +198,11 @@ Current mode:
   pass: `npm run build` should stay free of the 500 kB chunk warning, with the
   heavy print/admin/detail/export surfaces outside the initial app chunk. Do
   not continue splitting solely for line-count or bundle aesthetics unless a
-  measured regression appears.
+  measured regression appears. Use `npm run qa:bundle-budget` after
+  `npm run build` as the local guardrail: it records
+  `build/bundle-budget-report.json` and fails if the initial app chunk or the
+  critical lazy print/admin chunks cross their explicit raw/gzip budgets or get
+  accidentally merged back into the app shell.
 - Product priority should now be selected from monitoring evidence after
   `Batch-First Lab Pilot v1`: batch lookup, batch review clarity, batch print,
   batch export, correction/admin triage, and maintainability are shipped

@@ -526,7 +526,11 @@ df396b4 feat: add English/Chinese name search + update ECHA SDS URL
   surfacing (including partial-transient), CORS config, rate limiter config
 - **Build**: `npm run build` OK; Vite vendor chunks plus lazy-loaded print,
   admin, detail, export, prepared, and sidebar surfaces keep the main `index`
-  chunk under the 500 kB warning threshold.
+  chunk under the 500 kB warning threshold. Run `npm run qa:bundle-budget`
+  after build when touching app-shell imports, lazy routes, print/admin
+  surfaces, or Vite chunking; it writes `build/bundle-budget-report.json` and
+  fails on meaningful chunk-boundary regressions instead of encouraging
+  open-ended code splitting.
 - **CI**: GitHub Actions runs both on every push to main and on PRs; workflow
   actions use v6 / Node 24-compatible runtimes
 
