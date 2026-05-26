@@ -114,6 +114,12 @@ Use this loop before choosing a new slice, especially after the user says
 1. Check blockers first: failing CI, production 502/health failure, security or
    data-loss risk, safety-critical print regression, or user-provided
    screenshot/PDF evidence. Blockers override the default priority order.
+   If GitHub Actions fails inside `actions/checkout` with an account,
+   repository, or 403 access message, classify it as repository/CI access
+   until proven otherwise; do not keep changing product code to chase that
+   failure. If Zeabur creates a deployment but it never reaches a real
+   `startedAt` time or has no build logs, classify it as a deploy-platform or
+   GitHub-integration blocker before running heavier production QA.
 2. Review the last 10-20 commits when the recent direction is unclear or the
    last several slices have been in the same category. Classify the work as
    user-visible UX, print/rendering, data governance/admin, QA/CI, docs, or

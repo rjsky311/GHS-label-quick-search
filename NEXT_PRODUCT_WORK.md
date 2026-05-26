@@ -357,6 +357,12 @@ Current mode:
   created for the latest commit. `AUTONOMOUS_WORKFLOW.md` and
   `PROJECT_STATUS_AND_NEXT_PLAN.md` now document the Zeabur CLI deployment
   check and safe frontend `service redeploy` fallback before production QA.
+- Completed current slice: production verification now explicitly separates
+  code failures from external platform/access failures. If GitHub Actions fails
+  at checkout with 403/account access, or Zeabur creates a deployment that
+  never reaches build start and emits no build log, the next action is account
+  or platform recovery plus a fresh CI/deploy rerun, not more product-code
+  churn.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each

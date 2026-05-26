@@ -155,6 +155,13 @@ Current validation gates:
   use `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
   696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
   the deployment to reach `RUNNING` before heavier production QA.
+  If the new deployment stays before build start (`startedAt` unset) or has no
+  build log, do not treat that as a frontend build failure; classify it as a
+  Zeabur/GitHub integration or platform-scheduling blocker and keep production
+  verification blocked until `/build-info.json` proves the expected git SHA.
+  If GitHub Actions fails during `actions/checkout` with a 403/account access
+  message, treat CI as externally blocked and rerun only after repository or
+  account access is restored.
 - Production search UI: `npm run qa:production-search-ui` (desktop
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust/review columns, row-level multiple-GHS confirmation
