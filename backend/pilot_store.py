@@ -1456,6 +1456,9 @@ class PilotStore:
             for status in CORRECTION_REQUEST_REVIEW_STATUSES
         )
 
+        stale_miss_query_count = int(miss_retention.get("purgeableCount", 0))
+        inactive_reference_link_count = reference_link_status_counts.get("inactive", 0)
+
         attention_counts = {
             "openCorrectionRequests": open_correction_count,
             "candidateFoundAwaitingManualReview": unconverted_candidate_count,
@@ -1472,8 +1475,16 @@ class PilotStore:
                 "source-conflict",
                 0,
             ),
-            "staleMissQueryRows": int(miss_retention.get("purgeableCount", 0)),
-            "inactiveReferenceLinks": reference_link_status_counts.get("inactive", 0),
+            "staleMissQueryRows": stale_miss_query_count,
+            "inactiveReferenceLinks": inactive_reference_link_count,
+        }
+        primary_queue_item_counts = {
+            "openCorrectionRequests": open_correction_count,
+            "unresolvedSearches": unresolved_search_count,
+            "manualEntriesInReview": pending_manual_count,
+            "aliasesInReview": pending_alias_count,
+            "staleMissQueryRows": stale_miss_query_count,
+            "inactiveReferenceLinks": inactive_reference_link_count,
         }
 
         recommended_focus_target_labels = {
@@ -1587,10 +1598,13 @@ class PilotStore:
                 }
             )
 
-        open_work_item_count = sum(attention_counts.values())
+        open_work_item_count = sum(primary_queue_item_counts.values())
+        attention_signal_count = sum(attention_counts.values())
         return {
             "openWorkItemCount": int(open_work_item_count),
+            "attentionSignalCount": int(attention_signal_count),
             "attentionCounts": attention_counts,
+            "primaryQueueItemCounts": primary_queue_item_counts,
             "correctionIssueTypeCounts": correction_issue_type_counts,
             "recommendedFocus": recommended_focus,
             "signals": {

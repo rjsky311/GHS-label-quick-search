@@ -132,7 +132,7 @@ export default function PilotTriagePanel({
       <div className="grid gap-2 md:grid-cols-4">
         <SummaryCard
           label={t("pilot.openWorkItems", {
-            defaultValue: "Open work items",
+            defaultValue: "Queue items",
           })}
           value={pilotTriage.openWorkItemCount || 0}
           accent="text-emerald-800"

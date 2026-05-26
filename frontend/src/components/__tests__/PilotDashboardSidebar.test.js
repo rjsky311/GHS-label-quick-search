@@ -77,7 +77,8 @@ const baseProps = {
         retainedNeedsEvidenceCount: 1,
       },
       pilotTriage: {
-        openWorkItemCount: 14,
+        openWorkItemCount: 12,
+        attentionSignalCount: 25,
         attentionCounts: {
           openCorrectionRequests: 2,
           unresolvedSearches: 3,
@@ -293,7 +294,7 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("correction-request-status-count-rejected")).toHaveTextContent("0");
     expect(screen.getByTestId("correction-request-status-count-ignored")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
-    expect(screen.getByTestId("pilot-triage-open-work-items")).toHaveTextContent("14");
+    expect(screen.getByTestId("pilot-triage-open-work-items")).toHaveTextContent("12");
     expect(screen.getByTestId("pilot-triage-open-corrections")).toHaveTextContent("2");
     expect(screen.getByTestId("pilot-triage-unresolved-searches")).toHaveTextContent("3");
     expect(screen.getByTestId("pilot-triage-candidate-found")).toHaveTextContent("1");

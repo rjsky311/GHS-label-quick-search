@@ -966,7 +966,7 @@
   "pilot.triagePrimaryActionLabel": "Primary admin action",
   "pilot.triageNoPrimaryAction": "No queued pilot curation work requires immediate action.",
   "pilot.triageNoPrimaryActionNext": "Keep monitoring new correction requests, unresolved searches, and stale telemetry.",
-  "pilot.openWorkItems": "Open work items",
+  "pilot.openWorkItems": "Queue items",
   "pilot.triageOpenCorrections": "Open corrections",
   "pilot.triageUnresolvedSearches": "Unresolved searches",
   "pilot.triageCandidateFound": "Candidates to convert",

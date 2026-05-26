@@ -958,7 +958,7 @@
   "pilot.triagePrimaryActionLabel": "主要管理動作",
   "pilot.triageNoPrimaryAction": "目前沒有需要立即處理的 pilot curation 工作。",
   "pilot.triageNoPrimaryActionNext": "持續觀察新的修正請求、未解析查詢與過期 telemetry。",
-  "pilot.openWorkItems": "待處理項目",
+  "pilot.openWorkItems": "待處理佇列",
   "pilot.triageOpenCorrections": "待處理修正",
   "pilot.triageUnresolvedSearches": "未解查詢",
   "pilot.triageCandidateFound": "待轉候選",

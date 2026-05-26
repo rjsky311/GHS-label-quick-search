@@ -169,6 +169,11 @@ Current monitoring slice opened from real roster evidence:
   data-quality split: missing Chinese names, No-GHS reports, source conflicts,
   unresolved searches, and candidate-found evidence must stay as distinct
   next-action queues instead of collapsing into one generic correction state.
+- Admin triage totals now separate primary queue items from overlapping
+  attention signals. The first triage metric should not double-count
+  candidate-found, missing-name, No-GHS, source-conflict, and needs-evidence
+  signals that are already represented inside correction, miss-query, manual,
+  or alias queues.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

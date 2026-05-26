@@ -193,6 +193,8 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert summary["correctionRequestCount"] == 1
         assert summary["openCorrectionRequestCount"] == 1
         assert summary["correctionRequestStatusCounts"]["open"] == 1
+        assert summary["pilotTriage"]["openWorkItemCount"] == 1
+        assert summary["pilotTriage"]["attentionSignalCount"] == 2
         assert summary["pilotTriage"]["attentionCounts"]["openCorrectionRequests"] == 1
         assert summary["pilotTriage"]["attentionCounts"]["missingChineseNameReports"] == 1
         assert summary["pilotTriage"]["recommendedFocus"][0]["key"] == "correction_intake"
@@ -295,6 +297,16 @@ def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
         triage = summary["pilotTriage"]
         counts = triage["attentionCounts"]
 
+        assert triage["openWorkItemCount"] == 6
+        assert triage["attentionSignalCount"] == 11
+        assert triage["primaryQueueItemCounts"] == {
+            "openCorrectionRequests": 4,
+            "unresolvedSearches": 2,
+            "manualEntriesInReview": 0,
+            "aliasesInReview": 0,
+            "staleMissQueryRows": 0,
+            "inactiveReferenceLinks": 0,
+        }
         assert counts["openCorrectionRequests"] == 4
         assert counts["candidateFoundAwaitingManualReview"] == 1
         assert counts["missingChineseNameReports"] == 2
