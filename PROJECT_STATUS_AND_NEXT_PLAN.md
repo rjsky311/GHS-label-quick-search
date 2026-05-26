@@ -460,6 +460,9 @@ Current completion snapshot:
   source-conflict review, and missing trusted Chinese names. User-facing
   correction links prefill CAS/name context and issue type, while upstream
   transient failures remain retry states rather than correction requests.
+  Export preview review-reason columns now reuse the same shared data-quality
+  labels, keeping batch review, admin correction queues, and export handoff
+  wording aligned.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
 - **Unresolved lookup intake checkpoint 2026-05-22**: not-found search rows

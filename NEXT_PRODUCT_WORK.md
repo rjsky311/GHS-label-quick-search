@@ -185,6 +185,11 @@ Current monitoring slice opened from real roster evidence:
   columns, and admin correction issue labels aligned through the shared
   data-quality vocabulary instead of inventing a new wording layer for each
   surface.
+- Export preview review reasons now also use the shared data-quality
+  vocabulary instead of the older `export.reviewReason*` wording layer. This
+  keeps batch summary chips, admin correction queues, and export preview review
+  columns aligned when a lab manager moves from on-screen triage to a
+  downloaded handoff.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

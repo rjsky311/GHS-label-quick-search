@@ -9,6 +9,7 @@ import { hasGhsData } from "@/utils/ghsAvailability";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import {
   DATA_QUALITY_ISSUE_TYPES,
+  getDataQualityIssueDisplayLabel,
   getDataQualityIssues,
 } from "@/utils/dataQuality";
 
@@ -25,22 +26,7 @@ function hasDirectPictogramVisual(result) {
 }
 
 function getExportReviewReasonLabel(type, t) {
-  const labels = {
-    [DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]: t("export.reviewReasonUpstream"),
-    [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]: t("export.reviewReasonUnresolved"),
-    [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: t("export.reviewReasonNoGhs"),
-    [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: t(
-      "export.reviewReasonTextOnlyGhs"
-    ),
-    [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: t("export.reviewReasonSourceConflict"),
-    [DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS]: t(
-      "export.reviewReasonMultipleClassifications"
-    ),
-    [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: t(
-      "export.reviewReasonMissingChineseName"
-    ),
-  };
-  return labels[type] || t("export.reviewReasonNeedsReview");
+  return getDataQualityIssueDisplayLabel(type, t);
 }
 
 function hasMultipleClassifications(result) {

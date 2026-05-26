@@ -211,10 +211,10 @@ describe('buildExportPreview', () => {
 
     expect(preview.rows[0].cells[9]).toBe('export.yes');
     expect(preview.rows[0].cells[10]).toContain(
-      'export.reviewReasonMultipleClassifications',
+      'dataQuality.issue.multipleClassifications',
     );
     expect(preview.rows[0].cells[10]).toContain(
-      'export.reviewReasonMissingChineseName',
+      'dataQuality.issue.missingChineseName',
     );
     expect(preview.rows[0].cells[17]).toBe('export.yes');
     expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
@@ -239,14 +239,14 @@ describe('buildExportPreview', () => {
       unresolved: 0,
       upstreamError: 1,
     });
-    expect(reviewReasonText).toContain('export.reviewReasonUpstream');
-    expect(reviewReasonText).toContain('export.reviewReasonNoGhs');
-    expect(reviewReasonText).toContain('export.reviewReasonTextOnlyGhs');
-    expect(reviewReasonText).toContain('export.reviewReasonSourceConflict');
+    expect(reviewReasonText).toContain('dataQuality.issue.upstreamError');
+    expect(reviewReasonText).toContain('dataQuality.issue.noGhsData');
+    expect(reviewReasonText).toContain('dataQuality.issue.ghsTextNoPictograms');
+    expect(reviewReasonText).toContain('dataQuality.issue.sourceConflict');
     expect(reviewReasonText).toContain(
-      'export.reviewReasonMultipleClassifications',
+      'dataQuality.issue.multipleClassifications',
     );
-    expect(reviewReasonText).toContain('export.reviewReasonMissingChineseName');
+    expect(reviewReasonText).toContain('dataQuality.issue.missingChineseName');
   });
 });
 
