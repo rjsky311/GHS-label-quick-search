@@ -50,7 +50,6 @@ export default function ExportPreviewModal({
         ? results.length
         : 0;
   const visibleCount = Array.isArray(results) ? results.length : 0;
-  const foundCount = scopedResults.filter((result) => result.found).length;
 
   useEffect(() => {
     setFormat(initialFormat);
@@ -66,6 +65,12 @@ export default function ExportPreviewModal({
     () => buildExportPreview(scopedResults, { t, maxRows: 5 }),
     [scopedResults, t]
   );
+  const exportSummary = preview.summary || {
+    found: 0,
+    ready: 0,
+    needsReview: 0,
+    unresolved: 0,
+  };
 
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -127,7 +132,7 @@ export default function ExportPreviewModal({
         </div>
 
         <div className="space-y-5 p-6">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
               <div className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
                 {t("exportPreview.scopeLabel")}
@@ -144,10 +149,39 @@ export default function ExportPreviewModal({
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
               <div className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-                {t("exportPreview.foundLabel")}
+                {t("exportPreview.readyLabel")}
               </div>
-              <div className="mt-1 text-sm font-semibold text-slate-950">
-                {t("exportPreview.foundCount", { count: foundCount })}
+              <div
+                className="mt-1 text-sm font-semibold text-emerald-800"
+                data-testid="export-preview-summary-ready"
+              >
+                {t("exportPreview.readyCount", { count: exportSummary.ready })}
+              </div>
+            </div>
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+              <div className="text-xs font-medium uppercase tracking-[0.14em] text-amber-700">
+                {t("exportPreview.reviewLabel")}
+              </div>
+              <div
+                className="mt-1 text-sm font-semibold text-amber-950"
+                data-testid="export-preview-summary-review"
+              >
+                {t("exportPreview.reviewCount", {
+                  count: exportSummary.needsReview,
+                })}
+              </div>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-white p-3">
+              <div className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                {t("exportPreview.unresolvedLabel")}
+              </div>
+              <div
+                className="mt-1 text-sm font-semibold text-slate-950"
+                data-testid="export-preview-summary-unresolved"
+              >
+                {t("exportPreview.unresolvedCount", {
+                  count: exportSummary.unresolved,
+                })}
               </div>
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">

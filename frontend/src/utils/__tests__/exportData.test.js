@@ -30,7 +30,7 @@ import {
   normalizeResultsForExport,
   resolveExportDataState,
 } from '../exportData';
-import { getExportScopeOptions } from '../exportRows';
+import { getExportScopeOptions, summarizeExportResults } from '../exportRows';
 
 const mockResult = {
   cas_number: '64-17-5',
@@ -135,6 +135,14 @@ describe('buildExportPreview', () => {
     expect(preview.totalRows).toBe(1);
     expect(preview.previewRows).toBe(1);
     expect(preview.hiddenRows).toBe(0);
+    expect(preview.summary).toEqual({
+      total: 1,
+      found: 1,
+      ready: 1,
+      needsReview: 0,
+      unresolved: 0,
+      upstreamError: 0,
+    });
     expect(preview.rows[0].id).toBe('64-17-5-0');
     expect(preview.rows[0].cells[0]).toBe('64-17-5');
     expect(preview.rows[0].cells[1]).toBe('Ethanol');
@@ -207,6 +215,44 @@ describe('buildExportPreview', () => {
     );
     expect(preview.rows[0].cells[17]).toBe('export.yes');
     expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
+  });
+});
+
+describe('summarizeExportResults', () => {
+  it('counts ready, review, unresolved, and upstream rows for batch export decisions', () => {
+    const ready = {
+      ...mockResult,
+      cas_number: '64-17-5',
+      name_zh: '銋?',
+    };
+    const review = {
+      ...mockResult,
+      cas_number: '67-64-1',
+      name_en: 'Acetone',
+      name_zh: '',
+      has_multiple_classifications: true,
+      other_classifications: [{ signal_word: 'Warning', pictograms: [] }],
+    };
+    const unresolved = {
+      cas_number: '999-99-9',
+      found: false,
+      error: 'Not found',
+    };
+    const upstream = {
+      cas_number: '777-77-7',
+      found: false,
+      upstream_error: true,
+      error: 'PubChem temporarily unavailable',
+    };
+
+    expect(summarizeExportResults([ready, review, unresolved, upstream])).toEqual({
+      total: 4,
+      found: 2,
+      ready: 1,
+      needsReview: 2,
+      unresolved: 1,
+      upstreamError: 1,
+    });
   });
 });
 

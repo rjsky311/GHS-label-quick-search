@@ -69,7 +69,7 @@ Post-closure monitoring work:
 | Multiple-GHS rows show system-suggested vs user-confirmed state and route to the chooser. | Passed | Result rows and export rows preserve multiple-GHS status; multiple-GHS chips open the existing classification chooser; production search UI QA checks the deployed action. |
 | Missing names, unresolved searches, no-GHS states, and source conflicts route into correction/admin review. | Passed | Data-quality issue links, in-app correction requests, admin correction queue, and pilot triage attention counts cover these paths; candidate evidence remains review-only. |
 | Candidate discovery stays review-only and ready for a future sandbox decision. | Passed | `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`, `backend/candidate_discovery.py`, and `backend/scripts/discover_candidates.py` keep discovery maintainer-side and dry-run-only. Default sources are approved manual entries plus the local seed dictionary; optional Wikidata is explicit by CAS. PubChem synonyms, NCI, LLM, and scientific skills remain planned and cannot affect public lookup, labels, exports, or QR. |
-| Exports preserve trust/review context and remain readable for lab-manager triage. | Passed | CSV/XLSX share trust headers, XLSX includes `GHS Results`, `Ready Rows`, `Needs Review`, `Unresolved`, and `Pilot Summary`; the audit patch adds original total-row and visible-row context to the summary. |
+| Exports preserve trust/review context and remain readable for lab-manager triage. | Passed | CSV/XLSX share trust headers, XLSX includes `GHS Results`, `Ready Rows`, `Needs Review`, `Unresolved`, and `Pilot Summary`; the audit patch adds original total-row and visible-row context to the summary, and export preview shows ready/review/unresolved counts for the selected scope before download. |
 | Three-output label model remains intact. | Passed | The public print model remains Complete A4/Letter, QR small label, and Identification small label; small labels remain identity/GHS/QR only and complete labels carry full H/P content. |
 | At least one low-risk maintainability extraction or bounded refactor is complete. | Passed | Multiple bounded extraction slices are recorded in this file, including print lifecycle, print styles, preview panels, admin triage sections, backend API schemas, and backend pilot/admin routes. |
 | Current docs point to this file as the shipped/monitoring Batch-First owner doc. | Passed | `PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md` name this file as the Batch-First owner doc; after closure, they route future work to post-closure monitoring slices. |
@@ -227,7 +227,10 @@ Current checkpoint:
   existing `Pilot Summary`.
 - Frontend export preview now explains the XLSX workbook layout so a lab
   manager knows the downloaded file is already triaged.
-- Tests cover the triage workbook sheets and the XLSX-only preview note.
+- Frontend export preview also summarizes the selected scope with ready,
+  needs-review, and unresolved counts before CSV/XLSX generation.
+- Tests cover the triage workbook sheets, the XLSX-only preview note, and the
+  selected-scope summary counts.
 
 ### 4. Data Correction And Admin Triage
 

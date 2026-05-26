@@ -110,6 +110,29 @@ export function getExportScopeOptions({ allResults = [], visibleResults = [] } =
   ];
 }
 
+export function summarizeExportResults(results = []) {
+  const rows = Array.isArray(results) ? results : [];
+  return rows.reduce(
+    (summary, result) => ({
+      total: summary.total + 1,
+      found: summary.found + (result?.found ? 1 : 0),
+      ready: summary.ready + (isExportReadyRow(result) ? 1 : 0),
+      needsReview:
+        summary.needsReview + (isExportNeedsReviewRow(result) ? 1 : 0),
+      unresolved: summary.unresolved + (isExportUnresolvedRow(result) ? 1 : 0),
+      upstreamError: summary.upstreamError + (result?.upstream_error ? 1 : 0),
+    }),
+    {
+      total: 0,
+      found: 0,
+      ready: 0,
+      needsReview: 0,
+      unresolved: 0,
+      upstreamError: 0,
+    },
+  );
+}
+
 export function resolveExportDataState(result, t) {
   if (result?.upstream_error) return t("export.dataStateUpstreamError");
   if (result?.found === false) return t("export.dataStateNotFound");
@@ -238,5 +261,6 @@ export function buildExportPreview(results, options = {}) {
     totalRows: dataRows.length,
     previewRows: Math.min(maxRows, dataRows.length),
     hiddenRows: Math.max(0, dataRows.length - maxRows),
+    summary: summarizeExportResults(normalizedResults),
   };
 }

@@ -129,6 +129,10 @@ Current monitoring slice opened from real roster evidence:
 - Export preview ready scope is aligned with the backend XLSX `Ready Rows`
   sheet: ready means GHS data with no review reason, while needs-review and
   unresolved rows remain separate scopes.
+- Export preview now shows the selected scope's ready, needs-review, and
+  unresolved counts before download, so lab managers can decide whether they
+  are exporting a working handoff or a cleanup queue without opening the file
+  first.
 - Upstream/source outages stay in needs-review retry scope instead of
   unresolved identity scope, matching the data-quality rule that transient
   PubChem failures should not become correction requests.

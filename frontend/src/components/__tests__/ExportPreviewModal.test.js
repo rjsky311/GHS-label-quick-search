@@ -37,6 +37,15 @@ describe('ExportPreviewModal', () => {
     expect(screen.getByTestId('export-preview-scope-ready')).toBeInTheDocument();
     expect(screen.getByTestId('export-preview-scope-needs-review')).toBeInTheDocument();
     expect(screen.getByTestId('export-preview-scope-unresolved')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-summary-ready')).toHaveTextContent(
+      'exportPreview.readyCount',
+    );
+    expect(screen.getByTestId('export-preview-summary-review')).toHaveTextContent(
+      'exportPreview.reviewCount',
+    );
+    expect(screen.getByTestId('export-preview-summary-unresolved')).toHaveTextContent(
+      'exportPreview.unresolvedCount',
+    );
     expect(screen.getByText('64-17-5')).toBeInTheDocument();
     expect(screen.getByText('999-99-9')).toBeInTheDocument();
     expect(screen.getByText('export.dataState')).toBeInTheDocument();
@@ -116,6 +125,9 @@ describe('ExportPreviewModal', () => {
     );
 
     fireEvent.click(screen.getByTestId('export-preview-scope-unresolved'));
+    expect(screen.getByTestId('export-preview-summary-unresolved')).toHaveTextContent(
+      'exportPreview.unresolvedCount',
+    );
     fireEvent.click(screen.getByTestId('export-preview-confirm'));
 
     await waitFor(() => {
