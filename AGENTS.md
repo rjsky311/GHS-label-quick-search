@@ -195,6 +195,10 @@ in those smaller modules.
 
 - Older Zeabur setup used its own frontend Dockerfile and missed repo-local npm config.
 - Current frontend deploy is Vite/npm based. `frontend/Dockerfile` uses Node 22; `zeabur.yaml` runs `npm ci && npm run build` and passes `VITE_BACKEND_URL`.
+- The live Zeabur frontend service is named `ghs-frontend`, so the repo also
+  has root-level `zbpack.ghs-frontend.json` to pin the monorepo app directory
+  (`frontend`), build command, and static output (`build`) for that actual
+  service name. Keep it in sync with frontend build changes.
 - Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*` config unless explicitly asked.
 - Current i18n packages remain intentionally conservative: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x.
 

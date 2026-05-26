@@ -158,6 +158,8 @@ frontend/
 
 .github/workflows/      CI and production QA workflows
 zeabur.yaml             Zeabur deployment configuration
+zbpack.ghs-frontend.json
+                        Zeabur service-specific frontend monorepo build config
 ```
 
 ## Maintainer Entry Points
