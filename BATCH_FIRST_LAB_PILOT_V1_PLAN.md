@@ -277,7 +277,10 @@ Current checkpoint:
   action and each detailed focus row can open the related dashboard section,
   so maintainers can handle the top queue or a lower-priority queue without
   manually scanning for the matching correction, candidate, miss-query, alias,
-  manual-entry, or reference-link section.
+  manual-entry, or reference-link section. The API also provides a
+  human-readable target label and the frontend localizes that label before
+  rendering the action, so queue navigation is clear in both English and
+  Traditional Chinese.
 - Candidate discovery dry-run reports now include status and evidence-type
   summary counts, including rows without candidates. This keeps maintainer-side
   data cleanup measurable without letting generated or external candidates

@@ -145,10 +145,10 @@ Current monitoring slice opened from real roster evidence:
   card before the metric grid, so the maintainer can see the next data-quality
   action without scanning every correction, unresolved-search, candidate, and
   telemetry counter first. The primary action and each recommended focus row
-  now carry stable target queues and open the related admin section, keeping
-  the dashboard oriented around "what should I handle next?" rather than
-  summary-only reporting. Keep future admin work oriented around this
-  operator-first pattern.
+  now carry stable target queues, human-readable target labels, and open the
+  related admin section, keeping the dashboard oriented around "what should I
+  handle next?" rather than summary-only reporting. Keep future admin work
+  oriented around this operator-first pattern.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

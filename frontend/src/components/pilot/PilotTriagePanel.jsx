@@ -20,6 +20,32 @@ export default function PilotTriagePanel({
   const canOpenPrimaryTarget =
     Boolean(primaryFocus?.targetKey) &&
     typeof openFocusTarget === "function";
+  const targetDisplayLabel = (focus) => {
+    if (!focus?.targetKey && !focus?.targetLabel) {
+      return "";
+    }
+    const fallback = focus.targetLabel || "Related queue";
+    const key = focus.targetKey
+      ? `pilot.triageTargetLabel.${focus.targetKey}`
+      : "pilot.triageTargetLabel.related";
+    const translated = t(key, { defaultValue: fallback });
+    return translated === key ? fallback : translated;
+  };
+  const openTargetLabel = (focus) => {
+    const label = targetDisplayLabel(focus);
+    if (!label) {
+      return t("pilot.triageOpenTarget", {
+        defaultValue: "Open related queue",
+      });
+    }
+    const translated = t("pilot.triageOpenTargetLabel", {
+      defaultValue: "Open {{label}}",
+      label,
+    });
+    return translated === "pilot.triageOpenTargetLabel"
+      ? `Open ${label}`
+      : translated;
+  };
 
   return (
     <section
@@ -72,6 +98,14 @@ export default function PilotTriagePanel({
                       "Keep monitoring new correction requests, unresolved searches, and stale telemetry.",
                   })}
             </div>
+            {targetDisplayLabel(primaryFocus) ? (
+              <div
+                className="mt-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800"
+                data-testid="pilot-triage-primary-action-target-label"
+              >
+                {targetDisplayLabel(primaryFocus)}
+              </div>
+            ) : null}
           </div>
           {primaryFocus ? (
             <div className="flex shrink-0 items-center gap-2 self-start">
@@ -82,9 +116,7 @@ export default function PilotTriagePanel({
                   className="rounded-md border border-emerald-300 bg-emerald-700 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-800"
                   data-testid="pilot-triage-primary-action-open-target"
                 >
-                  {t("pilot.triageOpenTarget", {
-                    defaultValue: "Open related queue",
-                  })}
+                  {openTargetLabel(primaryFocus)}
                 </button>
               ) : null}
               <span
@@ -219,9 +251,7 @@ export default function PilotTriagePanel({
                   className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
                   data-testid={`pilot-triage-focus-${focus.key}-open-target`}
                 >
-                  {t("pilot.triageOpenTarget", {
-                    defaultValue: "Open related queue",
-                  })}
+                  {openTargetLabel(focus)}
                 </button>
               ) : null}
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">

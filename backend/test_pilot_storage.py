@@ -197,6 +197,10 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert summary["pilotTriage"]["attentionCounts"]["missingChineseNameReports"] == 1
         assert summary["pilotTriage"]["recommendedFocus"][0]["key"] == "correction_intake"
         assert summary["pilotTriage"]["recommendedFocus"][0]["targetKey"] == "correction_requests"
+        assert (
+            summary["pilotTriage"]["recommendedFocus"][0]["targetLabel"]
+            == "Correction requests"
+        )
         assert summary["convertedCorrectionCandidateCount"] == 0
         assert summary["topCorrectionRequests"][0]["localContextRedacted"] is True
 

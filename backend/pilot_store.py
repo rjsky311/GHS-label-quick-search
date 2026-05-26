@@ -1476,6 +1476,15 @@ class PilotStore:
             "inactiveReferenceLinks": reference_link_status_counts.get("inactive", 0),
         }
 
+        recommended_focus_target_labels = {
+            "correction_requests": "Correction requests",
+            "converted_candidates": "Converted candidates",
+            "manual_entries": "Manual entries",
+            "needs_evidence": "Needs-evidence work",
+            "miss_queries": "Miss-query cleanup",
+            "alias_review": "Alias review",
+            "reference_links": "Reference links",
+        }
         recommended_focus_rules = (
             (
                 "correction_intake",
@@ -1559,6 +1568,9 @@ class PilotStore:
             {
                 "key": key,
                 "targetKey": target_key,
+                "targetLabel": recommended_focus_target_labels.get(
+                    target_key, "Related queue"
+                ),
                 "message": message,
                 "nextAction": next_action,
                 "count": int(count),

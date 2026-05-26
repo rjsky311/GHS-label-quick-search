@@ -93,6 +93,7 @@ const baseProps = {
           {
             key: "correction_intake",
             targetKey: "correction_requests",
+            targetLabel: "Correction requests",
             message: "Review open correction requests before adding new data sources.",
             nextAction: "Open correction queue and decide approve, reject, or needs evidence.",
             count: 2,
@@ -311,8 +312,11 @@ describe("PilotDashboardSidebar", () => {
     );
     expect(screen.getByTestId("pilot-triage-primary-action-count")).toHaveTextContent("2");
     expect(
+      screen.getByTestId("pilot-triage-primary-action-target-label"),
+    ).toHaveTextContent("Correction requests");
+    expect(
       screen.getByTestId("pilot-triage-primary-action-open-target"),
-    ).toHaveTextContent("pilot.triageOpenTarget");
+    ).toHaveTextContent("Open Correction requests");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
       "Review open correction requests",
     );
@@ -359,6 +363,7 @@ describe("PilotDashboardSidebar", () => {
             {
               key: "candidate_found",
               targetKey: "converted_candidates",
+              targetLabel: "Converted candidates",
               message: "Convert candidate evidence.",
               nextAction: "Open candidate queue.",
               count: 1,
@@ -366,6 +371,7 @@ describe("PilotDashboardSidebar", () => {
             {
               key: "unresolved_searches",
               targetKey: "miss_queries",
+              targetLabel: "Miss-query cleanup",
               message: "Resolve search misses.",
               nextAction: "Open miss query queue.",
               count: 3,
