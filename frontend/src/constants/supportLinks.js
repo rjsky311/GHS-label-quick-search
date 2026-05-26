@@ -1,3 +1,8 @@
+import {
+  DATA_QUALITY_DISPLAY_LABELS,
+  DATA_QUALITY_ISSUE_TYPES,
+} from "@/constants/dataQualityIssueLabels";
+
 export const SUPPORT_ISSUES_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues";
 
@@ -13,16 +18,27 @@ const appendIfPresent = (params, key, value) => {
 };
 
 const DATA_CORRECTION_TITLES = {
-  "missing-chinese-name": "Missing Chinese name",
-  "no-ghs-data": "GHS data gap",
-  "ghs-text-no-pictograms": "GHS pictogram gap",
-  "source-conflict": "Source classification review",
-  "unresolved-search": "Unresolved lookup",
-  "upstream-error": "Upstream data issue",
+  [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]
+      .defaultValue,
+  [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA].defaultValue,
+  [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]
+      .defaultValue,
+  [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]
+      .defaultValue,
+  [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]
+      .defaultValue,
+  [DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]:
+    DATA_QUALITY_DISPLAY_LABELS[DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]
+      .defaultValue,
 };
 
 const DATA_CORRECTION_DEFAULT_CONTEXT = {
-  "missing-chinese-name": {
+  [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: {
     currentOutput:
       "The app does not have a trusted Chinese name, or the available Chinese field repeats English.",
     expectedOutput:
@@ -31,7 +47,7 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
     localContext:
       "Please keep safety-data corrections separate from workflow or product requests.",
   },
-  "no-ghs-data": {
+  [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: {
     currentOutput:
       "The app found this chemical identity, but no GHS hazard content was available.",
     expectedOutput:
@@ -40,7 +56,7 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
     localContext:
       "Please keep safety-data corrections separate from workflow or product requests.",
   },
-  "ghs-text-no-pictograms": {
+  [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: {
     currentOutput:
       "The app has GHS text for this chemical, but no renderable GHS pictograms.",
     expectedOutput:
@@ -49,7 +65,7 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
     localContext:
       "Please keep safety-data corrections separate from workflow or product requests.",
   },
-  "source-conflict": {
+  [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: {
     currentOutput:
       "The app found multiple public GHS classifications or source variants for this chemical.",
     expectedOutput:
@@ -58,7 +74,7 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
     localContext:
       "Please keep safety-data corrections separate from workflow or product requests.",
   },
-  "unresolved-search": {
+  [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]: {
     currentOutput:
       "The app could not resolve this lookup to a reviewed chemical identity.",
     expectedOutput:
@@ -70,20 +86,20 @@ const DATA_CORRECTION_DEFAULT_CONTEXT = {
 };
 
 const DATA_CORRECTION_FORM_ISSUE_TYPES = {
-  "missing-chinese-name": "Chemical identity or alias",
-  "no-ghs-data": "Other data issue",
-  "ghs-text-no-pictograms": "GHS pictogram",
-  "source-conflict": "Source/provenance display",
-  "unresolved-search": "Chemical identity or alias",
-  "upstream-error": "Other data issue",
+  [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: "Chemical identity or alias",
+  [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: "Other data issue",
+  [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: "GHS pictogram",
+  [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: "Source/provenance display",
+  [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]: "Chemical identity or alias",
+  [DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]: "Other data issue",
 };
 
 const DATA_CORRECTION_REQUEST_TYPES = new Set([
-  "missing-chinese-name",
-  "unresolved-search",
-  "no-ghs-data",
-  "ghs-text-no-pictograms",
-  "source-conflict",
+  DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME,
+  DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH,
+  DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
+  DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
+  DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT,
   "reference-link",
   "other-data-quality",
 ]);

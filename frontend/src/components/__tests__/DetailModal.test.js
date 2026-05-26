@@ -157,7 +157,7 @@ describe('DetailModal', () => {
       const url = new URL(reportLink.getAttribute('href'));
       expect(url.searchParams.get('template')).toBe('data-correction.yml');
       expect(url.searchParams.get('labels')).toBe('data-correction');
-      expect(url.searchParams.get('title')).toBe('Missing Chinese name: 107-18-6');
+      expect(url.searchParams.get('title')).toBe('Missing trusted Chinese name: 107-18-6');
       expect(url.searchParams.get('body')).toContain('- CAS: 107-18-6');
       expect(url.searchParams.get('body')).toContain('- English name: Allyl Alcohol');
     });
@@ -437,7 +437,7 @@ describe('DetailModal', () => {
       const url = new URL(reportLink.getAttribute('href'));
       expect(reportLink).toHaveTextContent('detail.reportSourceConflictCta');
       expect(url.searchParams.get('title')).toBe(
-        'Source classification review: 64-17-5',
+        'Source conflict: 64-17-5',
       );
     });
 
@@ -655,7 +655,7 @@ describe('DetailModal', () => {
       const reportLink = screen.getByTestId('detail-report-ghs-gap-link');
       const url = new URL(reportLink.getAttribute('href'));
       expect(reportLink).toHaveTextContent('detail.reportDataGapCta');
-      expect(url.searchParams.get('title')).toBe('GHS data gap: 64-17-5');
+      expect(url.searchParams.get('title')).toBe('No GHS data: 64-17-5');
     });
 
     it('does NOT render the no-GHS banner when any GHS signal is present', () => {

@@ -630,7 +630,7 @@ describe('ResultsTable', () => {
       const url = new URL(link.getAttribute('href'));
       expect(link).toHaveTextContent('dataQuality.issue.missingChineseName');
       expect(url.searchParams.get('title')).toBe(
-        'Missing Chinese name: 107-18-6',
+        'Missing trusted Chinese name: 107-18-6',
       );
       expect(url.searchParams.get('body')).toContain(
         '- English name: Allyl Alcohol',

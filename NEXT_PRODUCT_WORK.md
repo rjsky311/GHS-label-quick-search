@@ -190,6 +190,10 @@ Current monitoring slice opened from real roster evidence:
   wording layer. This keeps batch summary chips, admin correction queues,
   export preview columns, and downloaded handoff files aligned when a lab
   manager moves from on-screen triage to workbook review.
+- Structured correction/support links now also derive their issue titles from
+  the same shared data-quality vocabulary. Keep future correction-link,
+  issue-template, export, results, and admin wording changes behind that shared
+  issue-label contract instead of adding another surface-specific wording map.
 - Candidate discovery dry-run reports now summarize no-candidate rows,
   candidate-found rows, and evidence-type counts before the item list. Use
   those summary counts when deciding whether a queue needs manual review,

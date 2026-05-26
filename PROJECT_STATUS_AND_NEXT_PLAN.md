@@ -462,7 +462,8 @@ Current completion snapshot:
   transient failures remain retry states rather than correction requests.
   Export preview and backend CSV/XLSX review-reason columns now reuse the same
   shared data-quality labels, keeping batch review, admin correction queues,
-  and downloaded handoff wording aligned.
+  structured correction/support issue titles, and downloaded handoff wording
+  aligned.
   `qa:production-search-ui` now verifies the row and Detail correction links
   for missing Chinese names, no-GHS gaps, and source-conflict review.
 - **Unresolved lookup intake checkpoint 2026-05-22**: not-found search rows

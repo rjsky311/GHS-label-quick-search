@@ -31,7 +31,7 @@ describe("supportLinks", () => {
     expect(url.searchParams.get("template")).toBe("data-correction.yml");
     expect(url.searchParams.get("labels")).toBe("data-correction");
     expect(url.searchParams.get("title")).toBe(
-      "Missing Chinese name: 107-18-6",
+      "Missing trusted Chinese name: 107-18-6",
     );
     expect(url.searchParams.get("cas_number")).toBe("107-18-6");
     expect(url.searchParams.get("chemical_name")).toBe("Allyl Alcohol");
