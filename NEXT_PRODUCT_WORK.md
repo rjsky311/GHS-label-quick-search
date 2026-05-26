@@ -141,6 +141,11 @@ Current monitoring slice opened from real roster evidence:
   load failures, deployment freshness problems, QA-runner failures, and true
   product print/layout regressions. Use that bucket before opening another
   product fix from a scheduled QA email.
+- Admin triage now promotes the first recommended focus into a primary action
+  card before the metric grid, so the maintainer can see the next data-quality
+  action without scanning every correction, unresolved-search, candidate, and
+  telemetry counter first. Keep future admin work oriented around this
+  operator-first pattern.
 
 ### Exit Condition
 

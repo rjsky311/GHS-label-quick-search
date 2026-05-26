@@ -267,6 +267,13 @@ Done means:
 - Missing Chinese names, unresolved searches, no-GHS data, and source conflicts
   each have a clear review path.
 
+Current checkpoint:
+
+- The pilot triage panel now promotes the highest-priority recommended focus
+  into a primary admin action above the metric grid. The detailed counters and
+  focus rows remain available, but the first maintainer read is now "what do I
+  do next?" rather than "which of these counters matters most?".
+
 ### 5. Maintainability Slice
 
 Goal: reduce future implementation risk without starting a large rewrite.

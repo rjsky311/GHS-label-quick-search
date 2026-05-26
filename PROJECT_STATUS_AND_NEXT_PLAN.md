@@ -344,6 +344,12 @@ Current completion snapshot:
   The next Batch-First work should be a new evidence-driven monitoring slice,
   not another implementation pass unless user, QA, CI, or pilot evidence
   reopens a specific workflow.
+- **Admin triage primary-action checkpoint 2026-05-27**: the pilot triage
+  panel now turns the first recommended focus into an explicit primary admin
+  action above the counter grid. Detailed correction, unresolved-search,
+  candidate, manual-entry, and telemetry counters remain available, but the
+  operator first sees the next data-quality action instead of deriving it from
+  multiple cards.
 - **Inventory-derived batch hardening checkpoint 2026-05-26**: a real roster
   sample reopened a narrow monitoring slice without changing the product's
   100-item batch model. The app now rehyphenates pure numeric CAS values copied

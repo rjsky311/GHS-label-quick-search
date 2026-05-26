@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import PilotDashboardSidebar from "../PilotDashboardSidebar";
+import PilotTriagePanel from "../pilot/PilotTriagePanel";
 import { toast } from "sonner";
 
 jest.mock("sonner", () => ({
@@ -301,6 +302,13 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-triage-upstream-retries")).toHaveTextContent("6");
     expect(screen.getByTestId("pilot-triage-no-ghs")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-stale-telemetry")).toHaveTextContent("5");
+    expect(screen.getByTestId("pilot-triage-primary-action-message")).toHaveTextContent(
+      "Review open correction requests",
+    );
+    expect(screen.getByTestId("pilot-triage-primary-action-next")).toHaveTextContent(
+      "pilot.triageNextAction",
+    );
+    expect(screen.getByTestId("pilot-triage-primary-action-count")).toHaveTextContent("2");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
       "Review open correction requests",
     );
@@ -315,6 +323,25 @@ describe("PilotDashboardSidebar", () => {
     expect(
       screen.getByTestId("correction-request-candidate-converted-202-manual-pending"),
     ).toBeInTheDocument();
+  });
+
+  it("renders a no-action primary triage state when the pilot queue is clear", () => {
+    render(
+      <PilotTriagePanel
+        pilotTriage={{
+          openWorkItemCount: 0,
+          attentionCounts: {},
+          recommendedFocus: [],
+        }}
+        observabilityCounters={{}}
+      />,
+    );
+
+    expect(screen.getByTestId("pilot-triage-primary-action")).toBeInTheDocument();
+    expect(screen.getByTestId("pilot-triage-primary-action-message")).toHaveTextContent(
+      "pilot.triageNoPrimaryAction",
+    );
+    expect(screen.queryByTestId("pilot-triage-primary-action-count")).not.toBeInTheDocument();
   });
 
   it("purges stale miss-query telemetry after confirmation", async () => {

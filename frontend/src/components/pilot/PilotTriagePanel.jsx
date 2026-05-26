@@ -13,6 +13,7 @@ export default function PilotTriagePanel({
   const recommendedFocus = Array.isArray(pilotTriage.recommendedFocus)
     ? pilotTriage.recommendedFocus
     : [];
+  const primaryFocus = recommendedFocus[0] || null;
 
   return (
     <section
@@ -29,6 +30,53 @@ export default function PilotTriagePanel({
             "Compact operator view for deciding whether the next pilot action is data review, unresolved search cleanup, source review, or telemetry maintenance.",
         })}
       />
+      <div
+        className="mb-3 rounded-lg border border-emerald-300 bg-white p-3 text-sm text-slate-700 shadow-sm"
+        data-testid="pilot-triage-primary-action"
+      >
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+              {t("pilot.triagePrimaryActionLabel", {
+                defaultValue: "Primary admin action",
+              })}
+            </div>
+            <div
+              className="mt-1 font-medium text-slate-900"
+              data-testid="pilot-triage-primary-action-message"
+            >
+              {primaryFocus
+                ? primaryFocus.message
+                : t("pilot.triageNoPrimaryAction", {
+                    defaultValue:
+                      "No queued pilot curation work requires immediate action.",
+                  })}
+            </div>
+            <div
+              className="mt-1 text-xs text-slate-600"
+              data-testid="pilot-triage-primary-action-next"
+            >
+              {primaryFocus?.nextAction
+                ? t("pilot.triageNextAction", {
+                    defaultValue: "Next action: {{action}}",
+                    action: primaryFocus.nextAction,
+                  })
+                : t("pilot.triageNoPrimaryActionNext", {
+                    defaultValue:
+                      "Keep monitoring new correction requests, unresolved searches, and stale telemetry.",
+                  })}
+            </div>
+          </div>
+          {primaryFocus ? (
+            <span
+              className="inline-flex self-start rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800"
+              data-testid="pilot-triage-primary-action-count"
+            >
+              {primaryFocus.count}
+            </span>
+          ) : null}
+        </div>
+      </div>
       <div className="grid gap-2 md:grid-cols-4">
         <SummaryCard
           label={t("pilot.openWorkItems", {
