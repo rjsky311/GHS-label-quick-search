@@ -55,6 +55,16 @@ export const inventoryRosterEvidenceSummary = Object.freeze([
 export const inventoryDataQualityFixtureResults = [
   {
     found: true,
+    cas_number: "67-64-1",
+    name_en: "Acetone",
+    name_zh: "丙酮",
+    ghs_pictograms: pictograms("GHS02", "GHS07"),
+    hazard_statements: [hStatement("H225"), hStatement("H319")],
+    precautionary_statements: [],
+    signal_word: "Warning",
+  },
+  {
+    found: true,
     cas_number: "90-41-5",
     name_en: "2-Aminobiphenyl",
     name_zh: "2-胺基聯苯",

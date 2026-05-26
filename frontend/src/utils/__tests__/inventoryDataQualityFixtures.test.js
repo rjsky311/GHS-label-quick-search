@@ -68,6 +68,7 @@ describe("inventory data-quality fixtures", () => {
       ]),
     );
 
+    expect(issueMap["67-64-1"]).toEqual([]);
     expect(issueMap["90-41-5"]).toContain("multiple-classifications");
     expect(issueMap["84-65-1"]).toContain("missing-chinese-name");
     expect(issueMap["50-00-0"]).toContain("ghs-text-no-pictograms");

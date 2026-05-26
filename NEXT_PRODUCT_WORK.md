@@ -146,6 +146,9 @@ Current monitoring slice opened from real roster evidence:
   unresolved counts before download, so lab managers can decide whether they
   are exporting a working handoff or a cleanup queue without opening the file
   first.
+- The export preview and export-row tests now reuse the real-roster review
+  fixture, so ready, needs-review, unresolved, and upstream-retry rows must stay
+  mutually clear before download.
 - Upstream/source outages stay in needs-review retry scope instead of
   unresolved identity scope, matching the data-quality rule that transient
   PubChem failures should not become correction requests.

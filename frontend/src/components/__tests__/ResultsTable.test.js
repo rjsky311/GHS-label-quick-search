@@ -308,13 +308,13 @@ describe('ResultsTable', () => {
 
       expect(
         screen.getByTestId('results-workflow-summary-found-value')
-      ).toHaveTextContent('5/7');
+      ).toHaveTextContent('6/8');
       expect(
         screen.getByTestId('results-workflow-summary-unresolved-value')
       ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
-      ).toHaveTextContent('4');
+      ).toHaveTextContent('5');
       expect(
         screen.getByTestId('results-workflow-summary-needs-review-value')
       ).toHaveTextContent('7');

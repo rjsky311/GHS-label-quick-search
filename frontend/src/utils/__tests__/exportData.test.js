@@ -31,6 +31,9 @@ import {
   resolveExportDataState,
 } from '../exportData';
 import { getExportScopeOptions, summarizeExportResults } from '../exportRows';
+import {
+  inventoryDataQualityFixtureResults,
+} from '../testFixtures/inventoryDataQualityFixtures';
 
 const mockResult = {
   cas_number: '64-17-5',
@@ -216,6 +219,35 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].cells[17]).toBe('export.yes');
     expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
   });
+
+  it('previews every real-roster review reason without merging them into one generic state', () => {
+    const needsReviewRows = getExportScopeOptions({
+      allResults: inventoryDataQualityFixtureResults,
+      visibleResults: inventoryDataQualityFixtureResults,
+    }).find((option) => option.key === 'needs-review').results;
+    const preview = buildExportPreview(needsReviewRows, {
+      t: (key) => key,
+      maxRows: 10,
+    });
+    const reviewReasonText = preview.rows.map((row) => row.cells[10]).join('; ');
+
+    expect(preview.summary).toEqual({
+      total: 6,
+      found: 5,
+      ready: 0,
+      needsReview: 6,
+      unresolved: 0,
+      upstreamError: 1,
+    });
+    expect(reviewReasonText).toContain('export.reviewReasonUpstream');
+    expect(reviewReasonText).toContain('export.reviewReasonNoGhs');
+    expect(reviewReasonText).toContain('export.reviewReasonTextOnlyGhs');
+    expect(reviewReasonText).toContain('export.reviewReasonSourceConflict');
+    expect(reviewReasonText).toContain(
+      'export.reviewReasonMultipleClassifications',
+    );
+    expect(reviewReasonText).toContain('export.reviewReasonMissingChineseName');
+  });
 });
 
 describe('summarizeExportResults', () => {
@@ -250,6 +282,17 @@ describe('summarizeExportResults', () => {
       found: 2,
       ready: 1,
       needsReview: 2,
+      unresolved: 1,
+      upstreamError: 1,
+    });
+  });
+
+  it('keeps real-roster export states aligned with batch review buckets', () => {
+    expect(summarizeExportResults(inventoryDataQualityFixtureResults)).toEqual({
+      total: 8,
+      found: 6,
+      ready: 1,
+      needsReview: 6,
       unresolved: 1,
       upstreamError: 1,
     });
@@ -310,6 +353,31 @@ describe('getExportScopeOptions', () => {
       '999-99-9',
       '777-77-7',
     ]);
+  });
+
+  it('routes the real-roster fixture into ready, needs-review, and unresolved scopes', () => {
+    const options = getExportScopeOptions({
+      allResults: inventoryDataQualityFixtureResults,
+      visibleResults: inventoryDataQualityFixtureResults.slice(0, 3),
+    });
+    const byKey = Object.fromEntries(
+      options.map((option) => [
+        option.key,
+        option.results.map((row) => row.cas_number),
+      ]),
+    );
+
+    expect(byKey.ready).toEqual(['67-64-1']);
+    expect(byKey['needs-review']).toEqual([
+      '90-41-5',
+      '84-65-1',
+      '50-00-0',
+      '100-00-5',
+      '57-13-6',
+      '75-21-8',
+    ]);
+    expect(byKey.unresolved).toEqual(['9999-99-9']);
+    expect(byKey.visible).toEqual(['67-64-1', '90-41-5', '84-65-1']);
   });
 });
 

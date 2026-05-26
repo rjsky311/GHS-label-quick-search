@@ -1,5 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ExportPreviewModal from '../ExportPreviewModal';
+import {
+  inventoryDataQualityFixtureResults,
+} from '../../utils/testFixtures/inventoryDataQualityFixtures';
 
 const results = [
   {
@@ -227,6 +230,80 @@ describe('ExportPreviewModal', () => {
           scopeKey: 'ready',
           count: 1,
           totalCount: 3,
+          visibleCount: 3,
+        }),
+      );
+    });
+  });
+
+  it('keeps real-roster export scopes separated before download', async () => {
+    const onConfirm = jest.fn().mockResolvedValue(undefined);
+    render(
+      <ExportPreviewModal
+        results={inventoryDataQualityFixtureResults.slice(0, 3)}
+        allResults={inventoryDataQualityFixtureResults}
+        initialFormat="xlsx"
+        onClose={jest.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('export-preview-scope-ready'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [
+          expect.objectContaining({
+            cas_number: '67-64-1',
+          }),
+        ],
+        expect.objectContaining({
+          scopeKey: 'ready',
+          count: 1,
+          totalCount: 8,
+          visibleCount: 3,
+        }),
+      );
+    });
+
+    onConfirm.mockClear();
+    fireEvent.click(screen.getByTestId('export-preview-scope-needs-review'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        expect.arrayContaining([
+          expect.objectContaining({ cas_number: '90-41-5' }),
+          expect.objectContaining({ cas_number: '75-21-8' }),
+        ]),
+        expect.objectContaining({
+          scopeKey: 'needs-review',
+          count: 6,
+          totalCount: 8,
+          visibleCount: 3,
+        }),
+      );
+    });
+
+    onConfirm.mockClear();
+    fireEvent.click(screen.getByTestId('export-preview-scope-unresolved'));
+    fireEvent.click(screen.getByTestId('export-preview-confirm'));
+
+    await waitFor(() => {
+      expect(onConfirm).toHaveBeenCalledWith(
+        'xlsx',
+        [
+          expect.objectContaining({
+            cas_number: '9999-99-9',
+          }),
+        ],
+        expect.objectContaining({
+          scopeKey: 'unresolved',
+          count: 1,
+          totalCount: 8,
           visibleCount: 3,
         }),
       );
