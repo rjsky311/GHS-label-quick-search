@@ -207,6 +207,10 @@ For print workflow changes, the default validation stack is:
 - `npm run qa:production-health` after Zeabur deploy, before heavier
   production QA, to confirm frontend HTML, current Vite asset, and backend
   health are reachable and to capture Zeabur request IDs for 502 triage.
+  Current Vite builds also emit `/build-info.json`; set
+  `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` locally, or rely
+  on `PRINT_QA_EXPECTED_GIT_SHA=${{ github.sha }}` in GitHub Actions, when the
+  gate must prove the deployed frontend matches the current commit.
   For frontend UI changes, set `PRINT_QA_EXPECTED_ASSET_TEXT` or
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker string from the new
   bundle when you need to prove production has refreshed instead of validating

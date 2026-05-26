@@ -50,6 +50,40 @@ describe("batchSearchInput", () => {
     });
   });
 
+  it("extracts only the CAS column from tabular spreadsheet pastes with a header", () => {
+    const summary = parseBatchSearchInput(
+      [
+        "登入日期\tCAS No.\t品名\t供應商統編",
+        "20200813\t67641\tAcetone\t23282972",
+        "20200814\t90-41-5\t2-Aminobiphenyl\t299250050",
+        "20200815\t1003094\t2-Bromothiophene\t75989",
+      ].join("\n"),
+    );
+
+    expect(summary.queries).toEqual(["67-64-1", "90-41-5", "1003-09-4"]);
+    expect(summary.inputCount).toBe(3);
+    expect(summary.rehyphenatedItems).toEqual([
+      expect.objectContaining({ raw: "67641", normalized: "67-64-1" }),
+      expect.objectContaining({ raw: "1003094", normalized: "1003-09-4" }),
+    ]);
+    expect(summary.invalidItems).toEqual([]);
+  });
+
+  it("does not rehyphenate unrelated numeric cells from headerless tabular rows", () => {
+    const summary = parseBatchSearchInput(
+      [
+        "Acetone\t20200813\tCAS 67-64-1\t23282972",
+        "2-Aminobiphenyl\t299250050\t90-41-5\t75989",
+        "Supplier row\t20201231\t23282972",
+      ].join("\n"),
+    );
+
+    expect(summary.queries).toEqual(["67-64-1", "90-41-5"]);
+    expect(summary.inputCount).toBe(2);
+    expect(summary.rehyphenatedCount).toBe(0);
+    expect(summary.invalidItems).toEqual([]);
+  });
+
   it("validates CAS checksums", () => {
     expect(hasValidCasChecksum("67-64-1")).toBe(true);
     expect(hasValidCasChecksum("90-90-4")).toBe(true);

@@ -27,6 +27,12 @@ const expectedAssetTexts = (
   .split("||")
   .map((value) => value.trim())
   .filter(Boolean);
+const expectedGitSha = (
+  process.env.PRODUCTION_HEALTH_EXPECTED_GIT_SHA ||
+  process.env.PRINT_QA_EXPECTED_GIT_SHA ||
+  process.env.GITHUB_SHA ||
+  ""
+).trim();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -63,6 +69,35 @@ const responseMeta = (response, elapsedMs) => ({
   requestId: response.headers.get("x-zeabur-request-id") || "",
   server: response.headers.get("server") || "",
 });
+
+const fetchJsonMeta = async (url) => {
+  const { response, elapsedMs } = await elapsedFetch(url);
+  const meta = responseMeta(response, elapsedMs);
+  let body = null;
+  let parseError = "";
+  try {
+    body = await response.json();
+  } catch (error) {
+    parseError = error?.message || String(error);
+  }
+  return { response, meta, body, parseError };
+};
+
+const normalizeSha = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const gitShaMatches = (actual, expected) => {
+  const actualSha = normalizeSha(actual);
+  const expectedSha = normalizeSha(expected);
+  if (!actualSha || !expectedSha) return false;
+  return (
+    actualSha === expectedSha ||
+    actualSha.startsWith(expectedSha) ||
+    expectedSha.startsWith(actualSha)
+  );
+};
 
 const resolveIndexAsset = (html, baseUrl) => {
   const match = html.match(/(?:src|href)="([^"]*assets\/index-[^"]+\.js)"/);
@@ -163,6 +198,62 @@ const checkFrontend = () =>
       };
     }
 
+    const buildInfoUrl = new URL("/build-info.json", htmlUrl);
+    buildInfoUrl.searchParams.set("productionHealthCheck", Date.now().toString());
+    let buildInfo = {
+      url: buildInfoUrl.toString(),
+      status: 0,
+      ok: false,
+      elapsedMs: 0,
+      requestId: "",
+      server: "",
+      app: "",
+      version: "",
+      gitSha: "",
+      gitShortSha: "",
+      gitBranch: "",
+      builtAt: "",
+      parseError: "",
+      expectedGitSha: expectedGitSha || undefined,
+      gitShaMatches: expectedGitSha ? false : undefined,
+    };
+    try {
+      const buildInfoResult = await fetchJsonMeta(buildInfoUrl.toString());
+      buildInfo = {
+        ...buildInfo,
+        ...buildInfoResult.meta,
+        url: buildInfoUrl.toString(),
+        app: buildInfoResult.body?.app || "",
+        version: buildInfoResult.body?.version || "",
+        gitSha: buildInfoResult.body?.gitSha || "",
+        gitShortSha: buildInfoResult.body?.gitShortSha || "",
+        gitBranch: buildInfoResult.body?.gitBranch || "",
+        builtAt: buildInfoResult.body?.builtAt || "",
+        parseError: buildInfoResult.parseError,
+        gitShaMatches: expectedGitSha
+          ? gitShaMatches(buildInfoResult.body?.gitSha, expectedGitSha)
+          : undefined,
+      };
+    } catch (error) {
+      buildInfo = {
+        ...buildInfo,
+        error: error?.message || String(error),
+      };
+    }
+
+    if (expectedGitSha && !buildInfo.gitShaMatches) {
+      return {
+        ok: false,
+        frontendUrl,
+        htmlUrl,
+        assetUrl,
+        html: htmlMeta,
+        asset: assetMeta,
+        buildInfo,
+        error: "frontend build-info git SHA did not match the expected deployed commit",
+      };
+    }
+
     return {
       ok: true,
       frontendUrl,
@@ -176,6 +267,7 @@ const checkFrontend = () =>
             missing: [],
           }
         : undefined,
+      buildInfo,
     };
   });
 
@@ -219,6 +311,7 @@ const result = {
   timeoutMs,
   retryDelayMs,
   expectedAssetTextCount: expectedAssetTexts.length,
+  expectedGitSha: expectedGitSha || undefined,
   checks,
   failures,
 };

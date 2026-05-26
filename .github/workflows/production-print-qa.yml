@@ -45,6 +45,7 @@ jobs:
     env:
       PRINT_QA_HEADLESS: "1"
       PRINT_QA_PRODUCTION_URL: ${{ github.event.inputs.production_url || 'https://ghs-frontend.zeabur.app/' }}
+      PRINT_QA_EXPECTED_GIT_SHA: ${{ github.sha }}
       PRINT_QA_SUMMARY_REPORT_PATH: build/production-print-qa-summary.json
 
     steps:

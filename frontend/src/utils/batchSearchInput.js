@@ -1,8 +1,14 @@
 import { BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 
 const TOKEN_SPLIT_PATTERN = /[,\n\t;\uFF0C\u3001\uFF1B]+/;
+const CELL_TOKEN_SPLIT_PATTERN = /[,\n;\uFF0C\u3001\uFF1B]+/;
+const ROW_SPLIT_PATTERN = /\r?\n/;
+const TAB_PATTERN = /\t/;
 const CAS_FORMAT_PATTERN = /^\d{2,7}-\d{2}-\d$/;
 const CAS_DIGITS_PATTERN = /^\d{5,10}$/;
+const CAS_PREFIX_PATTERN = /^cas\s*(?:no\.?|number|#|[:\uFF1A])?\s*/i;
+const CAS_LIKE_WITH_DASH_PATTERN =
+  /\d{2,7}\s*[-\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]\s*\d{2}\s*[-\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]\s*\d/;
 const CAS_NEXT_TOKEN_PATTERN =
   /(\d)\s+(?=(?:cas\s*(?:no\.?|number|#|[:\uFF1A])?\s*)?\d{2,7}\s*[-\u2010-\u2015\u2212\uFE58\uFE63\uFF0D])/gi;
 export const BATCH_TELEMETRY_PREVIEW_LIMIT = 20;
@@ -12,18 +18,94 @@ const toHalfWidth = (value = "") =>
     String.fromCharCode(char.charCodeAt(0) - 0xfee0),
   );
 
-export const splitBatchSearchInput = (input = "") =>
-  toHalfWidth(input)
+const splitDelimitedTokens = (input = "", { includeTabs = true } = {}) =>
+  String(input)
     .replace(CAS_NEXT_TOKEN_PATTERN, "$1\n")
-    .split(TOKEN_SPLIT_PATTERN)
+    .split(includeTabs ? TOKEN_SPLIT_PATTERN : CELL_TOKEN_SPLIT_PATTERN)
     .map((token) => token.trim())
     .filter(Boolean);
+
+const normalizeHeaderCell = (value = "") =>
+  toHalfWidth(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s.:\uFF1A#_-]+/g, "");
+
+const isCasHeaderCell = (value = "") => {
+  const normalized = normalizeHeaderCell(value);
+  return [
+    "cas",
+    "casno",
+    "casnumber",
+    "cas編號",
+    "cas號碼",
+    "cas登錄號",
+    "cas登錄號碼",
+  ].includes(normalized);
+};
+
+const splitTabularRows = (input = "") =>
+  String(input)
+    .split(ROW_SPLIT_PATTERN)
+    .map((row) => row.split(TAB_PATTERN).map((cell) => cell.trim()));
+
+const splitCasColumnFromTabularInput = (input = "") => {
+  if (!TAB_PATTERN.test(input)) return null;
+
+  const rows = splitTabularRows(input).filter((row) =>
+    row.some((cell) => cell.trim()),
+  );
+  if (!rows.some((row) => row.length > 1)) return null;
+
+  const headerIndex = rows.findIndex((row) => row.some(isCasHeaderCell));
+  if (headerIndex < 0) return null;
+
+  const casIndex = rows[headerIndex].findIndex(isCasHeaderCell);
+  return rows
+    .slice(headerIndex + 1)
+    .flatMap((row) =>
+      splitDelimitedTokens(row[casIndex] || "", { includeTabs: false }),
+    );
+};
+
+const isExplicitCasToken = (token = "") => {
+  const value = toHalfWidth(token).trim();
+  return CAS_PREFIX_PATTERN.test(value) || CAS_LIKE_WITH_DASH_PATTERN.test(value);
+};
+
+const splitCasTokensFromHeaderlessTabularInput = (input = "") => {
+  if (!TAB_PATTERN.test(input)) return null;
+
+  const rows = splitTabularRows(input);
+  return rows.flatMap((row) => {
+    const cells = row.map((cell) => cell.trim()).filter(Boolean);
+    if (cells.length <= 1) {
+      return splitDelimitedTokens(cells[0] || "", { includeTabs: false });
+    }
+
+    return cells.flatMap((cell) =>
+      splitDelimitedTokens(cell, { includeTabs: false }).filter(isExplicitCasToken),
+    );
+  });
+};
+
+export const splitBatchSearchInput = (input = "") => {
+  const normalizedInput = toHalfWidth(input);
+  const casColumnTokens = splitCasColumnFromTabularInput(normalizedInput);
+  if (casColumnTokens) return casColumnTokens;
+
+  const headerlessTableTokens =
+    splitCasTokensFromHeaderlessTabularInput(normalizedInput);
+  if (headerlessTableTokens) return headerlessTableTokens;
+
+  return splitDelimitedTokens(normalizedInput);
+};
 
 const normalizeCasTokenBase = (token = "") =>
   toHalfWidth(token)
     .trim()
     .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
-    .replace(/^cas\s*(?:no\.?|number|#|[:\uFF1A])?\s*/i, "")
+    .replace(CAS_PREFIX_PATTERN, "")
     .replace(/\s+/g, "")
     .trim();
 

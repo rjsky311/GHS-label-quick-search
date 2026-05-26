@@ -1,7 +1,63 @@
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+
+const BUILD_SHA_ENV_KEYS = [
+  "VITE_GIT_SHA",
+  "GITHUB_SHA",
+  "ZEABUR_GIT_COMMIT_SHA",
+  "ZEABUR_COMMIT_SHA",
+  "SOURCE_COMMIT",
+  "COMMIT_SHA",
+];
+
+const readGitValue = (args) => {
+  try {
+    return execFileSync("git", args, {
+      cwd: __dirname,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+};
+
+const resolveBuildGitSha = () => {
+  for (const key of BUILD_SHA_ENV_KEYS) {
+    const value = (process.env[key] || "").trim();
+    if (value) return value;
+  }
+  return readGitValue(["rev-parse", "HEAD"]);
+};
+
+const createBuildInfoPlugin = () => ({
+  name: "ghs-build-info",
+  apply: "build",
+  generateBundle() {
+    const gitSha = resolveBuildGitSha();
+    const gitBranch =
+      (process.env.GITHUB_REF_NAME || process.env.ZEABUR_GIT_BRANCH || "").trim() ||
+      readGitValue(["rev-parse", "--abbrev-ref", "HEAD"]);
+    const buildInfo = {
+      app: "ghs-label-quick-search",
+      version: process.env.npm_package_version || "1.10.0",
+      gitSha,
+      gitShortSha: gitSha ? gitSha.slice(0, 12) : "",
+      gitBranch,
+      builtAt: new Date().toISOString(),
+      nodeVersion: process.version,
+    };
+
+    this.emitFile({
+      type: "asset",
+      fileName: "build-info.json",
+      source: `${JSON.stringify(buildInfo, null, 2)}\n`,
+    });
+  },
+});
 
 function createViteHealthCheckPlugin() {
   const startedAt = Date.now();
@@ -271,6 +327,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      createBuildInfoPlugin(),
       env.ENABLE_HEALTH_CHECK === "true" ? createViteHealthCheckPlugin() : null,
     ].filter(Boolean),
     resolve: {

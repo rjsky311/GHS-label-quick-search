@@ -445,9 +445,23 @@ Minimum gates for this clarity slice:
 
 Additional gates before claiming deployed completion:
 
+- `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD) npm run
+  qa:production-health` or the GitHub `Production Print QA` workflow's
+  `PRINT_QA_EXPECTED_GIT_SHA` environment when a pushed production-facing
+  frontend patch needs proof that Zeabur is serving the latest commit.
 - `npm run qa:production-search-ui`
 - `npm run qa:production-lab-ready-batch`
 - `npm run qa:production-product`
+
+Deploy freshness hardening added after closure:
+
+- Vite production builds now emit `/build-info.json` with app version, git
+  SHA, branch, build time, and Node version.
+- `qa:production-health` reports that metadata and can fail when the deployed
+  git SHA does not match the expected current commit.
+- The GitHub `Production Print QA` workflow passes `github.sha` as the
+  expected production SHA, so a healthy but stale Zeabur frontend is treated as
+  a production reliability failure before heavier print/browser gates run.
 
 ## Future Monitoring Order
 
@@ -458,6 +472,10 @@ Additional gates before claiming deployed completion:
 3. Choose a new closeable slice only from evidence:
    - inventory-derived QA hardening when a real roster exposes paste cleanup,
      translation-quality, upstream/source, or batch triage gaps.
+     Current roster-derived paste cleanup evidence: tabular spreadsheet pastes
+     with a `CAS`/`CAS No.` header must parse only that column, and headerless
+     multi-column pastes must not rehyphenate dates, supplier IDs, item numbers,
+     or other unrelated numeric cells into valid-looking CAS queries.
    - maintainability extraction only when it supports an active
      batch/admin/data/print change.
    - multiple-GHS confirmation clarity if real batch evidence shows users are

@@ -14,6 +14,13 @@ export const inventoryBatchPasteFixture = [
   "67-64-2",
 ].join("\n");
 
+export const inventoryTabularPasteFixture = [
+  "登入日期\tCAS No.\t英文名稱\t供應商統編",
+  "20200813\t67641\tAcetone\t23282972",
+  "20200814\t90-41-5\t2-Aminobiphenyl\t299250050",
+  "20200815\t1003094\t2-Bromothiophene\t75989",
+].join("\n");
+
 export const inventoryDataQualityFixtureResults = [
   {
     found: true,

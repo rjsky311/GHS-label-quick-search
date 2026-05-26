@@ -110,6 +110,12 @@ Current monitoring slice opened from real roster evidence:
   100 rows.
 - Batch paste cleanup now includes pure numeric CAS rehyphenation, while
   duplicate, invalid-format, and checksum-failed rows remain separate.
+- Real roster evidence showed a tabular-paste false-positive risk: dates,
+  supplier IDs, and item numbers can pass CAS checksum after naive numeric
+  rehyphenation. Batch parsing now treats spreadsheet rows with a `CAS`/`CAS
+  No.` header as a CAS-column extraction, and headerless multi-column rows only
+  accept explicit CAS-prefixed or hyphenated CAS cells instead of rehyphenating
+  every unrelated numeric cell.
 - Batch review fixtures should keep missing Chinese names, unresolved searches,
   no-GHS rows, multiple-GHS rows, and upstream retry states separate.
 - Batch result summaries now include a review action queue and keep upstream
@@ -326,6 +332,12 @@ Current mode:
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT`. Use this after frontend UI changes
   when Zeabur reports success but the production URL may still be serving an
   older Vite asset.
+- Completed current slice: Vite production builds now emit `/build-info.json`
+  with app version, git SHA, branch, build time, and Node version.
+  `qa:production-health` can compare this file with
+  `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or the
+  GitHub workflow SHA, so stale Zeabur deployments fail with explicit commit
+  evidence instead of only passing a generic 200 OK health check.
 - Completed current slice: the main `CI` workflow now has a manual
   `workflow_dispatch` fallback. If future pushes show Zeabur deployment checks
   but no automatic GitHub Actions `CI` run, trigger `gh workflow run CI --ref

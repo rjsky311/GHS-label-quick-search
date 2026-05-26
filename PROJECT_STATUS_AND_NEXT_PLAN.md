@@ -143,9 +143,12 @@ Current validation gates:
 - Frontend: `npm test -- --runInBand`, `npm run test:i18n`, `npm run build`
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
-- Production availability: `npm run qa:production-health` (frontend HTML,
-  current Vite asset, backend `/api/health`, bounded retries, Zeabur request
-  IDs)
+- Production availability and freshness: `npm run qa:production-health`
+  (frontend HTML, current Vite asset, `/build-info.json`, backend
+  `/api/health`, bounded retries, Zeabur request IDs). When
+  `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or
+  `GITHUB_SHA` is present, this gate fails if the deployed build metadata does
+  not match the expected commit.
 - Production deploy freshness: after frontend pushes, combine the production
   asset marker with Zeabur CLI deployment checks. If production remains on an
   older Vite asset and Zeabur has no deployment for the latest `main` commit,
@@ -353,10 +356,15 @@ Current completion snapshot:
   deduplicated, checksum-checked, and summarized before request. The parser
   accepts common spreadsheet separators plus same-line space-separated CAS
   values with `CAS No.` / `CAS:` prefixes, while preserving spaces that belong
-  inside a single CAS token. Search history and frontend observability now
-  follow the same normalized handoff, with bounded telemetry metadata instead
-  of raw invalid paste payloads. `qa:production-search-ui` now exercises the
-  deployed messy-paste path and fails if the ready summary, duplicate/invalid
+  inside a single CAS token. Real roster evidence added a stricter
+  tabular-paste rule: if a spreadsheet paste has a `CAS`/`CAS No.` header, only
+  that column is parsed; if a multi-column paste has no CAS header, unrelated
+  numeric cells such as dates, item numbers, and supplier IDs are not
+  rehyphenated into CAS values unless they are explicitly CAS-prefixed or
+  already hyphenated. Search history and frontend observability now follow the
+  same normalized handoff, with bounded telemetry metadata instead of raw
+  invalid paste payloads. `qa:production-search-ui` now exercises the deployed
+  messy-paste path and fails if the ready summary, duplicate/invalid
   diagnostics, or enabled search handoff regress.
 - **QR return-path checkpoint**: `qa:production-search-ui` now opens the
   deployed app with `?cas=<CAS>` and fails if the app does not hydrate the
@@ -592,13 +600,16 @@ Current status:
 - Workflow job summaries include product-block pass/fail status when product
   block evidence is present.
 - `qa:production-health` checks the deployed frontend HTML, current Vite index
-  asset, and backend `/api/health` with bounded retries. It writes
-  `build/production-health-report.json` with request IDs and timing so a 502
-  incident can be diagnosed without replaying ad hoc curl commands.
+  asset, generated `/build-info.json`, and backend `/api/health` with bounded
+  retries. It writes `build/production-health-report.json` with request IDs,
+  timing, and deployed git SHA evidence so a 502 or stale-deploy incident can
+  be diagnosed without replaying ad hoc curl commands.
   Set `PRINT_QA_EXPECTED_ASSET_TEXT` or
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker from the new UI
   when a production-facing change needs proof that Zeabur is serving the
   refreshed frontend bundle, not only a reachable older asset.
+  Prefer `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` or the
+  GitHub workflow-provided `PRINT_QA_EXPECTED_GIT_SHA` for commit-level proof.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

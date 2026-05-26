@@ -173,7 +173,7 @@ Use this classification when turning pilot evidence into work:
 | Export hard to use | Product backlog | Prefer summary/scope improvements over more columns. |
 | Label output clipped | P0 print regression | Do not print clipped required content. |
 | Physical printer mismatch | Physical print checklist | Deferred until real materials exist. |
-| Production 502 or stale deploy | P0 production reliability | Use Zeabur health/deploy workflow. |
+| Production 502 or stale deploy | P0 production reliability | Use Zeabur health/deploy workflow; require `/build-info.json` git SHA proof before heavier production QA. |
 | Production Print QA source/upstream outage | Source reliability / retry | Distinguish this from a print-layout regression before changing renderer code. |
 
 ## Closure Evidence For A Pilot Round

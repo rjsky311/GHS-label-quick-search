@@ -3,6 +3,7 @@ import { parseBatchSearchInput } from "@/utils/batchSearchInput";
 import {
   inventoryBatchPasteFixture,
   inventoryDataQualityFixtureResults,
+  inventoryTabularPasteFixture,
 } from "@/utils/testFixtures/inventoryDataQualityFixtures";
 
 const issueTypesFor = (result) =>
@@ -19,6 +20,15 @@ describe("inventory data-quality fixtures", () => {
       expect.objectContaining({ raw: "344-04-07", reason: "format" }),
       expect.objectContaining({ raw: "67-64-2", reason: "checksum" }),
     ]);
+  });
+
+  it("extracts the CAS column from real-inventory style tabular pastes", () => {
+    const summary = parseBatchSearchInput(inventoryTabularPasteFixture);
+
+    expect(summary.queries).toEqual(["67-64-1", "90-41-5", "1003-09-4"]);
+    expect(summary.inputCount).toBe(3);
+    expect(summary.rehyphenatedCount).toBe(2);
+    expect(summary.invalidItems).toEqual([]);
   });
 
   it("keeps batch review buckets separate for lab-manager triage", () => {
