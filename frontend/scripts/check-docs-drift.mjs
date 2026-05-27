@@ -209,7 +209,7 @@ requireIncludes(
   "POST_95_REPRIORITIZATION.md",
   docs["POST_95_REPRIORITIZATION.md"],
   "Small Pilot Observation And Operator Loop",
-  "post-95 re-rank must name the active next target",
+  "post-95 re-rank must keep the shipped target-selection evidence discoverable",
 );
 requireIncludes(
   "POST_95_REPRIORITIZATION.md",
@@ -245,7 +245,7 @@ requireIncludes(
   "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
   docs["PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md"],
   "Pilot Evidence And Maintainability Pass",
-  "active short-term target role statement",
+  "shipped short-term evidence-pass role statement",
 );
 requireIncludes(
   "PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md",
@@ -293,7 +293,7 @@ requireIncludes(
   "NEXT_PRODUCT_WORK.md",
   docs["NEXT_PRODUCT_WORK.md"],
   "PILOT_OPERATIONS_READY_PLAN.md",
-  "short queue must point to the active pilot-operations owner doc",
+  "short queue must point to the shipped pilot-operations owner doc",
 );
 requireIncludes(
   "NEXT_PRODUCT_WORK.md",

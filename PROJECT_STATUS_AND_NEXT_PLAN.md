@@ -141,7 +141,7 @@ Current baseline capabilities:
   small-label continuation on the same output instead of recommending mixed A4
   recovery.
 - `PRINT_LABEL_CONTRACT.md` defines the print safety contract.
-- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the active batch-print product
+- `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` defines the current batch-print product
   contract: purpose-first, one physical stock per batch, per-item fit report,
   representative preview, explicit reduced/continuation print scope,
   excluded-list handling, and deployed batch QA.
@@ -320,7 +320,7 @@ Current completion snapshot:
   push and PRs, not just as a local suggestion.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
-  the continuation order and done criteria.
+  the evidence-triggered continuation rules and done criteria.
 - **Scope-gate baseline**: `PRODUCT_SCOPE_GATE.md` is the decision process for
   large ambiguous product slices. It is not a global Codex memory or installed
   skill; it keeps the "grill me" pattern inside the repo where decisions are
@@ -328,15 +328,15 @@ Current completion snapshot:
 - **Intentionally deferred**: real-printer validation remains deferred until
   physical paper/stock/printer access is available. Automated Browser/PDF
   checks are strong preconditions, not proof of real printer behavior.
-- **Still active / recurring**: fixed-stock batch regression coverage,
+- **Monitoring-only recurring risks**: fixed-stock batch regression coverage,
   source-conflict governance, upstream outage states, QR real-world
   reliability, compact multilingual labels, long chemical names, case/custom
   identity fields, admin/telemetry limits, and low-noise UX should continue to
   receive new regression cases when evidence appears. Track these
   non-physical-print follow-ups in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
   use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` for the batch-print contract.
-- **Active product simplification**: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` now
-  defines the next print workflow target. It intentionally cuts the public
+- **Implemented product simplification baseline**: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`
+  now defines the public print workflow model. It intentionally cuts the public
   label flow down to complete labels, QR small labels, and identification
   small labels.
 - **Data-trust export baseline**: effective custom classification selections

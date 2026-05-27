@@ -11,7 +11,7 @@ Use `PRODUCT_REQUIREMENTS_DECISIONS.md` for the current product decisions,
 priority order, correction-intake direction, Chinese-name candidate policy, and
 done criteria.
 For the next label-printing refactor, use
-`SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the active product contract.
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the current public print contract.
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
 implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
@@ -330,19 +330,20 @@ Current mode:
 - Physical print validation is **deferred** until real paper, stock, printer,
   and QR-scan evidence can be collected.
 - While physical printing is deferred, fixed-stock batch label printing is now
-  in gate/monitoring state. The default active continuation targets are data
-  governance / safety boundaries, low-noise UX, and narrow/mobile polish. Track
-  non-physical-print work in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`;
-  use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` before changing batch behavior.
-- The product simplification decision for label printing is now the active
-  implementation baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the
+  in gate/monitoring state. Data governance / safety boundaries, low-noise UX,
+  and narrow/mobile polish are monitoring-only candidates until fresh evidence
+  opens a slice. Track non-physical-print work in
+  `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; use
+  `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` before changing batch behavior.
+- The product simplification decision for label printing is now the implemented
+  baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` supersedes the
   old first-level print UI model. Keep future print work inside the three
   outputs before adding more stock, purpose, density, or front-label options.
 - Current print closure item from 2026-05-18: the A4/Letter complete-primary
   overflow fix is deployed and covered by `test:print-contract`,
   `qa:print-pdf`, `qa:production-batch-print`, and `qa:production-primary`.
-  Keep monitoring this class of issue, but return the default continuation
-  target to data governance / safety boundaries and low-noise UX polish.
+  Keep monitoring this class of issue, but do not reopen data governance /
+  safety boundaries or low-noise UX polish without fresh evidence.
 - Completed current slice: batch search input is normalized, deduplicated, and
   checked for CAS format/checksum before the backend call. The UI summarizes
   ignored duplicates and invalid entries early, because bad batch input is a
@@ -695,8 +696,9 @@ Current mode:
   passed.
 
 1. Data governance and safety boundaries for PubChem/ECHA/SDS/manual-reference
-   flows. Use this as the active continuation target while physical printing is
-   deferred. The policy lives in `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
+   flows. Treat this as a monitoring candidate while physical printing is
+   deferred, not a standing continuation target. The policy lives in
+   `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`;
    the detailed future tracker lives in
    `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. The optional external
    scientific-skill evaluation lives in
