@@ -730,6 +730,12 @@ const inspectExportPreviewSurface = async (page) => {
     nodes.map((node) => (node.textContent || "").replace(/\s+/g, " ").trim()),
   );
   const bodyText = ((await modal.textContent()) || "").replace(/\s+/g, " ");
+  const reviewActionColumns = modal.getByTestId("export-preview-review-action-columns");
+  const reviewActionColumnNoteCount = await reviewActionColumns.count().catch(() => 0);
+  const reviewActionColumnNoteText =
+    reviewActionColumnNoteCount > 0
+      ? ((await reviewActionColumns.first().textContent().catch(() => "")) || "").replace(/\s+/g, " ").trim()
+      : "";
   await modal.getByTestId("export-preview-cancel").click();
   await modal.waitFor({ state: "hidden", timeout: 10000 });
   return {
@@ -749,6 +755,16 @@ const inspectExportPreviewSurface = async (page) => {
     hasPrintable: headers.some((header) => /Printable/i.test(header)),
     hasReviewRequired: headers.some((header) => /Needs Review/i.test(header)),
     hasReviewReasons: headers.some((header) => /Review Reasons/i.test(header)),
+    hasReviewSignalCount: headers.some((header) =>
+      /Review Signal Count|檢查訊號數/i.test(header),
+    ),
+    hasPrimaryReviewAction: headers.some((header) =>
+      /Primary Review Action|第一建議動作/i.test(header),
+    ),
+    hasReviewActionColumnNote:
+      reviewActionColumnNoteCount > 0 &&
+      /Review handoff columns|檢查交接欄位/i.test(reviewActionColumnNoteText),
+    reviewActionColumnNoteText,
     hasMultipleGhsStatus: headers.some((header) =>
       /Multiple GHS Status|多 GHS 狀態/i.test(header),
     ),
@@ -1637,6 +1653,12 @@ const summarizeSearchUiReportForConsole = (report) => {
               header,
             ),
           ).length || 0,
+        exportPreviewReviewActionColumns:
+          metrics.exportPreviewSurface?.headers?.filter((header) =>
+            /Review Signal Count|Primary Review Action|檢查訊號數|第一建議動作/i.test(header),
+          ).length || 0,
+        exportPreviewReviewActionColumnNote:
+          metrics.exportPreviewSurface?.reviewActionColumnNoteText || "",
         missingChineseNameCorrection: {
           noteCount:
             metrics.missingChineseNameCorrection?.noteCount || 0,
@@ -1774,6 +1796,15 @@ try {
   }
   if (!exportPreviewSurface.hasReviewReasons) {
     failures.push("export-preview-review-reasons-column-missing");
+  }
+  if (!exportPreviewSurface.hasReviewSignalCount) {
+    failures.push("export-preview-review-signal-count-column-missing");
+  }
+  if (!exportPreviewSurface.hasPrimaryReviewAction) {
+    failures.push("export-preview-primary-review-action-column-missing");
+  }
+  if (!exportPreviewSurface.hasReviewActionColumnNote) {
+    failures.push("export-preview-review-action-column-note-missing");
   }
   if (!exportPreviewSurface.hasMultipleGhsStatus) {
     failures.push("export-preview-multiple-ghs-status-column-missing");
