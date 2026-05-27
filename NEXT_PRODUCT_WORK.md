@@ -122,6 +122,25 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-05-28 state check: no fresh screenshot/PDF/CI/admin evidence currently
+  opens a new product slice. `main` was clean, the latest visible GitHub CI
+  runs were green, expected-SHA `npm run qa:production-health` passed against
+  Zeabur production, `npm run qa:production-batch-print` passed against the
+  deployed 51-CAS fixture, and `npm run build` plus
+  `npm run qa:bundle-budget` passed locally. Keep the next work
+  evidence-triggered. Do not open another print-polish, admin, or broad
+  product slice only because it is possible.
+- 2026-05-28 maintainability scan: the current largest code surfaces are
+  `frontend/src/utils/printQaMatrix.js` (2,776 lines),
+  `frontend/src/utils/printLabelStyles.js` (1,847),
+  `frontend/src/components/LabelPrintModal.jsx` (1,756),
+  `frontend/src/utils/printLabels.js` (1,472),
+  `frontend/src/components/ResultsTable.jsx` (1,246),
+  `frontend/src/components/PilotDashboardSidebar.jsx` (1,142),
+  `backend/pilot_store.py` (1,723), and `backend/server.py` (1,532).
+  These are refactor candidates, not automatic work. Open a split only when a
+  concrete evidence-triggered product/admin/QA change touches the same
+  responsibility boundary.
 - Excel/roster data should be used as a representative QA corpus, not imported
   wholesale into the product. Users still run bounded batches, usually up to
   100 rows.

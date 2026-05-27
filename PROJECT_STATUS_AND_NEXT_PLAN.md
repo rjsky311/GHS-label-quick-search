@@ -318,6 +318,21 @@ Current completion snapshot:
   maintainability work solely because the bundle "feels large". GitHub CI runs
   this gate after the frontend production build so the boundary is enforced on
   push and PRs, not just as a local suggestion.
+- **State-check checkpoint 2026-05-28**:
+  the repository is in monitoring/maintenance mode unless fresh evidence opens
+  a product slice. `main` was clean and recent GitHub CI runs were green.
+  Expected-SHA `npm run qa:production-health` passed against
+  `dd732eb5215d9ea8399b4ddbf119cd373a7f7b02`, proving Zeabur served the
+  current frontend build metadata and the backend health endpoint was healthy.
+  `npm run qa:production-batch-print` passed against the deployed default
+  51-CAS batch fixture, exercising fixed-stock batch modal handoff, export
+  preview trust/review fields, multiple-GHS warning copy, and print handoff
+  metadata. `npm run build` and `npm run qa:bundle-budget` passed with 23 JS
+  chunks; the initial app chunk stayed under budget at 272.25 KiB raw /
+  77.54 KiB gzip, while the lazy print modal and print engine stayed under
+  their budgets at 113.46 KiB and 110.19 KiB raw. Treat this as evidence that
+  the current product baseline is deployable and split enough for now, not as
+  permission to keep adding polish by inertia.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the evidence-triggered continuation rules and done criteria.

@@ -449,6 +449,62 @@ Record:
   - `cd backend; python -m py_compile server.py api_models.py api_validation.py export_helpers.py`
   - `cd backend; python -m pytest -q`
 
+#### 2026-05-28 Maintenance Re-Check
+
+Status: `Monitoring`
+
+Current evidence:
+
+- `npm run build` passed with 23 JS chunks.
+- `npm run qa:bundle-budget` passed. Large chunks stayed within the explicit
+  guardrails: initial app 272.25 KiB raw / 77.54 KiB gzip, lazy
+  `LabelPrintModal` 113.46 KiB / 27.91 KiB gzip, lazy `printLabels`
+  110.19 KiB / 25.17 KiB gzip, and lazy `PilotDashboardSidebar` 62.18 KiB /
+  13.04 KiB gzip.
+- Expected-SHA `npm run qa:production-health` passed against
+  `dd732eb5215d9ea8399b4ddbf119cd373a7f7b02`, so production freshness was
+  proven before heavier production checks.
+- `npm run qa:production-batch-print` passed against the deployed default
+  51-CAS fixture and verified fixed-stock batch handoff, export preview
+  trust/review columns, multiple-GHS warning copy, and print handoff metadata.
+
+Current large surfaces:
+
+- `frontend/src/utils/printQaMatrix.js`: 2,776 lines. Treat as QA fixture/report
+  infrastructure. Split only if new print QA cases need a clearer fixture
+  builder or report writer boundary.
+- `frontend/src/utils/printLabelStyles.js`: 1,847 lines. This is the highest
+  runtime print-maintenance risk. Split only alongside a concrete print layout
+  change, with `test:print-contract` and `qa:print-pdf` proving no renderer
+  drift.
+- `frontend/src/components/LabelPrintModal.jsx`: 1,756 lines. Most first-level
+  UI pieces are already extracted. The next split should target state/event
+  orchestration only when a modal workflow change requires it.
+- `frontend/src/utils/printLabels.js`: 1,472 lines. The next useful split is a
+  complete-label section renderer or print-iframe assembly helper, but only
+  when a print product change touches that boundary.
+- `frontend/src/components/ResultsTable.jsx`: 1,246 lines. This is now a
+  product-flow risk because batch review, correction links, export preview,
+  row actions, and print selection all meet here. Split row-action/review
+  summary logic only when a batch-review or export-handoff evidence slice
+  reopens.
+- `frontend/src/components/PilotDashboardSidebar.jsx`: 1,142 lines and
+  `backend/pilot_store.py`: 1,723 lines. Open admin/store splits only when real
+  admin queue evidence proves maintainers cannot find or process the next
+  data-quality action quickly.
+- `backend/server.py`: 1,532 lines. Core schemas/routes are already partly
+  extracted. Split only with backend import-compatibility tests if a future API
+  change touches dictionary/search route boundaries.
+
+Decision:
+
+- Do not start another refactor only because these files are large.
+- The next maintainability slice should be attached to the next evidence-based
+  product slice and should reduce the exact boundary that product work touches.
+- Code splitting is currently guarded by budget tests; reopen bundle work only
+  if `qa:bundle-budget`, production load evidence, or CI shows a measurable
+  regression.
+
 ### Documentation Cleanup
 
 Status: `Recorded`
