@@ -214,6 +214,28 @@ const summarizeDeployment = (deployment) => {
   };
 };
 
+const parseTimestamp = (value) => {
+  if (!value || value === ZERO_TIME) return null;
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : null;
+};
+
+const ageMinutesSince = (value) => {
+  const timestamp = parseTimestamp(value);
+  if (!timestamp) return null;
+  return Math.max(0, Math.round((Date.now() - timestamp) / 60000));
+};
+
+const summarizeDeploymentAge = (deployment) => {
+  if (!deployment) return null;
+  return {
+    createdAgeMinutes: ageMinutesSince(deployment.createdAt),
+    scheduledAgeMinutes: ageMinutesSince(deployment.scheduledAt),
+    startedAgeMinutes: ageMinutesSince(deployment.startedAt),
+    finishedAgeMinutes: ageMinutesSince(deployment.finishedAt),
+  };
+};
+
 const safeJsonParse = (text, fallback) => {
   try {
     return JSON.parse(text);
@@ -289,6 +311,20 @@ const buildLogEntries =
     ? safeJsonParse(buildLog.stdout, [])
     : [];
 const localConfig = readLocalZeaburConfig();
+const redeployCommand = `npx zeabur service redeploy --id ${serviceId} --env-id ${environmentId} --yes --json --interactive=false`;
+const inspectDeploymentCommand = expectedDeployment
+  ? `npx zeabur deployment get --deployment-id ${
+      expectedDeployment.ID || expectedDeployment.id
+    } --json --interactive=false`
+  : `npx zeabur deployment list --service-id ${serviceId} --env-id ${environmentId} --json --interactive=false`;
+let statusCategory = "unknown";
+const nextActions = [];
+
+const setStatusCategory = (category) => {
+  if (statusCategory === "unknown") {
+    statusCategory = category;
+  }
+};
 
 const allServiceVariables = [
   ...(Array.isArray(variablePayload?.readonlyVariables)
@@ -323,11 +359,14 @@ const guidance = [];
 
 if (!expectedGitSha) {
   failures.push("Could not resolve an expected git SHA.");
+  setStatusCategory("expected-sha-missing");
 }
 
 if (zeabur.status !== 0) {
   failures.push("Zeabur CLI deployment list command failed.");
+  setStatusCategory("zeabur-cli-failure");
   guidance.push("Confirm Zeabur CLI auth and network access, then rerun this gate.");
+  nextActions.push("Confirm Zeabur CLI auth/network access, then rerun npm run qa:zeabur-deployment.");
 }
 
 if (serviceGet.status !== 0) {
@@ -346,13 +385,16 @@ if (parseError) {
 
 if (!deployments.length && zeabur.status === 0 && !parseError) {
   failures.push("Zeabur CLI returned no deployments for the frontend service.");
+  setStatusCategory("no-deployments");
 }
 
 if (expectedGitSha && deployments.length && !expectedDeployment) {
   failures.push(`No Zeabur deployment was found for expected commit ${expectedGitSha}.`);
+  setStatusCategory("expected-deployment-missing");
   guidance.push(
     "Trigger the frontend service redeploy, then wait for the expected commit to reach RUNNING before heavier production QA.",
   );
+  nextActions.push(`Trigger a frontend redeploy: ${redeployCommand}`);
 }
 
 if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
@@ -364,8 +406,15 @@ if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
     failures.push(
       `Expected deployment ${expectedDeployment.ID} is ${expectedDeployment.status} but has not reached build start.`,
     );
+    setStatusCategory("stuck-before-build");
     guidance.push(
       "Treat this as a Zeabur/GitHub integration or platform scheduling blocker, not a frontend build regression.",
+    );
+    nextActions.push(
+      `The expected deployment has not started building; retry once with: ${redeployCommand}`,
+    );
+    nextActions.push(
+      "If a redeploy still has no build log or build start time, inspect the Zeabur dashboard service queue/GitHub integration before changing product code.",
     );
     if (buildLog.status === 0 && buildLogEntries.length === 0) {
       guidance.push(
@@ -392,6 +441,7 @@ if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
     failures.push(
       `Expected deployment ${expectedDeployment.ID} is ${expectedDeployment.status}, not RUNNING.`,
     );
+    setStatusCategory("expected-deployment-not-running");
   }
 }
 
@@ -399,19 +449,29 @@ if (runningDeployment && !shasMatch(runningDeployment.commitSHA, expectedGitSha)
   failures.push(
     `Latest RUNNING deployment is ${runningDeployment.commitSHA}, not expected ${expectedGitSha}.`,
   );
+  setStatusCategory("stale-running-deployment");
   guidance.push(
     "Production is stale until /build-info.json and Zeabur RUNNING deployment agree with the expected commit.",
   );
+  nextActions.push(`Trigger a frontend redeploy: ${redeployCommand}`);
 }
 
 if (expectedRunning && !runningDeployment) {
   failures.push("The expected deployment is RUNNING but no RUNNING deployment was identified.");
+  setStatusCategory("running-state-inconsistent");
 }
 
 const ok =
   failures.length === 0 &&
   Boolean(expectedRunning) &&
   shasMatch(expectedRunning.commitSHA, expectedGitSha);
+
+if (ok) {
+  statusCategory = "fresh-running";
+  nextActions.push("Proceed with heavier production QA.");
+} else if (!nextActions.length) {
+  nextActions.push(`Inspect current Zeabur deployment state: ${inspectDeploymentCommand}`);
+}
 
 const result = {
   ok,
@@ -462,10 +522,19 @@ const result = {
   },
   localConfig,
   latestDeployment: summarizeDeployment(latestDeployment),
+  latestDeploymentAge: summarizeDeploymentAge(latestDeployment),
   runningDeployment: summarizeDeployment(runningDeployment),
+  runningDeploymentAge: summarizeDeploymentAge(runningDeployment),
   expectedDeployment: summarizeDeployment(expectedDeployment),
+  expectedDeploymentAge: summarizeDeploymentAge(expectedDeployment),
   expectedDeployments: expectedDeployments.map(summarizeDeployment),
   deploymentCount: deployments.length,
+  statusCategory,
+  recovery: {
+    redeployCommand,
+    inspectDeploymentCommand,
+    nextActions,
+  },
   failures,
   guidance,
 };

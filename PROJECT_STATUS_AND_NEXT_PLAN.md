@@ -690,9 +690,13 @@ Current status:
   before build start (`startedAt` unset), or when the latest `RUNNING`
   deployment is still an older commit. It writes
   `build/zeabur-deployment-report.json` with deployment status, service
-  metadata, build-log availability, and local `zeabur.yaml`/`zbpack` config
-  evidence so stale production and platform scheduling failures can be reported
-  without manually comparing CLI JSON.
+  metadata, build-log availability, local `zeabur.yaml`/`zbpack` config
+  evidence, deployment age, a `statusCategory`, and recovery commands so stale
+  production and platform scheduling failures can be reported without manually
+  comparing CLI JSON. A `stuck-before-build` category means the expected commit
+  reached Zeabur but never started building; retry the reported redeploy command
+  once, then inspect the Zeabur service queue/GitHub integration rather than
+  changing product code.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

@@ -119,7 +119,10 @@ Current monitoring slice opened from real roster evidence:
   config when dashboard metadata stays blank. After push, re-run
   `npm run qa:zeabur-deployment` and expected-SHA
   `npm run qa:production-health` before treating production QA as
-  authoritative.
+  authoritative. The deployment freshness report now includes deployment age,
+  `statusCategory`, and recovery commands; use `stuck-before-build` as a
+  platform/integration bucket after one redeploy attempt instead of opening
+  another product-code fix.
 - Batch paste cleanup now includes pure numeric CAS rehyphenation, while
   duplicate, invalid-format, and checksum-failed rows remain separate. The
   representative roster fixture now also covers Chinese `CAS編號` headers,
