@@ -83,6 +83,8 @@
   "results.workflowReviewLabel": "需要檢查",
   "results.workflowReviewBody": "包含來源重試、查不到、來源衝突、缺中文名或 GHS 資料缺口。",
   "results.workflowReviewActionQueueLabel": "處理順序",
+  "results.workflowReviewSignalCount": "{{signals}} 個訊號 / {{rows}} 筆",
+  "results.workflowReviewSignalNote": "訊號數可能高於需要審查的列數，因為同一個化學品可能同時有多個問題。先處理建議下一步，再依問題類型篩選。",
   "results.workflowReviewActionQueueNext": "下一步：",
   "results.workflowExportLabel": "整批筆數",
   "results.workflowExportBody": "這是篩選前的整批大小；匯出會依目前可見範圍執行。",

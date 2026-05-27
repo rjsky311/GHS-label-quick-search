@@ -83,6 +83,8 @@
   "results.workflowReviewLabel": "Needs review",
   "results.workflowReviewBody": "Includes source retries, lookup gaps, source conflicts, missing Chinese names, or GHS data gaps.",
   "results.workflowReviewActionQueueLabel": "Review action queue",
+  "results.workflowReviewSignalCount": "{{signals}} signals / {{rows}} rows",
+  "results.workflowReviewSignalNote": "Signal counts can be higher than rows needing review because one chemical can have several issues. Start with the recommended next step, then filter each issue type.",
   "results.workflowReviewActionQueueNext": "Next:",
   "results.workflowExportLabel": "Batch rows",
   "results.workflowExportBody": "Full batch size before filters; exports follow the current visible scope.",

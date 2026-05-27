@@ -299,6 +299,56 @@ describe('ResultsTable', () => {
       });
     });
 
+    it('explains overlapping review signals separately from unique review rows', () => {
+      const overlappingReviewResult = {
+        ...mockWarningResult,
+        cas_number: '100-00-5',
+        name_en: '4-Nitrochlorobenzene',
+        name_zh: '',
+        source_conflict: true,
+        has_multiple_classifications: true,
+        other_classifications: [
+          {
+            pictograms: [{ code: 'GHS07' }],
+            hazard_statements: [{ code: 'H302', text_en: 'Harmful if swallowed.' }],
+            signal_word: 'Warning',
+          },
+        ],
+      };
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[overlappingReviewResult, mockWarningResult]}
+          totalCount={2}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(
+        screen.getByTestId('results-workflow-summary-needs-review-value')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-summary-label-ready-value')
+      ).toHaveTextContent('1');
+      expect(
+        screen.getByTestId('results-workflow-review-signal-count')
+      ).toHaveTextContent('results.workflowReviewSignalCount');
+      expect(
+        screen.getByTestId('results-workflow-review-signal-note')
+      ).toHaveTextContent('results.workflowReviewSignalNote');
+      expect(
+        screen.getByTestId('results-workflow-review-action-source-conflict'),
+      ).toHaveTextContent('results.reviewActionReviewSourceConflict');
+      expect(
+        screen.getByTestId('results-workflow-review-action-multiple-classifications'),
+      ).toHaveTextContent('results.reviewActionConfirmMultipleGhs');
+      expect(
+        screen.getByTestId('results-workflow-review-action-missing-chinese-name'),
+      ).toHaveTextContent('results.reviewActionReportChineseName');
+    });
+
     it('keeps real-roster review buckets and next actions separated in the batch summary', () => {
       const onSetAdvancedFilter = jest.fn();
 

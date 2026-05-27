@@ -172,6 +172,13 @@ export default function ResultsTable({
       action: getReviewNextActionLabel(type, t),
     }))
     .filter((issue) => issue.count > 0);
+  const workflowReviewSignalCount = workflowIssueSummaries.reduce(
+    (total, issue) => total + issue.count,
+    0,
+  );
+  const workflowReviewSignalsOverlap =
+    workflowSummary.needsReview > 0 &&
+    workflowReviewSignalCount > workflowSummary.needsReview;
   const multipleGhsReviewCount =
     workflowIssueCounts[DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS] || 0;
   const activeReviewIssueType = advancedFilter.reviewIssueType || "";
@@ -726,9 +733,30 @@ export default function ResultsTable({
               className="mt-3 border-t border-slate-100 pt-3"
               data-testid="results-workflow-review-action-queue"
             >
-              <p className="mb-2 text-xs font-semibold text-slate-700">
-                {t("results.workflowReviewActionQueueLabel")}
-              </p>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-slate-700">
+                  {t("results.workflowReviewActionQueueLabel")}
+                </p>
+                {workflowReviewSignalsOverlap && (
+                  <span
+                    className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-100"
+                    data-testid="results-workflow-review-signal-count"
+                  >
+                    {t("results.workflowReviewSignalCount", {
+                      rows: workflowSummary.needsReview,
+                      signals: workflowReviewSignalCount,
+                    })}
+                  </span>
+                )}
+              </div>
+              {workflowReviewSignalsOverlap && (
+                <p
+                  className="mb-2 text-xs text-slate-500"
+                  data-testid="results-workflow-review-signal-note"
+                >
+                  {t("results.workflowReviewSignalNote")}
+                </p>
+              )}
               <div className="grid gap-2 md:grid-cols-2">
                 {workflowIssueSummaries.map((issue) => (
                   <button
