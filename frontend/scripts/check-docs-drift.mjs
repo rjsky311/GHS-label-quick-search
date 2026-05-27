@@ -152,7 +152,9 @@ for (const [relativePath, text] of Object.entries(docs)) {
 
 for (const [relativePath, text] of Object.entries(docs)) {
   for (const stalePhrase of [
+    "active batch-first pilot target",
     "active batch-first target",
+    "active batch-first owner doc",
     "active major target",
     "active major owner doc",
     "current active target is",

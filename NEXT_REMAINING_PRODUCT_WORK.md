@@ -6,8 +6,10 @@ baseline. It is not the canonical planning entry point. Start from
 queue, then use this file with `AUTONOMOUS_WORKFLOW.md`,
 `PRINT_ACCEPTANCE_STANDARD.md`, and `PRINT_BROWSER_QA_CHECKLIST.md` when a
 specific product block is selected.
-For label-printing simplification, use `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as
-the active execution contract before using the older print/batch backlog below.
+For label-printing work, use `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the current
+public-output contract before using the older print/batch backlog below.
+Do not work through this file linearly. Open items here only after
+`NEXT_PRODUCT_WORK.md` records a fresh evidence trigger and a stop condition.
 
 The product goal remains the same: a user should be able to search a chemical,
 understand the hazard source, choose one clear output type, preview a truthful
@@ -45,16 +47,18 @@ implementation checklist.
 - **Deferred by decision**: real-printer paper/stock validation is not complete
   because physical evidence is intentionally postponed; keep generated work
   orders current and convert future physical findings into automated checks.
-- **Still worth extending**: compact multilingual pressure, long names,
+- **Monitoring-only extension candidates**: compact multilingual pressure, long names,
   case/custom identity fields, QR scan evidence, admin/telemetry limits,
   source-conflict handling, fixed-stock batch label printing, and first-time
   user guidance should receive new tests or QA cases when a new example
   appears. The non-physical-print tracker for those next steps is
   `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`; the batch-print contract is
   `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- **Active simplification target**: the old print-modal vocabulary should be
+- **Implemented simplification baseline**: the public print model is already
   reduced according to `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: complete label, QR
-  small label, and identification small label.
+  small label, and identification small label. Reopen old print-modal
+  vocabulary only if a screenshot, QA failure, or code-review finding proves
+  it has leaked back into the product.
 - **A4/Letter complete-primary checkpoint**: the 2026-05-18 deployed fix
   aligns full-page H/P typography with resolved layout metrics and tightens
   dense continuation thresholds. `test:print-contract`, `qa:print-pdf`,

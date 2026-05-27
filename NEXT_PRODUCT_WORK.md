@@ -67,13 +67,26 @@ confusion, or a recurring data-governance issue.
 
 ### Active Slice
 
-Current default active slice: none from Batch-First by default. Select a new
-evidence-driven slice from the shipped Batch-First monitoring baseline. Use
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the Batch-First owner doc. Use
+Current active slice: none unless fresh evidence opens one. Do not continue
+Batch-First work by default. Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the
+shipped/monitoring Batch-First owner doc,
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the shipped evidence packet,
 `POST_95_REPRIORITIZATION.md` as the post-95 decision history,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
+
+Open a new slice only when the evidence states:
+
+1. Source: user screenshot/PDF/Excel, production QA failure, admin queue
+   evidence, CI/deployment failure, or a concrete code-review finding.
+2. Affected user job: batch review, batch label print, export handoff,
+   correction/admin triage, lookup trust, or production reliability.
+3. Expected proof: test command, QA gate, production clickthrough, generated
+   artifact, or owner-doc checkpoint that would prove the issue is resolved.
+4. Stop condition: what makes the slice done, and what must not be expanded
+   while doing it.
+
+Do not open a slice from broad backlog wording alone.
 
 Current housekeeping state: the Repository Hygiene / Code Splitting / Docs
 Consolidation pass is complete. The Batch-First Lab Pilot v1
@@ -103,7 +116,11 @@ evidence instead of continuing Batch-First implementation by inertia:
    already satisfied; reopen only when the next batch/admin/data change needs a
    narrower boundary.
 
-Current monitoring slice opened from real roster evidence:
+### Monitoring Evidence Log
+
+The items below are completed or monitoring evidence, not an open checklist.
+Reopen one only when fresh evidence contradicts it or shows the user still
+cannot complete the intended job.
 
 - Excel/roster data should be used as a representative QA corpus, not imported
   wholesale into the product. Users still run bounded batches, usually up to
@@ -250,13 +267,23 @@ Current closure note: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` remains
 `Shipped`; do not reopen it unless new pilot evidence contradicts its
 conclusions.
 
-### Next Likely Switch
+### Next Slice Triggers
 
-Likely switch points inside this target are: a failed Batch-First closure
-audit, multiple-GHS confirmation clarity, correction/admin queue triage,
-export-handoff confusion from real use, or a new production/user-provided
-blocker. Physical print validation remains deferred until real stock and
-printer access are available.
+Open the next slice from one of these evidence triggers:
+
+1. Multiple-GHS confirmation is unclear in a real batch review or print/export
+   path.
+2. Correction/admin queue evidence shows maintainers cannot identify the next
+   data-quality action quickly.
+3. A lab-manager export handoff example shows confusing scope, filenames,
+   sheets, or review categories.
+4. Production QA, CI, Zeabur deployment freshness, or a user screenshot/PDF
+   proves a product regression.
+5. A new product decision changes the public scope. Use `PRODUCT_SCOPE_GATE.md`
+   before implementation.
+
+Physical print validation remains deferred until real stock and printer access
+are available.
 
 ### Default Order
 
