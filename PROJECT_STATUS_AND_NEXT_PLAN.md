@@ -136,6 +136,11 @@ Current baseline capabilities:
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
   data-quality label helper directly, so users and maintainers do not see
   different names for the same action bucket.
+- Batch export handoff now preserves both the number of review signals and the
+  first recommended action in backend CSV/XLSX, frontend export preview, and
+  local CSV fallback. Production search UI QA now asserts those columns and the
+  preview explanation, so the handoff cannot silently drift back to
+  reason-only exports.
 - The simplified print UX baseline follows `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`:
   one batch output type at a time, no first-level purpose/card sprawl, and
   small-label continuation on the same output instead of recommending mixed A4

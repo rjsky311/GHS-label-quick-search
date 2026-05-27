@@ -95,7 +95,10 @@ selected item count, physical label count, physical page count, and stock
 purpose consistently, backend XLSX exports split the same batch into ready,
 needs-review, unresolved, and summary sheets for lab-manager triage, CI passed,
 Zeabur production refreshed, and the production health, batch-print, and
-product QA gates passed after `5d51401`.
+product QA gates passed after `5d51401`. A later export-handoff monitoring
+slice shipped review signal counts and primary recommended actions across
+backend CSV/XLSX, frontend export preview/local fallback, and production search
+UI QA in `a8afe4b`, `1a49af5`, and `b975efa`.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -122,6 +125,17 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-05-28 export handoff clarity: fresh monitoring evidence showed that
+  overlapping review reasons could survive into CSV/XLSX without a compact
+  lab-manager action signal. Backend exports now add `Review Signal Count` and
+  `Primary Review Action`, XLSX `Pilot Summary` separates unique review rows
+  from total review signals and overlapping-signal rows, frontend export
+  preview/local CSV fallback show the same fields, and production search UI QA
+  now fails if those handoff columns or their preview note disappear. Commits
+  `a8afe4b`, `1a49af5`, and `b975efa` passed backend export tests, focused
+  frontend tests, i18n parity, build, docs drift, bundle budget, GitHub CI,
+  Zeabur deployment freshness, expected-SHA production health, and production
+  search UI QA.
 - 2026-05-28 state check: no fresh screenshot/PDF/CI/admin evidence currently
   opens a new product slice. `main` was clean, the latest visible GitHub CI
   runs were green, expected-SHA `npm run qa:production-health` passed against
