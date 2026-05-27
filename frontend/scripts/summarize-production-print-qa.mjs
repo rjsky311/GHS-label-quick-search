@@ -247,8 +247,60 @@ const summarizeGenericReport = (name, reportPath, report) => {
     summary: report.summary || null,
     selectedCases: report.selectedCases || null,
     missingMarkers: report.missingMarkers || [],
+    warnings: normalizeFailureList(report.warnings),
     failures: reportFailures,
     failedCases: failedCases.map(failureFromResult),
+  };
+};
+
+const summarizeZeaburDeploymentReport = (reportPath, report) => {
+  if (!report) {
+    return {
+      name: "zeabur-deployment",
+      present: false,
+      ok: null,
+      reportPath,
+    };
+  }
+
+  const reportFailures = normalizeFailureList(report.failures);
+  if (report.parseError) {
+    reportFailures.push(`parse-error: ${report.parseError}`);
+  }
+  if (report.ok === false && report.statusCategory && reportFailures.length === 0) {
+    reportFailures.push(`zeabur-deployment-${report.statusCategory}`);
+  }
+
+  return {
+    name: "zeabur-deployment",
+    present: true,
+    ok: Boolean(report.ok),
+    reportPath,
+    statusCategory: report.statusCategory || "",
+    expectedGitSha: report.expectedGitSha || "",
+    latestDeployment: report.latestDeployment || null,
+    expectedDeployment: report.expectedDeployment || null,
+    runningDeployment: report.runningDeployment || null,
+    recovery: report.recovery || null,
+    guidance: normalizeFailureList(report.guidance),
+    warnings: [],
+    failures: [],
+    failedCases: reportFailures.length
+      ? [
+          {
+            id: report.statusCategory || "zeabur-deployment",
+            failures: reportFailures,
+            statusText: [
+              "zeabur deployment",
+              report.statusCategory,
+              ...(report.guidance || []),
+              ...(report.recovery?.nextActions || []),
+            ]
+              .filter(Boolean)
+              .join(" "),
+          },
+        ]
+      : [],
   };
 };
 
@@ -275,6 +327,11 @@ const healthPath = path.resolve(
   process.cwd(),
   env.PRODUCTION_HEALTH_REPORT_PATH ||
     "build/production-health-report.json",
+);
+const zeaburDeploymentPath = path.resolve(
+  process.cwd(),
+  env.ZEABUR_DEPLOYMENT_REPORT_PATH ||
+    "build/zeabur-deployment-report.json",
 );
 const searchUiPath = path.resolve(
   process.cwd(),
@@ -304,6 +361,10 @@ const handoffReportPaths = findReports(/^production-print-.*report\.json$/)
   .filter((filePath) => !/production-print-qa-summary\.json$/.test(filePath));
 
 const reports = {
+  deployment: summarizeZeaburDeploymentReport(
+    zeaburDeploymentPath,
+    readJsonIfExists(zeaburDeploymentPath),
+  ),
   health: summarizeGenericReport(
     "production-health",
     healthPath,
@@ -345,6 +406,7 @@ const reports = {
 };
 
 const presentReports = [
+  reports.deployment,
   reports.health,
   reports.bundle,
   reports.searchUi,
@@ -378,17 +440,33 @@ const reportLevelFailures = presentReports.flatMap((report) =>
     previewText: "",
   })),
 );
+const reportWarnings = presentReports.flatMap((report) =>
+  (report.warnings || []).map((warning) => ({
+    report: report.name,
+    warning,
+  })),
+);
 const failureTriage = buildFailureTriage([
   ...actionableFailures,
   ...reportLevelFailures,
 ]);
 
 const isPassingReport = (report) => Boolean(report?.present && report.ok === true);
+const isPassingOrAbsentReport = (report) =>
+  !report?.present || report.ok === true;
 
 const handoffReportsPassing =
   reports.handoff.length > 0 && reports.handoff.every(isPassingReport);
 
 const buildProductBlocks = () => [
+  {
+    id: "deployment-freshness",
+    name: "Production deployment freshness",
+    reports: [reports.deployment.name, reports.health.name],
+    ok: isPassingOrAbsentReport(reports.deployment) && isPassingReport(reports.health),
+    evidence:
+      "Production deployment freshness is proven when Zeabur has a running deployment for the expected commit and production health/build metadata matches the deployed app.",
+  },
   {
     id: "production-availability",
     name: "Production frontend/backend availability",
@@ -488,6 +566,7 @@ const result = {
     incompleteProductBlocks: incompleteProductBlocks.map((block) => block.id),
     actionableFailures,
     reportLevelFailures,
+    reportWarnings,
     failureTriage,
   },
 };

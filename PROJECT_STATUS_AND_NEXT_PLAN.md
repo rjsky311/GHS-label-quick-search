@@ -184,6 +184,15 @@ Current validation gates:
   `zbpack.ghs-frontend.json` is present on `main`, and the frontend service
   exposes the matching `ZBPACK_*` build variables, then redeploy and re-run
   this gate.
+  The Production Print QA workflow now runs this probe in its always-run
+  evidence phase and the production summary consumes
+  `build/zeabur-deployment-report.json` when present. Use the summary's
+  deployment-freshness block and failure bucket before deciding whether a QA
+  email needs product-code work, a Zeabur redeploy, or dashboard/integration
+  inspection.
+  If `/build-info.json` is unreadable but no expected SHA was supplied,
+  `qa:production-health` stays an availability check but records a warning;
+  do not use that weaker pass as proof that production is on the latest commit.
   If GitHub Actions fails during `actions/checkout` with a 403/account access
   message, treat CI as externally blocked and rerun only after repository or
   account access is restored.

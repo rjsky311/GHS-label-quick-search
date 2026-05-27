@@ -125,6 +125,10 @@ jobs:
             echo "Skipping physical print validation plan; build/print-qa-report.json was not generated for this mode."
           fi
 
+      - name: Probe Zeabur deployment freshness
+        if: always()
+        run: npm run qa:zeabur-deployment || true
+
       - name: Write production QA summary
         if: always()
         run: npm run qa:production-summary || true

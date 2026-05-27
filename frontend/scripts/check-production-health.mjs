@@ -241,6 +241,13 @@ const checkFrontend = () =>
       };
     }
 
+    const warnings = [];
+    if (buildInfo.parseError || !buildInfo.app || !buildInfo.version) {
+      warnings.push(
+        "frontend build-info metadata was not readable; run qa:zeabur-deployment or set an expected git SHA before treating production freshness as proven",
+      );
+    }
+
     if (expectedGitSha && !buildInfo.gitShaMatches) {
       return {
         ok: false,
@@ -250,6 +257,7 @@ const checkFrontend = () =>
         html: htmlMeta,
         asset: assetMeta,
         buildInfo,
+        warnings,
         error: "frontend build-info git SHA did not match the expected deployed commit",
       };
     }
@@ -268,6 +276,7 @@ const checkFrontend = () =>
           }
         : undefined,
       buildInfo,
+      warnings,
     };
   });
 
@@ -301,6 +310,11 @@ const checks = [await checkFrontend(), await checkBackend()];
 const failures = checks
   .filter((check) => !check.ok)
   .map((check) => `${check.name} failed after ${check.attempts.length} attempts`);
+const warnings = checks.flatMap((check) =>
+  (check.attempts || []).flatMap((attempt) =>
+    Array.isArray(attempt.warnings) ? attempt.warnings : [],
+  ),
+);
 const result = {
   ok: failures.length === 0,
   generatedAt: new Date().toISOString(),
@@ -314,6 +328,7 @@ const result = {
   expectedGitSha: expectedGitSha || undefined,
   checks,
   failures,
+  warnings,
 };
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

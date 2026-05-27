@@ -164,6 +164,15 @@ Current monitoring slice opened from real roster evidence:
   load failures, deployment freshness problems, QA-runner failures, and true
   product print/layout regressions. Use that bucket before opening another
   product fix from a scheduled QA email.
+- Production Print QA now probes Zeabur deployment freshness in the always-run
+  evidence phase and folds `build/zeabur-deployment-report.json` into the
+  summary when present. A scheduled QA email should therefore show whether the
+  failure is `stuck-before-build`, stale deployment metadata, Zeabur CLI/auth,
+  or a real product QA regression before another product fix is opened.
+- `qa:production-health` now reports unreadable `/build-info.json` as a
+  warning even when no expected SHA is supplied. Treat plain availability as
+  weaker evidence than commit-level freshness until either expected-SHA health
+  or `qa:zeabur-deployment` proves the deployed commit.
 - Admin triage now promotes the first recommended focus into a primary action
   card before the metric grid, so the maintainer can see the next data-quality
   action without scanning every correction, unresolved-search, candidate, and
