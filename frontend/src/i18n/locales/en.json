@@ -1034,6 +1034,8 @@
   "pilot.triagePendingManualEntries": "Manual entries in review",
   "pilot.triageNeedsEvidence": "Needs evidence",
   "pilot.triageStaleTelemetry": "Stale telemetry",
+  "pilot.triageAttentionSignals": "Review signals",
+  "pilot.triageOverlapNote": "Review signals can be higher than queue items because one correction request can carry multiple data-quality issues. Start from the primary action, then clear the related signals.",
   "pilot.triageOpenTarget": "Open related queue",
   "pilot.triageOpenTargetLabel": "Open {{label}}",
   "pilot.triageTargetLabel.related": "Related queue",

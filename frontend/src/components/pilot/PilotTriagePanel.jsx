@@ -43,6 +43,17 @@ export default function PilotTriagePanel({
 }) {
   const { t } = useTranslation();
   const attentionCounts = pilotTriage.attentionCounts || {};
+  const openWorkItemCount = Number(pilotTriage.openWorkItemCount || 0);
+  const attentionSignalCount = Number.isFinite(
+    Number(pilotTriage.attentionSignalCount),
+  )
+    ? Number(pilotTriage.attentionSignalCount)
+    : Object.values(attentionCounts).reduce(
+        (total, count) => total + Number(count || 0),
+        0,
+      );
+  const hasOverlappingSignals =
+    openWorkItemCount > 0 && attentionSignalCount > openWorkItemCount;
   const upstreamRetryCount =
     attentionCounts.upstreamRetryRows || observabilityCounters["upstream.total"] || 0;
   const dataQualityLabel = (issueType) =>
@@ -183,9 +194,17 @@ export default function PilotTriagePanel({
           label={t("pilot.openWorkItems", {
             defaultValue: "Queue items",
           })}
-          value={pilotTriage.openWorkItemCount || 0}
+          value={openWorkItemCount}
           accent="text-emerald-800"
           testId="pilot-triage-open-work-items"
+        />
+        <SummaryCard
+          label={t("pilot.triageAttentionSignals", {
+            defaultValue: "Review signals",
+          })}
+          value={attentionSignalCount}
+          accent="text-indigo-700"
+          testId="pilot-triage-attention-signals"
         />
         <SummaryCard
           label={t("pilot.triageOpenCorrections", {
@@ -260,6 +279,19 @@ export default function PilotTriagePanel({
           testId="pilot-triage-stale-telemetry"
         />
       </div>
+      {hasOverlappingSignals ? (
+        <p
+          className="mt-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-600"
+          data-testid="pilot-triage-overlap-note"
+        >
+          {t("pilot.triageOverlapNote", {
+            defaultValue:
+              "Review signals can be higher than queue items because one correction request can carry multiple data-quality issues. Start from the primary action, then clear the related signals.",
+            signals: attentionSignalCount,
+            items: openWorkItemCount,
+          })}
+        </p>
+      ) : null}
       <div className="mt-3 space-y-2">
         {recommendedFocus.map((focus) => {
           const canOpenFocusTarget =

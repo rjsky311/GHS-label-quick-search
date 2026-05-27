@@ -1026,6 +1026,8 @@
   "pilot.triagePendingManualEntries": "手動項目審查",
   "pilot.triageNeedsEvidence": "需要佐證",
   "pilot.triageStaleTelemetry": "逾期 telemetry",
+  "pilot.triageAttentionSignals": "審查訊號",
+  "pilot.triageOverlapNote": "審查訊號可能高於待處理佇列，因為同一筆修正請求可能同時帶有多個資料品質問題。先從主要管理動作開始，再逐步清掉相關訊號。",
   "pilot.triageOpenTarget": "開啟相關佇列",
   "pilot.triageOpenTargetLabel": "開啟{{label}}",
   "pilot.triageTargetLabel.related": "相關佇列",

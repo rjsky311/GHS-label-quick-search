@@ -295,6 +295,10 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("correction-request-status-count-ignored")).toHaveTextContent("1");
     expect(screen.getByTestId("pilot-summary-stale-miss-rows")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-open-work-items")).toHaveTextContent("12");
+    expect(screen.getByTestId("pilot-triage-attention-signals")).toHaveTextContent("25");
+    expect(screen.getByTestId("pilot-triage-overlap-note")).toHaveTextContent(
+      "pilot.triageOverlapNote",
+    );
     expect(screen.getByTestId("pilot-triage-open-corrections")).toHaveTextContent("2");
     expect(screen.getByTestId("pilot-triage-unresolved-searches")).toHaveTextContent("3");
     expect(screen.getByTestId("pilot-triage-candidate-found")).toHaveTextContent("1");
@@ -366,6 +370,7 @@ describe("PilotDashboardSidebar", () => {
       "pilot.triageNoPrimaryAction",
     );
     expect(screen.queryByTestId("pilot-triage-primary-action-count")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pilot-triage-overlap-note")).not.toBeInTheDocument();
   });
 
   it("calls the triage target handler from the primary and focus-row actions", () => {

@@ -147,6 +147,9 @@ cannot complete the intended job.
   the post-push deployment doubt for the current status checkpoint; keep the
   active slice closed unless new user evidence, production QA, CI, or admin
   data opens a concrete issue.
+- 2026-05-28 admin triage UX: the pilot triage panel now shows both unique
+  queue items and overlapping review signals, then explains the overlap. This
+  is a bounded data/admin triage improvement, not a new admin product surface.
 - 2026-05-28 maintainability scan: the current largest code surfaces are
   `frontend/src/utils/printQaMatrix.js` (2,776 lines),
   `frontend/src/utils/printLabelStyles.js` (1,847),

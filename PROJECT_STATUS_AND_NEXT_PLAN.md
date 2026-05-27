@@ -356,6 +356,13 @@ Current completion snapshot:
   health were aligned with that commit. No product-code slice was opened from
   this follow-up because it only verified that the latest canonical status
   checkpoint is live.
+- **Admin triage UX checkpoint 2026-05-28**:
+  the pilot/admin triage panel now separates unique queue items from
+  overlapping data-quality review signals, with an inline note explaining why
+  one correction request can increase several signal buckets. This keeps the
+  maintainer workflow focused on the primary action without hiding missing
+  Chinese names, no-GHS reports, source conflicts, unresolved searches, or
+  telemetry work.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the evidence-triggered continuation rules and done criteria.
