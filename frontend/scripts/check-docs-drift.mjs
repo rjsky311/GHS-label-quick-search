@@ -80,6 +80,13 @@ const docs = {
   ),
 };
 
+const rootMarkdownDocs = Object.fromEntries(
+  fs
+    .readdirSync(repoRoot)
+    .filter((fileName) => fileName.endsWith(".md"))
+    .map((fileName) => [fileName, readText(fileName)]),
+);
+
 const frontendPackage = JSON.parse(fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"));
 const ciWorkflow = readText(".github/workflows/ci.yml");
 const versionSources = {
@@ -150,7 +157,7 @@ for (const [relativePath, text] of Object.entries(docs)) {
   );
 }
 
-for (const [relativePath, text] of Object.entries(docs)) {
+for (const [relativePath, text] of Object.entries(rootMarkdownDocs)) {
   for (const stalePhrase of [
     "active batch-first pilot target",
     "active batch-first target",
