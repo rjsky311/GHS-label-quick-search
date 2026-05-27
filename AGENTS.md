@@ -1,617 +1,210 @@
-# GHS Label Quick Search ??Project Context
+# GHS Label Quick Search - Agent Bootstrap
+
+Use this file as the fast project orientation for Codex sessions. The
+canonical planning entry point is `PROJECT_STATUS_AND_NEXT_PLAN.md`; read it
+before choosing the next autonomous product slice.
 
 ## Project Overview
 
-- **Purpose**: Chemical GHS hazard label quick search system
-- **Stack**: React 19 + Tailwind CSS + Radix UI (frontend) / FastAPI + Python 3.11 (backend)
-- **Data Source**: PubChem REST API + local chemical dictionary (1,707 CAS entries)
-- **Current Version**: v1.10.0
-- **GitHub**: `rjsky311/GHS-label-quick-search` (private)
-- **Deployment**: Zeabur auto-deploy on push to main
-- **Frontend URL**: https://ghs-frontend.zeabur.app
-- **Backend URL**: https://ghs-backend.zeabur.app
+- Purpose: free public GHS lookup and label-printing utility for lab,
+  operations, teaching, and safety-adjacent users.
+- Core user job: batch lookup first, then batch print, export, and
+  data-correction/admin triage.
+- Stack: React 19 + Tailwind CSS + Radix UI + Vite frontend; FastAPI +
+  Python 3.11 backend.
+- **Current Version**: v1.10.0. Do not version-bump unless explicitly asked.
+- GitHub: `rjsky311/GHS-label-quick-search` (private).
+- Deployment: Zeabur auto-deploys from `main`.
+- Frontend: https://ghs-frontend.zeabur.app
+- Backend: https://ghs-backend.zeabur.app
 
-## Zeabur Infrastructure IDs
+## Current Product Rules
+
+- Current public print model has exactly three outputs:
+  - Complete A4/Letter label.
+  - QR small label.
+  - Identification small label.
+- Complete labels carry full H/P content and QR lookup links.
+- Small labels carry identity and GHS pictograms only; do not add H/P text to
+  small labels without a new product decision.
+- Printed hazard labels must never silently omit available GHS pictograms.
+- QR or supplemental labels must not replace required visual hazard
+  communication.
+- Keep safety-critical label content free of ads or promotional copy.
+- The app is a reference tool; it must keep SDS, supplier labels, and local
+  regulation authority boundaries visible.
+
+## Planning And Scope Selection
+
+- Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first.
+- `NEXT_PRODUCT_WORK.md` is only the short live queue.
+- `NEXT_REMAINING_PRODUCT_WORK.md` is detailed backlog context, not the
+  priority selector.
+- `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is shipped/monitoring, not an open
+  implementation target.
+- `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the current print-product contract.
+- `PRODUCT_REQUIREMENTS_DECISIONS.md` pins current product decisions.
+- `PRODUCT_SCOPE_GATE.md` defines the project-level "grill me" scope gate for
+  broad or ambiguous product changes.
+- Open a new slice only from concrete evidence: user screenshot/PDF/Excel,
+  production QA failure, CI/deployment failure, admin queue evidence, export
+  handoff confusion, or a code-review finding.
+- Every opened slice must state source, affected user job, expected proof, and
+  stop condition before implementation.
+- Do not continue Batch-First, print polish, admin tooling, or refactoring by
+  inertia after the shipped monitoring baseline.
+- Explicitly: do not continue by backlog inertia.
+
+## Zeabur Infrastructure
 
 - Project ID: `696262d991818d5fd97058b3`
 - Environment ID: `696262d9a7aaff0c1152b3d6`
 - Frontend service ID: `69626873d9479ab33ad4590e`
+- Live service names are `ghs-frontend` and `ghs-backend`.
+- `zeabur.yaml` service names should stay aligned with those live names.
+- `zbpack.ghs-frontend.json` pins the monorepo frontend app directory
+  (`frontend`), build command, and static output (`build`).
+- The live frontend service also mirrors non-sensitive build settings through
+  `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and
+  `VITE_BACKEND_URL`.
 
 ## Architecture
 
-```
+```text
 User Browser
-   |
-   v
-[React 19 + Tailwind + Radix UI + Vite]  (Zeabur static hosting)
-   |  axios HTTP calls to ${VITE_BACKEND_URL}/api
-   v
-[FastAPI (Python 3.11)]            (Zeabur Docker, port 8001)
-   |  httpx async calls
-   v
-[PubChem REST API]                 (NIH public API)
-   +
-[chemical_dict.py]                 (1,707 CAS?H, 1,707 CAS?N, 1,816 EN?H, reverse lookup dicts)
+  -> React 19 + Tailwind + Radix UI + Vite
+  -> axios calls to ${VITE_BACKEND_URL}/api
+  -> FastAPI backend on Zeabur, port 8001
+  -> PubChem REST API plus local dictionaries/admin curation
 ```
 
-**State management**: top-level state lives in `App.jsx` via `useState`; persistence, selection, sort, and modal-workflow behaviour are factored out into custom hooks (`src/hooks/`) and workflow helpers (`src/utils/`). Prefer adding new behaviour as a hook/util rather than widening `App.jsx` further.
-**Caching**: Server-side 24hr TTL in-memory (cachetools, max 5000). Client-side localStorage.
+Frontend state currently lives mostly in `frontend/src/App.jsx`, with
+persistence, selection, sorting, print, and modal workflows factored into
+hooks and helpers. Prefer adding behavior as a hook, util, or focused
+component instead of widening `App.jsx`.
 
-## Frontend Architecture (20+ components + 15+ hooks + shared utils)
+Important frontend areas:
 
-### Components (`src/components/`)
+- `frontend/src/components/ResultsTable.jsx`: results, batch workflow summary,
+  review reasons, export preview, and table actions.
+- `frontend/src/components/LabelPrintModal.jsx`: print modal shell. Keep new
+  print UI behavior in `frontend/src/components/label-print/` where possible.
+- `frontend/src/utils/printLabels.js`: print HTML generation and handoff.
+- `frontend/src/utils/printLabelStyles.js`: printable label CSS.
+- `frontend/src/utils/printPreviewStyles.js`: preview-only CSS.
+- `frontend/src/utils/printBatchPlanner.js`: fixed-stock batch planning.
+- `frontend/src/utils/printContentModel.js`: print content contract.
+- `frontend/src/utils/printFitEngine.js`: readiness/fit checks.
+- `frontend/src/utils/printLayoutInspection.js`: rendered overflow inspection.
+- `frontend/src/utils/exportData.js` and `frontend/src/utils/exportRows.js`:
+  export preview/download contracts.
+- `frontend/src/components/pilot/`: admin/pilot dashboard sections.
 
-| File                                | Purpose                                                                                                                                                                                                                                          |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Header.jsx`                        | App header, favorites/history toggles, language switch                                                                                                                                                                                           |
-| `SearchSection.jsx`                 | Single/batch search tabs with autocomplete                                                                                                                                                                                                       |
-| `SearchAutocomplete.jsx`            | Autocomplete dropdown (history + favorites)                                                                                                                                                                                                      |
-| `ResultsTable.jsx`                  | Results table with sort, filter, export, SDS, print                                                                                                                                                                                              |
-| `DetailModal.jsx`                   | Full chemical detail (GHS classification, SDS links)                                                                                                                                                                                             |
-| `LabelPrintModal.jsx`               | Purpose-first label printing config for the current three public outputs: Complete A4/Letter label, QR small label, and Identification small label; static print option definitions live in `components/label-print/labelPrintModalOptions.js`, output-type selector lives in `components/label-print/LabelOutputSelector.jsx`, config/stock button UI lives in `components/label-print/LabelPrintConfigControls.jsx`, stock-size summary/picker UI lives in `components/label-print/StockSizeSelector.jsx`, selected-label quantity controls live in `components/label-print/SelectedLabelsControls.jsx`, responsible-profile controls live in `components/label-print/ResponsibleProfileControls.jsx`, advanced print controls live in `components/label-print/LabelAdvancedPrintOptions.jsx`, output/readiness summaries live in `components/label-print/LabelPrintOutcomeSections.jsx`, output-plan details live in `components/label-print/PrintOutputPlanDetails.jsx`, batch fit/report controls live in `components/label-print/BatchFitReport.jsx`, the preview panel shell lives in `components/label-print/LabelPreviewPanel.jsx`, the real print-fragment preview panel lives in `components/label-print/LabelPreviewSection.jsx`, preview diagnostics and sheet-layout details live in `components/label-print/PreviewDiagnosticsPanel.jsx`, shared helper/config logic lives in `components/label-print/labelPrintModalHelpers.js`, saved/recent print controls live in `components/label-print/SavedPrintControls.jsx`, multiple-GHS print warning UI lives in `components/label-print/MultipleGhsPrintWarning.jsx`, and the sticky modal action bar lives in `components/label-print/LabelPrintFooter.jsx` |
-| `PrepareSolutionModal.jsx`          | Prepare-solution workflow form (concentration + solvent inputs, read-only parent summary, trust-boundary note); v1.9 M3 Tier 1                                                                                                                   |
-| `PreparedSidebar.jsx`               | Recent prepared-solution reprint sidebar                                                                                                                                                                                                         |
-| `PilotDashboardSidebar.jsx`         | Admin-gated pilot dashboard for observability, dictionary growth, aliases, manual entries, correction requests, and reference links; triage summary UI lives in `components/pilot/PilotTriagePanel.jsx`, dictionary add forms live in `components/pilot/PilotDictionaryForms.jsx`, recent alias/manual-entry/reference-link lists live in `components/pilot/PilotRecentCurationLists.jsx`, correction request review sections live in `components/pilot/PilotCorrectionRequestSections.jsx`, candidate evidence lives in `components/pilot/CorrectionCandidateEvidence.jsx`, shared primitives live in `components/pilot/PilotDashboardPrimitives.jsx`, and curation status/sort helpers live in `components/pilot/pilotDashboardHelpers.js` |
-| `AdminAccessDialog.jsx`             | Admin unlock dialog for pilot dashboard                                                                                                                                                                                                          |
-| `AuthoritativeSourceNote.jsx`       | Persistent SDS/supplier/local-regulation authority note                                                                                                                                                                                          |
-| `UpstreamErrorBanner.jsx`           | PubChem transient-error warning banner                                                                                                                                                                                                           |
-| `FavoritesSidebar.jsx`              | Favorites management sidebar                                                                                                                                                                                                                     |
-| `HistorySidebar.jsx`                | Search history sidebar                                                                                                                                                                                                                           |
-| `EmptyState.jsx`                    | Landing page with quick-start buttons                                                                                                                                                                                                            |
-| `Footer.jsx`                        | Version display + disclaimer                                                                                                                                                                                                                     |
-| `ErrorBoundary.jsx`                 | React error boundary                                                                                                                                                                                                                             |
-| `SkeletonTable.jsx`                 | Loading skeleton                                                                                                                                                                                                                                 |
-| `ClassificationComparisonTable.jsx` | Shared GHS comparison table (same-chemical & cross-chemical modes)                                                                                                                                                                               |
-| `ComparisonModal.jsx`               | Cross-chemical GHS classification comparison modal                                                                                                                                                                                               |
-| `GHSImage.jsx`                      | GHS pictogram image display                                                                                                                                                                                                                      |
+Important backend areas:
 
-### Hooks (`src/hooks/`)
+- `backend/server.py`: core FastAPI app and search orchestration.
+- `backend/api_models.py`: Pydantic payload schemas.
+- `backend/api_validation.py`: bounded validation, CAS normalization, safe URL
+  checks, miss-query sanitization, candidate sanitization.
+- `backend/pilot_admin_routes.py`: admin ops, dictionary curation, correction
+  intake/review, miss-query retention, workspace route factory.
+- `backend/export_helpers.py`: CSV/XLSX trust headers, formula-injection
+  neutralization, trusted Chinese-name filtering, XLSX pilot summary.
+- `backend/chemical_dict.py`: local dictionary data.
 
-| File                    | Purpose                                                                                                                                   |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `useSearchHistory.js`   | Search history in localStorage (max 50)                                                                                                   |
-| `useFavorites.js`       | Favorites in localStorage                                                                                                                 |
-| `useCustomGHS.js`       | Custom GHS classification overrides                                                                                                       |
-| `useLabelSelection.js`  | Tracks selected chemicals for printing                                                                                                    |
-| `useResultSort.js`      | Table sort state (4 columns)                                                                                                              |
-| `usePrintTemplates.js`  | Save/load/delete print setting presets (max 10)                                                                                           |
-| `usePrintWorkspace.js`  | Local-first print templates, custom label fields, lab profile, and recent print wiring; optional workspace sync when explicitly enabled   |
-| `usePrintRecents.js`    | Recent print storage and reload helpers                                                                                                   |
-| `useLabProfile.js`      | Lab profile persistence                                                                                                                   |
-| `useObservability.js`   | Pilot observability event logging/report export                                                                                           |
-| `usePilotDashboard.js`  | Admin-gated pilot dashboard data loading and saves                                                                                        |
-| `usePreparedRecents.js` | Prepared-solution recent workflow inputs (localStorage, schemaVersion:1, max 10, dedup+prepend); v1.9 M3 Tier 2                           |
-| `usePreparedPresets.js` | Prepared-solution saved recipe presets (localStorage, schemaVersion:1, max 10, recipe-only: parent+concentration+solvent); v1.9 M3 Tier 2 |
-| `useFocusTrap.js`       | Modal/Sidebar focus trap + Tab wrap + focus restore on close (onClose held in ref so parent re-render doesn't rebuild the trap)           |
-| `use-toast.js`          | shadcn toast hook                                                                                                                         |
+## Key Commands
 
-### Utils (`src/utils/`)
+Run frontend commands from `frontend/`:
 
-| File                    | Purpose                                                                                                                                                                                                                                                                                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exportData.js`         | Excel/CSV export (backend-only; no client-side fallback after Phase 3)                                                                                                                                                                                                                                                                 |
-| `printContentModel.js`  | Shared print content contract: resolves effective GHS classification, counts required pictograms/H/P statements/signal/profile fields, and marks complete-primary vs supplemental label policy                                                                                                                                         |
-| `printFitEngine.js`     | Shared print preflight/readiness engine for dense-content routing, full-page primary upgrade decisions, responsible-profile gating, and UI/renderer fit inspection                                                                                                                                                                      |
-| `printOutputPlanner.js` | Product-level print output planner: maps chemical content, stock, locale, and profile completeness to complete-primary / supplemental / full-page recommendation states                                                                                                                                                                 |
-| `printLabels.js`        | Label printing engine (purpose-aware full primary labels plus compact supplemental templates, iframe HTML generation, preflight orchestration, and print handoff); prepared-solution rendering branch keyed on `isPreparedSolution`                                                                                                     |
-| `printLabelStyles.js`   | Printable label stylesheet builder extracted from `printLabels.js`; keep physical print CSS/layout styling changes here unless they need renderer data-shape changes                                                                                                                                                                    |
-| `printPreviewStyles.js` | Preview-only print stylesheet sizing, scale, viewport, and inspection mode CSS extracted from `printLabelStyles.js`; keep browser-preview frame/scale changes here |
-| `printDocumentLayoutHelpers.js` | Print document escaping, QR/lookup URL helpers, label class/data-attribute helpers, auto-fit level resolution, lab-profile fallback resolution, and render model resolution extracted from `printLabels.js`; keep print document model changes here unless they require renderer HTML changes |
-| `printLifecycle.js`     | Print lifecycle metadata, layout-blocked alert text, and QA handoff pending/blocked/ready status publishing extracted from `printLabels.js`; keep QA/status-only handoff changes here unless they need renderer changes                                                                                                                  |
-| `printImagePreflight.js` | Required print image loading, timeout, and image-failure issue creation for GHS pictograms and QR codes; keep image-load reliability changes here instead of re-growing `printLabels.js`                                                                                                                                               |
-| `printContinuationPagination.js` | Pure complete-label continuation pagination helpers: statement weight/line-unit calculation, page limits, append logic, and compaction                                                                                                                                                                                        |
-| `printStatementPriority.js` | H/P statement priority scoring used by print rendering                                                                                                                                                                                                                 |
-| `printLayoutInspection.js` | Rendered print-layout overflow inspection shared by print preflight/tests; keep this separate from HTML generation when tightening print fit rules                                                                                                                                                                                     |
-| `printRenderHelpers.js` | Print-render helper functions for compact pictogram pagination, print-template normalization, label identity density, localized statement/signal text, and renderer text truncation                                                                                                                                                      |
-| `preparedSolution.js`   | Prepared-solution helpers: `buildPreparedSolutionItem` (Tier 1, optional operational fields from Tier 2 PR-1), `buildRecentRecord` + `preparedRecentKey` (Tier 2 PR-2A), `buildPresetRecord` + `preparedPresetKey` (Tier 2 PR-2B, recipe-only ??drops operational fields), `formatPreparedDisplayName` (Tier 2 PR-3, app-only display) |
-| `sdsLinks.js`           | PubChem Safety + ECHA CHEM search URL builders                                                                                                                                                                                                                                                                                         |
-| `formatDate.js`         | i18n-aware date formatting                                                                                                                                                                                                                                                                                                             |
-| `printStorage.js`       | Versioned print template/job/lab-profile normalization and recent print merge helpers                                                                                                                                                                                                                                                  |
-| `workspaceDocuments.js` | Optional admin-gated workspace document helpers; public builds default to local-only no-op sync                                                                                                                                                                                                                                        |
-| `ghsAvailability.js`    | Distinguishes unavailable GHS data from renderable GHS visuals                                                                                                                                                                                                                                                                         |
-| `ghsText.js`            | Localized GHS name/signal/statement text helpers                                                                                                                                                                                                                                                                                       |
-
-### i18n (`src/i18n/`)
-
-- `index.js` ??i18next init with LanguageDetector, fallback zh-TW
-- `locales/zh-TW.json` ??Traditional Chinese (grew across v1.8 M0?2 and v1.9 M3 Tier 1; keep additions tagged to their milestone in PRs)
-- `locales/en.json` ??English (same growth pattern as zh-TW)
-- Language stored in localStorage key `ghs_language`
-
-### Build
-
-- Vite 6 + `@vitejs/plugin-react`
-- `@` alias ??`src/` via `frontend/vite.config.js`
-- Tailwind CSS 3.4 + shadcn/ui (46 primitives)
-- Test runner: Jest 30 + jsdom. Run frontend npm commands from `frontend/`;
-  run tests with `npm test -- --runInBand` and locale parity with
-  `npm run test:i18n`.
-
-## Backend Architecture (`backend/server.py`)
-
-Backend payload schemas and validation constants live outside the route module:
-`backend/api_models.py` owns Pydantic request/response payloads, while
-`backend/api_validation.py` owns bounded payload constants, CAS normalization,
-safe-reference URL checks, dictionary-miss context sanitization, and correction
-candidate sanitization. `server.py` re-exports the public model/constant names
-used by existing tests and callers, but new schema/validator work should start
-in those smaller modules.
-
-### API Endpoints (all under `/api`)
-
-| Endpoint                          | Method   | Rate limit (per IP) | Description                                                                                                       |
-| --------------------------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `/api/health`                     | GET      | ??                  | Health check; unlimited so LB/uptime monitors don't trip                                                          |
-| `/api/ops/report`                 | GET      | admin-gated         | Pilot observability/admin report                                                                                  |
-| `/api/dictionary/report`          | GET      | admin-gated         | Pilot dictionary growth report                                                                                    |
-| `/api/dictionary/manual-entries`  | GET/POST | admin-gated         | Manual dictionary entries                                                                                         |
-| `/api/dictionary/aliases`         | GET/POST | admin-gated         | Alias curation                                                                                                    |
-| `/api/dictionary/reference-links` | GET/POST | admin-gated         | Reference/SDS link curation                                                                                       |
-| `/api/dictionary/correction-requests` | GET/POST | POST 20/min, GET admin-gated | Public bounded correction intake and admin review queue                                                           |
-| `/api/dictionary/miss-query`      | POST     | ??                  | Optional search miss telemetry; no-op unless `CAPTURE_DICTIONARY_MISSES=true`                                     |
-| `/api/workspace/{doc_type}`       | GET/PUT  | admin-gated         | Optional shared workspace persistence for prepared/print/lab-profile docs; public frontend defaults to local-only |
-| `/api/search-by-name/{query}`     | GET      | 60/min              | Name search (EN/ZH substring + aliases, max 20)                                                                   |
-| `/api/search/{query}`             | GET      | 30/min              | Single CAS or name search (auto-detect)                                                                           |
-| `/api/search`                     | POST     | 10/min              | Batch CAS search (Pydantic `max_length=100` ??422 on overflow)                                                    |
-| `/api/export/xlsx`                | POST     | 10/min              | Export to Excel (Pydantic `max_length=500`, formula-injection safe)                                               |
-| `/api/export/csv`                 | POST     | 10/min              | Export to CSV (same limits)                                                                                       |
-| `/api/ghs-pictograms`             | GET      | ??                  | GHS pictogram metadata (static)                                                                                   |
-
-### Key Functions
-
-- `normalize_cas()` ??CAS format normalization (strips non-digits except hyphens)
-- `resolve_name_to_cas()` ??4-tier name?AS resolution (exact ZH ??exact EN ??word-boundary regex ??prefix)
-- `pubchem_get_json()` ??Retry helper: exponential backoff with jitter, honours `Retry-After`, raises `PubChemError` on exhausted transient failures; gated by `_pubchem_semaphore` (outbound concurrency cap, default 8)
-- `get_cid_from_cas()` ??4-method CID lookup (3 concurrent + 1 alt-CAS fallback); raises `PubChemError` when any attempt is transient AND no CID was found
-- `get_compound_name()` ??3-method name lookup with local dictionary fallbacks (lenient: per-endpoint catches `PubChemError`)
-- `get_ghs_classification()` ??Strict: lets `PubChemError` propagate so `search_chemical` can surface `upstream_error=True` instead of an empty-hazards response
-- `_classification_signature()` / `_report_rank_key()` ??Richer GHS dedup (`pictograms + signal + H-codes + source`) and deterministic primary-selection ranking (`report_count ??ECHA ??hazard count ??source order`)
-- `extract_all_ghs_classifications()` ??Parses ALL GHS reports from PubChem
-- `search_chemical()` ??Main orchestrator; catches `PubChemError` at both the CID and GHS phases
-- `pilot_admin_routes.py` -- Pilot/admin ops, dictionary curation, correction intake/review, miss-query retention/resolution, and workspace document route factory; keep admin route changes here unless they need core search/export state changes
-- `export_helpers.py` ??CSV/XLSX trust headers, spreadsheet formula-injection neutralization, trusted Chinese-name filtering, and XLSX Pilot Summary sheet helpers
-- `_client_ip()` ??Reads leftmost `X-Forwarded-For` for rate-limit bucketing behind Zeabur's proxy (disable via `TRUST_FORWARDED_HEADERS=0`)
-
-### Chemical Dictionaries (`backend/chemical_dict.py`)
-
-- `CAS_TO_EN` ??1,707 CAS?nglish name entries
-- `CAS_TO_ZH` ??1,707 CAS?hinese name entries
-- `CHEMICAL_NAMES_ZH_EXPANDED` ??1,816 English?hinese expanded dictionary
-- `EN_TO_CAS` ??1,702 English name (lowercase)?AS reverse lookup (5 fewer due to duplicate names)
-- `ZH_TO_CAS` ??Chinese name?AS reverse lookup
-
-### Backend Tests (`backend/test_name_search.py`)
-
-- 99 tests covering: name resolution, reverse dictionaries, aliases, API endpoints,
-  GHS classification dedup/ranking, export formula injection + size limits,
-  PubChem retry helper (429/5xx/timeout/Retry-After), `search_chemical` upstream_error
-  scenarios (including partial-transient mixed with 404), CORS config, rate limiter config
-- Run with: `python -m pytest -q`
-- Config: `pytest.ini` with `asyncio_mode = auto`
-
-## Critical Lessons (from previous sessions)
-
-### Zeabur Dockerfile Mismatch
-
-- Older Zeabur setup used its own frontend Dockerfile and missed repo-local npm config.
-- Current frontend deploy is Vite/npm based. `frontend/Dockerfile` uses Node 22; `zeabur.yaml` runs `npm ci && npm run build` and passes `VITE_BACKEND_URL`.
-- The live Zeabur frontend service is named `ghs-frontend`, so the repo also
-  has root-level `zbpack.ghs-frontend.json` to pin the monorepo app directory
-  (`frontend`), build command, and static output (`build`) for that actual
-  service name. `zeabur.yaml` service names should stay aligned with the live
-  `ghs-frontend` / `ghs-backend` services. The live frontend service also has
-  non-sensitive `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`,
-  and `VITE_BACKEND_URL` variables as a dashboard-level mirror for the same
-  build settings. Keep these in sync with build changes.
-- Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*` config unless explicitly asked.
-- Current i18n packages remain intentionally conservative: i18next 23.x, react-i18next 14.x, i18next-browser-languagedetector 7.x.
-
-### SearchAutocomplete Event Conflict
-
-- `mousedown` document listener fires before button `click` event
-- Solution: `requestAnimationFrame()` delay in outside-click handler
-- Symptom: search button "doesn't work on first click"
-
-### useFavorites Incomplete Fields
-
-- Must save `found`, `other_classifications`, `has_multiple_classifications` to localStorage
-- `DetailModal` needs null fallback for `getEffectiveClassification()` result
-- Symptom: clicking "detail" from favorites sidebar crashes app
-
-### i18n Package Versions
-
-- react-i18next 16.x / i18next 25.x previously created peer-dependency pressure during CRA/CRACO builds.
-- Even after the Vite migration, keep i18next 23.x / react-i18next 14.x / language detector 7.x unless there is an explicit dependency-refresh task.
-
-### PubChem Silent Degradation (Phase 1 fix)
-
-- Prior `get_ghs_classification` returned `{}` on any exception ??`search_chemical` emitted `found=True` with empty hazards. For a safety tool, that is indistinguishable from "no hazards" ??the worst failure mode this app can have
-- Fix: classify transient (429/5xx/timeout) vs definitive (404) in `pubchem_get_json`; surface via `upstream_error: true`; UI shows "PubChem ?急??⊥???" rather than "no data"
-- Partial-transient note: if ANY CID-lookup method raised `PubChemError` and no method found a CID, `get_cid_from_cas` raises ??we must not trust a not-found conclusion based on a partial outage
-
-### GHS Dedup by Pictogram Only (Phase 1 fix)
-
-- Old dedup key `frozenset(p['code'])` dropped reports with same icons but different H-codes / signal word
-- New signature `(pic_set, signal_word, sorted(h_codes), source)`; primary selected by deterministic rank (report_count ??ECHA ??hazard count ??source order)
-
-### printLabels Was an XSS Vector (Phase 1 fix)
-
-- `iframeDoc.write(...)` with template-string interpolation bypassed React's auto-escaping
-- Custom fields from localStorage, CAS input, PubChem text all flowed in raw
-- Fix: `escapeHtml()` applied to every interpolated text and attribute value
-
-### CSV/XLSX Formula Injection (Phase 1 fix)
-
-- Values starting with `=`, `+`, `-`, `@`, `\t`, `\r` execute as formulas in Excel/Sheets/Calc when the export is opened
-- `export_helpers.spreadsheet_safe()` prefixes with `'`; applied to every cell in both export endpoints
-
-### useFocusTrap onClose Identity (Phase 2 post-review fix)
-
-- Initial implementation had `useEffect(?? [onClose])`
-- App.js passes inline `onClose={() => setShowX(false)}`, so every parent re-render produced a new identity ??effect tore down and rebuilt ??focus bounced from user's current position back to the opener and then to the panel's first focusable
-- Fix: hold latest `onClose` in `onCloseRef`; main effect has empty deps and only runs once per mount
-
-## Current State (runtime v1.10.0)
-
-Runtime/code version is `1.10.0`. `frontend/package.json`,
-`frontend/src/constants/version.js`, `backend/server.py` `APP_VERSION`,
-and the Footer test pin are aligned. Do not version-bump further without
-an explicit ask.
-
-v1.10 moved the frontend from `react-scripts + CRACO` to Vite/npm and
-added print-workflow productization: label stock presets, QR labels, live
-sheet/label preview, recent print reload, lab profile, template save/load,
-and calibration controls. The current user-facing print model is intentionally
-small: Complete A4/Letter label, QR small label, and Identification small
-label. Complete labels carry the full H/P content and QR lookup link; small
-labels carry identity and GHS pictograms only. `PRINT_LABEL_CONTRACT.md`
-now pins the print safety contract: available GHS pictograms must never be
-summarized as `+N`, hidden behind QR, or silently omitted from printed hazard
-labels. It also added admin-gated pilot persistence and
-optional workspace documents. Public builds keep prepared/print/lab-profile
-state local-only unless `VITE_ENABLE_WORKSPACE_SYNC=true` and an admin key are
-provided. Dictionary miss capture is also opt-in via
-`CAPTURE_DICTIONARY_MISSES=true`.
-
-The current project-level planning entry is
-`PROJECT_STATUS_AND_NEXT_PLAN.md`. Read it first when choosing the next product
-slice; it consolidates current status, should-do items, blind spots, priority
-order, and done criteria. The priority order is not a permanent autopilot: use
-the next-step decision loop in `AUTONOMOUS_WORKFLOW.md` after several completed
-slices, after 10-20 commits cluster in one workstream, or when the user asks
-whether the recent order still makes product sense. Do not open a new product
-slice unless fresh evidence can name the source, affected user job, expected
-proof, and stop condition; if that evidence is missing, keep the project in
-monitoring/maintenance mode instead of working through historical backlog
-items.
-
-The 95% Lab-Ready Pilot target is shipped. `LAB_READY_PILOT_95_PLAN.md` is now
-the evidence packet for that milestone: realistic 50-100 item batch confidence,
-three stable label outputs, correction/admin governance, low-noise next-step
-UX, and repeatable QA closure. The current post-95 target selection lives in
-`POST_95_REPRIORITIZATION.md`; read it after
-`PROJECT_STATUS_AND_NEXT_PLAN.md` when choosing the next major product slice.
-The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`; it defines
-the Pilot Operations Ready baseline for small real pilots, admin/report triage,
-data-quality loop closure, batch export utility, and pilot QA cadence. Use
-`PILOT_RUNBOOK.md` as the operator-facing checklist before changing pilot
-reporting, admin triage, or evidence-driven continuation rules.
-The shipped short-term follow-up is
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`; use it as evidence for pilot
-smoothness, batch export usability, data-quality next-step selection,
-large-module maintainability, and historical-document cleanup.
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the shipped/monitoring Batch-First
-owner doc, not an open implementation target. Read it before continuing batch
-review flow, batch label confidence, batch export, correction/admin triage, or
-bounded maintainability work that directly supports those workflows. As of
-2026-05-26, the batch review clarity slice, fixed-stock handoff/output
-contract, Batch Export v1 workbook split, production batch handoff QA ordering
-fix, owner-doc closure audit, admin-triage product evidence, and repository
-hygiene/code-splitting/docs consolidation work are shipped on `main`; the next
-Batch-First work should be selected from new monitoring evidence. Current real
-roster evidence is treated as a representative QA corpus, not as a whole-roster
-product import: parser/fixture coverage includes Chinese `CAS編號` headers,
-Excel numeric/decimal CAS cells, harmless trailing punctuation, formula/date
-errors that must stay invalid, duplicates, checksum failures, missing Chinese
-names, no-GHS rows, multiple-GHS rows, upstream retry states, and unresolved
-lookups. Physical printer validation remains deferred until real stock/printer
-evidence is available.
-
-The current product-requirements decision packet is
-`PRODUCT_REQUIREMENTS_DECISIONS.md`. Read it before changing data-correction
-intake, Chinese-name candidate handling, batch-first product priority, or the
-definition of done. It records the 2026-05-22 alignment: prioritize batch
-lookup/print/export, keep three public label outputs, store future public
-correction requests in the backend pilot/admin SQLite flow, and treat future
-LLM/external Chinese-name suggestions as candidates until admin-approved.
-Backend correction-request storage/API and admin dashboard review are now in
-place, public correction actions now open the in-app queue dialog first while
-preserving GitHub issue links as fallback, and admin `candidate_found` updates
-now store review-only candidate evidence bundles. Approved correction requests
-and candidate bundles do not change public data by themselves; stored candidate
-bundles can seed pending manual-entry review records, but those records must be
-explicitly approved before public lookup, labels, exports, or QR targets use
-them.
-Candidate evidence payloads are sanitized at the backend boundary and forced
-to remain review-only. The current maintainer-only discovery path is
-`backend/scripts/discover_candidates.py`, backed by
-`backend/candidate_discovery.py`; it reads approved manual entries and the
-local seed dictionary by default, can resolve exact local names to CAS for
-unresolved-search rows, requires explicit opt-in for Wikidata, and does not
-write public data. Future PubChem synonym/NCI/LLM/scientific-skill discovery
-work must follow `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md`: dry-run first, evidence
-bundle only, no public-data side effects.
-
-The project-level scope alignment workflow is pinned in
-`PRODUCT_SCOPE_GATE.md`. Use it before broad or ambiguous product decisions,
-multi-surface UX changes, label-printing model changes, data-trust changes, or
-repeated-rework situations where the goal, non-goals, required content, or
-acceptance criteria are not already clear. It is a repo-tracked workflow, not a
-global memory or installed skill.
-
-The current label-printing product baseline is pinned in
-`SIMPLIFIED_LABEL_OUTPUT_MODEL.md`. Use it before changing `LabelPrintModal`,
-print output planning, stock presets, batch print UX, or print QA. The
-user-facing workflow has three outputs: complete A4/Letter label, QR small
-label, and identification small label. Complete labels include full H/P and a
-QR lookup link. Small labels print CAS first, English name second, Chinese name
-third, and all available GHS pictograms across same-output continuation labels;
-they should not expose H/P, signal words, H-code chips, case/custom fields, or
-front-label terminology.
-
-The print-workflow refactor baseline is pinned in
-`PRINT_OUTPUT_REFACTOR_PLAN.md`. Use it before changing `LabelPrintModal`,
-`printLabels`, `printFitEngine`, `printContentModel`, stock presets, preview
-rendering, or print tests. It defines the output-planner direction, A4/Letter
-primary labels, curated stock set, typography scaling, supplemental-label
-rules, and Browser QA matrix. The completed five-workstream execution map lives
-in `NEXT_PRINT_WORKSTREAMS.md`; the detailed remaining product backlog lives in
-`NEXT_REMAINING_PRODUCT_WORK.md`.
-
-The batch-print product contract is pinned in
-`BATCH_LABEL_PRINT_REFACTOR_PLAN.md`. Use it before changing batch search to
-print flows, `Print all with GHS data`, multi-selected label modal behavior,
-batch preview, batch print planning, or multi-chemical QA. Batch printing must
-be purpose-first and fixed-stock: users choose one physical stock for the batch,
-then the app classifies each item as printable, reduced, continuation, or
-excluded without silently mixing paper/roll sizes. Ready items print by
-default; reduced-purpose and same-stock continuation items require explicit
-acknowledgement before they join the same fixed-stock handoff.
-`qa:production-batch-print` is the deployed fixed-stock batch gate and is
-included in `qa:production-product`; `qa:print-pdf` also covers a 50-item
-fixed-stock compact batch print artifact.
-
-Data governance and safety boundaries are pinned in
-`DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`. Use it before changing source
-ranking, SDS/reference links, QR targets, manual dictionary/alias behavior,
-dictionary miss telemetry, admin-gated data paths, or upstream-error/no-GHS
-states. Effective alternate-classification selections now carry their selected
-source/report-count evidence through result rows, Detail provenance,
-print/export preparation, export preview, frontend CSV fallback, and backend
-CSV/XLSX exports.
-
-Support and correction intake is part of the same data-governance contract.
-Data-correction and workflow-request links must prefill only values that exist
-in the repository GitHub issue-form dropdown and field-id schemas; internal app
-issue keys belong in the generated body/context, not in dropdown query
-parameters. Broad source guidance stays in the body as `Evidence prompt`, while
-`evidence_type` uses a template option such as `Other`. Keep
-`frontend/src/constants/__tests__/supportLinksIssueTemplate.test.js` and
-`npm run qa:production-search-ui` aligned with this contract whenever issue
-templates or support links change; the production search UI gate reads the
-repository issue-template dropdown options and allowed field ids at run time, so
-do not reintroduce duplicated hard-coded option or field-id lists in QA scripts.
-
-Future non-physical-print work while real-printer validation is deferred is
-tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data
-trust/correction workflow, first-time UX guidance, public README/docs cleanup,
-and brand/support surfaces.
-
-Documentation drift checks now cover owner docs, not only the short roadmap
-files. `npm run test:docs` checks that the shipped/monitoring Batch-First owner
-doc, pilot evidence, data governance, simplified labels, print contract,
-physical print deferral, brand/support strategy, and scientific-skill
-evaluation docs keep a visible path back to `PROJECT_STATUS_AND_NEXT_PLAN.md`;
-it also checks the candidate-discovery dry-run contract before any external
-source is wired into the product.
-
-Optional scientific lookup skill evaluation is recorded in
-`SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`. The current decision is not to install
-the full `K-Dense-AI/scientific-agent-skills` repository. If a future
-data-governance or dictionary-curation round needs external scientific lookup
-support, consider only the documented whitelist (`database-lookup`,
-`paper-lookup`, and later `datamol`) as maintainer-side evidence tools, not
-runtime data sources.
-
-Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
-live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
-execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user
-asks to "continue" or otherwise delegates the next work round, start from
-`PROJECT_STATUS_AND_NEXT_PLAN.md`, run the dynamic next-step decision loop, and
-use `NEXT_PRODUCT_WORK.md` to decide whether a fresh evidence-triggered slice
-exists. If one exists, run `PRODUCT_SCOPE_GATE.md` first when the slice is
-broad or ambiguous, implement it, verify it, push to `main` when stable, and
-track CI/Zeabur/production QA for user-facing changes. If no slice has fresh
-evidence, do not continue by backlog inertia; keep monitoring/maintenance
-checks healthy and stop only for the explicit stop conditions in
-`AUTONOMOUS_WORKFLOW.md`.
-
-Meaningful work slices should also end with proactive observations. Name any
-newly noticed blind spot, stale assumption, repeated-fix pattern, or mismatch
-between passing QA and the user's actual goal, then record actionable findings
-in docs, tests, QA checks, or backlog instead of leaving them only in chat.
-
-PR #23 (`6b67061`) landed the productized free-utility redesign and is
-deployed on Zeabur. Production smoke after merge covered frontend asset
-refresh, backend health/search, the trust panel, detail workflow, and label
-print modal entry.
-
-### Git History (key commits)
-
-```
-07d7037 Harden production support link QA
-ae1e205 Guard support link prefill field ids
-a9c1ddb Expand docs drift coverage for owner docs
-1ed736c Read issue templates in production support QA
-8bf6e03 Guard support links against issue template drift
-8f2197d Align correction evidence type prefill
-67fbec3 Cover prepared reprint production QA
-09ad9e8 Add production prepared print QA
-6b273b4 Expand print QA layering and prepared coverage
-55039a6 Tighten production print bundle check
-929476c Expand compact label print coverage
-5cbdb7b Refine quick ID compact label layout
-c02295d Refine compact label preview scaling
-60de466 Expand print QA matrix coverage
-e238361 Refine print workflow and comparison icons
-7d16cae Unify GHS pictogram presentation
-f930827 Tighten production bundle marker gate
-6b67061 Merge pull request #23 - Productize utility workflow
-a9bdebd feat: productize utility workflow
-51cdb11 Polish label print copy and hierarchy
-31c8a18 Refine label preview hierarchy
-55dbcd4 Harden admin tools and simplify label output
-395273e Refine pilot search and prepared workflows
-7807b84 Persist print recents in workspace backend
-0b68579 Add pilot dashboard admin sidebar
-1e11586 Add pilot dictionary growth and shared workspace persistence
-7d10d07 Downgrade Vite to support Zeabur Node 18 builds
-d67f6c5 Use Zeabur frontend Dockerfile with Node 22
-065b00c Pin frontend Node runtime for CI and Zeabur
-5f6f056 Migrate frontend to Vite and add observability report
-1888964 Finish print preset workflow and preview wiring
-7657a1a Refactor print layout model and template hierarchy
-42f77b8 Add prepared reprint sidebar and lab profile printing
-348dceb Merge pull request #22 ??v1.9 version sync
-6c846c5 Merge pull request #21 ??UX cleanup from pilot dogfood (toast + today default + recent no-stale-date)
-e1f0a3b Merge pull request #20 ??Tier 2 debt cleanup (dead helper + stacked aria-modal)
-456e376 Merge pull request #19 ??M3 Tier 2 PR-3 derived preview name + trust copy refresh (Option A app-only)
-aa2f29b Merge pull request #17 ??M3 Tier 2 PR-2B parent-scoped saved presets
-f2a9a0f Merge pull request #16 ??M3 Tier 2 PR-2A parent-scoped recent prepared workflow
-a3b420e Merge pull request #15 ??M3 Tier 2 PR-1 operational metadata on prepared items
-70b35f6 Merge pull request #14 ??M3 Tier 1 PR-A prepared-solution UI flow + lifecycle fixes
-fe5e124 Merge pull request #13 ??M3 Tier 1 PR-B prepared-solution print path
-fdada04 Merge pull request #12 ??v1.8 version sync (runtime/docs ??1.8.0)
-6591a63 Merge pull request #11 ??M2 PR-B Print all with GHS data
-f24c650 Merge pull request #10 ??M2 PR-A no-GHS warning + aged cache tooltip
-b734520 Merge pull request #9  ??M1 PR-C upstream banner + authoritative note
-acef423 Merge pull request #8  ??M1 PR-B provenance UI in DetailModal / ResultsTable
-e2c90bd Merge pull request #7  ??M1 PR-A provenance fields in backend
-d2903c4 Merge pull request #6  ??M0 PR-C P-codes in print + export
-7323974 Merge pull request #5  ??M0 PR-B P-codes UI rendering
-0b7a754 Merge pull request #4  ??M0 PR-A backend P-code extraction
-84c948a Merge pull request #3  ??Phase 3 cleanup (dead files, headers, audit)
-8fd6185 Merge pull request #2  ??Phase 2 (autocomplete race, afterprint, focus trap)
-f7ed4c8 Merge pull request #1  ??Phase 1 hardening (CORS, rate limits, retry)
-94179e4 feat: add B&W / Color print mode toggle for GHS pictograms
-daa462a feat: add classification comparison table (same-chemical + cross-chemical)
-581c7c8 feat: add save print templates (localStorage, max 10 presets)
-dc6f91c feat: add live name search autocomplete from backend API
-df396b4 feat: add English/Chinese name search + update ECHA SDS URL
-5414eb2 v1.6.0: i18n dual-language + table sort & filter + SDS links
-25c719f v1.4.0: Architecture refactoring ??split monolithic App.js into 15 modules
+```powershell
+npm test -- --runInBand
+npm run test:i18n
+npm run test:docs
+npm run build
+npm run qa:bundle-budget
+npm run test:print-contract
+npm run qa:print-pdf
+npm run qa:production-health
+npm run qa:zeabur-deployment
+npm run qa:production-search-ui
+npm run qa:production-batch-print
+npm run qa:production-product
 ```
 
-### Test Results (latest known v1.10 baseline)
+Run backend commands from `backend/`:
 
-- **Frontend**: 1005 tests across 63 suites; 0 known React `act(...)` warnings
-- **Frontend command location**: run npm-based frontend checks from `frontend/`.
-- **Frontend i18n parity**: `npm run test:i18n` checks referenced locale keys, zh-TW/en key symmetry, and accidental CJK text in English strings
-- **Docs drift**: `npm run test:docs` checks runtime version alignment, canonical planning links, doc role statements, physical-print deferral wording, future-tracker statuses, evidence-triggered continuation rules, and shipped/monitoring owner-doc contracts across the required maintainer docs.
-- **Print contract**: `npm run test:print-contract` covers 261 focused print/planner/renderer assertions
-- **Print PDF QA**: `npm run qa:print-pdf` covers 35 print cases, including custom tiny compact stock, prepared-solution A4 primary, compact prepared outputs, sparse single-pictogram Nitrogen/Zinc Oxide/Boric Acid outputs, and a fixed-stock 50-item compact batch print artifact; it fails on compact visual-overlap regressions, stock mismatch, missing batch-category metadata, clipping, or hidden pictograms
-- **Production deployment freshness QA**: `npm run qa:zeabur-deployment` checks Zeabur's frontend deployment list for the expected git SHA, fails when the expected commit is missing, stuck before build start, not `RUNNING`, or when production still runs an older commit, then writes `build/zeabur-deployment-report.json` for stale-deploy triage. The report includes Zeabur service metadata, build-log availability, and local `zeabur.yaml`/`zbpack.ghs-frontend.json` evidence so platform scheduling/configuration blockers are not mistaken for product-code regressions.
-- **Production availability QA**: `npm run qa:production-health` checks the deployed frontend HTML, current Vite index asset, generated `/build-info.json`, and backend `/api/health` with bounded retries, then writes `build/production-health-report.json` with Zeabur request IDs, timing, and deployed git SHA evidence for 502/stale-deploy triage.
-- **Production print QA**: `npm run qa:production-print` covers PDF artifact generation plus deployed click-through handoff checks; split gates are available through `qa:production-primary`, `qa:production-compact`, and `qa:production-multi-chemical`
-- **Batch print QA**: `qa:production-multi-chemical` remains representative multi-chemical print coverage, while `qa:production-batch-print` exercises the deployed fixed-stock batch modal flow, representative preview switching, print action copy that names purpose/stock/exclusions, acknowledged reduced/continuation scope when available, and batch review screenshot/report.
-- **Production search UI QA**: `npm run qa:production-search-ui` uses deployed Chrome to search Hydrochloric Acid, inspect the result-row pictogram strip, trust note, source badge, separated data-correction/workflow support links, SDS link, expand alternate classifications, open the detail modal classification comparison/reference-link surfaces, verify the Urea no-GHS data-state boundary, verify structured correction fields for missing Chinese names / no-GHS gaps / source conflicts / unresolved lookups, verify issue-form dropdown-compatible `issue_type`, `evidence_type`, and `workflow_area` values, verify support-link query keys against the issue-template field ids, and verify Detail/Prepare Solution modal keyboard containment. The gate uses bounded app-shell/search retries to reduce false failures from transient deployed load/search delays. It saves full JSON evidence plus result, expanded-classification, detail-modal, mobile-result, mobile-detail, no-GHS-result, and no-GHS-detail screenshots, but prints a compact console summary for CI review. It fails on unreadable/missing pictogram strips, unsafe/untyped reference links, missing trust surfaces, no-GHS rows that can be selected/printed, support-link regressions, issue-template schema drift including stale query keys, mobile horizontal overflow, broken modal Tab/Escape behavior, image-load failures, or vertical action-button regressions.
-- **Production print workflow**: GitHub Actions workflow `Production Print QA` defaults to `product` mode for the product-level closure gate, can also run `health`, `smoke`, `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, or `all`, and uploads JSON reports/screenshots/PDF artifacts plus `production-print-qa-summary.json`
-- **Production prepared QA**: `npm run qa:production-prepared` covers deployed prepared creation, prepared-sidebar reprint, and prepared preset reuse for A4 primary plus compact prepared outputs. The fixture uses run-relative prepared/expiry dates so the QA remains a fresh workflow check over time.
-- **Production product QA**: `npm run qa:production-product` is the product-level closure gate. It runs deployed availability/print smoke, deployed prepared QA, deployed fixed-stock batch QA, and a required product-block summary so production availability, print renderer/stock fit, result pictograms, trust/SDS boundaries, prepared workflows, fixed-stock batch printing, and whole-product UX/support positioning are all represented in one pass/fail report.
-- **Physical print QA**: `PHYSICAL_PRINT_VALIDATION_CHECKLIST.md` covers real paper/stock, printer scaling, QR scan, and physical readability checks that automated Browser/PDF QA cannot fully prove. Run `npm run qa:physical-print-plan` after `qa:print-report` to generate `build/physical-print-validation-plan.md` and `.json` as the current real-printer work order.
-- **Data governance**: `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md` covers source roles, SDS/reference policy, QR target precedence, admin/manual data boundaries, telemetry limits, and conflict handling.
-- **Backend**: 193 tests covering name resolution, reverse dicts, aliases, API endpoints,
-  GHS dedup/ranking, export limits + formula injection, PubChem retry, upstream_error
-  surfacing (including partial-transient), CORS config, rate limiter config
-- **Build**: `npm run build` OK; Vite vendor chunks plus lazy-loaded print,
-  admin, detail, export, prepared, and sidebar surfaces keep the main `index`
-  chunk under the 500 kB warning threshold. Run `npm run qa:bundle-budget`
-  after build when touching app-shell imports, lazy routes, print/admin
-  surfaces, or Vite chunking; it writes `build/bundle-budget-report.json` and
-  fails on meaningful chunk-boundary regressions instead of encouraging
-  open-ended code splitting. CI now runs this gate after the production build.
-- **CI**: GitHub Actions runs both on every push to main and on PRs; workflow
-  actions use v6 / Node 24-compatible runtimes
+```powershell
+python -m py_compile server.py api_models.py api_validation.py export_helpers.py
+python -m pytest -q
+```
 
-### CI/CD (`.github/workflows/ci.yml`)
+Docs-only baseline:
 
-- **Frontend job**: `npm ci` ??`npm run test:i18n` ??`npm run test:docs` ??
-  `npm test -- --runInBand` ??`npm run build` ??`npm run qa:bundle-budget`
-- **Backend job**: `pip install -r requirements.txt` ??`py_compile server.py api_models.py api_validation.py export_helpers.py` ??`pytest -q`
-- Triggers: push to main, pull requests
+```powershell
+git diff --check
+```
 
-### Environment Variables
+When verifying production freshness, set the expected SHA:
 
-| Service  | Variable           | Local                                         | Production                        |
-| -------- | ------------------ | --------------------------------------------- | --------------------------------- |
-| Backend  | `CORS_ORIGINS`     | `http://localhost:5173,http://127.0.0.1:5173` | `https://ghs-frontend.zeabur.app` |
-| Frontend | `VITE_BACKEND_URL` | `http://localhost:8001`                       | `https://ghs-backend.zeabur.app`  |
+```powershell
+$env:PRODUCTION_HEALTH_EXPECTED_GIT_SHA=(git rev-parse HEAD)
+npm run qa:production-health
+```
 
-## Completed Milestones
+## Critical Safety Lessons
 
-- [x] Frontend unit tests Phase 1 (88 tests, 12 suites)
-- [x] Frontend unit tests Phase 2 (92 tests, 4 complex components) ??Total: 180+
-- [x] GitHub Actions CI/CD (frontend tests + build + backend tests)
-- [x] English/Chinese name search (backend resolve + /search-by-name/ endpoint + 29 tests)
-- [x] ECHA SDS link URL update ??`chem.echa.europa.eu/substance-search`
-- [x] Search shortcut: "/" key (Ctrl+K fallback) ??same as GitHub/YouTube
-- [x] Live name search autocomplete (debounced API + dedup + 8 tests)
-- [x] Fix autocomplete dropdown overflow-hidden clipping
-- [x] Chemical aliases / common names (~90 ZH + ~60 EN aliases, 30 new backend tests, alias badge UI)
-- [x] Print popup blocker fix (hidden iframe replaces window.open, 20 new tests)
-- [x] Custom label fields (lab name, date, batch number ??localStorage, 4 templates, 6 new tests)
-- [x] Bilingual labels (name display mode: both/en/zh with fallback, 5 new tests)
-- [x] Print quantity per chemical (1-20 copies per label, +/- controls, expand before paging, 4 new tests)
-- [x] Full-template font auto-sizing (4-tier system based on hazard count ? label size, 11 new tests)
-- [x] Save print templates (localStorage max 10 presets, usePrintTemplates hook, 12 new tests)
-- [x] Classification comparison table ??same-chemical (Part A) + cross-chemical (Part B), 30 new tests
-- [x] B&W / Color print option ??colorMode toggle in labelConfig, CSS grayscale filter, 3 new tests
-- [x] **Phase 1 hardening** ??printLabels HTML escaping; GHS dedup/ranking; export row-limit + formula neutralization; PubChem retry + upstream_error; CORS default + `allow_credentials=False`; slowapi rate limits + outbound PubChem semaphore
-- [x] **Phase 2 hardening** ??autocomplete abort + stale-response guard; iframe cleanup via `afterprint`; frontend batch>100 alert + double-guard; `useFocusTrap` hook + sidebar adoption; test coverage for LabelPrintModal / ErrorBoundary / sidebars
-- [x] **Phase 3 cleanup** ??version sync 1.7.0; removed dead files (`backend_test.py`, `tests/`, `摮.csv`, `test_result.md`); README + CLAUDE.md sync
-- [x] **v1.8 M0** ??P-codes (precautionary statements): backend extraction, UI rendering, print + export (PRs #4/#5/#6)
-- [x] **v1.8 M1** ??Data provenance + trust signals: backend provenance fields, DetailModal/ResultsTable surfaces, upstream banner + authoritative-source note (PRs #7/#8/#9)
-- [x] **v1.8 M2** ??No-GHS warning + aged-cache tooltip + "Print all with GHS data" shortcut (PRs #10/#11)
-- [x] **v1.8 version sync** ??runtime/docs aligned to `1.8.0` (PR #12)
-- [x] **v1.9 M3 Tier 1** ??Prepared-solution workflow (single-parent, concentration + solvent inputs, trust boundary preserved): PR-B print path (#13) + PR-A UI flow with Escape-parity + stale-quantity lifecycle fixes (#14; merge SHA `70b35f6`)
-- [x] **v1.9 M3 Tier 2** ??Operational Prepared Workflow (all frontend-only, localStorage-only, trust boundary preserved):
-  - PR-1 (#15) ??optional operational metadata on prepared items: `preparedBy` / `preparedDate` / `expiryDate`
-  - PR-2A (#16) ??parent-scoped recent prepared store (`usePreparedRecents`, schemaVersion:1, max 10, dedup+prepend) with form prefill
-  - PR-2B (#17) ??parent-scoped saved presets (`usePreparedPresets`, recipe-only: parent+concentration+solvent; preset click clears operational fields to prevent stale-date leak)
-  - PR-3 (#19, merge SHA `456e376`) ??`formatPreparedDisplayName` app-only display helper (Option A: not rendered on printed label) + `prepared.formNote` copy refresh
-- [x] **v1.9 Tier 2 debt cleanup** (#20, merge SHA `e1f0a3b`) ??removed dead `selectionHasPreparedItem` helper; closed stacked `aria-modal` a11y debt via `suppressed` prop on DetailModal (`inert` + `aria-hidden` + `aria-modal` drop + Escape / backdrop gates)
-- [x] **v1.9 prepared-solution UX cleanup** (#21, merge SHA `6c846c5`) ??pilot-dogfood-driven: Save-as-preset toast, `preparedDate` defaults to today (local TZ via `todayDateString`), Recent prefill no longer silently carries yesterday's date, Preset prefill same rule
-- [x] **v1.9 version sync** ??runtime/docs aligned to `1.9.0`
-- [x] **v1.10 frontend/build migration** ??Vite/npm migration, CI/Zeabur npm build alignment, frontend runtime `1.10.0`
-- [x] **v1.10 print workflow productization** ??label stock presets, QR template, live sheet/label preview, lab profile, recent print reload, template save/load, calibration controls
-- [x] **v1.10 pilot/workspace persistence** ??admin dashboard, admin-gated workspace documents, manual entries, aliases, reference links; public print/prepared/lab-profile state remains local-only by default
-- [x] **Productized redesign planning** ??see `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`
+- PubChem transient failures must surface as upstream retry states, not as
+  empty hazard data.
+- GHS dedup must include pictograms, signal word, H-codes, and source; do not
+  dedup by pictograms alone.
+- Print HTML must escape all interpolated text and attributes.
+- CSV/XLSX exports must neutralize formula injection for every cell.
+- Reference links and QR targets must be explicit safe `http` or `https`
+  URLs.
+- Admin/manual data must stay reviewed, bounded, and auditable before it can
+  affect public lookup, labels, exports, or QR targets.
+- Missing trusted Chinese names should be treated as curation issues; do not
+  display English as fake Chinese.
+- Public correction intake is for data-quality issues, not a general support
+  inbox.
+- `useFocusTrap` should avoid rebuilding traps on every parent render; keep
+  close handlers in refs where needed.
 
-## v1.8 Roadmap
+## Deployment And QA Lessons
 
-See **[V1_8_REAL_WORLD_ROADMAP.md](./V1_8_REAL_WORLD_ROADMAP.md)** for the historical product roadmap. M0?3 and the v1.10 M4-style print-workflow expansion have now landed. The current next product decision is no longer "should we add real print workflow?" but "how do we make the full free tool feel productized, trustworthy, and pleasant enough for daily use?" The current design contract lives in **[DESIGN.md](./DESIGN.md)**, **[BRANDED_UTILITY_STRATEGY.md](./BRANDED_UTILITY_STRATEGY.md)**, and **[REDESIGN_ROADMAP.md](./REDESIGN_ROADMAP.md)**.
+- Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*`.
+- Keep i18next 23.x, react-i18next 14.x, and language detector 7.x unless a
+  dependency-refresh task explicitly changes them.
+- If Zeabur production is stale, run `qa:zeabur-deployment` before heavier
+  product QA.
+- If a Zeabur deployment is stuck before build start with no build log, treat
+  it as a platform/integration bucket after one redeploy attempt, not a
+  frontend build regression.
+- If GitHub Actions fails during checkout with an access/account 403, treat CI
+  as externally blocked until repository or account access is restored.
 
-## Roadmap / Pending Work (Legacy ??see v1.8 roadmap above)
+## Current Completion Posture
 
-### ? Low Priority ??Nice to Have
+- 95% Lab-Ready Pilot: shipped.
+- Pilot Operations Ready: shipped.
+- Pilot Evidence And Maintainability Pass: shipped.
+- Batch-First Lab Pilot v1: shipped/monitoring.
+- Real physical printing remains deferred until actual paper, label stock,
+  printer scaling, thermal quality, QR scanning, and pictogram readability can
+  be tested.
+- Code splitting, docs consolidation, CI/production QA, and maintainability are
+  in maintenance mode. Reopen them only when evidence shows a real blocker or
+  the next product change touches that boundary.
 
-| #   | Feature                               | Description                                                | Difficulty |
-| --- | ------------------------------------- | ---------------------------------------------------------- | ---------- |
-| 1   | **Export preview**                    | Preview Excel/CSV data before downloading                  | Medium     |
-| 2   | **First-time user tutorial**          | Interactive onboarding walkthrough for new users           | Medium     |
-| 3   | **Zeabur Dockerfile sync**            | Make Zeabur use repo's Dockerfile instead of stored one    | Low        |
-| 4   | **PWA support**                       | Offline usage with service worker                          | High       |
-| 5   | **Dark/light theme toggle**           | Theme switcher                                             | Medium     |
-| 6   | **Performance monitoring**            | Sentry / LogRocket integration                             | Medium     |
-| 7   | **Mobile-optimized label printing**   | Responsive print layout for mobile                         | Medium     |
-| 8   | **Solvent-resistant label templates** | Special templates for waterproof/chemical-resistant labels | Low        |
+## How To Continue
+
+1. Read `PROJECT_STATUS_AND_NEXT_PLAN.md`.
+2. Check `git status --short --branch`.
+3. Verify current CI/deployment state if the work depends on production.
+4. Select the next slice from evidence, not from broad backlog wording.
+5. Define proof before editing: test command, QA gate, production clickthrough,
+   generated artifact, or owner-doc checkpoint.
+6. Keep edits scoped to the user job: batch review, batch label print, export
+   handoff, correction/admin triage, lookup trust, or production reliability.
+7. Update docs only when behavior, acceptance criteria, QA gates, or workflow
+   assumptions actually change.
