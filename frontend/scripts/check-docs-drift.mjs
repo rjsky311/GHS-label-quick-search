@@ -29,6 +29,15 @@ function requireNotIncludes(relativePath, text, needle, reason) {
   }
 }
 
+function requireMaxLineCount(relativePath, text, maxLines, reason) {
+  const lineCount = text.trimEnd().split(/\r?\n/).length;
+  if (lineCount > maxLines) {
+    failures.push(
+      `${relativePath} has ${lineCount} lines; expected at most ${maxLines} (${reason}).`,
+    );
+  }
+}
+
 function extract(relativePath, text, pattern, label) {
   const match = text.match(pattern);
   if (!match) {
@@ -182,6 +191,25 @@ for (const [relativePath, text] of Object.entries(rootMarkdownDocs)) {
       text,
       stalePhrase,
       "completed work must stay shipped/monitoring or evidence-triggered, not an open active target",
+    );
+  }
+
+  if (text.includes("\uFFFD")) {
+    failures.push(
+      `${relativePath} must not contain Unicode replacement characters (likely encoding damage).`,
+    );
+  }
+  if (/[\uE000-\uF8FF]/u.test(text)) {
+    failures.push(
+      `${relativePath} must not contain private-use Unicode characters (likely mojibake).`,
+    );
+  }
+  for (const mojibakeToken of ["蝺刻", "急??", "?", "摮"]) {
+    requireNotIncludes(
+      relativePath,
+      text,
+      mojibakeToken,
+      "root markdown should not preserve known mojibake tokens",
     );
   }
 }
@@ -389,6 +417,12 @@ requireIncludes(
   docs["AGENTS.md"],
   "do not continue by backlog inertia",
   "agent bootstrap must prevent autonomous backlog drift",
+);
+requireMaxLineCount(
+  "AGENTS.md",
+  docs["AGENTS.md"],
+  260,
+  "agent bootstrap should stay concise and point to owner docs instead of duplicating history",
 );
 requireIncludes(
   "AUTONOMOUS_WORKFLOW.md",
