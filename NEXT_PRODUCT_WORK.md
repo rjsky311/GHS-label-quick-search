@@ -136,6 +136,16 @@ cannot complete the intended job.
   frontend tests, i18n parity, build, docs drift, bundle budget, GitHub CI,
   Zeabur deployment freshness, expected-SHA production health, and production
   search UI QA.
+- 2026-05-28 post-handoff product QA checkpoint: after the documentation
+  checkpoint `a97bd97` deployed to Zeabur, `npm run qa:production-product`
+  passed against production. The product report covered deployment freshness,
+  production availability, print renderer/stock fit, result-table pictograms,
+  trust/source/SDS, prepared-solution reprint, fixed-stock batch printing, and
+  whole-product UX/brand utility. It reported zero failed reports, zero
+  incomplete product blocks, zero actionable failures, zero report-level
+  failures, zero warnings, and no failure triage. Keep the current baseline
+  closed unless new user evidence, production QA, CI, or admin data opens a
+  concrete issue.
 - 2026-05-28 state check: no fresh screenshot/PDF/CI/admin evidence currently
   opens a new product slice. `main` was clean, the latest visible GitHub CI
   runs were green, expected-SHA `npm run qa:production-health` passed against
