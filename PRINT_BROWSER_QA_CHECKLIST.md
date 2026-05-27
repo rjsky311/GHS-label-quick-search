@@ -5,6 +5,13 @@ is not the active product queue. Start current planning from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`; use this file only when a selected slice
 changes print UI, preview, or rendered output behavior.
 
+Current product-model note: the public print workflow is the simplified
+three-output model in `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`: Complete A4/Letter
+label, QR small label, and Identification small label. Older terms in this
+checklist such as compact, bottle/rack, quick-ID, supplemental, and QR
+supplement describe internal regression coverage or historical fixture names.
+Do not use those terms as a reason to re-expand the first-level print UI.
+
 This checklist turns the print acceptance contract into repeatable Browser Use
 verification after meaningful print-workflow changes and after Zeabur deploys.
 It is not a legal compliance certificate; it verifies that the app UI, preview,
@@ -36,7 +43,7 @@ stock-specific markers such as `label-stock-small-rack` and
 `label-stock-medium-rack` are present in the deployed bundle. Content-policy
 changes must also prove that policy markers such as
 `label-content-`, `label-hazard-mode-`, `h_codes_only`, and `qr_reference`
-are present.
+are present. These are renderer/regression markers, not public workflow names.
 
 For the normal post-deploy print gate, use the combined runner:
 
@@ -61,7 +68,8 @@ manually with one of these modes:
 - `product`: default product-level closure gate for user-facing product work.
 - `smoke`: fast high-risk deployed print path.
 - `primary`: full-page primary and continuation outputs.
-- `compact`: compact bottle/rack/QR/quick-ID outputs.
+- `compact`: compact renderer regression coverage for the current QR small
+  label, Identification small label, and remaining internal fixture names.
 - `multi-chemical`: cross-chemical production-searchable outputs.
 - `prepared`: prepared creation, reprint, and preset reuse.
 - `full`: local print matrix + PDF artifacts + deployed handoff.
@@ -263,25 +271,27 @@ productization rounds rather than a single renderer or search-table fix.
 4. Select the result checkbox.
 5. Open `Print Labels`.
 6. Confirm the modal decision summary says:
-   - Output role: complete primary.
+   - Output role: Complete A4/Letter label.
    - GHS icons: all pictograms kept.
    - Hazard text: full H/P text.
 7. Confirm `print-outcome-summary` states the printable outcome in plain
    language before the lower-level checklist.
 8. Confirm output/readability diagnostics are collapsed below the live label
    preview unless the user opens them.
-9. Confirm the footer print action uses the same outcome language, for example
-   complete primary, supplemental bottle/tube, or QR supplement.
+9. Confirm the footer print action uses the same public outcome language:
+   Complete A4/Letter label, QR small label, or Identification small label.
 10. Confirm `selected-stock-summary` shows the current physical target size and
    `stock-size-picker` is collapsed until the user chooses to change stock.
-11. Confirm the first-level target selector is task-based (`Main container`,
-   `Bottle label`, `Tube / vial`, `QR supplement`) rather than a template list.
+11. Confirm the first-level output selector exposes only the three public
+   outputs from `SIMPLIFIED_LABEL_OUTPUT_MODEL.md`.
 12. Confirm the preview context strip contains only output role, GHS icon
    preservation, and current stock; full configuration details should stay in
    the lower inspection strip or advanced controls.
-13. Choose `Bottle label` and confirm it routes to the bottle stock and the
-   planner changes dense content to supplemental rather than hiding pictograms.
-14. Expand `stock-size-picker`, choose another stock, and confirm the selected
+13. Choose QR small label and Identification small label once each, confirming
+   they omit H/P text and keep CAS, English name, Chinese name, and every
+   available pictogram across same-output continuation labels.
+14. Expand `stock-size-picker`, choose another stock when the current output
+   allows it, and confirm the selected
    stock summary plus preview update.
 15. Confirm the responsible profile section is collapsed when profile data is
    complete and expands automatically when profile data is missing.
@@ -299,39 +309,32 @@ For both A4 Primary and Letter Primary:
 - Confirm the print action is enabled only when the responsible profile is
   complete.
 
-## Supplemental Bottle Output
+## QR Small Label Output
 
-1. Select the common bottle stock.
-2. Confirm the decision summary changes to supplemental output.
-3. Confirm `label-kind-supplemental` is present.
-4. Confirm all expected GHS pictogram codes are present.
-5. Confirm `more-pics` is absent.
-6. Confirm the responsible profile status is optional for this output.
-7. Confirm the print action remains enabled for a truthful supplemental label.
+1. Select QR small label.
+2. Confirm CAS, English name, and Chinese name appear as separated readable
+   identity lines.
+3. Confirm `<img class="qrcode-img">` is present on the first label for that
+   chemical.
+4. Confirm all expected GHS pictogram codes are present across the same-output
+   continuation set when the first label cannot hold every pictogram.
+5. Confirm H/P statements, signal word, H-code chips, custom/case fields, and
+   teaser summaries are absent.
+6. Confirm continuation labels reuse the QR area for pictograms instead of
+   reserving an empty QR column.
 
-## QR Supplement Output
+## Identification Small Label Output
 
-1. Select QR supplement.
-2. Switch name display to English.
-3. Switch print color to B/W.
-4. Confirm the decision summary says QR supplement.
-5. Confirm `label-kind-qr-supplement` is present.
-6. Confirm `<img class="qrcode-img">` is present.
-7. Confirm `print-bw` is present.
-8. Confirm Chinese body text for the chemical is absent in English mode.
-9. Confirm all expected pictogram codes are still present.
-10. Confirm `more-pics` is absent.
-
-## Quick-ID Tube / Vial Output
-
-1. Select `Tube / vial`.
-2. Confirm the decision summary says quick-ID supplemental output.
-3. Confirm `label-kind-quick-id` is present.
-4. Confirm `<img class="qrcode-img">` is absent.
-5. Confirm all expected GHS pictogram codes are present.
-6. Confirm `more-pics` is absent.
-7. Click the print action with `qaPrintHandoff=1` and confirm
-   `print-qa-status` reports `data-label-kind="quick-id"` plus all expected
+1. Select Identification small label.
+2. Confirm CAS, English name, and Chinese name appear as separated readable
+   identity lines.
+3. Confirm `<img class="qrcode-img">` is absent.
+4. Confirm every expected GHS pictogram code is present across same-output
+   continuation labels.
+5. Confirm H/P statements, signal word, H-code chips, custom/case fields, QR
+   content, and teaser summaries are absent.
+6. Click the print action with `qaPrintHandoff=1` and confirm
+   `print-qa-status` reports the current small-label kind plus all expected
    pictograms.
 
 ## Missing Profile Gate
@@ -350,19 +353,15 @@ For both A4 Primary and Letter Primary:
 Run these when the change touches stock presets, typography, output planning,
 or renderers:
 
-- Ethanol `64-17-5` bottle output remains readable and printable.
-- A small stock or vial-strip output keeps every pictogram and does not claim to
-  be complete primary.
-- Small-rack and medium-rack quick-ID outputs keep CAS, signal word, product
-  identity, and every pictogram visible without overlap.
-- Small-rack and medium-rack QR outputs keep QR and every pictogram visible
-  without QR/pictogram collision.
+- Ethanol `64-17-5` remains readable and printable in the three public outputs.
+- QR small label and Identification small label keep CAS, English name, Chinese
+  name, and every pictogram visible without claiming to be complete primary.
+- QR small-label continuation keeps QR on the first label only and uses later
+  label space for pictograms.
 - A no-GHS chemical does not produce a false hazard label.
 - A transient upstream-error result blocks hazard-label printing.
-- Custom tiny complete-primary stock routes to A4/Letter instead of enabling an
-  invalid primary label.
-- Custom supplemental stock stays printable as supplemental and keeps every
-  pictogram.
+- Custom or legacy tiny complete-primary stock routes to A4/Letter or the
+  simplified small-label outputs instead of enabling an invalid primary label.
 
 ## Local Code Contract
 
@@ -402,17 +401,17 @@ Serve that directory with a local static server and inspect the individual
 HTML files in Browser Use. Prefer a temp directory rather than `build/` for
 long-lived visual inspection so Vite can freely clean the production build
 directory. These artifacts reuse the same preview renderer as the app and now
-cover A4 Primary, Letter Primary, A4 Chinese/B&W, Letter English/B&W, bottle
-supplemental, bottle supplemental with case identity, Avery 5163, Avery 5164,
-rack landscape, tube/vial quick-ID, tube/vial quick-ID with case identity,
-Brother 62 mm quick-ID, QR supplement, Brother 62 mm QR supplement, and custom
-tiny supplemental stock for Hydrochloric Acid, plus lower-density Ethanol,
-Sodium Hydroxide QR, Methanol B/W, Hydrogen Peroxide English QR, sparse
-single-pictogram Nitrogen, Zinc Oxide, and Boric Acid outputs, and long-name
-corrosive bottle and tube fixtures that verify identity shrink rules keep CAS
-visible. Blocked custom complete-primary cases remain in the matrix report but
-are excluded from PDF artifact generation because they should not reach print
-handoff.
+cover the current Complete A4/Letter, QR small-label, and Identification
+small-label outputs plus historical/internal fixture names such as bottle,
+rack, tube/vial, Brother 62 mm, Avery, QR supplement, and custom tiny stock for
+Hydrochloric Acid. Treat those historical fixture names as renderer regression
+coverage unless they map to a current public output. The matrix also covers
+lower-density Ethanol, Sodium Hydroxide QR, Methanol B/W, Hydrogen Peroxide
+English QR, sparse single-pictogram Nitrogen, Zinc Oxide, and Boric Acid
+outputs, and long-name corrosive fixtures that verify identity shrink rules
+keep CAS visible. Blocked custom complete-primary cases remain in the matrix
+report but are excluded from PDF artifact generation because they should not
+reach print handoff.
 
 The report records the expected `qa_handoff` attributes, preview scale, actual
 print-document HTML checks, and a `productionBrowserQa` section listing the
@@ -433,10 +432,13 @@ case:
 
 - `data-status="qa_handoff"` for printable output, or `data-status="blocked"`
   with `data-issue-types` for blocked output.
-- `data-label-kind` matches `complete-primary`, `supplemental`, `quick-id`, or
-  `qr-supplement`.
+- `data-label-kind` matches the current output or its internal renderer kind.
+  Public UX should still name the result as Complete A4/Letter label, QR small
+  label, or Identification small label.
 - `data-pictograms` contains every expected GHS code for the chemical.
-- `data-has-qr` is `true` only for QR supplemental labels.
+- `data-has-qr` is `true` for Complete A4/Letter labels and QR small labels
+  when their current contract expects QR, and `false` for Identification small
+  labels.
 - `data-cas-numbers` contains the selected chemical's CAS number and
   `data-has-cas="true"` so small-label identity fields cannot disappear
   silently.

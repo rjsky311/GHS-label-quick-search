@@ -13,6 +13,13 @@ Use `PROJECT_STATUS_AND_NEXT_PLAN.md` for current priority, continuation order,
 and done criteria. Physical print execution is deferred there until real
 paper/stock/printer evidence is available.
 
+Current product-model note: when physical validation resumes, validate the
+three public outputs from `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` first: Complete
+A4/Letter label, QR small label, and Identification small label. Older stock
+families in this checklist are historical/internal regression families and
+should not be treated as a mandate to reintroduce first-level bottle, rack,
+tube, or QR-supplement choices.
+
 ## 1. Preconditions
 
 Run automated gates first so the physical print pass is not debugging basic
@@ -65,27 +72,36 @@ percentage and treat any layout drift as a product finding.
 
 ## 2. Required Physical Stock Families
 
-Validate representative outputs for these families before claiming print
-workflow stability:
+Validate the current public outputs first before claiming print workflow
+stability:
 
 | Family | Representative output | Required physical evidence |
 | --- | --- | --- |
-| A4 primary | Hydrochloric Acid A4 primary | Complete primary label fits, all pictograms readable, no QR in required body |
-| Letter primary | Hydrochloric Acid Letter primary | Same as A4, with Letter paper selected |
-| Continuation primary | Formaldehyde A4 primary | Multiple pages print in order; every page repeats identity and pictograms |
-| Standard bottle | Hydrochloric Acid bottle supplemental | Supplemental wording is truthful; all pictograms remain readable |
-| Large front label | Hydrochloric Acid large container front | Identity and pictograms dominate; text priority is clear |
-| Tube/vial strip | Hydrochloric Acid quick-ID with case number | CAS/case identity remains visible; no pictogram is cropped |
-| Rack label | Small or medium rack quick-ID | Compact layout remains readable at normal handling distance |
-| 62 mm continuous | 62 mm quick-ID or QR supplement | Roll output does not clip at edges; pictograms remain large enough |
-| QR supplement | QR supplement with Hydrochloric Acid | QR scans quickly; pictograms remain present and not replaced by QR |
-| Prepared solution | Prepared Hydrochloric Acid bottle or tube | Parent identity, concentration, solvent, dates, and pictograms stay visible |
+| Complete A4 label | Hydrochloric Acid or a dense batch item on A4 | Full H/P content prints or continues on the same stock; identity, CAS, signal, pictograms, QR, and profile stay readable |
+| Complete Letter label | Hydrochloric Acid or a dense batch item on Letter | Same as A4, with Letter paper selected |
+| Complete continuation set | Formaldehyde, Aniline, or another dense H/P item | Pages print in order; each continuation repeats identity, CAS, signal, pictograms, profile, and quiet page marker |
+| QR small label | Hydrochloric Acid or a multi-pictogram item on 62 x 40 mm | CAS/English/Chinese identity is readable; QR scans; all pictograms appear across same-output continuation labels |
+| Identification small label | Hydrochloric Acid or a multi-pictogram item on 70 x 24 mm | CAS/English/Chinese identity is readable; all pictograms appear across same-output continuation labels; no QR/H/P/signal appears |
+
+Historical/internal regression families can be validated only after the current
+public outputs pass or when a bug report specifically involves that legacy
+fixture:
+
+| Legacy family | Representative output | Required physical evidence |
+| --- | --- | --- |
+| Standard bottle | Historical bottle/internal fixture | All pictograms remain readable if the fixture is still generated |
+| Large front label | Historical large-container/front fixture | Identity and pictograms dominate if the fixture is still generated |
+| Tube/vial strip | Historical tube/vial quick-ID fixture | CAS identity remains visible; no pictogram is cropped |
+| Rack label | Historical small/medium rack fixture | Compact layout remains readable at normal handling distance |
+| 62 mm continuous | Current QR small label or historical 62 mm fixture | Roll output does not clip at edges; pictograms remain large enough |
+| QR supplement | Historical QR supplement fixture | QR scans quickly; pictograms remain present and not replaced by QR |
+| Prepared solution | Prepared-label fixture still supported by the app | Parent identity, concentration, solvent, dates, and pictograms stay visible |
 
 ## 3. Chemical Coverage
 
 Use at least these chemicals because they stress different failure modes:
 
-- Hydrochloric Acid (`7647-01-0`): four pictograms, dense H/P content, compact
+- Hydrochloric Acid (`7647-01-0`): four pictograms, dense H/P content, small
   label pressure.
 - Formaldehyde (`50-00-0`): dense content and continuation-page pressure.
 - Ethanol (`64-17-5`): lower-density flammable case.
@@ -110,16 +126,19 @@ For every printed label, inspect these items on paper, not only on screen:
 - No content crosses a die-cut label boundary.
 - No content is lost to printer margins.
 - Orientation matches the selected stock.
-- The app's output role matches the physical output: complete primary,
-  supplemental, quick-ID, QR supplement, or continuation set.
+- The app's output role matches the physical output: Complete A4/Letter label,
+  QR small label, Identification small label, same-output continuation, or a
+  clearly marked historical/internal fixture.
 
 Expected handling distances:
 
-- A4/Letter primary: readable at desk distance.
-- Bottle/large front label: readable while holding the container.
-- Tube/vial/rack/62 mm labels: identity, CAS/case, signal, and pictograms must
-  be readable at close handling distance; full H/P text is not expected on
-  quick-ID or supplemental outputs.
+- A4/Letter complete label: readable at desk distance.
+- QR small label and Identification small label: CAS, English name, Chinese
+  name, QR when present, and pictograms must be readable at close handling
+  distance; H/P text and signal words are not expected.
+- Historical bottle/tube/rack fixtures: readable only as regression evidence;
+  do not promote them back into the first-level product model without a new
+  scope-gate decision.
 
 ## 5. QR Scan Checks
 
@@ -198,13 +217,15 @@ Automated regression added:
 
 ## 8. Escalation Rules
 
-- If a complete primary label fails physically, route users to A4/Letter,
-  continuation output, or another verified complete stock before printing.
-- If a compact supplemental label fails physically, keep pictograms and identity
-  first; scale/reflow before summarizing text; never remove available
-  pictograms to make the layout pass.
-- If QR fails, increase QR size or move to a larger QR supplement stock. Do not
-  let QR replace GHS pictograms or complete primary requirements.
+- If a Complete A4/Letter label fails physically, route users to same-stock
+  continuation output or the other verified complete stock before printing.
+- If a QR small label or Identification small label fails physically, keep CAS,
+  English name, Chinese name, QR when present, and pictograms first; scale and
+  reflow before creating same-output continuation labels; never remove
+  available pictograms to make the layout pass.
+- If QR fails, increase QR size or move the QR small label to a larger verified
+  small-label stock. Do not let QR replace GHS pictograms or complete-label
+  requirements.
 - If browser or driver scaling creates unavoidable drift, document the required
   print setting and consider adding in-app print guidance for that stock.
 - If a stock repeatedly fails physical validation, mark it experimental or move

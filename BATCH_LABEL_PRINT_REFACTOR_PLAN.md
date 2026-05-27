@@ -9,6 +9,16 @@ Start here before changing batch search-to-print behavior, "Print all with GHS
 data", multi-selected `LabelPrintModal` behavior, print planning for more than
 one chemical, batch preview, batch print QA, or fixed-stock label workflows.
 
+Status note: this file is now a shipped/supporting product-history document
+for fixed-stock batch printing. The current public print model is defined by
+`SIMPLIFIED_LABEL_OUTPUT_MODEL.md` and exposes exactly three user-facing
+outputs: Complete A4/Letter label, QR small label, and Identification small
+label. Terms below such as Quick ID, Supplemental, reduced-purpose, bottle,
+tube, rack, and QR supplement are retained because older tests, renderer
+internals, and historical decisions still use them. Do not treat those terms as
+permission to reopen first-level product complexity without a scope-gate
+decision.
+
 Cross-reference this file with:
 
 - `PROJECT_STATUS_AND_NEXT_PLAN.md` for priority and done criteria.
