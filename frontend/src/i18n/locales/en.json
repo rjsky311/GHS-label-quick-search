@@ -84,7 +84,7 @@
   "results.workflowExportLabel": "Batch rows",
   "results.workflowExportBody": "Full batch size before filters; exports follow the current visible scope.",
   "results.workflowFilteredScope": "Currently showing {{shown}} / {{total}} rows after filters.",
-  "results.workflowOutputScope": "Visible {{visible}}/{{total}} · selected printable {{selected}} · quick-print scope {{printable}}.",
+  "results.workflowOutputScope": "Visible {{visible}}/{{total}} · ready output {{ready}} · selected printable {{selected}} · quick-print candidates {{printable}}.",
   "results.reviewPrimaryReason": "Primary reason:",
   "results.reviewNextAction": "Next:",
   "results.reviewActionRetryUpstream": "Retry upstream source",

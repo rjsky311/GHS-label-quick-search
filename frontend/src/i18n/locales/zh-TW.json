@@ -84,7 +84,7 @@
   "results.workflowExportLabel": "整批筆數",
   "results.workflowExportBody": "這是篩選前的整批大小；匯出會依目前可見範圍執行。",
   "results.workflowFilteredScope": "套用篩選後目前顯示 {{shown}} / {{total}} 筆。",
-  "results.workflowOutputScope": "目前可見 {{visible}}/{{total}}；已選可列印 {{selected}}；快速列印範圍 {{printable}}。",
+  "results.workflowOutputScope": "目前顯示 {{visible}}/{{total}} 筆；可直接輸出 {{ready}} 筆；已選可列印 {{selected}} 筆；快速列印候選 {{printable}} 筆。",
   "results.reviewPrimaryReason": "主要原因：",
   "results.reviewNextAction": "下一步：",
   "results.reviewActionRetryUpstream": "重試上游來源",

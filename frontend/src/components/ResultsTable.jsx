@@ -611,6 +611,7 @@ export default function ResultsTable({
               {t("results.workflowOutputScope", {
                 visible: results.length,
                 total: totalCount,
+                ready: workflowSummary.readyOutput,
                 selected: selectedPrintableCount,
                 printable: printAllWithGhsCount,
               })}
