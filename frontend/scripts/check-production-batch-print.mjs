@@ -269,17 +269,23 @@ const inspectBatchResultsState = async (page) =>
         };
       })
       .filter(Boolean);
-    const reviewReasons = Array.from(
+    const reviewActions = Array.from(
       document.querySelectorAll(
-        '[data-testid^="results-workflow-review-reason-"]',
+        '[data-testid^="results-workflow-review-action-"]',
       ),
-    ).map((node) => ({
-      type: (node.getAttribute("data-testid") || "").replace(
-        "results-workflow-review-reason-",
-        "",
-      ),
-      text: (node.textContent || "").replace(/\s+/g, " ").trim(),
-    }));
+    )
+      .filter(
+        (node) =>
+          node.getAttribute("data-testid") !==
+          "results-workflow-review-action-queue",
+      )
+      .map((node) => ({
+        type: (node.getAttribute("data-testid") || "").replace(
+          "results-workflow-review-action-",
+          "",
+        ),
+        text: (node.textContent || "").replace(/\s+/g, " ").trim(),
+      }));
     return {
       workflowSummary,
       nextAction: {
@@ -287,8 +293,8 @@ const inspectBatchResultsState = async (page) =>
         body: textOf("results-next-action-body"),
         cta: textOf("results-next-action-primary"),
       },
-      reviewReasonText: textOf("results-workflow-review-reasons"),
-      reviewReasons,
+      reviewActionQueueText: textOf("results-workflow-review-action-queue"),
+      reviewActions,
     };
   });
 
@@ -478,15 +484,15 @@ const run = async () => {
       if (!batchResultsState.nextAction?.body) {
         failures.push("lab-ready-next-action-body-missing");
       }
-      if (batchResultsState.reviewReasons.length < 1) {
-        failures.push("lab-ready-review-reasons-missing");
+      if (batchResultsState.reviewActions.length < 1) {
+        failures.push("lab-ready-review-action-queue-missing");
       }
       if (
-        batchResultsState.reviewReasons.some(
-          (reason) => !/\d/.test(reason.text || ""),
+        batchResultsState.reviewActions.some(
+          (action) => !/\d/.test(action.text || ""),
         )
       ) {
-        failures.push("lab-ready-review-reason-count-missing");
+        failures.push("lab-ready-review-action-count-missing");
       }
       if (!exportPreviewSurface.available) {
         failures.push("lab-ready-export-preview-unavailable");
