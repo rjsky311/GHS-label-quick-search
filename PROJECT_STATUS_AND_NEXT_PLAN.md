@@ -648,7 +648,10 @@ Current completion snapshot:
 ## 3. Next Priority Order
 
 Use this order unless a fresh production screenshot, failing CI/QA run, security
-finding, or user-reported blocker clearly points elsewhere.
+finding, or user-reported blocker clearly points elsewhere. The `Do next`
+items below are guardrails for opening an evidence-backed slice, not an
+always-open checklist. Do not reopen shipped/monitoring work unless current
+evidence proves the baseline no longer lets users complete the intended job.
 
 Before continuing the same workstream for another round, apply the next-step
 decision loop from `AUTONOMOUS_WORKFLOW.md` when:
@@ -844,18 +847,18 @@ Goal: batch printing should solve the real workflow of choosing one physical
 label stock and printing many chemicals, without forcing every item through
 complete-primary/A4 logic.
 
-Do next:
+Monitoring guardrails:
 
 - Use `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` as the implementation contract.
 - Treat batch printing as purpose-first inside the current three-output model:
   Complete A4/Letter label, QR small label, or Identification small label.
 - Keep one selected physical stock for the batch. Do not silently split a batch
   across A4, Letter, tube, rack, and QR stocks.
-- Add a batch fit report that classifies each item as ready, ready-tight,
-  reduced-purpose, same-stock-continuation, excluded-data, or excluded-fit.
-- Replace "preview the first selected label" assumptions with representative
-  previews: first, worst-fit, longest name, most pictograms, densest text, and
-  excluded list.
+- Keep the batch fit report visible before print handoff, with each item
+  classified as ready, ready-tight, reduced-purpose, same-stock-continuation,
+  excluded-data, or excluded-fit.
+- Keep representative previews available: first, worst-fit, longest name, most
+  pictograms, densest text, and excluded list.
 - Keep the true 50-item fixed-stock batch fixture and QA gate healthy. The
   existing `multi-chemical` production layer remains representative coverage,
   not proof of a real batch workflow.
@@ -873,19 +876,17 @@ Done means:
 
 Current status:
 
-- Direction is documented in `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
-- Implementation has started at the planner layer:
-  `frontend/src/utils/printBatchPlanner.js`,
-  `frontend/src/utils/testFixtures/batchPrintFixtures.js`, and
-  `frontend/src/utils/__tests__/printBatchPlanner.test.js` define the first
-  fixed-stock 50-item classification baseline.
-- `LabelPrintModal` now surfaces a first batch fit report for multi-item
-  selections and can hand off the default ready subset without forcing the
-  whole batch to A4/Letter.
-- `LabelPrintModal` now also supports representative preview switching for
-  the batch fit report, aligns the sheet preview to the current selected print
-  scope, and exposes review/excluded items with CSV export before print
-  handoff.
+- Status is shipped/monitoring, with the owner contract in
+  `BATCH_LABEL_PRINT_REFACTOR_PLAN.md` and the latest Batch-First evidence in
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
+- Planner-layer classification lives in `frontend/src/utils/printBatchPlanner.js`;
+  the reusable mixed fixture and unit coverage live in
+  `frontend/src/utils/testFixtures/batchPrintFixtures.js` and
+  `frontend/src/utils/__tests__/printBatchPlanner.test.js`.
+- `LabelPrintModal` surfaces the batch fit report for multi-item selections,
+  supports representative preview switching, aligns the sheet preview to the
+  current selected print scope, and exposes review/excluded items with CSV
+  export before print handoff.
 - Batch print actions and the batch output contract now name selected item
   count, physical label count, physical page count, selected purpose, and
   physical stock. Scope summaries still name excluded count and unselected
@@ -899,9 +900,9 @@ Current status:
   reduced/continuation path is available. It is folded into
   `qa:production-product` plus the `fixed-stock-batch-printing` product block
   in the production QA summary.
-- Deployed 50-item batch evidence was captured on commit `37cdff9` by
-  `qa:production-batch-print`, `qa:production-product`, and GitHub Actions
-  `Production Print QA` run `25947899331`.
+- Deployed batch evidence remains part of `qa:production-product`. The latest
+  post-handoff checkpoint passed production product QA after `a97bd97`, and the
+  docs checkpoint `cba6ae9` is live on Zeabur.
 - `qa:print-report` now also writes a 50-item fixed-stock compact batch print
   artifact, and `qa:print-pdf` checks that artifact for stock metadata, batch
   categories, required pictograms, identity text, clipping, and visual overlap.
