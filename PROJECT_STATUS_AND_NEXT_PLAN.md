@@ -1129,7 +1129,8 @@ Use these files by role:
 - `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`: shipped evidence packet for
   pilot evidence, export usability, data-quality next-step selection,
   maintainability boundaries, and historical-doc cleanup.
-- `NEXT_PRODUCT_WORK.md`: short live queue and default continuation order.
+- `NEXT_PRODUCT_WORK.md`: short evidence-triggered live queue for the next
+  slice, including source, affected user job, proof, and stop condition.
 - `NEXT_REMAINING_PRODUCT_WORK.md`: detailed execution backlog and
   current status.
 - `PRINT_LABEL_CONTRACT.md`: print safety contract.
@@ -1152,5 +1153,5 @@ Use these files by role:
 - `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline; supporting
   history, not the active live queue.
 - `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:
-  productized utility design direction; supporting history for the active
-  batch-first pilot target.
+  productized utility design direction; supporting history for the
+  shipped/monitoring Batch-First baseline and future evidence-driven slices.

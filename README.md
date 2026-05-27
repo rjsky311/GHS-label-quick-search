@@ -189,7 +189,8 @@ Use these files before starting product or safety-critical changes:
   shipped/monitoring Batch-First owner doc for batch review flow, batch label
   confidence, batch export, correction/admin triage, and bounded
   maintainability evidence.
-- [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
+- [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short evidence-triggered
+  live queue for choosing the next slice.
 - [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
   workflow for aligning broad or ambiguous product decisions before
   implementation.

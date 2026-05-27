@@ -65,12 +65,11 @@ Use this loop when continuing autonomously:
    evidence/context; use `LAB_READY_PILOT_95_PLAN.md` as prior milestone
    evidence only.
 2. Run the next-step decision loop below, then pick one coherent product slice
-   with a clear user-facing acceptance goal.
-   The current default order is batch review flow, batch label confidence,
-   batch export, correction/admin triage, then one low-risk maintainability
-   slice. Trust/source/SDS safety, low-noise UX, print renderer fit, and
-   result-table polish should enter only when evidence shows they block that
-   batch-first path.
+   with a clear user-facing acceptance goal. If there is no fresh evidence,
+   do not reopen shipped Batch-First, print, export, or admin targets by
+   habit. Keep the project in monitoring/maintenance mode until
+   `NEXT_PRODUCT_WORK.md` records a source, affected user job, expected proof,
+   and stop condition for the next slice.
 3. If the slice is broad, ambiguous, repeated-rework-prone, or changes product
    direction, run the project scope gate in `PRODUCT_SCOPE_GATE.md` before
    editing.

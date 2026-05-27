@@ -285,10 +285,10 @@ Open the next slice from one of these evidence triggers:
 Physical print validation remains deferred until real stock and printer access
 are available.
 
-### Default Order
+### Fallback Maintenance Order
 
-Unless a blocker, fresh evidence, or the re-rank loop points elsewhere, continue
-in this order:
+Use this section only after a blocker, fresh evidence trigger, or explicit
+re-rank loop selects a slice. It is not a standing backlog to work through.
 
 Current mode:
 

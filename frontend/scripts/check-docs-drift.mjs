@@ -326,10 +326,28 @@ requireIncludes(
   "short queue role statement",
 );
 requireIncludes(
+  "NEXT_PRODUCT_WORK.md",
+  docs["NEXT_PRODUCT_WORK.md"],
+  "Open a new slice only when the evidence states",
+  "live queue must require evidence before opening a new slice",
+);
+requireIncludes(
+  "NEXT_PRODUCT_WORK.md",
+  docs["NEXT_PRODUCT_WORK.md"],
+  "It is not a standing backlog to work through",
+  "live queue must not become a permanent backlog order",
+);
+requireIncludes(
   "NEXT_REMAINING_PRODUCT_WORK.md",
   docs["NEXT_REMAINING_PRODUCT_WORK.md"],
   "not the canonical planning entry point",
   "execution backlog must not become a competing roadmap",
+);
+requireIncludes(
+  "NEXT_REMAINING_PRODUCT_WORK.md",
+  docs["NEXT_REMAINING_PRODUCT_WORK.md"],
+  "Do not work through this file linearly",
+  "execution backlog must require an evidence-triggered slice",
 );
 requireIncludes(
   "CLAUDE.md",
@@ -342,6 +360,12 @@ requireIncludes(
   docs["AUTONOMOUS_WORKFLOW.md"],
   "Stop Conditions",
   "continuation rules need explicit stopping criteria",
+);
+requireIncludes(
+  "AUTONOMOUS_WORKFLOW.md",
+  docs["AUTONOMOUS_WORKFLOW.md"],
+  "source, affected user job, expected proof",
+  "autonomous continuation must use evidence-triggered slice requirements",
 );
 requireIncludes(
   "PRODUCT_SCOPE_GATE.md",
