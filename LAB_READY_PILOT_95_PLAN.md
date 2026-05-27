@@ -86,6 +86,11 @@ Current evidence:
   valid CAS values, 76 label-ready rows, 20 review rows, next-action copy,
   review-reason distribution, export trust columns, multiple-GHS warning state,
   and fixed-stock print handoff.
+- Later monitoring tightened the table wording: "ready" now means GHS data
+  with no review reason, matching the XLSX `Ready Rows` sheet. GHS-bearing rows
+  that still need source, Chinese-name, multiple-GHS, text-only pictogram, or
+  upstream review stay in the needs-review scope instead of being counted as
+  directly ready.
 
 Required pilot behavior:
 

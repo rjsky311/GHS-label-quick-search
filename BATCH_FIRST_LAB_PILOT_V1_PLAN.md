@@ -388,8 +388,8 @@ Batch review clarity:
 
 - The batch summary separates input total, valid unique submitted rows,
   ignored duplicates, invalid rejected rows, found rows, unresolved lookup gaps
-  (excluding upstream outages), label-ready rows, needs-review rows, selected
-  rows, visible rows, and printable rows.
+  (excluding upstream outages), ready-output rows with no review reasons,
+  needs-review rows, selected rows, visible rows, and printable rows.
 - Every needs-review row shows one primary reason and one next action.
 - Multiple-GHS rows visibly distinguish system-suggested primary
   classification from user-confirmed classification.
@@ -412,9 +412,10 @@ Batch export usefulness:
 
 - Export preview lets the user choose a clear scope: all, visible, ready,
   needs-review, or unresolved.
-- The frontend ready scope now matches the backend XLSX `Ready Rows` sheet:
-  found rows with GHS data and no review reasons. Rows needing review and
-  unresolved rows stay in their own scopes.
+- The frontend ready scope now matches the backend XLSX `Ready Rows` sheet in
+  both export preview and batch result summary: found rows with GHS data and no
+  review reasons. Rows needing review and unresolved rows stay in their own
+  scopes.
 - Upstream/source outage rows are treated as needs-review retry work, not as
   unresolved identity gaps. This keeps source failures out of dictionary
   cleanup queues and XLSX `Unresolved` sheets.

@@ -139,16 +139,16 @@ Current monitoring slice opened from real roster evidence:
   no-GHS rows, text-only GHS rows, source conflicts, multiple-GHS rows, and
   upstream retry states separate.
 - The real-roster review fixture is now also wired into the batch result
-  workflow summary test. The UI must keep found, unresolved, label-ready,
-  needs-review, and each review-action bucket separate before this monitoring
-  slice can be treated as still healthy.
+  workflow summary test. The UI must keep found, unresolved, ready-output
+  rows, needs-review rows, and each review-action bucket separate before this
+  monitoring slice can be treated as still healthy.
 - Batch result summaries now include a review action queue and keep upstream
   retry rows out of the unresolved lookup count; use that as the baseline for
   future "what should I do next?" UI instead of adding another competing review
   surface.
-- Export preview ready scope is aligned with the backend XLSX `Ready Rows`
-  sheet: ready means GHS data with no review reason, while needs-review and
-  unresolved rows remain separate scopes.
+- Batch result ready-output scope is aligned with export preview and the
+  backend XLSX `Ready Rows` sheet: ready means GHS data with no review reason,
+  while needs-review and unresolved rows remain separate scopes.
 - Export preview now shows the selected scope's ready, needs-review, and
   unresolved counts before download, so lab managers can decide whether they
   are exporting a working handoff or a cleanup queue without opening the file

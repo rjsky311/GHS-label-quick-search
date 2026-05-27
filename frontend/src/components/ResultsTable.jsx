@@ -133,12 +133,12 @@ export default function ResultsTable({
       const effective = result.found ? getEffectiveClassification(result) : null;
       const issues = getDataQualityIssues(result, effective);
       const hasAnyIssue = issues.length > 0;
-      const labelReady = result.found && hasGhsData(effective);
+      const readyOutput = result.found && hasGhsData(effective) && !hasAnyIssue;
 
       return {
         found: summary.found + (result.found ? 1 : 0),
         unresolved: summary.unresolved + (isUnresolvedSearchResult(result) ? 1 : 0),
-        labelReady: summary.labelReady + (labelReady ? 1 : 0),
+        readyOutput: summary.readyOutput + (readyOutput ? 1 : 0),
         needsReview: summary.needsReview + (hasAnyIssue ? 1 : 0),
         exportRows: summary.exportRows + 1,
       };
@@ -146,7 +146,7 @@ export default function ResultsTable({
     {
       found: 0,
       unresolved: 0,
-      labelReady: 0,
+      readyOutput: 0,
       needsReview: 0,
       exportRows: 0,
     },
@@ -196,18 +196,18 @@ export default function ResultsTable({
             body: t("results.nextActionReviewBody", {
               reason: primaryWorkflowIssue.label,
               count: primaryWorkflowIssue.count,
-              ready: workflowSummary.labelReady,
+              ready: workflowSummary.readyOutput,
             }),
             cta: t("results.nextActionReviewCta"),
             onClick: () => setReviewIssueFilter(primaryWorkflowIssue.type),
           };
         }
-        if (workflowSummary.labelReady > 0) {
+        if (workflowSummary.readyOutput > 0) {
           return {
             tone: "ready",
             title: t("results.nextActionReadyTitle"),
             body: t("results.nextActionReadyBody", {
-              count: workflowSummary.labelReady,
+              count: workflowSummary.readyOutput,
             }),
             cta:
               onPrintAllWithGhs && printAllWithGhsCount > 0
@@ -314,7 +314,7 @@ export default function ResultsTable({
     },
     {
       key: "label-ready",
-      value: workflowSummary.labelReady,
+      value: workflowSummary.readyOutput,
       label: t("results.workflowLabelReadyLabel"),
       body: t("results.workflowLabelReadyBody"),
       className: "border-emerald-100 bg-emerald-50 text-emerald-950",

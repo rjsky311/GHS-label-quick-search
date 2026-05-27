@@ -406,10 +406,11 @@ Current completion snapshot:
   print/layout regressions. Spreadsheet formula/date errors such as `#VALUE!`
   and date-coerced cells remain invalid instead of being guessed. Batch review
   summaries now also show a compact action queue so every active review bucket
-  exposes its next step. Export preview ready scope also matches the backend
-  XLSX `Ready Rows` sheet, so review and unresolved rows cannot be mixed into a
-  "ready" export. Upstream outage rows are routed to needs-review retry work
-  instead of unresolved identity cleanup. Admin triage recommended-focus
+  exposes its next step. The batch result ready-output count and export preview
+  ready scope both match the backend XLSX `Ready Rows` sheet, so review and
+  unresolved rows cannot be mixed into a "ready" output. Upstream outage rows
+  are routed to needs-review retry work instead of unresolved identity cleanup.
+  Admin triage recommended-focus
   messages and next actions now resolve through frontend locale keys keyed by
   the stable backend focus id, so the dashboard can stay bilingual while
   backend message strings remain API fallbacks rather than final UI copy.

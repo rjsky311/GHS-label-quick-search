@@ -200,7 +200,7 @@ describe('ResultsTable', () => {
       ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
-      ).toHaveTextContent('2');
+      ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-needs-review-value')
       ).toHaveTextContent('3');
@@ -314,7 +314,7 @@ describe('ResultsTable', () => {
       ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
-      ).toHaveTextContent('5');
+      ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-needs-review-value')
       ).toHaveTextContent('7');
@@ -498,7 +498,7 @@ describe('ResultsTable', () => {
       ).toHaveTextContent('3/4');
       expect(
         screen.getByTestId('results-workflow-summary-label-ready-value')
-      ).toHaveTextContent('2');
+      ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-summary-needs-review-value')
       ).toHaveTextContent('3');
