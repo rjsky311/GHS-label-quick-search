@@ -211,16 +211,6 @@ describe('ResultsTable', () => {
         screen.getByTestId('results-workflow-summary-export-value')
       ).toHaveTextContent('4');
       expect(screen.getByText('results.workflowSummaryTitle')).toBeInTheDocument();
-      expect(screen.getByTestId('results-workflow-review-reasons')).toBeInTheDocument();
-      expect(
-        screen.getByTestId('results-workflow-review-reason-multiple-classifications')
-      ).toHaveTextContent('1');
-      expect(
-        screen.getByTestId('results-workflow-review-reason-no-ghs-data')
-      ).toHaveTextContent('1');
-      expect(
-        screen.getByTestId('results-workflow-review-reason-unresolved-search')
-      ).toHaveTextContent('1');
       expect(
         screen.getByTestId('results-workflow-review-action-queue')
       ).toBeInTheDocument();
@@ -294,14 +284,11 @@ describe('ResultsTable', () => {
         screen.getByTestId('results-workflow-summary-needs-review-value')
       ).toHaveTextContent('2');
       expect(
-        screen.getByTestId('results-workflow-review-reason-upstream-error')
-      ).toHaveTextContent('1');
-      expect(
-        screen.getByTestId('results-workflow-review-reason-unresolved-search')
-      ).toHaveTextContent('1');
-      expect(
         screen.getByTestId('results-workflow-review-action-upstream-error'),
       ).toHaveTextContent('results.reviewActionRetryUpstream');
+      expect(
+        screen.getByTestId('results-workflow-review-action-unresolved-search'),
+      ).toHaveTextContent('results.reviewActionReportLookupGap');
 
       fireEvent.click(screen.getByTestId('results-next-action-primary'));
 
@@ -348,9 +335,6 @@ describe('ResultsTable', () => {
         ['multiple-classifications', 'results.reviewActionConfirmMultipleGhs'],
         ['missing-chinese-name', 'results.reviewActionReportChineseName'],
       ].forEach(([issueType, actionKey]) => {
-        expect(
-          screen.getByTestId(`results-workflow-review-reason-${issueType}`)
-        ).toHaveTextContent('1');
         expect(
           screen.getByTestId(`results-workflow-review-action-${issueType}`)
         ).toHaveTextContent(actionKey);
@@ -421,7 +405,7 @@ describe('ResultsTable', () => {
       ).toHaveTextContent('results.reviewActionConfirmMultipleGhs');
     });
 
-    it('lets review reason chips filter the batch table', () => {
+    it('lets review action queue cards filter the batch table', () => {
       const onSetAdvancedFilter = jest.fn();
       render(
         <ResultsTable
@@ -440,7 +424,7 @@ describe('ResultsTable', () => {
       );
 
       fireEvent.click(
-        screen.getByTestId('results-workflow-review-reason-multiple-classifications'),
+        screen.getByTestId('results-workflow-review-action-multiple-classifications'),
       );
 
       expect(onSetAdvancedFilter).toHaveBeenCalledWith({

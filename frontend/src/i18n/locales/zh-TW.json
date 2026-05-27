@@ -82,7 +82,6 @@
   "results.workflowLabelReadyBody": "有 GHS 資料且沒有需要檢查原因的列。",
   "results.workflowReviewLabel": "需要檢查",
   "results.workflowReviewBody": "包含來源重試、查不到、來源衝突、缺中文名或 GHS 資料缺口。",
-  "results.workflowReviewReasonsLabel": "下一步檢查",
   "results.workflowReviewActionQueueLabel": "處理順序",
   "results.workflowReviewActionQueueNext": "下一步：",
   "results.workflowExportLabel": "整批筆數",

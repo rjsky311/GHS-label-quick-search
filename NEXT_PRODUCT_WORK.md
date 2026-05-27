@@ -145,7 +145,9 @@ Current monitoring slice opened from real roster evidence:
 - Batch result summaries now include a review action queue and keep upstream
   retry rows out of the unresolved lookup count; use that as the baseline for
   future "what should I do next?" UI instead of adding another competing review
-  surface.
+  surface. The action queue is the single batch-level review filter surface;
+  do not reintroduce a separate duplicate review-chip row unless real user
+  evidence shows the queue is too slow to scan.
 - Batch result summaries now also promote multiple-GHS rows into a dedicated
   confirmation callout when present, because this choice affects labels and
   exports more directly than a generic review chip.

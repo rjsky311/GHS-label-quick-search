@@ -82,7 +82,6 @@
   "results.workflowLabelReadyBody": "Rows with GHS data and no review reasons.",
   "results.workflowReviewLabel": "Needs review",
   "results.workflowReviewBody": "Includes source retries, lookup gaps, source conflicts, missing Chinese names, or GHS data gaps.",
-  "results.workflowReviewReasonsLabel": "Next checks",
   "results.workflowReviewActionQueueLabel": "Review action queue",
   "results.workflowReviewActionQueueNext": "Next:",
   "results.workflowExportLabel": "Batch rows",

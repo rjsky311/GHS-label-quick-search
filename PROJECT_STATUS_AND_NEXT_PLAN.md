@@ -406,10 +406,11 @@ Current completion snapshot:
   print/layout regressions. Spreadsheet formula/date errors such as `#VALUE!`
   and date-coerced cells remain invalid instead of being guessed. Batch review
   summaries now also show a compact action queue so every active review bucket
-  exposes its next step. The batch result ready-output count and export preview
-  ready scope both match the backend XLSX `Ready Rows` sheet, so review and
-  unresolved rows cannot be mixed into a "ready" output. Upstream outage rows
-  are routed to needs-review retry work instead of unresolved identity cleanup.
+  exposes its next step through a single batch-level filter surface. The batch
+  result ready-output count and export preview ready scope both match the
+  backend XLSX `Ready Rows` sheet, so review and unresolved rows cannot be
+  mixed into a "ready" output. Upstream outage rows are routed to needs-review
+  retry work instead of unresolved identity cleanup.
   Multiple-GHS rows now get a dedicated batch-level confirmation callout when
   present, because the selected classification controls the downstream label
   and export handoff. Admin triage recommended-focus

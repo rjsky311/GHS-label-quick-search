@@ -723,35 +723,6 @@ export default function ResultsTable({
           </div>
           {workflowIssueSummaries.length > 0 && (
             <div
-              className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600"
-              data-testid="results-workflow-review-reasons"
-            >
-              <span className="font-semibold text-slate-700">
-                {t("results.workflowReviewReasonsLabel")}
-              </span>
-              {workflowIssueSummaries.map((issue) => (
-                <button
-                  key={issue.type}
-                  type="button"
-                  onClick={() => setReviewIssueFilter(issue.type)}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 font-medium transition-colors ${
-                    activeReviewIssueType === issue.type
-                      ? "border-blue-200 bg-blue-50 text-blue-800"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800"
-                  }`}
-                  data-testid={`results-workflow-review-reason-${issue.type}`}
-                  aria-pressed={activeReviewIssueType === issue.type}
-                >
-                  <span>{issue.label}</span>
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
-                    {issue.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-          {workflowIssueSummaries.length > 0 && (
-            <div
               className="mt-3 border-t border-slate-100 pt-3"
               data-testid="results-workflow-review-action-queue"
             >
