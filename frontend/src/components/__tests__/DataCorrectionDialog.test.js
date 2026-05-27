@@ -45,6 +45,38 @@ describe("DataCorrectionDialog", () => {
       "href",
       context.fallbackUrl,
     );
+    expect(screen.getByTestId("data-correction-guidance")).toHaveTextContent(
+      "correctionDialog.guidance.missingChineseName.title",
+    );
+    expect(
+      screen.getByTestId("data-correction-expected-output"),
+    ).toHaveAttribute(
+      "placeholder",
+      "correctionDialog.guidance.missingChineseName.expectedPlaceholder",
+    );
+  });
+
+  it("uses issue-specific guidance for unresolved lookups", () => {
+    const unresolvedContext = buildDataCorrectionContext({
+      queryText: "unknown vendor synonym",
+      issueType: "unresolved-search",
+    });
+
+    render(
+      <DataCorrectionDialog context={unresolvedContext} onClose={jest.fn()} />,
+    );
+
+    expect(screen.getByTestId("data-correction-guidance")).toHaveTextContent(
+      "correctionDialog.guidance.unresolvedSearch.title",
+    );
+    expect(screen.getByTestId("data-correction-evidence-url")).toHaveAttribute(
+      "placeholder",
+      "correctionDialog.guidance.unresolvedSearch.evidenceUrlPlaceholder",
+    );
+    expect(screen.getByTestId("data-correction-local-context")).toHaveAttribute(
+      "placeholder",
+      "correctionDialog.guidance.unresolvedSearch.contextPlaceholder",
+    );
   });
 
   it("submits to the backend correction-request queue", async () => {

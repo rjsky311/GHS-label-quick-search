@@ -565,6 +565,10 @@ Current completion snapshot:
   explicitly requested, and emits suggested admin candidate payloads without
   writing approved data or changing public lookup, labels, exports, or QR
   targets.
+- The public correction dialog now gives issue-specific guidance before
+  submission, so missing Chinese names, unresolved lookups, no-GHS states,
+  pictogram gaps, source conflicts, and reference-link fixes ask for the right
+  correction and evidence without becoming a general support form.
 - **Manual dictionary review checkpoint 2026-05-21**: manual dictionary rows
   now carry review status, public surfaces consume approved rows only, and the
   admin dashboard can approve, mark needs-evidence, or reject pending manual

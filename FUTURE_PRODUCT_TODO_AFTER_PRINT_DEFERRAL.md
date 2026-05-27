@@ -183,6 +183,11 @@ Work items:
   backend correction-request API from result rows, Detail, and the product
   trust panel. Contextual links still preserve their GitHub issue-form URL as a
   visible fallback if the API is unavailable.
+- Completed: added issue-specific guidance to the in-app correction dialog.
+  Missing Chinese names, unresolved lookups, no-GHS states, pictogram gaps,
+  source conflicts, reference-link fixes, and other data-quality reports now
+  show what the user should enter, what evidence is useful, and when the
+  request belongs in workflow support instead of safety-data correction.
 - Completed: admin correction requests can now be marked `candidate_found`
   with a structured candidate evidence bundle. The bundle captures request id,
   issue type, CAS, candidate English/Chinese names when present in the request

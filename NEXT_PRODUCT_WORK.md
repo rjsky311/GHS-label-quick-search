@@ -212,6 +212,12 @@ Current monitoring slice opened from real roster evidence:
   columns, and admin correction issue labels aligned through the shared
   data-quality vocabulary instead of inventing a new wording layer for each
   surface.
+- Public data-correction intake now gives issue-specific guidance inside the
+  in-app dialog for missing Chinese names, unresolved lookups, no-GHS states,
+  pictogram gaps, source conflicts, reference links, and other data-quality
+  issues. Keep this path evidence-first and low-noise: the form should tell
+  users what correction and evidence to provide without turning data
+  correction into a general workflow/support inbox.
 - Export preview and backend CSV/XLSX review reason cells now also use the
   shared data-quality vocabulary instead of the older `export.reviewReason*`
   wording layer. This keeps batch summary chips, admin correction queues,

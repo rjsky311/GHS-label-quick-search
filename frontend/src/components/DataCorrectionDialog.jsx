@@ -8,6 +8,110 @@ import {
   submitCorrectionRequest,
 } from "@/utils/correctionRequests";
 
+const ISSUE_GUIDANCE = {
+  "missing-chinese-name": {
+    title: "correctionDialog.guidance.missingChineseName.title",
+    body: "correctionDialog.guidance.missingChineseName.body",
+    expected: "correctionDialog.guidance.missingChineseName.expected",
+    evidence: "correctionDialog.guidance.missingChineseName.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.missingChineseName.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.missingChineseName.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.missingChineseName.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.missingChineseName.contextPlaceholder",
+  },
+  "unresolved-search": {
+    title: "correctionDialog.guidance.unresolvedSearch.title",
+    body: "correctionDialog.guidance.unresolvedSearch.body",
+    expected: "correctionDialog.guidance.unresolvedSearch.expected",
+    evidence: "correctionDialog.guidance.unresolvedSearch.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.unresolvedSearch.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.unresolvedSearch.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.unresolvedSearch.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.unresolvedSearch.contextPlaceholder",
+  },
+  "no-ghs-data": {
+    title: "correctionDialog.guidance.noGhsData.title",
+    body: "correctionDialog.guidance.noGhsData.body",
+    expected: "correctionDialog.guidance.noGhsData.expected",
+    evidence: "correctionDialog.guidance.noGhsData.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.noGhsData.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.noGhsData.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.noGhsData.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.noGhsData.contextPlaceholder",
+  },
+  "ghs-text-no-pictograms": {
+    title: "correctionDialog.guidance.ghsTextNoPictograms.title",
+    body: "correctionDialog.guidance.ghsTextNoPictograms.body",
+    expected: "correctionDialog.guidance.ghsTextNoPictograms.expected",
+    evidence: "correctionDialog.guidance.ghsTextNoPictograms.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.ghsTextNoPictograms.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.ghsTextNoPictograms.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.ghsTextNoPictograms.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.ghsTextNoPictograms.contextPlaceholder",
+  },
+  "source-conflict": {
+    title: "correctionDialog.guidance.sourceConflict.title",
+    body: "correctionDialog.guidance.sourceConflict.body",
+    expected: "correctionDialog.guidance.sourceConflict.expected",
+    evidence: "correctionDialog.guidance.sourceConflict.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.sourceConflict.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.sourceConflict.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.sourceConflict.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.sourceConflict.contextPlaceholder",
+  },
+  "reference-link": {
+    title: "correctionDialog.guidance.referenceLink.title",
+    body: "correctionDialog.guidance.referenceLink.body",
+    expected: "correctionDialog.guidance.referenceLink.expected",
+    evidence: "correctionDialog.guidance.referenceLink.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.referenceLink.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.referenceLink.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.referenceLink.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.referenceLink.contextPlaceholder",
+  },
+  "other-data-quality": {
+    title: "correctionDialog.guidance.otherDataQuality.title",
+    body: "correctionDialog.guidance.otherDataQuality.body",
+    expected: "correctionDialog.guidance.otherDataQuality.expected",
+    evidence: "correctionDialog.guidance.otherDataQuality.evidence",
+    expectedPlaceholder:
+      "correctionDialog.guidance.otherDataQuality.expectedPlaceholder",
+    evidenceUrlPlaceholder:
+      "correctionDialog.guidance.otherDataQuality.evidenceUrlPlaceholder",
+    evidenceTypePlaceholder:
+      "correctionDialog.guidance.otherDataQuality.evidenceTypePlaceholder",
+    contextPlaceholder:
+      "correctionDialog.guidance.otherDataQuality.contextPlaceholder",
+  },
+};
+
+const getIssueGuidance = (issueType) =>
+  ISSUE_GUIDANCE[issueType] || ISSUE_GUIDANCE["other-data-quality"];
+
 const textFromError = (error) => {
   const detail = error?.response?.data?.detail;
   if (typeof detail === "string") return detail;
@@ -47,6 +151,8 @@ export default function DataCorrectionDialog({
   }, [dialogRef]);
 
   if (!context) return null;
+
+  const guidance = getIssueGuidance(context.issueType || form.issue_type);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({
@@ -177,6 +283,18 @@ export default function DataCorrectionDialog({
               </span>
             </div>
 
+            <div
+              className="rounded-md border border-blue-100 bg-blue-50 p-3 text-sm text-blue-950"
+              data-testid="data-correction-guidance"
+            >
+              <div className="font-semibold">{t(guidance.title)}</div>
+              <p className="mt-1 leading-6 text-blue-900">{t(guidance.body)}</p>
+              <ul className="mt-2 space-y-1 text-blue-900">
+                <li>{t(guidance.expected)}</li>
+                <li>{t(guidance.evidence)}</li>
+              </ul>
+            </div>
+
             <label className="block text-sm font-medium text-slate-700">
               <span>{t("correctionDialog.currentOutputLabel")}</span>
               <textarea
@@ -195,6 +313,7 @@ export default function DataCorrectionDialog({
                 onChange={updateField("expected_output")}
                 rows={3}
                 required
+                placeholder={t(guidance.expectedPlaceholder)}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 data-testid="data-correction-expected-output"
               />
@@ -206,7 +325,7 @@ export default function DataCorrectionDialog({
                 <input
                   value={form.evidence_url || ""}
                   onChange={updateField("evidence_url")}
-                  placeholder="https://"
+                  placeholder={t(guidance.evidenceUrlPlaceholder)}
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   data-testid="data-correction-evidence-url"
                 />
@@ -216,6 +335,7 @@ export default function DataCorrectionDialog({
                 <input
                   value={form.evidence_type || ""}
                   onChange={updateField("evidence_type")}
+                  placeholder={t(guidance.evidenceTypePlaceholder)}
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   data-testid="data-correction-evidence-type"
                 />
@@ -228,6 +348,7 @@ export default function DataCorrectionDialog({
                 value={form.local_context || ""}
                 onChange={updateField("local_context")}
                 rows={2}
+                placeholder={t(guidance.contextPlaceholder)}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 data-testid="data-correction-local-context"
               />
