@@ -348,6 +348,14 @@ Current completion snapshot:
   current evidence that the deployed product baseline is healthy; future work
   should still start from new monitoring evidence rather than continuing by
   inertia.
+- **Deployment follow-up 2026-05-28**:
+  the docs/evidence checkpoint commit
+  `c1ddf4e12a394dbd043dff50bfa13feaf9a61e4f` was also deployed by Zeabur.
+  `qa:zeabur-deployment` reported `statusCategory: fresh-running`, and
+  expected-SHA `qa:production-health` proved `/build-info.json` plus backend
+  health were aligned with that commit. No product-code slice was opened from
+  this follow-up because it only verified that the latest canonical status
+  checkpoint is live.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the evidence-triggered continuation rules and done criteria.

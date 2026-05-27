@@ -140,6 +140,13 @@ cannot complete the intended job.
   zero failed reports, zero incomplete product blocks, zero actionable
   failures, and no triage buckets. Treat the deployed product baseline as
   healthy until new monitoring evidence says otherwise.
+- 2026-05-28 deployment follow-up: the docs/evidence checkpoint commit
+  `c1ddf4e12a394dbd043dff50bfa13feaf9a61e4f` is also live on Zeabur.
+  `npm run qa:zeabur-deployment` reported `fresh-running`, and expected-SHA
+  `npm run qa:production-health` passed against the same commit. This closes
+  the post-push deployment doubt for the current status checkpoint; keep the
+  active slice closed unless new user evidence, production QA, CI, or admin
+  data opens a concrete issue.
 - 2026-05-28 maintainability scan: the current largest code surfaces are
   `frontend/src/utils/printQaMatrix.js` (2,776 lines),
   `frontend/src/utils/printLabelStyles.js` (1,847),

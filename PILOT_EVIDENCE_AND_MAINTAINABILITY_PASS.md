@@ -476,6 +476,11 @@ Current evidence:
   fixed-stock batch printing, and whole-product UX/brand utility. The summary
   had zero failed reports, zero incomplete product blocks, zero actionable
   failures, and no failure-triage buckets.
+- The follow-up docs/evidence checkpoint commit
+  `c1ddf4e12a394dbd043dff50bfa13feaf9a61e4f` also passed Zeabur deployment
+  freshness and expected-SHA production health. This confirms the latest
+  status checkpoint is deployed; it does not reopen product implementation
+  work by itself.
 
 Current large surfaces:
 
