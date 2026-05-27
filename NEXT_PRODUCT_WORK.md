@@ -178,6 +178,11 @@ Current monitoring slice opened from real roster evidence:
   keys were removed. Keep missing trusted Chinese name, upstream retry needed,
   no GHS data, and source conflict terminology aligned through the shared
   data-quality label helper instead of adding another wording layer.
+- Admin triage recommended-focus messages and next actions now resolve through
+  stable frontend locale keys, with the backend-provided English strings kept as
+  fallbacks only. Keep future admin recommendation keys mapped in
+  `PilotTriagePanel` and both locale files so the operator-facing "what should
+  I do next?" copy does not drift from the zh-TW/en product surface.
 - Admin triage totals now separate primary queue items from overlapping
   attention signals. The first triage metric should not double-count
   candidate-found, missing-name, No-GHS, source-conflict, and needs-evidence

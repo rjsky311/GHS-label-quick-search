@@ -318,7 +318,7 @@ describe("PilotDashboardSidebar", () => {
     );
     expect(screen.getByTestId("pilot-triage-stale-telemetry")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-primary-action-message")).toHaveTextContent(
-      "Review open correction requests",
+      "pilot.triageFocus.correction_intake.message",
     );
     expect(screen.getByTestId("pilot-triage-primary-action-next")).toHaveTextContent(
       "pilot.triageNextAction",
@@ -331,7 +331,7 @@ describe("PilotDashboardSidebar", () => {
       screen.getByTestId("pilot-triage-primary-action-open-target"),
     ).toHaveTextContent("Open Correction requests");
     expect(screen.getByTestId("pilot-triage-focus-correction_intake")).toHaveTextContent(
-      "Review open correction requests",
+      "pilot.triageFocus.correction_intake.message",
     );
     expect(
       screen.getByTestId("pilot-triage-focus-correction_intake-next-action"),
@@ -468,13 +468,13 @@ describe("PilotDashboardSidebar", () => {
     );
 
     expect(screen.getByTestId("pilot-triage-focus-missing_chinese_names")).toHaveTextContent(
-      "Backfill trusted Traditional Chinese names.",
+      "pilot.triageFocus.missing_chinese_names.message",
     );
     expect(screen.getByTestId("pilot-triage-focus-no_ghs_gaps")).toHaveTextContent(
-      "Review no-GHS reports.",
+      "pilot.triageFocus.no_ghs_gaps.message",
     );
     expect(screen.getByTestId("pilot-triage-focus-source_conflicts")).toHaveTextContent(
-      "Inspect source conflicts.",
+      "pilot.triageFocus.source_conflicts.message",
     );
 
     fireEvent.click(

@@ -6,6 +6,35 @@ import {
 } from "@/utils/dataQuality";
 import { SectionHeading, SummaryCard } from "./PilotDashboardPrimitives";
 
+const TRIAGE_FOCUS_MESSAGE_KEYS = {
+  correction_intake: "pilot.triageFocus.correction_intake.message",
+  candidate_found: "pilot.triageFocus.candidate_found.message",
+  manual_review: "pilot.triageFocus.manual_review.message",
+  needs_evidence: "pilot.triageFocus.needs_evidence.message",
+  unresolved_searches: "pilot.triageFocus.unresolved_searches.message",
+  missing_chinese_names: "pilot.triageFocus.missing_chinese_names.message",
+  no_ghs_gaps: "pilot.triageFocus.no_ghs_gaps.message",
+  source_conflicts: "pilot.triageFocus.source_conflicts.message",
+  alias_review: "pilot.triageFocus.alias_review.message",
+  reference_link_review: "pilot.triageFocus.reference_link_review.message",
+  telemetry_retention: "pilot.triageFocus.telemetry_retention.message",
+  healthy: "pilot.triageFocus.healthy.message",
+};
+
+const TRIAGE_FOCUS_NEXT_ACTION_KEYS = {
+  correction_intake: "pilot.triageFocus.correction_intake.nextAction",
+  candidate_found: "pilot.triageFocus.candidate_found.nextAction",
+  manual_review: "pilot.triageFocus.manual_review.nextAction",
+  needs_evidence: "pilot.triageFocus.needs_evidence.nextAction",
+  unresolved_searches: "pilot.triageFocus.unresolved_searches.nextAction",
+  missing_chinese_names: "pilot.triageFocus.missing_chinese_names.nextAction",
+  no_ghs_gaps: "pilot.triageFocus.no_ghs_gaps.nextAction",
+  source_conflicts: "pilot.triageFocus.source_conflicts.nextAction",
+  alias_review: "pilot.triageFocus.alias_review.nextAction",
+  reference_link_review: "pilot.triageFocus.reference_link_review.nextAction",
+  telemetry_retention: "pilot.triageFocus.telemetry_retention.nextAction",
+};
+
 export default function PilotTriagePanel({
   pilotTriage = {},
   observabilityCounters = {},
@@ -23,6 +52,20 @@ export default function PilotTriagePanel({
     : [];
   const primaryFocus = recommendedFocus[0] || null;
   const openFocusTarget = onOpenFocusTarget || onOpenPrimaryActionTarget;
+  const focusText = (focus, field) => {
+    if (!focus) {
+      return "";
+    }
+    const keyMap =
+      field === "nextAction"
+        ? TRIAGE_FOCUS_NEXT_ACTION_KEYS
+        : TRIAGE_FOCUS_MESSAGE_KEYS;
+    const translationKey = keyMap[focus.key];
+    const fallback = focus[field] || "";
+    return translationKey
+      ? t(translationKey, { defaultValue: fallback })
+      : fallback;
+  };
   const canOpenPrimaryTarget =
     Boolean(primaryFocus?.targetKey) &&
     typeof openFocusTarget === "function";
@@ -84,7 +127,7 @@ export default function PilotTriagePanel({
               data-testid="pilot-triage-primary-action-message"
             >
               {primaryFocus
-                ? primaryFocus.message
+                ? focusText(primaryFocus, "message")
                 : t("pilot.triageNoPrimaryAction", {
                     defaultValue:
                       "No queued pilot curation work requires immediate action.",
@@ -97,7 +140,7 @@ export default function PilotTriagePanel({
               {primaryFocus?.nextAction
                 ? t("pilot.triageNextAction", {
                     defaultValue: "Next action: {{action}}",
-                    action: primaryFocus.nextAction,
+                    action: focusText(primaryFocus, "nextAction"),
                   })
                 : t("pilot.triageNoPrimaryActionNext", {
                     defaultValue:
@@ -228,7 +271,7 @@ export default function PilotTriagePanel({
             data-testid={`pilot-triage-focus-${focus.key}`}
           >
             <div>
-              <div>{focus.message}</div>
+              <div>{focusText(focus, "message")}</div>
               {focus.nextAction && (
                 <div
                   className="mt-1 text-xs font-medium text-emerald-800"
@@ -236,7 +279,7 @@ export default function PilotTriagePanel({
                 >
                   {t("pilot.triageNextAction", {
                     defaultValue: "Next action: {{action}}",
-                    action: focus.nextAction,
+                    action: focusText(focus, "nextAction"),
                   })}
                 </div>
               )}

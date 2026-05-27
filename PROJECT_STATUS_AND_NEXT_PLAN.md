@@ -400,7 +400,10 @@ Current completion snapshot:
   exposes its next step. Export preview ready scope also matches the backend
   XLSX `Ready Rows` sheet, so review and unresolved rows cannot be mixed into a
   "ready" export. Upstream outage rows are routed to needs-review retry work
-  instead of unresolved identity cleanup.
+  instead of unresolved identity cleanup. Admin triage recommended-focus
+  messages and next actions now resolve through frontend locale keys keyed by
+  the stable backend focus id, so the dashboard can stay bilingual while
+  backend message strings remain API fallbacks rather than final UI copy.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
