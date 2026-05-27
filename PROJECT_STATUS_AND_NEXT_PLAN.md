@@ -333,6 +333,21 @@ Current completion snapshot:
   their budgets at 113.46 KiB and 110.19 KiB raw. Treat this as evidence that
   the current product baseline is deployable and split enough for now, not as
   permission to keep adding polish by inertia.
+- **Full-product QA checkpoint 2026-05-28**:
+  after the state check, `qa:zeabur-deployment` reported
+  `statusCategory: fresh-running` for commit
+  `22ff46837b91be7a81499ccfe3c5b96c6d111333`, and expected-SHA
+  `qa:production-health` passed against the same commit. Then
+  `npm run qa:production-product` passed. The generated product report listed
+  all eight product blocks as green: deployment freshness, production
+  availability, print renderer/stock fit, result-table pictograms,
+  trust/source/SDS boundaries, prepared-solution reprint, fixed-stock batch
+  printing, and whole-product UX/brand utility. The summary reported eight
+  present reports, zero failed reports, zero incomplete product blocks, zero
+  actionable failures, and no failure-triage buckets. This is the strongest
+  current evidence that the deployed product baseline is healthy; future work
+  should still start from new monitoring evidence rather than continuing by
+  inertia.
 - **Canonical-doc baseline**: this file, `NEXT_PRODUCT_WORK.md`,
   `NEXT_REMAINING_PRODUCT_WORK.md`, and `AUTONOMOUS_WORKFLOW.md` now agree on
   the evidence-triggered continuation rules and done criteria.

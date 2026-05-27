@@ -467,6 +467,15 @@ Current evidence:
 - `npm run qa:production-batch-print` passed against the deployed default
   51-CAS fixture and verified fixed-stock batch handoff, export preview
   trust/review columns, multiple-GHS warning copy, and print handoff metadata.
+- `npm run qa:production-product` passed after deployment freshness and
+  expected-SHA production health proved production was on
+  `22ff46837b91be7a81499ccfe3c5b96c6d111333`.
+  The product report marked all eight product blocks green:
+  deployment freshness, production availability, print renderer/stock fit,
+  result-table pictograms, trust/source/SDS, prepared-solution reprint,
+  fixed-stock batch printing, and whole-product UX/brand utility. The summary
+  had zero failed reports, zero incomplete product blocks, zero actionable
+  failures, and no failure-triage buckets.
 
 Current large surfaces:
 

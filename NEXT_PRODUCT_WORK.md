@@ -130,6 +130,16 @@ cannot complete the intended job.
   `npm run qa:bundle-budget` passed locally. Keep the next work
   evidence-triggered. Do not open another print-polish, admin, or broad
   product slice only because it is possible.
+- 2026-05-28 full-product QA: after Zeabur deployment freshness and
+  expected-SHA production health both proved production was serving commit
+  `22ff46837b91be7a81499ccfe3c5b96c6d111333`,
+  `npm run qa:production-product` passed. The product report covered
+  deployment freshness, production availability, print renderer/stock fit,
+  result-table pictograms, trust/source/SDS, prepared-solution reprint,
+  fixed-stock batch printing, and whole-product UX/brand utility. It reported
+  zero failed reports, zero incomplete product blocks, zero actionable
+  failures, and no triage buckets. Treat the deployed product baseline as
+  healthy until new monitoring evidence says otherwise.
 - 2026-05-28 maintainability scan: the current largest code surfaces are
   `frontend/src/utils/printQaMatrix.js` (2,776 lines),
   `frontend/src/utils/printLabelStyles.js` (1,847),
