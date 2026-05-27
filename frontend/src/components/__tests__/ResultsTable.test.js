@@ -171,6 +171,7 @@ describe('ResultsTable', () => {
     });
 
     it('renders a batch workflow summary for multi-row result sets', () => {
+      const onSetAdvancedFilter = jest.fn();
       render(
         <ResultsTable
           {...defaultProps}
@@ -181,6 +182,8 @@ describe('ResultsTable', () => {
             mockNotFoundResult,
           ]}
           totalCount={4}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
           getEffectiveClassification={createMockGetEffective()}
         />
       );
@@ -242,6 +245,23 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('results-workflow-output-scope')).toHaveTextContent(
         'results.workflowOutputScope'
       );
+      expect(
+        screen.getByTestId('results-multiple-ghs-review-callout')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('results-multiple-ghs-review-title')
+      ).toHaveTextContent('results.multipleGhsReviewTitle');
+      expect(
+        screen.getByTestId('results-multiple-ghs-review-body')
+      ).toHaveTextContent('results.multipleGhsReviewBody');
+
+      fireEvent.click(screen.getByTestId('results-multiple-ghs-review-primary'));
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'multiple-classifications',
+      });
     });
 
     it('keeps upstream retry rows out of unresolved lookup counts', () => {
@@ -473,6 +493,9 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('results-next-action-title')).toHaveTextContent(
         'results.nextActionReadyTitle'
       );
+      expect(
+        screen.queryByTestId('results-multiple-ghs-review-callout')
+      ).not.toBeInTheDocument();
       fireEvent.click(screen.getByTestId('results-next-action-primary'));
       expect(onPrintAllWithGhs).toHaveBeenCalledTimes(1);
     });

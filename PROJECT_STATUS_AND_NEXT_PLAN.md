@@ -410,7 +410,9 @@ Current completion snapshot:
   ready scope both match the backend XLSX `Ready Rows` sheet, so review and
   unresolved rows cannot be mixed into a "ready" output. Upstream outage rows
   are routed to needs-review retry work instead of unresolved identity cleanup.
-  Admin triage recommended-focus
+  Multiple-GHS rows now get a dedicated batch-level confirmation callout when
+  present, because the selected classification controls the downstream label
+  and export handoff. Admin triage recommended-focus
   messages and next actions now resolve through frontend locale keys keyed by
   the stable backend focus id, so the dashboard can stay bilingual while
   backend message strings remain API fallbacks rather than final UI copy.

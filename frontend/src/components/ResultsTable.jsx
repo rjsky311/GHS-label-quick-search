@@ -172,6 +172,8 @@ export default function ResultsTable({
       action: getReviewNextActionLabel(type, t),
     }))
     .filter((issue) => issue.count > 0);
+  const multipleGhsReviewCount =
+    workflowIssueCounts[DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS] || 0;
   const activeReviewIssueType = advancedFilter.reviewIssueType || "";
   const activeReviewIssueLabel = activeReviewIssueType
     ? getDataQualityIssueLabel(activeReviewIssueType, t)
@@ -658,6 +660,43 @@ export default function ResultsTable({
                   {nextAction.cta}
                 </button>
               )}
+            </div>
+          )}
+          {multipleGhsReviewCount > 0 && (
+            <div
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-amber-950"
+              data-testid="results-multiple-ghs-review-callout"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                  {t("results.multipleGhsReviewEyebrow")}
+                </p>
+                <h4
+                  className="mt-0.5 text-sm font-semibold"
+                  data-testid="results-multiple-ghs-review-title"
+                >
+                  {t("results.multipleGhsReviewTitle", {
+                    count: multipleGhsReviewCount,
+                  })}
+                </h4>
+                <p
+                  className="mt-1 text-xs text-amber-800"
+                  data-testid="results-multiple-ghs-review-body"
+                >
+                  {t("results.multipleGhsReviewBody")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setReviewIssueFilter(DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS)
+                }
+                disabled={!onSetAdvancedFilter}
+                className="shrink-0 rounded-md border border-amber-300 bg-white/80 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-white disabled:cursor-default disabled:opacity-60"
+                data-testid="results-multiple-ghs-review-primary"
+              >
+                {t("results.multipleGhsReviewCta")}
+              </button>
             </div>
           )}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

@@ -146,6 +146,9 @@ Current monitoring slice opened from real roster evidence:
   retry rows out of the unresolved lookup count; use that as the baseline for
   future "what should I do next?" UI instead of adding another competing review
   surface.
+- Batch result summaries now also promote multiple-GHS rows into a dedicated
+  confirmation callout when present, because this choice affects labels and
+  exports more directly than a generic review chip.
 - Batch result ready-output scope is aligned with export preview and the
   backend XLSX `Ready Rows` sheet: ready means GHS data with no review reason,
   while needs-review and unresolved rows remain separate scopes.
