@@ -178,7 +178,7 @@ requireIncludes(
   "PROJECT_STATUS_AND_NEXT_PLAN.md",
   docs["PROJECT_STATUS_AND_NEXT_PLAN.md"],
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
-  "active batch-first target must stay discoverable from the canonical plan",
+  "shipped/monitoring batch-first owner doc must stay discoverable from the canonical plan",
 );
 requireIncludes(
   "POST_95_REPRIORITIZATION.md",
@@ -190,7 +190,7 @@ requireIncludes(
   "POST_95_REPRIORITIZATION.md",
   docs["POST_95_REPRIORITIZATION.md"],
   "PILOT_OPERATIONS_READY_PLAN.md",
-  "post-95 re-rank must point to the active owner doc",
+  "post-95 re-rank must point to the shipped pilot-operations owner doc",
 );
 requireIncludes(
   "PILOT_OPERATIONS_READY_PLAN.md",
@@ -244,25 +244,25 @@ requireIncludes(
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
   docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
   "Batch-First Lab Pilot v1",
-  "active major target role statement",
+  "batch-first owner doc role statement",
 );
 requireIncludes(
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
   docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
   "Batch Review Flow",
-  "active major target must cover batch review flow",
+  "batch-first owner doc must cover batch review flow",
 );
 requireIncludes(
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
   docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
   "Batch Export v1",
-  "active major target must cover batch export",
+  "batch-first owner doc must cover batch export",
 );
 requireIncludes(
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
   docs["BATCH_FIRST_LAB_PILOT_V1_PLAN.md"],
   "Maintainability Slice",
-  "active major target must cover the bounded maintainability work",
+  "batch-first owner doc must cover the bounded maintainability work",
 );
 requireIncludes(
   "NEXT_PRODUCT_WORK.md",
@@ -280,7 +280,7 @@ requireIncludes(
   "NEXT_PRODUCT_WORK.md",
   docs["NEXT_PRODUCT_WORK.md"],
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
-  "short queue must point to the active batch-first owner doc",
+  "short queue must point to the shipped/monitoring batch-first owner doc",
 );
 requireIncludes(
   "LAB_READY_PILOT_95_PLAN.md",

@@ -3,7 +3,8 @@
 Historical note: this v1.8 working roadmap is retained for context only and is
 not the active planning source. Start current planning from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`; use
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active major target.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First
+evidence baseline when a new slice touches batch workflows.
 
 > Status: working document
 > Last updated: 2026-04-16

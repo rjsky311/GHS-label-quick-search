@@ -4,7 +4,8 @@ Historical/supporting note: this ledger records the earlier nine-segment print
 productization work. It is not the active print or product queue. Start from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`; use `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` for
 the current three-output label model and
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active major target.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First
+evidence baseline when a new slice touches batch workflows.
 
 This ledger is the working contract for the nine print-productization segments.
 It exists so print work stays tied to the user goal: users should be able to

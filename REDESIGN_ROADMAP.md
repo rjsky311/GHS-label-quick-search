@@ -2,8 +2,9 @@
 
 Historical note: this roadmap is superseded as an active queue. Keep it as
 design and productization context only. Start current planning from
-`PROJECT_STATUS_AND_NEXT_PLAN.md` and the active major owner doc
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
+`PROJECT_STATUS_AND_NEXT_PLAN.md` and the shipped/monitoring Batch-First owner
+doc `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` when a new slice touches batch
+workflows.
 
 ## North Star
 

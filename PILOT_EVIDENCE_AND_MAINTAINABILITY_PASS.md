@@ -134,8 +134,8 @@ Canonical current entry points remain:
 2. `NEXT_PRODUCT_WORK.md`
 3. `POST_95_REPRIORITIZATION.md`
 4. `PILOT_OPERATIONS_READY_PLAN.md`
-5. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active major target after this
-   shipped evidence pass.
+5. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the shipped/monitoring Batch-First
+   owner doc after this evidence pass.
 6. This document as shipped evidence for the next target.
 
 Historical or supporting documents should say when they are historical,
@@ -474,7 +474,7 @@ Record:
   - `PRINT_OUTPUT_REFACTOR_PLAN.md`
 - `frontend/scripts/check-docs-drift.mjs` now requires this owner doc and its
   main sections. After the next-target update it also requires
-  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the active major owner doc.
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the Batch-First owner doc.
 
 ## Verification Plan
 

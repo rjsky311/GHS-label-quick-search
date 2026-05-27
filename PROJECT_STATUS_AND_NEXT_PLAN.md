@@ -45,11 +45,12 @@ baseline, with the operator-facing checklist in `PILOT_RUNBOOK.md`.
 `LAB_READY_PILOT_95_PLAN.md` is the shipped 95% evidence packet, not an active
 unfinished target.
 
-Current major target: `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is the active owner
-doc for the next productization round. Use it after the shipped pilot evidence
-docs when continuing work on batch review flow, batch label confidence, batch
-export usefulness, correction/admin triage, or bounded maintainability work
-that directly supports those workflows.
+Current major productization baseline: `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is
+now the shipped/monitoring owner doc for the latest batch-first round, not an
+open implementation target. Use it after the shipped pilot evidence docs as
+the evidence baseline for new monitoring-driven slices in batch review flow,
+batch label confidence, batch export usefulness, correction/admin triage, or
+bounded maintainability work that directly supports those workflows.
 
 Shipped short-term evidence: `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`
 records the representative pilot-evidence audit, export conclusion,
@@ -114,9 +115,10 @@ Current baseline capabilities:
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
   the evidence packet for that milestone. The shipped post-95 target selection
   lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target owner
-  doc is `PILOT_OPERATIONS_READY_PLAN.md`. The current active target is
-  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`: small pilot evidence should now improve
-  the batch-first lookup/review/print/export/correction path.
+  doc is `PILOT_OPERATIONS_READY_PLAN.md`. The latest batch-first
+  productization target is also shipped/monitoring in
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`; new work should be selected from fresh
+  monitoring evidence instead of continuing that implementation by inertia.
 - Product priority is now explicit: batch lookup -> batch print, batch export,
   data correction/governance, single lookup polish, then brand/support polish.
 - Print workflow now exposes the simplified three-output model on the first
@@ -762,9 +764,10 @@ Do next:
   historical context, not active priority selectors.
 - Update docs whenever behavior, acceptance criteria, QA gates, or workflow
   assumptions change.
-- Keep `npm run test:docs` covering the active owner docs, including data
-  governance, simplified labels, print contract, physical print deferral,
-  brand/support strategy, and scientific-skill evaluation.
+- Keep `npm run test:docs` covering the owner docs, including Batch-First
+  shipped/monitoring evidence, data governance, simplified labels, print
+  contract, physical print deferral, brand/support strategy, and
+  scientific-skill evaluation.
 
 Done means:
 

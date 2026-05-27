@@ -18,9 +18,9 @@ Read these files in order before choosing or continuing work:
 6. `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` - shipped short-term evidence
    doc for pilot evidence, export usability, data-quality next steps,
    maintainability boundaries, and historical-doc cleanup.
-7. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` - active major owner doc for batch review
-   flow, batch label confidence, batch export, correction/admin triage, and
-   bounded maintainability work that supports those workflows.
+7. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` - shipped/monitoring owner doc for batch
+   review flow, batch label confidence, batch export, correction/admin triage,
+   and bounded maintainability evidence.
 8. `LAB_READY_PILOT_95_PLAN.md` - shipped 95% lab-ready pilot evidence packet,
    workstreams, non-goals, closure gates, and final audit checklist.
 9. `AUTONOMOUS_WORKFLOW.md` - standing approval, stop conditions,
@@ -43,7 +43,8 @@ Maintenance rule:
 - Keep pilot operating instructions in `PILOT_RUNBOOK.md`.
 - Keep the shipped short-term evidence and maintainability pass in
   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`.
-- Keep the active major target in `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
+- Keep Batch-First shipped/monitoring evidence in
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
 - Keep the shipped 95% product-maturity evidence in `LAB_READY_PILOT_95_PLAN.md`.
 - Keep continuation workflow rules in `AUTONOMOUS_WORKFLOW.md`.
 - Keep broad-scope decision alignment rules in `PRODUCT_SCOPE_GATE.md`.

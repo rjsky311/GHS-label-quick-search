@@ -403,13 +403,13 @@ tracked in `FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md`. Use it for data
 trust/correction workflow, first-time UX guidance, public README/docs cleanup,
 and brand/support surfaces.
 
-Documentation drift checks now cover the active owner docs, not only the short
-roadmap files. `npm run test:docs` checks that the active batch-first target,
-pilot evidence, data governance, simplified labels, print contract, physical
-print deferral, brand/support strategy, and scientific-skill evaluation docs
-keep a visible path back to `PROJECT_STATUS_AND_NEXT_PLAN.md`; it also checks
-the candidate-discovery dry-run contract before any external source is wired
-into the product.
+Documentation drift checks now cover owner docs, not only the short roadmap
+files. `npm run test:docs` checks that the shipped/monitoring Batch-First owner
+doc, pilot evidence, data governance, simplified labels, print contract,
+physical print deferral, brand/support strategy, and scientific-skill
+evaluation docs keep a visible path back to `PROJECT_STATUS_AND_NEXT_PLAN.md`;
+it also checks the candidate-discovery dry-run contract before any external
+source is wired into the product.
 
 Optional scientific lookup skill evaluation is recorded in
 `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`. The current decision is not to install

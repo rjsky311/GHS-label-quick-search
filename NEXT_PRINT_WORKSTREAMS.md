@@ -3,7 +3,8 @@
 Historical/supporting note: these workstreams are now completed baseline
 context, not the active live queue. Start current planning from
 `PROJECT_STATUS_AND_NEXT_PLAN.md`, then use `NEXT_PRODUCT_WORK.md` and the
-active major owner doc `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`.
+shipped/monitoring Batch-First owner doc
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` when print work affects batch workflows.
 
 This document expands the original five print-workflow gaps into implementation
 workstreams. Use it with `NEXT_PRODUCT_WORK.md`,

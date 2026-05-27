@@ -67,8 +67,9 @@ post-95 target owner doc is
 operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The shipped
 short-term evidence pass is
 [PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md).
-The active major target is
-[BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md).
+The latest Batch-First productization owner doc is
+[BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md), now in
+shipped/monitoring status; use it as evidence for new monitoring-driven slices.
 The shipped 95% lab-ready pilot evidence packet is
 [LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
 [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
@@ -185,9 +186,9 @@ Use these files before starting product or safety-critical changes:
   usability, data-quality next steps, maintainability boundaries, and
   historical-doc cleanup.
 - [BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md) -
-  active major target for batch review flow, batch label confidence, batch
-  export, correction/admin triage, and bounded maintainability work that
-  supports those workflows.
+  shipped/monitoring Batch-First owner doc for batch review flow, batch label
+  confidence, batch export, correction/admin triage, and bounded
+  maintainability evidence.
 - [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short live queue.
 - [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
   workflow for aligning broad or ambiguous product decisions before

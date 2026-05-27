@@ -17,9 +17,10 @@ stop condition below applies:
   findings for the detailed work context. Prefer the canonical plan when there
   is no fresh regression because the original print workstreams are now the
   baseline.
-- When the active work is about reaching the next major product maturity target,
-  read the active owner doc after `PROJECT_STATUS_AND_NEXT_PLAN.md`. For the
-  current major target, read `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`. Use
+- When the active work is about reaching or monitoring a major product maturity
+  target, read the relevant owner doc after `PROJECT_STATUS_AND_NEXT_PLAN.md`.
+  The latest batch-first owner doc is
+  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`, now in shipped/monitoring status. Use
   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`,
   `PILOT_OPERATIONS_READY_PLAN.md`, and `PILOT_RUNBOOK.md` as shipped evidence
   and pilot-operation context. `LAB_READY_PILOT_95_PLAN.md` is the shipped
@@ -56,8 +57,9 @@ stop condition below applies:
 Use this loop when continuing autonomously:
 
 1. Check `git status`, read `PROJECT_STATUS_AND_NEXT_PLAN.md`, and then read
-   the relevant project docs before editing. For current product-maturity work,
-   include `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`, then use
+   the relevant project docs before editing. For new product-maturity or
+   monitoring work, include `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` when the slice
+   touches batch review, label confidence, export, or admin triage, then use
    `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md`,
    `PILOT_OPERATIONS_READY_PLAN.md`, and `PILOT_RUNBOOK.md` as shipped
    evidence/context; use `LAB_READY_PILOT_95_PLAN.md` as prior milestone
@@ -100,11 +102,12 @@ pilot evidence, admin/report triage conclusions, batch export usability
 conclusions, data-quality next-step selection, maintainability boundaries,
 historical-doc cleanup, and passing docs/affected tests recorded.
 
-For Batch-First Lab Pilot v1 work, do not call the target complete until
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` has shipped evidence for representative
-50-100 item batch lookup, review, selected print handoff, export, and
-correction/admin routing, plus a completed low-risk maintainability slice or a
-recorded reason to defer that slice.
+For new Batch-First monitoring slices, do not reopen the shipped target unless
+fresh user, CI, QA, admin-queue, screenshot, PDF, or production evidence shows
+that representative 50-100 item batch lookup, review, selected print handoff,
+export, or correction/admin routing no longer works. If a monitoring slice is
+opened, record the evidence and exit condition instead of continuing
+Batch-First implementation by inertia.
 
 ## Next-Step Decision Loop
 

@@ -3,7 +3,8 @@
 Historical/supporting note: this document records the product design language
 and remains useful for visual direction. It is not the active roadmap. Start
 current planning from `PROJECT_STATUS_AND_NEXT_PLAN.md`, then use
-`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` for the active batch-first target.
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First
+evidence baseline when a new slice touches batch workflows.
 
 ## Product Position
 

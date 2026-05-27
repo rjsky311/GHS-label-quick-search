@@ -10,10 +10,11 @@ The owner doc produced from this decision is `PILOT_OPERATIONS_READY_PLAN.md`,
 with the operator checklist in `PILOT_RUNBOOK.md`. That target is now shipped
 as the post-95 pilot-operations baseline.
 The short-term follow-up
-`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` also shipped. The active major
-target after that evidence pass is `BATCH_FIRST_LAB_PILOT_V1_PLAN.md`, which
-turns the pilot evidence into a batch-first lab workflow target before any
-broader feature work.
+`PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` also shipped. The Batch-First
+follow-up target after that evidence pass is
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md`; it has since moved to
+`Shipped / Monitoring` and now serves as the evidence baseline for new
+monitoring-driven slices.
 
 ## Re-Rank Trigger
 

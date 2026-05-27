@@ -1,8 +1,9 @@
 # Batch-First Lab Pilot v1 Plan
 
-Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first. This document is the active
-major owner doc after the 95% Lab-Ready Pilot, Pilot Operations Ready, and
-Pilot Evidence And Maintainability Pass targets shipped.
+Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first. This document is the
+shipped/monitoring owner doc for the Batch-First Lab Pilot v1 round after the
+95% Lab-Ready Pilot, Pilot Operations Ready, and Pilot Evidence And
+Maintainability Pass targets shipped.
 
 ## Status
 
@@ -747,7 +748,7 @@ For admin/correction changes:
   `components/pilot/PilotCorrectionRequestSections.jsx`, reducing
   `PilotDashboardSidebar.jsx` to 1,076 lines while preserving focused pilot
   dashboard tests.
-- 2026-05-25: Documentation audit refreshed the active owner doc after the
+- 2026-05-25: Documentation audit refreshed the Batch-First owner doc after the
   latest extraction slices. Completed pagination, statement-priority,
   stylesheet, print-lifecycle, required-image-preflight, advanced-control,
   outcome-summary, output-plan, stock-size selector, selected-label controls,
