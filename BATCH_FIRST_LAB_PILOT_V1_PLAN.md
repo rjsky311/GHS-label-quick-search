@@ -185,8 +185,14 @@ Current checkpoint:
   non-zero, and the print action includes physical labels/pages.
 - Batch export v1 now uses a shared backend export row contract for CSV and
   XLSX, with readable trust/review columns kept aligned across formats.
+- CSV/XLSX export rows now include `Review Signal Count` and
+  `Primary Review Action`, so a lab manager can see whether one row has
+  overlapping issues and which triage action should be handled first.
 - XLSX export now includes lab-manager triage sheets: `GHS Results`,
   `Ready Rows`, `Needs Review`, `Unresolved`, and `Pilot Summary`.
+- XLSX `Pilot Summary` now separates unique needs-review rows from total
+  review signals and rows with multiple signals, matching the batch-review UI
+  behavior where one chemical can have several issues.
 - Export preview now tells maintainers that XLSX separates ready, review, and
   unresolved rows before download, while CSV remains a single flat sheet.
 
@@ -200,6 +206,8 @@ Scope:
   - printable state;
   - needs-review state;
   - review reasons;
+  - review signal count;
+  - primary review action;
   - primary source;
   - report count;
   - source conflict;
@@ -223,9 +231,14 @@ Current checkpoint:
 
 - Backend CSV/XLSX exports now share `EXPORT_DATA_HEADERS` and
   `build_export_data_row`, reducing drift between flat CSV and workbook export.
+- CSV/XLSX rows expose both review reasons and the first recommended review
+  action. This keeps the downloaded file useful as a working triage handoff
+  instead of requiring maintainers to infer next steps from issue labels.
 - XLSX exports now split rows into `Ready Rows`, `Needs Review`, and
   `Unresolved` sheets in addition to the complete `GHS Results` sheet and the
   existing `Pilot Summary`.
+- `Pilot Summary` reports total review signals and rows with multiple review
+  signals in addition to unique needs-review rows.
 - Frontend export preview now explains the XLSX workbook layout so a lab
   manager knows the downloaded file is already triaged.
 - Frontend export preview also summarizes the selected scope with ready,

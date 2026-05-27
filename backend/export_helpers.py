@@ -22,6 +22,8 @@ EXPORT_TRUST_HEADERS = [
     "Printable",
     "Needs Review",
     "Review Reasons",
+    "Review Signal Count",
+    "Primary Review Action",
     "Primary Source",
     "Report Count",
     "Retrieved At",
@@ -52,6 +54,16 @@ EXPORT_REVIEW_REASON_LABELS = {
     "source_conflict": "Source conflict",
     "multiple_classifications": "Multiple GHS classifications",
     "missing_chinese_name": "Missing trusted Chinese name",
+}
+
+EXPORT_REVIEW_ACTION_LABELS = {
+    "upstream_error": "Retry upstream source",
+    "unresolved_search": "Send lookup gap to correction",
+    "no_ghs_data": "Check SDS before relying on no-GHS result",
+    "ghs_text_no_pictograms": "Review pictogram evidence",
+    "source_conflict": "Inspect source conflict evidence",
+    "multiple_classifications": "Confirm primary GHS classification",
+    "missing_chinese_name": "Submit trusted Chinese-name evidence",
 }
 
 
@@ -119,27 +131,40 @@ def _has_manual_classification_selection(result: Dict[str, Any]) -> bool:
     )
 
 
-def _export_review_reasons(result: Dict[str, Any]) -> List[str]:
-    reasons: List[str] = []
+def _export_review_issue_types(result: Dict[str, Any]) -> List[str]:
+    issue_types: List[str] = []
     if result.get("upstream_error"):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["upstream_error"])
+        issue_types.append("upstream_error")
     if result.get("found") is False:
         if not result.get("upstream_error"):
-            reasons.append(EXPORT_REVIEW_REASON_LABELS["unresolved_search"])
-        return reasons
+            issue_types.append("unresolved_search")
+        return issue_types
 
     if not _has_export_ghs_data(result):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["no_ghs_data"])
+        issue_types.append("no_ghs_data")
     elif not (result.get("ghs_pictograms") or result.get("pictograms")):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["ghs_text_no_pictograms"])
+        issue_types.append("ghs_text_no_pictograms")
 
     if result.get("source_conflict") or result.get("source_conflicts"):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["source_conflict"])
+        issue_types.append("source_conflict")
     if _has_multiple_classifications(result) and not _has_manual_classification_selection(result):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["multiple_classifications"])
+        issue_types.append("multiple_classifications")
     if result.get("name_en") and not _trusted_export_chinese_name(result):
-        reasons.append(EXPORT_REVIEW_REASON_LABELS["missing_chinese_name"])
-    return reasons
+        issue_types.append("missing_chinese_name")
+    return issue_types
+
+
+def _export_review_reasons(result: Dict[str, Any]) -> List[str]:
+    return [
+        EXPORT_REVIEW_REASON_LABELS[issue_type]
+        for issue_type in _export_review_issue_types(result)
+    ]
+
+
+def _export_primary_review_action(issue_types: List[str]) -> str:
+    if not issue_types:
+        return "No review action"
+    return EXPORT_REVIEW_ACTION_LABELS[issue_types[0]]
 
 
 def _export_multiple_ghs_status(result: Dict[str, Any]) -> str:
@@ -155,12 +180,18 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
     reference_count = (
         len(reference_links) if isinstance(reference_links, list) else 0
     )
-    review_reasons = _export_review_reasons(result)
+    review_issue_types = _export_review_issue_types(result)
+    review_reasons = [
+        EXPORT_REVIEW_REASON_LABELS[issue_type]
+        for issue_type in review_issue_types
+    ]
     return [
         _export_data_state(result),
         "Yes" if result.get("found") is not False and _has_export_ghs_data(result) else "No",
         "Yes" if review_reasons else "No",
         "; ".join(review_reasons) if review_reasons else "No review reasons",
+        str(len(review_issue_types)),
+        _export_primary_review_action(review_issue_types),
         result.get("primary_source") or "Not recorded",
         result.get("primary_report_count") or "-",
         result.get("retrieved_at") or "Not recorded",
@@ -286,6 +317,8 @@ def _apply_export_column_widths(worksheet) -> None:
         55,
         58,
         34,
+        16,
+        34,
         14,
         16,
         44,
@@ -362,10 +395,16 @@ def _build_export_pilot_summary(
 ) -> List[tuple[str, Any, str]]:
     review_reason_counts: Counter[str] = Counter()
     printable_count = 0
+    review_signal_count = 0
+    review_overlap_count = 0
     for result in results:
         if result.get("found") is not False and _has_export_ghs_data(result):
             printable_count += 1
-        review_reason_counts.update(_export_review_reasons(result))
+        review_reasons = _export_review_reasons(result)
+        review_reason_counts.update(review_reasons)
+        review_signal_count += len(review_reasons)
+        if len(review_reasons) > 1:
+            review_overlap_count += 1
 
     needs_review_count = sum(
         1 for result in results if _export_review_reasons(result)
@@ -411,6 +450,16 @@ def _build_export_pilot_summary(
             "Needs review rows",
             needs_review_count,
             "Rows that should be checked before relying on the export.",
+        ),
+        (
+            "Review signals",
+            review_signal_count,
+            "Total issue signals across review rows; this can exceed needs-review rows when one chemical has several issues.",
+        ),
+        (
+            "Rows with multiple review signals",
+            review_overlap_count,
+            "Rows where more than one issue should be handled in the same triage pass.",
         ),
         (
             "Unresolved searches",

@@ -1773,9 +1773,11 @@ async def test_export_csv_includes_data_trust_columns():
     assert "Printable" in body
     assert "Needs Review" in body
     assert "Review Reasons" in body
+    assert "Review Signal Count" in body
+    assert "Primary Review Action" in body
     assert "Primary Source" in body
     assert "Found with renderable GHS pictograms" in body
-    assert "Yes,No,No review reasons" in body
+    assert "Yes,No,No review reasons,0,No review action" in body
     assert "ECHA C&L Notifications Summary" in body
     assert "236" in body
     assert "Cached" in body
@@ -1809,12 +1811,16 @@ async def test_export_xlsx_includes_data_trust_columns():
     wb = load_workbook(BytesIO(response.content))
     ws = wb.active
     assert ws.cell(row=1, column=8).value == "Data State"
-    assert ws.cell(row=1, column=20).value == "Classification Selection"
+    assert ws.cell(row=1, column=12).value == "Review Signal Count"
+    assert ws.cell(row=1, column=13).value == "Primary Review Action"
+    assert ws.cell(row=1, column=22).value == "Classification Selection"
     assert ws.cell(row=2, column=8).value == "Not found"
     assert ws.cell(row=2, column=9).value == "No"
     assert ws.cell(row=2, column=10).value == "Yes"
     assert ws.cell(row=2, column=11).value == "Unresolved lookup"
-    assert ws.cell(row=2, column=20).value == "Default primary classification"
+    assert ws.cell(row=2, column=12).value == "1"
+    assert ws.cell(row=2, column=13).value == "Send lookup gap to correction"
+    assert ws.cell(row=2, column=22).value == "Default primary classification"
 
 
 async def test_export_xlsx_includes_pilot_summary_sheet():
@@ -1885,6 +1891,8 @@ async def test_export_xlsx_includes_pilot_summary_sheet():
     assert rows["Exported row count"] == 4
     assert rows["Printable rows"] == 2
     assert rows["Needs review rows"] == 3
+    assert rows["Review signals"] == 4
+    assert rows["Rows with multiple review signals"] == 1
     assert rows["Unresolved searches"] == 1
     assert rows["Upstream transient failures"] == 1
     assert rows["Missing trusted Chinese names"] == 1
@@ -1954,7 +1962,16 @@ async def test_export_xlsx_includes_lab_manager_triage_sheets():
     assert wb["Needs Review"].max_row == 3
     assert wb["Needs Review"].cell(row=2, column=1).value == "777-77-7"
     assert wb["Needs Review"].cell(row=2, column=11).value == "Upstream retry needed"
+    assert wb["Needs Review"].cell(row=2, column=12).value == "1"
+    assert wb["Needs Review"].cell(row=2, column=13).value == "Retry upstream source"
     assert wb["Needs Review"].cell(row=3, column=1).value == "107-18-6"
+    assert wb["Needs Review"].cell(row=3, column=11).value == (
+        "Multiple GHS classifications; Missing trusted Chinese name"
+    )
+    assert wb["Needs Review"].cell(row=3, column=12).value == "2"
+    assert wb["Needs Review"].cell(row=3, column=13).value == (
+        "Confirm primary GHS classification"
+    )
     assert wb["Unresolved"].max_row == 2
     assert wb["Unresolved"].cell(row=2, column=1).value == "999-99-9"
 

@@ -415,7 +415,10 @@ Current completion snapshot:
   downloads are already separated for lab-manager triage. Export preview now
   also shows selected-scope ready, needs-review, and unresolved counts before
   download, so users can tell whether they are exporting a working handoff or a
-  cleanup queue before opening the file.
+  cleanup queue before opening the file. The export row contract now also
+  carries `Review Signal Count` and `Primary Review Action`, and the XLSX
+  `Pilot Summary` distinguishes unique needs-review rows from total review
+  signals and rows with overlapping signals.
 - **Batch handoff/export closure checkpoint 2026-05-25**: `5195b3a` shipped
   the fixed-stock batch handoff/export closure scope and `5d51401` fixed the
   production batch QA ordering so the handoff contract is asserted after the
