@@ -264,6 +264,17 @@ export default function ExportPreviewModal({
                 </div>
               </div>
             ) : null}
+            <div
+              className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-950"
+              data-testid="export-preview-review-action-columns"
+            >
+              <div className="font-semibold">
+                {t("exportPreview.reviewActionColumnsTitle")}
+              </div>
+              <div className="mt-1 text-xs leading-5 text-sky-900">
+                {t("exportPreview.reviewActionColumnsBody")}
+              </div>
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-md border border-slate-200">

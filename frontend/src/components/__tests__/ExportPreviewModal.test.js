@@ -57,6 +57,9 @@ describe('ExportPreviewModal', () => {
     expect(screen.getByTestId('export-preview-workbook-layout')).toHaveTextContent(
       'exportPreview.workbookLayoutTitle',
     );
+    expect(screen.getByTestId('export-preview-review-action-columns')).toHaveTextContent(
+      'exportPreview.reviewActionColumnsTitle',
+    );
   });
 
   it('confirms the initial xlsx format', async () => {
@@ -99,6 +102,9 @@ describe('ExportPreviewModal', () => {
 
     fireEvent.click(screen.getByTestId('export-preview-format-csv'));
     expect(screen.queryByTestId('export-preview-workbook-layout')).not.toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-review-action-columns')).toHaveTextContent(
+      'exportPreview.reviewActionColumnsTitle',
+    );
     fireEvent.click(screen.getByTestId('export-preview-confirm'));
 
     await waitFor(() => {

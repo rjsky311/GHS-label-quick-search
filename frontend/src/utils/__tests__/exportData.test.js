@@ -125,6 +125,8 @@ describe('buildExportPreview', () => {
       'export.printable',
       'export.reviewRequired',
       'export.reviewReasons',
+      'export.reviewSignalCount',
+      'export.primaryReviewAction',
       'export.primarySource',
       'export.reportCount',
       'export.retrievedAt',
@@ -153,11 +155,13 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].cells[8]).toBe('export.yes');
     expect(preview.rows[0].cells[9]).toBe('export.no');
     expect(preview.rows[0].cells[10]).toBe('export.noReviewReasons');
-    expect(preview.rows[0].cells[11]).toBe('ECHA C&L Notifications Summary');
-    expect(preview.rows[0].cells[12]).toBe('120');
-    expect(preview.rows[0].cells[14]).toBe('export.cacheHit');
-    expect(preview.rows[0].cells[15]).toBe('export.referenceCount');
-    expect(preview.rows[0].cells[18]).toBe('export.multipleGhsNone');
+    expect(preview.rows[0].cells[11]).toBe('0');
+    expect(preview.rows[0].cells[12]).toBe('export.noReviewAction');
+    expect(preview.rows[0].cells[13]).toBe('ECHA C&L Notifications Summary');
+    expect(preview.rows[0].cells[14]).toBe('120');
+    expect(preview.rows[0].cells[16]).toBe('export.cacheHit');
+    expect(preview.rows[0].cells[17]).toBe('export.referenceCount');
+    expect(preview.rows[0].cells[20]).toBe('export.multipleGhsNone');
   });
 
   it('limits preview rows and reports hidden rows', () => {
@@ -216,8 +220,10 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].cells[10]).toContain(
       'dataQuality.issue.missingChineseName',
     );
-    expect(preview.rows[0].cells[17]).toBe('export.yes');
-    expect(preview.rows[0].cells[18]).toBe('export.multipleGhsSystemSuggested');
+    expect(preview.rows[0].cells[11]).toBe('2');
+    expect(preview.rows[0].cells[12]).toBe('export.reviewActionConfirmMultipleGhs');
+    expect(preview.rows[0].cells[19]).toBe('export.yes');
+    expect(preview.rows[0].cells[20]).toBe('export.multipleGhsSystemSuggested');
   });
 
   it('previews every real-roster review reason without merging them into one generic state', () => {

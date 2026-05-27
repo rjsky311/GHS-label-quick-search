@@ -30,6 +30,29 @@ function getExportReviewReasonLabel(type, t) {
   return getDataQualityIssueDisplayLabel(type, t);
 }
 
+function getExportPrimaryReviewActionLabel(type, t) {
+  const labels = {
+    [DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR]: t("export.reviewActionRetryUpstream"),
+    [DATA_QUALITY_ISSUE_TYPES.UNRESOLVED_SEARCH]: t(
+      "export.reviewActionReportLookupGap",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA]: t("export.reviewActionReportNoGhs"),
+    [DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS]: t(
+      "export.reviewActionReviewPictograms",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT]: t(
+      "export.reviewActionReviewSourceConflict",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS]: t(
+      "export.reviewActionConfirmMultipleGhs",
+    ),
+    [DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME]: t(
+      "export.reviewActionReportChineseName",
+    ),
+  };
+  return labels[type] || t("export.reviewActionReviewData");
+}
+
 function hasMultipleClassifications(result) {
   return Boolean(
     result?.has_multiple_classifications || result?.other_classifications?.length > 0
@@ -152,6 +175,10 @@ function buildExportTrustCells(result, t) {
           .map((issue) => getExportReviewReasonLabel(issue.type, t))
           .join("; ")
       : t("export.noReviewReasons"),
+    String(reviewIssues.length),
+    reviewIssues.length
+      ? getExportPrimaryReviewActionLabel(reviewIssues[0].type, t)
+      : t("export.noReviewAction"),
     result?.primary_source || t("export.notRecorded"),
     result?.primary_report_count || "-",
     result?.retrieved_at || t("export.notRecorded"),
@@ -190,6 +217,8 @@ export function buildCsvRows(results, t) {
       t("export.printable"),
       t("export.reviewRequired"),
       t("export.reviewReasons"),
+      t("export.reviewSignalCount"),
+      t("export.primaryReviewAction"),
       t("export.primarySource"),
       t("export.reportCount"),
       t("export.retrievedAt"),
