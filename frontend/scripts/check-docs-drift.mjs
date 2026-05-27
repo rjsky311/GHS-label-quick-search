@@ -23,6 +23,12 @@ function requireIncludes(relativePath, text, needle, reason) {
   }
 }
 
+function requireNotIncludes(relativePath, text, needle, reason) {
+  if (text.includes(needle)) {
+    failures.push(`${relativePath} must not include "${needle}" (${reason}).`);
+  }
+}
+
 function extract(relativePath, text, pattern, label) {
   const match = text.match(pattern);
   if (!match) {
@@ -142,6 +148,23 @@ for (const [relativePath, text] of Object.entries(docs)) {
     "PROJECT_STATUS_AND_NEXT_PLAN.md",
     "canonical planning entry point must stay discoverable",
   );
+}
+
+for (const [relativePath, text] of Object.entries(docs)) {
+  for (const stalePhrase of [
+    "active batch-first target",
+    "active major target",
+    "active major owner doc",
+    "current active target is",
+    "current major target",
+  ]) {
+    requireNotIncludes(
+      relativePath,
+      text,
+      stalePhrase,
+      "Batch-First is shipped/monitoring; do not re-label it as an open active target",
+    );
+  }
 }
 
 requireIncludes(
