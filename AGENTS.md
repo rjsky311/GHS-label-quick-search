@@ -276,10 +276,14 @@ provided. Dictionary miss capture is also opt-in via
 The current project-level planning entry is
 `PROJECT_STATUS_AND_NEXT_PLAN.md`. Read it first when choosing the next product
 slice; it consolidates current status, should-do items, blind spots, priority
-order, and done criteria. The priority order is a default, not a permanent
-autopilot: use the next-step decision loop in `AUTONOMOUS_WORKFLOW.md` after
-several completed slices, after 10-20 commits cluster in one workstream, or
-when the user asks whether the recent order still makes product sense.
+order, and done criteria. The priority order is not a permanent autopilot: use
+the next-step decision loop in `AUTONOMOUS_WORKFLOW.md` after several completed
+slices, after 10-20 commits cluster in one workstream, or when the user asks
+whether the recent order still makes product sense. Do not open a new product
+slice unless fresh evidence can name the source, affected user job, expected
+proof, and stop condition; if that evidence is missing, keep the project in
+monitoring/maintenance mode instead of working through historical backlog
+items.
 
 The 95% Lab-Ready Pilot target is shipped. `LAB_READY_PILOT_95_PLAN.md` is now
 the evidence packet for that milestone: realistic 50-100 item batch confidence,
@@ -423,11 +427,14 @@ Autonomous continuation rules are pinned in `AUTONOMOUS_WORKFLOW.md`, and the
 live product queue is summarized in `NEXT_PRODUCT_WORK.md`; the detailed
 execution backlog remains in `NEXT_REMAINING_PRODUCT_WORK.md`. When the user
 asks to "continue" or otherwise delegates the next work round, start from
-`PROJECT_STATUS_AND_NEXT_PLAN.md`, run the dynamic next-step decision loop,
-pick the highest-value product slice, run `PRODUCT_SCOPE_GATE.md` first if the
-slice is broad or ambiguous, implement it, verify it, push to `main` when
-stable, and track CI/Zeabur/production QA for user-facing changes. Stop only
-for the explicit stop conditions in `AUTONOMOUS_WORKFLOW.md`.
+`PROJECT_STATUS_AND_NEXT_PLAN.md`, run the dynamic next-step decision loop, and
+use `NEXT_PRODUCT_WORK.md` to decide whether a fresh evidence-triggered slice
+exists. If one exists, run `PRODUCT_SCOPE_GATE.md` first when the slice is
+broad or ambiguous, implement it, verify it, push to `main` when stable, and
+track CI/Zeabur/production QA for user-facing changes. If no slice has fresh
+evidence, do not continue by backlog inertia; keep monitoring/maintenance
+checks healthy and stop only for the explicit stop conditions in
+`AUTONOMOUS_WORKFLOW.md`.
 
 Meaningful work slices should also end with proactive observations. Name any
 newly noticed blind spot, stale assumption, repeated-fix pattern, or mismatch

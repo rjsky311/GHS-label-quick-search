@@ -356,6 +356,24 @@ requireIncludes(
   "compatibility entry point must not duplicate the roadmap",
 );
 requireIncludes(
+  "CLAUDE.md",
+  docs["CLAUDE.md"],
+  "short evidence-triggered live queue",
+  "compatibility entry point must route continuation through the live queue",
+);
+requireIncludes(
+  "AGENTS.md",
+  docs["AGENTS.md"],
+  "source, affected user job, expected",
+  "agent bootstrap must explain evidence-triggered slice requirements",
+);
+requireIncludes(
+  "AGENTS.md",
+  docs["AGENTS.md"],
+  "do not continue by backlog inertia",
+  "agent bootstrap must prevent autonomous backlog drift",
+);
+requireIncludes(
   "AUTONOMOUS_WORKFLOW.md",
   docs["AUTONOMOUS_WORKFLOW.md"],
   "Stop Conditions",
