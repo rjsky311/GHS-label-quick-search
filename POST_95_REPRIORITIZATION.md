@@ -87,8 +87,9 @@ Why this is first:
 - The 95% gates prove the app can pass controlled scenarios.
 - The next maturity jump depends on observing real usage, not adding more
 features blindly.
-- Correction/admin flows exist, but the operator loop is not yet the product's
-first-class next target.
+- Correction/admin flows exist, but the operator loop needed to become a
+  first-class shipped baseline before later monitoring slices could be chosen
+  from evidence.
 
 User-facing outcome:
 
@@ -284,7 +285,8 @@ This document-only re-rank is complete when:
 
 - `PROJECT_STATUS_AND_NEXT_PLAN.md` points to this file as the post-95 decision
   packet.
-- `NEXT_PRODUCT_WORK.md` names the active next target and exit condition.
+- `NEXT_PRODUCT_WORK.md` records the evidence-triggered live queue and the
+  shipped target references needed to choose the next slice.
 - `AGENTS.md`, `CLAUDE.md`, and `README.md` no longer describe the 95% target
   as unfinished.
 - `npm run test:docs` passes.

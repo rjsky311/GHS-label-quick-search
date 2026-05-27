@@ -24,7 +24,7 @@ function requireIncludes(relativePath, text, needle, reason) {
 }
 
 function requireNotIncludes(relativePath, text, needle, reason) {
-  if (text.includes(needle)) {
+  if (text.toLowerCase().includes(needle.toLowerCase())) {
     failures.push(`${relativePath} must not include "${needle}" (${reason}).`);
   }
 }
@@ -155,16 +155,26 @@ for (const [relativePath, text] of Object.entries(docs)) {
     "active batch-first pilot target",
     "active batch-first target",
     "active batch-first owner doc",
+    "active continuation target",
     "active major target",
     "active major owner doc",
+    "active next target",
+    "active owner-doc contracts",
+    "active product contract",
+    "active product simplification",
+    "active short-term target",
     "current active target is",
     "current major target",
+    "default active continuation targets",
+    "priority order is a default",
+    "still active / recurring",
+    "use this as the active continuation target",
   ]) {
     requireNotIncludes(
       relativePath,
       text,
       stalePhrase,
-      "Batch-First is shipped/monitoring; do not re-label it as an open active target",
+      "completed work must stay shipped/monitoring or evidence-triggered, not an open active target",
     );
   }
 }
