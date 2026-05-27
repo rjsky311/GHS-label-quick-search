@@ -1346,8 +1346,8 @@ const inspectBatchInputNormalizationPath = async (
       reviewValue: "",
       exportValue: "",
       filteredScopeCount: 0,
-      reviewReasonCount: 0,
-      reviewReasonText: "",
+      reviewActionQueueCount: 0,
+      reviewActionQueueText: "",
       nextActionTitle: "",
       nextActionBody: "",
       nextActionCta: "",
@@ -1392,10 +1392,14 @@ const inspectBatchInputNormalizationPath = async (
         .getByTestId("results-workflow-filtered-scope")
         .count()
         .catch(() => 0);
-      const reviewReasons = page.getByTestId("results-workflow-review-reasons");
-      resultSummary.reviewReasonCount = await reviewReasons.count().catch(() => 0);
-      resultSummary.reviewReasonText =
-        ((await reviewReasons.textContent().catch(() => "")) || "")
+      const reviewActionQueue = page.getByTestId(
+        "results-workflow-review-action-queue",
+      );
+      resultSummary.reviewActionQueueCount = await reviewActionQueue
+        .count()
+        .catch(() => 0);
+      resultSummary.reviewActionQueueText =
+        ((await reviewActionQueue.textContent().catch(() => "")) || "")
           .replace(/\s+/g, " ")
           .trim();
       resultSummary.nextActionTitle =
@@ -2343,9 +2347,9 @@ try {
   }
   if (
     missingChineseNameCorrection.title !==
-      `Missing Chinese name: ${missingChineseNameFixture.cas_number}` ||
+      `Missing trusted Chinese name: ${missingChineseNameFixture.cas_number}` ||
     missingChineseNameCorrection.rowTitle !==
-      `Missing Chinese name: ${missingChineseNameFixture.cas_number}`
+      `Missing trusted Chinese name: ${missingChineseNameFixture.cas_number}`
   ) {
     failures.push("missing-chinese-name-correction-title-mismatch");
   }
@@ -2485,13 +2489,13 @@ try {
   if (!batchResultSummary.workflowSummaryVisible) {
     failures.push("batch-results-workflow-summary-missing");
   }
-  if (batchResultSummary.rowCount !== 5) {
+  if (batchResultSummary.rowCount !== 6) {
     failures.push("batch-results-row-count-mismatch");
   }
-  if (!/\/\s*5\b/.test(batchResultSummary.foundValue || "")) {
+  if (!/\/\s*6\b/.test(batchResultSummary.foundValue || "")) {
     failures.push("batch-results-found-summary-total-mismatch");
   }
-  if (!/\b5\b/.test(batchResultSummary.exportValue || "")) {
+  if (!/\b6\b/.test(batchResultSummary.exportValue || "")) {
     failures.push("batch-results-export-summary-mismatch");
   }
   if (batchResultSummary.filteredScopeCount > 0) {
@@ -2504,11 +2508,11 @@ try {
     failures.push("batch-results-next-action-body-missing");
   }
   if (Number(batchResultSummary.reviewValue || 0) > 0) {
-    if (batchResultSummary.reviewReasonCount < 1) {
-      failures.push("batch-results-review-reasons-missing");
+    if (batchResultSummary.reviewActionQueueCount < 1) {
+      failures.push("batch-results-review-action-queue-missing");
     }
-    if (!/\d/.test(batchResultSummary.reviewReasonText || "")) {
-      failures.push("batch-results-review-reasons-count-missing");
+    if (!/\d/.test(batchResultSummary.reviewActionQueueText || "")) {
+      failures.push("batch-results-review-action-queue-count-missing");
     }
     if (!batchResultSummary.nextActionCta) {
       failures.push("batch-results-next-action-cta-missing");
