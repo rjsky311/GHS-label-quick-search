@@ -301,9 +301,21 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-triage-manual-entries")).toHaveTextContent("2");
     expect(screen.getByTestId("pilot-triage-needs-evidence")).toHaveTextContent("4");
     expect(screen.getByTestId("pilot-triage-missing-chinese-names")).toHaveTextContent("1");
+    expect(screen.getByTestId("pilot-triage-missing-chinese-names")).toHaveTextContent(
+      "dataQuality.issue.missingChineseName",
+    );
     expect(screen.getByTestId("pilot-triage-source-conflicts")).toHaveTextContent("2");
+    expect(screen.getByTestId("pilot-triage-source-conflicts")).toHaveTextContent(
+      "dataQuality.issue.sourceConflict",
+    );
     expect(screen.getByTestId("pilot-triage-upstream-retries")).toHaveTextContent("6");
+    expect(screen.getByTestId("pilot-triage-upstream-retries")).toHaveTextContent(
+      "dataQuality.issue.upstreamError",
+    );
     expect(screen.getByTestId("pilot-triage-no-ghs")).toHaveTextContent("5");
+    expect(screen.getByTestId("pilot-triage-no-ghs")).toHaveTextContent(
+      "dataQuality.issue.noGhsData",
+    );
     expect(screen.getByTestId("pilot-triage-stale-telemetry")).toHaveTextContent("5");
     expect(screen.getByTestId("pilot-triage-primary-action-message")).toHaveTextContent(
       "Review open correction requests",
@@ -325,7 +337,9 @@ describe("PilotDashboardSidebar", () => {
       screen.getByTestId("pilot-triage-focus-correction_intake-next-action"),
     ).toHaveTextContent("pilot.triageNextAction");
     expect(screen.getByText("mystery solvent")).toBeInTheDocument();
-    expect(screen.getByText("dataQuality.issue.missingChineseName")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("dataQuality.issue.missingChineseName").length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("missing-chinese-name")).toBeInTheDocument();
     expect(
       screen.getByTestId("converted-correction-candidate-row-202"),

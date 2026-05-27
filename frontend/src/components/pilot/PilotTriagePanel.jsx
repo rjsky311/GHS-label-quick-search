@@ -1,5 +1,9 @@
 import { Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  DATA_QUALITY_ISSUE_TYPES,
+  getDataQualityIssueDisplayLabel,
+} from "@/utils/dataQuality";
 import { SectionHeading, SummaryCard } from "./PilotDashboardPrimitives";
 
 export default function PilotTriagePanel({
@@ -12,6 +16,8 @@ export default function PilotTriagePanel({
   const attentionCounts = pilotTriage.attentionCounts || {};
   const upstreamRetryCount =
     attentionCounts.upstreamRetryRows || observabilityCounters["upstream.total"] || 0;
+  const dataQualityLabel = (issueType) =>
+    getDataQualityIssueDisplayLabel(issueType, t);
   const recommendedFocus = Array.isArray(pilotTriage.recommendedFocus)
     ? pilotTriage.recommendedFocus
     : [];
@@ -179,33 +185,25 @@ export default function PilotTriagePanel({
           testId="pilot-triage-needs-evidence"
         />
         <SummaryCard
-          label={t("pilot.triageMissingChineseNames", {
-            defaultValue: "Missing Chinese names",
-          })}
+          label={dataQualityLabel(DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME)}
           value={attentionCounts.missingChineseNameReports || 0}
           accent="text-orange-700"
           testId="pilot-triage-missing-chinese-names"
         />
         <SummaryCard
-          label={t("pilot.triageSourceConflicts", {
-            defaultValue: "Source conflicts",
-          })}
+          label={dataQualityLabel(DATA_QUALITY_ISSUE_TYPES.SOURCE_CONFLICT)}
           value={attentionCounts.sourceConflictReports || 0}
           accent="text-red-700"
           testId="pilot-triage-source-conflicts"
         />
         <SummaryCard
-          label={t("pilot.triageUpstreamRetries", {
-            defaultValue: "Upstream retries",
-          })}
+          label={dataQualityLabel(DATA_QUALITY_ISSUE_TYPES.UPSTREAM_ERROR)}
           value={upstreamRetryCount}
           accent="text-red-700"
           testId="pilot-triage-upstream-retries"
         />
         <SummaryCard
-          label={t("pilot.triageNoGhsReports", {
-            defaultValue: "No-GHS reports",
-          })}
+          label={dataQualityLabel(DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA)}
           value={attentionCounts.noGhsReports || 0}
           accent="text-red-700"
           testId="pilot-triage-no-ghs"

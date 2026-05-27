@@ -174,9 +174,10 @@ Current monitoring slice opened from real roster evidence:
   unresolved searches, and candidate-found evidence must stay as distinct
   next-action queues instead of collapsing into one generic correction state.
 - Admin triage metric labels now mirror the shared data-quality labels used by
-  batch review and export previews. Keep missing trusted Chinese name,
-  upstream retry needed, no GHS data, and source conflict terminology aligned
-  across user-facing review surfaces.
+  batch review and export previews, and the pilot-specific duplicate locale
+  keys were removed. Keep missing trusted Chinese name, upstream retry needed,
+  no GHS data, and source conflict terminology aligned through the shared
+  data-quality label helper instead of adding another wording layer.
 - Admin triage totals now separate primary queue items from overlapping
   attention signals. The first triage metric should not double-count
   candidate-found, missing-name, No-GHS, source-conflict, and needs-evidence
