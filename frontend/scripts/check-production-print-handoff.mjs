@@ -49,6 +49,14 @@ const CASE_ATTEMPTS = Number.parseInt(
   env.PRINT_QA_CASE_ATTEMPTS || "2",
   10,
 );
+const CASE_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_CASE_TIMEOUT_MS || "180000",
+  10,
+);
+const BROWSER_LAUNCH_TIMEOUT_MS = Number.parseInt(
+  env.PRINT_QA_BROWSER_LAUNCH_TIMEOUT_MS || "60000",
+  10,
+);
 const APP_SHELL_READY_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_APP_SHELL_READY_TIMEOUT_MS || "20000",
   10,
@@ -273,6 +281,7 @@ const isRetryableHandoffFailure = (result) => {
   if (!result || result.passed) return false;
   if ((result.failures || []).includes(SOURCE_UPSTREAM_FAILURE)) return true;
   if ((result.failures || []).includes("runner-error")) return true;
+  if ((result.failures || []).includes("runner-timeout")) return true;
   const issueTypes = result.status?.["data-issue-types"] || "";
   if (
     issueTypes
@@ -1486,37 +1495,88 @@ const evaluateCase = ({ testCase, status, evidence }) => {
   };
 };
 
-const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
+const runCase = async ({
+  browser,
+  testCase,
+  baseUrl,
+  responsibleProfile,
+  progress = null,
+}) => {
+  const startedAtMs = Date.now();
+  const startedAt = new Date(startedAtMs).toISOString();
+  let page = null;
+  let timedOut = false;
+  let stage = "new-page";
+  const setStage = (value) => {
+    stage = value;
+    if (progress) {
+      progress.stage = value;
+      progress.updatedAt = new Date().toISOString();
+    }
+  };
+  const caseTimeout = setTimeout(() => {
+    timedOut = true;
+    page?.close({ runBeforeUnload: false }).catch(() => {});
+  }, CASE_TIMEOUT_MS);
   try {
+    setStage("new-page");
+    page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
+    setStage("storage-reset");
     await page.addInitScript(() => {
       window.localStorage?.clear();
       window.sessionStorage?.clear();
     });
+    setStage("navigate");
     await navigateToApp(page, baseUrl);
+    setStage("search");
     await fillSearch(page, testCase.searchTerm);
+    setStage("open-print-modal");
     await openPrintModal(page);
+    setStage("inspect-modal-shell");
     const modalShellInspection = await inspectModalShell(page);
+    setStage("responsible-profile");
     await fillResponsibleProfile(
       page,
       testCase.responsibleProfile ?? responsibleProfile,
     );
+    setStage("target-and-stock");
     await setTargetAndStock(page, testCase);
+    setStage("visual-config");
     await setVisualConfig(page, testCase);
+    setStage("custom-fields");
     await setCustomFields(page, testCase);
+    setStage("preview-evidence");
     const evidence = await capturePreviewEvidence(page, testCase);
     evidence.modalShellInspection = modalShellInspection;
+    setStage("print-status");
     const status = await readPrintStatus(page, testCase);
-    return evaluateCase({ testCase, status, evidence });
+    setStage("evaluate");
+    return {
+      ...evaluateCase({ testCase, status, evidence }),
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - startedAtMs,
+      timedOut: false,
+      stage,
+    };
   } catch (error) {
     const failure = {
       id: testCase.id,
       searchTerm: testCase.searchTerm,
       passed: false,
-      failures: error?.qaFailures || ["runner-error"],
-      error: error?.message || String(error),
+      failures: timedOut
+        ? ["runner-timeout"]
+        : error?.qaFailures || ["runner-error"],
+      error: timedOut
+        ? `Production print QA case timed out after ${CASE_TIMEOUT_MS}ms`
+        : error?.message || String(error),
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - startedAtMs,
+      timedOut,
+      stage,
     };
-    if (screenshotDir) {
+    if (screenshotDir && page) {
       fs.mkdirSync(screenshotDir, { recursive: true });
       const targetPath = path.join(screenshotDir, `${testCase.id}-error.png`);
       await page.screenshot({ path: targetPath, fullPage: true }).catch(() => {});
@@ -1530,7 +1590,8 @@ const runCase = async ({ browser, testCase, baseUrl, responsibleProfile }) => {
     }
     return failure;
   } finally {
-    await page.close().catch(() => {});
+    clearTimeout(caseTimeout);
+    await page?.close({ runBeforeUnload: false }).catch(() => {});
   }
 };
 
@@ -1547,21 +1608,128 @@ const baseUrl =
 const responsibleProfile = report.productionBrowserQa?.responsibleProfile || {};
 const executablePath = resolveChromeExecutable();
 const startedAt = new Date().toISOString();
-const browser = await chromium.launch({
-  executablePath,
-  headless,
-  args: ["--disable-dev-shm-usage"],
-});
+const launchBrowser = () =>
+  chromium.launch({
+    executablePath,
+    headless,
+    args: ["--disable-dev-shm-usage"],
+    timeout: BROWSER_LAUNCH_TIMEOUT_MS,
+  });
+let browser = await launchBrowser();
 
 const results = [];
+const summarizeFailedCases = (items) =>
+  items
+    .filter((result) => !result.passed)
+    .map(({ id, searchTerm, failures, status, evidence, error, timedOut, stage }) => ({
+      id,
+      searchTerm,
+      failures,
+      error: error || "",
+      timedOut: Boolean(timedOut),
+      stage: stage || "",
+      searchFailure: evidence?.searchFailure || null,
+      printButtonEnabled: status?.printButtonEnabled,
+      statusText: status?.text || "",
+      labelKind: evidence?.previewInspection?.labelKind || "",
+      previewText: evidence?.previewInspection?.frameTextSample || "",
+    }));
+const buildHandoffReport = ({ partial = false } = {}) => {
+  const failed = results.filter((result) => !result.passed);
+  return {
+    ok: !partial && failed.length === 0 && results.length === cases.length,
+    partial,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    productionUrl: baseUrl,
+    reportPath,
+    handoffReportPath: outputPath,
+    executablePath,
+    headless,
+    caseTimeoutMs: CASE_TIMEOUT_MS,
+    browserLaunchTimeoutMs: BROWSER_LAUNCH_TIMEOUT_MS,
+    selectedCases: cases.map((testCase) => testCase.id),
+    summary: {
+      total: results.length,
+      totalSelected: cases.length,
+      completed: results.length,
+      passed: results.length - failed.length,
+      failed: failed.length,
+      pending: Math.max(cases.length - results.length, 0),
+    },
+    failedCaseSummary: summarizeFailedCases(results),
+    results,
+  };
+};
+const writeHandoffReport = ({ partial = false } = {}) => {
+  const result = buildHandoffReport({ partial });
+  if (outputPath) {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${maybeJson(result)}${os.EOL}`);
+  }
+  return result;
+};
+const buildTimeoutCaseResult = (testCase, startedAtMs, stage = "") => ({
+  id: testCase.id,
+  searchTerm: testCase.searchTerm,
+  passed: false,
+  failures: ["runner-timeout"],
+  error: `Production print QA case timed out after ${CASE_TIMEOUT_MS}ms`,
+  startedAt: new Date(startedAtMs).toISOString(),
+  finishedAt: new Date().toISOString(),
+  durationMs: Date.now() - startedAtMs,
+  timedOut: true,
+  stage,
+});
+const runCaseAttempt = async ({ testCase }) => {
+  const startedAtMs = Date.now();
+  let timeout = null;
+  let timedOut = false;
+  const progress = { stage: "queued", updatedAt: new Date().toISOString() };
+  const casePromise = runCase({
+    browser,
+    testCase,
+    baseUrl,
+    responsibleProfile,
+    progress,
+  });
+  const timeoutPromise = new Promise((resolve) => {
+    timeout = setTimeout(() => {
+      timedOut = true;
+      browser.close().catch(() => {});
+      resolve(buildTimeoutCaseResult(testCase, startedAtMs, progress.stage));
+    }, CASE_TIMEOUT_MS);
+  });
+  const result = await Promise.race([casePromise, timeoutPromise]);
+  if (timeout) clearTimeout(timeout);
+  if (timedOut) {
+    browser = await launchBrowser();
+  }
+  return result;
+};
+
 try {
   for (const testCase of cases) {
     // Keep progress visible for long HCl matrices.
     // eslint-disable-next-line no-console
     console.log(`Running production print QA: ${testCase.id}`);
     let result = null;
+    const attemptSummaries = [];
     for (let attempt = 1; attempt <= CASE_ATTEMPTS; attempt += 1) {
-      result = await runCase({ browser, testCase, baseUrl, responsibleProfile });
+      // eslint-disable-next-line no-console
+      console.log(
+        `Running production print QA: ${testCase.id} attempt ${attempt}/${CASE_ATTEMPTS}`,
+      );
+      result = await runCaseAttempt({ testCase });
+      attemptSummaries.push({
+        attempt,
+        passed: Boolean(result?.passed),
+        failures: result?.failures || [],
+        error: result?.error || "",
+        stage: result?.stage || "",
+        durationMs: result?.durationMs || 0,
+        timedOut: Boolean(result?.timedOut),
+      });
       if (!isRetryableHandoffFailure(result) || attempt >= CASE_ATTEMPTS) {
         break;
       }
@@ -1576,48 +1744,34 @@ try {
       );
       await sleep(SEARCH_RETRY_DELAY_MS);
     }
+    result = {
+      ...result,
+      attempts: attemptSummaries,
+    };
     results.push(result);
+    writeHandoffReport({ partial: true });
+    // eslint-disable-next-line no-console
+    console.log(
+      maybeJson({
+        event: "production-print-qa-case-finish",
+        id: testCase.id,
+        passed: Boolean(result.passed),
+        failures: result.failures || [],
+        stage: result.stage || "",
+        durationMs: result.durationMs || 0,
+        timedOut: Boolean(result.timedOut),
+        completed: results.length,
+        totalSelected: cases.length,
+      }),
+    );
   }
 } finally {
   await browser.close();
 }
 
-const failed = results.filter((result) => !result.passed);
-const failedCaseSummary = failed.map(({ id, searchTerm, failures, status, evidence }) => ({
-  id,
-  searchTerm,
-  failures,
-  searchFailure: evidence?.searchFailure || null,
-  printButtonEnabled: status?.printButtonEnabled,
-  statusText: status?.text || "",
-  labelKind: evidence?.previewInspection?.labelKind || "",
-  previewText: evidence?.previewInspection?.frameTextSample || "",
-}));
-const result = {
-  ok: failed.length === 0,
-  startedAt,
-  finishedAt: new Date().toISOString(),
-  productionUrl: baseUrl,
-  reportPath,
-  handoffReportPath: outputPath,
-  executablePath,
-  headless,
-  selectedCases: cases.map((testCase) => testCase.id),
-  summary: {
-    total: results.length,
-    passed: results.length - failed.length,
-    failed: failed.length,
-  },
-  failedCaseSummary,
-  results,
-};
+const result = writeHandoffReport({ partial: false });
 
-if (outputPath) {
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, `${maybeJson(result)}${os.EOL}`);
-}
-
-  const consoleResult = verboseConsole
+const consoleResult = verboseConsole
   ? result
   : {
       ok: result.ok,
@@ -1626,7 +1780,7 @@ if (outputPath) {
       handoffReportPath: result.handoffReportPath,
       summary: result.summary,
       selectedCases: result.selectedCases,
-      failedCases: failedCaseSummary,
+      failedCases: result.failedCaseSummary,
     };
 
 console.log(maybeJson(consoleResult));

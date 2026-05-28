@@ -79,6 +79,21 @@ const classifyFailure = (failure = {}) => {
   const issueTypes = new Set(failure.issueTypes || []);
 
   if (
+    failures.has("runner-error") ||
+    failures.has("runner-timeout") ||
+    /runner-error|runner-timeout|parse-error|browser executable|app shell|navigation|locator|strict mode violation|target closed/.test(
+      text,
+    )
+  ) {
+    return {
+      bucket: "qa-runner",
+      label: "QA runner / harness",
+      nextAction:
+        "Inspect the runner trace and retry once; fix the harness only if the production page is otherwise healthy.",
+    };
+  }
+
+  if (
     failures.has("source-upstream-unavailable") ||
     /upstream|pubchem|timeout|timed out|429|502|503|temporarily unavailable|temporary unavailable|source outage/.test(
       text,
@@ -117,20 +132,6 @@ const classifyFailure = (failure = {}) => {
       label: "Deployment freshness",
       nextAction:
         "Verify Zeabur reached a running deployment for the expected commit before debugging product behavior.",
-    };
-  }
-
-  if (
-    failures.has("runner-error") ||
-    /runner-error|parse-error|browser executable|app shell|navigation|locator|strict mode violation|target closed/.test(
-      text,
-    )
-  ) {
-    return {
-      bucket: "qa-runner",
-      label: "QA runner / harness",
-      nextAction:
-        "Inspect the runner trace and retry once; fix the harness only if the production page is otherwise healthy.",
     };
   }
 

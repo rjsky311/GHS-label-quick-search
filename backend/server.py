@@ -103,6 +103,9 @@ ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
 ops_counters: Counter = Counter()
 ops_recent_events = deque(maxlen=50)
 OPS_STALE_THRESHOLD_HOURS = float(os.environ.get("OPS_STALE_THRESHOLD_HOURS", "12"))
+SEARCH_CHEMICAL_TIMEOUT_SECONDS = float(
+    os.environ.get("SEARCH_CHEMICAL_TIMEOUT_SECONDS", "24")
+)
 
 # ─── Outbound PubChem concurrency gate ──────────────────────
 #
@@ -1378,6 +1381,43 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         reference_links=_build_reference_links(normalized_cas, cid, name_en),
     )
 
+
+async def bounded_search_chemical(
+    cas_number: str,
+    http_client: httpx.AsyncClient,
+) -> ChemicalResult:
+    """Run one chemical lookup inside the public API timeout budget.
+
+    Zeabur's public gateway can return a 502 if a request stays open too long.
+    A safety lookup should degrade into an explicit upstream_error row instead
+    of leaving the browser, batch search, or production QA waiting until the
+    proxy gives up.
+    """
+    try:
+        return await asyncio.wait_for(
+            search_chemical(cas_number, http_client),
+            timeout=SEARCH_CHEMICAL_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        normalized_cas = normalize_cas(cas_number)
+        _record_ops_counter("upstream.search_timeout")
+        logger.warning(
+            "Search lookup timed out for %s after %.1fs",
+            normalized_cas or cas_number,
+            SEARCH_CHEMICAL_TIMEOUT_SECONDS,
+        )
+        return ChemicalResult(
+            cas_number=cas_number,
+            name_en=get_english_name_from_cas(normalized_cas),
+            name_zh=get_chinese_name_from_cas(normalized_cas),
+            found=False,
+            upstream_error=True,
+            error=(
+                "PubChem lookup timed out before the public gateway limit; "
+                "please retry later."
+            ),
+        )
+
 # API Routes
 @api_router.get("/")
 async def root():
@@ -1414,18 +1454,12 @@ api_router.include_router(
 @limiter.limit("10/minute")
 async def search_chemicals(request: Request, query: CASQuery):
     """Search for chemicals by CAS numbers"""
-    results = []
     http_client = shared_http_client
-    # Process in batches to avoid overwhelming the API
-    batch_size = 5
-    for i in range(0, len(query.cas_numbers), batch_size):
-        batch = query.cas_numbers[i:i+batch_size]
-        tasks = [search_chemical(cas, http_client) for cas in batch]
-        batch_results = await asyncio.gather(*tasks)
-        results.extend(batch_results)
-        # Add small delay between batches
-        if i + batch_size < len(query.cas_numbers):
-            await asyncio.sleep(0.5)
+    # Keep the public batch route inside the gateway budget. The outbound
+    # PubChem semaphore still limits upstream concurrency, while each item has
+    # its own explicit timeout and degrades to an upstream_error row.
+    tasks = [bounded_search_chemical(cas, http_client) for cas in query.cas_numbers]
+    results = await asyncio.gather(*tasks)
     for raw_query, result in zip(query.cas_numbers, results):
         if result.found or result.upstream_error:
             continue
@@ -1513,7 +1547,7 @@ async def _search_single_query(query: str) -> ChemicalResult:
 
     # Check if it looks like a CAS number (digits and hyphens only)
     if re.match(r'^[\d-]+$', query):
-        result = await search_chemical(query, shared_http_client)
+        result = await bounded_search_chemical(query, shared_http_client)
         if not result.found and not result.upstream_error:
             _record_dictionary_miss(
                 query,
@@ -1526,7 +1560,7 @@ async def _search_single_query(query: str) -> ChemicalResult:
     # Try to resolve name to CAS
     resolved_cas = resolve_name_to_cas(query)
     if resolved_cas:
-        return await search_chemical(resolved_cas, shared_http_client)
+        return await bounded_search_chemical(resolved_cas, shared_http_client)
 
     # Not found by name
     _record_dictionary_miss(query, "name", "search_single")
