@@ -147,6 +147,11 @@ Rules:
   still require evidence review before any public data can change.
   Handoff CSV/README packets generated with `--handoff-dir` carry the same
   review-only boundary and are not import files for public dictionary data.
+  `backend/scripts/import_inventory_handoff.py` may bridge those packets into
+  the admin correction queue for review, but its default mode is dry-run and
+  `--apply` can create only correction requests. It must not create approved
+  manual dictionary entries, aliases, reference links, labels, exports, QR
+  targets, or seed-dictionary changes.
 
 ### External Scientific Lookup Skills
 

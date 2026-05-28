@@ -1231,6 +1231,12 @@ Use these files by role:
   states what blocks batch use, what needs evidence, what can become QA
   coverage, and what must remain review-only. Use `--handoff-dir` when the
   next step needs CSV/README files that a maintainer can open directly.
+- `backend/scripts/import_inventory_handoff.py`: maintainer-only dry-run/apply
+  bridge from an inventory audit handoff packet into the admin correction
+  queue. Use it when the next step is to turn review-only workbook Chinese-name
+  candidates or seed-dictionary gaps into admin-triage tasks. It creates no
+  approved public dictionary data; even `--apply` writes correction requests
+  only.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

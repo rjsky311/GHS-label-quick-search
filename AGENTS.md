@@ -115,6 +115,11 @@ Important backend areas:
   for real lab inventory workbooks. Use it to turn user-provided Excel files
   into parser/data-governance evidence, an `actionQueue`, and optional
   handoff CSV/README files without importing public dictionary data.
+- `backend/inventory_handoff_import.py` and
+  `backend/scripts/import_inventory_handoff.py`: maintainer-only bridge from
+  an inventory audit handoff packet into the admin correction queue. Default
+  mode is dry-run; `--apply` writes review-only correction requests and never
+  approves public dictionary data.
 - `backend/chemical_dict.py`: local dictionary data.
 
 ## Key Commands
@@ -143,12 +148,16 @@ python -m py_compile server.py api_models.py api_validation.py export_helpers.py
 python -m pytest -q
 python scripts\audit_inventory_workbook.py <path-to-xlsx>
 python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
+python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>
+python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json> --apply
 ```
 
 The inventory audit output is review-only. Use `summary`, `actionQueue`,
 `examples`, and `--handoff-dir` CSVs to decide whether the next slice is
 workbook cleanup, parser QA, seed-dictionary coverage, or admin/manual-entry
-review; never treat workbook Chinese names as approved public data.
+review; never treat workbook Chinese names as approved public data. The
+handoff import script preserves that same boundary: dry-run reports what would
+enter the admin queue, while `--apply` creates correction requests only.
 
 Docs-only baseline:
 
