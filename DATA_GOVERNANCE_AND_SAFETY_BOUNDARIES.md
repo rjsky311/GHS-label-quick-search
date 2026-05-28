@@ -142,6 +142,9 @@ Rules:
   verification. The audit may canonicalize spreadsheet artifacts such as
   numeric CAS values and first-segment leading zeros for QA/reporting, but that
   cleanup does not approve workbook names, hazards, aliases, or SDS links.
+  The audit `actionQueue` is a triage aid only: `fix-invalid-cas` may block
+  batch use of those rows, while candidate-name and dictionary-gap actions
+  still require evidence review before any public data can change.
 
 ### External Scientific Lookup Skills
 

@@ -236,6 +236,125 @@ def _candidate_from_workbook_row(
     return candidate
 
 
+def _inventory_action(
+    *,
+    key: str,
+    count: int,
+    severity: str,
+    target_example_key: str | list[str],
+    title: str,
+    next_action: str,
+    blocks_batch_use: bool = False,
+) -> Optional[dict[str, Any]]:
+    if count <= 0:
+        return None
+    target_example_keys = (
+        target_example_key if isinstance(target_example_key, list) else [target_example_key]
+    )
+    return {
+        "key": key,
+        "count": count,
+        "severity": severity,
+        "targetExampleKey": target_example_keys[0] if target_example_keys else "",
+        "targetExampleKeys": target_example_keys,
+        "title": title,
+        "nextAction": next_action,
+        "blocksBatchUse": blocks_batch_use,
+        "review_required": True,
+        "public_data_changed": False,
+    }
+
+
+def build_inventory_action_queue(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return maintainer actions derived from the audit summary.
+
+    The queue is intentionally conservative: it describes work to review, fix,
+    or use as QA evidence, but never implies that workbook values are approved
+    public dictionary data.
+    """
+
+    missing_without_candidate = max(
+        int(summary.get("missingSeedChineseNameRows") or 0)
+        - int(summary.get("workbookChineseNameCandidateRows") or 0),
+        0,
+    )
+    actions = [
+        _inventory_action(
+            key="fix-invalid-cas",
+            count=int(summary.get("invalidCasCount") or 0),
+            severity="blocking",
+            target_example_key="invalidCas",
+            title="Fix invalid CAS cells before batch use",
+            next_action=(
+                "Correct format/checksum problems in the source workbook; "
+                "invalid CAS rows cannot be searched, printed, exported, or "
+                "turned into dictionary candidates."
+            ),
+            blocks_batch_use=True,
+        ),
+        _inventory_action(
+            key="review-workbook-chinese-candidates",
+            count=int(summary.get("workbookChineseNameCandidateRows") or 0),
+            severity="review",
+            target_example_key="workbookChineseNameCandidates",
+            title="Review workbook Chinese-name candidates",
+            next_action=(
+                "Verify each workbook-provided Chinese name against SDS, "
+                "supplier label, or regulatory evidence before converting it "
+                "into a pending or approved manual dictionary entry."
+            ),
+        ),
+        _inventory_action(
+            key="triage-unknown-seed-dictionary",
+            count=int(summary.get("unknownSeedDictionaryRows") or 0),
+            severity="review",
+            target_example_key="unknownSeedDictionary",
+            title="Triage CAS rows outside the seed dictionary",
+            next_action=(
+                "Decide whether each CAS/name pair needs a correction request, "
+                "manual-entry candidate, alias, or no action. Do not import "
+                "workbook identity fields directly into public lookup."
+            ),
+        ),
+        _inventory_action(
+            key="collect-missing-chinese-name-evidence",
+            count=missing_without_candidate,
+            severity="evidence",
+            target_example_key="missingSeedChineseName",
+            title="Collect evidence for missing Chinese names",
+            next_action=(
+                "For rows without a usable workbook Chinese-name candidate, "
+                "collect SDS, supplier, regulatory, or reviewed local evidence "
+                "before creating manual dictionary entries."
+            ),
+        ),
+        _inventory_action(
+            key="confirm-cas-cleanup-coverage",
+            count=int(summary.get("casCleanupSignalRows") or 0),
+            severity="qa",
+            target_example_key=["rehyphenatedCas", "leadingZeroCas"],
+            title="Keep CAS cleanup covered by parser and production QA",
+            next_action=(
+                "Use numeric-CAS and leading-zero examples as parser/production "
+                "QA fixtures so spreadsheet artifacts become canonical CAS "
+                "before search, review, print, and export."
+            ),
+        ),
+        _inventory_action(
+            key="deduplicate-workbook-rows",
+            count=int(summary.get("duplicateValidCasRows") or 0),
+            severity="cleanup",
+            target_example_key="duplicates",
+            title="Deduplicate repeated valid CAS rows",
+            next_action=(
+                "Deduplicate before lab-manager handoff when the repeated rows "
+                "do not represent separate physical containers or locations."
+            ),
+        ),
+    ]
+    return [action for action in actions if action]
+
+
 def audit_inventory_workbook(
     workbook_path: str | Path,
     *,
@@ -264,6 +383,7 @@ def audit_inventory_workbook(
         "uniqueValidCasCount": 0,
         "duplicateValidCasRows": 0,
         "invalidCasCount": 0,
+        "casCleanupSignalRows": 0,
         "rehyphenatedCasCount": 0,
         "leadingZeroCasCount": 0,
         "knownSeedDictionaryRows": 0,
@@ -303,6 +423,7 @@ def audit_inventory_workbook(
                 "validCasRowCount": 0,
                 "invalidCasCount": 0,
                 "duplicateValidCasRows": 0,
+                "casCleanupSignalRows": 0,
                 "rehyphenatedCasCount": 0,
                 "leadingZeroCasCount": 0,
                 "workbookChineseNameCandidateRows": 0,
@@ -402,6 +523,10 @@ def audit_inventory_workbook(
                     seen_valid_cas.add(cas_number)
                     summary["uniqueValidCasCount"] += 1
 
+                if detail["wasRehyphenated"] or detail["wasLeadingZeroCanonicalized"]:
+                    summary["casCleanupSignalRows"] += 1
+                    sheet_summary["casCleanupSignalRows"] += 1
+
                 if not has_cjk(seed_name_zh):
                     summary["missingSeedChineseNameRows"] += 1
                     _append_example(
@@ -437,6 +562,7 @@ def audit_inventory_workbook(
         "source": AUDIT_SOURCE,
         "workbook": str(path),
         "summary": summary,
+        "actionQueue": build_inventory_action_queue(summary),
         "sheetSummaries": sheet_summaries,
         "examples": examples,
     }

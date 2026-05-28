@@ -480,12 +480,16 @@ Current completion snapshot:
   columns, validate and re-hyphenate spreadsheet CAS values, canonicalize
   first-segment leading-zero CAS artifacts, report duplicates/invalid rows,
   compare CAS coverage against the seed dictionary, and emit review-only
-  Chinese-name candidate evidence. The command does not change public lookup,
-  labels, exports, or manual dictionary data. The first run on the supplied
-  workbook found 3,246 CAS cells, 3,000 valid CAS rows, 1,635 unique valid CAS
-  numbers, 246 invalid CAS cells, 99 re-hyphenated CAS cells, 22
-  leading-zero CAS artifacts, 52 rows outside the seed dictionary, and 4
-  workbook Chinese-name candidate rows after canonicalization.
+  Chinese-name candidate evidence. The command now also emits an `actionQueue`
+  that separates blocking workbook cleanup, review-only Chinese-name
+  candidates, seed-dictionary gaps, missing-name evidence collection,
+  parser/production-QA coverage, and duplicate-row cleanup. It does not change
+  public lookup, labels, exports, or manual dictionary data. The first run on
+  the supplied workbook found 3,246 CAS cells, 3,000 valid CAS rows, 1,635
+  unique valid CAS numbers, 246 invalid CAS cells, 99 re-hyphenated CAS cells,
+  22 leading-zero CAS artifacts, 121 total CAS cleanup signals, 52 rows outside
+  the seed dictionary, and 4 workbook Chinese-name candidate rows after
+  canonicalization.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -1219,6 +1223,9 @@ Use these files by role:
   inventory workbook audit for real lab rosters; use it to find CAS cleanup,
   duplicate rows, seed-dictionary gaps, and review-only Chinese-name candidates
   before deciding whether a product, parser, or admin-curation slice is needed.
+  Its `actionQueue` is the handoff surface for maintainers/Coding Agent: it
+  states what blocks batch use, what needs evidence, what can become QA
+  coverage, and what must remain review-only.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

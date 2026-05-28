@@ -82,8 +82,19 @@ def test_audits_workbook_cas_columns_and_skips_unrelated_numbers(tmp_path):
     assert report["summary"]["validCasRowCount"] == 5
     assert report["summary"]["uniqueValidCasCount"] == 5
     assert report["summary"]["invalidCasCount"] == 1
+    assert report["summary"]["casCleanupSignalRows"] == 3
     assert report["summary"]["rehyphenatedCasCount"] == 2
     assert report["summary"]["leadingZeroCasCount"] == 1
+    assert [item["key"] for item in report["actionQueue"]] == [
+        "fix-invalid-cas",
+        "confirm-cas-cleanup-coverage",
+    ]
+    assert report["actionQueue"][0]["blocksBatchUse"] is True
+    assert report["actionQueue"][1]["public_data_changed"] is False
+    assert report["actionQueue"][1]["targetExampleKeys"] == [
+        "rehyphenatedCas",
+        "leadingZeroCas",
+    ]
     assert {
         item["normalized"] for item in report["examples"]["rehyphenatedCas"]
     } == {"73183-34-3", "1003-09-4"}
@@ -116,6 +127,10 @@ def test_workbook_chinese_names_are_review_only_candidates(tmp_path):
     assert report["summary"]["unknownSeedDictionaryRows"] == 1
     assert report["summary"]["missingSeedChineseNameRows"] == 1
     assert report["summary"]["workbookChineseNameCandidateRows"] == 1
+    assert [item["key"] for item in report["actionQueue"]] == [
+        "review-workbook-chinese-candidates",
+        "triage-unknown-seed-dictionary",
+    ]
     assert candidate["review_required"] is True
     assert candidate["approved_for_public_use"] is False
     assert candidate["public_data_changed"] is False
@@ -156,3 +171,4 @@ def test_inventory_workbook_audit_cli_outputs_json(tmp_path):
     assert payload["source"] == "inventory-workbook-audit"
     assert payload["summary"]["validCasRowCount"] == 1
     assert payload["summary"]["uniqueValidCasCount"] == 1
+    assert payload["actionQueue"] == []
