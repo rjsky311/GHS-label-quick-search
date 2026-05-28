@@ -207,9 +207,10 @@ Current validation gates:
   search/detail, source/trust surfaces, no-GHS data-state boundary,
   export-preview trust/review columns, row-level multiple-GHS confirmation
   action, detail-to-prepared modal keyboard/focus checks, batch messy-paste
-  normalization, `?cas=` QR-return hydration, plus 390px narrow read-first
-  result and detail-comparison checks; bounded first-search retry for
-  transient deployed load/search delays)
+  normalization including spreadsheet numeric CAS and leading-zero workbook
+  artifacts, `?cas=` QR-return hydration, plus 390px narrow read-first result
+  and detail-comparison checks; bounded first-search retry for transient
+  deployed load/search delays)
 - Production print handoff: `npm run qa:production-smoke`,
   `npm run qa:production-primary`, `npm run qa:production-compact`,
   `npm run qa:production-multi-chemical`, `npm run qa:production-print`
@@ -720,6 +721,8 @@ Do next:
 - Keep batch paste/import normalization aligned with real lab workbooks:
   spreadsheet numeric CAS values and first-segment leading-zero CAS artifacts
   should become canonical CAS before search, review, print, and export.
+  Production search UI QA must keep at least one deployed leading-zero case
+  such as `0118-12-7` -> `118-12-7`, not only local parser unit tests.
 
 Done means:
 

@@ -142,7 +142,9 @@ cannot complete the intended job.
   seed dictionary, and 4 review-only workbook Chinese-name candidates after
   canonicalization. The audit also exposed first-segment leading-zero CAS
   artifacts, so frontend batch normalization now canonicalizes those before
-  search.
+  search. Production search UI QA now includes the same class of leading-zero
+  workbook artifact (`0118-12-7` -> `118-12-7`) and verifies the deployed
+  batch path counts, cleans, searches, and exports the canonicalized row.
 - 2026-05-28 export handoff clarity: fresh monitoring evidence showed that
   overlapping review reasons could survive into CSV/XLSX without a compact
   lab-manager action signal. Backend exports now add `Review Signal Count` and

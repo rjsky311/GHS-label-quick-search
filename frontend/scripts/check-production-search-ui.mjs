@@ -1340,6 +1340,7 @@ const inspectBatchInputNormalizationPath = async (
         "90-41-5",
         "344-04-07",
         "67641",
+        "0118-12-7",
         "CAS No. 62 - 53 - 3",
       ].join("\n"),
     );
@@ -1448,6 +1449,29 @@ const inspectBatchInputNormalizationPath = async (
         ((await diagnostics.textContent().catch(() => "")) || "")
           .replace(/\s+/g, " ")
           .trim(),
+      diagnosticSummaries: {
+        duplicate:
+          ((await page
+            .getByTestId("batch-duplicate-summary")
+            .textContent()
+            .catch(() => "")) || "")
+            .replace(/\s+/g, " ")
+            .trim(),
+        invalid:
+          ((await page
+            .getByTestId("batch-invalid-summary")
+            .textContent()
+            .catch(() => "")) || "")
+            .replace(/\s+/g, " ")
+            .trim(),
+        rehyphenated:
+          ((await page
+            .getByTestId("batch-rehyphenated-summary")
+            .textContent()
+            .catch(() => "")) || "")
+            .replace(/\s+/g, " ")
+            .trim(),
+      },
       searchButtonDisabled,
       overLimitAlertCount: await page
         .getByTestId("batch-over-limit-alert")
@@ -2498,15 +2522,27 @@ try {
     failures.push("unresolved-search-correction-curation-context-missing");
   }
   if (
-    !/\b6\b/.test(batchInputNormalization.readySummary) ||
-    !/\b8\b/.test(batchInputNormalization.readySummary)
+    !/\b7\b/.test(batchInputNormalization.readySummary) ||
+    !/\b9\b/.test(batchInputNormalization.readySummary)
   ) {
     failures.push("batch-input-ready-summary-mismatch");
   }
   if (
-    !/\b1\b/.test(batchInputNormalization.diagnostics) ||
-    !/344-04-07/.test(batchInputNormalization.diagnostics) ||
-    !/67641/.test(batchInputNormalization.diagnostics)
+    !/1 invalid CAS/.test(
+      batchInputNormalization.diagnosticSummaries?.invalid || "",
+    ) ||
+    !/344-04-07/.test(
+      batchInputNormalization.diagnosticSummaries?.invalid || "",
+    ) ||
+    !/2 spreadsheet CAS/.test(
+      batchInputNormalization.diagnosticSummaries?.rehyphenated || "",
+    ) ||
+    !/67641 -> 67-64-1/.test(
+      batchInputNormalization.diagnosticSummaries?.rehyphenated || "",
+    ) ||
+    !/0118-12-7 -> 118-12-7/.test(
+      batchInputNormalization.diagnosticSummaries?.rehyphenated || "",
+    )
   ) {
     failures.push("batch-input-diagnostics-missing");
   }
@@ -2520,13 +2556,13 @@ try {
   if (!batchResultSummary.workflowSummaryVisible) {
     failures.push("batch-results-workflow-summary-missing");
   }
-  if (batchResultSummary.rowCount !== 6) {
+  if (batchResultSummary.rowCount !== 7) {
     failures.push("batch-results-row-count-mismatch");
   }
-  if (!/\/\s*6\b/.test(batchResultSummary.foundValue || "")) {
+  if (!/\/\s*7\b/.test(batchResultSummary.foundValue || "")) {
     failures.push("batch-results-found-summary-total-mismatch");
   }
-  if (!/\b6\b/.test(batchResultSummary.exportValue || "")) {
+  if (!/\b7\b/.test(batchResultSummary.exportValue || "")) {
     failures.push("batch-results-export-summary-mismatch");
   }
   if (batchResultSummary.filteredScopeCount > 0) {
