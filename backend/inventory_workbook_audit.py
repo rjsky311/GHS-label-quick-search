@@ -11,6 +11,14 @@ from candidate_discovery import build_candidate_bundle, clean_text, has_cjk
 from chemical_dict import CAS_TO_EN, CAS_TO_ZH
 
 AUDIT_SOURCE = "inventory-workbook-audit"
+HANDOFF_RECORD_KEYS = (
+    "invalidCas",
+    "workbookChineseNameCandidates",
+    "unknownSeedDictionary",
+    "missingSeedChineseName",
+    "casCleanupSignals",
+    "duplicates",
+)
 
 CAS_FORMAT_PATTERN = re.compile(r"^\d{2,7}-\d{2}-\d$")
 CAS_DIGITS_PATTERN = re.compile(r"^\d{5,10}$")
@@ -187,6 +195,16 @@ def _append_example(
         examples[key].append(item)
 
 
+def _append_handoff_record(
+    records: Optional[dict[str, list[dict[str, Any]]]],
+    key: str,
+    item: dict[str, Any],
+) -> None:
+    if records is None:
+        return
+    records[key].append(item)
+
+
 def _detect_sheet_mapping(
     worksheet: Any,
     *,
@@ -360,6 +378,7 @@ def audit_inventory_workbook(
     *,
     max_examples: int = 20,
     max_header_scan_rows: int = 40,
+    include_handoff_records: bool = False,
 ) -> dict[str, Any]:
     path = Path(workbook_path)
     workbook = load_workbook(path, read_only=True, data_only=True)
@@ -373,6 +392,9 @@ def audit_inventory_workbook(
         "missingSeedChineseName": [],
         "workbookChineseNameCandidates": [],
     }
+    handoff_records = (
+        {key: [] for key in HANDOFF_RECORD_KEYS} if include_handoff_records else None
+    )
     sheet_summaries: list[dict[str, Any]] = []
     summary = {
         "sheetCount": len(workbook.sheetnames),
@@ -454,12 +476,14 @@ def audit_inventory_workbook(
                 if not detail["valid"]:
                     summary["invalidCasCount"] += 1
                     sheet_summary["invalidCasCount"] += 1
+                    invalid_item = {**row_context, "reason": detail["reason"]}
                     _append_example(
                         examples,
                         "invalidCas",
-                        {**row_context, "reason": detail["reason"]},
+                        invalid_item,
                         max_examples=max_examples,
                     )
+                    _append_handoff_record(handoff_records, "invalidCas", invalid_item)
                     continue
 
                 cas_number = str(detail["normalized"])
@@ -476,11 +500,21 @@ def audit_inventory_workbook(
                     summary["knownSeedDictionaryRows"] += 1
                 else:
                     summary["unknownSeedDictionaryRows"] += 1
+                    unknown_item = {
+                        **row_context,
+                        "nameEn": name_en,
+                        "nameZh": workbook_name_zh,
+                    }
                     _append_example(
                         examples,
                         "unknownSeedDictionary",
-                        {**row_context, "nameEn": name_en, "nameZh": workbook_name_zh},
+                        unknown_item,
                         max_examples=max_examples,
+                    )
+                    _append_handoff_record(
+                        handoff_records,
+                        "unknownSeedDictionary",
+                        unknown_item,
                     )
 
                 if detail["wasRehyphenated"]:
@@ -513,12 +547,14 @@ def audit_inventory_workbook(
                 if cas_number in seen_valid_cas:
                     summary["duplicateValidCasRows"] += 1
                     sheet_summary["duplicateValidCasRows"] += 1
+                    duplicate_item = {**row_context, "reason": "duplicate-valid-cas"}
                     _append_example(
                         examples,
                         "duplicates",
-                        {**row_context, "reason": "duplicate-valid-cas"},
+                        duplicate_item,
                         max_examples=max_examples,
                     )
+                    _append_handoff_record(handoff_records, "duplicates", duplicate_item)
                 else:
                     seen_valid_cas.add(cas_number)
                     summary["uniqueValidCasCount"] += 1
@@ -526,36 +562,64 @@ def audit_inventory_workbook(
                 if detail["wasRehyphenated"] or detail["wasLeadingZeroCanonicalized"]:
                     summary["casCleanupSignalRows"] += 1
                     sheet_summary["casCleanupSignalRows"] += 1
+                    _append_handoff_record(
+                        handoff_records,
+                        "casCleanupSignals",
+                        {
+                            **row_context,
+                            "rawNormalized": detail["rawNormalized"],
+                            "wasRehyphenated": detail["wasRehyphenated"],
+                            "wasLeadingZeroCanonicalized": detail[
+                                "wasLeadingZeroCanonicalized"
+                            ],
+                        },
+                    )
 
                 if not has_cjk(seed_name_zh):
                     summary["missingSeedChineseNameRows"] += 1
+                    missing_item = {
+                        **row_context,
+                        "nameEn": name_en,
+                        "workbookNameZh": workbook_name_zh,
+                    }
                     _append_example(
                         examples,
                         "missingSeedChineseName",
-                        {**row_context, "nameEn": name_en, "workbookNameZh": workbook_name_zh},
+                        missing_item,
                         max_examples=max_examples,
+                    )
+                    _append_handoff_record(
+                        handoff_records,
+                        "missingSeedChineseName",
+                        missing_item,
                     )
                     if has_cjk(workbook_name_zh):
                         summary["workbookChineseNameCandidateRows"] += 1
                         sheet_summary["workbookChineseNameCandidateRows"] += 1
+                        candidate = _candidate_from_workbook_row(
+                            cas_number=cas_number,
+                            name_en=name_en,
+                            name_zh=workbook_name_zh,
+                            sheet_name=worksheet.title,
+                            row_number=row_number,
+                        )
                         _append_example(
                             examples,
                             "workbookChineseNameCandidates",
-                            _candidate_from_workbook_row(
-                                cas_number=cas_number,
-                                name_en=name_en,
-                                name_zh=workbook_name_zh,
-                                sheet_name=worksheet.title,
-                                row_number=row_number,
-                            ),
+                            candidate,
                             max_examples=max_examples,
+                        )
+                        _append_handoff_record(
+                            handoff_records,
+                            "workbookChineseNameCandidates",
+                            candidate,
                         )
 
             sheet_summaries.append(sheet_summary)
     finally:
         workbook.close()
 
-    return {
+    payload = {
         "schemaVersion": 1,
         "dryRun": True,
         "publicDataChanged": False,
@@ -566,3 +630,6 @@ def audit_inventory_workbook(
         "sheetSummaries": sheet_summaries,
         "examples": examples,
     }
+    if handoff_records is not None:
+        payload["handoffRecords"] = handoff_records
+    return payload

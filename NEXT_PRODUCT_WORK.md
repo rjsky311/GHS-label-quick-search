@@ -149,8 +149,8 @@ cannot complete the intended job.
   separates 246 invalid CAS cells, 4 review-only Chinese-name candidates, 52
   seed-dictionary gaps, 48 missing-name evidence tasks without workbook
   candidates, 121 CAS cleanup QA signals, and 1,365 duplicate valid-CAS rows.
-  Use that queue as the next handoff surface instead of manually interpreting
-  raw counts.
+  Use that queue and the optional `--handoff-dir` CSV/README packet as the next
+  handoff surface instead of manually interpreting raw counts.
 - 2026-05-28 export handoff clarity: fresh monitoring evidence showed that
   overlapping review reasons could survive into CSV/XLSX without a compact
   lab-manager action signal. Backend exports now add `Review Signal Count` and

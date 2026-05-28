@@ -145,6 +145,8 @@ Rules:
   The audit `actionQueue` is a triage aid only: `fix-invalid-cas` may block
   batch use of those rows, while candidate-name and dictionary-gap actions
   still require evidence review before any public data can change.
+  Handoff CSV/README packets generated with `--handoff-dir` carry the same
+  review-only boundary and are not import files for public dictionary data.
 
 ### External Scientific Lookup Skills
 

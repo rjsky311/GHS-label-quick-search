@@ -172,3 +172,65 @@ def test_inventory_workbook_audit_cli_outputs_json(tmp_path):
     assert payload["summary"]["validCasRowCount"] == 1
     assert payload["summary"]["uniqueValidCasCount"] == 1
     assert payload["actionQueue"] == []
+
+
+def test_inventory_workbook_audit_cli_writes_handoff_packet(tmp_path):
+    workbook_path = save_workbook(
+        tmp_path / "handoff.xlsx",
+        [
+            (
+                "Inventory",
+                [
+                    ["CAS", "Name", "\u4e2d\u6587\u540d"],
+                    ["64-17-5", "Ethanol", "\u4e59\u9187"],
+                    ["64-17-5", "Ethanol duplicate", "\u4e59\u9187"],
+                    ["123-45-5", "Unreviewed Example", "\u5f85\u5be9\u4e2d\u6587\u540d"],
+                    ["0118-12-7", "Leading zero example", "\u524d\u5c0e\u96f6\u6e2c\u8a66"],
+                    ["#VALUE!", "Bad CAS", "\u932f\u8aa4"],
+                ],
+            )
+        ],
+    )
+    handoff_dir = tmp_path / "handoff"
+    output_path = tmp_path / "audit.json"
+
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/audit_inventory_workbook.py",
+            str(workbook_path),
+            "--output",
+            str(output_path),
+            "--handoff-dir",
+            str(handoff_dir),
+            "--max-examples",
+            "1",
+        ],
+        cwd=Path(__file__).parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["handoffRecords"]["invalidCas"][0]["raw"] == "#VALUE!"
+    assert len(payload["handoffRecords"]["duplicates"]) == 1
+    assert len(payload["handoffRecords"]["casCleanupSignals"]) == 1
+    assert len(payload["handoffRecords"]["workbookChineseNameCandidates"]) == 1
+
+    expected_files = {
+        "README.md",
+        "audit.json",
+        "action-queue.csv",
+        "invalid-cas.csv",
+        "workbook-chinese-name-candidates.csv",
+        "unknown-seed-dictionary.csv",
+        "missing-seed-chinese-name.csv",
+        "cas-cleanup-signals.csv",
+        "duplicates.csv",
+    }
+    assert expected_files.issubset({path.name for path in handoff_dir.iterdir()})
+    assert "fix-invalid-cas" in (handoff_dir / "action-queue.csv").read_text(
+        encoding="utf-8-sig"
+    )
+    assert "review-only" in (handoff_dir / "README.md").read_text(encoding="utf-8")

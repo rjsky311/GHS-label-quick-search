@@ -489,7 +489,11 @@ Current completion snapshot:
   unique valid CAS numbers, 246 invalid CAS cells, 99 re-hyphenated CAS cells,
   22 leading-zero CAS artifacts, 121 total CAS cleanup signals, 52 rows outside
   the seed dictionary, and 4 workbook Chinese-name candidate rows after
-  canonicalization.
+  canonicalization. The CLI can now write a maintainer handoff packet with
+  `--handoff-dir <output-dir>`: `audit.json`, `action-queue.csv`, per-category
+  CSVs, and `README.md` so invalid CAS cleanup, candidate review,
+  seed-dictionary triage, missing-name evidence, parser QA fixtures, and
+  duplicate cleanup can be handled without manually interpreting raw JSON.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -1225,7 +1229,8 @@ Use these files by role:
   before deciding whether a product, parser, or admin-curation slice is needed.
   Its `actionQueue` is the handoff surface for maintainers/Coding Agent: it
   states what blocks batch use, what needs evidence, what can become QA
-  coverage, and what must remain review-only.
+  coverage, and what must remain review-only. Use `--handoff-dir` when the
+  next step needs CSV/README files that a maintainer can open directly.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

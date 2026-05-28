@@ -113,8 +113,8 @@ Important backend areas:
 - `backend/inventory_workbook_audit.py` and
   `backend/scripts/audit_inventory_workbook.py`: maintainer-only dry-run audit
   for real lab inventory workbooks. Use it to turn user-provided Excel files
-  into parser/data-governance evidence and an `actionQueue` without importing
-  public dictionary data.
+  into parser/data-governance evidence, an `actionQueue`, and optional
+  handoff CSV/README files without importing public dictionary data.
 - `backend/chemical_dict.py`: local dictionary data.
 
 ## Key Commands
@@ -142,12 +142,13 @@ Run backend commands from `backend/`:
 python -m py_compile server.py api_models.py api_validation.py export_helpers.py
 python -m pytest -q
 python scripts\audit_inventory_workbook.py <path-to-xlsx>
+python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
 ```
 
-The inventory audit output is review-only. Use `summary`, `actionQueue`, and
-`examples` to decide whether the next slice is workbook cleanup, parser QA,
-seed-dictionary coverage, or admin/manual-entry review; never treat workbook
-Chinese names as approved public data.
+The inventory audit output is review-only. Use `summary`, `actionQueue`,
+`examples`, and `--handoff-dir` CSVs to decide whether the next slice is
+workbook cleanup, parser QA, seed-dictionary coverage, or admin/manual-entry
+review; never treat workbook Chinese names as approved public data.
 
 Docs-only baseline:
 
