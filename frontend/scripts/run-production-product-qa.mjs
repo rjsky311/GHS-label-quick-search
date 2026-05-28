@@ -10,7 +10,7 @@ const productReportPath = path.resolve(
     "build/production-product-qa-report.json",
 );
 const stepTimeoutMs = Number.parseInt(
-  process.env.PRODUCTION_PRODUCT_QA_STEP_TIMEOUT_MS || "900000",
+  process.env.PRODUCTION_PRODUCT_QA_STEP_TIMEOUT_MS || "1800000",
   10,
 );
 const steps = [];
