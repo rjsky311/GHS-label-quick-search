@@ -60,7 +60,8 @@ const getPictogramCodes = (chemical = {}) =>
 const uniqueSorted = (values = []) => [...new Set(values.filter(Boolean))].sort();
 
 const maybeWriteReport = (report) => {
-  const outputPath = process.env.PRINT_QA_REPORT_PATH;
+  const outputPath =
+    process.env.PRINT_QA_REPORT_PATH || "build/print-qa-report.json";
   if (!outputPath) return;
 
   const absolutePath = path.resolve(process.cwd(), outputPath);
