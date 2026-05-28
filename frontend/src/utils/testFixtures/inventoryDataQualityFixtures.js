@@ -8,6 +8,7 @@ const hStatement = (code, text = `${code} hazard text`) => ({
 
 export const inventoryBatchPasteFixture = [
   "67641",
+  "0118-12-7",
   "90-41-5",
   "90-41-5",
   "344-04-07",
@@ -44,6 +45,11 @@ export const inventoryRosterEvidenceSummary = Object.freeze([
     evidence: "trailing punctuation",
     example: "7719-09-7.",
     expectedBehavior: "trim harmless terminal punctuation before validation",
+  },
+  {
+    evidence: "leading-zero CAS artifact",
+    example: "0118-12-7",
+    expectedBehavior: "canonicalize to 118-12-7 before lookup",
   },
   {
     evidence: "spreadsheet formula/date errors",

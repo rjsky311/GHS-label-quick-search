@@ -119,12 +119,30 @@ evidence instead of continuing Batch-First implementation by inertia:
    already satisfied; reopen only when the next batch/admin/data change needs a
    narrower boundary.
 
+The 2026-05-28 inventory workbook audit slice was opened from a concrete user
+Excel file rather than broad backlog wording. It added
+`backend/scripts/audit_inventory_workbook.py` as a maintainer-only dry-run
+checker and hardened frontend batch CAS normalization for first-segment
+leading-zero artifacts such as `0118-12-7` -> `118-12-7`. Use this tool when a
+real lab roster should become evidence for parser gaps, seed-dictionary
+coverage, duplicate rows, invalid CAS cells, or review-only Chinese-name
+candidates. Do not treat the workbook itself as an approved public dictionary
+source.
+
 ### Monitoring Evidence Log
 
 The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-05-28 inventory workbook audit: a supplied multi-sheet lab workbook
+  produced a repeatable dry-run report with 3,246 CAS cells, 3,000 valid CAS
+  rows, 1,635 unique valid CAS numbers, 246 invalid CAS cells, 99
+  re-hyphenated CAS cells, 22 leading-zero CAS artifacts, 52 rows outside the
+  seed dictionary, and 4 review-only workbook Chinese-name candidates after
+  canonicalization. The audit also exposed first-segment leading-zero CAS
+  artifacts, so frontend batch normalization now canonicalizes those before
+  search.
 - 2026-05-28 export handoff clarity: fresh monitoring evidence showed that
   overlapping review reasons could survive into CSV/XLSX without a compact
   lab-manager action signal. Backend exports now add `Review Signal Count` and
@@ -342,7 +360,9 @@ Open the next slice from one of these evidence triggers:
    sheets, or review categories.
 4. Production QA, CI, Zeabur deployment freshness, or a user screenshot/PDF
    proves a product regression.
-5. A new product decision changes the public scope. Use `PRODUCT_SCOPE_GATE.md`
+5. A real lab workbook audit exposes a parser, seed-dictionary, duplicate-row,
+   invalid-CAS, or Chinese-name candidate pattern that blocks batch use.
+6. A new product decision changes the public scope. Use `PRODUCT_SCOPE_GATE.md`
    before implementation.
 
 Physical print validation remains deferred until real stock and printer access

@@ -472,6 +472,19 @@ Current completion snapshot:
   messages and next actions now resolve through frontend locale keys keyed by
   the stable backend focus id, so the dashboard can stay bilingual while
   backend message strings remain API fallbacks rather than final UI copy.
+- **Inventory workbook audit checkpoint 2026-05-28**: the user-provided
+  multi-sheet lab workbook is now represented by a maintainer-only dry-run
+  audit path instead of a one-off manual inspection. Run
+  `python backend/scripts/audit_inventory_workbook.py <xlsx>` to extract CAS
+  columns, validate and re-hyphenate spreadsheet CAS values, canonicalize
+  first-segment leading-zero CAS artifacts, report duplicates/invalid rows,
+  compare CAS coverage against the seed dictionary, and emit review-only
+  Chinese-name candidate evidence. The command does not change public lookup,
+  labels, exports, or manual dictionary data. The first run on the supplied
+  workbook found 3,246 CAS cells, 3,000 valid CAS rows, 1,635 unique valid CAS
+  numbers, 246 invalid CAS cells, 99 re-hyphenated CAS cells, 22
+  leading-zero CAS artifacts, 52 rows outside the seed dictionary, and 4
+  workbook Chinese-name candidate rows after canonicalization.
 - **Detail comparison evidence checkpoint**: same-chemical Detail comparisons
   now show compact selection evidence for each available public
   classification: current selection, report count, source family, and
@@ -704,6 +717,9 @@ Do next:
   by creating second/third small labels instead of recommending A4/Letter.
 - Keep URL-query hydration for `?cas=...` covered so QR codes scan back to this
   product's lookup page.
+- Keep batch paste/import normalization aligned with real lab workbooks:
+  spreadsheet numeric CAS values and first-segment leading-zero CAS artifacts
+  should become canonical CAS before search, review, print, and export.
 
 Done means:
 
@@ -1196,6 +1212,10 @@ Use these files by role:
   scaling, QR scan, and physical readability checklist.
 - `DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md`: source roles, SDS/reference
   policy, admin/manual data boundaries, telemetry limits, and conflict handling.
+- `backend/scripts/audit_inventory_workbook.py`: maintainer-only dry-run
+  inventory workbook audit for real lab rosters; use it to find CAS cleanup,
+  duplicate rows, seed-dictionary gaps, and review-only Chinese-name candidates
+  before deciding whether a product, parser, or admin-curation slice is needed.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

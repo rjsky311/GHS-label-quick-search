@@ -15,8 +15,8 @@ describe("inventory data-quality fixtures", () => {
   it("captures spreadsheet paste cleanup found in real inventory files", () => {
     const summary = parseBatchSearchInput(inventoryBatchPasteFixture);
 
-    expect(summary.queries).toEqual(["67-64-1", "90-41-5"]);
-    expect(summary.rehyphenatedCount).toBe(1);
+    expect(summary.queries).toEqual(["67-64-1", "118-12-7", "90-41-5"]);
+    expect(summary.rehyphenatedCount).toBe(2);
     expect(summary.duplicateCount).toBe(1);
     expect(summary.invalidItems).toEqual([
       expect.objectContaining({ raw: "344-04-07", reason: "format" }),
@@ -56,6 +56,7 @@ describe("inventory data-quality fixtures", () => {
         expect.objectContaining({ example: "CAS編號" }),
         expect.objectContaining({ example: "73183343.0" }),
         expect.objectContaining({ example: "7719-09-7." }),
+        expect.objectContaining({ example: "0118-12-7" }),
       ]),
     );
   });

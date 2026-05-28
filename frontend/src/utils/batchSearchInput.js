@@ -134,16 +134,27 @@ export const rehyphenateCasDigits = (value = "") => {
   return `${firstGroup}-${digits.slice(-3, -1)}-${digits.slice(-1)}`;
 };
 
+export const canonicalizeCasLeadingZeros = (value = "") => {
+  if (!CAS_FORMAT_PATTERN.test(value)) return "";
+  const [firstGroup, middleGroup, checkDigit] = String(value).split("-");
+  const canonicalFirstGroup = firstGroup.replace(/^0+/, "");
+  if (!canonicalFirstGroup || canonicalFirstGroup === firstGroup) return "";
+  return `${canonicalFirstGroup}-${middleGroup}-${checkDigit}`;
+};
+
 export const normalizeCasTokenDetailed = (token = "") => {
   const rawNormalized = normalizeCasTokenBase(token);
   const rehyphenated = /^\d+$/.test(rawNormalized)
     ? rehyphenateCasDigits(rawNormalized)
     : "";
+  const normalizedCandidate = rehyphenated || rawNormalized;
+  const leadingZeroCanonicalized = canonicalizeCasLeadingZeros(normalizedCandidate);
 
   return {
-    normalized: rehyphenated || rawNormalized,
+    normalized: leadingZeroCanonicalized || normalizedCandidate,
     rawNormalized,
     wasRehyphenated: Boolean(rehyphenated && rehyphenated !== rawNormalized),
+    wasLeadingZeroCanonicalized: Boolean(leadingZeroCanonicalized),
   };
 };
 
@@ -180,7 +191,12 @@ export const parseBatchSearchInput = (
   const rehyphenatedItems = [];
 
   rawTokens.forEach((raw, index) => {
-    const { normalized, rawNormalized, wasRehyphenated } =
+    const {
+      normalized,
+      rawNormalized,
+      wasRehyphenated,
+      wasLeadingZeroCanonicalized,
+    } =
       normalizeCasTokenDetailed(raw);
     if (!CAS_FORMAT_PATTERN.test(normalized)) {
       invalidItems.push({ raw, normalized, rawNormalized, index, reason: "format" });
@@ -214,10 +230,14 @@ export const parseBatchSearchInput = (
       rawNormalized,
       index,
       wasRehyphenated,
+      wasLeadingZeroCanonicalized,
     };
     items.push(item);
-    if (wasRehyphenated) {
-      rehyphenatedItems.push({ ...item, reason: "numeric-cas" });
+    if (wasRehyphenated || wasLeadingZeroCanonicalized) {
+      rehyphenatedItems.push({
+        ...item,
+        reason: wasRehyphenated ? "numeric-cas" : "leading-zero-cas",
+      });
     }
   });
 

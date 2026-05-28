@@ -134,6 +134,14 @@ Rules:
 - Automated translation may be used only as a candidate suggestion. It must not
   silently become the printed Chinese identity because chemical common names,
   salts, hydrates, isomers, and mixtures can translate ambiguously.
+- Real inventory workbooks are evidence sources, not public-data authorities.
+  `backend/scripts/audit_inventory_workbook.py` may extract CAS cleanup issues,
+  missing seed-dictionary coverage, and workbook-provided Chinese names, but
+  those names remain review-only candidate evidence until converted into an
+  approved manual entry or seed-dictionary update with separate source
+  verification. The audit may canonicalize spreadsheet artifacts such as
+  numeric CAS values and first-segment leading zeros for QA/reporting, but that
+  cleanup does not approve workbook names, hazards, aliases, or SDS links.
 
 ### External Scientific Lookup Skills
 

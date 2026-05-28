@@ -110,6 +110,11 @@ Important backend areas:
   intake/review, miss-query retention, workspace route factory.
 - `backend/export_helpers.py`: CSV/XLSX trust headers, formula-injection
   neutralization, trusted Chinese-name filtering, XLSX pilot summary.
+- `backend/inventory_workbook_audit.py` and
+  `backend/scripts/audit_inventory_workbook.py`: maintainer-only dry-run audit
+  for real lab inventory workbooks. Use it to turn user-provided Excel files
+  into parser/data-governance evidence without importing public dictionary
+  data.
 - `backend/chemical_dict.py`: local dictionary data.
 
 ## Key Commands
@@ -136,6 +141,7 @@ Run backend commands from `backend/`:
 ```powershell
 python -m py_compile server.py api_models.py api_validation.py export_helpers.py
 python -m pytest -q
+python scripts\audit_inventory_workbook.py <path-to-xlsx>
 ```
 
 Docs-only baseline:

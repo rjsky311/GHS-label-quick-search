@@ -1,5 +1,6 @@
 import {
   buildBatchSearchTelemetryMeta,
+  canonicalizeCasLeadingZeros,
   hasValidCasChecksum,
   normalizeCasToken,
   normalizeCasTokenDetailed,
@@ -49,7 +50,27 @@ describe("batchSearchInput", () => {
       rawNormalized: "67641",
       normalized: "67-64-1",
       wasRehyphenated: true,
+      wasLeadingZeroCanonicalized: false,
     });
+  });
+
+  it("canonicalizes CAS first-segment leading zeros from workbook artifacts", () => {
+    expect(canonicalizeCasLeadingZeros("0118-12-7")).toBe("118-12-7");
+    expect(canonicalizeCasLeadingZeros("0765-10-6")).toBe("765-10-6");
+    expect(canonicalizeCasLeadingZeros("118-12-7")).toBe("");
+    expect(normalizeCasToken("0118-12-7")).toBe("118-12-7");
+    expect(normalizeCasToken("CAS 0118127")).toBe("118-12-7");
+    const summary = parseBatchSearchInput("0118-12-7");
+    expect(summary.queries).toEqual(["118-12-7"]);
+    expect(summary.rehyphenatedCount).toBe(1);
+    expect(summary.rehyphenatedItems).toEqual([
+      expect.objectContaining({
+        raw: "0118-12-7",
+        normalized: "118-12-7",
+        wasLeadingZeroCanonicalized: true,
+        reason: "leading-zero-cas",
+      }),
+    ]);
   });
 
   it("extracts Chinese CAS-number columns from inventory sheets", () => {
