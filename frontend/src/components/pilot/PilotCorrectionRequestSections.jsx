@@ -9,6 +9,8 @@ import { curationTimestamp } from "@/components/pilot/pilotDashboardHelpers";
 import { getDataQualityIssueDisplayLabel } from "@/utils/dataQuality";
 import { formatRelativeTime } from "@/utils/formatDate";
 
+const INVENTORY_HANDOFF_SOURCE = "inventory-workbook-audit";
+
 const correctionRequestIdentity = (item = {}) => ({
   requestId: item.id,
   issueType: item.issue_type || item.issueType || "other",
@@ -27,6 +29,46 @@ function CorrectionTargetSummary({ casNumber, chemicalName }) {
         t("pilot.correctionUnknownTarget", {
           defaultValue: "No target identity provided",
         })}
+    </div>
+  );
+}
+
+function CorrectionSourceBadge({ source, requestId }) {
+  const { t } = useTranslation();
+  const normalizedSource = String(source || "").trim();
+  if (!normalizedSource) {
+    return null;
+  }
+  const isInventoryHandoff = normalizedSource === INVENTORY_HANDOFF_SOURCE;
+  const label = isInventoryHandoff
+    ? t("pilot.inventoryHandoffSource", {
+        defaultValue: "Inventory workbook handoff",
+      })
+    : normalizedSource;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+      <span
+        className={`rounded-full px-2 py-0.5 font-semibold ${
+          isInventoryHandoff
+            ? "bg-cyan-100 text-cyan-800"
+            : "bg-slate-100 text-slate-600"
+        }`}
+        data-testid={`correction-request-source-${requestId}`}
+      >
+        {label}
+      </span>
+      {isInventoryHandoff ? (
+        <span
+          className="rounded-full border border-cyan-200 bg-white px-2 py-0.5 font-medium text-cyan-800"
+          data-testid={`correction-request-source-review-only-${requestId}`}
+        >
+          {t("pilot.inventoryHandoffReviewOnly", {
+            defaultValue:
+              "Review-only; verify evidence before manual-entry approval.",
+          })}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -124,26 +166,37 @@ export function TopCorrectionRequestsSection({
   setCorrectionReviewDrafts,
   onStatusUpdate,
   onCreateManualEntry,
+  title,
+  subtitle,
+  emptyText,
+  sectionClassName = "rounded-lg border border-slate-200 bg-white p-4",
 }) {
   const { t } = useTranslation();
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className={sectionClassName}>
       <SectionHeading
         icon={ShieldAlert}
-        title={t("pilot.correctionRequests", {
-          defaultValue: "Correction requests",
-        })}
-        subtitle={t("pilot.correctionRequestsHint", {
-          defaultValue:
-            "Station and in-app reports land here first. Approve only after source evidence is reviewed.",
-        })}
+        title={
+          title ||
+          t("pilot.correctionRequests", {
+            defaultValue: "Correction requests",
+          })
+        }
+        subtitle={
+          subtitle ||
+          t("pilot.correctionRequestsHint", {
+            defaultValue:
+              "Station and in-app reports land here first. Approve only after source evidence is reviewed.",
+          })
+        }
       />
       {items.length === 0 ? (
         <p className="text-sm text-slate-500">
-          {t("pilot.noCorrectionRequests", {
-            defaultValue: "No open correction requests yet.",
-          })}
+          {emptyText ||
+            t("pilot.noCorrectionRequests", {
+              defaultValue: "No open correction requests yet.",
+            })}
         </p>
       ) : (
         <div className="space-y-2">
@@ -151,6 +204,10 @@ export function TopCorrectionRequestsSection({
             const { requestId, issueType, casNumber, chemicalName, status } =
               correctionRequestIdentity(item);
             const evidenceUrl = item.evidence_url || item.evidenceUrl || "";
+            const currentOutput = item.current_output || item.currentOutput || "";
+            const expectedOutput =
+              item.expected_output || item.expectedOutput || "";
+            const source = item.source || item.sourceLabel || "";
             return (
               <div
                 key={`correction-${requestId}`}
@@ -166,13 +223,38 @@ export function TopCorrectionRequestsSection({
                         testId={`correction-request-status-${requestId}`}
                       />
                     </div>
+                    <CorrectionSourceBadge
+                      source={source}
+                      requestId={requestId}
+                    />
                     <CorrectionTargetSummary
                       casNumber={casNumber}
                       chemicalName={chemicalName}
                     />
-                    {item.current_output || item.currentOutput ? (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {item.current_output || item.currentOutput}
+                    {currentOutput ? (
+                      <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600">
+                        <span className="mr-1 font-semibold text-slate-800">
+                          {t("pilot.correctionCurrentOutput", {
+                            defaultValue: "Current",
+                          })}
+                          :
+                        </span>
+                        <span data-testid={`correction-request-current-${requestId}`}>
+                          {currentOutput}
+                        </span>
+                      </div>
+                    ) : null}
+                    {expectedOutput ? (
+                      <div className="mt-1 rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-xs text-emerald-900">
+                        <span className="mr-1 font-semibold">
+                          {t("pilot.correctionExpectedOutput", {
+                            defaultValue: "Expected",
+                          })}
+                          :
+                        </span>
+                        <span data-testid={`correction-request-expected-${requestId}`}>
+                          {expectedOutput}
+                        </span>
                       </div>
                     ) : null}
                     {evidenceUrl ? (

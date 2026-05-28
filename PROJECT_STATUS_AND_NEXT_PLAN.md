@@ -1236,7 +1236,9 @@ Use these files by role:
   queue. Use it when the next step is to turn review-only workbook Chinese-name
   candidates or seed-dictionary gaps into admin-triage tasks. It creates no
   approved public dictionary data; even `--apply` writes correction requests
-  only.
+  only. The admin dashboard now treats these rows as a distinct
+  `inventory-workbook-audit` handoff queue with its own triage count,
+  next-action focus, source badges, and expected/current-output context.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

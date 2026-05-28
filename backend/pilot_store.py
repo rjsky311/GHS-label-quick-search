@@ -29,6 +29,7 @@ CORRECTION_REQUEST_STATUS_ORDER = (
 )
 CORRECTION_REQUEST_STATUSES = set(CORRECTION_REQUEST_STATUS_ORDER)
 CORRECTION_REQUEST_REVIEW_STATUSES = ("open", "candidate_found")
+INVENTORY_HANDOFF_CORRECTION_SOURCE = "inventory-workbook-audit"
 CORRECTION_REQUEST_TYPES = {
     "missing-chinese-name",
     "unresolved-search",
@@ -1244,21 +1245,27 @@ class PilotStore:
         *,
         limit: int = 100,
         statuses: Optional[Iterable[str]] = None,
+        source: Optional[str] = None,
         include_context: bool = True,
         exclude_converted_manual_entries: bool = False,
     ) -> list[dict[str, Any]]:
         params: list[Any] = []
-        where_status = ""
+        where_clauses: list[str] = []
         if statuses:
             normalized_statuses = [
                 normalize_correction_request_status(status) for status in statuses
             ]
-            where_status = (
-                "WHERE status IN ("
+            where_clauses.append(
+                "status IN ("
                 + ",".join("?" for _ in normalized_statuses)
                 + ")"
             )
             params.extend(normalized_statuses)
+        normalized_source = (source or "").strip()
+        if normalized_source:
+            where_clauses.append("source = ?")
+            params.append(normalized_source)
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
         limit_clause = "" if exclude_converted_manual_entries else "LIMIT ?"
         if not exclude_converted_manual_entries:
             params.append(limit)
@@ -1282,7 +1289,7 @@ class PilotStore:
               created_at,
               updated_at
             FROM dictionary_correction_requests
-            {where_status}
+            {where_sql}
             ORDER BY updated_at DESC, id DESC
             {limit_clause}
             """,
@@ -1321,6 +1328,43 @@ class PilotStore:
         self,
         *,
         statuses: Optional[Iterable[str]] = None,
+        source: Optional[str] = None,
+    ) -> dict[str, int]:
+        params: list[Any] = []
+        where_clauses: list[str] = []
+        if statuses:
+            normalized_statuses = [
+                normalize_correction_request_status(status) for status in statuses
+            ]
+            where_clauses.append(
+                "status IN ("
+                + ",".join("?" for _ in normalized_statuses)
+                + ")"
+            )
+            params.extend(normalized_statuses)
+        normalized_source = (source or "").strip()
+        if normalized_source:
+            where_clauses.append("source = ?")
+            params.append(normalized_source)
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        rows = self._fetchall(
+            f"""
+            SELECT issue_type, COUNT(*) AS count
+            FROM dictionary_correction_requests
+            {where_sql}
+            GROUP BY issue_type
+            """,
+            params,
+        )
+        counts = {issue_type: 0 for issue_type in sorted(CORRECTION_REQUEST_TYPES)}
+        for row in rows:
+            counts[str(row["issue_type"])] = int(row["count"])
+        return counts
+
+    def get_correction_request_source_counts(
+        self,
+        *,
+        statuses: Optional[Iterable[str]] = None,
     ) -> dict[str, int]:
         params: list[Any] = []
         where_status = ""
@@ -1336,17 +1380,14 @@ class PilotStore:
             params.extend(normalized_statuses)
         rows = self._fetchall(
             f"""
-            SELECT issue_type, COUNT(*) AS count
+            SELECT source, COUNT(*) AS count
             FROM dictionary_correction_requests
             {where_status}
-            GROUP BY issue_type
+            GROUP BY source
             """,
             params,
         )
-        counts = {issue_type: 0 for issue_type in sorted(CORRECTION_REQUEST_TYPES)}
-        for row in rows:
-            counts[str(row["issue_type"])] = int(row["count"])
-        return counts
+        return {str(row["source"]): int(row["count"]) for row in rows}
 
     def get_converted_correction_candidate_count(self) -> int:
         rows = self._fetchall(
@@ -1423,6 +1464,19 @@ class PilotStore:
         correction_issue_type_counts = self.get_correction_request_issue_type_counts(
             statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
         )
+        correction_source_counts = self.get_correction_request_source_counts(
+            statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+        )
+        inventory_handoff_count = correction_source_counts.get(
+            INVENTORY_HANDOFF_CORRECTION_SOURCE,
+            0,
+        )
+        inventory_handoff_issue_type_counts = (
+            self.get_correction_request_issue_type_counts(
+                statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
+            )
+        )
         miss_query_status_counts = self.get_miss_query_status_counts()
         manual_entry_status_counts = self.get_manual_entry_status_counts()
         alias_status_counts = self.get_alias_status_counts()
@@ -1461,6 +1515,7 @@ class PilotStore:
 
         attention_counts = {
             "openCorrectionRequests": open_correction_count,
+            "inventoryHandoffRequests": inventory_handoff_count,
             "candidateFoundAwaitingManualReview": unconverted_candidate_count,
             "manualEntriesInReview": pending_manual_count,
             "aliasesInReview": pending_alias_count,
@@ -1489,6 +1544,7 @@ class PilotStore:
 
         recommended_focus_target_labels = {
             "correction_requests": "Correction requests",
+            "inventory_handoff": "Inventory handoff queue",
             "converted_candidates": "Converted candidates",
             "manual_entries": "Manual entries",
             "needs_evidence": "Needs-evidence work",
@@ -1497,6 +1553,13 @@ class PilotStore:
             "reference_links": "Reference links",
         }
         recommended_focus_rules = (
+            (
+                "inventory_handoff",
+                "inventory_handoff",
+                "Review inventory workbook handoff items before converting candidates into manual entries.",
+                "Open the handoff queue, verify workbook names and seed-dictionary gaps against evidence, then convert, reject, or leave review-only.",
+                attention_counts["inventoryHandoffRequests"],
+            ),
             (
                 "correction_intake",
                 "correction_requests",
@@ -1606,6 +1669,8 @@ class PilotStore:
             "attentionCounts": attention_counts,
             "primaryQueueItemCounts": primary_queue_item_counts,
             "correctionIssueTypeCounts": correction_issue_type_counts,
+            "correctionSourceCounts": correction_source_counts,
+            "inventoryHandoffIssueTypeCounts": inventory_handoff_issue_type_counts,
             "recommendedFocus": recommended_focus,
             "signals": {
                 "hasCorrectionBacklog": open_correction_count > 0,
@@ -1703,6 +1768,9 @@ class PilotStore:
                 CORRECTION_REQUEST_REVIEW_STATUSES,
             ),
             "correctionRequestStatusCounts": self.get_correction_request_status_counts(),
+            "correctionRequestSourceCounts": self.get_correction_request_source_counts(
+                statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+            ),
             "convertedCorrectionCandidateCount": self.get_converted_correction_candidate_count(),
             "convertedCorrectionCandidates": self.list_converted_correction_candidates(
                 limit=limit,
@@ -1711,6 +1779,13 @@ class PilotStore:
             "topCorrectionRequests": self.list_correction_requests(
                 limit=limit,
                 statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                include_context=False,
+                exclude_converted_manual_entries=True,
+            ),
+            "inventoryHandoffCorrectionRequests": self.list_correction_requests(
+                limit=limit,
+                statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
                 include_context=False,
                 exclude_converted_manual_entries=True,
             ),

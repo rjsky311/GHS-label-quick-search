@@ -497,6 +497,105 @@ describe("PilotDashboardSidebar", () => {
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(5, "converted_candidates");
   });
 
+  it("routes inventory handoff focus to its review-only correction queue", () => {
+    const onOpenFocusTarget = jest.fn();
+    render(
+      <PilotTriagePanel
+        pilotTriage={{
+          openWorkItemCount: 2,
+          attentionCounts: {
+            openCorrectionRequests: 2,
+            inventoryHandoffRequests: 2,
+          },
+          recommendedFocus: [
+            {
+              key: "inventory_handoff",
+              targetKey: "inventory_handoff",
+              targetLabel: "Inventory handoff queue",
+              message:
+                "Review inventory workbook handoff items before converting candidates.",
+              nextAction: "Verify workbook candidates against evidence.",
+              count: 2,
+            },
+          ],
+        }}
+        observabilityCounters={{}}
+        onOpenFocusTarget={onOpenFocusTarget}
+      />,
+    );
+
+    expect(screen.getByTestId("pilot-triage-inventory-handoff")).toHaveTextContent(
+      "2",
+    );
+    expect(screen.getByTestId("pilot-triage-focus-inventory_handoff")).toHaveTextContent(
+      "pilot.triageFocus.inventory_handoff.message",
+    );
+
+    fireEvent.click(screen.getByTestId("pilot-triage-focus-inventory_handoff-open-target"));
+
+    expect(onOpenFocusTarget).toHaveBeenCalledWith("inventory_handoff");
+  });
+
+  it("separates inventory handoff correction requests from the general correction list", () => {
+    const inventoryRequest = {
+      id: 301,
+      issue_type: "missing-chinese-name",
+      cas_number: "84-65-1",
+      chemical_name: "Anthraquinone",
+      current_output: "Seed dictionary has no trusted Chinese name.",
+      expected_output: "Inventory candidate: 蒽醌",
+      source: "inventory-workbook-audit",
+      status: "open",
+      updated_at: "2026-04-18T15:00:00+00:00",
+    };
+    const props = {
+      ...baseProps,
+      report: {
+        ...baseProps.report,
+        dictionary: {
+          ...baseProps.report.dictionary,
+          inventoryHandoffCorrectionRequests: [inventoryRequest],
+          topCorrectionRequests: [
+            inventoryRequest,
+            ...baseProps.report.dictionary.topCorrectionRequests,
+          ],
+          pilotTriage: {
+            ...baseProps.report.dictionary.pilotTriage,
+            attentionCounts: {
+              ...baseProps.report.dictionary.pilotTriage.attentionCounts,
+              inventoryHandoffRequests: 1,
+            },
+            recommendedFocus: [
+              {
+                key: "inventory_handoff",
+                targetKey: "inventory_handoff",
+                targetLabel: "Inventory handoff queue",
+                message: "Review inventory handoff first.",
+                nextAction: "Verify evidence before approval.",
+                count: 1,
+              },
+            ],
+          },
+        },
+      },
+    };
+
+    render(<PilotDashboardSidebar {...props} />);
+
+    expect(screen.getByText("pilot.inventoryHandoffQueue")).toBeInTheDocument();
+    expect(screen.getAllByTestId("correction-request-row-301")).toHaveLength(1);
+    expect(screen.getByTestId("correction-request-source-301")).toHaveTextContent(
+      "pilot.inventoryHandoffSource",
+    );
+    expect(
+      screen.getByTestId("correction-request-source-review-only-301"),
+    ).toHaveTextContent("pilot.inventoryHandoffReviewOnly");
+    expect(screen.getByTestId("correction-request-expected-301")).toHaveTextContent(
+      "Inventory candidate",
+    );
+    expect(screen.getByTestId("correction-request-row-201")).toBeInTheDocument();
+  });
+
   it("scrolls to the related admin queue from the primary triage action", async () => {
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = jest.fn();

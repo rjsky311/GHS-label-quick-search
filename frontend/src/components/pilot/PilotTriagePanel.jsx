@@ -8,6 +8,7 @@ import { SectionHeading, SummaryCard } from "./PilotDashboardPrimitives";
 
 const TRIAGE_FOCUS_MESSAGE_KEYS = {
   correction_intake: "pilot.triageFocus.correction_intake.message",
+  inventory_handoff: "pilot.triageFocus.inventory_handoff.message",
   candidate_found: "pilot.triageFocus.candidate_found.message",
   manual_review: "pilot.triageFocus.manual_review.message",
   needs_evidence: "pilot.triageFocus.needs_evidence.message",
@@ -23,6 +24,7 @@ const TRIAGE_FOCUS_MESSAGE_KEYS = {
 
 const TRIAGE_FOCUS_NEXT_ACTION_KEYS = {
   correction_intake: "pilot.triageFocus.correction_intake.nextAction",
+  inventory_handoff: "pilot.triageFocus.inventory_handoff.nextAction",
   candidate_found: "pilot.triageFocus.candidate_found.nextAction",
   manual_review: "pilot.triageFocus.manual_review.nextAction",
   needs_evidence: "pilot.triageFocus.needs_evidence.nextAction",
@@ -213,6 +215,14 @@ export default function PilotTriagePanel({
           value={attentionCounts.openCorrectionRequests || 0}
           accent="text-emerald-800"
           testId="pilot-triage-open-corrections"
+        />
+        <SummaryCard
+          label={t("pilot.triageInventoryHandoff", {
+            defaultValue: "Inventory handoff",
+          })}
+          value={attentionCounts.inventoryHandoffRequests || 0}
+          accent="text-cyan-700"
+          testId="pilot-triage-inventory-handoff"
         />
         <SummaryCard
           label={t("pilot.triageUnresolvedSearches", {

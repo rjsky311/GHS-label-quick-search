@@ -520,6 +520,14 @@ Current mode:
   maintainer can continue curation without implying public data has changed.
   The ordinary open correction summary excludes those converted rows, keeping
   the overview focused on unconverted next-action items.
+- Completed current slice: inventory workbook handoff requests now surface as
+  their own admin triage focus instead of being hidden inside the generic
+  correction queue. The backend reports handoff source counts, issue-type
+  counts, and a dedicated review-only request list; the dashboard shows a
+  "Inventory handoff" summary card, a primary action when handoff items exist,
+  source badges, expected/current output context, and a separate handoff queue.
+  This keeps real lab roster evidence actionable without implying public
+  dictionary data has changed.
 - Completed current slice: correction candidate evidence payloads are now
   sanitized at the backend API boundary. Unknown fields are dropped, candidate
   evidence URLs must use `http` or `https`, text fields are capped, CAS values

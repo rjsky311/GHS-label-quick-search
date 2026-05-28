@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-from pilot_store import PilotStore
+from pilot_store import INVENTORY_HANDOFF_CORRECTION_SOURCE, PilotStore
 
 
 def make_store(tmp_path: Path) -> PilotStore:
@@ -324,6 +324,58 @@ def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
         assert focus_by_key["missing_chinese_names"]["count"] == 2
         assert focus_by_key["no_ghs_gaps"]["count"] == 1
         assert focus_by_key["source_conflicts"]["count"] == 1
+    finally:
+        store.close()
+
+
+def test_inventory_handoff_requests_surface_as_admin_triage_focus(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="84-65-1",
+            chemical_name="Anthraquinone",
+            current_output="Seed dictionary has no trusted Traditional Chinese name.",
+            expected_output="Inventory candidate: 蒽醌",
+            source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
+        )
+        store.record_correction_request(
+            issue_type="unresolved-search",
+            query_text="inventory row with unknown CAS",
+            current_output="Workbook row could not be resolved.",
+            expected_output="Needs maintainer review before import.",
+            source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
+        )
+        store.record_correction_request(
+            issue_type="source-conflict",
+            cas_number="67-64-1",
+            chemical_name="Acetone",
+            current_output="Public report differs from local SDS.",
+            expected_output="Review source conflict separately.",
+            source="public",
+        )
+
+        summary = store.get_dictionary_summary()
+        triage = summary["pilotTriage"]
+        counts = triage["attentionCounts"]
+        focus_by_key = {item["key"]: item for item in triage["recommendedFocus"]}
+
+        assert counts["openCorrectionRequests"] == 3
+        assert counts["inventoryHandoffRequests"] == 2
+        assert triage["primaryQueueItemCounts"]["openCorrectionRequests"] == 3
+        assert summary["correctionRequestSourceCounts"] == {
+            INVENTORY_HANDOFF_CORRECTION_SOURCE: 2,
+            "public": 1,
+        }
+        assert summary["inventoryHandoffCorrectionRequests"][0]["source"] == (
+            INVENTORY_HANDOFF_CORRECTION_SOURCE
+        )
+        assert len(summary["inventoryHandoffCorrectionRequests"]) == 2
+        assert triage["correctionSourceCounts"][INVENTORY_HANDOFF_CORRECTION_SOURCE] == 2
+        assert triage["inventoryHandoffIssueTypeCounts"]["missing-chinese-name"] == 1
+        assert triage["inventoryHandoffIssueTypeCounts"]["unresolved-search"] == 1
+        assert focus_by_key["inventory_handoff"]["targetKey"] == "inventory_handoff"
+        assert focus_by_key["inventory_handoff"]["count"] == 2
     finally:
         store.close()
 

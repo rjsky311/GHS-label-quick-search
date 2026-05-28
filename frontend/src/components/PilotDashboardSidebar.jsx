@@ -41,6 +41,7 @@ import { hasCjkText } from "@/utils/ghsText";
 
 const TRIAGE_TARGET_TABS = {
   correction_requests: "overview",
+  inventory_handoff: "overview",
   converted_candidates: "overview",
   manual_entries: "overview",
   needs_evidence: "overview",
@@ -48,6 +49,8 @@ const TRIAGE_TARGET_TABS = {
   alias_review: "overview",
   reference_links: "dictionary",
 };
+
+const INVENTORY_HANDOFF_SOURCE = "inventory-workbook-audit";
 
 const normalizeTriageTargetKey = (targetKey = "") =>
   String(targetKey).replace(/[^A-Za-z0-9_-]/g, "");
@@ -116,6 +119,20 @@ export default function PilotDashboardSidebar(props) {
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
   const topCorrectionRequests = dictionary.topCorrectionRequests || [];
+  const inventoryHandoffCorrectionRequests =
+    dictionary.inventoryHandoffCorrectionRequests?.length > 0
+      ? dictionary.inventoryHandoffCorrectionRequests
+      : topCorrectionRequests.filter(
+          (item) => item.source === INVENTORY_HANDOFF_SOURCE
+        );
+  const inventoryHandoffRequestIds = new Set(
+    inventoryHandoffCorrectionRequests.map((item) => item.id).filter(Boolean)
+  );
+  const generalTopCorrectionRequests = topCorrectionRequests.filter(
+    (item) =>
+      item.source !== INVENTORY_HANDOFF_SOURCE &&
+      !inventoryHandoffRequestIds.has(item.id)
+  );
   const convertedCorrectionCandidates =
     dictionary.convertedCorrectionCandidates || [];
   const recentManualEntries = useMemo(
@@ -784,19 +801,48 @@ export default function PilotDashboardSidebar(props) {
                   saving={saving}
                 />
               </div>
-              <div
-                data-triage-targets="correction_requests correction_intake missing_chinese_names no_ghs_gaps source_conflicts needs_evidence"
-                tabIndex={-1}
-              >
-                <TopCorrectionRequestsSection
-                  items={topCorrectionRequests}
-                  saving={saving}
-                  correctionReviewDrafts={correctionReviewDrafts}
-                  setCorrectionReviewDrafts={setCorrectionReviewDrafts}
-                  onStatusUpdate={handleCorrectionRequestStatusUpdate}
-                  onCreateManualEntry={handleCreateManualEntryFromCandidate}
-                />
-              </div>
+              {inventoryHandoffCorrectionRequests.length > 0 ? (
+                <div
+                  data-triage-targets="inventory_handoff correction_requests correction_intake missing_chinese_names no_ghs_gaps source_conflicts needs_evidence"
+                  tabIndex={-1}
+                >
+                  <TopCorrectionRequestsSection
+                    items={inventoryHandoffCorrectionRequests}
+                    saving={saving}
+                    correctionReviewDrafts={correctionReviewDrafts}
+                    setCorrectionReviewDrafts={setCorrectionReviewDrafts}
+                    onStatusUpdate={handleCorrectionRequestStatusUpdate}
+                    onCreateManualEntry={handleCreateManualEntryFromCandidate}
+                    title={t("pilot.inventoryHandoffQueue", {
+                      defaultValue: "Inventory handoff queue",
+                    })}
+                    subtitle={t("pilot.inventoryHandoffQueueHint", {
+                      defaultValue:
+                        "Workbook candidates and seed-dictionary gaps imported for review only. Verify evidence before converting anything into public dictionary data.",
+                    })}
+                    emptyText={t("pilot.noInventoryHandoffRequests", {
+                      defaultValue: "No inventory handoff items are waiting.",
+                    })}
+                    sectionClassName="rounded-lg border border-cyan-200 bg-cyan-50 p-4"
+                  />
+                </div>
+              ) : null}
+              {generalTopCorrectionRequests.length > 0 ||
+              inventoryHandoffCorrectionRequests.length === 0 ? (
+                <div
+                  data-triage-targets="correction_requests correction_intake missing_chinese_names no_ghs_gaps source_conflicts needs_evidence"
+                  tabIndex={-1}
+                >
+                  <TopCorrectionRequestsSection
+                    items={generalTopCorrectionRequests}
+                    saving={saving}
+                    correctionReviewDrafts={correctionReviewDrafts}
+                    setCorrectionReviewDrafts={setCorrectionReviewDrafts}
+                    onStatusUpdate={handleCorrectionRequestStatusUpdate}
+                    onCreateManualEntry={handleCreateManualEntryFromCandidate}
+                  />
+                </div>
+              ) : null}
 
               <section
                 className="rounded-lg border border-slate-200 bg-white p-4"
