@@ -15,7 +15,7 @@ const defaultStepTimeoutMs = Number.parseInt(
 );
 const stepTimeouts = {
   "production-smoke": Number.parseInt(
-    process.env.PRODUCTION_PRODUCT_QA_SMOKE_TIMEOUT_MS || "3600000",
+    process.env.PRODUCTION_PRODUCT_QA_SMOKE_TIMEOUT_MS || "7200000",
     10,
   ),
   "production-prepared": Number.parseInt(

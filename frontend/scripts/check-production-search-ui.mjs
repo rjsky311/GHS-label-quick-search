@@ -44,6 +44,10 @@ const APP_SHELL_TIMEOUT_MS = Number.parseInt(
   env.PRODUCTION_SEARCH_UI_APP_SHELL_TIMEOUT_MS || "60000",
   10,
 );
+const BROWSER_CLOSE_TIMEOUT_MS = Number.parseInt(
+  env.PRODUCTION_SEARCH_UI_BROWSER_CLOSE_TIMEOUT_MS || "10000",
+  10,
+);
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 
@@ -166,6 +170,31 @@ const unresolvedSearchFixture = {
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const closeBrowserWithTimeout = async (browserInstance) => {
+  if (!browserInstance) return;
+  let closeTimedOut = false;
+  await Promise.race([
+    browserInstance.close(),
+    sleep(BROWSER_CLOSE_TIMEOUT_MS).then(() => {
+      closeTimedOut = true;
+    }),
+  ]);
+  if (closeTimedOut) {
+    const browserProcess = browserInstance.process?.();
+    browserProcess?.kill?.("SIGKILL");
+    console.warn(
+      JSON.stringify(
+        {
+          event: "production-search-ui-browser-close-timeout",
+          timeoutMs: BROWSER_CLOSE_TIMEOUT_MS,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+};
 
 const parseIssueUrl = (href) => {
   try {
@@ -2755,5 +2784,5 @@ try {
   console.error(report.error);
   process.exitCode = 1;
 } finally {
-  await browser?.close();
+  await closeBrowserWithTimeout(browser);
 }
