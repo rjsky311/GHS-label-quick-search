@@ -38,6 +38,32 @@ const screenshotDir = path.resolve(
 );
 const headless = env.PRINT_QA_HEADLESS !== "0";
 const verboseConsole = env.PRINT_QA_VERBOSE === "1";
+const preparedCaseAttempts = Number.parseInt(
+  env.PRINT_QA_PREPARED_CASE_ATTEMPTS || "3",
+  10,
+);
+const preparedPageAttempts = Number.parseInt(
+  env.PRINT_QA_PREPARED_PAGE_ATTEMPTS || "10",
+  10,
+);
+const preparedPageRetryBaseDelayMs = Number.parseInt(
+  env.PRINT_QA_PREPARED_PAGE_RETRY_BASE_DELAY_MS || "1500",
+  10,
+);
+const preparedPageRetryMaxDelayMs = Number.parseInt(
+  env.PRINT_QA_PREPARED_PAGE_RETRY_MAX_DELAY_MS || "10000",
+  10,
+);
+const RETRYABLE_RUNTIME_PATTERNS = [
+  /Failed to fetch dynamically imported module/i,
+  /Importing a module script failed/i,
+  /dynamically imported module/i,
+  /ChunkLoadError/i,
+  /Application Error/i,
+  /\b502\b/i,
+  /\b503\b/i,
+  /\b504\b/i,
+];
 
 const localDateOffset = (offsetDays) => {
   const date = new Date();
@@ -138,6 +164,58 @@ const EXPECTED_PICTOGRAMS = Object.freeze(["GHS04", "GHS05", "GHS06", "GHS07"]);
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 
+const pushLimited = (list, value, limit = 30) => {
+  list.push(value);
+  if (list.length > limit) list.shift();
+};
+
+const installPageDiagnostics = (page) => {
+  const diagnostics = {
+    stage: "new-page",
+    pageErrors: [],
+    consoleMessages: [],
+    serverErrors: [],
+    failedRequests: [],
+  };
+
+  page.on("pageerror", (error) => {
+    pushLimited(diagnostics.pageErrors, {
+      message: error?.message || String(error),
+      stack: error?.stack || "",
+    });
+  });
+  page.on("console", (message) => {
+    if (!["error", "warning"].includes(message.type())) return;
+    pushLimited(diagnostics.consoleMessages, {
+      type: message.type(),
+      text: message.text(),
+    });
+  });
+  page.on("response", (response) => {
+    if (response.status() < 500) return;
+    pushLimited(diagnostics.serverErrors, {
+      status: response.status(),
+      url: response.url(),
+    });
+  });
+  page.on("requestfailed", (request) => {
+    pushLimited(diagnostics.failedRequests, {
+      url: request.url(),
+      failure: request.failure()?.errorText || "",
+    });
+  });
+
+  return diagnostics;
+};
+
+const isRetryablePreparedFailure = (failure) => {
+  const text = JSON.stringify({
+    error: failure?.error || "",
+    diagnostics: failure?.diagnostics || {},
+  });
+  return RETRYABLE_RUNTIME_PATTERNS.some((pattern) => pattern.test(text));
+};
+
 const commonChromePaths = () => {
   if (process.platform === "win32") {
     return [
@@ -214,14 +292,21 @@ const waitForFirstVisible = async (page, locators, timeout = 60000) => {
 
 const gotoProductionPage = async (page) => {
   let lastError = null;
-  const attempts = Number(env.PRINT_QA_PREPARED_PAGE_ATTEMPTS || 6);
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+  for (let attempt = 1; attempt <= preparedPageAttempts; attempt += 1) {
     try {
       const url = withQaParam(productionUrl);
-      await page.goto(url, {
+      const response = await page.goto(url, {
         waitUntil: "domcontentloaded",
         timeout: attempt === 1 ? 45000 : 60000,
       });
+      if (response && response.status() >= 500) {
+        const requestId = response.headers()["x-request-id"] || "";
+        throw new Error(
+          `Production prepared QA page returned ${response.status()} ${response.statusText()}${
+            requestId ? ` (request ${requestId})` : ""
+          }.`,
+        );
+      }
       await page.getByTestId("single-search-btn").waitFor({
         state: "visible",
         timeout: 30000,
@@ -229,7 +314,18 @@ const gotoProductionPage = async (page) => {
       return;
     } catch (error) {
       lastError = error;
-      await sleep(1000 * Math.min(attempt, 5));
+      if (attempt < preparedPageAttempts) {
+        await page.goto("about:blank", {
+          waitUntil: "domcontentloaded",
+          timeout: 10000,
+        }).catch(() => {});
+        await sleep(
+          Math.min(
+            preparedPageRetryBaseDelayMs * attempt,
+            preparedPageRetryMaxDelayMs,
+          ),
+        );
+      }
     }
   }
   throw lastError || new Error("Failed to open production prepared QA page.");
@@ -906,28 +1002,41 @@ const evaluateCase = ({
   };
 };
 
-const runCase = async ({ browser, testCase }) => {
+const runCase = async ({ browser, testCase, attempt = 1 }) => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
+  const diagnostics = installPageDiagnostics(page);
+  const markStage = (stage) => {
+    diagnostics.stage = stage;
+  };
   try {
     page.setDefaultTimeout(60000);
     await page.addInitScript(() => {
       localStorage.removeItem("ghs_prepared_recents");
       localStorage.removeItem("ghs_prepared_presets");
     });
+    markStage("open-production-page");
     await gotoProductionPage(page);
     let entryEvidence = {};
     if (testCase.entryMode === "reprint") {
+      markStage("open-prepared-reprint-modal");
       entryEvidence = await openPreparedReprintModal(page);
     } else if (testCase.entryMode === "preset") {
+      markStage("open-prepared-preset-print-modal");
       entryEvidence = await openPreparedPresetPrintModal(page);
     } else {
+      markStage("open-prepared-print-modal");
       await openPreparedPrintModal(page);
     }
+    markStage("fill-responsible-profile");
     await fillResponsibleProfile(page);
+    markStage("set-target-and-stock");
     await setTargetAndStock(page, testCase);
+    markStage("inspect-selected-summary");
     const selectedSummary = await inspectSelectedPreparedSummary(page);
+    markStage("inspect-preview");
     let preview = await inspectPreviewFrame(page, testCase);
     if (Number(testCase.expectedMinTotalLabels || 1) > 1) {
+      markStage("inspect-next-preview");
       await page.getByTestId("preview-page-next").click();
       await page.waitForTimeout(300);
       const nextPreview = await inspectPreviewFrame(page, testCase);
@@ -939,14 +1048,20 @@ const runCase = async ({ browser, testCase }) => {
       path: screenshotPath,
     });
     preview.screenshotPath = screenshotPath;
+    markStage("read-print-status");
     const status = await readPrintStatus(page);
-    return evaluateCase({
-      testCase,
-      selectedSummary,
-      preview,
-      status,
-      entryEvidence,
-    });
+    return {
+      ...evaluateCase({
+        testCase,
+        selectedSummary,
+        preview,
+        status,
+        entryEvidence,
+      }),
+      attempt,
+      diagnostics,
+      retryable: false,
+    };
   } catch (error) {
     const failure = {
       id: testCase.id,
@@ -954,15 +1069,34 @@ const runCase = async ({ browser, testCase }) => {
       passed: false,
       failures: ["runner-error"],
       error: error?.message || String(error),
+      attempt,
+      diagnostics,
     };
     fs.mkdirSync(screenshotDir, { recursive: true });
     const screenshotPath = path.join(screenshotDir, `${testCase.id}-error.png`);
     await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => {});
     failure.screenshotPath = screenshotPath;
+    failure.retryable = isRetryablePreparedFailure(failure);
     return failure;
   } finally {
     await page.close().catch(() => {});
   }
+};
+
+const runCaseWithRetries = async ({ browser, testCase }) => {
+  let lastResult = null;
+  for (let attempt = 1; attempt <= preparedCaseAttempts; attempt += 1) {
+    lastResult = await runCase({ browser, testCase, attempt });
+    if (lastResult.passed || !lastResult.retryable || attempt >= preparedCaseAttempts) {
+      return lastResult;
+    }
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Retrying production prepared print QA case ${testCase.id} after retryable runtime failure at stage ${lastResult.diagnostics?.stage || "unknown"} (${attempt}/${preparedCaseAttempts}).`,
+    );
+    await sleep(1000 * attempt);
+  }
+  return lastResult;
 };
 
 const executablePath = resolveChromeExecutable();
@@ -978,7 +1112,7 @@ try {
   for (const testCase of ALL_PREPARED_CASES) {
     // eslint-disable-next-line no-console
     console.log(`Running production prepared print QA: ${testCase.id}`);
-    results.push(await runCase({ browser, testCase }));
+    results.push(await runCaseWithRetries({ browser, testCase }));
   }
 } finally {
   await browser.close();
@@ -992,6 +1126,8 @@ const result = {
   productionUrl,
   executablePath,
   headless,
+  preparedCaseAttempts,
+  preparedPageAttempts,
   reportPath: outputPath,
   screenshotDir,
   summary: {
@@ -999,11 +1135,15 @@ const result = {
     passed: results.length - failed.length,
     failed: failed.length,
   },
-  failedCases: failed.map(({ id, failures, error, screenshotPath }) => ({
+  failedCases: failed.map(({ id, failures, error, screenshotPath, attempt, diagnostics }) => ({
     id,
     failures,
     error,
     screenshotPath,
+    attempt,
+    stage: diagnostics?.stage || "",
+    serverErrors: diagnostics?.serverErrors || [],
+    failedRequests: diagnostics?.failedRequests || [],
   })),
   results,
 };

@@ -1,5 +1,4 @@
 import {
-  lazy,
   Suspense,
   useState,
   useRef,
@@ -45,6 +44,7 @@ import {
   PILOT_ADMIN_ENABLED,
 } from "@/constants/admin";
 import { recordDictionaryMissQuery } from "@/utils/workspaceDocuments";
+import { lazyWithRetry } from "@/utils/lazyWithRetry";
 
 // Components
 import AdminAccessDialog from "@/components/AdminAccessDialog";
@@ -57,17 +57,42 @@ import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import Footer from "@/components/Footer";
 import SkeletonTable from "@/components/SkeletonTable";
 
-const ResultsTable = lazy(() => import("@/components/ResultsTable"));
-const FavoritesSidebar = lazy(() => import("@/components/FavoritesSidebar"));
-const HistorySidebar = lazy(() => import("@/components/HistorySidebar"));
-const PilotDashboardSidebar = lazy(() => import("@/components/PilotDashboardSidebar"));
-const PreparedSidebar = lazy(() => import("@/components/PreparedSidebar"));
-const DetailModal = lazy(() => import("@/components/DetailModal"));
-const DataCorrectionDialog = lazy(() => import("@/components/DataCorrectionDialog"));
-const ComparisonModal = lazy(() => import("@/components/ComparisonModal"));
-const LabelPrintModal = lazy(() => import("@/components/LabelPrintModal"));
-const PrepareSolutionModal = lazy(() => import("@/components/PrepareSolutionModal"));
-const ExportPreviewModal = lazy(() => import("@/components/ExportPreviewModal"));
+const ResultsTable = lazyWithRetry(() => import("@/components/ResultsTable"), {
+  chunkName: "ResultsTable",
+});
+const FavoritesSidebar = lazyWithRetry(() => import("@/components/FavoritesSidebar"), {
+  chunkName: "FavoritesSidebar",
+});
+const HistorySidebar = lazyWithRetry(() => import("@/components/HistorySidebar"), {
+  chunkName: "HistorySidebar",
+});
+const PilotDashboardSidebar = lazyWithRetry(
+  () => import("@/components/PilotDashboardSidebar"),
+  { chunkName: "PilotDashboardSidebar" },
+);
+const PreparedSidebar = lazyWithRetry(() => import("@/components/PreparedSidebar"), {
+  chunkName: "PreparedSidebar",
+});
+const DetailModal = lazyWithRetry(() => import("@/components/DetailModal"), {
+  chunkName: "DetailModal",
+});
+const DataCorrectionDialog = lazyWithRetry(
+  () => import("@/components/DataCorrectionDialog"),
+  { chunkName: "DataCorrectionDialog" },
+);
+const ComparisonModal = lazyWithRetry(() => import("@/components/ComparisonModal"), {
+  chunkName: "ComparisonModal",
+});
+const LabelPrintModal = lazyWithRetry(() => import("@/components/LabelPrintModal"), {
+  chunkName: "LabelPrintModal",
+});
+const PrepareSolutionModal = lazyWithRetry(
+  () => import("@/components/PrepareSolutionModal"),
+  { chunkName: "PrepareSolutionModal" },
+);
+const ExportPreviewModal = lazyWithRetry(() => import("@/components/ExportPreviewModal"), {
+  chunkName: "ExportPreviewModal",
+});
 
 function DeferredOverlayFallback() {
   const { t } = useTranslation();

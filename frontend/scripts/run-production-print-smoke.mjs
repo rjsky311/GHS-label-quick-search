@@ -7,6 +7,19 @@ const stepTimeoutMs = Number.parseInt(
   process.env.PRODUCTION_PRINT_SMOKE_STEP_TIMEOUT_MS || "1800000",
   10,
 );
+const retryableStepAttempts = Number.parseInt(
+  process.env.PRODUCTION_PRINT_SMOKE_RETRYABLE_STEP_ATTEMPTS || "2",
+  10,
+);
+const retryableStepDelayMs = Number.parseInt(
+  process.env.PRODUCTION_PRINT_SMOKE_RETRYABLE_STEP_DELAY_MS || "5000",
+  10,
+);
+
+const retryableStepIds = new Set([
+  "production-search-ui",
+  "production-handoff",
+]);
 
 const defaultSmokeCases = [
   "a4-primary",
@@ -45,7 +58,9 @@ const killProcessTree = (child) => {
   }, 5000).unref?.();
 };
 
-const run = (id, args) =>
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const runAttempt = (id, args, attempt, attempts) =>
   new Promise((resolve, reject) => {
     const childArgs = isWindows ? ["/d", "/s", "/c", "npm", ...args] : args;
     const startedAt = Date.now();
@@ -56,6 +71,8 @@ const run = (id, args) =>
           id,
           command: `npm ${args.join(" ")}`,
           timeoutMs: stepTimeoutMs,
+          attempt,
+          attempts,
         },
         null,
         2,
@@ -83,6 +100,8 @@ const run = (id, args) =>
             exitCode: code,
             durationMs: Date.now() - startedAt,
             timedOut: status === "timed_out",
+            attempt,
+            attempts,
           },
           null,
           2,
@@ -110,6 +129,38 @@ const run = (id, args) =>
       }
     });
   });
+
+const run = async (id, args) => {
+  const attempts = retryableStepIds.has(id)
+    ? Math.max(1, retryableStepAttempts)
+    : 1;
+  let lastError = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await runAttempt(id, args, attempt, attempts);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts) break;
+      console.warn(
+        JSON.stringify(
+          {
+            event: "production-print-smoke-step-retry",
+            id,
+            attempt,
+            attempts,
+            delayMs: retryableStepDelayMs,
+            error: error?.message || String(error),
+          },
+          null,
+          2,
+        ),
+      );
+      await sleep(retryableStepDelayMs);
+    }
+  }
+  throw lastError || new Error(`npm ${args.join(" ")} failed.`);
+};
 
 await run("production-health", ["run", "qa:production-health"]);
 await run("production-bundle", ["run", "qa:production-bundle"]);

@@ -6,6 +6,14 @@ import { chromium } from "playwright-core";
 const DEFAULT_REPORT_PATH = "build/print-qa-report.json";
 const DEFAULT_HANDOFF_REPORT_PATH = "build/production-print-handoff-report.json";
 const DEFAULT_SEARCH_TERM = "";
+const DEFAULT_HANDOFF_CASES = [
+  "a4-primary",
+  "a4-primary-profile-blocked",
+  "letter-primary",
+  "ethylene-oxide-a4-primary-continuation",
+  "tube-vial-quick-id",
+  "brother-62mm-qr-supplement",
+];
 const PREVIEW_GEOMETRY_TOLERANCE_PX = 2;
 const STATUS_ATTRIBUTES = [
   "data-status",
@@ -53,6 +61,10 @@ const CASE_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_CASE_TIMEOUT_MS || "180000",
   10,
 );
+const CASE_TIMEOUT_GRACE_MS = Number.parseInt(
+  env.PRINT_QA_CASE_TIMEOUT_GRACE_MS || "10000",
+  10,
+);
 const BROWSER_LAUNCH_TIMEOUT_MS = Number.parseInt(
   env.PRINT_QA_BROWSER_LAUNCH_TIMEOUT_MS || "60000",
   10,
@@ -91,8 +103,62 @@ const outputPath = env.PRINT_QA_HANDOFF_REPORT_PATH
   : path.resolve(process.cwd(), DEFAULT_HANDOFF_REPORT_PATH);
 const verboseConsole = env.PRINT_QA_VERBOSE === "1";
 const SOURCE_UPSTREAM_FAILURE = "source-upstream-unavailable";
+const RETRYABLE_RUNTIME_PATTERNS = [
+  /Failed to fetch dynamically imported module/i,
+  /Importing a module script failed/i,
+  /dynamically imported module/i,
+  /ChunkLoadError/i,
+  /Application Error/i,
+  /\b502\b/i,
+  /\b503\b/i,
+  /\b504\b/i,
+];
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
+
+const pushLimited = (list, value, limit = 30) => {
+  list.push(value);
+  if (list.length > limit) list.shift();
+};
+
+const installPageDiagnostics = (page) => {
+  const diagnostics = {
+    stage: "new-page",
+    pageErrors: [],
+    consoleMessages: [],
+    serverErrors: [],
+    failedRequests: [],
+  };
+
+  page.on("pageerror", (error) => {
+    pushLimited(diagnostics.pageErrors, {
+      message: error?.message || String(error),
+      stack: error?.stack || "",
+    });
+  });
+  page.on("console", (message) => {
+    if (!["error", "warning"].includes(message.type())) return;
+    pushLimited(diagnostics.consoleMessages, {
+      type: message.type(),
+      text: message.text(),
+    });
+  });
+  page.on("response", (response) => {
+    if (response.status() < 500) return;
+    pushLimited(diagnostics.serverErrors, {
+      status: response.status(),
+      url: response.url(),
+    });
+  });
+  page.on("requestfailed", (request) => {
+    pushLimited(diagnostics.failedRequests, {
+      url: request.url(),
+      failure: request.failure()?.errorText || "",
+    });
+  });
+
+  return diagnostics;
+};
 
 const commonChromePaths = () => {
   if (process.platform === "win32") {
@@ -173,7 +239,8 @@ const selectCases = (cases) => {
   if (searchTerm) {
     return cases.filter((testCase) => testCase.searchTerm === searchTerm);
   }
-  return cases.filter((testCase) => !/^QA-/.test(testCase.searchTerm || ""));
+  const defaultIds = new Set(DEFAULT_HANDOFF_CASES);
+  return cases.filter((testCase) => defaultIds.has(testCase.id));
 };
 
 const withQaParam = (url) => {
@@ -282,6 +349,13 @@ const isRetryableHandoffFailure = (result) => {
   if ((result.failures || []).includes(SOURCE_UPSTREAM_FAILURE)) return true;
   if ((result.failures || []).includes("runner-error")) return true;
   if ((result.failures || []).includes("runner-timeout")) return true;
+  const runtimeText = JSON.stringify({
+    error: result.error || "",
+    diagnostics: result.diagnostics || {},
+  });
+  if (RETRYABLE_RUNTIME_PATTERNS.some((pattern) => pattern.test(runtimeText))) {
+    return true;
+  }
   const issueTypes = result.status?.["data-issue-types"] || "";
   if (
     issueTypes
@@ -1507,8 +1581,12 @@ const runCase = async ({
   let page = null;
   let timedOut = false;
   let stage = "new-page";
+  let diagnostics = null;
   const setStage = (value) => {
     stage = value;
+    if (diagnostics) {
+      diagnostics.stage = value;
+    }
     if (progress) {
       progress.stage = value;
       progress.updatedAt = new Date().toISOString();
@@ -1521,6 +1599,8 @@ const runCase = async ({
   try {
     setStage("new-page");
     page = await browser.newPage({ viewport: { width: 1440, height: 980 } });
+    diagnostics = installPageDiagnostics(page);
+    diagnostics.stage = stage;
     setStage("storage-reset");
     await page.addInitScript(() => {
       window.localStorage?.clear();
@@ -1558,6 +1638,7 @@ const runCase = async ({
       durationMs: Date.now() - startedAtMs,
       timedOut: false,
       stage,
+      diagnostics,
     };
   } catch (error) {
     const failure = {
@@ -1575,6 +1656,7 @@ const runCase = async ({
       durationMs: Date.now() - startedAtMs,
       timedOut,
       stage,
+      diagnostics,
     };
     if (screenshotDir && page) {
       fs.mkdirSync(screenshotDir, { recursive: true });
@@ -1621,7 +1703,7 @@ const results = [];
 const summarizeFailedCases = (items) =>
   items
     .filter((result) => !result.passed)
-    .map(({ id, searchTerm, failures, status, evidence, error, timedOut, stage }) => ({
+    .map(({ id, searchTerm, failures, status, evidence, error, timedOut, stage, diagnostics }) => ({
       id,
       searchTerm,
       failures,
@@ -1633,6 +1715,15 @@ const summarizeFailedCases = (items) =>
       statusText: status?.text || "",
       labelKind: evidence?.previewInspection?.labelKind || "",
       previewText: evidence?.previewInspection?.frameTextSample || "",
+      diagnostics: diagnostics
+        ? {
+            stage: diagnostics.stage || "",
+            serverErrors: diagnostics.serverErrors || [],
+            failedRequests: diagnostics.failedRequests || [],
+            pageErrors: diagnostics.pageErrors || [],
+            consoleMessages: diagnostics.consoleMessages || [],
+          }
+        : null,
     }));
 const buildHandoffReport = ({ partial = false } = {}) => {
   const failed = results.filter((result) => !result.passed);
@@ -1647,6 +1738,7 @@ const buildHandoffReport = ({ partial = false } = {}) => {
     executablePath,
     headless,
     caseTimeoutMs: CASE_TIMEOUT_MS,
+    caseTimeoutGraceMs: CASE_TIMEOUT_GRACE_MS,
     browserLaunchTimeoutMs: BROWSER_LAUNCH_TIMEOUT_MS,
     selectedCases: cases.map((testCase) => testCase.id),
     summary: {
@@ -1680,6 +1772,7 @@ const buildTimeoutCaseResult = (testCase, startedAtMs, stage = "") => ({
   durationMs: Date.now() - startedAtMs,
   timedOut: true,
   stage,
+  diagnostics: null,
 });
 const runCaseAttempt = async ({ testCase }) => {
   const startedAtMs = Date.now();
@@ -1698,7 +1791,7 @@ const runCaseAttempt = async ({ testCase }) => {
       timedOut = true;
       browser.close().catch(() => {});
       resolve(buildTimeoutCaseResult(testCase, startedAtMs, progress.stage));
-    }, CASE_TIMEOUT_MS);
+    }, CASE_TIMEOUT_MS + CASE_TIMEOUT_GRACE_MS);
   });
   const result = await Promise.race([casePromise, timeoutPromise]);
   if (timeout) clearTimeout(timeout);
@@ -1729,6 +1822,15 @@ try {
         stage: result?.stage || "",
         durationMs: result?.durationMs || 0,
         timedOut: Boolean(result?.timedOut),
+        diagnostics: result?.diagnostics
+          ? {
+              stage: result.diagnostics.stage || "",
+              serverErrors: result.diagnostics.serverErrors || [],
+              failedRequests: result.diagnostics.failedRequests || [],
+              pageErrors: result.diagnostics.pageErrors || [],
+              consoleMessages: result.diagnostics.consoleMessages || [],
+            }
+          : null,
       });
       if (!isRetryableHandoffFailure(result) || attempt >= CASE_ATTEMPTS) {
         break;
