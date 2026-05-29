@@ -9,10 +9,28 @@ const productReportPath = path.resolve(
   process.env.PRODUCTION_PRODUCT_QA_REPORT_PATH ||
     "build/production-product-qa-report.json",
 );
-const stepTimeoutMs = Number.parseInt(
+const defaultStepTimeoutMs = Number.parseInt(
   process.env.PRODUCTION_PRODUCT_QA_STEP_TIMEOUT_MS || "1800000",
   10,
 );
+const stepTimeouts = {
+  "production-smoke": Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_SMOKE_TIMEOUT_MS || "3600000",
+    10,
+  ),
+  "production-prepared": Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_PREPARED_TIMEOUT_MS || "1200000",
+    10,
+  ),
+  "production-batch-print": Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_BATCH_TIMEOUT_MS || "1200000",
+    10,
+  ),
+  "production-summary": Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_SUMMARY_TIMEOUT_MS || "120000",
+    10,
+  ),
+};
 const steps = [];
 
 const env = {
@@ -61,6 +79,8 @@ const killProcessTree = (child) => {
   }, 5000).unref?.();
 };
 
+const timeoutForStep = (id) => stepTimeouts[id] || defaultStepTimeoutMs;
+
 const writeProductReport = ({ ok, failure = null }) => {
   const summaryPath = path.resolve(
     process.cwd(),
@@ -72,7 +92,8 @@ const writeProductReport = ({ ok, failure = null }) => {
     generatedAt: new Date().toISOString(),
     reportPath: productReportPath,
     summaryReportPath: summaryPath,
-    stepTimeoutMs,
+    defaultStepTimeoutMs,
+    stepTimeouts,
     steps,
     failure,
     productBlocks: summary.productBlocks || [],
@@ -88,9 +109,11 @@ const run = (id, args, extraEnv = {}) =>
   new Promise((resolve, reject) => {
     const childArgs = isWindows ? ["/d", "/s", "/c", "npm", ...args] : args;
     const startedAt = new Date();
+    const stepTimeoutMs = timeoutForStep(id);
     const step = {
       id,
       command: `npm ${args.join(" ")}`,
+      timeoutMs: stepTimeoutMs,
       startedAt: startedAt.toISOString(),
       finishedAt: null,
       durationMs: null,

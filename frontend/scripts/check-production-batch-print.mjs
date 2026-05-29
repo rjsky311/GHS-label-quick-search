@@ -11,6 +11,22 @@ const MODAL_TIMEOUT_MS = Number.parseInt(
   process.env.BATCH_PRINT_QA_MODAL_TIMEOUT_MS || "30000",
   10,
 );
+const PAGE_ATTEMPTS = Number.parseInt(
+  process.env.BATCH_PRINT_QA_PAGE_ATTEMPTS || "8",
+  10,
+);
+const PAGE_RETRY_DELAY_MS = Number.parseInt(
+  process.env.BATCH_PRINT_QA_PAGE_RETRY_DELAY_MS || "2500",
+  10,
+);
+const PAGE_NAVIGATION_TIMEOUT_MS = Number.parseInt(
+  process.env.BATCH_PRINT_QA_PAGE_NAVIGATION_TIMEOUT_MS || "60000",
+  10,
+);
+const APP_SHELL_TIMEOUT_MS = Number.parseInt(
+  process.env.BATCH_PRINT_QA_APP_SHELL_TIMEOUT_MS || "60000",
+  10,
+);
 
 const args = process.argv.slice(2);
 
@@ -376,9 +392,46 @@ const withQaParam = (url) => {
   return nextUrl.toString();
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const writeJson = (targetPath, payload) => {
   fs.mkdirSync(path.dirname(targetPath), { recursive: true });
   fs.writeFileSync(targetPath, `${JSON.stringify(payload, null, 2)}\n`);
+};
+
+const gotoProductionPage = async (page, productionUrl) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= PAGE_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await page.goto(withQaParam(productionUrl), {
+        waitUntil: "domcontentloaded",
+        timeout: PAGE_NAVIGATION_TIMEOUT_MS,
+      });
+      if (response && response.status() >= 500) {
+        const requestId = response.headers()["x-request-id"] || "";
+        throw new Error(
+          `Production batch QA page returned ${response.status()} ${response.statusText()}${
+            requestId ? ` (request ${requestId})` : ""
+          }.`,
+        );
+      }
+      await page.getByTestId("batch-search-tab").waitFor({
+        state: "visible",
+        timeout: APP_SHELL_TIMEOUT_MS,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < PAGE_ATTEMPTS) {
+        await page.goto("about:blank", {
+          waitUntil: "domcontentloaded",
+          timeout: 10000,
+        }).catch(() => {});
+        await sleep(PAGE_RETRY_DELAY_MS * attempt);
+      }
+    }
+  }
+  throw lastError || new Error("Failed to open production batch QA page.");
 };
 
 const run = async () => {
@@ -418,10 +471,7 @@ const run = async () => {
   const failures = [];
 
   try {
-    await page.goto(withQaParam(productionUrl), {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
+    await gotoProductionPage(page, productionUrl);
     await page.getByTestId("batch-search-tab").click();
     await page.getByTestId("batch-cas-input").fill(casList.join("\n"));
     const batchInputState = await page.evaluate(() => {
