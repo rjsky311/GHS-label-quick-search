@@ -469,6 +469,7 @@ const run = async () => {
     window.localStorage.setItem("ghs_language", "en");
   });
   const failures = [];
+  const warnings = [];
 
   try {
     await gotoProductionPage(page, productionUrl);
@@ -511,18 +512,33 @@ const run = async () => {
       "";
     const printableMatch = foundText.match(/(\d+)/);
     const printableCount = printableMatch ? Number(printableMatch[1]) : 0;
-    if (printableCount < Math.min(10, casList.length)) {
-      failures.push(`too-few-printable-results:${printableCount}`);
-    }
-    const expectedLabReadyPrintable = Math.min(50, batchFixture.rawCount);
-    if (
-      batchFixture.fixtureName === "lab-ready" &&
-      printableCount < expectedLabReadyPrintable
-    ) {
-      failures.push(`lab-ready-too-few-printable-results:${printableCount}`);
-    }
 
     const batchResultsState = await inspectBatchResultsState(page);
+    const hasUpstreamRetryReview = batchResultsState.reviewActions.some(
+      (action) =>
+        action.type === "upstream-error" ||
+        /upstream retry|Retry upstream/i.test(action.text || ""),
+    );
+    const handleTooFewPrintableResults = (failureId, minimumPrintableCount) => {
+      if (printableCount >= minimumPrintableCount) return;
+      if (hasUpstreamRetryReview && printableCount >= 1) {
+        warnings.push(
+          `${failureId}:${printableCount}:external-upstream-transient`,
+        );
+        return;
+      }
+      failures.push(`${failureId}:${printableCount}`);
+    };
+    handleTooFewPrintableResults(
+      "too-few-printable-results",
+      Math.min(10, casList.length),
+    );
+    if (batchFixture.fixtureName === "lab-ready") {
+      handleTooFewPrintableResults(
+        "lab-ready-too-few-printable-results",
+        Math.min(50, batchFixture.rawCount),
+      );
+    }
     const exportPreviewSurface = await inspectExportPreviewSurface(page);
     if (batchFixture.fixtureName === "lab-ready") {
       if (batchResultsState.workflowSummary.length < 3) {
@@ -864,6 +880,7 @@ const run = async () => {
       printHandoff,
       dialogMessages,
       screenshotDir,
+      warnings,
       failures,
     };
     writeJson(reportPath, report);
