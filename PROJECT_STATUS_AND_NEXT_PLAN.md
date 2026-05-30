@@ -227,6 +227,12 @@ Current completion snapshot:
   product QA, production search UI QA, production print handoff, prepared
   production QA, print contract/PDF QA, reference-link safety checks, and
   modal keyboard containment are all represented by repeatable gates.
+- **Evidence-driven monitoring checkpoint 2026-05-30**: `main` is clean at
+  `bc56672`, GitHub CI is green for that commit, Zeabur production is serving
+  `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`, and expected-SHA
+  `npm run qa:production-health` passed. The current operating mode remains
+  monitoring/maintenance: open a new product slice only from concrete user,
+  production, admin, export, or code-review evidence.
 - **Post-95 re-rank checkpoint 2026-05-24**:
   `POST_95_REPRIORITIZATION.md` reviewed the last 20 commits and moved the
   next default target from broad lab-ready closure to a small pilot observation

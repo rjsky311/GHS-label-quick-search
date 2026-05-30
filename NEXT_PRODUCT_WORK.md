@@ -98,7 +98,12 @@ Zeabur production refreshed, and the production health, batch-print, and
 product QA gates passed after `5d51401`. A later export-handoff monitoring
 slice shipped review signal counts and primary recommended actions across
 backend CSV/XLSX, frontend export preview/local fallback, and production search
-UI QA in `a8afe4b`, `1a49af5`, and `b975efa`.
+UI QA in `a8afe4b`, `1a49af5`, and `b975efa`. A later production-QA
+hardening round closed the 2026-05-28 Production Print QA failure class by
+bounding runner steps, preventing browser-close hangs, and classifying
+upstream-limited batch fixtures as warnings only when the UI itself shows a
+concrete upstream retry state. Commit `bc56672` is deployed to Zeabur and has
+green CI plus expected-SHA production health/product QA evidence.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -135,6 +140,16 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-05-30 evidence-driven monitoring checkpoint: no fresh product slice is
+  open. The worktree is clean on `main`, GitHub CI is green for `bc56672`, and
+  expected-SHA `npm run qa:production-health` passed against Zeabur production
+  serving `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`. The previous
+  Production Print QA failure was already superseded by the QA-hardening
+  commits `7c10c2c`, `c2b7985`, `cb206a8`, `056b8a1`, `1e6ca3d`, `70cb120`,
+  and `bc56672`. Continue by waiting for concrete evidence from a user
+  screenshot/PDF/Excel, production QA failure, admin queue, export-handoff
+  confusion, or code-review finding; do not reopen Batch-First, print polish,
+  or admin tooling from backlog wording alone.
 - 2026-05-28 inventory workbook audit: a supplied multi-sheet lab workbook
   produced a repeatable dry-run report with 3,246 CAS cells, 3,000 valid CAS
   rows, 1,635 unique valid CAS numbers, 246 invalid CAS cells, 99
