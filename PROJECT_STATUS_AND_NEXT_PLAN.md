@@ -227,8 +227,9 @@ Current completion snapshot:
   product QA, production search UI QA, production print handoff, prepared
   production QA, print contract/PDF QA, reference-link safety checks, and
   modal keyboard containment are all represented by repeatable gates.
-- **Evidence-driven monitoring checkpoint 2026-05-30**: `main` is clean at
-  `bc56672`, GitHub CI is green for that commit, Zeabur production is serving
+- **Evidence-driven monitoring checkpoint 2026-05-30**: the product-code
+  baseline was clean on `main` at `bc56672`, GitHub CI was green for that
+  baseline, Zeabur production served
   `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`, and expected-SHA
   `npm run qa:production-health` passed. The current operating mode remains
   monitoring/maintenance: open a new product slice only from concrete user,
