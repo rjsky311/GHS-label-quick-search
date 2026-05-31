@@ -1,9 +1,6 @@
 const rawBackendUrl =
   (typeof globalThis.__APP_BACKEND_URL__ === "string"
     ? globalThis.__APP_BACKEND_URL__
-    : "") ||
-  (typeof process !== "undefined" && process.env
-    ? process.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || ""
     : "");
 
 export const BACKEND_URL = rawBackendUrl.trim().replace(/\/+$/, "");

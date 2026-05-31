@@ -136,6 +136,7 @@ describe('usePrintTemplates', () => {
 
     const { result } = renderHook(() => usePrintTemplates());
     expect(result.current.templates).toEqual([]);
+    expect(localStorage.getItem(TEMPLATES_KEY)).toBeNull();
 
     consoleSpy.mockRestore();
   });

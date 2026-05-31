@@ -103,6 +103,7 @@ describe('useFavorites', () => {
 
     const { result } = renderHook(() => useFavorites());
     expect(result.current.favorites).toEqual([]);
+    expect(localStorage.getItem(FAVORITES_KEY)).toBeNull();
 
     consoleSpy.mockRestore();
   });

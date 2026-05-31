@@ -1,4 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
+import {
+  readJsonStorage,
+  removeStorageItem,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 const FAVORITES_KEY = "ghs_favorites";
 
@@ -7,19 +12,11 @@ export default function useFavorites() {
 
   // Load favorites from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(FAVORITES_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setFavorites(parsed);
-        } else {
-          localStorage.removeItem(FAVORITES_KEY);
-        }
-      } catch (e) {
-        console.error("Failed to parse favorites", e);
-      }
-    }
+    setFavorites(
+      readJsonStorage(FAVORITES_KEY, [], {
+        validate: Array.isArray,
+      })
+    );
   }, []);
 
   const toggleFavorite = useCallback((chemical) => {
@@ -45,7 +42,7 @@ export default function useFavorites() {
         };
         updated = [favoriteItem, ...prev];
       }
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
+      writeJsonStorage(FAVORITES_KEY, updated);
       return updated;
     });
   }, []);
@@ -57,7 +54,7 @@ export default function useFavorites() {
 
   const clearFavorites = useCallback(() => {
     setFavorites([]);
-    localStorage.removeItem(FAVORITES_KEY);
+    removeStorageItem(FAVORITES_KEY);
   }, []);
 
   return { favorites, toggleFavorite, isFavorited, clearFavorites };

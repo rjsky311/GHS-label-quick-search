@@ -7,6 +7,11 @@ import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
+import {
+  readJsonStorage,
+  removeStorageItem,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 const TEMPLATES_KEY = "ghs_print_templates";
 const MAX_TEMPLATES = 10;
@@ -16,18 +21,13 @@ export default function usePrintTemplates() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const localTemplates = (() => {
-      const saved = localStorage.getItem(TEMPLATES_KEY);
-      if (!saved) return [];
-      try {
-        const parsed = JSON.parse(saved);
-        if (!Array.isArray(parsed)) return [];
-        return parsed.map(normalizePrintTemplate).filter(Boolean);
-      } catch (e) {
-        console.error("Failed to parse print templates", e);
-        return [];
-      }
-    })();
+    const localTemplates = readJsonStorage(TEMPLATES_KEY, [], {
+      normalize: (parsed) =>
+        Array.isArray(parsed)
+          ? parsed.map(normalizePrintTemplate).filter(Boolean)
+          : [],
+      validate: (templates) => templates.length > 0,
+    });
 
     if (localTemplates.length > 0) {
       setTemplates(localTemplates);
@@ -44,7 +44,7 @@ export default function usePrintTemplates() {
         if (remotePayload.length > 0) {
           if (!cancelled) {
             setTemplates(remotePayload);
-            localStorage.setItem(TEMPLATES_KEY, JSON.stringify(remotePayload));
+            writeJsonStorage(TEMPLATES_KEY, remotePayload);
           }
           return;
         }
@@ -77,7 +77,7 @@ export default function usePrintTemplates() {
       );
       if (!newTemplate) return prev;
       const updated = [newTemplate, ...prev];
-      localStorage.setItem(TEMPLATES_KEY, JSON.stringify(updated));
+      writeJsonStorage(TEMPLATES_KEY, updated);
       void saveWorkspaceDocument("print_templates", updated).catch(() => {});
       saved = true;
       return updated;
@@ -88,7 +88,7 @@ export default function usePrintTemplates() {
   const deleteTemplate = useCallback((templateId) => {
     setTemplates((prev) => {
       const updated = prev.filter((t) => t.id !== templateId);
-      localStorage.setItem(TEMPLATES_KEY, JSON.stringify(updated));
+      writeJsonStorage(TEMPLATES_KEY, updated);
       void saveWorkspaceDocument("print_templates", updated).catch(() => {});
       return updated;
     });
@@ -96,7 +96,7 @@ export default function usePrintTemplates() {
 
   const clearTemplates = useCallback(() => {
     setTemplates([]);
-    localStorage.removeItem(TEMPLATES_KEY);
+    removeStorageItem(TEMPLATES_KEY);
     void saveWorkspaceDocument("print_templates", []).catch(() => {});
   }, []);
 

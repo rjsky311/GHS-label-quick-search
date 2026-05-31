@@ -12,6 +12,10 @@ import {
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
 import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
+import {
   EMPTY_CUSTOM_LABEL_FIELDS,
   normalizeCustomLabelFields,
 } from "@/utils/printStorage";
@@ -19,17 +23,17 @@ import {
 export const CUSTOM_FIELDS_KEY = "ghs_custom_label_fields";
 
 function loadCustomLabelFields() {
-  try {
-    const raw = localStorage.getItem(CUSTOM_FIELDS_KEY);
-    if (!raw) return { ...EMPTY_CUSTOM_LABEL_FIELDS };
-    return normalizeCustomLabelFields(JSON.parse(raw));
-  } catch {
-    return { ...EMPTY_CUSTOM_LABEL_FIELDS };
-  }
+  return readJsonStorage(CUSTOM_FIELDS_KEY, { ...EMPTY_CUSTOM_LABEL_FIELDS }, {
+    normalize: (value) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? normalizeCustomLabelFields(value)
+        : null,
+    validate: Boolean,
+  });
 }
 
 function persistCustomLabelFields(fields) {
-  localStorage.setItem(CUSTOM_FIELDS_KEY, JSON.stringify(fields));
+  writeJsonStorage(CUSTOM_FIELDS_KEY, fields);
 }
 
 export default function usePrintWorkspace() {

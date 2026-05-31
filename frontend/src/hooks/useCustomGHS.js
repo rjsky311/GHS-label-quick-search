@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+import {
+  readJsonStorage,
+  removeStorageItem,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 const CUSTOM_GHS_KEY = "ghs_custom_settings";
 
@@ -14,18 +19,12 @@ export default function useCustomGHS() {
 
   // Load custom GHS settings from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(CUSTOM_GHS_KEY);
-    if (saved) {
-      try {
-        const parsed = normalizeCustomSettings(JSON.parse(saved));
-        setCustomGHSSettings(parsed);
-        if (Object.keys(parsed).length === 0) {
-          localStorage.removeItem(CUSTOM_GHS_KEY);
-        }
-      } catch (e) {
-        console.error("Failed to parse custom GHS settings", e);
-      }
-    }
+    setCustomGHSSettings(
+      readJsonStorage(CUSTOM_GHS_KEY, {}, {
+        normalize: normalizeCustomSettings,
+        validate: (value) => Object.keys(value).length > 0,
+      })
+    );
   }, []);
 
   // Get the effective GHS classification for a result (considering user customization)
@@ -85,7 +84,7 @@ export default function useCustomGHS() {
             updatedAt: new Date().toISOString(),
           },
         };
-        localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
+        writeJsonStorage(CUSTOM_GHS_KEY, newSettings);
         return newSettings;
       });
     },
@@ -96,7 +95,11 @@ export default function useCustomGHS() {
     setCustomGHSSettings((prev) => {
       const newSettings = { ...prev };
       delete newSettings[casNumber];
-      localStorage.setItem(CUSTOM_GHS_KEY, JSON.stringify(newSettings));
+      if (Object.keys(newSettings).length > 0) {
+        writeJsonStorage(CUSTOM_GHS_KEY, newSettings);
+      } else {
+        removeStorageItem(CUSTOM_GHS_KEY);
+      }
       return newSettings;
     });
   }, []);

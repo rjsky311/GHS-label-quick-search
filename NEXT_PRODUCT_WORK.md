@@ -224,17 +224,14 @@ cannot complete the intended job.
 - 2026-05-28 admin triage UX: the pilot triage panel now shows both unique
   queue items and overlapping review signals, then explains the overlap. This
   is a bounded data/admin triage improvement, not a new admin product surface.
-- 2026-05-28 maintainability scan: the current largest code surfaces are
-  `frontend/src/utils/printQaMatrix.js` (2,776 lines),
-  `frontend/src/utils/printLabelStyles.js` (1,847),
-  `frontend/src/components/LabelPrintModal.jsx` (1,756),
-  `frontend/src/utils/printLabels.js` (1,472),
-  `frontend/src/components/ResultsTable.jsx` (1,246),
-  `frontend/src/components/PilotDashboardSidebar.jsx` (1,142),
-  `backend/pilot_store.py` (1,723), and `backend/server.py` (1,532).
-  These are refactor candidates, not automatic work. Open a split only when a
-  concrete evidence-triggered product/admin/QA change touches the same
-  responsibility boundary.
+- 2026-05-28 maintainability scan: the recurring large code surfaces are still
+  print QA matrices/styles, `LabelPrintModal.jsx`, `printLabels.js`,
+  `ResultsTable.jsx`, pilot dashboard/admin helpers, `pilot_store.py`, and
+  `server.py`. Use a fresh line-count scan for exact current numbers; historical
+  counts in this file are not acceptance criteria. These are refactor
+  candidates, not automatic work. Open a split only when a concrete
+  evidence-triggered product/admin/QA change touches the same responsibility
+  boundary.
 - Excel/roster data should be used as a representative QA corpus, not imported
   wholesale into the product. Users still run bounded batches, usually up to
   100 rows.
@@ -686,26 +683,13 @@ Current mode:
 - Completed current slice: print stylesheet, preview stylesheet generation,
   print-render text/identity/pictogram helpers, required print-image
   preflight, and print document layout/model helpers moved out of
-  `printLabels.js`. Current worktree counts are `printLabels.js` 1,472 lines,
-  `printDocumentLayoutHelpers.js` 483 lines, `printImagePreflight.js` 80
-  lines, `printRenderHelpers.js` 148 lines, `printLifecycle.js` 239 lines,
-  `printLabelStyles.js` 1,847 lines, `printPreviewStyles.js` 164 lines,
-  `LabelPrintModal.jsx` 1,750 lines,
-  `LabelPrintFooter.jsx` 49 lines, `MultipleGhsPrintWarning.jsx` 56 lines,
-  `LabelPreviewPanel.jsx` 235 lines, `SelectedLabelsControls.jsx` 245 lines,
-  `PreviewDiagnosticsPanel.jsx` 168 lines, `StockSizeSelector.jsx` 104 lines,
-  `PrintOutputPlanDetails.jsx` 129 lines, `LabelOutputSelector.jsx` 72 lines,
-  `BatchFitReport.jsx` 291 lines, `LabelAdvancedPrintOptions.jsx` 411 lines,
-  `LabelPrintOutcomeSections.jsx` 179 lines, `LabelPreviewSection.jsx` 162
-  lines, `labelPrintModalOptions.js` 113 lines,
-  `LabelPrintConfigControls.jsx` 115 lines,
-  `ResponsibleProfileControls.jsx` 120 lines, `SavedPrintControls.jsx` 237
-  lines, `PilotDashboardSidebar.jsx` 1,076 lines,
-  `PilotDictionaryForms.jsx` 306 lines, `PilotRecentCurationLists.jsx` 280
-  lines, `PilotCorrectionRequestSections.jsx` 330 lines, `server.py` 1,613
-  lines, `pilot_admin_routes.py` 281 lines, `api_models.py` 363 lines,
-  `api_validation.py` 229 lines, `export_helpers.py` 204 lines, and
-  `pilot_store.py` 1,639 lines.
+  `printLabels.js`. At that checkpoint, line counts were recorded as
+  implementation history; use a fresh scan for current numbers instead of
+  treating those historical counts as active acceptance criteria. The split
+  covered the print engine, print lifecycle, label-print modal sections, output
+  selectors, batch fit report, advanced options, preview diagnostics,
+  configuration controls, responsible-profile controls, saved-print controls,
+  pilot dashboard sections, and backend pilot/admin modules.
 - Completed current slice: backend pilot/admin endpoints for ops reports,
   dictionary curation, correction intake/review, miss-query retention, and
   workspace documents now live in `backend/pilot_admin_routes.py`. `server.py`

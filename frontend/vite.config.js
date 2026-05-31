@@ -317,8 +317,7 @@ function createViteHealthCheckPlugin() {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const backendUrl =
-    (env.VITE_BACKEND_URL || env.REACT_APP_BACKEND_URL || "").trim();
+  const backendUrl = (env.VITE_BACKEND_URL || "").trim();
   const pilotAdminEnabled =
     (env.VITE_ENABLE_PILOT_ADMIN || "").trim().toLowerCase() === "true";
   const workspaceSyncEnabled =
@@ -350,7 +349,7 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    envPrefix: ["VITE_", "REACT_APP_"],
+    envPrefix: ["VITE_"],
     define: {
       "globalThis.__APP_BACKEND_URL__": JSON.stringify(backendUrl),
       "globalThis.__APP_PILOT_ADMIN_ENABLED__": JSON.stringify(pilotAdminEnabled),

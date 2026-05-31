@@ -7,6 +7,10 @@ import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
+import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 /**
  * usePreparedPresets — Tier 2 PR-2B.
@@ -49,24 +53,14 @@ const PRESETS_KEY = "ghs_prepared_presets";
 export const MAX_PREPARED_PRESETS = 10;
 
 function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(PRESETS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizePreparedPresetRecord).filter(Boolean);
-  } catch {
-    return [];
-  }
+  const parsed = readJsonStorage(PRESETS_KEY, [], {
+    validate: Array.isArray,
+  });
+  return parsed.map(normalizePreparedPresetRecord).filter(Boolean);
 }
 
 function persist(list) {
-  try {
-    localStorage.setItem(PRESETS_KEY, JSON.stringify(list));
-  } catch {
-    // Swallow — presets are convenience state; in-memory value stays
-    // consistent for the session even if the write fails.
-  }
+  writeJsonStorage(PRESETS_KEY, list);
 }
 
 export default function usePreparedPresets() {

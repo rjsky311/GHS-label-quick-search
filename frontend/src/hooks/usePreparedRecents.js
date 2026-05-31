@@ -7,6 +7,10 @@ import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
+import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 /**
  * usePreparedRecents — Tier 2 PR-2A.
@@ -48,25 +52,14 @@ const RECENTS_KEY = "ghs_prepared_recents";
 export const MAX_PREPARED_RECENTS = 10;
 
 function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(RECENTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizePreparedRecentRecord).filter(Boolean);
-  } catch {
-    return [];
-  }
+  const parsed = readJsonStorage(RECENTS_KEY, [], {
+    validate: Array.isArray,
+  });
+  return parsed.map(normalizePreparedRecentRecord).filter(Boolean);
 }
 
 function persist(list) {
-  try {
-    localStorage.setItem(RECENTS_KEY, JSON.stringify(list));
-  } catch {
-    // Quota or serialisation errors: swallow — recents are a
-    // convenience, not a system-of-record. The in-memory state is
-    // still consistent for the current session.
-  }
+  writeJsonStorage(RECENTS_KEY, list);
 }
 
 export default function usePreparedRecents() {

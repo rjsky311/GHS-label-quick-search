@@ -8,28 +8,23 @@ import {
   fetchWorkspaceDocument,
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
+import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 const RECENT_PRINTS_KEY = "ghs_recent_print_jobs";
 export const MAX_RECENT_PRINTS = 10;
 
 function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(RECENT_PRINTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizePrintJob).filter(Boolean);
-  } catch {
-    return [];
-  }
+  const parsed = readJsonStorage(RECENT_PRINTS_KEY, [], {
+    validate: Array.isArray,
+  });
+  return parsed.map(normalizePrintJob).filter(Boolean);
 }
 
 function persist(list) {
-  try {
-    localStorage.setItem(RECENT_PRINTS_KEY, JSON.stringify(list));
-  } catch {
-    // Best-effort convenience state only.
-  }
+  writeJsonStorage(RECENT_PRINTS_KEY, list);
 }
 
 export default function usePrintRecents() {

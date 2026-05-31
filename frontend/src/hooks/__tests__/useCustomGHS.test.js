@@ -44,6 +44,15 @@ describe('useCustomGHS', () => {
     expect(result.current.getEffectiveClassification(mockResult).isCustom).toBe(false);
   });
 
+  it('resets corrupted stored settings JSON', () => {
+    localStorage.setItem(CUSTOM_GHS_KEY, '{broken json');
+
+    const { result } = renderHook(() => useCustomGHS());
+
+    expect(result.current.customGHSSettings).toEqual({});
+    expect(localStorage.getItem(CUSTOM_GHS_KEY)).toBeNull();
+  });
+
   it('getEffectiveClassification returns null for null result', () => {
     const { result } = renderHook(() => useCustomGHS());
     expect(result.current.getEffectiveClassification(null)).toBeNull();

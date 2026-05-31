@@ -4,6 +4,10 @@ import {
   hasMeaningfulWorkspacePayload,
   saveWorkspaceDocument,
 } from "@/utils/workspaceDocuments";
+import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 export const LAB_PROFILE_KEY = "ghs_lab_profile";
 
@@ -23,32 +27,29 @@ function sanitizeProfile(raw) {
 }
 
 function loadLegacyLabName() {
-  try {
-    const raw = localStorage.getItem("ghs_custom_label_fields");
-    if (!raw) return { ...EMPTY_PROFILE };
-    const parsed = JSON.parse(raw);
-    return {
-      ...EMPTY_PROFILE,
-      organization:
-        typeof parsed?.labName === "string" ? parsed.labName : "",
-    };
-  } catch {
-    return { ...EMPTY_PROFILE };
-  }
+  const parsed = readJsonStorage("ghs_custom_label_fields", null, {
+    validate: (value) =>
+      value && typeof value === "object" && !Array.isArray(value),
+  });
+  return {
+    ...EMPTY_PROFILE,
+    organization:
+      typeof parsed?.labName === "string" ? parsed.labName : "",
+  };
 }
 
 function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(LAB_PROFILE_KEY);
-    if (!raw) return loadLegacyLabName();
-    return sanitizeProfile(JSON.parse(raw));
-  } catch {
-    return { ...EMPTY_PROFILE };
-  }
+  return readJsonStorage(LAB_PROFILE_KEY, loadLegacyLabName(), {
+    normalize: (value) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? sanitizeProfile(value)
+        : null,
+    validate: Boolean,
+  });
 }
 
 function persist(profile) {
-  localStorage.setItem(LAB_PROFILE_KEY, JSON.stringify(profile));
+  writeJsonStorage(LAB_PROFILE_KEY, profile);
 }
 
 export default function useLabProfile() {

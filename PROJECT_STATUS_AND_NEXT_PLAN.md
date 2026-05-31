@@ -280,27 +280,12 @@ Current completion snapshot:
   correction request review sections, backend export trust/summary code,
   backend API schemas, backend bounded payload validation, and backend
   pilot/admin routes now have separate modules while preserving existing
-  API/test contracts. Current worktree counts
-  are `printLabels.js` 1,472 lines, `printDocumentLayoutHelpers.js` 483
-  lines, `printImagePreflight.js` 80 lines, `printRenderHelpers.js` 148
-  lines, `printLifecycle.js` 239 lines, `printLabelStyles.js` 1,847 lines,
-  `printPreviewStyles.js` 164 lines,
-  `LabelPrintModal.jsx` 1,750 lines,
-  `LabelPrintFooter.jsx` 49 lines, `MultipleGhsPrintWarning.jsx` 56 lines,
-  `LabelPreviewPanel.jsx` 235 lines, `SelectedLabelsControls.jsx` 245 lines,
-  `PreviewDiagnosticsPanel.jsx` 168 lines, `StockSizeSelector.jsx` 104 lines,
-  `PrintOutputPlanDetails.jsx` 129 lines, `LabelOutputSelector.jsx` 72 lines,
-  `BatchFitReport.jsx` 291 lines, `LabelAdvancedPrintOptions.jsx` 411 lines,
-  `LabelPrintOutcomeSections.jsx` 179 lines, `LabelPreviewSection.jsx` 162
-  lines, `labelPrintModalOptions.js` 113 lines,
-  `LabelPrintConfigControls.jsx` 115 lines,
-  `ResponsibleProfileControls.jsx` 120 lines, `SavedPrintControls.jsx` 237
-  lines, `PilotDashboardSidebar.jsx` 1,076 lines,
-  `PilotDictionaryForms.jsx` 306 lines, `PilotRecentCurationLists.jsx` 280
-  lines, `PilotCorrectionRequestSections.jsx` 330 lines, `server.py` 1,613
-  lines, `pilot_admin_routes.py` 281 lines, `api_models.py` 363 lines,
-  `api_validation.py` 229 lines, `export_helpers.py` 204 lines, and
-  `pilot_store.py` 1,639 lines.
+  API/test contracts. Historical line counts from this checkpoint are not the
+  current source of truth; run a fresh line-count scan before opening any
+  large-file refactor. Treat this checkpoint as a map of responsibility
+  boundaries: print orchestration/styles/preview, label-print modal sections,
+  batch fit/report UI, correction/admin review sections, backend export trust,
+  backend API validation, and pilot/admin persistence.
   Remaining large-file work should be selected only when it directly supports
   the next batch, data-governance, print, or admin workflow change.
 - **Documentation audit checkpoint 2026-05-25**:
@@ -319,11 +304,12 @@ Current completion snapshot:
   and comparison modals, export preview, prepared-solution modal, print modal,
   and admin dashboard. Export download logic is also isolated behind a dynamic
   import while CSV escaping and export preview rows stay in light shared utils.
-  `npm run build` now emits no 500 kB chunk warning: the main `index` chunk is
-  246.08 kB, with `LabelPrintModal` 114.66 kB, `printLabels` 112.84 kB,
-  `PilotDashboardSidebar` 56.31 kB, and `exportData` 1.24 kB as separate
-  chunks. Keep future code-splitting work evidence-based rather than splitting
-  stable first-screen code by default.
+  `npm run build` now emits no 500 kB chunk warning and the heavy
+  print/admin/detail/export surfaces are separated from the first-screen app
+  shell. Use the current `build/bundle-budget-report.json` output as the
+  source of truth for exact chunk sizes; do not copy historical chunk numbers
+  forward as acceptance criteria. Keep future code-splitting work
+  evidence-based rather than splitting stable first-screen code by default.
 - **Bundle-budget gate checkpoint 2026-05-27**:
   `npm run qa:bundle-budget` now records `build/bundle-budget-report.json`
   after `npm run build` and fails only on meaningful chunk-boundary regressions:
@@ -342,12 +328,10 @@ Current completion snapshot:
   `npm run qa:production-batch-print` passed against the deployed default
   51-CAS batch fixture, exercising fixed-stock batch modal handoff, export
   preview trust/review fields, multiple-GHS warning copy, and print handoff
-  metadata. `npm run build` and `npm run qa:bundle-budget` passed with 23 JS
-  chunks; the initial app chunk stayed under budget at 272.25 KiB raw /
-  77.54 KiB gzip, while the lazy print modal and print engine stayed under
-  their budgets at 113.46 KiB and 110.19 KiB raw. Treat this as evidence that
-  the current product baseline is deployable and split enough for now, not as
-  permission to keep adding polish by inertia.
+  metadata. `npm run build` and `npm run qa:bundle-budget` passed; use the
+  generated bundle-budget report for exact raw/gzip chunk values. Treat this
+  as evidence that the current product baseline is deployable and split enough
+  for now, not as permission to keep adding polish by inertia.
 - **Full-product QA checkpoint 2026-05-28**:
   after the state check, `qa:zeabur-deployment` reported
   `statusCategory: fresh-running` for commit

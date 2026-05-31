@@ -107,6 +107,7 @@ describe('useSearchHistory', () => {
 
     const { result } = renderHook(() => useSearchHistory());
     expect(result.current.history).toEqual([]);
+    expect(localStorage.getItem(HISTORY_KEY)).toBeNull();
 
     consoleSpy.mockRestore();
   });

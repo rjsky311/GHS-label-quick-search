@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import { API } from "@/constants/ghs";
 import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
 import { escapeCsvCell } from "@/utils/csvCell";
+import {
+  readJsonStorage,
+  writeJsonStorage,
+} from "@/utils/localStorageJson";
 
 export const OBSERVABILITY_STORAGE_KEY = "ghs_observability_events";
 export const OBSERVABILITY_UPDATE_EVENT = "ghs:observability-updated";
@@ -89,23 +93,14 @@ export function normalizeObservabilityEvent(raw) {
 }
 
 export function loadObservabilityEvents() {
-  try {
-    const raw = localStorage.getItem(OBSERVABILITY_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeObservabilityEvent).filter(Boolean);
-  } catch {
-    return [];
-  }
+  const parsed = readJsonStorage(OBSERVABILITY_STORAGE_KEY, [], {
+    validate: Array.isArray,
+  });
+  return parsed.map(normalizeObservabilityEvent).filter(Boolean);
 }
 
 function persistObservabilityEvents(events) {
-  try {
-    localStorage.setItem(OBSERVABILITY_STORAGE_KEY, JSON.stringify(events));
-  } catch {
-    // Best-effort local diagnostics only.
-  }
+  writeJsonStorage(OBSERVABILITY_STORAGE_KEY, events);
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(
