@@ -235,7 +235,7 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
         response = await ac.post(
             "/api/dictionary/manual-entries",
             json={
-                "cas_number": "321-54-7",
+                "cas_number": "321-54-0",
                 "name_en": "Pilot Solvent",
                 "name_zh": "試驗溶劑",
                 "notes": "seeded from admin panel",
@@ -243,25 +243,25 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
             headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
-        assert response.json()["record"]["cas_number"] == "321-54-7"
+        assert response.json()["record"]["cas_number"] == "321-54-0"
 
         response = await ac.post(
             "/api/dictionary/aliases",
             json={
                 "alias_text": "pilot solvent x",
                 "locale": "en",
-                "cas_number": "321-54-7",
+                "cas_number": "321-54-0",
                 "status": "approved",
             },
             headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
-        assert response.json()["record"]["cas_number"] == "321-54-7"
+        assert response.json()["record"]["cas_number"] == "321-54-0"
 
         response = await ac.post(
             "/api/dictionary/reference-links",
             json={
-                "cas_number": "321-54-7",
+                "cas_number": "321-54-0",
                 "label": "Vendor SDS",
                 "url": "https://vendor.example/sds",
                 "link_type": "sds",
@@ -275,12 +275,12 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
         entries = await ac.get("/api/dictionary/manual-entries", headers=ADMIN_HEADERS)
         aliases = await ac.get("/api/dictionary/aliases?status=approved", headers=ADMIN_HEADERS)
         links = await ac.get(
-            "/api/dictionary/reference-links?cas_number=321-54-7",
+            "/api/dictionary/reference-links?cas_number=321-54-0",
             headers=ADMIN_HEADERS,
         )
 
     assert entries.status_code == 200
-    assert any(item["cas_number"] == "321-54-7" for item in entries.json()["items"])
+    assert any(item["cas_number"] == "321-54-0" for item in entries.json()["items"])
     assert aliases.status_code == 200
     assert any(item["alias_text"] == "pilot solvent x" for item in aliases.json()["items"])
     assert links.status_code == 200

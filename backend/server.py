@@ -63,6 +63,7 @@ from api_validation import (
     _reference_link_type_rank,
     _safe_reference_link_type,
     _sanitize_dictionary_miss_context,
+    is_valid_cas,
     normalize_cas,
 )
 
@@ -1211,13 +1212,13 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             error="無效的 CAS 號碼格式（正確格式如：64-17-5）"
         )
 
-    # Validate CAS number format (should be like XX-XX-X or XXXXX-XX-X)
-    cas_pattern = re.match(r'^(\d{2,7})-(\d{2})-(\d)$', normalized_cas)
-    if not cas_pattern:
+    # Validate CAS number format and checksum before any local dictionary or
+    # PubChem lookup. A format-only CAS can still be a typo.
+    if not is_valid_cas(normalized_cas):
         return ChemicalResult(
             cas_number=cas_number,
             found=False,
-            error=f"CAS 號碼格式不正確：{normalized_cas}（正確格式如：64-17-5）"
+            error=f"CAS 號碼格式或檢查碼不正確：{normalized_cas}（正確格式如：64-17-5）"
         )
 
     # ===== NEW: Try to get Chinese and English name from CAS dictionary FIRST (most accurate) =====

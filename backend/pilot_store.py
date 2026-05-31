@@ -633,13 +633,19 @@ class PilotStore:
                 )
             conn.commit()
 
-        return self.get_alias_exact(alias_text, locale, statuses=None)
+        return self.get_alias_exact(
+            alias_text,
+            locale,
+            cas_number=cas_number,
+            statuses=None,
+        )
 
     def get_alias_exact(
         self,
         alias_text: str,
         locale: str,
         *,
+        cas_number: Optional[str] = None,
         statuses: Optional[Iterable[str]] = (APPROVED_ALIAS_STATUS,),
     ) -> Optional[dict[str, Any]]:
         if not alias_text:
@@ -649,6 +655,10 @@ class PilotStore:
             return None
 
         params: list[Any] = [alias_norm, locale]
+        where_cas = ""
+        if cas_number:
+            where_cas = " AND cas_number = ?"
+            params.append(cas_number)
         where_status = ""
         if statuses:
             status_list = list(statuses)
@@ -659,7 +669,7 @@ class PilotStore:
             f"""
             SELECT alias_text, locale, cas_number, source, confidence, status, notes, last_seen_at, hit_count
             FROM dictionary_aliases
-            WHERE alias_norm = ? AND locale = ?{where_status}
+            WHERE alias_norm = ? AND locale = ?{where_cas}{where_status}
             ORDER BY
               CASE status
                 WHEN 'approved' THEN 0

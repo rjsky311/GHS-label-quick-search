@@ -7,6 +7,7 @@ from typing import Any, Iterable, Optional
 
 from openpyxl import load_workbook
 
+from api_validation import CAS_FORMAT_PATTERN, has_valid_cas_checksum
 from candidate_discovery import build_candidate_bundle, clean_text, has_cjk
 from chemical_dict import CAS_TO_EN, CAS_TO_ZH
 
@@ -20,7 +21,6 @@ HANDOFF_RECORD_KEYS = (
     "duplicates",
 )
 
-CAS_FORMAT_PATTERN = re.compile(r"^\d{2,7}-\d{2}-\d$")
 CAS_DIGITS_PATTERN = re.compile(r"^\d{5,10}$")
 CAS_PREFIX_PATTERN = re.compile(r"^cas\s*(?:no\.?|number|#|[:\uff1a])?\s*", re.I)
 DASH_PATTERN = re.compile(r"[\u2010-\u2015\u2212\ufe58\ufe63\uff0d]")
@@ -127,18 +127,6 @@ def canonicalize_cas_leading_zeros(value: str) -> str:
     if not canonical_first_group or canonical_first_group == first_group:
         return ""
     return f"{canonical_first_group}-{middle_group}-{check_digit}"
-
-
-def has_valid_cas_checksum(cas: str) -> bool:
-    if not CAS_FORMAT_PATTERN.fullmatch(cas):
-        return False
-    digits = cas.replace("-", "")
-    check_digit = int(digits[-1])
-    checksum = sum(
-        int(digit) * multiplier
-        for multiplier, digit in enumerate(reversed(digits[:-1]), start=1)
-    )
-    return checksum % 10 == check_digit
 
 
 def normalize_cas_token_detailed(value: Any = "") -> dict[str, Any]:

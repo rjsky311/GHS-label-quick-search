@@ -3009,7 +3009,7 @@ async def test_search_chemical_no_ghs_reports_still_populates_timestamp(monkeypa
         async def get(self, *_a, **_k):
             raise RuntimeError("should not be called")
 
-    result = await srv.search_chemical("123-45-6", _NullClient())
+    result = await srv.search_chemical("123-45-5", _NullClient())
 
     assert result.found is True
     assert result.retrieved_at == "2026-04-16T02:00:00+00:00"

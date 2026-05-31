@@ -43,6 +43,7 @@ from api_validation import (
     _sanitize_correction_candidate_payload,
     _sanitize_dictionary_miss_context,
     normalize_cas,
+    normalize_valid_cas,
 )
 
 
@@ -208,8 +209,12 @@ class DictionaryMissQueryResolutionPayload(BaseModel):
     def resolved_cas_is_trimmed(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return None
-        normalized = normalize_cas(value)
-        return normalized or None
+        if not str(value).strip():
+            return None
+        normalized = normalize_valid_cas(value)
+        if not normalized:
+            raise ValueError("resolved_cas must be a valid CAS number")
+        return normalized
 
 
 class DictionaryMissQueryRetentionPayload(BaseModel):
@@ -271,8 +276,12 @@ class DictionaryCorrectionRequestPayload(BaseModel):
     def correction_cas_is_trimmed(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return None
-        normalized = normalize_cas(value)
-        return normalized or None
+        if not str(value).strip():
+            return None
+        normalized = normalize_valid_cas(value)
+        if not normalized:
+            raise ValueError("cas_number must be a valid CAS number")
+        return normalized
 
     @field_validator("evidence_url")
     @classmethod
@@ -346,10 +355,10 @@ class DictionaryManualEntryPayload(BaseModel):
     @field_validator("cas_number")
     @classmethod
     def cas_number_must_not_be_blank(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("cas_number must not be blank")
-        return value
+        normalized = normalize_valid_cas(value)
+        if not normalized:
+            raise ValueError("cas_number must be a valid CAS number")
+        return normalized
 
     @field_validator("name_en", "name_zh")
     @classmethod
@@ -405,6 +414,14 @@ class DictionaryAliasPayload(BaseModel):
             raise ValueError("field must not be blank")
         return value
 
+    @field_validator("cas_number")
+    @classmethod
+    def alias_cas_number_must_be_valid(cls, value: str) -> str:
+        normalized = normalize_valid_cas(value)
+        if not normalized:
+            raise ValueError("cas_number must be a valid CAS number")
+        return normalized
+
     @field_validator("locale")
     @classmethod
     def locale_must_be_supported(cls, value: str) -> str:
@@ -450,6 +467,14 @@ class DictionaryReferenceLinkPayload(BaseModel):
         if not value:
             raise ValueError("field must not be blank")
         return value
+
+    @field_validator("cas_number")
+    @classmethod
+    def reference_cas_number_must_be_valid(cls, value: str) -> str:
+        normalized = normalize_valid_cas(value)
+        if not normalized:
+            raise ValueError("cas_number must be a valid CAS number")
+        return normalized
 
     @field_validator("url")
     @classmethod

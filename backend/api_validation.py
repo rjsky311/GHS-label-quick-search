@@ -90,6 +90,7 @@ ALLOWED_CORRECTION_CANDIDATE_KEYS = {
     "manual_entry_source",
     "public_data_changed",
 }
+CAS_FORMAT_PATTERN = re.compile(r"^\d{2,7}-\d{2}-\d$")
 CORRECTION_CANDIDATE_TEXT_LIMITS = {
     "name_en": MAX_ADMIN_NAME_LENGTH,
     "name_zh": MAX_ADMIN_NAME_LENGTH,
@@ -131,6 +132,30 @@ def normalize_cas(cas: str) -> str:
                 cas = f"{first}-{middle}-{check}"
 
     return cas
+
+
+def has_valid_cas_checksum(cas: str) -> bool:
+    """Return True only when a normalized CAS number has a valid checksum."""
+    if not CAS_FORMAT_PATTERN.fullmatch(cas or ""):
+        return False
+    digits = cas.replace("-", "")
+    check_digit = int(digits[-1])
+    checksum = sum(
+        int(digit) * multiplier
+        for multiplier, digit in enumerate(reversed(digits[:-1]), start=1)
+    )
+    return checksum % 10 == check_digit
+
+
+def is_valid_cas(cas: str) -> bool:
+    """Validate normalized CAS format and checksum."""
+    return has_valid_cas_checksum(cas)
+
+
+def normalize_valid_cas(cas: str) -> str:
+    """Normalize a CAS token and return it only if format/checksum are valid."""
+    normalized = normalize_cas(cas or "")
+    return normalized if is_valid_cas(normalized) else ""
 
 
 def _is_safe_reference_url(value: str) -> bool:
@@ -211,7 +236,9 @@ def _sanitize_correction_candidate_payload(
         if len(text) > max_length:
             raise ValueError(f"{key} is too large")
         if key == "cas_number":
-            text = normalize_cas(text) or text
+            text = normalize_valid_cas(text)
+            if not text:
+                raise ValueError("candidate CAS number must be valid")
         if key == "evidence_url" and not _is_safe_reference_url(text):
             raise ValueError("candidate evidence URL must use http or https")
         sanitized[key] = text

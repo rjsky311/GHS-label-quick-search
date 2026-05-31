@@ -20,6 +20,72 @@ const elementVerticallyOverflows = (element, tolerancePx = 1) => {
   return clientHeight > 0 && scrollHeight > clientHeight + tolerancePx;
 };
 
+const getElementStyle = (element) => {
+  const view = element?.ownerDocument?.defaultView;
+  if (view?.getComputedStyle) return view.getComputedStyle(element);
+  if (typeof window !== "undefined" && window.getComputedStyle) {
+    return window.getComputedStyle(element);
+  }
+  return element?.style || {};
+};
+
+const isHiddenOverflow = (value = "") =>
+  ["hidden", "clip"].includes(String(value || "").toLowerCase());
+
+const hasLineClamp = (style) => {
+  const rawClamp =
+    style?.webkitLineClamp ||
+    style?.WebkitLineClamp ||
+    style?.lineClamp ||
+    "";
+  return rawClamp && rawClamp !== "none" && rawClamp !== "unset";
+};
+
+const requiredTextIsVisuallyClipped = (element, tolerancePx = 1) => {
+  if (!element?.textContent?.trim()) return false;
+  const style = getElementStyle(element);
+  const overflowX = style.overflowX || style.overflow || "";
+  const overflowY = style.overflowY || style.overflow || "";
+  const textOverflow = String(style.textOverflow || "").toLowerCase();
+  const whiteSpace = String(style.whiteSpace || "").toLowerCase();
+
+  if (
+    textOverflow === "ellipsis" &&
+    isHiddenOverflow(overflowX) &&
+    elementOverflows(element, tolerancePx)
+  ) {
+    return true;
+  }
+
+  if (
+    whiteSpace === "nowrap" &&
+    isHiddenOverflow(overflowX) &&
+    elementOverflows(element, tolerancePx)
+  ) {
+    return true;
+  }
+
+  if (
+    hasLineClamp(style) &&
+    isHiddenOverflow(overflowY) &&
+    elementVerticallyOverflows(element, tolerancePx)
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+const REQUIRED_TEXT_CLIP_SELECTORS = [
+  [".name-en", "required-name-en-clipped"],
+  [".name-zh", "required-name-zh-clipped"],
+  [".small-name-en", "required-small-name-en-clipped"],
+  [".small-name-zh", "required-small-name-zh-clipped"],
+  [".small-cas", "required-small-cas-clipped"],
+  [".cas", "required-cas-clipped"],
+  [".meta-chip-cas .meta-chip-value", "required-cas-value-clipped"],
+];
+
 export function inspectPrintLayoutDocument(documentLike) {
   const root = documentLike?.body || documentLike;
   if (!root?.querySelectorAll) return [];
@@ -52,6 +118,11 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".support-chip", "support-chip-overflow"],
       [".custom-fields", "custom-fields-overflow"],
       [".name-section", "name-section-overflow"],
+      [".name-en", "name-en-overflow"],
+      [".name-zh", "name-zh-overflow"],
+      [".small-name-en", "small-name-en-overflow"],
+      [".small-name-zh", "small-name-zh-overflow"],
+      [".small-cas", "small-cas-overflow"],
       [".standard-rail", "standard-rail-overflow"],
       [".standard-main", "standard-main-overflow"],
       [".standard-hazard-board", "standard-hazard-board-overflow"],
@@ -68,6 +139,18 @@ export function inspectPrintLayoutDocument(documentLike) {
           : [label.querySelector?.(selector)].filter(Boolean);
       elements.forEach((element, elementIndex) => {
         if (elementOverflows(element, 2)) {
+          issues.push({ type, ...issueMeta, selector, elementIndex });
+        }
+      });
+    });
+
+    REQUIRED_TEXT_CLIP_SELECTORS.forEach(([selector, type]) => {
+      const elements =
+        typeof label.querySelectorAll === "function"
+          ? Array.from(label.querySelectorAll(selector))
+          : [label.querySelector?.(selector)].filter(Boolean);
+      elements.forEach((element, elementIndex) => {
+        if (requiredTextIsVisuallyClipped(element, 1)) {
           issues.push({ type, ...issueMeta, selector, elementIndex });
         }
       });

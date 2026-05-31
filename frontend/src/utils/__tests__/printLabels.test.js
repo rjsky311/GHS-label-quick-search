@@ -206,18 +206,19 @@ describe("inspectPrintLayoutDocument", () => {
     );
   });
 
-  it("does not block a label solely because clamped identity text has horizontal scroll", () => {
+  it("reports required identity text that is visually clipped by print CSS", () => {
     const root = document.createElement("div");
     root.innerHTML = `
       <div class="label">
         <div class="name-section">
-          <div class="name-en">Very long display name controlled by CSS line clamp</div>
+          <div class="name-en" style="overflow:hidden;-webkit-line-clamp:1;">Very long display name controlled by CSS line clamp</div>
         </div>
       </div>
     `;
 
     const label = root.querySelector(".label");
     const nameSection = root.querySelector(".name-section");
+    const nameEn = root.querySelector(".name-en");
 
     Object.defineProperties(label, {
       clientHeight: { value: 100, configurable: true },
@@ -231,8 +232,23 @@ describe("inspectPrintLayoutDocument", () => {
       clientWidth: { value: 160, configurable: true },
       scrollWidth: { value: 160, configurable: true },
     });
+    Object.defineProperties(nameEn, {
+      clientHeight: { value: 18, configurable: true },
+      scrollHeight: { value: 28, configurable: true },
+      clientWidth: { value: 160, configurable: true },
+      scrollWidth: { value: 160, configurable: true },
+    });
 
-    expect(inspectPrintLayoutDocument(root)).toEqual([]);
+    expect(inspectPrintLayoutDocument(root)).toEqual([
+      expect.objectContaining({
+        type: "name-en-overflow",
+        selector: ".name-en",
+      }),
+      expect.objectContaining({
+        type: "required-name-en-clipped",
+        selector: ".name-en",
+      }),
+    ]);
   });
 
   it("reports clipped full-label inner panels before printing", () => {
@@ -4202,7 +4218,7 @@ describe("escapeHtml", () => {
 
 // ── Page-level trust-boundary footer (v1.8 M1 PR-C) ──
 describe("print page footer disclaimer", () => {
-  let mockIframe, mockIframeDoc, mockIframeWindow;
+  let mockIframe, mockIframeDoc;
   let createElementSpy, appendChildSpy, getByIdSpy;
 
   beforeEach(() => {
@@ -4210,7 +4226,6 @@ describe("print page footer disclaimer", () => {
     const mocks = createMockIframe();
     mockIframe = mocks.mockIframe;
     mockIframeDoc = mocks.mockIframeDoc;
-    mockIframeWindow = mocks.mockIframeWindow;
 
     createElementSpy = jest
       .spyOn(document, "createElement")
@@ -4287,7 +4302,7 @@ describe("print page footer disclaimer", () => {
 // correctly across all four templates. PR-A will build the UI flow
 // that produces such items; these tests construct them directly.
 describe("prepared solution print rendering", () => {
-  let mockIframe, mockIframeDoc, mockIframeWindow;
+  let mockIframe, mockIframeDoc;
   let createElementSpy, appendChildSpy, getByIdSpy;
 
   beforeEach(() => {
@@ -4295,7 +4310,6 @@ describe("prepared solution print rendering", () => {
     const mocks = createMockIframe();
     mockIframe = mocks.mockIframe;
     mockIframeDoc = mocks.mockIframeDoc;
-    mockIframeWindow = mocks.mockIframeWindow;
 
     createElementSpy = jest
       .spyOn(document, "createElement")
