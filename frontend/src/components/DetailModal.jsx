@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+﻿import { useCallback, useEffect } from "react";
 import {
   Star,
   X,
@@ -286,7 +286,7 @@ export default function DetailModal({
       aria-hidden={suppressed ? "true" : undefined}
       // React 19 supports `inert` as a boolean attribute; passing
       // `true` serializes to `inert=""` on the DOM, `false` omits it.
-      // eslint-disable-next-line react/no-unknown-property
+
       inert={suppressed || undefined}
       aria-labelledby="detail-modal-title"
       data-testid="detail-modal"

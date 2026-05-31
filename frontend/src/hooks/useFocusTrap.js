@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 
 /**
  * Focus management for custom modal/sidebar components that are not
@@ -130,7 +130,7 @@ export default function useFocusTrap(onClose, options = null) {
     };
     // Intentionally empty: we want the trap set up once per panel
     // lifetime. `onClose` identity changes are absorbed by onCloseRef.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   return containerRef;

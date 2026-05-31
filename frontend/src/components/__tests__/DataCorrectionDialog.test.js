@@ -1,4 +1,3 @@
-import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import DataCorrectionDialog from "../DataCorrectionDialog";
 import { buildDataCorrectionContext } from "@/constants/supportLinks";

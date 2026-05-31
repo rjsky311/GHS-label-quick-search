@@ -585,7 +585,7 @@ const renderMoreHazards = (count, model, className = "") => {
   )}</div>`;
 };
 
-const renderPurposeNotice = (model) => {
+const renderPurposeNotice = () => {
   // Purpose warnings live in the print modal. The physical label keeps its
   // limited area for identity, pictograms, signal word, and hazard content.
   return "";
@@ -619,7 +619,7 @@ const renderComplianceStatements = (statements, className, model) => {
   </div>`;
 };
 
-const renderComplianceQrPanel = (effectiveChem, model) => {
+const renderComplianceQrPanel = (effectiveChem) => {
   const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
 
   return `<div class="compliance-qr qrcode-panel">
@@ -654,7 +654,7 @@ const renderComplianceFooter = (effectiveChem, model, continuation = null) => {
       }
       ${renderCustomFields(model)}
     </div>
-    ${showQr ? renderComplianceQrPanel(effectiveChem, model) : ""}
+    ${showQr ? renderComplianceQrPanel(effectiveChem) : ""}
   </div>`;
 };
 
@@ -1374,7 +1374,7 @@ export function printLabels(
     handoffNotified = true;
     try {
       lifecycleCallbacks.onPrintHandoff(lifecycleMeta);
-    } catch (_) {
+    } catch {
       // Print handoff must not fail because recent-job persistence failed.
     }
   };
@@ -1544,7 +1544,7 @@ export function printLabels(
             once: true,
           },
         );
-      } catch (_) {
+      } catch {
         // Embedded webviews may not support afterprint on iframe windows.
       }
 

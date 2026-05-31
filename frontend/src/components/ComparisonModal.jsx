@@ -1,4 +1,4 @@
-import { X, Info } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import useFocusTrap from "@/hooks/useFocusTrap";

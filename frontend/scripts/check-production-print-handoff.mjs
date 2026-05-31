@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright-core";
@@ -415,8 +415,6 @@ const QR_TARGET_TYPES = new Set([
   "reference",
   "ghs-lookup",
 ]);
-const QR_TARGET_ROLE_TEXT_RE =
-  /(?:SDS|Regulatory|Occupational|Reference|法規|職安|參考)/i;
 
 const getAttributeMap = async (locator, attributes) => {
   const result = {};
@@ -1804,12 +1802,12 @@ const runCaseAttempt = async ({ testCase }) => {
 try {
   for (const testCase of cases) {
     // Keep progress visible for long HCl matrices.
-    // eslint-disable-next-line no-console
+
     console.log(`Running production print QA: ${testCase.id}`);
     let result = null;
     const attemptSummaries = [];
     for (let attempt = 1; attempt <= CASE_ATTEMPTS; attempt += 1) {
-      // eslint-disable-next-line no-console
+
       console.log(
         `Running production print QA: ${testCase.id} attempt ${attempt}/${CASE_ATTEMPTS}`,
       );
@@ -1835,7 +1833,7 @@ try {
       if (!isRetryableHandoffFailure(result) || attempt >= CASE_ATTEMPTS) {
         break;
       }
-      // eslint-disable-next-line no-console
+
       console.log(
         `Retrying production print QA: ${testCase.id} after ${[
           ...(result.failures || []),
@@ -1852,7 +1850,7 @@ try {
     };
     results.push(result);
     writeHandoffReport({ partial: true });
-    // eslint-disable-next-line no-console
+
     console.log(
       maybeJson({
         event: "production-print-qa-case-finish",

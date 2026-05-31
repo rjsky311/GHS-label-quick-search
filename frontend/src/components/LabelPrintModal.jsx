@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   Languages,
   Palette,
@@ -17,14 +16,11 @@ import {
   STOCK_IDS_BY_PRINT_TARGET,
   buildDisplayNames,
   buildBatchReviewCsv,
-  buildHazardPreview,
   buildPreviewRisks,
   formatMmValue,
   getBatchCategoryLabel,
   getBatchPurposeLabel,
-  getDensityLabel,
   getLabelPurposeForConfig,
-  getOptionLabel,
   getOutputTone,
   getPreviewFrameHeight,
   getPrintTargetForConfig,
@@ -74,7 +70,6 @@ import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
-  getLocalizedSignalWord,
   resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
 
@@ -388,26 +383,42 @@ export default function LabelPrintModal({
       null
     : null;
   const previewChem = activeBatchPreviewItem?.chemical || firstSelectedChem;
-  const activeBatchPreviewPrintItems = activeBatchPreviewItem
-    ? buildBatchPrintableItems(
-        { items: [activeBatchPreviewItem] },
-        { includeReducedPurpose: true, includeContinuation: true },
-      )
-    : [];
-  const previewSourceItems = activeBatchPreviewItem
-    ? activeBatchPreviewPrintItems.length
-      ? activeBatchPreviewPrintItems
-      : [activeBatchPreviewItem.chemical]
-    : selectedForLabel;
-  const previewLabelConfig = activeBatchPreviewPrintItems[0]?.__printLayoutOverride
-    ? {
-        ...effectiveLabelConfig,
-        ...activeBatchPreviewPrintItems[0].__printLayoutOverride,
-      }
-    : effectiveLabelConfig;
-  const previewLabelQuantities = activeBatchPreviewItem
-    ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
-    : labelQuantities;
+  const activeBatchPreviewPrintItems = useMemo(
+    () =>
+      activeBatchPreviewItem
+        ? buildBatchPrintableItems(
+            { items: [activeBatchPreviewItem] },
+            { includeReducedPurpose: true, includeContinuation: true },
+          )
+        : [],
+    [activeBatchPreviewItem],
+  );
+  const previewSourceItems = useMemo(
+    () =>
+      activeBatchPreviewItem
+        ? activeBatchPreviewPrintItems.length
+          ? activeBatchPreviewPrintItems
+          : [activeBatchPreviewItem.chemical]
+        : selectedForLabel,
+    [activeBatchPreviewItem, activeBatchPreviewPrintItems, selectedForLabel],
+  );
+  const previewLabelConfig = useMemo(
+    () =>
+      activeBatchPreviewPrintItems[0]?.__printLayoutOverride
+        ? {
+            ...effectiveLabelConfig,
+            ...activeBatchPreviewPrintItems[0].__printLayoutOverride,
+          }
+        : effectiveLabelConfig,
+    [activeBatchPreviewPrintItems, effectiveLabelConfig],
+  );
+  const previewLabelQuantities = useMemo(
+    () =>
+      activeBatchPreviewItem
+        ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
+        : labelQuantities,
+    [activeBatchPreviewItem, labelQuantities],
+  );
   const sheetPreviewItems = canPrintBatchSelectedScope
     ? batchSelectedPrintItems
     : selectedForLabel;
@@ -435,12 +446,6 @@ export default function LabelPrintModal({
     displayNames,
     tx,
   });
-  const densityLabel = getDensityLabel(
-    previewLabelConfig,
-    resolveLayoutProfile(previewLabelConfig),
-    previewChem,
-    tx,
-  );
   const visiblePreviewRisks =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
     plannerPreviewRisk
@@ -1211,6 +1216,7 @@ export default function LabelPrintModal({
     labProfile,
     previewZoomMode,
     activePreviewLabelIndex,
+    selectedForLabel.length,
   ]);
 
   useEffect(() => {
@@ -1426,30 +1432,6 @@ export default function LabelPrintModal({
     labelConfig,
     onLabelConfigChange,
   ]);
-
-  const renderPreviewMeta = () => (
-    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-      <span className="rounded-full bg-blue-50 px-2 py-1 font-mono text-blue-700">
-        {previewChem?.cas_number || "CAS"}
-      </span>
-      {previewChem?.signal_word && (
-        <span className="rounded-full bg-red-50 px-2 py-1 font-medium text-red-700">
-          {getLocalizedSignalWord(previewChem, currentLocale)}
-        </span>
-      )}
-      {(previewChem?.ghs_pictograms?.length || 0) > 0 && (
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">
-          {tx("label.previewPictograms", "Pictograms")}:{" "}
-          {previewChem.ghs_pictograms.length}
-        </span>
-      )}
-      {previewChem?.isPreparedSolution && (
-        <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
-          {t("print.preparedShort")}
-        </span>
-      )}
-    </div>
-  );
 
   const isFullPagePrimaryPreview =
     labelConfig.template === "full" &&

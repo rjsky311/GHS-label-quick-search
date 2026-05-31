@@ -442,7 +442,7 @@ function App() {
     });
   };
 
-  const searchSingle = async (directCas) => {
+  const searchSingle = useCallback(async (directCas) => {
     const query =
       typeof directCas === "string" ? directCas.trim() : singleCas.trim();
     if (!query) {
@@ -465,7 +465,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [singleCas, t, replaceResultsView, saveToHistory, logUnresolvedSearch]);
 
   const searchBatch = async () => {
     if (!batchCas.trim()) {

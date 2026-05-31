@@ -253,7 +253,7 @@ const clickRepresentativePreview = async (page, representative) => {
   try {
     await button.click({ timeout: 5000 });
     return true;
-  } catch (error) {
+  } catch {
     await page.evaluate((targetTestId) => {
       const node = document.querySelector(`[data-testid="${targetTestId}"]`);
       if (!node) return;

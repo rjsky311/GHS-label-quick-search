@@ -1,4 +1,4 @@
-import {
+﻿import {
   buildPreparedSolutionItem,
   buildPresetRecord,
   buildRecentRecord,
@@ -757,7 +757,7 @@ describe("dead-export guard", () => {
     // Import via require so the test reads the current module surface
     // rather than relying on the test-file import list (which is a
     // statically declared thing at the top of this file).
-    // eslint-disable-next-line global-require
+
     const mod = require("../preparedSolution");
     expect(mod.selectionHasPreparedItem).toBeUndefined();
   });

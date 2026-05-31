@@ -60,7 +60,7 @@ export function isPrintHandoffQaMode() {
       new URLSearchParams(window.location.search).get(PRINT_QA_HANDOFF_PARAM) ===
       "1"
     );
-  } catch (_) {
+  } catch {
     return false;
   }
 }

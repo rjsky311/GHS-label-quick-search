@@ -61,6 +61,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
+    "lint": "eslint src scripts",
     "build": "vite build",
     "preview": "vite preview",
     "qa:bundle-budget": "node scripts/check-bundle-budget.mjs",

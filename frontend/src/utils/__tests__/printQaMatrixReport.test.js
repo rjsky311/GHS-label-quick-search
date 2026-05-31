@@ -1,4 +1,4 @@
-jest.mock("@/i18n", () => ({
+﻿jest.mock("@/i18n", () => ({
   t: Object.assign((key) => key, { bind: () => (key) => key }),
   language: "en",
 }));
@@ -68,7 +68,7 @@ const maybeWriteReport = (report) => {
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, `${JSON.stringify(report, null, 2)}\n`);
   // Keep this visible when running `npm run qa:print-report`.
-  // eslint-disable-next-line no-console
+
   console.log(`Print QA report written to ${absolutePath}`);
 };
 
@@ -108,7 +108,7 @@ const maybeWritePreviewArtifacts = () => {
   );
 
   // Keep this visible when running `npm run qa:print-report`.
-  // eslint-disable-next-line no-console
+
   console.log(`Print QA previews written to ${absoluteDir}`);
 };
 
@@ -320,7 +320,7 @@ const maybeWritePrintArtifacts = () => {
   );
 
   // Keep this visible when running `npm run qa:print-report`.
-  // eslint-disable-next-line no-console
+
   console.log(`Print QA print artifacts written to ${absoluteDir}`);
 };
 

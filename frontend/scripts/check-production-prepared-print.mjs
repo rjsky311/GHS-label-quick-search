@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright-core";
@@ -1090,7 +1090,7 @@ const runCaseWithRetries = async ({ browser, testCase }) => {
     if (lastResult.passed || !lastResult.retryable || attempt >= preparedCaseAttempts) {
       return lastResult;
     }
-    // eslint-disable-next-line no-console
+
     console.warn(
       `Retrying production prepared print QA case ${testCase.id} after retryable runtime failure at stage ${lastResult.diagnostics?.stage || "unknown"} (${attempt}/${preparedCaseAttempts}).`,
     );
@@ -1110,7 +1110,7 @@ const browser = await chromium.launch({
 const results = [];
 try {
   for (const testCase of ALL_PREPARED_CASES) {
-    // eslint-disable-next-line no-console
+
     console.log(`Running production prepared print QA: ${testCase.id}`);
     results.push(await runCaseWithRetries({ browser, testCase }));
   }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { createRef } from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import SearchAutocomplete from '../SearchAutocomplete';
 import axios from 'axios';
 
@@ -27,7 +27,7 @@ const defaultProps = {
   onSearch: jest.fn(),
   history: [],
   favorites: [],
-  searchInputRef: React.createRef(),
+  searchInputRef: createRef(),
   loading: false,
 };
 

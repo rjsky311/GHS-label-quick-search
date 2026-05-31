@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
@@ -81,7 +81,6 @@ const inspectPrintDom = async (page, testCase) =>
   page.evaluate(
     ({
       expectedLabelKind,
-      expectedLabelKinds,
       expectedPictograms,
       expectedHasQr,
       expectedStockPreset,
@@ -545,7 +544,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1600 } });
   for (const testCase of index) {
     // Keep progress visible because PDF generation can take a while.
-    // eslint-disable-next-line no-console
+
     console.log(`Rendering print PDF QA: ${testCase.id}`);
     results.push(await runCase({ page, testCase }));
   }

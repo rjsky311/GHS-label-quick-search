@@ -5,9 +5,7 @@ import { API } from "@/constants/ghs";
 import i18n from "@/i18n";
 import {
   buildCsvRows,
-  buildExportPreview,
   normalizeResultsForExport,
-  resolveExportDataState,
 } from "@/utils/exportRows";
 import { escapeCsvCell } from "@/utils/csvCell";
 
@@ -80,7 +78,6 @@ export async function exportToExcel(results, options = {}) {
       count: normalizedResults.length,
     }));
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error("Excel export failed:", e);
     toast.error(t("export.errorXlsx"));
   }
@@ -108,7 +105,6 @@ export async function exportToCSV(results, options = {}) {
     }));
     return;
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn("CSV server export failed, using client-side fallback:", e);
   }
 

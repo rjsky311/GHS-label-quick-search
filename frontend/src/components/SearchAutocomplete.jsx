@@ -14,7 +14,6 @@ export default function SearchAutocomplete({
   history,
   favorites,
   searchInputRef,
-  loading,
 }) {
   const { t } = useTranslation();
   const [showSuggestions, setShowSuggestions] = useState(false);

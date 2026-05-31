@@ -1,4 +1,4 @@
-/**
+﻿/**
  * App-level integration tests for v1.9 M3 Tier 1 PR-A.
  *
  * Pins the behaviour that component-level tests cannot verify on
@@ -27,7 +27,6 @@
  * `printAllWithGhs.integration.test.js`.
  */
 
-import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import axios from "axios";
 import App from "@/App";
@@ -148,7 +147,7 @@ const ethanolResult = {
   other_classifications: [],
 };
 
-async function enterPrepareFlowFor(result) {
+async function enterPrepareFlowFor(_result) {
   // Open detail for the given result.
   const detailBtn = screen.getAllByTestId(/^detail-btn-/)[0];
   await act(async () => fireEvent.click(detailBtn));
@@ -249,7 +248,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     // Bump Ethanol's quantity to 5 inside the modal.
     const plusBtn = screen.getByText("+");
     for (let i = 0; i < 4; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+
       await act(async () => fireEvent.click(plusBtn));
     }
     // Close the label modal (no cancel cleanup triggers because
@@ -424,7 +423,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
     // dialog belongs to the prepared row.
     const plusBtn = screen.getByText("+");
     for (let i = 0; i < 4; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+
       await act(async () => fireEvent.click(plusBtn));
     }
 
@@ -809,7 +808,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
   // Save fires a toast.success, and it is emphatically NOT a submit
   // (LabelPrintModal does not open, selection / quantities stay put).
   it("Save-as-preset fires toast.success and does NOT open LabelPrintModal", async () => {
-    // eslint-disable-next-line global-require
+
     const { toast } = require("sonner");
     render(<App />);
     await runBatchSearch({
@@ -849,7 +848,7 @@ describe("v1.9 M3 Tier 1 PR-A — prepare-solution flow (App integration)", () =
   });
 
   it("saving the same preset twice reports an update instead of a second silent create", async () => {
-    // eslint-disable-next-line global-require
+
     const { toast } = require("sonner");
     render(<App />);
     await runBatchSearch({

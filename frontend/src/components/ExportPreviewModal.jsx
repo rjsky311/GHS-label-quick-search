@@ -42,7 +42,10 @@ export default function ExportPreviewModal({
     scopeOptions.find((option) => option.key === selectedScope) ||
     scopeOptions.find((option) => option.key === EXPORT_SCOPE_KEYS.VISIBLE) ||
     scopeOptions[0];
-  const scopedResults = selectedScopeOption?.results || [];
+  const scopedResults = useMemo(
+    () => selectedScopeOption?.results || [],
+    [selectedScopeOption],
+  );
   const sourceTotalCount =
     Array.isArray(allResults) && allResults.length > 0
       ? allResults.length
