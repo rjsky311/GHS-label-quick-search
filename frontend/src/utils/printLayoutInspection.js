@@ -62,10 +62,15 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".qrcode-panel", "qr-panel-overflow"],
       [".qrcode-caption", "qr-caption-overflow"],
     ].forEach(([selector, type]) => {
-      const element = label.querySelector(selector);
-      if (elementOverflows(element, 2)) {
-        issues.push({ type, ...issueMeta });
-      }
+      const elements =
+        typeof label.querySelectorAll === "function"
+          ? Array.from(label.querySelectorAll(selector))
+          : [label.querySelector?.(selector)].filter(Boolean);
+      elements.forEach((element, elementIndex) => {
+        if (elementOverflows(element, 2)) {
+          issues.push({ type, ...issueMeta, selector, elementIndex });
+        }
+      });
     });
 
     const footer = label.querySelector(".compliance-footer");

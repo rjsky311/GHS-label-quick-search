@@ -21,12 +21,20 @@ from api_validation import (
     MAX_CORRECTION_CONTEXT_CHARS,
     MAX_CORRECTION_SOURCE_LENGTH,
     MAX_CORRECTION_TEXT_LENGTH,
+    MAX_EXPORT_DICT_KEYS,
+    MAX_EXPORT_KEY_CHARS,
+    MAX_EXPORT_LIST_ITEMS,
+    MAX_EXPORT_NESTING_DEPTH,
+    MAX_EXPORT_PAYLOAD_JSON_CHARS,
+    MAX_EXPORT_ROW_JSON_CHARS,
     MAX_EXPORT_ROWS,
+    MAX_EXPORT_SCALAR_CHARS,
     MAX_MISS_CONTEXT_ITEMS,
     MAX_MISS_CONTEXT_JSON_CHARS,
     MAX_MISS_ENDPOINT_LENGTH,
     MAX_MISS_QUERY_KIND_LENGTH,
     MAX_MISS_QUERY_LENGTH,
+    MAX_PUBLIC_CAS_QUERY_LENGTH,
     MAX_REFERENCE_PRIORITY,
     MAX_WORKSPACE_DOCUMENT_JSON_CHARS,
     MISS_QUERY_STATUSES,
@@ -39,7 +47,20 @@ from api_validation import (
 
 
 class CASQuery(BaseModel):
-    cas_numbers: List[str] = Field(..., max_length=100)
+    cas_numbers: List[str] = Field(..., min_length=1, max_length=100)
+
+    @field_validator("cas_numbers")
+    @classmethod
+    def cas_numbers_must_stay_bounded(cls, value: List[str]) -> List[str]:
+        normalized_values = []
+        for item in value:
+            text = str(item or "").strip()
+            if not text:
+                raise ValueError("CAS query must not be blank")
+            if len(text) > MAX_PUBLIC_CAS_QUERY_LENGTH:
+                raise ValueError("CAS query is too long")
+            normalized_values.append(text)
+        return normalized_values
 
 
 class GHSReport(BaseModel):
@@ -76,6 +97,27 @@ class ChemicalResult(BaseModel):
     reference_links: List[Dict[str, Any]] = []
 
 
+def _validate_export_value(value: Any, *, depth: int = 0) -> None:
+    if depth > MAX_EXPORT_NESTING_DEPTH:
+        raise ValueError("export payload is too deeply nested")
+    if isinstance(value, dict):
+        if len(value) > MAX_EXPORT_DICT_KEYS:
+            raise ValueError("export row has too many fields")
+        for raw_key, raw_value in value.items():
+            if len(str(raw_key)) > MAX_EXPORT_KEY_CHARS:
+                raise ValueError("export field name is too long")
+            _validate_export_value(raw_value, depth=depth + 1)
+        return
+    if isinstance(value, list):
+        if len(value) > MAX_EXPORT_LIST_ITEMS:
+            raise ValueError("export list field has too many items")
+        for item in value:
+            _validate_export_value(item, depth=depth + 1)
+        return
+    if isinstance(value, str) and len(value) > MAX_EXPORT_SCALAR_CHARS:
+        raise ValueError("export text field is too long")
+
+
 class ExportRequest(BaseModel):
     results: List[Dict[str, Any]] = Field(..., max_length=MAX_EXPORT_ROWS)
     format: str = "xlsx"
@@ -84,6 +126,19 @@ class ExportRequest(BaseModel):
     export_count: Optional[int] = None
     source_total_count: Optional[int] = Field(default=None, ge=0, le=MAX_EXPORT_ROWS)
     visible_count: Optional[int] = Field(default=None, ge=0, le=MAX_EXPORT_ROWS)
+
+    @field_validator("results")
+    @classmethod
+    def results_must_stay_bounded(cls, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+        if len(encoded) > MAX_EXPORT_PAYLOAD_JSON_CHARS:
+            raise ValueError("export payload is too large")
+        for row in value:
+            row_encoded = json.dumps(row, ensure_ascii=False, sort_keys=True, default=str)
+            if len(row_encoded) > MAX_EXPORT_ROW_JSON_CHARS:
+                raise ValueError("export row payload is too large")
+            _validate_export_value(row)
+        return value
 
 
 class WorkspaceDocumentPayload(BaseModel):

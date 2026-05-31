@@ -1096,6 +1096,7 @@
   "pilot.correctionUnknownTarget": "未提供目標識別資訊",
   "pilot.correctionCurrentOutput": "目前",
   "pilot.correctionExpectedOutput": "期望",
+  "pilot.correctionDuplicateCount": "回報 {{count}} 次",
   "pilot.evidenceLink": "佐證連結",
   "pilot.correctionReviewNotesPlaceholder": "審查備註",
   "pilot.candidateFound": "候選",

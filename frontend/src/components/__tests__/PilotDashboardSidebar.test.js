@@ -123,6 +123,7 @@ const baseProps = {
           current_output: "English name only",
           expected_output: "中文名稱：乙醇",
           evidence_url: "https://example.com/evidence",
+          duplicate_count: 3,
           status: "open",
           updated_at: "2026-04-18T13:00:00+00:00",
         },
@@ -218,6 +219,8 @@ const baseProps = {
   correctionRequests: [
     {
       id: 201,
+      evidence_url: "https://example.com/evidence",
+      duplicate_count: 3,
       issue_type: "missing-chinese-name",
       cas_number: "64-17-5",
       chemical_name: "Ethanol",
@@ -731,6 +734,17 @@ describe("PilotDashboardSidebar", () => {
         }),
       });
     });
+  });
+
+  it("surfaces duplicate correction reports and safe evidence links", () => {
+    render(<PilotDashboardSidebar {...baseProps} />);
+
+    expect(
+      screen.getByTestId("correction-request-duplicate-count-201"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("correction-request-evidence-link-201"),
+    ).toHaveAttribute("rel", "noopener noreferrer");
   });
 
   it("renders stored correction candidate evidence as review-only", () => {

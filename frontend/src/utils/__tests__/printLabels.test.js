@@ -288,6 +288,40 @@ describe("inspectPrintLayoutDocument", () => {
       ],
     );
   });
+
+  it("reports overflow from later repeated elements inside a label", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label">
+        <div class="hazard-summary-item"></div>
+        <div class="hazard-summary-item"></div>
+      </div>
+    `;
+
+    const [firstItem, secondItem] = root.querySelectorAll(
+      ".hazard-summary-item",
+    );
+    Object.defineProperties(firstItem, {
+      clientHeight: { value: 20, configurable: true },
+      scrollHeight: { value: 20, configurable: true },
+      clientWidth: { value: 100, configurable: true },
+      scrollWidth: { value: 100, configurable: true },
+    });
+    Object.defineProperties(secondItem, {
+      clientHeight: { value: 20, configurable: true },
+      scrollHeight: { value: 28, configurable: true },
+      clientWidth: { value: 100, configurable: true },
+      scrollWidth: { value: 100, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([
+      expect.objectContaining({
+        type: "hazard-summary-overflow",
+        selector: ".hazard-summary-item",
+        elementIndex: 1,
+      }),
+    ]);
+  });
 });
 
 describe("inspectPrintContentFit", () => {

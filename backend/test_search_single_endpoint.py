@@ -3,6 +3,7 @@ import asyncio
 from httpx import ASGITransport, AsyncClient
 
 import server
+from api_validation import MAX_PUBLIC_SEARCH_QUERY_LENGTH
 
 
 async def test_search_single_query_endpoint_supports_name_lookup(monkeypatch):
@@ -32,6 +33,17 @@ async def test_search_single_query_endpoint_requires_query():
         response = await ac.get("/api/search-single", params={"q": "   "})
 
     assert response.status_code == 400
+
+
+async def test_search_single_query_endpoint_rejects_overlong_query():
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get(
+            "/api/search-single",
+            params={"q": "x" * (MAX_PUBLIC_SEARCH_QUERY_LENGTH + 1)},
+        )
+
+    assert response.status_code == 422
 
 
 async def test_search_endpoint_returns_upstream_error_before_gateway_timeout(monkeypatch):

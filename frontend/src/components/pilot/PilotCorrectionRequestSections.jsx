@@ -208,6 +208,9 @@ export function TopCorrectionRequestsSection({
             const expectedOutput =
               item.expected_output || item.expectedOutput || "";
             const source = item.source || item.sourceLabel || "";
+            const duplicateCount = Number(
+              item.duplicate_count || item.duplicateCount || 1,
+            );
             return (
               <div
                 key={`correction-${requestId}`}
@@ -227,6 +230,17 @@ export function TopCorrectionRequestsSection({
                       source={source}
                       requestId={requestId}
                     />
+                    {duplicateCount > 1 ? (
+                      <span
+                        className="mt-1 inline-flex w-fit rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800"
+                        data-testid={`correction-request-duplicate-count-${requestId}`}
+                      >
+                        {t("pilot.correctionDuplicateCount", {
+                          count: duplicateCount,
+                          defaultValue: "{{count}} reports",
+                        })}
+                      </span>
+                    ) : null}
                     <CorrectionTargetSummary
                       casNumber={casNumber}
                       chemicalName={chemicalName}
@@ -261,8 +275,9 @@ export function TopCorrectionRequestsSection({
                       <a
                         href={evidenceUrl}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
+                        data-testid={`correction-request-evidence-link-${requestId}`}
                       >
                         {t("pilot.evidenceLink", {
                           defaultValue: "Evidence link",

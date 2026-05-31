@@ -243,6 +243,7 @@ class PilotStore:
               source TEXT NOT NULL DEFAULT 'public',
               status TEXT NOT NULL DEFAULT 'open',
               review_notes TEXT,
+              duplicate_count INTEGER NOT NULL DEFAULT 1,
               created_at TEXT NOT NULL,
               updated_at TEXT NOT NULL
             );
@@ -255,6 +256,7 @@ class PilotStore:
             """
         )
         self._ensure_dictionary_entry_schema_locked()
+        self._ensure_correction_request_schema_locked()
         conn.commit()
 
     def _ensure_dictionary_entry_schema_locked(self) -> None:
@@ -275,6 +277,27 @@ class PilotStore:
             WHERE status IS NULL OR TRIM(status) = ''
             """,
             (APPROVED_MANUAL_ENTRY_STATUS,),
+        )
+
+    def _ensure_correction_request_schema_locked(self) -> None:
+        conn = self._require_conn()
+        columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(dictionary_correction_requests)"
+            ).fetchall()
+        }
+        if "duplicate_count" not in columns:
+            conn.execute(
+                "ALTER TABLE dictionary_correction_requests "
+                "ADD COLUMN duplicate_count INTEGER NOT NULL DEFAULT 1"
+            )
+        conn.execute(
+            """
+            UPDATE dictionary_correction_requests
+            SET duplicate_count = 1
+            WHERE duplicate_count IS NULL OR duplicate_count < 1
+            """
         )
 
     def _require_conn(self) -> sqlite3.Connection:
@@ -1126,6 +1149,7 @@ class PilotStore:
         item["evidenceUrl"] = item.get("evidence_url")
         item["evidenceType"] = item.get("evidence_type")
         item["reviewNotes"] = item.get("review_notes")
+        item["duplicateCount"] = int(item.get("duplicate_count") or 1)
         item["createdAt"] = item.get("created_at")
         item["updatedAt"] = item.get("updated_at")
         if include_context:
@@ -1158,6 +1182,7 @@ class PilotStore:
               source,
               status,
               review_notes,
+              duplicate_count,
               created_at,
               updated_at
             FROM dictionary_correction_requests
@@ -1190,11 +1215,70 @@ class PilotStore:
         now = utc_now_iso()
         normalized_issue_type = normalize_correction_request_type(issue_type)
         normalized_status = normalize_correction_request_status(status)
-        candidate_json = json.dumps(candidate or {}, ensure_ascii=False)
+        candidate_json = json.dumps(candidate or {}, ensure_ascii=False, sort_keys=True)
         source = (source or "public").strip() or "public"
+        normalized_cas_number = (cas_number or "").strip() or None
+        normalized_chemical_name = (chemical_name or "").strip() or None
+        normalized_query_text = (query_text or "").strip() or None
+        normalized_current_output = (current_output or "").strip() or None
+        normalized_expected_output = (expected_output or "").strip() or None
+        normalized_evidence_url = (evidence_url or "").strip() or None
+        normalized_evidence_type = (evidence_type or "").strip() or None
+        normalized_local_context = (local_context or "").strip() or None
 
         with self._lock:
             conn = self._require_conn()
+            existing = conn.execute(
+                """
+                SELECT id
+                FROM dictionary_correction_requests
+                WHERE issue_type = ?
+                  AND COALESCE(cas_number, '') = ?
+                  AND COALESCE(chemical_name, '') = ?
+                  AND COALESCE(query_text, '') = ?
+                  AND COALESCE(current_output, '') = ?
+                  AND COALESCE(expected_output, '') = ?
+                  AND COALESCE(evidence_url, '') = ?
+                  AND COALESCE(evidence_type, '') = ?
+                  AND COALESCE(candidate_json, '') = ?
+                  AND source = ?
+                  AND status IN (?, ?)
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                (
+                    normalized_issue_type,
+                    normalized_cas_number or "",
+                    normalized_chemical_name or "",
+                    normalized_query_text or "",
+                    normalized_current_output or "",
+                    normalized_expected_output or "",
+                    normalized_evidence_url or "",
+                    normalized_evidence_type or "",
+                    candidate_json,
+                    source,
+                    "open",
+                    "candidate_found",
+                ),
+            ).fetchone()
+            if existing is not None:
+                request_id = int(existing["id"])
+                conn.execute(
+                    """
+                    UPDATE dictionary_correction_requests
+                    SET
+                      duplicate_count = COALESCE(duplicate_count, 1) + 1,
+                      local_context = COALESCE(local_context, ?),
+                      updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (normalized_local_context, now, request_id),
+                )
+                conn.commit()
+                record = self._fetch_correction_request_by_id(request_id)
+                assert record is not None
+                return record
+
             cursor = conn.execute(
                 """
                 INSERT INTO dictionary_correction_requests(
@@ -1218,14 +1302,14 @@ class PilotStore:
                 """,
                 (
                     normalized_issue_type,
-                    (cas_number or "").strip() or None,
-                    (chemical_name or "").strip() or None,
-                    (query_text or "").strip() or None,
-                    (current_output or "").strip() or None,
-                    (expected_output or "").strip() or None,
-                    (evidence_url or "").strip() or None,
-                    (evidence_type or "").strip() or None,
-                    (local_context or "").strip() or None,
+                    normalized_cas_number,
+                    normalized_chemical_name,
+                    normalized_query_text,
+                    normalized_current_output,
+                    normalized_expected_output,
+                    normalized_evidence_url,
+                    normalized_evidence_type,
+                    normalized_local_context,
                     candidate_json,
                     source,
                     normalized_status,
@@ -1286,6 +1370,7 @@ class PilotStore:
               source,
               status,
               review_notes,
+              duplicate_count,
               created_at,
               updated_at
             FROM dictionary_correction_requests
@@ -1311,10 +1396,19 @@ class PilotStore:
                 break
         return items
 
-    def get_correction_request_status_counts(self) -> dict[str, int]:
+    def get_correction_request_status_counts(
+        self,
+        *,
+        report_counts: bool = False,
+    ) -> dict[str, int]:
+        count_expr = (
+            "COALESCE(SUM(COALESCE(duplicate_count, 1)), 0)"
+            if report_counts
+            else "COUNT(*)"
+        )
         rows = self._fetchall(
-            """
-            SELECT status, COUNT(*) AS count
+            f"""
+            SELECT status, {count_expr} AS count
             FROM dictionary_correction_requests
             GROUP BY status
             """
@@ -1329,6 +1423,7 @@ class PilotStore:
         *,
         statuses: Optional[Iterable[str]] = None,
         source: Optional[str] = None,
+        report_counts: bool = False,
     ) -> dict[str, int]:
         params: list[Any] = []
         where_clauses: list[str] = []
@@ -1347,9 +1442,14 @@ class PilotStore:
             where_clauses.append("source = ?")
             params.append(normalized_source)
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        count_expr = (
+            "COALESCE(SUM(COALESCE(duplicate_count, 1)), 0)"
+            if report_counts
+            else "COUNT(*)"
+        )
         rows = self._fetchall(
             f"""
-            SELECT issue_type, COUNT(*) AS count
+            SELECT issue_type, {count_expr} AS count
             FROM dictionary_correction_requests
             {where_sql}
             GROUP BY issue_type
@@ -1365,6 +1465,7 @@ class PilotStore:
         self,
         *,
         statuses: Optional[Iterable[str]] = None,
+        report_counts: bool = False,
     ) -> dict[str, int]:
         params: list[Any] = []
         where_status = ""
@@ -1378,9 +1479,14 @@ class PilotStore:
                 + ")"
             )
             params.extend(normalized_statuses)
+        count_expr = (
+            "COALESCE(SUM(COALESCE(duplicate_count, 1)), 0)"
+            if report_counts
+            else "COUNT(*)"
+        )
         rows = self._fetchall(
             f"""
-            SELECT source, COUNT(*) AS count
+            SELECT source, {count_expr} AS count
             FROM dictionary_correction_requests
             {where_status}
             GROUP BY source
@@ -1432,6 +1538,7 @@ class PilotStore:
               source,
               status,
               review_notes,
+              duplicate_count,
               created_at,
               updated_at
             FROM dictionary_correction_requests
@@ -1461,13 +1568,30 @@ class PilotStore:
 
     def get_pilot_triage_summary(self) -> dict[str, Any]:
         correction_status_counts = self.get_correction_request_status_counts()
+        correction_report_status_counts = self.get_correction_request_status_counts(
+            report_counts=True,
+        )
         correction_issue_type_counts = self.get_correction_request_issue_type_counts(
             statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+        )
+        correction_report_issue_type_counts = (
+            self.get_correction_request_issue_type_counts(
+                statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                report_counts=True,
+            )
         )
         correction_source_counts = self.get_correction_request_source_counts(
             statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
         )
+        correction_report_source_counts = self.get_correction_request_source_counts(
+            statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+            report_counts=True,
+        )
         inventory_handoff_count = correction_source_counts.get(
+            INVENTORY_HANDOFF_CORRECTION_SOURCE,
+            0,
+        )
+        inventory_handoff_report_count = correction_report_source_counts.get(
             INVENTORY_HANDOFF_CORRECTION_SOURCE,
             0,
         )
@@ -1509,6 +1633,10 @@ class PilotStore:
             correction_status_counts.get(status, 0)
             for status in CORRECTION_REQUEST_REVIEW_STATUSES
         )
+        open_correction_report_count = sum(
+            correction_report_status_counts.get(status, 0)
+            for status in CORRECTION_REQUEST_REVIEW_STATUSES
+        )
 
         stale_miss_query_count = int(miss_retention.get("purgeableCount", 0))
         inactive_reference_link_count = reference_link_status_counts.get("inactive", 0)
@@ -1532,6 +1660,23 @@ class PilotStore:
             ),
             "staleMissQueryRows": stale_miss_query_count,
             "inactiveReferenceLinks": inactive_reference_link_count,
+        }
+        attention_report_counts = {
+            "openCorrectionReports": open_correction_report_count,
+            "duplicateCorrectionReports": max(
+                open_correction_report_count - open_correction_count,
+                0,
+            ),
+            "inventoryHandoffReports": inventory_handoff_report_count,
+            "missingChineseNameReports": correction_report_issue_type_counts.get(
+                "missing-chinese-name",
+                0,
+            ),
+            "noGhsReports": correction_report_issue_type_counts.get("no-ghs-data", 0),
+            "sourceConflictReports": correction_report_issue_type_counts.get(
+                "source-conflict",
+                0,
+            ),
         }
         primary_queue_item_counts = {
             "openCorrectionRequests": open_correction_count,
@@ -1667,13 +1812,20 @@ class PilotStore:
             "openWorkItemCount": int(open_work_item_count),
             "attentionSignalCount": int(attention_signal_count),
             "attentionCounts": attention_counts,
+            "attentionReportCounts": attention_report_counts,
             "primaryQueueItemCounts": primary_queue_item_counts,
             "correctionIssueTypeCounts": correction_issue_type_counts,
+            "correctionIssueTypeReportCounts": correction_report_issue_type_counts,
             "correctionSourceCounts": correction_source_counts,
+            "correctionSourceReportCounts": correction_report_source_counts,
             "inventoryHandoffIssueTypeCounts": inventory_handoff_issue_type_counts,
             "recommendedFocus": recommended_focus,
             "signals": {
                 "hasCorrectionBacklog": open_correction_count > 0,
+                "hasDuplicateCorrectionReports": attention_report_counts[
+                    "duplicateCorrectionReports"
+                ]
+                > 0,
                 "hasUnresolvedSearchBacklog": unresolved_search_count > 0,
                 "hasManualReviewBacklog": pending_manual_count > 0,
                 "hasSourceConflictReports": attention_counts["sourceConflictReports"] > 0,
@@ -1759,6 +1911,12 @@ class PilotStore:
             "correctionRequestCount": self._scalar(
                 "SELECT COUNT(*) FROM dictionary_correction_requests"
             ),
+            "correctionRequestReportCount": self._scalar(
+                """
+                SELECT COALESCE(SUM(COALESCE(duplicate_count, 1)), 0)
+                FROM dictionary_correction_requests
+                """
+            ),
             "openCorrectionRequestCount": self._scalar(
                 """
                 SELECT COUNT(*)
@@ -1767,9 +1925,26 @@ class PilotStore:
                 """,
                 CORRECTION_REQUEST_REVIEW_STATUSES,
             ),
+            "openCorrectionRequestReportCount": self._scalar(
+                """
+                SELECT COALESCE(SUM(COALESCE(duplicate_count, 1)), 0)
+                FROM dictionary_correction_requests
+                WHERE status IN (?, ?)
+                """,
+                CORRECTION_REQUEST_REVIEW_STATUSES,
+            ),
             "correctionRequestStatusCounts": self.get_correction_request_status_counts(),
+            "correctionRequestReportStatusCounts": (
+                self.get_correction_request_status_counts(report_counts=True)
+            ),
             "correctionRequestSourceCounts": self.get_correction_request_source_counts(
                 statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+            ),
+            "correctionRequestReportSourceCounts": (
+                self.get_correction_request_source_counts(
+                    statuses=CORRECTION_REQUEST_REVIEW_STATUSES,
+                    report_counts=True,
+                )
             ),
             "convertedCorrectionCandidateCount": self.get_converted_correction_candidate_count(),
             "convertedCorrectionCandidates": self.list_converted_correction_candidates(

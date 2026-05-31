@@ -118,7 +118,30 @@ export default function PilotDashboardSidebar(props) {
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
-  const topCorrectionRequests = dictionary.topCorrectionRequests || [];
+  const correctionRequestById = useMemo(
+    () =>
+      new Map(
+        correctionRequests
+          .map((item) => [item?.id || item?.requestId, item])
+          .filter(([id]) => id != null),
+      ),
+    [correctionRequests],
+  );
+  const topCorrectionRequests = (dictionary.topCorrectionRequests || []).map(
+    (item) => {
+      const fallback = correctionRequestById.get(item?.id || item?.requestId);
+      if (!fallback) return item;
+      return {
+        ...fallback,
+        ...item,
+        duplicate_count:
+          item.duplicate_count ??
+          item.duplicateCount ??
+          fallback.duplicate_count ??
+          fallback.duplicateCount,
+      };
+    },
+  );
   const inventoryHandoffCorrectionRequests =
     dictionary.inventoryHandoffCorrectionRequests?.length > 0
       ? dictionary.inventoryHandoffCorrectionRequests

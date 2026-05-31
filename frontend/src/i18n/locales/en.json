@@ -1104,6 +1104,7 @@
   "pilot.correctionUnknownTarget": "No target identity provided",
   "pilot.correctionCurrentOutput": "Current",
   "pilot.correctionExpectedOutput": "Expected",
+  "pilot.correctionDuplicateCount": "{{count}} reports",
   "pilot.evidenceLink": "Evidence link",
   "pilot.correctionReviewNotesPlaceholder": "Review note",
   "pilot.candidateFound": "Candidate",

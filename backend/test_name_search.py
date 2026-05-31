@@ -19,6 +19,11 @@ from server import (
 )
 from pilot_store import PilotStore
 from chemical_dict import EN_TO_CAS, ZH_TO_CAS, CAS_TO_EN, CAS_TO_ZH, ALIASES_ZH, ALIASES_EN
+from api_validation import (
+    MAX_EXPORT_SCALAR_CHARS,
+    MAX_PUBLIC_CAS_QUERY_LENGTH,
+    MAX_PUBLIC_SEARCH_QUERY_LENGTH,
+)
 
 
 def route_limits_for(endpoint_name):
@@ -900,6 +905,21 @@ def test_admin_dictionary_payloads_reject_unbounded_values():
         )
 
 
+def test_public_payload_models_reject_unbounded_values():
+    with pytest.raises(ValidationError):
+        server.CASQuery(cas_numbers=["1" * (MAX_PUBLIC_CAS_QUERY_LENGTH + 1)])
+
+    with pytest.raises(ValidationError):
+        server.ExportRequest(
+            results=[
+                {
+                    "cas_number": "64-17-5",
+                    "name_en": "x" * (MAX_EXPORT_SCALAR_CHARS + 1),
+                }
+            ]
+        )
+
+
 async def test_admin_write_routes_reject_invalid_payloads(monkeypatch):
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
     transport = ASGITransport(app=app)
@@ -1109,6 +1129,15 @@ async def test_search_by_name_short_query_returns_empty():
     assert response.status_code == 200
     data = response.json()
     assert data["results"] == []
+
+
+async def test_search_by_name_rejects_overlong_query():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get(
+            f"/api/search-by-name/{'x' * (MAX_PUBLIC_SEARCH_QUERY_LENGTH + 1)}"
+        )
+    assert response.status_code == 422
 
 
 async def test_search_by_name_max_20_results():
@@ -2444,8 +2473,8 @@ from server import limiter as _limiter
 
 
 def test_limiter_is_configured_with_custom_key_func():
-    """Rate limit buckets must key off client IP (including
-    X-Forwarded-For for Zeabur proxy), not a shared global."""
+    """Rate limit buckets must key off resolved client IP, not a shared
+    global bucket."""
     from server import _client_ip
     assert _limiter._key_func is _client_ip
 
@@ -2461,11 +2490,11 @@ def test_pubchem_outbound_semaphore_is_bounded():
     assert _pubchem_semaphore._value == PUBCHEM_OUTBOUND_CONCURRENCY
 
 
-def test_client_ip_prefers_leftmost_x_forwarded_for():
-    """When behind a proxy, X-Forwarded-For's leftmost IP is the real
-    client, so rate limiting must bucket on that rather than the
-    proxy's address. Otherwise every user shares one bucket."""
+def test_client_ip_ignores_forwarded_header_by_default(monkeypatch):
+    """Forwarded headers are client-controlled unless the deployment has
+    verified that its proxy overwrites them."""
     from server import _client_ip
+    monkeypatch.delenv("TRUST_FORWARDED_HEADERS", raising=False)
 
     class _FakeHeaders(dict):
         def get(self, k, default=None):
@@ -2476,6 +2505,44 @@ def test_client_ip_prefers_leftmost_x_forwarded_for():
 
     class _FakeRequest:
         headers = _FakeHeaders({"x-forwarded-for": "203.0.113.9, 10.0.0.1"})
+        client = _FakeClient()
+
+    assert _client_ip(_FakeRequest()) == "10.0.0.1"
+
+
+def test_client_ip_prefers_leftmost_x_forwarded_for_when_trusted(monkeypatch):
+    """Opted-in trusted proxy deployments can still bucket by the original
+    client address."""
+    from server import _client_ip
+    monkeypatch.setenv("TRUST_FORWARDED_HEADERS", "1")
+
+    class _FakeHeaders(dict):
+        def get(self, k, default=None):
+            return super().get(k.lower(), default)
+
+    class _FakeClient:
+        host = "10.0.0.1"
+
+    class _FakeRequest:
+        headers = _FakeHeaders({"x-forwarded-for": "203.0.113.9, 10.0.0.1"})
+        client = _FakeClient()
+
+    assert _client_ip(_FakeRequest()) == "203.0.113.9"
+
+
+def test_client_ip_skips_invalid_forwarded_values_when_trusted(monkeypatch):
+    from server import _client_ip
+    monkeypatch.setenv("TRUST_FORWARDED_HEADERS", "1")
+
+    class _FakeHeaders(dict):
+        def get(self, k, default=None):
+            return super().get(k.lower(), default)
+
+    class _FakeClient:
+        host = "10.0.0.1"
+
+    class _FakeRequest:
+        headers = _FakeHeaders({"x-forwarded-for": "spoofed, 203.0.113.9"})
         client = _FakeClient()
 
     assert _client_ip(_FakeRequest()) == "203.0.113.9"

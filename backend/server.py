@@ -1,12 +1,13 @@
 from collections import Counter, deque
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Path as ApiPath, Query
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from ipaddress import ip_address
 import os
 import secrets
 import logging
@@ -54,6 +55,7 @@ from api_validation import (
     MAX_MISS_CONTEXT_JSON_CHARS,
     MAX_MISS_CONTEXT_SCALAR_CHARS,
     MAX_MISS_QUERY_LENGTH,
+    MAX_PUBLIC_SEARCH_QUERY_LENGTH,
     MAX_REFERENCE_PRIORITY,
     MAX_WORKSPACE_DOCUMENT_JSON_CHARS,
     _is_safe_reference_url,
@@ -362,22 +364,38 @@ def _record_dictionary_miss(query: str, query_kind: str, endpoint: str, *, conte
 
 # ─── Client IP resolution for rate limiting ─────────────────
 #
-# The service sits behind Zeabur's proxy, so `request.client.host`
-# always resolves to the proxy. Without taking X-Forwarded-For into
-# account, every user would share one rate-limit bucket.
-#
-# Trust the LEFTMOST (original client) IP in X-Forwarded-For when
-# present, and fall back to the direct peer address otherwise.
-#
-# Deployment caveat (documented here and in README): this assumes the
-# API is only reachable through a trusted reverse proxy. If the API
-# is ever exposed directly to the public, a malicious client could
-# forge X-Forwarded-For. In that case set TRUST_FORWARDED_HEADERS=0.
+# Forwarded headers are only safe when the public service is reachable
+# exclusively through a proxy that overwrites user-supplied forwarding
+# headers. Default to the direct peer so a forged X-Forwarded-For cannot
+# bypass public endpoint rate limits. Deployments that have verified
+# trusted proxy behavior can opt in with TRUST_FORWARDED_HEADERS=1.
+def _trust_forwarded_headers() -> bool:
+    return os.environ.get("TRUST_FORWARDED_HEADERS", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _first_valid_forwarded_ip(forwarded: str) -> Optional[str]:
+    for candidate in forwarded.split(","):
+        value = candidate.strip()
+        if not value:
+            continue
+        try:
+            ip_address(value)
+        except ValueError:
+            continue
+        return value
+    return None
+
+
 def _client_ip(request: "Request") -> str:
-    if os.environ.get("TRUST_FORWARDED_HEADERS", "1") == "1":
+    if _trust_forwarded_headers():
         forwarded = request.headers.get("x-forwarded-for")
         if forwarded:
-            first = forwarded.split(",")[0].strip()
+            first = _first_valid_forwarded_ip(forwarded)
             if first:
                 return first
     if request.client:
@@ -1473,7 +1491,10 @@ async def search_chemicals(request: Request, query: CASQuery):
 
 @api_router.get("/search-by-name/{query}")
 @limiter.limit("60/minute")
-async def search_by_name(request: Request, query: str):
+async def search_by_name(
+    request: Request,
+    query: str = ApiPath(..., max_length=MAX_PUBLIC_SEARCH_QUERY_LENGTH),
+):
     """Search for chemicals by English or Chinese name (including aliases/common names).
     Returns list of matching {cas_number, name_en, name_zh, alias} (max 20).
     Used for autocomplete / name lookup before full GHS search.
@@ -1573,13 +1594,19 @@ async def _search_single_query(query: str) -> ChemicalResult:
 
 @api_router.get("/search-single", response_model=ChemicalResult)
 @limiter.limit("30/minute")
-async def search_single_chemical_query(request: Request, q: str):
+async def search_single_chemical_query(
+    request: Request,
+    q: str = Query(..., max_length=MAX_PUBLIC_SEARCH_QUERY_LENGTH),
+):
     return await _search_single_query(q)
 
 
 @api_router.get("/search/{cas_number}", response_model=ChemicalResult)
 @limiter.limit("30/minute")
-async def search_single_chemical(request: Request, cas_number: str):
+async def search_single_chemical(
+    request: Request,
+    cas_number: str = ApiPath(..., max_length=MAX_PUBLIC_SEARCH_QUERY_LENGTH),
+):
     """Search by CAS number or chemical name.
     Auto-detects whether input is a CAS number or name."""
     return await _search_single_query(cas_number)

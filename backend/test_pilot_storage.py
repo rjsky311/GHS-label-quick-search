@@ -252,6 +252,58 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         store.close()
 
 
+def test_correction_request_deduplicates_open_matching_reports(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        first = store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="107-18-6",
+            chemical_name="Allyl Alcohol",
+            current_output="Chinese name is missing.",
+            expected_output="Review a Traditional Chinese name before approval.",
+            evidence_url="https://example.com/sds",
+            evidence_type="Supplier SDS",
+            local_context="Submitted from detail modal.",
+            candidate={"name_zh": "candidate only"},
+        )
+        duplicate = store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="107-18-6",
+            chemical_name="Allyl Alcohol",
+            current_output="Chinese name is missing.",
+            expected_output="Review a Traditional Chinese name before approval.",
+            evidence_url="https://example.com/sds",
+            evidence_type="Supplier SDS",
+            local_context="Submitted again from row action.",
+            candidate={"name_zh": "candidate only"},
+        )
+
+        assert duplicate["id"] == first["id"]
+        assert duplicate["duplicateCount"] == 2
+        assert duplicate["localContext"] == "Submitted from detail modal."
+
+        listed = store.list_correction_requests(limit=5)
+        assert len(listed) == 1
+        assert listed[0]["duplicateCount"] == 2
+        summary = store.get_dictionary_summary()
+        assert summary["correctionRequestCount"] == 1
+        assert summary["correctionRequestReportCount"] == 2
+        assert summary["openCorrectionRequestCount"] == 1
+        assert summary["openCorrectionRequestReportCount"] == 2
+        assert summary["correctionRequestStatusCounts"]["open"] == 1
+        assert summary["correctionRequestReportStatusCounts"]["open"] == 2
+        assert summary["pilotTriage"]["attentionCounts"]["openCorrectionRequests"] == 1
+        assert summary["pilotTriage"]["attentionReportCounts"][
+            "openCorrectionReports"
+        ] == 2
+        assert summary["pilotTriage"]["attentionReportCounts"][
+            "duplicateCorrectionReports"
+        ] == 1
+        assert summary["pilotTriage"]["signals"]["hasDuplicateCorrectionReports"] is True
+    finally:
+        store.close()
+
+
 def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
     store = make_store(tmp_path)
     try:

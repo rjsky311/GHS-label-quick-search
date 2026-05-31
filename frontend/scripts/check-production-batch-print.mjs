@@ -519,12 +519,16 @@ const run = async () => {
         action.type === "upstream-error" ||
         /upstream retry|Retry upstream/i.test(action.text || ""),
     );
+    const allowExternalUpstreamDegradedPass =
+      process.env.ALLOW_UPSTREAM_DEGRADED_BATCH_QA === "1";
     const handleTooFewPrintableResults = (failureId, minimumPrintableCount) => {
       if (printableCount >= minimumPrintableCount) return;
       if (hasUpstreamRetryReview && printableCount >= 1) {
         warnings.push(
           `${failureId}:${printableCount}:external-upstream-transient`,
         );
+        if (allowExternalUpstreamDegradedPass) return;
+        failures.push(`${failureId}:${printableCount}:external-upstream-degraded`);
         return;
       }
       failures.push(`${failureId}:${printableCount}`);
@@ -880,6 +884,7 @@ const run = async () => {
       printHandoff,
       dialogMessages,
       screenshotDir,
+      allowExternalUpstreamDegradedPass,
       warnings,
       failures,
     };
