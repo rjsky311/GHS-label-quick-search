@@ -44,15 +44,8 @@ jobs:
       - name: Check bundle budget
         run: npm run qa:bundle-budget
 
-      # Informational only: we want visibility on production
-      # dependency advisories without blocking every change while the
-      # remaining transitive packages are reviewed.
-      - name: Audit production dependencies (informational)
-        run: |
-          npm audit --omit=dev --audit-level=high || {
-            echo "::notice title=Production dependency audit::Advisories found; this informational baseline is tracked separately and does not block CI."
-            exit 0
-          }
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
   backend:
     name: Backend
@@ -87,13 +80,7 @@ jobs:
       - name: Run tests
         run: python -m pytest -v
 
-      # pip-audit surfaces any CVE against the pinned requirements.
-      # Informational for now. Known baseline issues will be handled
-      # in the FastAPI dependency refresh follow-up.
-      - name: Audit Python dependencies (informational)
+      - name: Audit Python dependencies
         run: |
           pip install pip-audit
-          pip-audit -r requirements.txt || {
-            echo "::notice title=Python dependency audit::Advisories found; this informational baseline is tracked separately and does not block CI."
-            exit 0
-          }
+          pip-audit -r requirements.txt

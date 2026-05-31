@@ -384,6 +384,8 @@
   "label.quantityMax": "每種最多 20 張",
   "label.previewHint": "點擊「列印標籤」後會開啟列印對話框，您可以在列印預覽中確認標籤樣式。",
   "label.printBtn": "列印標籤 ({{count}} 張)",
+  "label.printBlockedFeedbackTitle": "列印前已暫停",
+  "label.printBlockedFeedbackBody": "列印前檢查發現必要圖片或版面問題。請調整目前輸出後再重新列印。",
   "label.cancel": "取消",
   "label.quickTemplates": "快速範本",
   "label.noTemplates": "尚無已儲存範本",

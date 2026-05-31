@@ -88,6 +88,10 @@ uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 Backend environment defaults are in [backend/.env.example](./backend/.env.example).
+Single-worker local/dev deployments use in-memory rate limiting. Before
+scaling the backend to multiple workers or instances, configure shared
+rate-limit storage with `RATE_LIMIT_STORAGE_URI`, `LIMITS_STORAGE_URI`, or
+`REDIS_URL` so public endpoint limits remain consistent across instances.
 
 ### Frontend
 

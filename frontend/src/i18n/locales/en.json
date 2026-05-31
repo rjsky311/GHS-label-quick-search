@@ -384,6 +384,8 @@
   "label.batchNumberPlaceholder": "e.g. CASE-2026-001",
   "label.customFieldsHint": "Optional — empty fields won't appear on labels",
   "label.printBtn": "Print Labels ({{count}})",
+  "label.printBlockedFeedbackTitle": "Printing paused before handoff",
+  "label.printBlockedFeedbackBody": "The print preflight found a required image or layout issue. Adjust the selected output, then print again.",
   "label.cancel": "Cancel",
   "label.quickTemplates": "Quick Templates",
   "label.noTemplates": "No saved templates",

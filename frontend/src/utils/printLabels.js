@@ -1287,19 +1287,33 @@ export function printLabels(
           ),
         },
       });
-      if (
-        !isPrintHandoffQaMode() &&
-        typeof window !== "undefined" &&
-        typeof window.alert === "function"
-      ) {
-        window.alert(
-          hasRequiredImageFailure(preflightIssues)
-            ? i18n.t("print.imageBlocked", {
-                defaultValue:
-                  "Required label images did not load. Check your network and try again before printing.",
-              })
-            : buildLayoutBlockedAlert(lifecycleMeta, preflightIssues),
+      if (!isPrintHandoffQaMode()) {
+        const issueTypes = [
+          ...new Set(preflightIssues.map((issue) => issue.type).filter(Boolean)),
+        ];
+        const issueCasNumbers = getPreflightIssueCasNumbers(
+          documentBundle,
+          preflightIssues,
         );
+        const imageFailure = hasRequiredImageFailure(preflightIssues);
+        const message = imageFailure
+          ? i18n.t("print.imageBlocked", {
+              defaultValue:
+                "Required label images did not load. Check your network and try again before printing.",
+            })
+          : buildLayoutBlockedAlert(lifecycleMeta, preflightIssues);
+        try {
+          lifecycleCallbacks?.onPrintBlocked?.({
+            imageFailure,
+            issueCasNumbers,
+            issueCount: preflightIssues.length,
+            issueTypes,
+            lifecycleMeta,
+            message,
+          });
+        } catch {
+          // UI notification failures must not resume an unsafe print handoff.
+        }
       }
       iframe.remove();
       return;

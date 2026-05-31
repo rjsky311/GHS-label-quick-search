@@ -96,6 +96,12 @@ CAPTURE_DICTIONARY_MISSES = (
     (os.environ.get("CAPTURE_DICTIONARY_MISSES") or "").strip().lower()
     in {"1", "true", "yes", "on"}
 )
+RATE_LIMIT_STORAGE_URI = (
+    os.environ.get("RATE_LIMIT_STORAGE_URI")
+    or os.environ.get("LIMITS_STORAGE_URI")
+    or os.environ.get("REDIS_URL")
+    or ""
+).strip()
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None
@@ -404,10 +410,10 @@ def _client_ip(request: "Request") -> str:
     return "unknown"
 
 
-# slowapi limiter. In-memory bucket — correct for a single-worker
-# deployment. Scaling to multiple workers/instances requires swapping
-# in a Redis-backed storage URI or pushing rate-limiting out to the
-# edge (Zeabur router, Cloudflare, etc.).
+# slowapi limiter. In-memory storage is acceptable for a single-worker
+# deployment. Scaling to multiple workers/instances should set
+# RATE_LIMIT_STORAGE_URI/LIMITS_STORAGE_URI (for example a redis:// URL) or
+# push rate limiting out to the edge (Zeabur router, Cloudflare, etc.).
 limiter = Limiter(
     key_func=_client_ip,
     default_limits=[],  # no implicit global limit; per-route only
@@ -415,6 +421,8 @@ limiter = Limiter(
     # pluck a Response from each endpoint signature. Rate-limit
     # signalling happens through the 429 status + exception handler.
     headers_enabled=False,
+    storage_uri=RATE_LIMIT_STORAGE_URI or None,
+    key_prefix="ghs-label-quick-search",
 )
 
 @asynccontextmanager

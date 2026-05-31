@@ -245,6 +245,53 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("shows print preflight blocks inside the modal instead of relying on browser alerts", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      printBlockedInfo: {
+        issueTypes: ["label-overflow", "required-image-failed"],
+        message: "Required label images did not load.",
+      },
+    });
+
+    const feedback = screen.getByTestId("print-blocked-feedback");
+    expect(feedback).toHaveAttribute("role", "alert");
+    expect(feedback).toHaveTextContent("Printing paused before handoff");
+    expect(feedback).toHaveTextContent("Required label images did not load.");
+    expect(feedback).toHaveTextContent("label-overflow");
+    expect(feedback).toHaveTextContent("required-image-failed");
+  });
+
+  it("clears stale print preflight feedback when the selected print scope changes", async () => {
+    const onClearPrintBlockedInfo = jest.fn();
+    const { props, rerender } = renderModal({
+      selectedForLabel: [makeChem({ cas_number: "64-17-5", name_en: "Ethanol" })],
+      printBlockedInfo: {
+        issueTypes: ["label-overflow"],
+        message: "This previous output was blocked.",
+      },
+      onClearPrintBlockedInfo,
+    });
+
+    expect(screen.getByTestId("print-blocked-feedback")).toHaveTextContent(
+      "This previous output was blocked.",
+    );
+    expect(onClearPrintBlockedInfo).not.toHaveBeenCalled();
+
+    rerender(
+      <LabelPrintModal
+        {...props}
+        selectedForLabel={[
+          makeChem({ cas_number: "67-64-1", name_en: "Acetone" }),
+        ]}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onClearPrintBlockedInfo).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("warns before printing when a selected chemical has unconfirmed multiple GHS versions", () => {
     renderModal({
       selectedForLabel: [

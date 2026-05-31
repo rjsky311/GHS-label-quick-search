@@ -157,6 +157,7 @@ function App() {
   });
   const [preparedReprintingId, setPreparedReprintingId] = useState(null);
   const [dataCorrectionContext, setDataCorrectionContext] = useState(null);
+  const [printBlockedInfo, setPrintBlockedInfo] = useState(null);
 
   useEffect(() => {
     document.title = t("header.title");
@@ -710,6 +711,7 @@ function App() {
     const printableSelection = sourceSelection.map((chemical) =>
       resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
     );
+    setPrintBlockedInfo(null);
 
     const { printLabels } = await import("@/utils/printLabels");
 
@@ -730,6 +732,9 @@ function App() {
             labProfile,
           });
         },
+        onPrintBlocked: (blockedInfo) => {
+          setPrintBlockedInfo(blockedInfo);
+        },
       }
     );
   }, [
@@ -746,6 +751,7 @@ function App() {
     (record) => {
       const items = loadRecentPrint(record);
       if (items.length === 0) return;
+      setPrintBlockedInfo(null);
       setSelectedForLabel(items);
       setShowLabelModal(true);
     },
@@ -875,6 +881,7 @@ function App() {
   // We do NOT attempt to restore a previous selection snapshot.
   const handleCloseLabelModal = useCallback(() => {
     setShowLabelModal(false);
+    setPrintBlockedInfo(null);
     if (preparedFlowActive) {
       setSelectedForLabel([]);
       setLabelQuantities({});
@@ -1145,6 +1152,8 @@ function App() {
             recentPrints={recentPrints}
             onLoadRecentPrint={handleLoadRecentPrint}
             onClearRecentPrints={clearRecentPrints}
+            printBlockedInfo={printBlockedInfo}
+            onClearPrintBlockedInfo={() => setPrintBlockedInfo(null)}
             onClose={handleCloseLabelModal}
           />
         )}

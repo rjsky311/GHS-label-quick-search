@@ -102,8 +102,10 @@ UI QA in `a8afe4b`, `1a49af5`, and `b975efa`. A later production-QA
 hardening round closed the 2026-05-28 Production Print QA failure class by
 bounding runner steps, preventing browser-close hangs, and classifying
 upstream-limited batch fixtures as warnings only when the UI itself shows a
-concrete upstream retry state. Commit `bc56672` is deployed to Zeabur and has
-green CI plus expected-SHA production health/product QA evidence.
+concrete upstream retry state. The 2026-05-30 checkpoint recorded `bc56672` as
+deployed to Zeabur with green CI plus expected-SHA production health/product
+QA evidence; do not treat that historical SHA as the current production
+baseline without rerunning the current expected-SHA production health gate.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -140,11 +142,13 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
-- 2026-05-30 evidence-driven monitoring checkpoint: no fresh product slice is
-  open. The product-code baseline was clean on `main` at `bc56672`, GitHub CI
-  was green for that product baseline, and expected-SHA
-  `npm run qa:production-health` passed against Zeabur production serving
-  `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`. The previous Production Print
+- 2026-05-30 evidence-driven monitoring checkpoint: no fresh product slice was
+  open at that historical checkpoint. It recorded a clean product-code
+  baseline on `main` at `bc56672`, green GitHub CI, and expected-SHA
+  `npm run qa:production-health` passing against Zeabur production serving
+  `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`. Do not use that historical SHA
+  as current production freshness evidence; rerun the current expected-SHA
+  production health gate. The previous Production Print
   QA failure was already superseded by the QA-hardening commits `7c10c2c`,
   `c2b7985`, `cb206a8`, `056b8a1`, `1e6ca3d`, `70cb120`, and `bc56672`.
   Continue by waiting for concrete evidence from a user screenshot/PDF/Excel,

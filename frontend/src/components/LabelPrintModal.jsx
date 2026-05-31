@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  AlertTriangle,
   Languages,
   Palette,
   Tag,
@@ -95,6 +96,8 @@ export default function LabelPrintModal({
   recentPrints = [],
   onLoadRecentPrint,
   onClearRecentPrints,
+  printBlockedInfo = null,
+  onClearPrintBlockedInfo,
   onClose,
 }) {
   const { t, i18n } = useTranslation();
@@ -203,6 +206,43 @@ export default function LabelPrintModal({
         }`,
     )
     .join("|");
+  const printBlockedScopeKey = useMemo(
+    () =>
+      JSON.stringify({
+        selection: previewSelectionKey,
+        target: printTarget,
+        stockPreset: layoutProfile.stockPreset,
+        template: effectiveLabelConfig.template,
+        labelPurpose,
+        colorMode: effectiveLabelConfig.colorMode,
+        nameDisplay: effectiveLabelConfig.nameDisplay,
+        widthMm: layoutProfile.widthMm,
+        heightMm: layoutProfile.heightMm,
+        pageSize: layoutProfile.page?.size || effectiveLabelConfig.pageSize,
+        batchIncludeReducedPurpose,
+        customLabelFields,
+        labelQuantities,
+        labProfile,
+      }),
+    [
+      batchIncludeReducedPurpose,
+      customLabelFields,
+      effectiveLabelConfig.colorMode,
+      effectiveLabelConfig.nameDisplay,
+      effectiveLabelConfig.pageSize,
+      effectiveLabelConfig.template,
+      labelPurpose,
+      labelQuantities,
+      labProfile,
+      layoutProfile.heightMm,
+      layoutProfile.page?.size,
+      layoutProfile.stockPreset,
+      layoutProfile.widthMm,
+      previewSelectionKey,
+      printTarget,
+    ],
+  );
+  const printBlockedScopeKeyRef = useRef(printBlockedScopeKey);
   const estimatedPages =
     totalLabels > 0 ? Math.ceil(totalLabels / layoutProfile.perPage) : 0;
   const resolvedResponsibleProfile = resolveResponsibleProfile(
@@ -1243,6 +1283,12 @@ export default function LabelPrintModal({
     outputPlan.recommendedFullPagePatch,
   ]);
 
+  useEffect(() => {
+    if (printBlockedScopeKeyRef.current === printBlockedScopeKey) return;
+    printBlockedScopeKeyRef.current = printBlockedScopeKey;
+    onClearPrintBlockedInfo?.();
+  }, [onClearPrintBlockedInfo, printBlockedScopeKey]);
+
   const formatPrintTimestamp = (value) => {
     if (!value) return "";
     try {
@@ -1314,6 +1360,7 @@ export default function LabelPrintModal({
   };
 
   const handlePrintAction = () => {
+    onClearPrintBlockedInfo?.();
     onPrintLabels(
       effectiveLabelConfig,
       canPrintBatchSelectedScope ? batchSelectedPrintItems : undefined,
@@ -1583,6 +1630,45 @@ export default function LabelPrintModal({
                     tx={tx}
                   />
                 </div>
+
+                {printBlockedInfo && (
+                  <div
+                    className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950"
+                    data-testid="print-blocked-feedback"
+                    role="alert"
+                  >
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                      <div className="min-w-0 space-y-2">
+                        <p className="font-semibold">
+                          {tx(
+                            "label.printBlockedFeedbackTitle",
+                            "Printing paused before handoff",
+                          )}
+                        </p>
+                        <p className="leading-5">
+                          {printBlockedInfo.message ||
+                            tx(
+                              "label.printBlockedFeedbackBody",
+                              "The print preflight found a required image or layout issue. Adjust the selected output, then print again.",
+                            )}
+                        </p>
+                        {printBlockedInfo.issueTypes?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {printBlockedInfo.issueTypes.map((issueType) => (
+                              <span
+                                key={issueType}
+                                className="rounded-full border border-red-200 bg-white px-2 py-0.5 text-xs font-medium text-red-800"
+                              >
+                                {issueType}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4">
                   <PrintOutputPlanDetails

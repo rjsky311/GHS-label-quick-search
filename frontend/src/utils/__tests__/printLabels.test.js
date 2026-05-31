@@ -1196,6 +1196,7 @@ describe("printLabels", () => {
   });
 
   it("blocks supplemental labels when the rendered layout clips", () => {
+    const onPrintBlocked = jest.fn();
     const overflowLabel = {
       clientHeight: 20,
       scrollHeight: 34,
@@ -1217,9 +1218,20 @@ describe("printLabels", () => {
         stockPreset: "medium-bottle",
       },
       {},
+      {},
+      {},
+      {},
+      { onPrintBlocked },
     );
 
-    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: false,
+        issueTypes: expect.arrayContaining(["label-overflow"]),
+        message: "print.layoutBlockedDetailed",
+      }),
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(
@@ -1232,6 +1244,7 @@ describe("printLabels", () => {
   });
 
   it("still blocks complete primary labels when the rendered layout clips", () => {
+    const onPrintBlocked = jest.fn();
     const overflowLabel = {
       clientHeight: 20,
       scrollHeight: 34,
@@ -1256,9 +1269,17 @@ describe("printLabels", () => {
       {},
       {},
       { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      { onPrintBlocked },
     );
 
-    expect(alertSpy).toHaveBeenCalledWith("print.layoutBlockedDetailed");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: false,
+        issueTypes: expect.arrayContaining(["label-overflow"]),
+        message: "print.layoutBlockedDetailed",
+      }),
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(
@@ -1311,6 +1332,7 @@ describe("printLabels", () => {
   });
 
   it("blocks printing when a required GHS pictogram fails to load", () => {
+    const onPrintBlocked = jest.fn();
     const brokenPictogram = {
       complete: false,
       onload: null,
@@ -1331,11 +1353,22 @@ describe("printLabels", () => {
       [mockChemical],
       { size: "medium", template: "standard", orientation: "portrait" },
       {},
+      {},
+      {},
+      {},
+      { onPrintBlocked },
     );
 
     brokenPictogram.onerror();
 
-    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: true,
+        issueTypes: ["required-image-failed"],
+        message: "print.imageBlocked",
+      }),
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -1349,6 +1382,7 @@ describe("printLabels", () => {
   });
 
   it("blocks printing when a required image never resolves before timeout", () => {
+    const onPrintBlocked = jest.fn();
     const stalledPictogram = {
       complete: false,
       onload: null,
@@ -1369,6 +1403,10 @@ describe("printLabels", () => {
       [mockChemical],
       { size: "medium", template: "standard", orientation: "portrait" },
       {},
+      {},
+      {},
+      {},
+      { onPrintBlocked },
     );
 
     jest.advanceTimersByTime(9999);
@@ -1377,7 +1415,14 @@ describe("printLabels", () => {
 
     jest.advanceTimersByTime(1);
 
-    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: true,
+        issueTypes: ["required-image-failed"],
+        message: "print.imageBlocked",
+      }),
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(mockIframe.remove).toHaveBeenCalled();
@@ -1392,6 +1437,7 @@ describe("printLabels", () => {
   });
 
   it("blocks printing when a completed required image has no rendered pixels", () => {
+    const onPrintBlocked = jest.fn();
     const brokenQr = {
       complete: true,
       naturalWidth: 0,
@@ -1408,9 +1454,20 @@ describe("printLabels", () => {
       [mockChemical],
       { size: "medium", template: "qrcode", orientation: "portrait" },
       {},
+      {},
+      {},
+      {},
+      { onPrintBlocked },
     );
 
-    expect(alertSpy).toHaveBeenCalledWith("print.imageBlocked");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: true,
+        issueTypes: ["required-image-failed"],
+        message: "print.imageBlocked",
+      }),
+    );
     jest.advanceTimersByTime(300);
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
   });
