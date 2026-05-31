@@ -4,53 +4,78 @@ import PreviewDiagnosticsPanel from "@/components/label-print/PreviewDiagnostics
 import { PrintOutcomeSummary } from "@/components/label-print/LabelPrintOutcomeSections";
 
 export default function LabelPreviewPanel({
-  activeBatchPreviewItem,
-  activePreviewPageIndex,
-  canUseFullPagePrimary,
-  currentStockName,
-  handleFocusResponsibleProfile,
-  handleUseFullPagePrimary,
-  hasMultiplePreviewPages,
-  hasPreviewWarnings,
-  isPrintFitBlocked,
-  isProfileBlocked,
-  labelFragmentPreviewHeight,
-  labelPreviewBundle,
-  layoutProfile,
-  onUseSupplementalLabel,
-  outputChecklistBadge,
-  outputChecklistHint,
-  outputChecklistItems,
-  outputChecklistTitle,
-  outputOutcomeBody,
-  outputOutcomeTitle,
-  outputOutcomeTone,
-  outputRoleSummary,
-  pictogramSummary,
-  plannedPrintPageCount,
-  previewChem,
-  previewContextOutputSummary,
-  previewFitLabel,
-  previewNavigationCount,
-  previewPageLabel,
-  previewPagePositionLabel,
-  previewPhysicalSizeLabel,
-  previewScaleLabel,
-  previewZoomMode,
-  primaryPreviewRisk,
-  readyPreviewMessage,
-  setPreviewZoomMode,
-  sheetPreviewBundle,
-  sheetPreviewHeight,
-  shouldShowPreviewOutcomeSummary,
-  statementSummary,
-  stockPresetDisplay,
-  t,
-  tx,
-  updatePreviewPageIndex,
-  useFullPagePrimaryLabel,
-  visiblePreviewRisks,
+  model,
 }) {
+  const {
+    actions,
+    context,
+    diagnostics,
+    focus,
+    labels,
+    outcome,
+    preview,
+    status,
+  } = model;
+  const { t, tx } = labels;
+  const {
+    activeBatchPreviewItem,
+    previewChem,
+    stockPresetDisplay,
+  } = focus;
+  const {
+    currentStockName,
+    layoutProfile,
+    outputRoleSummary,
+    pictogramSummary,
+    previewContextOutputSummary,
+    statementSummary,
+  } = context;
+  const {
+    outputOutcomeBody,
+    outputOutcomeTitle,
+    outputOutcomeTone,
+    shouldShowPreviewOutcomeSummary,
+  } = outcome;
+  const {
+    activePreviewPageIndex,
+    hasMultiplePreviewPages,
+    labelFragmentPreviewHeight,
+    labelPreviewBundle,
+    previewFitLabel,
+    previewNavigationCount,
+    previewPageLabel,
+    previewPagePositionLabel,
+    previewPhysicalSizeLabel,
+    previewScaleLabel,
+    previewZoomMode,
+    sheetPreviewBundle,
+    sheetPreviewHeight,
+  } = preview;
+  const {
+    outputChecklistBadge,
+    outputChecklistHint,
+    outputChecklistItems,
+    outputChecklistTitle,
+    plannedPrintPageCount,
+    readyPreviewMessage,
+    visiblePreviewRisks,
+  } = diagnostics;
+  const {
+    canUseFullPagePrimary,
+    hasPreviewWarnings,
+    isPrintFitBlocked,
+    isProfileBlocked,
+    primaryPreviewRisk,
+    useFullPagePrimaryLabel,
+  } = status;
+  const {
+    handleFocusResponsibleProfile,
+    handleUseFullPagePrimary,
+    onUseSupplementalLabel,
+    setPreviewZoomMode,
+    updatePreviewPageIndex,
+  } = actions;
+
   return (
     <aside className="order-first border-t border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
       <div

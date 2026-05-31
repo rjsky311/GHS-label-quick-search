@@ -32,6 +32,9 @@ jobs:
       - name: Check docs drift
         run: npm run test:docs
 
+      - name: Lint frontend
+        run: npm run lint
+
       - name: Run tests
         run: npm test -- --runInBand
 
@@ -70,7 +73,16 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Syntax check
-        run: python -m py_compile server.py
+        run: >
+          python -m py_compile
+          server.py
+          api_models.py
+          api_validation.py
+          export_helpers.py
+          pilot_admin_routes.py
+          pilot_store.py
+          inventory_workbook_audit.py
+          inventory_handoff_import.py
 
       - name: Run tests
         run: python -m pytest -v

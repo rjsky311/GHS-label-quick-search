@@ -10,7 +10,6 @@ import {
 } from "@/utils/printContentPolicy";
 import {
   getCompletePrimaryContinuationCapacity,
-  inspectPrintContentFit,
 } from "@/utils/printFitEngine";
 import {
   buildLayoutBlockedAlert,
@@ -21,13 +20,15 @@ import {
   publishPrintHandoffQaStatus,
   publishPrintPendingQaStatus,
 } from "@/utils/printLifecycle";
-import { inspectPrintLayoutDocument } from "@/utils/printLayoutInspection";
 import { waitForRequiredPrintImages } from "@/utils/printImagePreflight";
 import {
-  MAX_CONTINUATION_TIGHTNESS_LEVEL,
+  collectPrintPreflightIssues,
+  hasRequiredImageFailure,
+  resolvePrintPreflightRetry,
+} from "@/utils/printHandoffPreflight";
+import {
   PRINT_QA_LABEL_KIND_HELPERS,
   clampAutoFitLevel,
-  clampContinuationTightnessLevel,
   escapeHtml,
   expandLabelsByQuantity,
   getChemicalLookupUrl,
@@ -1170,158 +1171,6 @@ export function buildPrintPreviewDocument(
   };
 }
 
-function getContinuationRetryIssueCasNumbers(
-  documentBundle,
-  preflightIssues = [],
-) {
-  const labels = documentBundle?.model?.expandedLabels || [];
-  return [
-    ...new Set(
-      preflightIssues
-        .filter((issue) => CONTINUATION_TIGHTENING_ISSUE_TYPES.has(issue?.type))
-        .map((issue) => {
-          const index = Number(issue?.index);
-          if (!Number.isInteger(index) || index < 0 || index >= labels.length) {
-            return "";
-          }
-          const label = labels[index];
-          const sourceChemical = label?.sourceChemical || label;
-          return sourceChemical?.cas_number || "";
-        })
-        .filter(Boolean),
-    ),
-  ];
-}
-
-function getChemicalContinuationTightnessLevel(chemical) {
-  return clampContinuationTightnessLevel(
-    chemical?.__printLayoutOverride?.__continuationTightnessLevel ??
-      chemical?.__printLayoutOverride?.continuationTightnessLevel,
-  );
-}
-
-function applyTargetedContinuationTightness(
-  selectedForLabel,
-  issueCasNumbers,
-  nextContinuationTightnessLevel,
-) {
-  const issueCasSet = new Set(issueCasNumbers || []);
-  if (!issueCasSet.size) return selectedForLabel;
-
-  return selectedForLabel.map((chemical) => {
-    if (!issueCasSet.has(chemical?.cas_number)) return chemical;
-    const existingOverride = chemical.__printLayoutOverride || {};
-    return {
-      ...chemical,
-      __printLayoutOverride: {
-        ...existingOverride,
-        __continuationTightnessLevel: nextContinuationTightnessLevel,
-        continuationTightnessLevel: nextContinuationTightnessLevel,
-      },
-    };
-  });
-}
-
-const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
-  "label-overflow",
-  "compliance-core-overflow",
-  "compliance-alert-overflow",
-  "compliance-statements-overflow",
-  "compliance-hazards-overflow",
-  "compliance-precautions-overflow",
-  "compliance-pictograms-overflow",
-  "compliance-footer-clipped",
-  "cas-overflow",
-  "cas-chip-overflow",
-  "cas-value-overflow",
-  "case-chip-overflow",
-  "case-value-overflow",
-  "support-chip-overflow",
-  "custom-fields-overflow",
-  "name-section-overflow",
-  "standard-rail-overflow",
-  "standard-main-overflow",
-  "standard-hazard-board-overflow",
-  "hazard-list-overflow",
-  "hazard-summary-overflow",
-  "hazard-code-list-overflow",
-  "signal-overflow",
-  "qr-panel-overflow",
-  "qr-caption-overflow",
-  "statement-code-overflow",
-  "content-text-too-dense",
-  "supplemental-content-too-dense",
-]);
-
-const shouldRetryWithAutoFit = (preflightIssues = [], layout = {}) =>
-  clampAutoFitLevel(layout.autoFitLevel) < 4 &&
-  preflightIssues.some((issue) =>
-    AUTO_FIT_RETRY_ISSUE_TYPES.has(issue?.type),
-  ) &&
-  !preflightIssues.some((issue) => issue?.type === "required-image-failed");
-
-const CONTINUATION_TIGHTENING_ISSUE_TYPES = new Set([
-  "label-overflow",
-  "compliance-core-overflow",
-  "compliance-statements-overflow",
-  "compliance-hazards-overflow",
-  "compliance-precautions-overflow",
-  "compliance-footer-clipped",
-  "statement-code-overflow",
-]);
-
-const shouldRetryWithContinuationTightening = (
-  preflightIssues = [],
-  layout = {},
-) =>
-  isFullPagePrimaryLayout(layout) &&
-  preflightIssues.some((issue) =>
-    CONTINUATION_TIGHTENING_ISSUE_TYPES.has(issue?.type),
-  ) &&
-  !preflightIssues.some((issue) => issue?.type === "required-image-failed");
-
-function getContinuationTighteningRetry(
-  documentBundle,
-  preflightIssues = [],
-  selectedForLabel = [],
-) {
-  if (
-    !shouldRetryWithContinuationTightening(
-      preflightIssues,
-      documentBundle?.model?.layout,
-    )
-  ) {
-    return null;
-  }
-
-  const issueCasNumbers = getContinuationRetryIssueCasNumbers(
-    documentBundle,
-    preflightIssues,
-  );
-  const currentContinuationTightnessLevel = issueCasNumbers.length
-    ? Math.max(
-        0,
-        ...selectedForLabel
-          .filter((chemical) => issueCasNumbers.includes(chemical?.cas_number))
-          .map(getChemicalContinuationTightnessLevel),
-      )
-    : clampContinuationTightnessLevel(
-        documentBundle.model.layout.continuationTightnessLevel,
-      );
-  const nextContinuationTightnessLevel =
-    currentContinuationTightnessLevel + 1;
-
-  if (nextContinuationTightnessLevel > MAX_CONTINUATION_TIGHTNESS_LEVEL) {
-    return null;
-  }
-
-  return {
-    issueCasNumbers,
-    nextContinuationTightnessLevel,
-    targeted: issueCasNumbers.length > 0,
-  };
-}
-
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -1383,85 +1232,33 @@ export function printLabels(
     if (preflightTriggered) return;
     preflightTriggered = true;
 
-    const contentIssues = inspectPrintContentFit(documentBundle.model);
-    const layoutIssues = inspectPrintLayoutDocument(iframeDoc);
-    const preflightIssues = [
-      ...contentIssues,
-      ...layoutIssues,
-      ...imageLoadIssues,
-    ];
+    const preflightIssues = collectPrintPreflightIssues(
+      documentBundle,
+      iframeDoc,
+      imageLoadIssues,
+    );
     if (preflightIssues.length > 0) {
       const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
-      if (shouldRetryWithAutoFit(preflightIssues, documentBundle.model.layout)) {
-        const nextAutoFitLevel =
-          clampAutoFitLevel(documentBundle.model.layout.autoFitLevel) + 1;
-        recordObservabilityEvent("print_autofit_retry", {
-          status: "retry",
-          count: lifecycleMeta.totalLabels || 1,
-          meta: {
-            ...lifecycleMeta,
-            nextAutoFitLevel,
-            issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
-          },
-        });
-        iframe.remove();
-        printLabels(
-          selectedForLabel,
-          {
-            ...labelConfig,
-            autoFitLevel: nextAutoFitLevel,
-          },
-          customGHSSettings,
-          customLabelFields,
-          labelQuantities,
-          labProfile,
-          lifecycleCallbacks,
-        );
-        return;
-      }
-      const continuationTighteningRetry = getContinuationTighteningRetry(
+      const retryPlan = resolvePrintPreflightRetry({
         documentBundle,
         preflightIssues,
         selectedForLabel,
-      );
-      if (continuationTighteningRetry) {
-        const {
-          issueCasNumbers,
-          nextContinuationTightnessLevel,
-          targeted,
-        } = continuationTighteningRetry;
-        const nextSelectedForLabel = targeted
-          ? applyTargetedContinuationTightness(
-              selectedForLabel,
-              issueCasNumbers,
-              nextContinuationTightnessLevel,
-            )
-          : selectedForLabel;
-        const nextLabelConfig = targeted
-          ? {
-              ...labelConfig,
-              autoFitLevel: documentBundle.model.layout.autoFitLevel,
-            }
-          : {
-              ...labelConfig,
-              autoFitLevel: documentBundle.model.layout.autoFitLevel,
-              __continuationTightnessLevel: nextContinuationTightnessLevel,
-            };
-        recordObservabilityEvent("print_continuation_tightening_retry", {
+        labelConfig,
+      });
+      if (retryPlan) {
+        recordObservabilityEvent(retryPlan.eventName, {
           status: "retry",
           count: lifecycleMeta.totalLabels || 1,
           meta: {
             ...lifecycleMeta,
-            nextContinuationTightnessLevel,
             issueTypes: [...new Set(preflightIssues.map((issue) => issue.type))],
-            issueCasNumbers,
-            targeted,
+            ...retryPlan.meta,
           },
         });
         iframe.remove();
         printLabels(
-          nextSelectedForLabel,
-          nextLabelConfig,
+          retryPlan.selectedForLabel,
+          retryPlan.labelConfig,
           customGHSSettings,
           customLabelFields,
           labelQuantities,
@@ -1495,11 +1292,8 @@ export function printLabels(
         typeof window !== "undefined" &&
         typeof window.alert === "function"
       ) {
-        const hasRequiredImageFailure = preflightIssues.some(
-          (issue) => issue.type === "required-image-failed",
-        );
         window.alert(
-          hasRequiredImageFailure
+          hasRequiredImageFailure(preflightIssues)
             ? i18n.t("print.imageBlocked", {
                 defaultValue:
                   "Required label images did not load. Check your network and try again before printing.",

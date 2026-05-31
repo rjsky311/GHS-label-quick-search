@@ -69,6 +69,7 @@ import {
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import useFocusTrap from "@/hooks/useFocusTrap";
+import useLabelPrintPreviewState from "@/hooks/useLabelPrintPreviewState";
 import {
   resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
@@ -369,65 +370,25 @@ export default function LabelPrintModal({
   const batchRepresentativeOptions = Object.values(
     BATCH_PRINT_REPRESENTATIVE,
   ).filter((representative) => batchPrintPlan.representatives[representative]);
-  const activeBatchPreviewItem = hasBatchPrintPlan
-    ? batchPrintPlan.items.find((item) => item.index === batchPreviewItemIndex) ||
-      batchPrintPlan.items.find(
-        (item) =>
-          item.index ===
-          batchPrintPlan.representatives[batchPreviewRepresentative]?.index,
-      ) ||
-      batchPrintPlan.items.find(
-        (item) =>
-          item.index === batchPrintPlan.representatives.first?.index,
-      ) ||
-      null
-    : null;
+  const {
+    activeBatchPreviewItem,
+    previewLabelConfig,
+    previewLabelQuantities,
+    previewSourceItems,
+    sheetPreviewItems,
+    sheetPreviewQuantities,
+  } = useLabelPrintPreviewState({
+    batchPreviewItemIndex,
+    batchPreviewRepresentative,
+    batchPrintPlan,
+    batchSelectedPrintItems,
+    canPrintBatchSelectedScope,
+    effectiveLabelConfig,
+    hasBatchPrintPlan,
+    labelQuantities,
+    selectedForLabel,
+  });
   const previewChem = activeBatchPreviewItem?.chemical || firstSelectedChem;
-  const activeBatchPreviewPrintItems = useMemo(
-    () =>
-      activeBatchPreviewItem
-        ? buildBatchPrintableItems(
-            { items: [activeBatchPreviewItem] },
-            { includeReducedPurpose: true, includeContinuation: true },
-          )
-        : [],
-    [activeBatchPreviewItem],
-  );
-  const previewSourceItems = useMemo(
-    () =>
-      activeBatchPreviewItem
-        ? activeBatchPreviewPrintItems.length
-          ? activeBatchPreviewPrintItems
-          : [activeBatchPreviewItem.chemical]
-        : selectedForLabel,
-    [activeBatchPreviewItem, activeBatchPreviewPrintItems, selectedForLabel],
-  );
-  const previewLabelConfig = useMemo(
-    () =>
-      activeBatchPreviewPrintItems[0]?.__printLayoutOverride
-        ? {
-            ...effectiveLabelConfig,
-            ...activeBatchPreviewPrintItems[0].__printLayoutOverride,
-          }
-        : effectiveLabelConfig,
-    [activeBatchPreviewPrintItems, effectiveLabelConfig],
-  );
-  const previewLabelQuantities = useMemo(
-    () =>
-      activeBatchPreviewItem
-        ? { [activeBatchPreviewItem.cas || "preview"]: 1 }
-        : labelQuantities,
-    [activeBatchPreviewItem, labelQuantities],
-  );
-  const sheetPreviewItems = canPrintBatchSelectedScope
-    ? batchSelectedPrintItems
-    : selectedForLabel;
-  const sheetPreviewQuantities = canPrintBatchSelectedScope
-    ? batchSelectedPrintItems.reduce((acc, chem) => {
-        acc[chem.cas_number] = labelQuantities?.[chem.cas_number] || 1;
-        return acc;
-      }, {})
-    : labelQuantities;
   const batchItemsNeedingReview = hasBatchPrintPlan
     ? batchPrintPlan.items.filter(
         (item) => item.requiresAcknowledgement || item.excluded,
@@ -1485,6 +1446,70 @@ export default function LabelPrintModal({
     const maxPageIndex = Math.max(previewNavigationCount - 1, 0);
     setPreviewPageIndex(Math.max(0, Math.min(nextIndex, maxPageIndex)));
   };
+  const previewPanelModel = {
+    actions: {
+      handleFocusResponsibleProfile,
+      handleUseFullPagePrimary,
+      onUseSupplementalLabel: () => applyPrintTarget("quickId"),
+      setPreviewZoomMode,
+      updatePreviewPageIndex,
+    },
+    context: {
+      currentStockName,
+      layoutProfile,
+      outputRoleSummary,
+      pictogramSummary,
+      previewContextOutputSummary,
+      statementSummary,
+    },
+    diagnostics: {
+      outputChecklistBadge,
+      outputChecklistHint,
+      outputChecklistItems,
+      outputChecklistTitle,
+      plannedPrintPageCount,
+      readyPreviewMessage,
+      visiblePreviewRisks,
+    },
+    focus: {
+      activeBatchPreviewItem,
+      previewChem,
+      stockPresetDisplay,
+    },
+    labels: {
+      t,
+      tx,
+    },
+    outcome: {
+      outputOutcomeBody,
+      outputOutcomeTitle,
+      outputOutcomeTone,
+      shouldShowPreviewOutcomeSummary,
+    },
+    preview: {
+      activePreviewPageIndex,
+      hasMultiplePreviewPages,
+      labelFragmentPreviewHeight,
+      labelPreviewBundle,
+      previewFitLabel,
+      previewNavigationCount,
+      previewPageLabel,
+      previewPagePositionLabel,
+      previewPhysicalSizeLabel,
+      previewScaleLabel,
+      previewZoomMode,
+      sheetPreviewBundle,
+      sheetPreviewHeight,
+    },
+    status: {
+      canUseFullPagePrimary,
+      hasPreviewWarnings,
+      isPrintFitBlocked,
+      isProfileBlocked,
+      primaryPreviewRisk,
+      useFullPagePrimaryLabel,
+    },
+  };
 
   return (
     <div
@@ -1717,54 +1742,7 @@ export default function LabelPrintModal({
               />
             </div>
 
-            <LabelPreviewPanel
-              activeBatchPreviewItem={activeBatchPreviewItem}
-              activePreviewPageIndex={activePreviewPageIndex}
-              canUseFullPagePrimary={canUseFullPagePrimary}
-              currentStockName={currentStockName}
-              handleFocusResponsibleProfile={handleFocusResponsibleProfile}
-              handleUseFullPagePrimary={handleUseFullPagePrimary}
-              hasMultiplePreviewPages={hasMultiplePreviewPages}
-              hasPreviewWarnings={hasPreviewWarnings}
-              isPrintFitBlocked={isPrintFitBlocked}
-              isProfileBlocked={isProfileBlocked}
-              labelFragmentPreviewHeight={labelFragmentPreviewHeight}
-              labelPreviewBundle={labelPreviewBundle}
-              layoutProfile={layoutProfile}
-              onUseSupplementalLabel={() => applyPrintTarget("quickId")}
-              outputChecklistBadge={outputChecklistBadge}
-              outputChecklistHint={outputChecklistHint}
-              outputChecklistItems={outputChecklistItems}
-              outputChecklistTitle={outputChecklistTitle}
-              outputOutcomeBody={outputOutcomeBody}
-              outputOutcomeTitle={outputOutcomeTitle}
-              outputOutcomeTone={outputOutcomeTone}
-              outputRoleSummary={outputRoleSummary}
-              pictogramSummary={pictogramSummary}
-              plannedPrintPageCount={plannedPrintPageCount}
-              previewChem={previewChem}
-              previewContextOutputSummary={previewContextOutputSummary}
-              previewFitLabel={previewFitLabel}
-              previewNavigationCount={previewNavigationCount}
-              previewPageLabel={previewPageLabel}
-              previewPagePositionLabel={previewPagePositionLabel}
-              previewPhysicalSizeLabel={previewPhysicalSizeLabel}
-              previewScaleLabel={previewScaleLabel}
-              previewZoomMode={previewZoomMode}
-              primaryPreviewRisk={primaryPreviewRisk}
-              readyPreviewMessage={readyPreviewMessage}
-              setPreviewZoomMode={setPreviewZoomMode}
-              sheetPreviewBundle={sheetPreviewBundle}
-              sheetPreviewHeight={sheetPreviewHeight}
-              shouldShowPreviewOutcomeSummary={shouldShowPreviewOutcomeSummary}
-              statementSummary={statementSummary}
-              stockPresetDisplay={stockPresetDisplay}
-              t={t}
-              tx={tx}
-              updatePreviewPageIndex={updatePreviewPageIndex}
-              useFullPagePrimaryLabel={useFullPagePrimaryLabel}
-              visiblePreviewRisks={visiblePreviewRisks}
-            />
+            <LabelPreviewPanel model={previewPanelModel} />
           </div>
 
         <LabelPrintFooter
