@@ -1099,6 +1099,7 @@
   "pilot.inventoryHandoffQueueSummaryTitle": "Inventory handoff review plan",
   "pilot.inventoryHandoffQueueSummarySubtitle": "Use this queue as a review checklist. Nothing here changes public lookup, labels, exports, or QR targets until a maintainer approves the evidence.",
   "pilot.inventoryHandoffQueueSummaryTotal": "Review queue",
+  "pilot.inventoryHandoffQueueSummaryVisibleRows": "Showing {{visible}} of {{total}} review item(s) in this dashboard snapshot.",
   "pilot.inventoryHandoffQueueSummaryReviewOnly": "Review-only import. Workbook Chinese names are candidate evidence, not approved public data.",
   "pilot.inventoryHandoffQueueSummaryIssueBreakdown": "Issue breakdown",
   "pilot.inventoryHandoffQueueStepCandidate": "For candidate Chinese names, verify SDS, supplier label, or another trusted source before creating or approving a manual entry.",

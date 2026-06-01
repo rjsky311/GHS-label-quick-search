@@ -1091,6 +1091,7 @@
   "pilot.inventoryHandoffQueueSummaryTitle": "清冊交接審查計畫",
   "pilot.inventoryHandoffQueueSummarySubtitle": "這個佇列只作為審查清單；維護者確認佐證前，不會改變公開查詢、標籤、匯出或 QR 目標。",
   "pilot.inventoryHandoffQueueSummaryTotal": "待審查項目",
+  "pilot.inventoryHandoffQueueSummaryVisibleRows": "目前儀表板顯示 {{visible}} / {{total}} 個待審查項目。",
   "pilot.inventoryHandoffQueueSummaryReviewOnly": "僅供審查匯入。清冊中的中文名稱只是候選佐證，不是已核准的公開資料。",
   "pilot.inventoryHandoffQueueSummaryIssueBreakdown": "問題類型",
   "pilot.inventoryHandoffQueueStepCandidate": "候選中文名稱要先核對 SDS、供應商標籤或其他可信來源，再建立或核准人工字典項目。",

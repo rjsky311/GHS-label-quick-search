@@ -1240,7 +1240,8 @@ Use these files by role:
   only. The admin dashboard now treats these rows as a distinct
   `inventory-workbook-audit` handoff queue with its own triage count,
   next-action focus, source badges, expected/current-output context,
-  issue-type breakdown, and maintainer review-plan summary.
+  issue-type breakdown, full-queue versus visible-row count, and maintainer
+  review-plan summary.
 - `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`: future whitelist and risk review for
   optional scientific lookup skills such as `database-lookup`, `paper-lookup`,
   and `datamol`.

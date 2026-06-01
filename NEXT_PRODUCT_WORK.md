@@ -551,6 +551,12 @@ Current mode:
   unknown seed-dictionary gaps, and rerunning the audit/import dry-run. This
   makes workbook handoff evidence actionable without making row-level triage
   depend on chat memory.
+- Completed current slice: an operational walkthrough against the supplied
+  inventory workbook handoff exposed a dashboard limit mismatch. The admin
+  summary now reports the full handoff queue count from triage metrics while
+  separately stating how many rows are visible in the current dashboard
+  snapshot, so maintainers do not mistake a limited row sample for the whole
+  backlog.
 - Completed current slice: correction candidate evidence payloads are now
   sanitized at the backend API boundary. Unknown fields are dropped, candidate
   evidence URLs must use `http` or `https`, text fields are capped, CAS values

@@ -112,6 +112,7 @@ function inventoryHandoffIssueRows(items, issueTypeCounts) {
 export function InventoryHandoffQueueSummary({
   items = [],
   issueTypeCounts = {},
+  totalCount,
 }) {
   const { t } = useTranslation();
   if (items.length === 0) {
@@ -119,6 +120,12 @@ export function InventoryHandoffQueueSummary({
   }
 
   const issueRows = inventoryHandoffIssueRows(items, issueTypeCounts);
+  const parsedTotalCount = Number(totalCount);
+  const totalItemCount =
+    Number.isFinite(parsedTotalCount) && parsedTotalCount > items.length
+      ? parsedTotalCount
+      : items.length;
+  const visibleItemCount = items.length;
 
   return (
     <section
@@ -144,9 +151,20 @@ export function InventoryHandoffQueueSummary({
           </div>
           <div className="mt-1 text-2xl font-bold text-slate-950">
             <span data-testid="inventory-handoff-queue-total">
-              {items.length}
+              {totalItemCount}
             </span>
           </div>
+          <p
+            className="mt-1 text-xs text-cyan-900"
+            data-testid="inventory-handoff-queue-visible-count"
+          >
+            {t("pilot.inventoryHandoffQueueSummaryVisibleRows", {
+              visible: visibleItemCount,
+              total: totalItemCount,
+              defaultValue:
+                "Showing {{visible}} of {{total}} review item(s) in this dashboard snapshot.",
+            })}
+          </p>
           <p className="mt-1 text-xs text-cyan-900">
             {t("pilot.inventoryHandoffQueueSummaryReviewOnly", {
               defaultValue:

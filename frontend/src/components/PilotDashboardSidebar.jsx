@@ -151,6 +151,9 @@ export default function PilotDashboardSidebar(props) {
       : topCorrectionRequests.filter(
           (item) => item.source === INVENTORY_HANDOFF_SOURCE
         );
+  const inventoryHandoffTotalCount =
+    pilotTriage.attentionCounts?.inventoryHandoffRequests ||
+    inventoryHandoffCorrectionRequests.length;
   const inventoryHandoffRequestIds = new Set(
     inventoryHandoffCorrectionRequests.map((item) => item.id).filter(Boolean)
   );
@@ -836,6 +839,7 @@ export default function PilotDashboardSidebar(props) {
                   <InventoryHandoffQueueSummary
                     items={inventoryHandoffCorrectionRequests}
                     issueTypeCounts={inventoryHandoffIssueTypeCounts}
+                    totalCount={inventoryHandoffTotalCount}
                   />
                   <TopCorrectionRequestsSection
                     items={inventoryHandoffCorrectionRequests}

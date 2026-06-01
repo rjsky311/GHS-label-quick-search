@@ -569,7 +569,7 @@ describe("PilotDashboardSidebar", () => {
             },
             attentionCounts: {
               ...baseProps.report.dictionary.pilotTriage.attentionCounts,
-              inventoryHandoffRequests: 1,
+              inventoryHandoffRequests: 55,
             },
             recommendedFocus: [
               {
@@ -578,7 +578,7 @@ describe("PilotDashboardSidebar", () => {
                 targetLabel: "Inventory handoff queue",
                 message: "Review inventory handoff first.",
                 nextAction: "Verify evidence before approval.",
-                count: 1,
+                count: 55,
               },
             ],
           },
@@ -593,7 +593,12 @@ describe("PilotDashboardSidebar", () => {
       screen.getByTestId("inventory-handoff-queue-summary"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("inventory-handoff-queue-total")).toHaveTextContent(
-      "1",
+      "55",
+    );
+    expect(
+      screen.getByTestId("inventory-handoff-queue-visible-count"),
+    ).toHaveTextContent(
+      "pilot.inventoryHandoffQueueSummaryVisibleRows",
     );
     expect(
       screen.getByTestId("inventory-handoff-queue-issue-missing-chinese-name"),
