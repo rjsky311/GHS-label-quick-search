@@ -310,6 +310,44 @@ describe("printFitEngine", () => {
     );
   });
 
+  it("derives A4 and Letter continuation capacity from resolved page metrics", () => {
+    const a4 = getCompletePrimaryContinuationCapacity(
+      resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      }),
+    );
+    const letter = getCompletePrimaryContinuationCapacity(
+      resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "letter-primary",
+      }),
+    );
+
+    expect(a4.source).toBe("renderer-calibrated");
+    expect(a4.calibration).toEqual(
+      expect.objectContaining({
+        columns: 3,
+        lineCharacters: expect.any(Number),
+        firstPageTextHeightMm: expect.any(Number),
+        continuationTextHeightMm: expect.any(Number),
+      }),
+    );
+    expect(a4.splitLineUnits).toBeGreaterThanOrEqual(72);
+    expect(a4.splitTextWeight).toBeGreaterThanOrEqual(12000);
+    expect(a4.continuationPageLineUnits).toBeGreaterThan(
+      a4.firstPageLineUnits,
+    );
+    expect(a4.continuationPageLineUnits).toBeGreaterThanOrEqual(
+      letter.continuationPageLineUnits,
+    );
+    expect(a4.calibration.continuationTextHeightMm).toBeGreaterThan(
+      a4.calibration.firstPageTextHeightMm,
+    );
+  });
+
   it("expands A4 continuation planning capacity after print auto-fit retries", () => {
     const normal = getCompletePrimaryContinuationCapacity(
       resolvePrintLayoutConfig({

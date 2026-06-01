@@ -2,6 +2,7 @@ import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import { buildPrintLabelContent } from "@/utils/printContentModel";
 import {
   PRINT_READINESS_STATE,
+  estimatePrintContentLineUnits,
   estimatePrintContentTextWeight,
   evaluatePrintReadiness,
   getMaxSupplementalPictogramCount,
@@ -233,12 +234,15 @@ const highestPressure = (
     layout,
     locale,
   );
+  const lineUnits = estimatePrintContentLineUnits(content, layout, locale);
   const maxTextWeight = Math.max(1, readiness.maxTextWeight || 1);
   const maxStatements = Math.max(1, readiness.maxStatements || 1);
+  const maxLineUnits = Math.max(1, readiness.maxLineUnits || 1);
   const maxPictograms = Math.max(1, getMaxSupplementalPictogramCount(layout));
 
   return Math.max(
     textWeight / maxTextWeight,
+    lineUnits / maxLineUnits,
     (content.counts?.statements || 0) / maxStatements,
     (content.counts?.pictograms || 0) / maxPictograms,
   );
@@ -246,11 +250,13 @@ const highestPressure = (
 
 const metricsForItem = (content, readiness, layout, locale) => {
   const textWeight = estimatePrintContentTextWeight(content, layout, locale);
+  const lineUnits = estimatePrintContentLineUnits(content, layout, locale);
   return {
     identityLength: identityText(content).length,
     pictogramCount: content.counts?.pictograms || 0,
     statementCount: content.counts?.statements || 0,
     textWeight,
+    lineUnits,
     fitPressure: highestPressure(readiness, content, layout, locale),
   };
 };

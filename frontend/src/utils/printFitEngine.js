@@ -50,6 +50,222 @@ const scaleFiniteLimit = (value, factor, minimum = 1) =>
     ? Math.max(minimum, Math.floor(value * factor))
     : value;
 
+const CSS_PX_TO_MM = 25.4 / 96;
+
+const metricNumber = (value, fallback = 0) => {
+  const parsed = Number.parseFloat(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const clampMetric = (value, min, max) =>
+  Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+
+const roundMetric = (value, digits = 2) => {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+};
+
+const getFullPageLineCharacters = (layout = {}) => {
+  const typography = layout.typography || {};
+  const statementPx = metricNumber(typography.complianceStatementSize, 5.6);
+  const paddingMm = metricNumber(layout.label?.padding, 1.2);
+  const usableWidthMm = Math.max(
+    80,
+    metricNumber(layout.widthMm, 188) - paddingMm * 2,
+  );
+  const averageCharacterWidthMm = Math.max(
+    0.72,
+    statementPx * CSS_PX_TO_MM * 0.5,
+  );
+
+  return Math.round(
+    clampMetric((usableWidthMm / averageCharacterWidthMm) * 0.52, 118, 145),
+  );
+};
+
+const getLegacyFullPageContinuationCapacity = (isLetter) =>
+  isLetter
+    ? {
+        splitStatementCount: 44,
+        splitTextWeight: 11000,
+        splitLineUnits: 64,
+        pageStatementCount: 32,
+        pageTextWeight: 3150,
+        pageLineUnits: 64,
+        firstPageStatementCount: 42,
+        firstPageTextWeight: 7000,
+        firstPageLineUnits: 64,
+        continuationPageStatementCount: 66,
+        continuationPageTextWeight: 9000,
+        continuationPageLineUnits: 82,
+        hazardOnlyStatementCount: 16,
+        hazardOnlyTextWeight: 1850,
+        precautionOnlyStatementCount: 30,
+        precautionOnlyTextWeight: 2900,
+        precautionOnlyLineUnits: 82,
+        mixedPrecautionStatementCount: 30,
+        mixedPrecautionTextWeight: 2350,
+        separatePrecautionsAfterHazardCount: 18,
+        separatePrecautionsAfterHazardTextWeight: 2600,
+      }
+    : {
+        splitStatementCount: 48,
+        splitTextWeight: 12000,
+        splitLineUnits: 72,
+        pageStatementCount: 34,
+        pageTextWeight: 3400,
+        pageLineUnits: 72,
+        firstPageStatementCount: 48,
+        firstPageTextWeight: 8000,
+        firstPageLineUnits: 72,
+        continuationPageStatementCount: 72,
+        continuationPageTextWeight: 10000,
+        continuationPageLineUnits: 90,
+        hazardOnlyStatementCount: 17,
+        hazardOnlyTextWeight: 2000,
+        precautionOnlyStatementCount: 32,
+        precautionOnlyTextWeight: 3200,
+        precautionOnlyLineUnits: 90,
+        mixedPrecautionStatementCount: 32,
+        mixedPrecautionTextWeight: 2600,
+        separatePrecautionsAfterHazardCount: 20,
+        separatePrecautionsAfterHazardTextWeight: 2900,
+      };
+
+const deriveFullPageContinuationCapacity = (layout = {}, legacy = {}) => {
+  const typography = layout.typography || {};
+  const isLetter =
+    layout.stockId === "letter-primary" ||
+    layout.stockPreset === "letter-primary" ||
+    layout.pageSize === "Letter";
+  const labelWidthMm = metricNumber(layout.widthMm, isLetter ? 186 : 188);
+  const labelHeightMm = metricNumber(layout.heightMm, isLetter ? 236 : 268);
+  const paddingMm = metricNumber(layout.label?.padding, 1.2);
+  const statementPx = metricNumber(typography.complianceStatementSize, 5.6);
+  const lineHeight = metricNumber(typography.complianceLineHeight, 1.03);
+  const columns = Math.max(1, metricNumber(typography.complianceColumns, 3));
+  const pictogramMm = metricNumber(typography.compliancePictogramSize, 28);
+  const lineHeightMm = Math.max(
+    1.12,
+    statementPx * lineHeight * CSS_PX_TO_MM,
+  );
+  const headerReserveMm = clampMetric(
+    metricNumber(typography.titleSize, 24) * CSS_PX_TO_MM * 1.8 + 6,
+    16,
+    26,
+  );
+  const footerReserveMm = isLetter ? 28 : 30;
+  const firstPageMediaReserveMm = clampMetric(pictogramMm + 8, 30, 40);
+  const sharedTextHeightMm = Math.max(
+    72,
+    labelHeightMm - paddingMm * 2 - headerReserveMm - footerReserveMm,
+  );
+  const firstPageTextHeightMm = Math.max(
+    54,
+    sharedTextHeightMm - firstPageMediaReserveMm,
+  );
+  const lineCharacters = getFullPageLineCharacters(layout);
+  const densityFactor = isLetter ? 0.29 : 0.3;
+  const derivedFirstPageLineUnits = Math.round(
+    clampMetric(
+      (firstPageTextHeightMm / lineHeightMm) * columns * densityFactor,
+      legacy.firstPageLineUnits || 64,
+      isLetter ? 78 : 86,
+    ),
+  );
+  const firstPageLineUnits = legacy.firstPageLineUnits;
+  const continuationPageLineUnits = Math.round(
+    clampMetric(
+      (sharedTextHeightMm / lineHeightMm) * columns * (densityFactor + 0.04),
+      legacy.continuationPageLineUnits || 82,
+      isLetter ? 104 : 118,
+    ),
+  );
+  const splitLineUnits = legacy.splitLineUnits;
+  const firstPageStatementCount = legacy.firstPageStatementCount;
+  const continuationPageStatementCount = Math.max(
+    legacy.continuationPageStatementCount || 0,
+    Math.floor(continuationPageLineUnits * 0.68),
+  );
+  const splitStatementCount = legacy.splitStatementCount;
+  const firstPageTextWeight = legacy.firstPageTextWeight;
+  const continuationPageTextWeight = Math.max(
+    legacy.continuationPageTextWeight || 0,
+    Math.round(continuationPageLineUnits * lineCharacters * 1.02),
+  );
+  const splitTextWeight = legacy.splitTextWeight;
+
+  return {
+    ...legacy,
+    source: "renderer-calibrated",
+    splitStatementCount,
+    splitTextWeight,
+    splitLineUnits,
+    pageStatementCount: Math.max(
+      legacy.pageStatementCount || 0,
+      firstPageStatementCount,
+    ),
+    pageTextWeight: Math.max(legacy.pageTextWeight || 0, firstPageTextWeight),
+    pageLineUnits: Math.max(legacy.pageLineUnits || 0, firstPageLineUnits),
+    firstPageStatementCount,
+    firstPageTextWeight,
+    firstPageLineUnits,
+    continuationPageStatementCount,
+    continuationPageTextWeight,
+    continuationPageLineUnits,
+    hazardOnlyStatementCount: Math.max(
+      legacy.hazardOnlyStatementCount || 0,
+      Math.floor(firstPageStatementCount * 0.36),
+    ),
+    hazardOnlyTextWeight: Math.max(
+      legacy.hazardOnlyTextWeight || 0,
+      Math.floor(firstPageTextWeight * 0.24),
+    ),
+    precautionOnlyStatementCount: Math.max(
+      legacy.precautionOnlyStatementCount || 0,
+      Math.floor(continuationPageStatementCount * 0.45),
+    ),
+    precautionOnlyTextWeight: Math.max(
+      legacy.precautionOnlyTextWeight || 0,
+      Math.floor(continuationPageTextWeight * 0.34),
+    ),
+    precautionOnlyLineUnits: Math.max(
+      legacy.precautionOnlyLineUnits || 0,
+      continuationPageLineUnits,
+    ),
+    mixedPrecautionStatementCount: Math.max(
+      legacy.mixedPrecautionStatementCount || 0,
+      Math.floor(firstPageStatementCount * 0.5),
+    ),
+    mixedPrecautionTextWeight: Math.max(
+      legacy.mixedPrecautionTextWeight || 0,
+      Math.floor(firstPageTextWeight * 0.34),
+    ),
+    separatePrecautionsAfterHazardCount: Math.max(
+      legacy.separatePrecautionsAfterHazardCount || 0,
+      Math.floor(firstPageStatementCount * 0.34),
+    ),
+    separatePrecautionsAfterHazardTextWeight: Math.max(
+      legacy.separatePrecautionsAfterHazardTextWeight || 0,
+      Math.floor(firstPageTextWeight * 0.36),
+    ),
+    calibration: {
+      labelWidthMm: roundMetric(labelWidthMm),
+      labelHeightMm: roundMetric(labelHeightMm),
+      paddingMm: roundMetric(paddingMm),
+      statementPx: roundMetric(statementPx),
+      lineHeight: roundMetric(lineHeight),
+      lineHeightMm: roundMetric(lineHeightMm),
+      columns,
+      lineCharacters,
+      firstPageTextHeightMm: roundMetric(firstPageTextHeightMm),
+      continuationTextHeightMm: roundMetric(sharedTextHeightMm),
+      firstPageMediaReserveMm: roundMetric(firstPageMediaReserveMm),
+      derivedFirstPageLineUnits,
+    },
+  };
+};
+
 const applyContinuationAutoFitCapacity = (capacity, layout = {}) => {
   const level = clampAutoFitLevel(layout.autoFitLevel);
   if (level <= 0) return capacity;
@@ -298,56 +514,13 @@ export const getCompletePrimaryContinuationCapacity = (layout = {}) => {
     layout.stockId === "letter-primary" ||
     layout.stockPreset === "letter-primary" ||
     layout.pageSize === "Letter";
+  const legacy = getLegacyFullPageContinuationCapacity(isLetter);
+  const capacity = deriveFullPageContinuationCapacity(layout, legacy);
 
-  if (isLetter) {
-    return applyContinuationTightnessCapacity(applyContinuationAutoFitCapacity({
-      splitStatementCount: 44,
-      splitTextWeight: 11000,
-      splitLineUnits: 64,
-      pageStatementCount: 32,
-      pageTextWeight: 3150,
-      pageLineUnits: 64,
-      firstPageStatementCount: 42,
-      firstPageTextWeight: 7000,
-      firstPageLineUnits: 64,
-      continuationPageStatementCount: 66,
-      continuationPageTextWeight: 9000,
-      continuationPageLineUnits: 82,
-      hazardOnlyStatementCount: 16,
-      hazardOnlyTextWeight: 1850,
-      precautionOnlyStatementCount: 30,
-      precautionOnlyTextWeight: 2900,
-      precautionOnlyLineUnits: 82,
-      mixedPrecautionStatementCount: 30,
-      mixedPrecautionTextWeight: 2350,
-      separatePrecautionsAfterHazardCount: 18,
-      separatePrecautionsAfterHazardTextWeight: 2600,
-    }, layout), layout);
-  }
-
-  return applyContinuationTightnessCapacity(applyContinuationAutoFitCapacity({
-    splitStatementCount: 48,
-    splitTextWeight: 12000,
-    splitLineUnits: 72,
-    pageStatementCount: 34,
-    pageTextWeight: 3400,
-    pageLineUnits: 72,
-    firstPageStatementCount: 48,
-    firstPageTextWeight: 8000,
-    firstPageLineUnits: 72,
-    continuationPageStatementCount: 72,
-    continuationPageTextWeight: 10000,
-    continuationPageLineUnits: 90,
-    hazardOnlyStatementCount: 17,
-    hazardOnlyTextWeight: 2000,
-    precautionOnlyStatementCount: 32,
-    precautionOnlyTextWeight: 3200,
-    precautionOnlyLineUnits: 90,
-    mixedPrecautionStatementCount: 32,
-    mixedPrecautionTextWeight: 2600,
-    separatePrecautionsAfterHazardCount: 20,
-    separatePrecautionsAfterHazardTextWeight: 2900,
-  }, layout), layout);
+  return applyContinuationTightnessCapacity(
+    applyContinuationAutoFitCapacity(capacity, layout),
+    layout,
+  );
 };
 
 export const getMaxCompleteStatementCount = (layout) => {
@@ -367,11 +540,6 @@ export const getMaxCompleteStatementCount = (layout) => {
   }
 
   return maxStatements;
-};
-
-const metricNumber = (value, fallback = 0) => {
-  const parsed = Number.parseFloat(String(value ?? ""));
-  return Number.isFinite(parsed) ? parsed : fallback;
 };
 
 const layoutAreaMm = (layout = {}) =>
@@ -472,7 +640,7 @@ export const getMaxCompleteTextWeight = (layout = {}) => {
 };
 
 const getStatementLineCharacters = (layout = {}) =>
-  isFullPageLikeLayout(layout) ? 135 : 92;
+  isFullPageLikeLayout(layout) ? getFullPageLineCharacters(layout) : 92;
 
 export const getMaxCompleteLineUnits = (layout = {}) => {
   if (isFullPageLikeLayout(layout)) {
