@@ -487,10 +487,29 @@ export function TopCorrectionRequestsSection({
               item.duplicate_count || item.duplicateCount || 1,
             );
             const isInventoryHandoff = source === INVENTORY_HANDOFF_SOURCE;
+            const inventoryCandidate =
+              item.candidate && typeof item.candidate === "object"
+                ? item.candidate
+                : {};
+            const inventoryHandoffConverted = Boolean(
+              inventoryCandidate.converted_to_manual_entry,
+            );
+            const inventoryHandoffManualApproved =
+              inventoryCandidate.manual_entry_status === "approved";
             const inventoryHandoffApproveBlocked =
               showInventoryHandoffGuidance &&
               isInventoryHandoff &&
-              !item.candidate?.converted_to_manual_entry;
+              (!inventoryHandoffConverted || !inventoryHandoffManualApproved);
+            const inventoryHandoffApproveBlockedTitle =
+              !inventoryHandoffConverted
+                ? t("pilot.inventoryHandoffApproveBlocked", {
+                    defaultValue:
+                      "Convert this handoff row into a manual review entry before approving the correction request.",
+                  })
+                : t("pilot.inventoryHandoffManualApprovalBlocked", {
+                    defaultValue:
+                      "Approve the pending manual entry before approving this handoff correction request.",
+                  });
             return (
               <div
                 key={`correction-${requestId}`}
@@ -632,10 +651,7 @@ export function TopCorrectionRequestsSection({
                           disabled={saving || !requestId || approvalBlocked}
                           title={
                             approvalBlocked
-                              ? t("pilot.inventoryHandoffApproveBlocked", {
-                                  defaultValue:
-                                    "Convert this handoff row into a manual review entry before approving the correction request.",
-                                })
+                              ? inventoryHandoffApproveBlockedTitle
                               : undefined
                           }
                           className={className}

@@ -158,6 +158,9 @@ workbook cleanup, parser QA, seed-dictionary coverage, or admin/manual-entry
 review; never treat workbook Chinese names as approved public data. The
 handoff import script preserves that same boundary: dry-run reports what would
 enter the admin queue, while `--apply` creates correction requests only.
+Inventory handoff correction requests must not be marked `approved` until the
+candidate has become a manual dictionary review entry and that manual entry is
+approved.
 
 Docs-only baseline:
 

@@ -1122,6 +1122,7 @@
   "pilot.inventoryHandoffNextActionNoGhsDetail": "Do not mark missing upstream data as safe. Keep the row in review until SDS or another trusted source is checked.",
   "pilot.inventoryHandoffMissingCandidatePayload": "Status says candidate found, but no candidate payload is attached. Recreate candidate evidence before manual review.",
   "pilot.inventoryHandoffApproveBlocked": "Convert this handoff row into a manual review entry before approving the correction request.",
+  "pilot.inventoryHandoffManualApprovalBlocked": "Approve the pending manual entry before approving this handoff correction request.",
   "pilot.noInventoryHandoffRequests": "No inventory handoff items are waiting.",
   "pilot.inventoryHandoffSource": "Inventory workbook handoff",
   "pilot.inventoryHandoffReviewOnly": "Review-only; verify evidence before manual-entry approval.",

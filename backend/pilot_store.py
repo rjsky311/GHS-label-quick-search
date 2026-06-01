@@ -116,6 +116,39 @@ def normalize_correction_request_type(issue_type: Optional[str]) -> str:
     return normalized
 
 
+def inventory_handoff_correction_can_be_approved(
+    *,
+    source: Optional[str],
+    candidate: Optional[dict[str, Any]],
+) -> bool:
+    if (source or "").strip() != INVENTORY_HANDOFF_CORRECTION_SOURCE:
+        return True
+    if not isinstance(candidate, dict):
+        return False
+    return (
+        candidate.get("converted_to_manual_entry") is True
+        and candidate.get("manual_entry_status") == APPROVED_MANUAL_ENTRY_STATUS
+    )
+
+
+def require_inventory_handoff_approval_boundary(
+    *,
+    source: Optional[str],
+    status: str,
+    candidate: Optional[dict[str, Any]],
+) -> None:
+    if normalize_correction_request_status(status) != "approved":
+        return
+    if inventory_handoff_correction_can_be_approved(
+        source=source,
+        candidate=candidate,
+    ):
+        return
+    raise ValueError(
+        "inventory handoff correction requests require an approved manual entry before approval"
+    )
+
+
 class PilotStore:
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path)
@@ -1235,6 +1268,11 @@ class PilotStore:
         normalized_evidence_url = (evidence_url or "").strip() or None
         normalized_evidence_type = (evidence_type or "").strip() or None
         normalized_local_context = (local_context or "").strip() or None
+        require_inventory_handoff_approval_boundary(
+            source=source,
+            status=normalized_status,
+            candidate=candidate or {},
+        )
 
         with self._lock:
             conn = self._require_conn()
@@ -1852,28 +1890,52 @@ class PilotStore:
         candidate: Optional[dict[str, Any]] = None,
     ) -> Optional[dict[str, Any]]:
         normalized_status = normalize_correction_request_status(status)
-        candidate_json = (
-            json.dumps(candidate, ensure_ascii=False) if candidate is not None else None
-        )
-        self._execute(
-            """
-            UPDATE dictionary_correction_requests
-            SET
-              status = ?,
-              review_notes = COALESCE(?, review_notes),
-              candidate_json = COALESCE(?, candidate_json),
-              updated_at = ?
-            WHERE id = ?
-            """,
-            (
-                normalized_status,
-                (review_notes or "").strip() if review_notes is not None else None,
-                candidate_json,
-                utc_now_iso(),
-                request_id,
-            ),
-        )
-        return self._fetch_correction_request_by_id(request_id)
+        next_candidate = candidate
+        candidate_json = None
+        if candidate is not None:
+            candidate_json = json.dumps(candidate, ensure_ascii=False, sort_keys=True)
+
+        with self._lock:
+            conn = self._require_conn()
+            existing = conn.execute(
+                """
+                SELECT source, candidate_json
+                FROM dictionary_correction_requests
+                WHERE id = ?
+                """,
+                (request_id,),
+            ).fetchone()
+            if existing is None:
+                return None
+
+            if next_candidate is None:
+                next_candidate = json.loads(existing["candidate_json"] or "{}")
+            require_inventory_handoff_approval_boundary(
+                source=existing["source"],
+                status=normalized_status,
+                candidate=next_candidate,
+            )
+
+            conn.execute(
+                """
+                UPDATE dictionary_correction_requests
+                SET
+                  status = ?,
+                  review_notes = COALESCE(?, review_notes),
+                  candidate_json = COALESCE(?, candidate_json),
+                  updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    normalized_status,
+                    (review_notes or "").strip() if review_notes is not None else None,
+                    candidate_json,
+                    utc_now_iso(),
+                    request_id,
+                ),
+            )
+            conn.commit()
+            return self._fetch_correction_request_by_id(request_id)
 
     # Reporting -----------------------------------------------------------
     def get_dictionary_summary(self, *, limit: int = 10) -> dict[str, Any]:

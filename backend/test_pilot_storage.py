@@ -1,6 +1,8 @@
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from pilot_store import INVENTORY_HANDOFF_CORRECTION_SOURCE, PilotStore
 
 
@@ -248,6 +250,84 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
 
         listed = store.list_correction_requests(statuses=("candidate_found",))
         assert [item["id"] for item in listed] == [record["id"]]
+    finally:
+        store.close()
+
+
+def test_inventory_handoff_request_requires_approved_manual_entry_before_approval(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        record = store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="7783-46-2",
+            chemical_name="Lead fluoride",
+            current_output="Seed dictionary has no trusted Chinese name.",
+            expected_output="Inventory candidate: 氟化鉛",
+            source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
+            status="candidate_found",
+            candidate={
+                "cas_number": "7783-46-2",
+                "name_en": "Lead fluoride",
+                "name_zh": "氟化鉛",
+            },
+        )
+
+        with pytest.raises(ValueError, match="approved manual entry"):
+            store.update_correction_request_status(record["id"], status="approved")
+
+        with pytest.raises(ValueError, match="approved manual entry"):
+            store.update_correction_request_status(
+                record["id"],
+                status="approved",
+                candidate={
+                    **record["candidate"],
+                    "converted_to_manual_entry": True,
+                    "manual_entry_status": "pending",
+                },
+            )
+
+        approved = store.update_correction_request_status(
+            record["id"],
+            status="approved",
+            candidate={
+                **record["candidate"],
+                "converted_to_manual_entry": True,
+                "manual_entry_status": "approved",
+            },
+        )
+        assert approved["status"] == "approved"
+
+        public_record = store.record_correction_request(
+            issue_type="source-conflict",
+            cas_number="67-64-1",
+            chemical_name="Acetone",
+            current_output="Public report differs from local SDS.",
+            expected_output="Reviewed by maintainer.",
+            source="public",
+        )
+        public_approved = store.update_correction_request_status(
+            public_record["id"],
+            status="approved",
+        )
+        assert public_approved["status"] == "approved"
+    finally:
+        store.close()
+
+
+def test_inventory_handoff_request_cannot_be_created_as_approved_without_manual_review(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        with pytest.raises(ValueError, match="approved manual entry"):
+            store.record_correction_request(
+                issue_type="missing-chinese-name",
+                cas_number="7783-46-2",
+                chemical_name="Lead fluoride",
+                current_output="Seed dictionary has no trusted Chinese name.",
+                expected_output="Inventory candidate: 氟化鉛",
+                source=INVENTORY_HANDOFF_CORRECTION_SOURCE,
+                status="approved",
+                candidate={"name_zh": "氟化鉛"},
+            )
     finally:
         store.close()
 

@@ -573,7 +573,9 @@ Current mode:
   status-update flows can mark a candidate as converted to manual review.
 - Completed current slice: inventory handoff correction rows now carry
   row-level next-action guidance and block direct `Approve` until the row has
-  been converted into a pending manual dictionary review entry. Missing
+  been converted into a manual dictionary review entry and that manual entry is
+  approved. The backend store enforces the same rule, so scripts or direct
+  admin API calls cannot approve review-only handoff rows early. Missing
   Chinese-name candidates must include actual CJK Chinese text before the UI
   can create that manual-review entry, so workbook placeholders or English-only
   values cannot be treated as reviewed curation.

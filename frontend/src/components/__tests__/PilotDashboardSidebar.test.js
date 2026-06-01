@@ -590,12 +590,34 @@ describe("PilotDashboardSidebar", () => {
       status: "approved",
       updated_at: "2026-04-18T18:00:00+00:00",
     };
+    const convertedPendingInventoryRequest = {
+      id: 305,
+      issue_type: "missing-chinese-name",
+      cas_number: "7783-46-2",
+      chemical_name: "Lead fluoride",
+      current_output: "Seed dictionary has no trusted Chinese name.",
+      expected_output: "Pending manual entry created from inventory evidence.",
+      duplicate_count: 2,
+      source: "inventory-workbook-audit",
+      status: "candidate_found",
+      candidate: {
+        cas_number: "7783-46-2",
+        name_en: "Lead fluoride",
+        name_zh: "\u6c1f\u5316\u925b",
+        source: "inventory-workbook-audit",
+        converted_to_manual_entry: true,
+        manual_entry_status: "pending",
+        public_data_changed: false,
+      },
+      updated_at: "2026-04-18T19:00:00+00:00",
+    };
     const props = {
       ...baseProps,
       correctionRequests: [
         inventoryRequest,
         secondInventoryRequest,
         priorityInventoryRequest,
+        convertedPendingInventoryRequest,
         completedInventoryRequest,
         ...baseProps.correctionRequests,
       ],
@@ -659,6 +681,7 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getAllByTestId("correction-request-row-301")).toHaveLength(1);
     expect(screen.getAllByTestId("correction-request-row-302")).toHaveLength(1);
     expect(screen.getAllByTestId("correction-request-row-303")).toHaveLength(1);
+    expect(screen.getAllByTestId("correction-request-row-305")).toHaveLength(1);
     expect(screen.queryByTestId("correction-request-row-304")).not.toBeInTheDocument();
     expect(screen.getByTestId("correction-request-source-301")).toHaveTextContent(
       "pilot.inventoryHandoffSource",
@@ -674,6 +697,10 @@ describe("PilotDashboardSidebar", () => {
       screen.getByTestId("correction-request-next-action-303"),
     ).toHaveTextContent("pilot.inventoryHandoffNextActionCreateManual");
     expect(screen.getByTestId("approve-correction-request-303")).toBeDisabled();
+    expect(
+      screen.getByTestId("correction-request-next-action-305"),
+    ).toHaveTextContent("pilot.inventoryHandoffNextActionManualReview");
+    expect(screen.getByTestId("approve-correction-request-305")).toBeDisabled();
     expect(
       screen.getByTestId("create-manual-entry-from-candidate-303"),
     ).toBeInTheDocument();
@@ -712,6 +739,7 @@ describe("PilotDashboardSidebar", () => {
     ).toHaveTextContent("pilot.inventoryHandoffQueueSummaryActiveFilterIssue");
     expect(screen.getByTestId("correction-request-row-301")).toBeInTheDocument();
     expect(screen.getByTestId("correction-request-row-303")).toBeInTheDocument();
+    expect(screen.getByTestId("correction-request-row-305")).toBeInTheDocument();
     expect(screen.queryByTestId("correction-request-row-302")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("inventory-handoff-filter-all"));
