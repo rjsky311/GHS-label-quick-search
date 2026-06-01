@@ -113,6 +113,9 @@ export function InventoryHandoffQueueSummary({
   items = [],
   issueTypeCounts = {},
   totalCount,
+  activeIssueType = "all",
+  filteredCount,
+  onIssueTypeChange,
 }) {
   const { t } = useTranslation();
   if (items.length === 0) {
@@ -126,6 +129,16 @@ export function InventoryHandoffQueueSummary({
       ? parsedTotalCount
       : items.length;
   const visibleItemCount = items.length;
+  const parsedFilteredCount = Number(filteredCount);
+  const activeFilteredCount = Number.isFinite(parsedFilteredCount)
+    ? parsedFilteredCount
+    : visibleItemCount;
+  const filterButtonClass = (isActive) =>
+    `inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+      isActive
+        ? "border-cyan-700 bg-cyan-700 text-white"
+        : "border-cyan-200 bg-cyan-50 text-cyan-900 hover:bg-cyan-100"
+    }`;
 
   return (
     <section
@@ -178,6 +191,54 @@ export function InventoryHandoffQueueSummary({
               defaultValue: "Issue breakdown",
             })}
           </div>
+          <div
+            className="mt-2 flex flex-wrap gap-2"
+            data-testid="inventory-handoff-queue-filters"
+          >
+            <button
+              type="button"
+              className={filterButtonClass(activeIssueType === "all")}
+              onClick={() => onIssueTypeChange?.("all")}
+              data-testid="inventory-handoff-filter-all"
+            >
+              {t("pilot.inventoryHandoffQueueSummaryFilterAll", {
+                defaultValue: "All review items",
+              })}
+              <span className="rounded-full bg-white/80 px-1.5 py-0.5 font-mono text-[11px] text-cyan-900">
+                {totalItemCount}
+              </span>
+            </button>
+            {issueRows.map((row) => (
+              <button
+                key={`filter-${row.issueType}`}
+                type="button"
+                className={filterButtonClass(activeIssueType === row.issueType)}
+                onClick={() => onIssueTypeChange?.(row.issueType)}
+                data-testid={`inventory-handoff-filter-${row.issueType}`}
+              >
+                {getDataQualityIssueDisplayLabel(row.issueType, t)}
+                <span className="rounded-full bg-white/80 px-1.5 py-0.5 font-mono text-[11px] text-cyan-900">
+                  {row.count}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p
+            className="mt-2 text-xs text-cyan-900"
+            data-testid="inventory-handoff-queue-active-filter"
+          >
+            {activeIssueType === "all"
+              ? t("pilot.inventoryHandoffQueueSummaryActiveFilterAll", {
+                  count: activeFilteredCount,
+                  defaultValue: "Showing all {{count}} visible review item(s).",
+                })
+              : t("pilot.inventoryHandoffQueueSummaryActiveFilterIssue", {
+                  count: activeFilteredCount,
+                  issue: getDataQualityIssueDisplayLabel(activeIssueType, t),
+                  defaultValue:
+                    "Showing {{count}} visible {{issue}} review item(s).",
+                })}
+          </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {issueRows.map((row) => (
               <span

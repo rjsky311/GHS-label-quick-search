@@ -30,6 +30,7 @@ import {
   CORRECTION_REQUEST_STATUS_OPTIONS,
   MANUAL_ENTRY_STATUS_OPTIONS,
   REFERENCE_LINK_STATUS_OPTIONS,
+  curationTimestamp,
   sortNewestFirst,
 } from "@/components/pilot/pilotDashboardHelpers";
 import {
@@ -52,9 +53,50 @@ const TRIAGE_TARGET_TABS = {
 };
 
 const INVENTORY_HANDOFF_SOURCE = "inventory-workbook-audit";
+const CORRECTION_REQUEST_REVIEW_STATUSES = new Set(["open", "candidate_found"]);
+const INVENTORY_HANDOFF_ISSUE_PRIORITY = {
+  "missing-chinese-name": 0,
+  "unresolved-search": 1,
+  "no-ghs-data": 2,
+  "source-conflict": 3,
+  "reference-link": 4,
+  "ghs-text-no-pictograms": 5,
+  "other-data-quality": 6,
+};
 
 const normalizeTriageTargetKey = (targetKey = "") =>
   String(targetKey).replace(/[^A-Za-z0-9_-]/g, "");
+
+const correctionRequestIssueType = (item = {}) =>
+  item.issue_type || item.issueType || "other-data-quality";
+
+const correctionRequestStatus = (item = {}) => item.status || "open";
+
+const isInventoryHandoffCorrectionRequest = (item = {}) =>
+  item.source === INVENTORY_HANDOFF_SOURCE &&
+  CORRECTION_REQUEST_REVIEW_STATUSES.has(correctionRequestStatus(item));
+
+const sortInventoryHandoffCorrectionRequests = (items = []) =>
+  [...items].sort((a, b) => {
+    const issuePriorityDiff =
+      (INVENTORY_HANDOFF_ISSUE_PRIORITY[correctionRequestIssueType(a)] ?? 99) -
+      (INVENTORY_HANDOFF_ISSUE_PRIORITY[correctionRequestIssueType(b)] ?? 99);
+    if (issuePriorityDiff !== 0) return issuePriorityDiff;
+
+    const duplicateDiff =
+      Number(b.duplicate_count || b.duplicateCount || 1) -
+      Number(a.duplicate_count || a.duplicateCount || 1);
+    if (duplicateDiff !== 0) return duplicateDiff;
+
+    const timeDiff =
+      Date.parse(curationTimestamp(b) || "") -
+      Date.parse(curationTimestamp(a) || "");
+    if (!Number.isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
+
+    return String(a.cas_number || a.casNumber || "").localeCompare(
+      String(b.cas_number || b.casNumber || ""),
+    );
+  });
 
 export default function PilotDashboardSidebar(props) {
   const {
@@ -104,6 +146,8 @@ export default function PilotDashboardSidebar(props) {
   });
   const [missResolutionDrafts, setMissResolutionDrafts] = useState({});
   const [correctionReviewDrafts, setCorrectionReviewDrafts] = useState({});
+  const [inventoryHandoffIssueFilter, setInventoryHandoffIssueFilter] =
+    useState("all");
 
   const dictionary = report?.dictionary || {};
   const counters = report?.counters || {};
@@ -130,30 +174,56 @@ export default function PilotDashboardSidebar(props) {
       ),
     [correctionRequests],
   );
-  const topCorrectionRequests = (dictionary.topCorrectionRequests || []).map(
-    (item) => {
-      const fallback = correctionRequestById.get(item?.id || item?.requestId);
-      if (!fallback) return item;
-      return {
-        ...fallback,
-        ...item,
-        duplicate_count:
-          item.duplicate_count ??
-          item.duplicateCount ??
-          fallback.duplicate_count ??
-          fallback.duplicateCount,
-      };
-    },
+  const topCorrectionRequests = useMemo(
+    () =>
+      (dictionary.topCorrectionRequests || []).map((item) => {
+        const fallback = correctionRequestById.get(item?.id || item?.requestId);
+        if (!fallback) return item;
+        return {
+          ...fallback,
+          ...item,
+          duplicate_count:
+            item.duplicate_count ??
+            item.duplicateCount ??
+            fallback.duplicate_count ??
+            fallback.duplicateCount,
+        };
+      }),
+    [correctionRequestById, dictionary.topCorrectionRequests],
   );
-  const inventoryHandoffCorrectionRequests =
-    dictionary.inventoryHandoffCorrectionRequests?.length > 0
-      ? dictionary.inventoryHandoffCorrectionRequests
-      : topCorrectionRequests.filter(
-          (item) => item.source === INVENTORY_HANDOFF_SOURCE
-        );
+  const inventoryHandoffCorrectionRequests = useMemo(() => {
+    const fullInventoryQueue = correctionRequests.filter(
+      (item) => item.source === INVENTORY_HANDOFF_SOURCE,
+    );
+    if (fullInventoryQueue.length > 0) {
+      return sortInventoryHandoffCorrectionRequests(
+        fullInventoryQueue.filter(isInventoryHandoffCorrectionRequest),
+      );
+    }
+    const summaryQueue =
+      dictionary.inventoryHandoffCorrectionRequests?.length > 0
+        ? dictionary.inventoryHandoffCorrectionRequests
+        : topCorrectionRequests.filter(
+            (item) => item.source === INVENTORY_HANDOFF_SOURCE
+          );
+    return sortInventoryHandoffCorrectionRequests(
+      summaryQueue.filter(isInventoryHandoffCorrectionRequest),
+    );
+  }, [
+    correctionRequests,
+    dictionary.inventoryHandoffCorrectionRequests,
+    topCorrectionRequests,
+  ]);
   const inventoryHandoffTotalCount =
     pilotTriage.attentionCounts?.inventoryHandoffRequests ||
     inventoryHandoffCorrectionRequests.length;
+  const visibleInventoryHandoffCorrectionRequests =
+    inventoryHandoffIssueFilter === "all"
+      ? inventoryHandoffCorrectionRequests
+      : inventoryHandoffCorrectionRequests.filter(
+          (item) =>
+            correctionRequestIssueType(item) === inventoryHandoffIssueFilter
+        );
   const inventoryHandoffRequestIds = new Set(
     inventoryHandoffCorrectionRequests.map((item) => item.id).filter(Boolean)
   );
@@ -840,9 +910,12 @@ export default function PilotDashboardSidebar(props) {
                     items={inventoryHandoffCorrectionRequests}
                     issueTypeCounts={inventoryHandoffIssueTypeCounts}
                     totalCount={inventoryHandoffTotalCount}
+                    activeIssueType={inventoryHandoffIssueFilter}
+                    filteredCount={visibleInventoryHandoffCorrectionRequests.length}
+                    onIssueTypeChange={setInventoryHandoffIssueFilter}
                   />
                   <TopCorrectionRequestsSection
-                    items={inventoryHandoffCorrectionRequests}
+                    items={visibleInventoryHandoffCorrectionRequests}
                     saving={saving}
                     correctionReviewDrafts={correctionReviewDrafts}
                     setCorrectionReviewDrafts={setCorrectionReviewDrafts}

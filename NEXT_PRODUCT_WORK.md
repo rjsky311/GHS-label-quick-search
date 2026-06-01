@@ -557,6 +557,13 @@ Current mode:
   separately stating how many rows are visible in the current dashboard
   snapshot, so maintainers do not mistake a limited row sample for the whole
   backlog.
+- Completed current slice: the inventory handoff admin queue now uses the full
+  admin correction-request list when available instead of the limited ops
+  summary sample, sorts review items by issue priority and duplicate signal,
+  and adds issue-type quick filters. This makes 50+ item handoff batches
+  actionable: maintainers can process candidate Chinese-name rows first, then
+  unresolved seed-dictionary gaps, while approved/ignored rows stay out of the
+  review queue.
 - Completed current slice: correction candidate evidence payloads are now
   sanitized at the backend API boundary. Unknown fields are dropped, candidate
   evidence URLs must use `http` or `https`, text fields are capped, CAS values

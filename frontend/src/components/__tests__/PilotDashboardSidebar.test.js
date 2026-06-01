@@ -551,8 +551,47 @@ describe("PilotDashboardSidebar", () => {
       status: "open",
       updated_at: "2026-04-18T15:00:00+00:00",
     };
+    const secondInventoryRequest = {
+      id: 302,
+      issue_type: "unresolved-search",
+      cas_number: "95838-16-7",
+      chemical_name: "Inventory unresolved seed item",
+      current_output: "No trusted seed dictionary match.",
+      expected_output: "Confirm CAS/name pair before approval.",
+      source: "inventory-workbook-audit",
+      status: "open",
+      updated_at: "2026-04-18T16:00:00+00:00",
+    };
+    const priorityInventoryRequest = {
+      id: 303,
+      issue_type: "missing-chinese-name",
+      cas_number: "7783-46-2",
+      chemical_name: "Lead fluoride",
+      current_output: "Seed dictionary has no trusted Chinese name.",
+      expected_output: "Inventory candidate: 氟化鉛",
+      duplicate_count: 4,
+      source: "inventory-workbook-audit",
+      status: "candidate_found",
+      updated_at: "2026-04-18T17:00:00+00:00",
+    };
+    const completedInventoryRequest = {
+      id: 304,
+      issue_type: "missing-chinese-name",
+      cas_number: "7487-88-9",
+      chemical_name: "Magnesium sulfate",
+      source: "inventory-workbook-audit",
+      status: "approved",
+      updated_at: "2026-04-18T18:00:00+00:00",
+    };
     const props = {
       ...baseProps,
+      correctionRequests: [
+        inventoryRequest,
+        secondInventoryRequest,
+        priorityInventoryRequest,
+        completedInventoryRequest,
+        ...baseProps.correctionRequests,
+      ],
       report: {
         ...baseProps.report,
         dictionary: {
@@ -565,7 +604,8 @@ describe("PilotDashboardSidebar", () => {
           pilotTriage: {
             ...baseProps.report.dictionary.pilotTriage,
             inventoryHandoffIssueTypeCounts: {
-              "missing-chinese-name": 1,
+              "missing-chinese-name": 2,
+              "unresolved-search": 1,
             },
             attentionCounts: {
               ...baseProps.report.dictionary.pilotTriage.attentionCounts,
@@ -602,11 +642,17 @@ describe("PilotDashboardSidebar", () => {
     );
     expect(
       screen.getByTestId("inventory-handoff-queue-issue-missing-chinese-name"),
+    ).toHaveTextContent("2");
+    expect(
+      screen.getByTestId("inventory-handoff-queue-issue-unresolved-search"),
     ).toHaveTextContent("1");
     expect(
       screen.getByTestId("inventory-handoff-queue-next-steps"),
     ).toBeInTheDocument();
     expect(screen.getAllByTestId("correction-request-row-301")).toHaveLength(1);
+    expect(screen.getAllByTestId("correction-request-row-302")).toHaveLength(1);
+    expect(screen.getAllByTestId("correction-request-row-303")).toHaveLength(1);
+    expect(screen.queryByTestId("correction-request-row-304")).not.toBeInTheDocument();
     expect(screen.getByTestId("correction-request-source-301")).toHaveTextContent(
       "pilot.inventoryHandoffSource",
     );
@@ -616,6 +662,18 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("correction-request-expected-301")).toHaveTextContent(
       "Inventory candidate",
     );
+    fireEvent.click(
+      screen.getByTestId("inventory-handoff-filter-missing-chinese-name"),
+    );
+    expect(
+      screen.getByTestId("inventory-handoff-queue-active-filter"),
+    ).toHaveTextContent("pilot.inventoryHandoffQueueSummaryActiveFilterIssue");
+    expect(screen.getByTestId("correction-request-row-301")).toBeInTheDocument();
+    expect(screen.getByTestId("correction-request-row-303")).toBeInTheDocument();
+    expect(screen.queryByTestId("correction-request-row-302")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("inventory-handoff-filter-all"));
+    expect(screen.getByTestId("correction-request-row-302")).toBeInTheDocument();
     expect(screen.getByTestId("correction-request-row-201")).toBeInTheDocument();
   });
 
