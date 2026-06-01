@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   ConvertedCorrectionCandidatesSection,
+  InventoryHandoffQueueSummary,
   RecentCorrectionRequestsSection,
   TopCorrectionRequestsSection,
 } from "@/components/pilot/PilotCorrectionRequestSections";
@@ -115,6 +116,8 @@ export default function PilotDashboardSidebar(props) {
   const referenceLinkStatusCounts = dictionary.referenceLinkStatusCounts || {};
   const correctionRequestStatusCounts =
     dictionary.correctionRequestStatusCounts || {};
+  const inventoryHandoffIssueTypeCounts =
+    pilotTriage.inventoryHandoffIssueTypeCounts || {};
   const missRetention = dictionary.missQueryRetention || {};
   const pendingAliases = dictionary.pendingAliases || [];
   const pendingManualEntries = dictionary.pendingManualEntries || [];
@@ -826,9 +829,14 @@ export default function PilotDashboardSidebar(props) {
               </div>
               {inventoryHandoffCorrectionRequests.length > 0 ? (
                 <div
+                  className="space-y-3"
                   data-triage-targets="inventory_handoff correction_requests correction_intake missing_chinese_names no_ghs_gaps source_conflicts needs_evidence"
                   tabIndex={-1}
                 >
+                  <InventoryHandoffQueueSummary
+                    items={inventoryHandoffCorrectionRequests}
+                    issueTypeCounts={inventoryHandoffIssueTypeCounts}
+                  />
                   <TopCorrectionRequestsSection
                     items={inventoryHandoffCorrectionRequests}
                     saving={saving}

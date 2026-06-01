@@ -88,6 +88,121 @@ function CorrectionIssueTypeLabel({ issueType }) {
   );
 }
 
+function inventoryHandoffIssueRows(items, issueTypeCounts) {
+  const counts =
+    issueTypeCounts && Object.keys(issueTypeCounts).length > 0
+      ? { ...issueTypeCounts }
+      : items.reduce((acc, item) => {
+          const issueType = item.issue_type || item.issueType || "other";
+          acc[issueType] = (acc[issueType] || 0) + 1;
+          return acc;
+        }, {});
+
+  return Object.entries(counts)
+    .map(([issueType, count]) => ({
+      issueType,
+      count: Number(count) || 0,
+    }))
+    .filter((row) => row.count > 0)
+    .sort(
+      (a, b) => b.count - a.count || a.issueType.localeCompare(b.issueType),
+    );
+}
+
+export function InventoryHandoffQueueSummary({
+  items = [],
+  issueTypeCounts = {},
+}) {
+  const { t } = useTranslation();
+  if (items.length === 0) {
+    return null;
+  }
+
+  const issueRows = inventoryHandoffIssueRows(items, issueTypeCounts);
+
+  return (
+    <section
+      className="rounded-lg border border-cyan-200 bg-cyan-50 p-4"
+      data-testid="inventory-handoff-queue-summary"
+    >
+      <SectionHeading
+        icon={ShieldAlert}
+        title={t("pilot.inventoryHandoffQueueSummaryTitle", {
+          defaultValue: "Inventory handoff review plan",
+        })}
+        subtitle={t("pilot.inventoryHandoffQueueSummarySubtitle", {
+          defaultValue:
+            "Use this queue as a review checklist. Nothing here changes public lookup, labels, exports, or QR targets until a maintainer approves the evidence.",
+        })}
+      />
+      <div className="grid gap-3 text-sm text-slate-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="rounded-lg border border-cyan-200 bg-white p-3">
+          <div className="text-xs font-semibold uppercase tracking-wide text-cyan-800">
+            {t("pilot.inventoryHandoffQueueSummaryTotal", {
+              defaultValue: "Review queue",
+            })}
+          </div>
+          <div className="mt-1 text-2xl font-bold text-slate-950">
+            <span data-testid="inventory-handoff-queue-total">
+              {items.length}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-cyan-900">
+            {t("pilot.inventoryHandoffQueueSummaryReviewOnly", {
+              defaultValue:
+                "Review-only import. Workbook Chinese names are candidate evidence, not approved public data.",
+            })}
+          </p>
+        </div>
+        <div className="rounded-lg border border-cyan-200 bg-white p-3">
+          <div className="text-xs font-semibold uppercase tracking-wide text-cyan-800">
+            {t("pilot.inventoryHandoffQueueSummaryIssueBreakdown", {
+              defaultValue: "Issue breakdown",
+            })}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {issueRows.map((row) => (
+              <span
+                key={row.issueType}
+                className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-900"
+                data-testid={`inventory-handoff-queue-issue-${row.issueType}`}
+              >
+                {getDataQualityIssueDisplayLabel(row.issueType, t)}
+                <span className="rounded-full bg-white px-1.5 py-0.5 font-mono text-[11px] text-cyan-800">
+                  {row.count}
+                </span>
+              </span>
+            ))}
+          </div>
+          <ol
+            className="mt-3 list-decimal space-y-1 pl-4 text-xs leading-5 text-slate-700"
+            data-testid="inventory-handoff-queue-next-steps"
+          >
+            <li>
+              {t("pilot.inventoryHandoffQueueStepCandidate", {
+                defaultValue:
+                  "For candidate Chinese names, verify SDS, supplier label, or another trusted source before creating or approving a manual entry.",
+              })}
+            </li>
+            <li>
+              {t("pilot.inventoryHandoffQueueStepUnknownSeed", {
+                defaultValue:
+                  "For unknown seed-dictionary gaps, confirm the CAS/name pair first; leave it review-only when evidence is weak.",
+              })}
+            </li>
+            <li>
+              {t("pilot.inventoryHandoffQueueStepRerun", {
+                defaultValue:
+                  "After triage, rerun the inventory audit/import dry-run and expect this queue to shrink.",
+              })}
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ConvertedCorrectionCandidatesSection({
   items = [],
   saving = false,

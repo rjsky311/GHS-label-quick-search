@@ -564,6 +564,9 @@ describe("PilotDashboardSidebar", () => {
           ],
           pilotTriage: {
             ...baseProps.report.dictionary.pilotTriage,
+            inventoryHandoffIssueTypeCounts: {
+              "missing-chinese-name": 1,
+            },
             attentionCounts: {
               ...baseProps.report.dictionary.pilotTriage.attentionCounts,
               inventoryHandoffRequests: 1,
@@ -586,6 +589,18 @@ describe("PilotDashboardSidebar", () => {
     render(<PilotDashboardSidebar {...props} />);
 
     expect(screen.getByText("pilot.inventoryHandoffQueue")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("inventory-handoff-queue-summary"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("inventory-handoff-queue-total")).toHaveTextContent(
+      "1",
+    );
+    expect(
+      screen.getByTestId("inventory-handoff-queue-issue-missing-chinese-name"),
+    ).toHaveTextContent("1");
+    expect(
+      screen.getByTestId("inventory-handoff-queue-next-steps"),
+    ).toBeInTheDocument();
     expect(screen.getAllByTestId("correction-request-row-301")).toHaveLength(1);
     expect(screen.getByTestId("correction-request-source-301")).toHaveTextContent(
       "pilot.inventoryHandoffSource",

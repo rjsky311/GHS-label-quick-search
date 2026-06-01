@@ -545,6 +545,12 @@ Current mode:
   source badges, expected/current output context, and a separate handoff queue.
   This keeps real lab roster evidence actionable without implying public
   dictionary data has changed.
+- Completed current slice: the inventory handoff queue now starts with a
+  maintainer review plan. It shows the review-only item count, issue-type
+  breakdown, and an explicit triage order for candidate Chinese names,
+  unknown seed-dictionary gaps, and rerunning the audit/import dry-run. This
+  makes workbook handoff evidence actionable without making row-level triage
+  depend on chat memory.
 - Completed current slice: correction candidate evidence payloads are now
   sanitized at the backend API boundary. Unknown fields are dropped, candidate
   evidence URLs must use `http` or `https`, text fields are capped, CAS values
