@@ -164,3 +164,32 @@ def test_inventory_handoff_import_cli_dry_run(tmp_path):
     assert payload["dryRun"] is True
     assert payload["summary"]["plannedItems"] == 2
     assert payload["summary"]["wouldCreate"] == 2
+
+
+def test_inventory_handoff_import_cli_stdout_escapes_non_cp950_text(tmp_path):
+    payload = sample_handoff_payload()
+    payload["handoffRecords"]["workbookChineseNameCandidates"][0]["name_zh"] = "\u94c8\u9e7d"
+    handoff_dir = tmp_path / "handoff"
+    handoff_dir.mkdir()
+    (handoff_dir / "audit.json").write_text(
+        json.dumps(payload, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/import_inventory_handoff.py",
+            str(handoff_dir),
+            "--db-path",
+            str(tmp_path / "pilot.db"),
+        ],
+        cwd=Path(__file__).parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    report = json.loads(completed.stdout)
+
+    assert "\\u94c8\\u9e7d" in completed.stdout
+    assert report["items"][0]["candidateNameZh"] == "\u94c8\u9e7d"

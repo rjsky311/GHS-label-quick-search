@@ -258,10 +258,18 @@ Current completion snapshot:
   `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` is now the shipped/monitoring owner doc.
   It converted the shipped evidence into a closeable productization target:
   batch-first review clarity, three-output batch label confidence, practical
-  batch export, correction/admin triage, and one low-risk maintainability
-  slice. The closure audit moved this target from `Open` to
-  `Shipped / Monitoring`; future work should come from new monitoring
-  evidence, not from continuing Batch-First implementation by inertia.
+  export handoff, correction/admin triage, and bounded maintainability.
+  The closure audit moved this target from `Open` to `Shipped / Monitoring`;
+  future work should come from new monitoring evidence, not from continuing
+  Batch-First implementation by inertia.
+- **Real inventory audit evidence checkpoint 2026-06-01**:
+  the maintainer-only workbook audit was rerun on a large user-provided lab
+  roster and converted into a non-authoritative QA evidence fixture. The audit
+  found 3,000 valid CAS rows, 1,635 unique valid CAS numbers, 246 invalid CAS
+  cells, 121 CAS cleanup signals, 52 seed-dictionary gaps, and 4 workbook
+  Chinese-name candidates. Treat this as parser/data-governance evidence only:
+  it proves batch cleanup and triage pressure, not approved public dictionary
+  data.
 - **Batch-first clarity slice checkpoint 2026-05-25**:
   batch review clarity, batch export scope, and admin triage next-action
   visibility shipped in `20b5745`. `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` records

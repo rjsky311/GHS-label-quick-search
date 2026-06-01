@@ -806,3 +806,10 @@ For admin/correction changes:
   `ExportPreviewModal`, `exportData`, `PilotDashboardSidebar`, backend export,
   and pilot-storage tests passed. Remaining work is monitoring and future
   evidence-driven slices, not an unfinished Batch-First implementation item.
+- 2026-06-01: Real inventory evidence was refreshed without importing the
+  workbook into public data. The latest maintainer audit found 3,000 valid CAS
+  rows, 1,635 unique valid CAS numbers, 246 invalid CAS cells, 121 CAS cleanup
+  signals, 52 seed-dictionary gaps, 52 missing seed Chinese-name rows, and 4
+  workbook Chinese-name candidates. `inventoryWorkbookAuditEvidenceFixture`
+  captures these counts as a non-authoritative QA fixture; the workbook values
+  remain review-only and must not bypass SDS/supplier/regulatory evidence.

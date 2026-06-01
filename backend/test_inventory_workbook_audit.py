@@ -174,6 +174,39 @@ def test_inventory_workbook_audit_cli_outputs_json(tmp_path):
     assert payload["actionQueue"] == []
 
 
+def test_inventory_workbook_audit_cli_stdout_escapes_non_cp950_text(tmp_path):
+    workbook_path = save_workbook(
+        tmp_path / "cli-non-cp950.xlsx",
+        [
+            (
+                "Inventory",
+                [
+                    ["CAS", "Name", "\u4e2d\u6587\u540d"],
+                    ["123-45-5", "Cerium salt", "\u94c8\u9e7d"],
+                ],
+            )
+        ],
+    )
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/audit_inventory_workbook.py",
+            str(workbook_path),
+            "--max-examples",
+            "2",
+        ],
+        cwd=Path(__file__).parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(completed.stdout)
+
+    assert "\\u94c8\\u9e7d" in completed.stdout
+    assert payload["examples"]["workbookChineseNameCandidates"][0]["name_zh"] == "\u94c8\u9e7d"
+
+
 def test_inventory_workbook_audit_cli_writes_handoff_packet(tmp_path):
     workbook_path = save_workbook(
         tmp_path / "handoff.xlsx",

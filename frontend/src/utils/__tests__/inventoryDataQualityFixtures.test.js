@@ -4,6 +4,7 @@ import {
   inventoryBatchPasteFixture,
   inventoryChineseHeaderPasteFixture,
   inventoryDataQualityFixtureResults,
+  inventoryWorkbookAuditEvidenceFixture,
   inventoryRosterEvidenceSummary,
   inventoryTabularPasteFixture,
 } from "@/utils/testFixtures/inventoryDataQualityFixtures";
@@ -57,6 +58,37 @@ describe("inventory data-quality fixtures", () => {
         expect.objectContaining({ example: "73183343.0" }),
         expect.objectContaining({ example: "7719-09-7." }),
         expect.objectContaining({ example: "0118-12-7" }),
+      ]),
+    );
+  });
+
+  it("keeps the latest real-workbook audit evidence as a non-authoritative QA fixture", () => {
+    expect(inventoryWorkbookAuditEvidenceFixture.summary).toEqual(
+      expect.objectContaining({
+        validCasRowCount: 3000,
+        uniqueValidCasCount: 1635,
+        invalidCasCount: 246,
+        casCleanupSignalRows: 121,
+        unknownSeedDictionaryRows: 52,
+        missingSeedChineseNameRows: 52,
+        workbookChineseNameCandidateRows: 4,
+      }),
+    );
+    expect(inventoryWorkbookAuditEvidenceFixture.actionQueue).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "fix-invalid-cas",
+          severity: "blocking",
+          blocksBatchUse: true,
+        }),
+        expect.objectContaining({
+          key: "review-workbook-chinese-candidates",
+          count: 4,
+        }),
+        expect.objectContaining({
+          key: "confirm-cas-cleanup-coverage",
+          count: 121,
+        }),
       ]),
     );
   });

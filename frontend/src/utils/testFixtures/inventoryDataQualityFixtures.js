@@ -58,6 +58,66 @@ export const inventoryRosterEvidenceSummary = Object.freeze([
   },
 ]);
 
+export const inventoryWorkbookAuditEvidenceFixture = Object.freeze({
+  source: "real lab inventory workbook audit",
+  capturedAt: "2026-06-01",
+  summary: {
+    sheetCount: 11,
+    sheetsWithCasColumn: 9,
+    skippedSheets: 2,
+    casCellCount: 3246,
+    validCasRowCount: 3000,
+    uniqueValidCasCount: 1635,
+    duplicateValidCasRows: 1365,
+    invalidCasCount: 246,
+    casCleanupSignalRows: 121,
+    rehyphenatedCasCount: 99,
+    leadingZeroCasCount: 22,
+    knownSeedDictionaryRows: 2948,
+    unknownSeedDictionaryRows: 52,
+    missingSeedChineseNameRows: 52,
+    workbookChineseNameCandidateRows: 4,
+  },
+  actionQueue: [
+    {
+      key: "fix-invalid-cas",
+      count: 246,
+      severity: "blocking",
+      blocksBatchUse: true,
+    },
+    {
+      key: "review-workbook-chinese-candidates",
+      count: 4,
+      severity: "review",
+      blocksBatchUse: false,
+    },
+    {
+      key: "triage-unknown-seed-dictionary",
+      count: 52,
+      severity: "review",
+      blocksBatchUse: false,
+    },
+    {
+      key: "collect-missing-chinese-name-evidence",
+      count: 48,
+      severity: "evidence",
+      blocksBatchUse: false,
+    },
+    {
+      key: "confirm-cas-cleanup-coverage",
+      count: 121,
+      severity: "qa",
+      blocksBatchUse: false,
+    },
+    {
+      key: "deduplicate-workbook-rows",
+      count: 1365,
+      severity: "cleanup",
+      blocksBatchUse: false,
+    },
+  ],
+});
+
 export const inventoryDataQualityFixtureResults = [
   {
     found: true,

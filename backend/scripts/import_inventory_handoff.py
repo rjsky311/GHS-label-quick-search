@@ -15,11 +15,12 @@ from pilot_store import PilotStore  # noqa: E402
 
 
 def write_payload(payload: dict, output: str | None) -> None:
-    text = json.dumps(payload, ensure_ascii=False, indent=2)
     if output:
+        text = json.dumps(payload, ensure_ascii=False, indent=2)
         Path(output).write_text(text, encoding="utf-8")
         return
-    print(text)
+    text = json.dumps(payload, ensure_ascii=True, indent=2)
+    sys.stdout.write(text + "\n")
 
 
 def build_store(db_path: str | None) -> PilotStore:
