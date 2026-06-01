@@ -4,6 +4,7 @@ import {
   buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
   getCorrectionCandidateManualEntryReadiness,
+  hasApprovedManualEntryForCorrectionCandidate,
 } from "@/utils/correctionCandidates";
 
 describe("correction candidate evidence helpers", () => {
@@ -208,5 +209,41 @@ describe("correction candidate evidence helpers", () => {
     expect(payload.review_notes).toContain(
       "public data remains unchanged until that manual entry is approved",
     );
+  });
+
+  it("recognizes approved manual entries as the real approval boundary", () => {
+    const item = {
+      cas_number: "7783-46-2",
+      chemical_name: "Lead fluoride",
+      candidate: {
+        cas_number: "7783-46-2",
+        name_en: "Lead fluoride",
+        name_zh: "\u6c1f\u5316\u925b",
+        converted_to_manual_entry: true,
+        manual_entry_status: "pending",
+      },
+    };
+
+    expect(
+      hasApprovedManualEntryForCorrectionCandidate(item, [
+        {
+          cas_number: "7783-46-2",
+          name_en: "Lead fluoride",
+          name_zh: "\u6c1f\u5316\u925b",
+          status: "approved",
+        },
+      ]),
+    ).toBe(true);
+
+    expect(
+      hasApprovedManualEntryForCorrectionCandidate(item, [
+        {
+          cas_number: "7783-46-2",
+          name_en: "Lead fluoride",
+          name_zh: "\u932f\u8aa4\u540d\u7a31",
+          status: "approved",
+        },
+      ]),
+    ).toBe(false);
   });
 });

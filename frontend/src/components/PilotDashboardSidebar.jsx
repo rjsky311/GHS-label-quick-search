@@ -916,6 +916,7 @@ export default function PilotDashboardSidebar(props) {
                   />
                   <TopCorrectionRequestsSection
                     items={visibleInventoryHandoffCorrectionRequests}
+                    manualEntries={manualEntries}
                     saving={saving}
                     correctionReviewDrafts={correctionReviewDrafts}
                     setCorrectionReviewDrafts={setCorrectionReviewDrafts}
@@ -944,6 +945,7 @@ export default function PilotDashboardSidebar(props) {
                 >
                   <TopCorrectionRequestsSection
                     items={generalTopCorrectionRequests}
+                    manualEntries={manualEntries}
                     saving={saving}
                     correctionReviewDrafts={correctionReviewDrafts}
                     setCorrectionReviewDrafts={setCorrectionReviewDrafts}

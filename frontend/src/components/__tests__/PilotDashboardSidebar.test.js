@@ -747,6 +747,57 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("correction-request-row-201")).toBeInTheDocument();
   });
 
+  it("unblocks inventory handoff approval when the matching manual entry is approved", () => {
+    const convertedPendingInventoryRequest = {
+      id: 306,
+      issue_type: "missing-chinese-name",
+      cas_number: "7783-46-2",
+      chemical_name: "Lead fluoride",
+      source: "inventory-workbook-audit",
+      status: "candidate_found",
+      candidate: {
+        cas_number: "7783-46-2",
+        name_en: "Lead fluoride",
+        name_zh: "\u6c1f\u5316\u925b",
+        source: "inventory-workbook-audit",
+        converted_to_manual_entry: true,
+        manual_entry_status: "pending",
+        public_data_changed: false,
+      },
+      updated_at: "2026-04-18T19:00:00+00:00",
+    };
+    const props = {
+      ...baseProps,
+      manualEntries: [
+        ...baseProps.manualEntries,
+        {
+          cas_number: "7783-46-2",
+          name_en: "Lead fluoride",
+          name_zh: "\u6c1f\u5316\u925b",
+          status: "approved",
+        },
+      ],
+      report: {
+        ...baseProps.report,
+        dictionary: {
+          ...baseProps.report.dictionary,
+          inventoryHandoffCorrectionRequests: [convertedPendingInventoryRequest],
+          pilotTriage: {
+            ...baseProps.report.dictionary.pilotTriage,
+            attentionCounts: {
+              ...baseProps.report.dictionary.pilotTriage.attentionCounts,
+              inventoryHandoffRequests: 1,
+            },
+          },
+        },
+      },
+    };
+
+    render(<PilotDashboardSidebar {...props} />);
+
+    expect(screen.getByTestId("approve-correction-request-306")).not.toBeDisabled();
+  });
+
   it("scrolls to the related admin queue from the primary triage action", async () => {
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = jest.fn();

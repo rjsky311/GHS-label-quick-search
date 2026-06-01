@@ -1,6 +1,7 @@
 import { BookPlus, ExternalLink, ShieldAlert } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CorrectionCandidateEvidence from "@/components/pilot/CorrectionCandidateEvidence";
+import { hasApprovedManualEntryForCorrectionCandidate } from "@/utils/correctionCandidates";
 import {
   CurationStatusBadge,
   SectionHeading,
@@ -435,6 +436,7 @@ export function ConvertedCorrectionCandidatesSection({
 
 export function TopCorrectionRequestsSection({
   items = [],
+  manualEntries = [],
   saving = false,
   correctionReviewDrafts = {},
   setCorrectionReviewDrafts,
@@ -495,7 +497,8 @@ export function TopCorrectionRequestsSection({
               inventoryCandidate.converted_to_manual_entry,
             );
             const inventoryHandoffManualApproved =
-              inventoryCandidate.manual_entry_status === "approved";
+              inventoryCandidate.manual_entry_status === "approved" ||
+              hasApprovedManualEntryForCorrectionCandidate(item, manualEntries);
             const inventoryHandoffApproveBlocked =
               showInventoryHandoffGuidance &&
               isInventoryHandoff &&

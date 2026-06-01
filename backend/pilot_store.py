@@ -120,15 +120,79 @@ def inventory_handoff_correction_can_be_approved(
     *,
     source: Optional[str],
     candidate: Optional[dict[str, Any]],
+    approved_manual_entry: Optional[dict[str, Any]] = None,
+    request_cas_number: Optional[str] = None,
+    request_chemical_name: Optional[str] = None,
 ) -> bool:
     if (source or "").strip() != INVENTORY_HANDOFF_CORRECTION_SOURCE:
         return True
     if not isinstance(candidate, dict):
         return False
-    return (
-        candidate.get("converted_to_manual_entry") is True
-        and candidate.get("manual_entry_status") == APPROVED_MANUAL_ENTRY_STATUS
+    if candidate.get("converted_to_manual_entry") is not True:
+        return False
+    return manual_entry_matches_correction_candidate(
+        candidate,
+        approved_manual_entry,
+        request_cas_number=request_cas_number,
+        request_chemical_name=request_chemical_name,
+        require_approved=True,
     )
+
+
+def candidate_cas_number(
+    candidate: Optional[dict[str, Any]],
+    *,
+    request_cas_number: Optional[str] = None,
+) -> str:
+    if isinstance(candidate, dict):
+        cas_number = str(candidate.get("cas_number") or "").strip()
+        if cas_number:
+            return cas_number
+    return str(request_cas_number or "").strip()
+
+
+def manual_entry_matches_correction_candidate(
+    candidate: Optional[dict[str, Any]],
+    manual_entry: Optional[dict[str, Any]],
+    *,
+    request_cas_number: Optional[str] = None,
+    request_chemical_name: Optional[str] = None,
+    require_approved: bool = False,
+) -> bool:
+    if not isinstance(candidate, dict) or not isinstance(manual_entry, dict):
+        return False
+    if require_approved and manual_entry.get("status") != APPROVED_MANUAL_ENTRY_STATUS:
+        return False
+
+    candidate_cas = candidate_cas_number(
+        candidate,
+        request_cas_number=request_cas_number,
+    )
+    manual_cas = str(manual_entry.get("cas_number") or "").strip()
+    if not candidate_cas or not manual_cas or candidate_cas != manual_cas:
+        return False
+
+    candidate_zh = str(candidate.get("name_zh") or "").strip()
+    manual_zh = str(manual_entry.get("name_zh") or "").strip()
+    if candidate_zh and _CJK_RE.search(candidate_zh):
+        return (
+            bool(manual_zh)
+            and normalize_compact_text(candidate_zh, locale="zh")
+            == normalize_compact_text(manual_zh, locale="zh")
+        )
+
+    candidate_en = str(
+        candidate.get("name_en") or request_chemical_name or ""
+    ).strip()
+    manual_en = str(manual_entry.get("name_en") or "").strip()
+    if candidate_en:
+        return (
+            bool(manual_en)
+            and normalize_compact_text(candidate_en, locale="en")
+            == normalize_compact_text(manual_en, locale="en")
+        )
+
+    return bool(manual_zh or manual_en)
 
 
 def require_inventory_handoff_approval_boundary(
@@ -136,12 +200,18 @@ def require_inventory_handoff_approval_boundary(
     source: Optional[str],
     status: str,
     candidate: Optional[dict[str, Any]],
+    approved_manual_entry: Optional[dict[str, Any]] = None,
+    request_cas_number: Optional[str] = None,
+    request_chemical_name: Optional[str] = None,
 ) -> None:
     if normalize_correction_request_status(status) != "approved":
         return
     if inventory_handoff_correction_can_be_approved(
         source=source,
         candidate=candidate,
+        approved_manual_entry=approved_manual_entry,
+        request_cas_number=request_cas_number,
+        request_chemical_name=request_chemical_name,
     ):
         return
     raise ValueError(
@@ -432,49 +502,130 @@ class PilotStore:
         name_zh_norm = normalize_query_text(name_zh, locale="zh") if name_zh else ""
         name_en_compact = normalize_compact_text(name_en, locale="en") if name_en else ""
         name_zh_compact = normalize_compact_text(name_zh, locale="zh") if name_zh else ""
-        self._execute(
-            """
-            INSERT INTO dictionary_entries(
-              cas_number,
-              name_en,
-              name_zh,
-              name_en_norm,
-              name_zh_norm,
-              name_en_compact,
-              name_zh_compact,
-              notes,
-              source,
-              status,
-              updated_at
+        with self._lock:
+            conn = self._require_conn()
+            conn.execute(
+                """
+                INSERT INTO dictionary_entries(
+                  cas_number,
+                  name_en,
+                  name_zh,
+                  name_en_norm,
+                  name_zh_norm,
+                  name_en_compact,
+                  name_zh_compact,
+                  notes,
+                  source,
+                  status,
+                  updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(cas_number) DO UPDATE SET
+                  name_en = excluded.name_en,
+                  name_zh = excluded.name_zh,
+                  name_en_norm = excluded.name_en_norm,
+                  name_zh_norm = excluded.name_zh_norm,
+                  name_en_compact = excluded.name_en_compact,
+                  name_zh_compact = excluded.name_zh_compact,
+                  notes = excluded.notes,
+                  source = excluded.source,
+                  status = excluded.status,
+                  updated_at = excluded.updated_at
+                """,
+                (
+                    cas_number,
+                    name_en,
+                    name_zh,
+                    name_en_norm,
+                    name_zh_norm,
+                    name_en_compact,
+                    name_zh_compact,
+                    notes,
+                    source,
+                    status,
+                    updated_at,
+                ),
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(cas_number) DO UPDATE SET
-              name_en = excluded.name_en,
-              name_zh = excluded.name_zh,
-              name_en_norm = excluded.name_en_norm,
-              name_zh_norm = excluded.name_zh_norm,
-              name_en_compact = excluded.name_en_compact,
-              name_zh_compact = excluded.name_zh_compact,
-              notes = excluded.notes,
-              source = excluded.source,
-              status = excluded.status,
-              updated_at = excluded.updated_at
-            """,
-            (
-                cas_number,
-                name_en,
-                name_zh,
-                name_en_norm,
-                name_zh_norm,
-                name_en_compact,
-                name_zh_compact,
-                notes,
-                source,
-                status,
-                updated_at,
-            ),
-        )
+            manual_entry = {
+                "cas_number": cas_number,
+                "name_en": name_en,
+                "name_zh": name_zh,
+                "notes": notes,
+                "source": source,
+                "status": status,
+                "updated_at": updated_at,
+            }
+            self._sync_manual_entry_status_to_correction_candidates_locked(
+                conn,
+                manual_entry,
+            )
+            conn.commit()
         return self.get_manual_entry_by_cas(cas_number, include_unapproved=True) or {}
+
+    def _sync_manual_entry_status_to_correction_candidates_locked(
+        self,
+        conn: sqlite3.Connection,
+        manual_entry: dict[str, Any],
+    ) -> None:
+        manual_cas = str(manual_entry.get("cas_number") or "").strip()
+        if not manual_cas:
+            return
+
+        rows = conn.execute(
+            """
+            SELECT id, cas_number, chemical_name, candidate_json
+            FROM dictionary_correction_requests
+            WHERE status IN (?, ?)
+              AND candidate_json IS NOT NULL
+            """,
+            CORRECTION_REQUEST_REVIEW_STATUSES,
+        ).fetchall()
+        now = utc_now_iso()
+        for row in rows:
+            try:
+                candidate = json.loads(row["candidate_json"] or "{}")
+            except json.JSONDecodeError:
+                continue
+            if candidate.get("converted_to_manual_entry") is not True:
+                continue
+            if not manual_entry_matches_correction_candidate(
+                candidate,
+                manual_entry,
+                request_cas_number=row["cas_number"],
+                request_chemical_name=row["chemical_name"],
+                require_approved=False,
+            ):
+                continue
+
+            candidate["manual_entry_status"] = manual_entry.get("status")
+            if manual_entry.get("source"):
+                candidate["manual_entry_source"] = manual_entry.get("source")
+            conn.execute(
+                """
+                UPDATE dictionary_correction_requests
+                SET candidate_json = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    json.dumps(candidate, ensure_ascii=False, sort_keys=True),
+                    now,
+                    row["id"],
+                ),
+            )
+
+    def _approved_manual_entry_for_correction_candidate(
+        self,
+        candidate: Optional[dict[str, Any]],
+        *,
+        request_cas_number: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
+        cas_number = candidate_cas_number(
+            candidate,
+            request_cas_number=request_cas_number,
+        )
+        if not cas_number:
+            return None
+        return self.get_manual_entry_by_cas(cas_number)
 
     def get_manual_entry_by_cas(
         self,
@@ -549,7 +700,12 @@ class PilotStore:
                 return dict(row)
         return None
 
-    def list_manual_entries(self, *, status: Optional[str] = None) -> list[dict[str, Any]]:
+    def list_manual_entries(
+        self,
+        *,
+        status: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> list[dict[str, Any]]:
         sql = """
             SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
             FROM dictionary_entries
@@ -559,6 +715,9 @@ class PilotStore:
             sql += " WHERE status = ?"
             params.append(normalize_manual_entry_status(status))
         sql += " ORDER BY cas_number"
+        if limit is not None:
+            sql += " LIMIT ?"
+            params.append(int(limit))
         rows = self._fetchall(
             sql,
             params,
@@ -740,6 +899,7 @@ class PilotStore:
         status: Optional[str] = None,
         locale: Optional[str] = None,
         cas_number: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> list[dict[str, Any]]:
         sql = """
             SELECT id, alias_text, locale, cas_number, source, confidence, status, notes, first_seen_at, last_seen_at, hit_count
@@ -757,6 +917,9 @@ class PilotStore:
             sql += " AND cas_number = ?"
             params.append(cas_number)
         sql += " ORDER BY status, hit_count DESC, alias_text ASC"
+        if limit is not None:
+            sql += " LIMIT ?"
+            params.append(int(limit))
         rows = self._fetchall(sql, params)
         return [dict(row) for row in rows]
 
@@ -1143,6 +1306,7 @@ class PilotStore:
         cas_number: Optional[str] = None,
         *,
         include_inactive: bool = False,
+        limit: Optional[int] = None,
     ) -> list[dict[str, Any]]:
         sql = """
             SELECT id, cas_number, cid, link_type, label, url, source, priority, status, updated_at
@@ -1157,6 +1321,9 @@ class PilotStore:
             sql += " AND status = ?"
             params.append(ACTIVE_REFERENCE_STATUS)
         sql += " ORDER BY cas_number ASC, priority ASC, label ASC"
+        if limit is not None:
+            sql += " LIMIT ?"
+            params.append(int(limit))
         rows = self._fetchall(sql, params)
         return [
             {
@@ -1268,10 +1435,17 @@ class PilotStore:
         normalized_evidence_url = (evidence_url or "").strip() or None
         normalized_evidence_type = (evidence_type or "").strip() or None
         normalized_local_context = (local_context or "").strip() or None
+        approved_manual_entry = self._approved_manual_entry_for_correction_candidate(
+            candidate or {},
+            request_cas_number=normalized_cas_number,
+        )
         require_inventory_handoff_approval_boundary(
             source=source,
             status=normalized_status,
             candidate=candidate or {},
+            approved_manual_entry=approved_manual_entry,
+            request_cas_number=normalized_cas_number,
+            request_chemical_name=normalized_chemical_name,
         )
 
         with self._lock:
@@ -1899,7 +2073,7 @@ class PilotStore:
             conn = self._require_conn()
             existing = conn.execute(
                 """
-                SELECT source, candidate_json
+                SELECT source, cas_number, chemical_name, candidate_json
                 FROM dictionary_correction_requests
                 WHERE id = ?
                 """,
@@ -1910,10 +2084,19 @@ class PilotStore:
 
             if next_candidate is None:
                 next_candidate = json.loads(existing["candidate_json"] or "{}")
+            approved_manual_entry = (
+                self._approved_manual_entry_for_correction_candidate(
+                    next_candidate,
+                    request_cas_number=existing["cas_number"],
+                )
+            )
             require_inventory_handoff_approval_boundary(
                 source=existing["source"],
                 status=normalized_status,
                 candidate=next_candidate,
+                approved_manual_entry=approved_manual_entry,
+                request_cas_number=existing["cas_number"],
+                request_chemical_name=existing["chemical_name"],
             )
 
             conn.execute(

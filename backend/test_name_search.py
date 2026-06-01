@@ -638,6 +638,77 @@ async def test_admin_can_view_and_update_correction_requests(monkeypatch):
     }
 
 
+async def test_admin_dictionary_list_routes_use_bounded_limits(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    captured = {}
+
+    def fake_list_manual_entries(*, status=None, limit=None):
+        captured["manual"] = {"status": status, "limit": limit}
+        return []
+
+    def fake_list_aliases(*, status=None, locale=None, cas_number=None, limit=None):
+        captured["aliases"] = {
+            "status": status,
+            "locale": locale,
+            "cas_number": cas_number,
+            "limit": limit,
+        }
+        return []
+
+    def fake_list_reference_links(cas_number=None, *, include_inactive=False, limit=None):
+        captured["reference"] = {
+            "cas_number": cas_number,
+            "include_inactive": include_inactive,
+            "limit": limit,
+        }
+        return []
+
+    monkeypatch.setattr(server.pilot_store, "list_manual_entries", fake_list_manual_entries)
+    monkeypatch.setattr(server.pilot_store, "list_aliases", fake_list_aliases)
+    monkeypatch.setattr(server.pilot_store, "list_reference_links", fake_list_reference_links)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        manual_response = await ac.get(
+            "/api/dictionary/manual-entries?status=pending&limit=9999",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        alias_response = await ac.get(
+            "/api/dictionary/aliases?status=approved&locale=en&cas_number=64-17-5&limit=2",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        reference_response = await ac.get(
+            "/api/dictionary/reference-links?cas_number=64-17-5&include_inactive=true",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        bad_limit_response = await ac.get(
+            "/api/dictionary/manual-entries?limit=0",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+
+    assert manual_response.status_code == 200
+    assert manual_response.json()["limit"] == 500
+    assert alias_response.status_code == 200
+    assert alias_response.json()["limit"] == 2
+    assert reference_response.status_code == 200
+    assert reference_response.json()["limit"] == 250
+    assert bad_limit_response.status_code == 422
+    assert captured == {
+        "manual": {"status": "pending", "limit": 500},
+        "aliases": {
+            "status": "approved",
+            "locale": "en",
+            "cas_number": "64-17-5",
+            "limit": 2,
+        },
+        "reference": {
+            "cas_number": "64-17-5",
+            "include_inactive": True,
+            "limit": 250,
+        },
+    }
+
+
 async def test_admin_correction_request_status_requires_known_row(monkeypatch):
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
     monkeypatch.setattr(

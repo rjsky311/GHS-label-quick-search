@@ -15,6 +15,26 @@ from api_models import (
     WorkspaceDocumentPayload,
 )
 
+ADMIN_DASHBOARD_LIST_DEFAULT_LIMIT = 250
+ADMIN_DASHBOARD_LIST_MAX_LIMIT = 500
+
+
+def _bounded_admin_list_limit(
+    limit: Optional[int],
+    *,
+    default: int = ADMIN_DASHBOARD_LIST_DEFAULT_LIMIT,
+    maximum: int = ADMIN_DASHBOARD_LIST_MAX_LIMIT,
+) -> int:
+    if limit is None:
+        return default
+    try:
+        normalized = int(limit)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="limit must be an integer") from exc
+    if normalized < 1:
+        raise HTTPException(status_code=422, detail="limit must be at least 1")
+    return min(normalized, maximum)
+
 
 def create_pilot_admin_router(
     *,
@@ -59,11 +79,20 @@ def create_pilot_admin_router(
         }
 
     @router.get("/dictionary/manual-entries")
-    async def dictionary_manual_entries(request: Request):
+    async def dictionary_manual_entries(
+        request: Request,
+        status: Optional[str] = None,
+        limit: Optional[int] = None,
+    ):
         require_admin(request)
+        bounded_limit = _bounded_admin_list_limit(limit)
         return {
             "generatedAt": datetime.now(timezone.utc).isoformat(),
-            "items": pilot_store.list_manual_entries(),
+            "limit": bounded_limit,
+            "items": pilot_store.list_manual_entries(
+                status=status,
+                limit=bounded_limit,
+            ),
         }
 
     @router.post("/dictionary/manual-entries")
@@ -88,14 +117,18 @@ def create_pilot_admin_router(
         status: Optional[str] = None,
         locale: Optional[str] = None,
         cas_number: Optional[str] = None,
+        limit: Optional[int] = None,
     ):
         require_admin(request)
+        bounded_limit = _bounded_admin_list_limit(limit)
         return {
             "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "limit": bounded_limit,
             "items": pilot_store.list_aliases(
                 status=status,
                 locale=locale,
                 cas_number=cas_number,
+                limit=bounded_limit,
             ),
         }
 
@@ -118,13 +151,17 @@ def create_pilot_admin_router(
         request: Request,
         cas_number: Optional[str] = None,
         include_inactive: bool = False,
+        limit: Optional[int] = None,
     ):
         require_admin(request)
+        bounded_limit = _bounded_admin_list_limit(limit)
         return {
             "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "limit": bounded_limit,
             "items": pilot_store.list_reference_links(
                 cas_number,
                 include_inactive=include_inactive,
+                limit=bounded_limit,
             ),
         }
 

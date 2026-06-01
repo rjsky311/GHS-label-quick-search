@@ -286,15 +286,56 @@ def test_inventory_handoff_request_requires_approved_manual_entry_before_approva
                 },
             )
 
-        approved = store.update_correction_request_status(
+        with pytest.raises(ValueError, match="approved manual entry"):
+            store.update_correction_request_status(
+                record["id"],
+                status="approved",
+                candidate={
+                    **record["candidate"],
+                    "converted_to_manual_entry": True,
+                    "manual_entry_status": "approved",
+                },
+            )
+
+        store.update_correction_request_status(
             record["id"],
-            status="approved",
+            status="candidate_found",
             candidate={
                 **record["candidate"],
                 "converted_to_manual_entry": True,
-                "manual_entry_status": "approved",
+                "manual_entry_status": "pending",
             },
         )
+
+        store.upsert_dictionary_entry(
+            "7783-46-2",
+            name_en="Lead fluoride",
+            name_zh="Different reviewed name",
+            source="correction-request",
+            status="approved",
+        )
+        with pytest.raises(ValueError, match="approved manual entry"):
+            store.update_correction_request_status(
+                record["id"],
+                status="approved",
+                candidate={
+                    **record["candidate"],
+                    "converted_to_manual_entry": True,
+                    "manual_entry_status": "approved",
+                },
+            )
+
+        store.upsert_dictionary_entry(
+            "7783-46-2",
+            name_en="Lead fluoride",
+            name_zh=record["candidate"]["name_zh"],
+            source="correction-request",
+            status="approved",
+        )
+        synced = store._fetch_correction_request_by_id(record["id"])
+        assert synced["candidate"]["manual_entry_status"] == "approved"
+
+        approved = store.update_correction_request_status(record["id"], status="approved")
         assert approved["status"] == "approved"
 
         public_record = store.record_correction_request(

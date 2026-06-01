@@ -18,6 +18,16 @@ const normalizeText = (value, maxLength = MAX_FIELD_LENGTH) => {
 const firstPresent = (...values) =>
   values.map((value) => normalizeText(value)).find(Boolean) || "";
 
+const normalizeCas = (value) => String(value || "").trim();
+
+const normalizeCompactEnglish = (value) =>
+  normalizeText(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+const normalizeCompactChinese = (value) =>
+  normalizeText(value).replace(/[\s\u3000()嚗?\[\]{}\-_/.,;:]+/g, "");
+
 const splitCandidateSegments = (...values) =>
   values
     .flatMap((value) => String(value || "").split(/[\n\r|/;\uFF1B]+/))
@@ -253,4 +263,41 @@ export function getCorrectionCandidateDisplayRows(candidate = {}) {
   return rows
     .filter(([, value]) => normalizeText(value))
     .map(([label, value]) => [label, normalizeText(value)]);
+}
+
+export function hasApprovedManualEntryForCorrectionCandidate(
+  item = {},
+  manualEntries = [],
+) {
+  const candidate =
+    item.candidate && typeof item.candidate === "object" ? item.candidate : {};
+  if (candidate.converted_to_manual_entry !== true) return false;
+
+  const candidateCas = normalizeCas(candidate.cas_number || item.cas_number);
+  if (!candidateCas) return false;
+
+  const candidateZh = normalizeText(candidate.name_zh);
+  const candidateEn = normalizeText(
+    candidate.name_en || item.chemical_name || item.chemicalName,
+  );
+
+  return (manualEntries || []).some((entry) => {
+    if (entry?.status !== "approved") return false;
+    if (normalizeCas(entry.cas_number || entry.casNumber) !== candidateCas) {
+      return false;
+    }
+    if (candidateZh && hasCjkText(candidateZh)) {
+      return (
+        normalizeCompactChinese(entry.name_zh || entry.nameZh) ===
+        normalizeCompactChinese(candidateZh)
+      );
+    }
+    if (candidateEn) {
+      return (
+        normalizeCompactEnglish(entry.name_en || entry.nameEn) ===
+        normalizeCompactEnglish(candidateEn)
+      );
+    }
+    return Boolean(entry.name_zh || entry.nameZh || entry.name_en || entry.nameEn);
+  });
 }
