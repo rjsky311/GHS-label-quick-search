@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import { getCorrectionCandidateDisplayRows } from "@/utils/correctionCandidates";
+import {
+  getCorrectionCandidateDisplayRows,
+  getCorrectionCandidateManualEntryReadiness,
+} from "@/utils/correctionCandidates";
 
 export default function CorrectionCandidateEvidence({
   candidate,
@@ -12,10 +15,11 @@ export default function CorrectionCandidateEvidence({
   const rows = getCorrectionCandidateDisplayRows(candidate);
   if (rows.length === 0) return null;
   const isConvertedToManualEntry = Boolean(candidate?.converted_to_manual_entry);
+  const manualEntryReadiness =
+    getCorrectionCandidateManualEntryReadiness(candidate);
   const canCreateManualEntry =
     !isConvertedToManualEntry &&
-    Boolean(candidate?.cas_number) &&
-    Boolean(candidate?.name_en || candidate?.name_zh) &&
+    manualEntryReadiness.canCreate &&
     typeof onCreateManualEntry === "function";
 
   return (
@@ -69,6 +73,22 @@ export default function CorrectionCandidateEvidence({
             defaultValue: "Create review entry",
           })}
         </button>
+      ) : !isConvertedToManualEntry &&
+        typeof onCreateManualEntry === "function" ? (
+        <div
+          className="mt-3 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-900"
+          data-testid={`correction-request-candidate-${requestId}-manual-blocked`}
+        >
+          {manualEntryReadiness.reason === "missing-cjk-chinese-name"
+            ? t("pilot.candidateManualEntryMissingChineseName", {
+                defaultValue:
+                  "A missing-Chinese-name request needs a reviewed Chinese name before it can become a manual dictionary review entry.",
+              })
+            : t("pilot.candidateManualEntryMissingIdentity", {
+                defaultValue:
+                  "Candidate needs a CAS number and at least one name before it can become a review entry.",
+              })}
+        </div>
       ) : null}
     </div>
   );

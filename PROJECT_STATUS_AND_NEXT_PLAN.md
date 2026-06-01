@@ -636,6 +636,12 @@ Current completion snapshot:
   review. `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` now defines the next safe
   implementation contract for future external/LLM/scientific-skill candidate
   discovery: dry-run first, evidence bundle only, no public-data side effects.
+  Inventory handoff correction rows now also show a row-level next action and
+  block direct approval until review-only candidate evidence has been converted
+  into a pending manual dictionary review entry. Missing-Chinese-name
+  candidates must contain real CJK Chinese text before the admin UI can create
+  that manual-review entry; English placeholders or workbook-only text cannot
+  silently become public curation work.
   The first maintainer CLI implementation now exists in
   `backend/scripts/discover_candidates.py`: it reads approved manual entries
   and the local seed dictionary by default, can resolve exact local names to

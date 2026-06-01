@@ -133,6 +133,30 @@ const candidateNotes = (candidate = {}) =>
     .filter(Boolean)
     .join(" | ");
 
+const candidateIssueType = (candidate = {}) =>
+  normalizeText(
+    candidate.issue_type || candidate.issueType || candidate.candidate_type,
+  );
+
+export function getCorrectionCandidateManualEntryReadiness(candidate = {}) {
+  const casNumber = normalizeText(candidate.cas_number || candidate.casNumber);
+  const nameEn = normalizeText(candidate.name_en || candidate.nameEn);
+  const nameZh = normalizeText(candidate.name_zh || candidate.nameZh);
+  const issueType = candidateIssueType(candidate);
+
+  if (!casNumber) {
+    return { canCreate: false, reason: "missing-cas" };
+  }
+  if (issueType === "missing-chinese-name" && !hasCjkText(nameZh)) {
+    return { canCreate: false, reason: "missing-cjk-chinese-name" };
+  }
+  if (!nameEn && !nameZh) {
+    return { canCreate: false, reason: "missing-name" };
+  }
+
+  return { canCreate: true, reason: "" };
+}
+
 const appendReviewNote = (baseNote = "", nextNote = "") => {
   const notes = [normalizeText(baseNote, MAX_REVIEW_NOTES_LENGTH), nextNote]
     .filter(Boolean)
@@ -178,7 +202,8 @@ export function buildManualEntryPayloadFromCorrectionCandidate(
   const nameEn = normalizeText(candidate.name_en);
   const nameZh = normalizeText(candidate.name_zh);
 
-  if (!casNumber || (!nameEn && !nameZh)) return null;
+  const readiness = getCorrectionCandidateManualEntryReadiness(candidate);
+  if (!readiness.canCreate) return null;
 
   return {
     cas_number: casNumber,

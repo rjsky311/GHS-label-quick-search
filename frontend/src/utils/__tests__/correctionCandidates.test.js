@@ -3,6 +3,7 @@ import {
   buildCorrectionRequestManualEntryConversionPayload,
   buildManualEntryPayloadFromCorrectionCandidate,
   getCorrectionCandidateDisplayRows,
+  getCorrectionCandidateManualEntryReadiness,
 } from "@/utils/correctionCandidates";
 
 describe("correction candidate evidence helpers", () => {
@@ -67,6 +68,50 @@ describe("correction candidate evidence helpers", () => {
 
     expect(candidate.name_en).toBe("Formaldehyde");
     expect(candidate.name_zh).toBeUndefined();
+  });
+
+  it("blocks missing-Chinese-name manual entries until a real Chinese name exists", () => {
+    expect(
+      getCorrectionCandidateManualEntryReadiness({
+        issue_type: "missing-chinese-name",
+        cas_number: "67-64-1",
+        name_en: "Acetone",
+        name_zh: "Acetone zh",
+      }),
+    ).toEqual({
+      canCreate: false,
+      reason: "missing-cjk-chinese-name",
+    });
+
+    expect(
+      buildManualEntryPayloadFromCorrectionCandidate({
+        id: 206,
+        issue_type: "missing-chinese-name",
+        cas_number: "67-64-1",
+        chemical_name: "Acetone",
+        expected_output: "Chinese: Acetone zh",
+      }),
+    ).toBeNull();
+  });
+
+  it("allows unresolved-search manual entries when the identity is clear", () => {
+    const payload = buildManualEntryPayloadFromCorrectionCandidate(
+      {
+        id: 207,
+        issue_type: "unresolved-search",
+        query_text: "acetone",
+        expected_output: "CAS: 67-64-1\nEnglish: Acetone",
+      },
+      "CAS checked",
+    );
+
+    expect(payload).toMatchObject({
+      cas_number: "67-64-1",
+      name_en: "Acetone",
+      name_zh: null,
+      source: "correction-request",
+      status: "pending",
+    });
   });
 
   it("renders a compact candidate display row list", () => {

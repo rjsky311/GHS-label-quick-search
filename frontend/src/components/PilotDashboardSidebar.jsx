@@ -921,6 +921,7 @@ export default function PilotDashboardSidebar(props) {
                     setCorrectionReviewDrafts={setCorrectionReviewDrafts}
                     onStatusUpdate={handleCorrectionRequestStatusUpdate}
                     onCreateManualEntry={handleCreateManualEntryFromCandidate}
+                    showInventoryHandoffGuidance
                     title={t("pilot.inventoryHandoffQueue", {
                       defaultValue: "Inventory handoff queue",
                     })}

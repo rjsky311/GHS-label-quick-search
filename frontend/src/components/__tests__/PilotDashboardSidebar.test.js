@@ -539,7 +539,7 @@ describe("PilotDashboardSidebar", () => {
     expect(onOpenFocusTarget).toHaveBeenCalledWith("inventory_handoff");
   });
 
-  it("separates inventory handoff correction requests from the general correction list", () => {
+  it("separates inventory handoff correction requests from the general correction list", async () => {
     const inventoryRequest = {
       id: 301,
       issue_type: "missing-chinese-name",
@@ -572,6 +572,13 @@ describe("PilotDashboardSidebar", () => {
       duplicate_count: 4,
       source: "inventory-workbook-audit",
       status: "candidate_found",
+      candidate: {
+        cas_number: "7783-46-2",
+        name_en: "Lead fluoride",
+        name_zh: "\u6c1f\u5316\u925b",
+        source: "inventory-workbook-audit",
+        issue_type: "missing-chinese-name",
+      },
       updated_at: "2026-04-18T17:00:00+00:00",
     };
     const completedInventoryRequest = {
@@ -659,6 +666,41 @@ describe("PilotDashboardSidebar", () => {
     expect(
       screen.getByTestId("correction-request-source-review-only-301"),
     ).toHaveTextContent("pilot.inventoryHandoffReviewOnly");
+    expect(
+      screen.getByTestId("correction-request-next-action-301"),
+    ).toHaveTextContent("pilot.inventoryHandoffNextActionCreateCandidate");
+    expect(screen.getByTestId("approve-correction-request-301")).toBeDisabled();
+    expect(
+      screen.getByTestId("correction-request-next-action-303"),
+    ).toHaveTextContent("pilot.inventoryHandoffNextActionCreateManual");
+    expect(screen.getByTestId("approve-correction-request-303")).toBeDisabled();
+    expect(
+      screen.getByTestId("create-manual-entry-from-candidate-303"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("create-manual-entry-from-candidate-303"));
+
+    await waitFor(() => {
+      expect(props.onSaveManualEntry).toHaveBeenCalledWith({
+        cas_number: "7783-46-2",
+        name_en: "Lead fluoride",
+        name_zh: "\u6c1f\u5316\u925b",
+        notes: expect.stringContaining("Correction request #303"),
+        source: "correction-request",
+        status: "pending",
+      });
+    });
+    expect(props.onUpdateCorrectionRequestStatus).toHaveBeenCalledWith(
+      303,
+      expect.objectContaining({
+        status: "candidate_found",
+        candidate: expect.objectContaining({
+          cas_number: "7783-46-2",
+          converted_to_manual_entry: true,
+          manual_entry_status: "pending",
+          public_data_changed: false,
+        }),
+      }),
+    );
     expect(screen.getByTestId("correction-request-expected-301")).toHaveTextContent(
       "Inventory candidate",
     );

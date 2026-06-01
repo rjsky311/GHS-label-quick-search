@@ -88,6 +88,86 @@ function CorrectionIssueTypeLabel({ issueType }) {
   );
 }
 
+function InventoryHandoffNextAction({ item = {} }) {
+  const { t } = useTranslation();
+  const { requestId, issueType, status } = correctionRequestIdentity(item);
+  const candidate =
+    item.candidate && typeof item.candidate === "object" ? item.candidate : {};
+  const convertedToManualEntry = Boolean(candidate.converted_to_manual_entry);
+  const hasCandidateEvidence = Object.keys(candidate).length > 0;
+
+  let title = t("pilot.inventoryHandoffNextActionReviewEvidence", {
+    defaultValue: "Review evidence before changing public data",
+  });
+  let detail = t("pilot.inventoryHandoffNextActionGenericDetail", {
+    defaultValue:
+      "Keep this row review-only until the CAS, identity, and supporting source are clear.",
+  });
+
+  if (convertedToManualEntry) {
+    title = t("pilot.inventoryHandoffNextActionManualReview", {
+      defaultValue: "Manual dictionary review is now the next owner",
+    });
+    detail = t("pilot.inventoryHandoffNextActionManualReviewDetail", {
+      defaultValue:
+        "Finish or reject the pending manual entry before treating this handoff item as resolved.",
+    });
+  } else if (issueType === "missing-chinese-name" && hasCandidateEvidence) {
+    title = t("pilot.inventoryHandoffNextActionCreateManual", {
+      defaultValue: "Verify the Chinese-name evidence, then create review entry",
+    });
+    detail = t("pilot.inventoryHandoffNextActionCreateManualDetail", {
+      defaultValue:
+        "A workbook candidate is present, but it is not public data. Create a pending manual entry only after checking a trusted source.",
+    });
+  } else if (issueType === "missing-chinese-name") {
+    title = t("pilot.inventoryHandoffNextActionCreateCandidate", {
+      defaultValue: "Create candidate evidence first",
+    });
+    detail = t("pilot.inventoryHandoffNextActionCreateCandidateDetail", {
+      defaultValue:
+        "Use Candidate after adding review notes or evidence; do not approve this request directly from workbook text.",
+    });
+  } else if (issueType === "unresolved-search") {
+    title = t("pilot.inventoryHandoffNextActionResolveSearch", {
+      defaultValue: "Confirm the CAS/name pair before dictionary work",
+    });
+    detail = t("pilot.inventoryHandoffNextActionResolveSearchDetail", {
+      defaultValue:
+        "If the row is a real chemical, capture evidence and create a reviewed entry; otherwise reject or ignore it.",
+    });
+  } else if (issueType === "no-ghs-data") {
+    title = t("pilot.inventoryHandoffNextActionNoGhs", {
+      defaultValue: "Check whether this is missing data or genuinely non-GHS",
+    });
+    detail = t("pilot.inventoryHandoffNextActionNoGhsDetail", {
+      defaultValue:
+        "Do not mark missing upstream data as safe. Keep the row in review until SDS or another trusted source is checked.",
+    });
+  }
+
+  return (
+    <div
+      className="mt-2 rounded-md border border-cyan-200 bg-white px-2 py-1.5 text-xs text-cyan-950"
+      data-testid={`correction-request-next-action-${requestId}`}
+    >
+      <div className="font-semibold">{title}</div>
+      <div className="mt-0.5 text-cyan-800">{detail}</div>
+      {status === "candidate_found" && !hasCandidateEvidence ? (
+        <div
+          className="mt-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-amber-900"
+          data-testid={`correction-request-next-action-missing-candidate-${requestId}`}
+        >
+          {t("pilot.inventoryHandoffMissingCandidatePayload", {
+            defaultValue:
+              "Status says candidate found, but no candidate payload is attached. Recreate candidate evidence before manual review.",
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function inventoryHandoffIssueRows(items, issueTypeCounts) {
   const counts =
     issueTypeCounts && Object.keys(issueTypeCounts).length > 0
@@ -364,6 +444,7 @@ export function TopCorrectionRequestsSection({
   subtitle,
   emptyText,
   sectionClassName = "rounded-lg border border-slate-200 bg-white p-4",
+  showInventoryHandoffGuidance = false,
 }) {
   const { t } = useTranslation();
 
@@ -405,6 +486,11 @@ export function TopCorrectionRequestsSection({
             const duplicateCount = Number(
               item.duplicate_count || item.duplicateCount || 1,
             );
+            const isInventoryHandoff = source === INVENTORY_HANDOFF_SOURCE;
+            const inventoryHandoffApproveBlocked =
+              showInventoryHandoffGuidance &&
+              isInventoryHandoff &&
+              !item.candidate?.converted_to_manual_entry;
             return (
               <div
                 key={`correction-${requestId}`}
@@ -424,6 +510,9 @@ export function TopCorrectionRequestsSection({
                       source={source}
                       requestId={requestId}
                     />
+                    {showInventoryHandoffGuidance && isInventoryHandoff ? (
+                      <InventoryHandoffNextAction item={item} />
+                    ) : null}
                     {duplicateCount > 1 ? (
                       <span
                         className="mt-1 inline-flex w-fit rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800"
@@ -531,18 +620,31 @@ export function TopCorrectionRequestsSection({
                         "rounded bg-slate-700 px-3 py-2 text-xs text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40",
                         "ignore-correction-request",
                       ],
-                    ].map(([nextStatus, label, className, testIdPrefix]) => (
-                      <button
-                        key={nextStatus}
-                        type="button"
-                        onClick={() => onStatusUpdate?.(item, nextStatus)}
-                        disabled={saving || !requestId}
-                        className={className}
-                        data-testid={`${testIdPrefix}-${requestId}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
+                    ].map(([nextStatus, label, className, testIdPrefix]) => {
+                      const approvalBlocked =
+                        nextStatus === "approved" &&
+                        inventoryHandoffApproveBlocked;
+                      return (
+                        <button
+                          key={nextStatus}
+                          type="button"
+                          onClick={() => onStatusUpdate?.(item, nextStatus)}
+                          disabled={saving || !requestId || approvalBlocked}
+                          title={
+                            approvalBlocked
+                              ? t("pilot.inventoryHandoffApproveBlocked", {
+                                  defaultValue:
+                                    "Convert this handoff row into a manual review entry before approving the correction request.",
+                                })
+                              : undefined
+                          }
+                          className={className}
+                          data-testid={`${testIdPrefix}-${requestId}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

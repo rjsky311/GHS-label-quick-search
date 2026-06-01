@@ -571,6 +571,12 @@ Current mode:
   (`approved_for_public_use: false`, `public_data_changed: false`). Public
   submissions cannot set manual-review conversion metadata; only admin
   status-update flows can mark a candidate as converted to manual review.
+- Completed current slice: inventory handoff correction rows now carry
+  row-level next-action guidance and block direct `Approve` until the row has
+  been converted into a pending manual dictionary review entry. Missing
+  Chinese-name candidates must include actual CJK Chinese text before the UI
+  can create that manual-review entry, so workbook placeholders or English-only
+  values cannot be treated as reviewed curation.
 - Completed current slice: added `CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md` and
   included it in the docs drift gate. Future Wikidata, PubChem synonym, NCI,
   LLM, or scientific-skill candidate discovery now has a dry-run-first contract
