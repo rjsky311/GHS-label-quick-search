@@ -133,12 +133,20 @@ export default function ResultsTable({
       const effective = result.found ? getEffectiveClassification(result) : null;
       const issues = getDataQualityIssues(result, effective);
       const hasAnyIssue = issues.length > 0;
-      const readyOutput = result.found && hasGhsData(effective) && !hasAnyIssue;
+      const hasOutputData = result.found && hasGhsData(effective);
+      const readyOutput = hasOutputData && !hasAnyIssue;
+      const blockedOutput =
+        Boolean(result.upstream_error) ||
+        isUnresolvedSearchResult(result) ||
+        (result.found && !hasOutputData);
 
       return {
         found: summary.found + (result.found ? 1 : 0),
         unresolved: summary.unresolved + (isUnresolvedSearchResult(result) ? 1 : 0),
         readyOutput: summary.readyOutput + (readyOutput ? 1 : 0),
+        reviewBeforeOutput:
+          summary.reviewBeforeOutput + (hasOutputData && hasAnyIssue ? 1 : 0),
+        blockedOutput: summary.blockedOutput + (blockedOutput ? 1 : 0),
         needsReview: summary.needsReview + (hasAnyIssue ? 1 : 0),
         exportRows: summary.exportRows + 1,
       };
@@ -147,6 +155,8 @@ export default function ResultsTable({
       found: 0,
       unresolved: 0,
       readyOutput: 0,
+      reviewBeforeOutput: 0,
+      blockedOutput: 0,
       needsReview: 0,
       exportRows: 0,
     },
@@ -181,6 +191,8 @@ export default function ResultsTable({
     workflowReviewSignalCount > workflowSummary.needsReview;
   const multipleGhsReviewCount =
     workflowIssueCounts[DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS] || 0;
+  const missingChineseNameReviewCount =
+    workflowIssueCounts[DATA_QUALITY_ISSUE_TYPES.MISSING_CHINESE_NAME] || 0;
   const activeReviewIssueType = advancedFilter.reviewIssueType || "";
   const activeReviewIssueLabel = activeReviewIssueType
     ? getDataQualityIssueLabel(activeReviewIssueType, t)
@@ -343,6 +355,77 @@ export default function ResultsTable({
       className: "border-slate-200 bg-slate-50 text-slate-950",
     },
   ];
+  const workflowSelfServiceLanes = [
+    {
+      key: "ready",
+      value: workflowSummary.readyOutput,
+      title: t("results.workflowLaneReadyTitle"),
+      body: t("results.workflowLaneReadyBody"),
+      className: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    },
+    {
+      key: "review",
+      value: workflowSummary.reviewBeforeOutput,
+      title: t("results.workflowLaneReviewTitle"),
+      body: t("results.workflowLaneReviewBody"),
+      className: "border-amber-200 bg-amber-50 text-amber-950",
+    },
+    {
+      key: "blocked",
+      value: workflowSummary.blockedOutput,
+      title: t("results.workflowLaneBlockedTitle"),
+      body: t("results.workflowLaneBlockedBody"),
+      className: "border-red-100 bg-red-50 text-red-950",
+    },
+  ];
+  const workflowActionPlan = [
+    ...(multipleGhsReviewCount > 0
+      ? [
+          {
+            key: "multiple-ghs",
+            body: t("results.workflowActionPlanMultipleGhs", {
+              count: multipleGhsReviewCount,
+            }),
+          },
+        ]
+      : []),
+    ...(missingChineseNameReviewCount > 0
+      ? [
+          {
+            key: "missing-chinese-name",
+            body: t("results.workflowActionPlanMissingChineseName", {
+              count: missingChineseNameReviewCount,
+            }),
+          },
+        ]
+      : []),
+    ...(workflowSummary.blockedOutput > 0
+      ? [
+          {
+            key: "blocked-output",
+            body: t("results.workflowActionPlanBlockedOutput", {
+              count: workflowSummary.blockedOutput,
+            }),
+          },
+        ]
+      : []),
+    ...(workflowSummary.readyOutput > 0
+      ? [
+          {
+            key: "ready-output",
+            body: t("results.workflowActionPlanReadyOutput", {
+              count: workflowSummary.readyOutput,
+            }),
+          },
+        ]
+      : []),
+  ];
+  if (workflowActionPlan.length === 0 && showWorkflowSummary) {
+    workflowActionPlan.push({
+      key: "no-open-actions",
+      body: t("results.workflowActionPlanNoOpenActions"),
+    });
+  }
 
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
@@ -626,6 +709,43 @@ export default function ResultsTable({
               })}
             </p>
           </div>
+          <div
+            className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3"
+            data-testid="results-workflow-self-service"
+          >
+            <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-semibold text-slate-950">
+                  {t("results.workflowSelfServiceTitle")}
+                </h4>
+                <p className="mt-1 text-xs text-slate-500">
+                  {t("results.workflowSelfServiceBody")}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-3">
+              {workflowSelfServiceLanes.map((lane) => (
+                <div
+                  key={lane.key}
+                  className={`rounded-md border px-3 py-2 ${lane.className}`}
+                  data-testid={`results-workflow-lane-${lane.key}`}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                      {lane.title}
+                    </span>
+                    <span
+                      className="text-xl font-semibold"
+                      data-testid={`results-workflow-lane-${lane.key}-value`}
+                    >
+                      {lane.value}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs opacity-75">{lane.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
           {nextAction && (
             <div
               className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-3 ${
@@ -667,6 +787,30 @@ export default function ResultsTable({
                   {nextAction.cta}
                 </button>
               )}
+            </div>
+          )}
+          {workflowActionPlan.length > 0 && (
+            <div
+              className="mb-3 rounded-md border border-slate-200 bg-white px-3 py-3"
+              data-testid="results-workflow-action-plan"
+            >
+              <p className="text-xs font-semibold text-slate-700">
+                {t("results.workflowActionPlanTitle")}
+              </p>
+              <ol className="mt-2 space-y-1.5 text-xs text-slate-600">
+                {workflowActionPlan.map((item, index) => (
+                  <li
+                    key={item.key}
+                    className="flex gap-2"
+                    data-testid={`results-workflow-action-plan-${item.key}`}
+                  >
+                    <span className="font-semibold text-slate-400">
+                      {index + 1}.
+                    </span>
+                    <span>{item.body}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
           {multipleGhsReviewCount > 0 && (

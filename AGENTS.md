@@ -46,6 +46,9 @@ before choosing the next autonomous product slice.
 - `PRODUCT_REQUIREMENTS_DECISIONS.md` pins current product decisions.
 - `PRODUCT_SCOPE_GATE.md` defines the project-level "grill me" scope gate for
   broad or ambiguous product changes.
+- `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines planned role-based
+  scenario gates and safe external survey-research usage.
+- `PERSONA_SURVEY_REVIEW_PACKET.md` is the safe external review prompt packet.
 - Open a new slice only from concrete evidence: user screenshot/PDF/Excel,
   production QA failure, CI/deployment failure, admin queue evidence, export
   handoff confusion, or a code-review finding.

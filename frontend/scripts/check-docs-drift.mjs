@@ -63,6 +63,13 @@ const docs = {
   ),
   "LAB_READY_PILOT_95_PLAN.md": readText("LAB_READY_PILOT_95_PLAN.md"),
   "PRODUCT_SCOPE_GATE.md": readText("PRODUCT_SCOPE_GATE.md"),
+  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md": readText(
+    "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
+  ),
+  "PERSONA_SURVEY_REVIEW_PACKET.md": readText("PERSONA_SURVEY_REVIEW_PACKET.md"),
+  "LINER_SURVEY_2026_06_02_FINDINGS.md": readText(
+    "LINER_SURVEY_2026_06_02_FINDINGS.md",
+  ),
   "AUTONOMOUS_WORKFLOW.md": readText("AUTONOMOUS_WORKFLOW.md"),
   "NEXT_PRODUCT_WORK.md": readText("NEXT_PRODUCT_WORK.md"),
   "NEXT_REMAINING_PRODUCT_WORK.md": readText("NEXT_REMAINING_PRODUCT_WORK.md"),
@@ -441,6 +448,60 @@ requireIncludes(
   docs["PRODUCT_SCOPE_GATE.md"],
   "Decision Packet",
   "scope gate must produce a bounded implementation decision",
+);
+requireIncludes(
+  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
+  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
+  "Scenario Test Model",
+  "persona research plan must define role-level scenario gates",
+);
+requireIncludes(
+  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
+  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
+  "LINER Survey Research Model",
+  "persona research plan must define safe external survey use",
+);
+requireIncludes(
+  "PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md",
+  docs["PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md"],
+  "PERSONA_SURVEY_REVIEW_PACKET.md",
+  "persona research plan must point to the concrete external review packet",
+);
+requireIncludes(
+  "PERSONA_SURVEY_REVIEW_PACKET.md",
+  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
+  "Safe Inputs",
+  "external review packet must define upload boundaries",
+);
+requireIncludes(
+  "PERSONA_SURVEY_REVIEW_PACKET.md",
+  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
+  "Survey Prompt Templates",
+  "external review packet must provide reusable persona prompts",
+);
+requireIncludes(
+  "PERSONA_SURVEY_REVIEW_PACKET.md",
+  docs["PERSONA_SURVEY_REVIEW_PACKET.md"],
+  "Research-to-Backlog Decision Rule",
+  "external review packet must prevent survey output from becoming unbounded work",
+);
+requireIncludes(
+  "LINER_SURVEY_2026_06_02_FINDINGS.md",
+  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
+  "Batch Review Self-Service Clarity",
+  "first LINER findings must record the bounded implementation decision",
+);
+requireIncludes(
+  "LINER_SURVEY_2026_06_02_FINDINGS.md",
+  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
+  "Not allowed use",
+  "external survey findings must keep compliance and correctness boundaries visible",
+);
+requireIncludes(
+  "LINER_SURVEY_2026_06_02_FINDINGS.md",
+  docs["LINER_SURVEY_2026_06_02_FINDINGS.md"],
+  "Research-To-Backlog Decision",
+  "external survey findings must route research into a bounded backlog decision",
 );
 for (const relativePath of [
   "README.md",

@@ -26,6 +26,16 @@ changing product direction, label-printing models, data trust boundaries,
 workflow simplification, or multi-surface UX behavior when the acceptance
 standard is not already clear.
 
+Persona integration and survey research:
+`PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines how to turn
+role-based workflows into scenario gates and how to use external survey
+simulation as product-research input without treating it as GHS correctness or
+compliance validation. `PERSONA_SURVEY_REVIEW_PACKET.md` is the sanitized
+packet to use before uploading prompts or screenshots to LINER or another
+external review tool. `LINER_SURVEY_2026_06_02_FINDINGS.md` records the first
+external survey dataset and the bounded Batch Review Self-Service Clarity slice
+opened from that evidence.
+
 Proactive insight habit: `AUTONOMOUS_WORKFLOW.md` requires each meaningful
 work slice to surface newly noticed blind spots, repeated-fix patterns,
 workstream imbalance, or QA/user-purpose mismatches, then record actionable
@@ -1207,6 +1217,14 @@ Use these files by role:
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
+- `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md`: planned persona-based
+  integration and survey-research owner doc for role-level workflow validation
+  beyond feature/block QA gates.
+- `PERSONA_SURVEY_REVIEW_PACKET.md`: safe external review packet with persona
+  prompts, screenshot checklist, output schema, and research-to-backlog rules.
+- `LINER_SURVEY_2026_06_02_FINDINGS.md`: first LINER survey findings, role
+  coverage, quantified signals, and the evidence-bounded batch review clarity
+  decision.
 - Repository hygiene, code splitting, the Batch-First handoff/export closure
   scope, and the Batch-First closure-audit patch have reviewable scopes.
   Future work should start from a new evidence-driven slice rather than

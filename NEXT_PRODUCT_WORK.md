@@ -15,6 +15,12 @@ For the next label-printing refactor, use
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
 implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
+For role-level workflow validation, use
+`PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` to decide whether the next
+slice should become a persona scenario gate or use
+`PERSONA_SURVEY_REVIEW_PACKET.md` for sanitized external survey research. The
+first LINER evidence checkpoint is recorded in
+`LINER_SURVEY_2026_06_02_FINDINGS.md`.
 For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
 The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
@@ -142,6 +148,14 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-06-02 LINER survey workflow critique: the uploaded survey dataset had
+  16 AI simulated respondents and 128 responses across the batch lookup,
+  review, print, export, and correction/admin path. The strongest actionable
+  signal was not a new label model; it was that batch users need a self-service
+  review path that separates ready output, review/warning rows, unresolved
+  lookup rows, multi-GHS primary-classification confirmation, and missing
+  Chinese-name curation before print/export. The evidence and scope boundary
+  live in `LINER_SURVEY_2026_06_02_FINDINGS.md`.
 - 2026-05-30 evidence-driven monitoring checkpoint: no fresh product slice was
   open at that historical checkpoint. It recorded a clean product-code
   baseline on `main` at `bc56672`, green GitHub CI, and expected-SHA
@@ -906,6 +920,13 @@ The detailed execution backlog lives in
    `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
 8. Product scope gate decisions, tracked in `PRODUCT_SCOPE_GATE.md` when a
    future slice needs pre-implementation alignment.
+9. Persona integration and survey-research validation, tracked in
+   `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` when evidence shows that
+   feature-level QA is green but role-level workflow confidence is still weak.
+   Use `PERSONA_SURVEY_REVIEW_PACKET.md` for the safe external review prompt
+   packet and research-to-backlog rule. Use
+   `LINER_SURVEY_2026_06_02_FINDINGS.md` as the first survey evidence
+   checkpoint.
 
 Treat the older `NEXT_PRINT_WORKSTREAMS.md` and
 `PRINT_OUTPUT_REFACTOR_PLAN.md` as v1.10 baseline context unless a new failure

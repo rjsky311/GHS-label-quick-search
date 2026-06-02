@@ -73,7 +73,14 @@ shipped/monitoring status; use it as evidence for new monitoring-driven slices.
 The shipped 95% lab-ready pilot evidence packet is
 [LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
 [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
-changes.
+changes. Use
+[PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md](./PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md)
+when the next question is whether role-based integration scenarios or external
+survey simulation would expose workflow blind spots that feature-level QA does
+not catch. Use
+[PERSONA_SURVEY_REVIEW_PACKET.md](./PERSONA_SURVEY_REVIEW_PACKET.md) as the
+safe prompt and screenshot packet before uploading anything to an external
+review tool.
 
 ## Local Development
 
@@ -198,6 +205,10 @@ Use these files before starting product or safety-critical changes:
 - [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
   workflow for aligning broad or ambiguous product decisions before
   implementation.
+- [PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md](./PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md) -
+  planned persona scenario gates and safe external survey-research workflow.
+- [PERSONA_SURVEY_REVIEW_PACKET.md](./PERSONA_SURVEY_REVIEW_PACKET.md) -
+  sanitized external review prompt packet and research-to-backlog rules.
 - [FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md](./FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md) -
   future non-physical-print tracker while real-printer validation is deferred.
 - [SCIENTIFIC_AGENT_SKILLS_EVALUATION.md](./SCIENTIFIC_AGENT_SKILLS_EVALUATION.md) -
