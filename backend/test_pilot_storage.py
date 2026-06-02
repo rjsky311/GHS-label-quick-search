@@ -93,6 +93,48 @@ def test_pending_dictionary_entry_is_kept_out_of_default_lookup(tmp_path):
         store.close()
 
 
+def test_pilot_triage_prioritizes_manual_review_before_candidate_intake(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        store.upsert_dictionary_entry(
+            "555-55-5",
+            name_en="Review Buffer",
+            name_zh="\u5be9\u6838\u7de9\u885d\u6db2",
+            status="pending",
+        )
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="84-65-1",
+            chemical_name="Anthraquinone",
+            current_output="Candidate found, not approved.",
+            expected_output="Convert only through manual dictionary review.",
+            status="candidate_found",
+            candidate={
+                "cas_number": "84-65-1",
+                "name_en": "Anthraquinone",
+                "name_zh": "\u84bd\u9190",
+                "approved_for_public_use": False,
+            },
+        )
+
+        triage = store.get_dictionary_summary()["pilotTriage"]
+        focus_order = [item["key"] for item in triage["recommendedFocus"]]
+        assert focus_order[:3] == [
+            "manual_review",
+            "candidate_found",
+            "missing_chinese_names",
+        ]
+        assert triage["dataQualityWorkflow"]["primaryStage"]["key"] == "manual_review"
+        workflow_by_key = {
+            item["key"]: item for item in triage["dataQualityWorkflow"]["stages"]
+        }
+        assert workflow_by_key["manual_review"]["count"] == 1
+        assert workflow_by_key["candidate_found"]["count"] == 1
+        assert workflow_by_key["missing_chinese_names"]["count"] == 1
+    finally:
+        store.close()
+
+
 def test_dictionary_entry_status_migration_defaults_legacy_rows(tmp_path):
     db_path = tmp_path / "legacy-pilot.db"
     conn = sqlite3.connect(db_path)
@@ -199,12 +241,23 @@ def test_correction_request_roundtrip_and_summary(tmp_path):
         assert summary["pilotTriage"]["attentionSignalCount"] == 2
         assert summary["pilotTriage"]["attentionCounts"]["openCorrectionRequests"] == 1
         assert summary["pilotTriage"]["attentionCounts"]["missingChineseNameReports"] == 1
-        assert summary["pilotTriage"]["recommendedFocus"][0]["key"] == "correction_intake"
+        assert summary["pilotTriage"]["recommendedFocus"][0]["key"] == (
+            "missing_chinese_names"
+        )
         assert summary["pilotTriage"]["recommendedFocus"][0]["targetKey"] == "correction_requests"
         assert (
             summary["pilotTriage"]["recommendedFocus"][0]["targetLabel"]
             == "Correction requests"
         )
+        workflow = summary["pilotTriage"]["dataQualityWorkflow"]
+        assert workflow["primaryStage"]["key"] == "missing_chinese_names"
+        workflow_by_key = {item["key"]: item for item in workflow["stages"]}
+        assert workflow_by_key["missing_chinese_names"]["count"] == 1
+        assert workflow_by_key["missing_chinese_names"]["targetKey"] == (
+            "correction_requests"
+        )
+        assert workflow_by_key["candidate_found"]["count"] == 0
+        assert workflow_by_key["manual_review"]["count"] == 0
         assert summary["convertedCorrectionCandidateCount"] == 0
         assert summary["topCorrectionRequests"][0]["localContextRedacted"] is True
 
@@ -488,6 +541,12 @@ def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
         assert counts["unresolvedSearches"] == 2
 
         focus_by_key = {item["key"]: item for item in triage["recommendedFocus"]}
+        focus_order = [item["key"] for item in triage["recommendedFocus"]]
+        assert focus_order[:3] == [
+            "candidate_found",
+            "missing_chinese_names",
+            "correction_intake",
+        ]
         assert focus_by_key["correction_intake"]["targetKey"] == "correction_requests"
         assert focus_by_key["candidate_found"]["targetKey"] == "converted_candidates"
         assert focus_by_key["unresolved_searches"]["targetKey"] == "miss_queries"
@@ -497,6 +556,12 @@ def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
         assert focus_by_key["missing_chinese_names"]["count"] == 2
         assert focus_by_key["no_ghs_gaps"]["count"] == 1
         assert focus_by_key["source_conflicts"]["count"] == 1
+        workflow = triage["dataQualityWorkflow"]
+        workflow_by_key = {item["key"]: item for item in workflow["stages"]}
+        assert workflow["primaryStage"]["key"] == "candidate_found"
+        assert workflow_by_key["candidate_found"]["count"] == 1
+        assert workflow_by_key["missing_chinese_names"]["count"] == 2
+        assert workflow_by_key["unresolved_searches"]["count"] == 2
     finally:
         store.close()
 

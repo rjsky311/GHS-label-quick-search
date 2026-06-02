@@ -145,7 +145,11 @@ Current baseline capabilities:
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
   data-quality label helper directly, so users and maintainers do not see
-  different names for the same action bucket.
+  different names for the same action bucket. The pilot/admin triage payload
+  also exposes a data-quality workflow so maintainers can start from the
+  closest-to-approval stage: manual review, candidate evidence, missing
+  Chinese-name reports, inventory handoff, unresolved searches, then general
+  correction intake.
 - LINER/persona workflow research has been converted into five executable
   persona gates: batch print, export handoff, teaching prepared-solution setup,
   admin triage, and single-lookup trust. Reopen a persona workflow only from

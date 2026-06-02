@@ -427,6 +427,43 @@ describe("PilotDashboardSidebar", () => {
             unresolvedSearches: 2,
             candidateFoundAwaitingManualReview: 1,
           },
+          dataQualityWorkflow: {
+            primaryStage: {
+              key: "candidate_found",
+              label: "Candidate evidence",
+              count: 1,
+              isActive: true,
+            },
+            stages: [
+              {
+                key: "manual_review",
+                targetKey: "manual_entries",
+                targetLabel: "Manual entries",
+                label: "Final public-data review",
+                nextAction: "Approve pending manual entries before public lookup changes.",
+                count: 0,
+                isActive: false,
+              },
+              {
+                key: "candidate_found",
+                targetKey: "converted_candidates",
+                targetLabel: "Converted candidates",
+                label: "Candidate evidence",
+                nextAction: "Convert evidence to a pending manual entry.",
+                count: 1,
+                isActive: true,
+              },
+              {
+                key: "missing_chinese_names",
+                targetKey: "correction_requests",
+                targetLabel: "Correction requests",
+                label: "Trusted Chinese-name gaps",
+                nextAction: "Create source-backed candidate evidence.",
+                count: 2,
+                isActive: true,
+              },
+            ],
+          },
           recommendedFocus: [
             {
               key: "missing_chinese_names",
@@ -484,6 +521,16 @@ describe("PilotDashboardSidebar", () => {
     expect(screen.getByTestId("pilot-triage-focus-source_conflicts")).toHaveTextContent(
       "pilot.triageFocus.source_conflicts.message",
     );
+    expect(screen.getByTestId("pilot-data-quality-workflow")).toBeInTheDocument();
+    expect(screen.getByTestId("pilot-data-quality-workflow-primary")).toHaveTextContent(
+      "pilot.dataQualityWorkflowPrimary",
+    );
+    expect(
+      screen.getByTestId("pilot-data-quality-workflow-stage-manual_review-count"),
+    ).toHaveTextContent("0");
+    expect(
+      screen.getByTestId("pilot-data-quality-workflow-stage-candidate_found"),
+    ).toHaveTextContent("pilot.dataQualityWorkflowStage.candidate_found.label");
 
     fireEvent.click(
       screen.getByTestId("pilot-triage-focus-missing_chinese_names-open-target"),
@@ -492,12 +539,16 @@ describe("PilotDashboardSidebar", () => {
     fireEvent.click(screen.getByTestId("pilot-triage-focus-source_conflicts-open-target"));
     fireEvent.click(screen.getByTestId("pilot-triage-focus-unresolved_searches-open-target"));
     fireEvent.click(screen.getByTestId("pilot-triage-focus-candidate_found-open-target"));
+    fireEvent.click(
+      screen.getByTestId("pilot-data-quality-workflow-stage-candidate_found-open-target"),
+    );
 
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(1, "correction_requests");
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(2, "correction_requests");
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(3, "correction_requests");
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(4, "miss_queries");
     expect(onOpenFocusTarget).toHaveBeenNthCalledWith(5, "converted_candidates");
+    expect(onOpenFocusTarget).toHaveBeenNthCalledWith(6, "converted_candidates");
   });
 
   it("routes inventory handoff focus to its review-only correction queue", () => {

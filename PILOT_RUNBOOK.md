@@ -120,6 +120,8 @@ Treat these as P0 and stop normal pilot expansion:
 
 1. Open the admin dashboard.
 2. Check the Pilot triage panel:
+   - data-quality workflow current stage,
+   - manual review / candidate evidence stage counts,
    - open work items,
    - unresolved searches,
    - missing Chinese-name reports,

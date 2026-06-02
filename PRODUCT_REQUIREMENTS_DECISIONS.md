@@ -140,6 +140,10 @@ Preferred storage and workflow:
   (backend storage/API, admin review queue, and public in-app dialog landed on
   2026-05-22).
 - Show correction requests in the admin dashboard as part of data governance.
+- The admin dashboard should expose the data-quality work as a workflow, not
+  only disconnected counters: pending manual entries first, then candidate
+  evidence, missing Chinese-name reports, inventory handoff, unresolved
+  searches, and finally general correction intake.
 - Keep GitHub issue links as fallback/maintainer escape hatches, not the
   primary user-facing correction path.
 

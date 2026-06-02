@@ -1919,6 +1919,69 @@ class PilotStore:
             "alias_review": "Alias review",
             "reference_links": "Reference links",
         }
+        data_quality_workflow_rules = (
+            (
+                "manual_review",
+                "manual_entries",
+                "Final public-data review",
+                "Approve or reject pending manual entries before lookup, labels, or exports can use them.",
+                attention_counts["manualEntriesInReview"],
+            ),
+            (
+                "candidate_found",
+                "converted_candidates",
+                "Candidate evidence",
+                "Convert reviewed candidate evidence into a pending manual entry, or keep it review-only.",
+                attention_counts["candidateFoundAwaitingManualReview"],
+            ),
+            (
+                "missing_chinese_names",
+                "correction_requests",
+                "Trusted Chinese-name gaps",
+                "Create source-backed candidate evidence before any dictionary approval.",
+                attention_counts["missingChineseNameReports"],
+            ),
+            (
+                "inventory_handoff",
+                "inventory_handoff",
+                "Inventory workbook handoff",
+                "Review workbook candidates without treating roster names as approved public data.",
+                attention_counts["inventoryHandoffRequests"],
+            ),
+            (
+                "unresolved_searches",
+                "miss_queries",
+                "Unresolved lookup inputs",
+                "Resolve high-signal misses to reviewed CAS data or mark them needs-evidence.",
+                attention_counts["unresolvedSearches"],
+            ),
+            (
+                "correction_intake",
+                "correction_requests",
+                "Open correction intake",
+                "Triage public/user reports after closer-to-approval queues are clear.",
+                attention_counts["openCorrectionRequests"],
+            ),
+        )
+        data_quality_workflow_stages = [
+            {
+                "key": key,
+                "targetKey": target_key,
+                "targetLabel": recommended_focus_target_labels.get(
+                    target_key, "Related queue"
+                ),
+                "label": label,
+                "nextAction": next_action,
+                "count": int(count),
+                "isActive": int(count) > 0,
+            }
+            for key, target_key, label, next_action, count in data_quality_workflow_rules
+        ]
+        primary_data_quality_stage = next(
+            (stage for stage in data_quality_workflow_stages if stage["isActive"]),
+            None,
+        )
+
         recommended_focus_rules = (
             (
                 "inventory_handoff",
@@ -1928,11 +1991,11 @@ class PilotStore:
                 attention_counts["inventoryHandoffRequests"],
             ),
             (
-                "correction_intake",
-                "correction_requests",
-                "Review open correction requests before adding new data sources.",
-                "Open the correction queue, then approve, reject, mark ignored, or add review notes.",
-                attention_counts["openCorrectionRequests"],
+                "manual_review",
+                "manual_entries",
+                "Approve or reject pending manual entries before public lookup changes.",
+                "Approve, reject, or request evidence before public lookup/labels/exports use the row.",
+                attention_counts["manualEntriesInReview"],
             ),
             (
                 "candidate_found",
@@ -1942,11 +2005,18 @@ class PilotStore:
                 attention_counts["candidateFoundAwaitingManualReview"],
             ),
             (
-                "manual_review",
-                "manual_entries",
-                "Approve or reject pending manual entries before public lookup changes.",
-                "Approve, reject, or request evidence before public lookup/labels/exports use the row.",
-                attention_counts["manualEntriesInReview"],
+                "missing_chinese_names",
+                "correction_requests",
+                "Backfill trusted Traditional Chinese names with source evidence.",
+                "Create candidate evidence first; approve only through manual dictionary review.",
+                attention_counts["missingChineseNameReports"],
+            ),
+            (
+                "correction_intake",
+                "correction_requests",
+                "Review open correction requests before adding new data sources.",
+                "Open the correction queue, then approve, reject, mark ignored, or add review notes.",
+                attention_counts["openCorrectionRequests"],
             ),
             (
                 "needs_evidence",
@@ -1961,13 +2031,6 @@ class PilotStore:
                 "Resolve high-frequency search misses or mark them needs-evidence.",
                 "Resolve to reviewed CAS, mark needs-evidence, or ignore low-signal misses.",
                 attention_counts["unresolvedSearches"],
-            ),
-            (
-                "missing_chinese_names",
-                "correction_requests",
-                "Backfill trusted Traditional Chinese names with source evidence.",
-                "Create candidate evidence first; approve only through manual dictionary review.",
-                attention_counts["missingChineseNameReports"],
             ),
             (
                 "no_ghs_gaps",
@@ -2041,6 +2104,16 @@ class PilotStore:
             "correctionSourceCounts": correction_source_counts,
             "correctionSourceReportCounts": correction_report_source_counts,
             "inventoryHandoffIssueTypeCounts": inventory_handoff_issue_type_counts,
+            "dataQualityWorkflow": {
+                "primaryStage": primary_data_quality_stage
+                or {
+                    "key": "healthy",
+                    "label": "No data-quality action required",
+                    "count": 0,
+                    "isActive": False,
+                },
+                "stages": data_quality_workflow_stages,
+            },
             "recommendedFocus": recommended_focus,
             "signals": {
                 "hasCorrectionBacklog": open_correction_count > 0,

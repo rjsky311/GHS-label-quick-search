@@ -37,6 +37,31 @@ const TRIAGE_FOCUS_NEXT_ACTION_KEYS = {
   telemetry_retention: "pilot.triageFocus.telemetry_retention.nextAction",
 };
 
+const DATA_QUALITY_WORKFLOW_LABEL_KEYS = {
+  manual_review: "pilot.dataQualityWorkflowStage.manual_review.label",
+  candidate_found: "pilot.dataQualityWorkflowStage.candidate_found.label",
+  missing_chinese_names:
+    "pilot.dataQualityWorkflowStage.missing_chinese_names.label",
+  inventory_handoff: "pilot.dataQualityWorkflowStage.inventory_handoff.label",
+  unresolved_searches:
+    "pilot.dataQualityWorkflowStage.unresolved_searches.label",
+  correction_intake: "pilot.dataQualityWorkflowStage.correction_intake.label",
+  healthy: "pilot.dataQualityWorkflowStage.healthy.label",
+};
+
+const DATA_QUALITY_WORKFLOW_ACTION_KEYS = {
+  manual_review: "pilot.dataQualityWorkflowStage.manual_review.nextAction",
+  candidate_found: "pilot.dataQualityWorkflowStage.candidate_found.nextAction",
+  missing_chinese_names:
+    "pilot.dataQualityWorkflowStage.missing_chinese_names.nextAction",
+  inventory_handoff:
+    "pilot.dataQualityWorkflowStage.inventory_handoff.nextAction",
+  unresolved_searches:
+    "pilot.dataQualityWorkflowStage.unresolved_searches.nextAction",
+  correction_intake:
+    "pilot.dataQualityWorkflowStage.correction_intake.nextAction",
+};
+
 export default function PilotTriagePanel({
   pilotTriage = {},
   observabilityCounters = {},
@@ -64,6 +89,11 @@ export default function PilotTriagePanel({
     ? pilotTriage.recommendedFocus
     : [];
   const primaryFocus = recommendedFocus[0] || null;
+  const dataQualityWorkflow = pilotTriage.dataQualityWorkflow || {};
+  const dataQualityWorkflowStages = Array.isArray(dataQualityWorkflow.stages)
+    ? dataQualityWorkflow.stages
+    : [];
+  const primaryDataQualityStage = dataQualityWorkflow.primaryStage || null;
   const openFocusTarget = onOpenFocusTarget || onOpenPrimaryActionTarget;
   const focusText = (focus, field) => {
     if (!focus) {
@@ -107,6 +137,16 @@ export default function PilotTriagePanel({
     return translated === "pilot.triageOpenTargetLabel"
       ? `Open ${label}`
       : translated;
+  };
+  const workflowStageLabel = (stage) => {
+    const key = DATA_QUALITY_WORKFLOW_LABEL_KEYS[stage?.key];
+    return key ? t(key, { defaultValue: stage.label || "" }) : stage?.label || "";
+  };
+  const workflowStageNextAction = (stage) => {
+    const key = DATA_QUALITY_WORKFLOW_ACTION_KEYS[stage?.key];
+    return key
+      ? t(key, { defaultValue: stage.nextAction || "" })
+      : stage?.nextAction || "";
   };
 
   return (
@@ -191,6 +231,90 @@ export default function PilotTriagePanel({
           ) : null}
         </div>
       </div>
+      {dataQualityWorkflowStages.length > 0 ? (
+        <div
+          className="mb-3 rounded-lg border border-emerald-200 bg-white p-3 text-sm text-slate-700 shadow-sm"
+          data-testid="pilot-data-quality-workflow"
+        >
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                {t("pilot.dataQualityWorkflowTitle", {
+                  defaultValue: "Data-quality workflow",
+                })}
+              </div>
+              <p
+                className="mt-1 text-xs text-slate-600"
+                data-testid="pilot-data-quality-workflow-hint"
+              >
+                {t("pilot.dataQualityWorkflowHint", {
+                  defaultValue:
+                    "Follow the closest-to-approval stage first: manual review, candidate evidence, missing Chinese-name reports, workbook handoff, unresolved searches, then general intake.",
+                })}
+              </p>
+            </div>
+            {primaryDataQualityStage ? (
+              <span
+                className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800"
+                data-testid="pilot-data-quality-workflow-primary"
+              >
+                {t("pilot.dataQualityWorkflowPrimary", {
+                  defaultValue: "Current: {{label}}",
+                  label: workflowStageLabel(primaryDataQualityStage),
+                })}
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            {dataQualityWorkflowStages.map((stage) => {
+              const canOpenStageTarget =
+                Boolean(stage.targetKey) && typeof openFocusTarget === "function";
+              return (
+                <div
+                  key={stage.key}
+                  className={`rounded-md border px-3 py-2 ${
+                    stage.isActive
+                      ? "border-emerald-300 bg-emerald-50"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                  data-testid={`pilot-data-quality-workflow-stage-${stage.key}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-semibold text-slate-900">
+                        {workflowStageLabel(stage)}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-600">
+                        {workflowStageNextAction(stage)}
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        stage.isActive
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                      data-testid={`pilot-data-quality-workflow-stage-${stage.key}-count`}
+                    >
+                      {stage.count}
+                    </span>
+                  </div>
+                  {canOpenStageTarget && stage.isActive ? (
+                    <button
+                      type="button"
+                      onClick={() => openFocusTarget(stage.targetKey)}
+                      className="mt-2 rounded-md border border-emerald-200 bg-white px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+                      data-testid={`pilot-data-quality-workflow-stage-${stage.key}-open-target`}
+                    >
+                      {openTargetLabel(stage)}
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       <div className="grid gap-2 md:grid-cols-4">
         <SummaryCard
           label={t("pilot.openWorkItems", {
