@@ -146,6 +146,10 @@ Current baseline capabilities:
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
   data-quality label helper directly, so users and maintainers do not see
   different names for the same action bucket.
+- LINER/persona workflow research has been converted into five executable
+  persona gates: batch print, export handoff, teaching prepared-solution setup,
+  admin triage, and single-lookup trust. Reopen a persona workflow only from
+  fresh evidence, not from survey output alone.
 - Batch export handoff now preserves both the number of review signals and the
   first recommended action in backend CSV/XLSX, frontend export preview, and
   local CSV fallback. Production search UI QA now asserts those columns and the

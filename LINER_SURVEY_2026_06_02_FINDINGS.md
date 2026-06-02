@@ -105,12 +105,19 @@ Affected user job:
 
 Expected proof:
 
-- Persona batch-print test asserts the review surface separates ready,
-  warning/review, and unresolved scopes.
-- Persona export test asserts export preview communicates scope and review
-  handoff before download.
-- Admin triage persona test remains aligned with missing-name and correction
-  queue behavior.
+- `frontend/src/__tests__/personaBatchPrint.integration.test.js` asserts the
+  review surface separates ready, warning/review, and unresolved scopes.
+- `frontend/src/__tests__/personaExportHandoff.integration.test.js` asserts
+  export preview communicates scope and review handoff before download.
+- `frontend/src/__tests__/personaAdminTriage.integration.test.js` keeps
+  missing-name, source-conflict, unresolved-search, and correction queue
+  behavior aligned for maintainers.
+- `frontend/src/__tests__/personaTeachingSetup.integration.test.js` covers a
+  teaching-unit prepared-solution path and verifies the print handoff stays
+  task-first.
+- `frontend/src/__tests__/personaSingleLookupTrust.integration.test.js` covers
+  source confidence, missing trusted Chinese-name curation, multiple-GHS
+  review, safe SDS/reference links, and authority boundaries for single lookup.
 - `npm run test:docs`, targeted frontend tests, and build pass.
 - Production verification is needed only when UI/runtime code changes are
   pushed.

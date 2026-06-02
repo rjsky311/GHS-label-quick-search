@@ -4,7 +4,7 @@ Use `PROJECT_STATUS_AND_NEXT_PLAN.md` as the canonical planning entry point.
 This file is an owner doc for a future evidence-driven slice that combines
 persona-based integration tests with external survey-style product research.
 
-Status: `Gate added`.
+Status: `Five persona gates added / monitoring`.
 
 First survey checkpoint: `LINER_SURVEY_2026_06_02_FINDINGS.md` records the
 uploaded LINER dataset and opens only the bounded Batch Review Self-Service
@@ -157,6 +157,14 @@ Likely gate:
 - Existing `qa:production-prepared` plus `qa:production-search-ui` when the
   changed surface is deployed.
 
+Current gate:
+
+- `frontend/src/__tests__/personaTeachingSetup.integration.test.js` covers a
+  teaching-unit repeatable setup path from single lookup into the prepared
+  solution flow, then verifies the print modal remains task-first, exposes the
+  three public outputs, preserves parent identity/GHS data, and hands off a
+  prepared label without hiding the SDS/supplier/local-rule trust boundary.
+
 ### Scenario 4: Admin/Data Curator Triage
 
 Goal: a maintainer can tell what data-quality action to take next.
@@ -204,6 +212,14 @@ Likely gate:
 
 - `qa:production-search-ui` for deployed behavior.
 - Focused data-governance tests when source ranking or name policy changes.
+
+Current gate:
+
+- `frontend/src/__tests__/personaSingleLookupTrust.integration.test.js` covers
+  a single lookup with source confidence, missing trusted Chinese-name
+  curation, multiple GHS classification review, safe SDS/regulatory reference
+  links, provenance/report-count context, cache visibility, and authority
+  boundary copy.
 
 ## LINER Survey Research Model
 
@@ -269,22 +285,26 @@ Do not implement from survey output alone when:
 3. First scenario gate: added for lab graduate student batch review/print.
 4. Second scenario gate: added for lab manager export handoff.
 5. Third scenario gate: added for admin/data curator triage.
-6. Survey packet: added in `PERSONA_SURVEY_REVIEW_PACKET.md` for LINER or
+6. Fourth scenario gate: added for teaching-unit prepared-solution setup.
+7. Fifth scenario gate: added for general single-lookup trust and source
+   boundaries.
+8. Survey packet: added in `PERSONA_SURVEY_REVIEW_PACKET.md` for LINER or
    another external review tool.
-7. Research-to-backlog rule: update `NEXT_PRODUCT_WORK.md` only when survey or
+9. Research-to-backlog rule: update `NEXT_PRODUCT_WORK.md` only when survey or
    scenario output identifies source, affected user job, proof, and stop
    condition.
 
 ## Done Criteria
 
-This plan is ready to implement when:
+This plan is ready to use as a monitoring baseline when:
 
 - It is discoverable from `PROJECT_STATUS_AND_NEXT_PLAN.md`,
   `NEXT_PRODUCT_WORK.md`, and `README.md`.
 - Existing docs still state that fresh evidence is required before opening a
   new product slice.
-- The next implementation round can choose one persona scenario without asking
-  the user to restate the product direction.
+- The five current persona workflows have executable gates, and the next
+  implementation round can reopen a scenario only from fresh evidence instead
+  of broad backlog inertia.
 
 A persona integration slice is done only when:
 
