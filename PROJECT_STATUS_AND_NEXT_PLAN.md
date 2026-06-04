@@ -36,6 +36,18 @@ external review tool. `LINER_SURVEY_2026_06_02_FINDINGS.md` records the first
 external survey dataset and the bounded Batch Review Self-Service Clarity slice
 opened from that evidence.
 
+External design exploration: `CLAUDE_DESIGN_UI_REVIEW_PACKET.md` is the
+sanitized Claude Design upload/prompt packet for UI hierarchy, design-system,
+and implementation-handoff exploration. Use it only for design critique and
+handoff; do not treat Claude Design output as GHS, SDS, legal, data-trust, or
+print-safety authority. `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters downloaded
+Claude Design handoffs into Adopt / Adapt / Reject / Needs Discussion before
+any product UI implementation. Do not apply Claude Design mock code directly.
+
+Migration handoff: `MAC_MIGRATION_HANDOFF.md` records how to preserve project
+context in GitHub and resume development on the Mac mini M4 without committing
+local secrets, generated files, ignored databases, or temporary design zips.
+
 Proactive insight habit: `AUTONOMOUS_WORKFLOW.md` requires each meaningful
 work slice to surface newly noticed blind spots, repeated-fix patterns,
 workstream imbalance, or QA/user-purpose mismatches, then record actionable

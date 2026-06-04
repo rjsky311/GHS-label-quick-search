@@ -49,6 +49,10 @@ before choosing the next autonomous product slice.
 - `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines planned role-based
   scenario gates and safe external survey-research usage.
 - `PERSONA_SURVEY_REVIEW_PACKET.md` is the safe external review prompt packet.
+- `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters Claude Design handoffs before UI
+  implementation; do not apply Claude mock code directly.
+- `MAC_MIGRATION_HANDOFF.md` defines the Windows-to-Mac setup and context
+  preservation checklist.
 - Open a new slice only from concrete evidence: user screenshot/PDF/Excel,
   production QA failure, CI/deployment failure, admin queue evidence, export
   handoff confusion, or a code-review finding.

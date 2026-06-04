@@ -21,6 +21,12 @@ slice should become a persona scenario gate or use
 `PERSONA_SURVEY_REVIEW_PACKET.md` for sanitized external survey research. The
 first LINER evidence checkpoint is recorded in
 `LINER_SURVEY_2026_06_02_FINDINGS.md`.
+For Claude Design output, use `CLAUDE_DESIGN_UI_REVIEW_PACKET.md` as the
+upload/prompt packet and `CLAUDE_DESIGN_ADOPTION_PLAN.md` as the adoption
+filter. Claude Design handoffs are advisory UI references, not product, data,
+or print-safety contracts.
+For moving development to macOS, use `MAC_MIGRATION_HANDOFF.md` as the setup
+and context-preservation checklist.
 For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
 The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
