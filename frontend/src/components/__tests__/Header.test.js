@@ -46,7 +46,8 @@ describe('Header', () => {
       'history-toggle-btn',
     ].forEach((testId) => {
       const button = screen.getByTestId(testId);
-      expect(button).toHaveClass('h-10', 'w-10', 'shrink-0', 'sm:w-28');
+      expect(button).toHaveClass('notebook-control', 'notebook-control-utility');
+      expect(button).toHaveClass('h-11', 'w-11', 'shrink-0', 'sm:w-28');
       expect(button.querySelector('svg')).toHaveClass('shrink-0');
     });
 
@@ -59,6 +60,14 @@ describe('Header', () => {
   it('shows favorites count badge when favorites exist', () => {
     render(<Header {...defaultProps} favorites={[{ cas_number: '64-17-5' }, { cas_number: '7732-18-5' }]} />);
     expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('uses notebook primary styling for the active admin button', () => {
+    render(<Header {...defaultProps} showPilotDashboard={true} />);
+    expect(screen.getByTestId('pilot-dashboard-toggle-btn')).toHaveClass(
+      'notebook-control',
+      'notebook-control-primary'
+    );
   });
 
   it('hides favorites count badge when favorites empty', () => {

@@ -86,7 +86,15 @@ describe('SearchSection', () => {
     it('keeps the single search button width stable across translated labels', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       const button = screen.getByTestId('single-search-btn');
-      expect(button).toHaveClass('inline-flex', 'w-28', 'shrink-0', 'sm:w-32');
+      expect(button).toHaveClass(
+        'notebook-control',
+        'notebook-control-primary',
+        'inline-flex',
+        'w-28',
+        'shrink-0',
+        'sm:w-32'
+      );
+      expect(button.className).not.toContain('bg-blue-700');
       expect(button.querySelector('svg')).toHaveClass('shrink-0');
     });
 
@@ -139,6 +147,20 @@ describe('SearchSection', () => {
       render(<SearchSection {...defaultProps} activeTab="batch" />);
       fireEvent.click(screen.getByTestId('clear-batch-btn'));
       expect(defaultProps.onSetBatchCas).toHaveBeenCalledWith('');
+    });
+
+    it('uses notebook action styling for batch submit and clear actions', () => {
+      render(<SearchSection {...defaultProps} activeTab="batch" batchCount={5} />);
+
+      expect(screen.getByTestId('batch-search-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-primary'
+      );
+      expect(screen.getByTestId('batch-search-btn').className).not.toContain('bg-blue-700');
+      expect(screen.getByTestId('clear-batch-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
     });
 
     it('shows detailed over-limit alert when batchCount exceeds the limit', () => {

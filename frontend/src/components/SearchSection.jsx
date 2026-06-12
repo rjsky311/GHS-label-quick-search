@@ -1,5 +1,6 @@
 import { Search, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
 import { BATCH_SEARCH_LIMIT } from "@/constants/ghs";
 
@@ -48,14 +49,14 @@ export default function SearchSection({
       : 0;
 
   return (
-    <div className="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex border-b border-slate-200">
+    <div className="notebook-surface mb-6 rounded-lg">
+      <div className="flex border-b border-[hsl(var(--notebook-border)/0.72)]">
         <button
           onClick={() => onSetActiveTab("single")}
-          className={`inline-flex flex-1 items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "single"
               ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              : "text-slate-500 hover:text-slate-900"
           }`}
           data-testid="single-search-tab"
         >
@@ -64,10 +65,10 @@ export default function SearchSection({
         </button>
         <button
           onClick={() => onSetActiveTab("batch")}
-          className={`inline-flex flex-1 items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "batch"
               ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              : "text-slate-500 hover:text-slate-900"
           }`}
           data-testid="batch-search-tab"
         >
@@ -93,10 +94,12 @@ export default function SearchSection({
                   searchInputRef={searchInputRef}
                   loading={loading}
                 />
-                <button
+                <Button
                   onClick={() => onSearchSingle()}
                   disabled={loading}
-                  className="inline-flex w-28 shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-32"
+                  variant="notebookPrimary"
+                  size="notebook"
+                  className="w-28 shrink-0 sm:w-32"
                   data-testid="single-search-btn"
                 >
                   {loading ? (
@@ -110,7 +113,7 @@ export default function SearchSection({
                       <span className="truncate">{t("search.searchBtn")}</span>
                     </>
                   )}
-                </button>
+                </Button>
               </div>
               <p className="mt-2 text-xs text-slate-500">
                 {t("search.inputHint")}{" "}
@@ -206,14 +209,16 @@ export default function SearchSection({
               )}
             </div>
             <div className="flex gap-3">
-              <button
+              <Button
                 onClick={onSearchBatch}
                 disabled={
                   loading ||
                   batchCount > BATCH_SEARCH_LIMIT ||
                   (batchSummary?.inputCount > 0 && batchCount === 0)
                 }
-                className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-700 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                variant="notebookPrimary"
+                size="notebookWide"
+                className="flex-1"
                 data-testid="batch-search-btn"
               >
                 {loading ? (
@@ -227,14 +232,15 @@ export default function SearchSection({
                     <span>{t("search.batchSearchBtn")}</span>
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => onSetBatchCas("")}
-                className="rounded-md border border-slate-300 bg-white px-6 py-3 text-slate-700 transition-colors hover:bg-slate-50"
+                variant="notebookSecondary"
+                size="notebookWide"
                 data-testid="clear-batch-btn"
               >
                 {t("search.clear")}
-              </button>
+              </Button>
             </div>
 
             {/* Batch Progress Bar */}

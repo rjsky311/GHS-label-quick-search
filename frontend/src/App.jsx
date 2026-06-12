@@ -891,7 +891,7 @@ function App() {
 
   // ── Render ──
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="theme-comfort-dim notebook-app min-h-screen">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-blue-700 focus:text-white focus:rounded-md">
         {t("a11y.skipToContent")}
       </a>

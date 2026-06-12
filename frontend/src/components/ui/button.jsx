@@ -19,12 +19,25 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        notebookPrimary:
+          "notebook-control notebook-control-primary hover:text-[hsl(var(--notebook-action))]",
+        notebookSecondary:
+          "notebook-control notebook-control-secondary hover:text-[hsl(var(--notebook-action))]",
+        notebookDanger:
+          "notebook-control notebook-control-danger hover:text-[hsl(var(--notebook-danger))]",
+        notebookUtility:
+          "notebook-control notebook-control-utility hover:text-[hsl(var(--notebook-action))]",
+        notebookTab:
+          "notebook-control notebook-control-tab hover:text-[hsl(var(--notebook-action))]",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
+        notebook: "h-11 px-4 py-2",
+        notebookWide: "h-11 px-5 py-2",
+        notebookIcon: "h-11 w-11",
       },
     },
     defaultVariants: {

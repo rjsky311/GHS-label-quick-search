@@ -8,6 +8,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 export default function Header({
   favorites,
@@ -28,10 +29,8 @@ export default function Header({
   const languageToggleTitle = isZh
     ? t("header.switchToEnglish")
     : t("header.switchToChinese");
-  const buttonBase =
-    "relative inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-0 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-28 sm:justify-start sm:px-3";
-  const activeButton =
-    "relative inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-md border border-blue-700 bg-blue-700 px-0 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-28 sm:justify-start sm:px-3";
+  const headerButtonBase =
+    "relative h-11 w-11 shrink-0 px-0 sm:w-28 sm:justify-start sm:px-3";
 
   const toggleLanguage = () => {
     const lang = isZh ? "en" : "zh-TW";
@@ -54,9 +53,11 @@ export default function Header({
           </div>
           <div className="flex flex-wrap gap-2">
             {showPilotDashboardButton ? (
-              <button
+              <Button
                 onClick={onTogglePilotDashboard}
-                className={showPilotDashboard ? activeButton : buttonBase}
+                variant={showPilotDashboard ? "notebookPrimary" : "notebookUtility"}
+                size="notebookIcon"
+                className={headerButtonBase}
                 data-testid="pilot-dashboard-toggle-btn"
                 title={t("header.adminToolsTitle", {
                   defaultValue: pilotAdminUnlocked
@@ -77,21 +78,25 @@ export default function Header({
                     {pilotAttentionCount > 0 ? pilotAttentionCount : opsEventCount}
                   </span>
                 ) : null}
-              </button>
+              </Button>
             ) : null}
-            <button
+            <Button
               onClick={toggleLanguage}
-              className={buttonBase}
+              variant="notebookUtility"
+              size="notebookIcon"
+              className={headerButtonBase}
               title={languageToggleTitle}
               aria-label={languageToggleTitle}
               data-testid="language-toggle-btn"
             >
               <Globe className="h-4 w-4 shrink-0" />
               <span className="hidden min-w-0 truncate sm:inline">{t("header.langToggle")}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onToggleFavorites}
-              className={buttonBase}
+              variant="notebookUtility"
+              size="notebookIcon"
+              className={headerButtonBase}
               data-testid="favorites-toggle-btn"
             >
               <Star className="h-4 w-4 shrink-0 text-amber-500" />
@@ -101,10 +106,12 @@ export default function Header({
                   {favorites.length}
                 </span>
               ) : null}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onTogglePrepared}
-              className={buttonBase}
+              variant="notebookUtility"
+              size="notebookIcon"
+              className={headerButtonBase}
               data-testid="prepared-toggle-btn"
             >
               <FlaskConical className="h-4 w-4 shrink-0 text-blue-700" />
@@ -114,10 +121,12 @@ export default function Header({
                   {preparedCount}
                 </span>
               ) : null}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onToggleHistory}
-              className={buttonBase}
+              variant="notebookUtility"
+              size="notebookIcon"
+              className={headerButtonBase}
               data-testid="history-toggle-btn"
             >
               <ClipboardList className="h-4 w-4 shrink-0 text-slate-600" />
@@ -127,7 +136,7 @@ export default function Header({
                   {history.length}
                 </span>
               ) : null}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

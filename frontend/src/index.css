@@ -44,6 +44,64 @@ code {
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
+        --notebook-app: 42 29% 91%;
+        --notebook-ink: 220 24% 15%;
+        --notebook-muted-ink: 218 13% 43%;
+        --notebook-surface: 42 38% 96%;
+        --notebook-surface-raised: 42 45% 98%;
+        --notebook-border: 37 20% 77%;
+        --notebook-rule: 218 24% 83%;
+        --notebook-action: 218 72% 34%;
+        --notebook-action-soft: 216 82% 96%;
+        --notebook-action-border: 218 67% 42%;
+        --notebook-danger: 0 72% 48%;
+        --notebook-danger-soft: 0 86% 97%;
+        --notebook-warning: 36 92% 40%;
+        --notebook-warning-soft: 39 90% 94%;
+        --notebook-ready: 148 58% 32%;
+        --notebook-ready-soft: 146 45% 93%;
+        --notebook-print-surface: 0 0% 100%;
+        --notebook-print-ink: 220 24% 12%;
+    }
+    .theme-comfort-dim {
+        --notebook-app: 42 29% 91%;
+        --notebook-ink: 220 24% 15%;
+        --notebook-muted-ink: 218 13% 43%;
+        --notebook-surface: 42 38% 96%;
+        --notebook-surface-raised: 42 45% 98%;
+        --notebook-border: 37 20% 77%;
+        --notebook-rule: 218 24% 83%;
+        --notebook-action: 218 72% 34%;
+        --notebook-action-soft: 216 82% 96%;
+        --notebook-action-border: 218 67% 42%;
+        --notebook-danger: 0 72% 48%;
+        --notebook-danger-soft: 0 86% 97%;
+        --notebook-warning: 36 92% 40%;
+        --notebook-warning-soft: 39 90% 94%;
+        --notebook-ready: 148 58% 32%;
+        --notebook-ready-soft: 146 45% 93%;
+        --notebook-print-surface: 0 0% 100%;
+        --notebook-print-ink: 220 24% 12%;
+    }
+    .theme-dark-bench {
+        --notebook-app: 210 18% 8%;
+        --notebook-ink: 42 30% 91%;
+        --notebook-muted-ink: 215 14% 70%;
+        --notebook-surface: 210 16% 12%;
+        --notebook-surface-raised: 210 16% 15%;
+        --notebook-border: 210 12% 28%;
+        --notebook-rule: 204 16% 22%;
+        --notebook-action: 196 90% 76%;
+        --notebook-action-soft: 202 48% 18%;
+        --notebook-action-border: 198 84% 63%;
+        --notebook-danger: 4 78% 62%;
+        --notebook-danger-soft: 4 42% 16%;
+        --notebook-warning: 39 86% 64%;
+        --notebook-warning-soft: 38 40% 16%;
+        --notebook-ready: 142 55% 58%;
+        --notebook-ready-soft: 142 33% 16%;
+        --notebook-print-surface: 0 0% 100%;
+        --notebook-print-ink: 220 24% 12%;
     }
     .dark {
         --background: 0 0% 3.9%;
@@ -82,3 +140,82 @@ code {
     }
 }
 
+@layer components {
+    .notebook-app {
+        background-color: hsl(var(--notebook-app));
+        color: hsl(var(--notebook-ink));
+        background-image:
+            linear-gradient(
+                hsl(var(--notebook-rule) / 0.24) 1px,
+                transparent 1px
+            ),
+            radial-gradient(
+                hsl(var(--notebook-rule) / 0.18) 0.7px,
+                transparent 0.7px
+            );
+        background-size:
+            100% 2.35rem,
+            18px 18px;
+    }
+
+    .notebook-surface {
+        border: 1px solid hsl(var(--notebook-border) / 0.78);
+        background-color: hsl(var(--notebook-surface));
+        color: hsl(var(--notebook-ink));
+        box-shadow: 0 12px 28px hsl(220 18% 10% / 0.08);
+    }
+
+    .notebook-print-preview {
+        border: 1px solid hsl(var(--notebook-border) / 0.8);
+        background-color: hsl(var(--notebook-print-surface));
+        color: hsl(var(--notebook-print-ink));
+    }
+
+    .notebook-control {
+        min-height: 2.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid hsl(var(--notebook-border) / 0.95);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-ink));
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.36) inset,
+            0 4px 10px hsl(220 18% 10% / 0.07);
+    }
+
+    .notebook-control:hover {
+        border-color: hsl(var(--notebook-action-border));
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-control:focus-visible {
+        outline: 2px solid hsl(var(--notebook-action-border));
+        outline-offset: 2px;
+    }
+
+    .notebook-control-primary {
+        border-color: hsl(var(--notebook-action-border));
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+        font-weight: 700;
+    }
+
+    .notebook-control-secondary,
+    .notebook-control-utility,
+    .notebook-control-tab {
+        background-color: hsl(var(--notebook-surface-raised));
+    }
+
+    .notebook-control-danger {
+        border-color: hsl(var(--notebook-danger) / 0.88);
+        background-color: hsl(var(--notebook-danger-soft));
+        color: hsl(var(--notebook-danger));
+        font-weight: 700;
+    }
+
+    .notebook-control-tab {
+        min-height: 2.5rem;
+        border-bottom-color: hsl(var(--notebook-action-border) / 0.6);
+        box-shadow: 0 -1px 0 hsl(var(--notebook-rule) / 0.7) inset;
+    }
+}
