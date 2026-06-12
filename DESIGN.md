@@ -6,6 +6,13 @@ current planning from `PROJECT_STATUS_AND_NEXT_PLAN.md`, then use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First
 evidence baseline when a new slice touches batch workflows.
 
+Current visual-language note: the newer
+`EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` records the selected experiment
+notebook direction for future UI work: Comfort Dim and Dark Bench themes,
+notebook-native controls, responsive material surfaces, and white printed-label
+previews in Dark Bench. Use that file as the current taste/Design System
+reference before opening a visual redesign implementation slice.
+
 ## Product Position
 
 GHS Label Quick Search is a free, public chemical safety utility. Its first job is to help lab and operations users quickly find GHS hazard information, produce usable secondary-container labels, and verify source context before work continues.
