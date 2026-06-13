@@ -406,6 +406,26 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("keeps the selected print identity language when switching output type", () => {
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        nameDisplay: "en",
+      },
+    });
+
+    fireEvent.click(screen.getByTestId("label-purpose-qrSupplement"));
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        nameDisplay: "en",
+      }),
+    );
+  });
+
   it("uses notebook-style controls for full-page recovery CTAs", () => {
     let rendered = render(
       <RecommendedOutputSummary
@@ -1093,6 +1113,12 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "QR small label is printable",
     );
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "selected identity language",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
+      "English, Chinese",
+    );
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
       "data-mode",
@@ -1171,6 +1197,12 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Identification small label is printable",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "selected identity language",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
+      "English, Chinese",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Quick-ID supplement",

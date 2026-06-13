@@ -119,7 +119,7 @@ export const PRINT_TARGET_OPTIONS = [
     descKey: "label.targetQrSmallDesc",
     fallbackLabel: "QR small label",
     fallbackDesc:
-      "Small label with CAS, English, Chinese, QR, and all GHS pictograms across extra labels.",
+      "Small label with CAS, the selected identity language, QR, and all GHS pictograms across extra labels.",
     icon: QrCode,
     presetId: "brother-62mm-continuous",
     template: "qrcode",
@@ -131,7 +131,7 @@ export const PRINT_TARGET_OPTIONS = [
     descKey: "label.targetIdentitySmallDesc",
     fallbackLabel: "Identification small label",
     fallbackDesc:
-      "Small label with CAS, English, Chinese, and all GHS pictograms across extra labels.",
+      "Small label with CAS, the selected identity language, and all GHS pictograms across extra labels.",
     icon: Target,
     presetId: "small-strip",
     template: "icon",

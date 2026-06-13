@@ -149,7 +149,7 @@ export default function LabelPrintModal({
       ...labelConfig,
       labelPurpose: fallbackOption.purpose,
       template: fallbackOption.template,
-      nameDisplay: "both",
+      nameDisplay: labelConfig.nameDisplay || "both",
       stockPreset: fallbackPreset.id,
       size: fallbackPreset.size,
       orientation: fallbackPreset.orientation,
@@ -1127,13 +1127,13 @@ export default function LabelPrintModal({
               : isQrSupplementOutput
                 ? tx(
                     "label.outputOutcomeQrSmallBody",
-                    "This prints CAS, English, Chinese, QR, and every GHS pictogram. If icons do not fit, the same output continues onto another small label.",
+                    "This prints CAS, the selected identity language, QR, and every GHS pictogram. If icons do not fit, the same output continues onto another small label.",
                     { target: qrTargetInfo ? qrTargetRoleLabel : "SDS/QR" },
                   )
                 : isQuickIdOutput
                   ? tx(
                       "label.outputOutcomeIdentitySmallBody",
-                      "This prints CAS, English, Chinese, and every GHS pictogram. It does not include H/P text or QR.",
+                      "This prints CAS, the selected identity language, and every GHS pictogram. It does not include H/P text or QR.",
                     )
                   : isSupplementalOutput
                     ? tx(
@@ -1411,7 +1411,7 @@ export default function LabelPrintModal({
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
-      nameDisplay: "both",
+      nameDisplay: effectiveLabelConfig.nameDisplay || "both",
       columns: preset.columns,
       rows: preset.rows,
       perPage: preset.perPage,
@@ -1491,7 +1491,7 @@ export default function LabelPrintModal({
       ...effectiveLabelConfig,
       labelPurpose: option.purpose,
       template: option.template,
-      nameDisplay: "both",
+      nameDisplay: effectiveLabelConfig.nameDisplay || "both",
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
