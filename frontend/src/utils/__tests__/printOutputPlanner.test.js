@@ -290,6 +290,48 @@ describe("printOutputPlanner", () => {
     expect(plan.issues).toEqual([]);
   });
 
+  it("requires recovery when a QR small-label output would need a third label", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [
+        {
+          cas_number: "9000-00-0",
+          name_en: "Crowded pictogram sample",
+          name_zh: "多圖示樣品",
+          ghs_pictograms: Array.from({ length: 13 }, (_, index) => ({
+            code: `GHS${String(index + 1).padStart(2, "0")}`,
+          })),
+          hazard_statements: [],
+          precautionary_statements: [],
+        },
+      ],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "brother-62mm-continuous",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: {},
+      locale: "zh-TW",
+    });
+
+    expect(plan.state).toBe(
+      PRINT_OUTPUT_PLAN_STATE.SMALL_LABEL_CONTINUATION_LIMIT,
+    );
+    expect(plan.canPrint).toBe(false);
+    expect(plan.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "small-label-continuation-limit",
+          pageCount: 3,
+        }),
+      ]),
+    );
+    expect(plan.recoveryActions).toEqual([
+      "use-english-only",
+      "use-complete-label",
+    ]);
+  });
+
   it("keeps dense bottle target printable as supplemental instead of forcing Letter", () => {
     const plan = buildPrintOutputPlan({
       selectedForLabel: [makeHydrochloricAcid()],

@@ -7,6 +7,12 @@ import {
   evaluatePrintReadiness,
 } from "@/utils/printFitEngine";
 import { resolvePrintOutputKindFromLayout } from "@/utils/printContentPolicy";
+import {
+  getPrintOutputIdForLayout,
+  getSmallLabelContinuationPolicy,
+  requiresSmallLabelRecovery,
+} from "@/utils/printOutputContract";
+import { splitCompactPictograms } from "@/utils/printRenderHelpers";
 
 export const PRINT_OUTPUT_PLAN_STATE = Object.freeze({
   PENDING_SELECTION: "pending_selection",
@@ -17,6 +23,7 @@ export const PRINT_OUTPUT_PLAN_STATE = Object.freeze({
   MISSING_REQUIRED_PROFILE: "missing_required_profile",
   MISSING_HAZARD_DATA: "missing_hazard_data",
   INVALID_STOCK: "invalid_stock",
+  SMALL_LABEL_CONTINUATION_LIMIT: "small_label_continuation_limit",
 });
 
 export const PRINT_OUTPUT_KIND = Object.freeze({
@@ -97,6 +104,37 @@ const isSmallSupplementalStock = (layout = {}) =>
   layout.size === "small" ||
   (layout.widthMm < 80 && layout.heightMm < 50);
 
+const getSmallLabelContinuationIssue = (readiness, layout = {}) => {
+  const outputId = getPrintOutputIdForLayout(layout, layout.template);
+  const policy = getSmallLabelContinuationPolicy(outputId);
+  if (!policy) return null;
+
+  const overLimitItems = (readiness.contents || [])
+    .map((content, index) => {
+      const pages = splitCompactPictograms(
+        content.pictograms || [],
+        layout,
+        layout.template,
+      );
+      return {
+        index,
+        cas: content.cas,
+        pageCount: pages.length,
+      };
+    })
+    .filter((item) => requiresSmallLabelRecovery(outputId, item.pageCount));
+
+  if (overLimitItems.length === 0) return null;
+
+  return {
+    type: "small-label-continuation-limit",
+    outputId,
+    maxLabels: policy.maxLabels,
+    pageCount: Math.max(...overLimitItems.map((item) => item.pageCount)),
+    items: overLimitItems,
+  };
+};
+
 export function buildPrintOutputPlan({
   selectedForLabel = [],
   layout,
@@ -124,6 +162,10 @@ export function buildPrintOutputPlan({
     stockId: recommendedFullPageStockId,
   });
   const issues = [...(readiness.issues || [])];
+  const smallLabelContinuationIssue = getSmallLabelContinuationIssue(
+    readiness,
+    layout || {},
+  );
 
   if (readiness.state === PRINT_READINESS_STATE.PENDING_SELECTION) {
     return {
@@ -177,6 +219,20 @@ export function buildPrintOutputPlan({
       outputKind,
       readiness,
       issues,
+      recommendedFullPageStockId,
+      recommendedFullPagePatch,
+    };
+  }
+
+  if (smallLabelContinuationIssue) {
+    issues.push(smallLabelContinuationIssue);
+    return {
+      state: PRINT_OUTPUT_PLAN_STATE.SMALL_LABEL_CONTINUATION_LIMIT,
+      canPrint: false,
+      outputKind,
+      readiness,
+      issues,
+      recoveryActions: ["use-english-only", "use-complete-label"],
       recommendedFullPageStockId,
       recommendedFullPagePatch,
     };
