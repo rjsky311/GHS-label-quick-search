@@ -165,6 +165,74 @@ code {
         box-shadow: 0 12px 28px hsl(220 18% 10% / 0.08);
     }
 
+    .notebook-panel {
+        border: 1px solid hsl(var(--notebook-border) / 0.72);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-ink));
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.28) inset,
+            0 6px 16px hsl(220 18% 10% / 0.06);
+    }
+
+    .notebook-note {
+        border-block: 1px solid hsl(var(--notebook-action-border) / 0.26);
+        background-color: hsl(var(--notebook-action-soft) / 0.74);
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-status-card {
+        border: 1px solid hsl(var(--notebook-border) / 0.68);
+        background-color: hsl(var(--notebook-surface-raised) / 0.84);
+        color: hsl(var(--notebook-ink));
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.24) inset;
+    }
+
+    .notebook-chip {
+        border: 1px solid hsl(var(--notebook-border) / 0.72);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-muted-ink));
+    }
+
+    .notebook-chip-action {
+        border: 1px solid hsl(var(--notebook-border) / 0.78);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-muted-ink));
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.22) inset;
+    }
+
+    .notebook-chip-action:hover {
+        border-color: hsl(var(--notebook-action-border) / 0.64);
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-result-row {
+        border: 1px solid hsl(var(--notebook-border) / 0.76);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-result-row:hover {
+        background-color: hsl(var(--notebook-action-soft) / 0.56);
+    }
+
+    .notebook-result-row-selected {
+        background-color: hsl(var(--notebook-action-soft));
+    }
+
+    .notebook-inline-action {
+        min-height: 2.75rem;
+        border: 1px solid hsl(var(--notebook-border) / 0.9);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-inline-action:hover {
+        border-color: hsl(var(--notebook-action-border));
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+    }
+
     .notebook-print-preview {
         border: 1px solid hsl(var(--notebook-border) / 0.8);
         background-color: hsl(var(--notebook-print-surface));

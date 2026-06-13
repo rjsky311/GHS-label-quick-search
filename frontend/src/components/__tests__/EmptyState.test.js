@@ -34,6 +34,14 @@ describe('EmptyState', () => {
     expect(onQuickSearch).toHaveBeenCalledWith('64-17-5');
   });
 
+  it('uses notebook controls for quick example buttons', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const example = screen.getByText('64-17-5').closest('button');
+    expect(example).toHaveClass('notebook-control', 'notebook-control-secondary');
+    expect(example.className).not.toContain('bg-white');
+  });
+
   it('renders 4 feature cards', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
     expect(screen.getByText('empty.workflowSearch')).toBeInTheDocument();
@@ -51,5 +59,17 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.featurePrintDesc')).toBeInTheDocument();
     expect(screen.getByText('empty.featureExcelDesc')).toBeInTheDocument();
     expect(screen.getByText('empty.featureFavoriteDesc')).toBeInTheDocument();
+  });
+
+  it('uses notebook cards for workflow and feature modules', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    expect(screen.getByTestId('empty-workflow-card-search')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-workflow-card-review')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-workflow-card-use')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass('notebook-panel');
   });
 });

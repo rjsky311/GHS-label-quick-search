@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import emptyWorkflowVisual from "@/assets/generated/ghs-empty-workflow.webp";
+import { Button } from "@/components/ui/button";
 
 export default function EmptyState({ onQuickSearch }) {
   const { t } = useTranslation();
@@ -19,16 +20,19 @@ export default function EmptyState({ onQuickSearch }) {
   ];
   const workflow = [
     {
+      key: "search",
       icon: Search,
       titleKey: "empty.workflowSearch",
       bodyKey: "empty.workflowSearchDesc",
     },
     {
+      key: "review",
       icon: ShieldCheck,
       titleKey: "empty.workflowReview",
       bodyKey: "empty.workflowReviewDesc",
     },
     {
+      key: "use",
       icon: ClipboardCheck,
       titleKey: "empty.workflowUse",
       bodyKey: "empty.workflowUseDesc",
@@ -36,21 +40,25 @@ export default function EmptyState({ onQuickSearch }) {
   ];
   const features = [
     {
+      key: "batch",
       icon: ClipboardList,
       titleKey: "empty.featureBatch",
       descKey: "empty.featureBatchDesc",
     },
     {
+      key: "print",
       icon: Printer,
       titleKey: "empty.featurePrint",
       descKey: "empty.featurePrintDesc",
     },
     {
+      key: "excel",
       icon: FileSpreadsheet,
       titleKey: "empty.featureExcel",
       descKey: "empty.featureExcelDesc",
     },
     {
+      key: "favorite",
       icon: Star,
       titleKey: "empty.featureFavorite",
       descKey: "empty.featureFavoriteDesc",
@@ -75,22 +83,28 @@ export default function EmptyState({ onQuickSearch }) {
             <p className="mb-3 text-sm font-medium text-slate-500">{t("empty.tryThese")}</p>
             <div className="flex flex-wrap gap-3">
               {examples.map((ex) => (
-                <button
+                <Button
                   key={ex.cas}
                   type="button"
                   onClick={() => onQuickSearch(ex.cas)}
-                  className="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50"
+                  variant="notebookSecondary"
+                  size="notebook"
+                  className="px-4"
                 >
                   <span className="font-mono text-blue-700">{ex.cas}</span>
                   <span className="ml-2 text-slate-500">{t(ex.nameKey)}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {workflow.map(({ icon: Icon, titleKey, bodyKey }) => (
-              <div key={titleKey} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+            {workflow.map(({ key, icon: Icon, titleKey, bodyKey }) => (
+              <div
+                key={titleKey}
+                className="notebook-panel rounded-md p-4"
+                data-testid={`empty-workflow-card-${key}`}
+              >
                 <Icon className="h-5 w-5 text-blue-700" />
                 <h3 className="mt-3 text-sm font-semibold text-slate-950">{t(titleKey)}</h3>
                 <p className="mt-1 text-xs leading-5 text-slate-600">{t(bodyKey)}</p>
@@ -107,15 +121,19 @@ export default function EmptyState({ onQuickSearch }) {
             decoding="async"
             data-testid="empty-visual-asset"
           />
-          <div className="absolute bottom-3 right-3 rounded-md border border-blue-100 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm backdrop-blur">
+          <div className="notebook-panel absolute bottom-3 right-3 rounded-md px-3 py-2 text-xs font-medium backdrop-blur">
             {t("empty.visualBadge")}
           </div>
         </div>
       </div>
 
       <div className="mx-auto mt-8 grid max-w-5xl grid-cols-2 gap-3 md:grid-cols-4">
-        {features.map(({ icon: Icon, titleKey, descKey }) => (
-          <div key={titleKey} className="rounded-md border border-slate-200 bg-white p-4 text-left shadow-sm">
+        {features.map(({ key, icon: Icon, titleKey, descKey }) => (
+          <div
+            key={titleKey}
+            className="notebook-panel rounded-md p-4 text-left"
+            data-testid={`empty-feature-card-${key}`}
+          >
             <Icon className="mb-2 h-6 w-6 text-blue-700" />
             <h3 className="mb-1 text-sm font-medium text-slate-950">{t(titleKey)}</h3>
             <p className="text-xs leading-5 text-slate-500">{t(descKey)}</p>

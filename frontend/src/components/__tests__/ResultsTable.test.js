@@ -72,6 +72,43 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('print-label-btn')).toBeInTheDocument();
     });
 
+    it('uses notebook surfaces for the result workbench shell and summary', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockWarningResult]}
+          totalCount={2}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('results-table-shell')).toHaveClass('notebook-surface');
+      expect(screen.getByTestId('results-decision-guide')).toHaveClass('notebook-note');
+      expect(screen.getByTestId('results-workflow-summary')).toHaveClass('notebook-panel');
+    });
+
+    it('uses notebook controls for result header actions', () => {
+      render(<ResultsTable {...defaultProps} printAllWithGhsCount={1} />);
+
+      expect(screen.getByTestId('print-label-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-primary'
+      );
+      expect(screen.getByTestId('print-label-btn').className).not.toContain('bg-blue-700');
+      expect(screen.getByTestId('print-all-with-ghs-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
+      expect(screen.getByTestId('export-xlsx-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
+      expect(screen.getByTestId('export-csv-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
+    });
+
     it('renders export Excel button', () => {
       render(<ResultsTable {...defaultProps} />);
       expect(screen.getByTestId('export-xlsx-btn')).toBeInTheDocument();
@@ -626,6 +663,33 @@ describe('ResultsTable', () => {
   });
 
   describe('Found result rows', () => {
+    it('uses notebook row cards and filter chips without losing responsive row classes', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockWarningResult]}
+          totalCount={2}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      expect(screen.getByTestId('results-filter-toolbar')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('result-filter-all')).toHaveClass('notebook-chip-action');
+      expect(screen.getByTestId('result-row-0')).toHaveClass(
+        'notebook-result-row',
+        'block',
+        'md:table-row'
+      );
+      expect(screen.getByTestId('detail-btn-0')).toHaveClass(
+        'notebook-inline-action',
+        'whitespace-nowrap'
+      );
+      expect(screen.getByTestId('sds-btn-0')).toHaveClass(
+        'notebook-inline-action',
+        'whitespace-nowrap'
+      );
+    });
+
     it('keeps the results readable on narrow screens without a desktop-only minimum table width', () => {
       render(<ResultsTable {...defaultProps} />);
 

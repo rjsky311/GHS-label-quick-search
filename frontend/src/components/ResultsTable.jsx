@@ -1,6 +1,7 @@
 import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight, ExternalLink, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
+import { Button } from "@/components/ui/button";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { formatRelativeTime } from "@/utils/formatDate";
@@ -565,7 +566,10 @@ export default function ResultsTable({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div
+      className="notebook-surface overflow-hidden rounded-lg"
+      data-testid="results-table-shell"
+    >
       {/* Results Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
         <div className="text-slate-950">
@@ -575,7 +579,7 @@ export default function ResultsTable({
           </span>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
+          <Button
             onClick={onOpenLabelModal}
             disabled={!hasPrintableLabelResults && selectedPrintableCount === 0}
             title={
@@ -583,22 +587,26 @@ export default function ResultsTable({
                 ? t("label.noPrintableHazardData")
                 : undefined
             }
-            className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+            variant="notebookPrimary"
+            size="notebook"
+            className="px-4 disabled:cursor-not-allowed"
             data-testid="print-label-btn"
           >
             <Tag className="w-4 h-4" /> {t("results.printLabel")}
             {selectedPrintableCount > 0 && (
-              <span className="rounded-full bg-blue-900 px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-[hsl(var(--notebook-action))] px-2 py-0.5 text-xs text-white">
                 {selectedPrintableCount}
               </span>
             )}
-          </button>
+          </Button>
           {/* Precise shortcut — opens the modal with ONLY visible rows
               that have GHS data (no-GHS rows excluded). */}
           {printAllWithGhsCount > 0 && (
-            <button
+            <Button
               onClick={onPrintAllWithGhs}
-              className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
+              variant="notebookSecondary"
+              size="notebook"
+              className="px-4 text-emerald-800 hover:text-emerald-800"
               data-testid="print-all-with-ghs-btn"
             >
               <Printer className="w-4 h-4" />
@@ -606,17 +614,19 @@ export default function ResultsTable({
               <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs text-white">
                 {printAllWithGhsCount}
               </span>
-            </button>
+            </Button>
           )}
           {(() => {
             const comparableCount = selectedForLabel.filter(
               (r) => r.found && r.ghs_pictograms?.length > 0
             ).length;
             return comparableCount >= 2 ? (
-              <button
+              <Button
                 onClick={onOpenComparison}
                 disabled={comparableCount > 5}
-                className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                variant="notebookSecondary"
+                size="notebook"
+                className="px-4 text-blue-800 hover:text-blue-800 disabled:cursor-not-allowed"
                 data-testid="compare-btn"
                 title={
                   comparableCount > 5
@@ -628,29 +638,33 @@ export default function ResultsTable({
                 <span className="rounded-full bg-blue-700 px-2 py-0.5 text-xs text-white">
                   {comparableCount}
                 </span>
-              </button>
+              </Button>
             ) : null;
           })()}
-          <button
+          <Button
             onClick={onExportToExcel}
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            variant="notebookSecondary"
+            size="notebook"
+            className="px-4"
             data-testid="export-xlsx-btn"
           >
             <FileSpreadsheet className="w-4 h-4" /> {t("results.exportExcel")}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={onExportToCSV}
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            variant="notebookSecondary"
+            size="notebook"
+            className="px-4"
             data-testid="export-csv-btn"
           >
             <FileText className="w-4 h-4" /> {t("results.exportCSV")}
-          </button>
+          </Button>
         </div>
       </div>
 
       {hasFoundResults && (
         <div
-          className="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-blue-50/70 px-4 py-3 text-sm"
+          className="notebook-note flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
           data-testid="results-decision-guide"
         >
           <span className="font-medium text-blue-950">
@@ -660,7 +674,7 @@ export default function ResultsTable({
             {decisionSteps.map(({ key, icon: Icon, label }) => (
               <span
                 key={key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                className="notebook-chip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
                 data-testid={`results-decision-step-${key}`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 text-blue-700" />
@@ -673,7 +687,7 @@ export default function ResultsTable({
 
       {showWorkflowSummary && (
         <div
-          className="border-b border-slate-200 bg-white px-4 py-4"
+          className="notebook-panel rounded-none border-x-0 border-t-0 px-4 py-4"
           data-testid="results-workflow-summary"
         >
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -710,7 +724,7 @@ export default function ResultsTable({
             </p>
           </div>
           <div
-            className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3"
+            className="notebook-panel mb-3 rounded-md px-3 py-3"
             data-testid="results-workflow-self-service"
           >
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
@@ -727,7 +741,7 @@ export default function ResultsTable({
               {workflowSelfServiceLanes.map((lane) => (
                 <div
                   key={lane.key}
-                  className={`rounded-md border px-3 py-2 ${lane.className}`}
+                  className={`notebook-status-card rounded-md px-3 py-2 ${lane.className}`}
                   data-testid={`results-workflow-lane-${lane.key}`}
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -781,7 +795,7 @@ export default function ResultsTable({
                 <button
                   type="button"
                   onClick={nextAction.onClick}
-                  className="shrink-0 rounded-md border border-current/20 bg-white/70 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white"
+                  className="notebook-inline-action shrink-0 rounded-md px-3 py-2 text-xs font-semibold transition-colors"
                   data-testid="results-next-action-primary"
                 >
                   {nextAction.cta}
@@ -791,7 +805,7 @@ export default function ResultsTable({
           )}
           {workflowActionPlan.length > 0 && (
             <div
-              className="mb-3 rounded-md border border-slate-200 bg-white px-3 py-3"
+              className="notebook-panel mb-3 rounded-md px-3 py-3"
               data-testid="results-workflow-action-plan"
             >
               <p className="text-xs font-semibold text-slate-700">
@@ -843,7 +857,7 @@ export default function ResultsTable({
                   setReviewIssueFilter(DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS)
                 }
                 disabled={!onSetAdvancedFilter}
-                className="shrink-0 rounded-md border border-amber-300 bg-white/80 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-white disabled:cursor-default disabled:opacity-60"
+                className="notebook-inline-action shrink-0 rounded-md px-3 py-2 text-xs font-semibold text-amber-900 transition-colors disabled:cursor-default disabled:opacity-60"
                 data-testid="results-multiple-ghs-review-primary"
               >
                 {t("results.multipleGhsReviewCta")}
@@ -854,7 +868,7 @@ export default function ResultsTable({
             {workflowSummaryCards.map((card) => (
               <div
                 key={card.key}
-                className={`rounded-md border px-3 py-2 ${card.className}`}
+                className={`notebook-status-card rounded-md px-3 py-2 ${card.className}`}
                 data-testid={`results-workflow-summary-${card.key}`}
               >
                 <div className="flex items-baseline justify-between gap-2">
@@ -908,7 +922,7 @@ export default function ResultsTable({
                     type="button"
                     onClick={() => setReviewIssueFilter(issue.type)}
                     disabled={!onSetAdvancedFilter}
-                    className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                    className={`notebook-chip-action rounded-md px-3 py-2 text-left text-xs transition-colors ${
                       activeReviewIssueType === issue.type
                         ? "border-blue-200 bg-blue-50 text-blue-950"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-950"
@@ -937,7 +951,7 @@ export default function ResultsTable({
 
       {/* Selection controls */}
       {hasPrintableLabelResults && (
-        <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm">
+        <div className="notebook-panel flex flex-wrap items-center gap-4 rounded-none border-x-0 border-t-0 px-4 py-2 text-sm">
           <span className="text-slate-600">{t("results.labelSelect")}</span>
           <button
             onClick={onSelectAllForLabel}
@@ -959,7 +973,10 @@ export default function ResultsTable({
 
       {/* Filter Toolbar */}
       {totalCount > 1 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-4 py-2 text-sm">
+        <div
+          className="notebook-panel flex flex-wrap items-center gap-2 rounded-none border-x-0 border-t-0 px-4 py-2 text-sm"
+          data-testid="results-filter-toolbar"
+        >
           <Filter className="h-4 w-4 shrink-0 text-slate-500" />
           {[
             { value: "all", labelKey: "filter.all" },
@@ -970,13 +987,14 @@ export default function ResultsTable({
             <button
               key={f.value}
               onClick={() => onSetResultFilter(f.value)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`notebook-chip-action px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 resultFilter === f.value
                   ? f.color === "red" ? "bg-red-50 text-red-700 ring-1 ring-red-200"
                   : f.color === "amber" ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                   : "bg-slate-100 text-slate-900 ring-1 ring-slate-300"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900"
               }`}
+              data-testid={`result-filter-${f.value}`}
             >
               {t(f.labelKey)}
             </button>
@@ -987,7 +1005,7 @@ export default function ResultsTable({
             <button
               key={n}
               onClick={() => onSetAdvancedFilter({ ...advancedFilter, minPictograms: advancedFilter.minPictograms === n ? 0 : n })}
-              className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`notebook-chip-action px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                 advancedFilter.minPictograms === n
                   ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900"
@@ -1003,14 +1021,14 @@ export default function ResultsTable({
               value={advancedFilter.hCodeSearch}
               onChange={(e) => onSetAdvancedFilter({ ...advancedFilter, hCodeSearch: e.target.value })}
               placeholder={t("filter.hCodePlaceholder")}
-              className="w-24 rounded-full border border-slate-300 bg-white py-1 pl-6 pr-2 text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-24 rounded-full border border-[hsl(var(--notebook-border)/0.86)] bg-[hsl(var(--notebook-surface-raised))] py-1 pl-6 pr-2 text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           {activeReviewIssueType && (
             <button
               type="button"
               onClick={() => onSetAdvancedFilter({ ...advancedFilter, reviewIssueType: "" })}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100 transition-colors hover:bg-blue-100"
+              className="notebook-chip-action inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100 transition-colors hover:bg-blue-100"
               data-testid="active-review-reason-filter"
             >
               {t("filter.reviewReason", { reason: activeReviewIssueLabel })}
@@ -1080,9 +1098,9 @@ export default function ResultsTable({
               return (
               <tr
                 key={idx}
-                className={`block rounded-lg border border-slate-200 p-4 shadow-sm transition-colors hover:bg-blue-50/60 md:table-row md:rounded-none md:border-0 md:p-0 md:shadow-none ${
+                className={`notebook-result-row block rounded-lg p-4 shadow-sm transition-colors md:table-row md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none ${
                   !result.found ? "opacity-60" : ""
-                } ${isSelectedForLabel(result.cas_number) ? "bg-blue-50" : "bg-white md:bg-transparent"}`}
+                } ${isSelectedForLabel(result.cas_number) ? "notebook-result-row-selected" : ""}`}
                 data-testid={`result-row-${idx}`}
               >
                 <td className="inline-flex w-9 px-0 py-0 align-top md:table-cell md:w-12 md:px-2 md:py-4 md:text-center">
@@ -1417,7 +1435,7 @@ export default function ResultsTable({
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         onClick={() => onViewDetail(result)}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        className="notebook-inline-action inline-flex items-center justify-center whitespace-nowrap rounded px-3 py-1 text-sm font-medium transition-colors"
                         data-testid={`detail-btn-${idx}`}
                       >
                         {t("results.detail")}
@@ -1427,7 +1445,7 @@ export default function ResultsTable({
                           href={getPubChemSDSUrl(result.cid)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
+                          className="notebook-inline-action inline-flex items-center justify-center gap-1 whitespace-nowrap rounded px-2 py-1 text-sm font-medium text-emerald-800 transition-colors hover:text-emerald-800"
                           title={t("sds.viewSDS")}
                           data-testid={`sds-btn-${idx}`}
                         >
