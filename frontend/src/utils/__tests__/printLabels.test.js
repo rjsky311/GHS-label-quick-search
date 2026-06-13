@@ -770,6 +770,46 @@ describe("print layout model", () => {
     );
     expect(inspectPreview.html).toContain("preview-zoom-inspect");
   });
+
+  it("uses 100% inspect zoom for full-page primary labels", () => {
+    const config = {
+      stockPreset: "a4-primary",
+      template: "full",
+      labelPurpose: "shipping",
+    };
+    const fitPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      config,
+      {},
+      {},
+      { "64-17-5": 1 },
+      {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+      { mode: "label", previewZoom: "fit" },
+    );
+    const inspectPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      config,
+      {},
+      {},
+      { "64-17-5": 1 },
+      {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+      { mode: "label", previewZoom: "inspect" },
+    );
+
+    expect(fitPreview.previewMetrics.labelPreviewScale).toBeLessThan(0.5);
+    expect(inspectPreview.previewMetrics.previewZoom).toBe("inspect");
+    expect(inspectPreview.previewMetrics.labelPreviewScale).toBeCloseTo(1, 5);
+    expect(inspectPreview.html).toContain("preview-zoom-inspect");
+    expect(inspectPreview.html).toContain("overflow: auto");
+  });
 });
 
 describe("printLabels", () => {

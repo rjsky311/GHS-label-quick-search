@@ -12,9 +12,21 @@ export function buildPrintPreviewStyles(mode, model, options = {}) {
     mode === "label" && isFullPagePrimaryLayout(model.layout);
   const previewZoom = options.previewZoom === "inspect" ? "inspect" : "fit";
   const maxLabelPreviewWidthPx =
-    previewZoom === "inspect" ? 760 : isFullPageLabelPreview ? 300 : 420;
+    previewZoom === "inspect"
+      ? isFullPageLabelPreview
+        ? rawLabelWidthPx
+        : 760
+      : isFullPageLabelPreview
+        ? 300
+        : 420;
   const maxLabelPreviewHeightPx =
-    previewZoom === "inspect" ? 640 : isFullPageLabelPreview ? 240 : 340;
+    previewZoom === "inspect"
+      ? isFullPageLabelPreview
+        ? rawLabelHeightPx
+        : 640
+      : isFullPageLabelPreview
+        ? 240
+        : 340;
   const maxLabelPreviewScale = isFullPageLabelPreview
     ? 1
     : previewZoom === "inspect"
