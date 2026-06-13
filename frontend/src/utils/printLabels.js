@@ -452,18 +452,29 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
 };
 
 const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
+  const nameDisplay = resolveNameDisplayForChemical(effectiveChem, model);
   const englishName =
     effectiveChem.name_en || effectiveChem.name || effectiveChem.cas_number || "";
   const chineseName = resolvePrintableChineseName(effectiveChem);
   const continuation = getContinuationMeta(chemical);
-  const chineseNameHtml = chineseName
-    ? `<div class="small-name-zh">${escapeHtml(chineseName)}</div>`
-    : "";
+  const englishNameHtml =
+    nameDisplay === "en" || nameDisplay === "both"
+      ? `<div class="small-name-en">${escapeHtml(englishName)}</div>`
+      : "";
+  const chineseNameHtml =
+    (nameDisplay === "zh" || nameDisplay === "both") && chineseName
+      ? `<div class="small-name-zh">${escapeHtml(chineseName)}</div>`
+      : "";
+  const fallbackNameHtml =
+    !englishNameHtml && !chineseNameHtml
+      ? `<div class="small-name-en">${escapeHtml(englishName || chineseName)}</div>`
+      : "";
 
   return `<div class="small-identity${getIdentityDensityClass(effectiveChem, model)}">
     <div class="small-cas">CAS ${escapeHtml(effectiveChem.cas_number || "")}</div>
-    <div class="small-name-en">${escapeHtml(englishName)}</div>
+    ${englishNameHtml}
     ${chineseNameHtml}
+    ${fallbackNameHtml}
     ${renderContinuationBadge(continuation, model)}
   </div>`;
 };

@@ -89,6 +89,11 @@ export const canRenderCompactBilingualName = (chemical, layout = {}) => {
 };
 
 export const resolveNameDisplayForChemical = (chemical, model) => {
+  const requestedDisplay = model?.layout?.nameDisplay;
+  if (requestedDisplay === "en" || requestedDisplay === "zh") {
+    return requestedDisplay;
+  }
+
   if (["full", "icon", "qrcode"].includes(model?.layout?.template)) {
     return "both";
   }

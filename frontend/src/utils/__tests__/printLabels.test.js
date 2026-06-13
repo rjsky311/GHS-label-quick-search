@@ -3709,7 +3709,32 @@ describe("printLabels", () => {
         expect(html).not.toContain("乙醇");
       });
     });
-    it("forces compact icon and QR templates to print CAS, English, and Chinese identity", () => {
+    it("prints bilingual identity on compact icon and QR templates when requested", () => {
+      ["icon", "qrcode"].forEach((template) => {
+        const mocks = createMockIframe();
+        createElementSpy.mockImplementation((tag) =>
+          tag === "iframe" ? mocks.mockIframe : {},
+        );
+        getByIdSpy.mockReturnValue(null);
+
+        printLabels(
+          [mockChemical],
+          {
+            size: "medium",
+            template,
+            orientation: "portrait",
+            nameDisplay: "both",
+          },
+          {},
+        );
+        const html = mocks.mockIframeDoc.write.mock.calls[0][0];
+        expect(html).toContain("small-cas");
+        expect(html).toContain("Ethanol");
+        expect(html).toContain(mockChemical.name_zh);
+      });
+    });
+
+    it("prints English-only identity on compact icon and QR templates when requested", () => {
       ["icon", "qrcode"].forEach((template) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
@@ -3730,7 +3755,7 @@ describe("printLabels", () => {
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).toContain("small-cas");
         expect(html).toContain("Ethanol");
-        expect(html).toContain(mockChemical.name_zh);
+        expect(html).not.toContain(mockChemical.name_zh);
       });
     });
 
