@@ -78,6 +78,27 @@ export const COLOR_OPTIONS = [
   { value: "bw", labelKey: "label.colorBW", iconLabel: "B/W" },
 ];
 
+export const NAME_DISPLAY_OPTIONS = [
+  {
+    value: "both",
+    labelKey: "label.nameDisplayBoth",
+    descKey: "label.nameDisplayBothDesc",
+    iconLabel: "中/EN",
+  },
+  {
+    value: "en",
+    labelKey: "label.nameDisplayEnglish",
+    descKey: "label.nameDisplayEnglishDesc",
+    iconLabel: "EN",
+  },
+  {
+    value: "zh",
+    labelKey: "label.nameDisplayChinese",
+    descKey: "label.nameDisplayChineseDesc",
+    iconLabel: "中",
+  },
+];
+
 export const PRINT_TARGET_OPTIONS = [
   {
     value: "complete",

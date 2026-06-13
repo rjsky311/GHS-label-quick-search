@@ -38,6 +38,7 @@ import { ConfigButtonGrid } from "@/components/label-print/LabelPrintConfigContr
 import ResponsibleProfileControls from "@/components/label-print/ResponsibleProfileControls";
 import {
   COLOR_OPTIONS,
+  NAME_DISPLAY_OPTIONS,
   ORIENTATION_OPTIONS,
   PRINT_TARGET_OPTIONS,
 } from "@/components/label-print/labelPrintModalOptions";
@@ -1842,15 +1843,19 @@ export default function LabelPrintModal({
                     <h4 className="text-sm font-medium text-slate-800">
                       {tx("label.identityDisplay", "Printed identity")}
                     </h4>
-                    <div
-                      className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium leading-5 text-emerald-900"
-                      data-testid="fixed-identity-display"
-                    >
+                    <p className="text-xs leading-5 text-slate-500">
                       {tx(
-                        "label.fixedIdentityDisplay",
-                        "Always prints CAS first, English second, and Chinese third.",
+                        "label.identityDisplayHint",
+                        "CAS always prints first. Choose whether the physical label shows both names or one language.",
                       )}
-                    </div>
+                    </p>
+                    <ConfigButtonGrid
+                      options={NAME_DISPLAY_OPTIONS}
+                      value={effectiveLabelConfig.nameDisplay || "both"}
+                      onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
+                      activeClasses="border-emerald-500 bg-emerald-50 text-emerald-800"
+                      t={t}
+                    />
                   </section>
 
                   <section className="space-y-3">

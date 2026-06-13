@@ -8,7 +8,19 @@ import PrintOutputPlanDetails from "../label-print/PrintOutputPlanDetails";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key, options = {}) => options.defaultValue ?? key,
+    t: (key, options = {}) => {
+      const translations = {
+        "label.nameDisplayBoth": "Bilingual",
+        "label.nameDisplayBothDesc": "CAS, English, and Chinese names.",
+        "label.nameDisplayEnglish": "English only",
+        "label.nameDisplayEnglishDesc":
+          "CAS and English name for international labels.",
+        "label.nameDisplayChinese": "Chinese only",
+        "label.nameDisplayChineseDesc":
+          "CAS and Chinese name when local workflow needs it.",
+      };
+      return options.defaultValue ?? translations[key] ?? key;
+    },
     i18n: {
       language: "en",
       changeLanguage: jest.fn(),
@@ -369,6 +381,28 @@ describe("LabelPrintModal", () => {
       within(previewActions).getByRole("button", {
         name: "Print a supplemental label instead",
       }),
+    );
+  });
+
+  it("lets users choose English-only identity for physical labels", () => {
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        nameDisplay: "both",
+      },
+    });
+
+    const outputControls = screen.getByTestId("core-output-controls");
+    expect(outputControls).toHaveTextContent("Bilingual");
+    expect(outputControls).toHaveTextContent("English only");
+    expect(outputControls).toHaveTextContent("Chinese only");
+    expect(screen.queryByTestId("fixed-identity-display")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("label-config-option-en"));
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({ nameDisplay: "en" }),
     );
   });
 

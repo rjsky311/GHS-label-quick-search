@@ -1316,6 +1316,13 @@
   "label.qrTargetSiteLabel": "GHS Label Quick Search",
   "label.identityDisplay": "Printed identity",
   "label.fixedIdentityDisplay": "Always prints CAS first, English second, and Chinese third.",
+  "label.identityDisplayHint": "CAS always prints first. Choose whether the physical label shows both names or one language.",
+  "label.nameDisplayBoth": "Bilingual",
+  "label.nameDisplayBothDesc": "CAS, English, and Chinese names.",
+  "label.nameDisplayEnglish": "English only",
+  "label.nameDisplayEnglishDesc": "CAS and English name for international labels.",
+  "label.nameDisplayChinese": "Chinese only",
+  "label.nameDisplayChineseDesc": "CAS and Chinese name when local workflow needs it.",
   "label.printQrSmallAction": "Print QR small label ({{count}})",
   "label.printIdentitySmallAction": "Print identification small label ({{count}})",
   "label.printFixSmallLabelContinuation": "Simplify small label first"
