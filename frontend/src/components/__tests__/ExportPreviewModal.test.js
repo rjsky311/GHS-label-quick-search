@@ -48,6 +48,23 @@ describe('ExportPreviewModal', () => {
     );
 
     expect(screen.getByTestId('export-preview-modal')).toBeInTheDocument();
+    expect(screen.getByTestId('export-preview-modal')).toHaveClass(
+      'modal-viewport-overlay',
+    );
+    expect(screen.getByTestId('export-preview-panel')).toHaveClass(
+      'modal-viewport-panel',
+      'max-h-[calc(100dvh-2rem)]',
+      'overflow-hidden',
+    );
+    expect(screen.getByTestId('export-preview-body')).toHaveClass(
+      'modal-viewport-body',
+      'min-h-0',
+      'flex-1',
+      'overflow-y-auto',
+    );
+    expect(screen.getByTestId('export-preview-footer')).toHaveClass(
+      'modal-viewport-footer',
+    );
     expect(screen.getByText('exportPreview.title')).toBeInTheDocument();
     expect(screen.getAllByTestId('export-preview-row')).toHaveLength(2);
     expect(screen.getByTestId('export-preview-scope-visible')).toBeInTheDocument();

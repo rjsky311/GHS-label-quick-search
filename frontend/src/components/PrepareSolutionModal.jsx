@@ -8,6 +8,11 @@ import {
   todayDateString,
 } from "@/utils/preparedSolution";
 import { resolveTrustedChineseName } from "@/utils/ghsText";
+import {
+  modalViewportBodyClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 
 function getRecentExpiryStatus(expiryDate) {
   const expiryStatus = getPreparedExpiryStatus(expiryDate);
@@ -239,7 +244,7 @@ export default function PrepareSolutionModal({
 
   return (
     <div
-      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-[55]")}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -249,7 +254,8 @@ export default function PrepareSolutionModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white shadow-2xl outline-none"
+        className={modalViewportPanelClassName("max-w-md bg-white")}
+        data-testid="prepare-solution-panel"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -279,7 +285,11 @@ export default function PrepareSolutionModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className={modalViewportBodyClassName("space-y-5 p-6")}
+          data-testid="prepare-solution-form"
+        >
           {/* Read-only parent chemical summary.
               Always visible so the user knows exactly what the derived
               label will inherit from — no ambiguity once the modal

@@ -7,6 +7,11 @@ import {
   normalizeCorrectionRequestPayload,
   submitCorrectionRequest,
 } from "@/utils/correctionRequests";
+import {
+  modalViewportBodyClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 
 const ISSUE_GUIDANCE = {
   "missing-chinese-name": {
@@ -187,7 +192,7 @@ export default function DataCorrectionDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-[70]")}
       role="dialog"
       aria-modal="true"
       aria-labelledby="data-correction-dialog-title"
@@ -197,7 +202,7 @@ export default function DataCorrectionDialog({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none sm:max-h-[90vh]"
+        className={modalViewportPanelClassName("max-w-2xl bg-white")}
         data-testid="data-correction-panel"
         onClick={(event) => event.stopPropagation()}
       >
@@ -228,7 +233,10 @@ export default function DataCorrectionDialog({
         </div>
 
         {submittedRecord ? (
-          <div className="space-y-4 px-5 py-5">
+          <div
+            className={modalViewportBodyClassName("space-y-4 px-5 py-5")}
+            data-testid="data-correction-body"
+          >
             <div
               className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-950"
               data-testid="data-correction-success"
@@ -257,7 +265,11 @@ export default function DataCorrectionDialog({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
+          <form
+            onSubmit={handleSubmit}
+            className={modalViewportBodyClassName("space-y-4 px-5 py-5")}
+            data-testid="data-correction-body"
+          >
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-medium text-slate-700">
                 <span>{t("correctionDialog.casLabel")}</span>

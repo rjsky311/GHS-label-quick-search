@@ -26,6 +26,11 @@ import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { Button } from "@/components/ui/button";
+import {
+  modalViewportBodyClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   getLocalizedNames,
@@ -282,7 +287,7 @@ export default function DetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-50")}
       onClick={suppressed ? undefined : onClose}
       role="dialog"
       aria-modal={suppressed ? undefined : "true"}
@@ -297,9 +302,9 @@ export default function DetailModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`notebook-surface max-h-[90vh] w-full overflow-y-auto rounded-lg shadow-2xl outline-none ${
-          allClassifications.length > 1 ? "max-w-3xl" : "max-w-2xl"
-        }`}
+        className={modalViewportPanelClassName(
+          `notebook-surface ${allClassifications.length > 1 ? "max-w-3xl" : "max-w-2xl"}`,
+        )}
         data-testid="detail-modal-panel"
         onClick={(e) => e.stopPropagation()}
       >
@@ -348,40 +353,44 @@ export default function DetailModal({
         </div>
 
         <div
-          className="notebook-panel rounded-none border-x-0 border-t-0 px-6 py-4"
-          data-testid="detail-trust-strip"
+          className={modalViewportBodyClassName()}
+          data-testid="detail-modal-body"
         >
           <div
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
-            data-testid="detail-trust-grid"
+            className="notebook-panel rounded-none border-x-0 border-t-0 px-6 py-4"
+            data-testid="detail-trust-strip"
           >
-            {trustSummaryItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.key}
-                  className="notebook-status-card flex min-w-0 items-start gap-3 rounded-md px-3 py-3"
-                  data-testid={`detail-trust-${item.key}`}
-                  title={item.title || item.value}
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-xs font-medium uppercase text-[hsl(var(--notebook-muted-ink))]">
-                      {item.label}
+            <div
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+              data-testid="detail-trust-grid"
+            >
+              {trustSummaryItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.key}
+                    className="notebook-status-card flex min-w-0 items-start gap-3 rounded-md px-3 py-3"
+                    data-testid={`detail-trust-${item.key}`}
+                    title={item.title || item.value}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">
+                      <Icon className="h-4 w-4" />
                     </span>
-                    <span className="block truncate text-sm font-semibold text-[hsl(var(--notebook-ink))]">
-                      {item.value}
+                    <span className="min-w-0">
+                      <span className="block text-xs font-medium uppercase text-[hsl(var(--notebook-muted-ink))]">
+                        {item.label}
+                      </span>
+                      <span className="block truncate text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+                        {item.value}
+                      </span>
                     </span>
-                  </span>
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        <div className="p-6 space-y-6">
+          <div className="space-y-6 p-6">
           {missingChineseNameReportUrl ? (
             <div
               role="note"
@@ -797,6 +806,7 @@ export default function DetailModal({
                 </a>
               </Button>
             )}
+          </div>
           </div>
         </div>
       </div>

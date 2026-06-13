@@ -46,6 +46,11 @@ import LabelOutputSelector from "@/components/label-print/LabelOutputSelector";
 import PrintOutputPlanDetails from "@/components/label-print/PrintOutputPlanDetails";
 import LabelPreviewPanel from "@/components/label-print/LabelPreviewPanel";
 import LabelPrintFooter from "@/components/label-print/LabelPrintFooter";
+import {
+  modalViewportBodyClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 import MultipleGhsPrintWarning from "@/components/label-print/MultipleGhsPrintWarning";
 import SelectedLabelsControls from "@/components/label-print/SelectedLabelsControls";
 import StockSizeSelector from "@/components/label-print/StockSizeSelector";
@@ -1560,7 +1565,7 @@ export default function LabelPrintModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-50")}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -1569,7 +1574,8 @@ export default function LabelPrintModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="flex max-h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl outline-none"
+        className={modalViewportPanelClassName("max-w-7xl bg-white")}
+        data-testid="label-modal-panel"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
@@ -1597,7 +1603,9 @@ export default function LabelPrintModal({
         </div>
 
         <div
-          className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(27rem,34rem)] lg:overflow-hidden"
+          className={modalViewportBodyClassName(
+            "grid lg:grid-cols-[minmax(0,1fr)_minmax(27rem,34rem)] lg:overflow-hidden",
+          )}
           data-testid="label-modal-scroll-body"
         >
             <div

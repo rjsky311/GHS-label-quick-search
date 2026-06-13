@@ -2,6 +2,12 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ClassificationComparisonTable from "@/components/ClassificationComparisonTable";
 import useFocusTrap from "@/hooks/useFocusTrap";
+import {
+  modalViewportBodyClassName,
+  modalViewportFooterClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 
 /**
  * Cross-chemical GHS classification comparison modal.
@@ -35,7 +41,7 @@ export default function ComparisonModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-50")}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -44,7 +50,8 @@ export default function ComparisonModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none"
+        className={modalViewportPanelClassName("max-w-4xl bg-white")}
+        data-testid="comparison-modal-panel"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -67,7 +74,10 @@ export default function ComparisonModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div
+          className={modalViewportBodyClassName("space-y-4 p-6")}
+          data-testid="comparison-modal-body"
+        >
           <ClassificationComparisonTable
             mode="cross-chemical"
             columns={columns}
@@ -77,7 +87,10 @@ export default function ComparisonModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-0 flex justify-end">
+        <div
+          className={modalViewportFooterClassName("flex justify-end p-6")}
+          data-testid="comparison-modal-footer"
+        >
           <button
             onClick={onClose}
             className="rounded-md border border-slate-300 bg-white px-6 py-2 text-slate-700 transition-colors hover:bg-slate-50"

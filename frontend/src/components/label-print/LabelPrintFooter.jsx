@@ -1,4 +1,5 @@
 import { FileText, Printer } from "lucide-react";
+import { modalViewportFooterClassName } from "@/components/ui/modalViewport";
 
 export default function LabelPrintFooter({
   canUseFullPagePrimary,
@@ -13,7 +14,9 @@ export default function LabelPrintFooter({
 }) {
   return (
     <div
-      className="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-5"
+      className={modalViewportFooterClassName(
+        "flex flex-col gap-3 px-6 py-5 sm:flex-row",
+      )}
       data-testid="label-modal-footer"
     >
       {canUseFullPagePrimary ? (

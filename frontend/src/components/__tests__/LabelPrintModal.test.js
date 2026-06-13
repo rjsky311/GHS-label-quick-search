@@ -187,6 +187,20 @@ describe("LabelPrintModal", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAttribute("aria-labelledby", "label-modal-title");
+    expect(dialog).toHaveClass("modal-viewport-overlay");
+    expect(screen.getByTestId("label-modal-panel")).toHaveClass(
+      "modal-viewport-panel",
+      "max-h-[calc(100dvh-2rem)]",
+      "overflow-hidden",
+    );
+    expect(screen.getByTestId("label-modal-scroll-body")).toHaveClass(
+      "modal-viewport-body",
+      "min-h-0",
+      "flex-1",
+    );
+    expect(screen.getByTestId("label-modal-footer")).toHaveClass(
+      "modal-viewport-footer",
+    );
     expect(screen.getByTestId("label-preview-panel")).toBeInTheDocument();
     expect(screen.getByText("Live preview")).toBeInTheDocument();
     expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(

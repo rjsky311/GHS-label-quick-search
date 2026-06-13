@@ -133,11 +133,25 @@ describe('DetailModal', () => {
     it('uses notebook surfaces for the modal shell and trust cards', () => {
       render(<DetailModal {...defaultProps} />);
 
+      const dialog = screen.getByTestId('detail-modal');
+      expect(dialog).toHaveClass('modal-viewport-overlay');
+
       const panel = screen.getByTestId('detail-modal-panel');
-      expect(panel).toHaveClass('notebook-surface');
+      expect(panel).toHaveClass(
+        'notebook-surface',
+        'modal-viewport-panel',
+        'max-h-[calc(100dvh-2rem)]',
+        'overflow-hidden',
+      );
       expect(panel.className).not.toContain('bg-white');
 
       expect(screen.getByTestId('detail-modal-header')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('detail-modal-body')).toHaveClass(
+        'modal-viewport-body',
+        'min-h-0',
+        'flex-1',
+        'overflow-y-auto',
+      );
       expect(screen.getByTestId('detail-trust-strip')).toHaveClass('notebook-panel');
       expect(screen.getByTestId('detail-trust-source')).toHaveClass('notebook-status-card');
       expect(screen.getByTestId('detail-trust-classification')).toHaveClass('notebook-status-card');

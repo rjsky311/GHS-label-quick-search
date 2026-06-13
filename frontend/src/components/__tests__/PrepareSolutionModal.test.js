@@ -34,6 +34,18 @@ describe("PrepareSolutionModal", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveClass("modal-viewport-overlay");
+    expect(screen.getByTestId("prepare-solution-panel")).toHaveClass(
+      "modal-viewport-panel",
+      "max-h-[calc(100dvh-2rem)]",
+      "overflow-hidden",
+    );
+    expect(screen.getByTestId("prepare-solution-form")).toHaveClass(
+      "modal-viewport-body",
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+    );
     expect(screen.getByText("prepared.title")).toBeInTheDocument();
   });
 

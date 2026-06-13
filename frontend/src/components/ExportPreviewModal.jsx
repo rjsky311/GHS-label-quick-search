@@ -7,6 +7,12 @@ import {
   buildExportPreview,
   getExportScopeOptions,
 } from "@/utils/exportRows";
+import {
+  modalViewportBodyClassName,
+  modalViewportFooterClassName,
+  modalViewportOverlayClassName,
+  modalViewportPanelClassName,
+} from "@/components/ui/modalViewport";
 
 const FORMAT_OPTIONS = [
   { value: "xlsx", icon: FileSpreadsheet, labelKey: "exportPreview.xlsx" },
@@ -97,7 +103,7 @@ export default function ExportPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className={modalViewportOverlayClassName("z-50")}
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
@@ -107,7 +113,8 @@ export default function ExportPreviewModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none"
+        className={modalViewportPanelClassName("max-w-5xl bg-white")}
+        data-testid="export-preview-panel"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-slate-200 p-6">
@@ -134,7 +141,10 @@ export default function ExportPreviewModal({
           </button>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div
+          className={modalViewportBodyClassName("space-y-5 p-6")}
+          data-testid="export-preview-body"
+        >
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
               <div className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
@@ -340,7 +350,12 @@ export default function ExportPreviewModal({
           </div>
         </div>
 
-        <div className="flex flex-col justify-end gap-3 border-t border-slate-200 p-6 sm:flex-row">
+        <div
+          className={modalViewportFooterClassName(
+            "flex flex-col justify-end gap-3 p-6 sm:flex-row",
+          )}
+          data-testid="export-preview-footer"
+        >
           <button
             type="button"
             onClick={handleClose}
