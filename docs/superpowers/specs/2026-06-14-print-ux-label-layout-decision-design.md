@@ -65,6 +65,8 @@ Relevant references:
   Source: https://www.osha.gov/laws-regs/standardinterpretations/2013-09-20
 - OSHA HazCom 1910.1200 defines label elements as pictogram, hazard statement,
   signal word, and precautionary statement for each hazard class/category.
+  Shipped-container labels also require product identifier and responsible
+  party name, address, and phone number.
   Source: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200
 - EU Regulation 2024/2865 updates CLP label legibility with minimum x-height,
   pictogram dimensions, line spacing, and font requirements. The smallest
@@ -156,9 +158,12 @@ The preview area should answer:
 - Is this complete or supplemental?
 - Which language mode is active?
 - Is the preview fit-to-view or inspect-scale?
+- Which representative labels should be checked before printing, especially
+  first label, worst-fit label, longest-name label, and continuation label.
 
 The preview should keep advanced fit diagnostics behind a disclosure. The first
-layer should summarize decisions in human language.
+layer should summarize decisions in human language and show the actual label
+fragments needed to trust the output.
 
 ### 5.4 Advanced Details
 
@@ -167,8 +172,8 @@ Move these behind "Print check details" or equivalent:
 - Fit-engine diagnostics.
 - Overflow inspection details.
 - Physical stock layout counts.
-- Representative preview labels.
 - Debug-like internal categories.
+- Raw per-element measurement details.
 
 Advanced details may remain available, but the user should not need them for
 the happy path.
@@ -238,9 +243,13 @@ Layout decisions:
 - GHS pictograms should remain recognizable, not decorative.
 - If pictograms exceed the first label, continuation labels repeat identity and
   use the recovered QR area for remaining pictograms.
-- The default continuation cap should be small. If the set would require too
-  many small labels, the UI should recommend complete A4/Letter instead of
-  producing a long strip of tiny fragments.
+- Continuation caps are recovery thresholds, not truncation limits. The app
+  must never print a QR small label unless every available GHS pictogram appears
+  across the same-output continuation set.
+- If all pictograms cannot be rendered readably within the accepted cap, block
+  QR small-label printing and offer English-only mode, explicit acceptance of
+  the full same-output continuation count, or Complete A4/Letter as a separate
+  complete-primary output.
 
 Suggested initial cap:
 
@@ -277,6 +286,13 @@ Layout decisions:
 - The label should not accept a profile field or detailed hazard text.
 - If bilingual identity becomes unreadable, the UI should offer pure English
   mode or recommend a larger complete output.
+- Continuation caps are recovery thresholds, not truncation limits. The app
+  must never print an Identification small label unless every available GHS
+  pictogram appears across the same-output continuation set.
+- If all pictograms cannot be rendered readably within the accepted cap, block
+  Identification small-label printing and offer English-only mode, explicit
+  acceptance of the full same-output continuation count, or Complete A4/Letter
+  as a separate complete-primary output.
 
 Suggested initial cap:
 
@@ -302,9 +318,14 @@ Rules:
 
 - Missing trusted Chinese names remain a data curation issue. Do not fake a
   Chinese name by repeating English.
+- English-only is an explicit user-selected physical print mode that
+  intentionally suppresses trusted Chinese names on the printed label. Default
+  bilingual mode still prints trusted Traditional Chinese plus English.
 - Language mode must affect both preview and print output.
 - The selected language mode should be visible near the preview summary.
 - English-only mode should not weaken SDS/supplier/local regulation reminders.
+- Missing trusted Chinese names must remain visible as a data-quality issue in
+  the UI outside the physical English-only label.
 
 ## 8. Readability And Physical Scale Rules
 
@@ -406,7 +427,8 @@ Default happy path:
 5. If the output is complete A4/Letter and profile is missing, the primary
    action becomes "先補上負責單位".
 6. If the output is supplemental and ready, the primary action becomes "列印 QR
-   小標籤" or "列印識別小標籤".
+   小標籤" or "列印識別小標籤", paired with a visible reminder that supplemental
+   labels do not replace complete labels, SDS, supplier labels, or local rules.
 7. If readability or continuation exceeds the product cap, the modal offers a
    clear recovery: switch to English-only, switch to complete A4/Letter, or
    review continuation details.
@@ -420,7 +442,7 @@ Complete A4/Letter:
 
 - Missing responsible profile blocks print.
 - Recovery: focus the responsible profile section.
-- Copy: "完整主標需要負責單位資訊。補上名稱、電話與地址後，就可以安心列印。"
+- Copy: "完整主標需要負責單位名稱、電話與地址。補齊後才能列印此參考主標；使用前仍需依 SDS、供應商標籤與當地規範確認。"
 
 QR small label:
 
@@ -428,12 +450,14 @@ QR small label:
 - Too many small-label continuations prompts recovery instead of silently
   printing a long run.
 - Recovery: English-only mode, complete A4/Letter, or inspect continuation.
+- Copy near print action: "補充小標籤，不能取代完整主標、SDS、供應商標籤或當地規範要求。"
 
 Identification small label:
 
 - Missing CAS or identity blocks print.
 - Too many pictograms for readable small-label output prompts recovery.
 - Recovery: English-only mode or complete A4/Letter.
+- Copy near print action: "識別小標籤只協助辨識與查看圖示，不能取代完整主標、SDS、供應商標籤或當地規範要求。"
 
 All outputs:
 
@@ -487,6 +511,13 @@ Suggested review prompt:
 
 The next implementation plan should be split into small slices:
 
+0. Contract and QA lock:
+   - Centralize output definitions, forbidden content, language-mode rules,
+     readability token names, and continuation/block semantics.
+   - Add or confirm print-contract tests before changing modal UI.
+   - Preserve the existing three-output contract while making English-only an
+     explicit rendering mode.
+
 1. Copy and information hierarchy:
    - Rename first-layer labels and status copy.
    - Move advanced diagnostics behind disclosure.
@@ -515,9 +546,12 @@ The design is ready for implementation planning when:
 - The user agrees with the three-output role definitions.
 - The user agrees that responsible profile remains complete-label only.
 - The user agrees with bilingual default plus English-only mode.
-- The user agrees with small-label continuation caps and recovery behavior.
+- The user agrees that small-label continuation caps are recovery thresholds,
+  not pictogram truncation limits.
+- The user agrees with small-label continuation recovery behavior.
 - The user agrees with the warmer copy direction.
-- A critical review has not found unresolved safety or UX contradictions.
+- Critical review findings have been incorporated or explicitly deferred with a
+  documented reason.
 
 Implementation acceptance will require:
 
@@ -529,15 +563,20 @@ Implementation acceptance will require:
 
 ## 16. Open Decision For User Review
 
-The only unresolved product choice is the exact strictness of small-label
-continuation caps:
+The only unresolved product choice is how strict the small-label continuation
+recovery threshold should be:
 
-- Conservative: maximum 2 labels per chemical for both QR and identification
-  small labels.
-- Flexible: QR may allow 3 labels after explicit acceptance; identification
-  stays capped at 2.
+- Conservative: recovery appears after 2 labels per chemical for both QR and
+  identification small labels.
+- Flexible: QR may allow 3 labels after explicit acceptance before stronger
+  recovery; identification shows recovery after 2.
 
 Recommendation: use the flexible rule. QR labels have more physical height and
 serve as a scan-back supplement, so a third label can be acceptable if the user
 explicitly accepts it. Identification labels are too small and should stay
 stricter.
+
+In both options, the threshold never permits pictogram omission. If every
+available pictogram cannot be rendered readably across the accepted same-output
+continuation set, the small-label output must be blocked or require explicit
+acceptance of the full readable same-output continuation count.
