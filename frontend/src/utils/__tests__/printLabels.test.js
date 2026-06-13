@@ -2207,6 +2207,72 @@ describe("printLabels", () => {
       });
     });
 
+    it("keeps six QR small-label pictograms on the first 62 mm label", () => {
+      const sixPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [sixPictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-6]"/g)).toHaveLength(6);
+      expect(preview.fragmentHtml).toContain("qrcode-img");
+    });
+
+    it("keeps six Identification small-label pictograms on one label", () => {
+      const sixPictogramChemical = {
+        ...mockChemical,
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [sixPictogramChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-6]"/g)).toHaveLength(6);
+      expect(preview.fragmentHtml).not.toContain("qrcode-img");
+    });
+
     it("adds identity density classes so long small-label names shrink before CAS is lost", () => {
       const longNameChemical = {
         ...mockChemical,

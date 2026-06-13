@@ -7,6 +7,9 @@ import {
   resolveTrustedChineseName,
   shouldRenderBilingualLabelText,
 } from "@/utils/ghsText";
+import {
+  getCompactPictogramCapacity as getContractCompactPictogramCapacity,
+} from "@/utils/printOutputContract";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
 
@@ -24,20 +27,7 @@ export const getCompactPictogramCapacity = (
   layout = {},
   template,
   pageIndex = 0,
-) => {
-  const stock = layout.stockPreset || layout.stockId;
-  const isQr = template === "qrcode";
-  const continuationWithoutQr = isQr && pageIndex > 0;
-
-  if (stock === "small-strip") return continuationWithoutQr ? 6 : isQr ? 6 : 5;
-  if (stock === "brother-62mm-continuous") {
-    return continuationWithoutQr ? 6 : isQr ? 6 : 5;
-  }
-  if (stock === "small-rack") return continuationWithoutQr ? 6 : isQr ? 6 : 6;
-  if (stock === "medium-rack") return continuationWithoutQr ? 8 : isQr ? 6 : 8;
-
-  return continuationWithoutQr ? 6 : isQr ? 6 : 6;
-};
+) => getContractCompactPictogramCapacity(layout, template, pageIndex);
 
 export const splitCompactPictograms = (pictograms = [], layout = {}, template) => {
   const pages = [];
