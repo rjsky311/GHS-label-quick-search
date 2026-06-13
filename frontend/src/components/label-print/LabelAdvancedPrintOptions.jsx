@@ -202,7 +202,6 @@ function AdvancedLayoutControls({
               options={SIZE_OPTIONS}
               value={labelConfig.size}
               onSelect={(size) => updateLayoutConfig({ size })}
-              activeClasses="border-amber-500 bg-amber-50 text-amber-800"
               t={t}
             />
           </section>
@@ -215,7 +214,6 @@ function AdvancedLayoutControls({
               options={ORIENTATION_OPTIONS}
               value={labelConfig.orientation}
               onSelect={(orientation) => updateLayoutConfig({ orientation })}
-              activeClasses="border-blue-500 bg-blue-50 text-blue-800"
               t={t}
             />
           </section>

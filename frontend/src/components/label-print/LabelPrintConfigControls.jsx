@@ -9,7 +9,6 @@ export function ConfigButtonGrid({
   options,
   value,
   onSelect,
-  activeClasses,
   t,
 }) {
   return (
@@ -24,10 +23,10 @@ export function ConfigButtonGrid({
             type="button"
             onClick={() => onSelect(option.value)}
             data-testid={`label-config-option-${option.value}`}
-            className={`rounded-md border p-3 text-left transition-colors ${
+            className={`notebook-control rounded-md p-3 text-left transition-colors ${
               selected
-                ? activeClasses
-                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+                ? "notebook-control-primary"
+                : "notebook-control-secondary"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -46,12 +45,12 @@ export function ConfigButtonGrid({
               <span className="min-w-0 font-medium">{t(option.labelKey)}</span>
             </div>
             {option.descKey && (
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                 {t(option.descKey)}
               </div>
             )}
             {option.tipKey && (
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                 {t(option.tipKey)}
               </div>
             )}
@@ -79,34 +78,34 @@ export function StockChoiceButton({
       onClick={() => onSelect(preset)}
       aria-pressed={selected}
       data-testid={`primary-output-size-${preset.id}`}
-      className={`rounded-md border p-3 text-left transition-colors ${
+      className={`notebook-control rounded-md p-3 text-left transition-colors ${
         selected
-          ? "border-blue-600 bg-blue-50 text-blue-900"
-          : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50"
+          ? "notebook-control-primary"
+          : "notebook-control-secondary"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium">{display.name}</span>
         {selected && <Check className="h-4 w-4" />}
       </div>
-      <div className="mt-1 text-xs leading-5 text-slate-500">
+      <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
         {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
         {tx("label.previewPerPage", "{{count}}/page", {
           count: preset.perPage,
         })}
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-slate-500">
-        <span className="rounded-full bg-slate-100 px-2 py-0.5">
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-[hsl(var(--notebook-muted-ink))]">
+        <span className="notebook-chip rounded-full px-2 py-0.5">
           {preset.pageSize || "A4"}
         </span>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5">
+        <span className="notebook-chip rounded-full px-2 py-0.5">
           {t(
             ORIENTATION_OPTIONS.find(
               (item) => item.value === preset.orientation,
             )?.labelKey || "label.portrait",
           )}
         </span>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5">
+        <span className="notebook-chip rounded-full px-2 py-0.5">
           {isFullPage
             ? tx("label.completePrimaryStock", "complete")
             : labelPurpose === "shipping"

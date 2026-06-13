@@ -1696,7 +1696,7 @@ export default function LabelPrintModal({
               data-testid="label-settings-column"
             >
               <section
-                className="rounded-lg border border-slate-200 bg-white p-4"
+                className="space-y-3"
                 data-testid="primary-output-size-controls"
               >
                 <LabelOutputSelector
@@ -1825,14 +1825,14 @@ export default function LabelPrintModal({
               </section>
 
               <section
-                className="rounded-lg border border-slate-200 bg-white p-4"
+                className="notebook-panel rounded-md p-4"
                 data-testid="core-output-controls"
               >
-                <h3 className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                  <Languages className="h-4 w-4 text-blue-600" />
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+                  <Languages className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
                   {tx("label.outputBasicsTitle", "Language and print mode")}
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                   {tx(
                     "label.outputBasicsHint",
                     "These choices directly affect the printed label and preview.",
@@ -1840,10 +1840,10 @@ export default function LabelPrintModal({
                 </p>
                 <div className="mt-4 grid gap-6 xl:grid-cols-2">
                   <section className="space-y-3">
-                    <h4 className="text-sm font-medium text-slate-800">
+                    <h4 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                       {tx("label.identityDisplay", "Printed identity")}
                     </h4>
-                    <p className="text-xs leading-5 text-slate-500">
+                    <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                       {tx(
                         "label.identityDisplayHint",
                         "CAS always prints first. Choose whether the physical label shows both names or one language.",
@@ -1853,21 +1853,19 @@ export default function LabelPrintModal({
                       options={NAME_DISPLAY_OPTIONS}
                       value={effectiveLabelConfig.nameDisplay || "both"}
                       onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
-                      activeClasses="border-emerald-500 bg-emerald-50 text-emerald-800"
                       t={t}
                     />
                   </section>
 
                   <section className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      <Palette className="h-4 w-4 text-emerald-600" />
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+                      <Palette className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
                       {t("label.colorMode")}
                     </h4>
                     <ConfigButtonGrid
                       options={COLOR_OPTIONS}
                       value={labelConfig.colorMode}
                       onSelect={(colorMode) => updateVisualConfig({ colorMode })}
-                      activeClasses="border-emerald-500 bg-emerald-50 text-emerald-800"
                       t={t}
                     />
                   </section>

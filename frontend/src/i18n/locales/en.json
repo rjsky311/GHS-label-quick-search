@@ -1293,6 +1293,7 @@
   "label.simplifiedOutputTitle": "Choose label output",
   "label.simplifiedOutputHint": "Choose one output type. Small labels aim for one label and stop at two instead of dropping CAS, names, QR, or GHS pictograms.",
   "label.simplifiedOutputType": "Output type",
+  "label.selectedOutputNoteTitle": "Selected output",
   "label.targetComplete": "Complete A4/Letter label",
   "label.targetCompleteDesc": "Full information label with CAS, English, Chinese, every GHS pictogram, H/P statements, and QR.",
   "label.targetQrSmall": "QR small label",

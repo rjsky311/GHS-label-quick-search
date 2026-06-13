@@ -291,7 +291,7 @@ describe("LabelPrintModal", () => {
       "grid-cols-1",
     );
     expect(screen.getByTestId("output-goal-controls")).toHaveClass(
-      "sm:grid-cols-2",
+      "sm:grid-cols-3",
     );
     expect(screen.getByTestId("output-goal-controls")).not.toHaveClass(
       "2xl:grid-cols-4",
@@ -381,6 +381,74 @@ describe("LabelPrintModal", () => {
       within(previewActions).getByRole("button", {
         name: "Print a supplemental label instead",
       }),
+    );
+  });
+
+  it("uses notebook-native output controls with a compact selected-output summary", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("label-output-selector")).toHaveClass(
+      "notebook-panel",
+    );
+
+    const outputControls = screen.getByTestId("output-goal-controls");
+    expect(outputControls).toHaveClass("grid-cols-1", "sm:grid-cols-3");
+    expect(outputControls).not.toHaveClass("sm:grid-cols-2");
+
+    for (const value of ["complete", "qrSupplement", "quickId"]) {
+      const button = screen.getByTestId(`label-purpose-${value}`);
+      expect(button).toHaveClass("notebook-control");
+      expect(button.className).not.toContain("border-blue-500");
+      expect(button.className).not.toContain("bg-blue-50");
+      expect(button.className).not.toContain("text-blue-900");
+    }
+
+    expect(screen.getByTestId("label-purpose-complete")).toHaveClass(
+      "notebook-control-primary",
+    );
+    expect(screen.getByTestId("label-purpose-qrSupplement")).toHaveClass(
+      "notebook-control-secondary",
+    );
+    expect(screen.getByTestId("label-purpose-quickId")).toHaveClass(
+      "notebook-control-secondary",
+    );
+    expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
+      "Complete A4/Letter label",
+    );
+    expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
+      "A4 Primary",
+    );
+    expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
+      "Full information label",
+    );
+  });
+
+  it("uses notebook-native controls for print language and color settings", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("core-output-controls")).toHaveClass(
+      "notebook-panel",
+    );
+
+    for (const value of ["both", "en", "zh", "color", "bw"]) {
+      const button = screen.getByTestId(`label-config-option-${value}`);
+      expect(button).toHaveClass("notebook-control");
+      expect(button.className).not.toContain("border-emerald-500");
+      expect(button.className).not.toContain("bg-emerald-50");
+      expect(button.className).not.toContain("text-emerald-800");
+      expect(button.className).not.toContain("border-blue-500");
+      expect(button.className).not.toContain("bg-blue-50");
+      expect(button.className).not.toContain("text-blue-800");
+    }
+
+    expect(screen.getByTestId("label-config-option-both")).toHaveClass(
+      "notebook-control-primary",
+    );
+    expect(screen.getByTestId("label-config-option-en")).toHaveClass(
+      "notebook-control-secondary",
+    );
+    expect(screen.getByTestId("label-config-option-color")).toHaveClass(
+      "notebook-control-primary",
     );
   });
 

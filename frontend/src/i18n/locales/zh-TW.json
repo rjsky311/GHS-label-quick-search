@@ -1285,6 +1285,7 @@
   "label.simplifiedOutputTitle": "選擇標籤輸出",
   "label.simplifiedOutputHint": "選擇一種輸出。小標籤以一張為目標、兩張為上限；不會為了塞版面而省略 CAS、名稱、QR 或 GHS 圖示。",
   "label.simplifiedOutputType": "輸出類型",
+  "label.selectedOutputNoteTitle": "已選擇輸出",
   "label.targetComplete": "完整 A4/Letter 標籤",
   "label.targetCompleteDesc": "包含 CAS、英文、中文、全部 GHS 圖示、完整 H/P 文字與 QR 的完整標籤。",
   "label.targetQrSmall": "QR 小標籤",
