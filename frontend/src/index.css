@@ -296,6 +296,31 @@ code {
         color: hsl(var(--notebook-print-ink));
     }
 
+    .empty-workbench {
+        background-image:
+            linear-gradient(
+                hsl(var(--notebook-rule) / 0.2) 1px,
+                transparent 1px
+            );
+        background-size: 100% 2.15rem;
+    }
+
+    .notebook-ledger-row {
+        border: 1px solid hsl(var(--notebook-border) / 0.68);
+        background-color: hsl(var(--notebook-surface-raised) / 0.78);
+        color: hsl(var(--notebook-ink));
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.22) inset,
+            0 5px 12px hsl(220 18% 10% / 0.045);
+    }
+
+    .notebook-step-marker {
+        border: 1px solid hsl(var(--notebook-action-border) / 0.36);
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+        font-variant-numeric: tabular-nums;
+    }
+
     .notebook-control {
         min-height: 2.75rem;
         border-radius: 0.5rem;

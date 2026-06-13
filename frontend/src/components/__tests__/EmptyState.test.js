@@ -42,6 +42,34 @@ describe('EmptyState', () => {
     expect(example.className).not.toContain('bg-white');
   });
 
+  it('renders the notebook workbench layout regions', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    expect(screen.getByTestId('empty-workbench')).toHaveClass(
+      'notebook-surface',
+      'empty-workbench',
+    );
+    expect(screen.getByTestId('empty-workbench-grid')).toHaveClass(
+      'grid',
+      'lg:grid-cols-12',
+    );
+    expect(screen.getByTestId('empty-workbench-primary')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-workbench-support')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-workbench-tools')).toBeInTheDocument();
+  });
+
+  it('renders a provided trust panel inside the workbench trust slot', () => {
+    render(
+      <EmptyState
+        onQuickSearch={onQuickSearch}
+        trustPanel={<div data-testid="empty-trust-child">trust panel</div>}
+      />,
+    );
+
+    const trustSlot = screen.getByTestId('empty-workbench-trust-slot');
+    expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
+  });
+
   it('renders 4 feature cards', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
     expect(screen.getByText('empty.workflowSearch')).toBeInTheDocument();
@@ -61,15 +89,18 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.featureFavoriteDesc')).toBeInTheDocument();
   });
 
-  it('uses notebook cards for workflow and feature modules', () => {
+  it('uses notebook ledger rows and status cards for workbench modules', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
-    expect(screen.getByTestId('empty-workflow-card-search')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-workflow-card-review')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-workflow-card-use')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-panel');
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass('notebook-panel');
+    expect(screen.getByTestId('empty-workbench-workflow')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-workflow-card-search')).toHaveClass('notebook-ledger-row');
+    expect(screen.getByTestId('empty-workflow-card-review')).toHaveClass('notebook-ledger-row');
+    expect(screen.getByTestId('empty-workflow-card-use')).toHaveClass('notebook-ledger-row');
+    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass('notebook-status-card');
+    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass('notebook-status-card');
+    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-status-card');
+    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
+      'notebook-status-card',
+    );
   });
 });
