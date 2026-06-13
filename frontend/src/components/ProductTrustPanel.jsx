@@ -6,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import {
   SUPPORT_REPORT_DATA_URL,
   buildDataCorrectionContext,
@@ -54,16 +55,19 @@ export default function ProductTrustPanel({
 
   const cards = [
     {
+      id: "source",
       icon: ShieldCheck,
       titleKey: "productTrust.sourceTitle",
       bodyKey: "productTrust.sourceBody",
     },
     {
+      id: "label",
       icon: FileCheck2,
       titleKey: "productTrust.noAdsTitle",
       bodyKey: "productTrust.noAdsBody",
     },
     {
+      id: "feedback",
       icon: MessageSquarePlus,
       titleKey: "productTrust.feedbackTitle",
       bodyKey: "productTrust.feedbackBody",
@@ -72,54 +76,66 @@ export default function ProductTrustPanel({
 
   return (
     <section
-      className={`mx-auto border-slate-200 bg-white/80 ${
+      className={`notebook-panel mx-auto text-left ${
         isCompact
-          ? "mt-4 border-t py-4"
-          : "mt-8 max-w-5xl rounded-md border px-5 py-5 text-left shadow-sm"
+          ? "mt-4 rounded-md border-t px-4 py-4"
+          : "mt-8 max-w-5xl rounded-md px-5 py-5"
       }`}
       aria-label={t("productTrust.ariaLabel")}
       data-testid={`product-trust-panel-${variant}`}
     >
       <div className={isCompact ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]" : "space-y-4"}>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[hsl(var(--notebook-action))]">
             {t("productTrust.kicker")}
           </p>
-          <h2 className={`${isCompact ? "mt-1 text-base" : "mt-2 text-lg"} font-semibold text-slate-950`}>
+          <h2 className={`${isCompact ? "mt-1 text-base" : "mt-2 text-lg"} font-semibold text-[hsl(var(--notebook-ink))]`}>
             {t(isCompact ? "productTrust.resultsTitle" : "productTrust.title")}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-[hsl(var(--notebook-muted-ink))]">
             {t(isCompact ? "productTrust.resultsBody" : "productTrust.body")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <a
-              href={SUPPORT_REPORT_DATA_URL}
-              onClick={
-                onOpenDataCorrection
-                  ? (event) => {
-                      event.preventDefault();
-                      onOpenDataCorrection(dataCorrectionContext);
-                    }
-                  : undefined
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid={`product-trust-report-link-${variant}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
+            <Button
+              asChild
+              variant="notebookPrimary"
+              size="notebook"
+              className="px-3"
             >
-              {t("productTrust.reportDataCta")}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-            <a
-              href={workflowRequestUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid={`product-trust-workflow-link-${variant}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              <a
+                href={SUPPORT_REPORT_DATA_URL}
+                onClick={
+                  onOpenDataCorrection
+                    ? (event) => {
+                        event.preventDefault();
+                        onOpenDataCorrection(dataCorrectionContext);
+                      }
+                    : undefined
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`product-trust-report-link-${variant}`}
+              >
+                {t("productTrust.reportDataCta")}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="notebookSecondary"
+              size="notebook"
+              className="px-3"
             >
-              {t("productTrust.requestWorkflowCta")}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+              <a
+                href={workflowRequestUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`product-trust-workflow-link-${variant}`}
+              >
+                {t("productTrust.requestWorkflowCta")}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Button>
           </div>
         </div>
 
@@ -127,12 +143,13 @@ export default function ProductTrustPanel({
           className={`grid gap-3 ${isCompact ? "sm:grid-cols-3" : "md:grid-cols-3"}`}
           data-testid={`product-trust-proof-list-${variant}`}
         >
-          {cards.map(({ icon: Icon, titleKey, bodyKey }) => (
+          {cards.map(({ id, icon: Icon, titleKey, bodyKey }) => (
             <div
               key={titleKey}
-              className="flex min-w-0 items-start gap-2 text-sm text-slate-600"
+              className="notebook-status-card flex min-w-0 items-start gap-2 rounded-md p-3 text-sm"
+              data-testid={`product-trust-proof-card-${variant}-${id}`}
             >
-              <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">
                 {isCompact ? (
                   <CheckCircle2 className="h-4 w-4" />
                 ) : (
@@ -140,8 +157,8 @@ export default function ProductTrustPanel({
                 )}
               </span>
               <div className="min-w-0">
-                <h3 className="font-medium text-slate-950">{t(titleKey)}</h3>
-                <p className="mt-1 text-xs leading-5 text-slate-600">{t(bodyKey)}</p>
+                <h3 className="font-medium text-[hsl(var(--notebook-ink))]">{t(titleKey)}</h3>
+                <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">{t(bodyKey)}</p>
               </div>
             </div>
           ))}

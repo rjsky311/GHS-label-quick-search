@@ -5,18 +5,25 @@ describe('ProductTrustPanel', () => {
   it('renders the empty-state trust and feedback surface', () => {
     render(<ProductTrustPanel variant="empty" />);
 
-    expect(screen.getByTestId('product-trust-panel-empty')).toBeInTheDocument();
+    const panel = screen.getByTestId('product-trust-panel-empty');
+    expect(panel).toBeInTheDocument();
+    expect(panel).toHaveClass('notebook-panel');
+    expect(panel).not.toHaveClass('bg-white/80');
     expect(screen.getByTestId('product-trust-proof-list-empty')).toBeInTheDocument();
     expect(screen.getByText('productTrust.title')).toBeInTheDocument();
     expect(screen.getByText('productTrust.sourceTitle')).toBeInTheDocument();
     expect(screen.getByText('productTrust.noAdsTitle')).toBeInTheDocument();
     expect(screen.getByText('productTrust.feedbackTitle')).toBeInTheDocument();
-    expect(screen.getByTestId('product-trust-report-link-empty')).toHaveAttribute(
+    const reportLink = screen.getByTestId('product-trust-report-link-empty');
+    const workflowLink = screen.getByTestId('product-trust-workflow-link-empty');
+    expect(reportLink).toHaveClass('notebook-control', 'notebook-control-primary');
+    expect(workflowLink).toHaveClass('notebook-control', 'notebook-control-secondary');
+    expect(reportLink).toHaveAttribute(
       'href',
       'https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction'
     );
     const emptyWorkflowUrl = new URL(
-      screen.getByTestId('product-trust-workflow-link-empty').getAttribute('href')
+      workflowLink.getAttribute('href')
     );
     expect(emptyWorkflowUrl.searchParams.get('template')).toBe('workflow-request.yml');
     expect(emptyWorkflowUrl.searchParams.get('labels')).toBe('workflow-request');
@@ -32,14 +39,17 @@ describe('ProductTrustPanel', () => {
   it('renders the compact post-result surface with separated safe external support links', () => {
     render(<ProductTrustPanel variant="results" />);
 
-    expect(screen.getByTestId('product-trust-panel-results')).toBeInTheDocument();
-    expect(screen.getByTestId('product-trust-panel-results')).toHaveClass('border-t');
-    expect(screen.getByTestId('product-trust-panel-results')).not.toHaveClass('rounded-lg');
+    const panel = screen.getByTestId('product-trust-panel-results');
+    expect(panel).toBeInTheDocument();
+    expect(panel).toHaveClass('notebook-panel', 'border-t');
+    expect(panel).not.toHaveClass('bg-white/80', 'rounded-lg');
     expect(screen.getByTestId('product-trust-proof-list-results')).toBeInTheDocument();
     expect(screen.getByText('productTrust.resultsTitle')).toBeInTheDocument();
 
     const reportLink = screen.getByTestId('product-trust-report-link-results');
     const workflowLink = screen.getByTestId('product-trust-workflow-link-results');
+    expect(reportLink).toHaveClass('notebook-control', 'notebook-control-primary');
+    expect(workflowLink).toHaveClass('notebook-control', 'notebook-control-secondary');
     expect(reportLink).toHaveTextContent('productTrust.reportDataCta');
     expect(reportLink).toHaveAttribute(
       'href',

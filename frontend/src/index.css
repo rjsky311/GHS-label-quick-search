@@ -175,9 +175,14 @@ code {
     }
 
     .notebook-note {
-        border-block: 1px solid hsl(var(--notebook-action-border) / 0.26);
-        background-color: hsl(var(--notebook-action-soft) / 0.74);
-        color: hsl(var(--notebook-action));
+        border: 1px solid hsl(var(--notebook-action-border) / 0.26);
+        border-left-width: 4px;
+        border-left-color: hsl(var(--notebook-action-border) / 0.68);
+        background-color: hsl(var(--notebook-surface-raised) / 0.88);
+        color: hsl(var(--notebook-ink));
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.2) inset,
+            0 4px 12px hsl(220 18% 10% / 0.045);
     }
 
     .notebook-status-card {

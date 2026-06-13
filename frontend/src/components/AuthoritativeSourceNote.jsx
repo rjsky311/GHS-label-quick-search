@@ -25,14 +25,20 @@ export default function AuthoritativeSourceNote({
       : mode === "blocked"
         ? "trust.blockedNote"
         : "trust.authoritativeNote";
+  const toneClass =
+    mode === "blocked"
+      ? "border border-red-200 bg-red-50 text-red-900"
+      : mode === "supplemental"
+        ? "border border-amber-200 bg-amber-50 text-amber-900"
+        : "notebook-note";
+  const checklistItemClass =
+    mode === "general"
+      ? "notebook-chip inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium"
+      : "inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 font-medium ring-1 ring-current/10";
   const wrapperClass = [
     variant === "detail" ? "mt-2" : isPrint ? "mt-3" : "mt-4",
-    "flex items-start gap-3 rounded-md border p-3 text-xs",
-    mode === "blocked"
-      ? "border-red-200 bg-red-50 text-red-900"
-      : mode === "supplemental"
-        ? "border-amber-200 bg-amber-50 text-amber-900"
-        : "border-slate-200 bg-slate-50 text-slate-600",
+    "flex items-start gap-3 rounded-md p-3 text-xs",
+    toneClass,
   ].join(" ");
   const checklistItems = [
     "trust.verifySds",
@@ -60,7 +66,7 @@ export default function AuthoritativeSourceNote({
           {checklistItems.map((key) => (
             <span
               key={key}
-              className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 font-medium ring-1 ring-current/10"
+              className={checklistItemClass}
             >
               <CheckCircle2 className="h-3 w-3" />
               {t(key)}

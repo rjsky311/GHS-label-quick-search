@@ -23,6 +23,15 @@ describe("AuthoritativeSourceNote", () => {
     ).toHaveAttribute("role", "note");
   });
 
+  it("uses notebook note and chip styling for the general results note", () => {
+    render(<AuthoritativeSourceNote />);
+
+    const note = screen.getByTestId("authoritative-source-note-results");
+    expect(note).toHaveClass("notebook-note");
+    expect(note).not.toHaveClass("bg-slate-50");
+    expect(screen.getByText("trust.verifySds")).toHaveClass("notebook-chip");
+  });
+
   it("renders the i18n note key (mock returns as-is)", () => {
     render(<AuthoritativeSourceNote />);
     expect(screen.getByText("trust.authoritativeTitle")).toBeInTheDocument();
