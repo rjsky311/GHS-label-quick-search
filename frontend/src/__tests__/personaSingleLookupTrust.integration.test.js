@@ -146,6 +146,14 @@ describe("persona gate: general single lookup trust", () => {
   it("surfaces source confidence, missing Chinese-name curation, and authority boundaries", async () => {
     render(<App />);
 
+    expect(await screen.findByTestId("empty-workbench-trust-slot")).toContainElement(
+      screen.getByTestId("product-trust-panel-empty")
+    );
+    expect(screen.getByTestId("product-trust-panel-empty")).toHaveAttribute(
+      "data-layout",
+      "embedded"
+    );
+
     await runSingleSearch(singleLookupTrustResult);
 
     expect(

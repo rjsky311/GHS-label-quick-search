@@ -1066,13 +1066,16 @@ function App() {
         )}
 
         {results.length === 0 && !loading && (
-          <>
-            <EmptyState onQuickSearch={handleQuickSearch} />
-            <ProductTrustPanel
-              variant="empty"
-              onOpenDataCorrection={handleOpenDataCorrection}
-            />
-          </>
+          <EmptyState
+            onQuickSearch={handleQuickSearch}
+            trustPanel={
+              <ProductTrustPanel
+                variant="empty"
+                embedded
+                onOpenDataCorrection={handleOpenDataCorrection}
+              />
+            }
+          />
         )}
       </main>
 
