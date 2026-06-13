@@ -8,9 +8,16 @@ settings.
 ## Goal
 
 Make the current Experiment Notebook visual direction feel like a coherent
-working product instead of a set of token-level surface changes. The v1 slice
-should connect the first screen, print-preview reading experience, shared
-controls, and responsive QA into one testable workbench pass.
+working product instead of a set of token-level surface changes. Workbench v1
+is the umbrella product decision for the first screen, print-preview reading
+experience, touched shared controls, and responsive QA. Implementation must be
+split into two serial slices so the work stays reviewable:
+
+1. **Slice A: First-Screen Workbench Composition**.
+2. **Slice B: Print-Preview Readability**.
+
+Shared controls are updated only where a slice touches them; this spec does not
+authorize a whole-app redesign pass.
 
 The user-facing outcome is:
 
@@ -187,9 +194,22 @@ Requirements:
 - Make Inspect easier to discover for A4 labels without hiding Fit.
 - QR and identification small labels should explain that small text is a
   physical stock/readability constraint, not a theme issue.
+- Any small-label explanatory copy belongs in the modal UI only. It must never
+  be inserted into printable label HTML.
 - Preview label surfaces stay white in Comfort Dim and future Dark Bench.
 - Footer and primary print action must remain visible without covering safety
   warnings or critical blocked-state explanations.
+
+Preview metadata acceptance:
+
+| Item | Required content | Location | Proposed test id | Pass/fail check |
+| --- | --- | --- | --- | --- |
+| CAS | Normalized CAS shown as a monospace identifier | Outside the iframe, near the preview title or preview context strip | `print-preview-readout-cas` | Visible text includes the selected chemical CAS; not only present inside iframe HTML |
+| English name | Selected chemical English name | Outside the iframe | `print-preview-readout-name-en` | Visible text includes the selected English name |
+| Chinese name | Trusted Chinese name, or an explicit missing-trusted-name state | Outside the iframe | `print-preview-readout-name-zh` | Visible trusted Chinese name, or a readable state that does not fake Chinese with English |
+| Output type | Complete A4/Letter, QR small label, or Identification small label | Outside the iframe | `print-preview-readout-output` | Matches the selected public output |
+| Physical stock | Label dimensions and paper/page count | Outside the iframe | `print-preview-readout-stock` | Includes physical size such as `188 x 268 mm`, `62 x 40 mm`, or `70 x 24 mm` |
+| Preview mode and scale | Fit or Inspect plus scale percentage | Outside the iframe | `print-preview-readout-scale` | Updates when Fit/Inspect changes and is keyboard reachable |
 
 ### Shared Controls
 
@@ -212,11 +232,15 @@ Comfort Dim is the implementation target for this slice.
 
 Dark Bench requirements are limited to preserving token compatibility:
 
+- Do not add a public theme switcher.
+- Do not attempt a whole-app Dark Bench implementation in Workbench v1.
 - Do not hard-code new pure-white UI panels outside actual label preview
   surfaces.
 - Do not darken printable label previews.
-- Add tests or CSS assertions only where this slice touches theme-sensitive
-  tokens.
+- Add only narrow tests or CSS assertions where this slice touches
+  theme-sensitive tokens. The minimum assertion is that applying existing
+  Dark Bench tokens does not darken preview surfaces that represent printable
+  labels.
 
 ## Responsive Requirements
 
@@ -257,7 +281,7 @@ Mobile:
 ### Measurable Acceptance
 
 - At a 1440 px viewport, empty-state workbench sections align to the same left
-  and right grid boundaries.
+  and right grid boundaries within a 4 px tolerance.
 - At a 390 px viewport, no card/control text overflows its container.
 - Label print modal content is reachable at 900 px, 720 px, and 640 px viewport
   heights.
@@ -271,8 +295,10 @@ Mobile:
 Before considering implementation complete, run:
 
 ```bash
+git diff --check
 cd frontend && npm test -- --runInBand
 cd frontend && npm run test:i18n
+cd frontend && npm run test:docs
 cd frontend && npm run build
 cd frontend && npm run test:print-contract
 cd frontend && npm run qa:print-pdf
@@ -282,21 +308,41 @@ For production-facing completion after deploy, run:
 
 ```bash
 cd frontend && npm run qa:zeabur-deployment
-cd frontend && npm run qa:production-health
+cd frontend && PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD) npm run qa:production-health
 cd frontend && npm run qa:production-search-ui
 cd frontend && npm run qa:production-batch-print
 ```
 
-Add or update focused QA where implementation changes require it:
+Focused visual QA is mandatory for the touched surfaces.
 
-- Empty-state desktop screenshot at 1440 x 900.
-- Empty-state mobile screenshot at 390 x 844.
-- Label print modal screenshots for:
-  - Complete A4/Letter Fit.
-  - Complete A4/Letter Inspect.
-  - QR small label.
-  - Identification small label.
-- Modal viewport-height check for 900, 720, and 640 px.
+Required artifacts:
+
+- `build/experiment-notebook-workbench/empty-desktop-1440.png`
+  - Viewport: 1440 x 900.
+  - Target: first screen empty state.
+  - Check: shared workbench left/right boundaries align within 4 px.
+- `build/experiment-notebook-workbench/empty-mobile-390.png`
+  - Viewport: 390 x 844.
+  - Target: first screen empty state.
+  - Check: no horizontal scroll and no visible text overflow in controls.
+- `build/experiment-notebook-workbench/print-a4-fit.png`
+  - Target: Complete A4/Letter preview in Fit mode.
+  - Check: whole label visible and preview metadata readout visible outside
+    the iframe.
+- `build/experiment-notebook-workbench/print-a4-inspect.png`
+  - Target: Complete A4/Letter preview in Inspect mode.
+  - Check: CAS/name metadata remains visible outside the iframe.
+- `build/experiment-notebook-workbench/print-qr-small.png`
+  - Target: QR small label.
+  - Check: small-label explanatory copy is outside printable label HTML.
+- `build/experiment-notebook-workbench/print-id-small.png`
+  - Target: Identification small label.
+  - Check: small-label explanatory copy is outside printable label HTML.
+- `build/experiment-notebook-workbench/modal-heights.json`
+  - Viewport heights: 900 px, 720 px, and 640 px.
+  - Target: label print modal.
+  - Check: header, footer, selected output controls, preview metadata, and last
+    visible warning or status block are reachable without browser zoom changes.
 
 ## Documentation Updates
 
@@ -314,13 +360,16 @@ Implementation should update:
 
 The implementation plan should break this into small, testable slices:
 
-1. Workbench layout contract tests.
-2. Empty-state workbench composition.
-3. Product trust panel alignment.
-4. Print preview metadata/readability contract tests.
-5. Label print preview panel UX improvements.
-6. Modal viewport-height QA.
-7. Visual QA screenshots and production verification.
+1. **Slice A: First-Screen Workbench Composition**
+   - Workbench layout contract tests.
+   - Empty-state workbench composition.
+   - Product trust panel alignment.
+   - Desktop/mobile visual QA for the first screen.
+2. **Slice B: Print-Preview Readability**
+   - Print preview metadata/readability contract tests.
+   - Label print preview panel UX improvements.
+   - Modal viewport-height QA.
+   - A4/QR/identification visual QA and production verification.
 
 Each slice should preserve existing behavior and commit independently.
 
@@ -332,5 +381,7 @@ The current conservative defaults are:
 - Comfort Dim first.
 - Dark Bench token compatibility only.
 - No actual label renderer changes.
-- Homepage/workbench and print-preview UX in the same v1 slice.
+- Homepage/workbench and print-preview UX belong to the same Workbench v1
+  product decision, but implementation is serial: Slice A first, Slice B after
+  Slice A passes review.
 - Production deployment only after tests and local visual QA pass.
