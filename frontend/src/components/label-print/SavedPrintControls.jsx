@@ -143,7 +143,8 @@ export default function SavedPrintControls({
                 <button
                   type="button"
                   onClick={saveTemplate}
-                  className="rounded bg-blue-700 p-1.5 text-white transition-colors hover:bg-blue-800"
+                  aria-label={t("label.saveCurrentBtn")}
+                  className="notebook-control notebook-control-primary flex h-8 min-h-8 w-8 items-center justify-center p-1.5 transition-colors"
                 >
                   <Check className="h-3.5 w-3.5" />
                 </button>
@@ -153,7 +154,8 @@ export default function SavedPrintControls({
                     setTemplateName("");
                     setShowSaveInput(false);
                   }}
-                  className="rounded bg-slate-100 p-1.5 text-slate-600 transition-colors hover:bg-slate-200"
+                  aria-label={t("label.cancel")}
+                  className="notebook-control notebook-control-secondary flex h-8 min-h-8 w-8 items-center justify-center p-1.5 transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

@@ -226,7 +226,7 @@ export default function LabelPreviewPanel({
                       <button
                         type="button"
                         onClick={handleUseFullPagePrimary}
-                        className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800"
+                        className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-colors"
                         data-testid="use-full-page-primary-banner"
                       >
                         <FileText className="h-4 w-4" />

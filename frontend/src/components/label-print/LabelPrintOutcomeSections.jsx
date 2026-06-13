@@ -77,7 +77,7 @@ export function RecommendedOutputSummary({
             <button
               type="button"
               onClick={onUseFullPagePrimary}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+              className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               data-testid="recommended-use-full-page-primary"
             >
               <FileText className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function RecommendedOutputSummary({
             <button
               type="button"
               onClick={onFocusResponsibleProfile}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+              className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               data-testid="recommended-fill-profile"
             >
               <Building2 className="h-4 w-4" />
@@ -142,7 +142,7 @@ export function PrintOutcomeSummary({
               <button
                 type="button"
                 onClick={onFocusResponsibleProfile}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-800"
+                className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               >
                 <Building2 className="h-4 w-4" />
                 {tx("label.profileCompleteAction", "Fill profile now")}
@@ -150,7 +150,7 @@ export function PrintOutcomeSummary({
               <button
                 type="button"
                 onClick={onUseSupplementalLabel}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-white/80 px-3 py-2 text-xs font-semibold ring-1 ring-current/15 transition-colors hover:bg-white"
+                className="notebook-control notebook-control-secondary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               >
                 <Tag className="h-4 w-4" />
                 {tx(

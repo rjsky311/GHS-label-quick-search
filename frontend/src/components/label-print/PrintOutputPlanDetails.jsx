@@ -62,7 +62,7 @@ export default function PrintOutputPlanDetails({
           <button
             type="button"
             onClick={handleUseFullPagePrimary}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-blue-700 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-800"
+            className="notebook-control notebook-control-primary inline-flex shrink-0 items-center justify-center gap-2 px-3 py-2 text-xs font-medium transition-colors"
             data-testid="use-full-page-primary-plan"
           >
             <FileText className="h-4 w-4" />

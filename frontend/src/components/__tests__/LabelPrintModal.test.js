@@ -1,6 +1,10 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import LabelPrintModal from "../LabelPrintModal";
+import LabelPrintFooter from "../label-print/LabelPrintFooter";
+import LabelPreviewPanel from "../label-print/LabelPreviewPanel";
+import { RecommendedOutputSummary } from "../label-print/LabelPrintOutcomeSections";
+import PrintOutputPlanDetails from "../label-print/PrintOutputPlanDetails";
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -47,6 +51,104 @@ const baseConfig = {
 
 const baseFields = { labName: "", date: "", batchNumber: "" };
 const baseProfile = { organization: "", phone: "", address: "" };
+
+function expectNotebookPrimaryControl(button) {
+  expect(button).toHaveClass("notebook-control", "notebook-control-primary");
+  expect(button.className).not.toContain("bg-blue-700");
+  expect(button.className).not.toContain("hover:bg-blue-800");
+  expect(button.className).not.toContain("text-white");
+}
+
+function expectNotebookSecondaryControl(button) {
+  expect(button).toHaveClass("notebook-control", "notebook-control-secondary");
+  expect(button.className).not.toContain("bg-blue-700");
+  expect(button.className).not.toContain("hover:bg-blue-800");
+  expect(button.className).not.toContain("text-white");
+}
+
+function tx(_key, defaultValue, options = {}) {
+  if (!defaultValue) return _key;
+  return Object.entries(options).reduce(
+    (text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)),
+    defaultValue,
+  );
+}
+
+function makePreviewPanelModel(overrides = {}) {
+  return {
+    actions: {
+      handleFocusResponsibleProfile: jest.fn(),
+      handleUseFullPagePrimary: jest.fn(),
+      onUseSupplementalLabel: jest.fn(),
+      setPreviewZoomMode: jest.fn(),
+      updatePreviewPageIndex: jest.fn(),
+    },
+    context: {
+      currentStockName: "Avery 5163",
+      layoutProfile: {
+        columns: 2,
+        heightMm: 50.8,
+        perPage: 10,
+        rows: 5,
+        stockPreset: "avery-5163",
+        stockPresetName: "Avery 5163",
+        widthMm: 101.6,
+      },
+      outputRoleSummary: "Complete primary",
+      pictogramSummary: "All pictograms kept",
+      previewContextOutputSummary: "Complete primary",
+      statementSummary: "Full H/P text",
+    },
+    diagnostics: {
+      outputChecklistBadge: "Needs review",
+      outputChecklistHint: "Review before printing.",
+      outputChecklistItems: [],
+      outputChecklistTitle: "Output checks",
+      plannedPrintPageCount: 1,
+      readyPreviewMessage: "Ready",
+      visiblePreviewRisks: ["Use a full-page primary label."],
+    },
+    focus: {
+      activeBatchPreviewItem: null,
+      previewChem: makeChem(),
+      stockPresetDisplay: { name: "Avery 5163" },
+    },
+    labels: {
+      t: (key) => key,
+      tx,
+    },
+    outcome: {
+      outputOutcomeBody: "Use a full-page primary label.",
+      outputOutcomeTitle: "Use full-page primary",
+      outputOutcomeTone: "caution",
+      shouldShowPreviewOutcomeSummary: false,
+    },
+    preview: {
+      activePreviewPageIndex: 0,
+      hasMultiplePreviewPages: false,
+      labelFragmentPreviewHeight: 240,
+      labelPreviewBundle: { html: "<html><body>Label preview</body></html>" },
+      previewFitLabel: "Fit",
+      previewNavigationCount: 1,
+      previewPageLabel: "Sheet",
+      previewPagePositionLabel: "Page 1 / 1",
+      previewPhysicalSizeLabel: "101.6 x 50.8 mm",
+      previewScaleLabel: "100%",
+      previewZoomMode: "fit",
+      sheetPreviewBundle: null,
+      sheetPreviewHeight: 320,
+    },
+    status: {
+      canUseFullPagePrimary: true,
+      hasPreviewWarnings: true,
+      isPrintFitBlocked: true,
+      isProfileBlocked: false,
+      primaryPreviewRisk: "Use a full-page primary label.",
+      useFullPagePrimaryLabel: "Use full-page primary",
+    },
+    ...overrides,
+  };
+}
 
 function renderModal(overrides = {}) {
   const props = {
@@ -226,6 +328,114 @@ describe("LabelPrintModal", () => {
       "lg:overflow-y-auto",
     );
     expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
+  });
+
+  it("uses notebook-style controls for print dialog CTAs", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expectNotebookPrimaryControl(screen.getByTestId("print-label-action"));
+    expectNotebookSecondaryControl(
+      screen.getByText("label.cancel").closest("button"),
+    );
+    expectNotebookPrimaryControl(screen.getByTestId("recommended-fill-profile"));
+
+    const previewActions = screen.getByTestId("profile-blocked-actions");
+    expectNotebookPrimaryControl(
+      within(previewActions).getByRole("button", {
+        name: "Fill profile now",
+      }),
+    );
+    expectNotebookSecondaryControl(
+      within(previewActions).getByRole("button", {
+        name: "Print a supplemental label instead",
+      }),
+    );
+  });
+
+  it("uses notebook-style controls for full-page recovery CTAs", () => {
+    let rendered = render(
+      <RecommendedOutputSummary
+        outputOutcomeTone="caution"
+        outputOutcomeTitle="Use full-page primary"
+        outputOutcomeBody="Switch to a larger output."
+        currentStockName="Avery 5163"
+        outputRoleSummary="Complete primary"
+        statementSummary="Full H/P text"
+        canUseFullPagePrimary
+        isProfileBlocked={false}
+        useFullPagePrimaryLabel="Use full-page primary"
+        onUseFullPagePrimary={jest.fn()}
+        onFocusResponsibleProfile={jest.fn()}
+        tx={tx}
+      />,
+    );
+    expectNotebookPrimaryControl(
+      screen.getByTestId("recommended-use-full-page-primary"),
+    );
+    rendered.unmount();
+
+    rendered = render(
+      <PrintOutputPlanDetails
+        activeBatchPreviewItem={null}
+        batchIncludeReducedPurpose={false}
+        batchItemsNeedingReview={[]}
+        batchPreviewItemIndex={0}
+        batchPreviewRepresentative="ready"
+        batchPrintPlan={null}
+        batchPrintPurposeLabel="Complete"
+        batchReducedPurposeItems={[]}
+        batchRepresentativeOptions={[]}
+        batchSelectedPrintItems={[]}
+        batchUnselectedReviewCount={0}
+        canUseFullPagePrimary
+        currentStockName="Avery 5163"
+        decisionSummaryItems={[]}
+        handleExportBatchReviewList={jest.fn()}
+        handleUseFullPagePrimary={jest.fn()}
+        outputPlanBody="Switch to a full-page primary label."
+        outputPlanTitle="Use full-page primary"
+        outputPlanTone="caution"
+        outputRoleSummary="Complete primary"
+        plannedPrintLabelCount={1}
+        plannedPrintPageCount={1}
+        recoveryRoute={null}
+        setBatchIncludeReducedPurpose={jest.fn()}
+        setBatchPreviewItemIndex={jest.fn()}
+        setBatchPreviewRepresentative={jest.fn()}
+        shouldOpenOutputPlanDetails
+        tx={tx}
+        useFullPagePrimaryLabel="Use full-page primary"
+      />,
+    );
+    expectNotebookPrimaryControl(
+      screen.getByTestId("use-full-page-primary-plan"),
+    );
+    rendered.unmount();
+
+    rendered = render(
+      <LabelPreviewPanel model={makePreviewPanelModel()} />,
+    );
+    expectNotebookPrimaryControl(
+      screen.getByTestId("use-full-page-primary-banner"),
+    );
+    rendered.unmount();
+
+    render(
+      <LabelPrintFooter
+        canUseFullPagePrimary
+        isPrintFitBlocked={false}
+        onClose={jest.fn()}
+        onPrint={jest.fn()}
+        onUseFullPagePrimary={jest.fn()}
+        printActionLabel="Print"
+        selectedCount={1}
+        useFullPagePrimaryLabel="Use full-page primary"
+        cancelLabel="Cancel"
+      />,
+    );
+    expectNotebookPrimaryControl(
+      screen.getByTestId("use-full-page-primary-footer"),
+    );
   });
 
   it("summarizes selected labels and keeps quantity controls secondary", () => {
@@ -1331,6 +1541,14 @@ describe("LabelPrintModal", () => {
 
     fireEvent.click(screen.getByText("label.saveCurrentBtn"));
     const input = screen.getByPlaceholderText("label.templateNamePlaceholder");
+    const inlineTemplateButtons = input.parentElement.querySelectorAll("button");
+    expectNotebookPrimaryControl(inlineTemplateButtons[0]);
+    expect(inlineTemplateButtons[0]).toHaveAttribute(
+      "aria-label",
+      "label.saveCurrentBtn",
+    );
+    expectNotebookSecondaryControl(inlineTemplateButtons[1]);
+    expect(inlineTemplateButtons[1]).toHaveAttribute("aria-label", "label.cancel");
     fireEvent.change(input, { target: { value: "My Preset" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
