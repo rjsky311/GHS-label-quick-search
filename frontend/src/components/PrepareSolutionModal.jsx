@@ -14,6 +14,16 @@ import {
   modalViewportPanelClassName,
 } from "@/components/ui/modalViewport";
 
+const NOTEBOOK_FIELD_CLASS = "notebook-field w-full rounded-md px-3 py-2 text-sm";
+const NOTEBOOK_LABEL_CLASS =
+  "mb-1 block text-sm font-medium text-[hsl(var(--notebook-ink))]";
+const NOTEBOOK_MUTED_TEXT_CLASS = "text-[hsl(var(--notebook-muted-ink))]";
+const NOTEBOOK_ACTION_TEXT_CLASS = "text-[hsl(var(--notebook-action))]";
+const NOTEBOOK_SECTION_CLASS = "notebook-panel space-y-2 rounded-md p-3";
+const NOTEBOOK_STATUS_CARD_CLASS = "notebook-status-card rounded-md p-3";
+const NOTEBOOK_INTERACTIVE_CARD_CLASS =
+  "notebook-status-card w-full rounded-md px-3 py-2 text-left transition-colors hover:border-[hsl(var(--notebook-action-border)/0.56)] hover:bg-[hsl(var(--notebook-action-soft)/0.58)]";
+
 function getRecentExpiryStatus(expiryDate) {
   const expiryStatus = getPreparedExpiryStatus(expiryDate);
   if (expiryStatus === "expired") {
@@ -254,29 +264,29 @@ export default function PrepareSolutionModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={modalViewportPanelClassName("max-w-md bg-white")}
+        className={modalViewportPanelClassName("notebook-panel max-w-md")}
         data-testid="prepare-solution-panel"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-200 p-6">
+        <div className="flex items-start justify-between border-b border-[hsl(var(--notebook-rule)/0.72)] p-6">
           <div className="flex items-start gap-3">
-            <FlaskConical className="mt-0.5 h-6 w-6 shrink-0 text-blue-700" />
+            <FlaskConical className="mt-0.5 h-6 w-6 shrink-0 text-[hsl(var(--notebook-action))]" />
             <div>
               <h2
                 id="prepare-solution-modal-title"
-                className="text-xl font-semibold text-slate-950"
+                className="text-xl font-semibold text-[hsl(var(--notebook-ink))]"
               >
                 {t("prepared.title")}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[hsl(var(--notebook-muted-ink))]">
                 {t("prepared.subtitle")}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="notebook-control notebook-control-utility flex h-9 min-h-9 w-9 items-center justify-center p-1 transition-colors"
             data-testid="prepare-solution-close-btn"
             aria-label={t("prepared.cancel")}
           >
@@ -295,20 +305,20 @@ export default function PrepareSolutionModal({
               label will inherit from — no ambiguity once the modal
               closes and they're in the print flow. */}
           <div
-            className="rounded-md border border-slate-200 bg-slate-50 p-3"
+            className={NOTEBOOK_STATUS_CARD_CLASS}
             data-testid="prepare-solution-parent-summary"
           >
-            <div className="mb-1 text-xs text-slate-500">
+            <div className="mb-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
               {t("prepared.parent")}
             </div>
-            <div className="font-mono text-sm text-blue-700">
+            <div className="font-mono text-sm text-[hsl(var(--notebook-action))]">
               {parent.cas_number}
             </div>
-            <div className="font-medium text-slate-950">
+            <div className="font-medium text-[hsl(var(--notebook-ink))]">
               {parent.name_en || ""}
             </div>
             {resolveTrustedChineseName(parent) && (
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-[hsl(var(--notebook-muted-ink))]">
                 {resolveTrustedChineseName(parent)}
               </div>
             )}
@@ -323,15 +333,15 @@ export default function PrepareSolutionModal({
               label. See handlePrefillFromPreset. */}
           {parentPresets.length > 0 && (
             <div
-              className="space-y-2 rounded-md border border-blue-200 bg-blue-50 p-3"
+              className={NOTEBOOK_SECTION_CLASS}
               data-testid="prepare-solution-preset-section"
             >
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs text-blue-800">
-                  <Bookmark className="h-3.5 w-3.5 text-blue-700" />
+                <div className={`flex items-center gap-2 text-xs ${NOTEBOOK_ACTION_TEXT_CLASS}`}>
+                  <Bookmark className="h-3.5 w-3.5" />
                   <span>{t("prepared.presetHeading")}</span>
                 </div>
-                <p className="text-xs text-blue-700">
+                <p className={`text-xs ${NOTEBOOK_MUTED_TEXT_CLASS}`}>
                   {t("prepared.presetHint")}
                 </p>
               </div>
@@ -351,17 +361,17 @@ export default function PrepareSolutionModal({
                       <button
                         type="button"
                         onClick={() => handlePrefillFromPreset(p)}
-                        className="w-full rounded-md border border-blue-200 bg-white px-3 py-2 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
+                        className={NOTEBOOK_INTERACTIVE_CARD_CLASS}
                         data-testid={`prepare-solution-preset-item-${idx}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--notebook-action))]">
                               <span data-testid={`prepare-solution-preset-badge-${idx}`}>
                                 {t("prepared.presetBadge")}
                               </span>
                             </div>
-                            <div className="mt-1 text-sm text-slate-950">
+                            <div className="mt-1 text-sm text-[hsl(var(--notebook-ink))]">
                               {p.name ||
                                 display ||
                                 t("prepared.labelMeta", {
@@ -372,7 +382,7 @@ export default function PrepareSolutionModal({
                           </div>
                         </div>
                         {p.name && display && p.name !== display && (
-                          <div className="mt-0.5 text-xs text-slate-500">
+                          <div className="mt-0.5 text-xs text-[hsl(var(--notebook-muted-ink))]">
                             {display}
                           </div>
                         )}
@@ -391,15 +401,15 @@ export default function PrepareSolutionModal({
               sourced from here — see handlePrefillFromRecent. */}
           {parentRecents.length > 0 && (
             <div
-              className="space-y-2 rounded-md border border-blue-200 bg-blue-50 p-3"
+              className={NOTEBOOK_SECTION_CLASS}
               data-testid="prepare-solution-recent-section"
             >
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs text-blue-800">
-                  <Clock className="h-3.5 w-3.5 text-blue-700" />
+                <div className={`flex items-center gap-2 text-xs ${NOTEBOOK_ACTION_TEXT_CLASS}`}>
+                  <Clock className="h-3.5 w-3.5" />
                   <span>{t("prepared.recentHeading")}</span>
                 </div>
-                <p className="text-xs text-blue-700">
+                <p className={`text-xs ${NOTEBOOK_MUTED_TEXT_CLASS}`}>
                   {t("prepared.recentHint")}
                 </p>
               </div>
@@ -417,20 +427,19 @@ export default function PrepareSolutionModal({
                       <button
                         type="button"
                         onClick={() => handlePrefillFromRecent(r)}
-                        className={`w-full rounded border px-3 py-2 text-left transition-colors ${
-                          expiryStatus?.cardClass ||
-                          "border-blue-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+                        className={`${NOTEBOOK_INTERACTIVE_CARD_CLASS} ${
+                          expiryStatus?.cardClass || ""
                         }`}
                         data-testid={`prepare-solution-recent-item-${idx}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--notebook-action))]">
                               <span data-testid={`prepare-solution-recent-badge-${idx}`}>
                                 {t("prepared.recentBadge")}
                               </span>
                             </div>
-                            <div className="mt-1 text-sm text-slate-950">
+                            <div className="mt-1 text-sm text-[hsl(var(--notebook-ink))]">
                               {display ||
                                 t("prepared.labelMeta", {
                                   concentration: r.concentration || "",
@@ -448,7 +457,7 @@ export default function PrepareSolutionModal({
                           )}
                         </div>
                         {(r.preparedBy || r.preparedDate || r.expiryDate) && (
-                          <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-slate-500">
+                          <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-[hsl(var(--notebook-muted-ink))]">
                             {r.preparedBy && (
                               <span>
                                 {t("prepared.preparedByShort")}: {r.preparedBy}
@@ -477,7 +486,7 @@ export default function PrepareSolutionModal({
           <div>
             <label
               htmlFor="prepared-concentration"
-              className="mb-1 block text-sm font-medium text-slate-700"
+              className={NOTEBOOK_LABEL_CLASS}
             >
               {t("prepared.concentration")}
               <span className="ml-1 text-red-600" aria-hidden>
@@ -491,7 +500,7 @@ export default function PrepareSolutionModal({
               value={concentration}
               onChange={(e) => setConcentration(e.target.value)}
               placeholder={t("prepared.concentrationPlaceholder")}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className={NOTEBOOK_FIELD_CLASS}
               data-testid="prepared-concentration-input"
               required
               maxLength={60}
@@ -501,7 +510,7 @@ export default function PrepareSolutionModal({
           <div>
             <label
               htmlFor="prepared-solvent"
-              className="mb-1 block text-sm font-medium text-slate-700"
+              className={NOTEBOOK_LABEL_CLASS}
             >
               {t("prepared.solvent")}
               <span className="ml-1 text-red-600" aria-hidden>
@@ -514,7 +523,7 @@ export default function PrepareSolutionModal({
               value={solvent}
               onChange={(e) => setSolvent(e.target.value)}
               placeholder={t("prepared.solventPlaceholder")}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className={NOTEBOOK_FIELD_CLASS}
               data-testid="prepared-solvent-input"
               required
               maxLength={60}
@@ -527,14 +536,14 @@ export default function PrepareSolutionModal({
               user is never nudged to believe these are derived from GHS
               data. All three are optional; they never block submit. */}
           <div
-            className="space-y-4 border-t border-slate-200 pt-4"
+            className="notebook-panel space-y-4 rounded-md p-3"
             data-testid="prepare-solution-operational-section"
           >
             <div>
-              <h3 className="text-sm font-semibold text-slate-800">
+              <h3 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                 {t("prepared.operationalHeading")}
               </h3>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {t("prepared.operationalSubheading")}
               </p>
             </div>
@@ -542,7 +551,7 @@ export default function PrepareSolutionModal({
             <div>
               <label
                 htmlFor="prepared-prepared-by"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className={NOTEBOOK_LABEL_CLASS}
               >
                 {t("prepared.preparedBy")}
               </label>
@@ -552,17 +561,17 @@ export default function PrepareSolutionModal({
                 value={preparedBy}
                 onChange={(e) => setPreparedBy(e.target.value)}
                 placeholder={t("prepared.preparedByPlaceholder")}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className={NOTEBOOK_FIELD_CLASS}
                 data-testid="prepared-prepared-by-input"
                 maxLength={60}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor="prepared-prepared-date"
-                  className="mb-1 block text-sm font-medium text-slate-700"
+                  className={NOTEBOOK_LABEL_CLASS}
                 >
                   {t("prepared.preparedDate")}
                 </label>
@@ -571,7 +580,7 @@ export default function PrepareSolutionModal({
                   type="date"
                   value={preparedDate}
                   onChange={(e) => setPreparedDate(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_FIELD_CLASS}
                   data-testid="prepared-prepared-date-input"
                 />
               </div>
@@ -579,7 +588,7 @@ export default function PrepareSolutionModal({
               <div>
                 <label
                   htmlFor="prepared-expiry-date"
-                  className="mb-1 block text-sm font-medium text-slate-700"
+                  className={NOTEBOOK_LABEL_CLASS}
                 >
                   {t("prepared.expiryDate")}
                 </label>
@@ -588,7 +597,7 @@ export default function PrepareSolutionModal({
                   type="date"
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_FIELD_CLASS}
                   data-testid="prepared-expiry-date-input"
                 />
               </div>
@@ -597,12 +606,12 @@ export default function PrepareSolutionModal({
 
           {typeof onSavePreset === "function" && (
             <div
-              className="border-t border-slate-200 pt-4"
+              className="notebook-panel rounded-md p-3"
               data-testid="prepare-solution-preset-name-section"
             >
               <label
                 htmlFor="prepared-preset-name"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className={NOTEBOOK_LABEL_CLASS}
               >
                 {t("prepared.presetName")}
               </label>
@@ -612,11 +621,11 @@ export default function PrepareSolutionModal({
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value.slice(0, 60))}
                 placeholder={t("prepared.presetNamePlaceholder")}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className={NOTEBOOK_FIELD_CLASS}
                 data-testid="prepared-preset-name-input"
                 maxLength={60}
               />
-              <p className="mt-1.5 text-xs text-slate-500">
+              <p className="mt-1.5 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {t("prepared.presetNameHint")}
               </p>
             </div>
@@ -628,17 +637,17 @@ export default function PrepareSolutionModal({
               boundary BEFORE the user commits — people skim labels but
               read form instructions. */}
           <div
-            className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900"
+            className="notebook-note rounded-md p-3 text-xs"
             data-testid="prepare-solution-form-note"
           >
             {t("prepared.formNote")}
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50"
+              className="notebook-control notebook-control-secondary w-full justify-center px-4 py-2 text-sm font-medium transition-colors sm:w-auto"
               data-testid="prepare-solution-cancel-btn"
             >
               {t("prepared.cancel")}
@@ -652,7 +661,7 @@ export default function PrepareSolutionModal({
                 type="button"
                 onClick={handleSavePresetClick}
                 disabled={!canSubmit}
-                className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="notebook-control notebook-control-secondary inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 data-testid="prepare-solution-save-preset-btn"
               >
                 <Save className="w-4 h-4" /> {t("prepared.saveAsPreset")}
@@ -661,7 +670,7 @@ export default function PrepareSolutionModal({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="rounded-md bg-blue-700 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="notebook-control notebook-control-primary w-full justify-center px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               data-testid="prepare-solution-submit-btn"
             >
               {t("prepared.continueToPrint")}

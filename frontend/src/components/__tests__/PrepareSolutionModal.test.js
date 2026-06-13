@@ -8,6 +8,33 @@ import { todayDateString } from "@/utils/preparedSolution";
 // local-clock today, not a hard-coded string that would rot daily.
 const TODAY = todayDateString();
 
+function expectNotebookPrimaryControl(element) {
+  expect(element).toHaveClass("notebook-control", "notebook-control-primary");
+  expect(element.className).not.toContain("bg-blue-700");
+  expect(element.className).not.toContain("hover:bg-blue-800");
+  expect(element.className).not.toContain("text-white");
+}
+
+function expectNotebookSecondaryControl(element) {
+  expect(element).toHaveClass("notebook-control", "notebook-control-secondary");
+  expect(element.className).not.toContain("bg-blue-700");
+  expect(element.className).not.toContain("hover:bg-blue-800");
+  expect(element.className).not.toContain("text-white");
+}
+
+function expectNotebookField(element) {
+  expect(element).toHaveClass("notebook-field");
+  expect(element.className).not.toContain("focus:border-blue-500");
+  expect(element.className).not.toContain("focus:ring-blue-500");
+}
+
+function expectNotebookSurface(element) {
+  expect(element.className).not.toContain("border-blue-200");
+  expect(element.className).not.toContain("bg-blue-50");
+  expect(element.className).not.toContain("border-slate-200");
+  expect(element.className).not.toContain("bg-slate-50");
+}
+
 const baseParent = {
   cas_number: "64-17-5",
   cid: 702,
@@ -75,6 +102,42 @@ describe("PrepareSolutionModal", () => {
     const summary = screen.getByTestId("prepare-solution-parent-summary");
     expect(summary.textContent).toContain("Allyl Alcohol");
     expect(summary.textContent.match(/Allyl Alcohol/g)).toHaveLength(1);
+  });
+
+  it("uses notebook fields and action controls for prepared-solution data entry", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={jest.fn()}
+      />
+    );
+
+    expectNotebookField(screen.getByTestId("prepared-concentration-input"));
+    expectNotebookField(screen.getByTestId("prepared-solvent-input"));
+    expectNotebookField(screen.getByTestId("prepared-prepared-by-input"));
+    expectNotebookField(screen.getByTestId("prepared-prepared-date-input"));
+    expectNotebookField(screen.getByTestId("prepared-expiry-date-input"));
+    expectNotebookField(screen.getByTestId("prepared-preset-name-input"));
+
+    expect(screen.getByTestId("prepare-solution-form-note")).toHaveClass(
+      "notebook-note",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-form-note"));
+    expect(screen.getByTestId("prepare-solution-operational-section")).toHaveClass(
+      "notebook-panel",
+    );
+
+    expectNotebookSecondaryControl(
+      screen.getByTestId("prepare-solution-cancel-btn"),
+    );
+    expectNotebookSecondaryControl(
+      screen.getByTestId("prepare-solution-save-preset-btn"),
+    );
+    expectNotebookPrimaryControl(
+      screen.getByTestId("prepare-solution-submit-btn"),
+    );
   });
 
   it("submit button is disabled until both concentration AND solvent have content", () => {
@@ -842,6 +905,42 @@ describe("PrepareSolutionModal", () => {
       screen.getByTestId("prepare-solution-preset-item-0")
     ).toBeInTheDocument();
     expect(screen.getByTestId("prepare-solution-preset-badge-0")).toBeInTheDocument();
+  });
+
+  it("uses notebook panels for parent identity, presets, and recents", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        recents={[baseRecent]}
+        presets={[basePreset]}
+        onSavePreset={jest.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("prepare-solution-parent-summary")).toHaveClass(
+      "notebook-status-card",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-parent-summary"));
+
+    expect(screen.getByTestId("prepare-solution-preset-section")).toHaveClass(
+      "notebook-panel",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-preset-section"));
+    expect(screen.getByTestId("prepare-solution-preset-item-0")).toHaveClass(
+      "notebook-status-card",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-preset-item-0"));
+
+    expect(screen.getByTestId("prepare-solution-recent-section")).toHaveClass(
+      "notebook-panel",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-recent-section"));
+    expect(screen.getByTestId("prepare-solution-recent-item-0")).toHaveClass(
+      "notebook-status-card",
+    );
+    expectNotebookSurface(screen.getByTestId("prepare-solution-recent-item-0"));
   });
 
   it("clicking a preset prefills concentration + solvent ONLY", () => {
