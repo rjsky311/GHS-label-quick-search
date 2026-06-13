@@ -25,6 +25,7 @@ import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
+import { Button } from "@/components/ui/button";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {
   getLocalizedNames,
@@ -246,13 +247,15 @@ export default function DetailModal({
   ];
 
   const getReferenceLinkClassName = (linkType) => {
+    const baseClassName =
+      "notebook-inline-action inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium";
     if (linkType === "sds") {
-      return "flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-800 transition-colors hover:bg-emerald-100";
+      return `${baseClassName} text-emerald-800 hover:text-emerald-800`;
     }
     if (linkType === "regulatory") {
-      return "flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-blue-800 transition-colors hover:bg-blue-100";
+      return `${baseClassName} text-[hsl(var(--notebook-action))]`;
     }
-    return "flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50";
+    return baseClassName;
   };
   const getReferenceTypeLabel = (linkType) => {
     if (linkType === "sds") return t("detail.referenceTypeSds");
@@ -294,24 +297,28 @@ export default function DetailModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-lg bg-white shadow-2xl outline-none ${
+        className={`notebook-surface max-h-[90vh] w-full overflow-y-auto rounded-lg shadow-2xl outline-none ${
           allClassifications.length > 1 ? "max-w-3xl" : "max-w-2xl"
         }`}
+        data-testid="detail-modal-panel"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-200 p-6">
+        <div
+          className="notebook-panel flex items-start justify-between gap-4 rounded-t-lg border-x-0 border-t-0 p-6"
+          data-testid="detail-modal-header"
+        >
           <div>
-            <h2 id="detail-modal-title" className="text-xl font-semibold text-slate-950">
+            <h2 id="detail-modal-title" className="text-xl font-semibold text-[hsl(var(--notebook-ink))]">
               {displayNames.primary}
             </h2>
             {displayNames.secondary && (
-              <p className="text-slate-500">{displayNames.secondary}</p>
+              <p className="text-[hsl(var(--notebook-muted-ink))]">{displayNames.secondary}</p>
             )}
-            <p className="mt-1 flex items-center gap-2 font-mono text-blue-700">
+            <p className="mt-1 flex items-center gap-2 font-mono text-[hsl(var(--notebook-action))]">
               CAS: {result.cas_number}
               <button
                 onClick={() => copyCAS(result.cas_number)}
-                className="text-slate-400 transition-colors hover:text-blue-700"
+                className="text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-[hsl(var(--notebook-action))]"
                 title={t("detail.copyCAS", { cas: result.cas_number })}
               >
                 <Copy className="w-4 h-4" />
@@ -332,7 +339,7 @@ export default function DetailModal({
             </button>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-700"
+              className="text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
               data-testid="close-modal-btn"
             >
               <X className="w-6 h-6" />
@@ -341,27 +348,30 @@ export default function DetailModal({
         </div>
 
         <div
-          className="border-b border-slate-200 bg-slate-50/80 px-6 py-4"
+          className="notebook-panel rounded-none border-x-0 border-t-0 px-6 py-4"
           data-testid="detail-trust-strip"
         >
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+            data-testid="detail-trust-grid"
+          >
             {trustSummaryItems.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.key}
-                  className="flex min-w-0 items-start gap-3 rounded-md border border-slate-200 bg-white px-3 py-3"
+                  className="notebook-status-card flex min-w-0 items-start gap-3 rounded-md px-3 py-3"
                   data-testid={`detail-trust-${item.key}`}
                   title={item.title || item.value}
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-700">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">
                     <Icon className="h-4 w-4" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-xs font-medium uppercase text-slate-500">
+                    <span className="block text-xs font-medium uppercase text-[hsl(var(--notebook-muted-ink))]">
                       {item.label}
                     </span>
-                    <span className="block truncate text-sm font-semibold text-slate-900">
+                    <span className="block truncate text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                       {item.value}
                     </span>
                   </span>
@@ -403,18 +413,18 @@ export default function DetailModal({
 
           {/* Custom Classification Note Input */}
           {(result.has_multiple_classifications || result.other_classifications?.length > 0) && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-800">
+            <div className="notebook-panel rounded-md p-4" data-testid="detail-custom-settings">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-[hsl(var(--notebook-action))]">
                 <LayoutGrid className="w-4 h-4" /> {t("detail.customSettings")}
               </h3>
-              <p className="mb-3 text-xs text-slate-600">
+              <p className="mb-3 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.customSettingsHint")}
               </p>
               <div
-                className="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900"
+                className="notebook-note mb-3 flex items-start gap-2 rounded-md px-3 py-2 text-xs leading-5"
                 data-testid="detail-source-conflict-note"
               >
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--notebook-action))]" />
                 <span>
                   <span className="block font-semibold">
                     {t("detail.sourceConflictTitle")}
@@ -442,12 +452,12 @@ export default function DetailModal({
                     const currentIndex = customGHSSettings[result.cas_number]?.selectedIndex || 0;
                     onSetCustomClassification(result.cas_number, currentIndex, e.target.value);
                   }}
-                  className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="notebook-field flex-1 rounded-md px-3 py-2 text-sm"
                 />
                 {hasCustomClassification(result.cas_number) && (
                   <button
                     onClick={() => onClearCustomClassification(result.cas_number)}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700"
+                    className="notebook-control notebook-control-secondary rounded-md px-3 py-2 text-sm transition-colors"
                     title={t("detail.restoreDefault")}
                   >
                     {t("detail.restoreDefault")}
@@ -460,7 +470,7 @@ export default function DetailModal({
           {/* Signal Word — only for single classification */}
           {allClassifications.length <= 1 && effective?.signal_word && (
             <div>
-              <h3 className="mb-2 text-sm font-medium text-slate-600">
+              <h3 className="mb-2 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.signalWord")}
               </h3>
               <span
@@ -508,9 +518,9 @@ export default function DetailModal({
           {shouldShowClassificationComparison ? (
             /* Multiple classifications — comparison table */
             <div>
-              <h3 className="mb-3 text-sm font-medium text-slate-600">
+              <h3 className="mb-3 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.ghsClassification")}
-                <span className="ml-2 text-blue-700">{t("detail.classificationCount", { count: allClassifications.length })}</span>
+                <span className="ml-2 text-[hsl(var(--notebook-action))]">{t("detail.classificationCount", { count: allClassifications.length })}</span>
               </h3>
               <ClassificationComparisonTable
                 mode="same-chemical"
@@ -528,14 +538,14 @@ export default function DetailModal({
                   )
                 }
               />
-              <p className="mt-3 flex items-center gap-1 text-xs text-slate-500">
+              <p className="mt-3 flex items-center gap-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 <Lightbulb className="h-3 w-3 shrink-0 text-amber-600" /> {t("detail.classificationHint")}
               </p>
             </div>
           ) : allClassifications.length === 1 && allClassifications[0].pictograms?.length > 0 ? (
             /* Single classification — simple pictogram display */
             <div>
-              <h3 className="mb-3 text-sm font-medium text-slate-600">
+              <h3 className="mb-3 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.ghsClassification")}
               </h3>
               <GHSPictogramStrip
@@ -550,22 +560,23 @@ export default function DetailModal({
           {/* Hazard Statements */}
           {effective?.hazard_statements?.length > 0 && (
             <div>
-              <h3 className="mb-3 text-sm font-medium text-slate-600">
+              <h3 className="mb-3 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.hazardStatements")}
                 {effective.isCustom && (
-                  <span className="ml-2 text-blue-700">{t("detail.customHazardNote")}</span>
+                  <span className="ml-2 text-[hsl(var(--notebook-action))]">{t("detail.customHazardNote")}</span>
                 )}
               </h3>
               <div className="space-y-2">
                 {effective.hazard_statements.map((stmt, idx) => (
                   <div
                     key={idx}
-                    className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
+                    className="notebook-status-card flex gap-3 rounded-md p-3"
+                    data-testid={`detail-hazard-statement-${stmt.code}`}
                   >
                     <span className="shrink-0 font-mono font-medium text-red-700">
                       {stmt.code}
                     </span>
-                    <span className="text-slate-800">
+                    <span className="text-[hsl(var(--notebook-ink))]">
                       {getLocalizedStatementText(stmt, displayLocale)}
                     </span>
                   </div>
@@ -577,19 +588,20 @@ export default function DetailModal({
           {/* Precautionary Statements */}
           {effective?.precautionary_statements?.length > 0 && (
             <div>
-              <h3 className="mb-3 text-sm font-medium text-slate-600">
+              <h3 className="mb-3 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 {t("detail.precautionaryStatements")}
               </h3>
               <div className="space-y-2">
                 {effective.precautionary_statements.map((stmt, idx) => (
                   <div
                     key={idx}
-                    className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"
+                    className="notebook-status-card flex gap-3 rounded-md p-3"
+                    data-testid={`detail-precautionary-statement-${stmt.code}`}
                   >
-                    <span className="shrink-0 font-mono font-medium text-blue-700">
+                    <span className="shrink-0 font-mono font-medium text-[hsl(var(--notebook-action))]">
                       {stmt.code}
                     </span>
-                    <span className="text-slate-800">
+                    <span className="text-[hsl(var(--notebook-ink))]">
                       {getLocalizedStatementText(stmt, displayLocale)}
                     </span>
                   </div>
@@ -601,11 +613,11 @@ export default function DetailModal({
           {/* Reference Links */}
           {referenceLinks.length > 0 && (
             <div>
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" /> {t("sds.section")}
               </h3>
               <p
-                className="mb-3 text-xs leading-5 text-slate-500"
+                className="mb-3 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]"
                 data-testid="detail-reference-verification-hint"
               >
                 {t("detail.referenceVerificationHint")}
@@ -626,11 +638,11 @@ export default function DetailModal({
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>{link.label}</span>
-                    <span className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-current/10">
+                    <span className="notebook-chip rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase">
                       {getReferenceTypeLabel(link.linkType)}
                     </span>
                     <span
-                      className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-current/10"
+                      className="notebook-chip rounded px-1.5 py-0.5 text-[10px] font-semibold"
                       data-testid={`detail-reference-source-${link.linkType}`}
                     >
                       {getReferenceSourceLabel(link.source)}
@@ -674,19 +686,19 @@ export default function DetailModal({
           {/* Data Provenance (v1.8 M1) */}
           {(effectiveSource || result.retrieved_at) && (
             <div>
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
-                <Info className="h-4 w-4 text-slate-500" /> {t("detail.provenance")}
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
+                <Info className="h-4 w-4 text-[hsl(var(--notebook-muted-ink))]" /> {t("detail.provenance")}
               </h3>
-              <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+              <div className="notebook-status-card space-y-2 rounded-md p-3 text-sm">
                 {effectiveSource && (
                   <div className="flex items-start gap-2">
-                    <Database className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <Database className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-muted-ink))]" />
                     <div className="flex-1">
-                      <span className="mr-2 text-slate-500">{t("detail.provenanceSource")}:</span>
-                      <span className="text-slate-800">{effectiveSource}</span>
+                      <span className="mr-2 text-[hsl(var(--notebook-muted-ink))]">{t("detail.provenanceSource")}:</span>
+                      <span className="text-[hsl(var(--notebook-ink))]">{effectiveSource}</span>
                       {effectiveReportCount && (
                         <span
-                          className="ml-2 inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700"
+                          className="notebook-chip ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs"
                           title={t("detail.provenanceReportCountTooltip", {
                             count: effectiveReportCount,
                           })}
@@ -702,11 +714,11 @@ export default function DetailModal({
                 )}
                 {result.retrieved_at && (
                   <div className="flex items-start gap-2">
-                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-muted-ink))]" />
                     <div className="flex-1">
-                      <span className="mr-2 text-slate-500">{t("detail.provenanceRetrieved")}:</span>
+                      <span className="mr-2 text-[hsl(var(--notebook-muted-ink))]">{t("detail.provenanceRetrieved")}:</span>
                       <span
-                        className="text-slate-800"
+                        className="text-[hsl(var(--notebook-ink))]"
                         title={result.retrieved_at}
                         data-testid="provenance-retrieved-at"
                       >
@@ -738,38 +750,52 @@ export default function DetailModal({
           {result.found && <AuthoritativeSourceNote variant="detail" />}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
-            <button
+          <div
+            className="notebook-note flex flex-wrap gap-3 rounded-md p-3"
+            data-testid="detail-action-bar"
+          >
+            <Button
               onClick={() => onPrintLabel(result)}
               disabled={!canPrintHazardLabel}
               title={!canPrintHazardLabel ? t("label.noPrintableHazardData") : undefined}
-              className="flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+              variant="notebookPrimary"
+              size="notebook"
+              className="px-4 disabled:cursor-not-allowed"
               data-testid="detail-print-label-btn"
             >
               <Tag className="w-4 h-4" /> {t("detail.printLabel")}
-            </button>
+            </Button>
             {/* v1.9 M3 Tier 1: Prepare-solution entry.
                 Only shown for found chemicals — prepared items rely on
                 parent's GHS arrays being populated to copy over, and
                 for a not-found result there's nothing to copy. */}
             {result.found && onPrepareSolution && (
-              <button
+              <Button
                 onClick={() => onPrepareSolution(result)}
-                className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 font-medium text-blue-800 hover:bg-blue-100"
+                variant="notebookSecondary"
+                size="notebook"
+                className="px-4"
                 data-testid="prepare-solution-btn"
               >
                 <FlaskConical className="w-4 h-4" /> {t("detail.prepareSolution")}
-              </button>
+              </Button>
             )}
             {result.cid && (
-              <a
-                href={`https://pubchem.ncbi.nlm.nih.gov/compound/${result.cid}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
+              <Button
+                asChild
+                variant="notebookSecondary"
+                size="notebook"
+                className="px-4"
               >
-                <ExternalLink className="w-4 h-4" /> {t("detail.viewPubChem")}
-              </a>
+                <a
+                  href={`https://pubchem.ncbi.nlm.nih.gov/compound/${result.cid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="detail-pubchem-link"
+                >
+                  <ExternalLink className="w-4 h-4" /> {t("detail.viewPubChem")}
+                </a>
+              </Button>
             )}
           </div>
         </div>

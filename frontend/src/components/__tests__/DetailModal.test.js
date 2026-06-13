@@ -130,6 +130,29 @@ describe('DetailModal', () => {
       expect(dialog).toHaveAttribute('aria-modal', 'true');
     });
 
+    it('uses notebook surfaces for the modal shell and trust cards', () => {
+      render(<DetailModal {...defaultProps} />);
+
+      const panel = screen.getByTestId('detail-modal-panel');
+      expect(panel).toHaveClass('notebook-surface');
+      expect(panel.className).not.toContain('bg-white');
+
+      expect(screen.getByTestId('detail-modal-header')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('detail-trust-strip')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('detail-trust-source')).toHaveClass('notebook-status-card');
+      expect(screen.getByTestId('detail-trust-classification')).toHaveClass('notebook-status-card');
+    });
+
+    it('keeps the trust summary readable with a mobile-first grid', () => {
+      render(<DetailModal {...defaultProps} />);
+
+      expect(screen.getByTestId('detail-trust-grid')).toHaveClass(
+        'grid-cols-1',
+        'sm:grid-cols-2',
+        'lg:grid-cols-4',
+      );
+    });
+
     it('renders English name as title', () => {
       render(<DetailModal {...defaultProps} />);
       expect(screen.getByText('Ethanol')).toBeInTheDocument();
@@ -232,6 +255,17 @@ describe('DetailModal', () => {
       expect(screen.getByText('高度易燃液體和蒸氣')).toBeInTheDocument();
     });
 
+    it('uses notebook cards for hazard and precautionary statement rows', () => {
+      render(<DetailModal {...defaultProps} />);
+
+      expect(screen.getByTestId('detail-hazard-statement-H225')).toHaveClass(
+        'notebook-status-card'
+      );
+      expect(screen.getByTestId('detail-precautionary-statement-P210')).toHaveClass(
+        'notebook-status-card'
+      );
+    });
+
     it('renders PubChem SDS link when cid is present', () => {
       render(<DetailModal {...defaultProps} />);
       // Link text is split by SVG icon, so search for the link by href
@@ -276,6 +310,35 @@ describe('DetailModal', () => {
       expect(screen.getByTestId('detail-reference-source-regulatory')).toHaveTextContent(
         'detail.referenceSourceEcha'
       );
+    });
+
+    it('uses notebook action styling for reference links and footer actions', () => {
+      render(
+        <DetailModal
+          {...defaultProps}
+          onPrepareSolution={jest.fn()}
+        />
+      );
+
+      expect(screen.getByTestId('detail-reference-link-sds')).toHaveClass(
+        'notebook-inline-action'
+      );
+      expect(screen.getByTestId('detail-print-label-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-primary'
+      );
+      expect(screen.getByTestId('detail-print-label-btn').className).not.toContain(
+        'bg-blue-700'
+      );
+      expect(screen.getByTestId('prepare-solution-btn')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
+      expect(screen.getByTestId('detail-pubchem-link')).toHaveClass(
+        'notebook-control',
+        'notebook-control-secondary'
+      );
+      expect(screen.getByTestId('detail-action-bar')).toHaveClass('notebook-note');
     });
 
     it('renders print label button', () => {
