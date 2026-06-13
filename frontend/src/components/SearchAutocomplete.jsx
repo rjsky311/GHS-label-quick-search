@@ -194,7 +194,7 @@ export default function SearchAutocomplete({
   const hasDropdownContent = allSuggestions.length > 0 || serverLoading;
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div ref={containerRef} className="relative min-w-0 flex-1">
       <input
         ref={searchInputRef}
         type="text"
@@ -206,7 +206,7 @@ export default function SearchAutocomplete({
         onFocus={() => value.trim() && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
         placeholder={t("search.placeholder")}
-        className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 pr-10 font-mono text-slate-950 shadow-sm placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        className="notebook-field w-full rounded-md px-4 py-3 pr-10 font-mono"
         data-testid="single-cas-input"
         role="combobox"
         aria-expanded={showSuggestions && hasDropdownContent}
@@ -221,7 +221,8 @@ export default function SearchAutocomplete({
             setShowSuggestions(false);
             setServerResults([]);
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+          aria-label={t("search.clear")}
+          className="notebook-field-clear absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -231,7 +232,7 @@ export default function SearchAutocomplete({
         <ul
           id="search-suggestions"
           role="listbox"
-          className="absolute left-0 right-0 top-full z-40 mt-1 max-h-80 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white shadow-xl"
+          className="notebook-dropdown relative z-40 mt-1 max-h-80 overflow-hidden overflow-y-auto rounded-md sm:absolute sm:left-0 sm:right-0 sm:top-full"
         >
           {/* Local suggestions (favorites + history) */}
           {localSuggestions.map((item, idx) => (
@@ -241,13 +242,13 @@ export default function SearchAutocomplete({
               role="option"
               aria-selected={idx === activeIndex}
               onClick={() => handleSelect(item)}
-              className={`flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${
+              className={`notebook-dropdown-option flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${
                 idx === activeIndex
-                  ? "bg-blue-50 text-slate-950"
-                  : "text-slate-700 hover:bg-slate-50"
+                  ? "notebook-dropdown-option-selected"
+                  : ""
               }`}
             >
-              <span className="shrink-0 text-slate-400">
+              <span className="shrink-0 text-[hsl(var(--notebook-muted-ink))]">
                 {item._source === "favorite" ? (
                   <Star className="w-4 h-4 text-amber-400" />
                 ) : (
@@ -256,16 +257,16 @@ export default function SearchAutocomplete({
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-blue-700">{item.cas_number}</span>
-                  <span className="truncate text-sm text-slate-950">{item.name_en}</span>
+                  <span className="font-mono text-sm text-[hsl(var(--notebook-action))]">{item.cas_number}</span>
+                  <span className="truncate text-sm text-[hsl(var(--notebook-ink))]">{item.name_en}</span>
                 </div>
                 {resolveTrustedChineseName(item) && (
-                  <div className="truncate text-xs text-slate-500">
+                  <div className="truncate text-xs text-[hsl(var(--notebook-muted-ink))]">
                     {resolveTrustedChineseName(item)}
                   </div>
                 )}
               </div>
-              <span className="shrink-0 text-xs text-slate-500">
+              <span className="shrink-0 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {item._source === "favorite" ? t("autocomplete.favorite") : t("autocomplete.history")}
               </span>
             </li>
@@ -273,7 +274,7 @@ export default function SearchAutocomplete({
 
           {/* Divider between local and server results */}
           {localSuggestions.length > 0 && dedupedServerResults.length > 0 && (
-            <li className="mx-2 border-t border-slate-200" role="separator" />
+            <li className="mx-2 border-t border-[hsl(var(--notebook-rule)/0.7)]" role="separator" />
           )}
 
           {/* Server results */}
@@ -287,26 +288,26 @@ export default function SearchAutocomplete({
                 role="option"
                 aria-selected={globalIdx === activeIndex}
                 onClick={() => handleSelect(item)}
-                className={`flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${
+                className={`notebook-dropdown-option flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors ${
                   globalIdx === activeIndex
-                    ? "bg-blue-50 text-slate-950"
-                    : "text-slate-700 hover:bg-slate-50"
+                    ? "notebook-dropdown-option-selected"
+                    : ""
                 }`}
               >
-                <span className="shrink-0 text-slate-400">
+                <span className="shrink-0 text-[hsl(var(--notebook-muted-ink))]">
                   {isAlias ? (
                     <Tag className="w-4 h-4 text-emerald-600" />
                   ) : (
-                    <Search className="w-4 h-4 text-blue-600" />
+                    <Search className="w-4 h-4 text-[hsl(var(--notebook-action))]" />
                   )}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm text-blue-700">{item.cas_number}</span>
-                    <span className="truncate text-sm text-slate-950">{item.name_en}</span>
+                    <span className="font-mono text-sm text-[hsl(var(--notebook-action))]">{item.cas_number}</span>
+                    <span className="truncate text-sm text-[hsl(var(--notebook-ink))]">{item.name_en}</span>
                   </div>
                   {resolveTrustedChineseName(item) && (
-                    <div className="truncate text-xs text-slate-500">
+                    <div className="truncate text-xs text-[hsl(var(--notebook-muted-ink))]">
                       {resolveTrustedChineseName(item)}
                       {isAlias && (
                         <span className="ml-1 text-emerald-700">← {item.alias}</span>
@@ -314,7 +315,7 @@ export default function SearchAutocomplete({
                     </div>
                   )}
                 </div>
-                <span className={`shrink-0 text-xs ${isAlias ? "text-emerald-700" : "text-blue-700"}`}>
+                <span className={`shrink-0 text-xs ${isAlias ? "text-emerald-700" : "text-[hsl(var(--notebook-action))]"}`}>
                   {isAlias ? t("autocomplete.alias") : t("autocomplete.search")}
                 </span>
               </li>
@@ -323,7 +324,7 @@ export default function SearchAutocomplete({
 
           {/* Loading spinner */}
           {serverLoading && dedupedServerResults.length === 0 && (
-            <li className="flex items-center gap-3 px-4 py-3 text-slate-500" role="presentation">
+            <li className="flex items-center gap-3 px-4 py-3 text-[hsl(var(--notebook-muted-ink))]" role="presentation">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t("autocomplete.searching")}</span>
             </li>

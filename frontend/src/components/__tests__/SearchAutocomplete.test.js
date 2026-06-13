@@ -59,6 +59,18 @@ describe('SearchAutocomplete', () => {
       expect(screen.getByTestId('single-cas-input')).toBeInTheDocument();
     });
 
+    it('uses notebook field styling for the search input and clear button', () => {
+      render(<SearchAutocomplete {...defaultProps} value="64-17-5" />);
+
+      const input = screen.getByTestId('single-cas-input');
+      expect(input).toHaveClass('notebook-field');
+      expect(input.className).not.toContain('bg-white');
+      expect(input.className).not.toContain('focus:border-blue-500');
+
+      const clearButton = screen.getByRole('button');
+      expect(clearButton).toHaveClass('notebook-field-clear');
+    });
+
     it('has combobox role with correct aria attributes', () => {
       render(<SearchAutocomplete {...defaultProps} />);
       const input = screen.getByRole('combobox');
@@ -91,6 +103,18 @@ describe('SearchAutocomplete', () => {
       fireEvent.focus(input);
       expect(screen.getByRole('listbox')).toBeInTheDocument();
       expect(screen.getByText('64-17-5')).toBeInTheDocument();
+    });
+
+    it('uses notebook dropdown and option styling for local suggestions', () => {
+      render(<SearchAutocomplete {...defaultProps} value="64-17" favorites={favItems} />);
+
+      fireEvent.focus(screen.getByTestId('single-cas-input'));
+
+      expect(screen.getByRole('listbox')).toHaveClass('notebook-dropdown');
+      expect(screen.getByRole('listbox')).toHaveClass('relative', 'sm:absolute');
+      const option = screen.getByText('64-17-5').closest('[role="option"]');
+      expect(option).toHaveClass('notebook-dropdown-option');
+      expect(option.className).not.toContain('hover:bg-slate-50');
     });
 
     it('shows suggestions matching history by English name', () => {

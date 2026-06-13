@@ -55,8 +55,8 @@ export default function SearchSection({
           onClick={() => onSetActiveTab("single")}
           className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "single"
-              ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
-              : "text-slate-500 hover:text-slate-900"
+              ? "border-b-2 border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]"
+              : "text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
           }`}
           data-testid="single-search-tab"
         >
@@ -67,8 +67,8 @@ export default function SearchSection({
           onClick={() => onSetActiveTab("batch")}
           className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
             activeTab === "batch"
-              ? "border-b-2 border-blue-700 bg-blue-50 text-blue-700"
-              : "text-slate-500 hover:text-slate-900"
+              ? "border-b-2 border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]"
+              : "text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
           }`}
           data-testid="batch-search-tab"
         >
@@ -81,10 +81,13 @@ export default function SearchSection({
         {activeTab === "single" ? (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2 block text-sm font-medium text-[hsl(var(--notebook-ink))]">
                 {t("search.inputLabel")}
               </label>
-              <div className="flex gap-3">
+              <div
+                className="flex flex-col gap-3 sm:flex-row"
+                data-testid="single-search-controls"
+              >
                 <SearchAutocomplete
                   value={singleCas}
                   onChange={onSetSingleCas}
@@ -99,7 +102,7 @@ export default function SearchSection({
                   disabled={loading}
                   variant="notebookPrimary"
                   size="notebook"
-                  className="w-28 shrink-0 sm:w-32"
+                  className="w-full sm:w-32 sm:shrink-0"
                   data-testid="single-search-btn"
                 >
                   {loading ? (
@@ -115,31 +118,31 @@ export default function SearchSection({
                   )}
                 </Button>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {t("search.inputHint")}{" "}
-                <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-xs text-slate-600">/</kbd>
+                <kbd className="rounded border border-[hsl(var(--notebook-border)/0.82)] bg-[hsl(var(--notebook-surface-raised))] px-1.5 py-0.5 text-xs text-[hsl(var(--notebook-muted-ink))]">/</kbd>
               </p>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2 block text-sm font-medium text-[hsl(var(--notebook-ink))]">
                 {t("search.batchInputLabel")}
               </label>
               <textarea
                 value={batchCas}
                 onChange={(e) => onSetBatchCas(e.target.value)}
                 placeholder={t("search.batchPlaceholder")}
-                className="h-40 w-full resize-none rounded-md border border-slate-300 bg-white px-4 py-3 font-mono text-slate-950 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="notebook-field h-40 w-full resize-none rounded-md px-4 py-3 font-mono"
                 data-testid="batch-cas-input"
               />
-              <div className="flex justify-between items-center mt-2">
-                <p className="text-xs text-slate-500">
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-xs text-[hsl(var(--notebook-muted-ink))]">
                   {t("search.batchHint")}
                 </p>
                 {batchCount > 0 && (
-                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-600" : "text-blue-700"}`}>
+                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-600" : "text-[hsl(var(--notebook-action))]"}`}>
                     {batchCount > BATCH_SEARCH_LIMIT
                       ? t("search.batchOverLimit", { count: batchCount, limit: BATCH_SEARCH_LIMIT })
                       : t("search.batchDetected", { count: batchCount })}
@@ -148,7 +151,7 @@ export default function SearchSection({
               </div>
               {hasBatchDiagnostics && (
                 <div
-                  className="mt-3 grid gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:grid-cols-2"
+                  className="notebook-note mt-3 grid gap-2 rounded-md p-3 text-sm sm:grid-cols-2"
                   data-testid="batch-input-diagnostics"
                   role="status"
                   aria-live="polite"
@@ -180,7 +183,7 @@ export default function SearchSection({
               )}
               {batchSummary?.inputCount > 0 && (
                 <div
-                  className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                  className="notebook-status-card mt-3 rounded-md px-3 py-2 text-sm"
                   data-testid="batch-ready-summary"
                   role="status"
                   aria-live="polite"

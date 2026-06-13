@@ -61,7 +61,8 @@ describe('SearchSection', () => {
     it('single tab has highlighted styling when activeTab=single', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       const singleTab = screen.getByTestId('single-search-tab');
-      expect(singleTab.className).toContain('text-blue-700');
+      expect(singleTab.className).toContain('text-[hsl(var(--notebook-action))]');
+      expect(singleTab.className).not.toContain('bg-blue-50');
     });
 
     it('clicking batch tab calls onSetActiveTab("batch")', () => {
@@ -83,6 +84,19 @@ describe('SearchSection', () => {
       expect(screen.getByTestId('single-search-btn')).toBeInTheDocument();
     });
 
+    it('stacks the single-search input and action on narrow screens', () => {
+      render(<SearchSection {...defaultProps} activeTab="single" />);
+
+      expect(screen.getByTestId('single-search-controls')).toHaveClass(
+        'flex-col',
+        'sm:flex-row'
+      );
+      expect(screen.getByTestId('single-search-btn')).toHaveClass(
+        'w-full',
+        'sm:w-32'
+      );
+    });
+
     it('keeps the single search button width stable across translated labels', () => {
       render(<SearchSection {...defaultProps} activeTab="single" />);
       const button = screen.getByTestId('single-search-btn');
@@ -90,8 +104,7 @@ describe('SearchSection', () => {
         'notebook-control',
         'notebook-control-primary',
         'inline-flex',
-        'w-28',
-        'shrink-0',
+        'w-full',
         'sm:w-32'
       );
       expect(button.className).not.toContain('bg-blue-700');
@@ -119,6 +132,15 @@ describe('SearchSection', () => {
     it('renders textarea with data-testid', () => {
       render(<SearchSection {...defaultProps} activeTab="batch" />);
       expect(screen.getByTestId('batch-cas-input')).toBeInTheDocument();
+    });
+
+    it('uses notebook field styling for the batch textarea', () => {
+      render(<SearchSection {...defaultProps} activeTab="batch" />);
+
+      const textarea = screen.getByTestId('batch-cas-input');
+      expect(textarea).toHaveClass('notebook-field');
+      expect(textarea.className).not.toContain('bg-white');
+      expect(textarea.className).not.toContain('focus:border-blue-500');
     });
 
     it('shows batch count when batchCount > 0', () => {
@@ -199,6 +221,7 @@ describe('SearchSection', () => {
       );
 
       expect(screen.getByTestId('batch-input-diagnostics')).toBeInTheDocument();
+      expect(screen.getByTestId('batch-input-diagnostics')).toHaveClass('notebook-note');
       expect(screen.getByTestId('batch-duplicate-summary')).toHaveTextContent(
         'search.batchDuplicateSummary'
       );
@@ -233,6 +256,7 @@ describe('SearchSection', () => {
       expect(screen.getByTestId('batch-ready-summary')).toHaveTextContent(
         'search.batchReadySummary'
       );
+      expect(screen.getByTestId('batch-ready-summary')).toHaveClass('notebook-status-card');
     });
 
     it('disables submit when pasted batch input has no valid CAS values', () => {
