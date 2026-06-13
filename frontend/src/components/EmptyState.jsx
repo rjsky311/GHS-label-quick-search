@@ -75,19 +75,24 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
           className="empty-workbench-grid grid gap-7 lg:grid-cols-12 lg:items-start"
           data-testid="empty-workbench-grid"
         >
-          <div className="empty-workbench-primary lg:col-span-7" data-testid="empty-workbench-primary">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+          <div
+            className="empty-workbench-primary min-w-0 text-left lg:col-span-7"
+            data-testid="empty-workbench-primary"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--notebook-action))]">
               {t("empty.kicker")}
             </p>
-            <h2 className="mt-3 max-w-2xl text-2xl font-semibold text-slate-950 md:text-3xl">
+            <h2 className="mt-3 max-w-2xl text-2xl font-semibold text-[hsl(var(--notebook-ink))] md:text-3xl">
               {t("empty.title")}
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+            <p className="mt-3 max-w-2xl text-base leading-7 text-[hsl(var(--notebook-muted-ink))]">
               {t("empty.subtitle")}
             </p>
 
             <div className="mt-6">
-              <p className="mb-3 text-sm font-medium text-slate-500">{t("empty.tryThese")}</p>
+              <p className="mb-3 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
+                {t("empty.tryThese")}
+              </p>
               <div className="flex flex-wrap gap-3">
                 {examples.map((ex) => (
                   <Button
@@ -98,8 +103,12 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                     size="notebook"
                     className="px-4"
                   >
-                    <span className="font-mono text-blue-700">{ex.cas}</span>
-                    <span className="ml-2 text-slate-500">{t(ex.nameKey)}</span>
+                    <span className="font-mono text-[hsl(var(--notebook-action))]">
+                      {ex.cas}
+                    </span>
+                    <span className="ml-2 text-[hsl(var(--notebook-muted-ink))]">
+                      {t(ex.nameKey)}
+                    </span>
                   </Button>
                 ))}
               </div>
@@ -117,17 +126,27 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 shrink-0 text-blue-700" aria-hidden="true" />
-                      <h3 className="text-sm font-semibold text-slate-950">{t(titleKey)}</h3>
+                      <Icon
+                        className="h-4 w-4 shrink-0 text-[hsl(var(--notebook-action))]"
+                        aria-hidden="true"
+                      />
+                      <h3 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+                        {t(titleKey)}
+                      </h3>
                     </div>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">{t(bodyKey)}</p>
+                    <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+                      {t(bodyKey)}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="empty-workbench-support lg:col-span-5" data-testid="empty-workbench-support">
+          <div
+            className="empty-workbench-support min-w-0 lg:col-span-5"
+            data-testid="empty-workbench-support"
+          >
             <div className="relative mx-auto aspect-[3/2] w-full max-w-xl" aria-hidden="true">
               <img
                 src={emptyWorkflowVisual}
@@ -142,7 +161,10 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
             </div>
           </div>
 
-          <div className="empty-workbench-tools lg:col-span-12" data-testid="empty-workbench-tools">
+          <div
+            className="empty-workbench-tools min-w-0 lg:col-span-12"
+            data-testid="empty-workbench-tools"
+          >
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
                 <div
@@ -150,9 +172,13 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                   className="notebook-status-card rounded-md p-4 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
-                  <Icon className="mb-2 h-6 w-6 text-blue-700" />
-                  <h3 className="mb-1 text-sm font-medium text-slate-950">{t(titleKey)}</h3>
-                  <p className="text-xs leading-5 text-slate-500">{t(descKey)}</p>
+                  <Icon className="mb-2 h-6 w-6 text-[hsl(var(--notebook-action))]" />
+                  <h3 className="mb-1 text-sm font-medium text-[hsl(var(--notebook-ink))]">
+                    {t(titleKey)}
+                  </h3>
+                  <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+                    {t(descKey)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -160,7 +186,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
 
           {trustPanel ? (
             <div
-              className="empty-workbench-trust-slot lg:col-span-12"
+              className="empty-workbench-trust-slot min-w-0 lg:col-span-12"
               data-testid="empty-workbench-trust-slot"
             >
               {trustPanel}

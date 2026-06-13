@@ -61,14 +61,18 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('empty-workbench-primary')).toHaveClass(
       'empty-workbench-primary',
       'lg:col-span-7',
+      'min-w-0',
+      'text-left',
     );
     expect(screen.getByTestId('empty-workbench-support')).toHaveClass(
       'empty-workbench-support',
       'lg:col-span-5',
+      'min-w-0',
     );
     expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
       'empty-workbench-tools',
       'lg:col-span-12',
+      'min-w-0',
     );
   });
 
@@ -81,8 +85,18 @@ describe('EmptyState', () => {
     );
 
     const trustSlot = screen.getByTestId('empty-workbench-trust-slot');
-    expect(trustSlot).toHaveClass('empty-workbench-trust-slot', 'lg:col-span-12');
+    expect(trustSlot).toHaveClass(
+      'empty-workbench-trust-slot',
+      'lg:col-span-12',
+      'min-w-0',
+    );
     expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
+  });
+
+  it('omits the trust slot when no trust panel is provided', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} trustPanel={null} />);
+
+    expect(screen.queryByTestId('empty-workbench-trust-slot')).not.toBeInTheDocument();
   });
 
   it('renders 4 feature cards', () => {
@@ -116,6 +130,43 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-status-card');
     expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
       'notebook-status-card',
+    );
+  });
+
+  it('uses notebook theme token text colors inside the workbench', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const workbench = screen.getByTestId('empty-workbench');
+    expect(workbench.querySelector('.text-blue-700')).not.toBeInTheDocument();
+    expect(workbench.querySelector('.text-slate-950')).not.toBeInTheDocument();
+    expect(workbench.querySelector('.text-slate-600')).not.toBeInTheDocument();
+    expect(workbench.querySelector('.text-slate-500')).not.toBeInTheDocument();
+    expect(screen.getByText('empty.kicker')).toHaveClass(
+      'text-[hsl(var(--notebook-action))]',
+    );
+    expect(screen.getByText('empty.title')).toHaveClass(
+      'text-[hsl(var(--notebook-ink))]',
+    );
+    expect(screen.getByText('empty.subtitle')).toHaveClass(
+      'text-[hsl(var(--notebook-muted-ink))]',
+    );
+    expect(screen.getByText('64-17-5')).toHaveClass(
+      'text-[hsl(var(--notebook-action))]',
+    );
+    expect(screen.getByText('empty.ethanol')).toHaveClass(
+      'text-[hsl(var(--notebook-muted-ink))]',
+    );
+    expect(screen.getByText('empty.workflowSearch')).toHaveClass(
+      'text-[hsl(var(--notebook-ink))]',
+    );
+    expect(screen.getByText('empty.workflowSearchDesc')).toHaveClass(
+      'text-[hsl(var(--notebook-muted-ink))]',
+    );
+    expect(screen.getByText('empty.featureBatch')).toHaveClass(
+      'text-[hsl(var(--notebook-ink))]',
+    );
+    expect(screen.getByText('empty.featureBatchDesc')).toHaveClass(
+      'text-[hsl(var(--notebook-muted-ink))]',
     );
   });
 });
