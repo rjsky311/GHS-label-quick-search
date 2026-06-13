@@ -210,10 +210,10 @@ export default function ExportPreviewModal({
                     key={option.key}
                     type="button"
                     onClick={() => setSelectedScope(option.key)}
-                    className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                    className={`notebook-control px-3 py-2 text-left text-sm transition-colors ${
                       selected
-                        ? "border-blue-700 bg-blue-50 text-blue-900"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50"
+                        ? "notebook-control-primary"
+                        : "notebook-control-secondary"
                     }`}
                     data-testid={`export-preview-scope-${option.key}`}
                   >
@@ -241,10 +241,10 @@ export default function ExportPreviewModal({
                     key={value}
                     type="button"
                     onClick={() => setFormat(value)}
-                    className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`notebook-control inline-flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
                       selected
-                        ? "border-blue-700 bg-blue-50 text-blue-800"
-                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        ? "notebook-control-primary"
+                        : "notebook-control-secondary"
                     }`}
                     data-testid={`export-preview-format-${value}`}
                   >
@@ -331,18 +331,21 @@ export default function ExportPreviewModal({
             )}
           </div>
 
-          <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+          <div
+            className="notebook-note flex items-start gap-2 rounded-md p-3 text-sm"
+            data-testid="export-preview-safety-note"
+          >
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-action))]" />
             <span>{t("exportPreview.safetyNote")}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 p-6">
+        <div className="flex flex-col justify-end gap-3 border-t border-slate-200 p-6 sm:flex-row">
           <button
             type="button"
             onClick={handleClose}
             disabled={submitting}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="notebook-control notebook-control-secondary w-full justify-center px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             data-testid="export-preview-cancel"
           >
             {t("exportPreview.cancel")}
@@ -351,7 +354,7 @@ export default function ExportPreviewModal({
             type="button"
             onClick={handleConfirm}
             disabled={submitting || preview.totalRows === 0}
-            className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="notebook-control notebook-control-primary inline-flex w-full items-center justify-center gap-2 px-4 py-2 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             data-testid="export-preview-confirm"
           >
             <Download className="h-4 w-4" />

@@ -22,6 +22,20 @@ const results = [
   },
 ];
 
+function expectNotebookPrimaryControl(element) {
+  expect(element).toHaveClass('notebook-control', 'notebook-control-primary');
+  expect(element.className).not.toContain('bg-blue-700');
+  expect(element.className).not.toContain('hover:bg-blue-800');
+  expect(element.className).not.toContain('text-white');
+}
+
+function expectNotebookSecondaryControl(element) {
+  expect(element).toHaveClass('notebook-control', 'notebook-control-secondary');
+  expect(element.className).not.toContain('bg-blue-700');
+  expect(element.className).not.toContain('hover:bg-blue-800');
+  expect(element.className).not.toContain('text-white');
+}
+
 describe('ExportPreviewModal', () => {
   it('renders a preview of the current export scope', () => {
     render(
@@ -59,6 +73,30 @@ describe('ExportPreviewModal', () => {
     );
     expect(screen.getByTestId('export-preview-review-action-columns')).toHaveTextContent(
       'exportPreview.reviewActionColumnsTitle',
+    );
+  });
+
+  it('uses notebook controls for export choices and footer actions', () => {
+    render(
+      <ExportPreviewModal
+        results={results}
+        initialFormat="xlsx"
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+      />
+    );
+
+    expectNotebookPrimaryControl(screen.getByTestId('export-preview-scope-visible'));
+    expectNotebookSecondaryControl(screen.getByTestId('export-preview-scope-ready'));
+    expectNotebookPrimaryControl(screen.getByTestId('export-preview-format-xlsx'));
+    expectNotebookSecondaryControl(screen.getByTestId('export-preview-format-csv'));
+    expectNotebookSecondaryControl(screen.getByTestId('export-preview-cancel'));
+    expectNotebookPrimaryControl(screen.getByTestId('export-preview-confirm'));
+    expect(screen.getByTestId('export-preview-safety-note')).toHaveClass(
+      'notebook-note',
+    );
+    expect(screen.getByTestId('export-preview-safety-note').className).not.toContain(
+      'bg-blue-50',
     );
   });
 

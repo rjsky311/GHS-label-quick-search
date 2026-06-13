@@ -112,6 +112,10 @@ const ISSUE_GUIDANCE = {
 const getIssueGuidance = (issueType) =>
   ISSUE_GUIDANCE[issueType] || ISSUE_GUIDANCE["other-data-quality"];
 
+const NOTEBOOK_FIELD_CLASS = "notebook-field mt-1 w-full rounded-md px-3 py-2 text-sm";
+const NOTEBOOK_TEXTAREA_CLASS = `${NOTEBOOK_FIELD_CLASS} leading-6`;
+const NOTEBOOK_MONO_FIELD_CLASS = `${NOTEBOOK_FIELD_CLASS} font-mono`;
+
 const textFromError = (error) => {
   const detail = error?.response?.data?.detail;
   if (typeof detail === "string") return detail;
@@ -245,7 +249,7 @@ export default function DataCorrectionDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
+                className="notebook-control notebook-control-primary px-4 py-2 text-sm font-semibold transition-colors"
                 data-testid="data-correction-done"
               >
                 {t("correctionDialog.done")}
@@ -260,7 +264,7 @@ export default function DataCorrectionDialog({
                 <input
                   value={form.cas_number || ""}
                   onChange={updateField("cas_number")}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_MONO_FIELD_CLASS}
                   data-testid="data-correction-cas"
                 />
               </label>
@@ -269,7 +273,7 @@ export default function DataCorrectionDialog({
                 <input
                   value={form.chemical_name || ""}
                   onChange={updateField("chemical_name")}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_FIELD_CLASS}
                   data-testid="data-correction-name"
                 />
               </label>
@@ -285,12 +289,14 @@ export default function DataCorrectionDialog({
             </div>
 
             <div
-              className="rounded-md border border-blue-100 bg-blue-50 p-3 text-sm text-blue-950"
+              className="notebook-note rounded-md p-3 text-sm"
               data-testid="data-correction-guidance"
             >
               <div className="font-semibold">{t(guidance.title)}</div>
-              <p className="mt-1 leading-6 text-blue-900">{t(guidance.body)}</p>
-              <ul className="mt-2 space-y-1 text-blue-900">
+              <p className="mt-1 leading-6 text-[hsl(var(--notebook-muted-ink))]">
+                {t(guidance.body)}
+              </p>
+              <ul className="mt-2 space-y-1 text-[hsl(var(--notebook-muted-ink))]">
                 <li>{t(guidance.expected)}</li>
                 <li>{t(guidance.evidence)}</li>
               </ul>
@@ -302,7 +308,7 @@ export default function DataCorrectionDialog({
                 value={form.current_output || ""}
                 onChange={updateField("current_output")}
                 rows={3}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className={NOTEBOOK_TEXTAREA_CLASS}
                 data-testid="data-correction-current-output"
               />
             </label>
@@ -315,7 +321,7 @@ export default function DataCorrectionDialog({
                 rows={3}
                 required
                 placeholder={t(guidance.expectedPlaceholder)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className={NOTEBOOK_TEXTAREA_CLASS}
                 data-testid="data-correction-expected-output"
               />
             </label>
@@ -327,7 +333,7 @@ export default function DataCorrectionDialog({
                   value={form.evidence_url || ""}
                   onChange={updateField("evidence_url")}
                   placeholder={t(guidance.evidenceUrlPlaceholder)}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_FIELD_CLASS}
                   data-testid="data-correction-evidence-url"
                 />
               </label>
@@ -337,7 +343,7 @@ export default function DataCorrectionDialog({
                   value={form.evidence_type || ""}
                   onChange={updateField("evidence_type")}
                   placeholder={t(guidance.evidenceTypePlaceholder)}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className={NOTEBOOK_FIELD_CLASS}
                   data-testid="data-correction-evidence-type"
                 />
               </label>
@@ -350,7 +356,7 @@ export default function DataCorrectionDialog({
                 onChange={updateField("local_context")}
                 rows={2}
                 placeholder={t(guidance.contextPlaceholder)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className={NOTEBOOK_TEXTAREA_CLASS}
                 data-testid="data-correction-local-context"
               />
             </label>
@@ -380,13 +386,13 @@ export default function DataCorrectionDialog({
               </div>
             )}
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4">
+            <div className="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-end">
               {context.fallbackUrl && (
                 <a
                   href={context.fallbackUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  className="notebook-control notebook-control-secondary inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors sm:w-auto"
                   data-testid="data-correction-github-fallback"
                 >
                   {t("correctionDialog.githubFallback")}
@@ -396,7 +402,7 @@ export default function DataCorrectionDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                className="notebook-control notebook-control-secondary w-full justify-center px-4 py-2 text-sm font-medium transition-colors sm:w-auto"
                 data-testid="data-correction-cancel"
               >
                 {t("common.cancel", { defaultValue: "Cancel" })}
@@ -404,7 +410,7 @@ export default function DataCorrectionDialog({
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="notebook-control notebook-control-primary inline-flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 data-testid="data-correction-submit"
               >
                 <Send className="h-4 w-4" />

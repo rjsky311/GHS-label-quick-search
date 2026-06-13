@@ -23,6 +23,26 @@ const context = buildDataCorrectionContext({
   issueType: "missing-chinese-name",
 });
 
+function expectNotebookPrimaryControl(element) {
+  expect(element).toHaveClass("notebook-control", "notebook-control-primary");
+  expect(element.className).not.toContain("bg-blue-700");
+  expect(element.className).not.toContain("hover:bg-blue-800");
+  expect(element.className).not.toContain("text-white");
+}
+
+function expectNotebookSecondaryControl(element) {
+  expect(element).toHaveClass("notebook-control", "notebook-control-secondary");
+  expect(element.className).not.toContain("bg-blue-700");
+  expect(element.className).not.toContain("hover:bg-blue-800");
+  expect(element.className).not.toContain("text-white");
+}
+
+function expectNotebookField(element) {
+  expect(element).toHaveClass("notebook-field");
+  expect(element.className).not.toContain("focus:border-blue-500");
+  expect(element.className).not.toContain("focus:ring-blue-500");
+}
+
 describe("DataCorrectionDialog", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,6 +82,39 @@ describe("DataCorrectionDialog", () => {
       "max-h-[calc(100vh-2rem)]",
       "overflow-y-auto",
     );
+  });
+
+  it("uses notebook controls for correction guidance and actions", async () => {
+    render(<DataCorrectionDialog context={context} onClose={jest.fn()} />);
+
+    expect(screen.getByTestId("data-correction-guidance")).toHaveClass(
+      "notebook-note",
+    );
+    expect(
+      screen.getByTestId("data-correction-guidance").className,
+    ).not.toContain("bg-blue-50");
+    expectNotebookSecondaryControl(
+      screen.getByTestId("data-correction-github-fallback"),
+    );
+    expectNotebookSecondaryControl(screen.getByTestId("data-correction-cancel"));
+    expectNotebookPrimaryControl(screen.getByTestId("data-correction-submit"));
+    expectNotebookField(screen.getByTestId("data-correction-cas"));
+    expectNotebookField(screen.getByTestId("data-correction-name"));
+    expectNotebookField(screen.getByTestId("data-correction-current-output"));
+    expectNotebookField(screen.getByTestId("data-correction-expected-output"));
+    expectNotebookField(screen.getByTestId("data-correction-evidence-url"));
+    expectNotebookField(screen.getByTestId("data-correction-evidence-type"));
+    expectNotebookField(screen.getByTestId("data-correction-local-context"));
+
+    fireEvent.change(screen.getByTestId("data-correction-expected-output"), {
+      target: { value: "Use a verified Traditional Chinese name." },
+    });
+    fireEvent.click(screen.getByTestId("data-correction-submit"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("data-correction-done")).toBeInTheDocument();
+    });
+    expectNotebookPrimaryControl(screen.getByTestId("data-correction-done"));
   });
 
   it("uses issue-specific guidance for unresolved lookups", () => {
