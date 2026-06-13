@@ -36,6 +36,31 @@ describe('ProductTrustPanel', () => {
     );
   });
 
+  it('renders the empty trust surface in embedded workbench mode without its own page width', () => {
+    render(<ProductTrustPanel variant="empty" embedded />);
+
+    const panel = screen.getByTestId('product-trust-panel-empty');
+    expect(panel).toHaveAttribute('data-layout', 'embedded');
+    expect(panel).toHaveClass('notebook-panel', 'rounded-md');
+    expect(panel.className).not.toContain('mx-auto');
+    expect(panel.className).not.toContain('max-w-5xl');
+    expect(panel.className).not.toContain('mt-8');
+
+    expect(screen.getByTestId('product-trust-proof-list-empty')).toHaveClass(
+      'grid',
+      'gap-3',
+      'md:grid-cols-3'
+    );
+    expect(screen.getByTestId('product-trust-report-link-empty')).toHaveClass(
+      'notebook-control',
+      'notebook-control-primary'
+    );
+    expect(screen.getByTestId('product-trust-workflow-link-empty')).toHaveClass(
+      'notebook-control',
+      'notebook-control-secondary'
+    );
+  });
+
   it('renders the compact post-result surface with separated safe external support links', () => {
     render(<ProductTrustPanel variant="results" />);
 

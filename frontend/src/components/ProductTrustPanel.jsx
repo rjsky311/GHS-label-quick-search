@@ -15,6 +15,7 @@ import {
 
 export default function ProductTrustPanel({
   variant = "empty",
+  embedded = false,
   onOpenDataCorrection,
 }) {
   const { t } = useTranslation();
@@ -73,18 +74,23 @@ export default function ProductTrustPanel({
       bodyKey: "productTrust.feedbackBody",
     },
   ];
+  const panelClassName = isCompact
+    ? "notebook-panel mx-auto mt-4 rounded-md border-t px-4 py-4 text-left"
+    : embedded
+      ? "notebook-panel rounded-md px-5 py-5 text-left"
+      : "notebook-panel mx-auto mt-8 max-w-5xl rounded-md px-5 py-5 text-left";
+  const innerClassName = isCompact
+    ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]"
+    : "space-y-4";
 
   return (
     <section
-      className={`notebook-panel mx-auto text-left ${
-        isCompact
-          ? "mt-4 rounded-md border-t px-4 py-4"
-          : "mt-8 max-w-5xl rounded-md px-5 py-5"
-      }`}
+      className={panelClassName}
       aria-label={t("productTrust.ariaLabel")}
       data-testid={`product-trust-panel-${variant}`}
+      data-layout={embedded ? "embedded" : isCompact ? "compact" : "standalone"}
     >
-      <div className={isCompact ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]" : "space-y-4"}>
+      <div className={innerClassName}>
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[hsl(var(--notebook-action))]">
             {t("productTrust.kicker")}
