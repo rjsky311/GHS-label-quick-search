@@ -51,6 +51,11 @@ const BROWSER_CLOSE_TIMEOUT_MS = Number.parseInt(
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
 
+const isSearchTabActiveClass = (className = "") =>
+  className.includes("text-[hsl(var(--notebook-action))]") ||
+  className.includes("bg-[hsl(var(--notebook-action-soft))]") ||
+  /border-blue-700|bg-blue-50/.test(className);
+
 const findRepoRoot = (startDir) => {
   let current = path.resolve(startDir);
   while (true) {
@@ -1735,7 +1740,7 @@ const summarizeSearchUiReportForConsole = (report) => {
         resultHasSearchTerm: Boolean(
           metrics.urlQueryHydration?.rowText?.includes(report.searchTerm),
         ),
-        singleTabActive: /border-blue-700|bg-blue-50/.test(
+        singleTabActive: isSearchTabActiveClass(
           metrics.urlQueryHydration?.singleTabClass || "",
         ),
         batchReadySummaryCount:
@@ -2620,7 +2625,7 @@ try {
   if (!urlQueryHydration.rowText.includes(searchTerm)) {
     failures.push("url-query-hydration-result-missing");
   }
-  if (!/border-blue-700|bg-blue-50/.test(urlQueryHydration.singleTabClass)) {
+  if (!isSearchTabActiveClass(urlQueryHydration.singleTabClass)) {
     failures.push("url-query-hydration-single-tab-inactive");
   }
   if (urlQueryHydration.batchReadySummaryCount > 0) {
