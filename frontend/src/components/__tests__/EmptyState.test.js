@@ -45,17 +45,31 @@ describe('EmptyState', () => {
   it('renders the notebook workbench layout regions', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
-    expect(screen.getByTestId('empty-workbench')).toHaveClass(
+    const emptyState = screen.getByTestId('empty-state');
+    const workbench = screen.getByTestId('empty-workbench');
+
+    expect(emptyState).toContainElement(workbench);
+    expect(workbench).toHaveClass(
       'notebook-surface',
       'empty-workbench',
     );
     expect(screen.getByTestId('empty-workbench-grid')).toHaveClass(
+      'empty-workbench-grid',
       'grid',
       'lg:grid-cols-12',
     );
-    expect(screen.getByTestId('empty-workbench-primary')).toBeInTheDocument();
-    expect(screen.getByTestId('empty-workbench-support')).toBeInTheDocument();
-    expect(screen.getByTestId('empty-workbench-tools')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-workbench-primary')).toHaveClass(
+      'empty-workbench-primary',
+      'lg:col-span-7',
+    );
+    expect(screen.getByTestId('empty-workbench-support')).toHaveClass(
+      'empty-workbench-support',
+      'lg:col-span-5',
+    );
+    expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
+      'empty-workbench-tools',
+      'lg:col-span-12',
+    );
   });
 
   it('renders a provided trust panel inside the workbench trust slot', () => {
@@ -67,6 +81,7 @@ describe('EmptyState', () => {
     );
 
     const trustSlot = screen.getByTestId('empty-workbench-trust-slot');
+    expect(trustSlot).toHaveClass('empty-workbench-trust-slot', 'lg:col-span-12');
     expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
   });
 
