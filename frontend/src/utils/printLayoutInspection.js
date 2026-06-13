@@ -41,6 +41,16 @@ const hasLineClamp = (style) => {
   return rawClamp && rawClamp !== "none" && rawClamp !== "unset";
 };
 
+const parseCssPx = (value) => {
+  const number = Number.parseFloat(String(value || ""));
+  return Number.isFinite(number) ? number : 0;
+};
+
+const getLineClampOverflowTolerance = (style, fallbackTolerancePx = 1) => {
+  const lineHeightPx = parseCssPx(style?.lineHeight);
+  return Math.max(fallbackTolerancePx, 3, Math.ceil(lineHeightPx * 0.15));
+};
+
 const requiredTextIsVisuallyClipped = (element, tolerancePx = 1) => {
   if (!element?.textContent?.trim()) return false;
   const style = getElementStyle(element);
@@ -68,7 +78,10 @@ const requiredTextIsVisuallyClipped = (element, tolerancePx = 1) => {
   if (
     hasLineClamp(style) &&
     isHiddenOverflow(overflowY) &&
-    elementVerticallyOverflows(element, tolerancePx)
+    elementVerticallyOverflows(
+      element,
+      getLineClampOverflowTolerance(style, tolerancePx),
+    )
   ) {
     return true;
   }

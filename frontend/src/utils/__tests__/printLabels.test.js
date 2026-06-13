@@ -251,6 +251,42 @@ describe("inspectPrintLayoutDocument", () => {
     ]);
   });
 
+  it("does not report complete-label name line-height rounding as clipped", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label label-full-page-primary">
+        <div class="name-section">
+          <div class="name-en" style="overflow:hidden;-webkit-line-clamp:1;line-height:30.68px;">Hydrochloric acid</div>
+        </div>
+      </div>
+    `;
+
+    const label = root.querySelector(".label");
+    const nameSection = root.querySelector(".name-section");
+    const nameEn = root.querySelector(".name-en");
+
+    Object.defineProperties(label, {
+      clientHeight: { value: 100, configurable: true },
+      scrollHeight: { value: 100, configurable: true },
+      clientWidth: { value: 180, configurable: true },
+      scrollWidth: { value: 180, configurable: true },
+    });
+    Object.defineProperties(nameSection, {
+      clientHeight: { value: 33, configurable: true },
+      scrollHeight: { value: 33, configurable: true },
+      clientWidth: { value: 160, configurable: true },
+      scrollWidth: { value: 160, configurable: true },
+    });
+    Object.defineProperties(nameEn, {
+      clientHeight: { value: 31, configurable: true },
+      scrollHeight: { value: 33, configurable: true },
+      clientWidth: { value: 160, configurable: true },
+      scrollWidth: { value: 160, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([]);
+  });
+
   it("reports clipped full-label inner panels before printing", () => {
     const root = document.createElement("div");
     root.innerHTML = `
