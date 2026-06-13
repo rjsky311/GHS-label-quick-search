@@ -16,7 +16,7 @@ export default function LabelOutputSelector({
           <p className="mt-1 text-xs text-slate-500">
             {tx(
               "label.simplifiedOutputHint",
-              "Choose one output type. Small labels continue onto a second or third label instead of dropping CAS, names, QR, or GHS pictograms.",
+              "Choose one output type. Small labels aim for one label and stop at two instead of dropping CAS, names, QR, or GHS pictograms.",
             )}
           </p>
         </div>

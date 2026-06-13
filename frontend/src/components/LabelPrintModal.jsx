@@ -346,6 +346,24 @@ export default function LabelPrintModal({
   const outputPlanHasUpstreamError = outputPlan.issues.some(
     (issue) => issue.type === "upstream-error",
   );
+  const isQrSupplementOutput =
+    labelPurpose === "qrSupplement" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
+  const isQuickIdOutput =
+    labelPurpose === "quickId" ||
+    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
+  const isSmallLabelContinuationBlocked =
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.SMALL_LABEL_CONTINUATION_LIMIT;
+  const smallLabelContinuationIssue = outputPlan.issues.find(
+    (issue) => issue.type === "small-label-continuation-limit",
+  );
+  const smallLabelContinuationPageCount =
+    smallLabelContinuationIssue?.pageCount || 3;
+  const smallLabelContinuationMaxLabels =
+    smallLabelContinuationIssue?.maxLabels || 2;
+  const smallLabelOutputName = isQrSupplementOutput
+    ? tx("label.targetQrSmall", "QR small label")
+    : tx("label.targetIdentitySmall", "Identification small label");
   const visibleStockChoices = ALL_STOCK_PRESETS.filter((preset) =>
     (STOCK_IDS_BY_PRINT_TARGET[printTarget] || []).includes(preset.id),
   );
@@ -410,6 +428,16 @@ export default function LabelPrintModal({
               : tx(
                   "label.outputPlanMissingHazardData",
                   "This item does not have enough GHS hazard content to produce a hazard label.",
+                )
+            : isSmallLabelContinuationBlocked
+              ? tx(
+                  "label.outputPlanSmallLabelContinuationLimit",
+                  "{{target}} would need {{count}} labels. Small labels stop at {{max}} so identity and GHS pictograms stay readable.",
+                  {
+                    target: smallLabelOutputName,
+                    count: smallLabelContinuationPageCount,
+                    max: smallLabelContinuationMaxLabels,
+                  },
                 )
             : "";
   const batchRepresentativeOptions = Object.values(
@@ -479,7 +507,8 @@ export default function LabelPrintModal({
         ? "caution"
         : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
             outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+            isSmallLabelContinuationBlocked
           ? "danger"
           : "caution";
   const shouldOpenOutputPlanDetails =
@@ -487,20 +516,16 @@ export default function LabelPrintModal({
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
   const hasAnyPictograms =
     printReadiness.elementSummary.pictograms.expected > 0;
-  const isQrSupplementOutput =
-    labelPurpose === "qrSupplement" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
-  const isQuickIdOutput =
-    labelPurpose === "quickId" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
   const isContinuationOutput =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE;
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE ||
+    isSmallLabelContinuationBlocked;
   const printTrustMode =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    isSmallLabelContinuationBlocked
       ? "blocked"
       : isSupplementalOutput || isQrSupplementOutput || isQuickIdOutput
         ? "supplemental"
@@ -518,6 +543,8 @@ export default function LabelPrintModal({
   const outputRoleSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
+    : isSmallLabelContinuationBlocked
+      ? tx("label.decisionRoleSmallLabelBlocked", "Small label too dense")
     : isContinuationOutput
       ? tx(
           "label.decisionRoleContinuation",
@@ -556,6 +583,8 @@ export default function LabelPrintModal({
   const statementSummary =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
       ? tx("label.decisionTextBlocked", "Do not print yet")
+      : isSmallLabelContinuationBlocked
+        ? tx("label.decisionTextSimplifySmallLabel", "Simplify before print")
       : isQrSupplementOutput
         ? qrTargetInfo
           ? tx(
@@ -816,6 +845,8 @@ export default function LabelPrintModal({
     ? tx("label.printFixProfileRequired", "Add lab/supplier profile first")
     : outputPlanHasUpstreamError
       ? tx("label.printFixVerifyHazards", "Verify hazard data first")
+    : isSmallLabelContinuationBlocked
+      ? tx("label.printFixSmallLabelContinuation", "Simplify small label first")
     : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
       ? tx("label.printFixContinuationRequired", "Use extra pages first")
       : tx("label.printFixRequired", "Choose a printable stock first");
@@ -857,6 +888,11 @@ export default function LabelPrintModal({
               ? tx("label.outputPlanHazardTitle", "Hazard data required")
               : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
                 ? tx("label.outputPlanInvalidTitle", "Needs a larger output")
+                : isSmallLabelContinuationBlocked
+                  ? tx(
+                      "label.outputPlanSmallLabelLimitTitle",
+                      "Small label limit reached",
+                    )
                 : tx("label.outputPlanPendingTitle", "Output plan pending");
   const outputPlanBody =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
@@ -882,6 +918,16 @@ export default function LabelPrintModal({
                     "label.outputPlanInvalidBody",
                     "Even this complete stock is too dense for one label. Use extra pages before printing.",
                   )
+                : isSmallLabelContinuationBlocked
+                  ? tx(
+                      "label.outputPlanSmallLabelLimitBody",
+                      "{{target}} would need {{count}} labels. This workflow stops small labels at {{max}}; simplify the language mode or print the complete A4/Letter label instead.",
+                      {
+                        target: smallLabelOutputName,
+                        count: smallLabelContinuationPageCount,
+                        max: smallLabelContinuationMaxLabels,
+                      },
+                    )
                 : tx(
                     "label.outputPlanPendingBody",
                     "Select at least one chemical to let the app choose a safe printable output.",
@@ -955,6 +1001,23 @@ export default function LabelPrintModal({
                   { stock: currentStockName },
                 ),
               }
+            : isSmallLabelContinuationBlocked
+              ? {
+                  kind: "small-label-continuation",
+                  tone: "danger",
+                  label: tx("label.recoveryRouteLabel", "Recommended recovery"),
+                  value: tx(
+                    "label.recoverySmallLabelContinuationValue",
+                    "Use English-only or complete A4/Letter",
+                  ),
+                  currentStock: currentStockName,
+                  targetStock: recommendedFullPageLabel,
+                  description: tx(
+                    "label.recoverySmallLabelContinuationBody",
+                    "Try English-only identity if name length is creating the pressure. If the pictograms still need more than {{max}} small labels, use the complete A4/Letter label instead.",
+                    { max: smallLabelContinuationMaxLabels },
+                  ),
+                }
             : null;
   const outputOutcomeTone =
     selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
@@ -979,6 +1042,15 @@ export default function LabelPrintModal({
               )
             : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
               ? tx("label.outputOutcomeInvalidTitle", "Choose a larger output")
+              : isSmallLabelContinuationBlocked
+                ? tx(
+                    isQrSupplementOutput
+                      ? "label.outputOutcomeQrSmallLimitTitle"
+                      : "label.outputOutcomeIdentitySmallLimitTitle",
+                    isQrSupplementOutput
+                      ? "QR small label needs a simpler route"
+                      : "Identification small label needs a simpler route",
+                  )
               : isContinuationOutput
                 ? tx(
                     "label.outputOutcomeContinuationTitle",
@@ -1036,6 +1108,16 @@ export default function LabelPrintModal({
                   "label.outputOutcomeInvalidBody",
                   "This stock cannot produce a truthful label. Use a larger primary label or extra pages.",
                 )
+              : isSmallLabelContinuationBlocked
+                ? tx(
+                    "label.outputOutcomeSmallLabelLimitBody",
+                    "This {{target}} would need {{count}} labels. Small labels stop at {{max}} so identity and GHS pictograms stay readable; use English-only identity or print the complete A4/Letter label.",
+                    {
+                      target: smallLabelOutputName,
+                      count: smallLabelContinuationPageCount,
+                      max: smallLabelContinuationMaxLabels,
+                    },
+                  )
               : isContinuationOutput
                 ? tx(
                     "label.outputOutcomeContinuationBody",

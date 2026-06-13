@@ -2092,14 +2092,6 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
     "qr-supplement",
   ].includes(expected.labelKind);
 
-  if (requiresBilingualIdentity) {
-    return {
-      any: uniqueTexts([...allNames, chemical.cas_number]),
-      required: allNames,
-      forbidden: [],
-    };
-  }
-
   if (labelConfig.nameDisplay === "en") {
     return {
       any: uniqueTexts([english, chemical.cas_number]),
@@ -2113,6 +2105,14 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
       any: uniqueTexts([chinese, chemical.cas_number]),
       required: uniqueTexts([chinese]),
       forbidden: english && english !== chinese ? [english] : [],
+    };
+  }
+
+  if (requiresBilingualIdentity) {
+    return {
+      any: uniqueTexts([...allNames, chemical.cas_number]),
+      required: allNames,
+      forbidden: [],
     };
   }
 

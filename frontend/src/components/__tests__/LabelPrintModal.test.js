@@ -221,6 +221,12 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Output type",
     );
+    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+      "Small labels aim for one label and stop at two",
+    );
+    expect(screen.getByTestId("primary-output-size-controls")).not.toHaveTextContent(
+      "third label",
+    );
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
       "Recommended next step",
     );
@@ -1076,6 +1082,45 @@ describe("LabelPrintModal", () => {
     expect(qrChecklist).not.toHaveTextContent("P statements");
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Print QR small label (1)",
+    );
+  });
+
+  it("blocks QR small labels that would need a third label and offers recovery paths", () => {
+    renderModal({
+      selectedForLabel: [
+        makeChem({
+          ghs_pictograms: Array.from({ length: 13 }, (_, index) => ({
+            code: `GHS${String(index + 1).padStart(2, "0")}`,
+          })),
+        }),
+      ],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "brother-62mm-continuous",
+      },
+    });
+
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "QR small label needs a simpler route",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "This QR small label would need 3 labels",
+    );
+    expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
+    expect(screen.getByTestId("print-output-plan")).toHaveTextContent(
+      "Small label limit reached",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveAttribute(
+      "data-recovery-kind",
+      "small-label-continuation",
+    );
+    expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
+      "Use English-only or complete A4/Letter",
+    );
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent(
+      "Simplify small label first",
     );
   });
 

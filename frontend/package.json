@@ -68,7 +68,7 @@
     "qa:workbench": "node scripts/check-experiment-notebook-workbench.mjs",
     "test:docs": "node scripts/check-docs-drift.mjs",
     "test:i18n": "node scripts/check-i18n-parity.mjs",
-    "test:print-contract": "jest --runInBand printContentPolicy.test.js printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printBatchPlanner.test.js printHandoffPreflight.test.js printLabels.test.js printQaMatrixReport.test.js",
+    "test:print-contract": "jest --runInBand printContentPolicy.test.js printOutputContract.test.js printAcceptanceMatrix.test.js printOutputPlanner.test.js printFitEngine.test.js printBatchPlanner.test.js printHandoffPreflight.test.js printLabels.test.js printQaMatrixReport.test.js",
     "qa:print-report": "jest --runInBand printQaMatrixReport.test.js --silent=false",
     "qa:print-pdf": "node scripts/check-print-pdf-artifacts.mjs",
     "qa:physical-print-plan": "node scripts/generate-physical-print-plan.mjs",

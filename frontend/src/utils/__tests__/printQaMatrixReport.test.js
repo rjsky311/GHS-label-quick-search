@@ -810,10 +810,10 @@ describe("print QA matrix report", () => {
     ).toEqual([]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedRequiredIdentityTexts,
-    ).toEqual(["乙醇", "Ethanol"]);
+    ).toEqual(["Ethanol"]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedForbiddenIdentityTexts,
-    ).toEqual([]);
+    ).toEqual(["乙醇"]);
     expect(byId["sodium-hydroxide-qr-supplement"].chemical).toMatchObject({
       cas: "1310-73-2",
       expectedPictograms: ["GHS05", "GHS07"],
@@ -830,7 +830,7 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["methanol-brother-quick-id-bw"]).toMatchObject({
       expectedNameDisplay: "en",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["甲醇", "Methanol"],
+      expectedRequiredIdentityTexts: ["Methanol"],
       expectedMinPictogramSidePx: 26,
     });
     expect(byId["hydrogen-peroxide-qr-supplement-en"].chemical).toMatchObject({
@@ -840,7 +840,7 @@ describe("print QA matrix report", () => {
     expect(byId["nitrogen-tube-quick-id-single-pictogram"].chemical).toMatchObject({
       cas: "7727-37-9",
       expectedPictograms: ["GHS04"],
-      expectedRequiredIdentityTexts: ["氮氣", "Nitrogen"],
+      expectedRequiredIdentityTexts: ["Nitrogen"],
     });
     expect(browserCaseById["nitrogen-tube-quick-id-single-pictogram"]).toMatchObject({
       expectedNameDisplay: "en",
@@ -852,7 +852,7 @@ describe("print QA matrix report", () => {
     expect(byId["zinc-oxide-small-qr-environmental"].chemical).toMatchObject({
       cas: "1314-13-2",
       expectedPictograms: ["GHS09"],
-      expectedRequiredIdentityTexts: ["氧化鋅", "Zinc Oxide"],
+      expectedRequiredIdentityTexts: ["Zinc Oxide"],
     });
     expect(browserCaseById["zinc-oxide-small-qr-environmental"]).toMatchObject({
       expectedNameDisplay: "en",
@@ -948,8 +948,8 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["ethanol-tube-quick-id"]).toMatchObject({
       expectedNameDisplay: "en",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["乙醇", "Ethanol"],
-      expectedForbiddenIdentityTexts: [],
+      expectedRequiredIdentityTexts: ["Ethanol"],
+      expectedForbiddenIdentityTexts: ["乙醇"],
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"].steps).not.toEqual(
       expect.arrayContaining([
