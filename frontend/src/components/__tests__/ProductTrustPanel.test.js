@@ -75,8 +75,12 @@ describe('ProductTrustPanel', () => {
 
     const panel = screen.getByTestId('product-trust-panel-results');
     expect(panel).toBeInTheDocument();
-    expect(panel).toHaveClass('notebook-panel', 'border-t');
-    expect(panel).not.toHaveClass('bg-white/80', 'rounded-lg');
+    expect(panel).toHaveAttribute('data-layout', 'compact');
+    expect(panel).toHaveClass('notebook-trust-strip', 'rounded-md');
+    expect(panel).not.toHaveClass('notebook-panel', 'bg-white/80', 'rounded-lg');
+    expect(panel.className).not.toContain('mx-auto');
+    expect(panel.className).not.toContain('mt-4');
+    expect(panel.className).not.toContain('max-w-5xl');
     expect(screen.getByTestId('product-trust-proof-list-results')).toBeInTheDocument();
     expect(screen.getByText('productTrust.resultsTitle')).toBeInTheDocument();
 

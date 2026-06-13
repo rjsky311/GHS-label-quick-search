@@ -87,6 +87,28 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('results-workflow-summary')).toHaveClass('notebook-panel');
     });
 
+    it('keeps the result decision guide on notebook ink/action tokens', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult, mockWarningResult]}
+          totalCount={2}
+          getEffectiveClassification={createMockGetEffective()}
+        />
+      );
+
+      const guide = screen.getByTestId('results-decision-guide');
+      expect(within(guide).getByText('results.decisionGuideTitle')).toHaveClass(
+        'text-[hsl(var(--notebook-ink))]',
+      );
+      expect(guide.querySelector('.text-blue-950')).not.toBeInTheDocument();
+      for (const key of ['identity', 'verify', 'output']) {
+        expect(
+          screen.getByTestId(`results-decision-step-${key}`).querySelector('svg'),
+        ).toHaveClass('text-[hsl(var(--notebook-action))]');
+      }
+    });
+
     it('uses notebook controls for result header actions', () => {
       render(<ResultsTable {...defaultProps} printAllWithGhsCount={1} />);
 
@@ -659,6 +681,26 @@ describe('ResultsTable', () => {
       renderMultiResults();
       const hCodeInput = screen.getByPlaceholderText('filter.hCodePlaceholder');
       expect(hCodeInput).toBeInTheDocument();
+    });
+
+    it('uses notebook field tokens for the H-code search control', () => {
+      renderMultiResults();
+
+      const hCodeInput = screen.getByTestId('results-hcode-filter-input');
+      expect(screen.getByTestId('results-hcode-filter-shell')).toHaveClass(
+        'relative',
+        'ml-1',
+      );
+      expect(screen.getByTestId('results-hcode-filter-icon')).toHaveClass(
+        'text-[hsl(var(--notebook-muted-ink))]',
+      );
+      expect(hCodeInput).toHaveClass(
+        'notebook-field',
+        'text-[hsl(var(--notebook-ink))]',
+      );
+      expect(hCodeInput.className).not.toContain('text-slate-950');
+      expect(hCodeInput.className).not.toContain('placeholder-slate-400');
+      expect(hCodeInput.className).not.toContain('focus:ring-blue-500');
     });
   });
 

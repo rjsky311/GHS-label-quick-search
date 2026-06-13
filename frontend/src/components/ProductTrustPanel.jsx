@@ -75,12 +75,12 @@ export default function ProductTrustPanel({
     },
   ];
   const panelClassName = isCompact
-    ? "notebook-panel mx-auto mt-4 rounded-md border-t px-4 py-4 text-left"
+    ? "notebook-trust-strip rounded-md px-4 py-4 text-left"
     : embedded
       ? "notebook-trust-strip rounded-md px-5 py-5 text-left"
       : "notebook-panel mx-auto mt-8 max-w-5xl rounded-md px-5 py-5 text-left";
   const innerClassName = isCompact
-    ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]"
+    ? "grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.8fr)]"
     : "space-y-4";
 
   return (

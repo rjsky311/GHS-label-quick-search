@@ -667,7 +667,7 @@ export default function ResultsTable({
           className="notebook-note flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
           data-testid="results-decision-guide"
         >
-          <span className="font-medium text-blue-950">
+          <span className="font-medium text-[hsl(var(--notebook-ink))]">
             {t("results.decisionGuideTitle")}
           </span>
           <div className="flex flex-wrap items-center gap-2">
@@ -677,7 +677,7 @@ export default function ResultsTable({
                 className="notebook-chip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
                 data-testid={`results-decision-step-${key}`}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0 text-blue-700" />
+                <Icon className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--notebook-action))]" />
                 {label}
               </span>
             ))}
@@ -977,7 +977,7 @@ export default function ResultsTable({
           className="notebook-panel flex flex-wrap items-center gap-2 rounded-none border-x-0 border-t-0 px-4 py-2 text-sm"
           data-testid="results-filter-toolbar"
         >
-          <Filter className="h-4 w-4 shrink-0 text-slate-500" />
+          <Filter className="h-4 w-4 shrink-0 text-[hsl(var(--notebook-muted-ink))]" />
           {[
             { value: "all", labelKey: "filter.all" },
             { value: "danger", labelKey: "filter.danger", color: "red" },
@@ -1000,7 +1000,7 @@ export default function ResultsTable({
             </button>
           ))}
           {/* Advanced Filters */}
-          <span className="mx-1 text-slate-300">|</span>
+          <span className="mx-1 text-[hsl(var(--notebook-rule))]">|</span>
           {[1, 2, 3].map((n) => (
             <button
               key={n}
@@ -1014,14 +1014,21 @@ export default function ResultsTable({
               {t("filter.pictogramCount", { count: n })}
             </button>
           ))}
-          <div className="relative ml-1">
-            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+          <div
+            className="relative ml-1"
+            data-testid="results-hcode-filter-shell"
+          >
+            <Search
+              className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[hsl(var(--notebook-muted-ink))]"
+              data-testid="results-hcode-filter-icon"
+            />
             <input
               type="text"
               value={advancedFilter.hCodeSearch}
               onChange={(e) => onSetAdvancedFilter({ ...advancedFilter, hCodeSearch: e.target.value })}
               placeholder={t("filter.hCodePlaceholder")}
-              className="w-24 rounded-full border border-[hsl(var(--notebook-border)/0.86)] bg-[hsl(var(--notebook-surface-raised))] py-1 pl-6 pr-2 text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="notebook-field h-8 min-h-8 w-28 rounded-md py-1 pl-7 pr-2 text-xs text-[hsl(var(--notebook-ink))]"
+              data-testid="results-hcode-filter-input"
             />
           </div>
           {activeReviewIssueType && (

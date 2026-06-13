@@ -153,6 +153,29 @@ describe('EmptyState', () => {
     );
   });
 
+  it('keeps workflow and tool cards aligned on responsive notebook grids', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    expect(screen.getByTestId('empty-workbench-workflow')).toHaveClass(
+      'grid',
+      'auto-rows-fr',
+      'md:grid-cols-3',
+    );
+    for (const key of ['search', 'review', 'use']) {
+      expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass('h-full');
+    }
+
+    expect(screen.getByTestId('empty-workbench-tool-grid')).toHaveClass(
+      'grid',
+      'auto-rows-fr',
+      'sm:grid-cols-2',
+      'lg:grid-cols-4',
+    );
+    for (const key of ['batch', 'print', 'excel', 'favorite']) {
+      expect(screen.getByTestId(`empty-feature-card-${key}`)).toHaveClass('h-full');
+    }
+  });
+
   it('uses notebook theme token text colors inside the workbench', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 

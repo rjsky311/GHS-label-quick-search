@@ -114,11 +114,14 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
               </div>
             </div>
 
-            <div className="mt-7 grid gap-3" data-testid="empty-workbench-workflow">
+            <div
+              className="mt-7 grid auto-rows-fr gap-3 md:grid-cols-3"
+              data-testid="empty-workbench-workflow"
+            >
               {workflow.map(({ key, icon: Icon, titleKey, bodyKey }, index) => (
                 <div
                   key={titleKey}
-                  className="notebook-ledger-row flex min-w-0 items-start gap-3 rounded-md p-3.5"
+                  className="notebook-ledger-row flex h-full min-w-0 items-start gap-3 rounded-md p-3.5"
                   data-testid={`empty-workflow-card-${key}`}
                 >
                   <span className="notebook-step-marker flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold">
@@ -165,11 +168,14 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
             className="empty-workbench-tools notebook-tool-tray min-w-0 rounded-md px-3 py-4 lg:col-span-12"
             data-testid="empty-workbench-tools"
           >
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+              className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-4"
+              data-testid="empty-workbench-tool-grid"
+            >
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
                 <div
                   key={titleKey}
-                  className="notebook-status-card notebook-tool-card flex min-w-0 gap-3 rounded-md p-4 text-left"
+                  className="notebook-status-card notebook-tool-card flex h-full min-w-0 gap-3 rounded-md p-4 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
                   <span className="notebook-tool-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-md">
