@@ -55,6 +55,15 @@ describe("DataCorrectionDialog", () => {
     );
   });
 
+  it("keeps the correction form within the viewport and scrollable", () => {
+    render(<DataCorrectionDialog context={context} onClose={jest.fn()} />);
+
+    expect(screen.getByTestId("data-correction-panel")).toHaveClass(
+      "max-h-[calc(100vh-2rem)]",
+      "overflow-y-auto",
+    );
+  });
+
   it("uses issue-specific guidance for unresolved lookups", () => {
     const unresolvedContext = buildDataCorrectionContext({
       queryText: "unknown vendor synonym",

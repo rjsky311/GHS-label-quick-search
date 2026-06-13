@@ -193,7 +193,8 @@ export default function DataCorrectionDialog({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-2xl outline-none"
+        className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl outline-none sm:max-h-[90vh]"
+        data-testid="data-correction-panel"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
