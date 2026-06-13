@@ -241,21 +241,24 @@ Layout decisions:
 
 - QR should remain large enough for practical phone scanning.
 - GHS pictograms should remain recognizable, not decorative.
+- The first QR small label should be the normal case. A well-fit 62 x 40 mm QR
+  label should carry QR, CAS, the selected language identity text, and roughly
+  six recognizable GHS pictograms when the chemical data requires them.
 - If pictograms exceed the first label, continuation labels repeat identity and
   use the recovered QR area for remaining pictograms.
 - Continuation caps are recovery thresholds, not truncation limits. The app
   must never print a QR small label unless every available GHS pictogram appears
   across the same-output continuation set.
 - If all pictograms cannot be rendered readably within the accepted cap, block
-  QR small-label printing and offer English-only mode, explicit acceptance of
-  the full same-output continuation count, or Complete A4/Letter as a separate
-  complete-primary output.
+  QR small-label printing and offer English-only mode or Complete A4/Letter as
+  a separate complete-primary output.
 
-Suggested initial cap:
+Continuation target:
 
-- Maximum 2 QR small labels per chemical by default.
-- A third label may be allowed only when every label remains readable and the
-  user explicitly accepts the continuation count.
+- Target 1 QR small label for ordinary chemicals.
+- Maximum 2 QR small labels per chemical.
+- If QR output would require a third label, treat that as a layout or output
+  mismatch: do not silently print it. Show recovery guidance instead.
 
 ### 6.3 Identification Small Label
 
@@ -283,6 +286,10 @@ Layout decisions:
 
 - This label is the strictest layout. It should prefer clarity over completeness
   of optional language content.
+- The first Identification small label should handle nearly all chemicals. The
+  layout should aim for one-label output in ordinary cases and should be able
+  to carry about six recognizable GHS pictograms when identity text remains
+  readable.
 - The label should not accept a profile field or detailed hazard text.
 - If bilingual identity becomes unreadable, the UI should offer pure English
   mode or recommend a larger complete output.
@@ -290,15 +297,15 @@ Layout decisions:
   must never print an Identification small label unless every available GHS
   pictogram appears across the same-output continuation set.
 - If all pictograms cannot be rendered readably within the accepted cap, block
-  Identification small-label printing and offer English-only mode, explicit
-  acceptance of the full same-output continuation count, or Complete A4/Letter
-  as a separate complete-primary output.
+  Identification small-label printing and offer English-only mode or Complete
+  A4/Letter as a separate complete-primary output.
 
-Suggested initial cap:
+Continuation target:
 
-- Maximum 2 identification small labels per chemical by default.
-- If more labels would be needed, prompt the user to switch output or language
-  mode rather than printing a long continuation set.
+- Target 1 Identification small label for nearly all chemicals.
+- Maximum 2 Identification small labels per chemical.
+- If Identification output would require a third label, treat that as a layout
+  or output mismatch: do not silently print it. Show recovery guidance instead.
 
 ## 7. Language Modes
 
@@ -561,22 +568,19 @@ Implementation acceptance will require:
 - Browser QA for the modal happy path and blocked states.
 - Production QA after deployment if UI or print renderer behavior changes.
 
-## 16. Open Decision For User Review
+## 16. Resolved Small-Label Continuation Decision
 
-The only unresolved product choice is how strict the small-label continuation
-recovery threshold should be:
+Small-label continuation is intentionally strict:
 
-- Conservative: recovery appears after 2 labels per chemical for both QR and
-  identification small labels.
-- Flexible: QR may allow 3 labels after explicit acceptance before stronger
-  recovery; identification shows recovery after 2.
+- QR small label: target one label in normal cases, maximum two labels per
+  chemical.
+- Identification small label: target one label for nearly all chemicals,
+  maximum two labels per chemical.
+- Both small-label layouts should be able to handle about six recognizable GHS
+  pictograms when the selected identity text remains readable.
 
-Recommendation: use the flexible rule. QR labels have more physical height and
-serve as a scan-back supplement, so a third label can be acceptable if the user
-explicitly accepts it. Identification labels are too small and should stay
-stricter.
-
-In both options, the threshold never permits pictogram omission. If every
-available pictogram cannot be rendered readably across the accepted same-output
-continuation set, the small-label output must be blocked or require explicit
-acceptance of the full readable same-output continuation count.
+This threshold never permits pictogram omission. If every available pictogram
+cannot be rendered readably across one or two same-output small labels, the
+small-label output must be blocked and the UI should offer English-only mode or
+Complete A4/Letter as the recovery path. A QR small label requiring a third
+label is considered a layout or output mismatch, not a normal accepted path.
