@@ -77,7 +77,7 @@ export default function ProductTrustPanel({
   const panelClassName = isCompact
     ? "notebook-panel mx-auto mt-4 rounded-md border-t px-4 py-4 text-left"
     : embedded
-      ? "notebook-panel rounded-md px-5 py-5 text-left"
+      ? "notebook-trust-strip rounded-md px-5 py-5 text-left"
       : "notebook-panel mx-auto mt-8 max-w-5xl rounded-md px-5 py-5 text-left";
   const innerClassName = isCompact
     ? "grid gap-4 lg:grid-cols-[1fr_1.7fr]"
@@ -152,7 +152,7 @@ export default function ProductTrustPanel({
           {cards.map(({ id, icon: Icon, titleKey, bodyKey }) => (
             <div
               key={titleKey}
-              className="notebook-status-card flex min-w-0 items-start gap-2 rounded-md p-3 text-sm"
+              className="notebook-status-card notebook-trust-item flex min-w-0 items-start gap-2 rounded-md p-3 text-sm"
               data-testid={`product-trust-proof-card-${variant}-${id}`}
             >
               <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">

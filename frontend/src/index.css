@@ -321,6 +321,61 @@ code {
         font-variant-numeric: tabular-nums;
     }
 
+    .notebook-tool-tray {
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.7);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-action-border) / 0.18) 0,
+                hsl(var(--notebook-action-border) / 0.18) 3px,
+                transparent 3px
+            ),
+            linear-gradient(
+                hsl(var(--notebook-rule) / 0.22) 1px,
+                transparent 1px
+            );
+        background-size:
+            100% 100%,
+            100% 2.15rem;
+    }
+
+    .notebook-tool-card {
+        position: relative;
+        align-items: flex-start;
+        min-height: 6rem;
+        background-color: hsl(var(--notebook-surface-raised) / 0.68);
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.18) inset;
+    }
+
+    .notebook-tool-card::after {
+        content: "";
+        position: absolute;
+        left: 0.9rem;
+        right: 0.9rem;
+        bottom: 0.72rem;
+        border-bottom: 1px dashed hsl(var(--notebook-rule) / 0.55);
+        pointer-events: none;
+    }
+
+    .notebook-tool-icon {
+        border: 1px solid hsl(var(--notebook-action-border) / 0.32);
+        background-color: hsl(var(--notebook-action-soft));
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-trust-strip {
+        border: 1px solid hsl(var(--notebook-border) / 0.64);
+        border-left: 4px solid hsl(var(--notebook-action-border) / 0.52);
+        background-color: hsl(var(--notebook-surface-raised) / 0.56);
+        color: hsl(var(--notebook-ink));
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
+    }
+
+    .notebook-trust-item {
+        background-color: hsl(var(--notebook-surface) / 0.42);
+        box-shadow: none;
+    }
+
     .notebook-control {
         min-height: 2.75rem;
         border-radius: 0.5rem;

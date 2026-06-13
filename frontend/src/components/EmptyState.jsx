@@ -162,23 +162,27 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
           </div>
 
           <div
-            className="empty-workbench-tools min-w-0 lg:col-span-12"
+            className="empty-workbench-tools notebook-tool-tray min-w-0 rounded-md px-3 py-4 lg:col-span-12"
             data-testid="empty-workbench-tools"
           >
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
                 <div
                   key={titleKey}
-                  className="notebook-status-card rounded-md p-4 text-left"
+                  className="notebook-status-card notebook-tool-card flex min-w-0 gap-3 rounded-md p-4 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
-                  <Icon className="mb-2 h-6 w-6 text-[hsl(var(--notebook-action))]" />
-                  <h3 className="mb-1 text-sm font-medium text-[hsl(var(--notebook-ink))]">
-                    {t(titleKey)}
-                  </h3>
-                  <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
-                    {t(descKey)}
-                  </p>
+                  <span className="notebook-tool-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-md">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="mb-1 text-sm font-medium text-[hsl(var(--notebook-ink))]">
+                      {t(titleKey)}
+                    </h3>
+                    <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+                      {t(descKey)}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

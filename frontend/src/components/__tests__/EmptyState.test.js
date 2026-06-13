@@ -133,6 +133,26 @@ describe('EmptyState', () => {
     );
   });
 
+  it('uses a unified notebook tool tray instead of detached feature cards', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
+      'notebook-tool-tray',
+    );
+    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
+      'notebook-tool-card',
+    );
+    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
+      'notebook-tool-card',
+    );
+    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
+      'notebook-tool-card',
+    );
+    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
+      'notebook-tool-card',
+    );
+  });
+
   it('uses notebook theme token text colors inside the workbench', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
