@@ -20,6 +20,14 @@ const elementVerticallyOverflows = (element, tolerancePx = 1) => {
   return clientHeight > 0 && scrollHeight > clientHeight + tolerancePx;
 };
 
+const elementHorizontallyOverflows = (element, tolerancePx = 1) => {
+  if (!element) return false;
+  const scrollWidth = Math.ceil(element.scrollWidth || 0);
+  const clientWidth = Math.ceil(element.clientWidth || 0);
+
+  return clientWidth > 0 && scrollWidth > clientWidth + tolerancePx;
+};
+
 const getElementStyle = (element) => {
   const view = element?.ownerDocument?.defaultView;
   if (view?.getComputedStyle) return view.getComputedStyle(element);
@@ -99,6 +107,30 @@ const REQUIRED_TEXT_CLIP_SELECTORS = [
   [".meta-chip-cas .meta-chip-value", "required-cas-value-clipped"],
 ];
 
+const WRAP_TOLERANT_TEXT_SELECTORS = new Set([".name-en", ".name-zh"]);
+
+const isWidthOnlyPrintableTextOverflow = (
+  element,
+  selector,
+  tolerancePx = 1,
+) => {
+  if (!WRAP_TOLERANT_TEXT_SELECTORS.has(selector)) return false;
+  if (!elementHorizontallyOverflows(element, tolerancePx)) return false;
+  if (elementVerticallyOverflows(element, tolerancePx)) return false;
+  if (requiredTextIsVisuallyClipped(element, tolerancePx)) return false;
+
+  const style = getElementStyle(element);
+  const textOverflow = String(style.textOverflow || "").toLowerCase();
+  const whiteSpace = String(style.whiteSpace || "").toLowerCase();
+
+  return textOverflow !== "ellipsis" && whiteSpace !== "nowrap";
+};
+
+const elementHasBlockingOverflow = (element, selector, tolerancePx = 1) => {
+  if (!elementOverflows(element, tolerancePx)) return false;
+  return !isWidthOnlyPrintableTextOverflow(element, selector, tolerancePx);
+};
+
 export function inspectPrintLayoutDocument(documentLike) {
   const root = documentLike?.body || documentLike;
   if (!root?.querySelectorAll) return [];
@@ -151,7 +183,7 @@ export function inspectPrintLayoutDocument(documentLike) {
           ? Array.from(label.querySelectorAll(selector))
           : [label.querySelector?.(selector)].filter(Boolean);
       elements.forEach((element, elementIndex) => {
-        if (elementOverflows(element, 2)) {
+        if (elementHasBlockingOverflow(element, selector, 2)) {
           issues.push({ type, ...issueMeta, selector, elementIndex });
         }
       });

@@ -145,6 +145,19 @@ Layout rules:
   be packed into one crowded line.
 - Line spacing must remain readable; do not collapse name lines to make room
   for optional content.
+- On the first QR small label, the top identity band may extend above the QR
+  area across the full label width. The QR reserved area is the QR code plus
+  quiet zone only, not the entire right-side column.
+- Place the QR object below the identity band on the right. The lower GHS area
+  should extend from the left label boundary to the QR quiet-zone boundary so
+  the space between GHS pictograms and QR is not treated as dead space.
+- For the default 62 x 40 mm QR stock, use the lower area's shape to choose
+  GHS grids: `5-6` pictograms as `3 x 2`, `7-8` pictograms as `4 x 2`, and
+  `9` pictograms as `3 x 3` pressure-case output.
+- The first QR small label may carry up to `9` pictograms when readable. Treat
+  `9` pictograms as a pressure upper bound; `7-8` pictograms should stay on one
+  label using `4 x 2` instead of spilling to continuation just because the old
+  first-label cap was six.
 - Avoid internal divider boxes or grid lines inside continuation small labels.
   Preserve the outer label boundary/cut area, then use whitespace and alignment
   to separate identity, pictograms, and QR.
@@ -185,6 +198,11 @@ Forbidden content:
 Layout rules:
 
 - CAS, English name, and Chinese name must be visually separated.
+- The top identity band owns the label width. The lower band owns the remaining
+  GHS area. Right-side whitespace is usable hazard space when pictogram count
+  requires it, not a fixed reserved region.
+- Name font size should be driven by identity text fit within the identity band,
+  not by the number of GHS pictograms below.
 - GHS pictograms are mandatory. They may move to a second/third label for the
   same chemical, but they must not be omitted or summarized as `+N`.
 - Avoid internal divider boxes or grid lines inside continuation labels. The
