@@ -23,6 +23,7 @@ from openpyxl.styles import Border, Side
 import csv
 import random
 import re
+import time
 from cachetools import TTLCache
 from pilot_store import (
     APPROVED_MANUAL_ENTRY_STATUS,
@@ -126,6 +127,30 @@ SEARCH_CHEMICAL_TIMEOUT_SECONDS = float(
 # that still benefits from the shared httpx client's keep-alive pool.
 PUBCHEM_OUTBOUND_CONCURRENCY = int(os.environ.get("PUBCHEM_CONCURRENCY", "8"))
 _pubchem_semaphore = asyncio.Semaphore(PUBCHEM_OUTBOUND_CONCURRENCY)
+PUBCHEM_MIN_REQUEST_INTERVAL_SECONDS = float(
+    os.environ.get("PUBCHEM_MIN_REQUEST_INTERVAL_SECONDS", "0.22")
+)
+_pubchem_rate_lock = asyncio.Lock()
+_last_pubchem_request_monotonic = 0.0
+
+
+async def _wait_for_pubchem_rate_slot() -> None:
+    """Pace outbound PubChem requests to stay under public usage limits."""
+    global _last_pubchem_request_monotonic
+    if PUBCHEM_MIN_REQUEST_INTERVAL_SECONDS <= 0:
+        return
+
+    async with _pubchem_rate_lock:
+        now = time.monotonic()
+        wait_seconds = (
+            _last_pubchem_request_monotonic
+            + PUBCHEM_MIN_REQUEST_INTERVAL_SECONDS
+            - now
+        )
+        if wait_seconds > 0:
+            await asyncio.sleep(wait_seconds)
+            now = time.monotonic()
+        _last_pubchem_request_monotonic = now
 
 
 def _record_ops_counter(key: str, amount: int = 1) -> None:
@@ -606,6 +631,7 @@ async def pubchem_get_json(
         # of PubChem (and get our IP rate-limited for everyone).
         async with _pubchem_semaphore:
             try:
+                await _wait_for_pubchem_rate_slot()
                 resp = await http_client.get(url, timeout=timeout)
             except httpx.TimeoutException as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
@@ -995,7 +1021,7 @@ async def _try_cid_by_substance(cas_number: str, http_client: httpx.AsyncClient)
     return None
 
 async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> Optional[int]:
-    """Get PubChem CID from CAS number — runs methods 1-3 concurrently, with cache.
+    """Get PubChem CID from CAS number — tries trusted methods sequentially.
 
     Policy for a safety-critical tool:
 
@@ -1016,25 +1042,21 @@ async def get_cid_from_cas(cas_number: str, http_client: httpx.AsyncClient) -> O
     if cas_number in cid_cache:
         return cid_cache[cas_number]
 
-    # Run methods 1-3 concurrently; return_exceptions so one transient
-    # failure does not abort the others.
-    results = await asyncio.gather(
-        _try_cid_by_name(cas_number, http_client),
-        _try_cid_by_xref(cas_number, http_client),
-        _try_cid_by_substance(cas_number, http_client),
-        return_exceptions=True,
-    )
     # CAS/RN-specific endpoints are more trustworthy than treating the
     # CAS number as a generic compound name. PubChem name lookup can
     # return related ions/salts first for ambiguous substances (for
     # example 7647-01-0 can surface chloride/CID 312 before the acid
     # record), which then changes the entire GHS label.
-    for result in (results[2], results[1], results[0]):
-        if isinstance(result, int):
-            cid_cache[cas_number] = result
-            return result
-
-    primary_had_transient = any(isinstance(r, PubChemError) for r in results)
+    primary_had_transient = False
+    for lookup in (_try_cid_by_substance, _try_cid_by_xref, _try_cid_by_name):
+        try:
+            cid = await lookup(cas_number, http_client)
+        except PubChemError:
+            primary_had_transient = True
+            continue
+        if cid:
+            cid_cache[cas_number] = cid
+            return cid
 
     # Method 4 (fallback): alternate CAS format (strip leading zeros).
     # We attempt it whether or not the primary results had transient
@@ -1790,4 +1812,3 @@ async def security_headers_middleware(request, call_next):
         "default-src 'none'; frame-ancestors 'none'",
     )
     return response
-

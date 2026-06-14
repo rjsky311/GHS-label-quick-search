@@ -2368,6 +2368,35 @@ async def test_get_cid_prefers_cas_specific_substance_result_over_name_candidate
     assert await srv.get_cid_from_cas(cas, http_client=None) == 313
 
 
+async def test_get_cid_stops_after_first_trusted_method_success(monkeypatch):
+    """CID lookup should avoid turning one CAS lookup into a request burst."""
+    import server as srv
+
+    calls = []
+
+    async def _substance_candidate(*_a, **_k):
+        calls.append("substance")
+        return 702
+
+    async def _xref_candidate(*_a, **_k):
+        calls.append("xref")
+        return 702
+
+    async def _name_candidate(*_a, **_k):
+        calls.append("name")
+        return 702
+
+    monkeypatch.setattr(srv, "_try_cid_by_name", _name_candidate)
+    monkeypatch.setattr(srv, "_try_cid_by_xref", _xref_candidate)
+    monkeypatch.setattr(srv, "_try_cid_by_substance", _substance_candidate)
+
+    cas = "64-17-5"
+    srv.cid_cache.pop(cas, None)
+
+    assert await srv.get_cid_from_cas(cas, http_client=None) == 702
+    assert calls == ["substance"]
+
+
 async def test_get_cid_partial_transient_mixed_with_404_raises(monkeypatch):
     """Regression (Codex review): if one CID lookup method returns a
     clean 404 but another is transient, we cannot trust the 'not found'

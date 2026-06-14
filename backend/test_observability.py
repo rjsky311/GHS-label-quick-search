@@ -79,3 +79,52 @@ async def test_pubchem_timeout_is_recorded_in_observability_counters():
     assert ops_counters["upstream.timeout"] == 1
     assert ops_counters["upstream.retry_exhausted"] == 1
     assert ops_recent_events[-1]["type"] == "upstream_error"
+
+
+async def test_pubchem_get_json_paces_before_outbound_request(monkeypatch):
+    calls = []
+
+    async def fake_rate_slot():
+        calls.append("pace")
+
+    class _OkClient:
+        async def get(self, *_args, **_kwargs):
+            calls.append("get")
+            return httpx.Response(200, json={"ok": True})
+
+    monkeypatch.setattr(server, "_wait_for_pubchem_rate_slot", fake_rate_slot, raising=False)
+
+    status, data = await pubchem_get_json(
+        _OkClient(),
+        "https://example.invalid/pubchem",
+        timeout=0.01,
+        retries=0,
+    )
+
+    assert status == 200
+    assert data == {"ok": True}
+    assert calls == ["pace", "get"]
+
+
+async def test_pubchem_rate_slot_sleeps_when_requests_are_too_close(monkeypatch):
+    sleeps = []
+
+    class _Clock:
+        def __init__(self):
+            self.values = iter([100.05, 100.2])
+
+        def monotonic(self):
+            return next(self.values)
+
+    async def fake_sleep(delay):
+        sleeps.append(delay)
+
+    monkeypatch.setattr(server, "time", _Clock(), raising=False)
+    monkeypatch.setattr(server.asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(server, "PUBCHEM_MIN_REQUEST_INTERVAL_SECONDS", 0.2, raising=False)
+    monkeypatch.setattr(server, "_last_pubchem_request_monotonic", 100.0, raising=False)
+
+    await server._wait_for_pubchem_rate_slot()
+
+    assert sleeps == pytest.approx([0.15])
+    assert server._last_pubchem_request_monotonic == pytest.approx(100.2)
