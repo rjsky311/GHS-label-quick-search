@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright-core";
+import { resolveBatchSearchGate } from "./production-batch-print-search-gate.mjs";
 
 const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app";
 const SEARCH_TIMEOUT_MS = Number.parseInt(
@@ -399,6 +400,50 @@ const writeJson = (targetPath, payload) => {
   fs.writeFileSync(targetPath, `${JSON.stringify(payload, null, 2)}\n`);
 };
 
+const parsePrintableCount = (text = "") => {
+  const printableMatch = text.match(/(\d+)/);
+  return printableMatch ? Number(printableMatch[1]) : 0;
+};
+
+const waitForBatchSearchOutcome = async (page) => {
+  await page.waitForFunction(
+    () => {
+      const isVisible = (node) => {
+        if (!node) return false;
+        const style = window.getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        return (
+          style.visibility !== "hidden" &&
+          style.display !== "none" &&
+          rect.width > 0 &&
+          rect.height > 0
+        );
+      };
+
+      if (isVisible(document.querySelector('[data-testid="print-all-with-ghs-btn"]'))) {
+        return true;
+      }
+
+      return Array.from(
+        document.querySelectorAll(
+          '[data-testid^="results-workflow-review-action-"]',
+        ),
+      ).some((node) => {
+        const testId = node.getAttribute("data-testid") || "";
+        const text = node.textContent || "";
+        return (
+          testId.endsWith("upstream-error") ||
+          /upstream retry|Retry upstream|PubChem|ServerBusy|temporarily unavailable/i.test(
+            text,
+          )
+        );
+      });
+    },
+    null,
+    { timeout: SEARCH_TIMEOUT_MS },
+  );
+};
+
 const gotoProductionPage = async (page, productionUrl) => {
   let lastError = null;
   for (let attempt = 1; attempt <= PAGE_ATTEMPTS; attempt += 1) {
@@ -502,28 +547,83 @@ const run = async () => {
       failures.push("lab-ready-invalid-diagnostics-missing");
     }
     await page.getByTestId("batch-search-btn").click();
-    await page.getByTestId("print-all-with-ghs-btn").waitFor({
-      state: "visible",
-      timeout: SEARCH_TIMEOUT_MS,
-    });
+    await waitForBatchSearchOutcome(page);
 
-    const foundText =
-      (await page.locator('[data-testid="print-all-with-ghs-btn"]').innerText()) ||
-      "";
-    const printableMatch = foundText.match(/(\d+)/);
-    const printableCount = printableMatch ? Number(printableMatch[1]) : 0;
+    const printAllButton = page.getByTestId("print-all-with-ghs-btn");
+    const printButtonVisible = await printAllButton.isVisible().catch(() => false);
+    const foundText = printButtonVisible ? await printAllButton.innerText() : "";
+    const printableCount = parsePrintableCount(foundText);
 
     const batchResultsState = await inspectBatchResultsState(page);
-    const hasUpstreamRetryReview = batchResultsState.reviewActions.some(
-      (action) =>
-        action.type === "upstream-error" ||
-        /upstream retry|Retry upstream/i.test(action.text || ""),
-    );
     const allowExternalUpstreamDegradedPass =
       process.env.ALLOW_UPSTREAM_DEGRADED_BATCH_QA === "1";
+    const searchGate = resolveBatchSearchGate({
+      printButtonVisible,
+      printableCount,
+      batchResultsState,
+      allowExternalUpstreamDegradedPass,
+    });
+    if (searchGate.warning) warnings.push(searchGate.warning);
+    if (searchGate.failure) failures.push(searchGate.failure);
+    if (searchGate.shouldStopEarly) {
+      const exportPreviewSurface = await inspectExportPreviewSurface(page);
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.screenshot({
+        path: path.join(screenshotDir, "batch-search-upstream-blocked.png"),
+        fullPage: false,
+      });
+      const report = {
+        ok: searchGate.ok && failures.length === 0,
+        generatedAt: new Date().toISOString(),
+        stage: "batch-search",
+        productionUrl,
+        fixtureName: batchFixture.fixtureName,
+        fixture: {
+          rawCount: batchFixture.rawCount,
+          uniqueCount: batchFixture.uniqueCount,
+          duplicateCount: batchFixture.duplicateCount,
+          invalidLikeCount: batchFixture.invalidLikeCount,
+          invalidLike: batchFixture.invalidLike,
+        },
+        casCount: casList.length,
+        casList,
+        batchInputState,
+        printableCount,
+        batchResultsState,
+        exportPreviewSurface,
+        searchGate,
+        fitReport: null,
+        initialActionNamesBatch: false,
+        scopeBefore: null,
+        scopeAfter: null,
+        scopeExerciseStock: "not-run",
+        representative: null,
+        printHandoff: null,
+        dialogMessages,
+        screenshotDir,
+        allowExternalUpstreamDegradedPass,
+        warnings,
+        failures,
+      };
+      writeJson(reportPath, report);
+      console.log(JSON.stringify(report, null, 2));
+      if (!report.ok) process.exitCode = 1;
+      return;
+    }
+
+    if (!searchGate.canContinueToPrintModal) {
+      failures.push("batch-search-completed-without-print-action");
+    }
     const handleTooFewPrintableResults = (failureId, minimumPrintableCount) => {
       if (printableCount >= minimumPrintableCount) return;
-      if (hasUpstreamRetryReview && printableCount >= 1) {
+      if (
+        batchResultsState.reviewActions.some(
+          (action) =>
+            action.type === "upstream-error" ||
+            /upstream retry|Retry upstream/i.test(action.text || ""),
+        ) &&
+        printableCount >= 1
+      ) {
         warnings.push(
           `${failureId}:${printableCount}:external-upstream-transient`,
         );

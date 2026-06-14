@@ -75,7 +75,7 @@
     "qa:inventory-print-samples": "node scripts/generate-inventory-print-samples.mjs",
     "qa:inventory-print-evidence": "node scripts/generate-inventory-print-evidence.mjs",
     "test:inventory-print-samples": "node --test scripts/__tests__/inventory-print-sampling.test.mjs",
-    "test:qa-scripts": "node --test scripts/__tests__/inventory-print-sampling.test.mjs scripts/__tests__/print-pdf-thresholds.test.mjs",
+    "test:qa-scripts": "node --test scripts/__tests__/inventory-print-sampling.test.mjs scripts/__tests__/print-pdf-thresholds.test.mjs scripts/__tests__/production-batch-print-search-gate.test.mjs",
     "qa:production-bundle": "node scripts/check-production-print-bundle.mjs",
     "qa:zeabur-deployment": "node scripts/check-zeabur-deployment-freshness.mjs",
     "qa:production-health": "node scripts/check-production-health.mjs",
