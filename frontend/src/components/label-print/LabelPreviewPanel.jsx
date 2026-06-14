@@ -5,6 +5,7 @@ import { PrintOutcomeSummary } from "@/components/label-print/LabelPrintOutcomeS
 
 export default function LabelPreviewPanel({
   model,
+  resetKey,
 }) {
   const {
     actions,
@@ -76,19 +77,41 @@ export default function LabelPreviewPanel({
     updatePreviewPageIndex,
   } = actions;
 
+  const previewContextItems = [
+    {
+      key: "role",
+      label: tx("label.previewContextOutput", "Output"),
+      value: previewContextOutputSummary,
+    },
+    {
+      key: "icons",
+      label: tx("label.previewContextIcons", "GHS icons"),
+      value: pictogramSummary,
+    },
+    {
+      key: "stock",
+      label: tx("label.previewContextStock", "Stock"),
+      value: currentStockName,
+    },
+  ];
+
   return (
-    <aside className="order-first border-t border-slate-200 bg-slate-50/70 lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
+    <aside
+      className="order-first border-t border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface)/0.58)] lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0"
+      data-testid="label-preview-scroll-region"
+    >
       <div
-        className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+        className="notebook-panel overflow-hidden rounded-md"
+        data-preview-reset-key={resetKey}
         data-testid="label-preview-panel"
       >
-        <div className="border-b border-slate-200 px-4 py-3">
+        <div className="border-b border-[hsl(var(--notebook-border)/0.6)] px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-xs font-semibold uppercase text-slate-500">
+              <div className="text-xs font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
                 {tx("label.previewTitle", "Live preview")}
               </div>
-              <h3 className="mt-1 text-base font-semibold text-slate-950">
+              <h3 className="mt-1 text-base font-semibold text-[hsl(var(--notebook-ink))]">
                 {activeBatchPreviewItem
                   ? tx(
                       "label.previewFocusBatchRepresentative",
@@ -104,7 +127,7 @@ export default function LabelPreviewPanel({
                         "No chemical selected yet",
                       )}
               </h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                 {activeBatchPreviewItem
                   ? tx(
                       "label.previewFocusBatchBody",
@@ -121,7 +144,7 @@ export default function LabelPreviewPanel({
                       )}
               </p>
             </div>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+            <span className="notebook-chip shrink-0 rounded-full px-2 py-1 text-xs font-medium">
               {layoutProfile.stockPreset === "custom"
                 ? tx("label.stockPresetCustom", "Custom tuning")
                 : stockPresetDisplay.name || layoutProfile.stockPresetName}
@@ -129,38 +152,22 @@ export default function LabelPreviewPanel({
           </div>
 
           <div
-            className="mt-3 grid gap-2 text-xs sm:grid-cols-3"
+            className="notebook-note mt-3 flex flex-wrap gap-2 rounded-md px-3 py-2 text-xs"
             data-testid="preview-context-strip"
           >
-            {[
-              {
-                key: "role",
-                label: tx("label.previewContextOutput", "Output"),
-                value: previewContextOutputSummary,
-              },
-              {
-                key: "icons",
-                label: tx("label.previewContextIcons", "GHS icons"),
-                value: pictogramSummary,
-              },
-              {
-                key: "stock",
-                label: tx("label.previewContextStock", "Stock"),
-                value: currentStockName,
-              },
-            ].map((item) => (
-              <div
+            {previewContextItems.map((item) => (
+              <span
                 key={item.key}
-                className="min-w-0 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
+                className="notebook-chip inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1"
                 data-testid={`preview-context-${item.key}`}
               >
-                <div className="font-semibold uppercase text-slate-500">
+                <span className="shrink-0 font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
                   {item.label}
-                </div>
-                <div className="mt-0.5 min-w-0 break-words font-medium leading-5 text-slate-800">
+                </span>
+                <span className="min-w-0 truncate font-medium text-[hsl(var(--notebook-ink))]">
                   {item.value}
-                </div>
-              </div>
+                </span>
+              </span>
             ))}
           </div>
         </div>

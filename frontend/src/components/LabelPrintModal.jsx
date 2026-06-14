@@ -1581,6 +1581,15 @@ export default function LabelPrintModal({
     const maxPageIndex = Math.max(previewNavigationCount - 1, 0);
     setPreviewPageIndex(Math.max(0, Math.min(nextIndex, maxPageIndex)));
   };
+  const previewPanelResetKey = [
+    printTarget,
+    layoutProfile.stockPreset,
+    layoutProfile.widthMm,
+    layoutProfile.heightMm,
+    layoutProfile.columns,
+    layoutProfile.rows,
+    effectiveNameDisplay,
+  ].join("|");
   const previewPanelModel = {
     actions: {
       handleFocusResponsibleProfile,
@@ -1921,7 +1930,11 @@ export default function LabelPrintModal({
               />
             </div>
 
-            <LabelPreviewPanel model={previewPanelModel} />
+            <LabelPreviewPanel
+              key={previewPanelResetKey}
+              model={previewPanelModel}
+              resetKey={previewPanelResetKey}
+            />
           </div>
 
         <LabelPrintFooter

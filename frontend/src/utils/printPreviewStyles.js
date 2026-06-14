@@ -136,6 +136,17 @@ export function buildPrintPreviewStyles(mode, model, options = {}) {
       transform: scale(${labelPreviewScale});
       transform-origin: top left;
     }
+    @media (max-width: ${frameWidthPx}px) {
+      body.preview-body-label {
+        overflow: auto;
+      }
+      body.preview-body-label .preview-shell {
+        justify-content: flex-start;
+      }
+      body.preview-body-label .preview-card-label {
+        max-width: none;
+      }
+    }
     .label-placeholder {
       border-style: dashed;
       border-color: #cbd5e1;

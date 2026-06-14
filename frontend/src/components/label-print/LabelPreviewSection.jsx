@@ -48,15 +48,15 @@ export default function LabelPreviewSection({
 
   return (
     <section
-      className="rounded-lg border border-slate-200 bg-white p-3"
+      className="notebook-print-preview rounded-md p-3"
       data-testid="primary-label-preview-section"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-sm font-medium text-slate-800">
+          <div className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
             {tx("label.previewLabelTitle", "Label preview")}
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
             {tx(
               "label.previewInspectionHint",
               "Fit shows the whole label first; inspect mode enlarges details for checking before printing.",
@@ -66,7 +66,7 @@ export default function LabelPreviewSection({
         <div className="flex flex-wrap items-center gap-2">
           {hasMultiplePreviewPages && (
             <div
-              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-1"
+              className="notebook-control notebook-control-secondary inline-flex min-h-9 items-center gap-1 rounded-md p-1"
               data-testid="preview-page-controls"
               aria-label={tx("label.previewPageControls", "Preview pages")}
             >
@@ -74,20 +74,20 @@ export default function LabelPreviewSection({
                 type="button"
                 onClick={() => updatePreviewPageIndex(activePreviewPageIndex - 1)}
                 disabled={activePreviewPageIndex <= 0}
-                className="flex h-7 w-7 items-center justify-center rounded bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-7 w-7 items-center justify-center rounded text-[hsl(var(--notebook-muted-ink))] transition-colors hover:bg-[hsl(var(--notebook-action-soft))] hover:text-[hsl(var(--notebook-action))] disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={tx("label.previewPreviousPage", "Previous preview page")}
                 data-testid="preview-page-prev"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="min-w-16 px-2 text-center text-xs font-semibold text-slate-700">
+              <span className="min-w-16 px-2 text-center text-xs font-semibold text-[hsl(var(--notebook-ink))]">
                 {previewPagePositionLabel}
               </span>
               <button
                 type="button"
                 onClick={() => updatePreviewPageIndex(activePreviewPageIndex + 1)}
                 disabled={activePreviewPageIndex >= previewNavigationCount - 1}
-                className="flex h-7 w-7 items-center justify-center rounded bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-7 w-7 items-center justify-center rounded text-[hsl(var(--notebook-muted-ink))] transition-colors hover:bg-[hsl(var(--notebook-action-soft))] hover:text-[hsl(var(--notebook-action))] disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={tx("label.previewNextPage", "Next preview page")}
                 data-testid="preview-page-next"
               >
@@ -96,7 +96,7 @@ export default function LabelPreviewSection({
             </div>
           )}
           <div
-            className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1"
+            className="notebook-control notebook-control-secondary inline-flex min-h-9 rounded-md p-1"
             data-testid="preview-zoom-controls"
           >
             {previewZoomOptions.map((option) => (
@@ -105,10 +105,11 @@ export default function LabelPreviewSection({
                 type="button"
                 aria-pressed={previewZoomMode === option.value}
                 onClick={() => setPreviewZoomMode(option.value)}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                data-testid={`preview-zoom-${option.value}`}
+                className={`notebook-control min-h-7 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   previewZoomMode === option.value
-                    ? "bg-white text-blue-700 shadow-sm ring-1 ring-blue-200"
-                    : "text-slate-600 hover:bg-white"
+                    ? "notebook-control-primary"
+                    : "notebook-control-secondary"
                 }`}
               >
                 {option.label}
@@ -125,7 +126,7 @@ export default function LabelPreviewSection({
         )}
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-inner">
+      <div className="mt-3 overflow-hidden rounded-md border border-[hsl(var(--notebook-border)/0.72)] bg-white shadow-inner">
         {labelPreviewBundle ? (
           <iframe
             title={tx("label.previewLabelTitle", "Label preview")}
@@ -145,24 +146,37 @@ export default function LabelPreviewSection({
         )}
       </div>
 
-      <div
-        className="mt-3 grid gap-2 text-xs sm:grid-cols-2"
+      <details
+        className="notebook-note mt-3 rounded-md px-3 py-2 text-xs"
         data-testid="preview-inspection-strip"
       >
-        {previewInspectionItems.map((item) => (
-          <div
-            key={item.label}
-            className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
-          >
-            <div className="font-semibold uppercase text-slate-500">
-              {item.label}
+        <summary
+          className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 font-medium text-[hsl(var(--notebook-ink))]"
+          data-testid="preview-details-summary"
+        >
+          <span>
+            {tx("label.previewDetailsTitle", "Preview details")}
+          </span>
+          <span className="text-[hsl(var(--notebook-muted-ink))]">
+            {previewFitLabel} · {previewPhysicalSizeLabel}
+          </span>
+        </summary>
+        <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+          {previewInspectionItems.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-2.5 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]"
+            >
+              <dt className="font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
+                {item.label}
+              </dt>
+              <dd className="mt-0.5 font-medium text-[hsl(var(--notebook-ink))]">
+                {item.value}
+              </dd>
             </div>
-            <div className="mt-0.5 font-medium text-slate-800">
-              {item.value}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </dl>
+      </details>
     </section>
   );
 }

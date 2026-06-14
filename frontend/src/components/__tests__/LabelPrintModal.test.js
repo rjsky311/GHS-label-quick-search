@@ -452,6 +452,98 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("keeps the print preview metadata compact and notebook-styled", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("label-preview-panel")).toHaveClass(
+      "notebook-panel",
+    );
+
+    const contextStrip = screen.getByTestId("preview-context-strip");
+    expect(contextStrip).toHaveClass("notebook-note");
+    expect(screen.getByTestId("preview-context-role")).toHaveClass(
+      "notebook-chip",
+    );
+    expect(screen.getByTestId("preview-context-icons")).toHaveClass(
+      "notebook-chip",
+    );
+    expect(screen.getByTestId("preview-context-stock")).toHaveClass(
+      "notebook-chip",
+    );
+
+    const zoomControls = screen.getByTestId("preview-zoom-controls");
+    expect(zoomControls).toHaveClass("notebook-control");
+    expect(screen.getByTestId("preview-zoom-fit")).toHaveClass(
+      "notebook-control-primary",
+    );
+    expect(screen.getByTestId("preview-zoom-inspect")).toHaveClass(
+      "notebook-control-secondary",
+    );
+    expect(screen.getByTestId("preview-zoom-fit").className).not.toContain(
+      "text-blue-700",
+    );
+
+    const previewDetails = screen.getByTestId("preview-inspection-strip");
+    expect(previewDetails.tagName).toBe("DETAILS");
+    expect(previewDetails).toHaveClass("notebook-note");
+    expect(previewDetails).not.toHaveAttribute("open");
+    expect(screen.getByTestId("preview-details-summary")).toHaveTextContent(
+      "Whole label visible",
+    );
+    expect(screen.getByTestId("preview-details-summary")).toHaveTextContent(
+      "188 x 268 mm",
+    );
+  });
+
+  it("keeps output and sheet checks secondary to the label preview", () => {
+    renderModal({ selectedForLabel: [makeChem()] });
+
+    expect(screen.getByTestId("preview-diagnostics")).toHaveClass(
+      "notebook-panel",
+    );
+    expect(screen.getByTestId("required-output-checklist")).toHaveClass(
+      "notebook-note",
+    );
+    expect(screen.getByTestId("preview-sheet-layout")).toHaveClass(
+      "notebook-panel",
+    );
+
+    const sheetMetrics = screen.getByTestId("preview-sheet-layout-metrics");
+    expect(sheetMetrics.tagName).toBe("DETAILS");
+    expect(sheetMetrics).not.toHaveAttribute("open");
+    expect(screen.getByTestId("preview-sheet-layout")).toHaveTextContent(
+      "1 x 1",
+    );
+  });
+
+  it("resets the preview panel when the output size changes", () => {
+    const { props, rerender } = renderModal({ selectedForLabel: [makeChem()] });
+
+    const initialResetKey = screen
+      .getByTestId("label-preview-panel")
+      .getAttribute("data-preview-reset-key");
+
+    rerender(
+      <LabelPrintModal
+        {...props}
+        labelConfig={{
+          ...baseConfig,
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+        }}
+      />,
+    );
+
+    const qrResetKey = screen
+      .getByTestId("label-preview-panel")
+      .getAttribute("data-preview-reset-key");
+
+    expect(qrResetKey).not.toEqual(initialResetKey);
+    expect(qrResetKey).toContain("qrSupplement");
+    expect(qrResetKey).toContain("62");
+  });
+
   it("lets users choose English-only identity for physical labels", () => {
     const { props } = renderModal({
       selectedForLabel: [makeChem()],

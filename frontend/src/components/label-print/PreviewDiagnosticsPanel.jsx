@@ -24,34 +24,34 @@ export default function PreviewDiagnosticsPanel({
   return (
     <>
       <details
-        className="rounded-lg border border-slate-200 bg-white p-4"
+        className="notebook-panel rounded-md p-3"
         data-testid="preview-diagnostics"
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
           <span className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-blue-600" />
+            <ClipboardList className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
             {tx("label.previewDiagnosticsTitle", "Output checks")}
           </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+          <span className="notebook-chip rounded-full px-2 py-1 text-xs font-medium">
             {outputChecklistBadge}
           </span>
         </summary>
 
         <div className="mt-3 space-y-3">
           <section
-            className="rounded-lg border border-slate-200 bg-white p-3"
+            className="notebook-note rounded-md p-3"
             data-testid="required-output-checklist"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-medium text-slate-800">
+                <div className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                   {outputChecklistTitle}
                 </div>
-                <div className="mt-1 text-xs leading-5 text-slate-500">
+                <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                   {outputChecklistHint}
                 </div>
               </div>
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+              <span className="notebook-chip shrink-0 rounded-full px-2 py-1 text-xs font-medium">
                 {outputChecklistBadge}
               </span>
             </div>
@@ -74,8 +74,8 @@ export default function PreviewDiagnosticsPanel({
             </div>
           </section>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+          <section className="rounded-md border border-[hsl(var(--notebook-border)/0.62)] bg-[hsl(var(--notebook-surface)/0.44)] p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
               {isPreviewChecklistReady ? (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               ) : (
@@ -83,11 +83,11 @@ export default function PreviewDiagnosticsPanel({
               )}
               {tx("label.previewChecklistTitle", "Preview checklist")}
             </div>
-            <div className="mt-3 space-y-2 text-sm text-slate-700">
+            <div className="mt-3 space-y-2 text-sm text-[hsl(var(--notebook-ink))]">
               {visiblePreviewRisks.map((risk) => (
                 <div
                   key={risk}
-                  className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
+                  className="rounded-md bg-[hsl(var(--notebook-surface-raised)/0.75)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.54)]"
                 >
                   {risk}
                 </div>
@@ -95,7 +95,7 @@ export default function PreviewDiagnosticsPanel({
             </div>
           </section>
 
-          <section className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+          <section className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">
             <div className="flex items-start gap-2">
               <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
               <span>{t("label.previewHint")}</span>
@@ -104,28 +104,31 @@ export default function PreviewDiagnosticsPanel({
         </div>
       </details>
 
-      <details className="rounded-lg border border-slate-200 bg-white p-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-800">
+      <details
+        className="notebook-panel rounded-md p-3"
+        data-testid="preview-sheet-layout"
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
           <span className="flex items-center gap-2">
-            <LayoutPanelTop className="h-4 w-4 text-blue-600" />
+            <LayoutPanelTop className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
             {tx("label.previewSheetTitle", "Sheet layout")}
           </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+          <span className="notebook-chip rounded-full px-2 py-1 text-xs font-medium">
             {layoutProfile.columns} x {layoutProfile.rows}
           </span>
         </summary>
 
-        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
-          <span>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-[hsl(var(--notebook-muted-ink))]">
+          <span className="notebook-chip rounded-full px-2 py-1">
             {layoutProfile.widthMm} x {layoutProfile.heightMm} mm
           </span>
-          <span>
+          <span className="notebook-chip rounded-full px-2 py-1">
             {tx("label.previewPerPage", "{{count}}/page", {
               count: layoutProfile.perPage,
             })}
           </span>
           {plannedPrintPageCount > 0 && (
-            <span>
+            <span className="notebook-chip rounded-full px-2 py-1">
               {tx("label.previewPageCount", "{{count}} page(s)", {
                 count: plannedPrintPageCount,
               })}
@@ -133,7 +136,7 @@ export default function PreviewDiagnosticsPanel({
           )}
         </div>
 
-        <div className="mt-4 overflow-auto rounded-lg border border-slate-200 bg-white shadow-inner">
+        <div className="mt-4 overflow-auto rounded-md border border-[hsl(var(--notebook-border)/0.72)] bg-white shadow-inner">
           {sheetPreviewBundle ? (
             <iframe
               title={tx("label.previewSheetTitle", "Sheet layout")}
@@ -152,24 +155,32 @@ export default function PreviewDiagnosticsPanel({
           )}
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
-          <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
-            {tx("label.previewPadding", "Padding")}:{" "}
-            {layoutProfile.pagePaddingMm} mm
+        <details
+          className="notebook-note mt-3 rounded-md px-3 py-2 text-xs"
+          data-testid="preview-sheet-layout-metrics"
+        >
+          <summary className="cursor-pointer list-none font-medium text-[hsl(var(--notebook-ink))]">
+            {tx("label.previewSheetMetricsTitle", "Alignment details")}
+          </summary>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[hsl(var(--notebook-muted-ink))]">
+            <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              {tx("label.previewPadding", "Padding")}:{" "}
+              {layoutProfile.pagePaddingMm} mm
+            </div>
+            <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              {tx("label.previewGap", "Gap")}: {layoutProfile.columnGapMm}/
+              {layoutProfile.rowGapMm} mm
+            </div>
+            <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              {tx("label.previewOffsetX", "Offset X")}:{" "}
+              {layoutProfile.offsetXmm} mm
+            </div>
+            <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              {tx("label.previewOffsetY", "Offset Y")}:{" "}
+              {layoutProfile.offsetYmm} mm
+            </div>
           </div>
-          <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
-            {tx("label.previewGap", "Gap")}: {layoutProfile.columnGapMm}/
-            {layoutProfile.rowGapMm} mm
-          </div>
-          <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
-            {tx("label.previewOffsetX", "Offset X")}: {layoutProfile.offsetXmm}{" "}
-            mm
-          </div>
-          <div className="rounded-md bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
-            {tx("label.previewOffsetY", "Offset Y")}: {layoutProfile.offsetYmm}{" "}
-            mm
-          </div>
-        </div>
+        </details>
       </details>
     </>
   );

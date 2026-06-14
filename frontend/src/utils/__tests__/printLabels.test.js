@@ -703,6 +703,11 @@ describe("print layout model", () => {
     expect(labelPreview.html).toContain("min-height: 0");
     expect(labelPreview.html).toContain("align-items: flex-start");
     expect(labelPreview.html).toContain("overflow: visible");
+    expect(labelPreview.html).toContain("@media (max-width:");
+    expect(labelPreview.html).toContain("body.preview-body-label {");
+    expect(labelPreview.html).toContain("overflow: auto;");
+    expect(labelPreview.html).toContain("justify-content: flex-start;");
+    expect(labelPreview.html).toContain("max-width: none;");
     expect(labelPreview.previewMetrics.frameHeightPx).toBeGreaterThanOrEqual(
       labelPreview.previewMetrics.cardHeightPx,
     );
