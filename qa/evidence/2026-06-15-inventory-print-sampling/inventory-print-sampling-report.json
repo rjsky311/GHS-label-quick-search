@@ -1,0 +1,334 @@
+{
+  "generatedAt": "2026-06-15T00:45:51+08:00",
+  "sourceName": "qa/fixtures/organic-inventory-2026-06-14.csv",
+  "boundary": "review-only: inventory names are QA evidence and are not approved dictionary data",
+  "summary": {
+    "totalCsvRows": 1103,
+    "headerRowIndex": 0,
+    "validRecordCount": 394,
+    "uniqueCasCount": 342,
+    "duplicateCasCount": 40,
+    "invalidCasRowCount": 7
+  },
+  "selectionRules": [
+    "Use inventory records for source-shape, CAS parsing, long-name, duplicate, and batch-boundary coverage.",
+    "Use synthetic stress cases for 6-9 pictogram layouts because real inventory data may not contain every GHS-count condition.",
+    "Use a synthetic over-limit case to keep third-label blocking behavior tested without implying real GHS has 19 pictograms."
+  ],
+  "inventorySamples": [
+    {
+      "id": "inventory-first-valid",
+      "reason": "First valid inventory row for smoke testing the source shape.",
+      "sourceRow": 3,
+      "cas": "90-41-5",
+      "rawCas": "90-41-5",
+      "name": "2-Aminobiphenyl",
+      "location": "有機",
+      "vendor": "ACROS",
+      "quantity": "1",
+      "nameLength": 15,
+      "recommendedOutputs": [
+        "complete",
+        "qrSupplement",
+        "quickId"
+      ]
+    },
+    {
+      "id": "inventory-longest-name",
+      "reason": "Longest inventory name, useful for small-label identity fit.",
+      "sourceRow": 236,
+      "cas": "127318-97-2",
+      "rawCas": "127318-97-2",
+      "name": "4-Ethyl-1,4,7,8-tetrahydro-3H,10H-spiro[pyrano[3,4-f]indolizine-6,2'-[1,3]dioxolane]-3,10-dione",
+      "location": "有機",
+      "vendor": "Lumtec",
+      "quantity": "1",
+      "nameLength": 95,
+      "recommendedOutputs": [
+        "complete",
+        "qrSupplement",
+        "quickId"
+      ]
+    },
+    {
+      "id": "inventory-short-name",
+      "reason": "Short name baseline, useful for spotting unnecessary shrinkage.",
+      "sourceRow": 205,
+      "cas": "2537-48-6",
+      "rawCas": "2537-48-6",
+      "name": "Dieth",
+      "location": "液體",
+      "vendor": "Combi-Blocks",
+      "quantity": "1",
+      "nameLength": 5,
+      "recommendedOutputs": [
+        "complete",
+        "qrSupplement",
+        "quickId"
+      ]
+    },
+    {
+      "id": "inventory-duplicate-cas",
+      "reason": "Duplicate CAS row, useful for batch dedupe and page-count checks.",
+      "sourceRow": 28,
+      "cas": "90-90-4",
+      "rawCas": "90-90-4",
+      "name": "4-Bromobenzophenone",
+      "location": "有機",
+      "vendor": "ACROS",
+      "quantity": "1",
+      "nameLength": 19,
+      "recommendedOutputs": [
+        "complete",
+        "qrSupplement",
+        "quickId"
+      ]
+    },
+    {
+      "id": "inventory-last-valid",
+      "reason": "Last valid row, useful for parser boundary checks.",
+      "sourceRow": 423,
+      "cas": "564483-18-7",
+      "rawCas": "564483-18-7",
+      "name": "Xphos",
+      "location": "防潮箱",
+      "vendor": "Lumtec",
+      "quantity": "1",
+      "nameLength": 5,
+      "recommendedOutputs": [
+        "complete",
+        "qrSupplement",
+        "quickId"
+      ]
+    }
+  ],
+  "invalidCasSamples": [
+    {
+      "sourceRow": 79,
+      "rawCas": "344-04-07",
+      "name": "Bromopentafluorobenzene",
+      "reason": "Invalid CAS-like cell from inventory source."
+    },
+    {
+      "sourceRow": 179,
+      "rawCas": "765-03-07",
+      "name": "1-Dodecyne",
+      "reason": "Invalid CAS-like cell from inventory source."
+    },
+    {
+      "sourceRow": 192,
+      "rawCas": "7333-08-06",
+      "name": "1,2-Di-3-thienyl-1,2-ethanedione",
+      "reason": "Invalid CAS-like cell from inventory source."
+    },
+    {
+      "sourceRow": 326,
+      "rawCas": "204-695-3",
+      "name": "1-Octadecylamine",
+      "reason": "Invalid CAS-like cell from inventory source."
+    },
+    {
+      "sourceRow": 345,
+      "rawCas": "no",
+      "name": "paraformaldehyde",
+      "reason": "Invalid CAS-like cell from inventory source."
+    }
+  ],
+  "syntheticStressCases": [
+    {
+      "id": "qr-small-8-ghs",
+      "cas": "999998-80-8",
+      "name": "Eight-pictogram QR stress sample",
+      "nameZh": "八圖示 QR 壓力測試",
+      "output": "qrSupplement",
+      "stockPreset": "brother-62mm-continuous",
+      "pictogramCount": 8,
+      "expectedLayout": "QR first label uses 4 x 2 GHS grid.",
+      "pictograms": [
+        {
+          "code": "GHS01"
+        },
+        {
+          "code": "GHS02"
+        },
+        {
+          "code": "GHS03"
+        },
+        {
+          "code": "GHS04"
+        },
+        {
+          "code": "GHS05"
+        },
+        {
+          "code": "GHS06"
+        },
+        {
+          "code": "GHS07"
+        },
+        {
+          "code": "GHS08"
+        }
+      ],
+      "recommendedOutputs": [
+        "qrSupplement"
+      ]
+    },
+    {
+      "id": "qr-small-9-ghs",
+      "cas": "999999-90-9",
+      "name": "Nine-pictogram QR stress sample",
+      "nameZh": "九圖示 QR 壓力測試",
+      "output": "qrSupplement",
+      "stockPreset": "brother-62mm-continuous",
+      "pictogramCount": 9,
+      "expectedLayout": "QR first label uses 3 x 3 GHS pressure grid.",
+      "pictograms": [
+        {
+          "code": "GHS01"
+        },
+        {
+          "code": "GHS02"
+        },
+        {
+          "code": "GHS03"
+        },
+        {
+          "code": "GHS04"
+        },
+        {
+          "code": "GHS05"
+        },
+        {
+          "code": "GHS06"
+        },
+        {
+          "code": "GHS07"
+        },
+        {
+          "code": "GHS08"
+        },
+        {
+          "code": "GHS09"
+        }
+      ],
+      "recommendedOutputs": [
+        "qrSupplement"
+      ]
+    },
+    {
+      "id": "quick-id-9-ghs",
+      "cas": "999997-90-9",
+      "name": "Nine-pictogram identification stress sample",
+      "nameZh": "九圖示識別標籤壓力測試",
+      "output": "quickId",
+      "stockPreset": "small-strip",
+      "pictogramCount": 9,
+      "expectedLayout": "Identification label uses the full lower hazard band.",
+      "pictograms": [
+        {
+          "code": "GHS01"
+        },
+        {
+          "code": "GHS02"
+        },
+        {
+          "code": "GHS03"
+        },
+        {
+          "code": "GHS04"
+        },
+        {
+          "code": "GHS05"
+        },
+        {
+          "code": "GHS06"
+        },
+        {
+          "code": "GHS07"
+        },
+        {
+          "code": "GHS08"
+        },
+        {
+          "code": "GHS09"
+        }
+      ],
+      "recommendedOutputs": [
+        "quickId"
+      ]
+    },
+    {
+      "id": "qr-small-over-limit-19-ghs",
+      "cas": "999996-19-0",
+      "name": "Synthetic QR continuation limit sample",
+      "nameZh": "QR 續頁上限合成測試",
+      "output": "qrSupplement",
+      "stockPreset": "brother-62mm-continuous",
+      "pictogramCount": 19,
+      "expectedLayout": "Planner blocks output because it would need a third label.",
+      "pictograms": [
+        {
+          "code": "GHS01"
+        },
+        {
+          "code": "GHS02"
+        },
+        {
+          "code": "GHS03"
+        },
+        {
+          "code": "GHS04"
+        },
+        {
+          "code": "GHS05"
+        },
+        {
+          "code": "GHS06"
+        },
+        {
+          "code": "GHS07"
+        },
+        {
+          "code": "GHS08"
+        },
+        {
+          "code": "GHS09"
+        },
+        {
+          "code": "GHS10"
+        },
+        {
+          "code": "GHS11"
+        },
+        {
+          "code": "GHS12"
+        },
+        {
+          "code": "GHS13"
+        },
+        {
+          "code": "GHS14"
+        },
+        {
+          "code": "GHS15"
+        },
+        {
+          "code": "GHS16"
+        },
+        {
+          "code": "GHS17"
+        },
+        {
+          "code": "GHS18"
+        },
+        {
+          "code": "GHS19"
+        }
+      ],
+      "recommendedOutputs": [
+        "qrSupplement"
+      ]
+    }
+  ]
+}

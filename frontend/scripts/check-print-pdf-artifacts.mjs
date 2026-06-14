@@ -2,6 +2,10 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
+import {
+  resolveQuickIdPictogramMinSidePx,
+  resolveQrMinSidePx,
+} from "./print-pdf-thresholds.mjs";
 
 const env = process.env;
 const DEFAULT_PRINT_HTML_DIR = "build/print-html-artifacts";
@@ -88,6 +92,8 @@ const inspectPrintDom = async (page, testCase) =>
       expectedMinTotalLabels,
       expectedPrintMinPictogramSidePx,
       expectedPrintMinQrSidePx,
+      quickIdPictogramMinSidePx,
+      qrMinSidePx,
       expectedRequiredIdentityText,
       expectedRequiredIdentityTexts,
       expectedForbiddenIdentityTexts,
@@ -330,7 +336,7 @@ const inspectPrintDom = async (page, testCase) =>
             }
             if (
               Math.min(rect.width, rect.height) <
-              Math.max(30, Number(expectedPrintMinPictogramSidePx) || 0)
+              quickIdPictogramMinSidePx
             ) {
               addIssue("pictogram-too-small", rect, { index, alt });
             }
@@ -345,8 +351,7 @@ const inspectPrintDom = async (page, testCase) =>
           });
           if (
             qr &&
-            Math.min(qr.width, qr.height) <
-              Math.max(50, Number(expectedPrintMinQrSidePx) || 0)
+            Math.min(qr.width, qr.height) < qrMinSidePx
           ) {
             addIssue("qr-too-small", qr);
           }
@@ -452,6 +457,10 @@ const inspectPrintDom = async (page, testCase) =>
       expectedPrintMinPictogramSidePx:
         testCase.expectedPrintMinPictogramSidePx || 0,
       expectedPrintMinQrSidePx: testCase.expectedPrintMinQrSidePx || 0,
+      quickIdPictogramMinSidePx: resolveQuickIdPictogramMinSidePx(
+        testCase.expectedPrintMinPictogramSidePx,
+      ),
+      qrMinSidePx: resolveQrMinSidePx(testCase.expectedPrintMinQrSidePx),
       expectedRequiredIdentityText: testCase.expectedRequiredIdentityText || "",
       expectedRequiredIdentityTexts: testCase.expectedRequiredIdentityTexts || [],
       expectedForbiddenIdentityTexts:

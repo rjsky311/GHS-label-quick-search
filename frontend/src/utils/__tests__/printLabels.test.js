@@ -287,6 +287,50 @@ describe("inspectPrintLayoutDocument", () => {
     expect(inspectPrintLayoutDocument(root)).toEqual([]);
   });
 
+  it("allows full-page primary names to wrap horizontally without blocking print", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label label-full-page-primary">
+        <div class="name-section">
+          <div class="name-en" style="white-space:normal;overflow-wrap:anywhere;overflow:visible;">
+            5-Bromo-2,2'-bithiophene-5'-carboxaldehyde
+          </div>
+          <div class="name-zh" style="white-space:normal;overflow-wrap:anywhere;overflow:visible;">
+            5-溴-2,2'-聯噻吩-5'-甲醛
+          </div>
+        </div>
+      </div>
+    `;
+
+    const label = root.querySelector(".label");
+    const nameSection = root.querySelector(".name-section");
+    const nameEn = root.querySelector(".name-en");
+    const nameZh = root.querySelector(".name-zh");
+
+    Object.defineProperties(label, {
+      clientHeight: { value: 900, configurable: true },
+      scrollHeight: { value: 900, configurable: true },
+      clientWidth: { value: 620, configurable: true },
+      scrollWidth: { value: 620, configurable: true },
+    });
+    Object.defineProperties(nameSection, {
+      clientHeight: { value: 70, configurable: true },
+      scrollHeight: { value: 70, configurable: true },
+      clientWidth: { value: 560, configurable: true },
+      scrollWidth: { value: 560, configurable: true },
+    });
+    [nameEn, nameZh].forEach((element) => {
+      Object.defineProperties(element, {
+        clientHeight: { value: 28, configurable: true },
+        scrollHeight: { value: 28, configurable: true },
+        clientWidth: { value: 220, configurable: true },
+        scrollWidth: { value: 420, configurable: true },
+      });
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([]);
+  });
+
   it("reports clipped full-label inner panels before printing", () => {
     const root = document.createElement("div");
     root.innerHTML = `
@@ -998,6 +1042,12 @@ describe("printLabels", () => {
     expect(html).toContain("label-a4-primary");
     expect(html).toContain("width: 28.2mm");
     expect(html).not.toContain("column-count: 3");
+    expect(html).toMatch(
+      /\.label-full-page-primary \.name-en \{[\s\S]*-webkit-line-clamp: 2;[\s\S]*overflow-wrap: anywhere;/,
+    );
+    expect(html).toMatch(
+      /\.label-full-page-primary \.name-zh \{[\s\S]*-webkit-line-clamp: 2;[\s\S]*overflow-wrap: anywhere;/,
+    );
     expect(html).toMatch(
       /\.label-full-page-primary \.compliance-precaution-list \{[\s\S]*display: flex;/,
     );
@@ -1928,7 +1978,7 @@ describe("printLabels", () => {
       expect(html).toContain("data:image/gif;base64");
     });
 
-    it("qrcode small labels continue same-stock only when pictograms exceed the first QR label", () => {
+    it("keeps all nine QR small-label pictograms on the first label", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
@@ -1966,8 +2016,8 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("qrcode-img");
       expect(preview.fragmentHtml).toContain("64-17-5");
       expect(preview.fragmentHtml).toContain("small-cas");
-      expect(preview.model.expandedLabels).toHaveLength(2);
-      expect(preview.fragmentHtml.match(/alt="GHS0[1-6]"/g)).toHaveLength(6);
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-9]"/g)).toHaveLength(9);
       expect(expandedPictogramCodes(preview)).toEqual([
         "GHS01",
         "GHS02",
@@ -1980,6 +2030,7 @@ describe("printLabels", () => {
         "GHS09",
       ]);
       expect(preview.fragmentHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
+      expect(preview.fragmentHtml).not.toContain("label-qr-no-code");
       expect(preview.fragmentHtml).not.toContain("more-pics");
     });
 
@@ -2012,10 +2063,11 @@ describe("printLabels", () => {
         "label-stock-brother-62mm-continuous",
       );
       expect(preview.fragmentHtml).toContain("label-form-strip");
-      expect(preview.html).toContain("width: 22mm");
+      expect(preview.html).toContain("width: 19.8mm");
       expect(preview.html).toContain(
-        "grid-template-columns: repeat(3, minmax(0, 11mm))",
+        "grid-template-columns: repeat(3, minmax(0, 9.4mm))",
       );
+      expect(preview.html).toContain("grid-auto-rows: 9.4mm");
       expect(preview.html).toContain(
         ".label-stock-brother-62mm-continuous.label-qr.label-form-strip",
       );
@@ -2098,26 +2150,26 @@ describe("printLabels", () => {
       expect(quickIdPreview.fragmentHtml).toContain("Allyl Alcohol sample pyjamas");
       expect(quickIdPreview.fragmentHtml).toContain("烯丙醇樣品");
       expect(quickIdPreview.html).toContain(
-        ".label-icon.label-form-strip .small-name-en {\n      font-size: 6.35px;\n      line-height: 1.16;",
+        ".label-icon.label-form-strip .small-name-en {\n      font-size: 7.05px;\n      line-height: 1.12;",
       );
       expect(quickIdPreview.html).toContain(
-        ".label-icon.label-form-strip .small-name-zh {\n      font-size: 6.35px;\n      line-height: 1.16;",
+        ".label-icon.label-form-strip .small-name-zh {\n      font-size: 7.05px;\n      line-height: 1.12;",
       );
       expect(quickIdPreview.html).toContain(
-        ".label-icon.label-form-strip .small-cas {\n      font-size: 6.6px;\n      line-height: 1.14;",
+        ".label-icon.label-form-strip .small-cas {\n      font-size: 7.25px;\n      line-height: 1.12;",
       );
       expect(qrPreview.html).toContain(
-        ".label-qr.label-form-strip .small-name-en {\n      font-size: 6px;\n      line-height: 1.16;",
+        ".label-qr.label-form-strip .small-name-en {\n      font-size: 7px;\n      line-height: 1.12;",
       );
       expect(qrPreview.html).toContain(
-        ".label-qr.label-form-strip .small-name-zh {\n      font-size: 6px;\n      line-height: 1.16;",
+        ".label-qr.label-form-strip .small-name-zh {\n      font-size: 7px;\n      line-height: 1.12;",
       );
       expect(qrPreview.html).toContain(
-        ".label-qr.label-form-strip .small-cas {\n      font-size: 6.15px;\n      line-height: 1.14;",
+        ".label-qr.label-form-strip .small-cas {\n      font-size: 7.1px;\n      line-height: 1.12;",
       );
     });
 
-    it("uses stock-specific horizontal pictogram rows for quick-ID labels", () => {
+    it("uses stock-specific two-row pictogram grids for quick-ID labels", () => {
       const multiPictogramChemical = {
         ...mockChemical,
         ghs_pictograms: [
@@ -2128,10 +2180,10 @@ describe("printLabels", () => {
         ],
       };
       const cases = [
-        ["small-strip", "label-stock-small-strip", "repeat(6, 7.4mm)"],
+        ["small-strip", "label-stock-small-strip", "repeat(6, 8.4mm)", "8.4mm"],
       ];
 
-      cases.forEach(([stockPreset, stockClass, gridRule]) => {
+      cases.forEach(([stockPreset, stockClass, gridRule, rowSize]) => {
         const preview = buildPrintPreviewDocument(
           [multiPictogramChemical],
           {
@@ -2155,6 +2207,7 @@ describe("printLabels", () => {
           `.label-icon.${stockClass} .pictograms-icon`,
         );
         expect(preview.html).toContain(`grid-template-columns: ${gridRule}`);
+        expect(preview.html).toContain(`grid-auto-rows: ${rowSize}`);
       });
     });
 
@@ -2172,7 +2225,7 @@ describe("printLabels", () => {
         [
           "brother-62mm-continuous",
           "label-stock-brother-62mm-continuous",
-          "repeat(3, minmax(0, 11mm))",
+          "repeat(3, minmax(0, 9.4mm))",
           "label-form-strip",
         ],
       ];
@@ -2279,8 +2332,9 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         ".label-icon.label-stock-small-strip .pictograms-icon",
       );
-      expect(preview.html).toContain("grid-template-columns: repeat(6, 7.4mm)");
-      expect(preview.html).toContain("width: 7.4mm");
+      expect(preview.html).toContain("grid-template-columns: repeat(6, 8.4mm)");
+      expect(preview.html).toContain("grid-auto-rows: 8.4mm");
+      expect(preview.html).toContain("width: 8.4mm");
     });
 
     it("adds identity density classes so long small-label names shrink before CAS is lost", () => {
@@ -2346,6 +2400,57 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("small-cas");
     });
 
+    it("uses the full lower band for 70 mm identification label pictograms", () => {
+      const eightPictogramChemical = {
+        ...mockChemical,
+        cas_number: "123456-78-9",
+        name_en:
+          "N,N-Dimethyl-4-nitrosoaniline hydrochloride analytical reference",
+        name_zh: "長名稱測試化學品樣本",
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [eightPictogramChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-pictogram-count-8");
+      expect(preview.fragmentHtml).toContain("identity-density-high");
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-8]"/g)).toHaveLength(8);
+      expect(preview.fragmentHtml).not.toContain("qrcode-img");
+      expect(preview.html).toContain(
+        ".label-icon.label-stock-small-strip.label-form-strip",
+      );
+      expect(preview.html).toContain(
+        "grid-template-rows: auto minmax(0, 1fr)",
+      );
+      expect(preview.html).toContain(
+        ".label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon",
+      );
+      expect(preview.html).toContain("grid-template-columns: repeat(9, 6.7mm)");
+      expect(preview.html).toContain("justify-content: start");
+    });
+
     it("prints small QR supplemental labels after keeping QR and every pictogram in the body", () => {
       const multiPictogramChemical = {
         ...mockChemical,
@@ -2380,11 +2485,62 @@ describe("printLabels", () => {
       expect(bodyHtml).toContain("qrcode-img");
       expect(bodyHtml.match(/alt="GHS0[1-9]"/g)).toHaveLength(9);
       expect(bodyHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
-      expect(bodyHtml).toContain("label-qr-no-code");
+      expect(bodyHtml).not.toContain("label-qr-no-code");
       expect(bodyHtml).not.toContain("more-pics");
       expect(alertSpy).not.toHaveBeenCalled();
       jest.advanceTimersByTime(300);
       expect(mockIframeWindow.print).toHaveBeenCalled();
+    });
+
+    it("lets 62 mm QR labels use the top-right area for identity and uses a 4x2 grid for eight pictograms", () => {
+      const eightPictogramChemical = {
+        ...mockChemical,
+        cas_number: "123456-78-9",
+        name_en:
+          "N,N-Dimethyl-4-nitrosoaniline hydrochloride analytical reference",
+        name_zh: "長名稱測試化學品樣本",
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [eightPictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).toContain("label-pictogram-count-8");
+      expect(preview.fragmentHtml).toContain("identity-density-high");
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-8]"/g)).toHaveLength(8);
+      expect(preview.fragmentHtml).toContain("qrcode-img");
+      expect(preview.html).toContain(
+        ".label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-identity",
+      );
+      expect(preview.html).toContain("grid-column: 1 / -1");
+      expect(preview.html).toContain("grid-row: 2");
+      expect(preview.html).toContain(
+        ".label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-8 .pictograms.qr-pics",
+      );
+      expect(preview.html).toContain("grid-template-columns: repeat(4, 7.7mm)");
+      expect(preview.html).toContain("grid-auto-rows: 7.7mm");
+      expect(preview.html).toContain("width: 18.9mm");
     });
 
     it("standard template uses the new hierarchy blocks for rail + hazard board", () => {

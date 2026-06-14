@@ -1327,7 +1327,7 @@ describe("LabelPrintModal", () => {
     renderModal({
       selectedForLabel: [
         makeChem({
-          ghs_pictograms: Array.from({ length: 13 }, (_, index) => ({
+          ghs_pictograms: Array.from({ length: 19 }, (_, index) => ({
             code: `GHS${String(index + 1).padStart(2, "0")}`,
           })),
         }),

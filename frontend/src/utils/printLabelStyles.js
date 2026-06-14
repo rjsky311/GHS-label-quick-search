@@ -464,7 +464,10 @@ export const buildPrintStyles = (model) => {
     .label-full-page-primary .name-en {
       font-size: 26px;
       line-height: 1.18;
-      -webkit-line-clamp: 1;
+      -webkit-line-clamp: 2;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
     }
     .name-zh {
       font-size: calc(${layout.typography.titleSize} - 2px);
@@ -472,9 +475,15 @@ export const buildPrintStyles = (model) => {
       margin-top: 0.5mm;
     }
     .label-full-page-primary .name-zh {
+      display: -webkit-box;
       font-size: 26px;
       line-height: 1.18;
       margin-top: 0.25mm;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .label-standard .name-en {
       font-size: max(${layout.typography.titleSize}, calc(${layout.typography.fontSize} + 2px));
@@ -1177,30 +1186,30 @@ export const buildPrintStyles = (model) => {
       gap: 0.14mm;
     }
     .label-icon.label-form-strip .small-cas {
-      font-size: 6.6px;
-      line-height: 1.14;
+      font-size: 7.25px;
+      line-height: 1.12;
     }
     .label-icon.label-form-strip .small-name-en {
-      font-size: 6.35px;
-      line-height: 1.16;
+      font-size: 7.05px;
+      line-height: 1.12;
     }
     .label-icon.label-form-strip .identity-density-medium .small-name-en,
     .label-icon.label-form-strip .identity-density-medium .small-name-zh {
-      font-size: 5.85px;
+      font-size: 6.45px;
     }
     .label-icon.label-form-strip .identity-density-high .small-name-en,
     .label-icon.label-form-strip .identity-density-high .small-name-zh {
-      font-size: 5.3px;
+      font-size: 5.95px;
     }
     .label-icon.label-form-strip .small-name-zh {
-      font-size: 6.35px;
-      line-height: 1.16;
+      font-size: 7.05px;
+      line-height: 1.12;
     }
     .label-icon.label-form-strip .identity-density-medium .small-cas {
-      font-size: 6px;
+      font-size: 6.65px;
     }
     .label-icon.label-form-strip .identity-density-high .small-cas {
-      font-size: 5.6px;
+      font-size: 6.15px;
     }
     .label-icon.label-form-strip .cas {
       display: block;
@@ -1257,13 +1266,52 @@ export const buildPrintStyles = (model) => {
     .label-icon.label-stock-medium-rack .label-middle {
       justify-content: center;
     }
+    .label-icon.label-stock-small-strip.label-form-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      align-items: stretch;
+      gap: 0.7mm;
+      padding: 1.15mm 1.4mm 1.1mm;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip .label-top-identity {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: start;
+      min-width: 0;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip .label-middle {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: stretch;
+      justify-content: center;
+      align-items: flex-start;
+      min-width: 0;
+    }
     .label-icon.label-stock-small-strip .pictograms-icon {
-      grid-template-columns: repeat(6, 7.4mm);
-      gap: 0.35mm;
+      grid-template-columns: repeat(6, 8.4mm);
+      grid-auto-rows: 8.4mm;
+      align-content: center;
+      justify-content: start;
+      gap: 0.35mm 0.45mm;
     }
     .label-icon.label-stock-small-strip .pictograms-icon img {
-      width: 7.4mm;
-      height: 7.4mm;
+      width: 8.4mm;
+      height: 8.4mm;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-7 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-9 .pictograms-icon {
+      grid-template-columns: repeat(9, 6.7mm);
+      grid-auto-rows: 6.7mm;
+      justify-content: start;
+      gap: 0.3mm 0.35mm;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-7 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-9 .pictograms-icon img {
+      width: 6.7mm;
+      height: 6.7mm;
     }
     .label-icon.label-stock-small-rack .label-top {
       padding-bottom: 0.45mm;
@@ -1506,12 +1554,12 @@ export const buildPrintStyles = (model) => {
       gap: 0.12mm;
     }
     .label-qr.label-form-strip .small-cas {
-      font-size: 6.15px;
-      line-height: 1.14;
+      font-size: 7.1px;
+      line-height: 1.12;
     }
     .label-qr.label-form-strip .small-name-en {
-      font-size: 6px;
-      line-height: 1.16;
+      font-size: 7px;
+      line-height: 1.12;
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
@@ -1519,25 +1567,25 @@ export const buildPrintStyles = (model) => {
     }
     .label-qr.label-form-strip .identity-density-medium .small-name-en,
     .label-qr.label-form-strip .identity-density-medium .small-name-zh {
-      font-size: 5.45px;
+      font-size: 6.35px;
     }
     .label-qr.label-form-strip .identity-density-high .small-name-en,
     .label-qr.label-form-strip .identity-density-high .small-name-zh {
-      font-size: 5.05px;
+      font-size: 5.85px;
     }
     .label-qr.label-form-strip .small-name-zh {
-      font-size: 6px;
-      line-height: 1.16;
+      font-size: 7px;
+      line-height: 1.12;
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
       overflow-wrap: anywhere;
     }
     .label-qr.label-form-strip .identity-density-medium .small-cas {
-      font-size: 5.65px;
+      font-size: 6.45px;
     }
     .label-qr.label-form-strip .identity-density-high .small-cas {
-      font-size: 5.25px;
+      font-size: 6px;
     }
     .label-qr.label-form-strip .meta-ribbon {
       margin-top: 0.2mm;
@@ -1670,33 +1718,52 @@ export const buildPrintStyles = (model) => {
       height: 13.35mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip {
-      gap: 0.65mm;
+      grid-template-columns: minmax(0, 1fr) 19.8mm;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 0.7mm 0.9mm;
       padding: 1.35mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-left-scan {
-      padding-right: 0.65mm;
+      padding-right: 0;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-identity {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      align-self: start;
+      min-width: 0;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, ${qrPictogramSize}));
+      grid-template-columns: repeat(3, minmax(0, 9.4mm));
+      grid-auto-rows: 9.4mm;
       justify-content: start;
+      align-content: center;
       gap: 0.42mm 0.55mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .pictograms.qr-pics img {
-      width: ${qrPictogramSize};
-      height: ${qrPictogramSize};
+      width: 9.4mm;
+      height: 9.4mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-right {
-      width: 18.8mm;
-      flex-basis: 18.8mm;
+      grid-column: 2;
+      grid-row: 2;
+      align-self: center;
+      justify-self: end;
+      width: 19.8mm;
+      flex-basis: 19.8mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-panel {
+      align-self: center;
+      justify-self: end;
+      justify-content: center;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-code-shell {
-      width: 18.8mm;
-      height: 18.8mm;
+      width: 19.8mm;
+      height: 19.8mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qrcode-img {
-      width: 18.2mm;
-      height: 18.2mm;
+      width: 18.9mm;
+      height: 18.9mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-qr-no-code .pictograms.qr-pics {
       grid-template-columns: repeat(3, 9.8mm);
@@ -1707,9 +1774,31 @@ export const buildPrintStyles = (model) => {
       width: 9.8mm;
       height: 9.8mm;
     }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-7 .pictograms.qr-pics,
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-8 .pictograms.qr-pics {
+      grid-template-columns: repeat(4, 7.7mm);
+      grid-auto-rows: 7.7mm;
+      gap: 0.55mm 0.55mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-7 .pictograms.qr-pics img,
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-8 .pictograms.qr-pics img {
+      width: 7.7mm;
+      height: 7.7mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-9 .pictograms.qr-pics {
+      grid-template-columns: repeat(3, 7.45mm);
+      grid-auto-rows: 7.45mm;
+      gap: 0.45mm 0.55mm;
+    }
+    .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-9 .pictograms.qr-pics img {
+      width: 7.45mm;
+      height: 7.45mm;
+    }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-support-row {
       justify-content: start;
-      padding-top: 0.2mm;
+      align-self: center;
+      align-items: center;
+      padding-top: 0;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .signal.qr-signal {
       width: 100%;

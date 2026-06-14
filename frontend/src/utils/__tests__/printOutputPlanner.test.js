@@ -297,7 +297,7 @@ describe("printOutputPlanner", () => {
           cas_number: "9000-00-0",
           name_en: "Crowded pictogram sample",
           name_zh: "多圖示樣品",
-          ghs_pictograms: Array.from({ length: 13 }, (_, index) => ({
+          ghs_pictograms: Array.from({ length: 19 }, (_, index) => ({
             code: `GHS${String(index + 1).padStart(2, "0")}`,
           })),
           hazard_statements: [],

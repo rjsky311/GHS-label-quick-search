@@ -1,6 +1,6 @@
 # Print UX And Label Layout Decision Design
 
-Status: proposed design for review.
+Status: accepted design for implementation.
 Date: 2026-06-14.
 Owner context: user feedback during print-preview and visual-language review.
 
@@ -240,10 +240,27 @@ Forbidden:
 Layout decisions:
 
 - QR should remain large enough for practical phone scanning.
+- The QR reserved area is the QR symbol plus its quiet zone, not the entire
+  right-side column. On the first QR label, the top identity band may extend
+  across the full label width above the QR object.
+- The first-label identity band should print CAS, English name, and trusted
+  Chinese name as visually distinct lines when bilingual mode is active. The
+  identity font-size decision should depend on the identity area's available
+  width and text length, not on the number of GHS pictograms below it.
+- The QR object should sit below the identity band on the right side. The GHS
+  area should use the remaining lower-left area up to the QR quiet-zone
+  boundary; do not leave a large unused middle area between GHS pictograms and
+  the QR object.
 - GHS pictograms should remain recognizable, not decorative.
 - The first QR small label should be the normal case. A well-fit 62 x 40 mm QR
   label should carry QR, CAS, the selected language identity text, and roughly
   six recognizable GHS pictograms when the chemical data requires them.
+- QR small-label pictogram grids should be chosen from the lower area shape:
+  `5-6` pictograms use `3 x 2`, `7-8` pictograms use `4 x 2`, and `9`
+  pictograms use `3 x 3` as a pressure-case upper bound.
+- The first QR small label may carry up to `9` pictograms when readable.
+  `7-8` pictograms should remain on the first label using `4 x 2` instead of
+  spilling to continuation just because the older first-label cap was six.
 - If pictograms exceed the first label, continuation labels repeat identity and
   use the recovered QR area for remaining pictograms.
 - Continuation caps are recovery thresholds, not truncation limits. The app
@@ -257,6 +274,8 @@ Continuation target:
 
 - Target 1 QR small label for ordinary chemicals.
 - Maximum 2 QR small labels per chemical.
+- First QR label capacity should be `9` pictograms only as a pressure cap; the
+  visually comfortable range remains `1-8`, with `7-8` using `4 x 2`.
 - If QR output would require a third label, treat that as a layout or output
   mismatch: do not silently print it. Show recovery guidance instead.
 
@@ -286,6 +305,11 @@ Layout decisions:
 
 - This label is the strictest layout. It should prefer clarity over completeness
   of optional language content.
+- The top identity band should use the label width for CAS, English name, and
+  trusted Chinese name. The lower band belongs to GHS pictograms; right-side
+  whitespace is usable hazard space, not a fixed reserved area.
+- Identification label font-size decisions should be based on identity text fit
+  within the top band, not on the number of GHS pictograms in the lower band.
 - The first Identification small label should handle nearly all chemicals. The
   layout should aim for one-label output in ordinary cases and should be able
   to carry about six recognizable GHS pictograms when identity text remains

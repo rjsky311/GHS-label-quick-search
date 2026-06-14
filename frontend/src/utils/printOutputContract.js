@@ -9,15 +9,17 @@ export const SMALL_LABEL_CONTINUATION_POLICY = Object.freeze({
     outputId: PRINT_OUTPUT_IDS.QR_SUPPLEMENT,
     targetLabels: 1,
     maxLabels: 2,
-    firstLabelPictogramTarget: 6,
-    continuationPictogramTarget: 6,
+    comfortablePictogramTarget: 6,
+    firstLabelPictogramTarget: 9,
+    continuationPictogramTarget: 9,
   }),
   [PRINT_OUTPUT_IDS.QUICK_ID]: Object.freeze({
     outputId: PRINT_OUTPUT_IDS.QUICK_ID,
     targetLabels: 1,
     maxLabels: 2,
-    firstLabelPictogramTarget: 6,
-    continuationPictogramTarget: 6,
+    comfortablePictogramTarget: 6,
+    firstLabelPictogramTarget: 9,
+    continuationPictogramTarget: 9,
   }),
 });
 
@@ -52,6 +54,16 @@ export const getCompactPictogramCapacity = (
   return pageIndex === 0
     ? policy.firstLabelPictogramTarget
     : policy.continuationPictogramTarget;
+};
+
+export const getQrSmallLabelPictogramGrid = (pictogramCount = 0) => {
+  const count = Math.max(0, Number(pictogramCount) || 0);
+  if (count <= 0) return { columns: 0, rows: 0, pressure: false };
+  if (count <= 3) return { columns: count, rows: 1, pressure: false };
+  if (count === 4) return { columns: 2, rows: 2, pressure: false };
+  if (count <= 6) return { columns: 3, rows: 2, pressure: false };
+  if (count <= 8) return { columns: 4, rows: 2, pressure: false };
+  return { columns: 3, rows: 3, pressure: true };
 };
 
 export const requiresSmallLabelRecovery = (outputId, pageCount) => {

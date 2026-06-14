@@ -3,6 +3,7 @@ import {
   SMALL_LABEL_CONTINUATION_POLICY,
   getSmallLabelContinuationPolicy,
   getCompactPictogramCapacity,
+  getQrSmallLabelPictogramGrid,
   requiresSmallLabelRecovery,
   validateSmallLabelContinuationSet,
 } from "@/utils/printOutputContract";
@@ -19,34 +20,54 @@ describe("printOutputContract", () => {
     ]);
   });
 
-  it("pins strict small-label continuation targets", () => {
+  it("pins strict small-label continuation limits and first-label pressure caps", () => {
     expect(SMALL_LABEL_CONTINUATION_POLICY.qrSupplement).toMatchObject({
       targetLabels: 1,
       maxLabels: 2,
-      firstLabelPictogramTarget: 6,
+      comfortablePictogramTarget: 6,
+      firstLabelPictogramTarget: 9,
     });
     expect(SMALL_LABEL_CONTINUATION_POLICY.quickId).toMatchObject({
       targetLabels: 1,
       maxLabels: 2,
-      firstLabelPictogramTarget: 6,
+      comfortablePictogramTarget: 6,
+      firstLabelPictogramTarget: 9,
     });
   });
 
-  it("uses six pictograms as the first-label compact target", () => {
+  it("uses nine pictograms as the compact first-label pressure cap", () => {
     expect(
       getCompactPictogramCapacity(
         { stockPreset: "brother-62mm-continuous", labelPurpose: "qrSupplement" },
         "qrcode",
         0,
       ),
-    ).toBe(6);
+    ).toBe(9);
     expect(
       getCompactPictogramCapacity(
         { stockPreset: "small-strip", labelPurpose: "quickId" },
         "icon",
         0,
       ),
-    ).toBe(6);
+    ).toBe(9);
+  });
+
+  it("selects QR small-label pictogram grids from the usable lower area", () => {
+    expect(getQrSmallLabelPictogramGrid(6)).toEqual({
+      columns: 3,
+      rows: 2,
+      pressure: false,
+    });
+    expect(getQrSmallLabelPictogramGrid(8)).toEqual({
+      columns: 4,
+      rows: 2,
+      pressure: false,
+    });
+    expect(getQrSmallLabelPictogramGrid(9)).toEqual({
+      columns: 3,
+      rows: 3,
+      pressure: true,
+    });
   });
 
   it("marks third small-label pages as recovery instead of a normal path", () => {
