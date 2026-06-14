@@ -146,14 +146,26 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
       'notebook-tool-card',
     );
+    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
+      'notebook-tool-card-accent',
+    );
     expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
       'notebook-tool-card',
+    );
+    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
+      'notebook-tool-card-accent',
     );
     expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
       'notebook-tool-card',
     );
+    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
+      'notebook-tool-card-accent',
+    );
     expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
       'notebook-tool-card',
+    );
+    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
+      'notebook-tool-card-accent',
     );
   });
 

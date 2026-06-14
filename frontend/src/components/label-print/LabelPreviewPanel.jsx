@@ -97,7 +97,7 @@ export default function LabelPreviewPanel({
 
   return (
     <aside
-      className="order-first border-t border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface)/0.58)] lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0"
+      className="border-t border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface)/0.58)] lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0"
       data-testid="label-preview-scroll-region"
     >
       <div

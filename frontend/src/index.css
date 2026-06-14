@@ -214,6 +214,32 @@ code {
         box-shadow: 0 1px 0 hsl(0 0% 100% / 0.24) inset;
     }
 
+    .notebook-tool-card {
+        position: relative;
+        overflow: hidden;
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-surface-raised) / 0.92),
+                hsl(var(--notebook-surface) / 0.7)
+            ),
+            repeating-linear-gradient(
+                0deg,
+                hsl(var(--notebook-rule) / 0.11) 0,
+                hsl(var(--notebook-rule) / 0.11) 1px,
+                transparent 1px,
+                transparent 11px
+            );
+    }
+
+    .notebook-tool-card-accent::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: hsl(var(--notebook-action-border) / 0.58);
+    }
+
     .notebook-field {
         min-height: 2.75rem;
         border: 1px solid hsl(var(--notebook-border) / 0.9);

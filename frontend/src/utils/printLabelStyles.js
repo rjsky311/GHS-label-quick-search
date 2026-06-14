@@ -1258,12 +1258,12 @@ export const buildPrintStyles = (model) => {
       justify-content: center;
     }
     .label-icon.label-stock-small-strip .pictograms-icon {
-      grid-template-columns: repeat(5, 8.2mm);
-      gap: 0.45mm;
+      grid-template-columns: repeat(6, 7.4mm);
+      gap: 0.35mm;
     }
     .label-icon.label-stock-small-strip .pictograms-icon img {
-      width: 8.2mm;
-      height: 8.2mm;
+      width: 7.4mm;
+      height: 7.4mm;
     }
     .label-icon.label-stock-small-rack .label-top {
       padding-bottom: 0.45mm;

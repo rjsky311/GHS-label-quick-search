@@ -2128,7 +2128,7 @@ describe("printLabels", () => {
         ],
       };
       const cases = [
-        ["small-strip", "label-stock-small-strip", "repeat(5, 8.2mm)"],
+        ["small-strip", "label-stock-small-strip", "repeat(6, 7.4mm)"],
       ];
 
       cases.forEach(([stockPreset, stockClass, gridRule]) => {
@@ -2276,6 +2276,11 @@ describe("printLabels", () => {
       expect(preview.model.expandedLabels).toHaveLength(1);
       expect(preview.fragmentHtml.match(/alt="GHS0[1-6]"/g)).toHaveLength(6);
       expect(preview.fragmentHtml).not.toContain("qrcode-img");
+      expect(preview.html).toContain(
+        ".label-icon.label-stock-small-strip .pictograms-icon",
+      );
+      expect(preview.html).toContain("grid-template-columns: repeat(6, 7.4mm)");
+      expect(preview.html).toContain("width: 7.4mm");
     });
 
     it("adds identity density classes so long small-label names shrink before CAS is lost", () => {

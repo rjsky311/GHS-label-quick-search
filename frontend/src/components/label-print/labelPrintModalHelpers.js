@@ -250,7 +250,7 @@ export function buildPreviewRisks({
     risks.push(
       tx(
         "label.previewRiskQuickId",
-        "Quick ID mode is for internal bench use only; it should not be treated as a complete hazard label.",
+        "Identification small labels are for bench-side identification; keep the complete hazard label or SDS nearby.",
       ),
     );
   }
@@ -434,7 +434,7 @@ export const getBatchCategoryLabel = (category, tx) => {
 export const getBatchPurposeLabel = (purpose, tx) => {
   switch (purpose) {
     case BATCH_PRINT_PURPOSE.QUICK_ID:
-      return tx("label.batchPurposeQuickId", "Quick ID");
+      return tx("label.batchPurposeQuickId", "Identification");
     case BATCH_PRINT_PURPOSE.SUPPLEMENTAL:
       return tx("label.batchPurposeSupplemental", "Supplemental");
     case BATCH_PRINT_PURPOSE.COMPLETE:
@@ -453,7 +453,7 @@ export const getBatchReasonLabel = (reason, tx) => {
     case "text-only-ghs-needs-hazard-text":
       return tx(
         "label.batchReasonTextOnlyQuickId",
-        "GHS text exists but no pictogram is available for Quick ID",
+        "GHS text exists but no pictogram is available for identification labels",
       );
     case "responsible-profile-missing":
       return tx("label.batchReasonProfile", "Responsible profile is incomplete");

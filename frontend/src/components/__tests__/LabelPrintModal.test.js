@@ -218,7 +218,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
       "lg:overflow-y-auto",
     );
-    expect(screen.getByTestId("label-preview-panel").parentElement).toHaveClass(
+    expect(screen.getByTestId("label-preview-panel").parentElement).not.toHaveClass(
       "order-first",
     );
   });
@@ -411,6 +411,24 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("label-purpose-quickId")).toHaveClass(
       "notebook-control-secondary",
+    );
+    expect(screen.getByTestId("label-purpose-complete")).toHaveTextContent(
+      "Full H/P + QR",
+    );
+    expect(screen.getByTestId("label-purpose-complete")).toHaveTextContent(
+      "A4/Letter",
+    );
+    expect(screen.getByTestId("label-purpose-qrSupplement")).toHaveTextContent(
+      "CAS + EN/ZH + QR + icons",
+    );
+    expect(screen.getByTestId("label-purpose-qrSupplement")).toHaveTextContent(
+      "Max 2 labels",
+    );
+    expect(screen.getByTestId("label-purpose-quickId")).toHaveTextContent(
+      "CAS + EN/ZH + icons",
+    );
+    expect(screen.getByTestId("label-purpose-quickId")).toHaveTextContent(
+      "Usually 1 label",
     );
     expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
       "Complete A4/Letter label",
@@ -1274,7 +1292,7 @@ describe("LabelPrintModal", () => {
       "QR small label is printable",
     );
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "selected identity language",
+      "English/Chinese names",
     );
     expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
       "English, Chinese",
@@ -1359,13 +1377,13 @@ describe("LabelPrintModal", () => {
       "Identification small label is printable",
     );
     expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
-      "selected identity language",
+      "English/Chinese names",
     );
     expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
       "English, Chinese",
     );
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
-      "Quick-ID supplement",
+      "Identification supplement",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Print identification small label (1)",

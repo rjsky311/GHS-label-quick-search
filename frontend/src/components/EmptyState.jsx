@@ -178,7 +178,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
                 <div
                   key={titleKey}
-                  className="notebook-status-card notebook-tool-card flex h-full min-w-0 gap-3 rounded-md p-4 text-left"
+                  className="notebook-status-card notebook-tool-card notebook-tool-card-accent flex h-full min-w-0 gap-3 rounded-md p-4 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
                   <span className="notebook-tool-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-md">

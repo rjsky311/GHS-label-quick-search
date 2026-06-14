@@ -556,7 +556,7 @@ export default function LabelPrintModal({
       ? tx("label.decisionRoleQrSupplement", "QR supplement")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
           outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
-        ? tx("label.decisionRoleQuickId", "Quick-ID supplement")
+        ? tx("label.decisionRoleQuickId", "Identification supplement")
       : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? isContainerFrontOutput
           ? tx("label.decisionRoleContainerFront", "Container front label")
@@ -1127,13 +1127,13 @@ export default function LabelPrintModal({
               : isQrSupplementOutput
                 ? tx(
                     "label.outputOutcomeQrSmallBody",
-                    "This prints CAS, the selected identity language, QR, and every GHS pictogram. If icons do not fit, the same output continues onto another small label.",
+                    "This prints CAS, English/Chinese names, QR, and every GHS pictogram. If icons do not fit, the same output continues onto another small label.",
                     { target: qrTargetInfo ? qrTargetRoleLabel : "SDS/QR" },
                   )
                 : isQuickIdOutput
                   ? tx(
                       "label.outputOutcomeIdentitySmallBody",
-                      "This prints CAS, the selected identity language, and every GHS pictogram. It does not include H/P text or QR.",
+                      "This prints CAS, English/Chinese names, and every GHS pictogram. It does not include H/P text or QR.",
                     )
                   : isSupplementalOutput
                     ? tx(

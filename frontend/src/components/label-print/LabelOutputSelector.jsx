@@ -55,6 +55,11 @@ export default function LabelOutputSelector({
               option.descKey,
               option.fallbackDesc || "",
             );
+            const optionContent = tx(
+              option.contentKey,
+              option.fallbackContent || "",
+            );
+            const optionRule = tx(option.ruleKey, option.fallbackRule || "");
 
             return (
               <button
@@ -65,7 +70,7 @@ export default function LabelOutputSelector({
                 aria-label={`${optionLabel}. ${optionDescription}`}
                 title={optionDescription}
                 data-testid={`label-purpose-${option.value}`}
-                className={`notebook-control min-h-12 w-full min-w-0 overflow-hidden rounded-md p-2.5 text-left transition-colors ${
+                className={`notebook-control min-h-[5.75rem] w-full min-w-0 overflow-hidden rounded-md p-2.5 text-left transition-colors ${
                   selected
                     ? "notebook-control-primary"
                     : "notebook-control-secondary"
@@ -77,6 +82,14 @@ export default function LabelOutputSelector({
                   </span>
                   <span className="min-w-0 whitespace-normal break-words text-sm font-semibold leading-5">
                     {optionLabel}
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-1.5 text-xs leading-4">
+                  <span className="text-[hsl(var(--notebook-muted-ink))]">
+                    {optionContent}
+                  </span>
+                  <span className="inline-flex w-fit max-w-full rounded-full border border-current/15 bg-[hsl(var(--notebook-surface)/0.76)] px-2 py-0.5 font-medium text-[hsl(var(--notebook-ink))]">
+                    {optionRule}
                   </span>
                 </div>
               </button>
