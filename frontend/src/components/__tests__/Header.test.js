@@ -30,6 +30,20 @@ describe('Header', () => {
     expect(screen.getByText('header.title')).toBeInTheDocument();
   });
 
+  it('uses the notebook app chrome instead of a detached white header', () => {
+    render(<Header {...defaultProps} />);
+
+    const header = screen.getByTestId('app-header');
+    expect(header).toHaveClass('notebook-header');
+    expect(header.className).not.toContain('bg-white');
+    expect(screen.getByText('header.title')).toHaveClass(
+      'text-[hsl(var(--notebook-ink))]'
+    );
+    expect(screen.getByText('header.subtitle')).toHaveClass(
+      'text-[hsl(var(--notebook-muted-ink))]'
+    );
+  });
+
   it('renders subtitle translation key', () => {
     render(<Header {...defaultProps} />);
     expect(screen.getByText('header.subtitle')).toBeInTheDocument();

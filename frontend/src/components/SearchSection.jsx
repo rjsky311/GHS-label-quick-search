@@ -49,8 +49,14 @@ export default function SearchSection({
       : 0;
 
   return (
-    <div className="notebook-surface mb-6 rounded-lg">
-      <div className="flex border-b border-[hsl(var(--notebook-border)/0.72)]">
+    <div
+      className="search-workbench-control notebook-surface mb-4 overflow-hidden rounded-md"
+      data-testid="search-workbench"
+    >
+      <div
+        className="search-workbench-tabs flex border-b border-[hsl(var(--notebook-border)/0.72)]"
+        data-testid="search-workbench-tabs"
+      >
         <button
           onClick={() => onSetActiveTab("single")}
           className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
@@ -77,7 +83,7 @@ export default function SearchSection({
         </button>
       </div>
 
-      <div className="p-6">
+      <div className="search-workbench-body p-5 md:p-6" data-testid="search-workbench-body">
         {activeTab === "single" ? (
           <div className="space-y-4">
             <div>

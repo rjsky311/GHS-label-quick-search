@@ -41,7 +41,7 @@ describe('ProductTrustPanel', () => {
 
     const panel = screen.getByTestId('product-trust-panel-empty');
     expect(panel).toHaveAttribute('data-layout', 'embedded');
-    expect(panel).toHaveClass('notebook-trust-strip', 'rounded-md');
+    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note', 'rounded-md');
     expect(panel.className).not.toContain('mx-auto');
     expect(panel.className).not.toContain('max-w-5xl');
     expect(panel.className).not.toContain('mt-8');
@@ -76,7 +76,7 @@ describe('ProductTrustPanel', () => {
     const panel = screen.getByTestId('product-trust-panel-results');
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveAttribute('data-layout', 'compact');
-    expect(panel).toHaveClass('notebook-trust-strip', 'rounded-md');
+    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note', 'rounded-md');
     expect(panel).not.toHaveClass('notebook-panel', 'bg-white/80', 'rounded-lg');
     expect(panel.className).not.toContain('mx-auto');
     expect(panel.className).not.toContain('mt-4');

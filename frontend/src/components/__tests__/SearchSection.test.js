@@ -42,6 +42,25 @@ beforeEach(() => {
 });
 
 describe('SearchSection', () => {
+  it('renders as a notebook workbench control surface instead of a detached white card', () => {
+    render(<SearchSection {...defaultProps} />);
+
+    const workbench = screen.getByTestId('search-workbench');
+    expect(workbench).toHaveClass(
+      'search-workbench-control',
+      'notebook-surface',
+      'rounded-md'
+    );
+    expect(workbench.className).not.toContain('rounded-lg');
+    expect(workbench.className).not.toContain('bg-white');
+    expect(screen.getByTestId('search-workbench-tabs')).toHaveClass(
+      'search-workbench-tabs'
+    );
+    expect(screen.getByTestId('search-workbench-body')).toHaveClass(
+      'search-workbench-body'
+    );
+  });
+
   describe('Tab switching', () => {
     it('renders both tab buttons with data-testid', () => {
       render(<SearchSection {...defaultProps} />);

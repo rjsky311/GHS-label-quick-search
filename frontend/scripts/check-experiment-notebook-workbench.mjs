@@ -11,6 +11,7 @@ const outputDir = path.resolve(
 const headless = env.WORKBENCH_QA_HEADLESS !== "0";
 
 const selectors = {
+  search: '[data-testid="search-workbench"]',
   workbench: '[data-testid="empty-workbench"]',
   grid: '[data-testid="empty-workbench-grid"]',
   primary: '[data-testid="empty-workbench-primary"]',
@@ -126,6 +127,7 @@ const inspectWorkbench = async (page) =>
       viewport: { width: window.innerWidth, height: window.innerHeight },
       documentScrollWidth: document.documentElement.scrollWidth,
       bodyScrollWidth: document.body.scrollWidth,
+      search: rectOf(selectorMap.search),
       workbench: rectOf(selectorMap.workbench),
       grid: rectOf(selectorMap.grid),
       primary: rectOf(selectorMap.primary),
@@ -172,6 +174,7 @@ const inspectViewport = async (browser, viewport, screenshotName) => {
 
     return {
       ...rawMetrics,
+      search: roundedRect(rawMetrics.search),
       workbench: roundedRect(rawMetrics.workbench),
       grid: roundedRect(rawMetrics.grid),
       primary: roundedRect(rawMetrics.primary),
@@ -231,6 +234,15 @@ try {
   const desktopAlignmentDelta = alignmentDelta(desktop.grid, desktop.trustSlot);
   if (desktopAlignmentDelta > 4) {
     failures.push(`desktop-grid-trust-alignment-${desktopAlignmentDelta}`);
+  }
+  const desktopSearchWorkbenchDelta = alignmentDelta(
+    desktop.search,
+    desktop.workbench,
+  );
+  if (desktopSearchWorkbenchDelta > 4) {
+    failures.push(
+      `desktop-search-workbench-alignment-${desktopSearchWorkbenchDelta}`,
+    );
   }
   if (maxScrollWidth(desktop) > desktop.viewport.width + 2) {
     failures.push("desktop-horizontal-scroll");

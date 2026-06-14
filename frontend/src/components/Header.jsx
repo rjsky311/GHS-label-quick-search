@@ -39,16 +39,19 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+    <header
+      className="notebook-header sticky top-0 z-40 border-b backdrop-blur"
+      data-testid="app-header"
+    >
       <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-red-50">
+            <div className="notebook-hazard-mark flex h-10 w-10 items-center justify-center rounded-md">
               <AlertTriangle className="h-5 w-5 text-red-700" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-semibold text-slate-950">{t("header.title")}</h1>
-              <p className="truncate text-xs text-slate-500">{t("header.subtitle")}</p>
+              <h1 className="truncate text-xl font-semibold text-[hsl(var(--notebook-ink))]">{t("header.title")}</h1>
+              <p className="truncate text-xs text-[hsl(var(--notebook-muted-ink))]">{t("header.subtitle")}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">

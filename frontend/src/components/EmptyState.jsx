@@ -66,17 +66,17 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
   ];
 
   return (
-    <section className="py-8 md:py-10" data-testid="empty-state">
+    <section className="pt-2 pb-8 md:pt-3 md:pb-10" data-testid="empty-state">
       <div
-        className="empty-workbench notebook-surface mx-auto max-w-6xl rounded-md px-5 py-6 md:px-7 md:py-8"
+        className="empty-workbench notebook-surface notebook-workbench-sheet w-full rounded-md px-4 py-5 sm:px-5 md:px-7 md:py-8"
         data-testid="empty-workbench"
       >
         <div
-          className="empty-workbench-grid grid gap-7 lg:grid-cols-12 lg:items-start"
+          className="empty-workbench-grid grid gap-5 md:gap-6 lg:grid-cols-12 lg:items-start lg:gap-7"
           data-testid="empty-workbench-grid"
         >
           <div
-            className="empty-workbench-primary min-w-0 text-left lg:col-span-7"
+            className="empty-workbench-primary min-w-0 text-left lg:col-span-8"
             data-testid="empty-workbench-primary"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--notebook-action))]">
@@ -147,10 +147,13 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
           </div>
 
           <div
-            className="empty-workbench-support min-w-0 lg:col-span-5"
+            className="empty-workbench-support min-w-0 lg:col-span-4"
             data-testid="empty-workbench-support"
           >
-            <div className="relative mx-auto aspect-[3/2] w-full max-w-xl" aria-hidden="true">
+            <div
+              className="notebook-visual-plate relative mx-auto aspect-[4/3] w-full max-w-md lg:ml-auto"
+              aria-hidden="true"
+            >
               <img
                 src={emptyWorkflowVisual}
                 alt=""
@@ -196,7 +199,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
 
           {trustPanel ? (
             <div
-              className="empty-workbench-trust-slot min-w-0 lg:col-span-12"
+              className="empty-workbench-trust-slot notebook-workbench-divider min-w-0 lg:col-span-12"
               data-testid="empty-workbench-trust-slot"
             >
               {trustPanel}

@@ -52,7 +52,10 @@ describe('EmptyState', () => {
     expect(workbench).toHaveClass(
       'notebook-surface',
       'empty-workbench',
+      'notebook-workbench-sheet',
+      'w-full',
     );
+    expect(workbench.className).not.toContain('max-w-6xl');
     expect(screen.getByTestId('empty-workbench-grid')).toHaveClass(
       'empty-workbench-grid',
       'grid',
@@ -60,13 +63,13 @@ describe('EmptyState', () => {
     );
     expect(screen.getByTestId('empty-workbench-primary')).toHaveClass(
       'empty-workbench-primary',
-      'lg:col-span-7',
+      'lg:col-span-8',
       'min-w-0',
       'text-left',
     );
     expect(screen.getByTestId('empty-workbench-support')).toHaveClass(
       'empty-workbench-support',
-      'lg:col-span-5',
+      'lg:col-span-4',
       'min-w-0',
     );
     expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
@@ -89,6 +92,7 @@ describe('EmptyState', () => {
       'empty-workbench-trust-slot',
       'lg:col-span-12',
       'min-w-0',
+      'notebook-workbench-divider',
     );
     expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
   });
