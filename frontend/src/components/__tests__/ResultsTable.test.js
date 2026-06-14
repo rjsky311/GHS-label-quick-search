@@ -72,7 +72,7 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('print-label-btn')).toBeInTheDocument();
     });
 
-    it('uses notebook surfaces for the result workbench shell and summary', () => {
+    it('uses one notebook workbench shell for result actions and summary', () => {
       render(
         <ResultsTable
           {...defaultProps}
@@ -82,9 +82,41 @@ describe('ResultsTable', () => {
         />
       );
 
-      expect(screen.getByTestId('results-table-shell')).toHaveClass('notebook-surface');
-      expect(screen.getByTestId('results-decision-guide')).toHaveClass('notebook-note');
-      expect(screen.getByTestId('results-workflow-summary')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('results-table-shell')).toHaveClass(
+        'results-workbench',
+        'notebook-surface',
+        'notebook-results-sheet',
+        'rounded-md',
+      );
+      expect(screen.getByTestId('results-table-shell').className).not.toContain(
+        'rounded-lg',
+      );
+      expect(screen.getByTestId('results-workbench-header')).toHaveClass(
+        'notebook-results-header',
+      );
+      expect(screen.getByTestId('results-action-rail')).toHaveClass(
+        'results-action-rail',
+        'grid',
+      );
+      expect(screen.getByTestId('results-decision-guide')).toHaveClass(
+        'notebook-note',
+        'notebook-decision-strip',
+      );
+      expect(screen.getByTestId('results-workflow-summary')).toHaveClass(
+        'notebook-results-summary-board',
+        'notebook-workbench-divider',
+      );
+    });
+
+    it('keeps result header copy on notebook theme tokens', () => {
+      render(<ResultsTable {...defaultProps} />);
+
+      expect(screen.getByTestId('results-title')).toHaveClass(
+        'text-[hsl(var(--notebook-ink))]',
+      );
+      expect(screen.getByTestId('results-summary-copy')).toHaveClass(
+        'text-[hsl(var(--notebook-muted-ink))]',
+      );
     });
 
     it('keeps the result decision guide on notebook ink/action tokens', () => {
@@ -114,7 +146,9 @@ describe('ResultsTable', () => {
 
       expect(screen.getByTestId('print-label-btn')).toHaveClass(
         'notebook-control',
-        'notebook-control-primary'
+        'notebook-control-primary',
+        'w-full',
+        'sm:w-auto',
       );
       expect(screen.getByTestId('print-label-btn').className).not.toContain('bg-blue-700');
       expect(screen.getByTestId('print-all-with-ghs-btn')).toHaveClass(
@@ -645,6 +679,21 @@ describe('ResultsTable', () => {
       fireEvent.click(screen.getByText('results.selectAll'));
       expect(defaultProps.onSelectAllForLabel).toHaveBeenCalled();
     });
+
+    it('uses a notebook tool strip for label selection controls', () => {
+      render(<ResultsTable {...defaultProps} />);
+
+      expect(screen.getByTestId('results-label-selection-toolbar')).toHaveClass(
+        'notebook-tool-tray',
+        'notebook-compact-toolbar',
+      );
+      expect(screen.getByTestId('results-select-all-btn')).toHaveClass(
+        'notebook-inline-action',
+      );
+      expect(screen.getByTestId('results-clear-selection-btn')).toHaveClass(
+        'notebook-inline-action',
+      );
+    });
   });
 
   describe('Filter toolbar', () => {
@@ -715,7 +764,10 @@ describe('ResultsTable', () => {
         />
       );
 
-      expect(screen.getByTestId('results-filter-toolbar')).toHaveClass('notebook-panel');
+      expect(screen.getByTestId('results-filter-toolbar')).toHaveClass(
+        'notebook-tool-tray',
+        'notebook-compact-toolbar',
+      );
       expect(screen.getByTestId('result-filter-all')).toHaveClass('notebook-chip-action');
       expect(screen.getByTestId('result-row-0')).toHaveClass(
         'notebook-result-row',

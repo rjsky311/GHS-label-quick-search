@@ -427,6 +427,7 @@ export default function ResultsTable({
       body: t("results.workflowActionPlanNoOpenActions"),
     });
   }
+  const headerActionButtonClass = "w-full justify-center px-4 sm:w-auto";
 
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
@@ -567,18 +568,32 @@ export default function ResultsTable({
 
   return (
     <div
-      className="notebook-surface overflow-hidden rounded-lg"
+      className="results-workbench notebook-surface notebook-results-sheet overflow-hidden rounded-md"
       data-testid="results-table-shell"
     >
       {/* Results Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
-        <div className="text-slate-950">
-          <span className="font-semibold">{t("results.title")}</span>
-          <span className="ml-2 text-slate-500">
+      <div
+        className="results-workbench-header notebook-results-header flex flex-wrap items-center justify-between gap-3 p-4"
+        data-testid="results-workbench-header"
+      >
+        <div className="min-w-0">
+          <span
+            className="font-semibold text-[hsl(var(--notebook-ink))]"
+            data-testid="results-title"
+          >
+            {t("results.title")}
+          </span>
+          <span
+            className="ml-2 text-[hsl(var(--notebook-muted-ink))]"
+            data-testid="results-summary-copy"
+          >
             {t("results.summary", { total: totalCount, found: results.filter((r) => r.found).length })}
           </span>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div
+          className="results-action-rail grid w-full grid-cols-1 gap-2 sm:w-auto sm:auto-cols-max sm:grid-flow-col sm:grid-cols-none sm:justify-end"
+          data-testid="results-action-rail"
+        >
           <Button
             onClick={onOpenLabelModal}
             disabled={!hasPrintableLabelResults && selectedPrintableCount === 0}
@@ -589,12 +604,12 @@ export default function ResultsTable({
             }
             variant="notebookPrimary"
             size="notebook"
-            className="px-4 disabled:cursor-not-allowed"
+            className={`${headerActionButtonClass} disabled:cursor-not-allowed`}
             data-testid="print-label-btn"
           >
             <Tag className="w-4 h-4" /> {t("results.printLabel")}
             {selectedPrintableCount > 0 && (
-              <span className="rounded-full bg-[hsl(var(--notebook-action))] px-2 py-0.5 text-xs text-white">
+              <span className="notebook-count-badge notebook-count-badge-action rounded-full px-2 py-0.5 text-xs">
                 {selectedPrintableCount}
               </span>
             )}
@@ -606,12 +621,12 @@ export default function ResultsTable({
               onClick={onPrintAllWithGhs}
               variant="notebookSecondary"
               size="notebook"
-              className="px-4 text-emerald-800 hover:text-emerald-800"
+              className={`${headerActionButtonClass} text-[hsl(var(--notebook-ready))] hover:text-[hsl(var(--notebook-ready))]`}
               data-testid="print-all-with-ghs-btn"
             >
               <Printer className="w-4 h-4" />
               {t("results.printAllWithGhs")}
-              <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs text-white">
+              <span className="notebook-count-badge notebook-count-badge-ready rounded-full px-2 py-0.5 text-xs">
                 {printAllWithGhsCount}
               </span>
             </Button>
@@ -626,7 +641,7 @@ export default function ResultsTable({
                 disabled={comparableCount > 5}
                 variant="notebookSecondary"
                 size="notebook"
-                className="px-4 text-blue-800 hover:text-blue-800 disabled:cursor-not-allowed"
+                className={`${headerActionButtonClass} text-[hsl(var(--notebook-action))] hover:text-[hsl(var(--notebook-action))] disabled:cursor-not-allowed`}
                 data-testid="compare-btn"
                 title={
                   comparableCount > 5
@@ -635,7 +650,7 @@ export default function ResultsTable({
                 }
               >
                 <LayoutGrid className="w-4 h-4" /> {t("compare.btn")}
-                <span className="rounded-full bg-blue-700 px-2 py-0.5 text-xs text-white">
+                <span className="notebook-count-badge notebook-count-badge-action rounded-full px-2 py-0.5 text-xs">
                   {comparableCount}
                 </span>
               </Button>
@@ -645,7 +660,7 @@ export default function ResultsTable({
             onClick={onExportToExcel}
             variant="notebookSecondary"
             size="notebook"
-            className="px-4"
+            className={headerActionButtonClass}
             data-testid="export-xlsx-btn"
           >
             <FileSpreadsheet className="w-4 h-4" /> {t("results.exportExcel")}
@@ -654,7 +669,7 @@ export default function ResultsTable({
             onClick={onExportToCSV}
             variant="notebookSecondary"
             size="notebook"
-            className="px-4"
+            className={headerActionButtonClass}
             data-testid="export-csv-btn"
           >
             <FileText className="w-4 h-4" /> {t("results.exportCSV")}
@@ -664,7 +679,7 @@ export default function ResultsTable({
 
       {hasFoundResults && (
         <div
-          className="notebook-note flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
+          className="notebook-note notebook-decision-strip flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
           data-testid="results-decision-guide"
         >
           <span className="font-medium text-[hsl(var(--notebook-ink))]">
@@ -687,21 +702,21 @@ export default function ResultsTable({
 
       {showWorkflowSummary && (
         <div
-          className="notebook-panel rounded-none border-x-0 border-t-0 px-4 py-4"
+          className="notebook-results-summary-board notebook-workbench-divider px-4 py-4"
           data-testid="results-workflow-summary"
         >
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h3 className="text-sm font-semibold text-slate-950">
+              <h3 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                 {t("results.workflowSummaryTitle")}
               </h3>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {t("results.workflowSummaryBody")}
               </p>
             </div>
             {results.length !== totalCount && (
               <p
-                className="text-xs font-medium text-slate-500"
+                className="text-xs font-medium text-[hsl(var(--notebook-muted-ink))]"
                 data-testid="results-workflow-filtered-scope"
               >
                 {t("results.workflowFilteredScope", {
@@ -711,7 +726,7 @@ export default function ResultsTable({
               </p>
             )}
             <p
-              className="text-xs font-medium text-slate-500"
+              className="text-xs font-medium text-[hsl(var(--notebook-muted-ink))]"
               data-testid="results-workflow-output-scope"
             >
               {t("results.workflowOutputScope", {
@@ -724,15 +739,15 @@ export default function ResultsTable({
             </p>
           </div>
           <div
-            className="notebook-panel mb-3 rounded-md px-3 py-3"
+            className="notebook-workflow-section mb-3 rounded-md px-3 py-3"
             data-testid="results-workflow-self-service"
           >
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <div>
-                <h4 className="text-sm font-semibold text-slate-950">
+                <h4 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                   {t("results.workflowSelfServiceTitle")}
                 </h4>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
                   {t("results.workflowSelfServiceBody")}
                 </p>
               </div>
@@ -805,20 +820,20 @@ export default function ResultsTable({
           )}
           {workflowActionPlan.length > 0 && (
             <div
-              className="notebook-panel mb-3 rounded-md px-3 py-3"
+              className="notebook-workflow-section mb-3 rounded-md px-3 py-3"
               data-testid="results-workflow-action-plan"
             >
-              <p className="text-xs font-semibold text-slate-700">
+              <p className="text-xs font-semibold text-[hsl(var(--notebook-ink))]">
                 {t("results.workflowActionPlanTitle")}
               </p>
-              <ol className="mt-2 space-y-1.5 text-xs text-slate-600">
+              <ol className="mt-2 space-y-1.5 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {workflowActionPlan.map((item, index) => (
                   <li
                     key={item.key}
                     className="flex gap-2"
                     data-testid={`results-workflow-action-plan-${item.key}`}
                   >
-                    <span className="font-semibold text-slate-400">
+                    <span className="font-semibold text-[hsl(var(--notebook-action))]">
                       {index + 1}.
                     </span>
                     <span>{item.body}</span>
@@ -888,11 +903,11 @@ export default function ResultsTable({
           </div>
           {workflowIssueSummaries.length > 0 && (
             <div
-              className="mt-3 border-t border-slate-100 pt-3"
+              className="mt-3 border-t border-[hsl(var(--notebook-rule)/0.72)] pt-3"
               data-testid="results-workflow-review-action-queue"
             >
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-slate-700">
+                <p className="text-xs font-semibold text-[hsl(var(--notebook-ink))]">
                   {t("results.workflowReviewActionQueueLabel")}
                 </p>
                 {workflowReviewSignalsOverlap && (
@@ -909,7 +924,7 @@ export default function ResultsTable({
               </div>
               {workflowReviewSignalsOverlap && (
                 <p
-                  className="mb-2 text-xs text-slate-500"
+                  className="mb-2 text-xs text-[hsl(var(--notebook-muted-ink))]"
                   data-testid="results-workflow-review-signal-note"
                 >
                   {t("results.workflowReviewSignalNote")}
@@ -951,21 +966,28 @@ export default function ResultsTable({
 
       {/* Selection controls */}
       {hasPrintableLabelResults && (
-        <div className="notebook-panel flex flex-wrap items-center gap-4 rounded-none border-x-0 border-t-0 px-4 py-2 text-sm">
-          <span className="text-slate-600">{t("results.labelSelect")}</span>
+        <div
+          className="notebook-tool-tray notebook-compact-toolbar flex flex-wrap items-center gap-3 px-4 py-3 text-sm"
+          data-testid="results-label-selection-toolbar"
+        >
+          <span className="text-[hsl(var(--notebook-muted-ink))]">
+            {t("results.labelSelect")}
+          </span>
           <button
             onClick={onSelectAllForLabel}
-            className="font-medium text-blue-700 hover:text-blue-900"
+            className="notebook-inline-action rounded-md px-3 py-2 text-xs font-semibold transition-colors"
+            data-testid="results-select-all-btn"
           >
             {t("results.selectAll")}
           </button>
           <button
             onClick={onClearLabelSelection}
-            className="font-medium text-slate-600 hover:text-slate-900"
+            className="notebook-inline-action rounded-md px-3 py-2 text-xs font-semibold transition-colors"
+            data-testid="results-clear-selection-btn"
           >
             {t("results.deselectAll")}
           </button>
-          <span className="text-slate-500">
+          <span className="text-[hsl(var(--notebook-muted-ink))]">
             {t("results.selectedCount", { count: selectedPrintableCount })}
           </span>
         </div>
@@ -974,7 +996,7 @@ export default function ResultsTable({
       {/* Filter Toolbar */}
       {totalCount > 1 && (
         <div
-          className="notebook-panel flex flex-wrap items-center gap-2 rounded-none border-x-0 border-t-0 px-4 py-2 text-sm"
+          className="notebook-tool-tray notebook-compact-toolbar flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
           data-testid="results-filter-toolbar"
         >
           <Filter className="h-4 w-4 shrink-0 text-[hsl(var(--notebook-muted-ink))]" />
