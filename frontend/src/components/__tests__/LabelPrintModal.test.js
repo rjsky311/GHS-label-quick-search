@@ -739,6 +739,7 @@ describe("LabelPrintModal", () => {
       "rounded-md",
     );
     expect(recommended).not.toHaveClass("rounded-lg");
+    expect(recommended.className).not.toContain("bg-amber-50");
     for (const key of ["stock", "role", "statements"]) {
       expect(screen.getByTestId(`recommended-output-${key}`)).toHaveClass(
         "notebook-print-stage-fact",
@@ -766,10 +767,73 @@ describe("LabelPrintModal", () => {
     const outcome = screen.getByTestId("print-outcome-summary");
     expect(outcome).toHaveClass("notebook-print-stage-section", "rounded-md");
     expect(outcome).not.toHaveClass("rounded-lg");
+    expect(outcome.className).not.toContain("bg-emerald-50");
     expect(screen.getAllByTestId("print-outcome-fact")).toHaveLength(4);
     screen.getAllByTestId("print-outcome-fact").forEach((fact) => {
       expect(fact).toHaveClass("notebook-print-stage-fact");
     });
+  });
+
+  it("keeps output plan alerts on shared notebook stage primitives", () => {
+    render(
+      <PrintOutputPlanDetails
+        activeBatchPreviewItem={null}
+        batchIncludeReducedPurpose={false}
+        batchItemsNeedingReview={[]}
+        batchPreviewItemIndex={0}
+        batchPreviewRepresentative="ready"
+        batchPrintPlan={null}
+        batchPrintPurposeLabel="Complete"
+        batchReducedPurposeItems={[]}
+        batchRepresentativeOptions={[]}
+        batchSelectedPrintItems={[]}
+        batchUnselectedReviewCount={0}
+        canUseFullPagePrimary={false}
+        currentStockName="A4 Primary"
+        decisionSummaryItems={[
+          { key: "stock", label: "Stock", value: "A4 Primary", tone: "danger" },
+          { key: "role", label: "Role", value: "Complete primary", tone: "ready" },
+          { key: "statements", label: "Text", value: "Full H/P", tone: "caution" },
+        ]}
+        handleExportBatchReviewList={jest.fn()}
+        handleUseFullPagePrimary={jest.fn()}
+        outputPlanBody="Use a larger readable stock before printing."
+        outputPlanTitle="Switch output"
+        outputPlanTone="danger"
+        outputRoleSummary="Complete primary"
+        plannedPrintLabelCount={1}
+        plannedPrintPageCount={1}
+        recoveryRoute={{
+          kind: "use-full-page",
+          currentStock: "small-strip",
+          targetStock: "a4-primary",
+          tone: "caution",
+          label: "Recovery",
+          value: "Use A4 Primary",
+          description: "Small labels cannot carry this complete output.",
+        }}
+        setBatchIncludeReducedPurpose={jest.fn()}
+        setBatchPreviewItemIndex={jest.fn()}
+        setBatchPreviewRepresentative={jest.fn()}
+        shouldOpenOutputPlanDetails
+        tx={tx}
+        useFullPagePrimaryLabel="Use full-page primary"
+      />,
+    );
+
+    const plan = screen.getByTestId("print-output-plan");
+    expect(plan).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(plan.className).not.toContain("bg-red-50");
+
+    const route = screen.getByTestId("print-recovery-route");
+    expect(route).toHaveClass("notebook-print-status-note");
+    expect(route.className).not.toContain("bg-amber-50");
+
+    for (const key of ["stock", "role", "statements"]) {
+      const item = screen.getByTestId(`print-decision-${key}`);
+      expect(item).toHaveClass("notebook-print-stage-fact");
+      expect(item.className).not.toContain("bg-");
+    }
   });
 
   it("summarizes selected labels and keeps quantity controls secondary", () => {
@@ -800,10 +864,15 @@ describe("LabelPrintModal", () => {
 
     const feedback = screen.getByTestId("print-blocked-feedback");
     expect(feedback).toHaveAttribute("role", "alert");
+    expect(feedback).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(feedback.className).not.toContain("bg-red-50");
     expect(feedback).toHaveTextContent("Printing paused before handoff");
     expect(feedback).toHaveTextContent("Required label images did not load.");
     expect(feedback).toHaveTextContent("label-overflow");
     expect(feedback).toHaveTextContent("required-image-failed");
+    screen.getAllByTestId("print-blocked-issue").forEach((issue) => {
+      expect(issue).toHaveClass("notebook-print-stage-fact");
+    });
   });
 
   it("clears stale print preflight feedback when the selected print scope changes", async () => {

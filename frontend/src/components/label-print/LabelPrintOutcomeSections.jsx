@@ -1,5 +1,7 @@
 import { AlertTriangle, Building2, CheckCircle2, FileText, Tag } from "lucide-react";
-import { READINESS_TONE_CLASSES } from "@/components/label-print/labelPrintModalHelpers";
+import {
+  READINESS_TONE_ACCENT_CLASSES,
+} from "@/components/label-print/labelPrintModalHelpers";
 
 function OutcomeIcon({ tone }) {
   const Icon = tone === "ready" ? CheckCircle2 : AlertTriangle;
@@ -23,8 +25,8 @@ export function RecommendedOutputSummary({
   return (
     <section
       className={`notebook-print-stage-section rounded-md p-3 ${
-        READINESS_TONE_CLASSES[outputOutcomeTone] ||
-        READINESS_TONE_CLASSES.neutral
+        READINESS_TONE_ACCENT_CLASSES[outputOutcomeTone] ||
+        READINESS_TONE_ACCENT_CLASSES.neutral
       }`}
       data-testid="recommended-output-summary"
       aria-live="polite"
@@ -117,8 +119,8 @@ export function PrintOutcomeSummary({
   return (
     <section
       className={`notebook-print-stage-section rounded-md p-3 ${
-        READINESS_TONE_CLASSES[outputOutcomeTone] ||
-        READINESS_TONE_CLASSES.neutral
+        READINESS_TONE_ACCENT_CLASSES[outputOutcomeTone] ||
+        READINESS_TONE_ACCENT_CLASSES.neutral
       }`}
       data-testid="print-outcome-summary"
     >

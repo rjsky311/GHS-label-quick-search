@@ -13,6 +13,7 @@ import {
 } from "@/constants/labelStocks";
 import {
   ALL_STOCK_PRESETS,
+  READINESS_TONE_ACCENT_CLASSES,
   RESPONSIBLE_PROFILE_FIELDS,
   STOCK_IDS_BY_PRINT_TARGET,
   buildDisplayNames,
@@ -1733,7 +1734,9 @@ export default function LabelPrintModal({
 
                 {printBlockedInfo && (
                   <div
-                    className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950"
+                    className={`notebook-print-stage-section mt-3 rounded-md px-4 py-3 text-sm ${
+                      READINESS_TONE_ACCENT_CLASSES.danger
+                    }`}
                     data-testid="print-blocked-feedback"
                     role="alert"
                   >
@@ -1758,7 +1761,8 @@ export default function LabelPrintModal({
                             {printBlockedInfo.issueTypes.map((issueType) => (
                               <span
                                 key={issueType}
-                                className="rounded-full border border-red-200 bg-white px-2 py-0.5 text-xs font-medium text-red-800"
+                                className="notebook-print-stage-fact rounded-md border-red-200 px-2 py-0.5 text-xs font-medium text-red-800"
+                                data-testid="print-blocked-issue"
                               >
                                 {issueType}
                               </span>

@@ -1,6 +1,8 @@
 import { ClipboardList, FileText } from "lucide-react";
 import BatchFitReport from "@/components/label-print/BatchFitReport";
-import { READINESS_TONE_CLASSES } from "@/components/label-print/labelPrintModalHelpers";
+import {
+  READINESS_TONE_ACCENT_CLASSES,
+} from "@/components/label-print/labelPrintModalHelpers";
 
 export default function PrintOutputPlanDetails({
   activeBatchPreviewItem,
@@ -36,9 +38,9 @@ export default function PrintOutputPlanDetails({
   return (
     <details
       open={shouldOpenOutputPlanDetails}
-      className={`rounded-md border p-3 ${
-        READINESS_TONE_CLASSES[outputPlanTone] ||
-        READINESS_TONE_CLASSES.neutral
+      className={`notebook-print-stage-section rounded-md p-3 ${
+        READINESS_TONE_ACCENT_CLASSES[outputPlanTone] ||
+        READINESS_TONE_ACCENT_CLASSES.neutral
       }`}
       data-testid="print-output-plan"
     >
@@ -72,9 +74,9 @@ export default function PrintOutputPlanDetails({
       </div>
       {recoveryRoute && (
         <div
-          className={`mt-3 rounded-md border px-3 py-2 ${
-            READINESS_TONE_CLASSES[recoveryRoute.tone] ||
-            READINESS_TONE_CLASSES.neutral
+          className={`notebook-print-status-note mt-3 rounded-md px-3 py-2 ${
+            READINESS_TONE_ACCENT_CLASSES[recoveryRoute.tone] ||
+            READINESS_TONE_ACCENT_CLASSES.neutral
           }`}
           data-testid="print-recovery-route"
           data-recovery-kind={recoveryRoute.kind}
@@ -97,9 +99,9 @@ export default function PrintOutputPlanDetails({
         {decisionSummaryItems.map((item) => (
           <div
             key={item.key}
-            className={`rounded-md border px-3 py-2 ${
-              READINESS_TONE_CLASSES[item.tone] ||
-              READINESS_TONE_CLASSES.neutral
+            className={`notebook-print-stage-fact rounded-md px-3 py-2 ${
+              READINESS_TONE_ACCENT_CLASSES[item.tone] ||
+              READINESS_TONE_ACCENT_CLASSES.neutral
             }`}
             data-testid={`print-decision-${item.key}`}
           >
