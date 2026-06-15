@@ -436,6 +436,8 @@
   "empty.ethanol": "乙醇",
   "empty.water": "水",
   "empty.hcl": "鹽酸",
+  "empty.featureHeading": "查詢後可接著整理",
+  "empty.featureSummary": "這些是查到資料後的工作流，不是另一組入口。",
   "empty.featureBatch": "批次查詢",
   "empty.featureBatchDesc": "一次查詢最多 100 個 CAS 號碼",
   "empty.featurePrint": "標籤列印",

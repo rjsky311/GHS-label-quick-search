@@ -501,6 +501,34 @@ code {
             0 5px 12px hsl(220 18% 10% / 0.045);
     }
 
+    .notebook-process-strip {
+        overflow: hidden;
+        border: 1px solid hsl(var(--notebook-border) / 0.56);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-action-border) / 0.12),
+                transparent 7rem
+            ),
+            hsl(var(--notebook-surface-raised) / 0.5);
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
+    }
+
+    .notebook-process-step {
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-process-step + .notebook-process-step {
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.66);
+    }
+
+    @media (min-width: 768px) {
+        .notebook-process-step + .notebook-process-step {
+            border-top: 0;
+            border-left: 1px solid hsl(var(--notebook-rule) / 0.66);
+        }
+    }
+
     .notebook-step-marker {
         border: 1px solid hsl(var(--notebook-action-border) / 0.36);
         background-color: hsl(var(--notebook-action-soft));
@@ -550,12 +578,38 @@ code {
         color: hsl(var(--notebook-action));
     }
 
+    .notebook-feature-ledger {
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.7);
+        background:
+            linear-gradient(
+                hsl(var(--notebook-rule) / 0.16) 1px,
+                transparent 1px
+            ),
+            hsl(var(--notebook-surface) / 0.32);
+        background-size: 100% 2.15rem;
+    }
+
+    .notebook-feature-note {
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-feature-icon,
+    .notebook-proof-icon {
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-feature-note p,
+    .notebook-proof-item p {
+        max-width: 32rem;
+    }
+
     .notebook-trust-strip {
-        border: 1px solid hsl(var(--notebook-border) / 0.64);
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.64);
+        border-bottom: 1px solid hsl(var(--notebook-rule) / 0.64);
         border-left: 4px solid hsl(var(--notebook-action-border) / 0.52);
         background-color: hsl(var(--notebook-surface-raised) / 0.56);
         color: hsl(var(--notebook-ink));
-        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
+        box-shadow: none;
     }
 
     .notebook-warm-note {
@@ -571,6 +625,15 @@ code {
     .notebook-trust-item {
         background-color: hsl(var(--notebook-surface) / 0.42);
         box-shadow: none;
+    }
+
+    .notebook-proof-list {
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.58);
+        padding-top: 0.85rem;
+    }
+
+    .notebook-proof-item {
+        color: hsl(var(--notebook-ink));
     }
 
     .notebook-control {

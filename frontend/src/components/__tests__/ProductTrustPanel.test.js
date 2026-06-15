@@ -51,13 +51,20 @@ describe('ProductTrustPanel', () => {
       'gap-3',
       'md:grid-cols-3'
     );
+    expect(screen.getByTestId('product-trust-proof-list-empty')).toHaveClass(
+      'notebook-proof-list',
+    );
     expect(screen.getByTestId('product-trust-proof-card-empty-source')).toHaveClass(
-      'notebook-trust-item',
+      'notebook-proof-item',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-label')).toHaveClass(
-      'notebook-trust-item',
+      'notebook-proof-item',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-feedback')).toHaveClass(
+      'notebook-proof-item',
+    );
+    expect(screen.getByTestId('product-trust-proof-card-empty-source')).not.toHaveClass(
+      'notebook-status-card',
       'notebook-trust-item',
     );
     expect(screen.getByTestId('product-trust-report-link-empty')).toHaveClass(

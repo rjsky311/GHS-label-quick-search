@@ -122,73 +122,62 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.featureFavoriteDesc')).toBeInTheDocument();
   });
 
-  it('uses notebook ledger rows and status cards for workbench modules', () => {
+  it('uses non-interactive process and feature proof styles for workbench modules', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-workflow')).toBeInTheDocument();
-    expect(screen.getByTestId('empty-workflow-card-search')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-workflow-card-review')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-workflow-card-use')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-status-card',
-    );
+    for (const key of ['search', 'review', 'use']) {
+      const step = screen.getByTestId(`empty-workflow-card-${key}`);
+      expect(step).toHaveClass('notebook-process-step');
+      expect(step).not.toHaveClass('notebook-ledger-row', 'notebook-status-card');
+    }
+    for (const key of ['batch', 'print', 'excel', 'favorite']) {
+      const feature = screen.getByTestId(`empty-feature-card-${key}`);
+      expect(feature).toHaveClass('notebook-feature-note');
+      expect(feature).not.toHaveClass(
+        'notebook-status-card',
+        'notebook-tool-card',
+        'notebook-tool-card-accent',
+      );
+    }
   });
 
-  it('uses a unified notebook tool tray instead of detached feature cards', () => {
+  it('uses a low-weight feature ledger instead of detached feature cards', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
+      'notebook-feature-ledger',
+    );
+    expect(screen.getByTestId('empty-workbench-tools')).not.toHaveClass(
       'notebook-tool-tray',
     );
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-tool-card-accent',
+    expect(screen.getByTestId('empty-feature-heading')).toHaveTextContent(
+      'empty.featureHeading',
     );
   });
 
-  it('keeps workflow and tool cards aligned on responsive notebook grids', () => {
+  it('keeps workflow and feature notes aligned on responsive notebook grids', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-workflow')).toHaveClass(
+      'notebook-process-strip',
       'grid',
-      'auto-rows-fr',
-      'md:grid-cols-3',
     );
     for (const key of ['search', 'review', 'use']) {
-      expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass('h-full');
+      expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass(
+        'min-w-0',
+      );
     }
 
     expect(screen.getByTestId('empty-workbench-tool-grid')).toHaveClass(
       'grid',
-      'auto-rows-fr',
       'sm:grid-cols-2',
       'lg:grid-cols-4',
     );
     for (const key of ['batch', 'print', 'excel', 'favorite']) {
-      expect(screen.getByTestId(`empty-feature-card-${key}`)).toHaveClass('h-full');
+      expect(screen.getByTestId(`empty-feature-card-${key}`)).toHaveClass(
+        'min-w-0',
+      );
     }
   });
 

@@ -744,6 +744,8 @@
   "empty.ethanol": "Ethanol",
   "empty.water": "Water",
   "empty.hcl": "Hydrochloric acid",
+  "empty.featureHeading": "After search, keep the workflow moving",
+  "empty.featureSummary": "These are follow-up uses after results appear, not a second set of entry points.",
   "empty.featureBatch": "Batch Search",
   "empty.featureBatchDesc": "Search up to 100 CAS numbers at once",
   "empty.featurePrint": "Label Printing",
