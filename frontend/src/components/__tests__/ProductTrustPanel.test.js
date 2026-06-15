@@ -54,18 +54,24 @@ describe('ProductTrustPanel', () => {
     expect(screen.getByTestId('product-trust-proof-list-empty')).toHaveClass(
       'notebook-proof-list',
     );
+    expect(screen.getByTestId('product-trust-proof-list-empty')).not.toHaveClass(
+      'notebook-control',
+      'notebook-status-card',
+    );
     expect(screen.getByTestId('product-trust-proof-card-empty-source')).toHaveClass(
-      'notebook-proof-item',
+      'nb-proof-note',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-label')).toHaveClass(
-      'notebook-proof-item',
+      'nb-proof-note',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-feedback')).toHaveClass(
-      'notebook-proof-item',
+      'nb-proof-note',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-source')).not.toHaveClass(
       'notebook-status-card',
       'notebook-trust-item',
+      'notebook-control',
+      'notebook-tool-card',
     );
     expect(screen.getByTestId('product-trust-report-link-empty')).toHaveClass(
       'notebook-control',

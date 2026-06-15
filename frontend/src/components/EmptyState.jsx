@@ -115,13 +115,13 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
             </div>
 
             <div
-              className="notebook-process-strip mt-7 grid gap-0 rounded-md md:grid-cols-3"
+              className="nb-process mt-7 grid gap-0 rounded-md md:grid-cols-3"
               data-testid="empty-workbench-workflow"
             >
               {workflow.map(({ key, icon: Icon, titleKey, bodyKey }, index) => (
                 <div
                   key={titleKey}
-                  className="notebook-process-step flex min-w-0 items-start gap-3 px-3.5 py-3"
+                  className="nb-step flex min-w-0 items-start gap-3 px-3.5 py-3"
                   data-testid={`empty-workflow-card-${key}`}
                 >
                   <span className="notebook-step-marker flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold">
@@ -162,7 +162,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                 data-testid="empty-visual-asset"
               />
               <div
-                className="notebook-figure-caption absolute bottom-3 right-3 max-w-[calc(100%-1.5rem)] px-2 py-1 text-xs font-medium"
+                className="nb-fig absolute bottom-3 left-3 right-3"
                 data-testid="empty-visual-caption"
               >
                 {t("empty.visualBadge")}

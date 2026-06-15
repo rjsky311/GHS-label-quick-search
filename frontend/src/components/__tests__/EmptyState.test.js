@@ -25,8 +25,10 @@ describe('EmptyState', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     const caption = screen.getByTestId('empty-visual-caption');
-    expect(caption).toHaveClass('notebook-figure-caption');
+    expect(caption).toHaveClass('nb-fig');
+    expect(caption).not.toHaveClass('notebook-figure-caption');
     expect(caption).not.toHaveClass('notebook-panel', 'notebook-control');
+    expect(caption.className).not.toContain('max-w-');
     expect(caption.closest('button')).toBeNull();
   });
 
@@ -137,7 +139,7 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('empty-workbench-workflow')).toBeInTheDocument();
     for (const key of ['search', 'review', 'use']) {
       const step = screen.getByTestId(`empty-workflow-card-${key}`);
-      expect(step).toHaveClass('notebook-process-step');
+      expect(step).toHaveClass('nb-step');
       expect(step).not.toHaveClass('notebook-ledger-row', 'notebook-status-card');
     }
     for (const key of ['batch', 'print', 'excel', 'favorite']) {
@@ -169,7 +171,7 @@ describe('EmptyState', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-workflow')).toHaveClass(
-      'notebook-process-strip',
+      'nb-process',
       'grid',
     );
     for (const key of ['search', 'review', 'use']) {

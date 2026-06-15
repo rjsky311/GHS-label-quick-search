@@ -336,6 +336,24 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-multiple-ghs-review-body')
       ).toHaveTextContent('results.multipleGhsReviewBody');
+      for (const key of ['ready', 'review', 'blocked']) {
+        expect(screen.getByTestId(`results-workflow-lane-${key}`)).toHaveClass(
+          'nb-stat',
+        );
+        expect(screen.getByTestId(`results-workflow-lane-${key}`)).not.toHaveClass(
+          'notebook-status-card',
+          'notebook-control',
+        );
+      }
+      for (const key of ['found', 'label-ready', 'needs-review', 'export']) {
+        expect(screen.getByTestId(`results-workflow-summary-${key}`)).toHaveClass(
+          'nb-stat',
+        );
+        expect(screen.getByTestId(`results-workflow-summary-${key}`)).not.toHaveClass(
+          'notebook-status-card',
+          'notebook-control',
+        );
+      }
 
       fireEvent.click(screen.getByTestId('results-multiple-ghs-review-primary'));
 

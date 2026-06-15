@@ -152,7 +152,7 @@ export default function ProductTrustPanel({
           {cards.map(({ id, icon: Icon, titleKey, bodyKey }) => (
             <div
               key={titleKey}
-              className="notebook-proof-item flex min-w-0 items-start gap-2.5 text-sm"
+              className="nb-proof-note flex min-w-0 items-start gap-2.5 text-sm"
               data-testid={`product-trust-proof-card-${variant}-${id}`}
             >
               <span className="notebook-proof-icon mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center">

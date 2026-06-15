@@ -735,7 +735,7 @@
   "empty.title": "Start with a CAS number or chemical name, then turn GHS reference data into usable labels and records",
   "empty.subtitle": "A free quick utility for labs, classrooms, and small R&D teams. Find traceable hazard references first, then print labels, export data, or save common chemicals.",
   "empty.tryThese": "Try these:",
-  "empty.visualBadge": "GHS quick workspace",
+  "empty.visualBadge": "GHS",
   "empty.workflowSearch": "Search fast",
   "empty.workflowSearchDesc": "Enter a CAS number, English name, or Chinese name to find the chemical and PubChem source.",
   "empty.workflowReview": "Review sources",

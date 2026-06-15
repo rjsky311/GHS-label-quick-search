@@ -756,7 +756,7 @@ export default function ResultsTable({
               {workflowSelfServiceLanes.map((lane) => (
                 <div
                   key={lane.key}
-                  className={`notebook-status-card rounded-md px-3 py-2 ${lane.className}`}
+                  className={`nb-stat ${lane.className}`}
                   data-testid={`results-workflow-lane-${lane.key}`}
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -883,7 +883,7 @@ export default function ResultsTable({
             {workflowSummaryCards.map((card) => (
               <div
                 key={card.key}
-                className={`notebook-status-card rounded-md px-3 py-2 ${card.className}`}
+                className={`nb-stat ${card.className}`}
                 data-testid={`results-workflow-summary-${card.key}`}
               >
                 <div className="flex items-baseline justify-between gap-2">

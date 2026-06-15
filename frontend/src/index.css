@@ -296,6 +296,14 @@ code {
         box-shadow: 0 1px 0 hsl(0 0% 100% / 0.24) inset;
     }
 
+    .nb-stat {
+        border: 1px solid hsl(var(--notebook-rule) / 0.68);
+        border-radius: 0.375rem;
+        color: hsl(var(--notebook-ink));
+        padding: 0.5rem 0.75rem;
+        box-shadow: none;
+    }
+
     .notebook-tool-card {
         position: relative;
         overflow: hidden;
@@ -572,13 +580,16 @@ code {
         box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
     }
 
-    .notebook-figure-caption {
+    .nb-fig {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.68);
         background-color: hsl(var(--notebook-surface) / 0.66);
         color: hsl(var(--notebook-muted-ink));
+        font-size: 0.75rem;
         letter-spacing: 0;
+        padding: 0.25rem 0;
         box-shadow: none;
         pointer-events: none;
+        text-align: left;
     }
 
     .notebook-ledger-row {
@@ -590,7 +601,7 @@ code {
             0 5px 12px hsl(220 18% 10% / 0.045);
     }
 
-    .notebook-process-strip {
+    .nb-process {
         overflow: hidden;
         border: 1px solid hsl(var(--notebook-rule) / 0.72);
         background:
@@ -603,16 +614,16 @@ code {
         box-shadow: none;
     }
 
-    .notebook-process-step {
+    .nb-step {
         color: hsl(var(--notebook-ink));
     }
 
-    .notebook-process-step + .notebook-process-step {
+    .nb-step + .nb-step {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.66);
     }
 
     @media (min-width: 768px) {
-        .notebook-process-step + .notebook-process-step {
+        .nb-step + .nb-step {
             border-top: 0;
             border-left: 1px solid hsl(var(--notebook-rule) / 0.66);
         }
@@ -689,7 +700,7 @@ code {
     }
 
     .notebook-feature-note p,
-    .notebook-proof-item p {
+    .nb-proof-note p {
         max-width: 32rem;
     }
 
@@ -719,11 +730,20 @@ code {
 
     .notebook-proof-list {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.58);
+        border-top-style: dashed;
+        background:
+            linear-gradient(
+                hsl(var(--notebook-rule) / 0.12) 1px,
+                transparent 1px
+            );
+        background-size: 100% 2rem;
         padding-top: 0.85rem;
     }
 
-    .notebook-proof-item {
+    .nb-proof-note {
+        border-bottom: 1px solid hsl(var(--notebook-rule) / 0.42);
         color: hsl(var(--notebook-ink));
+        padding-bottom: 0.55rem;
     }
 
     .notebook-control {
