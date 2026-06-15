@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import LabelPrintModal from "../LabelPrintModal";
 import LabelPrintFooter from "../label-print/LabelPrintFooter";
 import LabelPreviewPanel from "../label-print/LabelPreviewPanel";
-import { RecommendedOutputSummary } from "../label-print/LabelPrintOutcomeSections";
+import {
+  PrintOutcomeSummary,
+  RecommendedOutputSummary,
+} from "../label-print/LabelPrintOutcomeSections";
 import PrintOutputPlanDetails from "../label-print/PrintOutputPlanDetails";
 
 jest.mock("react-i18next", () => ({
@@ -710,6 +713,63 @@ describe("LabelPrintModal", () => {
     expectNotebookPrimaryControl(
       screen.getByTestId("use-full-page-primary-footer"),
     );
+  });
+
+  it("uses a shared notebook stage section for print outcome summaries", () => {
+    const { unmount } = render(
+      <RecommendedOutputSummary
+        outputOutcomeTone="caution"
+        outputOutcomeTitle="Use full-page primary"
+        outputOutcomeBody="Switch to a larger output."
+        currentStockName="Avery 5163"
+        outputRoleSummary="Complete primary"
+        statementSummary="Full H/P text"
+        canUseFullPagePrimary={false}
+        isProfileBlocked={false}
+        useFullPagePrimaryLabel="Use full-page primary"
+        onUseFullPagePrimary={jest.fn()}
+        onFocusResponsibleProfile={jest.fn()}
+        tx={tx}
+      />,
+    );
+
+    const recommended = screen.getByTestId("recommended-output-summary");
+    expect(recommended).toHaveClass(
+      "notebook-print-stage-section",
+      "rounded-md",
+    );
+    expect(recommended).not.toHaveClass("rounded-lg");
+    for (const key of ["stock", "role", "statements"]) {
+      expect(screen.getByTestId(`recommended-output-${key}`)).toHaveClass(
+        "notebook-print-stage-fact",
+      );
+    }
+
+    unmount();
+
+    render(
+      <PrintOutcomeSummary
+        outputOutcomeTone="ready"
+        outputOutcomeTitle="Ready to print"
+        outputOutcomeBody="This output can be printed."
+        isProfileBlocked={false}
+        currentStockName="A4 Primary"
+        outputRoleSummary="Complete primary"
+        pictogramSummary="All pictograms"
+        statementSummary="Full H/P text"
+        onFocusResponsibleProfile={jest.fn()}
+        onUseSupplementalLabel={jest.fn()}
+        tx={tx}
+      />,
+    );
+
+    const outcome = screen.getByTestId("print-outcome-summary");
+    expect(outcome).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(outcome).not.toHaveClass("rounded-lg");
+    expect(screen.getAllByTestId("print-outcome-fact")).toHaveLength(4);
+    screen.getAllByTestId("print-outcome-fact").forEach((fact) => {
+      expect(fact).toHaveClass("notebook-print-stage-fact");
+    });
   });
 
   it("summarizes selected labels and keeps quantity controls secondary", () => {

@@ -22,7 +22,7 @@ export function RecommendedOutputSummary({
 }) {
   return (
     <section
-      className={`rounded-lg border p-3 ${
+      className={`notebook-print-stage-section rounded-md p-3 ${
         READINESS_TONE_CLASSES[outputOutcomeTone] ||
         READINESS_TONE_CLASSES.neutral
       }`}
@@ -63,7 +63,7 @@ export function RecommendedOutputSummary({
         ].map((item) => (
           <div
             key={item.key}
-            className="rounded-md bg-white/70 px-2.5 py-2 ring-1 ring-current/10"
+            className="notebook-print-stage-fact rounded-md px-2.5 py-2"
             data-testid={`recommended-output-${item.key}`}
           >
             <div className="font-medium opacity-70">{item.label}</div>
@@ -116,7 +116,7 @@ export function PrintOutcomeSummary({
 }) {
   return (
     <section
-      className={`rounded-lg border p-3 ${
+      className={`notebook-print-stage-section rounded-md p-3 ${
         READINESS_TONE_CLASSES[outputOutcomeTone] ||
         READINESS_TONE_CLASSES.neutral
       }`}
@@ -171,7 +171,8 @@ export function PrintOutcomeSummary({
         ].map((item, index) => (
           <span
             key={`${item}-${index}`}
-            className="rounded-md bg-white/70 px-2 py-1 font-medium ring-1 ring-current/10"
+            className="notebook-print-stage-fact rounded-md px-2 py-1 font-medium"
+            data-testid="print-outcome-fact"
           >
             {item}
           </span>
