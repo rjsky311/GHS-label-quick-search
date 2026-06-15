@@ -158,7 +158,7 @@ export default function LabelPreviewPanel({
             {previewContextItems.map((item) => (
               <span
                 key={item.key}
-                className="notebook-chip inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1"
+                className="notebook-chip inline-flex min-w-[7rem] max-w-full items-center gap-1.5 rounded-full px-2.5 py-1"
                 data-testid={`preview-context-${item.key}`}
               >
                 <span className="shrink-0 font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">

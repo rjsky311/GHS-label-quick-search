@@ -488,6 +488,13 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("preview-context-stock")).toHaveClass(
       "notebook-chip",
     );
+    for (const testId of [
+      "preview-context-role",
+      "preview-context-icons",
+      "preview-context-stock",
+    ]) {
+      expect(screen.getByTestId(testId)).toHaveClass("min-w-[7rem]");
+    }
 
     const zoomControls = screen.getByTestId("preview-zoom-controls");
     expect(zoomControls).toHaveClass("notebook-control");
