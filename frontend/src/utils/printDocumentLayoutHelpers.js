@@ -432,19 +432,17 @@ export const resolveAutoFitLevelForModel = ({
       content.hazardStatements || [],
       modelForText,
     );
-    const pictogramCount = content.counts?.pictograms || 0;
     const statementCount = content.counts?.hazardStatements || 0;
 
     if (compactPhysical) {
       if (
         layout.nameDisplay === "both" ||
         customIdentityLoad > 0 ||
-        nameLoad > 24 ||
-        pictogramCount >= 3
+        nameLoad > 24
       ) {
         level = Math.max(level, 1);
       }
-      if (nameLoad > 40 || customIdentityLoad > 22 || pictogramCount >= 4) {
+      if (nameLoad > 40 || customIdentityLoad > 22) {
         level = Math.max(level, 2);
       }
       return;

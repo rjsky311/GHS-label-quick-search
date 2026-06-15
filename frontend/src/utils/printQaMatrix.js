@@ -905,6 +905,34 @@ export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   ],
 });
 
+export const PRINT_QA_NINE_PICTOGRAM_STRESS = Object.freeze({
+  cas_number: "QA-PICTO-009",
+  name_en: "Nine-pictogram compact layout stress chemical",
+  name_zh: "九圖示小標籤壓力測試",
+  cid: 0,
+  ghs_pictograms: [
+    { code: "GHS01" },
+    { code: "GHS02" },
+    { code: "GHS03" },
+    { code: "GHS04" },
+    { code: "GHS05" },
+    { code: "GHS06" },
+    { code: "GHS07" },
+    { code: "GHS08" },
+    { code: "GHS09" },
+  ],
+  signal_word: "Danger",
+  signal_word_zh: "危險",
+  hazard_statements: [
+    {
+      code: "H999",
+      text_en: "Synthetic QA hazard statement for compact pictogram layout.",
+      text_zh: "小標籤圖示排版壓力測試用危害說明。",
+    },
+  ],
+  precautionary_statements: [],
+});
+
 export const PRINT_QA_PREPARED_HYDROCHLORIC_ACID = Object.freeze(
   buildPreparedSolutionItem(
     { ...PRINT_QA_HYDROCHLORIC_ACID, found: true },
@@ -932,6 +960,7 @@ export const PRINT_QA_CHEMICALS = Object.freeze({
   zincOxide: PRINT_QA_ZINC_OXIDE,
   boricAcid: PRINT_QA_BORIC_ACID,
   longNameCorrosive: PRINT_QA_LONG_NAME_CORROSIVE,
+  ninePictogramStress: PRINT_QA_NINE_PICTOGRAM_STRESS,
   preparedHydrochloricAcid: PRINT_QA_PREPARED_HYDROCHLORIC_ACID,
 });
 
@@ -1013,6 +1042,12 @@ export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
     riskTags: ["long-name", "identity-density", "compact-autofit"],
     rationale:
       "Synthetic long-name fixture used to prove identity shrink rules keep CAS/name visible on compact output.",
+  },
+  ninePictogramStress: {
+    source: "local-fixture",
+    riskTags: ["nine-pictogram", "compact-grid", "small-label-pressure"],
+    rationale:
+      "Synthetic nine-pictogram fixture used to prove compact labels reflow the hazard band instead of shrinking identity text.",
   },
   preparedHydrochloricAcid: {
     source: "local-derived",
@@ -1496,6 +1531,29 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
   },
   {
+    id: "nine-pictogram-tube-quick-id",
+    label: "Nine-pictogram tube quick-ID",
+    chemicalId: "ninePictogramStress",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "quickId",
+      template: "icon",
+      stockPreset: "small-strip",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QUICK_ID,
+      labelKind: "quick-id",
+      stockPreset: "small-strip",
+      template: "icon",
+      hasQr: false,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
     id: "brother-62mm-quick-id",
     label: "Brother 62 mm quick-ID",
     locale: "zh-TW",
@@ -1591,6 +1649,29 @@ export const PRINT_QA_MATRIX = Object.freeze([
   {
     id: "brother-62mm-qr-supplement",
     label: "Brother 62 mm QR supplement",
+    locale: "zh-TW",
+    labelConfig: {
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+      stockPreset: "brother-62mm-continuous",
+      nameDisplay: "both",
+      colorMode: "color",
+    },
+    expected: {
+      canPrint: true,
+      outputKind: PRINT_OUTPUT_KIND.QR_SUPPLEMENT,
+      labelKind: "qr-supplement",
+      stockPreset: "brother-62mm-continuous",
+      template: "qrcode",
+      hasQr: true,
+      hasFullPagePictograms: false,
+      minPreviewScale: 1.4,
+    },
+  },
+  {
+    id: "nine-pictogram-brother-62mm-qr-supplement",
+    label: "Nine-pictogram Brother 62 mm QR supplement",
+    chemicalId: "ninePictogramStress",
     locale: "zh-TW",
     labelConfig: {
       labelPurpose: "qrSupplement",

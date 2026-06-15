@@ -39,6 +39,12 @@ Current implementation checkpoint:
   `npm run qa:print-pdf`, `npm run qa:production-batch-print`, and
   `npm run qa:production-primary` pass, including A4, Letter, formaldehyde
   continuation, and 50+ item batch handoff artifacts.
+- 2026-06-15 small-label layout checkpoint: compact identity auto-fit is
+  driven by identity text and custom identity pressure, not by the number of
+  GHS pictograms. QR small labels keep the QR rail fixed while allowing the
+  identity band to span above it; identification small labels use the lower
+  hazard band for 7-9 pictograms instead of shrinking identity text because the
+  hazard band is dense.
 
 ## 1. Product Decision
 

@@ -55,9 +55,11 @@ The best path is a label workflow that a lab user can print without guessing:
 - Letter Primary must be supported alongside A4 Primary for North American users. Both are complete primary-label outputs, not supplemental templates.
 - The print workflow should use an output planner: scale typography, reflow layout, and combine/deduplicate safe statement text before routing to a larger stock or supplemental output.
 - Fit decisions must be tied to rendered content, not only stock names or
-  statement counts. The system should derive a tighter fit level from chemical
-  name length, CAS/case identity chips, hazard text load, and pictogram count,
-  then retry fixable overflow with smaller typography before blocking print.
+  statement counts. Complete-label fit can account for identity, H/P text load,
+  and pictogram pressure before blocking print. Compact small-label identity
+  fit must be driven by identity text and custom identity fields; the number of
+  GHS pictograms should choose the lower hazard grid, not shrink CAS/name text
+  by itself.
 - A4 and Letter are the user-facing complete-label stocks. Smaller public
   outputs stay small and use same-output continuation labels; they do not
   bounce to A4/Letter merely because one item has many pictograms.
@@ -115,6 +117,12 @@ Automated tests should pin these behaviors:
   by both preview and print handoff. A blocked print is acceptable only after
   the renderer has already tried the allowed tighter fit levels and still finds
   critical clipping or missing identity/pictograms.
+- Compact-label QA must cover dense pictogram cases where identity remains
+  readable because the hazard band reflows. For the default public stocks, this
+  means 70 x 24 mm identification labels can keep 7-9 pictograms on one label
+  with a two-row hazard band, and 62 x 40 mm QR labels keep 7-8 pictograms in
+  `4 x 2` and 9 pictograms in a readable `3 x 3` pressure grid while preserving
+  QR size.
 - Production print QA must inspect the actual preview iframe for visible
   overflow/clipping of critical identity, signal, QR, pictogram, and hazard
   summary containers. A passing handoff status is not enough if the preview is

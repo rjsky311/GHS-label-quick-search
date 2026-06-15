@@ -2337,6 +2337,45 @@ describe("printLabels", () => {
       expect(preview.html).toContain("width: 8.4mm");
     });
 
+    it("does not shrink quick-ID identity just because the hazard band is dense", () => {
+      const ninePictogramChemical = {
+        ...mockChemical,
+        cas_number: "64-17-5",
+        name_en: "Ethanol",
+        name_zh: "乙醇",
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+          { code: "GHS09" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [ninePictogramChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.model.layout.autoFitLevel).toBe(1);
+      expect(preview.fragmentHtml).not.toContain("identity-density-high");
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-9]"/g)).toHaveLength(9);
+    });
+
     it("adds identity density classes so long small-label names shrink before CAS is lost", () => {
       const longNameChemical = {
         ...mockChemical,
@@ -2447,7 +2486,8 @@ describe("printLabels", () => {
       expect(preview.html).toContain(
         ".label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon",
       );
-      expect(preview.html).toContain("grid-template-columns: repeat(9, 6.7mm)");
+      expect(preview.html).toContain("grid-template-columns: repeat(5, 7.25mm)");
+      expect(preview.html).toContain("grid-auto-rows: 7.25mm");
       expect(preview.html).toContain("justify-content: start");
     });
 
@@ -2540,6 +2580,53 @@ describe("printLabels", () => {
       );
       expect(preview.html).toContain("grid-template-columns: repeat(4, 7.7mm)");
       expect(preview.html).toContain("grid-auto-rows: 7.7mm");
+      expect(preview.html).toContain("width: 18.9mm");
+    });
+
+    it("keeps nine QR small-label pictograms on the first label with a larger 3x3 grid", () => {
+      const ninePictogramChemical = {
+        ...mockChemical,
+        cas_number: "999999-99-9",
+        name_en: "Nine-pictogram QR stress chemical",
+        name_zh: "九圖示 QR 壓力測試",
+        ghs_pictograms: [
+          { code: "GHS01" },
+          { code: "GHS02" },
+          { code: "GHS03" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+          { code: "GHS09" },
+        ],
+      };
+
+      const preview = buildPrintPreviewDocument(
+        [ninePictogramChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.model.expandedLabels).toHaveLength(1);
+      expect(preview.fragmentHtml).toContain("label-pictogram-count-9");
+      expect(preview.fragmentHtml.match(/alt="GHS0[1-9]"/g)).toHaveLength(9);
+      expect(preview.fragmentHtml).toContain("qrcode-img");
+      expect(preview.html).toContain("grid-column: 1 / -1");
+      expect(preview.html).toContain(
+        ".label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-9 .pictograms.qr-pics",
+      );
+      expect(preview.html).toContain("grid-template-columns: repeat(3, 9.3mm)");
+      expect(preview.html).toContain("grid-auto-rows: 9.3mm");
       expect(preview.html).toContain("width: 18.9mm");
     });
 

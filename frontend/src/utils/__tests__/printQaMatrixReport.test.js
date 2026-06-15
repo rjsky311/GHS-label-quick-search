@@ -921,7 +921,7 @@ describe("print QA matrix report", () => {
       printHasRequiredIdentityText: true,
       hasSupportChip: false,
       printHasSupportChip: false,
-      autoFitLevel: 2,
+      autoFitLevel: 1,
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"]).toMatchObject({
       expectedLabelKind: "quick-id",
