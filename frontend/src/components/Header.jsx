@@ -31,7 +31,9 @@ export default function Header({
     ? t("header.switchToEnglish")
     : t("header.switchToChinese");
   const headerButtonBase =
-    "relative h-11 w-11 shrink-0 px-0 sm:w-28 sm:justify-start sm:px-3";
+    "relative min-h-12 w-auto min-w-[4.25rem] shrink-0 flex-col gap-1 px-2 py-1.5 text-xs sm:min-w-28 sm:flex-row sm:justify-start sm:px-3 sm:py-2";
+  const headerButtonLabelClass =
+    "max-w-[3.75rem] truncate sm:max-w-none";
 
   const handleHomeClick = (event) => {
     event.preventDefault();
@@ -86,7 +88,7 @@ export default function Header({
                 ) : (
                   <LockKeyhole className="h-4 w-4 shrink-0" />
                 )}
-                <span className="hidden min-w-0 truncate sm:inline">
+                <span className={headerButtonLabelClass}>
                   {t("header.adminTools", { defaultValue: "Admin" })}
                 </span>
                 {pilotAdminUnlocked && (pilotAttentionCount > 0 || opsEventCount > 0) ? (
@@ -106,7 +108,9 @@ export default function Header({
               data-testid="language-toggle-btn"
             >
               <Globe className="h-4 w-4 shrink-0" />
-              <span className="hidden min-w-0 truncate sm:inline">{t("header.langToggle")}</span>
+              <span className={headerButtonLabelClass}>
+                {t("header.langToggle")}
+              </span>
             </Button>
             <Button
               onClick={onToggleFavorites}
@@ -116,7 +120,9 @@ export default function Header({
               data-testid="favorites-toggle-btn"
             >
               <Star className="h-4 w-4 shrink-0 text-amber-500" />
-              <span className="hidden min-w-0 truncate sm:inline">{t("header.favorites")}</span>
+              <span className={headerButtonLabelClass}>
+                {t("header.favorites")}
+              </span>
               {favorites.length > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                   {favorites.length}
@@ -131,7 +137,9 @@ export default function Header({
               data-testid="prepared-toggle-btn"
             >
               <FlaskConical className="h-4 w-4 shrink-0 text-blue-700" />
-              <span className="hidden min-w-0 truncate sm:inline">{t("header.prepared")}</span>
+              <span className={headerButtonLabelClass}>
+                {t("header.prepared")}
+              </span>
               {preparedCount > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500 px-1 text-xs font-semibold text-slate-900">
                   {preparedCount}
@@ -146,7 +154,9 @@ export default function Header({
               data-testid="history-toggle-btn"
             >
               <ClipboardList className="h-4 w-4 shrink-0 text-slate-600" />
-              <span className="hidden min-w-0 truncate sm:inline">{t("header.history")}</span>
+              <span className={headerButtonLabelClass}>
+                {t("header.history")}
+              </span>
               {history.length > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs text-white">
                   {history.length}

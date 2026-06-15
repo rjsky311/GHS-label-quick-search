@@ -167,6 +167,20 @@ describe('EmptyState', () => {
     );
   });
 
+  it('marks follow-up workflow notes as a non-interactive explanatory list', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const list = screen.getByRole('list', { name: 'empty.featureHeading' });
+    expect(list).toHaveAttribute('data-testid', 'empty-workbench-tool-grid');
+
+    for (const key of ['batch', 'print', 'excel', 'favorite']) {
+      const feature = screen.getByTestId(`empty-feature-card-${key}`);
+      expect(feature.tagName).toBe('LI');
+      expect(feature.closest('button')).toBeNull();
+      expect(feature.closest('a')).toBeNull();
+    }
+  });
+
   it('keeps workflow and feature notes aligned on responsive notebook grids', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 

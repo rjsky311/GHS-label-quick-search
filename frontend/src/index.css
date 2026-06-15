@@ -226,14 +226,33 @@ code {
     }
 
     .notebook-note {
-        border: 1px solid hsl(var(--notebook-action-border) / 0.26);
-        border-left-width: 4px;
-        border-left-color: hsl(var(--notebook-action-border) / 0.68);
-        background-color: hsl(var(--notebook-surface-raised) / 0.88);
+        border: 1px solid hsl(var(--notebook-rule) / 0.64);
+        border-left-width: 3px;
+        border-left-color: hsl(var(--notebook-border) / 0.86);
+        background-color: hsl(var(--notebook-surface) / 0.58);
+        color: hsl(var(--notebook-ink));
+        box-shadow: none;
+    }
+
+    .notebook-safety-gate {
+        border: 1px solid hsl(var(--notebook-warning) / 0.3);
+        border-left: 4px solid hsl(var(--notebook-warning) / 0.82);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-warning-soft) / 0.58),
+                hsl(var(--notebook-surface-raised) / 0.86) 52%
+            );
         color: hsl(var(--notebook-ink));
         box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.2) inset,
-            0 4px 12px hsl(220 18% 10% / 0.045);
+            0 1px 0 hsl(0 0% 100% / 0.22) inset,
+            0 8px 18px hsl(36 50% 24% / 0.06);
+    }
+
+    .notebook-safety-gate-icon {
+        border: 1px solid hsl(var(--notebook-warning) / 0.28);
+        background-color: hsl(var(--notebook-warning-soft) / 0.86);
+        color: hsl(var(--notebook-warning));
     }
 
     .notebook-print-control-section {
@@ -290,10 +309,10 @@ code {
     }
 
     .notebook-status-card {
-        border: 1px solid hsl(var(--notebook-border) / 0.68);
-        background-color: hsl(var(--notebook-surface-raised) / 0.84);
+        border: 1px solid hsl(var(--notebook-rule) / 0.64);
+        background-color: hsl(var(--notebook-surface) / 0.5);
         color: hsl(var(--notebook-ink));
-        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.24) inset;
+        box-shadow: none;
     }
 
     .nb-stat {
@@ -522,32 +541,28 @@ code {
     }
 
     .notebook-decision-strip {
-        border-left-color: hsl(var(--notebook-action-border) / 0.72);
+        border-left-color: hsl(var(--notebook-action-border) / 0.58);
         background:
             linear-gradient(
                 90deg,
-                hsl(var(--notebook-action-soft) / 0.76),
-                hsl(var(--notebook-surface-raised) / 0.6)
+                hsl(var(--notebook-action-soft) / 0.42),
+                hsl(var(--notebook-surface) / 0.48)
             );
     }
 
     .notebook-results-summary-board {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.72);
         background:
-            linear-gradient(
-                90deg,
-                hsl(var(--notebook-action-border) / 0.1) 0,
-                hsl(var(--notebook-action-border) / 0.1) 4px,
-                transparent 4px
-            ),
+            linear-gradient(hsl(var(--notebook-rule) / 0.14) 1px, transparent 1px),
             hsl(var(--notebook-surface-raised) / 0.4);
+        background-size: 100% 2.15rem;
     }
 
     .notebook-workflow-section {
-        border: 1px solid hsl(var(--notebook-border) / 0.62);
-        background-color: hsl(var(--notebook-surface) / 0.5);
+        border: 1px solid hsl(var(--notebook-rule) / 0.62);
+        background-color: hsl(var(--notebook-surface) / 0.44);
         color: hsl(var(--notebook-ink));
-        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.14) inset;
+        box-shadow: none;
     }
 
     .notebook-compact-toolbar {
@@ -605,12 +620,9 @@ code {
         overflow: hidden;
         border: 1px solid hsl(var(--notebook-rule) / 0.72);
         background:
-            linear-gradient(
-                90deg,
-                hsl(var(--notebook-action-border) / 0.1),
-                transparent 6rem
-            ),
-            hsl(var(--notebook-surface-raised) / 0.36);
+            linear-gradient(hsl(var(--notebook-rule) / 0.14) 1px, transparent 1px),
+            hsl(var(--notebook-surface) / 0.42);
+        background-size: 100% 2.15rem;
         box-shadow: none;
     }
 
@@ -681,6 +693,8 @@ code {
     .notebook-feature-ledger {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.7);
         border-bottom: 1px solid hsl(var(--notebook-rule) / 0.56);
+        border-left: 0;
+        border-right: 0;
         background:
             linear-gradient(
                 hsl(var(--notebook-rule) / 0.16) 1px,
@@ -692,6 +706,8 @@ code {
 
     .notebook-feature-note {
         color: hsl(var(--notebook-ink));
+        box-shadow: none;
+        cursor: default;
     }
 
     .notebook-feature-icon,
@@ -707,8 +723,12 @@ code {
     .notebook-trust-strip {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.64);
         border-bottom: 1px solid hsl(var(--notebook-rule) / 0.64);
-        border-left: 4px solid hsl(var(--notebook-action-border) / 0.52);
-        background-color: hsl(var(--notebook-surface-raised) / 0.56);
+        border-left: 0;
+        border-right: 0;
+        background:
+            linear-gradient(hsl(var(--notebook-rule) / 0.13) 1px, transparent 1px),
+            hsl(var(--notebook-surface) / 0.42);
+        background-size: 100% 2.15rem;
         color: hsl(var(--notebook-ink));
         box-shadow: none;
     }
@@ -717,10 +737,15 @@ code {
         background:
             linear-gradient(
                 90deg,
-                hsl(var(--notebook-warning-soft) / 0.3),
-                transparent 34%
+                hsl(var(--notebook-warning-soft) / 0.18),
+                transparent 28%
             ),
-            hsl(var(--notebook-surface-raised) / 0.62);
+            linear-gradient(hsl(var(--notebook-rule) / 0.13) 1px, transparent 1px),
+            hsl(var(--notebook-surface) / 0.42);
+        background-size:
+            100% 100%,
+            100% 2.15rem,
+            100% 100%;
     }
 
     .notebook-trust-item {
@@ -731,12 +756,7 @@ code {
     .notebook-proof-list {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.58);
         border-top-style: dashed;
-        background:
-            linear-gradient(
-                hsl(var(--notebook-rule) / 0.12) 1px,
-                transparent 1px
-            );
-        background-size: 100% 2rem;
+        background: transparent;
         padding-top: 0.85rem;
     }
 

@@ -185,12 +185,13 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                 {t("empty.featureSummary")}
               </p>
             </div>
-            <div
+            <ul
               className="mt-3 grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4"
               data-testid="empty-workbench-tool-grid"
+              aria-label={t("empty.featureHeading")}
             >
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
-                <div
+                <li
                   key={titleKey}
                   className="notebook-feature-note flex min-w-0 gap-2.5 text-left"
                   data-testid={`empty-feature-card-${key}`}
@@ -206,9 +207,9 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                       {t(descKey)}
                     </p>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           {trustPanel ? (
