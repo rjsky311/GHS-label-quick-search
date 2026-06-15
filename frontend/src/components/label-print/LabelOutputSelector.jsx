@@ -20,7 +20,7 @@ export default function LabelOutputSelector({
 
   return (
     <div
-      className="notebook-panel rounded-md p-4"
+      className="notebook-print-control-section rounded-md p-4"
       data-testid="label-output-selector"
     >
       <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export default function LabelOutputSelector({
         </div>
       </div>
       <div
-        className="notebook-note mt-3 rounded-md px-3 py-2 text-xs leading-5"
+        className="notebook-print-note-section mt-3 rounded-md px-3 py-2 text-xs leading-5"
         data-testid="selected-output-note"
       >
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

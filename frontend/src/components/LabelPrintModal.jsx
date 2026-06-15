@@ -1834,7 +1834,7 @@ export default function LabelPrintModal({
               </section>
 
               <section
-                className="notebook-panel rounded-md p-4"
+                className="notebook-print-settings-section rounded-md p-4"
                 data-testid="core-output-controls"
               >
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">

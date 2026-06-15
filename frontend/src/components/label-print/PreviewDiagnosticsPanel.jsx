@@ -24,7 +24,7 @@ export default function PreviewDiagnosticsPanel({
   return (
     <>
       <details
-        className="notebook-panel rounded-md p-3"
+        className="notebook-print-check-section rounded-md p-3"
         data-testid="preview-diagnostics"
       >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
@@ -39,7 +39,7 @@ export default function PreviewDiagnosticsPanel({
 
         <div className="mt-3 space-y-3">
           <section
-            className="notebook-note rounded-md p-3"
+            className="notebook-print-note-section rounded-md p-3"
             data-testid="required-output-checklist"
           >
             <div className="flex items-center justify-between gap-3">
@@ -105,7 +105,7 @@ export default function PreviewDiagnosticsPanel({
       </details>
 
       <details
-        className="notebook-panel rounded-md p-3"
+        className="notebook-print-check-section rounded-md p-3"
         data-testid="preview-sheet-layout"
       >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[hsl(var(--notebook-ink))]">

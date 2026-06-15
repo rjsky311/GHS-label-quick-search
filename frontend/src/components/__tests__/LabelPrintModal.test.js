@@ -388,6 +388,9 @@ describe("LabelPrintModal", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("label-output-selector")).toHaveClass(
+      "notebook-print-control-section",
+    );
+    expect(screen.getByTestId("label-output-selector")).not.toHaveClass(
       "notebook-panel",
     );
 
@@ -439,12 +442,21 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
       "Full information label",
     );
+    expect(screen.getByTestId("selected-output-note")).toHaveClass(
+      "notebook-print-note-section",
+    );
+    expect(screen.getByTestId("selected-output-note")).not.toHaveClass(
+      "notebook-control",
+    );
   });
 
   it("uses notebook-native controls for print language and color settings", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("core-output-controls")).toHaveClass(
+      "notebook-print-settings-section",
+    );
+    expect(screen.getByTestId("core-output-controls")).not.toHaveClass(
       "notebook-panel",
     );
 
@@ -474,6 +486,9 @@ describe("LabelPrintModal", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("label-preview-panel")).toHaveClass(
+      "notebook-print-preview-panel",
+    );
+    expect(screen.getByTestId("label-preview-panel")).not.toHaveClass(
       "notebook-panel",
     );
 
@@ -524,13 +539,13 @@ describe("LabelPrintModal", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("preview-diagnostics")).toHaveClass(
-      "notebook-panel",
+      "notebook-print-check-section",
     );
     expect(screen.getByTestId("required-output-checklist")).toHaveClass(
-      "notebook-note",
+      "notebook-print-note-section",
     );
     expect(screen.getByTestId("preview-sheet-layout")).toHaveClass(
-      "notebook-panel",
+      "notebook-print-check-section",
     );
 
     const sheetMetrics = screen.getByTestId("preview-sheet-layout-metrics");

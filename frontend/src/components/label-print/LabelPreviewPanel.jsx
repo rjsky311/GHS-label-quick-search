@@ -101,7 +101,7 @@ export default function LabelPreviewPanel({
       data-testid="label-preview-scroll-region"
     >
       <div
-        className="notebook-panel overflow-hidden rounded-md"
+        className="notebook-print-preview-panel overflow-hidden rounded-md"
         data-preview-reset-key={resetKey}
         data-testid="label-preview-panel"
       >
