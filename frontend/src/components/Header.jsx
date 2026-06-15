@@ -23,6 +23,7 @@ export default function Header({
   onToggleFavorites,
   onToggleHistory,
   onTogglePrepared,
+  onGoHome,
 }) {
   const { t, i18n } = useTranslation();
   const isZh = i18n.language?.startsWith("zh");
@@ -31,6 +32,11 @@ export default function Header({
     : t("header.switchToChinese");
   const headerButtonBase =
     "relative h-11 w-11 shrink-0 px-0 sm:w-28 sm:justify-start sm:px-3";
+
+  const handleHomeClick = (event) => {
+    event.preventDefault();
+    onGoHome?.();
+  };
 
   const toggleLanguage = () => {
     const lang = isZh ? "en" : "zh-TW";
@@ -45,7 +51,14 @@ export default function Header({
     >
       <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+          <a
+            href="/"
+            className="notebook-home-link group -m-1 flex min-w-0 items-center gap-3 rounded-md p-1 text-left"
+            aria-label={t("header.homeAria")}
+            title={t("header.homeAria")}
+            onClick={handleHomeClick}
+            data-testid="header-home-link"
+          >
             <div className="notebook-hazard-mark flex h-10 w-10 items-center justify-center rounded-md">
               <AlertTriangle className="h-5 w-5 text-red-700" />
             </div>
@@ -53,7 +66,7 @@ export default function Header({
               <h1 className="truncate text-xl font-semibold text-[hsl(var(--notebook-ink))]">{t("header.title")}</h1>
               <p className="truncate text-xs text-[hsl(var(--notebook-muted-ink))]">{t("header.subtitle")}</p>
             </div>
-          </div>
+          </a>
           <div className="flex flex-wrap gap-2">
             {showPilotDashboardButton ? (
               <Button

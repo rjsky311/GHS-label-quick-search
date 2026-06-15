@@ -161,7 +161,10 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                 decoding="async"
                 data-testid="empty-visual-asset"
               />
-              <div className="notebook-panel absolute bottom-3 right-3 rounded-md px-3 py-2 text-xs font-medium backdrop-blur">
+              <div
+                className="notebook-figure-caption absolute bottom-3 right-3 max-w-[calc(100%-1.5rem)] px-2 py-1 text-xs font-medium"
+                data-testid="empty-visual-caption"
+              >
                 {t("empty.visualBadge")}
               </div>
             </div>

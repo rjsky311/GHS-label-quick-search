@@ -9,6 +9,7 @@
   "header.switchToChinese": "切換為繁體中文",
   "header.adminTools": "管理",
   "header.adminToolsTitle": "開啟管理工具",
+  "header.homeAria": "回到查詢首頁",
   "search.singleTab": "單一查詢",
   "search.batchTab": "批次查詢",
   "search.inputLabel": "輸入 CAS 號碼或化學物名稱",

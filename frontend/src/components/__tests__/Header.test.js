@@ -15,6 +15,7 @@ const defaultProps = {
   onToggleFavorites: jest.fn(),
   onToggleHistory: jest.fn(),
   onTogglePrepared: jest.fn(),
+  onGoHome: jest.fn(),
 };
 
 describe('Header', () => {
@@ -23,6 +24,7 @@ describe('Header', () => {
     defaultProps.onToggleHistory.mockClear();
     defaultProps.onTogglePrepared.mockClear();
     defaultProps.onTogglePilotDashboard.mockClear();
+    defaultProps.onGoHome.mockClear();
   });
 
   it('renders app title translation key', () => {
@@ -47,6 +49,21 @@ describe('Header', () => {
   it('renders subtitle translation key', () => {
     render(<Header {...defaultProps} />);
     expect(screen.getByText('header.subtitle')).toBeInTheDocument();
+  });
+
+  it('uses the full brand lockup as a quiet home control', () => {
+    render(<Header {...defaultProps} />);
+
+    const homeControl = screen.getByTestId('header-home-link');
+    expect(homeControl).toContainElement(screen.getByText('header.title'));
+    expect(homeControl).toContainElement(screen.getByText('header.subtitle'));
+    expect(homeControl).toHaveAttribute('aria-label', 'header.homeAria');
+    expect(homeControl).toHaveAttribute('href', '/');
+    expect(homeControl).toHaveClass('notebook-home-link');
+    expect(homeControl).not.toHaveClass('notebook-control');
+
+    fireEvent.click(homeControl);
+    expect(defaultProps.onGoHome).toHaveBeenCalledTimes(1);
   });
 
   it('keeps header action buttons in stable icon slots across translations', () => {

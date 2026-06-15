@@ -9,6 +9,7 @@
   "header.switchToChinese": "Switch to Traditional Chinese",
   "header.adminTools": "Admin",
   "header.adminToolsTitle": "Open admin tools",
+  "header.homeAria": "Back to search home",
   "search.singleTab": "Single Search",
   "search.batchTab": "Batch Search",
   "search.inputLabel": "Enter CAS Number or Chemical Name",

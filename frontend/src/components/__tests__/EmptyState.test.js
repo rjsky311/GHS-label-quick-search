@@ -21,6 +21,15 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.visualBadge')).toBeInTheDocument();
   });
 
+  it('renders the visual label as a non-interactive figure caption', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const caption = screen.getByTestId('empty-visual-caption');
+    expect(caption).toHaveClass('notebook-figure-caption');
+    expect(caption).not.toHaveClass('notebook-panel', 'notebook-control');
+    expect(caption.closest('button')).toBeNull();
+  });
+
   it('renders 3 quick example buttons with correct CAS numbers', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
     expect(screen.getByText('64-17-5')).toBeInTheDocument();

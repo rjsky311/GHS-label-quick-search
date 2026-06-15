@@ -180,6 +180,35 @@ code {
             0 4px 10px hsl(220 18% 10% / 0.05);
     }
 
+    .notebook-home-link {
+        color: hsl(var(--notebook-ink));
+        text-decoration: none;
+        transition:
+            background-color 160ms ease,
+            color 160ms ease;
+    }
+
+    .notebook-home-link:hover {
+        background-color: hsl(var(--notebook-action-soft) / 0.42);
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-home-link:hover h1,
+    .notebook-home-link:focus-visible h1 {
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-home-link:hover .notebook-hazard-mark {
+        border-color: hsl(var(--notebook-danger) / 0.34);
+        background-color: hsl(var(--notebook-danger-soft));
+    }
+
+    .notebook-home-link:focus-visible {
+        outline: 2px solid hsl(var(--notebook-action-border) / 0.74);
+        outline-offset: 3px;
+        background-color: hsl(var(--notebook-action-soft) / 0.5);
+    }
+
     .notebook-surface {
         border: 1px solid hsl(var(--notebook-border) / 0.78);
         background-color: hsl(var(--notebook-surface));
@@ -480,16 +509,23 @@ code {
     }
 
     .notebook-visual-plate {
-        border: 1px solid hsl(var(--notebook-border) / 0.58);
+        border: 1px solid hsl(var(--notebook-rule) / 0.66);
         background:
             linear-gradient(
                 135deg,
-                hsl(var(--notebook-surface-raised) / 0.82),
-                hsl(var(--notebook-surface) / 0.42)
+                hsl(var(--notebook-surface-raised) / 0.6),
+                hsl(var(--notebook-surface) / 0.34)
             );
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.18) inset,
-            0 8px 18px hsl(220 18% 10% / 0.045);
+        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
+    }
+
+    .notebook-figure-caption {
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.68);
+        background-color: hsl(var(--notebook-surface) / 0.66);
+        color: hsl(var(--notebook-muted-ink));
+        letter-spacing: 0;
+        box-shadow: none;
+        pointer-events: none;
     }
 
     .notebook-ledger-row {
@@ -503,15 +539,15 @@ code {
 
     .notebook-process-strip {
         overflow: hidden;
-        border: 1px solid hsl(var(--notebook-border) / 0.56);
+        border: 1px solid hsl(var(--notebook-rule) / 0.72);
         background:
             linear-gradient(
                 90deg,
-                hsl(var(--notebook-action-border) / 0.12),
-                transparent 7rem
+                hsl(var(--notebook-action-border) / 0.1),
+                transparent 6rem
             ),
-            hsl(var(--notebook-surface-raised) / 0.5);
-        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.16) inset;
+            hsl(var(--notebook-surface-raised) / 0.36);
+        box-shadow: none;
     }
 
     .notebook-process-step {
@@ -580,6 +616,7 @@ code {
 
     .notebook-feature-ledger {
         border-top: 1px solid hsl(var(--notebook-rule) / 0.7);
+        border-bottom: 1px solid hsl(var(--notebook-rule) / 0.56);
         background:
             linear-gradient(
                 hsl(var(--notebook-rule) / 0.16) 1px,
