@@ -429,6 +429,7 @@ function App() {
     setLabelQuantities({});
 
     if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", window.location.pathname || "/");
       window.requestAnimationFrame(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
       });

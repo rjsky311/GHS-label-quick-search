@@ -71,9 +71,10 @@ export const i18nReady = (async () => {
     resources,
     lng: initialLanguage,
     supportedLngs: [LANGUAGE_ZH_TW, LANGUAGE_EN],
-    nonExplicitSupportedLngs: true,
     fallbackLng: "zh-TW",
     partialBundledLanguages: true,
+    keySeparator: false,
+    nsSeparator: false,
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator"],
