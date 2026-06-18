@@ -439,12 +439,16 @@ const fillPreparedOperational = async (page, form = PREPARED_FORM) => {
   await page.getByTestId("prepared-expiry-date-input").fill(form.expiryDate || "");
 };
 
+const waitForLabelPrintModal = async (page, timeout = 15000) => {
+  await page.getByTestId("label-modal-footer").waitFor({
+    state: "visible",
+    timeout,
+  });
+};
+
 const submitPreparedForm = async (page) => {
   await page.getByTestId("prepare-solution-submit-btn").click();
-  await page.getByTestId("print-label-action").waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
+  await waitForLabelPrintModal(page);
 };
 
 const openPreparedPrintModal = async (page) => {
@@ -480,10 +484,7 @@ const openPreparedReprintModal = async (page) => {
       .replace(/\s+/g, " ")
       .trim();
   await page.getByTestId("prepared-reprint-btn-0").click();
-  await page.getByTestId("print-label-action").waitFor({
-    state: "visible",
-    timeout: 30000,
-  });
+  await waitForLabelPrintModal(page, 30000);
   return { recentText };
 };
 
@@ -855,6 +856,7 @@ const readPrintStatus = async (page) => {
     document.getElementById("ghs-print-qa-status")?.remove();
   });
   const printButton = page.getByTestId("print-label-action");
+  await printButton.waitFor({ state: "visible", timeout: 15000 });
   const printButtonEnabled = !(await printButton.isDisabled());
   if (!printButtonEnabled) {
     return {
