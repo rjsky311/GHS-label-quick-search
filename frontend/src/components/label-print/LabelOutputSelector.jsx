@@ -35,7 +35,7 @@ export default function LabelOutputSelector({
             )}
           </p>
         </div>
-        <span className="notebook-chip shrink-0 rounded-full px-2 py-1 text-xs font-medium">
+        <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.38)]">
           {currentStockName}
         </span>
       </div>
@@ -88,7 +88,7 @@ export default function LabelOutputSelector({
                   <span className="text-[hsl(var(--notebook-muted-ink))]">
                     {optionContent}
                   </span>
-                  <span className="inline-flex w-fit max-w-full rounded-full border border-current/15 bg-[hsl(var(--notebook-surface)/0.76)] px-2 py-0.5 font-medium text-[hsl(var(--notebook-ink))]">
+                  <span className="inline-flex w-fit max-w-full rounded-full bg-[hsl(var(--notebook-surface)/0.78)] px-2 py-0.5 font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.34)]">
                     {optionRule}
                   </span>
                 </div>
@@ -98,7 +98,7 @@ export default function LabelOutputSelector({
         </div>
       </div>
       <div
-        className="notebook-print-note-section mt-3 rounded-md px-3 py-2 text-xs leading-5"
+        className="mt-3 hidden border-t border-[hsl(var(--notebook-rule)/0.58)] px-1 pt-3 text-xs leading-5 sm:block"
         data-testid="selected-output-note"
       >
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -108,7 +108,7 @@ export default function LabelOutputSelector({
           <span className="font-medium text-[hsl(var(--notebook-ink))]">
             {selectedLabel}
           </span>
-          <span className="notebook-chip rounded-full px-2 py-0.5">
+          <span className="rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-0.5 text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.34)]">
             {currentStockName}
           </span>
         </div>

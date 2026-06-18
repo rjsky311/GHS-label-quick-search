@@ -41,7 +41,8 @@ describe('ProductTrustPanel', () => {
 
     const panel = screen.getByTestId('product-trust-panel-empty');
     expect(panel).toHaveAttribute('data-layout', 'embedded');
-    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note', 'rounded-md');
+    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note');
+    expect(panel).not.toHaveClass('rounded-md');
     expect(panel.className).not.toContain('mx-auto');
     expect(panel.className).not.toContain('max-w-5xl');
     expect(panel.className).not.toContain('mt-8');

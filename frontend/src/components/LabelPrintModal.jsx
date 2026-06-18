@@ -56,7 +56,10 @@ import {
 import MultipleGhsPrintWarning from "@/components/label-print/MultipleGhsPrintWarning";
 import SelectedLabelsControls from "@/components/label-print/SelectedLabelsControls";
 import StockSizeSelector from "@/components/label-print/StockSizeSelector";
-import { RecommendedOutputSummary } from "@/components/label-print/LabelPrintOutcomeSections";
+import {
+  PrintRunSummary,
+  RecommendedOutputSummary,
+} from "@/components/label-print/LabelPrintOutcomeSections";
 import {
   PRINT_OUTPUT_KIND,
   PRINT_OUTPUT_PLAN_STATE,
@@ -109,6 +112,7 @@ export default function LabelPrintModal({
 }) {
   const { t, i18n } = useTranslation();
   const dialogRef = useFocusTrap(onClose);
+  const settingsColumnRef = useRef(null);
   const autoAppliedOutputRef = useRef("");
   const userSelectedStockRef = useRef(false);
   const [previewZoomMode, setPreviewZoomMode] = useState("fit");
@@ -514,8 +518,10 @@ export default function LabelPrintModal({
           ? "danger"
           : "caution";
   const shouldOpenOutputPlanDetails =
-    outputPlanTone === "danger" ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    isSmallLabelContinuationBlocked;
   const hasAnyPictograms =
     printReadiness.elementSummary.pictograms.expected > 0;
   const isContinuationOutput =
@@ -1022,7 +1028,11 @@ export default function LabelPrintModal({
                 }
             : null;
   const outputOutcomeTone =
-    selectedForLabel.length === 0 ? "neutral" : outputPlanTone;
+    selectedForLabel.length === 0
+      ? "neutral"
+      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        ? "ready"
+        : outputPlanTone;
   const outputOutcomeTitle =
     selectedForLabel.length === 0
       ? tx("label.outputOutcomePendingTitle", "Choose a chemical to plan output")
@@ -1149,12 +1159,16 @@ export default function LabelPrintModal({
                       );
   const shouldShowPreviewOutcomeSummary =
     selectedForLabel.length === 0 ||
-    outputOutcomeTone === "danger" ||
+    (outputOutcomeTone === "danger" && !isProfileBlocked) ||
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
   const useFullPagePrimaryLabel = tx(
     "label.useFullPagePrimaryForComplete",
     "Use {{stock}} for complete label",
     { stock: recommendedFullPageLabel },
+  );
+  const profileCompleteFooterLabel = tx(
+    "label.profileCompleteFooterAction",
+    "Add responsible profile first",
   );
   const previewMode =
     (layoutProfile.template === "icon" || layoutProfile.template === "qrcode") &&
@@ -1208,6 +1222,86 @@ export default function LabelPrintModal({
         )
       : 0;
   const hasMultiplePreviewPages = previewNavigationCount > 1;
+  const formatPrintRunUnit = (count, englishSingular, englishPlural, zhUnit) =>
+    currentLocale?.startsWith("zh")
+      ? `${count} ${zhUnit}`
+      : `${count} ${count === 1 ? englishSingular : englishPlural}`;
+  const printRunBatchLabel = `${formatPrintRunUnit(
+    plannedPrintLabelCount,
+    "label",
+    "labels",
+    "張標籤",
+  )} / ${formatPrintRunUnit(
+    plannedPrintPageCount,
+    "page",
+    "pages",
+    "頁",
+  )}`;
+  const printRunTone =
+    selectedForLabel.length === 0
+      ? "neutral"
+      : isPrintFitBlocked
+        ? "danger"
+        : "ready";
+  const printRunTitle =
+    selectedForLabel.length === 0
+      ? tx("label.printRunPendingTitle", "Choose labels to print")
+      : isPrintFitBlocked
+        ? tx("label.printRunBlockedTitle", "Complete label paused")
+        : isQrSupplementOutput || isQuickIdOutput || isSupplementalOutput
+          ? tx(
+              "label.printRunSupplementalReadyTitle",
+              "Supplemental label ready",
+            )
+          : tx("label.printRunReadyTitle", "Ready to print");
+  const printRunBody =
+    selectedForLabel.length === 0
+      ? tx(
+          "label.printRunPendingBody",
+          "Select results first, then choose the output that matches the label stock.",
+        )
+      : isProfileBlocked
+        ? tx(
+            "label.printRunProfileBlockedBody",
+            "This complete A4/Letter label cannot print yet: add responsible lab or supplier name, phone, and address.",
+          )
+        : isPrintFitBlocked
+          ? outputOutcomeBody
+          : isQrSupplementOutput || isQuickIdOutput || isSupplementalOutput
+            ? tx(
+                "label.printRunSupplementalReadyBody",
+                "This can print now as a supplemental label. It cannot replace the complete primary container label.",
+              )
+            : tx(
+                "label.printRunReadyBody",
+                "This batch can print with the selected complete label output.",
+              );
+  const printRunIssueLabel =
+    selectedForLabel.length === 0
+      ? tx("label.readinessNoSelection", "Nothing selected")
+      : isProfileBlocked
+        ? tx(
+            "label.printRunProfileMissing",
+            "{{count}} profile fields missing",
+            {
+              count: Math.max(
+                RESPONSIBLE_PROFILE_FIELDS.length -
+                  responsibleProfilePresentCount,
+                0,
+              ),
+            },
+          )
+        : hasBatchPrintPlan
+          ? tx("label.printRunBatchScope", "{{excluded}} excluded", {
+              excluded: batchPrintPlan.summary.excluded,
+            })
+          : isQrSupplementOutput || isQuickIdOutput || isSupplementalOutput
+            ? tx("label.outputPlanSupplementalTitle", "Supplemental output")
+            : null;
+  const recommendedOutputEyebrow =
+    selectedForLabel.length === 0 || isPrintFitBlocked || canUseFullPagePrimary
+      ? undefined
+      : tx("label.outputDecisionTitle", "Label decision");
   const printActionLabel =
     selectedForLabel.length === 0
       ? t("label.printBtn", { count: plannedPrintLabelCount })
@@ -1339,6 +1433,10 @@ export default function LabelPrintModal({
     effectiveLabelConfig.template,
     previewSelectionKey,
   ]);
+
+  useEffect(() => {
+    settingsColumnRef.current?.scrollTo?.({ top: 0 });
+  }, [printTarget]);
 
   useEffect(() => {
     const maxPageIndex = Math.max(previewNavigationCount - 1, 0);
@@ -1656,6 +1754,243 @@ export default function LabelPrintModal({
     },
   };
 
+  const printBlockedFeedback = printBlockedInfo ? (
+    <div
+      className={`notebook-print-stage-section rounded-md px-4 py-3 text-sm ${
+        READINESS_TONE_ACCENT_CLASSES.danger
+      }`}
+      data-testid="print-blocked-feedback"
+      role="alert"
+    >
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+        <div className="min-w-0 space-y-2">
+          <p className="font-semibold">
+            {tx(
+              "label.printBlockedFeedbackTitle",
+              "Printing paused before handoff",
+            )}
+          </p>
+          <p className="leading-5">
+            {printBlockedInfo.message ||
+              tx(
+                "label.printBlockedFeedbackBody",
+                "The print preflight found a required image or layout issue. Adjust the selected output, then print again.",
+              )}
+          </p>
+          {printBlockedInfo.issueTypes?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {printBlockedInfo.issueTypes.map((issueType) => (
+                <span
+                  key={issueType}
+                  className="notebook-print-stage-fact rounded-md border-red-200 px-2 py-0.5 text-xs font-medium text-red-800"
+                  data-testid="print-blocked-issue"
+                >
+                  {issueType}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const responsibleProfileControls = (
+    <ResponsibleProfileControls
+      open={responsibleProfileMissing}
+      tone={responsibleProfileTone}
+      status={responsibleProfileStatus}
+      presentCount={responsibleProfilePresentCount}
+      fieldTotal={RESPONSIBLE_PROFILE_FIELDS.length}
+      required={responsibleProfileRequired}
+      labProfile={labProfile}
+      onLabProfileChange={onLabProfileChange}
+      onClearLabProfile={onClearLabProfile}
+      t={t}
+      tx={tx}
+    />
+  );
+
+  const primaryPrintSettings = (
+    <section className="space-y-3" data-testid="primary-print-settings">
+      <div className="notebook-print-section-heading">
+        <h3 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+          {tx("label.primaryPrintSettingsTitle", "Primary print settings")}
+        </h3>
+        <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+          {tx(
+            "label.primaryPrintSettingsHint",
+            "Paper size, printed identity, and color live here. Most users only need to change these when the physical stock changes.",
+          )}
+        </p>
+      </div>
+
+      <StockSizeSelector
+        applyStockPreset={applyStockPreset}
+        currentStockName={currentStockName}
+        currentStockOrientation={currentStockOrientation}
+        currentStockRole={currentStockRole}
+        labelPurpose={labelPurpose}
+        layoutProfile={layoutProfile}
+        primaryStockChoices={primaryStockChoices}
+        secondaryStockChoices={secondaryStockChoices}
+        selectableStockCount={selectableStockCount}
+        t={t}
+        tx={tx}
+      />
+
+      <section
+        className="notebook-print-settings-section rounded-md p-4"
+        data-testid="core-output-controls"
+      >
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+          <Languages className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
+          {tx("label.outputBasicsTitle", "Language and print mode")}
+        </h3>
+        <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+          {tx(
+            "label.outputBasicsHint",
+            "These choices directly affect the printed label and preview.",
+          )}
+        </p>
+        <div className="mt-4 grid gap-6 xl:grid-cols-2">
+          <section className="space-y-3">
+            <h4 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+              {tx("label.identityDisplay", "Printed identity")}
+            </h4>
+            <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+              {tx(
+                "label.identityDisplayHint",
+                "CAS always prints first. Choose whether the physical label shows both names or one language.",
+              )}
+            </p>
+            <ConfigButtonGrid
+              options={NAME_DISPLAY_OPTIONS}
+              value={effectiveLabelConfig.nameDisplay || "both"}
+              onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
+              t={t}
+            />
+          </section>
+
+          <section className="space-y-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+              <Palette className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
+              {t("label.colorMode")}
+            </h4>
+            <ConfigButtonGrid
+              options={COLOR_OPTIONS}
+              value={labelConfig.colorMode}
+              onSelect={(colorMode) => updateVisualConfig({ colorMode })}
+              t={t}
+            />
+          </section>
+        </div>
+      </section>
+    </section>
+  );
+
+  const shouldOpenDecisionDetails =
+    (isPrintFitBlocked && !isProfileBlocked) ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    isSmallLabelContinuationBlocked;
+
+  const recommendedPrintDecision = (
+    <RecommendedOutputSummary
+      outputOutcomeTone={outputOutcomeTone}
+      outputOutcomeTitle={outputOutcomeTitle}
+      outputOutcomeBody={outputOutcomeBody}
+      eyebrowLabel={recommendedOutputEyebrow}
+      currentStockName={currentStockName}
+      outputRoleSummary={outputRoleSummary}
+      statementSummary={statementSummary}
+      canUseFullPagePrimary={canUseFullPagePrimary}
+      isProfileBlocked={isProfileBlocked}
+      useFullPagePrimaryLabel={useFullPagePrimaryLabel}
+      onUseFullPagePrimary={handleUseFullPagePrimary}
+      onFocusResponsibleProfile={handleFocusResponsibleProfile}
+      tx={tx}
+    />
+  );
+
+  const printDecisionDetails = (
+    <details
+      open={shouldOpenDecisionDetails}
+      className="notebook-print-note-section rounded-md p-3"
+      data-testid="print-decision-details"
+    >
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
+            {tx(
+              "label.printDecisionDetailsTitle",
+              "Print decision notes",
+            )}
+          </div>
+          <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+            {tx(
+              "label.printDecisionDetailsHint",
+              "Output reasoning, source reminders, and batch fit details are kept here after the main print choices.",
+            )}
+          </p>
+        </div>
+        <span className="notebook-print-stage-fact shrink-0 rounded-full px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-muted-ink))]">
+          {outputRoleSummary}
+        </span>
+      </summary>
+
+      <div className="mt-3 space-y-3">
+        <PrintOutputPlanDetails
+          activeBatchPreviewItem={activeBatchPreviewItem}
+          batchIncludeReducedPurpose={batchIncludeReducedPurpose}
+          batchItemsNeedingReview={batchItemsNeedingReview}
+          batchPreviewItemIndex={batchPreviewItemIndex}
+          batchPreviewRepresentative={batchPreviewRepresentative}
+          batchPrintPlan={batchPrintPlan}
+          batchPrintPurposeLabel={batchPrintPurposeLabel}
+          batchReducedPurposeItems={batchReducedPurposeItems}
+          batchRepresentativeOptions={batchRepresentativeOptions}
+          batchSelectedPrintItems={batchSelectedPrintItems}
+          batchUnselectedReviewCount={batchUnselectedReviewCount}
+          canUseFullPagePrimary={canUseFullPagePrimary}
+          currentStockName={currentStockName}
+          decisionSummaryItems={decisionSummaryItems}
+          handleExportBatchReviewList={handleExportBatchReviewList}
+          handleUseFullPagePrimary={handleUseFullPagePrimary}
+          outputPlanBody={outputPlanBody}
+          outputPlanTitle={outputPlanTitle}
+          outputPlanTone={outputPlanTone}
+          outputRoleSummary={outputRoleSummary}
+          plannedPrintLabelCount={plannedPrintLabelCount}
+          plannedPrintPageCount={plannedPrintPageCount}
+          recoveryRoute={recoveryRoute}
+          setBatchIncludeReducedPurpose={setBatchIncludeReducedPurpose}
+          setBatchPreviewItemIndex={setBatchPreviewItemIndex}
+          setBatchPreviewRepresentative={setBatchPreviewRepresentative}
+          shouldOpenOutputPlanDetails={shouldOpenOutputPlanDetails}
+          tx={tx}
+          useFullPagePrimaryLabel={useFullPagePrimaryLabel}
+        />
+
+        <MultipleGhsPrintWarning
+          items={unconfirmedMultipleGhsItems}
+          examples={multipleGhsWarningExamples}
+          remainingCount={multipleGhsWarningRemainingCount}
+          tx={tx}
+        />
+
+        {shouldShowPrintTrustNote && (
+          <AuthoritativeSourceNote
+            variant="print"
+            mode={printTrustMode}
+          />
+        )}
+      </div>
+    </details>
+  );
+
   return (
     <div
       className={modalViewportOverlayClassName("z-50")}
@@ -1702,202 +2037,43 @@ export default function LabelPrintModal({
           data-testid="label-modal-scroll-body"
         >
             <div
-              className="space-y-6 px-6 py-6 lg:min-h-0 lg:overflow-y-auto"
+              ref={settingsColumnRef}
+              className="space-y-5 px-4 py-5 pb-28 sm:px-6 sm:py-6 sm:pb-6 lg:min-h-0 lg:overflow-y-auto"
               data-testid="label-settings-column"
             >
               <section
                 className="space-y-3"
                 data-testid="primary-output-size-controls"
               >
+                <PrintRunSummary
+                  tone={printRunTone}
+                  title={printRunTitle}
+                  body={printRunBody}
+                  outputLabel={printTargetLabel}
+                  batchLabel={printRunBatchLabel}
+                  issueLabel={printRunIssueLabel}
+                  tx={tx}
+                />
+
+                {printBlockedFeedback}
+
                 <LabelOutputSelector
                   currentStockName={currentStockName}
                   onSelectPrintTarget={applyPrintTarget}
                   printTarget={printTarget}
                   tx={tx}
                 />
-                <div className="mt-3">
-                  <RecommendedOutputSummary
-                    outputOutcomeTone={outputOutcomeTone}
-                    outputOutcomeTitle={outputOutcomeTitle}
-                    outputOutcomeBody={outputOutcomeBody}
-                    currentStockName={currentStockName}
-                    outputRoleSummary={outputRoleSummary}
-                    statementSummary={statementSummary}
-                    canUseFullPagePrimary={canUseFullPagePrimary}
-                    isProfileBlocked={isProfileBlocked}
-                    useFullPagePrimaryLabel={useFullPagePrimaryLabel}
-                    onUseFullPagePrimary={handleUseFullPagePrimary}
-                    onFocusResponsibleProfile={handleFocusResponsibleProfile}
-                    tx={tx}
-                  />
-                </div>
-
-                {printBlockedInfo && (
-                  <div
-                    className={`notebook-print-stage-section mt-3 rounded-md px-4 py-3 text-sm ${
-                      READINESS_TONE_ACCENT_CLASSES.danger
-                    }`}
-                    data-testid="print-blocked-feedback"
-                    role="alert"
-                  >
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                      <div className="min-w-0 space-y-2">
-                        <p className="font-semibold">
-                          {tx(
-                            "label.printBlockedFeedbackTitle",
-                            "Printing paused before handoff",
-                          )}
-                        </p>
-                        <p className="leading-5">
-                          {printBlockedInfo.message ||
-                            tx(
-                              "label.printBlockedFeedbackBody",
-                              "The print preflight found a required image or layout issue. Adjust the selected output, then print again.",
-                            )}
-                        </p>
-                        {printBlockedInfo.issueTypes?.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {printBlockedInfo.issueTypes.map((issueType) => (
-                              <span
-                                key={issueType}
-                                className="notebook-print-stage-fact rounded-md border-red-200 px-2 py-0.5 text-xs font-medium text-red-800"
-                                data-testid="print-blocked-issue"
-                              >
-                                {issueType}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-4">
-                  <PrintOutputPlanDetails
-                    activeBatchPreviewItem={activeBatchPreviewItem}
-                    batchIncludeReducedPurpose={batchIncludeReducedPurpose}
-                    batchItemsNeedingReview={batchItemsNeedingReview}
-                    batchPreviewItemIndex={batchPreviewItemIndex}
-                    batchPreviewRepresentative={batchPreviewRepresentative}
-                    batchPrintPlan={batchPrintPlan}
-                    batchPrintPurposeLabel={batchPrintPurposeLabel}
-                    batchReducedPurposeItems={batchReducedPurposeItems}
-                    batchRepresentativeOptions={batchRepresentativeOptions}
-                    batchSelectedPrintItems={batchSelectedPrintItems}
-                    batchUnselectedReviewCount={batchUnselectedReviewCount}
-                    canUseFullPagePrimary={canUseFullPagePrimary}
-                    currentStockName={currentStockName}
-                    decisionSummaryItems={decisionSummaryItems}
-                    handleExportBatchReviewList={handleExportBatchReviewList}
-                    handleUseFullPagePrimary={handleUseFullPagePrimary}
-                    outputPlanBody={outputPlanBody}
-                    outputPlanTitle={outputPlanTitle}
-                    outputPlanTone={outputPlanTone}
-                    outputRoleSummary={outputRoleSummary}
-                    plannedPrintLabelCount={plannedPrintLabelCount}
-                    plannedPrintPageCount={plannedPrintPageCount}
-                    recoveryRoute={recoveryRoute}
-                    setBatchIncludeReducedPurpose={setBatchIncludeReducedPurpose}
-                    setBatchPreviewItemIndex={setBatchPreviewItemIndex}
-                    setBatchPreviewRepresentative={setBatchPreviewRepresentative}
-                    shouldOpenOutputPlanDetails={shouldOpenOutputPlanDetails}
-                    tx={tx}
-                    useFullPagePrimaryLabel={useFullPagePrimaryLabel}
-                  />
-
-                  <MultipleGhsPrintWarning
-                    items={unconfirmedMultipleGhsItems}
-                    examples={multipleGhsWarningExamples}
-                    remainingCount={multipleGhsWarningRemainingCount}
-                    tx={tx}
-                  />
-
-                  {shouldShowPrintTrustNote && (
-                    <AuthoritativeSourceNote
-                      variant="print"
-                      mode={printTrustMode}
-                    />
-                  )}
-
-                  <StockSizeSelector
-                    applyStockPreset={applyStockPreset}
-                    currentStockName={currentStockName}
-                    currentStockOrientation={currentStockOrientation}
-                    currentStockRole={currentStockRole}
-                    labelPurpose={labelPurpose}
-                    layoutProfile={layoutProfile}
-                    primaryStockChoices={primaryStockChoices}
-                    secondaryStockChoices={secondaryStockChoices}
-                    selectableStockCount={selectableStockCount}
-                    t={t}
-                    tx={tx}
-                  />
-                </div>
               </section>
 
-              <section
-                className="notebook-print-settings-section rounded-md p-4"
-                data-testid="core-output-controls"
-              >
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
-                  <Languages className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
-                  {tx("label.outputBasicsTitle", "Language and print mode")}
-                </h3>
-                <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
-                  {tx(
-                    "label.outputBasicsHint",
-                    "These choices directly affect the printed label and preview.",
-                  )}
-                </p>
-                <div className="mt-4 grid gap-6 xl:grid-cols-2">
-                  <section className="space-y-3">
-                    <h4 className="text-sm font-semibold text-[hsl(var(--notebook-ink))]">
-                      {tx("label.identityDisplay", "Printed identity")}
-                    </h4>
-                    <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
-                      {tx(
-                        "label.identityDisplayHint",
-                        "CAS always prints first. Choose whether the physical label shows both names or one language.",
-                      )}
-                    </p>
-                    <ConfigButtonGrid
-                      options={NAME_DISPLAY_OPTIONS}
-                      value={effectiveLabelConfig.nameDisplay || "both"}
-                      onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
-                      t={t}
-                    />
-                  </section>
+              {recommendedPrintDecision}
 
-                  <section className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
-                      <Palette className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
-                      {t("label.colorMode")}
-                    </h4>
-                    <ConfigButtonGrid
-                      options={COLOR_OPTIONS}
-                      value={labelConfig.colorMode}
-                      onSelect={(colorMode) => updateVisualConfig({ colorMode })}
-                      t={t}
-                    />
-                  </section>
-                </div>
-              </section>
+              {isProfileBlocked && responsibleProfileControls}
 
-              <ResponsibleProfileControls
-                open={responsibleProfileMissing}
-                tone={responsibleProfileTone}
-                status={responsibleProfileStatus}
-                presentCount={responsibleProfilePresentCount}
-                fieldTotal={RESPONSIBLE_PROFILE_FIELDS.length}
-                required={responsibleProfileRequired}
-                labProfile={labProfile}
-                onLabProfileChange={onLabProfileChange}
-                onClearLabProfile={onClearLabProfile}
-                t={t}
-                tx={tx}
-              />
+              {primaryPrintSettings}
+
+              {!isProfileBlocked && responsibleProfileControls}
+
+              {printDecisionDetails}
 
               <SelectedLabelsControls
                 currentLocale={currentLocale}
@@ -1943,10 +2119,13 @@ export default function LabelPrintModal({
 
         <LabelPrintFooter
           canUseFullPagePrimary={canUseFullPagePrimary}
+          isProfileBlocked={isProfileBlocked}
           isPrintFitBlocked={isPrintFitBlocked}
           onClose={onClose}
+          onFocusResponsibleProfile={handleFocusResponsibleProfile}
           onPrint={handlePrintAction}
           onUseFullPagePrimary={handleUseFullPagePrimary}
+          profileCompleteActionLabel={profileCompleteFooterLabel}
           printActionLabel={printActionLabel}
           selectedCount={selectedForLabel.length}
           useFullPagePrimaryLabel={useFullPagePrimaryLabel}

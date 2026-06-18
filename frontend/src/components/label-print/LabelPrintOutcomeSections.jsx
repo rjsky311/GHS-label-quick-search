@@ -12,6 +12,7 @@ export function RecommendedOutputSummary({
   outputOutcomeTone,
   outputOutcomeTitle,
   outputOutcomeBody,
+  eyebrowLabel,
   currentStockName,
   outputRoleSummary,
   statementSummary,
@@ -35,7 +36,8 @@ export function RecommendedOutputSummary({
         <OutcomeIcon tone={outputOutcomeTone} />
         <div className="min-w-0">
           <div className="text-xs font-semibold uppercase tracking-normal opacity-80">
-            {tx("label.recommendedOutputTitle", "Recommended next step")}
+            {eyebrowLabel ||
+              tx("label.recommendedOutputTitle", "Recommended next step")}
           </div>
           <div className="mt-1 text-sm font-semibold">
             {outputOutcomeTitle}
@@ -90,7 +92,7 @@ export function RecommendedOutputSummary({
             <button
               type="button"
               onClick={onFocusResponsibleProfile}
-              className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
+              className="notebook-control notebook-control-repair inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               data-testid="recommended-fill-profile"
             >
               <Building2 className="h-4 w-4" />
@@ -99,6 +101,69 @@ export function RecommendedOutputSummary({
           )}
         </div>
       )}
+    </section>
+  );
+}
+
+export function PrintRunSummary({
+  tone,
+  title,
+  body,
+  outputLabel,
+  batchLabel,
+  issueLabel,
+  tx,
+}) {
+  return (
+    <section
+      className={`notebook-print-run-summary notebook-print-run-summary-${tone} notebook-print-stage-section rounded-md p-4 ${
+        READINESS_TONE_ACCENT_CLASSES[tone] ||
+        READINESS_TONE_ACCENT_CLASSES.neutral
+      }`}
+      data-testid="print-run-summary"
+      aria-live="polite"
+    >
+      <div className="flex items-start gap-3">
+        <OutcomeIcon tone={tone} />
+        <div className="min-w-0">
+          <div className="text-xs font-semibold uppercase tracking-normal opacity-80">
+            {tx("label.printRunSummaryEyebrow", "Print run status")}
+          </div>
+          <h3 className="mt-1 text-base font-semibold leading-6">{title}</h3>
+          <p className="mt-1 text-sm leading-5 opacity-90">{body}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 text-xs sm:grid-cols-3">
+        <div
+          className="notebook-print-stage-fact rounded-md px-2.5 py-2"
+          data-testid="print-run-output"
+        >
+          <div className="font-medium opacity-70">
+            {tx("label.outputRole", "Label output")}
+          </div>
+          <div className="mt-0.5 font-semibold">{outputLabel}</div>
+        </div>
+        <div
+          className="notebook-print-stage-fact rounded-md px-2.5 py-2"
+          data-testid="print-run-batch"
+        >
+          <div className="font-medium opacity-70">
+            {tx("label.batchPrintScopeTitle", "Print scope")}
+          </div>
+          <div className="mt-0.5 font-semibold">{batchLabel}</div>
+        </div>
+        {issueLabel && (
+          <div
+            className="notebook-print-stage-fact rounded-md px-2.5 py-2"
+            data-testid="print-run-issue"
+          >
+            <div className="font-medium opacity-70">
+              {tx("label.printRunIssueLabel", "Attention")}
+            </div>
+            <div className="mt-0.5 font-semibold">{issueLabel}</div>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -144,7 +209,7 @@ export function PrintOutcomeSummary({
               <button
                 type="button"
                 onClick={onFocusResponsibleProfile}
-                className="notebook-control notebook-control-primary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
+                className="notebook-control notebook-control-repair inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold transition-colors"
               >
                 <Building2 className="h-4 w-4" />
                 {tx("label.profileCompleteAction", "Fill profile now")}
@@ -156,8 +221,8 @@ export function PrintOutcomeSummary({
               >
                 <Tag className="h-4 w-4" />
                 {tx(
-                  "label.profileUseSupplementAction",
-                  "Print a supplemental label instead",
+                  "label.profileUseIdentificationAction",
+                  "Print identification small label instead",
                 )}
               </button>
             </div>
@@ -173,7 +238,7 @@ export function PrintOutcomeSummary({
         ].map((item, index) => (
           <span
             key={`${item}-${index}`}
-            className="notebook-print-stage-fact rounded-md px-2 py-1 font-medium"
+            className="rounded-full bg-[hsl(var(--notebook-surface)/0.66)] px-2 py-1 font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.32)]"
             data-testid="print-outcome-fact"
           >
             {item}

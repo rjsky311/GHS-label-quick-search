@@ -95,6 +95,13 @@ uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 Backend environment defaults are in [backend/.env.example](./backend/.env.example).
+For local browser testing, create `backend/.env` from that example and keep
+both frontend origins allowed:
+
+```bash
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
 Single-worker local/dev deployments use in-memory rate limiting. Before
 scaling the backend to multiple workers or instances, configure shared
 rate-limit storage with `RATE_LIMIT_STORAGE_URI`, `LIMITS_STORAGE_URI`, or

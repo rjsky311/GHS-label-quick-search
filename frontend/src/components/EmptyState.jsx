@@ -115,7 +115,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
             </div>
 
             <div
-              className="nb-process mt-7 grid gap-0 rounded-md md:grid-cols-3"
+              className="nb-process mt-7 grid gap-0 md:grid-cols-3"
               data-testid="empty-workbench-workflow"
             >
               {workflow.map(({ key, icon: Icon, titleKey, bodyKey }, index) => (
@@ -162,7 +162,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                 data-testid="empty-visual-asset"
               />
               <div
-                className="nb-fig absolute bottom-3 left-3 right-3"
+                className="nb-fig absolute bottom-3 left-3"
                 data-testid="empty-visual-caption"
               >
                 {t("empty.visualBadge")}
@@ -171,7 +171,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
           </div>
 
           <div
-            className="empty-workbench-tools notebook-feature-ledger min-w-0 rounded-md px-4 py-4 lg:col-span-12"
+            className="empty-workbench-tools notebook-feature-ledger min-w-0 px-4 py-4 lg:col-span-12"
             data-testid="empty-workbench-tools"
           >
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
@@ -214,7 +214,7 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
 
           {trustPanel ? (
             <div
-              className="empty-workbench-trust-slot notebook-workbench-divider min-w-0 lg:col-span-12"
+              className="empty-workbench-trust-slot min-w-0 lg:col-span-12"
               data-testid="empty-workbench-trust-slot"
             >
               {trustPanel}

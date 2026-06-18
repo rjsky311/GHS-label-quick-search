@@ -142,6 +142,13 @@ source .venv/bin/activate
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
 
+Create a local backend `.env` on the Mac only so Chrome can use either
+localhost spelling during development:
+
+```text
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
 If frontend needs a local backend, create a local `.env` file on the Mac only:
 
 ```text
@@ -192,4 +199,3 @@ When opening the project on Mac, ask Codex to:
 3. Run `npm run test:docs` and `npm run build` from `frontend/`.
 4. Check whether production freshness matters for the next task.
 5. Open a new slice only from concrete evidence.
-

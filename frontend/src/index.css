@@ -182,6 +182,7 @@ code {
 
     .notebook-home-link {
         color: hsl(var(--notebook-ink));
+        cursor: pointer;
         text-decoration: none;
         transition:
             background-color 160ms ease,
@@ -282,6 +283,11 @@ code {
         background-size: 100% 2.1rem;
         color: hsl(var(--notebook-ink));
         box-shadow: 0 1px 0 hsl(0 0% 100% / 0.14) inset;
+    }
+
+    .notebook-print-section-heading {
+        border-left: 4px solid hsl(var(--notebook-action-border) / 0.58);
+        padding-left: 0.75rem;
     }
 
     .notebook-print-note-section {
@@ -621,12 +627,14 @@ code {
     }
 
     .nb-fig {
+        display: inline-flex;
+        max-width: calc(100% - 1.5rem);
         border-top: 1px solid hsl(var(--notebook-rule) / 0.68);
-        background-color: hsl(var(--notebook-surface) / 0.66);
+        background-color: hsl(var(--notebook-surface) / 0.2);
         color: hsl(var(--notebook-muted-ink));
         font-size: 0.75rem;
         letter-spacing: 0;
-        padding: 0.25rem 0;
+        padding: 0.2rem 0.1rem 0;
         box-shadow: none;
         pointer-events: none;
         text-align: left;
@@ -643,7 +651,8 @@ code {
 
     .nb-process {
         overflow: hidden;
-        border: 1px solid hsl(var(--notebook-rule) / 0.72);
+        border-top: 1px solid hsl(var(--notebook-rule) / 0.72);
+        border-bottom: 1px solid hsl(var(--notebook-rule) / 0.58);
         background:
             linear-gradient(hsl(var(--notebook-rule) / 0.14) 1px, transparent 1px),
             hsl(var(--notebook-surface) / 0.42);
@@ -818,6 +827,35 @@ code {
         background-color: hsl(var(--notebook-action-soft));
         color: hsl(var(--notebook-action));
         font-weight: 700;
+    }
+
+    .notebook-control-print {
+        border-color: hsl(var(--notebook-action));
+        background-color: hsl(var(--notebook-action));
+        color: hsl(var(--notebook-surface));
+        font-weight: 800;
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.2) inset,
+            0 8px 18px hsl(218 72% 24% / 0.18);
+    }
+
+    .notebook-control-print:hover {
+        border-color: hsl(var(--notebook-action-border));
+        background-color: hsl(var(--notebook-action-border));
+        color: hsl(var(--notebook-surface));
+    }
+
+    .notebook-control-repair {
+        border-color: hsl(var(--notebook-danger) / 0.58);
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-danger));
+        font-weight: 800;
+    }
+
+    .notebook-control-repair:hover {
+        border-color: hsl(var(--notebook-danger) / 0.82);
+        background-color: hsl(var(--notebook-danger-soft));
+        color: hsl(var(--notebook-danger));
     }
 
     .notebook-control-secondary,

@@ -42,8 +42,14 @@ export default function Header({
 
   const toggleLanguage = () => {
     const lang = isZh ? "en" : "zh-TW";
-    i18n.changeLanguage(lang);
-    document.documentElement.lang = lang;
+    void i18n
+      .changeLanguage(lang)
+      .then(() => {
+        document.documentElement.lang = lang;
+      })
+      .catch((error) => {
+        console.error("Failed to switch language", error);
+      });
   };
 
   return (

@@ -103,8 +103,8 @@ describe('EmptyState', () => {
       'empty-workbench-trust-slot',
       'lg:col-span-12',
       'min-w-0',
-      'notebook-workbench-divider',
     );
+    expect(trustSlot).not.toHaveClass('notebook-workbench-divider');
     expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
   });
 
@@ -161,6 +161,7 @@ describe('EmptyState', () => {
     );
     expect(screen.getByTestId('empty-workbench-tools')).not.toHaveClass(
       'notebook-tool-tray',
+      'rounded-md',
     );
     expect(screen.getByTestId('empty-feature-heading')).toHaveTextContent(
       'empty.featureHeading',
@@ -187,6 +188,9 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('empty-workbench-workflow')).toHaveClass(
       'nb-process',
       'grid',
+    );
+    expect(screen.getByTestId('empty-workbench-workflow')).not.toHaveClass(
+      'rounded-md',
     );
     for (const key of ['search', 'review', 'use']) {
       expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass(

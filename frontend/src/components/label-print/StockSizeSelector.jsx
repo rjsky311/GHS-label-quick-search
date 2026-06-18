@@ -28,12 +28,12 @@ export default function StockSizeSelector({
   return (
     <>
       <div
-        className="mt-3 rounded-md border border-blue-100 bg-blue-50/70 p-3"
+        className="notebook-print-stage-section mt-3 rounded-md p-3"
         data-testid="selected-stock-summary"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-blue-700">
+            <div className="text-xs font-semibold uppercase tracking-normal text-[hsl(var(--notebook-muted-ink))]">
               {tx("label.outputStockTitle", "Target size")}
             </div>
             <div className="mt-1 text-base font-semibold text-slate-900">
@@ -52,23 +52,23 @@ export default function StockSizeSelector({
               )}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100">
+          <span className="notebook-print-stage-fact shrink-0 rounded-full px-2 py-1 text-xs font-medium">
             {currentStockRole}
           </span>
         </div>
       </div>
 
       <details
-        className="mt-3 rounded-md border border-slate-200 bg-slate-50/80 p-3"
+        className="notebook-print-stage-section mt-3 rounded-md p-3"
         data-testid="stock-size-picker"
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[hsl(var(--notebook-ink))]">
           <span>{tx("label.changeStockTitle", "Change target size")}</span>
-          <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+          <span className="notebook-print-stage-fact rounded-full px-2 py-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
             {selectableStockCount}
           </span>
         </summary>
-        <p className="mt-2 text-xs leading-5 text-slate-500">
+        <p className="mt-2 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
           {tx(
             "label.changeStockHint",
             "Use this only when the physical paper or label roll is different. The preview and planner will update immediately.",
@@ -79,18 +79,18 @@ export default function StockSizeSelector({
         </div>
         {secondaryStockChoices.length > 0 && (
           <details
-            className="mt-3 rounded-md border border-slate-200 bg-white p-3"
+            className="notebook-print-stage-section mt-3 rounded-md p-3"
             data-testid="secondary-output-size-controls"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[hsl(var(--notebook-ink))]">
               <span>
                 {tx("label.moreStockChoicesTitle", "More common stock sizes")}
               </span>
-              <span className="rounded-full bg-slate-50 px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+              <span className="notebook-print-stage-fact rounded-full px-2 py-1 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {secondaryStockChoices.length}
               </span>
             </summary>
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+            <p className="mt-2 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
               {tx(
                 "label.moreStockChoicesHint",
                 "Use these when your printer stock matches them. The same planner and preview checks still apply.",
