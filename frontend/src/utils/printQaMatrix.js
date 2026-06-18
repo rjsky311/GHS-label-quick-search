@@ -2756,7 +2756,17 @@ const buildProductionBrowserQaCase = (testCase, caseResult) => {
   expectedRecoveryKind: caseResult.handoffExpectation.recoveryKind || "",
   expectedBlockedTextPatterns:
     caseResult.expected.canPrint === false
-      ? ["continuation", "too dense", "larger", "complete primary", "A4", "續頁", "過密", "更大", "完整主標"]
+      ? caseResult.expected.blockedTextPatterns || [
+          "continuation",
+          "too dense",
+          "larger",
+          "complete primary",
+          "A4",
+          "續頁",
+          "過密",
+          "更大",
+          "完整主標",
+        ]
       : [],
   expectedLabelKind: caseResult.handoffExpectation.labelKind,
   expectedStockPreset: caseResult.handoffExpectation.stockPreset,

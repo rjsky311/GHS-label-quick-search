@@ -599,7 +599,9 @@ const inspectModalShell = async (page) =>
     const previewPanel = byTestId("label-preview-panel");
     const previewContext = byTestId("preview-context-strip");
     const printAction =
-      byTestId("print-label-action") || byTestId("use-full-page-primary-footer");
+      byTestId("print-label-action") ||
+      byTestId("fill-profile-footer") ||
+      byTestId("use-full-page-primary-footer");
 
     if (workflowSteps) {
       failures.push("legacy-workflow-steps-visible");
@@ -1193,9 +1195,11 @@ const readPrintStatus = async (page, testCase) => {
     .waitFor({ state: "attached", timeout: PRINT_ACTION_READY_TIMEOUT_MS })
     .catch(() => {});
   if ((await printButton.count()) === 0) {
-    const fallbackAction = page.getByTestId("use-full-page-primary-footer");
+    const fallbackAction = page
+      .getByTestId("fill-profile-footer")
+      .or(page.getByTestId("use-full-page-primary-footer"));
     const fallbackText =
-      ((await fallbackAction.textContent().catch(() => "")) || "").trim();
+      ((await fallbackAction.first().textContent().catch(() => "")) || "").trim();
     const outcomeText =
       ((await page
         .getByTestId("print-outcome-summary")
@@ -1610,8 +1614,6 @@ const runCase = async ({
     await fillSearch(page, testCase.searchTerm);
     setStage("open-print-modal");
     await openPrintModal(page);
-    setStage("inspect-modal-shell");
-    const modalShellInspection = await inspectModalShell(page);
     setStage("responsible-profile");
     await fillResponsibleProfile(
       page,
@@ -1623,6 +1625,8 @@ const runCase = async ({
     await setVisualConfig(page, testCase);
     setStage("custom-fields");
     await setCustomFields(page, testCase);
+    setStage("inspect-modal-shell");
+    const modalShellInspection = await inspectModalShell(page);
     setStage("preview-evidence");
     const evidence = await capturePreviewEvidence(page, testCase);
     evidence.modalShellInspection = modalShellInspection;
