@@ -44,6 +44,13 @@ print-safety authority. `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters downloaded
 Claude Design handoffs into Adopt / Adapt / Reject / Needs Discussion before
 any product UI implementation. Do not apply Claude Design mock code directly.
 
+Production UI checkpoint: `PRODUCTION_UI_CHECKPOINT_2026_06_18.md` records
+the shipped experiment-notebook main-screen and simplified print-workflow
+polish baseline, the deployed SHA, green production QA, and the visual
+acceptance screenshot package. Treat that slice as closed unless fresh
+screenshot, PDF, physical-print, CI/deployment, or admin/export evidence opens
+a concrete new issue.
+
 Migration handoff: `MAC_MIGRATION_HANDOFF.md` records how to preserve project
 context in GitHub and resume development on the Mac mini M4 without committing
 local secrets, generated files, ignored databases, or temporary design zips.
@@ -153,6 +160,11 @@ Current baseline capabilities:
   per-item fit categories, representative previews, acknowledged
   reduced/continuation scope, and deployed production QA evidence. Keep future
   changes aligned with `BATCH_LABEL_PRINT_REFACTOR_PLAN.md`.
+- The 2026-06-18 experiment-notebook UI polish checkpoint has shipped on
+  production at `3a95100eca298cd80158f01bab2b12358ceb2d98`, with the main
+  screen, simplified print modal, prepared print, and batch print covered by
+  green production product QA plus the visual evidence package in
+  `qa/evidence/production-visual-acceptance-2026-06-18/`.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
@@ -257,6 +269,12 @@ Current completion snapshot:
   product QA, production search UI QA, production print handoff, prepared
   production QA, print contract/PDF QA, reference-link safety checks, and
   modal keyboard containment are all represented by repeatable gates.
+- **Production UI checkpoint 2026-06-18**: the notebook-style main screen and
+  simplified print workflow polish are shipped and production-verified at
+  `3a95100eca298cd80158f01bab2b12358ceb2d98`. Use
+  `PRODUCTION_UI_CHECKPOINT_2026_06_18.md` and
+  `qa/evidence/production-visual-acceptance-2026-06-18/` as the handoff record
+  before considering more visual work.
 - **Evidence-driven monitoring checkpoint 2026-05-30**: this historical
   checkpoint recorded a clean product-code baseline on `main` at `bc56672`,
   green GitHub CI, Zeabur production serving

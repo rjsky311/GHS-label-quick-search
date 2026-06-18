@@ -118,6 +118,12 @@ concrete upstream retry state. The 2026-05-30 checkpoint recorded `bc56672` as
 deployed to Zeabur with green CI plus expected-SHA production health/product
 QA evidence; do not treat that historical SHA as the current production
 baseline without rerunning the current expected-SHA production health gate.
+The 2026-06-18 experiment-notebook UI and simplified print workflow polish
+checkpoint is now closed on production at
+`3a95100eca298cd80158f01bab2b12358ceb2d98`; use
+`PRODUCTION_UI_CHECKPOINT_2026_06_18.md` and
+`qa/evidence/production-visual-acceptance-2026-06-18/` before reopening visual
+polish.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -154,6 +160,18 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-06-18 production UI checkpoint: PR #35 and follow-up QA stabilization
+  commits shipped the experiment-notebook main screen and simplified print
+  workflow polish to production. Zeabur served
+  `3a95100eca298cd80158f01bab2b12358ceb2d98`; expected-SHA
+  `qa:zeabur-deployment`, `qa:production-health`, and
+  `qa:production-product` passed. GitHub Actions showed latest `CI` and
+  `Production Print QA` success. The visual acceptance package in
+  `qa/evidence/production-visual-acceptance-2026-06-18/` captures the main
+  screen, search results, A4 blocked/ready modal states, identification small
+  label, QR small label, and batch print modal. This closes the visual polish
+  slice unless new screenshot/PDF/physical-print/CI/deployment/admin evidence
+  opens a concrete issue.
 - 2026-06-02 LINER survey workflow critique: the uploaded survey dataset had
   16 AI simulated respondents and 128 responses across the batch lookup,
   review, print, export, and correction/admin path. The strongest actionable
