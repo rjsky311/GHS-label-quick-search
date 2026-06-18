@@ -52,6 +52,15 @@ const actionNamesSelectedScope = (text = "") =>
   actionNamesStockAndExclusion(text) &&
   (text.includes("selected") || text.includes("已確認"));
 
+const openDetailsByTestId = async (page, testId) => {
+  await page.locator(`details[data-testid="${testId}"]`).evaluateAll((nodes) => {
+    nodes.forEach((node) => {
+      node.open = true;
+      node.scrollIntoView({ block: "nearest" });
+    });
+  });
+};
+
 const DEFAULT_BATCH_CAS = [
   "64-17-5",
   "7647-01-0",
@@ -694,33 +703,70 @@ const run = async () => {
       state: "visible",
       timeout: MODAL_TIMEOUT_MS,
     });
-    await page.locator('details[data-testid="print-output-plan"]').evaluate(
-      (node) => {
-        node.open = true;
-      },
-    );
-    await page.getByTestId("batch-fit-report").waitFor({
-      state: "visible",
+    await openDetailsByTestId(page, "print-decision-details");
+    await openDetailsByTestId(page, "print-output-plan");
+    await page.waitForFunction(() => {
+      const isVisible = (node) => {
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.display !== "none" &&
+          style.visibility !== "hidden"
+        );
+      };
+      return Array.from(
+        document.querySelectorAll('[data-testid="batch-fit-report"]'),
+      ).some(isVisible);
+    }, null, {
       timeout: MODAL_TIMEOUT_MS,
     });
-    await page.getByTestId("batch-preview-selector").waitFor({
-      state: "visible",
+    await page.waitForFunction(() => {
+      const isVisible = (node) => {
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.display !== "none" &&
+          style.visibility !== "hidden"
+        );
+      };
+      return Array.from(
+        document.querySelectorAll('[data-testid="batch-preview-selector"]'),
+      ).some(isVisible);
+    }, null, {
       timeout: MODAL_TIMEOUT_MS,
     });
 
     const readFitReport = () => page.evaluate(() => {
+      const visibleByTestId = (testId) => {
+        const nodes = Array.from(
+          document.querySelectorAll(`[data-testid="${testId}"]`),
+        );
+        return (
+          nodes.find((node) => {
+            const rect = node.getBoundingClientRect();
+            const style = window.getComputedStyle(node);
+            return (
+              rect.width > 0 &&
+              rect.height > 0 &&
+              style.display !== "none" &&
+              style.visibility !== "hidden"
+            );
+          }) || nodes[0]
+        );
+      };
       const textOf = (testId) =>
-        document
-          .querySelector(`[data-testid="${testId}"]`)
+        visibleByTestId(testId)
           ?.textContent?.replace(/\s+/g, " ")
           .trim() || "";
       const frame = document.querySelector(
         '[data-testid="label-fragment-preview"]',
       );
       const label = frame?.contentDocument?.querySelector(".label");
-      const outputContract = document.querySelector(
-        '[data-testid="batch-output-contract"]',
-      );
+      const outputContract = visibleByTestId("batch-output-contract");
       return {
         ready: textOf("batch-fit-ready"),
         review: textOf("batch-fit-review"),
