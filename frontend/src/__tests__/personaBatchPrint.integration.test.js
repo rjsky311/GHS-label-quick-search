@@ -162,9 +162,14 @@ describe('persona gate: lab graduate student batch print', () => {
         screen.getByTestId(`results-workflow-review-action-${issueType}`)
       ).toBeInTheDocument();
     });
+    const reviewGate = screen
+      .getByTestId('results-multiple-ghs-review-title')
+      .closest('.notebook-safety-gate');
+    expect(reviewGate).not.toBeNull();
+    expect(reviewGate).toHaveClass('notebook-safety-gate');
     expect(
-      screen.getByTestId('results-multiple-ghs-review-callout')
-    ).toBeInTheDocument();
+      screen.queryByTestId('results-multiple-ghs-review-callout')
+    ).not.toBeInTheDocument();
 
     const printAllWithGhs = await screen.findByTestId('print-all-with-ghs-btn');
     expect(printAllWithGhs).toHaveTextContent('5');

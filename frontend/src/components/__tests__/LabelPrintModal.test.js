@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import LabelPrintModal from "../LabelPrintModal";
 import LabelPrintFooter from "../label-print/LabelPrintFooter";
 import LabelPreviewPanel from "../label-print/LabelPreviewPanel";
-import { RecommendedOutputSummary } from "../label-print/LabelPrintOutcomeSections";
+import {
+  PrintOutcomeSummary,
+  RecommendedOutputSummary,
+} from "../label-print/LabelPrintOutcomeSections";
 import PrintOutputPlanDetails from "../label-print/PrintOutputPlanDetails";
 
 jest.mock("react-i18next", () => ({
@@ -76,6 +79,16 @@ function expectNotebookSecondaryControl(button) {
   expect(button.className).not.toContain("bg-blue-700");
   expect(button.className).not.toContain("hover:bg-blue-800");
   expect(button.className).not.toContain("text-white");
+}
+
+function expectNotebookRepairControl(button) {
+  expect(button).toHaveClass("notebook-control", "notebook-control-repair");
+  expect(button).not.toHaveClass("notebook-control-primary");
+}
+
+function expectNotebookPrintControl(button) {
+  expect(button).toHaveClass("notebook-control", "notebook-control-print");
+  expect(button).not.toHaveClass("notebook-control-primary");
 }
 
 function tx(_key, defaultValue, options = {}) {
@@ -226,6 +239,25 @@ describe("LabelPrintModal", () => {
   it("starts with task-first target choice and keeps actions sticky", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
+    expect(screen.getByTestId("print-run-summary")).toHaveTextContent(
+      "Complete label paused",
+    );
+    expect(screen.getByTestId("print-run-summary")).toHaveTextContent(
+      "add responsible lab or supplier name",
+    );
+    expect(screen.getByTestId("print-run-output")).toHaveTextContent(
+      "Complete A4/Letter label",
+    );
+    expect(screen.getByTestId("print-run-batch")).toHaveTextContent(
+      "1 label / 1 page",
+    );
+    expect(
+      screen
+        .getByTestId("primary-output-size-controls")
+        .compareDocumentPosition(screen.getByTestId("print-run-summary")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
     expect(screen.getByTestId("primary-output-size-controls")).toBeInTheDocument();
     expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
       "Choose label output",
@@ -260,7 +292,7 @@ describe("LabelPrintModal", () => {
       "trust.blockedTitle",
     );
     expect(screen.getByTestId("print-output-plan").tagName).toBe("DETAILS");
-    expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
+    expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("print-decision-summary")).toHaveTextContent(
       "Label output",
     );
@@ -268,8 +300,9 @@ describe("LabelPrintModal", () => {
       "All pictograms kept",
     );
     expect(screen.queryByTestId("print-readiness-strip")).not.toBeInTheDocument();
-    expect(screen.getByTestId("print-outcome-summary")).toHaveTextContent(
-      "Add lab/supplier profile before printing",
+    expect(screen.queryByTestId("print-outcome-summary")).not.toBeInTheDocument();
+    expect(screen.getByTestId("fill-profile-footer")).toHaveTextContent(
+      "Add responsible profile first",
     );
     expect(screen.getByTestId("primary-label-preview-section")).toBeInTheDocument();
     expect(screen.getByTestId("preview-context-strip")).toHaveTextContent(
@@ -284,7 +317,10 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("preview-context-stock")).toHaveTextContent(
       "A4 Primary",
     );
-    expect(screen.getByTestId("primary-output-size-controls")).toHaveTextContent(
+    expect(screen.getByTestId("primary-print-settings")).toHaveTextContent(
+      "Primary print settings",
+    );
+    expect(screen.getByTestId("primary-print-settings")).toHaveTextContent(
       "Target size",
     );
     expect(screen.getByTestId("output-goal-controls")).toHaveClass(
@@ -300,7 +336,16 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("selected-stock-summary")).toHaveTextContent(
       "A4 Primary",
     );
+    expect(screen.getByTestId("selected-stock-summary")).toHaveClass(
+      "notebook-print-stage-section",
+    );
+    expect(screen.getByTestId("selected-stock-summary").className).not.toContain(
+      "bg-blue-50",
+    );
     expect(screen.getByTestId("stock-size-picker").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("stock-size-picker")).toHaveClass(
+      "notebook-print-stage-section",
+    );
     expect(screen.getByTestId("stock-size-picker")).not.toHaveAttribute("open");
     expect(screen.getByTestId("stock-size-picker")).toHaveTextContent(
       "Change target size",
@@ -315,8 +360,32 @@ describe("LabelPrintModal", () => {
     ).toBeTruthy();
     expect(
       screen
-        .getByTestId("output-goal-controls")
+        .getByTestId("print-run-summary")
+        .compareDocumentPosition(screen.getByTestId("label-output-selector")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("label-output-selector")
         .compareDocumentPosition(screen.getByTestId("recommended-output-summary")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("recommended-output-summary")
+        .compareDocumentPosition(screen.getByTestId("responsible-profile-controls")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("responsible-profile-controls")
+        .compareDocumentPosition(screen.getByTestId("primary-print-settings")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("primary-print-settings")
+        .compareDocumentPosition(screen.getByTestId("print-decision-details")) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
@@ -362,32 +431,78 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-modal-footer")).toHaveClass("shrink-0");
   });
 
+  it("uses a ready summary for printable supplemental outputs without making the status look blocked", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "brother-62mm-continuous",
+        labelWidthMm: 62,
+        labelHeightMm: 40,
+        columns: 3,
+        rows: 4,
+        perPage: 12,
+        orientation: "landscape",
+      },
+      labProfile: {
+        organization: "Lab",
+        phone: "123",
+        address: "Address",
+      },
+    });
+
+    expect(screen.getByTestId("print-run-summary")).toHaveTextContent(
+      "Supplemental label ready",
+    );
+    expect(screen.getByTestId("print-run-summary")).toHaveTextContent(
+      "cannot replace the complete primary container label",
+    );
+    expect(screen.getByTestId("print-run-summary")).toHaveClass(
+      "notebook-print-run-summary-ready",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).toHaveTextContent(
+      "Label decision",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
+      "Recommended next step",
+    );
+  });
+
   it("uses notebook-style controls for print dialog CTAs", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
-    expectNotebookPrimaryControl(screen.getByTestId("print-label-action"));
+    expectNotebookRepairControl(screen.getByTestId("fill-profile-footer"));
     expectNotebookSecondaryControl(
       screen.getByText("label.cancel").closest("button"),
     );
-    expectNotebookPrimaryControl(screen.getByTestId("recommended-fill-profile"));
+    expectNotebookRepairControl(screen.getByTestId("recommended-fill-profile"));
+    expect(screen.queryByTestId("profile-blocked-actions")).not.toBeInTheDocument();
+  });
 
-    const previewActions = screen.getByTestId("profile-blocked-actions");
-    expectNotebookPrimaryControl(
-      within(previewActions).getByRole("button", {
-        name: "Fill profile now",
-      }),
-    );
-    expectNotebookSecondaryControl(
-      within(previewActions).getByRole("button", {
-        name: "Print a supplemental label instead",
-      }),
-    );
+  it("uses a stronger print CTA only when the selected output can print", () => {
+    renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "brother-62mm-continuous",
+      },
+    });
+
+    expectNotebookPrintControl(screen.getByTestId("print-label-action"));
+    expect(screen.queryByTestId("fill-profile-footer")).not.toBeInTheDocument();
   });
 
   it("uses notebook-native output controls with a compact selected-output summary", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("label-output-selector")).toHaveClass(
+      "notebook-print-control-section",
+    );
+    expect(screen.getByTestId("label-output-selector")).not.toHaveClass(
       "notebook-panel",
     );
 
@@ -439,12 +554,19 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("selected-output-note")).toHaveTextContent(
       "Full information label",
     );
+    expect(screen.getByTestId("selected-output-note")).toHaveClass("border-t");
+    expect(screen.getByTestId("selected-output-note")).not.toHaveClass(
+      "notebook-control",
+    );
   });
 
   it("uses notebook-native controls for print language and color settings", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("core-output-controls")).toHaveClass(
+      "notebook-print-settings-section",
+    );
+    expect(screen.getByTestId("core-output-controls")).not.toHaveClass(
       "notebook-panel",
     );
 
@@ -474,26 +596,22 @@ describe("LabelPrintModal", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
     expect(screen.getByTestId("label-preview-panel")).toHaveClass(
+      "notebook-print-preview-panel",
+    );
+    expect(screen.getByTestId("label-preview-panel")).not.toHaveClass(
       "notebook-panel",
     );
 
     const contextStrip = screen.getByTestId("preview-context-strip");
-    expect(contextStrip).toHaveClass("notebook-note");
-    expect(screen.getByTestId("preview-context-role")).toHaveClass(
-      "notebook-chip",
-    );
-    expect(screen.getByTestId("preview-context-icons")).toHaveClass(
-      "notebook-chip",
-    );
-    expect(screen.getByTestId("preview-context-stock")).toHaveClass(
-      "notebook-chip",
-    );
+    expect(contextStrip).toHaveClass("grid");
+    expect(contextStrip).not.toHaveClass("notebook-note");
     for (const testId of [
       "preview-context-role",
       "preview-context-icons",
       "preview-context-stock",
     ]) {
-      expect(screen.getByTestId(testId)).toHaveClass("min-w-[7rem]");
+      expect(screen.getByTestId(testId)).toHaveClass("rounded-md");
+      expect(screen.getByTestId(testId)).not.toHaveClass("notebook-chip");
     }
 
     const zoomControls = screen.getByTestId("preview-zoom-controls");
@@ -523,14 +641,21 @@ describe("LabelPrintModal", () => {
   it("keeps output and sheet checks secondary to the label preview", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
-    expect(screen.getByTestId("preview-diagnostics")).toHaveClass(
-      "notebook-panel",
+    expect(screen.getByTestId("preview-review-panel").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("preview-review-panel")).toHaveClass(
+      "notebook-print-check-section",
+    );
+    expect(screen.getByTestId("preview-review-panel")).not.toHaveAttribute(
+      "open",
     );
     expect(screen.getByTestId("required-output-checklist")).toHaveClass(
-      "notebook-note",
+      "notebook-print-stage-section",
+    );
+    expect(screen.getByTestId("preview-diagnostics")).toHaveClass(
+      "notebook-print-stage-section",
     );
     expect(screen.getByTestId("preview-sheet-layout")).toHaveClass(
-      "notebook-panel",
+      "notebook-print-stage-section",
     );
 
     const sheetMetrics = screen.getByTestId("preview-sheet-layout-metrics");
@@ -538,6 +663,12 @@ describe("LabelPrintModal", () => {
     expect(sheetMetrics).not.toHaveAttribute("open");
     expect(screen.getByTestId("preview-sheet-layout")).toHaveTextContent(
       "1 x 1",
+    );
+    expect(screen.getByTestId("preview-review-panel")).toHaveTextContent(
+      "Output checks",
+    );
+    expect(screen.getByTestId("preview-review-panel")).toHaveTextContent(
+      "Sheet layout",
     );
   });
 
@@ -697,6 +828,128 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("uses a shared notebook stage section for print outcome summaries", () => {
+    const { unmount } = render(
+      <RecommendedOutputSummary
+        outputOutcomeTone="caution"
+        outputOutcomeTitle="Use full-page primary"
+        outputOutcomeBody="Switch to a larger output."
+        currentStockName="Avery 5163"
+        outputRoleSummary="Complete primary"
+        statementSummary="Full H/P text"
+        canUseFullPagePrimary={false}
+        isProfileBlocked={false}
+        useFullPagePrimaryLabel="Use full-page primary"
+        onUseFullPagePrimary={jest.fn()}
+        onFocusResponsibleProfile={jest.fn()}
+        tx={tx}
+      />,
+    );
+
+    const recommended = screen.getByTestId("recommended-output-summary");
+    expect(recommended).toHaveClass(
+      "notebook-print-stage-section",
+      "rounded-md",
+    );
+    expect(recommended).not.toHaveClass("rounded-lg");
+    expect(recommended.className).not.toContain("bg-amber-50");
+    for (const key of ["stock", "role", "statements"]) {
+      expect(screen.getByTestId(`recommended-output-${key}`)).toHaveClass(
+        "notebook-print-stage-fact",
+      );
+    }
+
+    unmount();
+
+    render(
+      <PrintOutcomeSummary
+        outputOutcomeTone="ready"
+        outputOutcomeTitle="Ready to print"
+        outputOutcomeBody="This output can be printed."
+        isProfileBlocked={false}
+        currentStockName="A4 Primary"
+        outputRoleSummary="Complete primary"
+        pictogramSummary="All pictograms"
+        statementSummary="Full H/P text"
+        onFocusResponsibleProfile={jest.fn()}
+        onUseSupplementalLabel={jest.fn()}
+        tx={tx}
+      />,
+    );
+
+    const outcome = screen.getByTestId("print-outcome-summary");
+    expect(outcome).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(outcome).not.toHaveClass("rounded-lg");
+    expect(outcome.className).not.toContain("bg-emerald-50");
+    expect(screen.getAllByTestId("print-outcome-fact")).toHaveLength(4);
+    screen.getAllByTestId("print-outcome-fact").forEach((fact) => {
+      expect(fact).toHaveClass("rounded-full");
+      expect(fact).not.toHaveClass("notebook-control");
+    });
+  });
+
+  it("keeps output plan alerts on shared notebook stage primitives", () => {
+    render(
+      <PrintOutputPlanDetails
+        activeBatchPreviewItem={null}
+        batchIncludeReducedPurpose={false}
+        batchItemsNeedingReview={[]}
+        batchPreviewItemIndex={0}
+        batchPreviewRepresentative="ready"
+        batchPrintPlan={null}
+        batchPrintPurposeLabel="Complete"
+        batchReducedPurposeItems={[]}
+        batchRepresentativeOptions={[]}
+        batchSelectedPrintItems={[]}
+        batchUnselectedReviewCount={0}
+        canUseFullPagePrimary={false}
+        currentStockName="A4 Primary"
+        decisionSummaryItems={[
+          { key: "stock", label: "Stock", value: "A4 Primary", tone: "danger" },
+          { key: "role", label: "Role", value: "Complete primary", tone: "ready" },
+          { key: "statements", label: "Text", value: "Full H/P", tone: "caution" },
+        ]}
+        handleExportBatchReviewList={jest.fn()}
+        handleUseFullPagePrimary={jest.fn()}
+        outputPlanBody="Use a larger readable stock before printing."
+        outputPlanTitle="Switch output"
+        outputPlanTone="danger"
+        outputRoleSummary="Complete primary"
+        plannedPrintLabelCount={1}
+        plannedPrintPageCount={1}
+        recoveryRoute={{
+          kind: "use-full-page",
+          currentStock: "small-strip",
+          targetStock: "a4-primary",
+          tone: "caution",
+          label: "Recovery",
+          value: "Use A4 Primary",
+          description: "Small labels cannot carry this complete output.",
+        }}
+        setBatchIncludeReducedPurpose={jest.fn()}
+        setBatchPreviewItemIndex={jest.fn()}
+        setBatchPreviewRepresentative={jest.fn()}
+        shouldOpenOutputPlanDetails
+        tx={tx}
+        useFullPagePrimaryLabel="Use full-page primary"
+      />,
+    );
+
+    const plan = screen.getByTestId("print-output-plan");
+    expect(plan).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(plan.className).not.toContain("bg-red-50");
+
+    const route = screen.getByTestId("print-recovery-route");
+    expect(route).toHaveClass("notebook-print-status-note");
+    expect(route.className).not.toContain("bg-amber-50");
+
+    for (const key of ["stock", "role", "statements"]) {
+      const item = screen.getByTestId(`print-decision-${key}`);
+      expect(item).toHaveClass("notebook-print-stage-fact");
+      expect(item.className).not.toContain("bg-");
+    }
+  });
+
   it("summarizes selected labels and keeps quantity controls secondary", () => {
     renderModal({ selectedForLabel: [makeChem()] });
 
@@ -725,10 +978,15 @@ describe("LabelPrintModal", () => {
 
     const feedback = screen.getByTestId("print-blocked-feedback");
     expect(feedback).toHaveAttribute("role", "alert");
+    expect(feedback).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expect(feedback.className).not.toContain("bg-red-50");
     expect(feedback).toHaveTextContent("Printing paused before handoff");
     expect(feedback).toHaveTextContent("Required label images did not load.");
     expect(feedback).toHaveTextContent("label-overflow");
     expect(feedback).toHaveTextContent("required-image-failed");
+    screen.getAllByTestId("print-blocked-issue").forEach((issue) => {
+      expect(issue).toHaveClass("notebook-print-stage-fact");
+    });
   });
 
   it("clears stale print preflight feedback when the selected print scope changes", async () => {
@@ -783,6 +1041,12 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("print-multiple-ghs-warning")).toHaveTextContent(
       "1 item(s) have multiple GHS versions",
+    );
+    expect(screen.getByTestId("print-multiple-ghs-warning")).toHaveClass(
+      "notebook-print-stage-section",
+    );
+    expect(screen.getByTestId("print-multiple-ghs-warning").className).not.toContain(
+      "bg-amber-50",
     );
     expect(
       screen.getByTestId("print-multiple-ghs-warning-items"),
@@ -1234,8 +1498,8 @@ describe("LabelPrintModal", () => {
     const supplementalChecklist = screen.getByTestId(
       "required-output-checklist",
     );
-    expect(screen.getByTestId("preview-diagnostics").tagName).toBe("DETAILS");
-    expect(screen.getByTestId("preview-diagnostics")).not.toHaveAttribute(
+    expect(screen.getByTestId("preview-review-panel").tagName).toBe("DETAILS");
+    expect(screen.getByTestId("preview-review-panel")).not.toHaveAttribute(
       "open",
     );
     expect(supplementalChecklist).toHaveTextContent("Primary");
@@ -1303,6 +1567,9 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
       "English, Chinese",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).toHaveClass(
+      "border-emerald-200",
     );
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
@@ -1478,6 +1745,9 @@ describe("LabelPrintModal", () => {
     const labelPreview = screen.getByTestId("primary-label-preview-section");
     const warning = screen.getByTestId("preview-warning-banner");
     const requiredOutput = screen.getByTestId("required-output-checklist");
+    expect(warning).toHaveClass("notebook-print-stage-section");
+    expect(warning.className).not.toContain("bg-red-50");
+    expect(warning.className).not.toContain("bg-amber-50");
 
     expect(
       labelPreview.compareDocumentPosition(warning) &
@@ -1698,7 +1968,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
       "A4 Primary is planned as a complete primary label",
     );
-    expect(screen.getByTestId("print-output-plan")).toHaveAttribute("open");
+    expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
       "data-mode",
       "blocked",
@@ -1724,10 +1994,11 @@ describe("LabelPrintModal", () => {
     expect(
       screen.getByTestId("required-output-responsible-profile"),
     ).toHaveTextContent("2/3");
-    const printButton = screen
-      .getByText("Add lab/supplier profile first")
-      .closest("button");
-    expect(printButton).toBeDisabled();
+    const printButton = screen.getByTestId("fill-profile-footer");
+    expect(printButton).toHaveTextContent(
+      "Add responsible profile first",
+    );
+    expect(printButton).not.toBeDisabled();
   });
 
   it("updates quantity controls within the valid range", () => {

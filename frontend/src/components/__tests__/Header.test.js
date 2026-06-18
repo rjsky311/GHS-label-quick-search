@@ -15,6 +15,7 @@ const defaultProps = {
   onToggleFavorites: jest.fn(),
   onToggleHistory: jest.fn(),
   onTogglePrepared: jest.fn(),
+  onGoHome: jest.fn(),
 };
 
 describe('Header', () => {
@@ -23,6 +24,7 @@ describe('Header', () => {
     defaultProps.onToggleHistory.mockClear();
     defaultProps.onTogglePrepared.mockClear();
     defaultProps.onTogglePilotDashboard.mockClear();
+    defaultProps.onGoHome.mockClear();
   });
 
   it('renders app title translation key', () => {
@@ -49,20 +51,38 @@ describe('Header', () => {
     expect(screen.getByText('header.subtitle')).toBeInTheDocument();
   });
 
-  it('keeps header action buttons in stable icon slots across translations', () => {
+  it('uses the full brand lockup as a quiet home control', () => {
+    render(<Header {...defaultProps} />);
+
+    const homeControl = screen.getByTestId('header-home-link');
+    expect(homeControl).toContainElement(screen.getByText('header.title'));
+    expect(homeControl).toContainElement(screen.getByText('header.subtitle'));
+    expect(homeControl).toHaveAttribute('aria-label', 'header.homeAria');
+    expect(homeControl).toHaveAttribute('href', '/');
+    expect(homeControl).toHaveClass('notebook-home-link');
+    expect(homeControl).not.toHaveClass('notebook-control');
+
+    fireEvent.click(homeControl);
+    expect(defaultProps.onGoHome).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps header action buttons legible on mobile and stable across translations', () => {
     render(<Header {...defaultProps} />);
 
     [
-      'pilot-dashboard-toggle-btn',
-      'language-toggle-btn',
-      'favorites-toggle-btn',
-      'prepared-toggle-btn',
-      'history-toggle-btn',
-    ].forEach((testId) => {
+      ['pilot-dashboard-toggle-btn', 'header.adminTools'],
+      ['language-toggle-btn', 'header.langToggle'],
+      ['favorites-toggle-btn', 'header.favorites'],
+      ['prepared-toggle-btn', 'header.prepared'],
+      ['history-toggle-btn', 'header.history'],
+    ].forEach(([testId, labelText]) => {
       const button = screen.getByTestId(testId);
+      const label = button.querySelector('span');
       expect(button).toHaveClass('notebook-control', 'notebook-control-utility');
-      expect(button).toHaveClass('h-11', 'w-11', 'shrink-0', 'sm:w-28');
+      expect(button).toHaveClass('min-w-[4.25rem]', 'shrink-0', 'sm:min-w-28');
       expect(button.querySelector('svg')).toHaveClass('shrink-0');
+      expect(button).toHaveTextContent(labelText);
+      expect(label).not.toHaveClass('hidden');
     });
 
     expect(screen.getByTestId('language-toggle-btn')).toHaveAttribute(

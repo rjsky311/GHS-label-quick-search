@@ -1302,16 +1302,16 @@ export const buildPrintStyles = (model) => {
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-7 .pictograms-icon,
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon,
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-9 .pictograms-icon {
-      grid-template-columns: repeat(9, 6.7mm);
-      grid-auto-rows: 6.7mm;
+      grid-template-columns: repeat(5, 7.25mm);
+      grid-auto-rows: 7.25mm;
       justify-content: start;
       gap: 0.3mm 0.35mm;
     }
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-7 .pictograms-icon img,
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-8 .pictograms-icon img,
     .label-icon.label-stock-small-strip.label-form-strip.label-pictogram-count-9 .pictograms-icon img {
-      width: 6.7mm;
-      height: 6.7mm;
+      width: 7.25mm;
+      height: 7.25mm;
     }
     .label-icon.label-stock-small-rack .label-top {
       padding-bottom: 0.45mm;
@@ -1786,13 +1786,13 @@ export const buildPrintStyles = (model) => {
       height: 7.7mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-9 .pictograms.qr-pics {
-      grid-template-columns: repeat(3, 7.45mm);
-      grid-auto-rows: 7.45mm;
+      grid-template-columns: repeat(3, 9.3mm);
+      grid-auto-rows: 9.3mm;
       gap: 0.45mm 0.55mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip.label-pictogram-count-9 .pictograms.qr-pics img {
-      width: 7.45mm;
-      height: 7.45mm;
+      width: 9.3mm;
+      height: 9.3mm;
     }
     .label-stock-brother-62mm-continuous.label-qr.label-form-strip .qr-support-row {
       justify-content: start;

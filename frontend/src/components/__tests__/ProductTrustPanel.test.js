@@ -41,7 +41,8 @@ describe('ProductTrustPanel', () => {
 
     const panel = screen.getByTestId('product-trust-panel-empty');
     expect(panel).toHaveAttribute('data-layout', 'embedded');
-    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note', 'rounded-md');
+    expect(panel).toHaveClass('notebook-trust-strip', 'notebook-warm-note');
+    expect(panel).not.toHaveClass('rounded-md');
     expect(panel.className).not.toContain('mx-auto');
     expect(panel.className).not.toContain('max-w-5xl');
     expect(panel.className).not.toContain('mt-8');
@@ -51,14 +52,27 @@ describe('ProductTrustPanel', () => {
       'gap-3',
       'md:grid-cols-3'
     );
+    expect(screen.getByTestId('product-trust-proof-list-empty')).toHaveClass(
+      'notebook-proof-list',
+    );
+    expect(screen.getByTestId('product-trust-proof-list-empty')).not.toHaveClass(
+      'notebook-control',
+      'notebook-status-card',
+    );
     expect(screen.getByTestId('product-trust-proof-card-empty-source')).toHaveClass(
-      'notebook-trust-item',
+      'nb-proof-note',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-label')).toHaveClass(
-      'notebook-trust-item',
+      'nb-proof-note',
     );
     expect(screen.getByTestId('product-trust-proof-card-empty-feedback')).toHaveClass(
+      'nb-proof-note',
+    );
+    expect(screen.getByTestId('product-trust-proof-card-empty-source')).not.toHaveClass(
+      'notebook-status-card',
       'notebook-trust-item',
+      'notebook-control',
+      'notebook-tool-card',
     );
     expect(screen.getByTestId('product-trust-report-link-empty')).toHaveClass(
       'notebook-control',

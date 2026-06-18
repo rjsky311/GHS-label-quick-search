@@ -428,6 +428,48 @@ export default function ResultsTable({
     });
   }
   const headerActionButtonClass = "w-full justify-center px-4 sm:w-auto";
+  const multipleGhsReviewGate =
+    multipleGhsReviewCount > 0 ? (
+      <div
+        className="notebook-safety-gate flex basis-full flex-wrap items-center justify-between gap-3 rounded-md px-3 py-3"
+      >
+        <div className="flex min-w-0 flex-1 gap-3">
+          <span className="notebook-safety-gate-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+              {t("results.multipleGhsReviewEyebrow")}
+            </p>
+            <h4
+              className="mt-0.5 text-sm font-semibold text-[hsl(var(--notebook-ink))]"
+              data-testid="results-multiple-ghs-review-title"
+            >
+              {t("results.multipleGhsReviewTitle", {
+                count: multipleGhsReviewCount,
+              })}
+            </h4>
+            <p
+              className="mt-1 text-xs leading-5 text-amber-800"
+              data-testid="results-multiple-ghs-review-body"
+            >
+              {t("results.multipleGhsReviewBody")}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setReviewIssueFilter(DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS)
+          }
+          disabled={!onSetAdvancedFilter}
+          className="notebook-inline-action shrink-0 rounded-md px-3 py-2 text-xs font-semibold text-amber-900 transition-colors disabled:cursor-default disabled:opacity-60"
+          data-testid="results-multiple-ghs-review-primary"
+        >
+          {t("results.multipleGhsReviewCta")}
+        </button>
+      </div>
+    ) : null;
 
   // `printAllWithGhsCount` is computed in App.js from the same filtered
   // and sorted subset the table is currently rendering. Don't recompute
@@ -590,6 +632,7 @@ export default function ResultsTable({
             {t("results.summary", { total: totalCount, found: results.filter((r) => r.found).length })}
           </span>
         </div>
+        {multipleGhsReviewGate}
         <div
           className="results-action-rail grid w-full grid-cols-1 gap-2 sm:w-auto sm:auto-cols-max sm:grid-flow-col sm:grid-cols-none sm:justify-end"
           data-testid="results-action-rail"
@@ -756,7 +799,7 @@ export default function ResultsTable({
               {workflowSelfServiceLanes.map((lane) => (
                 <div
                   key={lane.key}
-                  className={`notebook-status-card rounded-md px-3 py-2 ${lane.className}`}
+                  className={`nb-stat ${lane.className}`}
                   data-testid={`results-workflow-lane-${lane.key}`}
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -842,48 +885,11 @@ export default function ResultsTable({
               </ol>
             </div>
           )}
-          {multipleGhsReviewCount > 0 && (
-            <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-amber-950"
-              data-testid="results-multiple-ghs-review-callout"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                  {t("results.multipleGhsReviewEyebrow")}
-                </p>
-                <h4
-                  className="mt-0.5 text-sm font-semibold"
-                  data-testid="results-multiple-ghs-review-title"
-                >
-                  {t("results.multipleGhsReviewTitle", {
-                    count: multipleGhsReviewCount,
-                  })}
-                </h4>
-                <p
-                  className="mt-1 text-xs text-amber-800"
-                  data-testid="results-multiple-ghs-review-body"
-                >
-                  {t("results.multipleGhsReviewBody")}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setReviewIssueFilter(DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS)
-                }
-                disabled={!onSetAdvancedFilter}
-                className="notebook-inline-action shrink-0 rounded-md px-3 py-2 text-xs font-semibold text-amber-900 transition-colors disabled:cursor-default disabled:opacity-60"
-                data-testid="results-multiple-ghs-review-primary"
-              >
-                {t("results.multipleGhsReviewCta")}
-              </button>
-            </div>
-          )}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {workflowSummaryCards.map((card) => (
               <div
                 key={card.key}
-                className={`notebook-status-card rounded-md px-3 py-2 ${card.className}`}
+                className={`nb-stat ${card.className}`}
                 data-testid={`results-workflow-summary-${card.key}`}
               >
                 <div className="flex items-baseline justify-between gap-2">

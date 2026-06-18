@@ -397,6 +397,45 @@ function App() {
     [clearLabelSelection]
   );
 
+  const handleGoHome = useCallback(() => {
+    setError("");
+    setLoading(false);
+    setBatchProgress(null);
+    setSingleCas("");
+    setBatchCas("");
+    setActiveTab("single");
+    setResultFilter("all");
+    setAdvancedFilter({
+      minPictograms: 0,
+      hCodeSearch: "",
+      reviewIssueType: "",
+    });
+    replaceResultsView([]);
+    setSelectedResult(null);
+    setShowFavorites(false);
+    setShowHistory(false);
+    setShowPrepared(false);
+    setShowPilotDashboard(false);
+    setShowPilotAdminDialog(false);
+    setShowExportPreview(false);
+    setShowComparisonModal(false);
+    setShowLabelModal(false);
+    setDataCorrectionContext(null);
+    setPrepareSolutionParent(null);
+    setPreparedPresetNameDraft("");
+    setPreparedFlowActive(false);
+    setPreparedReprintingId(null);
+    setPrintBlockedInfo(null);
+    setLabelQuantities({});
+
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", window.location.pathname || "/");
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  }, [replaceResultsView, setLabelQuantities]);
+
   const logUnresolvedSearch = useCallback(
     (query, queryType, result, meta = {}) => {
       if (!result || result.found) return;
@@ -912,6 +951,7 @@ function App() {
         onToggleFavorites={() => setShowFavorites(!showFavorites)}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}
+        onGoHome={handleGoHome}
       />
 
       {showPilotAdminDialog && (

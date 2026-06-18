@@ -62,6 +62,26 @@ describe("AuthoritativeSourceNote", () => {
     expect(screen.getByText("trust.blockedNote")).toBeInTheDocument();
   });
 
+  it("uses the print notebook section language for print-mode warnings", () => {
+    const { rerender } = render(
+      <AuthoritativeSourceNote mode="supplemental" variant="print" />,
+    );
+
+    const supplemental = screen.getByTestId("authoritative-source-note-print");
+    expect(supplemental).toHaveClass("notebook-print-check-section");
+    expect(supplemental).not.toHaveClass("notebook-print-stage-section");
+    expect(supplemental.className).not.toContain("bg-amber-50");
+    expect(screen.getByText("trust.verifySds")).toHaveClass(
+      "notebook-print-stage-fact",
+    );
+
+    rerender(<AuthoritativeSourceNote mode="blocked" variant="print" />);
+    const blocked = screen.getByTestId("authoritative-source-note-print");
+    expect(blocked).toHaveClass("notebook-print-check-section");
+    expect(blocked).not.toHaveClass("notebook-print-stage-section");
+    expect(blocked.className).not.toContain("bg-red-50");
+  });
+
   it("note copy is identical across variants (single source of truth)", () => {
     const { rerender } = render(<AuthoritativeSourceNote variant="results" />);
     const resultsNote = screen.getByTestId("authoritative-source-note-results");

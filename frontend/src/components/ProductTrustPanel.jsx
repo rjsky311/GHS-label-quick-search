@@ -77,7 +77,7 @@ export default function ProductTrustPanel({
   const panelClassName = isCompact
     ? "notebook-trust-strip notebook-warm-note rounded-md px-4 py-4 text-left"
     : embedded
-      ? "notebook-trust-strip notebook-warm-note rounded-md px-5 py-5 text-left"
+      ? "notebook-trust-strip notebook-warm-note px-5 py-5 text-left"
       : "notebook-panel notebook-warm-note mx-auto mt-8 max-w-5xl rounded-md px-5 py-5 text-left";
   const innerClassName = isCompact
     ? "grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.8fr)]"
@@ -146,16 +146,16 @@ export default function ProductTrustPanel({
         </div>
 
         <div
-          className={`grid gap-3 ${isCompact ? "sm:grid-cols-3" : "md:grid-cols-3"}`}
+          className={`notebook-proof-list grid gap-3 ${isCompact ? "sm:grid-cols-3" : "md:grid-cols-3"}`}
           data-testid={`product-trust-proof-list-${variant}`}
         >
           {cards.map(({ id, icon: Icon, titleKey, bodyKey }) => (
             <div
               key={titleKey}
-              className="notebook-status-card notebook-trust-item flex min-w-0 items-start gap-2 rounded-md p-3 text-sm"
+              className="nb-proof-note flex min-w-0 items-start gap-2.5 text-sm"
               data-testid={`product-trust-proof-card-${variant}-${id}`}
             >
-              <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--notebook-action-border)/0.3)] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]">
+              <span className="notebook-proof-icon mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center">
                 {isCompact ? (
                   <CheckCircle2 className="h-4 w-4" />
                 ) : (

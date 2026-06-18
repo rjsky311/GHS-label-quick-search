@@ -21,6 +21,17 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.visualBadge')).toBeInTheDocument();
   });
 
+  it('renders the visual label as a non-interactive figure caption', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const caption = screen.getByTestId('empty-visual-caption');
+    expect(caption).toHaveClass('nb-fig');
+    expect(caption).not.toHaveClass('notebook-figure-caption');
+    expect(caption).not.toHaveClass('notebook-panel', 'notebook-control');
+    expect(caption.className).not.toContain('max-w-');
+    expect(caption.closest('button')).toBeNull();
+  });
+
   it('renders 3 quick example buttons with correct CAS numbers', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
     expect(screen.getByText('64-17-5')).toBeInTheDocument();
@@ -92,8 +103,8 @@ describe('EmptyState', () => {
       'empty-workbench-trust-slot',
       'lg:col-span-12',
       'min-w-0',
-      'notebook-workbench-divider',
     );
+    expect(trustSlot).not.toHaveClass('notebook-workbench-divider');
     expect(trustSlot).toContainElement(screen.getByTestId('empty-trust-child'));
   });
 
@@ -122,73 +133,80 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.featureFavoriteDesc')).toBeInTheDocument();
   });
 
-  it('uses notebook ledger rows and status cards for workbench modules', () => {
+  it('uses non-interactive process and feature proof styles for workbench modules', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-workflow')).toBeInTheDocument();
-    expect(screen.getByTestId('empty-workflow-card-search')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-workflow-card-review')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-workflow-card-use')).toHaveClass('notebook-ledger-row');
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass('notebook-status-card');
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-status-card',
-    );
+    for (const key of ['search', 'review', 'use']) {
+      const step = screen.getByTestId(`empty-workflow-card-${key}`);
+      expect(step).toHaveClass('nb-step');
+      expect(step).not.toHaveClass('notebook-ledger-row', 'notebook-status-card');
+    }
+    for (const key of ['batch', 'print', 'excel', 'favorite']) {
+      const feature = screen.getByTestId(`empty-feature-card-${key}`);
+      expect(feature).toHaveClass('notebook-feature-note');
+      expect(feature).not.toHaveClass(
+        'notebook-status-card',
+        'notebook-tool-card',
+        'notebook-tool-card-accent',
+      );
+    }
   });
 
-  it('uses a unified notebook tool tray instead of detached feature cards', () => {
+  it('uses a low-weight feature ledger instead of detached feature cards', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-tools')).toHaveClass(
+      'notebook-feature-ledger',
+    );
+    expect(screen.getByTestId('empty-workbench-tools')).not.toHaveClass(
       'notebook-tool-tray',
+      'rounded-md',
     );
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-batch')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-print')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-excel')).toHaveClass(
-      'notebook-tool-card-accent',
-    );
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-tool-card',
-    );
-    expect(screen.getByTestId('empty-feature-card-favorite')).toHaveClass(
-      'notebook-tool-card-accent',
+    expect(screen.getByTestId('empty-feature-heading')).toHaveTextContent(
+      'empty.featureHeading',
     );
   });
 
-  it('keeps workflow and tool cards aligned on responsive notebook grids', () => {
+  it('marks follow-up workflow notes as a non-interactive explanatory list', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} />);
+
+    const list = screen.getByRole('list', { name: 'empty.featureHeading' });
+    expect(list).toHaveAttribute('data-testid', 'empty-workbench-tool-grid');
+
+    for (const key of ['batch', 'print', 'excel', 'favorite']) {
+      const feature = screen.getByTestId(`empty-feature-card-${key}`);
+      expect(feature.tagName).toBe('LI');
+      expect(feature.closest('button')).toBeNull();
+      expect(feature.closest('a')).toBeNull();
+    }
+  });
+
+  it('keeps workflow and feature notes aligned on responsive notebook grids', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 
     expect(screen.getByTestId('empty-workbench-workflow')).toHaveClass(
+      'nb-process',
       'grid',
-      'auto-rows-fr',
-      'md:grid-cols-3',
+    );
+    expect(screen.getByTestId('empty-workbench-workflow')).not.toHaveClass(
+      'rounded-md',
     );
     for (const key of ['search', 'review', 'use']) {
-      expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass('h-full');
+      expect(screen.getByTestId(`empty-workflow-card-${key}`)).toHaveClass(
+        'min-w-0',
+      );
     }
 
     expect(screen.getByTestId('empty-workbench-tool-grid')).toHaveClass(
       'grid',
-      'auto-rows-fr',
       'sm:grid-cols-2',
       'lg:grid-cols-4',
     );
     for (const key of ['batch', 'print', 'excel', 'favorite']) {
-      expect(screen.getByTestId(`empty-feature-card-${key}`)).toHaveClass('h-full');
+      expect(screen.getByTestId(`empty-feature-card-${key}`)).toHaveClass(
+        'min-w-0',
+      );
     }
   });
 

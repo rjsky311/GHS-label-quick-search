@@ -26,15 +26,19 @@ export default function AuthoritativeSourceNote({
         ? "trust.blockedNote"
         : "trust.authoritativeNote";
   const toneClass =
-    mode === "blocked"
-      ? "border border-red-200 bg-red-50 text-red-900"
-      : mode === "supplemental"
-        ? "border border-amber-200 bg-amber-50 text-amber-900"
-        : "notebook-note";
+    isPrint && mode !== "general"
+      ? "notebook-print-check-section"
+      : mode === "blocked"
+        ? "notebook-note border-red-200 text-red-900"
+        : mode === "supplemental"
+          ? "notebook-note border-amber-200 text-amber-900"
+          : "notebook-note";
   const checklistItemClass =
-    mode === "general"
+    isPrint
+      ? "notebook-print-stage-fact inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium"
+      : mode === "general"
       ? "notebook-chip inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium"
-      : "inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 font-medium ring-1 ring-current/10";
+      : "notebook-chip inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium";
   const wrapperClass = [
     variant === "detail" ? "mt-2" : isPrint ? "mt-3" : "mt-4",
     "flex items-start gap-3 rounded-md p-3 text-xs",

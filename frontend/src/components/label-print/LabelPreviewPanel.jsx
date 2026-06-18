@@ -101,7 +101,7 @@ export default function LabelPreviewPanel({
       data-testid="label-preview-scroll-region"
     >
       <div
-        className="notebook-panel overflow-hidden rounded-md"
+        className="notebook-print-preview-panel overflow-hidden rounded-md"
         data-preview-reset-key={resetKey}
         data-testid="label-preview-panel"
       >
@@ -144,32 +144,32 @@ export default function LabelPreviewPanel({
                       )}
               </p>
             </div>
-            <span className="notebook-chip shrink-0 rounded-full px-2 py-1 text-xs font-medium">
+            <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.38)]">
               {layoutProfile.stockPreset === "custom"
                 ? tx("label.stockPresetCustom", "Custom tuning")
                 : stockPresetDisplay.name || layoutProfile.stockPresetName}
             </span>
           </div>
 
-          <div
-            className="notebook-note mt-3 flex flex-wrap gap-2 rounded-md px-3 py-2 text-xs"
+          <dl
+            className="mt-3 grid gap-2 text-xs sm:grid-cols-3"
             data-testid="preview-context-strip"
           >
             {previewContextItems.map((item) => (
-              <span
+              <div
                 key={item.key}
-                className="notebook-chip inline-flex min-w-[7rem] max-w-full items-center gap-1.5 rounded-full px-2.5 py-1"
+                className="min-w-0 rounded-md bg-[hsl(var(--notebook-surface)/0.58)] px-2.5 py-1.5 ring-1 ring-[hsl(var(--notebook-border)/0.32)]"
                 data-testid={`preview-context-${item.key}`}
               >
-                <span className="shrink-0 font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
+                <dt className="font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
                   {item.label}
-                </span>
-                <span className="min-w-0 truncate font-medium text-[hsl(var(--notebook-ink))]">
+                </dt>
+                <dd className="mt-0.5 truncate font-medium text-[hsl(var(--notebook-ink))]">
                   {item.value}
-                </span>
-              </span>
+                </dd>
+              </div>
             ))}
-          </div>
+          </dl>
         </div>
 
         <div className="space-y-4 px-4 py-4">
@@ -208,10 +208,10 @@ export default function LabelPreviewPanel({
 
           {previewChem && hasPreviewWarnings && primaryPreviewRisk && (
             <section
-              className={`rounded-lg border p-3 text-sm ${
+              className={`notebook-print-stage-section rounded-md p-3 text-sm ${
                 isPrintFitBlocked
-                  ? "border-red-200 bg-red-50 text-red-900"
-                  : "border-amber-200 bg-amber-50 text-amber-900"
+                  ? "border-red-200 text-red-900"
+                  : "border-amber-200 text-amber-900"
               }`}
               data-testid="preview-warning-banner"
             >
@@ -239,7 +239,7 @@ export default function LabelPreviewPanel({
                         <FileText className="h-4 w-4" />
                         {useFullPagePrimaryLabel}
                       </button>
-                      <span className="text-xs leading-5 text-red-800">
+                      <span className="text-xs leading-5 opacity-90">
                         {tx(
                           "label.useFullPagePrimaryHint",
                           "Keeps all pictograms and complete statements on a complete full-page primary label.",

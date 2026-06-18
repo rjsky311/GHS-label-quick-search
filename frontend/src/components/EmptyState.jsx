@@ -115,13 +115,13 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
             </div>
 
             <div
-              className="mt-7 grid auto-rows-fr gap-3 md:grid-cols-3"
+              className="nb-process mt-7 grid gap-0 md:grid-cols-3"
               data-testid="empty-workbench-workflow"
             >
               {workflow.map(({ key, icon: Icon, titleKey, bodyKey }, index) => (
                 <div
                   key={titleKey}
-                  className="notebook-ledger-row flex h-full min-w-0 items-start gap-3 rounded-md p-3.5"
+                  className="nb-step flex min-w-0 items-start gap-3 px-3.5 py-3"
                   data-testid={`empty-workflow-card-${key}`}
                 >
                   <span className="notebook-step-marker flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold">
@@ -161,28 +161,43 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                 decoding="async"
                 data-testid="empty-visual-asset"
               />
-              <div className="notebook-panel absolute bottom-3 right-3 rounded-md px-3 py-2 text-xs font-medium backdrop-blur">
+              <div
+                className="nb-fig absolute bottom-3 left-3"
+                data-testid="empty-visual-caption"
+              >
                 {t("empty.visualBadge")}
               </div>
             </div>
           </div>
 
           <div
-            className="empty-workbench-tools notebook-tool-tray min-w-0 rounded-md px-3 py-4 lg:col-span-12"
+            className="empty-workbench-tools notebook-feature-ledger min-w-0 px-4 py-4 lg:col-span-12"
             data-testid="empty-workbench-tools"
           >
-            <div
-              className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-4"
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+              <h3
+                className="text-sm font-semibold text-[hsl(var(--notebook-ink))]"
+                data-testid="empty-feature-heading"
+              >
+                {t("empty.featureHeading")}
+              </h3>
+              <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+                {t("empty.featureSummary")}
+              </p>
+            </div>
+            <ul
+              className="mt-3 grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4"
               data-testid="empty-workbench-tool-grid"
+              aria-label={t("empty.featureHeading")}
             >
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
-                <div
+                <li
                   key={titleKey}
-                  className="notebook-status-card notebook-tool-card notebook-tool-card-accent flex h-full min-w-0 gap-3 rounded-md p-4 text-left"
+                  className="notebook-feature-note flex min-w-0 gap-2.5 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
-                  <span className="notebook-tool-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-md">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  <span className="notebook-feature-icon mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <h3 className="mb-1 text-sm font-medium text-[hsl(var(--notebook-ink))]">
@@ -192,14 +207,14 @@ export default function EmptyState({ onQuickSearch, trustPanel = null }) {
                       {t(descKey)}
                     </p>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           {trustPanel ? (
             <div
-              className="empty-workbench-trust-slot notebook-workbench-divider min-w-0 lg:col-span-12"
+              className="empty-workbench-trust-slot min-w-0 lg:col-span-12"
               data-testid="empty-workbench-trust-slot"
             >
               {trustPanel}

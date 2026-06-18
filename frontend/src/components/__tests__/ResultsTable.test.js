@@ -175,6 +175,40 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('export-csv-btn')).toBeInTheDocument();
     });
 
+    it('raises multiple GHS review ahead of output actions', () => {
+      const onSetAdvancedFilter = jest.fn();
+
+      render(
+        <ResultsTable
+          {...defaultProps}
+          results={[mockFoundResult]}
+          totalCount={1}
+          advancedFilter={{ minPictograms: 0, hCodeSearch: '', reviewIssueType: '' }}
+          onSetAdvancedFilter={onSetAdvancedFilter}
+          getEffectiveClassification={createMockGetEffective()}
+        />,
+      );
+
+      const reviewGate = screen
+        .getByTestId('results-multiple-ghs-review-title')
+        .closest('.notebook-safety-gate');
+      const actionRail = screen.getByTestId('results-action-rail');
+      expect(reviewGate).not.toBeNull();
+      expect(reviewGate).toHaveClass('notebook-safety-gate');
+      expect(
+        reviewGate.compareDocumentPosition(actionRail) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+
+      fireEvent.click(screen.getByTestId('results-multiple-ghs-review-primary'));
+
+      expect(onSetAdvancedFilter).toHaveBeenCalledWith({
+        minPictograms: 0,
+        hCodeSearch: '',
+        reviewIssueType: 'multiple-classifications',
+      });
+    });
+
     it('clicking print label button calls onOpenLabelModal', () => {
       render(<ResultsTable {...defaultProps} />);
       fireEvent.click(screen.getByTestId('print-label-btn'));
@@ -327,15 +361,38 @@ describe('ResultsTable', () => {
       expect(screen.getByTestId('results-workflow-output-scope')).toHaveTextContent(
         'results.workflowOutputScope'
       );
-      expect(
-        screen.getByTestId('results-multiple-ghs-review-callout')
-      ).toBeInTheDocument();
+      const reviewGate = screen
+        .getByTestId('results-multiple-ghs-review-title')
+        .closest('.notebook-safety-gate');
+      expect(reviewGate).not.toBeNull();
+      expect(reviewGate).toHaveClass('notebook-safety-gate');
       expect(
         screen.getByTestId('results-multiple-ghs-review-title')
       ).toHaveTextContent('results.multipleGhsReviewTitle');
       expect(
         screen.getByTestId('results-multiple-ghs-review-body')
       ).toHaveTextContent('results.multipleGhsReviewBody');
+      expect(
+        screen.queryByTestId('results-multiple-ghs-review-callout')
+      ).not.toBeInTheDocument();
+      for (const key of ['ready', 'review', 'blocked']) {
+        expect(screen.getByTestId(`results-workflow-lane-${key}`)).toHaveClass(
+          'nb-stat',
+        );
+        expect(screen.getByTestId(`results-workflow-lane-${key}`)).not.toHaveClass(
+          'notebook-status-card',
+          'notebook-control',
+        );
+      }
+      for (const key of ['found', 'label-ready', 'needs-review', 'export']) {
+        expect(screen.getByTestId(`results-workflow-summary-${key}`)).toHaveClass(
+          'nb-stat',
+        );
+        expect(screen.getByTestId(`results-workflow-summary-${key}`)).not.toHaveClass(
+          'notebook-status-card',
+          'notebook-control',
+        );
+      }
 
       fireEvent.click(screen.getByTestId('results-multiple-ghs-review-primary'));
 

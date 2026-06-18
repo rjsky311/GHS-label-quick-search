@@ -22,6 +22,13 @@ export const READINESS_TONE_CLASSES = {
   danger: "border-red-200 bg-red-50 text-red-900",
 };
 
+export const READINESS_TONE_ACCENT_CLASSES = {
+  ready: "border-emerald-200 text-emerald-800",
+  neutral: "border-slate-200 text-slate-700",
+  caution: "border-amber-200 text-amber-900",
+  danger: "border-red-200 text-red-900",
+};
+
 export const BATCH_CATEGORY_TONE = {
   [BATCH_PRINT_ITEM_CATEGORY.READY]: "ready",
   [BATCH_PRINT_ITEM_CATEGORY.READY_TIGHT]: "ready",
