@@ -66,6 +66,7 @@
     "preview": "vite preview",
     "qa:bundle-budget": "node scripts/check-bundle-budget.mjs",
     "qa:github-resource": "node scripts/check-github-resource-usage.mjs",
+    "qa:p-code-coverage": "python ../backend/scripts/audit_p_code_coverage.py --fail-on-gaps",
     "qa:workbench": "node scripts/check-experiment-notebook-workbench.mjs",
     "test:docs": "node scripts/check-docs-drift.mjs",
     "test:i18n": "node scripts/check-i18n-parity.mjs",
@@ -105,6 +106,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "js-yaml": "4.2.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.2",

@@ -142,6 +142,7 @@ npm run test:docs
 npm run build
 npm run qa:bundle-budget
 npm run qa:github-resource
+npm run qa:p-code-coverage
 npm run test:print-contract
 npm run qa:print-pdf
 npm run qa:production-health

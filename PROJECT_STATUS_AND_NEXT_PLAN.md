@@ -216,6 +216,10 @@ Current validation gates:
   reports repository disk usage, Actions artifacts, Actions caches, and
   visibility. Public visibility is the default expected state; override
   `GITHUB_RESOURCE_EXPECTED_VISIBILITY` only if the product decision changes.
+- P-code wording coverage patrol: `npm run qa:p-code-coverage` from
+  `frontend/` queries the bounded backend smoke set and fails when observed
+  precautionary statement codes are missing English or Traditional Chinese
+  wording, or when the API payload has already degraded to code-only text.
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production availability and freshness: `npm run qa:production-health`
