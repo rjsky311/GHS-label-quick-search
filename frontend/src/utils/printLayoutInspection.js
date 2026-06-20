@@ -163,8 +163,6 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".support-chip", "support-chip-overflow"],
       [".custom-fields", "custom-fields-overflow"],
       [".name-section", "name-section-overflow"],
-      [".name-en", "name-en-overflow"],
-      [".name-zh", "name-zh-overflow"],
       [".small-name-en", "small-name-en-overflow"],
       [".small-name-zh", "small-name-zh-overflow"],
       [".small-cas", "small-cas-overflow"],

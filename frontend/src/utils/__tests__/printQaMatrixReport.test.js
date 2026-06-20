@@ -486,6 +486,13 @@ describe("print QA matrix report", () => {
       nameDisplay: "both",
     });
     expect(byId["a4-primary"].actual.hasFullPagePictograms).toBe(true);
+    expect(browserCaseById["a4-primary"].stockFit).toMatchObject({
+      expectedPreviewMinPictogramSidePx: 15,
+      expectedPreviewMinQrSidePx: 15,
+    });
+    expect(browserCaseById["a4-primary"].expectedPrintMinQrSidePx).toBeGreaterThan(
+      browserCaseById["a4-primary"].expectedMinQrSidePx,
+    );
     expect(byId["a4-primary"].actual.hasSummaries).toBe(false);
     expect(byId["a4-primary"].actual.contentPolicy).toMatchObject(
       byId["a4-primary"].expected.contentPolicy,

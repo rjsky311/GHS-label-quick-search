@@ -295,10 +295,6 @@ describe("inspectPrintLayoutDocument", () => {
 
     expect(inspectPrintLayoutDocument(root)).toEqual([
       expect.objectContaining({
-        type: "name-en-overflow",
-        selector: ".name-en",
-      }),
-      expect.objectContaining({
         type: "required-name-en-clipped",
         selector: ".name-en",
       }),
@@ -336,6 +332,42 @@ describe("inspectPrintLayoutDocument", () => {
       scrollHeight: { value: 33, configurable: true },
       clientWidth: { value: 160, configurable: true },
       scrollWidth: { value: 160, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([]);
+  });
+
+  it("does not block full-page continuation names when line-clamp rounding stays visible", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label label-full-page-primary label-continuation-page">
+        <div class="name-section">
+          <div class="name-en" style="overflow:hidden;-webkit-line-clamp:1;line-height:22px;">Ethylene Oxide</div>
+        </div>
+      </div>
+    `;
+
+    const label = root.querySelector(".label");
+    const nameSection = root.querySelector(".name-section");
+    const nameEn = root.querySelector(".name-en");
+
+    Object.defineProperties(label, {
+      clientHeight: { value: 900, configurable: true },
+      scrollHeight: { value: 900, configurable: true },
+      clientWidth: { value: 620, configurable: true },
+      scrollWidth: { value: 620, configurable: true },
+    });
+    Object.defineProperties(nameSection, {
+      clientHeight: { value: 30, configurable: true },
+      scrollHeight: { value: 30, configurable: true },
+      clientWidth: { value: 160, configurable: true },
+      scrollWidth: { value: 160, configurable: true },
+    });
+    Object.defineProperties(nameEn, {
+      clientHeight: { value: 24, configurable: true },
+      scrollHeight: { value: 28, configurable: true },
+      clientWidth: { value: 120, configurable: true },
+      scrollWidth: { value: 128, configurable: true },
     });
 
     expect(inspectPrintLayoutDocument(root)).toEqual([]);

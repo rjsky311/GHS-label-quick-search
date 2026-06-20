@@ -2288,7 +2288,7 @@ const buildStockFitContract = ({ layout = {}, labelKind = "", expected = {} }) =
       : labelKind === "qr-supplement"
         ? 18
         : labelKind === "complete-primary"
-          ? 18
+          ? 15
           : 20;
 
   return {
@@ -2306,9 +2306,11 @@ const buildStockFitContract = ({ layout = {}, labelKind = "", expected = {} }) =
     expectedPreviewMinPictogramSidePx:
       expected.minProductionPictogramSidePx || defaultPreviewMin,
     expectedPreviewMinQrSidePx:
-      labelKind === "qr-supplement" || labelKind === "complete-primary"
+      labelKind === "qr-supplement"
         ? 30
-        : 0,
+        : labelKind === "complete-primary"
+          ? defaultPreviewMin
+          : 0,
     requiresSupportChip: Boolean(expected.requiredIdentityText),
   };
 };

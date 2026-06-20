@@ -70,3 +70,19 @@ Acceptance decision:
 
 - Stop A4 polish for this slice. The remaining issues are non-blocking
   follow-up polish items, not reasons to continue another redesign/review loop.
+
+Production handoff hotfix:
+
+- After deployment, production print handoff QA found two issues that were not
+  exposed by PDF QA:
+  - Full-page `Fit` preview measured A4 pictograms and QR after shrinking the
+    whole page, so the old 30 px QR preview threshold was too high for the
+    preview viewport. Actual print/PDF QR size remains covered by the print
+    minimum-size contract.
+  - The live print preflight treated `.name-en` scroll overflow as blocking
+    even when the full-page label name remained visibly unclipped. Full-page
+    identity text now relies on the required-text clipping checks instead of a
+    generic name overflow block.
+- The fix keeps true clipping blockers in place through
+  `required-name-en-clipped`, `required-name-zh-clipped`, and related required
+  identity checks.
