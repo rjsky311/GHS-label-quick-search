@@ -156,6 +156,7 @@ Run backend commands from `backend/`:
 ```powershell
 python -m py_compile server.py api_models.py api_validation.py export_helpers.py
 python -m pytest -q
+python scripts\audit_p_code_coverage.py --fail-on-gaps
 python scripts\audit_inventory_workbook.py <path-to-xlsx>
 python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>
