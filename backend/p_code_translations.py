@@ -8,7 +8,8 @@ Covers single codes (P210, P233, ...) and common combined codes
 Combined codes are stored with the `+` connector exactly as PubChem
 returns them, not split into individual statements.
 
-Source: UN GHS Rev.8 (2019), Taiwan CNS 15030 series.
+Source: UN GHS Rev.8 (2019), Rev.10/Rev.11 precautionary statement
+summaries as surfaced by PubChem GHS Summary, Taiwan CNS 15030 series.
 """
 
 P_CODE_TRANSLATIONS: dict[str, str] = {
@@ -21,6 +22,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     # ─── Prevention (P200 series) ─────────────────────────────────────────────
     "P201": "使用前取得特殊指示。",
     "P202": "在閱讀及瞭解所有安全措施前，切勿操作。",
+    "P203": "使用前取得、閱讀並遵循所有安全指示。",
     "P210": "遠離熱源、熱表面、火花、明火及其他點火源。禁止吸煙。",
     "P211": "勿對火焰或其他點火源噴灑。",
     "P212": "避免密閉加熱，避免減少衝擊或摩擦。",
@@ -73,7 +75,10 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P313": "諮詢醫師。",
     "P314": "若感到不適，諮詢醫師。",
     "P315": "立即諮詢醫師。",
+    "P316": "立即取得緊急醫療協助。",
     "P317": "立即諮詢醫師。",
+    "P318": "若曾接觸或有疑慮，請諮詢醫師。",
+    "P319": "若感到不適，尋求醫療協助。",
     "P320": "需要立即進行特定治療（見本標示上的……）。",
     "P321": "需要進行特定治療（見本標示上的……）。",
     "P322": "需要進行特定措施（見本標示上的……）。",
@@ -93,6 +98,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P351": "以清水小心沖洗數分鐘。",
     "P352": "以大量肥皂和清水清洗。",
     "P353": "以水沖洗皮膚（沐浴）。",
+    "P354": "立即以水沖洗數分鐘。",
     "P360": "在就醫前立即以大量清水沖洗受污染的衣物和皮膚。",
     "P361": "立即脫除所有受污染的衣物。",
     "P362": "脫除受污染的衣物。",
@@ -137,25 +143,31 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P264+P265": "操作後徹底清洗所有接觸部位。",
 
     # P301 combinations
+    "P301+P316":      "若吞食：立即取得緊急醫療協助。",
+    "P301+P317":      "若吞食：尋求醫療協助。",
     "P301+P310":      "若吞食：立即聯絡中毒控制中心或醫師。",
     "P301+P312":      "若吞食且感到不適：聯絡中毒控制中心或醫師。",
     "P301+P330+P331": "若吞食：漱口。請勿催吐。",
 
     # P302 combinations
+    "P302+P317":      "若皮膚接觸：尋求醫療協助。",
     "P302+P334":      "若皮膚接觸：浸入冷水中或以濕繃帶包紮。",
     "P302+P350":      "若皮膚接觸：以肥皂和大量清水輕柔清洗。",
     "P302+P352":      "若皮膚接觸：以大量肥皂和清水清洗。",
+    "P302+P361+P354": "若皮膚接觸：立即脫除所有受污染的衣物，立即以水沖洗數分鐘。",
     "P302+P352+P333+P313": "若皮膚接觸：以大量肥皂和清水清洗。若皮膚過敏或出現皮疹：諮詢醫師。",
 
     # P303 combinations
     "P303+P361+P353": "若皮膚（或頭髮）接觸：立即脫除所有受污染的衣物，以水沖洗皮膚（沐浴）。",
 
     # P304 combinations
+    "P304+P317":      "若吸入：尋求醫療協助。",
     "P304+P312":      "若吸入且感到不適：聯絡中毒控制中心或醫師。",
     "P304+P340":      "若吸入：將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。",
     "P304+P341":      "若吸入：若呼吸困難，將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。",
 
     # P305 combinations
+    "P305+P354+P338": "若眼睛接觸：立即以水沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。",
     "P305+P351+P338": "若眼睛接觸：以清水小心沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。",
 
     # P306 combinations
@@ -165,23 +177,30 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
     "P307+P311":      "若接觸：聯絡中毒控制中心或醫師。",
 
     # P308 combinations
+    "P308+P316":      "若曾接觸或有疑慮：立即取得緊急醫療協助。",
     "P308+P311":      "若曾接觸或有疑慮：聯絡中毒控制中心或醫師。",
     "P308+P313":      "若曾接觸或有疑慮：諮詢醫師。",
 
     # P332 combinations
     "P332+P313":      "若皮膚過敏：諮詢醫師。",
+    "P332+P317":      "若皮膚刺激發生：尋求醫療協助。",
 
     # P333 combinations
     "P333+P313":      "若皮膚過敏或出現皮疹：諮詢醫師。",
+    "P333+P317":      "若皮膚刺激或皮疹發生：尋求醫療協助。",
 
     # P335+P334
     "P335+P334":      "用刷子輕輕拂去皮膚上的粒子，浸入冷水中或以濕繃帶包紮。",
+
+    # P336 combinations
+    "P336+P317":      "立即以溫水解凍已凍傷的部位，切勿摩擦受影響的部位，並尋求醫療協助。",
 
     # P337 combinations
     "P337+P313":      "若眼睛不適持續：諮詢醫師。",
     "P337+P317":      "若眼睛不適持續：立即諮詢醫師。",
 
     # P342 combinations
+    "P342+P316":      "若出現呼吸道症狀：立即取得緊急醫療協助。",
     "P342+P311":      "若有呼吸系統症狀：聯絡中毒控制中心或醫師。",
 
     # P361+P364
@@ -209,7 +228,7 @@ P_CODE_TRANSLATIONS: dict[str, str] = {
 
 }
 
-# ─── English P-code texts (UN GHS Rev.8 / Rev.10) ────────────────────────────
+# ─── English P-code texts (UN GHS Rev.8 / Rev.10 / Rev.11) ───────────────────
 
 P_CODE_TEXTS_EN: dict[str, str] = {
 
@@ -221,6 +240,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     # ─── Prevention (P200 series) ─────────────────────────────────────────────
     "P201": "Obtain special instructions before use.",
     "P202": "Do not handle until all safety precautions have been read and understood.",
+    "P203": "Obtain, read and follow all safety instructions before use.",
     "P210": "Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.",
     "P211": "Do not spray on an open flame or other ignition source.",
     "P212": "Avoid heating under confinement or reduction of the headspace.",
@@ -273,7 +293,10 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P313": "Get medical advice.",
     "P314": "Get medical advice if you feel unwell.",
     "P315": "Get immediate medical advice.",
+    "P316": "Get emergency medical help immediately.",
     "P317": "Get emergency medical help.",
+    "P318": "If exposed or concerned, get medical advice.",
+    "P319": "Get medical help if you feel unwell.",
     "P320": "Specific treatment is urgent (see ... on this label).",
     "P321": "Specific treatment (see ... on this label).",
     "P322": "Specific measures (see ... on this label).",
@@ -293,6 +316,7 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P351": "Rinse cautiously with water for several minutes.",
     "P352": "Wash with plenty of water.",
     "P353": "Rinse skin with water or shower.",
+    "P354": "Immediately rinse with water for several minutes.",
     "P360": "Rinse immediately contaminated clothing and skin with plenty of water before removing clothes.",
     "P361": "Take off immediately all contaminated clothing.",
     "P362": "Take off contaminated clothing.",
@@ -337,25 +361,31 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P264+P265": "Wash all exposed body parts thoroughly after handling.",
 
     # P301 combinations
+    "P301+P316":      "IF SWALLOWED: Get emergency medical help immediately.",
+    "P301+P317":      "IF SWALLOWED: Get medical help.",
     "P301+P310":      "IF SWALLOWED: Immediately call a POISON CENTER or doctor.",
     "P301+P312":      "IF SWALLOWED: Call a POISON CENTER or doctor if you feel unwell.",
     "P301+P330+P331": "IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.",
 
     # P302 combinations
+    "P302+P317":      "IF ON SKIN: Get medical help.",
     "P302+P334":      "IF ON SKIN: Immerse in cool water or wrap in wet bandages.",
     "P302+P350":      "IF ON SKIN: Gently wash with plenty of soap and water.",
     "P302+P352":      "IF ON SKIN: Wash with plenty of water.",
+    "P302+P361+P354": "IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.",
     "P302+P352+P333+P313": "IF ON SKIN: Wash with plenty of water. If skin irritation or rash occurs: Get medical advice.",
 
     # P303 combinations
     "P303+P361+P353": "IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water or shower.",
 
     # P304 combinations
+    "P304+P317":      "IF INHALED: Get medical help.",
     "P304+P312":      "IF INHALED: Call a POISON CENTER or doctor if you feel unwell.",
     "P304+P340":      "IF INHALED: Remove person to fresh air and keep comfortable for breathing.",
     "P304+P341":      "IF INHALED: If breathing is difficult, remove person to fresh air and keep comfortable for breathing.",
 
     # P305 combinations
+    "P305+P354+P338": "IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.",
     "P305+P351+P338": "IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.",
 
     # P306 combinations
@@ -365,23 +395,30 @@ P_CODE_TEXTS_EN: dict[str, str] = {
     "P307+P311":      "IF exposed: Call a POISON CENTER or doctor.",
 
     # P308 combinations
+    "P308+P316":      "IF exposed or concerned: Get emergency medical help immediately.",
     "P308+P311":      "IF exposed or concerned: Call a POISON CENTER or doctor.",
     "P308+P313":      "IF exposed or concerned: Get medical advice.",
 
     # P332 combinations
     "P332+P313":      "If skin irritation occurs: Get medical advice.",
+    "P332+P317":      "If skin irritation occurs: Get medical help.",
 
     # P333 combinations
     "P333+P313":      "If skin irritation or rash occurs: Get medical advice.",
+    "P333+P317":      "If skin irritation or rash occurs: Get medical help.",
 
     # P335+P334
     "P335+P334":      "Brush off loose particles from skin. Immerse in cool water or wrap in wet bandages.",
+
+    # P336 combinations
+    "P336+P317":      "Immediately thaw frosted parts with lukewarm water. Do not rub affected area. Get medical help.",
 
     # P337 combinations
     "P337+P313":      "If eye irritation persists: Get medical advice.",
     "P337+P317":      "If eye irritation persists: Get emergency medical help.",
 
     # P342 combinations
+    "P342+P316":      "If experiencing respiratory symptoms: Get emergency medical help immediately.",
     "P342+P311":      "If experiencing respiratory symptoms: Call a POISON CENTER or doctor.",
 
     # P361+P364

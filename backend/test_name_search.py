@@ -2725,6 +2725,33 @@ def test_p_code_zh_and_en_dicts_have_identical_keys():
     assert not missing_zh, f"Keys in EN but missing from ZH: {missing_zh}"
 
 
+def test_current_common_p_codes_have_reviewed_wording():
+    """Common current GHS/PubChem P-codes must not degrade to code-only text."""
+    current_codes = [
+        "P203",
+        "P301+P316",
+        "P301+P317",
+        "P302+P361+P354",
+        "P305+P354+P338",
+        "P308+P316",
+        "P316",
+        "P318",
+        "P319",
+        "P332+P317",
+        "P333+P317",
+        "P342+P316",
+    ]
+
+    missing = [
+        code
+        for code in current_codes
+        if P_CODE_TEXTS_EN.get(code, code) == code
+        or P_CODE_TRANSLATIONS.get(code, code) == code
+    ]
+
+    assert not missing, f"P-codes missing reviewed EN/ZH wording: {missing}"
+
+
 # ─── P-code extraction (v1.8 M0) ───────────────────────────
 
 from server import extract_all_ghs_classifications
@@ -2851,6 +2878,29 @@ class TestPCodeExtraction:
         # text_en must be the full English text, not just the code
         assert stmt["text_en"] != "P210"
         assert "heat" in stmt["text_en"].lower() or "ignition" in stmt["text_en"].lower()
+
+    def test_current_hydrochloric_acid_p_codes_populate_text_zh_and_text_en(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS04", "GHS05", "GHS06", "GHS07"]),
+            _signal_info("Danger"),
+            _hazard_info(
+                "H314: Causes severe skin burns and eye damage",
+                "H331: Toxic if inhaled",
+            ),
+            _precaution_info(
+                "P302+P361+P354, P305+P354+P338, P316, P319",
+            ),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+        statements = {
+            stmt["code"]: stmt for stmt in reports[0]["precautionary_statements"]
+        }
+
+        for code in ["P302+P361+P354", "P305+P354+P338", "P316", "P319"]:
+            stmt = statements[code]
+            assert stmt["text_en"] != code
+            assert stmt["text_zh"] != code
 
     def test_unknown_code_falls_back_to_code_string(self):
         """P-codes not in the translation dict should not be dropped;
