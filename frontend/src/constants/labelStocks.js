@@ -486,27 +486,28 @@ function resolveTypographyMetrics(normalized) {
   const paddingTrimMm = paddingTrimsMm[autoFitLevel] || 0;
 
   if (isFullPage) {
-    const fullPagePictogramMm = clamp(roundTo(shortSide * 0.15, 1), 28, 30);
+    const fullPagePictogramMm = clamp(roundTo(shortSide * 0.1064, 1), 19, 21);
     const complianceStatementMinPx =
-      autoFitLevel >= 4 ? 4 : autoFitLevel >= 3 ? 4.3 : 4.8;
+      autoFitLevel >= 4 ? 7.4 : autoFitLevel >= 3 ? 7.8 : 8.2;
     const hazardMinPx =
-      autoFitLevel >= 4 ? 6.1 : autoFitLevel >= 3 ? 6.6 : 7.2;
+      autoFitLevel >= 4 ? 7.1 : autoFitLevel >= 3 ? 7.6 : 8.1;
     return {
       ...base,
       fontPx: clamp(roundTo(13 * textScale, 1), 9, 13),
-      titlePx: clamp(roundTo(24 * (autoFitLevel ? 0.94 : 1), 1), 18, 24),
+      titlePx: clamp(roundTo(22 * (autoFitLevel ? 0.94 : 1), 1), 18, 22),
       pictogramPx: 44,
-      qrBoxMm: 36,
-      signalPx: clamp(roundTo(17 * signalScale, 1), 14, 17),
-      hazardPx: clamp(roundTo(9 * textScale, 1), hazardMinPx, 9),
-      labelPaddingMm: clamp(base.labelPaddingMm - paddingTrimMm, 1.2, base.labelPaddingMm),
+      qrBoxMm: 24,
+      signalPx: clamp(roundTo(16 * signalScale, 1), 13.2, 16),
+      hazardPx: clamp(roundTo(9.6 * textScale, 1), hazardMinPx, 9.6),
+      labelPaddingMm: clamp(3.4 - paddingTrimMm, 2.3, 3.4),
       compliancePictogramMm: fullPagePictogramMm,
       complianceStatementPx: clamp(
-        roundTo(5.6 * textScale, 1),
+        roundTo(9.2 * textScale, 1),
         complianceStatementMinPx,
-        5.6,
+        9.2,
       ),
-      complianceLineHeight: autoFitLevel ? 1.01 : 1.03,
+      complianceLineHeight:
+        autoFitLevel >= 4 ? 1.18 : autoFitLevel ? 1.2 : 1.24,
       complianceColumns: 3,
       standardPictogramMm: 30,
       standardRailColumnMm: 66,

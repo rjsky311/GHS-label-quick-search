@@ -103,6 +103,189 @@ const compactContinuationPages = (pages, capacity, model) => {
   );
 };
 
+const PRINT_TEXT_FALLBACKS = {
+  en: {
+    "print.title": "GHS Label Print",
+    "print.noHazardLabel": "No hazard label",
+    "print.noHazardStatement": "No hazard statements",
+    "print.noPrecautionaryStatement": "No precautionary statements",
+    "print.hazardStatementsLabel": "Hazard statements",
+    "print.precautionaryStatementsLabel": "Precautionary statements",
+    "print.scanForDetail": "Scan for details",
+    "print.qrLookupCaption": "Scan to open this chemical lookup",
+    "print.qrLookupPageOneCaption": "QR lookup - Page 1 only",
+    "print.qrSupplementNotice":
+      "Supplemental QR label - verify against SDS / primary label before use.",
+    "print.supplierMissing": "Responsible lab / supplier information missing",
+    "print.moreHazardsShort": "{{count}} more hazard(s)",
+    "print.morePrecautionary": "+{{count}} more",
+    "print.preparedSolution": "Prepared solution",
+    "print.preparedShort": "Prepared",
+    "print.concentration": "Concentration",
+    "print.concentrationShort": "Conc.",
+    "print.solvent": "Solvent",
+    "print.solventShort": "Solv.",
+    "print.preparedNote":
+      "Prepared solution - hazard data copied from the parent chemical. Classification may differ for the actual mixture; verify against the official SDS before use.",
+    "print.preparedParentWarning":
+      "Parent chemical hazard data - not verified mixture classification. Verify against the official SDS before use.",
+    "print.preparedBy": "Prepared by",
+    "print.preparedDate": "Prepared date",
+    "print.expiryDate": "Expiry date",
+    "print.pageNumber": "Page {{current}} / {{total}}",
+    "print.batch": "Case",
+    "print.profilePhone": "Phone",
+    "print.continuationBadge": "Page {{current}} / {{total}}",
+    "print.continuationBadgeContinues":
+      "Page {{current}} / {{total}}",
+    "print.continuationBadgeFinal":
+      "Page {{current}} / {{total}}",
+    "print.continuationPagePlain":
+      "Page {{current}} of {{total}}",
+    "print.continuationMainStatus": "Main label",
+    "print.continuationStatus": "Continuation",
+    "print.continuationFinalStatus": "Final continuation",
+    "print.continuationMainPageActionSingle":
+      "Continue with Page 2",
+    "print.continuationMainPageAction":
+      "Continue with pages 2-{{total}}",
+    "print.continuationQrHere": "QR on this page",
+    "print.continuationQrOnFirstPage": "QR on Page 1 only",
+    "print.continuationUseWithFirstPage":
+      "Continuation page - use with Page 1",
+    "print.continuationSetRequired":
+      "Complete label set: {{total}} pages - keep all pages together",
+    "print.continuationOnlyBandTitle":
+      "CONTINUATION ONLY",
+    "print.continuationOnlyBandDetail":
+      "Do not use this page alone",
+    "print.continuationOnlyBandQr":
+      "Scan Page 1 for QR lookup",
+    "print.continuationPictogramAnchor":
+      "GHS pictograms repeated for page matching; QR lookup remains on Page 1",
+    "print.continuationCompactPictogramAnchor":
+      "GHS repeated for page matching",
+    "print.keepAllPagesTogether":
+      "Keep pages together",
+    "print.continuationDoNotUseAlone":
+      "Do not use this page alone",
+    "print.noQrOnContinuationPage":
+      "No QR on this page; scan Page 1",
+    "print.statementWordingUnavailable":
+      "Wording unavailable - verify SDS before use.",
+    "print.footerHazardSource":
+      "Hazard source: PubChem/SDS reference",
+    "print.footerVerifyShort":
+      "Verify against SDS, supplier label, and local regulations before use.",
+    "trust.printFooter":
+      "For reference only - confirm against the official SDS, supplier label, and local regulations before use.",
+  },
+  "zh-TW": {
+    "print.title": "GHS 標籤列印",
+    "print.noHazardLabel": "無危害標示",
+    "print.noHazardStatement": "無危害說明",
+    "print.noPrecautionaryStatement": "無預防措施說明",
+    "print.hazardStatementsLabel": "危害說明",
+    "print.precautionaryStatementsLabel": "預防措施",
+    "print.scanForDetail": "掃碼查看詳情",
+    "print.qrLookupCaption": "掃描開啟此化學品查詢頁",
+    "print.qrLookupPageOneCaption": "QR 查詢碼 - 僅第 1 頁",
+    "print.qrSupplementNotice":
+      "QR 補充標籤 - 使用前請對照 SDS / 主要標籤確認。",
+    "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
+    "print.moreHazardsShort": "另有 {{count}} 項危害",
+    "print.morePrecautionary": "另有 {{count}} 項",
+    "print.preparedSolution": "配製稀釋液",
+    "print.preparedShort": "稀釋液",
+    "print.concentration": "濃度",
+    "print.concentrationShort": "濃度",
+    "print.solvent": "溶劑",
+    "print.solventShort": "溶劑",
+    "print.preparedNote":
+      "此為配製稀釋液 - 危害資料沿用母化學品。實際混合物分類可能不同，使用前請以官方安全資料表（SDS）為準。",
+    "print.preparedParentWarning":
+      "母化學品危害資料 - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準。",
+    "print.preparedBy": "配製人",
+    "print.preparedDate": "配製日期",
+    "print.expiryDate": "有效期限",
+    "print.pageNumber": "第 {{current}} / {{total}} 頁",
+    "print.batch": "案件",
+    "print.profilePhone": "電話",
+    "print.continuationBadge": "續頁 {{current}} / {{total}}",
+    "print.continuationBadgeContinues":
+      "第 {{current}} / {{total}} 頁",
+    "print.continuationBadgeFinal":
+      "第 {{current}} / {{total}} 頁",
+    "print.continuationPagePlain":
+      "第 {{current}} / {{total}} 頁",
+    "print.continuationMainStatus": "主標頁",
+    "print.continuationStatus": "續頁",
+    "print.continuationFinalStatus": "最後續頁",
+    "print.continuationMainPageActionSingle":
+      "請接續第 2 頁",
+    "print.continuationMainPageAction":
+      "請接續第 2-{{total}} 頁",
+    "print.continuationQrHere": "QR 在本頁",
+    "print.continuationQrOnFirstPage": "QR 僅在第 1 頁",
+    "print.continuationUseWithFirstPage":
+      "續頁，需與第 1 頁一併使用",
+    "print.continuationSetRequired":
+      "完整標籤共 {{total}} 頁，請整套張貼或保存",
+    "print.continuationOnlyBandTitle":
+      "續頁 / CONTINUATION ONLY",
+    "print.continuationOnlyBandDetail":
+      "不能單獨貼用本頁",
+    "print.continuationOnlyBandQr":
+      "請掃第 1 頁 QR 查詢碼",
+    "print.continuationPictogramAnchor":
+      "GHS 圖示重複作為頁面對照；QR 查詢碼保留在第 1 頁",
+    "print.continuationCompactPictogramAnchor":
+      "GHS 圖示已重複方便配頁",
+    "print.keepAllPagesTogether":
+      "整套頁面一起保存",
+    "print.continuationDoNotUseAlone":
+      "不可單獨使用本頁",
+    "print.noQrOnContinuationPage":
+      "本頁無 QR；請掃第 1 頁",
+    "print.statementWordingUnavailable":
+      "尚無完整文字 - 使用前請核對 SDS。",
+    "print.footerHazardSource":
+      "危害來源：PubChem/SDS 參考",
+    "print.footerVerifyShort":
+      "使用前請對照 SDS、供應商標示與當地法規。",
+    "trust.printFooter":
+      "僅供參考 - 使用前請對照官方安全資料表（SDS）、供應商標示與當地法規。",
+  },
+};
+
+const normalizePrintLocale = (locale) =>
+  String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+
+const interpolatePrintText = (template, values = {}) =>
+  String(template || "").replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (_, key) =>
+    values[key] === undefined || values[key] === null ? "" : String(values[key]),
+  );
+
+const isRawTranslationKey = (key, value) => {
+  if (typeof value !== "string" || value.trim() === "") return true;
+  return value === key || value.toUpperCase() === key.toUpperCase();
+};
+
+const createPrintTranslator = (rawTranslate, locale) => {
+  const fallbackLocale = normalizePrintLocale(locale);
+  return (key, values = {}) => {
+    const translated =
+      typeof rawTranslate === "function" ? rawTranslate(key, values) : "";
+    if (!isRawTranslationKey(key, translated)) return translated;
+
+    const fallback =
+      PRINT_TEXT_FALLBACKS[fallbackLocale]?.[key] ||
+      PRINT_TEXT_FALLBACKS.en[key] ||
+      key;
+    return interpolatePrintText(fallback, values);
+  };
+};
+
 const buildContinuationLabelsForChemical = (chemical, model) => {
   const renderModel = resolveRenderModelForChemical(chemical, model);
   const isCompactIdentityLayout =
@@ -251,12 +434,14 @@ export function buildPrintDocumentModel(
   customLabelFields = {},
   labelQuantities = {},
   labProfile = {},
+  options = {},
 ) {
   if (!Array.isArray(selectedForLabel) || selectedForLabel.length === 0) {
     return null;
   }
 
-  const t = i18n.t.bind(i18n);
+  const locale = options.locale || i18n.language;
+  const t = createPrintTranslator(i18n.t.bind(i18n), locale);
   let layout = resolvePrintLayoutConfig({
     ...labelConfig,
     template: normalizeTemplate(labelConfig?.template),
@@ -274,21 +459,21 @@ export function buildPrintDocumentModel(
     customLabelFields,
     resolvedLabProfile,
     t,
-    locale: i18n.language,
+    locale,
   });
   if (autoFitLevel > clampAutoFitLevel(layout.autoFitLevel)) {
     layout = resolvePrintLayoutConfig({
-      ...labelConfig,
-      template: normalizeTemplate(labelConfig?.template),
+    ...labelConfig,
+    template: normalizeTemplate(labelConfig?.template),
       autoFitLevel,
     });
     layout = withInternalPrintLayoutFlags(layout, labelConfig);
   }
   const modelBase = {
     t,
-    locale: i18n.language,
+    locale,
     layout,
-    contentPolicy: resolvePrintContentPolicy(layout, { locale: i18n.language }),
+    contentPolicy: resolvePrintContentPolicy(layout, { locale }),
     selectedForLabel,
     customGHSSettings,
     customLabelFields,
@@ -486,6 +671,11 @@ const renderPreparedBadge = (model) =>
     model.t("print.preparedShort"),
   )}</div>`;
 
+const renderPreparedFullPageIdentity = (model) =>
+  `<div class="prepared-solution-identity" data-testid="prepared-solution-identity">${escapeHtml(
+    model.t("print.preparedSolution"),
+  )}</div>`;
+
 const renderPreparedMeta = (chemical, model) => {
   if (!isPrepared(chemical)) return "";
   const meta = chemical.preparedSolution || {};
@@ -508,10 +698,16 @@ const renderPreparedMeta = (chemical, model) => {
   return `<div class="prepared-meta" data-testid="prepared-meta">${rows.join("")}</div>`;
 };
 
-const renderPreparedNote = (chemical, model) => {
+const renderPreparedNote = (chemical, model, { fullPagePrimary = false } = {}) => {
   if (!isPrepared(chemical)) return "";
-  return `<div class="prepared-note" data-testid="prepared-note">${escapeHtml(
-    model.t("print.preparedNote"),
+  const className = fullPagePrimary
+    ? "prepared-parent-warning"
+    : "prepared-note";
+  const key = fullPagePrimary
+    ? "print.preparedParentWarning"
+    : "print.preparedNote";
+  return `<div class="${className}" data-testid="${className}">${escapeHtml(
+    model.t(key),
   )}</div>`;
 };
 
@@ -548,6 +744,16 @@ const renderPreparedOperational = (chemical, model) => {
   return `<div class="prepared-operational" data-testid="prepared-operational">${rows.join(
     "",
   )}</div>`;
+};
+
+const renderPreparedFullPageBlock = (chemical, model) => {
+  if (!isPrepared(chemical)) return "";
+  return `<div class="prepared-identity-block" data-testid="prepared-identity-block">
+    ${renderPreparedFullPageIdentity(model)}
+    ${renderPreparedMeta(chemical, model)}
+    ${renderPreparedOperational(chemical, model)}
+    ${renderPreparedNote(chemical, model, { fullPagePrimary: true })}
+  </div>`;
 };
 
 const renderPictograms = (pictograms, className = "") => {
@@ -612,6 +818,25 @@ const shouldRenderMoreHazards = (layout = {}) => {
   return true;
 };
 
+const isStatementWordingUnavailable = (statement, model) => {
+  const code = String(statement?.code || "").trim();
+  if (!code) return false;
+  const localizedText = String(getLocalizedTextForModel(statement, model) || "")
+    .trim()
+    .replace(/\s+/g, " ");
+  return localizedText.toUpperCase() === code.toUpperCase();
+};
+
+const renderComplianceStatementText = (statement, model) => {
+  const isMissing = isStatementWordingUnavailable(statement, model);
+  const text = isMissing
+    ? model.t("print.statementWordingUnavailable")
+    : getLocalizedTextForModel(statement, model);
+  return `<span class="statement-text${isMissing ? " statement-text-missing" : ""}">${escapeHtml(
+    text,
+  )}</span>`;
+};
+
 const renderComplianceStatements = (statements, className, model) => {
   if (!statements.length) return "";
 
@@ -623,16 +848,18 @@ const renderComplianceStatements = (statements, className, model) => {
             statement.code,
           )}">${escapeHtml(
             statement.code,
-          )}</span><span class="statement-text">${escapeHtml(
-            getLocalizedTextForModel(statement, model),
-          )}</span></div>`,
+          )}</span>${renderComplianceStatementText(statement, model)}</div>`,
       )
       .join("")}
   </div>`;
 };
 
-const renderComplianceQrPanel = (effectiveChem) => {
+const renderComplianceQrPanel = (effectiveChem, model, continuation = null) => {
   const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
+  const captionKey =
+    continuation?.total > 1
+      ? "print.qrLookupPageOneCaption"
+      : "print.qrLookupCaption";
 
   return `<div class="compliance-qr qrcode-panel">
     <div class="compliance-qr-shell">
@@ -645,6 +872,12 @@ const renderComplianceQrPanel = (effectiveChem) => {
         data-qr-target-source="ghs-label-quick-search"
         data-qr-target-label="GHS Label Quick Search" />
     </div>
+    <div class="qrcode-caption">${escapeHtml(
+      model.t(captionKey, {
+        current: continuation?.current || 1,
+        total: continuation?.total || 1,
+      }),
+    )}</div>
   </div>`;
 };
 
@@ -654,30 +887,194 @@ const renderComplianceFooter = (effectiveChem, model, continuation = null) => {
     model.resolvedLabProfile.phone ||
     model.resolvedLabProfile.address;
   const showQr = !continuation || continuation.current === 1;
+  const showFooterMetadata = isFullPagePrimaryLayout(model.layout);
+  const continuationPageMeta =
+    showFooterMetadata && continuation?.total > 1
+      ? `<span class="compliance-footer-page">${escapeHtml(
+          model.t("print.pageNumber", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+        )}</span>`
+      : "";
+  const footerMetadata = showFooterMetadata
+    ? `<div class="compliance-footer-metadata">
+        <span class="compliance-footer-source">${escapeHtml(
+          model.t("print.footerHazardSource"),
+        )}</span>
+        <span class="compliance-footer-verify">${escapeHtml(
+          model.t("print.footerVerifyShort"),
+        )}</span>
+        ${continuationPageMeta}
+      </div>`
+    : "";
 
   return `<div class="compliance-footer${showQr ? "" : " compliance-footer-no-qr"}">
-    <div class="compliance-supplier">
-      ${
-        hasProfile
-          ? renderProfileFields(model)
-          : `<div class="profile-block profile-block-missing">${escapeHtml(
-              model.t("print.supplierMissing"),
-            )}</div>`
-      }
-      ${renderCustomFields(model)}
+    <div class="compliance-footer-text">
+      <div class="compliance-supplier">
+        ${
+          hasProfile
+            ? renderProfileFields(model)
+            : `<div class="profile-block profile-block-missing">${escapeHtml(
+                model.t("print.supplierMissing"),
+              )}</div>`
+        }
+        ${renderCustomFields(model)}
+      </div>
+      ${footerMetadata}
     </div>
-    ${showQr ? renderComplianceQrPanel(effectiveChem) : ""}
+    ${showQr ? renderComplianceQrPanel(effectiveChem, model, continuation) : ""}
   </div>`;
+};
+
+const renderPageFooterNote = (model) => {
+  if (isFullPagePrimaryLayout(model.layout)) return "";
+  return `<div class="page-footer-note">${escapeHtml(model.t("trust.printFooter"))}</div>`;
+};
+
+const getContinuationBadgeKey = (continuation) => {
+  if (!continuation || continuation.total <= 1) {
+    return "print.continuationBadge";
+  }
+  if (continuation.current <= 1) {
+    return "print.continuationBadgeContinues";
+  }
+  if (continuation.current >= continuation.total) {
+    return "print.continuationBadgeFinal";
+  }
+  return "print.continuationBadge";
 };
 
 const renderContinuationBadge = (continuation, model) => {
   if (!continuation || continuation.total <= 1) return "";
   return `<div class="continuation-badge" data-testid="continuation-badge">${escapeHtml(
-    model.t("print.continuationBadge", {
+    model.t(getContinuationBadgeKey(continuation), {
       current: continuation.current,
       total: continuation.total,
     }),
-  )}</div>`;
+	  )}</div>`;
+};
+
+const getContinuationStatusKey = (continuation) => {
+  if (!continuation || continuation.total <= 1 || continuation.current <= 1) {
+    return "print.continuationMainStatus";
+  }
+  if (continuation.current >= continuation.total) {
+    return "print.continuationFinalStatus";
+  }
+  return "print.continuationStatus";
+};
+
+const renderContinuationSafetyNote = (continuation, model) => {
+  if (!continuation || continuation.total <= 1 || continuation.current <= 1) {
+    return "";
+  }
+  return `<div class="continuation-safety-note" data-testid="continuation-safety-note">
+    <span class="continuation-safety-note-title">${escapeHtml(
+      model.t("print.continuationUseWithFirstPage"),
+    )}</span>
+    <span class="continuation-safety-note-detail">${escapeHtml(
+      model.t("print.continuationPictogramAnchor"),
+    )}</span>
+  </div>`;
+};
+
+const renderContinuationKeepTogetherNote = (continuation, model) => {
+  if (!continuation || continuation.total <= 1) return "";
+  const pageRole = model.t("print.continuationPagePlain", {
+    current: continuation.current,
+    total: continuation.total,
+    next: Math.min(continuation.total, continuation.current + 1),
+  });
+  const pageStatus = model.t(getContinuationStatusKey(continuation), {
+    current: continuation.current,
+    total: continuation.total,
+    next: Math.min(continuation.total, continuation.current + 1),
+  });
+  const qrLocation = model.t(
+    continuation.current > 1
+      ? "print.continuationQrOnFirstPage"
+      : "print.continuationQrHere",
+    {
+      current: continuation.current,
+      total: continuation.total,
+    },
+  );
+  const detailParts =
+    continuation.current > 1
+      ? [
+          model.t("print.keepAllPagesTogether", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+          model.t("print.continuationCompactPictogramAnchor", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+        ]
+      : [
+          model.t("print.continuationSetRequired", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+          model.t("print.keepAllPagesTogether", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+          model.t(
+            continuation.total === 2
+              ? "print.continuationMainPageActionSingle"
+              : "print.continuationMainPageAction",
+            {
+              current: continuation.current,
+              total: continuation.total,
+            },
+          ),
+        ];
+  const standaloneWarning =
+    continuation.current > 1
+      ? `<span class="continuation-use-warning">${escapeHtml(
+          model.t("print.continuationDoNotUseAlone", {
+            current: continuation.current,
+            total: continuation.total,
+          }),
+        )}</span>`
+      : "";
+  return `<div class="continuation-keep-together-note" data-testid="continuation-keep-together-note">
+    <span class="continuation-page-role">${escapeHtml(pageRole)}</span>
+    <span class="continuation-status">${escapeHtml(pageStatus)}</span>
+    <span class="continuation-qr-location">${escapeHtml(qrLocation)}</span>
+    ${standaloneWarning}
+    <span class="continuation-keep-together-detail">${escapeHtml(
+      detailParts.join(" · "),
+    )}</span>
+  </div>`;
+};
+
+const renderContinuationOnlyBand = (continuation, model) => {
+  if (!continuation || continuation.total <= 1 || continuation.current <= 1) {
+    return "";
+  }
+  return `<div class="continuation-only-band" data-testid="continuation-only-band">
+    <span class="continuation-only-title">${escapeHtml(
+      model.t("print.continuationOnlyBandTitle", {
+        current: continuation.current,
+        total: continuation.total,
+      }),
+    )}</span>
+    <span class="continuation-only-detail">${escapeHtml(
+      model.t("print.continuationOnlyBandDetail", {
+        current: continuation.current,
+        total: continuation.total,
+      }),
+    )}</span>
+    <span class="continuation-only-qr">${escapeHtml(
+      model.t("print.continuationOnlyBandQr", {
+        current: continuation.current,
+        total: continuation.total,
+      }),
+    )}</span>
+  </div>`;
 };
 
 const renderCompactPrecautions = (precautions, maxPrecautions, model) => {
@@ -718,13 +1115,11 @@ const getLabelContentForRender = (chemical, model) => {
     layout: model.layout,
     locale: model.locale,
   });
-  if (!continuation) return content;
-  const continuationPictograms =
-    Array.isArray(continuation.pictograms)
-      ? continuation.pictograms
-      : isFullPagePrimaryLayout(model.layout) && continuation.current > 1
-        ? []
-        : content.pictograms;
+	  if (!continuation) return content;
+	  const continuationPictograms =
+	    Array.isArray(continuation.pictograms)
+	      ? continuation.pictograms
+	      : content.pictograms;
 
   return {
     ...content,
@@ -893,9 +1288,11 @@ const renderFullTemplate = (chemical, model) => {
           ${!fullPagePrimary ? renderContinuationBadge(continuation, model) : ""}
           ${
             prepared
-              ? renderPreparedBadge(model) +
-                renderPreparedMeta(effectiveChem, model) +
-                renderPreparedOperational(effectiveChem, model)
+              ? fullPagePrimary
+                ? renderPreparedFullPageBlock(effectiveChem, model)
+                : renderPreparedBadge(model) +
+                  renderPreparedMeta(effectiveChem, model) +
+                  renderPreparedOperational(effectiveChem, model)
               : ""
           }
         </div>
@@ -908,6 +1305,8 @@ const renderFullTemplate = (chemical, model) => {
               </div>`
             : ""
         }
+        ${fullPagePrimary ? renderContinuationKeepTogetherNote(continuation, model) : ""}
+        ${fullPagePrimary ? renderContinuationOnlyBand(continuation, model) : ""}
       </div>
       ${purposeNotice}
       <div class="compliance-core${showComplianceAlertPanel ? "" : " compliance-core-no-alert"}">
@@ -953,7 +1352,7 @@ const renderFullTemplate = (chemical, model) => {
                         )
                       : `<div class="no-hazard-text">${escapeHtml(model.t("print.noPrecautionaryStatement"))}</div>`
                   }
-                  ${prepared ? renderPreparedNote(effectiveChem, model) : ""}
+                  ${prepared && !fullPagePrimary ? renderPreparedNote(effectiveChem, model) : ""}
                 </div>`
               : ""
           }
@@ -1023,6 +1422,7 @@ export function buildPrintDocument(
   customLabelFields = {},
   labelQuantities = {},
   labProfile = {},
+  options = {},
 ) {
   const model = buildPrintDocumentModel(
     selectedForLabel,
@@ -1031,6 +1431,7 @@ export function buildPrintDocument(
     customLabelFields,
     labelQuantities,
     labProfile,
+    options,
   );
 
   if (!model) return null;
@@ -1050,7 +1451,7 @@ export function buildPrintDocument(
       return `
         <div class="page">
           <div class="page-grid">${labelsHtml}</div>
-          <div class="page-footer-note">${escapeHtml(model.t("trust.printFooter"))}</div>
+          ${renderPageFooterNote(model)}
           <div class="page-number">${escapeHtml(
             model.t("print.pageNumber", {
               current: pageIndex + 1,
@@ -1097,6 +1498,7 @@ export function buildPrintPreviewDocument(
     customLabelFields,
     labelQuantities,
     labProfile,
+    options,
   );
 
   if (!model) return null;
@@ -1146,7 +1548,7 @@ export function buildPrintPreviewDocument(
           <div class="preview-grid-scaler">
             <div class="page preview-page">
               <div class="page-grid">${labelMarkup}${placeholders}</div>
-              <div class="page-footer-note">${escapeHtml(model.t("trust.printFooter"))}</div>
+              ${renderPageFooterNote(model)}
               <div class="page-number">${escapeHtml(
                 model.t("print.pageNumber", {
                   current: selectedPageIndex + 1,
@@ -1190,6 +1592,7 @@ export function printLabels(
   labelQuantities = {},
   labProfile = {},
   lifecycleCallbacks = {},
+  options = {},
 ) {
   const documentBundle = buildPrintDocument(
     selectedForLabel,
@@ -1198,6 +1601,7 @@ export function printLabels(
     customLabelFields,
     labelQuantities,
     labProfile,
+    options,
   );
 
   if (!documentBundle) return;

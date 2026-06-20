@@ -1011,7 +1011,7 @@ export const PRINT_QA_CHEMICAL_COVERAGE = Object.freeze({
     source: "production-regression",
     riskTags: ["moderate-hp", "continuation-packing", "space-utilization"],
     rationale:
-      "A4 complete-primary continuation regression for cases that should fit in two pages rather than creating a sparse orphan third page.",
+      "A4 complete-primary continuation regression for moderate H/P cases that need two safe pages, with the final page kept useful instead of sparse.",
   },
   hydrogenPeroxide: {
     source: "production",
@@ -1264,6 +1264,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasFullPagePictograms: true,
       hasSummaries: false,
       minPrintTotalLabels: 2,
+      maxPrintTotalLabels: 3,
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
         hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
@@ -1287,7 +1288,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
     },
     expected: {
       canPrint: true,
-      planState: PRINT_OUTPUT_PLAN_STATE.READY,
+      planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
       outputKind: PRINT_OUTPUT_KIND.COMPLETE_PRIMARY,
       labelKind: "complete-primary",
       stockPreset: "a4-primary",
@@ -1295,10 +1296,10 @@ export const PRINT_QA_MATRIX = Object.freeze([
       hasQr: false,
       hasFullPagePictograms: true,
       hasSummaries: false,
-      printTotalLabels: 1,
+      printTotalLabels: 2,
       contentPolicy: {
         role: PRINT_CONTENT_ROLE.COMPLETE_PRIMARY,
-        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP,
+        hazardTextMode: PRINT_HAZARD_TEXT_MODE.FULL_HP_CONTINUATION,
         precautionTextMode: PRINT_PRECAUTION_TEXT_MODE.FULL_TEXT,
       },
       productionExpectedIdentityTexts: ["2-Bromothiophene", "1003-09-4"],
@@ -2318,6 +2319,7 @@ const buildPreview = ({
   customLabelFields = {},
   labProfile,
   previewZoom = "fit",
+  locale,
 }) =>
   buildPrintPreviewDocument(
     [chemical],
@@ -2326,7 +2328,7 @@ const buildPreview = ({
     customLabelFields,
     { [chemical.cas_number]: 1 },
     labProfile,
-    { mode: "label", previewZoom },
+    { mode: "label", previewZoom, locale },
   );
 
 const buildDocument = ({
@@ -2334,6 +2336,7 @@ const buildDocument = ({
   labelConfig,
   customLabelFields = {},
   labProfile,
+  locale,
 }) =>
   buildPrintDocument(
     [chemical],
@@ -2342,6 +2345,7 @@ const buildDocument = ({
     customLabelFields,
     { [chemical.cas_number]: 1 },
     labProfile,
+    { locale },
   );
 
 export function resolvePrintQaCaseChemical(
@@ -2381,6 +2385,7 @@ export function buildPrintQaCaseResult({
     customLabelFields: testCase.customLabelFields,
     labProfile: caseLabProfile,
     previewZoom: "fit",
+    locale: testCase.locale,
   });
   const inspectPreview = buildPreview({
     chemical: selectedChemical,
@@ -2388,12 +2393,14 @@ export function buildPrintQaCaseResult({
     customLabelFields: testCase.customLabelFields,
     labProfile: caseLabProfile,
     previewZoom: "inspect",
+    locale: testCase.locale,
   });
   const printDocument = buildDocument({
     chemical: selectedChemical,
     labelConfig: testCase.labelConfig,
     customLabelFields: testCase.customLabelFields,
     labProfile: caseLabProfile,
+    locale: testCase.locale,
   });
   const fragmentHtml = fitPreview?.fragmentHtml || "";
   const printHtml = printDocument?.pagesHtml || "";

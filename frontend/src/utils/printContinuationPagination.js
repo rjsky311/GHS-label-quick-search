@@ -82,6 +82,13 @@ export const removeFirstContinuationItemFromPage = (
   return item;
 };
 
+const removeLastContinuationItemFromPage = (page, metrics) => {
+  const item = page.items.pop();
+  page.textWeight = Math.max(0, page.textWeight - metrics.weight);
+  page.lineUnits = Math.max(0, (page.lineUnits || 0) - metrics.lineUnits);
+  return item;
+};
+
 export const getContinuationPageLimits = (capacity, pageIndex) => {
   const firstPage = pageIndex === 0;
   return {
@@ -252,5 +259,68 @@ export const compactContinuationPages = (
     }
     index += 1;
   }
+  balanceTrailingContinuationPage(
+    compacted,
+    capacity,
+    model,
+    getLocalizedTextForModel,
+  );
   return compacted;
+};
+
+const balanceTrailingContinuationPage = (
+  compacted,
+  capacity,
+  model,
+  getLocalizedTextForModel,
+) => {
+  if (compacted.length < 2) return;
+
+  const trailingPageIndex = compacted.length - 1;
+  const trailing = compacted[trailingPageIndex];
+  const previous = compacted[trailingPageIndex - 1];
+  const trailingLimits = getContinuationPageLimits(capacity, trailingPageIndex);
+  const minimumTrailingItems =
+    trailingLimits.maxStatements >= 24 ? 8 : 4;
+
+  if (
+    !trailing ||
+    !previous ||
+    trailing.items.length === 0 ||
+    trailing.items.length >= minimumTrailingItems ||
+    previous.items.length <= minimumTrailingItems
+  ) {
+    return;
+  }
+
+  const trailingKind = trailing.items[0]?.kind;
+  while (
+    trailing.items.length < minimumTrailingItems &&
+    previous.items.length > minimumTrailingItems
+  ) {
+    const candidate = previous.items[previous.items.length - 1];
+    if (!candidate || candidate.kind !== trailingKind) break;
+    if (
+      !canFitContinuationItems(
+        trailing,
+        [candidate],
+        capacity,
+        trailingPageIndex,
+        model,
+        getLocalizedTextForModel,
+      )
+    ) {
+      break;
+    }
+
+    const metrics = getContinuationItemMetrics(
+      candidate,
+      model,
+      getLocalizedTextForModel,
+    );
+    const item = removeLastContinuationItemFromPage(previous, metrics);
+    trailing.items.unshift(item);
+    trailing.textWeight += metrics.weight;
+    trailing.lineUnits = (trailing.lineUnits || 0) + metrics.lineUnits;
+  }
 };

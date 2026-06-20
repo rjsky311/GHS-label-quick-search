@@ -77,7 +77,7 @@ export default function SelectedLabelsControls({
           selectedForLabel.map((chem, index) => {
             const quantity = labelQuantities?.[chem.cas_number] || 1;
             const derivedPreparedName = chem.isPreparedSolution
-              ? formatPreparedDisplayName(chem)
+              ? formatPreparedDisplayName(chem, { locale: currentLocale })
               : null;
             const localizedNames = getLocalizedNames(chem, currentLocale);
             const preparedExpiryBadge = chem.isPreparedSolution

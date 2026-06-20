@@ -86,8 +86,9 @@ export const buildPrintStyles = (model) => {
       bottom: 1mm;
       left: 3mm;
       right: ${layout.page.footerReserveRight};
-      font-size: 7px;
-      color: #999;
+      font-size: 8.6px;
+      color: #475569;
+      font-weight: 650;
       font-style: italic;
       white-space: nowrap;
       overflow: hidden;
@@ -122,8 +123,8 @@ export const buildPrintStyles = (model) => {
     .label-full-page-primary {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
-      gap: 1.15mm;
-      padding: 3.8mm;
+      gap: 1mm;
+      padding: ${layout.label.padding};
       border-width: 0.8mm;
       border-radius: 1.2mm;
       overflow: hidden;
@@ -183,13 +184,13 @@ export const buildPrintStyles = (model) => {
     .compliance-header-identity {
       min-width: 0;
     }
-    .label-full-page-primary .compliance-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 2mm;
-      align-items: start;
-      padding-bottom: 0.7mm;
-    }
+	    .label-full-page-primary .compliance-header {
+	      display: grid;
+	      grid-template-columns: minmax(0, 1fr) auto;
+	      gap: 2mm;
+	      align-items: start;
+	      padding-bottom: 0.7mm;
+	    }
     .compliance-header-actions {
       display: flex;
       flex-direction: column;
@@ -208,9 +209,9 @@ export const buildPrintStyles = (model) => {
       font-size: 10.5px;
       line-height: 1.08;
     }
-    .continuation-badge {
-      display: inline-flex;
-      width: fit-content;
+	    .continuation-badge {
+	      display: inline-flex;
+	      width: fit-content;
       margin-top: 0.9mm;
       padding: 0.35mm 1.1mm;
       border: 0.25mm solid #bfdbfe;
@@ -218,8 +219,121 @@ export const buildPrintStyles = (model) => {
       background: #eff6ff;
       color: #1d4ed8;
       font-size: 8px;
-      font-weight: 800;
-      line-height: 1.1;
+	      font-weight: 800;
+	      line-height: 1.1;
+	    }
+    .continuation-safety-note {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: baseline;
+      gap: 1.4mm;
+      min-width: 0;
+      margin-top: -0.05mm;
+      padding: 0.45mm 0;
+      border-top: 0.25mm solid #94a3b8;
+      border-bottom: 0.25mm solid #cbd5e1;
+      background: transparent;
+      color: #334155;
+      font-size: 8.7px;
+      line-height: 1.14;
+    }
+	    .continuation-safety-note-title {
+	      flex: 0 0 auto;
+	      color: #1d4ed8;
+	      font-weight: 850;
+	      white-space: nowrap;
+	    }
+	    .continuation-safety-note-detail {
+	      min-width: 0;
+	      color: #475569;
+	      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .label-full-page-primary .continuation-keep-together-note {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto auto auto minmax(0, auto) minmax(0, 1fr);
+      align-items: center;
+      column-gap: 1.2mm;
+      row-gap: 0.35mm;
+      min-width: 0;
+      padding: 0.55mm 0;
+      border: 0.22mm solid #cbd5e1;
+      border-left: 0;
+      border-right: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #0f172a;
+      font-size: 9.35px;
+      line-height: 1.14;
+    }
+    .continuation-page-role {
+      font-weight: 850;
+      color: #111827;
+      white-space: nowrap;
+    }
+    .continuation-status {
+      padding-left: 1mm;
+      border-left: 0.22mm solid #94a3b8;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .continuation-qr-location {
+      color: #1e40af;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .continuation-use-warning {
+      color: #9a3412;
+      font-weight: 880;
+      white-space: nowrap;
+    }
+    .continuation-keep-together-detail {
+      min-width: 0;
+      color: #334155;
+      font-weight: 720;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .continuation-only-band {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1.25mm;
+      padding: 0.95mm 1.35mm;
+      border: 0.28mm solid #fdba74;
+      border-left: 1.15mm solid #ea580c;
+      border-radius: 0.75mm;
+      background: #fff7ed;
+      color: #7c2d12;
+      line-height: 1.12;
+    }
+    .continuation-only-title {
+      font-size: 10.2px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .continuation-only-detail {
+      min-width: 0;
+      font-size: 9.2px;
+      font-weight: 820;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .continuation-only-qr {
+      padding-left: 1.05mm;
+      border-left: 0.22mm solid #fed7aa;
+      color: #9a3412;
+      font-size: 8.4px;
+      font-weight: 780;
+      white-space: nowrap;
     }
     .compliance-header .profile-block,
     .compliance-header .custom-fields {
@@ -244,12 +358,12 @@ export const buildPrintStyles = (model) => {
       min-width: 0;
     }
     .label-full-page-primary .compliance-alert-panel {
-      border: 0.2mm solid #dbe4ef;
-      border-radius: 1mm;
-      padding: 0.75mm 1mm;
-      background: #f8fafc;
-      gap: 0.8mm;
-      justify-content: center;
+      border: 0;
+      border-radius: 0;
+      padding: 0.25mm 0 0.1mm;
+      background: transparent;
+      gap: 0.65mm;
+      justify-content: flex-start;
       overflow: hidden;
     }
     .compliance-statements-panel {
@@ -315,6 +429,12 @@ export const buildPrintStyles = (model) => {
       color: #222;
       overflow-wrap: anywhere;
       min-width: 0;
+      line-height: inherit;
+    }
+    .statement-text-missing {
+      color: #92400e;
+      font-weight: 760;
+      font-style: italic;
     }
     .compliance-footer {
       display: grid;
@@ -329,8 +449,43 @@ export const buildPrintStyles = (model) => {
     .compliance-footer-no-qr {
       grid-template-columns: minmax(0, 1fr);
     }
+    .compliance-footer-text {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65mm;
+    }
     .compliance-supplier {
       min-width: 0;
+    }
+    .compliance-footer-metadata {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.35mm 1.45mm;
+      min-width: 0;
+      padding-top: 0.55mm;
+      border-top: 0.2mm solid #e2e8f0;
+      color: #475569;
+      font-size: 8.5px;
+      font-weight: 650;
+      line-height: 1.15;
+    }
+    .compliance-footer-source {
+      color: #334155;
+      font-weight: 820;
+    }
+    .compliance-footer-verify {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .compliance-footer-page {
+      margin-left: auto;
+      color: #334155;
+      font-weight: 850;
+      white-space: nowrap;
     }
     .compliance-footer .profile-block {
       margin-top: 0;
@@ -369,16 +524,44 @@ export const buildPrintStyles = (model) => {
       width: calc(${layout.typography.qrBox} - 3.2mm);
       height: calc(${layout.typography.qrBox} - 3.2mm);
     }
+    .qrcode-caption {
+      margin-top: 0.45mm;
+      max-width: ${layout.typography.qrBox};
+      color: #334155;
+      font-size: 9px;
+      font-weight: 850;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
     .label-full-page-primary .compliance-footer {
       margin-top: 0;
-      padding-top: 1.1mm;
+      padding: 0.95mm 1.1mm 0.95mm 1.25mm;
+      gap: 1.15mm;
+      border: 0.25mm solid #cbd5e1;
+      border-left: 1.05mm solid #64748b;
+      border-radius: 0.9mm;
+      background: #f8fafc;
+      align-items: center;
+    }
+    .label-full-page-primary .compliance-footer-text {
+      gap: 0.45mm;
+    }
+    .label-full-page-primary .compliance-footer-metadata {
+      padding-top: 0;
+      border-top: 0;
     }
     .label-full-page-primary .compliance-footer .profile-block {
-      padding: 0.8mm 1mm;
+      padding: 0.9mm 1.1mm;
+      border: 0.2mm solid #dbe3ee;
+      border-radius: 0.9mm;
     }
     .label-full-page-primary .compliance-footer .profile-row {
-      font-size: 9px;
-      line-height: 1.18;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+    .label-full-page-primary .compliance-qr {
+      border-left: 0.2mm solid #e2e8f0;
+      padding-left: 1.1mm;
     }
     .name-section {
       text-align: left;
@@ -702,6 +885,63 @@ export const buildPrintStyles = (model) => {
       border-left: 1.5px solid #60a5fa;
       border-radius: 0.5mm;
     }
+    .prepared-solution-identity {
+      margin-top: 0.85mm;
+      color: #475569;
+      font-size: 10.4px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .prepared-identity-block {
+      margin-top: 0.9mm;
+      padding: 0.95mm 1.15mm;
+      border: 0.24mm solid #bfdbfe;
+      border-left: 1.05mm solid #2563eb;
+      border-radius: 0.75mm;
+      background: #eff6ff;
+      display: grid;
+      grid-template-columns: minmax(34mm, auto) minmax(0, 1fr);
+      gap: 0.45mm 1.35mm;
+      align-items: start;
+    }
+    .prepared-identity-block .prepared-solution-identity {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      margin-top: 0;
+      color: #1e3a8a;
+      font-size: 11.2px;
+      line-height: 1.08;
+    }
+    .prepared-identity-block .prepared-meta,
+    .prepared-identity-block .prepared-operational {
+      grid-column: 2;
+    }
+    .prepared-identity-block .prepared-parent-warning {
+      grid-column: 1 / -1;
+    }
+    .label-full-page-primary .prepared-meta {
+      margin-top: 0.35mm;
+      color: #334155;
+      font-size: 9.6px;
+      line-height: 1.18;
+    }
+    .label-full-page-primary .prepared-label,
+    .label-full-page-primary .prepared-value {
+      color: #334155;
+    }
+    .prepared-parent-warning {
+      margin-top: 0.85mm;
+      padding: 0.65mm 0.95mm;
+      color: #713f12;
+      background: #fffbeb;
+      border: 0.22mm solid #f4d48a;
+      border-left: 1.1mm solid #d97706;
+      border-radius: 0.6mm;
+      font-size: 8.9px;
+      font-weight: 700;
+      line-height: 1.18;
+    }
     .prepared-operational {
       margin-top: 0.6mm;
       font-size: calc(${layout.typography.fontSize} - 2px);
@@ -773,10 +1013,12 @@ export const buildPrintStyles = (model) => {
     }
     .label-full-page-primary .pictograms.compliance-pictograms {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       justify-content: flex-start;
-      align-items: center;
-      gap: 1.2mm;
+      align-items: flex-start;
+      align-content: flex-start;
+      column-gap: 0.9mm;
+      row-gap: 0.65mm;
       width: 100%;
     }
     .pictograms.compliance-pictograms img {
@@ -961,44 +1203,176 @@ export const buildPrintStyles = (model) => {
     .label-full-page-primary .compliance-core {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: auto minmax(0, 1fr);
-      gap: 1.25mm;
+      gap: 0.9mm;
       min-height: 0;
     }
     .label-full-page-primary .compliance-core.compliance-core-no-alert {
       grid-template-rows: minmax(0, 1fr);
     }
-    .label-full-page-primary .compliance-alert-panel {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      align-items: center;
+	    .label-full-page-primary .compliance-alert-panel {
+	      display: grid;
+	      grid-template-columns: minmax(0, 1fr);
+	      align-items: center;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-safety-note {
+	      display: flex;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-header {
+	      gap: 1.2mm;
+	      padding-bottom: 0.35mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-header-actions {
+	      gap: 0.35mm;
+	      max-width: 42mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-header-actions .compliance-header-cas {
+	      padding: 0.18mm 0.75mm;
+	      font-size: 8.8px;
+	    }
+	    .label-continuation-page.label-full-page-primary .signal.compliance-signal {
+	      padding: 0.35mm 1.25mm;
+	      font-size: 13.5px;
+	      line-height: 1.05;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-header-actions .continuation-badge {
+	      margin-top: 0;
+	      padding: 0.16mm 0.72mm;
+	      font-size: 7px;
+	    }
+	    .label-continuation-page.label-full-page-primary .name-section {
+	      padding-bottom: 0.15mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .name-en {
+	      font-size: 22px;
+	      line-height: 1.06;
+	      -webkit-line-clamp: 1;
+	    }
+	    .label-continuation-page.label-full-page-primary .name-zh {
+	      font-size: 19px;
+	      line-height: 1.08;
+	      margin-top: 0;
+	      -webkit-line-clamp: 1;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-keep-together-note {
+	      grid-template-columns: auto auto auto minmax(0, 1fr);
+	      column-gap: 0.95mm;
+	      padding: 0.36mm 0;
+	      font-size: 8.9px;
+	      line-height: 1.08;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-only-band {
+	      padding: 0.7mm 1.05mm;
+	      gap: 0.9mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-only-title {
+	      font-size: 9.5px;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-only-detail {
+	      font-size: 8.6px;
+	    }
+	    .label-continuation-page.label-full-page-primary .continuation-only-qr {
+	      font-size: 7.9px;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer {
+	      padding-top: 0.35mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer-text {
+	      gap: 0.35mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer .profile-block {
+	      display: flex;
+	      align-items: baseline;
+	      gap: 1.6mm;
+	      padding: 0.35mm 0.75mm;
+	      min-width: 0;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer .profile-row {
+	      min-width: 0;
+	      font-size: 8.4px;
+	      line-height: 1.05;
+	      white-space: nowrap;
+	      overflow: hidden;
+	      text-overflow: ellipsis;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer .profile-org {
+	      flex: 0 0 auto;
+	      max-width: 34mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer .profile-address {
+	      flex: 1 1 auto;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-footer-metadata {
+	      padding-top: 0.35mm;
+	      gap: 0.25mm 1mm;
+	      font-size: 7.8px;
+	      line-height: 1.08;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-core {
+	      gap: 0.65mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .compliance-alert-panel {
+	      padding-top: 0;
+	      gap: 0;
+	    }
+	    .label-continuation-page.label-full-page-primary .pictograms.compliance-pictograms {
+	      column-gap: 0.65mm;
+	      row-gap: 0.45mm;
+	    }
+	    .label-continuation-page.label-full-page-primary .pictograms.compliance-pictograms img {
+	      width: 17.5mm;
+	      height: 17.5mm;
+	    }
+    .label-full-page-primary .compliance-statements-panel {
+      gap: 1.7mm;
+    }
+    .label-full-page-primary .statement-text {
+      max-width: 148mm;
+    }
+    .label-continuation-page.label-full-page-primary .compliance-statements-panel {
+      gap: 1.25mm;
+    }
+	    .label-continuation-page.label-full-page-primary .compliance-precaution-panel {
+	      padding-top: 0.9mm;
+	    }
+    .label-full-page-primary .compliance-precaution-panel {
+      padding-top: 1.15mm;
     }
     .label-full-page-primary .section-label {
-      font-size: 7px;
-      margin-bottom: 0.32mm;
+      font-size: 9.6px;
+      line-height: 1.1;
+      margin-bottom: 0.76mm;
       letter-spacing: 0;
     }
     .label-full-page-primary .compliance-hazard-list {
-      gap: 0.2mm;
+      gap: var(--compliance-statement-gap, 0.42mm);
     }
     .label-full-page-primary .compliance-precaution-list {
       display: flex;
       flex-direction: column;
-      gap: 0.2mm;
+      gap: var(--compliance-statement-gap, 0.42mm);
     }
     .label-full-page-primary .compliance-statement {
       break-inside: avoid;
       page-break-inside: avoid;
-      margin-bottom: var(--compliance-statement-gap, 0.42mm);
+      align-items: baseline;
+      padding: 0.04mm 0;
+    }
+    .label-continuation-page.label-full-page-primary .compliance-statement {
+      line-height: 1.22;
     }
     .label-full-page-primary .compliance-hazard-list .compliance-statement {
-      grid-template-columns: minmax(var(--hazard-code-min, 8.5mm), max-content) minmax(0, 1fr);
+      grid-template-columns: minmax(var(--hazard-code-min, 9mm), var(--hazard-code-max, 12mm)) minmax(0, 1fr);
     }
     .label-full-page-primary .compliance-precaution-list .compliance-statement {
       display: grid;
-      grid-template-columns: minmax(var(--hazard-code-min, 8.5mm), max-content) minmax(0, 1fr);
+      grid-template-columns: minmax(var(--precaution-code-min, 18mm), var(--precaution-code-max, 20mm)) minmax(0, 1fr);
       gap: var(--compliance-code-gap, 0.8mm);
     }
+    .label-full-page-primary .compliance-statement:nth-child(6n + 7) {
+      margin-top: 0.35mm;
+    }
     .label-full-page-primary .statement-code-long {
+      font-size: 0.92em;
       white-space: nowrap;
       overflow-wrap: normal;
       word-break: normal;
@@ -1916,6 +2290,7 @@ export const buildPrintStyles = (model) => {
           body.print-bw .meta-chip,
           body.print-bw .prepared-badge,
           body.print-bw .prepared-note,
+          body.print-bw .prepared-parent-warning,
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
           body.print-bw .qr-hazard-chip,

@@ -35,7 +35,8 @@ export default function PreparedSidebar({
   onReprint,
   reprintingId = null,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n?.language || "en";
   const panelRef = useFocusTrap(onClose);
 
   return (
@@ -88,7 +89,7 @@ export default function PreparedSidebar({
               const rowId = recentRowId(record, index);
               const display =
                 record.name ||
-                formatPreparedDisplayName(record) ||
+                formatPreparedDisplayName(record, { locale }) ||
                 t("prepared.labelMeta", {
                   concentration: record.concentration || "",
                   solvent: record.solvent || "",

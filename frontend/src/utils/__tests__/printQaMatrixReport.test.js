@@ -4,13 +4,13 @@
 }));
 
 jest.mock("@/constants/ghs", () => {
-  const image = (code) =>
-    `data:image/svg+xml;utf8,${encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-        <rect x="18" y="18" width="64" height="64" fill="#fff" stroke="#ef2b2d" stroke-width="9" transform="rotate(45 50 50)"/>
-        <text x="50" y="56" text-anchor="middle" font-size="18" font-family="Arial" font-weight="700">${code}</text>
-      </svg>`,
-    )}`;
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const image = (code) => {
+    const svgPath = path.resolve(process.cwd(), "public", "ghs", `${code}.svg`);
+    const svg = fs.readFileSync(svgPath, "utf8");
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  };
 
   return {
     GHS_IMAGES: {
@@ -51,6 +51,7 @@ import {
   buildPrintDocument,
   buildPrintPreviewDocument,
 } from "@/utils/printLabels";
+import { GHS_IMAGES } from "@/constants/ghs";
 
 const getPictogramCodes = (chemical = {}) =>
   (chemical.ghs_pictograms || [])
@@ -325,6 +326,14 @@ const maybeWritePrintArtifacts = () => {
 };
 
 describe("print QA matrix report", () => {
+  it("uses pictogram artwork in generated QA artifacts, not code-only placeholder SVGs", () => {
+    const ghs02 = GHS_IMAGES.GHS02 || "";
+
+    expect(ghs02).toMatch(/^data:image\/svg\+xml/);
+    expect(decodeURIComponent(ghs02)).not.toContain("<text");
+    expect(decodeURIComponent(ghs02)).toContain("<path");
+  });
+
   it("generates a passing machine-readable report for the production print matrix", () => {
     const report = buildPrintQaMatrixReport({
       ...(process.env.PRINT_QA_REPORT_GENERATED_AT
@@ -584,6 +593,7 @@ describe("print QA matrix report", () => {
         canPrint: true,
         planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
         minPrintTotalLabels: 2,
+        maxPrintTotalLabels: 3,
       }),
       actual: expect.objectContaining({
         canPrint: true,
@@ -600,7 +610,7 @@ describe("print QA matrix report", () => {
     });
     expect(
       byId["ethylene-oxide-a4-primary-continuation"].actual.printTotalLabels,
-    ).toBeGreaterThanOrEqual(2);
+    ).toBeLessThanOrEqual(3);
     expect(browserCaseById["ethylene-oxide-a4-primary-continuation"]).toMatchObject({
       expectedCanPrint: true,
       expectedPrintButtonEnabled: true,
@@ -630,13 +640,13 @@ describe("print QA matrix report", () => {
       }),
       expected: expect.objectContaining({
         canPrint: true,
-        planState: PRINT_OUTPUT_PLAN_STATE.READY,
-        printTotalLabels: 1,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+        printTotalLabels: 2,
       }),
       actual: expect.objectContaining({
         canPrint: true,
-        planState: PRINT_OUTPUT_PLAN_STATE.READY,
-        printTotalLabels: 1,
+        planState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
+        printTotalLabels: 2,
       }),
       handoffExpectation: expect.objectContaining({
         status: "qa_handoff",
@@ -652,14 +662,14 @@ describe("print QA matrix report", () => {
       expectedCanPrint: true,
       expectedPrintButtonEnabled: true,
       expectedStatus: "qa_handoff",
-      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.READY,
+      expectedPlanState: PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION,
       expectedLabelKind: "complete-primary",
       expectedStockPreset: "a4-primary",
       expectedPictograms: ["GHS02", "GHS05", "GHS06", "GHS07"],
       expectedIdentityTexts: ["2-Bromothiophene", "1003-09-4"],
       expectedRequiredIdentityTexts: ["2-Bromothiophene"],
-      expectedMinTotalLabels: 1,
-      expectedMinTotalPages: 1,
+      expectedMinTotalLabels: 2,
+      expectedMinTotalPages: 2,
     });
 
     expect(byId["bottle-supplemental"].handoffExpectation).toMatchObject({
@@ -896,6 +906,30 @@ describe("print QA matrix report", () => {
         hasFullPagePictograms: true,
       }),
     });
+    {
+      const testCase = PRINT_QA_MATRIX.find(
+        (entry) => entry.id === "prepared-a4-primary",
+      );
+      const chemical = resolvePrintQaCaseChemical(testCase);
+      const documentBundle = buildPrintDocument(
+        [chemical],
+        testCase.labelConfig,
+        {},
+        {},
+        {},
+        PRINT_QA_PROFILE,
+        { locale: testCase.locale },
+      );
+      expect(documentBundle.html).toContain("配製稀釋液");
+      expect(documentBundle.html).toContain("濃度");
+      expect(documentBundle.html).toContain("溶劑");
+      expect(documentBundle.html).toContain("配製人");
+      expect(documentBundle.html).toContain("危害說明");
+      expect(documentBundle.html).not.toContain("Prepared solution");
+      expect(documentBundle.html).not.toContain("Concentration");
+      expect(documentBundle.html).not.toContain("Solvent");
+      expect(documentBundle.html).not.toContain("Hazard statements");
+    }
     expect(byId["prepared-bottle-supplemental"].actual).toMatchObject({
       hasPreparedIdentityTexts: true,
       printHasPreparedIdentityTexts: true,

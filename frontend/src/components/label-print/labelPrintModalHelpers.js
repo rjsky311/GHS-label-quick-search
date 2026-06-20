@@ -81,7 +81,7 @@ export function buildDisplayNames(chem, nameDisplay, languageLike = "en") {
   if (!chem) return [];
 
   const preparedName = chem.isPreparedSolution
-    ? formatPreparedDisplayName(chem)
+    ? formatPreparedDisplayName(chem, { locale: languageLike })
     : null;
   const localizedNames = getLocalizedNames(chem, languageLike);
   const englishName =

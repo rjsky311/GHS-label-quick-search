@@ -17,6 +17,7 @@ const textForModel = (statement) => statement.text_en || "";
 
 const makeItem = (id, text = "Keep readable.") => ({
   id,
+  kind: "precaution",
   statement: { code: id, text_en: text },
 });
 
@@ -88,6 +89,48 @@ describe("print continuation pagination", () => {
       "P201",
       "P202",
       "P203",
+    ]);
+  });
+
+  it("balances a sparse trailing page instead of leaving a single orphan statement", () => {
+    const pages = [
+      makePage([
+        makeItem("P201"),
+        makeItem("P202"),
+        makeItem("P203"),
+        makeItem("P204"),
+        makeItem("P205"),
+        makeItem("P206"),
+        makeItem("P207"),
+      ]),
+      makePage([makeItem("P208")]),
+    ];
+    const compacted = compactContinuationPages(
+      pages,
+      {
+        firstPageStatementCount: 7,
+        firstPageTextWeight: 999,
+        firstPageLineUnits: 7,
+        continuationPageStatementCount: 7,
+        continuationPageTextWeight: 999,
+        continuationPageLineUnits: 7,
+      },
+      model,
+      textForModel,
+    );
+
+    expect(compacted).toHaveLength(2);
+    expect(compacted[0].items.map((item) => item.id)).toEqual([
+      "P201",
+      "P202",
+      "P203",
+      "P204",
+    ]);
+    expect(compacted[1].items.map((item) => item.id)).toEqual([
+      "P205",
+      "P206",
+      "P207",
+      "P208",
     ]);
   });
 

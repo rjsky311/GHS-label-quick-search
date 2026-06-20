@@ -142,6 +142,11 @@ const inspectPrintDom = async (page, testCase) =>
         document.querySelectorAll(".label:not(.label-placeholder)"),
       );
       const documentText = text(document.body);
+      const rawTranslationKeys = unique(
+        documentText.match(
+          /\b(?:print|trust)\.[A-Za-z0-9_.]+|\bPRINT\.[A-Z0-9_.]+/g,
+        ) || [],
+      ).sort();
       const normalizedDocumentText = normalizedText(documentText);
       const pictogramImages = Array.from(document.querySelectorAll("img"))
         .map((img) => ({
@@ -443,6 +448,7 @@ const inspectPrintDom = async (page, testCase) =>
           (candidate) =>
             !normalizedDocumentText.includes(normalizedText(candidate)),
         ),
+        rawTranslationKeys,
         hasMinimumLabels: labels.length >= Number(expectedMinTotalLabels || 1),
       };
     },
@@ -527,6 +533,7 @@ const runCase = async ({ page, testCase }) => {
   assert("required-identity-texts", dom.requiredIdentityTextsVisible);
   assert("forbidden-identity-texts", dom.forbiddenIdentityTextsAbsent);
   assert("images-loaded", dom.imageFailures.length === 0);
+  assert("no-raw-translation-keys", dom.rawTranslationKeys.length === 0);
   assert("no-more-pics", dom.hasMorePics === false);
   assert("no-clipped-elements", dom.clippedElements.length === 0);
   assert("no-visual-overlaps", dom.visualIssues.length === 0);
@@ -580,6 +587,7 @@ const report = {
     clippedElements: dom.clippedElements,
     visualIssues: dom.visualIssues,
     imageFailures: dom.imageFailures,
+    rawTranslationKeys: dom.rawTranslationKeys,
     pdf,
   })),
   results,

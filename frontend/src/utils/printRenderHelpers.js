@@ -51,11 +51,13 @@ export const clampIndex = (value, maxIndex) => {
 export const normalizeTemplate = (template) =>
   ALLOWED_TEMPLATES.has(template) ? template : "standard";
 
+const resolveModelLocale = (model) => model?.locale || i18n.language;
+
 export const resolveModelNameDisplay = (model) =>
-  resolveEffectiveLabelNameDisplay(model.layout, i18n.language);
+  resolveEffectiveLabelNameDisplay(model.layout, resolveModelLocale(model));
 
 export const resolveModelContentLocale = (model) =>
-  resolveEffectiveLabelContentLocale(model.layout, i18n.language);
+  resolveEffectiveLabelContentLocale(model.layout, resolveModelLocale(model));
 
 const approxNameWidthScore = (value) =>
   String(value || "")
@@ -143,7 +145,7 @@ export const getIdentityDensityClass = (chemical, model) => {
 };
 
 export const getLocalizedTextForModel = (statement, model) => {
-  if (shouldRenderBilingualLabelText(model.layout, i18n.language)) {
+  if (shouldRenderBilingualLabelText(model.layout, resolveModelLocale(model))) {
     return joinLocalizedParts(
       getLocalizedStatementText(statement, "zh"),
       getLocalizedStatementText(statement, "en"),
@@ -153,7 +155,7 @@ export const getLocalizedTextForModel = (statement, model) => {
 };
 
 export const getSignalWordForModel = (classification, model) => {
-  if (shouldRenderBilingualLabelText(model.layout, i18n.language)) {
+  if (shouldRenderBilingualLabelText(model.layout, resolveModelLocale(model))) {
     return joinLocalizedParts(
       getLocalizedSignalWord(classification, "zh"),
       getLocalizedSignalWord(classification, "en"),

@@ -39,12 +39,12 @@ const makeVeryDenseA4BatchFixture = () =>
     chemical.cas_number === "50-00-0"
       ? {
           ...chemical,
-          hazard_statements: Array.from({ length: 14 }, (_, index) => ({
+          hazard_statements: Array.from({ length: 20 }, (_, index) => ({
             code: `H${300 + index}`,
             text_en:
               "This is a very long complete-primary hazard statement retained for a high-density A4 continuation set with readable bilingual wrapping and no clipped label content.",
           })),
-          precautionary_statements: Array.from({ length: 30 }, (_, index) => ({
+          precautionary_statements: Array.from({ length: 48 }, (_, index) => ({
             code: `P${300 + index}`,
             text_en:
               "This is a very long precautionary statement retained for same-stock continuation printing so the batch planner still covers truly oversized full-page content.",

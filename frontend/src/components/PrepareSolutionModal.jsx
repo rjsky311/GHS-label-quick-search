@@ -89,7 +89,7 @@ export default function PrepareSolutionModal({
   presetNameValue,
   onPresetNameChange,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const concentrationInputRef = useRef(null);
   const dialogRef = useFocusTrap(onClose, {
     initialFocusRef: concentrationInputRef,
@@ -355,7 +355,9 @@ export default function PrepareSolutionModal({
                   // otherwise fall back to the Tier 1 concentration/
                   // solvent meta string so edge cases (missing parent
                   // name) still read cleanly.
-                  const display = formatPreparedDisplayName(p);
+                  const display = formatPreparedDisplayName(p, {
+                    locale: i18n.language,
+                  });
                   return (
                     <li key={`${p.createdAt || "noTs"}-${idx}`}>
                       <button
@@ -420,7 +422,9 @@ export default function PrepareSolutionModal({
                   // fields still render on the second line so the
                   // user can see who/when at a glance without needing
                   // to click-to-prefill.
-                  const display = formatPreparedDisplayName(r);
+                  const display = formatPreparedDisplayName(r, {
+                    locale: i18n.language,
+                  });
                   const expiryStatus = getRecentExpiryStatus(r.expiryDate);
                   return (
                     <li key={`${r.createdAt || "noTs"}-${idx}`}>

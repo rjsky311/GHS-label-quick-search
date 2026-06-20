@@ -15,6 +15,9 @@ import {
   getContinuationStatementWeight as getContinuationStatementWeightWithTextResolver,
 } from "@/utils/printContinuationPagination";
 import {
+  getCompletePrimaryContinuationCapacity,
+} from "@/utils/printFitEngine";
+import {
   getLocalizedTextForModel,
   normalizeTemplate,
   resolvePrintableChineseName,
@@ -179,62 +182,66 @@ export const getFullPageStatementTier = (
     precautionCodeMax,
   });
 
-  if (statementCount >= 28 || textLoad > 3000) {
+  if (
+    statementCount >= 32 ||
+    textLoad > 3000 ||
+    (statementCount >= 28 && textLoad > 2600)
+  ) {
     return buildTier({
-      fontScale: 0.95,
-      minFontPx: 4.6,
-      maxFontPx: 5.4,
-      lineHeight: 1.01,
-      marginBottom: "0.38mm",
-      codeGap: "0.5mm",
-      hazardCodeMin: "6.8mm",
-      hazardCodeMax: "9mm",
-      precautionCodeMin: "8.6mm",
-      precautionCodeMax: "11.2mm",
+      fontScale: 0.9,
+      minFontPx: 8.1,
+      maxFontPx: 8.3,
+      lineHeight: 1.16,
+      marginBottom: "0.28mm",
+      codeGap: "0.68mm",
+      hazardCodeMin: "9mm",
+      hazardCodeMax: "12mm",
+      precautionCodeMin: "18mm",
+      precautionCodeMax: "19.8mm",
     });
   }
 
   if (statementCount >= 22 || textLoad > 2400) {
     return buildTier({
-      fontScale: 1,
-      minFontPx: 4.8,
-      maxFontPx: 5.8,
-      lineHeight: 1.02,
-      marginBottom: "0.42mm",
-      codeGap: "0.55mm",
-      hazardCodeMin: "7.2mm",
-      hazardCodeMax: "9.6mm",
-      precautionCodeMin: "9.2mm",
-      precautionCodeMax: "12mm",
+      fontScale: 0.98,
+      minFontPx: 8.4,
+      maxFontPx: 9,
+      lineHeight: 1.21,
+      marginBottom: "0.48mm",
+      codeGap: "0.84mm",
+      hazardCodeMin: "9.4mm",
+      hazardCodeMax: "12.4mm",
+      precautionCodeMin: "18.2mm",
+      precautionCodeMax: "20.4mm",
     });
   }
 
   if (statementCount >= 16 || textLoad > 1800) {
     return buildTier({
-      fontScale: 1.08,
-      minFontPx: 5,
-      maxFontPx: 6.2,
-      lineHeight: 1.025,
-      marginBottom: "0.48mm",
-      codeGap: "0.62mm",
-      hazardCodeMin: "7.8mm",
-      hazardCodeMax: "10.5mm",
-      precautionCodeMin: "10mm",
-      precautionCodeMax: "13.2mm",
+      fontScale: 1.02,
+      minFontPx: 8.8,
+      maxFontPx: 9.4,
+      lineHeight: 1.22,
+      marginBottom: "0.56mm",
+      codeGap: "0.9mm",
+      hazardCodeMin: "9.8mm",
+      hazardCodeMax: "12.8mm",
+      precautionCodeMin: "18.6mm",
+      precautionCodeMax: "21mm",
     });
   }
 
   return buildTier({
-    fontScale: 1.18,
-    minFontPx: 5.2,
-    maxFontPx: 6.8,
-    lineHeight: 1.03,
-    marginBottom: "0.55mm",
-    codeGap: "0.7mm",
-    hazardCodeMin: "8.8mm",
-    hazardCodeMax: "11.5mm",
-    precautionCodeMin: "11.5mm",
-    precautionCodeMax: "15mm",
+    fontScale: 1.06,
+    minFontPx: 9.4,
+    maxFontPx: 9.7,
+    lineHeight: 1.24,
+    marginBottom: "0.66mm",
+    codeGap: "0.96mm",
+    hazardCodeMin: "10.2mm",
+    hazardCodeMax: "13.2mm",
+    precautionCodeMin: "19mm",
+    precautionCodeMax: "21.6mm",
   });
 };
 
@@ -432,7 +439,37 @@ export const resolveAutoFitLevelForModel = ({
       content.hazardStatements || [],
       modelForText,
     );
+    const precautionLoad = getStatementLoadForAutoFit(
+      content.precautionaryStatements || [],
+      modelForText,
+    );
     const statementCount = content.counts?.hazardStatements || 0;
+    const totalStatementCount = content.counts?.statements || statementCount;
+
+    if (isFullPagePrimaryLayout(layout)) {
+      const capacity = getCompletePrimaryContinuationCapacity(layout);
+      const statementLineUnits = [
+        ...(content.hazardStatements || []),
+        ...(content.precautionaryStatements || []),
+      ].reduce(
+        (total, statement) =>
+          total + getContinuationStatementLineUnits(statement, modelForText),
+        0,
+      );
+      const closeToSinglePageSplit =
+        totalStatementCount >= capacity.splitStatementCount * 0.78 ||
+        statementLineUnits >= capacity.splitLineUnits * 0.86 ||
+        hazardLoad + precautionLoad >= capacity.splitTextWeight * 0.4;
+      const stillSinglePageCandidate =
+        totalStatementCount <= capacity.splitStatementCount &&
+        statementLineUnits <= capacity.splitLineUnits &&
+        hazardLoad + precautionLoad <= capacity.splitTextWeight;
+
+      if (closeToSinglePageSplit && stillSinglePageCandidate) {
+        level = Math.max(level, 1);
+      }
+      return;
+    }
 
     if (compactPhysical) {
       if (

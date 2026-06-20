@@ -774,7 +774,8 @@ function App() {
         onPrintBlocked: (blockedInfo) => {
           setPrintBlockedInfo(blockedInfo);
         },
-      }
+      },
+      { locale: i18n.language }
     );
   }, [
     selectedForLabel,
@@ -784,6 +785,7 @@ function App() {
     labelQuantities,
     labProfile,
     addRecentPrint,
+    i18n.language,
   ]);
 
   const handleLoadRecentPrint = useCallback(

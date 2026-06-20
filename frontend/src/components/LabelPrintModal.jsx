@@ -1188,6 +1188,7 @@ export default function LabelPrintModal({
           mode: previewMode,
           pageIndex: previewPageIndex,
           labelIndex: previewPageIndex,
+          locale: currentLocale,
         },
       ),
     [
@@ -1199,6 +1200,7 @@ export default function LabelPrintModal({
       labProfile,
       previewPageIndex,
       previewMode,
+      currentLocale,
     ],
   );
   const plannedPrintLabelCount =
@@ -1389,6 +1391,7 @@ export default function LabelPrintModal({
         mode: "label",
         previewZoom: previewZoomMode,
         labelIndex: activePreviewLabelIndex,
+        locale: currentLocale,
       },
     );
   }, [
@@ -1400,6 +1403,7 @@ export default function LabelPrintModal({
     labProfile,
     previewZoomMode,
     activePreviewLabelIndex,
+    currentLocale,
     selectedForLabel.length,
   ]);
 

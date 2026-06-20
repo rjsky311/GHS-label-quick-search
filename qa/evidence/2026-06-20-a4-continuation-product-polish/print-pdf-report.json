@@ -1,0 +1,1916 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-20T06:50:56.756Z",
+  "printHtmlDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-html-artifacts",
+  "pdfDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts",
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "summary": {
+    "total": 42,
+    "passed": 42,
+    "failed": 0
+  },
+  "failedCases": [],
+  "results": [
+    {
+      "id": "a4-primary",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/a4-primary.pdf",
+        "bytes": 345174,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "aminobiphenyl-a4-primary",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/aminobiphenyl-a4-primary.pdf",
+        "bytes": 254212,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "letter-primary",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "letter-primary"
+        ],
+        "expectedStockPreset": "letter-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/letter-primary.pdf",
+        "bytes": 345121,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "a4-primary-zh-bw",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/a4-primary-zh-bw.pdf",
+        "bytes": 361380,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "letter-primary-en-bw",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "letter-primary"
+        ],
+        "expectedStockPreset": "letter-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/letter-primary-en-bw.pdf",
+        "bytes": 358361,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "ethylene-oxide-a4-primary-continuation",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 3,
+        "pictogramCodes": [
+          "GHS02",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethylene-oxide-a4-primary-continuation.pdf",
+        "bytes": 274505,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "bromothiophene-a4-primary-packing-regression",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 2,
+        "pictogramCodes": [
+          "GHS02",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bromothiophene-a4-primary-packing-regression.pdf",
+        "bytes": 338961,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "bottle-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bottle-supplemental.pdf",
+        "bytes": 61548,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "bottle-supplemental-with-case",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bottle-supplemental-with-case.pdf",
+        "bytes": 76130,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "large-primary-front-label",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "large-primary"
+        ],
+        "expectedStockPreset": "large-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/large-primary-front-label.pdf",
+        "bytes": 66459,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "large-primary-front-warning-batch-item",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "large-primary"
+        ],
+        "expectedStockPreset": "large-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/large-primary-front-warning-batch-item.pdf",
+        "bytes": 59769,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "avery-5163-bottle-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "avery-5163"
+        ],
+        "expectedStockPreset": "avery-5163",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/avery-5163-bottle-supplemental.pdf",
+        "bytes": 61759,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "avery-5164-large-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "avery-5164"
+        ],
+        "expectedStockPreset": "avery-5164",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/avery-5164-large-supplemental.pdf",
+        "bytes": 62131,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "rack-landscape-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-rack"
+        ],
+        "expectedStockPreset": "medium-rack",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/rack-landscape-supplemental.pdf",
+        "bytes": 64375,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "tube-vial-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/tube-vial-quick-id.pdf",
+        "bytes": 52399,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "tube-vial-quick-id-with-case",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/tube-vial-quick-id-with-case.pdf",
+        "bytes": 52399,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "nine-pictogram-tube-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS01",
+          "GHS02",
+          "GHS03",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08",
+          "GHS09"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nine-pictogram-tube-quick-id.pdf",
+        "bytes": 87274,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "brother-62mm-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "brother-62mm-continuous"
+        ],
+        "expectedStockPreset": "brother-62mm-continuous",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/brother-62mm-quick-id.pdf",
+        "bytes": 52441,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "small-rack-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-rack"
+        ],
+        "expectedStockPreset": "small-rack",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/small-rack-quick-id.pdf",
+        "bytes": 52430,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "medium-rack-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "medium-rack"
+        ],
+        "expectedStockPreset": "medium-rack",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/medium-rack-quick-id.pdf",
+        "bytes": 52520,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/qr-supplement.pdf",
+        "bytes": 55541,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "brother-62mm-qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "brother-62mm-continuous"
+        ],
+        "expectedStockPreset": "brother-62mm-continuous",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/brother-62mm-qr-supplement.pdf",
+        "bytes": 55536,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "nine-pictogram-brother-62mm-qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS01",
+          "GHS02",
+          "GHS03",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08",
+          "GHS09"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "brother-62mm-continuous"
+        ],
+        "expectedStockPreset": "brother-62mm-continuous",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nine-pictogram-brother-62mm-qr-supplement.pdf",
+        "bytes": 90575,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "small-rack-qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "small-rack"
+        ],
+        "expectedStockPreset": "small-rack",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/small-rack-qr-supplement.pdf",
+        "bytes": 55527,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "medium-rack-qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "medium-rack"
+        ],
+        "expectedStockPreset": "medium-rack",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/medium-rack-qr-supplement.pdf",
+        "bytes": 58087,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "custom-tiny-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "custom"
+        ],
+        "expectedStockPreset": "custom",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/custom-tiny-supplemental.pdf",
+        "bytes": 56398,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "ethanol-bottle-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS02",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethanol-bottle-supplemental.pdf",
+        "bytes": 40897,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "ethanol-tube-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS02",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethanol-tube-quick-id.pdf",
+        "bytes": 37404,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "sodium-hydroxide-qr-supplement",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS05",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/sodium-hydroxide-qr-supplement.pdf",
+        "bytes": 54293,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "methanol-brother-quick-id-bw",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS02",
+          "GHS06",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "brother-62mm-continuous"
+        ],
+        "expectedStockPreset": "brother-62mm-continuous",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/methanol-brother-quick-id-bw.pdf",
+        "bytes": 43785,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "hydrogen-peroxide-qr-supplement-en",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS03",
+          "GHS05",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/hydrogen-peroxide-qr-supplement-en.pdf",
+        "bytes": 47127,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "nitrogen-tube-quick-id-single-pictogram",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nitrogen-tube-quick-id-single-pictogram.pdf",
+        "bytes": 34612,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "zinc-oxide-small-qr-environmental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS09"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/zinc-oxide-small-qr-environmental.pdf",
+        "bytes": 36689,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "boric-acid-bottle-supplemental-health",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/boric-acid-bottle-supplemental-health.pdf",
+        "bytes": 47132,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "prepared-a4-primary",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-a4-primary.pdf",
+        "bytes": 383529,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "prepared-bottle-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-bottle-supplemental.pdf",
+        "bytes": 70525,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "prepared-tube-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-tube-quick-id.pdf",
+        "bytes": 52399,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "long-name-bottle-supplemental",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS05",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "supplemental"
+        ],
+        "stockPresets": [
+          "medium-bottle"
+        ],
+        "expectedStockPreset": "medium-bottle",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/long-name-bottle-supplemental.pdf",
+        "bytes": 51815,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "long-name-tube-quick-id",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 1,
+        "pictogramCodes": [
+          "GHS05",
+          "GHS07"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [],
+        "expectedBatchCategories": [],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/long-name-tube-quick-id.pdf",
+        "bytes": 61230,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "batch-quick-id-50-small-strip",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 46,
+        "pictogramCodes": [
+          "GHS01",
+          "GHS02",
+          "GHS03",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": false,
+        "expectedHasQr": false,
+        "labelKinds": [
+          "quick-id"
+        ],
+        "stockPresets": [
+          "small-strip"
+        ],
+        "expectedStockPreset": "small-strip",
+        "stockPresetMatches": true,
+        "batchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-quick-id-50-small-strip.pdf",
+        "bytes": 195794,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "batch-qr-50-brother-62mm",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 48,
+        "pictogramCodes": [
+          "GHS01",
+          "GHS02",
+          "GHS03",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "qr-supplement"
+        ],
+        "stockPresets": [
+          "brother-62mm-continuous"
+        ],
+        "expectedStockPreset": "brother-62mm-continuous",
+        "stockPresetMatches": true,
+        "batchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-qr-50-brother-62mm.pdf",
+        "bytes": 392342,
+        "hasPdfHeader": true
+      }
+    },
+    {
+      "id": "batch-a4-complete-50",
+      "passed": true,
+      "failures": [],
+      "dom": {
+        "labelCount": 48,
+        "pictogramCodes": [
+          "GHS01",
+          "GHS02",
+          "GHS03",
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07",
+          "GHS08"
+        ],
+        "expectedPictogramsPresent": true,
+        "exactPictograms": true,
+        "hasQr": true,
+        "expectedHasQr": true,
+        "labelKinds": [
+          "complete-primary"
+        ],
+        "stockPresets": [
+          "a4-primary"
+        ],
+        "expectedStockPreset": "a4-primary",
+        "stockPresetMatches": true,
+        "batchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategories": [
+          "ready"
+        ],
+        "expectedBatchCategoriesPresent": true,
+        "missingBatchCategoryCount": 0,
+        "allLabelsHaveBatchCategory": true,
+        "hasMorePics": false,
+        "imageFailures": [],
+        "clippedElements": [],
+        "visualIssues": [],
+        "requiredIdentityTextVisible": true,
+        "requiredIdentityTextsVisible": true,
+        "forbiddenIdentityTextsAbsent": true,
+        "rawTranslationKeys": [],
+        "hasMinimumLabels": true
+      },
+      "pdf": {
+        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-a4-complete-50.pdf",
+        "bytes": 760886,
+        "hasPdfHeader": true
+      }
+    }
+  ]
+}

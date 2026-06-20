@@ -31,6 +31,11 @@ import {
 } from "../printLabels";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import { recordObservabilityEvent } from "@/utils/observability";
+import { getFullPageStatementTier } from "@/utils/printDocumentLayoutHelpers";
+import {
+  PRINT_QA_BROMOTHIOPHENE,
+  PRINT_QA_ETHYLENE_OXIDE,
+} from "@/utils/printQaMatrix";
 
 // ── Mock chemical fixtures ──
 const mockChemical = {
@@ -163,6 +168,55 @@ describe("getHazardFontTier", () => {
   it("defaults to medium when size is undefined", () => {
     const tier = getHazardFontTier(3, undefined);
     expect(tier.fontSize).toBe("8px");
+  });
+});
+
+describe("getFullPageStatementTier", () => {
+  const fullPageModel = {
+    layout: resolvePrintLayoutConfig({
+      labelPurpose: "shipping",
+      template: "full",
+      stockPreset: "a4-primary",
+      nameDisplay: "both",
+    }),
+  };
+
+  it("keeps short many-row A4 statements out of the smallest continuation typography", () => {
+    const hazards = Array.from({ length: 6 }, (_, index) => ({
+      code: `H${280 + index}`,
+      text_en: `Short hazard wording ${index}`,
+      text_zh: `短危害文字 ${index}`,
+    }));
+    const precautions = Array.from({ length: 22 }, (_, index) => ({
+      code: `P${260 + index}`,
+      text_en: `Short precaution wording ${index}`,
+      text_zh: `短預防文字 ${index}`,
+    }));
+
+    const tier = getFullPageStatementTier(hazards, precautions, fullPageModel);
+
+    expect(tier.fontSize).toBe("9px");
+    expect(tier.lineHeight).toBe("1.21");
+  });
+
+  it("keeps genuinely dense A4 continuation text on the conservative tier", () => {
+    const longText =
+      "Dense bilingual statement retained for print QA, including handling, emergency response, storage, disposal, and repeated detail that should not be allowed to overflow the complete label.";
+    const hazards = Array.from({ length: 8 }, (_, index) => ({
+      code: `H${300 + index}`,
+      text_en: longText,
+      text_zh: `長危害文字 ${index} ${longText}`,
+    }));
+    const precautions = Array.from({ length: 24 }, (_, index) => ({
+      code: `P${300 + index}`,
+      text_en: longText,
+      text_zh: `長預防文字 ${index} ${longText}`,
+    }));
+
+    const tier = getFullPageStatementTier(hazards, precautions, fullPageModel);
+
+    expect(tier.fontSize).toBe("8.3px");
+    expect(tier.lineHeight).toBe("1.16");
   });
 });
 
@@ -569,7 +623,9 @@ describe("print layout model", () => {
     expect(small.typography.compliancePictogramSize).toBe("10mm");
     expect(medium.typography.compliancePictogramSize).toBe("14mm");
     expect(large.typography.compliancePictogramSize).toBe("24.6mm");
-    expect(a4Primary.typography.compliancePictogramSize).toBe("28.2mm");
+    expect(a4Primary.typography.compliancePictogramSize).toBe("20mm");
+    expect(a4Primary.typography.qrBox).toBe("24mm");
+    expect(a4Primary.typography.complianceStatementSize).toBe("9.2px");
   });
 
   it("keeps curated A4 stock grids within printable page geometry", () => {
@@ -1040,7 +1096,10 @@ describe("printLabels", () => {
 
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toContain("label-a4-primary");
-    expect(html).toContain("width: 28.2mm");
+    expect(html).toContain("width: 20mm");
+    expect(html).toMatch(
+      /\.compliance-qr \{[\s\S]*width: 24mm;[\s\S]*flex: 0 0 24mm;/,
+    );
     expect(html).not.toContain("column-count: 3");
     expect(html).toMatch(
       /\.label-full-page-primary \.name-en \{[\s\S]*-webkit-line-clamp: 2;[\s\S]*overflow-wrap: anywhere;/,
@@ -1055,7 +1114,17 @@ describe("printLabels", () => {
       /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*grid-template-columns:/,
     );
     expect(html).toContain("compliance-statements-panel");
-    expect(html).toContain("--precaution-code-max:11.2mm");
+    expect(html).toContain("--precaution-code-max:20.4mm");
+    expect(html).toContain("font-size:9px;line-height:1.21");
+    expect(html).toMatch(
+      /\.label-full-page-primary \.compliance-hazard-list \.compliance-statement \{[\s\S]*var\(--hazard-code-min, 9mm\)[\s\S]*var\(--hazard-code-max, 12mm\)/,
+    );
+    expect(html).toMatch(
+      /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*var\(--precaution-code-min, 18mm\)[\s\S]*var\(--precaution-code-max, 20mm\)/,
+    );
+    expect(html).toContain(
+      ".label-full-page-primary .compliance-statement:nth-child(6n + 7)",
+    );
     expect(html).not.toContain("font-size: 9px !important");
     const bodyHtml = html.slice(html.indexOf("<body"));
     expect(bodyHtml).not.toContain("label-continuation-page");
@@ -2735,7 +2804,7 @@ describe("printLabels", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("hazard-more");
-      expect(html).toContain("print.moreHazardsShort");
+      expect(html).toContain("3 more hazard(s)");
     });
 
     it("prioritizes severe H statements before summarizing compact standard labels", () => {
@@ -2882,7 +2951,7 @@ describe("printLabels", () => {
       expect(html).toContain("compliance-hazard-panel");
       expect(html).toContain("compliance-precaution-panel");
       expect(html).toContain("compliance-footer");
-      expect(html).toContain("print.hazardStatementsLabel");
+      expect(html).toContain("Hazard statements");
       expect(html).not.toContain("hazards-full");
       expect(html.indexOf("compliance-alert-panel")).toBeLessThan(
         html.indexOf("compliance-statements-panel"),
@@ -2956,8 +3025,11 @@ describe("printLabels", () => {
       );
 
       expect(preview.fragmentHtml).toContain("label-a4-primary");
-      expect(preview.html).toContain("width: 28.2mm");
-      expect(preview.html).toContain("height: 28.2mm");
+      expect(preview.html).toContain("width: 20mm");
+      expect(preview.html).toContain("height: 20mm");
+      expect(preview.html).toMatch(
+        /\.compliance-qr \{[\s\S]*width: 24mm;[\s\S]*flex: 0 0 24mm;/,
+      );
       expect(preview.html).not.toContain("column-count: 3");
       expect(preview.html).toMatch(
         /\.label-full-page-primary \.compliance-precaution-list \{[\s\S]*display: flex;/,
@@ -2967,11 +3039,21 @@ describe("printLabels", () => {
         "grid-template-rows: auto minmax(0, 1fr) auto",
       );
       expect(preview.fragmentHtml).not.toContain("label-continuation-page");
-      expect(preview.html).toContain("--precaution-code-max:11.2mm");
+      expect(preview.html).toContain("--precaution-code-max:20.4mm");
+      expect(preview.html).toContain("font-size:9px;line-height:1.21");
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
       expect(preview.html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
+      expect(preview.html).toMatch(
+        /\.label-full-page-primary \.compliance-footer \{[\s\S]*border: 0\.25mm solid #cbd5e1;[\s\S]*border-left: 1\.05mm solid #64748b;[\s\S]*background: #f8fafc;[\s\S]*align-items: center;/,
+      );
+      expect(preview.html).toMatch(
+        /\.label-full-page-primary \.compliance-footer \.profile-block \{[\s\S]*border: 0\.2mm solid #dbe3ee;[\s\S]*border-radius: 0\.9mm;/,
+      );
+      expect(preview.html).toMatch(
+        /\.label-full-page-primary \.compliance-qr \{[\s\S]*border-left: 0\.2mm solid #e2e8f0;[\s\S]*padding-left: 1\.1mm;/,
+      );
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
       expect(preview.html).toContain("height: 264px");
@@ -3016,20 +3098,222 @@ describe("printLabels", () => {
         { organization: "Lab A", phone: "02-1234", address: "Taipei" },
       );
 
-      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      const totalContinuationPages = documentBundle.model.expandedLabels.length;
+      expect(totalContinuationPages).toBeGreaterThan(1);
+      expect(totalContinuationPages).toBeLessThanOrEqual(3);
       expect(documentBundle.pagesHtml).toContain("label-continuation-page");
       expect(documentBundle.pagesHtml).toContain("data-continuation-page=\"1\"");
-      expect(documentBundle.pagesHtml).toContain("print.continuationBadge");
+      expect(documentBundle.pagesHtml).toContain("Main label");
+      expect(documentBundle.pagesHtml).toContain("Final continuation");
+      expect(documentBundle.pagesHtml).toContain(
+        "Keep pages together",
+      );
+      expect(documentBundle.pagesHtml).toContain("Page 1 of");
+      expect(documentBundle.pagesHtml).toContain("QR on Page 1 only");
+      expect(documentBundle.pagesHtml).toContain(
+        totalContinuationPages === 2
+          ? "Continue with Page 2"
+          : `Continue with pages 2-${totalContinuationPages}`,
+      );
+      expect(documentBundle.pagesHtml).toContain(
+        "data-testid=\"continuation-keep-together-note\"",
+      );
+      expect(documentBundle.pagesHtml).toContain("continuation-status");
+      expect(documentBundle.pagesHtml).toContain(
+        "GHS repeated for page matching",
+      );
+      expect(documentBundle.pagesHtml).toContain("Do not use this page alone");
+      expect(documentBundle.pagesHtml).toContain("continuation-use-warning");
+      expect(documentBundle.pagesHtml).toContain("compliance-footer-metadata");
+      expect(documentBundle.pagesHtml).toContain(
+        "Hazard source: PubChem/SDS reference",
+      );
+      expect(documentBundle.pagesHtml).toContain(
+        "Verify against SDS, supplier label, and local regulations before use.",
+      );
       expect(documentBundle.pagesHtml).toContain(">H300</span>");
       expect(documentBundle.pagesHtml).toContain(">P329</span>");
-      expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(1);
+      expect(documentBundle.pagesHtml.match(/alt=\"GHS08\"/g)).toHaveLength(
+        documentBundle.model.expandedLabels.length,
+      );
       expect(
         documentBundle.pagesHtml.match(/class="pictograms compliance-pictograms"/g),
-      ).toHaveLength(1);
-      expect(documentBundle.pagesHtml).toContain("compliance-core-no-alert");
+      ).toHaveLength(documentBundle.model.expandedLabels.length);
+      expect(documentBundle.pagesHtml).not.toContain("compliance-core-no-alert");
       expect(documentBundle.pagesHtml.match(/class="qrcode-img"/g)).toHaveLength(1);
       expect(documentBundle.model.totalPages).toBe(
         documentBundle.model.expandedLabels.length,
+      );
+      expect(documentBundle.html).toContain("continuation-page-role");
+      expect(documentBundle.html).toContain("continuation-status");
+      expect(documentBundle.html).toContain("continuation-qr-location");
+      expect(documentBundle.html).toMatch(
+        /\.continuation-keep-together-note \{[\s\S]*border: 0\.22mm solid #cbd5e1;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-statement \{[\s\S]*align-items: baseline;/,
+      );
+    });
+
+    it("makes A4 continuation pages visibly continuation-only and page one clearly a required set", () => {
+      const denseChemical = {
+        ...mockChemical,
+        cas_number: "75-21-8",
+        name_en: "Ethylene Oxide",
+        name_zh: "環氧乙烷",
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS04" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+          { code: "GHS08" },
+        ],
+        hazard_statements: Array.from({ length: 16 }, (_, index) => ({
+          code: `H${220 + index}`,
+          text_en:
+            "Dense hazard wording retained for continuation label review and visual hierarchy checks.",
+        })),
+        precautionary_statements: Array.from({ length: 32 }, (_, index) => ({
+          code: `P${260 + index}`,
+          text_en:
+            "Dense precautionary wording retained for continuation label review, handling, emergency response, storage, and disposal checks.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      const totalPages = documentBundle.model.expandedLabels.length;
+      expect(totalPages).toBeGreaterThan(1);
+      expect(documentBundle.pagesHtml).toContain(
+        "Complete label set: ",
+      );
+      expect(documentBundle.pagesHtml).toContain(
+        `${totalPages} pages - keep all pages together`,
+      );
+      expect(documentBundle.pagesHtml).toContain(
+        "class=\"continuation-only-band\"",
+      );
+      expect(documentBundle.pagesHtml).toContain("CONTINUATION ONLY");
+      expect(documentBundle.pagesHtml).toContain("Do not use this page alone");
+      expect(documentBundle.pagesHtml).toContain("Scan Page 1 for QR lookup");
+      expect(documentBundle.html).toMatch(
+        /\.continuation-only-band \{[\s\S]*background: #fff7ed;/,
+      );
+    });
+
+    it("marks code-only precautionary statements as missing wording instead of complete instructions", () => {
+      const codeOnlyChemical = {
+        ...mockChemical,
+        cas_number: "90-41-5",
+        name_en: "2-Aminobiphenyl",
+        name_zh: "2-胺基聯苯",
+        ghs_pictograms: [{ code: "GHS07" }, { code: "GHS08" }],
+        hazard_statements: [
+          { code: "H302", text_en: "Harmful if swallowed." },
+        ],
+        precautionary_statements: [
+          { code: "P203", text_en: "P203" },
+          { code: "P318", text_en: "P318" },
+        ],
+      };
+
+      const documentBundle = buildPrintDocument(
+        [codeOnlyChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.pagesHtml).toContain("statement-text-missing");
+      expect(documentBundle.pagesHtml).toContain(
+        "Wording unavailable - verify SDS before use.",
+      );
+    });
+
+    it("renders print-safe fallback copy for continuation pages and QR labels instead of raw i18n keys", () => {
+      const denseChemical = {
+        ...mockChemical,
+        cas_number: "1003-09-4",
+        name_en: "2-Bromothiophene",
+        name_zh: "2-溴噻吩",
+        ghs_pictograms: [
+          { code: "GHS02" },
+          { code: "GHS05" },
+          { code: "GHS06" },
+          { code: "GHS07" },
+        ],
+        hazard_statements: Array.from({ length: 14 }, (_, index) => ({
+          code: `H${300 + index}`,
+          text_en:
+            "This complete-primary hazard statement is intentionally long enough to require continuation pagination while remaining readable in the printed A4 output.",
+        })),
+        precautionary_statements: Array.from({ length: 34 }, (_, index) => ({
+          code: `P${300 + index}`,
+          text_en:
+            "This precautionary statement is intentionally long enough to require continuation pagination while preserving clear code alignment and readable wrapping.",
+        })),
+      };
+
+      const documentBundle = buildPrintDocument(
+        [denseChemical],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      expect(documentBundle.html).not.toMatch(
+        /\b(?:print|trust)\.[A-Za-z0-9_.]+|PRINT\.[A-Z0-9_.]+/,
+      );
+      expect(documentBundle.html).toContain("Hazard statements");
+      expect(documentBundle.html).toContain("Precautionary statements");
+      expect(documentBundle.html).toContain("Phone:");
+      expect(documentBundle.html).not.toMatch(
+        /<div\s+class="page-footer-note">/,
+      );
+      expect(documentBundle.html).toContain("Page 1 /");
+      expect(documentBundle.html).toContain("Main label");
+      expect(documentBundle.html).toContain("Final continuation");
+      expect(documentBundle.html).toContain("Keep pages together");
+      expect(documentBundle.html).toContain("QR on Page 1 only");
+      expect(documentBundle.html).toContain(
+        "GHS repeated for page matching",
+      );
+      expect(documentBundle.html).toContain(
+        "Hazard source: PubChem/SDS reference",
+      );
+      expect(documentBundle.html).toContain(
+        "Verify against SDS, supplier label, and local regulations before use.",
+      );
+      expect(documentBundle.html).toContain(
+        "QR lookup - Page 1 only",
       );
     });
 
@@ -3098,7 +3382,7 @@ describe("printLabels", () => {
       expect(documentBundle.model.expandedLabels).toHaveLength(1);
       expect(documentBundle.pagesHtml).not.toContain("label-continuation-page");
       expect(documentBundle.pagesHtml).toContain(
-        'style="font-size:6.6px;line-height:1.03"',
+        'style="font-size:9.7px;line-height:1.24"',
       );
       expect(documentBundle.pagesHtml).toContain(">H302</span>");
       expect(documentBundle.pagesHtml).toContain(">P501</span>");
@@ -3173,7 +3457,7 @@ describe("printLabels", () => {
         documentBundle.pagesHtml.match(
           /class="pictograms compliance-pictograms"/g,
         ),
-      ).toHaveLength(1);
+      ).toHaveLength(documentBundle.model.expandedLabels.length);
       expect(documentBundle.pagesHtml).toMatch(
         /<div class="compliance-alert-panel">\s*<div class="pictograms compliance-pictograms">/,
       );
@@ -3184,6 +3468,33 @@ describe("printLabels", () => {
         ".label-full-page-primary .pictograms.compliance-pictograms",
       );
       expect(documentBundle.html).toContain(
+        ".label-continuation-page.label-full-page-primary .continuation-safety-note",
+      );
+      expect(documentBundle.html).toContain(
+        ".label-full-page-primary .continuation-keep-together-note",
+      );
+      expect(documentBundle.html).toContain(
+        ".label-continuation-page.label-full-page-primary .pictograms.compliance-pictograms img",
+      );
+      expect(documentBundle.html).toContain(
+        ".label-continuation-page.label-full-page-primary .name-en",
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-continuation-page\.label-full-page-primary \.pictograms\.compliance-pictograms img \{[\s\S]*width: 17\.5mm;/,
+      );
+      expect(documentBundle.html).toContain(
+        ".label-full-page-primary .compliance-statement:nth-child(6n + 7)",
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.statement-text \{[\s\S]*max-width: 148mm;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.qrcode-caption \{[\s\S]*font-size: 9px;[\s\S]*font-weight: 850;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.page-footer-note \{[\s\S]*font-size: 8.6px;[\s\S]*font-weight: 650;/,
+      );
+      expect(documentBundle.html).toContain(
         "justify-content: flex-start;",
       );
       expect(documentBundle.html).toContain(
@@ -3191,6 +3502,38 @@ describe("printLabels", () => {
       );
       expect(documentBundle.html).toContain("font-size: 26px;");
       expect(documentBundle.html).toContain("line-height: 1.18;");
+    });
+
+    it("starts A4 continuation precautions on page one when rendered space is still available", () => {
+      const documentBundle = buildPrintDocument(
+        [PRINT_QA_ETHYLENE_OXIDE],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          colorMode: "color",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels.length).toBeGreaterThan(1);
+      const [firstPage, secondPage] = documentBundle.model.expandedLabels;
+      expect(firstPage.continuation.hazardStatements).toHaveLength(
+        PRINT_QA_ETHYLENE_OXIDE.hazard_statements.length,
+      );
+      expect(
+        firstPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
+      expect(secondPage.continuation.hazardStatements).toHaveLength(0);
+      expect(
+        documentBundle.model.expandedLabels[
+          documentBundle.model.expandedLabels.length - 1
+        ].continuation.precautionaryStatements.length,
+      ).toBeGreaterThanOrEqual(8);
     });
 
     it("packs moderate H/P content onto one A4 page without CSS column balancing", () => {
@@ -3271,6 +3614,43 @@ describe("printLabels", () => {
       expect(documentBundle.html).toMatch(
         /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*grid-template-columns:/,
       );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-hazard-list \.compliance-statement \{[\s\S]*var\(--hazard-code-min, 9mm\)[\s\S]*var\(--hazard-code-max, 12mm\)/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-precaution-list \.compliance-statement \{[\s\S]*var\(--precaution-code-min, 18mm\)[\s\S]*var\(--precaution-code-max, 20mm\)/,
+      );
+    });
+
+    it("keeps the Bromothiophene A4 packing regression as a balanced continuation set when one page would clip", () => {
+      const documentBundle = buildPrintDocument(
+        [PRINT_QA_BROMOTHIOPHENE],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          colorMode: "color",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.model.expandedLabels).toHaveLength(2);
+      const [firstPage, finalPage] = documentBundle.model.expandedLabels;
+      expect(firstPage.continuation.hazardStatements).toHaveLength(8);
+      expect(
+        firstPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThan(0);
+      expect(finalPage.continuation.hazardStatements).toHaveLength(0);
+      expect(
+        finalPage.continuation.precautionaryStatements.length,
+      ).toBeGreaterThanOrEqual(8);
+      expect(documentBundle.pagesHtml).toContain("label-continuation-page");
+      expect(documentBundle.pagesHtml).toContain(">H330</span>");
+      expect(documentBundle.pagesHtml).toContain(">P501</span>");
     });
 
     it("keeps retry-fitted A4 H/P sections together when they still fit one page", () => {
@@ -3519,6 +3899,11 @@ describe("printLabels", () => {
       expect(labelPreview.fragmentHtml).toContain(
         'data-continuation-page="2"',
       );
+      expect(labelPreview.fragmentHtml).toContain(
+        "GHS repeated for page matching",
+      );
+      expect(labelPreview.fragmentHtml).toContain('alt="GHS08"');
+      expect(labelPreview.fragmentHtml).not.toContain("qrcode-img");
       expect(labelPreview.fragmentHtml).not.toContain(
         'data-continuation-page="1"',
       );
@@ -3543,7 +3928,7 @@ describe("printLabels", () => {
 
       expect(preview.fragmentHtml).toContain("label-letter-primary");
       expect(preview.html).toContain("size: Letter");
-      expect(preview.html).toContain("width: 29.4mm");
+      expect(preview.html).toContain("width: 20.9mm");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
       expect(preview.html).toContain("preview-label-scaler");
@@ -3708,7 +4093,7 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).not.toContain('<div class="custom-fields">');
       expect(html).toContain("profile-block-missing");
-      expect(html).toContain("print.supplierMissing");
+      expect(html).toContain("Responsible lab / supplier information missing");
     });
 
     it("renders only non-empty fields", () => {
@@ -3758,7 +4143,7 @@ describe("printLabels", () => {
         { labName: "", date: "", batchNumber: "X-99" },
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain("print.batch");
+      expect(html).toContain("Case");
       expect(html).toContain("X-99");
     });
 
@@ -4124,6 +4509,29 @@ describe("printLabels", () => {
       expect(html).toContain("P210");
       expect(html).toContain("遠離熱源 / Keep away from heat");
     });
+
+    it("normalizes placeholder Chinese signal words before printing bilingual labels", () => {
+      const placeholderSignalChemical = {
+        ...mockChemical,
+        signal_word: "Danger",
+        signal_word_zh: "Danger ZH",
+      };
+
+      printLabels(
+        [placeholderSignalChemical],
+        {
+          size: "large",
+          template: "full",
+          orientation: "portrait",
+          nameDisplay: "both",
+        },
+        {},
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      expect(html).toContain("危險 / Danger");
+      expect(html).not.toContain("Danger ZH");
+    });
   });
 
   describe("label quantities", () => {
@@ -4374,7 +4782,7 @@ describe("printLabels", () => {
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("compliance-hazard-panel");
       expect(html).toContain("compliance-precaution-panel");
-      expect(html).toContain("print.precautionaryStatementsLabel");
+      expect(html).toContain("Precautionary statements");
     });
 
     it("standard container-front template omits P-codes even when source content has them", () => {
@@ -4437,7 +4845,7 @@ describe("printLabels", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain("compliance-precaution-panel");
-      expect(html).toContain("print.noPrecautionaryStatement");
+      expect(html).toContain("No precautionary statements");
       expect(html).not.toMatch(/<div\s+class="precaution-item-full/);
     });
 
@@ -4734,8 +5142,7 @@ describe("print page footer disclaimer", () => {
     );
     const html = mockIframeDoc.write.mock.calls[0][0];
     expect(html).toMatch(/<div\s+class="page-footer-note">/);
-    // The i18n key is rendered (mock returns it verbatim)
-    expect(html).toContain("trust.printFooter");
+    expect(html).toContain("For reference only");
   });
 
   it("footer note is emitted once per page", () => {
@@ -4769,6 +5176,52 @@ describe("print page footer disclaimer", () => {
     expect(footerMatch).not.toBeNull();
     // The content between the tags is the escaped i18n key; no `<` inside
     expect(footerMatch[1]).not.toMatch(/</);
+  });
+
+  it("keeps complete A4 primary trust copy inside the printed label instead of an external page footer", () => {
+    const documentBundle = buildPrintDocument(
+      [mockChemical],
+      {
+        stockPreset: "a4-primary",
+        template: "full",
+        labelPurpose: "shipping",
+        nameDisplay: "both",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+    );
+
+    expect(documentBundle.pagesHtml).not.toMatch(
+      /<div\s+class="page-footer-note">/,
+    );
+    expect(documentBundle.pagesHtml).toContain("compliance-footer-metadata");
+    expect(documentBundle.pagesHtml).toContain(
+      "Verify against SDS, supplier label, and local regulations before use.",
+    );
+  });
+
+  it("also removes the external page footer from complete A4 sheet preview", () => {
+    const preview = buildPrintPreviewDocument(
+      [mockChemical],
+      {
+        stockPreset: "a4-primary",
+        template: "full",
+        labelPurpose: "shipping",
+        nameDisplay: "both",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      { mode: "sheet" },
+    );
+
+    expect(preview.fragmentHtml).not.toMatch(
+      /<div\s+class="page-footer-note">/,
+    );
+    expect(preview.fragmentHtml).toContain("compliance-footer-metadata");
   });
 });
 
@@ -4828,7 +5281,20 @@ describe("prepared solution print rendering", () => {
   describe("full template", () => {
     it("renders prepared badge, meta rows, and the full note", () => {
       printLabels(
-        [makePrepared()],
+        [
+          makePrepared({
+            preparedSolution: {
+              concentration: "10% (v/v)",
+              solvent: "Water",
+              parentCas: mockChemical.cas_number,
+              parentNameEn: mockChemical.name_en,
+              parentNameZh: mockChemical.name_zh,
+              preparedBy: "QA Analyst",
+              preparedDate: "2026-06-20",
+              expiryDate: "2026-07-20",
+            },
+          }),
+        ],
         { size: "medium", template: "full", orientation: "portrait" },
         {},
       );
@@ -4838,6 +5304,77 @@ describe("prepared solution print rendering", () => {
       expect(html).toMatch(/<div\s+class="prepared-note"/);
       expect(html).toContain("10% (v/v)");
       expect(html).toContain("Water");
+    });
+
+    it("renders prepared A4 UI labels in zh-TW when an explicit locale is provided", () => {
+      const documentBundle = buildPrintDocument(
+        [
+          makePrepared({
+            preparedSolution: {
+              concentration: "10% (v/v)",
+              solvent: "Water",
+              parentCas: mockChemical.cas_number,
+              parentNameEn: mockChemical.name_en,
+              parentNameZh: mockChemical.name_zh,
+              preparedBy: "QA Analyst",
+            },
+          }),
+        ],
+        {
+          stockPreset: "a4-primary",
+          template: "full",
+          labelPurpose: "shipping",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+        { locale: "zh-TW" },
+      );
+
+      const html = documentBundle.html;
+      expect(html).toContain("配製稀釋液");
+      expect(html).toContain("prepared-identity-block");
+      expect(html).toContain("母化學品危害資料");
+      expect(html).toContain("prepared-solution-identity");
+      expect(html).toContain("prepared-parent-warning");
+      expect(html).toContain("濃度");
+      expect(html).toContain("溶劑");
+      expect(html).toContain("配製人");
+      expect(html).toContain("危害說明");
+      expect(html).toContain("使用前請對照 SDS、供應商標示與當地法規。");
+      expect(html).not.toContain("Prepared solution");
+      expect(html).not.toContain("Concentration");
+      expect(html).not.toContain("Solvent");
+      expect(html).not.toContain("Hazard statements");
+      expect(html).not.toContain("For reference only");
+    });
+
+    it("places the prepared solution warning before A4 hazard statements", () => {
+      printLabels(
+        [makePrepared()],
+        {
+          stockPreset: "a4-primary",
+          template: "full",
+          labelPurpose: "shipping",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      const html = mockIframeDoc.write.mock.calls[0][0];
+      const bodyHtml = html.slice(html.indexOf("<body"));
+      expect(bodyHtml.indexOf("prepared-parent-warning")).toBeGreaterThan(-1);
+      expect(bodyHtml.indexOf("prepared-parent-warning")).toBeLessThan(
+        bodyHtml.indexOf("compliance-core"),
+      );
+      expect(bodyHtml.indexOf("prepared-parent-warning")).toBeLessThan(
+        bodyHtml.indexOf("compliance-hazard-panel"),
+      );
     });
 
     it("applies label-prepared class so CSS scoping is possible", () => {
@@ -4890,7 +5427,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toMatch(/<div\s+class="meta-ribbon"/);
-      expect(html).toContain("print.preparedShort");
+      expect(html).toContain("Prepared");
       expect(html).toContain("10% (v/v)");
       expect(html).toContain("Water");
       expect(html).not.toMatch(/<div\s+class="prepared-note"/);

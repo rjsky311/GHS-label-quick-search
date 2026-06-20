@@ -99,10 +99,23 @@ export function getLocalizedStatementText(statement, languageLike = "zh") {
 
 export function getLocalizedSignalWord(classification, languageLike = "zh") {
   const locale = resolveDisplayLocale(languageLike);
+  const englishSignal = classification?.signal_word || "";
+  const chineseSignal = classification?.signal_word_zh || "";
+
   if (locale === "en") {
-    return classification?.signal_word || classification?.signal_word_zh || "";
+    return englishSignal || chineseSignal || "";
   }
-  return classification?.signal_word_zh || classification?.signal_word || "";
+
+  const normalizedChineseSignal = String(chineseSignal || "").trim();
+  const normalizedEnglishSignal = String(englishSignal || "").trim();
+  const isPlaceholderChineseSignal =
+    /^(danger|warning)\s+zh$/i.test(normalizedChineseSignal);
+  if (normalizedChineseSignal && !isPlaceholderChineseSignal) {
+    return normalizedChineseSignal;
+  }
+  if (/^danger$/i.test(normalizedEnglishSignal)) return "危險";
+  if (/^warning$/i.test(normalizedEnglishSignal)) return "警告";
+  return normalizedChineseSignal || normalizedEnglishSignal || "";
 }
 
 export function getLocalizedPictogramName(pictogram, languageLike = "zh") {

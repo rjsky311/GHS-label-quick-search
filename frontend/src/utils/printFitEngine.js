@@ -166,6 +166,8 @@ const deriveFullPageContinuationCapacity = (layout = {}, legacy = {}) => {
   );
   const lineCharacters = getFullPageLineCharacters(layout);
   const densityFactor = isLetter ? 0.29 : 0.3;
+  const readabilityDensityFactor = isLetter ? 0.3 : 0.34;
+  const continuationReadabilityDensityFactor = isLetter ? 0.36 : 0.42;
   const derivedFirstPageLineUnits = Math.round(
     clampMetric(
       (firstPageTextHeightMm / lineHeightMm) * columns * densityFactor,
@@ -173,25 +175,39 @@ const deriveFullPageContinuationCapacity = (layout = {}, legacy = {}) => {
       isLetter ? 78 : 86,
     ),
   );
-  const firstPageLineUnits = legacy.firstPageLineUnits;
-  const continuationPageLineUnits = Math.round(
+  const firstPageLineUnits = Math.round(
     clampMetric(
-      (sharedTextHeightMm / lineHeightMm) * columns * (densityFactor + 0.04),
-      legacy.continuationPageLineUnits || 82,
-      isLetter ? 104 : 118,
+      (firstPageTextHeightMm / lineHeightMm) *
+        columns *
+        readabilityDensityFactor,
+      isLetter ? 42 : 48,
+      isLetter ? 66 : 72,
     ),
   );
-  const splitLineUnits = legacy.splitLineUnits;
-  const firstPageStatementCount = legacy.firstPageStatementCount;
-  const continuationPageStatementCount = Math.max(
-    legacy.continuationPageStatementCount || 0,
-    Math.floor(continuationPageLineUnits * 0.68),
+  const continuationPageLineUnits = Math.round(
+    clampMetric(
+      (sharedTextHeightMm / lineHeightMm) *
+        columns *
+        continuationReadabilityDensityFactor,
+      isLetter ? 50 : 58,
+      isLetter ? 78 : 86,
+    ),
+  );
+  const splitLineUnits = Math.max(legacy.splitLineUnits, firstPageLineUnits);
+  const firstPageStatementCount = Math.min(
+    legacy.firstPageStatementCount,
+    Math.floor(firstPageLineUnits * 0.72),
+  );
+  const continuationPageStatementCount = Math.min(
+    legacy.continuationPageStatementCount,
+    Math.floor(continuationPageLineUnits * 0.72),
   );
   const splitStatementCount = legacy.splitStatementCount;
-  const firstPageTextWeight = legacy.firstPageTextWeight;
-  const continuationPageTextWeight = Math.max(
-    legacy.continuationPageTextWeight || 0,
-    Math.round(continuationPageLineUnits * lineCharacters * 1.02),
+  const firstPageTextWeight = Math.round(firstPageLineUnits * lineCharacters * 0.72);
+  const continuationPageTextWeightCeiling = isLetter ? 7200 : 8200;
+  const continuationPageTextWeight = Math.min(
+    Math.round(continuationPageLineUnits * lineCharacters * 0.72),
+    continuationPageTextWeightCeiling,
   );
   const splitTextWeight = legacy.splitTextWeight;
 
@@ -262,6 +278,7 @@ const deriveFullPageContinuationCapacity = (layout = {}, legacy = {}) => {
       continuationTextHeightMm: roundMetric(sharedTextHeightMm),
       firstPageMediaReserveMm: roundMetric(firstPageMediaReserveMm),
       derivedFirstPageLineUnits,
+      continuationPageTextWeightCeiling,
     },
   };
 };
@@ -645,6 +662,7 @@ const getStatementLineCharacters = (layout = {}) =>
 export const getMaxCompleteLineUnits = (layout = {}) => {
   if (isFullPageLikeLayout(layout)) {
     return (
+      getCompletePrimaryContinuationCapacity(layout).splitLineUnits ||
       getCompletePrimaryContinuationCapacity(layout).firstPageLineUnits ||
       getCompletePrimaryContinuationCapacity(layout).pageLineUnits ||
       Infinity

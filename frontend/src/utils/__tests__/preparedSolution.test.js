@@ -692,6 +692,20 @@ describe("formatPreparedDisplayName", () => {
     ).toBe("10% Ethanol in Water");
   });
 
+  it("uses zh-TW wording and prefers Chinese parent name when locale is zh-TW", () => {
+    expect(
+      formatPreparedDisplayName(
+        {
+          concentration: "10%",
+          solvent: "水",
+          parentNameEn: "Ethanol",
+          parentNameZh: "乙醇",
+        },
+        { locale: "zh-TW" },
+      )
+    ).toBe("10% 乙醇，以水配製");
+  });
+
   it("falls back to parentNameZh when parentNameEn is missing", () => {
     expect(
       formatPreparedDisplayName({

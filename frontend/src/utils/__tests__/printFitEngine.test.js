@@ -340,6 +340,7 @@ describe("printFitEngine", () => {
     expect(a4.continuationPageLineUnits).toBeGreaterThan(
       a4.firstPageLineUnits,
     );
+    expect(a4.continuationPageTextWeight).toBeLessThan(10000);
     expect(a4.continuationPageLineUnits).toBeGreaterThanOrEqual(
       letter.continuationPageLineUnits,
     );

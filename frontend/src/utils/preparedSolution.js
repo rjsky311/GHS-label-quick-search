@@ -272,7 +272,7 @@ export function normalizePreparedPresetRecord(record) {
  * @param {Object} input  Either a prepared item or a recent/preset record.
  * @returns {string}      Formatted display name, or "" when unavailable.
  */
-export function formatPreparedDisplayName(input) {
+export function formatPreparedDisplayName(input, options = {}) {
   if (!input) return "";
   // Unify the two shapes: prepared items carry their workflow inputs
   // under `preparedSolution`, whereas recents/presets are flat.
@@ -289,13 +289,26 @@ export function formatPreparedDisplayName(input) {
   // available we still produce a useful "concentration solute in
   // solvent" string by leaving solute out — "10% in Water" is less
   // informative but honest about what we know.
-  const parentName =
-    src.parentNameEn ||
-    src.parentNameZh ||
-    input.name_en ||
-    input.name_zh ||
-    "";
+  const isTraditionalChinese = String(options.locale || "")
+    .toLowerCase()
+    .startsWith("zh");
+  const parentName = isTraditionalChinese
+    ? src.parentNameZh ||
+      input.name_zh ||
+      src.parentNameEn ||
+      input.name_en ||
+      ""
+    : src.parentNameEn ||
+      src.parentNameZh ||
+      input.name_en ||
+      input.name_zh ||
+      "";
   const parent = parentName.trim();
+  if (isTraditionalChinese) {
+    return parent
+      ? `${concentration} ${parent}，以${solvent}配製`
+      : `${concentration}，以${solvent}配製`;
+  }
   if (!parent) return `${concentration} in ${solvent}`;
   return `${concentration} ${parent} in ${solvent}`;
 }
