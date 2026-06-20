@@ -1,14 +1,16 @@
 # QA Fixtures
 
-This folder stores user-provided, review-only input files for repeatable QA.
+This folder stores sanitized, review-only input files for repeatable QA.
 
 ## organic-inventory-2026-06-14.csv
 
-- Source: user-provided organic chemical inventory CSV from 2026-06-14.
+- Source: synthetic inventory-shaped CSV derived from the 2026-06-14 QA
+  need. It preserves parser and layout stress characteristics without
+  publishing real inventory rows.
 - Purpose: manual and scripted QA for batch lookup, batch print, export handoff,
   and print-layout stress cases.
-- Current sampler scan: 1,103 CSV rows, 394 valid CAS-format rows,
-  342 unique CAS values, 40 duplicate-CAS groups, and 7 invalid CAS rows.
+- Current sampler scan: 13 CSV rows, 10 valid CAS-format rows, 9 unique CAS
+  values, 1 duplicate-CAS group, and 2 invalid CAS rows.
 - Boundary: this file is test evidence only. Do not treat names or Chinese names
   in this inventory as approved public dictionary data.
 

@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-06-15T00:45:51+08:00",
+  "generatedAt": "2026-06-20T16:55:05+08:00",
   "sourceName": "qa/fixtures/organic-inventory-2026-06-14.csv",
   "boundary": "review-only: inventory names are QA evidence and are not approved dictionary data",
   "summary": {
-    "totalCsvRows": 1103,
+    "totalCsvRows": 13,
     "headerRowIndex": 0,
-    "validRecordCount": 394,
-    "uniqueCasCount": 342,
-    "duplicateCasCount": 40,
-    "invalidCasRowCount": 7
+    "validRecordCount": 10,
+    "uniqueCasCount": 9,
+    "duplicateCasCount": 1,
+    "invalidCasRowCount": 2
   },
   "selectionRules": [
     "Use inventory records for source-shape, CAS parsing, long-name, duplicate, and batch-boundary coverage.",
@@ -19,14 +19,14 @@
     {
       "id": "inventory-first-valid",
       "reason": "First valid inventory row for smoke testing the source shape.",
-      "sourceRow": 3,
+      "sourceRow": 2,
       "cas": "90-41-5",
       "rawCas": "90-41-5",
-      "name": "2-Aminobiphenyl",
-      "location": "有機",
-      "vendor": "ACROS",
+      "name": "2-Aminobiphenyl layout sample",
+      "location": "Synthetic Cabinet A",
+      "vendor": "Synthetic Vendor A",
       "quantity": "1",
-      "nameLength": 15,
+      "nameLength": 29,
       "recommendedOutputs": [
         "complete",
         "qrSupplement",
@@ -36,14 +36,14 @@
     {
       "id": "inventory-longest-name",
       "reason": "Longest inventory name, useful for small-label identity fit.",
-      "sourceRow": 236,
-      "cas": "127318-97-2",
-      "rawCas": "127318-97-2",
-      "name": "4-Ethyl-1,4,7,8-tetrahydro-3H,10H-spiro[pyrano[3,4-f]indolizine-6,2'-[1,3]dioxolane]-3,10-dione",
-      "location": "有機",
-      "vendor": "Lumtec",
+      "sourceRow": 4,
+      "cas": "123456-78-9",
+      "rawCas": "123456-78-9",
+      "name": "Very Long Synthetic Inventory Name For Compact Label Identity Fit Regression With Multiple Hyphenated Segments And Parenthetical Notes",
+      "location": "Synthetic Cabinet C",
+      "vendor": "Synthetic Vendor C",
       "quantity": "1",
-      "nameLength": 95,
+      "nameLength": 134,
       "recommendedOutputs": [
         "complete",
         "qrSupplement",
@@ -53,14 +53,14 @@
     {
       "id": "inventory-short-name",
       "reason": "Short name baseline, useful for spotting unnecessary shrinkage.",
-      "sourceRow": 205,
-      "cas": "2537-48-6",
-      "rawCas": "2537-48-6",
-      "name": "Dieth",
-      "location": "液體",
-      "vendor": "Combi-Blocks",
-      "quantity": "1",
-      "nameLength": 5,
+      "sourceRow": 7,
+      "cas": "7732-18-5",
+      "rawCas": "7732-18-5",
+      "name": "Water short name baseline",
+      "location": "Synthetic Fridge A",
+      "vendor": "Synthetic Vendor E",
+      "quantity": "4",
+      "nameLength": 25,
       "recommendedOutputs": [
         "complete",
         "qrSupplement",
@@ -70,14 +70,14 @@
     {
       "id": "inventory-duplicate-cas",
       "reason": "Duplicate CAS row, useful for batch dedupe and page-count checks.",
-      "sourceRow": 28,
-      "cas": "90-90-4",
-      "rawCas": "90-90-4",
-      "name": "4-Bromobenzophenone",
-      "location": "有機",
-      "vendor": "ACROS",
-      "quantity": "1",
-      "nameLength": 19,
+      "sourceRow": 6,
+      "cas": "67-64-1",
+      "rawCas": "67-64-1",
+      "name": "Acetone duplicate bottle B",
+      "location": "Synthetic Cabinet D",
+      "vendor": "Synthetic Vendor D",
+      "quantity": "3",
+      "nameLength": 26,
       "recommendedOutputs": [
         "complete",
         "qrSupplement",
@@ -87,14 +87,14 @@
     {
       "id": "inventory-last-valid",
       "reason": "Last valid row, useful for parser boundary checks.",
-      "sourceRow": 423,
-      "cas": "564483-18-7",
-      "rawCas": "564483-18-7",
-      "name": "Xphos",
-      "location": "防潮箱",
-      "vendor": "Lumtec",
+      "sourceRow": 13,
+      "cas": "222222-22-2",
+      "rawCas": "222222-22-2",
+      "name": "Last valid parser boundary sample",
+      "location": "Synthetic Shelf D",
+      "vendor": "Synthetic Vendor K",
       "quantity": "1",
-      "nameLength": 5,
+      "nameLength": 33,
       "recommendedOutputs": [
         "complete",
         "qrSupplement",
@@ -104,33 +104,15 @@
   ],
   "invalidCasSamples": [
     {
-      "sourceRow": 79,
+      "sourceRow": 8,
+      "rawCas": "#VALUE!",
+      "name": "Broken CAS row for parser coverage",
+      "reason": "Invalid CAS-like cell from inventory source."
+    },
+    {
+      "sourceRow": 9,
       "rawCas": "344-04-07",
-      "name": "Bromopentafluorobenzene",
-      "reason": "Invalid CAS-like cell from inventory source."
-    },
-    {
-      "sourceRow": 179,
-      "rawCas": "765-03-07",
-      "name": "1-Dodecyne",
-      "reason": "Invalid CAS-like cell from inventory source."
-    },
-    {
-      "sourceRow": 192,
-      "rawCas": "7333-08-06",
-      "name": "1,2-Di-3-thienyl-1,2-ethanedione",
-      "reason": "Invalid CAS-like cell from inventory source."
-    },
-    {
-      "sourceRow": 326,
-      "rawCas": "204-695-3",
-      "name": "1-Octadecylamine",
-      "reason": "Invalid CAS-like cell from inventory source."
-    },
-    {
-      "sourceRow": 345,
-      "rawCas": "no",
-      "name": "paraformaldehyde",
+      "name": "Malformed hyphen CAS row",
       "reason": "Invalid CAS-like cell from inventory source."
     }
   ],

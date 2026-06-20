@@ -46,6 +46,10 @@ tmp/
 qa/evidence/tmp-*/
 qa/evidence/**/pdfs/
 qa/evidence/**/rendered-pdf/
+qa/evidence/**/rendered/
+qa/evidence/**/a4-html-*/
+qa/evidence/**/a4-pdf-*/
+qa/evidence/**/a4-png-*/
 
 # System files
 .DS_Store

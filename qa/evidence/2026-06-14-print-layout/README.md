@@ -1,14 +1,15 @@
 # 2026-06-14 Print Layout Evidence
 
-Evidence captured from manual production testing with
-`qa/fixtures/organic-inventory-2026-06-14.csv`.
+Evidence captured from manual production testing with the inventory-shaped QA
+fixture that now lives at `qa/fixtures/organic-inventory-2026-06-14.csv`.
+The fixture is synthetic and retained only for parser/layout coverage.
 
 ## Files
 
-- `ghs-label-identification-small-batch.pdf`: identification small-label PDF.
-  It is A4 portrait, 4 pages, 20 labels per page.
-- `ghs-label-qr-small-batch.pdf`: QR small-label PDF. It is A4 landscape,
-  7 pages, 12 labels per page.
+The original batch PDF artifacts were removed during the 2026-06-20 public
+repository safety pass because they contained historical inventory-derived label
+content. Keep this directory as the design-decision note only; regenerate future
+print evidence from sanitized fixtures or synthetic cases.
 
 ## Observations
 
@@ -24,6 +25,6 @@ Evidence captured from manual production testing with
 
 ## Boundary
 
-These PDFs are output evidence, not product source. Keep printed GHS labels free
-of ads or unrelated promotional copy, and verify final safety labels against
-SDS, supplier labels, and local regulations.
+Historical print artifacts are output evidence, not product source. Keep printed
+GHS labels free of ads or unrelated promotional copy, and verify final safety
+labels against SDS, supplier labels, and local regulations.

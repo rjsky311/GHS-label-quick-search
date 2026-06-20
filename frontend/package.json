@@ -65,6 +65,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "qa:bundle-budget": "node scripts/check-bundle-budget.mjs",
+    "qa:github-resource": "node scripts/check-github-resource-usage.mjs",
     "qa:workbench": "node scripts/check-experiment-notebook-workbench.mjs",
     "test:docs": "node scripts/check-docs-drift.mjs",
     "test:i18n": "node scripts/check-i18n-parity.mjs",

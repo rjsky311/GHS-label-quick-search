@@ -13,7 +13,9 @@ before choosing the next autonomous product slice.
 - Stack: React 19 + Tailwind CSS + Radix UI + Vite frontend; FastAPI +
   Python 3.11 backend.
 - **Current Version**: v1.10.0. Do not version-bump unless explicitly asked.
-- GitHub: `rjsky311/GHS-label-quick-search` (private).
+- GitHub: `rjsky311/GHS-label-quick-search` is intentionally public. Public
+  visibility keeps the website's GitHub Issues feedback links usable for
+  outside users.
 - Deployment: Zeabur auto-deploys from `main`.
 - Frontend: https://ghs-frontend.zeabur.app
 - Backend: https://ghs-backend.zeabur.app
@@ -139,6 +141,7 @@ npm run test:i18n
 npm run test:docs
 npm run build
 npm run qa:bundle-budget
+npm run qa:github-resource
 npm run test:print-contract
 npm run qa:print-pdf
 npm run qa:production-health

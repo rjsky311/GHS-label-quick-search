@@ -127,6 +127,14 @@ Production:
 
 - Frontend: https://ghs-frontend.zeabur.app
 - Backend: https://ghs-backend.zeabur.app
+- GitHub repository visibility is intentionally public so the website's
+  GitHub Issues feedback links remain usable for outside users.
+- Public repository safety pass on 2026-06-20 replaced the tracked inventory
+  fixture with synthetic inventory-shaped QA data and removed historical
+  inventory-derived batch PDF artifacts from the current tree. The old
+  inventory-derived files still exist in git history at commit `a080588`; do
+  not rewrite history unless the owner explicitly opens a coordinated
+  history-purge slice.
 - Zeabur auto-deploys on push to `main`.
 - Zeabur's live service names are `ghs-frontend` and `ghs-backend`. The
   `zeabur.yaml` service names now match those live names. The frontend service
@@ -204,6 +212,10 @@ Current validation gates:
 - Docs-only: `git diff --check`
 - Docs drift: `npm run test:docs` from `frontend/`
 - Frontend: `npm test -- --runInBand`, `npm run test:i18n`, `npm run build`
+- GitHub resource patrol: `npm run qa:github-resource` from `frontend/`
+  reports repository disk usage, Actions artifacts, Actions caches, and
+  visibility. Public visibility is the default expected state; override
+  `GITHUB_RESOURCE_EXPECTED_VISIBILITY` only if the product decision changes.
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production availability and freshness: `npm run qa:production-health`
