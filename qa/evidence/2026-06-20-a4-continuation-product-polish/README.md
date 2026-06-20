@@ -86,3 +86,25 @@ Production handoff hotfix:
 - The fix keeps true clipping blockers in place through
   `required-name-en-clipped`, `required-name-zh-clipped`, and related required
   identity checks.
+
+Production QA gate follow-up:
+
+- Full production product QA then exposed two stale QA expectations:
+  - A4/Letter continuation preview checks still expected complete-label
+    continuation pages to have zero repeated GHS pictograms. Current product
+    output intentionally repeats the same GHS pictograms on continuation pages
+    so pages can be matched and safety communication stays visible.
+  - Prepared-solution A4 preview checks only recognized the older
+    `.prepared-badge` marker and used an 18 px full-page Fit-preview pictogram
+    threshold. Current full-page prepared labels use
+    `.prepared-solution-identity`, and full-page Fit preview thresholds should
+    verify visibility rather than physical print size.
+- Updated production QA scripts now require repeated continuation pictograms
+  for complete primary labels, recognize the full-page prepared identity
+  marker, and keep physical print size enforcement in PDF/print-contract QA.
+- Verified with:
+  - `node --check frontend/scripts/check-production-print-handoff.mjs`
+  - `node --check frontend/scripts/check-production-prepared-print.mjs`
+  - focused `npm run qa:production-handoff` for A4/Letter continuation cases
+  - focused `npm run qa:production-prepared`
+  - full `npm run qa:production-product`

@@ -100,7 +100,7 @@ const PREPARED_CASES = Object.freeze([
     expectedTemplate: "full",
     expectedHasQr: true,
     expectedHasPreparedBadge: true,
-    expectedMinPictogramSidePx: 18,
+    expectedMinPictogramSidePx: 15,
     expectedPreparedTexts: [
       PREPARED_FORM.concentration,
       PREPARED_FORM.solvent,
@@ -726,7 +726,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           })),
           ...Array.from(
             document.querySelectorAll(
-              ".meta-chip-cas, .signal, .prepared-badge, .meta-chip-prepared-detail",
+              ".meta-chip-cas, .signal, .prepared-badge, .prepared-solution-identity, .meta-chip-prepared-detail",
             ),
           ).map((element, index) => ({
             element,
@@ -781,7 +781,9 @@ const inspectPreviewFrame = async (page, testCase) => {
           normalizedBodyText.includes(normalized(text)),
         ),
         hasPreparedBadge:
-          document.querySelectorAll(".prepared-badge, .meta-chip-prepared")
+          document.querySelectorAll(
+            ".prepared-badge, .meta-chip-prepared, .prepared-solution-identity",
+          )
             .length > 0,
         hasCas: normalizedBodyText.includes("7647-01-0"),
         labelVisible: Boolean(

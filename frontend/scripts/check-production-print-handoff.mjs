@@ -1461,18 +1461,19 @@ const evaluateCase = ({ testCase, status, evidence }) => {
     const nextPreviewPictograms = new Set(nextPreview.pictogramCodes || []);
     const nextClippedCriticalElements =
       nextPreview.clippedCriticalElements || [];
-    const expectsContinuationWithoutRepeatedPictograms =
+    const expectsContinuationRepeatedPictograms =
       testCase.expectedLabelKind === "complete-primary" &&
-      ["a4-primary", "letter-primary"].includes(
-        testCase.expectedStockPreset || "",
-      );
+      (testCase.expectedPictograms || []).length > 0;
     assert("preview-page-controls", evidence.previewPageControlsVisible === true);
     assert("preview-next-page-changes", evidence.nextPreviewPageChanged === true);
     assert("preview-next-label-visible", nextPreview.labelVisible === true);
     assert(
       "preview-next-page-pictograms",
-      expectsContinuationWithoutRepeatedPictograms
-        ? nextPreviewPictograms.size === 0
+      expectsContinuationRepeatedPictograms
+        ? sameMembers(
+            [...nextPreviewPictograms],
+            testCase.expectedPictograms || [],
+          )
         : nextPreviewPictograms.size > 0,
     );
     assert(
