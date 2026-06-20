@@ -185,29 +185,30 @@ const PRINT_TEXT_FALLBACKS = {
     "print.noHazardLabel": "無危害標示",
     "print.noHazardStatement": "無危害說明",
     "print.noPrecautionaryStatement": "無預防措施說明",
-    "print.hazardStatementsLabel": "危害說明",
-    "print.precautionaryStatementsLabel": "預防措施",
+    "print.hazardStatementsLabel": "危害說明 / Hazard statements",
+    "print.precautionaryStatementsLabel": "預防措施 / Precautionary statements",
     "print.scanForDetail": "掃碼查看詳情",
-    "print.qrLookupCaption": "掃描開啟此化學品查詢頁",
-    "print.qrLookupPageOneCaption": "QR 查詢碼 - 僅第 1 頁",
+    "print.qrLookupCaption":
+      "掃描開啟此化學品查詢頁 / Scan to open this chemical lookup",
+    "print.qrLookupPageOneCaption": "QR 查詢碼 - 僅第 1 頁 / QR lookup - Page 1 only",
     "print.qrSupplementNotice":
       "QR 補充標籤 - 使用前請對照 SDS / 主要標籤確認。",
     "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
     "print.moreHazardsShort": "另有 {{count}} 項危害",
     "print.morePrecautionary": "另有 {{count}} 項",
-    "print.preparedSolution": "配製稀釋液",
-    "print.preparedShort": "稀釋液",
-    "print.concentration": "濃度",
-    "print.concentrationShort": "濃度",
-    "print.solvent": "溶劑",
-    "print.solventShort": "溶劑",
+    "print.preparedSolution": "配製溶液 / Prepared solution",
+    "print.preparedShort": "配製 / Prepared",
+    "print.concentration": "濃度 / Concentration",
+    "print.concentrationShort": "濃度 / Conc.",
+    "print.solvent": "溶劑 / Solvent",
+    "print.solventShort": "溶劑 / Solv.",
     "print.preparedNote":
-      "此為配製稀釋液 - 危害資料沿用母化學品。實際混合物分類可能不同，使用前請以官方安全資料表（SDS）為準。",
+      "此為配製溶液 / Prepared solution - 危害資料沿用母化學品；實際混合物分類可能不同。使用前請以官方安全資料表（SDS）為準 / Hazard data is copied from the parent chemical; verify against the official SDS before use.",
     "print.preparedParentWarning":
-      "母化學品危害資料 - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準。",
-    "print.preparedBy": "配製人",
-    "print.preparedDate": "配製日期",
-    "print.expiryDate": "有效期限",
+      "母化學品危害資料 / Parent chemical hazard data - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use.",
+    "print.preparedBy": "配製人 / Prepared by",
+    "print.preparedDate": "配製日期 / Prepared date",
+    "print.expiryDate": "有效期限 / Expiry date",
     "print.pageNumber": "第 {{current}} / {{total}} 頁",
     "print.batch": "案件",
     "print.profilePhone": "電話",
@@ -250,9 +251,9 @@ const PRINT_TEXT_FALLBACKS = {
     "print.statementWordingUnavailable":
       "尚無完整文字 - 使用前請核對 SDS。",
     "print.footerHazardSource":
-      "危害來源：PubChem/SDS 參考",
+      "參考資料：PubChem/SDS / Reference data: PubChem/SDS",
     "print.footerVerifyShort":
-      "使用前請對照 SDS、供應商標示與當地法規。",
+      "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
     "trust.printFooter":
       "僅供參考 - 使用前請對照官方安全資料表（SDS）、供應商標示與當地法規。",
   },
@@ -963,20 +964,6 @@ const getContinuationStatusKey = (continuation) => {
     return "print.continuationFinalStatus";
   }
   return "print.continuationStatus";
-};
-
-const renderContinuationSafetyNote = (continuation, model) => {
-  if (!continuation || continuation.total <= 1 || continuation.current <= 1) {
-    return "";
-  }
-  return `<div class="continuation-safety-note" data-testid="continuation-safety-note">
-    <span class="continuation-safety-note-title">${escapeHtml(
-      model.t("print.continuationUseWithFirstPage"),
-    )}</span>
-    <span class="continuation-safety-note-detail">${escapeHtml(
-      model.t("print.continuationPictogramAnchor"),
-    )}</span>
-  </div>`;
 };
 
 const renderContinuationKeepTogetherNote = (continuation, model) => {

@@ -215,8 +215,8 @@ describe("getFullPageStatementTier", () => {
 
     const tier = getFullPageStatementTier(hazards, precautions, fullPageModel);
 
-    expect(tier.fontSize).toBe("8.3px");
-    expect(tier.lineHeight).toBe("1.16");
+    expect(tier.fontSize).toBe("8.6px");
+    expect(tier.lineHeight).toBe("1.17");
   });
 });
 
@@ -1802,7 +1802,7 @@ describe("printLabels", () => {
     );
     const supportChips = [
       { textContent: "Batch: CASE-2026-0007" },
-      { textContent: "Demo Safety Lab" },
+      { textContent: "Laboratory Safety Office" },
     ];
     mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
       if (selector === "img") return mockImages;
@@ -1869,7 +1869,7 @@ describe("printLabels", () => {
         nameDisplay: "both",
         template: "qrcode",
         stockPreset: "small-strip",
-        supportChips: "Batch: CASE-2026-0007|Demo Safety Lab",
+        supportChips: "Batch: CASE-2026-0007|Laboratory Safety Office",
       }),
     );
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
@@ -1879,7 +1879,10 @@ describe("printLabels", () => {
         meta: expect.objectContaining({
           labelKind: "qr-supplement",
           pictogramCodes: ["GHS02", "GHS07"],
-          supportChipTexts: ["Batch: CASE-2026-0007", "Demo Safety Lab"],
+          supportChipTexts: [
+            "Batch: CASE-2026-0007",
+            "Laboratory Safety Office",
+          ],
           hasQr: true,
           casNumbers: ["64-17-5"],
           hasCas: true,
@@ -3078,13 +3081,13 @@ describe("printLabels", () => {
       expect(preview.html).toContain("qrcode-img");
       expect(preview.html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
       expect(preview.html).toMatch(
-        /\.label-full-page-primary \.compliance-footer \{[\s\S]*border: 0\.25mm solid #cbd5e1;[\s\S]*border-left: 1\.05mm solid #64748b;[\s\S]*background: #f8fafc;[\s\S]*align-items: center;/,
+        /\.label-full-page-primary \.compliance-footer \{[\s\S]*border: 0\.25mm solid #cbd5e1;[\s\S]*border-left: 0\.8mm solid #64748b;[\s\S]*background: #f8fafc;[\s\S]*align-items: center;/,
       );
       expect(preview.html).toMatch(
-        /\.label-full-page-primary \.compliance-footer \.profile-block \{[\s\S]*border: 0\.2mm solid #dbe3ee;[\s\S]*border-radius: 0\.9mm;/,
+        /\.label-full-page-primary \.compliance-footer \.profile-block \{[\s\S]*border: 0\.2mm solid #dbe3ee;[\s\S]*border-radius: 0\.7mm;/,
       );
       expect(preview.html).toMatch(
-        /\.label-full-page-primary \.compliance-qr \{[\s\S]*border-left: 0\.2mm solid #e2e8f0;[\s\S]*padding-left: 1\.1mm;/,
+        /\.label-full-page-primary \.compliance-qr \{[\s\S]*border-left: 0\.2mm solid #e2e8f0;[\s\S]*padding-left: 0\.85mm;/,
       );
       expect(preview.html).toContain("preview-label-scaler");
       expect(preview.html).toContain("transform: scale(0.");
@@ -3526,6 +3529,15 @@ describe("printLabels", () => {
       expect(documentBundle.html).toMatch(
         /\.page-footer-note \{[\s\S]*font-size: 8.6px;[\s\S]*font-weight: 650;/,
       );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-footer \{[\s\S]*padding: 0\.55mm 0\.85mm 0\.55mm 0\.95mm;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-footer \.profile-block \{[\s\S]*padding: 0\.45mm 0\.8mm;/,
+      );
+      expect(documentBundle.html).toMatch(
+        /\.label-full-page-primary \.compliance-footer \.profile-row \{[\s\S]*font-size: 9\.4px;[\s\S]*line-height: 1\.08;/,
+      );
       expect(documentBundle.html).toContain(
         "justify-content: flex-start;",
       );
@@ -3566,6 +3578,31 @@ describe("printLabels", () => {
           documentBundle.model.expandedLabels.length - 1
         ].continuation.precautionaryStatements.length,
       ).toBeGreaterThanOrEqual(8);
+    });
+
+    it("keeps A4 QA continuation fixture copy production-like", () => {
+      const documentBundle = buildPrintDocument(
+        [PRINT_QA_ETHYLENE_OXIDE],
+        {
+          labelPurpose: "shipping",
+          template: "full",
+          stockPreset: "a4-primary",
+          nameDisplay: "both",
+          colorMode: "color",
+        },
+        {},
+        {},
+        {},
+        { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      );
+
+      expect(documentBundle.pagesHtml).toContain("Ethylene Oxide");
+      expect(documentBundle.pagesHtml).not.toMatch(
+        /print QA|layout calibration|retained for continuation-page/i,
+      );
+      expect(documentBundle.pagesHtml).not.toContain("Danger ZH");
+      expect(documentBundle.pagesHtml).not.toContain("statement ZH");
+      expect(documentBundle.pagesHtml).not.toContain("instruction ZH");
     });
 
     it("packs moderate H/P content onto one A4 page without CSS column balancing", () => {
@@ -3683,6 +3720,12 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml).toContain("label-continuation-page");
       expect(documentBundle.pagesHtml).toContain(">H330</span>");
       expect(documentBundle.pagesHtml).toContain(">P501</span>");
+      expect(documentBundle.pagesHtml).toContain(
+        'style="font-size:8.6px;line-height:1.17"',
+      );
+      expect(documentBundle.pagesHtml).not.toContain(
+        'style="font-size:8.1px;line-height:1.16"',
+      );
     });
 
     it("keeps retry-fitted A4 H/P sections together when they still fit one page", () => {
@@ -5366,20 +5409,21 @@ describe("prepared solution print rendering", () => {
       );
 
       const html = documentBundle.html;
-      expect(html).toContain("配製稀釋液");
+      expect(html).toContain("配製溶液 / Prepared solution");
       expect(html).toContain("prepared-identity-block");
-      expect(html).toContain("母化學品危害資料");
+      expect(html).toContain("母化學品危害資料 / Parent chemical hazard data");
       expect(html).toContain("prepared-solution-identity");
       expect(html).toContain("prepared-parent-warning");
-      expect(html).toContain("濃度");
-      expect(html).toContain("溶劑");
-      expect(html).toContain("配製人");
-      expect(html).toContain("危害說明");
-      expect(html).toContain("使用前請對照 SDS、供應商標示與當地法規。");
-      expect(html).not.toContain("Prepared solution");
-      expect(html).not.toContain("Concentration");
-      expect(html).not.toContain("Solvent");
-      expect(html).not.toContain("Hazard statements");
+      expect(html).toContain("濃度 / Concentration");
+      expect(html).toContain("溶劑 / Solvent");
+      expect(html).toContain("配製人 / Prepared by");
+      expect(html).toContain("危害說明 / Hazard statements");
+      expect(html).toContain("預防措施 / Precautionary statements");
+      expect(html).toContain("掃描開啟此化學品查詢頁 / Scan to open this chemical lookup");
+      expect(html).toContain("參考資料：PubChem/SDS / Reference data");
+      expect(html).toContain(
+        "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
+      );
       expect(html).not.toContain("For reference only");
     });
 

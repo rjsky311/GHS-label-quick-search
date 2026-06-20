@@ -188,10 +188,10 @@ export const getFullPageStatementTier = (
     (statementCount >= 28 && textLoad > 2600)
   ) {
     return buildTier({
-      fontScale: 0.9,
-      minFontPx: 8.1,
-      maxFontPx: 8.3,
-      lineHeight: 1.16,
+      fontScale: 0.94,
+      minFontPx: 8.4,
+      maxFontPx: 8.55,
+      lineHeight: 1.17,
       marginBottom: "0.28mm",
       codeGap: "0.68mm",
       hazardCodeMin: "9mm",

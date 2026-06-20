@@ -500,7 +500,7 @@ Acceptance:
 
 ### 2.2 Print Workflow Guidance Without More Controls
 
-Status: `Gate added` on 2026-05-16.
+Status: `Monitoring` after the 2026-06-21 A4 pre-physical-print polish pass.
 
 Goal: users should feel the app is choosing the right print output with them,
 not forcing them to become layout experts.
@@ -527,12 +527,24 @@ Work items:
   responsible-profile requirement.
 - Keep supplemental/quick-ID/QR labels honest and visually distinct from
   complete primary labels.
+- Completed: A4/Letter complete-output PDF QA was tightened for
+  pre-physical-print review. Dense bilingual H/P continuation text now avoids
+  the prior smallest typography tier, A4 responsible-profile footer styling is
+  more compact, prepared-solution A4 output uses bilingual labels, and the QA
+  matrix now uses production-like synthetic hazard/precaution wording instead
+  of placeholder fixture copy. Independent visual review rated the v8 A4 output
+  `PASS_WITH_NOTES`: readable and releaseable before physical-printer testing,
+  with only non-blocking follow-ups for quieter footer styling and less
+  conservative continuation pagination.
 
 Acceptance:
 
 - Users can tell when the app will print a complete primary label versus a
   supplemental or quick-ID output.
 - Blocked states provide a usable next step, not just a warning.
+- A4/Letter complete-output PDF QA keeps dense text readable, preserves all
+  available pictograms, and avoids placeholder hazard/precaution wording in
+  generated review artifacts.
 - `npm run qa:production-product` remains green after UI changes.
 
 ### 2.3 Narrow And Mobile Read-First Polish
@@ -922,7 +934,7 @@ or user report points to a more urgent slice.
 | Telemetry/privacy | `Monitoring` | Retention/export-review policy is enforced; review payload caps/rate limits only if a future pilot shows storage growth or abuse | Backend tests + admin/CLI retention checks |
 | First-time UX | `Monitoring` | Keep reducing implementation wording while preserving the decision guide | Production search UI screenshots |
 | Fixed-stock batch print | `Monitoring` | Keep monitoring future batch examples; production search UI now covers the current messy-paste parser fixture and QR `?cas=` return path, and new fixtures should be added when real lists expose new separators or prefixes | Batch parser/integration tests + production search UI + print PDF artifact + production batch QA |
-| Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists | Production product QA |
+| Print guidance copy | `Monitoring` | Keep no-GHS rows out of label selection; improve blocked/supplemental copy only when confusion persists. A4 v8 is releaseable before physical-printer testing; reopen footer quieting or continuation pagination only from new PDF, real-printer, or user evidence | Print contract + PDF QA + production product QA |
 | Narrow/mobile reading | `Gate added` | Add more cases when new narrow regressions appear | `qa:production-search-ui` |
 | Accessibility | `Gate added` | Extend focus tests for new complex dialogs | Unit tests + production search UI |
 | README cleanup | `Shipped` | Keep README concise and aligned with canonical docs | `git diff --check`, rendered review |

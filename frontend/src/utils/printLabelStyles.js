@@ -535,33 +535,48 @@ export const buildPrintStyles = (model) => {
     }
     .label-full-page-primary .compliance-footer {
       margin-top: 0;
-      padding: 0.95mm 1.1mm 0.95mm 1.25mm;
-      gap: 1.15mm;
+      padding: 0.55mm 0.85mm 0.55mm 0.95mm;
+      gap: 0.9mm;
       border: 0.25mm solid #cbd5e1;
-      border-left: 1.05mm solid #64748b;
-      border-radius: 0.9mm;
+      border-left: 0.8mm solid #64748b;
+      border-radius: 0.75mm;
       background: #f8fafc;
       align-items: center;
     }
     .label-full-page-primary .compliance-footer-text {
-      gap: 0.45mm;
+      gap: 0.25mm;
     }
     .label-full-page-primary .compliance-footer-metadata {
       padding-top: 0;
       border-top: 0;
     }
     .label-full-page-primary .compliance-footer .profile-block {
-      padding: 0.9mm 1.1mm;
+      display: flex;
+      align-items: baseline;
+      gap: 1.2mm;
+      min-width: 0;
+      padding: 0.45mm 0.8mm;
       border: 0.2mm solid #dbe3ee;
-      border-radius: 0.9mm;
+      border-radius: 0.7mm;
     }
     .label-full-page-primary .compliance-footer .profile-row {
-      font-size: 10px;
-      line-height: 1.2;
+      min-width: 0;
+      font-size: 9.4px;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .label-full-page-primary .compliance-footer .profile-org {
+      flex: 0 0 auto;
+      max-width: 38mm;
+    }
+    .label-full-page-primary .compliance-footer .profile-address {
+      flex: 1 1 auto;
     }
     .label-full-page-primary .compliance-qr {
       border-left: 0.2mm solid #e2e8f0;
-      padding-left: 1.1mm;
+      padding-left: 0.85mm;
     }
     .name-section {
       text-align: left;

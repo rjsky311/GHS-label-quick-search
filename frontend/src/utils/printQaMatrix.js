@@ -23,9 +23,9 @@ export const PRINT_QA_PICTOGRAMS = Object.freeze([
 ]);
 
 export const PRINT_QA_PROFILE = Object.freeze({
-  organization: "Demo Safety Lab",
-  phone: "02-1234-5678",
-  address: "1 Lab Road, Taipei",
+  organization: "Laboratory Safety Office",
+  phone: "+886-2-2368-0000",
+  address: "12 Safety Archive Rd., Taipei",
 });
 
 export const PRINT_QA_CASE_FIELDS = Object.freeze({
@@ -39,39 +39,36 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
   cid: 313,
   ghs_pictograms: PRINT_QA_PICTOGRAMS.map((code) => ({ code })),
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H280",
-      text_en:
-        "H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]",
+      text_en: "Contains gas under pressure; may explode if heated.",
       text_zh: "內含高壓氣體；遇熱可能爆炸",
     },
     {
       code: "H290",
-      text_en: "H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]",
+      text_en: "May be corrosive to metals.",
       text_zh: "可能腐蝕金屬",
     },
     {
       code: "H314",
-      text_en:
-        "H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]",
+      text_en: "Causes severe skin burns and eye damage.",
       text_zh: "造成嚴重皮膚灼傷和眼睛損傷",
     },
     {
       code: "H318",
-      text_en: "H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]",
+      text_en: "Causes serious eye damage.",
       text_zh: "造成嚴重眼睛損傷",
     },
     {
       code: "H331",
-      text_en: "H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]",
+      text_en: "Toxic if inhaled.",
       text_zh: "吸入有毒",
     },
     {
       code: "H335",
-      text_en:
-        "H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]",
+      text_en: "May cause respiratory irritation.",
       text_zh: "可能造成呼吸道刺激",
     },
   ],
@@ -118,8 +115,10 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
     },
     {
       code: "P302+P361+P354",
-      text_en: "P302+P361+P354",
-      text_zh: "P302+P361+P354",
+      text_en:
+        "IF ON SKIN: Take off immediately all contaminated clothing and rinse skin with water for several minutes.",
+      text_zh:
+        "若皮膚接觸：立即脫除所有受污染衣物，並以清水沖洗皮膚數分鐘。",
     },
     {
       code: "P304+P340",
@@ -128,13 +127,15 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
     },
     {
       code: "P305+P354+P338",
-      text_en: "P305+P354+P338",
-      text_zh: "P305+P354+P338",
+      text_en:
+        "IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses if present and easy to do; continue rinsing.",
+      text_zh:
+        "若進入眼睛：立即以清水沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出後繼續沖洗。",
     },
     {
       code: "P316",
-      text_en: "P316",
-      text_zh: "P316",
+      text_en: "Get emergency medical help immediately.",
+      text_zh: "立即取得緊急醫療協助。",
     },
     {
       code: "P317",
@@ -143,8 +144,8 @@ export const PRINT_QA_HYDROCHLORIC_ACID = Object.freeze({
     },
     {
       code: "P319",
-      text_en: "P319",
-      text_zh: "P319",
+      text_en: "Get medical help if you feel unwell.",
+      text_zh: "如感不適，請取得醫療協助。",
     },
     {
       code: "P321",
@@ -200,23 +201,26 @@ export const PRINT_QA_AMINOBIPHENYL = Object.freeze({
   hazard_statements: [
     {
       code: "H302",
-      text_en: "H302 (100%): Harmful if swallowed [Warning Acute toxicity, oral]",
+      text_en: "Harmful if swallowed.",
       text_zh: "吞食有害",
     },
     {
       code: "H351",
-      text_en: "H351 (99.3%): Suspected of causing cancer [Warning Carcinogenicity]",
+      text_en: "Suspected of causing cancer.",
       text_zh: "懷疑會致癌",
     },
     {
       code: "H412",
-      text_en:
-        "H412 (100%): Harmful to aquatic life with long lasting effects [Hazardous to the aquatic environment, long-term hazard]",
+      text_en: "Harmful to aquatic life with long lasting effects.",
       text_zh: "對水生生物有害並具有長期持續影響",
     },
   ],
   precautionary_statements: [
-    { code: "P203", text_en: "P203", text_zh: "P203" },
+    {
+      code: "P203",
+      text_en: "Obtain, read, and follow all safety instructions before use.",
+      text_zh: "使用前取得、閱讀並遵循所有安全指示。",
+    },
     {
       code: "P264",
       text_en: "Wash hands thoroughly after handling.",
@@ -238,8 +242,16 @@ export const PRINT_QA_AMINOBIPHENYL = Object.freeze({
         "Wear protective gloves, protective clothing, eye protection, face protection.",
       text_zh: "佩戴防護手套、防護衣物、護眼用具及護面用具。",
     },
-    { code: "P301+P317", text_en: "P301+P317", text_zh: "P301+P317" },
-    { code: "P318", text_en: "P318", text_zh: "P318" },
+    {
+      code: "P301+P317",
+      text_en: "IF SWALLOWED: Get medical help.",
+      text_zh: "若吞食：取得醫療協助。",
+    },
+    {
+      code: "P318",
+      text_en: "If exposed or concerned, get medical advice.",
+      text_zh: "如暴露或有疑慮，請諮詢醫師。",
+    },
     { code: "P330", text_en: "Rinse mouth.", text_zh: "漱口。" },
     { code: "P405", text_en: "Store locked up.", text_zh: "存放於加鎖處。" },
     {
@@ -258,29 +270,29 @@ export const PRINT_QA_ETHANOL = Object.freeze({
   cid: 702,
   ghs_pictograms: [{ code: "GHS02" }, { code: "GHS07" }],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H225",
       text_en: "Highly flammable liquid and vapour",
-      text_zh: "Highly flammable liquid and vapour ZH",
+      text_zh: "高度易燃液體和蒸氣",
     },
     {
       code: "H319",
       text_en: "Causes serious eye irritation",
-      text_zh: "Causes serious eye irritation ZH",
+      text_zh: "造成嚴重眼睛刺激",
     },
   ],
   precautionary_statements: [
     {
       code: "P210",
       text_en: "Keep away from heat, hot surfaces, sparks, open flames and other ignition sources",
-      text_zh: "Keep away from ignition sources ZH",
+      text_zh: "遠離熱源、火花、明火及其他著火源",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套與護眼用具",
     },
   ],
 });
@@ -292,49 +304,49 @@ export const PRINT_QA_SODIUM_HYDROXIDE = Object.freeze({
   cid: 14798,
   ghs_pictograms: [{ code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H290",
       text_en: "May be corrosive to metals",
-      text_zh: "May be corrosive to metals ZH",
+      text_zh: "可能腐蝕金屬",
     },
     {
       code: "H314",
       text_en: "Causes severe skin burns and eye damage",
-      text_zh: "Causes severe skin burns and eye damage ZH",
+      text_zh: "造成嚴重皮膚灼傷和眼睛損傷",
     },
     {
       code: "H315",
       text_en: "Causes skin irritation",
-      text_zh: "Causes skin irritation ZH",
+      text_zh: "造成皮膚刺激",
     },
     {
       code: "H319",
       text_en: "Causes serious eye irritation",
-      text_zh: "Causes serious eye irritation ZH",
+      text_zh: "造成嚴重眼睛刺激",
     },
     {
       code: "H335",
       text_en: "May cause respiratory irritation",
-      text_zh: "May cause respiratory irritation ZH",
+      text_zh: "可能造成呼吸道刺激",
     },
   ],
   precautionary_statements: [
     {
       code: "P260",
       text_en: "Do not breathe dust or mist",
-      text_zh: "Do not breathe dust or mist ZH",
+      text_zh: "切勿吸入粉塵或霧滴",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves, protective clothing and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套、防護衣物與護眼用具",
     },
     {
       code: "P303+P361+P353",
       text_en: "IF ON SKIN: take off contaminated clothing and rinse skin with water",
-      text_zh: "IF ON SKIN ZH",
+      text_zh: "如皮膚接觸：立即脫除受污染衣物並以清水沖洗皮膚",
     },
   ],
 });
@@ -346,49 +358,49 @@ export const PRINT_QA_METHANOL = Object.freeze({
   cid: 887,
   ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }, { code: "GHS08" }],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H225",
       text_en: "Highly flammable liquid and vapour",
-      text_zh: "Highly flammable liquid and vapour ZH",
+      text_zh: "高度易燃液體和蒸氣",
     },
     {
       code: "H301",
       text_en: "Toxic if swallowed",
-      text_zh: "Toxic if swallowed ZH",
+      text_zh: "吞食有毒",
     },
     {
       code: "H311",
       text_en: "Toxic in contact with skin",
-      text_zh: "Toxic in contact with skin ZH",
+      text_zh: "皮膚接觸有毒",
     },
     {
       code: "H331",
       text_en: "Toxic if inhaled",
-      text_zh: "Toxic if inhaled ZH",
+      text_zh: "吸入有毒",
     },
     {
       code: "H370",
       text_en: "Causes damage to organs",
-      text_zh: "Causes damage to organs ZH",
+      text_zh: "會對器官造成傷害",
     },
   ],
   precautionary_statements: [
     {
       code: "P210",
       text_en: "Keep away from heat, sparks, open flames and hot surfaces",
-      text_zh: "Keep away from ignition sources ZH",
+      text_zh: "遠離熱源、火花、明火與高溫表面",
     },
     {
       code: "P260",
       text_en: "Do not breathe vapours",
-      text_zh: "Do not breathe vapours ZH",
+      text_zh: "切勿吸入蒸氣",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套與護眼用具",
     },
   ],
 });
@@ -405,77 +417,77 @@ export const PRINT_QA_FORMALDEHYDE = Object.freeze({
     { code: "GHS08" },
   ],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H301",
       text_en:
-        "Toxic if swallowed. Acute toxicity statement retained for complete shipped-container labelling.",
+        "Toxic if swallowed. Include the full acute toxicity statement on the complete shipped-container label.",
       text_zh:
-        "Toxic if swallowed ZH. Acute toxicity statement retained for complete shipped-container labelling.",
+        "吞食有毒。完整主要容器標籤需保留急性毒性說明。",
     },
     {
       code: "H311",
       text_en:
         "Toxic in contact with skin. Avoid direct handling during transfer, sampling, and waste collection.",
       text_zh:
-        "Toxic in contact with skin ZH. Avoid direct handling during transfer, sampling, and waste collection.",
+        "皮膚接觸有毒。轉移、取樣與廢棄物收集時應避免直接接觸。",
     },
     {
       code: "H314",
       text_en:
         "Causes severe skin burns and eye damage. Immediate emergency response and eyewash access are required.",
       text_zh:
-        "Causes severe skin burns and eye damage ZH. Immediate emergency response and eyewash access are required.",
+        "造成嚴重皮膚灼傷和眼睛損傷。需備妥緊急應變與洗眼設備。",
     },
     {
       code: "H317",
       text_en:
         "May cause an allergic skin reaction after repeated or prolonged laboratory exposure.",
       text_zh:
-        "May cause an allergic skin reaction ZH after repeated or prolonged laboratory exposure.",
+        "反覆或長時間暴露可能造成皮膚過敏反應。",
     },
     {
       code: "H318",
       text_en:
         "Causes serious eye damage. Use splash protection whenever opening the container or preparing dilutions.",
       text_zh:
-        "Causes serious eye damage ZH. Use splash protection whenever opening the container or preparing dilutions.",
+        "造成嚴重眼睛損傷。開啟容器或配製稀釋液時需使用防濺保護。",
     },
     {
       code: "H330",
       text_en:
         "Fatal if inhaled. Vapour exposure can occur during dispensing, spill response, and open-vessel work.",
       text_zh:
-        "Fatal if inhaled ZH. Vapour exposure can occur during dispensing, spill response, and open-vessel work.",
+        "吸入致命。分裝、洩漏處理與開放容器作業時可能暴露於蒸氣。",
     },
     {
       code: "H341",
       text_en:
         "Suspected of causing genetic defects. Obtain special instructions before use and keep exposure records.",
       text_zh:
-        "Suspected of causing genetic defects ZH. Obtain special instructions before use and keep exposure records.",
+        "懷疑會造成遺傳性缺陷。使用前取得特別指示並保存暴露紀錄。",
     },
     {
       code: "H350",
       text_en:
         "May cause cancer. Use only in controlled areas with documented training and exposure controls.",
       text_zh:
-        "May cause cancer ZH. Use only in controlled areas with documented training and exposure controls.",
+        "可能致癌。僅於受控區域並具備訓練與暴露控制紀錄時使用。",
     },
     {
       code: "H370",
       text_en:
         "Causes damage to organs. Do not use this label without a complete responsible-party profile.",
       text_zh:
-        "Causes damage to organs ZH. Do not use this label without a complete responsible-party profile.",
+        "會對器官造成傷害。未填寫完整負責單位資訊時，不應使用此主標籤。",
     },
     {
       code: "H372",
       text_en:
         "Causes damage to organs through prolonged or repeated exposure during routine laboratory handling.",
       text_zh:
-        "Causes damage to organs through prolonged or repeated exposure ZH during routine laboratory handling.",
+        "日常實驗室操作中，長期或反覆暴露會對器官造成傷害。",
     },
   ],
   precautionary_statements: [
@@ -484,105 +496,105 @@ export const PRINT_QA_FORMALDEHYDE = Object.freeze({
       text_en:
         "Obtain special instructions before use and verify the current SDS before preparing a working container.",
       text_zh:
-        "Obtain special instructions before use ZH and verify the current SDS before preparing a working container.",
+        "使用前取得特別指示，並在配製工作容器前核對最新版 SDS。",
     },
     {
       code: "P202",
       text_en:
         "Do not handle until all safety precautions have been read, understood, and communicated to the operator.",
       text_zh:
-        "Do not handle until all safety precautions have been read ZH and communicated to the operator.",
+        "所有安全預防措施完成閱讀、理解並傳達給操作者前，不得操作。",
     },
     {
       code: "P260",
       text_en:
         "Do not breathe dust, fume, gas, mist, vapours or spray generated during transfer or spill cleanup.",
       text_zh:
-        "Do not breathe vapours ZH generated during transfer or spill cleanup.",
+        "切勿吸入轉移或洩漏清理過程產生的粉塵、煙霧、氣體、霧滴、蒸氣或噴霧。",
     },
     {
       code: "P264",
       text_en:
         "Wash hands and all potentially exposed skin thoroughly after handling and before leaving the work area.",
       text_zh:
-        "Wash hands and all potentially exposed skin ZH thoroughly after handling.",
+        "操作後及離開工作區前，徹底清洗雙手與所有可能暴露的皮膚。",
     },
     {
       code: "P270",
       text_en:
         "Do not eat, drink or smoke when using this product or while contaminated gloves are present.",
       text_zh:
-        "Do not eat, drink or smoke ZH when using this product.",
+        "使用本品或接觸受污染手套時，勿飲食或吸煙。",
     },
     {
       code: "P271",
       text_en:
         "Use only outdoors or in a well-ventilated area with verified local exhaust ventilation.",
       text_zh:
-        "Use only outdoors or in a well-ventilated area ZH with verified local exhaust ventilation.",
+        "僅於室外或通風良好且局部排氣已確認有效的區域使用。",
     },
     {
       code: "P280",
       text_en:
         "Wear protective gloves, protective clothing, eye protection and face protection during dispensing.",
       text_zh:
-        "Wear protective gloves and eye protection ZH during dispensing.",
+        "分裝時佩戴防護手套、防護衣物、護眼用具與面部防護。",
     },
     {
       code: "P301+P310",
       text_en:
         "IF SWALLOWED: Immediately call a POISON CENTER or doctor and keep the product container available.",
       text_zh:
-        "IF SWALLOWED ZH: Immediately call a POISON CENTER or doctor.",
+        "若吞食：立即聯絡毒物諮詢中心或醫師，並保留產品容器供查閱。",
     },
     {
       code: "P303+P361+P353",
       text_en:
         "IF ON SKIN or hair: Take off immediately all contaminated clothing. Rinse skin with water.",
       text_zh:
-        "IF ON SKIN or hair ZH: Take off immediately all contaminated clothing.",
+        "若接觸皮膚或頭髮：立即脫除所有受污染衣物，並以清水沖洗皮膚。",
     },
     {
       code: "P304+P340",
       text_en:
         "IF INHALED: Remove person to fresh air and keep comfortable for breathing while awaiting help.",
       text_zh:
-        "IF INHALED ZH: Remove person to fresh air and keep comfortable for breathing.",
+        "若吸入：將人員移至空氣新鮮處，保持呼吸舒適並等待協助。",
     },
     {
       code: "P305+P351+P338",
       text_en:
         "IF IN EYES: Rinse cautiously with water for several minutes and remove contact lenses if easy to do.",
       text_zh:
-        "IF IN EYES ZH: Rinse cautiously with water for several minutes.",
+        "若進入眼睛：以清水小心沖洗數分鐘；若可輕易取出隱形眼鏡，請先取出。",
     },
     {
       code: "P308+P313",
       text_en:
         "If exposed or concerned: Get medical advice and bring SDS or container label information.",
       text_zh:
-        "If exposed or concerned ZH: Get medical advice and bring SDS or container label information.",
+        "如暴露或有疑慮：尋求醫療建議，並攜帶 SDS 或容器標籤資訊。",
     },
     {
       code: "P403+P233",
       text_en:
         "Store in a well-ventilated place. Keep container tightly closed and segregated from incompatibles.",
       text_zh:
-        "Store in a well-ventilated place ZH. Keep container tightly closed.",
+        "儲存於通風良好處，保持容器密閉並與不相容物隔離。",
     },
     {
       code: "P405",
       text_en:
         "Store locked up with access limited to trained personnel and documented inventory controls.",
       text_zh:
-        "Store locked up ZH with access limited to trained personnel.",
+        "加鎖存放，僅限受訓人員取用，並保留盤點管制紀錄。",
     },
     {
       code: "P501",
       text_en:
         "Dispose of contents and container in accordance with local, regional, national and international regulations.",
       text_zh:
-        "Dispose of contents and container ZH in accordance with local regulations.",
+        "依照地方、區域、國家及國際法規處置內容物與容器。",
     },
   ],
 });
@@ -601,67 +613,280 @@ export const PRINT_QA_ETHYLENE_OXIDE = Object.freeze({
     { code: "GHS08" },
   ],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
-  hazard_statements: Array.from({ length: 16 }, (_, index) => ({
-    code:
-      [
-        "H220",
-        "H230",
-        "H280",
-        "H301",
-        "H302",
-        "H314",
-        "H315",
-        "H318",
-        "H319",
-        "H331",
-        "H335",
-        "H336",
-        "H340",
-        "H350",
-        "H360",
-        "H372",
-      ][index] || `H${300 + index}`,
-    text_en:
-      "Dense ethylene oxide hazard statement retained for complete A4 primary continuation layout calibration.",
-    text_zh:
-      "Dense ethylene oxide hazard statement ZH retained for complete A4 primary continuation layout calibration.",
-  })),
-  precautionary_statements: Array.from({ length: 36 }, (_, index) => ({
-    code:
-      [
-        "P201",
-        "P202",
-        "P210",
-        "P260",
-        "P264",
-        "P270",
-        "P271",
-        "P280",
-        "P284",
-        "P301+P316",
-        "P302+P352",
-        "P304+P340",
-        "P305+P351+P338",
-        "P308+P313",
-        "P312",
-        "P321",
-        "P330",
-        "P333+P317",
-        "P337+P317",
-        "P362+P364",
-        "P370+P376",
-        "P377",
-        "P381",
-        "P403+P233",
-        "P405",
-        "P501",
-      ][index] || `P${500 + index}`,
-    text_en:
-      "Dense precautionary instruction retained for continuation-page print QA, including handling, emergency response, storage, and disposal wording.",
-    text_zh:
-      "Dense precautionary instruction ZH retained for continuation-page print QA, including handling, emergency response, storage, and disposal wording.",
-  })),
+  signal_word_zh: "危險",
+  hazard_statements: [
+    {
+      code: "H220",
+      text_en: "Extremely flammable gas.",
+      text_zh: "極易燃氣體。",
+    },
+    {
+      code: "H230",
+      text_en: "May react explosively even in the absence of air.",
+      text_zh: "即使沒有空氣也可能爆炸性反應。",
+    },
+    {
+      code: "H280",
+      text_en: "Contains gas under pressure; may explode if heated.",
+      text_zh: "內含加壓氣體；遇熱可能爆炸。",
+    },
+    {
+      code: "H301",
+      text_en: "Toxic if swallowed.",
+      text_zh: "吞食有毒。",
+    },
+    {
+      code: "H302",
+      text_en: "Harmful if swallowed.",
+      text_zh: "吞食有害。",
+    },
+    {
+      code: "H314",
+      text_en: "Causes severe skin burns and eye damage.",
+      text_zh: "造成嚴重皮膚灼傷和眼睛損傷。",
+    },
+    {
+      code: "H315",
+      text_en: "Causes skin irritation.",
+      text_zh: "造成皮膚刺激。",
+    },
+    {
+      code: "H318",
+      text_en: "Causes serious eye damage.",
+      text_zh: "造成嚴重眼睛損傷。",
+    },
+    {
+      code: "H319",
+      text_en: "Causes serious eye irritation.",
+      text_zh: "造成嚴重眼睛刺激。",
+    },
+    {
+      code: "H331",
+      text_en: "Toxic if inhaled.",
+      text_zh: "吸入有毒。",
+    },
+    {
+      code: "H335",
+      text_en: "May cause respiratory irritation.",
+      text_zh: "可能造成呼吸道刺激。",
+    },
+    {
+      code: "H336",
+      text_en: "May cause drowsiness or dizziness.",
+      text_zh: "可能造成嗜睡或暈眩。",
+    },
+    {
+      code: "H340",
+      text_en: "May cause genetic defects.",
+      text_zh: "可能造成遺傳性缺陷。",
+    },
+    {
+      code: "H350",
+      text_en: "May cause cancer.",
+      text_zh: "可能致癌。",
+    },
+    {
+      code: "H360",
+      text_en: "May damage fertility or the unborn child.",
+      text_zh: "可能損害生育能力或胎兒。",
+    },
+    {
+      code: "H372",
+      text_en:
+        "Causes damage to organs through prolonged or repeated exposure.",
+      text_zh: "長期或反覆暴露會對器官造成損害。",
+    },
+  ],
+  precautionary_statements: [
+    {
+      code: "P201",
+      text_en: "Obtain special instructions before use.",
+      text_zh: "使用前取得特別指示。",
+    },
+    {
+      code: "P202",
+      text_en:
+        "Do not handle until all safety precautions have been read and understood.",
+      text_zh: "在閱讀並瞭解所有安全預防措施前，切勿操作。",
+    },
+    {
+      code: "P210",
+      text_en:
+        "Keep away from heat, hot surfaces, sparks, open flames, and other ignition sources.",
+      text_zh: "遠離熱源、高溫表面、火花、明火及其他引火源。",
+    },
+    {
+      code: "P211",
+      text_en: "Do not spray on an open flame or other ignition source.",
+      text_zh: "切勿噴灑於明火或其他引火源。",
+    },
+    {
+      code: "P220",
+      text_en: "Keep away from clothing, combustible materials, and incompatible chemicals.",
+      text_zh: "遠離衣物、可燃材料及不相容化學品。",
+    },
+    {
+      code: "P233",
+      text_en: "Keep container tightly closed between controlled transfers.",
+      text_zh: "受控轉移以外時間，請保持容器密閉。",
+    },
+    {
+      code: "P240",
+      text_en: "Ground and bond container and receiving equipment before transfer.",
+      text_zh: "轉移前將容器與接收設備接地並等電位連接。",
+    },
+    {
+      code: "P241",
+      text_en: "Use explosion-proof electrical, ventilating, and lighting equipment.",
+      text_zh: "使用防爆電氣、通風與照明設備。",
+    },
+    {
+      code: "P242",
+      text_en: "Use non-sparking tools for connection, sampling, and maintenance.",
+      text_zh: "連接、取樣與維護時使用不產生火花的工具。",
+    },
+    {
+      code: "P243",
+      text_en: "Take action to prevent static discharges.",
+      text_zh: "採取措施防止靜電放電。",
+    },
+    {
+      code: "P260",
+      text_en: "Do not breathe gas, vapors, mist, or spray.",
+      text_zh: "切勿吸入氣體、蒸氣、霧滴或噴霧。",
+    },
+    {
+      code: "P264",
+      text_en: "Wash hands and exposed skin thoroughly after handling.",
+      text_zh: "操作後徹底清洗雙手與暴露皮膚。",
+    },
+    {
+      code: "P270",
+      text_en: "Do not eat, drink, or smoke when using this product.",
+      text_zh: "使用本品時勿飲食或吸菸。",
+    },
+    {
+      code: "P271",
+      text_en: "Use only outdoors or in a verified well-ventilated area.",
+      text_zh: "僅於室外或已確認通風良好處使用。",
+    },
+    {
+      code: "P280",
+      text_en: "Wear protective gloves, protective clothing, and eye or face protection.",
+      text_zh: "佩戴防護手套、防護衣物及護眼或護面用具。",
+    },
+    {
+      code: "P284",
+      text_en: "Wear respiratory protection when ventilation controls are insufficient.",
+      text_zh: "通風控制不足時，請佩戴呼吸防護具。",
+    },
+    {
+      code: "P301+P316",
+      text_en: "IF SWALLOWED: Get emergency medical help immediately.",
+      text_zh: "若吞食：立即取得緊急醫療協助。",
+    },
+    {
+      code: "P302+P352",
+      text_en: "IF ON SKIN: Wash with plenty of water.",
+      text_zh: "若皮膚接觸：以大量清水沖洗。",
+    },
+    {
+      code: "P304+P340",
+      text_en:
+        "IF INHALED: Remove person to fresh air and keep comfortable for breathing.",
+      text_zh: "若吸入：將人員移至空氣新鮮處，保持呼吸舒適。",
+    },
+    {
+      code: "P305+P351+P338",
+      text_en:
+        "IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do; continue rinsing.",
+      text_zh:
+        "若進入眼睛：以清水小心沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出後繼續沖洗。",
+    },
+    {
+      code: "P308+P313",
+      text_en: "If exposed or concerned: Get medical advice or attention.",
+      text_zh: "如暴露或有疑慮：尋求醫療建議或照護。",
+    },
+    {
+      code: "P312",
+      text_en: "Call a poison center or doctor if you feel unwell.",
+      text_zh: "如感不適，請聯絡毒物諮詢中心或醫師。",
+    },
+    {
+      code: "P321",
+      text_en: "Specific treatment is listed in the SDS and site emergency procedure.",
+      text_zh: "特定處置請參照 SDS 與現場緊急程序。",
+    },
+    {
+      code: "P330",
+      text_en: "Rinse mouth.",
+      text_zh: "漱口。",
+    },
+    {
+      code: "P333+P317",
+      text_en: "If skin irritation or rash occurs: Get medical help.",
+      text_zh: "如發生皮膚刺激或皮疹：取得醫療協助。",
+    },
+    {
+      code: "P337+P317",
+      text_en: "If eye irritation persists: Get medical help.",
+      text_zh: "如眼睛刺激持續：取得醫療協助。",
+    },
+    {
+      code: "P362+P364",
+      text_en: "Take off contaminated clothing and wash it before reuse.",
+      text_zh: "脫除受污染衣物，重新使用前先清洗。",
+    },
+    {
+      code: "P370+P376",
+      text_en:
+        "In case of fire: Stop leak if safe to do so and keep cylinders cool from a protected position.",
+      text_zh: "發生火災時：如安全可行，停止洩漏並在受保護位置冷卻鋼瓶。",
+    },
+    {
+      code: "P377",
+      text_en:
+        "Leaking gas fire: Do not extinguish unless leak can be stopped safely.",
+      text_zh: "漏氣著火：除非能安全停止洩漏，否則不要滅火。",
+    },
+    {
+      code: "P381",
+      text_en: "In case of leakage, eliminate all ignition sources.",
+      text_zh: "發生洩漏時，排除所有引火源。",
+    },
+    {
+      code: "P403",
+      text_en: "Store in a well-ventilated place.",
+      text_zh: "儲存於通風良好處。",
+    },
+    {
+      code: "P403+P233",
+      text_en: "Store in a well-ventilated place. Keep container tightly closed.",
+      text_zh: "儲存於通風良好處，保持容器密閉。",
+    },
+    {
+      code: "P405",
+      text_en: "Store locked up with access limited to authorized personnel.",
+      text_zh: "加鎖存放，僅限授權人員取用。",
+    },
+    {
+      code: "P410+P403",
+      text_en: "Protect from sunlight. Store in a well-ventilated place.",
+      text_zh: "避免日照，儲存於通風良好處。",
+    },
+    {
+      code: "P501",
+      text_en:
+        "Dispose of contents and container in accordance with approved hazardous waste procedures.",
+      text_zh: "依核准的有害廢棄物程序處置內容物與容器。",
+    },
+    {
+      code: "P502",
+      text_en: "Refer to manufacturer or supplier for recovery or recycling information.",
+      text_zh: "回收或再利用資訊請洽製造商或供應商。",
+    },
+  ],
 });
 
 export const PRINT_QA_BROMOTHIOPHENE = Object.freeze({
@@ -678,60 +903,274 @@ export const PRINT_QA_BROMOTHIOPHENE = Object.freeze({
   signal_word: "Danger",
   signal_word_zh: "危險",
   hazard_statements: [
-    "Flammable liquid and vapor.",
-    "Fatal if swallowed.",
-    "Toxic if swallowed.",
-    "Fatal in contact with skin.",
-    "Causes skin irritation.",
-    "Causes serious eye damage.",
-    "Causes serious eye irritation.",
-    "Fatal if inhaled.",
-  ].map((text_en, index) => ({
-    code:
-      ["H226", "H300", "H301", "H310", "H315", "H318", "H319", "H330"][
-        index
-      ] || `H${300 + index}`,
-    text_en: `${text_en} Complete A4 continuation regression statement.`,
-    text_zh: `危害說明 ${index + 1}，用於 A4 續頁空間利用率回歸測試。`,
-  })),
+    {
+      code: "H226",
+      text_en:
+        "Flammable liquid and vapor. Keep away from heat, sparks, open flames, and incompatible oxidizing materials.",
+      text_zh:
+        "易燃液體和蒸氣。請遠離熱源、火花、明火及不相容的氧化性材料。",
+    },
+    {
+      code: "H300",
+      text_en:
+        "Fatal if swallowed. Do not eat, drink, or smoke when using this product.",
+      text_zh: "吞食致命。使用本品時勿飲食或吸菸。",
+    },
+    {
+      code: "H301",
+      text_en:
+        "Toxic if swallowed. Use documented controls for transfer, storage, and disposal.",
+      text_zh: "吞食有毒。轉移、儲存與廢棄時請使用有紀錄的控制程序。",
+    },
+    {
+      code: "H310",
+      text_en:
+        "Fatal in contact with skin. Wear compatible gloves and protective clothing during handling.",
+      text_zh: "皮膚接觸致命。操作時請穿戴相容手套與防護衣物。",
+    },
+    {
+      code: "H315",
+      text_en:
+        "Causes skin irritation. Wash exposed skin thoroughly after handling.",
+      text_zh: "造成皮膚刺激。操作後請徹底清洗暴露皮膚。",
+    },
+    {
+      code: "H318",
+      text_en:
+        "Causes serious eye damage. Keep emergency eyewash access available before use.",
+      text_zh: "造成嚴重眼睛損傷。使用前請確認可立即使用緊急洗眼設備。",
+    },
+    {
+      code: "H319",
+      text_en:
+        "Causes serious eye irritation. Avoid splashes, aerosols, and direct eye exposure.",
+      text_zh: "造成嚴重眼睛刺激。避免噴濺、氣膠及眼睛直接暴露。",
+    },
+    {
+      code: "H330",
+      text_en:
+        "Fatal if inhaled. Use only with verified ventilation and respiratory protection when required.",
+      text_zh: "吸入致命。僅在已確認通風並依需要配戴呼吸防護時使用。",
+    },
+  ],
   precautionary_statements: [
-    "P210",
-    "P233",
-    "P240",
-    "P241",
-    "P242",
-    "P243",
-    "P260",
-    "P262",
-    "P264",
-    "P264+P265",
-    "P270",
-    "P271",
-    "P280",
-    "P284",
-    "P301+P316",
-    "P302+P352",
-    "P303+P361+P353",
-    "P304+P340",
-    "P305+P351+P338",
-    "P316",
-    "P317",
-    "P320",
-    "P321",
-    "P330",
-    "P332+P317",
-    "P337+P317",
-    "P361+P364",
-    "P370+P378",
-    "P403+P233",
-    "P405",
-    "P501",
-  ].map((code, index) => ({
-    code,
-    text_en:
-      "Retained precautionary wording for print QA packing, emergency response, storage, and disposal.",
-    text_zh: `預防措施 ${index + 1}，用於驗證續頁欄位可以穩定壓縮而不產生短頁。`,
-  })),
+    {
+      code: "P210",
+      text_en:
+        "Keep away from heat, sparks, open flames, hot surfaces, and other ignition sources. Verify the bench, transfer line, and waste container are free of ignition hazards before opening.",
+      text_zh:
+        "遠離熱源、火花、明火、高溫表面及其他引火源。開封前確認檯面、轉移管線與廢液容器沒有引火風險。",
+    },
+    {
+      code: "P233",
+      text_en:
+        "Keep container tightly closed when not in active use. Return the closure promptly after sampling, transfer, or label verification.",
+      text_zh:
+        "非操作期間保持容器密閉。取樣、轉移或核對標籤後，請立即復原瓶蓋或密封件。",
+    },
+    {
+      code: "P240",
+      text_en:
+        "Ground and bond container and receiving equipment before transfer. Use the same verified bonding path for dispensing, weighing, and waste consolidation.",
+      text_zh:
+        "轉移前將容器與接收設備接地並等電位連接。分裝、秤量與廢液彙整時使用同一套已確認的接地路徑。",
+    },
+    {
+      code: "P241",
+      text_en:
+        "Use explosion-proof electrical, ventilating, and lighting equipment. Keep ordinary switches, hot plates, and non-rated instruments outside the handling zone.",
+      text_zh:
+        "使用防爆電氣、通風與照明設備。一般開關、加熱板與非防爆儀器應遠離操作區。",
+    },
+    {
+      code: "P242",
+      text_en:
+        "Use non-sparking tools for transfer and cleanup. Keep dedicated spatulas, spill tools, and absorbents available before beginning the task.",
+      text_zh:
+        "轉移與清理時使用不產生火花的工具。操作前備妥專用刮勺、洩漏處理工具與吸附材。",
+    },
+    {
+      code: "P243",
+      text_en:
+        "Take action to prevent static discharges. Control clothing, containers, and low-humidity work conditions during dispensing.",
+      text_zh:
+        "採取措施防止靜電放電。分裝時控制衣物、容器與低濕度工作條件。",
+    },
+    {
+      code: "P260",
+      text_en:
+        "Do not breathe vapors, mist, or spray. Keep containers inside the hood sash line until sealed and wiped down.",
+      text_zh:
+        "切勿吸入蒸氣、霧滴或噴霧。容器密封並擦拭前，請保持在排氣櫃拉門內側。",
+    },
+    {
+      code: "P262",
+      text_en:
+        "Do not get in eyes, on skin, or on clothing. Plan pour paths and container supports to prevent splashes during transfer.",
+      text_zh:
+        "避免接觸眼睛、皮膚或衣物。轉移前規劃倒液路徑與容器支撐，避免噴濺。",
+    },
+    {
+      code: "P264",
+      text_en:
+        "Wash hands and exposed skin thoroughly after handling. Remove residue from reusable tools before they leave the controlled area.",
+      text_zh:
+        "操作後徹底清洗雙手與暴露皮膚。可重複使用工具離開管制區前，請先去除殘留物。",
+    },
+    {
+      code: "P264+P265",
+      text_en:
+        "Wash all exposed body parts thoroughly after handling. Confirm sleeves, cuffs, and glove edges have not retained liquid contamination.",
+      text_zh:
+        "操作後徹底清洗所有暴露部位。確認袖口、袖緣與手套邊緣未殘留液體污染。",
+    },
+    {
+      code: "P270",
+      text_en:
+        "Do not eat, drink, or smoke when using this product. Keep personal items and open containers outside the chemical handling area.",
+      text_zh:
+        "使用本品時勿飲食或吸菸。個人物品與開放容器請放在化學操作區外。",
+    },
+    {
+      code: "P271",
+      text_en:
+        "Use only outdoors or in a well-ventilated area. For indoor work, verify hood airflow and keep the sash positioned for splash protection.",
+      text_zh:
+        "僅於室外或通風良好處使用。室內操作時確認排氣櫃風量，並將拉門維持在防噴濺位置。",
+    },
+    {
+      code: "P280",
+      text_en:
+        "Wear compatible protective gloves, protective clothing, and eye or face protection. Select glove material against the SDS compatibility table and expected contact time.",
+      text_zh:
+        "佩戴相容防護手套、防護衣物及護眼或護面用具。依 SDS 相容性表與預期接觸時間選擇手套材質。",
+    },
+    {
+      code: "P284",
+      text_en:
+        "Wear respiratory protection when ventilation controls are insufficient. Follow the site respiratory protection program and cartridge change schedule.",
+      text_zh:
+        "通風控制不足時，請佩戴呼吸防護具。依現場呼吸防護計畫與濾罐更換時程執行。",
+    },
+    {
+      code: "P301+P316",
+      text_en:
+        "IF SWALLOWED: Get emergency medical help immediately. Provide the product label, SDS, exposure amount, and time of exposure to responders.",
+      text_zh:
+        "若吞食：立即取得緊急醫療協助。向應變人員提供產品標籤、SDS、暴露量與暴露時間。",
+    },
+    {
+      code: "P302+P352",
+      text_en:
+        "IF ON SKIN: Wash with plenty of water. Continue rinsing while contaminated clothing, gloves, and jewelry are removed.",
+      text_zh:
+        "若皮膚接觸：以大量清水沖洗。移除受污染衣物、手套與飾品時持續沖洗。",
+    },
+    {
+      code: "P303+P361+P353",
+      text_en:
+        "IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water and isolate clothing for hazardous decontamination.",
+      text_zh:
+        "若皮膚或頭髮接觸：立即脫除所有受污染衣物，以水沖洗皮膚，並將衣物隔離待有害物去污。",
+    },
+    {
+      code: "P304+P340",
+      text_en:
+        "IF INHALED: Remove person to fresh air and keep comfortable for breathing. Do not allow the exposed person to return to the work area without medical clearance.",
+      text_zh:
+        "若吸入：將人員移至空氣新鮮處，保持呼吸舒適。未經醫療確認前，不得讓暴露者返回工作區。",
+    },
+    {
+      code: "P305+P351+P338",
+      text_en:
+        "IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do; continue rinsing and keep eyewash access clear for responders.",
+      text_zh:
+        "若進入眼睛：以清水小心沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出後繼續沖洗，並保持洗眼設備通道暢通。",
+    },
+    {
+      code: "P316",
+      text_en:
+        "Get emergency medical help immediately. Share the route of exposure, duration, and first-aid steps already completed.",
+      text_zh:
+        "立即取得緊急醫療協助。提供暴露途徑、暴露時間與已完成的急救步驟。",
+    },
+    {
+      code: "P317",
+      text_en:
+        "Get medical help if symptoms occur or exposure is suspected. Retain the container, SDS, and incident notes for follow-up review.",
+      text_zh:
+        "如出現症狀或懷疑暴露，請取得醫療協助。保留容器、SDS 與事件紀錄供後續檢視。",
+    },
+    {
+      code: "P320",
+      text_en:
+        "Specific treatment is urgent; see SDS and workplace medical protocol. Contact the designated emergency coordinator while first aid continues.",
+      text_zh:
+        "需立即進行特定處置；請參照 SDS 與工作場所醫療程序。急救持續時聯絡指定緊急協調人。",
+    },
+    {
+      code: "P321",
+      text_en:
+        "Specific treatment is listed in the SDS and site emergency procedure. Keep the current revision of both documents available at the bench.",
+      text_zh:
+        "特定處置請參照 SDS 與現場緊急程序。請在操作檯備妥兩份文件的最新版。",
+    },
+    {
+      code: "P330",
+      text_en:
+        "Rinse mouth. Do not induce vomiting unless instructed by medical personnel or poison center guidance.",
+      text_zh: "漱口。除非醫療人員或毒物諮詢指示，勿催吐。",
+    },
+    {
+      code: "P332+P317",
+      text_en:
+        "If skin irritation occurs: Get medical help. Record glove type, contact duration, and decontamination steps.",
+      text_zh:
+        "如發生皮膚刺激：取得醫療協助。記錄手套類型、接觸時間與去污步驟。",
+    },
+    {
+      code: "P337+P317",
+      text_en:
+        "If eye irritation persists: Get medical help. Continue monitoring after rinsing and provide exposure details to responders.",
+      text_zh:
+        "如眼睛刺激持續：取得醫療協助。沖洗後持續觀察，並向應變人員提供暴露細節。",
+    },
+    {
+      code: "P361+P364",
+      text_en:
+        "Take off immediately all contaminated clothing and wash it before reuse. Bag clothing separately until the decontamination route is confirmed.",
+      text_zh:
+        "立即脫除所有受污染衣物，重新使用前先清洗。在確認去污方式前，請將衣物分開裝袋。",
+    },
+    {
+      code: "P370+P378",
+      text_en:
+        "In case of fire: Use alcohol-resistant foam, dry chemical, or carbon dioxide to extinguish. Cool exposed containers from a protected position.",
+      text_zh:
+        "發生火災時：使用抗醇泡沫、乾粉或二氧化碳滅火。從受保護位置冷卻受熱容器。",
+    },
+    {
+      code: "P403+P233",
+      text_en:
+        "Store in a well-ventilated place. Keep container tightly closed and segregated from oxidizers, acids, and ignition sources.",
+      text_zh:
+        "儲存於通風良好處，保持容器密閉，並與氧化劑、酸類及引火源隔離。",
+    },
+    {
+      code: "P405",
+      text_en:
+        "Store locked up with restricted access. Maintain inventory records, owner information, and inspection dates with the storage location.",
+      text_zh:
+        "加鎖存放並限制取用。儲存位置需保留盤點紀錄、負責人資訊與檢查日期。",
+    },
+    {
+      code: "P501",
+      text_en:
+        "Dispose of contents and container according to approved hazardous waste procedures. Keep incompatibles separated in labeled secondary containment until pickup.",
+      text_zh:
+        "依核准的有害廢棄物程序處置內容物與容器。清運前以標示清楚的二次盛裝分開不相容物。",
+    },
+  ],
 });
 
 export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
@@ -741,34 +1180,34 @@ export const PRINT_QA_HYDROGEN_PEROXIDE = Object.freeze({
   cid: 784,
   ghs_pictograms: [{ code: "GHS03" }, { code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H271",
       text_en: "May cause fire or explosion; strong oxidizer",
-      text_zh: "May cause fire or explosion ZH",
+      text_zh: "可能引起火災或爆炸；強氧化劑",
     },
     {
       code: "H302",
       text_en: "Harmful if swallowed",
-      text_zh: "Harmful if swallowed ZH",
+      text_zh: "吞食有害",
     },
     {
       code: "H314",
       text_en: "Causes severe skin burns and eye damage",
-      text_zh: "Causes severe skin burns and eye damage ZH",
+      text_zh: "造成嚴重皮膚灼傷和眼睛損傷",
     },
   ],
   precautionary_statements: [
     {
       code: "P220",
       text_en: "Keep away from clothing and other combustible materials",
-      text_zh: "Keep away from combustible materials ZH",
+      text_zh: "遠離衣物及其他可燃材料",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套與護眼用具",
     },
   ],
 });
@@ -780,24 +1219,24 @@ export const PRINT_QA_NITROGEN = Object.freeze({
   cid: 947,
   ghs_pictograms: [{ code: "GHS04" }],
   signal_word: "Warning",
-  signal_word_zh: "Warning ZH",
+  signal_word_zh: "警告",
   hazard_statements: [
     {
       code: "H280",
       text_en: "Contains gas under pressure; may explode if heated",
-      text_zh: "Contains gas under pressure ZH",
+      text_zh: "內含高壓氣體；遇熱可能爆炸",
     },
     {
       code: "H281",
       text_en: "Contains refrigerated gas; may cause cryogenic burns or injury",
-      text_zh: "Contains refrigerated gas ZH",
+      text_zh: "內含冷凍氣體；可能造成低溫灼傷或傷害",
     },
   ],
   precautionary_statements: [
     {
       code: "P403",
       text_en: "Store in a well-ventilated place",
-      text_zh: "Store in a well-ventilated place ZH",
+      text_zh: "儲存於通風良好處",
     },
   ],
 });
@@ -809,29 +1248,29 @@ export const PRINT_QA_ZINC_OXIDE = Object.freeze({
   cid: 14806,
   ghs_pictograms: [{ code: "GHS09" }],
   signal_word: "Warning",
-  signal_word_zh: "Warning ZH",
+  signal_word_zh: "警告",
   hazard_statements: [
     {
       code: "H400",
       text_en: "Very toxic to aquatic life",
-      text_zh: "Very toxic to aquatic life ZH",
+      text_zh: "對水生生物毒性非常大",
     },
     {
       code: "H410",
       text_en: "Very toxic to aquatic life with long lasting effects",
-      text_zh: "Very toxic to aquatic life with long lasting effects ZH",
+      text_zh: "對水生生物毒性非常大並具有長期持續影響",
     },
   ],
   precautionary_statements: [
     {
       code: "P273",
       text_en: "Avoid release to the environment",
-      text_zh: "Avoid release to the environment ZH",
+      text_zh: "避免排放至環境",
     },
     {
       code: "P391",
       text_en: "Collect spillage",
-      text_zh: "Collect spillage ZH",
+      text_zh: "收集溢漏物",
     },
   ],
 });
@@ -843,29 +1282,29 @@ export const PRINT_QA_BORIC_ACID = Object.freeze({
   cid: 7628,
   ghs_pictograms: [{ code: "GHS08" }],
   signal_word: "Danger",
-  signal_word_zh: "Danger ZH",
+  signal_word_zh: "危險",
   hazard_statements: [
     {
       code: "H360",
       text_en: "May damage fertility or the unborn child",
-      text_zh: "May damage fertility or the unborn child ZH",
+      text_zh: "可能對生育能力或胎兒造成傷害",
     },
   ],
   precautionary_statements: [
     {
       code: "P201",
       text_en: "Obtain special instructions before use",
-      text_zh: "Obtain special instructions before use ZH",
+      text_zh: "使用前取得特別指示",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套與護眼用具",
     },
     {
       code: "P308+P313",
       text_en: "If exposed or concerned: get medical advice",
-      text_zh: "If exposed or concerned ZH",
+      text_zh: "如暴露或有疑慮：尋求醫療建議",
     },
   ],
 });
@@ -878,29 +1317,29 @@ export const PRINT_QA_LONG_NAME_CORROSIVE = Object.freeze({
   cid: 0,
   ghs_pictograms: [{ code: "GHS05" }, { code: "GHS07" }],
   signal_word: "Warning",
-  signal_word_zh: "Warning ZH",
+  signal_word_zh: "警告",
   hazard_statements: [
     {
       code: "H315",
       text_en: "Causes skin irritation",
-      text_zh: "Causes skin irritation ZH",
+      text_zh: "造成皮膚刺激",
     },
     {
       code: "H319",
       text_en: "Causes serious eye irritation",
-      text_zh: "Causes serious eye irritation ZH",
+      text_zh: "造成嚴重眼睛刺激",
     },
   ],
   precautionary_statements: [
     {
       code: "P264",
       text_en: "Wash hands thoroughly after handling",
-      text_zh: "Wash hands after handling ZH",
+      text_zh: "操作後徹底清洗雙手",
     },
     {
       code: "P280",
       text_en: "Wear protective gloves and eye protection",
-      text_zh: "Wear protective gloves and eye protection ZH",
+      text_zh: "佩戴防護手套與護眼用具",
     },
   ],
 });
@@ -939,7 +1378,7 @@ export const PRINT_QA_PREPARED_HYDROCHLORIC_ACID = Object.freeze(
     {
       concentration: "1 M",
       solvent: "Water",
-      preparedBy: "QA Analyst",
+      preparedBy: "Lab Safety Office",
       preparedDate: "2026-05-12",
       expiryDate: "2026-06-12",
     },
@@ -1219,13 +1658,13 @@ export const PRINT_QA_MATRIX = Object.freeze([
   },
   {
     id: "letter-primary-en-bw",
-    label: "Letter complete primary bilingual B/W",
+    label: "Letter complete primary English B/W",
     locale: "en-US",
     labelConfig: {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "letter-primary",
-      nameDisplay: "both",
+      nameDisplay: "en",
       colorMode: "bw",
     },
     expected: {
@@ -2007,7 +2446,7 @@ export const PRINT_QA_MATRIX = Object.freeze([
       preparedIdentityTexts: [
         "1 M",
         "Water",
-        "QA Analyst",
+        "Lab Safety Office",
         "2026-05-12",
         "2026-06-12",
       ],

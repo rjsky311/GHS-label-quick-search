@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import LabelPrintModal from "../LabelPrintModal";
 import LabelPrintFooter from "../label-print/LabelPrintFooter";
 import LabelPreviewPanel from "../label-print/LabelPreviewPanel";

@@ -65,7 +65,7 @@ describe("printBatchPlanner", () => {
       batchPrintMixedFixture50.some(
         (chemical) =>
           chemical.ghs_pictograms.length === 0 &&
-          chemical.hazard_statements.length > 0,
+          chemical.hazard_statements.length === 0,
       ),
     ).toBe(true);
   });
@@ -87,10 +87,10 @@ describe("printBatchPlanner", () => {
     );
     expect(
       plan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_DATA],
-    ).toBeGreaterThanOrEqual(3);
+    ).toBeGreaterThanOrEqual(2);
     expect(
       plan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT],
-    ).toBeGreaterThanOrEqual(1);
+    ).toBe(0);
     expect(plan.summary.canPrintDefaultScope).toBe(true);
     expect(new Set(plan.items.map((item) => item.layout.stockPreset))).toEqual(
       new Set(["small-strip"]),
@@ -99,8 +99,8 @@ describe("printBatchPlanner", () => {
       plan.items.find((item) => item.cas === "7647-01-0").category,
     ).toBe(BATCH_PRINT_ITEM_CATEGORY.READY);
     expect(
-      plan.items.find((item) => item.cas === "7782-44-7").reason.type,
-    ).toBe("text-only-ghs-needs-hazard-text");
+      plan.items.find((item) => item.cas === "7782-44-7").category,
+    ).toBe(BATCH_PRINT_ITEM_CATEGORY.READY);
   });
 
   it("keeps QR small-label batch intent on the selected stock and continues dense pictogram sets", () => {

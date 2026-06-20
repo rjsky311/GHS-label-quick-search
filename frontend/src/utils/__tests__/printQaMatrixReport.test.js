@@ -28,6 +28,7 @@ jest.mock("@/constants/ghs", () => {
 });
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import {
   PRINT_QA_MATRIX,
@@ -89,7 +90,7 @@ const maybeWritePreviewArtifacts = () => {
       {},
       { [chemical.cas_number]: 1 },
       PRINT_QA_PROFILE,
-      { mode: "label", previewZoom: "fit" },
+      { mode: "label", previewZoom: "fit", locale: testCase.locale },
     );
     fs.writeFileSync(path.join(absoluteDir, `${testCase.id}.html`), preview.html);
   });
@@ -137,6 +138,7 @@ const buildCompleteBatchA4Bundle = () => {
       completeBatchItems.map((chemical) => [chemical.cas_number, 1]),
     ),
     PRINT_QA_PROFILE,
+    { locale: completeBatchPlan.locale },
   );
 
   return { completeBatchBundle, completeBatchItems };
@@ -160,6 +162,7 @@ const maybeWritePrintArtifacts = () => {
       testCase.customLabelFields || {},
       { [chemical.cas_number]: 1 },
       PRINT_QA_PROFILE,
+      { locale: testCase.locale },
     );
     const caseResult = buildPrintQaCaseResult({
       testCase,
@@ -216,6 +219,7 @@ const maybeWritePrintArtifacts = () => {
       quickIdBatchItems.map((chemical) => [chemical.cas_number, 1]),
     ),
     PRINT_QA_PROFILE,
+    { locale: quickIdBatchPlan.locale },
   );
   const quickIdBatchFile = "batch-quick-id-50-small-strip.html";
   fs.writeFileSync(
@@ -240,7 +244,7 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinQrSidePx: 0,
     expectedRequiredIdentityText: "",
     expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
-    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
+    expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
   });
 
   const qrBatchPlan = buildBatchPrintPlan({
@@ -264,6 +268,7 @@ const maybeWritePrintArtifacts = () => {
     {},
     Object.fromEntries(qrBatchItems.map((chemical) => [chemical.cas_number, 1])),
     PRINT_QA_PROFILE,
+    { locale: qrBatchPlan.locale },
   );
   const qrBatchFile = "batch-qr-50-brother-62mm.html";
   fs.writeFileSync(path.join(absoluteDir, qrBatchFile), qrBatchBundle.html);
@@ -284,8 +289,11 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinPictogramSidePx: 26,
     expectedPrintMinQrSidePx: 48,
     expectedRequiredIdentityText: "",
-    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Five Pictogram"],
-    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
+    expectedRequiredIdentityTexts: [
+      "Hydrochloric Acid",
+      "Peracetic Acid Solution",
+    ],
+    expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
   });
 
   const { completeBatchBundle, completeBatchItems } = buildCompleteBatchA4Bundle();
@@ -312,7 +320,7 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinQrSidePx: 30,
     expectedRequiredIdentityText: "",
     expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
-    expectedForbiddenIdentityTexts: ["Urea", "Temporary Upstream Failure Reagent"],
+    expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
   });
 
   fs.writeFileSync(
@@ -332,6 +340,196 @@ describe("print QA matrix report", () => {
     expect(ghs02).toMatch(/^data:image\/svg\+xml/);
     expect(decodeURIComponent(ghs02)).not.toContain("<text");
     expect(decodeURIComponent(ghs02)).toContain("<path");
+  });
+
+  it("renders the English Letter QA case as English-only output", () => {
+    const testCase = PRINT_QA_MATRIX.find(
+      (entry) => entry.id === "letter-primary-en-bw",
+    );
+    const chemical = resolvePrintQaCaseChemical(testCase);
+    const documentBundle = buildPrintDocument(
+      [chemical],
+      testCase.labelConfig,
+      {},
+      {},
+      {},
+      PRINT_QA_PROFILE,
+      { locale: testCase.locale },
+    );
+
+    expect(documentBundle.html).toContain("Hydrochloric Acid");
+    expect(documentBundle.html).toContain("Hazard statements");
+    expect(documentBundle.html).not.toContain("鹽酸");
+    expect(documentBundle.html).not.toContain("危險 / Danger");
+    expect(documentBundle.html).not.toContain("內含高壓氣體");
+    expect(documentBundle.html).not.toContain("危害說明");
+  });
+
+  it("writes prepared print artifacts with the case locale", () => {
+    const previousOutputDir = process.env.PRINT_QA_PRINT_HTML_DIR;
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "ghs-print-qa-artifacts-"),
+    );
+
+    try {
+      process.env.PRINT_QA_PRINT_HTML_DIR = tempDir;
+      maybeWritePrintArtifacts();
+
+      const html = fs.readFileSync(
+        path.join(tempDir, "prepared-a4-primary.html"),
+        "utf8",
+      );
+
+      expect(html).toContain("配製溶液 / Prepared solution");
+      expect(html).toContain("濃度 / Concentration");
+      expect(html).toContain("溶劑 / Solvent");
+      expect(html).toContain("配製人 / Prepared by");
+      expect(html).toContain("母化學品危害資料 / Parent chemical hazard data");
+      expect(html).not.toContain(
+        ">Parent chemical hazard data - not verified mixture classification",
+      );
+    } finally {
+      if (previousOutputDir === undefined) {
+        delete process.env.PRINT_QA_PRINT_HTML_DIR;
+      } else {
+        process.env.PRINT_QA_PRINT_HTML_DIR = previousOutputDir;
+      }
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps final-looking A4 QA artifacts free of fixture and regression copy", () => {
+    const bromothiopheneCase = PRINT_QA_MATRIX.find(
+      (entry) => entry.id === "bromothiophene-a4-primary-packing-regression",
+    );
+    const bromothiopheneHtml = buildPrintDocument(
+      [resolvePrintQaCaseChemical(bromothiopheneCase)],
+      bromothiopheneCase.labelConfig,
+      {},
+      {},
+      {},
+      PRINT_QA_PROFILE,
+      { locale: bromothiopheneCase.locale },
+    ).html;
+    const ethyleneOxideCase = PRINT_QA_MATRIX.find(
+      (entry) => entry.id === "ethylene-oxide-a4-primary-continuation",
+    );
+    const ethyleneOxideHtml = buildPrintDocument(
+      [resolvePrintQaCaseChemical(ethyleneOxideCase)],
+      ethyleneOxideCase.labelConfig,
+      {},
+      {},
+      {},
+      PRINT_QA_PROFILE,
+      { locale: ethyleneOxideCase.locale },
+    ).html;
+    const { completeBatchBundle } = buildCompleteBatchA4Bundle();
+
+    [bromothiopheneHtml, ethyleneOxideHtml, completeBatchBundle.html].forEach((html) => {
+      expect(html).not.toMatch(
+        /print QA|layout calibration|regression statement|回歸測試|fixture copy|placeholder copy|Routine Reagent|Contains dense bilingual|Buffered Reference Solution|Calibration Solvent|Hazard statement for routine laboratory handling|Follow the official SDS and local workplace procedure|Organic Peroxide Shipping Control Sample|Compressed Oxygen Classification|Formaldehyde Stabilized Laboratory Stock Solution|1111-11-1|No precautionary statements|May cause irritation during handling|May produce vapors or dust|Extremely hazardous compressed gas and vapor|Use closed handling, trained personnel|Use documented handling controls, emergency response equipment/i,
+      );
+      expect(html).not.toMatch(
+        /statement-code">H300<\/span><span class="statement-text">Contains gas|statement-code">P300<\/span><span class="statement-text">Keep only in original packaging/i,
+      );
+    });
+  });
+
+  it("keeps complete A4 review labels free of missing-wording fallback copy", () => {
+    const finalCaseIds = [
+      "a4-primary",
+      "letter-primary-en-bw",
+      "prepared-a4-primary",
+    ];
+
+    finalCaseIds.forEach((caseId) => {
+      const testCase = PRINT_QA_MATRIX.find((entry) => entry.id === caseId);
+      const documentBundle = buildPrintDocument(
+        [resolvePrintQaCaseChemical(testCase)],
+        testCase.labelConfig,
+        {},
+        {},
+        {},
+        PRINT_QA_PROFILE,
+        { locale: testCase.locale },
+      );
+
+      expect(documentBundle.html).not.toMatch(
+        /Wording unavailable - verify SDS before use|尚無完整文字 - 使用前請核對 SDS/,
+      );
+    });
+  });
+
+  it("keeps final-looking A4 QA artifacts free of raw upstream metadata", () => {
+    const finalCaseIds = [
+      "a4-primary",
+      "a4-primary-zh-bw",
+      "letter-primary-en-bw",
+      "prepared-a4-primary",
+    ];
+
+    finalCaseIds.forEach((caseId) => {
+      const testCase = PRINT_QA_MATRIX.find((entry) => entry.id === caseId);
+      const documentBundle = buildPrintDocument(
+        [resolvePrintQaCaseChemical(testCase)],
+        testCase.labelConfig,
+        {},
+        {},
+        {},
+        PRINT_QA_PROFILE,
+        { locale: testCase.locale },
+      );
+
+      expect(documentBundle.html).not.toMatch(/H\d{3}\s+\(\d+(?:\.\d+)?%\)/);
+      expect(documentBundle.html).not.toMatch(/\[(?:Warning|Danger|Hazardous) [^\]]+\]/);
+      expect(documentBundle.html).not.toContain("QA Analyst");
+    });
+  });
+
+  it("keeps zh-TW batch A4 review data bilingual when a Chinese name is shown", () => {
+    const { completeBatchItems } = buildCompleteBatchA4Bundle();
+    const itemsWithChineseIdentity = completeBatchItems.filter(
+      (chemical) => chemical.name_zh,
+    );
+
+    expect(itemsWithChineseIdentity.length).toBeGreaterThan(20);
+    itemsWithChineseIdentity.forEach((chemical) => {
+      (chemical.hazard_statements || []).forEach((statement) => {
+        expect(statement.text_zh).toEqual(expect.any(String));
+        expect(statement.text_zh.trim()).not.toEqual("");
+      });
+      (chemical.precautionary_statements || []).forEach((statement) => {
+        expect(statement.text_zh).toEqual(expect.any(String));
+        expect(statement.text_zh.trim()).not.toEqual("");
+      });
+    });
+  });
+
+  it("keeps batch A4 review data from looking like repeated generic profiles", () => {
+    const { completeBatchBundle, completeBatchItems } = buildCompleteBatchA4Bundle();
+    const dichloromethane = completeBatchItems.find(
+      (chemical) => chemical.cas_number === "75-09-2",
+    );
+    const statementSignatureCounts = completeBatchItems.reduce((counts, chemical) => {
+      const hazardCodes = (chemical.hazard_statements || [])
+        .map((statement) => statement.code)
+        .join(",");
+      const precautionCodes = (chemical.precautionary_statements || [])
+        .map((statement) => statement.code)
+        .join(",");
+      const signature = `${hazardCodes}|${precautionCodes}`;
+      counts.set(signature, (counts.get(signature) || 0) + 1);
+      return counts;
+    }, new Map());
+
+    expect(dichloromethane).toBeTruthy();
+    expect(
+      (dichloromethane.hazard_statements || []).map((statement) => statement.code),
+    ).not.toContain("H225");
+    expect(completeBatchBundle.html).not.toMatch(
+      /Dichloromethane[\s\S]{0,2000}Highly flammable liquid and vapor/i,
+    );
+    expect(Math.max(...statementSignatureCounts.values())).toBeLessThanOrEqual(2);
   });
 
   it("generates a passing machine-readable report for the production print matrix", () => {
@@ -574,14 +772,14 @@ describe("print QA matrix report", () => {
       casNumbers: ["7647-01-0"],
       pageSize: "Letter",
       colorMode: "bw",
-      nameDisplay: "both",
+      nameDisplay: "en",
     });
     expect(byId["letter-primary-en-bw"].actual.hasFullPagePictograms).toBe(true);
     expect(browserCaseById["letter-primary-en-bw"]).toMatchObject({
       expectedColorMode: "bw",
-      expectedNameDisplay: "both",
-      expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
-      expectedForbiddenIdentityTexts: [],
+      expectedNameDisplay: "en",
+      expectedRequiredIdentityTexts: ["Hydrochloric Acid"],
+      expectedForbiddenIdentityTexts: ["鹽酸"],
     });
 
     expect(byId["ethylene-oxide-a4-primary-continuation"]).toMatchObject({
@@ -927,15 +1125,12 @@ describe("print QA matrix report", () => {
         PRINT_QA_PROFILE,
         { locale: testCase.locale },
       );
-      expect(documentBundle.html).toContain("配製稀釋液");
-      expect(documentBundle.html).toContain("濃度");
-      expect(documentBundle.html).toContain("溶劑");
-      expect(documentBundle.html).toContain("配製人");
-      expect(documentBundle.html).toContain("危害說明");
-      expect(documentBundle.html).not.toContain("Prepared solution");
-      expect(documentBundle.html).not.toContain("Concentration");
-      expect(documentBundle.html).not.toContain("Solvent");
-      expect(documentBundle.html).not.toContain("Hazard statements");
+      expect(documentBundle.html).toContain("配製溶液 / Prepared solution");
+      expect(documentBundle.html).toContain("濃度 / Concentration");
+      expect(documentBundle.html).toContain("溶劑 / Solvent");
+      expect(documentBundle.html).toContain("配製人 / Prepared by");
+      expect(documentBundle.html).toContain("危害說明 / Hazard statements");
+      expect(documentBundle.html).toContain("預防措施 / Precautionary statements");
     }
     expect(byId["prepared-bottle-supplemental"].actual).toMatchObject({
       hasPreparedIdentityTexts: true,
