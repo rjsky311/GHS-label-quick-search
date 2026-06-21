@@ -363,6 +363,8 @@
   "label.selectedLabelsContinuationSummary": "{{sourceLabels}} selected label(s) expands to {{labels}} extra label(s), about {{pages}} page(s).",
   "label.noneSelected": "No chemicals selected",
   "label.noPrintableHazardData": "No printable GHS hazard data is available for this selection. Review the SDS or source links before making a hazard label.",
+  "label.favoritePrintLookupFailed": "Could not refresh this favorite before printing. Search it again, then print from the fresh result.",
+  "label.favoritePrintMissingCas": "This favorite needs a CAS number before it can be refreshed for printing.",
   "label.pictogramCount": "({{count}} pictograms)",
   "label.totalLabels": "{{count}} label(s) total",
   "label.totalOutputLabels": "{{count}} output label(s)",

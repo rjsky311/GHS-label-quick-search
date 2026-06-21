@@ -1,8 +1,20 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 
+import { createProductionQaExpectedShaEnv } from "./production-expected-sha.mjs";
+
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? "cmd.exe" : "npm";
+const expectedShaEnv = (() => {
+  try {
+    return createProductionQaExpectedShaEnv({
+      scriptName: "Production print QA",
+    });
+  } catch (error) {
+    console.error(error?.message || String(error));
+    process.exit(1);
+  }
+})();
 const defaultReportPath = "build/print-qa-report.json";
 const defaultPrintHtmlDir = "build/print-html-artifacts";
 const defaultPdfDir = "build/print-pdf-artifacts";
@@ -17,6 +29,7 @@ const defaultBatchReportPath = "build/production-batch-print-report.json";
 
 const env = {
   ...process.env,
+  ...expectedShaEnv,
   PRINT_QA_REPORT_PATH:
     process.env.PRINT_QA_REPORT_PATH || defaultReportPath,
   PRINT_QA_PRINT_HTML_DIR:

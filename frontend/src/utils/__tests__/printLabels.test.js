@@ -26,6 +26,7 @@ import {
   inspectPrintLayoutDocument,
   printLabels,
   getQRCodeUrl,
+  getChemicalLookupUrl,
   getHazardFontTier,
   escapeHtml,
 } from "../printLabels";
@@ -126,6 +127,35 @@ describe("getQRCodeUrl", () => {
     const url = getQRCodeUrl("https://example.com?a=1&b=2");
     expect(url).toMatch(/^data:image\/gif;base64,/);
     expect(url).not.toBe(getQRCodeUrl("https://example.com"));
+  });
+});
+
+describe("getChemicalLookupUrl", () => {
+  it("allows expected production and local lookup origins", () => {
+    expect(
+      getChemicalLookupUrl("64-17-5", "https://ghs-frontend.zeabur.app"),
+    ).toBe("https://ghs-frontend.zeabur.app/?cas=64-17-5");
+    expect(
+      getChemicalLookupUrl("64-17-5", "https://ghs-backend.zeabur.app"),
+    ).toBe("https://ghs-backend.zeabur.app/?cas=64-17-5");
+    expect(getChemicalLookupUrl("64-17-5", "http://localhost:5173")).toBe(
+      "http://localhost:5173/?cas=64-17-5",
+    );
+    expect(getChemicalLookupUrl("64-17-5", "http://127.0.0.1:5173")).toBe(
+      "http://127.0.0.1:5173/?cas=64-17-5",
+    );
+  });
+
+  it("blocks unsafe QR lookup origins and falls back to the public frontend", () => {
+    expect(getChemicalLookupUrl("64-17-5", "https://evil.example")).toBe(
+      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+    );
+    expect(getChemicalLookupUrl("64-17-5", "javascript:alert(1)")).toBe(
+      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+    );
+    expect(getChemicalLookupUrl("64-17-5", "data:text/html,owned")).toBe(
+      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+    );
   });
 });
 

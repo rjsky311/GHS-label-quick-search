@@ -84,6 +84,11 @@ class TestResolveNameToCas:
         """CAS-like input (digits and hyphens) won't be found by name."""
         assert resolve_name_to_cas("999-99-9") is None
 
+    def test_invalid_seed_cas_is_not_resolved_as_name_candidate(self, monkeypatch):
+        monkeypatch.setitem(server.EN_TO_CAS, "review invalid seed", "64-17-6")
+
+        assert resolve_name_to_cas("review invalid seed") is None
+
 
 # ─── Unit tests: reverse dictionaries ─────────────────────
 
@@ -134,6 +139,30 @@ async def test_search_by_name_ethanol():
     assert "results" in data
     cas_numbers = [r["cas_number"] for r in data["results"]]
     assert "64-17-5" in cas_numbers
+
+
+async def test_search_by_name_filters_invalid_seed_cas(monkeypatch):
+    monkeypatch.setitem(server.EN_TO_CAS, "review invalid seed", "64-17-6")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/search-by-name/review%20invalid%20seed")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"] == []
+
+
+async def test_search_by_name_rejects_invalid_cas_like_seed_query(monkeypatch):
+    monkeypatch.setitem(server.EN_TO_CAS, "64-17-6", "64-17-6")
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/search-by-name/64-17-6")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"] == []
 
 
 async def test_workspace_documents_require_admin_token(monkeypatch):
@@ -2897,6 +2926,158 @@ def _precaution_info(codes_csv):
         "Name": "Precautionary Statement Codes",
         "Value": {"StringWithMarkup": [{"String": codes_csv}]},
     }
+
+
+class TestHCodeExtraction:
+    """Tests for parsing PubChem GHS Hazard Statements."""
+
+    def test_multiple_h_codes_in_one_hazard_statement_are_preserved(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS07"]),
+            _signal_info("Warning"),
+            _hazard_info("H315 + H319: Causes skin and serious eye irritation"),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+        statements = reports[0]["hazard_statements"]
+
+        assert [stmt["code"] for stmt in statements] == ["H315", "H319"]
+        assert statements[0]["text_zh"] == server.H_CODE_TRANSLATIONS["H315"]
+        assert statements[1]["text_zh"] == server.H_CODE_TRANSLATIONS["H319"]
+
+    def test_missing_h_code_zh_uses_chinese_placeholder(self):
+        pubchem_text = "H999: Experimental English-only hazard wording"
+        data = _make_ghs_data(
+            _pic_info(["GHS07"]),
+            _hazard_info(pubchem_text),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+        stmt = reports[0]["hazard_statements"][0]
+
+        assert stmt["code"] == "H999"
+        assert stmt["text_en"] == pubchem_text
+        assert stmt["text_zh"] == "尚無完整文字 - 使用前請核對 SDS。"
+        assert stmt["text_zh"] != pubchem_text
+
+    def test_mixed_known_and_missing_h_codes_never_use_english_as_text_zh(self):
+        pubchem_text = "H225 + H999: Highly flammable liquid and future hazard"
+        data = _make_ghs_data(
+            _pic_info(["GHS02"]),
+            _signal_info("Danger"),
+            _hazard_info(pubchem_text),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+        statements = {
+            stmt["code"]: stmt for stmt in reports[0]["hazard_statements"]
+        }
+
+        assert set(statements) == {"H225", "H999"}
+        assert statements["H225"]["text_zh"] == server.H_CODE_TRANSLATIONS["H225"]
+        assert statements["H999"]["text_zh"] == "尚無完整文字 - 使用前請核對 SDS。"
+        assert all(stmt["text_zh"] != pubchem_text for stmt in statements.values())
+
+    def test_text_only_ghs_report_without_pictograms_is_preserved(self):
+        data = _make_ghs_data(
+            _signal_info("Warning"),
+            _hazard_info("H315: Causes skin irritation"),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+
+        assert len(reports) == 1
+        assert reports[0]["pictograms"] == []
+        assert reports[0]["signal_word"] == "Warning"
+        assert reports[0]["hazard_statements"][0]["code"] == "H315"
+
+
+async def test_search_chemical_preserves_text_only_ghs_data(monkeypatch):
+    import server as srv
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fake_get_name(*_a, **_k):
+        return ("Text-only test compound", None)
+
+    async def fake_get_ghs(*_a, **_k):
+        return (
+            _make_ghs_data(
+                _signal_info("Warning"),
+                _hazard_info("H315: Causes skin irritation"),
+            ),
+            False,
+            "2026-06-21T00:00:00+00:00",
+        )
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("123-45-5", _NullClient())
+
+    assert result.found is True
+    assert result.ghs_pictograms == []
+    assert result.signal_word == "Warning"
+    assert result.hazard_statements[0]["code"] == "H315"
+    assert "SDS" in (result.error or "")
+
+
+async def test_search_chemical_prefers_pictogram_report_over_stronger_text_only_report(monkeypatch):
+    import server as srv
+
+    fake_reports = [
+        {
+            "pictograms": [],
+            "hazard_statements": [_hz("H315")],
+            "precautionary_statements": [],
+            "signal_word": "Warning",
+            "signal_word_zh": "\u8b66\u544a",
+            "source": "ECHA C&L Notifications Summary",
+            "report_count": "999",
+        },
+        {
+            "pictograms": [_pic("GHS02")],
+            "hazard_statements": [_hz("H225")],
+            "precautionary_statements": [],
+            "signal_word": "Danger",
+            "signal_word_zh": "\u5371\u96aa",
+            "source": "Supplier classification",
+            "report_count": "1",
+        },
+    ]
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fake_get_name(*_a, **_k):
+        return ("Mixed report test compound", None)
+
+    async def fake_get_ghs(*_a, **_k):
+        return ({}, False, "2026-06-21T00:00:00+00:00")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(srv, "get_ghs_classification", fake_get_ghs)
+    monkeypatch.setattr(srv, "extract_all_ghs_classifications", lambda _: fake_reports)
+
+    class _NullClient:
+        async def get(self, *_a, **_k):
+            raise RuntimeError("should not be called")
+
+    result = await srv.search_chemical("123-45-5", _NullClient())
+
+    assert [pic["code"] for pic in result.ghs_pictograms] == ["GHS02"]
+    assert result.signal_word == "Danger"
+    assert result.hazard_statements[0]["code"] == "H225"
+    assert len(result.other_classifications) == 1
+    assert result.other_classifications[0].pictograms == []
+    assert result.other_classifications[0].hazard_statements[0]["code"] == "H315"
 
 
 class TestPCodeExtraction:

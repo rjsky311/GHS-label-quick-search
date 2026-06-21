@@ -2,8 +2,20 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { createProductionQaExpectedShaEnv } from "./production-expected-sha.mjs";
+
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? "cmd.exe" : "npm";
+const expectedShaEnv = (() => {
+  try {
+    return createProductionQaExpectedShaEnv({
+      scriptName: "Production product QA",
+    });
+  } catch (error) {
+    console.error(error?.message || String(error));
+    process.exit(1);
+  }
+})();
 const productReportPath = path.resolve(
   process.cwd(),
   process.env.PRODUCTION_PRODUCT_QA_REPORT_PATH ||
@@ -35,6 +47,7 @@ const steps = [];
 
 const env = {
   ...process.env,
+  ...expectedShaEnv,
   PRINT_QA_REPORT_PATH:
     process.env.PRINT_QA_REPORT_PATH || "build/print-qa-report.json",
   PRINT_QA_HANDOFF_REPORT_PATH:

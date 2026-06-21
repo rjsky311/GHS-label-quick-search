@@ -24,6 +24,14 @@ import {
 } from "@/utils/printRenderHelpers";
 
 const PUBLIC_LOOKUP_ORIGIN = "https://ghs-frontend.zeabur.app";
+const ALLOWED_LOOKUP_HOSTNAMES = new Set([
+  "ghs-frontend.zeabur.app",
+  "ghs-backend.zeabur.app",
+  "localhost",
+  "127.0.0.1",
+  "::1",
+  "[::1]",
+]);
 
 /**
  * HTML escape helper for safe interpolation into the print iframe.
@@ -65,16 +73,25 @@ const getCurrentLookupOrigin = () => {
   return PUBLIC_LOOKUP_ORIGIN;
 };
 
+const isAllowedLookupOrigin = (url) =>
+  ["http:", "https:"].includes(url.protocol) &&
+  ALLOWED_LOOKUP_HOSTNAMES.has(url.hostname);
+
+const resolveAllowedLookupOrigin = (origin) => {
+  try {
+    const candidate = new URL(origin || PUBLIC_LOOKUP_ORIGIN);
+    if (isAllowedLookupOrigin(candidate)) return candidate.origin;
+  } catch {
+    // Fall through to the public production lookup origin.
+  }
+  return PUBLIC_LOOKUP_ORIGIN;
+};
+
 export const getChemicalLookupUrl = (
   casNumber,
   origin = getCurrentLookupOrigin(),
 ) => {
-  let url;
-  try {
-    url = new URL("/", origin || PUBLIC_LOOKUP_ORIGIN);
-  } catch {
-    url = new URL("/", PUBLIC_LOOKUP_ORIGIN);
-  }
+  const url = new URL("/", resolveAllowedLookupOrigin(origin));
 
   const cas = String(casNumber || "").trim();
   if (cas) url.searchParams.set("cas", cas);

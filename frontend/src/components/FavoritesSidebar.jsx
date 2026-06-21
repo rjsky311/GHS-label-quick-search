@@ -2,11 +2,13 @@ import { Star, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import useFocusTrap from "@/hooks/useFocusTrap";
-import { hasGhsData } from "@/utils/ghsAvailability";
 import {
   getLocalizedPictogramName,
   resolveTrustedChineseName,
 } from "@/utils/ghsText";
+
+const hasUsableCas = (item) =>
+  typeof item?.cas_number === "string" && item.cas_number.trim().length > 0;
 
 export default function FavoritesSidebar({
   favorites,
@@ -113,8 +115,8 @@ export default function FavoritesSidebar({
                   </button>
                   <button
                     onClick={() => onPrintLabel(item)}
-                    disabled={!hasGhsData(item)}
-                    title={!hasGhsData(item) ? t("label.noPrintableHazardData") : undefined}
+                    disabled={!hasUsableCas(item)}
+                    title={!hasUsableCas(item) ? t("label.favoritePrintMissingCas") : undefined}
                     className="rounded bg-blue-700 px-2 py-1 text-xs font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
                   >
                     {t("favorites.printLabel")}
