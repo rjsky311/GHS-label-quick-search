@@ -14,6 +14,7 @@ import {
   resolveEnglishName,
   resolveTrustedChineseName,
 } from "@/utils/ghsText";
+import { escapeCsvCell } from "@/utils/csvCell";
 
 export const READINESS_TONE_CLASSES = {
   ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
@@ -515,11 +516,7 @@ export const buildBatchReviewCsv = (items, tx) => {
   ];
 
   return rows
-    .map((row) =>
-      row
-        .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
-        .join(","),
-    )
+    .map((row) => row.map(escapeCsvCell).join(","))
     .join("\n");
 };
 

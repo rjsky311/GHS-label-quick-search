@@ -1,8 +1,20 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 
+import { createProductionQaExpectedShaEnv } from "./production-expected-sha.mjs";
+
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? "cmd.exe" : "npm";
+const expectedShaEnv = (() => {
+  try {
+    return createProductionQaExpectedShaEnv({
+      scriptName: "Production print smoke QA",
+    });
+  } catch (error) {
+    console.error(error?.message || String(error));
+    process.exit(1);
+  }
+})();
 const stepTimeoutMs = Number.parseInt(
   process.env.PRODUCTION_PRINT_SMOKE_STEP_TIMEOUT_MS || "1800000",
   10,
@@ -32,6 +44,7 @@ const defaultSmokeCases = [
 
 const env = {
   ...process.env,
+  ...expectedShaEnv,
   PRINT_QA_CASES: process.env.PRINT_QA_CASES || defaultSmokeCases,
   PRINT_QA_REPORT_PATH:
     process.env.PRINT_QA_REPORT_PATH || "build/print-qa-report.json",

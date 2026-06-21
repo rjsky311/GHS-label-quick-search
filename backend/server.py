@@ -330,6 +330,11 @@ def _combined_lookup_map(locale: str) -> Dict[str, str]:
     return combined
 
 
+def _normalize_valid_lookup_cas(cas: Optional[str]) -> Optional[str]:
+    normalized = normalize_cas(str(cas or ""))
+    return normalized if normalized and is_valid_cas(normalized) else None
+
+
 def _compact_exact_match(query: str, locale: str) -> Optional[str]:
     compact_query = normalize_compact_text(query, locale=locale)
     if not compact_query:
@@ -338,7 +343,9 @@ def _compact_exact_match(query: str, locale: str) -> Optional[str]:
     matches = set()
     for key, cas in _combined_lookup_map(locale).items():
         if normalize_compact_text(key, locale=locale) == compact_query:
-            matches.add(cas)
+            normalized = _normalize_valid_lookup_cas(cas)
+            if normalized:
+                matches.add(normalized)
     if len(matches) == 1:
         return next(iter(matches))
     return None
@@ -627,6 +634,9 @@ H_CODE_TRANSLATIONS = {
     "H413": "可能對水生生物造成長期持續有害影響",
     "H420": "破壞高層大氣中的臭氧，危害公眾健康和環境",
 }
+H_CODE_MISSING_TEXT_ZH = "尚無完整文字 - 使用前請核對 SDS。"
+H_CODE_PATTERN = re.compile(r'\bH\d{3}[A-Za-z]*\b')
+GHS_TEXT_ONLY_REVIEW_ERROR = "PubChem GHS 資料含文字危害但未提供 pictogram；使用或列印前請核對 SDS。"
 
 # Pre-computed cleaned-name index for O(1) fuzzy lookups (built once at startup)
 _CLEAN_NAME_INDEX: Dict[str, str] = {}
@@ -773,20 +783,28 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
 
     manual_entry = pilot_store.get_manual_entry_by_name(q, locale, allow_compact=True)
     if manual_entry:
-        return manual_entry["cas_number"]
+        normalized = _normalize_valid_lookup_cas(manual_entry.get("cas_number"))
+        if normalized:
+            return normalized
 
     # Try exact Chinese name match (includes aliases like 酒精, 漂白水, etc.)
     if q in ZH_TO_CAS:
-        return ZH_TO_CAS[q]
+        normalized = _normalize_valid_lookup_cas(ZH_TO_CAS[q])
+        if normalized:
+            return normalized
 
     # Try exact English name match (case-insensitive, includes aliases like "bleach", "dmso")
     q_lower = q.lower()
     if q_lower in EN_TO_CAS:
-        return EN_TO_CAS[q_lower]
+        normalized = _normalize_valid_lookup_cas(EN_TO_CAS[q_lower])
+        if normalized:
+            return normalized
 
     exact_alias = pilot_store.get_alias_exact(q, locale)
     if exact_alias:
-        return exact_alias["cas_number"]
+        normalized = _normalize_valid_lookup_cas(exact_alias.get("cas_number"))
+        if normalized:
+            return normalized
 
     compact_match = _compact_exact_match(q, locale)
     if compact_match:
@@ -801,17 +819,31 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
     for name, cas in en_lookup.items():
         # Check if query appears as a word (bounded by space, parens, or start/end)
         if re.search(r'(?:^|[\s(])' + re.escape(q_lower) + r'(?:$|[\s)])', name):
-            en_contains.append(cas)
+            normalized = _normalize_valid_lookup_cas(cas)
+            if normalized:
+                en_contains.append(normalized)
     if len(en_contains) == 1:
         return en_contains[0]
 
     # Try partial match (prefix) — English (case-insensitive)
-    en_prefix = [cas for name, cas in en_lookup.items() if name.startswith(q_lower)]
+    en_prefix = [
+        normalized
+        for name, cas in en_lookup.items()
+        if name.startswith(q_lower)
+        for normalized in [_normalize_valid_lookup_cas(cas)]
+        if normalized
+    ]
     if len(en_prefix) == 1:
         return en_prefix[0]
 
     # Try partial match (prefix) — Chinese
-    zh_prefix = [cas for name, cas in zh_lookup.items() if name.startswith(q)]
+    zh_prefix = [
+        normalized
+        for name, cas in zh_lookup.items()
+        if name.startswith(q)
+        for normalized in [_normalize_valid_lookup_cas(cas)]
+        if normalized
+    ]
     if len(zh_prefix) == 1:
         return zh_prefix[0]
 
@@ -847,20 +879,43 @@ def _report_rank_key(report: Dict[str, Any], source_index: int) -> tuple:
     rank earlier are negated.
 
     Priority, highest first:
-      1. Larger ECHA report_count (stronger evidence base)
-      2. Reports labelled as ECHA C&L Notifications (regulatory source)
-      3. More hazard statements (more complete classification)
-      4. Original PubChem source order as the stable tie-breaker
+      1. Reports with pictograms, so primary labels never omit available icons
+      2. Larger ECHA report_count (stronger evidence base)
+      3. Reports labelled as ECHA C&L Notifications (regulatory source)
+      4. More hazard statements (more complete classification)
+      5. Original PubChem source order as the stable tie-breaker
     """
     raw = report.get("report_count")
     try:
         count = int(raw) if raw else 0
     except (TypeError, ValueError):
         count = 0
+    has_pictograms = 1 if report.get("pictograms") else 0
     source = (report.get("source") or "").lower()
     echa_bonus = 1 if "echa" in source else 0
     hazard_count = len(report.get("hazard_statements") or [])
-    return (-count, -echa_bonus, -hazard_count, source_index)
+    return (-has_pictograms, -count, -echa_bonus, -hazard_count, source_index)
+
+
+def _empty_ghs_report() -> Dict[str, Any]:
+    return {
+        "pictograms": [],
+        "hazard_statements": [],
+        "precautionary_statements": [],
+        "signal_word": None,
+        "signal_word_zh": None,
+        "source": None,
+        "report_count": None,
+    }
+
+
+def _ghs_report_has_content(report: Dict[str, Any]) -> bool:
+    return bool(
+        report.get("pictograms")
+        or report.get("hazard_statements")
+        or report.get("precautionary_statements")
+        or report.get("signal_word")
+    )
 
 
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
@@ -887,18 +942,10 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                     
                                     if info_name == "Pictogram(s)":
                                         # Start a new report when we encounter Pictogram(s)
-                                        if current_report is not None:
+                                        if current_report is not None and _ghs_report_has_content(current_report):
                                             reports.append(current_report)
                                         
-                                        current_report = {
-                                            "pictograms": [],
-                                            "hazard_statements": [],
-                                            "precautionary_statements": [],
-                                            "signal_word": None,
-                                            "signal_word_zh": None,
-                                            "source": None,
-                                            "report_count": None
-                                        }
+                                        current_report = _empty_ghs_report()
                                         
                                         # Extract pictogram codes
                                         seen_codes = set()
@@ -916,7 +963,9 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                                 **GHS_PICTOGRAMS[pic_code]
                                                             })
                                     
-                                    elif info_name == "Signal" and current_report is not None:
+                                    elif info_name == "Signal":
+                                        if current_report is None:
+                                            current_report = _empty_ghs_report()
                                         signal_translations = {"Danger": "危險", "Warning": "警告"}
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             signal = markup.get("String", "")
@@ -925,23 +974,26 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                 current_report["signal_word_zh"] = signal_translations.get(signal, signal)
                                                 break
                                     
-                                    elif info_name == "GHS Hazard Statements" and current_report is not None:
+                                    elif info_name == "GHS Hazard Statements":
+                                        if current_report is None:
+                                            current_report = _empty_ghs_report()
                                         seen_codes = set()
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             text = markup.get("String", "")
-                                            h_match = re.search(r'(H\d{3})', text)
-                                            if h_match:
-                                                h_code = h_match.group(1)
+                                            for h_match in H_CODE_PATTERN.finditer(text):
+                                                h_code = h_match.group(0)
                                                 if h_code not in seen_codes:
                                                     seen_codes.add(h_code)
                                                     zh_text = H_CODE_TRANSLATIONS.get(h_code, "")
                                                     current_report["hazard_statements"].append({
                                                         "code": h_code,
                                                         "text_en": text,
-                                                        "text_zh": zh_text if zh_text else text
+                                                        "text_zh": zh_text if zh_text else H_CODE_MISSING_TEXT_ZH
                                                     })
                                     
-                                    elif info_name == "Precautionary Statement Codes" and current_report is not None:
+                                    elif info_name == "Precautionary Statement Codes":
+                                        if current_report is None:
+                                            current_report = _empty_ghs_report()
                                         # PubChem returns P-codes as a comma-separated
                                         # list in a single StringWithMarkup.String,
                                         # e.g. "P210, P233, P240, P303+P361+P353, and P501".
@@ -962,7 +1014,9 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                         "text_zh": zh_text if zh_text else p_code,
                                                     })
 
-                                    elif info_name == "ECHA C&L Notifications Summary" and current_report is not None:
+                                    elif info_name == "ECHA C&L Notifications Summary":
+                                        if current_report is None:
+                                            current_report = _empty_ghs_report()
                                         for markup in info.get("Value", {}).get("StringWithMarkup", []):
                                             text = markup.get("String", "")
                                             if text:
@@ -974,14 +1028,15 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                                 break
                                 
                                 # Don't forget the last report
-                                if current_report is not None:
+                                if current_report is not None and _ghs_report_has_content(current_report):
                                     reports.append(current_report)
     
     except Exception as e:
         logger.error(f"Error extracting GHS classifications: {e}")
     
-    # Filter out empty reports
-    reports = [r for r in reports if r.get("pictograms")]
+    # Keep text-only PubChem GHS reports. Missing pictograms must not collapse
+    # available signal/H-code text into "no GHS data".
+    reports = [r for r in reports if _ghs_report_has_content(r)]
     
     return reports
 
@@ -1425,7 +1480,7 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         # Dedup using the full signature (pictograms + signal + h-codes + source).
         seen_signatures = {_classification_signature(primary)}
         for _, report in indexed[1:]:
-            if not report.get("pictograms"):
+            if not _ghs_report_has_content(report):
                 continue
             sig = _classification_signature(report)
             if sig in seen_signatures:
@@ -1440,6 +1495,12 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
                 source=report.get("source"),
                 report_count=report.get("report_count"),
             ))
+
+    text_only_review_required = bool(
+        all_classifications
+        and not primary_pictograms
+        and (primary_hazards or primary_precautions or primary_signal)
+    )
     
     # Use RecordTitle as fallback for name_en if not found
     if not name_en:
@@ -1483,6 +1544,7 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
         retrieved_at=retrieved_at,
         cache_hit=cache_hit,
         reference_links=_build_reference_links(normalized_cas, cid, name_en),
+        error=GHS_TEXT_ONLY_REVIEW_ERROR if text_only_review_required else None,
     )
 
 
@@ -1597,16 +1659,23 @@ async def search_by_name(
     seen_rows = set()
 
     def append_match(cas: str, *, alias: Optional[str] = None) -> None:
-        key = (cas, alias or "")
+        normalized = _normalize_valid_lookup_cas(cas)
+        if not normalized:
+            return
+        key = (normalized, alias or "")
         if key in seen_rows:
             return
         seen_rows.add(key)
         matches.append({
-            "cas_number": cas,
-            "name_en": get_english_name_from_cas(cas) or "",
-            "name_zh": get_chinese_name_from_cas(cas) or "",
+            "cas_number": normalized,
+            "name_en": get_english_name_from_cas(normalized) or "",
+            "name_zh": get_chinese_name_from_cas(normalized) or "",
             "alias": alias,
-            "reference_links": _build_reference_links(cas, None, get_english_name_from_cas(cas)),
+            "reference_links": _build_reference_links(
+                normalized,
+                None,
+                get_english_name_from_cas(normalized),
+            ),
         })
 
     # Chinese name matches (substring) — includes seed aliases merged into ZH_TO_CAS

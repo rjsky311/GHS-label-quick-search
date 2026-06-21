@@ -158,7 +158,7 @@ describe('FavoritesSidebar', () => {
     expect(onPrintLabel).toHaveBeenCalledWith(fav);
   });
 
-  it('disables print for favorites without GHS hazard content', () => {
+  it('allows print for identity-only favorites with a usable CAS so App can rehydrate', () => {
     const onPrintLabel = jest.fn();
     const fav = makeFav({
       ghs_pictograms: [],
@@ -171,7 +171,25 @@ describe('FavoritesSidebar', () => {
     );
 
     const printButton = screen.getByText('favorites.printLabel');
+    expect(printButton).not.toBeDisabled();
+    fireEvent.click(printButton);
+    expect(onPrintLabel).toHaveBeenCalledWith(fav);
+  });
+
+  it('disables print for favorites without a usable CAS number', () => {
+    const onPrintLabel = jest.fn();
+    const fav = makeFav({
+      cas_number: '   ',
+      ghs_pictograms: [{ code: 'GHS02', name_zh: '易燃' }],
+      hazard_statements: [{ code: 'H225', text_en: 'Highly flammable.' }],
+    });
+    render(
+      <FavoritesSidebar {...defaultProps} favorites={[fav]} onPrintLabel={onPrintLabel} />
+    );
+
+    const printButton = screen.getByText('favorites.printLabel');
     expect(printButton).toBeDisabled();
+    expect(printButton).toHaveAttribute('title', 'label.favoritePrintMissingCas');
     fireEvent.click(printButton);
     expect(onPrintLabel).not.toHaveBeenCalled();
   });

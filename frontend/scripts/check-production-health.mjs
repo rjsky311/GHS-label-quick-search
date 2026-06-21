@@ -2,6 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { resolveProductionQaExpectedSha } from "./production-expected-sha.mjs";
+
 const DEFAULT_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
 const DEFAULT_BACKEND_HEALTH_URL = "https://ghs-backend.zeabur.app/api/health";
 
@@ -27,12 +29,16 @@ const expectedAssetTexts = (
   .split("||")
   .map((value) => value.trim())
   .filter(Boolean);
-const expectedGitSha = (
-  process.env.PRODUCTION_HEALTH_EXPECTED_GIT_SHA ||
-  process.env.PRINT_QA_EXPECTED_GIT_SHA ||
-  process.env.GITHUB_SHA ||
-  ""
-).trim();
+const expectedGitSha = (() => {
+  try {
+    return resolveProductionQaExpectedSha({
+      scriptName: "Production health QA",
+    }).expectedGitSha;
+  } catch (error) {
+    console.error(error?.message || String(error));
+    process.exit(1);
+  }
+})();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -360,6 +360,8 @@
   "label.selectedLabelsContinuationSummary": "{{sourceLabels}} 張原始標籤會展開為 {{labels}} 張續頁標籤，約 {{pages}} 頁。",
   "label.noneSelected": "尚未選擇任何化學品",
   "label.noPrintableHazardData": "此選取項目沒有可列印的 GHS 危害資料。製作危害標籤前，請先查閱 SDS 或來源連結。",
+  "label.favoritePrintLookupFailed": "列印前無法重新取得此收藏項目的完整資料。請重新搜尋後，從最新結果列印。",
+  "label.favoritePrintMissingCas": "此收藏項目需要 CAS 號碼，才能重新取得完整資料並列印。",
   "label.pictogramCount": "({{count}} 個圖示)",
   "label.nameDisplay": "名稱顯示",
   "label.nameBoth": "雙語",

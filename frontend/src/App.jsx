@@ -170,6 +170,9 @@ function App() {
   const singleSearchAbortRef = useRef(null);
   const batchSearchRequestRef = useRef(0);
   const batchSearchAbortRef = useRef(null);
+  const favoritePrintRequestRef = useRef(0);
+  const favoritePrintAbortRef = useRef(null);
+  const favoritePrintCasRef = useRef("");
   const batchProgressClearTimeoutRef = useRef(null);
 
   const isCanceledRequest = useCallback(
@@ -179,6 +182,13 @@ function App() {
       axios.isCancel?.(error),
     [],
   );
+
+  const invalidateFavoritePrintLookup = useCallback(() => {
+    favoritePrintAbortRef.current?.abort?.();
+    favoritePrintAbortRef.current = null;
+    favoritePrintRequestRef.current += 1;
+    favoritePrintCasRef.current = "";
+  }, []);
 
   // ── Custom Hooks ──
   const { history, saveToHistory, clearHistory } = useSearchHistory();
@@ -418,6 +428,7 @@ function App() {
   );
 
   const handleGoHome = useCallback(() => {
+    invalidateFavoritePrintLookup();
     setError("");
     setLoading(false);
     setBatchProgress(null);
@@ -454,7 +465,7 @@ function App() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
-  }, [replaceResultsView, setLabelQuantities]);
+  }, [invalidateFavoritePrintLookup, replaceResultsView, setLabelQuantities]);
 
   const logUnresolvedSearch = useCallback(
     (query, queryType, result, meta = {}) => {
@@ -505,6 +516,7 @@ function App() {
   const searchSingle = useCallback(async (directCas) => {
     const query =
       typeof directCas === "string" ? directCas.trim() : singleCas.trim();
+    invalidateFavoritePrintLookup();
     if (!query) {
       setError(t("search.errorEmpty"));
       return;
@@ -544,9 +556,11 @@ function App() {
     saveToHistory,
     logUnresolvedSearch,
     isCanceledRequest,
+    invalidateFavoritePrintLookup,
   ]);
 
   const searchBatch = async () => {
+    invalidateFavoritePrintLookup();
     if (!batchCas.trim()) {
       setError(t("search.errorEmpty"));
       return;
@@ -670,21 +684,85 @@ function App() {
   }, [pilotAuthError]);
 
   const handleViewDetailFromFavorites = useCallback((item) => {
+    invalidateFavoritePrintLookup();
     setSelectedResult(item);
     setShowFavorites(false);
-  }, []);
+  }, [invalidateFavoritePrintLookup]);
 
-  const handlePrintLabelFromFavorites = useCallback((item) => {
-    if (!hasGhsData(item)) {
-      toast.error(t("label.noPrintableHazardData"));
+  const handleViewDetailFromResults = useCallback((item) => {
+    invalidateFavoritePrintLookup();
+    setSelectedResult(item);
+  }, [invalidateFavoritePrintLookup]);
+
+  const handlePrintLabelFromFavorites = useCallback(async (item) => {
+    const casNumber = typeof item?.cas_number === "string" ? item.cas_number.trim() : "";
+    invalidateFavoritePrintLookup();
+    if (!casNumber) {
+      toast.error(
+        t("label.favoritePrintLookupFailed", {
+          defaultValue:
+            "Could not refresh this favorite before printing. Search it again, then print from the fresh result.",
+        }),
+      );
       return;
     }
-    setSelectedForLabel([item]);
-    setShowLabelModal(true);
-    setShowFavorites(false);
-  }, [setSelectedForLabel, t]);
+
+    const controller = new AbortController();
+    const requestId = favoritePrintRequestRef.current + 1;
+    favoritePrintRequestRef.current = requestId;
+    favoritePrintCasRef.current = casNumber;
+    favoritePrintAbortRef.current = controller;
+
+    setError("");
+    try {
+      const response = await axios.get(`${API}/search-single`, {
+        params: { q: casNumber },
+        signal: controller.signal,
+      });
+      if (
+        favoritePrintRequestRef.current !== requestId ||
+        favoritePrintCasRef.current !== casNumber
+      ) {
+        return;
+      }
+      const refreshedItem = response.data;
+      const refreshedEffective = getEffectiveClassification(refreshedItem);
+      if (!refreshedItem?.found || !hasGhsData(refreshedEffective)) {
+        toast.error(t("label.noPrintableHazardData"));
+        return;
+      }
+      setSelectedForLabel([refreshedItem]);
+      setShowLabelModal(true);
+      setShowFavorites(false);
+    } catch (error) {
+      if (isCanceledRequest(error)) return;
+      if (
+        favoritePrintRequestRef.current !== requestId ||
+        favoritePrintCasRef.current !== casNumber
+      ) {
+        return;
+      }
+      toast.error(
+        t("label.favoritePrintLookupFailed", {
+          defaultValue:
+            "Could not refresh this favorite before printing. Search it again, then print from the fresh result.",
+        }),
+      );
+    } finally {
+      if (favoritePrintRequestRef.current === requestId) {
+        favoritePrintAbortRef.current = null;
+      }
+    }
+  }, [
+    getEffectiveClassification,
+    invalidateFavoritePrintLookup,
+    isCanceledRequest,
+    setSelectedForLabel,
+    t,
+  ]);
 
   const handlePrintLabelFromDetail = useCallback((item) => {
+    invalidateFavoritePrintLookup();
     const effective = getEffectiveClassification(item);
     if (!hasGhsData(effective)) {
       toast.error(t("label.noPrintableHazardData"));
@@ -693,7 +771,12 @@ function App() {
     setSelectedForLabel([item]);
     setSelectedResult(null);
     setShowLabelModal(true);
-  }, [getEffectiveClassification, setSelectedForLabel, t]);
+  }, [
+    getEffectiveClassification,
+    invalidateFavoritePrintLookup,
+    setSelectedForLabel,
+    t,
+  ]);
 
   const handleTogglePilotDashboard = useCallback(() => {
     if (!PILOT_ADMIN_ENABLED) return;
@@ -731,6 +814,7 @@ function App() {
   );
 
   const handleOpenLabelModal = useCallback(() => {
+    invalidateFavoritePrintLookup();
     const getPrintableResults = (items) =>
       items.filter((r) => r.found && hasGhsData(getEffectiveClassification(r)));
     const printableSelection = getPrintableResults(selectedForLabel);
@@ -752,6 +836,7 @@ function App() {
     setShowLabelModal(true);
   }, [
     getEffectiveClassification,
+    invalidateFavoritePrintLookup,
     selectedForLabel,
     setSelectedForLabel,
     sortedResults,
@@ -765,9 +850,15 @@ function App() {
     const printable = sortedResults.filter(
       (r) => r.found && hasGhsData(getEffectiveClassification(r))
     );
+    invalidateFavoritePrintLookup();
     setSelectedForLabel(printable);
     setShowLabelModal(true);
-  }, [sortedResults, getEffectiveClassification, setSelectedForLabel]);
+  }, [
+    sortedResults,
+    getEffectiveClassification,
+    invalidateFavoritePrintLookup,
+    setSelectedForLabel,
+  ]);
 
   // Pilot refinement: count the same visible subset that the shortcut
   // will act on, so the button reflects the current table scope.
@@ -853,11 +944,12 @@ function App() {
     (record) => {
       const items = loadRecentPrint(record);
       if (items.length === 0) return;
+      invalidateFavoritePrintLookup();
       setPrintBlockedInfo(null);
       setSelectedForLabel(items);
       setShowLabelModal(true);
     },
-    [loadRecentPrint, setSelectedForLabel]
+    [invalidateFavoritePrintLookup, loadRecentPrint, setSelectedForLabel]
   );
 
   // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────
@@ -868,9 +960,10 @@ function App() {
 
   // Entry: from DetailModal's "Prepare solution" button.
   const handleOpenPrepareSolution = useCallback((chem) => {
+    invalidateFavoritePrintLookup();
     setPreparedPresetNameDraft("");
     setPrepareSolutionParent(chem);
-  }, []);
+  }, [invalidateFavoritePrintLookup]);
 
   const handleOpenDataCorrection = useCallback((context) => {
     setDataCorrectionContext(context);
@@ -892,6 +985,7 @@ function App() {
   const handleReprintPreparedRecent = useCallback(
     async (record, recordId) => {
       if (!record?.parentCas) return;
+      invalidateFavoritePrintLookup();
       const activeId = recordId || record.createdAt || `recent-${record.parentCas}`;
       setPreparedReprintingId(activeId);
       try {
@@ -920,7 +1014,7 @@ function App() {
         setPreparedReprintingId(null);
       }
     },
-    [setSelectedForLabel, setLabelQuantities, t]
+    [invalidateFavoritePrintLookup, setSelectedForLabel, setLabelQuantities, t]
   );
 
   // Submit: build the derived item, hard-replace selection + quantities,
@@ -937,6 +1031,7 @@ function App() {
       if (!preparedItem) return; // validation already blocked this in the modal, but guard anyway
 
       // Replace selection with exactly this one prepared item.
+      invalidateFavoritePrintLookup();
       setSelectedForLabel([preparedItem]);
       // Reset quantities so the prepared item starts at 1, not inheriting
       // any stale count from a parent chemical that happens to share its CAS.
@@ -965,6 +1060,7 @@ function App() {
       setShowLabelModal,
       addPreparedRecent,
       setPreparedPresetNameDraft,
+      invalidateFavoritePrintLookup,
     ]
   );
 
@@ -991,6 +1087,30 @@ function App() {
     }
   }, [preparedFlowActive, setSelectedForLabel, setLabelQuantities]);
 
+  const handleCloseFavorites = useCallback(() => {
+    invalidateFavoritePrintLookup();
+    setShowFavorites(false);
+  }, [invalidateFavoritePrintLookup]);
+
+  const handleClearFavorites = useCallback(() => {
+    invalidateFavoritePrintLookup();
+    clearFavorites();
+  }, [clearFavorites, invalidateFavoritePrintLookup]);
+
+  const handleToggleFavoriteFromFavorites = useCallback((item) => {
+    invalidateFavoritePrintLookup();
+    toggleFavorite(item);
+  }, [invalidateFavoritePrintLookup, toggleFavorite]);
+
+  const handleToggleFavorites = useCallback(() => {
+    if (showFavorites) {
+      invalidateFavoritePrintLookup();
+      setShowFavorites(false);
+      return;
+    }
+    setShowFavorites(true);
+  }, [invalidateFavoritePrintLookup, showFavorites]);
+
   // ── Render ──
   return (
     <div className="theme-comfort-dim notebook-app min-h-screen">
@@ -1011,7 +1131,7 @@ function App() {
         showHistory={showHistory}
         showPilotDashboard={showPilotDashboard}
         onTogglePilotDashboard={handleTogglePilotDashboard}
-        onToggleFavorites={() => setShowFavorites(!showFavorites)}
+        onToggleFavorites={handleToggleFavorites}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}
         onGoHome={handleGoHome}
@@ -1052,9 +1172,9 @@ function App() {
         {showFavorites && (
           <FavoritesSidebar
             favorites={favorites}
-            onClose={() => setShowFavorites(false)}
-            onClearFavorites={clearFavorites}
-            onToggleFavorite={toggleFavorite}
+            onClose={handleCloseFavorites}
+            onClearFavorites={handleClearFavorites}
+            onToggleFavorite={handleToggleFavoriteFromFavorites}
             onViewDetail={handleViewDetailFromFavorites}
             onPrintLabel={handlePrintLabelFromFavorites}
           />
@@ -1154,7 +1274,7 @@ function App() {
                 onToggleOtherClassifications={toggleOtherClassifications}
                 onSetCustomClassification={setCustomClassification}
                 onClearCustomClassification={clearCustomClassification}
-                onViewDetail={setSelectedResult}
+                onViewDetail={handleViewDetailFromResults}
                 onOpenComparison={() => setShowComparisonModal(true)}
                 onOpenDataCorrection={handleOpenDataCorrection}
               />
