@@ -87,13 +87,14 @@ shipped/monitoring Batch-First owner doc,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
-Latest closed concrete slice: implementation commit
-`9f868deda22626e6def370d93baf151c66cdba55` covers the 2026-06-21
-post-deploy H360 variant wording gap by adding reviewed H360-family
-Traditional Chinese wording and a bounded H-code coverage patrol for primary
-and alternate classifications. Production proof still comes from expected-SHA
-freshness plus `npm run qa:h-code-coverage`; reopen only if that gate or fresh
-lookup/print evidence fails.
+Latest closed concrete slice: the 2026-06-21 post-deploy H360 variant wording
+gap is now production-verified closed at
+`d0659b9e79496a37fdca07a4a5c9d9150e64647c`. The slice added reviewed
+H360-family Traditional Chinese wording, a bounded H-code coverage patrol for
+primary and alternate classifications, and a dependency-light audit module so
+GitHub Production Print QA can run the check before product QA. Evidence lives
+in `qa/evidence/2026-06-21-h-code-wording-closure/`. Reopen only if
+`npm run qa:h-code-coverage` or fresh lookup/print evidence fails.
 
 Open a new slice only when the evidence states:
 

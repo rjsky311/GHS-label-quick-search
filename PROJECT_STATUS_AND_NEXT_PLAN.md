@@ -189,9 +189,14 @@ Current baseline capabilities:
   Traditional Chinese placeholder hazard wording for H360 variants (`H360FD`
   and `H360Fd`). Implementation commit
   `9f868deda22626e6def370d93baf151c66cdba55` adds reviewed H360-family wording
-  and a bounded H-code patrol covering primary and alternate classifications.
-  Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before reopening another
-  wording or print-quality slice.
+  and commit `d0659b9e79496a37fdca07a4a5c9d9150e64647c` makes that patrol
+  dependency-light for GitHub/production QA. Production is verified at
+  `d0659b9e79496a37fdca07a4a5c9d9150e64647c`: Zeabur freshness,
+  production health, H-code wording coverage, P-code wording coverage, and
+  GitHub Production Print QA all passed. Evidence lives in
+  `qa/evidence/2026-06-21-h-code-wording-closure/`. Use
+  `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before reopening another wording
+  or print-quality slice.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared

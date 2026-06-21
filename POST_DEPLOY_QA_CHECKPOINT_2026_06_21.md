@@ -18,6 +18,9 @@ fresh evidence should drive the next slice.
 Evidence package:
 `qa/evidence/2026-06-21-post-deploy-manual-qa/README.md`.
 
+H-code wording closure package:
+`qa/evidence/2026-06-21-h-code-wording-closure/README.md`.
+
 ## Production Gates
 
 These gates passed against the expected production SHA:
@@ -90,13 +93,39 @@ surface the placeholder to users.
 
 ## Next Issue Queue
 
+### Closure Update - H360 Variant Wording
+
+Status: closed on production at
+`d0659b9e79496a37fdca07a4a5c9d9150e64647c`.
+
+The two P1 items below were implemented and verified after this checkpoint:
+
+- H360-family Traditional Chinese wording was added for the observed
+  `H360FD` and `H360Fd` gaps plus related variants.
+- `npm run qa:h-code-coverage` now scans primary and alternate
+  classifications for missing H-code Traditional Chinese wording and
+  placeholder payload fields.
+- Zeabur deployment freshness and production health both matched
+  `d0659b9e79496a37fdca07a4a5c9d9150e64647c`.
+- Production H-code coverage found 48 unique H-codes across 11 representative
+  CAS results, with 0 missing Traditional Chinese codes and 0 placeholder
+  payload fields.
+- Manual-directed production spot check for `67-56-1`, `75-21-8`, and
+  `7647-01-0` found 32 unique H-codes, including `H360FD` and `H360Fd`, with
+  0 missing Traditional Chinese codes and 0 placeholder payload fields.
+- GitHub Production Print QA passed, including the new H-code wording coverage
+  step.
+
+Use the H-code wording closure package linked above as the evidence source
+before reopening this issue class.
+
 ### P1 - Close H360 Variant Chinese Wording Gaps
 
 Implementation update: commit
 `9f868deda22626e6def370d93baf151c66cdba55` adds reviewed Traditional Chinese
 wording for `H350i`, `H360F`, `H360D`, `H360FD`, `H360Fd`, `H360Df`,
 `H361f`, `H361d`, and `H361fd`, plus a focused regression test for the
-H360 reproductive-toxicity variants.
+H360 reproductive-toxicity variants. Production closure is recorded above.
 
 Source: post-deploy manual-directed content spot check on production.
 
@@ -131,7 +160,8 @@ Implementation update: commit
 `backend/scripts/audit_h_code_coverage.py` and `npm run qa:h-code-coverage`.
 The audit scans primary and `other_classifications` hazard statements for
 missing Traditional Chinese wording, missing payload text, renamed payload
-fields, and the `尚無完整文字 - 使用前請核對 SDS。` placeholder.
+fields, and the `尚無完整文字 - 使用前請核對 SDS。` placeholder. Production
+closure is recorded above.
 
 Source: same spot check. Existing QA was strong enough for primary print paths
 but did not fail on alternate classification H-code placeholders.

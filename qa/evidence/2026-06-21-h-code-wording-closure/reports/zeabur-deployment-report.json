@@ -1,0 +1,166 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T12:32:30.881Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+  "serviceId": "69626873d9479ab33ad4590e",
+  "environmentId": "696262d9a7aaff0c1152b3d6",
+  "expectedGitSha": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",
+  "zeaburCommand": "npx zeabur deployment list --service-id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "parseError": ""
+  },
+  "zeaburServiceCommand": "npx zeabur service get --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburServiceCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "zeaburVariableCommand": "npx zeabur variable list --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburVariableCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "serviceBuildVariables": {
+    "keys": [
+      "GHS_BACKEND_HOST",
+      "GHS_BACKEND_HOST",
+      "MONGODB_HOST",
+      "PORT",
+      "REACT_APP_BACKEND_URL",
+      "VITE_BACKEND_URL",
+      "ZBPACK_APP_DIR",
+      "ZBPACK_BUILD_COMMAND",
+      "ZBPACK_OUTPUT_DIR"
+    ],
+    "expected": {
+      "ZBPACK_APP_DIR": "frontend",
+      "ZBPACK_BUILD_COMMAND": "npm ci && npm run build",
+      "ZBPACK_OUTPUT_DIR": "build",
+      "VITE_BACKEND_URL": "https://ghs-backend.zeabur.app"
+    },
+    "matchesExpected": true
+  },
+  "service": {
+    "id": "69626873d9479ab33ad4590e",
+    "name": "ghs-frontend",
+    "template": "PREBUILT_V2",
+    "status": "RUNNING",
+    "rootDirectory": "",
+    "customBuildCommand": "",
+    "outputDir": "",
+    "watchPaths": [
+      "*"
+    ]
+  },
+  "buildLogCommand": "npx zeabur deployment log --deployment-id 6a37d96d28b523f84eeff7e9 --type build --json --interactive=false",
+  "buildLogCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "skipped": false,
+    "entryCount": 413
+  },
+  "localConfig": {
+    "zeaburYaml": {
+      "exists": true,
+      "hasFrontendServiceName": true,
+      "hasBackendServiceName": true,
+      "hasLegacyFrontendName": false,
+      "hasLegacyBackendName": false
+    },
+    "frontendZbpack": {
+      "exists": true,
+      "appDir": "frontend",
+      "buildCommand": "npm ci && npm run build",
+      "outputDir": "build",
+      "matchesExpected": true
+    }
+  },
+  "latestDeployment": {
+    "id": "6a37d96d28b523f84eeff7e9",
+    "status": "RUNNING",
+    "commitSHA": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",
+    "commitMessage": "Make H-code audit dependency-light",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T12:30:37.493Z",
+    "scheduledAt": "2026-06-21T12:30:39.355Z",
+    "startedAt": "2026-06-21T12:30:41.455Z",
+    "finishedAt": "2026-06-21T12:31:47.93Z",
+    "started": true,
+    "finished": true
+  },
+  "latestDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "runningDeployment": {
+    "id": "6a37d96d28b523f84eeff7e9",
+    "status": "RUNNING",
+    "commitSHA": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",
+    "commitMessage": "Make H-code audit dependency-light",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T12:30:37.493Z",
+    "scheduledAt": "2026-06-21T12:30:39.355Z",
+    "startedAt": "2026-06-21T12:30:41.455Z",
+    "finishedAt": "2026-06-21T12:31:47.93Z",
+    "started": true,
+    "finished": true
+  },
+  "runningDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "expectedDeployment": {
+    "id": "6a37d96d28b523f84eeff7e9",
+    "status": "RUNNING",
+    "commitSHA": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",
+    "commitMessage": "Make H-code audit dependency-light",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T12:30:37.493Z",
+    "scheduledAt": "2026-06-21T12:30:39.355Z",
+    "startedAt": "2026-06-21T12:30:41.455Z",
+    "finishedAt": "2026-06-21T12:31:47.93Z",
+    "started": true,
+    "finished": true
+  },
+  "expectedDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "expectedDeployments": [
+    {
+      "id": "6a37d96d28b523f84eeff7e9",
+      "status": "RUNNING",
+      "commitSHA": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",
+      "commitMessage": "Make H-code audit dependency-light",
+      "ref": "refs/heads/main",
+      "createdAt": "2026-06-21T12:30:37.493Z",
+      "scheduledAt": "2026-06-21T12:30:39.355Z",
+      "startedAt": "2026-06-21T12:30:41.455Z",
+      "finishedAt": "2026-06-21T12:31:47.93Z",
+      "started": true,
+      "finished": true
+    }
+  ],
+  "deploymentCount": 5,
+  "statusCategory": "fresh-running",
+  "recovery": {
+    "redeployCommand": "npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --yes --json --interactive=false",
+    "inspectDeploymentCommand": "npx zeabur deployment get --deployment-id 6a37d96d28b523f84eeff7e9 --json --interactive=false",
+    "nextActions": [
+      "Proceed with heavier production QA."
+    ]
+  },
+  "failures": [],
+  "guidance": []
+}
