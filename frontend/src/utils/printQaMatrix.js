@@ -2607,11 +2607,18 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
   const english = chemical.name_en || chemical.name;
   const chinese = chemical.name_zh || chemical.name;
   const allNames = uniqueTexts([chinese, english, chemical.name]);
-  const requiresBilingualIdentity = [
-    "complete-primary",
+  const requiresSmallLabelCompleteIdentity = [
     "quick-id",
     "qr-supplement",
   ].includes(expected.labelKind);
+
+  if (requiresSmallLabelCompleteIdentity) {
+    return {
+      any: uniqueTexts([...allNames, chemical.cas_number]),
+      required: allNames,
+      forbidden: [],
+    };
+  }
 
   if (labelConfig.nameDisplay === "en") {
     return {
@@ -2629,7 +2636,7 @@ const resolveIdentityTextExpectation = (chemical = {}, labelConfig = {}, expecte
     };
   }
 
-  if (requiresBilingualIdentity) {
+  if (expected.labelKind === "complete-primary") {
     return {
       any: uniqueTexts([...allNames, chemical.cas_number]),
       required: allNames,

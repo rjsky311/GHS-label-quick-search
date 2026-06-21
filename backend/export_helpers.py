@@ -104,6 +104,18 @@ def _has_export_ghs_data(result: Dict[str, Any]) -> bool:
     )
 
 
+def _has_export_pictograms(result: Dict[str, Any]) -> bool:
+    return bool(result.get("ghs_pictograms") or result.get("pictograms"))
+
+
+def _is_export_printable(result: Dict[str, Any]) -> bool:
+    return (
+        result.get("found") is not False
+        and _has_export_ghs_data(result)
+        and _has_export_pictograms(result)
+    )
+
+
 def _export_data_state(result: Dict[str, Any]) -> str:
     if result.get("upstream_error"):
         return "Upstream transient failure"
@@ -142,7 +154,7 @@ def _export_review_issue_types(result: Dict[str, Any]) -> List[str]:
 
     if not _has_export_ghs_data(result):
         issue_types.append("no_ghs_data")
-    elif not (result.get("ghs_pictograms") or result.get("pictograms")):
+    elif not _has_export_pictograms(result):
         issue_types.append("ghs_text_no_pictograms")
 
     if result.get("source_conflict") or result.get("source_conflicts"):
@@ -187,7 +199,7 @@ def _export_trust_cells(result: Dict[str, Any]) -> List[str]:
     ]
     return [
         _export_data_state(result),
-        "Yes" if result.get("found") is not False and _has_export_ghs_data(result) else "No",
+        "Yes" if _is_export_printable(result) else "No",
         "Yes" if review_reasons else "No",
         "; ".join(review_reasons) if review_reasons else "No review reasons",
         str(len(review_issue_types)),
@@ -398,7 +410,7 @@ def _build_export_pilot_summary(
     review_signal_count = 0
     review_overlap_count = 0
     for result in results:
-        if result.get("found") is not False and _has_export_ghs_data(result):
+        if _is_export_printable(result):
             printable_count += 1
         review_reasons = _export_review_reasons(result)
         review_reason_counts.update(review_reasons)

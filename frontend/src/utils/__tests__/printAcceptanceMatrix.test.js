@@ -488,7 +488,7 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("more-pics");
   });
 
-  it("renders English-only QR small labels as a physical print mode", () => {
+  it("renders QR small labels with complete identity even when English-only is requested", () => {
     const preview = previewLabel(hydrochloricAcid, {
       labelPurpose: "qrSupplement",
       template: "qrcode",
@@ -502,7 +502,7 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("qrcode-img");
     expect(preview.fragmentHtml).toContain("small-cas");
     expect(preview.fragmentHtml).toContain("Hydrochloric Acid");
-    expect(preview.fragmentHtml).not.toContain(hydrochloricAcid.name_zh);
+    expect(preview.fragmentHtml).toContain(hydrochloricAcid.name_zh);
     expect(expandedPictogramCodes(preview)).toEqual([
       "GHS04",
       "GHS05",

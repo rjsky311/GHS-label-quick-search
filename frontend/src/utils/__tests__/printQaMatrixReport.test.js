@@ -1025,10 +1025,10 @@ describe("print QA matrix report", () => {
     ).toEqual([]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedRequiredIdentityTexts,
-    ).toEqual(["Ethanol"]);
+    ).toEqual(["乙醇", "Ethanol"]);
     expect(
       byId["ethanol-tube-quick-id"].chemical.expectedForbiddenIdentityTexts,
-    ).toEqual(["乙醇"]);
+    ).toEqual([]);
     expect(byId["sodium-hydroxide-qr-supplement"].chemical).toMatchObject({
       cas: "1310-73-2",
       expectedPictograms: ["GHS05", "GHS07"],
@@ -1043,9 +1043,9 @@ describe("print QA matrix report", () => {
       expectedPictograms: ["GHS02", "GHS06", "GHS08"],
     });
     expect(browserCaseById["methanol-brother-quick-id-bw"]).toMatchObject({
-      expectedNameDisplay: "en",
+      expectedNameDisplay: "both",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["Methanol"],
+      expectedRequiredIdentityTexts: ["甲醇", "Methanol"],
       expectedMinPictogramSidePx: 26,
     });
     expect(byId["hydrogen-peroxide-qr-supplement-en"].chemical).toMatchObject({
@@ -1055,10 +1055,10 @@ describe("print QA matrix report", () => {
     expect(byId["nitrogen-tube-quick-id-single-pictogram"].chemical).toMatchObject({
       cas: "7727-37-9",
       expectedPictograms: ["GHS04"],
-      expectedRequiredIdentityTexts: ["Nitrogen"],
+      expectedRequiredIdentityTexts: ["氮氣", "Nitrogen"],
     });
     expect(browserCaseById["nitrogen-tube-quick-id-single-pictogram"]).toMatchObject({
-      expectedNameDisplay: "en",
+      expectedNameDisplay: "both",
       expectedLabelKind: "quick-id",
       expectedStockPreset: "small-strip",
       expectedPictograms: ["GHS04"],
@@ -1067,10 +1067,10 @@ describe("print QA matrix report", () => {
     expect(byId["zinc-oxide-small-qr-environmental"].chemical).toMatchObject({
       cas: "1314-13-2",
       expectedPictograms: ["GHS09"],
-      expectedRequiredIdentityTexts: ["Zinc Oxide"],
+      expectedRequiredIdentityTexts: ["氧化鋅", "Zinc Oxide"],
     });
     expect(browserCaseById["zinc-oxide-small-qr-environmental"]).toMatchObject({
-      expectedNameDisplay: "en",
+      expectedNameDisplay: "both",
       expectedLabelKind: "qr-supplement",
       expectedStockPreset: "small-strip",
       expectedPictograms: ["GHS09"],
@@ -1182,10 +1182,10 @@ describe("print QA matrix report", () => {
       expectedMinQrSidePx: 30,
     });
     expect(browserCaseById["ethanol-tube-quick-id"]).toMatchObject({
-      expectedNameDisplay: "en",
+      expectedNameDisplay: "both",
       expectedColorMode: "bw",
-      expectedRequiredIdentityTexts: ["Ethanol"],
-      expectedForbiddenIdentityTexts: ["乙醇"],
+      expectedRequiredIdentityTexts: ["乙醇", "Ethanol"],
+      expectedForbiddenIdentityTexts: [],
     });
     expect(browserCaseById["tube-vial-quick-id-with-case"].steps).not.toEqual(
       expect.arrayContaining([

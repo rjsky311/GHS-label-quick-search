@@ -463,6 +463,11 @@ export const getBatchReasonLabel = (reason, tx) => {
         "label.batchReasonTextOnlyQuickId",
         "GHS text exists but no pictogram is available for identification labels",
       );
+    case "ghs-text-no-pictograms":
+      return tx(
+        "label.batchReasonGhsTextNoPictograms",
+        "GHS text exists but no pictogram is available; review the source before printing small labels",
+      );
     case "responsible-profile-missing":
       return tx("label.batchReasonProfile", "Responsible profile is incomplete");
     case "complete-content-needs-continuation":

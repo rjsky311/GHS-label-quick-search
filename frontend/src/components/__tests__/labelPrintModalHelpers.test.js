@@ -1,4 +1,7 @@
-import { buildBatchReviewCsv } from "@/components/label-print/labelPrintModalHelpers";
+import {
+  buildBatchReviewCsv,
+  getBatchReasonLabel,
+} from "@/components/label-print/labelPrintModalHelpers";
 
 const tx = (_key, defaultValue) => defaultValue;
 
@@ -27,5 +30,13 @@ describe("buildBatchReviewCsv", () => {
     expect(csv).toContain("'-effective");
     expect(csv).toContain("'-reason");
     expect(csv).not.toMatch(/(^|,)"?[=+\-@\t]/m);
+  });
+});
+
+describe("getBatchReasonLabel", () => {
+  it("uses a specific review reason for text-only GHS without pictograms", () => {
+    expect(getBatchReasonLabel({ type: "ghs-text-no-pictograms" }, tx)).toBe(
+      "GHS text exists but no pictogram is available; review the source before printing small labels",
+    );
   });
 });

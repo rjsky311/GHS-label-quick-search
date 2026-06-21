@@ -1205,6 +1205,14 @@ export const buildPrintStyles = (model) => {
       text-align: center;
       padding: 3mm 0;
     }
+    .no-hazard-review {
+      color: #92400e;
+      background: #fffbeb;
+      border: 0.25mm solid #f59e0b;
+      border-radius: 1mm;
+      font-weight: 700;
+      padding: 1.2mm 1.6mm;
+    }
     .no-hazard-text {
       color: #64748b;
       font-style: italic;

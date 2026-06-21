@@ -52,6 +52,21 @@ const makeSimpleSupplementalChemical = () => ({
   precautionary_statements: [],
 });
 
+const makeTextOnlyGhsChemical = () => ({
+  ...makeSimpleSupplementalChemical(),
+  cas_number: "100-00-5",
+  name_en: "Text-only GHS sample",
+  name_zh: "文字型 GHS 樣品",
+  ghs_pictograms: [],
+  hazard_statements: [
+    { code: "H302", text_en: "Harmful if swallowed." },
+  ],
+  precautionary_statements: [
+    { code: "P264", text_en: "Wash hands thoroughly after handling." },
+  ],
+  signal_word: "Warning",
+});
+
 const makeDenseSupplementalChemical = () => ({
   ...makeChemical(4),
   name_en:
@@ -366,5 +381,29 @@ describe("printOutputPlanner", () => {
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
     expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QUICK_ID);
     expect(plan.canPrint).toBe(true);
+  });
+
+  it.each([
+    ["QR small label", "qrSupplement", "qrcode", PRINT_OUTPUT_KIND.QR_SUPPLEMENT],
+    ["identification small label", "quickId", "icon", PRINT_OUTPUT_KIND.QUICK_ID],
+  ])("blocks text-only GHS from %s output plans", (_label, labelPurpose, template, outputKind) => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeTextOnlyGhsChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose,
+        template,
+        stockPreset: "small-strip",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: {},
+      locale: "zh-TW",
+    });
+
+    expect(plan.canPrint).toBe(false);
+    expect(plan.outputKind).toBe(outputKind);
+    expect(plan.state).not.toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
+    expect(plan.issues).toEqual([
+      expect.objectContaining({ type: "ghs-text-no-pictograms" }),
+    ]);
   });
 });
