@@ -1,0 +1,289 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T11:11:05.265Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-qa-summary.json",
+  "requireProductBlocks": true,
+  "requireDeploymentFreshness": true,
+  "reports": {
+    "deployment": {
+      "name": "zeabur-deployment",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+      "statusCategory": "fresh-running",
+      "expectedGitSha": "0455d721ce883be6332cc0fee41d6b8379712040",
+      "latestDeployment": {
+        "id": "6a37c3fa28b523f84eefeeb1",
+        "status": "RUNNING",
+        "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+        "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+        "ref": "refs/heads/main",
+        "createdAt": "2026-06-21T10:59:06.708Z",
+        "scheduledAt": "2026-06-21T10:59:08.649Z",
+        "startedAt": "2026-06-21T10:59:10.752Z",
+        "finishedAt": "2026-06-21T11:00:18.799Z",
+        "started": true,
+        "finished": true
+      },
+      "expectedDeployment": {
+        "id": "6a37c3fa28b523f84eefeeb1",
+        "status": "RUNNING",
+        "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+        "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+        "ref": "refs/heads/main",
+        "createdAt": "2026-06-21T10:59:06.708Z",
+        "scheduledAt": "2026-06-21T10:59:08.649Z",
+        "startedAt": "2026-06-21T10:59:10.752Z",
+        "finishedAt": "2026-06-21T11:00:18.799Z",
+        "started": true,
+        "finished": true
+      },
+      "runningDeployment": {
+        "id": "6a37c3fa28b523f84eefeeb1",
+        "status": "RUNNING",
+        "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+        "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+        "ref": "refs/heads/main",
+        "createdAt": "2026-06-21T10:59:06.708Z",
+        "scheduledAt": "2026-06-21T10:59:08.649Z",
+        "startedAt": "2026-06-21T10:59:10.752Z",
+        "finishedAt": "2026-06-21T11:00:18.799Z",
+        "started": true,
+        "finished": true
+      },
+      "recovery": {
+        "redeployCommand": "npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --yes --json --interactive=false",
+        "inspectDeploymentCommand": "npx zeabur deployment get --deployment-id 6a37c3fa28b523f84eefeeb1 --json --interactive=false",
+        "nextActions": [
+          "Proceed with heavier production QA."
+        ]
+      },
+      "guidance": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "health": {
+      "name": "production-health",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-health-report.json",
+      "productionUrl": "",
+      "assetUrl": "",
+      "summary": null,
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "bundle": {
+      "name": "bundle-freshness",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-bundle-report.json",
+      "productionUrl": "https://ghs-frontend.zeabur.app/",
+      "assetUrl": "https://ghs-frontend.zeabur.app/assets/index-k9INrctF.js",
+      "summary": null,
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "searchUi": {
+      "name": "search-ui",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-report.json",
+      "productionUrl": "https://ghs-frontend.zeabur.app/",
+      "assetUrl": "",
+      "summary": null,
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "printQa": {
+      "name": "print-qa-matrix",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-qa-report.json",
+      "productionUrl": "",
+      "assetUrl": "",
+      "summary": {
+        "total": 41,
+        "passed": 41,
+        "failed": 0
+      },
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "pdf": {
+      "name": "print-pdf",
+      "present": false,
+      "ok": null,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-report.json"
+    },
+    "prepared": {
+      "name": "prepared-production",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-report.json",
+      "productionUrl": "https://ghs-frontend.zeabur.app/",
+      "assetUrl": "",
+      "summary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0
+      },
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "batch": {
+      "name": "fixed-stock-batch-print",
+      "present": true,
+      "ok": true,
+      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-batch-print-report.json",
+      "productionUrl": "https://ghs-frontend.zeabur.app",
+      "assetUrl": "",
+      "summary": null,
+      "selectedCases": null,
+      "missingMarkers": [],
+      "warnings": [],
+      "failures": [],
+      "failedCases": []
+    },
+    "handoff": [
+      {
+        "name": "production-print-smoke-report",
+        "present": true,
+        "ok": true,
+        "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-report.json",
+        "productionUrl": "https://ghs-frontend.zeabur.app/",
+        "assetUrl": "",
+        "summary": {
+          "total": 6,
+          "totalSelected": 6,
+          "completed": 6,
+          "passed": 6,
+          "failed": 0,
+          "pending": 0
+        },
+        "selectedCases": [
+          "a4-primary",
+          "a4-primary-profile-blocked",
+          "letter-primary",
+          "ethylene-oxide-a4-primary-continuation",
+          "tube-vial-quick-id",
+          "brother-62mm-qr-supplement"
+        ],
+        "missingMarkers": [],
+        "warnings": [],
+        "failures": [],
+        "failedCases": []
+      }
+    ]
+  },
+  "productBlocks": [
+    {
+      "id": "deployment-freshness",
+      "name": "Production deployment freshness",
+      "reports": [
+        "zeabur-deployment",
+        "production-health"
+      ],
+      "ok": true,
+      "evidence": "Production deployment freshness is proven by production health/build metadata; Zeabur deployment state is included when CLI auth is available."
+    },
+    {
+      "id": "production-availability",
+      "name": "Production frontend/backend availability",
+      "reports": [
+        "production-health"
+      ],
+      "ok": true,
+      "evidence": "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and Zeabur request-id capture."
+    },
+    {
+      "id": "print-renderer-stock-fit",
+      "name": "Print renderer and stock fit robustness",
+      "reports": [
+        "bundle-freshness",
+        "print-qa-matrix",
+        "production-print-smoke-report"
+      ],
+      "ok": true,
+      "evidence": "Production bundle freshness, print QA matrix, and deployed print handoff checks cover complete-primary and compact stock paths."
+    },
+    {
+      "id": "result-table-pictograms",
+      "name": "Result table and GHS pictogram visual unity",
+      "reports": [
+        "search-ui"
+      ],
+      "ok": true,
+      "evidence": "Production search UI QA checks result-row, expanded classification, and detail comparison pictogram geometry."
+    },
+    {
+      "id": "trust-source-sds",
+      "name": "Trust, source, SDS, and safety boundaries",
+      "reports": [
+        "search-ui"
+      ],
+      "ok": true,
+      "evidence": "Production search UI QA checks authoritative notes, source chips, safe SDS/reference links, and support-link separation."
+    },
+    {
+      "id": "prepared-solution-reprint",
+      "name": "Prepared solution and reprint workflow maturity",
+      "reports": [
+        "prepared-production"
+      ],
+      "ok": true,
+      "evidence": "Production prepared QA covers prepared print, recent reprint, and saved preset reuse across primary, bottle, and tube outputs."
+    },
+    {
+      "id": "fixed-stock-batch-printing",
+      "name": "Fixed-stock batch label printing",
+      "reports": [
+        "fixed-stock-batch-print"
+      ],
+      "ok": true,
+      "evidence": "Production batch print QA searches a mixed batch, opens the fixed-stock modal, verifies the batch fit report, switches representative preview, and checks ready-batch handoff."
+    },
+    {
+      "id": "whole-product-ux-brand-utility",
+      "name": "Whole-product UX and brand-utility convergence",
+      "reports": [
+        "search-ui",
+        "production-health",
+        "bundle-freshness",
+        "production-print-smoke-report",
+        "prepared-production",
+        "fixed-stock-batch-print"
+      ],
+      "ok": true,
+      "evidence": "Core deployed walkthroughs keep search, detail, modal keyboard containment, trust/support, print, prepared, and batch workflows in one production gate."
+    }
+  ],
+  "summary": {
+    "presentReports": 8,
+    "failedReports": 0,
+    "failedReportNames": [],
+    "failedRequiredFreshnessBlocks": [],
+    "failedProductBlocks": [],
+    "incompleteProductBlocks": [],
+    "actionableFailures": [],
+    "reportLevelFailures": [],
+    "reportWarnings": [],
+    "failureTriage": []
+  }
+}

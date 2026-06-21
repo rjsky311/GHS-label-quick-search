@@ -178,6 +178,17 @@ Current baseline capabilities:
   boundaries, P-code wording coverage, frontend search/print state guards,
   backend git-SHA health reporting, Zeabur deployment freshness, and
   production summary gating covered by green local and production QA.
+- The 2026-06-21 post-deploy print lookup and production QA hardening
+  checkpoint has shipped on production at
+  `0455d721ce883be6332cc0fee41d6b8379712040`. PR #38 hardened GHS parsing,
+  favorite print rehydration, stale print lookup cancellation, QR target
+  allowlisting, and expected-SHA production QA. Production deployment,
+  health, search UI, batch print, prepared print, and product QA passed
+  against the expected SHA. The follow-up manual-directed spot check found the
+  next concrete P1 issue: alternate classifications still contain Traditional
+  Chinese placeholder hazard wording for H360 variants (`H360FD` and
+  `H360Fd`). Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before opening the
+  next wording or print-quality slice.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
@@ -222,8 +233,8 @@ Current validation gates:
   visibility. Public visibility is the default expected state; override
   `GITHUB_RESOURCE_EXPECTED_VISIBILITY` only if the product decision changes.
   The 2026-06-21 cleanup removed expired GitHub Actions artifacts; the clean
-  baseline is PUBLIC visibility, 11.92 MiB repository disk usage,
-  94.02 MiB active artifacts, 0.00 MiB expired artifacts, and 367.79 MiB
+  baseline is PUBLIC visibility, 12.07 MiB repository disk usage,
+  97.44 MiB active artifacts, 0.00 MiB expired artifacts, and 367.79 MiB
   Actions caches.
 - P-code wording coverage patrol: `npm run qa:p-code-coverage` from
   `frontend/` queries the bounded backend smoke set and fails when observed

@@ -1,0 +1,166 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T11:00:48.008Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+  "serviceId": "69626873d9479ab33ad4590e",
+  "environmentId": "696262d9a7aaff0c1152b3d6",
+  "expectedGitSha": "0455d721ce883be6332cc0fee41d6b8379712040",
+  "zeaburCommand": "npx zeabur deployment list --service-id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "parseError": ""
+  },
+  "zeaburServiceCommand": "npx zeabur service get --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburServiceCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "zeaburVariableCommand": "npx zeabur variable list --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburVariableCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "serviceBuildVariables": {
+    "keys": [
+      "GHS_BACKEND_HOST",
+      "GHS_BACKEND_HOST",
+      "MONGODB_HOST",
+      "PORT",
+      "REACT_APP_BACKEND_URL",
+      "VITE_BACKEND_URL",
+      "ZBPACK_APP_DIR",
+      "ZBPACK_BUILD_COMMAND",
+      "ZBPACK_OUTPUT_DIR"
+    ],
+    "expected": {
+      "ZBPACK_APP_DIR": "frontend",
+      "ZBPACK_BUILD_COMMAND": "npm ci && npm run build",
+      "ZBPACK_OUTPUT_DIR": "build",
+      "VITE_BACKEND_URL": "https://ghs-backend.zeabur.app"
+    },
+    "matchesExpected": true
+  },
+  "service": {
+    "id": "69626873d9479ab33ad4590e",
+    "name": "ghs-frontend",
+    "template": "PREBUILT_V2",
+    "status": "RUNNING",
+    "rootDirectory": "",
+    "customBuildCommand": "",
+    "outputDir": "",
+    "watchPaths": [
+      "*"
+    ]
+  },
+  "buildLogCommand": "npx zeabur deployment log --deployment-id 6a37c3fa28b523f84eefeeb1 --type build --json --interactive=false",
+  "buildLogCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "skipped": false,
+    "entryCount": 413
+  },
+  "localConfig": {
+    "zeaburYaml": {
+      "exists": true,
+      "hasFrontendServiceName": true,
+      "hasBackendServiceName": true,
+      "hasLegacyFrontendName": false,
+      "hasLegacyBackendName": false
+    },
+    "frontendZbpack": {
+      "exists": true,
+      "appDir": "frontend",
+      "buildCommand": "npm ci && npm run build",
+      "outputDir": "build",
+      "matchesExpected": true
+    }
+  },
+  "latestDeployment": {
+    "id": "6a37c3fa28b523f84eefeeb1",
+    "status": "RUNNING",
+    "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+    "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T10:59:06.708Z",
+    "scheduledAt": "2026-06-21T10:59:08.649Z",
+    "startedAt": "2026-06-21T10:59:10.752Z",
+    "finishedAt": "2026-06-21T11:00:18.799Z",
+    "started": true,
+    "finished": true
+  },
+  "latestDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 0
+  },
+  "runningDeployment": {
+    "id": "6a37c3fa28b523f84eefeeb1",
+    "status": "RUNNING",
+    "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+    "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T10:59:06.708Z",
+    "scheduledAt": "2026-06-21T10:59:08.649Z",
+    "startedAt": "2026-06-21T10:59:10.752Z",
+    "finishedAt": "2026-06-21T11:00:18.799Z",
+    "started": true,
+    "finished": true
+  },
+  "runningDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 0
+  },
+  "expectedDeployment": {
+    "id": "6a37c3fa28b523f84eefeeb1",
+    "status": "RUNNING",
+    "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+    "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T10:59:06.708Z",
+    "scheduledAt": "2026-06-21T10:59:08.649Z",
+    "startedAt": "2026-06-21T10:59:10.752Z",
+    "finishedAt": "2026-06-21T11:00:18.799Z",
+    "started": true,
+    "finished": true
+  },
+  "expectedDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 0
+  },
+  "expectedDeployments": [
+    {
+      "id": "6a37c3fa28b523f84eefeeb1",
+      "status": "RUNNING",
+      "commitSHA": "0455d721ce883be6332cc0fee41d6b8379712040",
+      "commitMessage": "Harden print lookup and production QA gates\n\nSummary:\n- Harden GHS parsing/name-search behavior, favorite print rehydration, QR target allowlisting, and production QA freshness gates.\n- Add regression coverage for backend lookup handling, favorite print races, production SHA resolution, and label print helpers.\n\nValidation:\n- Backend and Frontend GitHub CI passed on PR #38.\n- Local frontend/backend/build/resource checks passed before merge.",
+      "ref": "refs/heads/main",
+      "createdAt": "2026-06-21T10:59:06.708Z",
+      "scheduledAt": "2026-06-21T10:59:08.649Z",
+      "startedAt": "2026-06-21T10:59:10.752Z",
+      "finishedAt": "2026-06-21T11:00:18.799Z",
+      "started": true,
+      "finished": true
+    }
+  ],
+  "deploymentCount": 5,
+  "statusCategory": "fresh-running",
+  "recovery": {
+    "redeployCommand": "npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --yes --json --interactive=false",
+    "inspectDeploymentCommand": "npx zeabur deployment get --deployment-id 6a37c3fa28b523f84eefeeb1 --json --interactive=false",
+    "nextActions": [
+      "Proceed with heavier production QA."
+    ]
+  },
+  "failures": [],
+  "guidance": []
+}

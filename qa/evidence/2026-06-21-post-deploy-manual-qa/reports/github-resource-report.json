@@ -1,0 +1,176 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T10:51:47.533Z",
+  "repo": "rjsky311/GHS-label-quick-search",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/github-resource-report.json",
+  "thresholds": {
+    "repoDiskKiB": 102400,
+    "artifactsBytes": 1073741824,
+    "cachesBytes": 1073741824
+  },
+  "expectedVisibility": "PUBLIC",
+  "repoInfo": {
+    "defaultBranchRef": {
+      "name": "main"
+    },
+    "diskUsage": 12364,
+    "isPrivate": false,
+    "nameWithOwner": "rjsky311/GHS-label-quick-search",
+    "visibility": "PUBLIC"
+  },
+  "artifacts": {
+    "count": 36,
+    "activeCount": 36,
+    "expiredCount": 0,
+    "totalBytes": 102173155,
+    "total": "97.44 MiB",
+    "activeBytes": 102173155,
+    "active": "97.44 MiB",
+    "expiredBytes": 0,
+    "expired": "0.00 MiB",
+    "largest": [
+      {
+        "name": "production-print-qa-scheduled-product-27753418118",
+        "sizeInBytes": 5972419,
+        "size": "5.70 MiB",
+        "expired": false,
+        "createdAt": "2026-06-18T10:42:47Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27899140146",
+        "sizeInBytes": 3589217,
+        "size": "3.42 MiB",
+        "expired": false,
+        "createdAt": "2026-06-21T08:58:37Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27877718210",
+        "sizeInBytes": 3582579,
+        "size": "3.42 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T17:02:53Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27878311507",
+        "sizeInBytes": 3580591,
+        "size": "3.41 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T17:27:05Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27890530659",
+        "sizeInBytes": 3579109,
+        "size": "3.41 MiB",
+        "expired": false,
+        "createdAt": "2026-06-21T02:17:17Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27878001407",
+        "sizeInBytes": 3574499,
+        "size": "3.41 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T17:13:50Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27866963583",
+        "sizeInBytes": 3570003,
+        "size": "3.40 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T09:36:11Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27876680481",
+        "sizeInBytes": 3569738,
+        "size": "3.40 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T16:21:35Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27864839346",
+        "sizeInBytes": 3566875,
+        "size": "3.40 MiB",
+        "expired": false,
+        "createdAt": "2026-06-20T08:03:02Z"
+      },
+      {
+        "name": "production-print-qa-scheduled-product-27758982070",
+        "sizeInBytes": 3565903,
+        "size": "3.40 MiB",
+        "expired": false,
+        "createdAt": "2026-06-18T12:29:54Z"
+      }
+    ]
+  },
+  "caches": {
+    "count": 9,
+    "totalBytes": 385655595,
+    "total": "367.79 MiB",
+    "largest": [
+      {
+        "key": "node-cache-Linux-x64-npm-ae13e86d1db8d23c4c35736c42d545c9ed85dc24aad8a5210f7b32ff3879122d",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 58708708,
+        "size": "55.99 MiB",
+        "lastAccessedAt": "2026-06-20T17:04:15.658565000Z"
+      },
+      {
+        "key": "node-cache-Linux-x64-npm-ba4c4c0bc64244e80c3724d58630c1e44d47a941d5f483fb76976e7dfe41ac75",
+        "ref": "refs/pull/35/merge",
+        "sizeInBytes": 57398247,
+        "size": "54.74 MiB",
+        "lastAccessedAt": "2026-06-18T09:46:42.049034000Z"
+      },
+      {
+        "key": "node-cache-Linux-x64-npm-ba4c4c0bc64244e80c3724d58630c1e44d47a941d5f483fb76976e7dfe41ac75",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 57396910,
+        "size": "54.74 MiB",
+        "lastAccessedAt": "2026-06-18T12:20:21.920385000Z"
+      },
+      {
+        "key": "node-cache-Linux-x64-npm-652b091423a1c0ffeaff9ea20c4b209315cc68e4259edbdce5d4806aa0ff816a",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 52027171,
+        "size": "49.62 MiB",
+        "lastAccessedAt": "2026-06-20T17:17:45.269991000Z"
+      },
+      {
+        "key": "node-cache-Linux-x64-npm-2fa98a6e0e5bc2a4e0bb0c561cc0c6647a8e4972540d964c4b0527d82800b289",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 52026278,
+        "size": "49.62 MiB",
+        "lastAccessedAt": "2026-06-21T10:49:54.944130000Z"
+      },
+      {
+        "key": "node-cache-Linux-x64-npm-50d7186cf3ffd1c23fd58b145484e1293ad7a4795079c9b5e063cdbcbabbca8f",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 51936042,
+        "size": "49.53 MiB",
+        "lastAccessedAt": "2026-06-18T09:03:27.951521000Z"
+      },
+      {
+        "key": "setup-python-Linux-x64-24.04-Ubuntu-python-3.11.15-pip-5bf19bdb798949e8dd869c1f42daeadea3e06fb48974d3830f5295fa4d16b59a",
+        "ref": "refs/pull/35/merge",
+        "sizeInBytes": 19774461,
+        "size": "18.86 MiB",
+        "lastAccessedAt": "2026-06-18T09:46:48.724389000Z"
+      },
+      {
+        "key": "setup-python-Linux-x64-24.04-Ubuntu-python-3.11.15-pip-5bf19bdb798949e8dd869c1f42daeadea3e06fb48974d3830f5295fa4d16b59a",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 19774307,
+        "size": "18.86 MiB",
+        "lastAccessedAt": "2026-06-21T10:49:52.321340000Z"
+      },
+      {
+        "key": "setup-python-Linux-x64-24.04-Ubuntu-python-3.11.15-pip-68ab549a7303ede1f2dad7a7bb78adbc1ac67efa5c285f5df506dfe7371b5457",
+        "ref": "refs/heads/main",
+        "sizeInBytes": 16613471,
+        "size": "15.84 MiB",
+        "lastAccessedAt": "2026-06-18T10:08:31.160508000Z"
+      }
+    ]
+  },
+  "warnings": [],
+  "failures": []
+}

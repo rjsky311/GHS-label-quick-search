@@ -1,0 +1,2587 @@
+{
+  "ok": true,
+  "partial": false,
+  "startedAt": "2026-06-21T11:03:45.412Z",
+  "finishedAt": "2026-06-21T11:10:00.959Z",
+  "productionUrl": "https://ghs-frontend.zeabur.app/",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-qa-report.json",
+  "handoffReportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-report.json",
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "headless": true,
+  "caseTimeoutMs": 180000,
+  "caseTimeoutGraceMs": 10000,
+  "browserLaunchTimeoutMs": 60000,
+  "selectedCases": [
+    "a4-primary",
+    "a4-primary-profile-blocked",
+    "letter-primary",
+    "ethylene-oxide-a4-primary-continuation",
+    "tube-vial-quick-id",
+    "brother-62mm-qr-supplement"
+  ],
+  "summary": {
+    "total": 6,
+    "totalSelected": 6,
+    "completed": 6,
+    "passed": 6,
+    "failed": 0,
+    "pending": 0
+  },
+  "failedCaseSummary": [],
+  "results": [
+    {
+      "id": "a4-primary",
+      "searchTerm": "7647-01-0",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "188",
+        "data-label-height-mm": "268",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-auto-fit-level": "0",
+        "data-template": "full",
+        "data-stock-preset": "a4-primary",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/a4-primary.png",
+        "previewPageControlsVisible": false,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": null,
+        "previewInspection": {
+          "labelKind": "complete-primary",
+          "labelClass": "label label-full label-compliance label-stock-a4-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-4 label-pictogram-density-standard label-purpose-shipping label-full-page-primary label-a4-primary",
+          "frameTextSample": "Hydrochloric acid 鹽酸 CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure] H290 可能腐蝕金屬 / H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals] H314 造成嚴重皮膚灼傷和眼睛損傷 / H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation] H318 造成嚴重眼睛損傷 / H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation] H331 吸入有毒 / H331 (4",
+          "pictogramCodes": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "hasQrImage": true,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 296,
+              "width": 481,
+              "height": 296
+            },
+            "label": {
+              "left": 156,
+              "top": 20,
+              "right": 324.34,
+              "bottom": 259.97,
+              "width": 168.34,
+              "height": 239.97
+            },
+            "pictograms": [
+              {
+                "left": 159.75,
+                "top": 40.89,
+                "right": 177.66,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 178.46,
+                "top": 40.89,
+                "right": 196.37,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 197.17,
+                "top": 40.89,
+                "right": 215.08,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 215.88,
+                "top": 40.89,
+                "right": 233.78,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              }
+            ],
+            "qrImages": [
+              {
+                "left": 300.03,
+                "top": 225.48,
+                "right": 318.65,
+                "bottom": 244.1,
+                "width": 18.62,
+                "height": 18.62
+              }
+            ],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 17.91,
+          "minQrSidePx": 18.62,
+          "counts": {
+            "pictograms": 4,
+            "qrImages": 1,
+            "supportChips": 0,
+            "signalWords": 1,
+            "casNodes": 2
+          },
+          "qrTargetAttributes": [
+            {
+              "key": "QR",
+              "target": "https://ghs-frontend.zeabur.app/?cas=7647-01-0",
+              "type": "ghs-lookup",
+              "source": "ghs-label-quick-search",
+              "label": "GHS Label Quick Search"
+            }
+          ]
+        },
+        "outputChecklistText": "必要輸出數量來自與列印 preflight 相同的內容模型。主標GHS 圖示4/4H 語句6/6P 語句22/22警示語1/1負責單位資訊3/3",
+        "decisionSummaryText": "標籤輸出完整主標籤GHS 圖示保留所有圖示危害文字完整 H/P 文字",
+        "recoveryRoute": null,
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "完整主標籤"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "A4 主標"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:03:45.787Z",
+      "finishedAt": "2026-06-21T11:04:49.946Z",
+      "durationMs": 64159,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 64159,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a4-primary-profile-blocked",
+      "searchTerm": "7647-01-0",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": null,
+        "data-label-kind": null,
+        "data-pictograms": null,
+        "data-has-qr": null,
+        "data-cas-numbers": null,
+        "data-has-cas": null,
+        "data-label-width-mm": null,
+        "data-label-height-mm": null,
+        "data-page-size": null,
+        "data-color-mode": null,
+        "data-name-display": null,
+        "data-auto-fit-level": null,
+        "data-template": null,
+        "data-stock-preset": null,
+        "data-total-labels": null,
+        "data-total-pages": null,
+        "data-issue-types": null,
+        "data-support-chips": null
+      },
+      "statusText": "先補齊負責單位資訊 missing print-label-action",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/a4-primary-profile-blocked.png",
+        "previewPageControlsVisible": false,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": null,
+        "previewInspection": {
+          "labelKind": "complete-primary",
+          "labelClass": "label label-full label-compliance label-stock-a4-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-4 label-pictogram-density-standard label-purpose-shipping label-full-page-primary label-a4-primary",
+          "frameTextSample": "Hydrochloric acid 鹽酸 CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure] H290 可能腐蝕金屬 / H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals] H314 造成嚴重皮膚灼傷和眼睛損傷 / H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation] H318 造成嚴重眼睛損傷 / H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation] H331 吸入有毒 / H331 (4",
+          "pictogramCodes": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "hasQrImage": true,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 296,
+              "width": 481,
+              "height": 296
+            },
+            "label": {
+              "left": 156,
+              "top": 20,
+              "right": 324.34,
+              "bottom": 259.97,
+              "width": 168.34,
+              "height": 239.97
+            },
+            "pictograms": [
+              {
+                "left": 159.75,
+                "top": 40.89,
+                "right": 177.66,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 178.46,
+                "top": 40.89,
+                "right": 196.37,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 197.17,
+                "top": 40.89,
+                "right": 215.08,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              },
+              {
+                "left": 215.88,
+                "top": 40.89,
+                "right": 233.78,
+                "bottom": 58.79,
+                "width": 17.91,
+                "height": 17.91
+              }
+            ],
+            "qrImages": [
+              {
+                "left": 300.03,
+                "top": 225.48,
+                "right": 318.65,
+                "bottom": 244.1,
+                "width": 18.62,
+                "height": 18.62
+              }
+            ],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 17.91,
+          "minQrSidePx": 18.62,
+          "counts": {
+            "pictograms": 4,
+            "qrImages": 1,
+            "supportChips": 0,
+            "signalWords": 1,
+            "casNodes": 2
+          },
+          "qrTargetAttributes": [
+            {
+              "key": "QR",
+              "target": "https://ghs-frontend.zeabur.app/?cas=7647-01-0",
+              "type": "ghs-lookup",
+              "source": "ghs-label-quick-search",
+              "label": "GHS Label Quick Search"
+            }
+          ]
+        },
+        "outputChecklistText": "必要輸出數量來自與列印 preflight 相同的內容模型。主標GHS 圖示4/4H 語句6/6P 語句22/22警示語1/1負責單位資訊0/3",
+        "decisionSummaryText": "標籤輸出需要負責單位資訊GHS 圖示保留所有圖示危害文字完整 H/P 文字",
+        "recoveryRoute": {
+          "text": "建議處理方式補齊實驗室/供應商資料A4 主標 目前規劃為完整主標，因此列印前必須有名稱、電話與地址。",
+          "kind": "profile",
+          "currentStock": "A4 主標",
+          "targetStock": ""
+        },
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "需要負責單位資訊"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "A4 主標"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:04:49.955Z",
+      "finishedAt": "2026-06-21T11:05:43.148Z",
+      "durationMs": 53193,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 53193,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "letter-primary",
+      "searchTerm": "7647-01-0",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "196",
+        "data-label-height-mm": "250",
+        "data-page-size": "Letter",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-auto-fit-level": "0",
+        "data-template": "full",
+        "data-stock-preset": "letter-primary",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/letter-primary.png",
+        "previewPageControlsVisible": false,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": null,
+        "previewInspection": {
+          "labelKind": "complete-primary",
+          "labelClass": "label label-full label-compliance label-stock-letter-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-4 label-pictogram-density-standard label-purpose-shipping label-full-page-primary label-letter-primary",
+          "frameTextSample": "Hydrochloric acid 鹽酸 CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure] H290 可能腐蝕金屬 / H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals] H314 造成嚴重皮膚灼傷和眼睛損傷 / H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation] H318 造成嚴重眼睛損傷 / H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation] H331 吸入有毒 / H331 (4",
+          "pictogramCodes": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "hasQrImage": true,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 296,
+              "width": 481,
+              "height": 296
+            },
+            "label": {
+              "left": 146,
+              "top": 20,
+              "right": 334.13,
+              "bottom": 259.97,
+              "width": 188.13,
+              "height": 239.97
+            },
+            "pictograms": [
+              {
+                "left": 150.02,
+                "top": 42.39,
+                "right": 170.08,
+                "bottom": 62.45,
+                "width": 20.06,
+                "height": 20.06
+              },
+              {
+                "left": 170.94,
+                "top": 42.39,
+                "right": 191,
+                "bottom": 62.45,
+                "width": 20.06,
+                "height": 20.06
+              },
+              {
+                "left": 191.87,
+                "top": 42.39,
+                "right": 211.92,
+                "bottom": 62.45,
+                "width": 20.06,
+                "height": 20.06
+              },
+              {
+                "left": 212.79,
+                "top": 42.39,
+                "right": 232.85,
+                "bottom": 62.45,
+                "width": 20.06,
+                "height": 20.06
+              }
+            ],
+            "qrImages": [
+              {
+                "left": 308.08,
+                "top": 223,
+                "right": 328.04,
+                "bottom": 242.96,
+                "width": 19.96,
+                "height": 19.96
+              }
+            ],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 20.06,
+          "minQrSidePx": 19.96,
+          "counts": {
+            "pictograms": 4,
+            "qrImages": 1,
+            "supportChips": 0,
+            "signalWords": 1,
+            "casNodes": 2
+          },
+          "qrTargetAttributes": [
+            {
+              "key": "QR",
+              "target": "https://ghs-frontend.zeabur.app/?cas=7647-01-0",
+              "type": "ghs-lookup",
+              "source": "ghs-label-quick-search",
+              "label": "GHS Label Quick Search"
+            }
+          ]
+        },
+        "outputChecklistText": "必要輸出數量來自與列印 preflight 相同的內容模型。主標GHS 圖示4/4H 語句6/6P 語句22/22警示語1/1負責單位資訊3/3",
+        "decisionSummaryText": "標籤輸出完整主標籤GHS 圖示保留所有圖示危害文字完整 H/P 文字",
+        "recoveryRoute": null,
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "完整主標籤"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "Letter 主標"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:05:43.164Z",
+      "finishedAt": "2026-06-21T11:06:47.013Z",
+      "durationMs": 63849,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 63849,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ethylene-oxide-a4-primary-continuation",
+      "searchTerm": "75-21-8",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS02,GHS04,GHS05,GHS06,GHS07,GHS08",
+        "data-has-qr": "true",
+        "data-cas-numbers": "75-21-8",
+        "data-has-cas": "true",
+        "data-label-width-mm": "188",
+        "data-label-height-mm": "268",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-auto-fit-level": "0",
+        "data-template": "full",
+        "data-stock-preset": "a4-primary",
+        "data-total-labels": "2",
+        "data-total-pages": "2",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS02,GHS04,GHS05,GHS06,GHS07,GHS08",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/ethylene-oxide-a4-primary-continuation.png",
+        "previewPageControlsVisible": true,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": {
+          "labelKind": "complete-primary",
+          "labelClass": "label label-full label-compliance label-stock-a4-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-6 label-pictogram-density-dense label-purpose-shipping label-full-page-primary label-a4-primary label-continuation-page",
+          "frameTextSample": "Ethylene Oxide CAS 75-21-8 危險 / Danger 第 2 / 2 頁 第 2 / 2 頁 最後續頁 QR 僅在第 1 頁 不可單獨使用本頁 整套頁面一起保存 · GHS 圖示已重複方便配頁 續頁 / CONTINUATION ONLY 不能單獨貼用本頁 請掃第 1 頁 QR 查詢碼 預防措施 / PRECAUTIONARY STATEMENTS P363 清洗後，受污染的衣物在重新使用前應先清洗。 / Wash contaminated clothing before reuse. P377 閥門漏氣起火：若安全可行，設法堵住洩漏；否則讓其燃燒直至燃料耗盡。 / Leaking gas fire: Do not extinguish, unless leak can be stopped safely. P381 若安全可行，消除所有點火源。 / In case of leakage, eliminate all ignition sources. P403 儲存於通風良好處。 / Store in a well-ventilated place. P403",
+          "pictogramCodes": [
+            "GHS02",
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07",
+            "GHS08"
+          ],
+          "hasQrImage": false,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS02",
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07",
+            "GHS08"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 296,
+              "width": 481,
+              "height": 296
+            },
+            "label": {
+              "left": 156,
+              "top": 20,
+              "right": 324.34,
+              "bottom": 259.97,
+              "width": 168.34,
+              "height": 239.97
+            },
+            "pictograms": [
+              {
+                "left": 159.75,
+                "top": 48.26,
+                "right": 175.42,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 176,
+                "top": 48.26,
+                "right": 191.67,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 192.25,
+                "top": 48.26,
+                "right": 207.92,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 208.51,
+                "top": 48.26,
+                "right": 224.17,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 224.76,
+                "top": 48.26,
+                "right": 240.43,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 241.01,
+                "top": 48.26,
+                "right": 256.68,
+                "bottom": 63.93,
+                "width": 15.67,
+                "height": 15.67
+              }
+            ],
+            "qrImages": [],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 15.67,
+          "minQrSidePx": 0,
+          "counts": {
+            "pictograms": 6,
+            "qrImages": 0,
+            "supportChips": 0,
+            "signalWords": 1,
+            "casNodes": 2
+          },
+          "qrTargetAttributes": []
+        },
+        "previewInspection": {
+          "labelKind": "complete-primary",
+          "labelClass": "label label-full label-compliance label-stock-a4-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-6 label-pictogram-density-dense label-purpose-shipping label-full-page-primary label-a4-primary label-continuation-page",
+          "frameTextSample": "Ethylene Oxide CAS 75-21-8 危險 / Danger 第 1 / 2 頁 第 1 / 2 頁 主標頁 QR 在本頁 完整標籤共 2 頁，請整套張貼或保存 · 整套頁面一起保存 · 請接續第 2 頁 危害說明 / HAZARD STATEMENTS H220 極易燃氣體 / H220 (> 99.9%): Extremely flammable gas [Danger Flammable gases] H230 可能以爆炸方式反應，即使沒有空氣 / H230 (18.4%): May react explosively even in the absence of air [Danger Flammable gases] H280 內含高壓氣體；遇熱可能爆炸 / H280 (86%): Contains gas under pressure; may explode if heated [Warning Gases under pressure] H301 吞食有毒 / H301 (20.4%): Toxic if swallowed [Danger Acute ",
+          "pictogramCodes": [
+            "GHS02",
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07",
+            "GHS08"
+          ],
+          "hasQrImage": true,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS02",
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07",
+            "GHS08"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 296,
+              "width": 481,
+              "height": 296
+            },
+            "label": {
+              "left": 156,
+              "top": 20,
+              "right": 324.34,
+              "bottom": 259.97,
+              "width": 168.34,
+              "height": 239.97
+            },
+            "pictograms": [
+              {
+                "left": 159.75,
+                "top": 40.36,
+                "right": 175.42,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 176,
+                "top": 40.36,
+                "right": 191.67,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 192.25,
+                "top": 40.36,
+                "right": 207.92,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 208.51,
+                "top": 40.36,
+                "right": 224.17,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 224.76,
+                "top": 40.36,
+                "right": 240.43,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              },
+              {
+                "left": 241.01,
+                "top": 40.36,
+                "right": 256.68,
+                "bottom": 56.03,
+                "width": 15.67,
+                "height": 15.67
+              }
+            ],
+            "qrImages": [
+              {
+                "left": 300.03,
+                "top": 227.87,
+                "right": 318.65,
+                "bottom": 246.49,
+                "width": 18.62,
+                "height": 18.62
+              }
+            ],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 15.67,
+          "minQrSidePx": 18.62,
+          "counts": {
+            "pictograms": 6,
+            "qrImages": 1,
+            "supportChips": 0,
+            "signalWords": 1,
+            "casNodes": 2
+          },
+          "qrTargetAttributes": [
+            {
+              "key": "QR",
+              "target": "https://ghs-frontend.zeabur.app/?cas=75-21-8",
+              "type": "ghs-lookup",
+              "source": "ghs-label-quick-search",
+              "label": "GHS Label Quick Search"
+            }
+          ]
+        },
+        "outputChecklistText": "必要輸出數量來自與列印 preflight 相同的內容模型。主標GHS 圖示6/6H 語句16/16P 語句36/36警示語1/1負責單位資訊3/3",
+        "decisionSummaryText": "標籤輸出完整 A4/Letter 續頁GHS 圖示保留所有圖示危害文字完整 H/P 跨頁",
+        "recoveryRoute": null,
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "完整 A4/Letter 續頁"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "A4 主標"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:06:47.020Z",
+      "finishedAt": "2026-06-21T11:07:52.687Z",
+      "durationMs": 65667,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 65667,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tube-vial-quick-id",
+      "searchTerm": "7647-01-0",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "quick-id",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "false",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "70",
+        "data-label-height-mm": "24",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-auto-fit-level": "1",
+        "data-template": "icon",
+        "data-stock-preset": "small-strip",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: quick-id; GHS04,GHS05,GHS06,GHS07",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/tube-vial-quick-id.png",
+        "previewPageControlsVisible": false,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": null,
+        "previewInspection": {
+          "labelKind": "quick-id",
+          "labelClass": "label label-icon label-stock-small-strip label-size-small label-form-strip label-fit-level-1 label-content-quick-id label-hazard-mode-omitted label-precaution-mode-omitted label-kind-quick-id label-output-supplemental label-pictogram-count-4 label-pictogram-density-standard",
+          "frameTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+          "pictogramCodes": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "hasQrImage": false,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": false,
+          "expectedPictograms": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 220,
+              "width": 481,
+              "height": 220
+            },
+            "label": {
+              "left": 30.5,
+              "top": 20,
+              "right": 450.44,
+              "bottom": 163.97,
+              "width": 419.94,
+              "height": 143.97
+            },
+            "pictograms": [
+              {
+                "left": 40.47,
+                "top": 88.82,
+                "right": 90.84,
+                "bottom": 139.2,
+                "width": 50.37,
+                "height": 50.37
+              },
+              {
+                "left": 93.52,
+                "top": 88.82,
+                "right": 143.89,
+                "bottom": 139.2,
+                "width": 50.37,
+                "height": 50.37
+              },
+              {
+                "left": 146.57,
+                "top": 88.82,
+                "right": 196.94,
+                "bottom": 139.2,
+                "width": 50.37,
+                "height": 50.37
+              },
+              {
+                "left": 199.62,
+                "top": 88.82,
+                "right": 249.99,
+                "bottom": 139.2,
+                "width": 50.37,
+                "height": 50.37
+              }
+            ],
+            "qrImages": [],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 50.37,
+          "minQrSidePx": 0,
+          "counts": {
+            "pictograms": 4,
+            "qrImages": 0,
+            "supportChips": 0,
+            "signalWords": 0,
+            "casNodes": 0
+          },
+          "qrTargetAttributes": []
+        },
+        "outputChecklistText": "本張標籤會印這裡只描述目前這張實體標籤。完整 H/P 細節應放在主標籤，或透過 SDS / QR 查閱。補充名稱 / CAS會列印名稱與 CAS 保持可讀。GHS 圖示4/4可用圖示必須保留在標籤上。完整危害文字小標不印識別小標籤優先讓身分與圖示清楚。",
+        "decisionSummaryText": "標籤輸出識別補充標籤GHS 圖示保留所有圖示危害文字小標籤不印 H/P",
+        "recoveryRoute": null,
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "識別補充標籤"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "試管條"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:07:52.700Z",
+      "finishedAt": "2026-06-21T11:08:56.568Z",
+      "durationMs": 63868,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 63868,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "brother-62mm-qr-supplement",
+      "searchTerm": "7647-01-0",
+      "passed": true,
+      "failures": [],
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "qr-supplement",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "62",
+        "data-label-height-mm": "40",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-auto-fit-level": "1",
+        "data-template": "qrcode",
+        "data-stock-preset": "brother-62mm-continuous",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: qr-supplement; GHS04,GHS05,GHS06,GHS07",
+      "evidence": {
+        "requiredIdentityTextInPreview": true,
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-screenshots/brother-62mm-qr-supplement.png",
+        "previewPageControlsVisible": false,
+        "nextPreviewPageChanged": true,
+        "nextPreviewInspection": null,
+        "previewInspection": {
+          "labelKind": "qr-supplement",
+          "labelClass": "label label-qr label-stock-brother-62mm-continuous label-size-small label-form-strip label-fit-level-1 label-content-qr-supplement label-hazard-mode-qr-reference label-precaution-mode-omitted label-kind-qr-supplement label-output-supplemental label-pictogram-count-4 label-pictogram-density-standard",
+          "frameTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+          "pictogramCodes": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "hasQrImage": true,
+          "hasSignalWord": true,
+          "hasCas": true,
+          "hasExpectedIdentityText": true,
+          "hasRequiredIdentityTexts": true,
+          "hasNoForbiddenIdentityText": true,
+          "hasRequiredIdentityText": true,
+          "hasExpectedColorClass": true,
+          "hasExpectedImageColorMode": true,
+          "imageFilters": [
+            "none",
+            "none",
+            "none",
+            "none",
+            "none"
+          ],
+          "expectedHasQr": true,
+          "expectedPictograms": [
+            "GHS04",
+            "GHS05",
+            "GHS06",
+            "GHS07"
+          ],
+          "labelVisible": true,
+          "labelWithinViewport": true,
+          "documentHasScrollOverflow": false,
+          "clippedCriticalElements": [],
+          "clippedContentElements": [],
+          "geometry": {
+            "viewport": {
+              "left": 0,
+              "top": 0,
+              "right": 481,
+              "bottom": 327,
+              "width": 481,
+              "height": 327
+            },
+            "label": {
+              "left": 30.5,
+              "top": 20,
+              "right": 450.44,
+              "bottom": 290.92,
+              "width": 419.94,
+              "height": 270.92
+            },
+            "pictograms": [
+              {
+                "left": 41.42,
+                "top": 114.7,
+                "right": 105.07,
+                "bottom": 178.35,
+                "width": 63.65,
+                "height": 63.65
+              },
+              {
+                "left": 108.79,
+                "top": 114.7,
+                "right": 172.44,
+                "bottom": 178.35,
+                "width": 63.65,
+                "height": 63.65
+              },
+              {
+                "left": 176.17,
+                "top": 114.7,
+                "right": 239.81,
+                "bottom": 178.35,
+                "width": 63.65,
+                "height": 63.65
+              },
+              {
+                "left": 41.42,
+                "top": 181.18,
+                "right": 105.07,
+                "bottom": 244.83,
+                "width": 63.65,
+                "height": 63.65
+              }
+            ],
+            "qrImages": [
+              {
+                "left": 308.47,
+                "top": 115.77,
+                "right": 436.47,
+                "bottom": 243.76,
+                "width": 128,
+                "height": 128
+              }
+            ],
+            "supportChips": []
+          },
+          "requiredSupportChipVisible": true,
+          "supportChipOverlapIssues": [],
+          "minPictogramSidePx": 63.65,
+          "minQrSidePx": 128,
+          "counts": {
+            "pictograms": 4,
+            "qrImages": 1,
+            "supportChips": 0,
+            "signalWords": 0,
+            "casNodes": 0
+          },
+          "qrTargetAttributes": [
+            {
+              "key": "QR",
+              "target": "https://ghs-frontend.zeabur.app/?cas=7647-01-0",
+              "type": "ghs-lookup",
+              "source": "ghs-label-quick-search",
+              "label": "GHS Label Quick Search"
+            }
+          ]
+        },
+        "outputChecklistText": "本張標籤會印這裡只描述目前這張實體標籤。完整 H/P 細節應放在主標籤，或透過 SDS / QR 查閱。補充名稱 / CAS會列印名稱與 CAS 保持可讀。GHS 圖示4/4可用圖示必須保留在標籤上。QR Code會列印掃描路徑承載補充細節。QR 目標查詢頁掃描會開啟 GHS 標籤快速查詢（本站）。使用前仍要核對目的地。完整危害文字透過 QR：查詢頁小型 QR 標籤不列印完整 H/P 文字。",
+        "decisionSummaryText": "標籤輸出QR 補充標籤GHS 圖示保留所有圖示危害文字細節由 QR 查閱：GHS 標籤快速查詢",
+        "recoveryRoute": null,
+        "modalShellInspection": {
+          "failures": [],
+          "targetButtons": [
+            {
+              "id": "label-purpose-complete",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "完整 A4/Letter 標籤",
+                "完整 H/P + QR",
+                "A4/Letter"
+              ]
+            },
+            {
+              "id": "label-purpose-qrSupplement",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "QR 小標籤",
+                "CAS + 中/EN + QR + 圖示",
+                "最多 2 張"
+              ]
+            },
+            {
+              "id": "label-purpose-quickId",
+              "width": 213,
+              "height": 100,
+              "lines": [
+                "識別小標籤",
+                "CAS + 中/EN + 圖示",
+                "通常 1 張"
+              ]
+            }
+          ],
+          "previewContextItems": [
+            {
+              "id": "preview-context-role",
+              "width": 164,
+              "lines": [
+                "輸出",
+                "QR 補充標籤"
+              ]
+            },
+            {
+              "id": "preview-context-icons",
+              "width": 164,
+              "lines": [
+                "GHS 圖示",
+                "保留所有圖示"
+              ]
+            },
+            {
+              "id": "preview-context-stock",
+              "width": 164,
+              "lines": [
+                "紙材",
+                "62 mm 連續標籤"
+              ]
+            }
+          ],
+          "outputPlanOpen": false,
+          "hasLegacyWorkflowSteps": false
+        }
+      },
+      "startedAt": "2026-06-21T11:08:56.575Z",
+      "finishedAt": "2026-06-21T11:10:00.789Z",
+      "durationMs": 64214,
+      "timedOut": false,
+      "stage": "evaluate",
+      "diagnostics": {
+        "stage": "evaluate",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "warning",
+            "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "attempts": [
+        {
+          "attempt": 1,
+          "passed": true,
+          "failures": [],
+          "error": "",
+          "stage": "evaluate",
+          "durationMs": 64214,
+          "timedOut": false,
+          "diagnostics": {
+            "stage": "evaluate",
+            "serverErrors": [],
+            "failedRequests": [],
+            "pageErrors": [],
+            "consoleMessages": [
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS02.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS08.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS01.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS03.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "warning",
+                "text": "The resource https://ghs-frontend.zeabur.app/ghs/GHS09.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              },
+              {
+                "type": "error",
+                "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

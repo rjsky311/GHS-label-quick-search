@@ -87,6 +87,12 @@ shipped/monitoring Batch-First owner doc,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
+Latest concrete next-slice candidate: the 2026-06-21 post-deploy
+manual-directed QA checkpoint found Traditional Chinese placeholder hazard
+wording in alternate classifications for H360 variants (`H360FD` and
+`H360Fd`). Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` as the owner
+checkpoint if opening that P1 wording/coverage slice.
+
 Open a new slice only when the evidence states:
 
 1. Source: user screenshot/PDF/Excel, production QA failure, admin queue
@@ -132,6 +138,17 @@ production summary gating. `qa:production-health`, `qa:zeabur-deployment`, and
 `qa:production-product` passed against that expected SHA. The follow-up GitHub
 resource cleanup removed expired Actions artifacts and left
 `qa:github-resource` green with no warnings.
+The 2026-06-21 post-deploy PR #38 checkpoint is now closed on production at
+`0455d721ce883be6332cc0fee41d6b8379712040`. It hardened GHS parsing,
+favorite print rehydration, stale print lookup cancellation, QR target
+allowlisting, and expected-SHA production QA. `qa:zeabur-deployment`,
+`qa:production-health`, `qa:production-search-ui`,
+`qa:production-batch-print`, and `qa:production-product` passed against that
+expected SHA. The evidence package is
+`qa/evidence/2026-06-21-post-deploy-manual-qa/`. The next concrete P1 issue is
+not more print polish: it is closing H360 variant Traditional Chinese wording
+gaps in alternate classifications and adding coverage so that class of gap is
+not found only by manual spot check.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -193,6 +210,17 @@ cannot complete the intended job.
   94.02 MiB active artifacts, 0.00 MiB expired artifacts, 367.79 MiB caches,
   and no warnings. Reopen only from fresh production QA, code-review,
   screenshot/PDF/physical-print, admin, or GitHub resource evidence.
+- 2026-06-21 post-deploy manual-directed QA checkpoint: PR #38 merged and
+  production served `0455d721ce883be6332cc0fee41d6b8379712040`.
+  Deployment freshness, production health, search UI, batch print, prepared
+  print, and full production product QA passed. GitHub resource patrol passed
+  with PUBLIC visibility, 12.07 MiB repository disk usage, 97.44 MiB active
+  artifacts, 0.00 MiB expired artifacts, 367.79 MiB caches, and no warnings.
+  A manual-directed content spot check found `H360FD` and `H360Fd`
+  Traditional Chinese placeholder wording in alternate classifications for
+  Methanol and Ethylene Oxide. Open the next slice from that concrete wording
+  evidence or from fresher screenshot/PDF/physical-print/admin/export/CI
+  evidence; do not reopen broad UI or print polish by inertia.
 - 2026-06-02 LINER survey workflow critique: the uploaded survey dataset had
   16 AI simulated respondents and 128 responses across the batch lookup,
   review, print, export, and correction/admin path. The strongest actionable
