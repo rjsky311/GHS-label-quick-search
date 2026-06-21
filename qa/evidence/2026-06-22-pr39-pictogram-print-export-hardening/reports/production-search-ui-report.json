@@ -1,0 +1,2653 @@
+{
+  "ok": true,
+  "productionUrl": "https://ghs-frontend.zeabur.app/",
+  "searchTerm": "7647-01-0",
+  "noGhsSearchTerm": "57-13-6",
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results.png",
+  "expandedScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results-expanded-classifications.png",
+  "detailScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/detail-modal-classification-comparison.png",
+  "mobileScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results-mobile-read-first.png",
+  "mobileDetailScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results-mobile-detail-read-first.png",
+  "noGhsScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results-no-ghs-state.png",
+  "noGhsDetailScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/detail-modal-no-ghs-state.png",
+  "batchInputScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/batch-input-normalization.png",
+  "unresolvedSearchScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/search-results-unresolved-lookup.png",
+  "urlQueryHydrationScreenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-screenshots/url-query-hydration.png",
+  "failures": [],
+  "searchAttempts": 1,
+  "mobileSearchAttempts": 1,
+  "metrics": {
+    "detailButton": {
+      "text": "Details",
+      "width": 71,
+      "height": 44,
+      "whiteSpace": "nowrap"
+    },
+    "sdsButton": {
+      "text": "View SDS",
+      "width": 100,
+      "height": 44,
+      "whiteSpace": "nowrap"
+    },
+    "pictogramTiles": 4,
+    "resultPictogramMetrics": {
+      "label": "primary-result-row",
+      "size": "md",
+      "variant": "primary",
+      "count": 4,
+      "width": 194,
+      "height": 44,
+      "tiles": [
+        {
+          "code": "GHS04",
+          "tileWidth": 44,
+          "tileHeight": 44,
+          "frameWidth": 44,
+          "frameHeight": 44,
+          "imageWidth": 38,
+          "imageHeight": 40,
+          "imageComplete": true,
+          "naturalWidth": 70,
+          "naturalHeight": 70,
+          "codeText": ""
+        },
+        {
+          "code": "GHS05",
+          "tileWidth": 44,
+          "tileHeight": 44,
+          "frameWidth": 44,
+          "frameHeight": 44,
+          "imageWidth": 38,
+          "imageHeight": 40,
+          "imageComplete": true,
+          "naturalWidth": 70,
+          "naturalHeight": 70,
+          "codeText": ""
+        },
+        {
+          "code": "GHS06",
+          "tileWidth": 44,
+          "tileHeight": 44,
+          "frameWidth": 44,
+          "frameHeight": 44,
+          "imageWidth": 38,
+          "imageHeight": 40,
+          "imageComplete": true,
+          "naturalWidth": 70,
+          "naturalHeight": 70,
+          "codeText": ""
+        },
+        {
+          "code": "GHS07",
+          "tileWidth": 44,
+          "tileHeight": 44,
+          "frameWidth": 44,
+          "frameHeight": 44,
+          "imageWidth": 38,
+          "imageHeight": 40,
+          "imageComplete": true,
+          "naturalWidth": 70,
+          "naturalHeight": 70,
+          "codeText": ""
+        }
+      ]
+    },
+    "expandedClassificationCount": 6,
+    "expandedPictogramMetrics": [
+      {
+        "label": "other-classification-0",
+        "size": "sm",
+        "variant": "muted",
+        "count": 5,
+        "width": 98,
+        "height": 153,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "other-classification-1",
+        "size": "sm",
+        "variant": "muted",
+        "count": 5,
+        "width": 98,
+        "height": 153,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "other-classification-2",
+        "size": "sm",
+        "variant": "muted",
+        "count": 3,
+        "width": 98,
+        "height": 100,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "other-classification-3",
+        "size": "sm",
+        "variant": "muted",
+        "count": 3,
+        "width": 98,
+        "height": 100,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "other-classification-4",
+        "size": "sm",
+        "variant": "muted",
+        "count": 2,
+        "width": 78,
+        "height": 47,
+        "tiles": [
+          {
+            "code": "GHS05",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS07",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS07"
+          }
+        ]
+      },
+      {
+        "label": "other-classification-5",
+        "size": "sm",
+        "variant": "muted",
+        "count": 1,
+        "width": 36,
+        "height": 47,
+        "tiles": [
+          {
+            "code": "GHS09",
+            "tileWidth": 36,
+            "tileHeight": 47,
+            "frameWidth": 36,
+            "frameHeight": 36,
+            "imageWidth": 30,
+            "imageHeight": 32,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      }
+    ],
+    "resultsTrustSurface": {
+      "authoritativeNoteCount": 1,
+      "authoritativeNoteMode": "general",
+      "checklistCount": 3,
+      "productTrustPanelCount": 1,
+      "productTrustProofCount": 3,
+      "decisionGuideCount": 1,
+      "decisionStepCount": 3,
+      "productTrustReportHref": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction",
+      "productTrustReport": {
+        "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction",
+        "template": "data-correction.yml",
+        "labels": "data-correction",
+        "title": "",
+        "body": "",
+        "casNumber": "",
+        "chemicalName": "",
+        "issueType": "",
+        "currentOutput": "",
+        "expectedOutput": "",
+        "evidenceUrl": "",
+        "evidenceType": "",
+        "localContext": "",
+        "workflowArea": "",
+        "goal": "",
+        "currentProblem": "",
+        "desiredBehavior": "",
+        "examples": ""
+      },
+      "productTrustWorkflowHref": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request&title=Workflow+request%3A+Search+results%2C+SDS+review%2C+export%2C+or+label+handoff&workflow_area=Search+and+results&goal=I+need+help+completing+the+next+step+after+search+results+appear.&current_problem=Original+workflow+area%3A+Search+results%2C+SDS+review%2C+export%2C+or+label+handoff%0A%0AThe+current+result%2C+SDS%2Freference%2C+export%2C+or+label+path+is+hard+to+complete+from+the+results+view.&desired_behavior=Keep+the+safety-data+correction+path+separate%2C+and+describe+the+workflow+improvement+that+would+make+the+task+easier.&examples=Examples%3A+batch+labels%2C+prepared-solution+reprint%2C+SDS+review%2C+export+columns%2C+or+label+preview+handoff.",
+      "productTrustWorkflow": {
+        "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=workflow-request.yml&labels=workflow-request&title=Workflow+request%3A+Search+results%2C+SDS+review%2C+export%2C+or+label+handoff&workflow_area=Search+and+results&goal=I+need+help+completing+the+next+step+after+search+results+appear.&current_problem=Original+workflow+area%3A+Search+results%2C+SDS+review%2C+export%2C+or+label+handoff%0A%0AThe+current+result%2C+SDS%2Freference%2C+export%2C+or+label+path+is+hard+to+complete+from+the+results+view.&desired_behavior=Keep+the+safety-data+correction+path+separate%2C+and+describe+the+workflow+improvement+that+would+make+the+task+easier.&examples=Examples%3A+batch+labels%2C+prepared-solution+reprint%2C+SDS+review%2C+export+columns%2C+or+label+preview+handoff.",
+        "template": "workflow-request.yml",
+        "labels": "workflow-request",
+        "title": "Workflow request: Search results, SDS review, export, or label handoff",
+        "body": "",
+        "casNumber": "",
+        "chemicalName": "",
+        "issueType": "",
+        "currentOutput": "",
+        "expectedOutput": "",
+        "evidenceUrl": "",
+        "evidenceType": "",
+        "localContext": "",
+        "workflowArea": "Search and results",
+        "goal": "I need help completing the next step after search results appear.",
+        "currentProblem": "Original workflow area: Search results, SDS review, export, or label handoff\n\nThe current result, SDS/reference, export, or label path is hard to complete from the results view.",
+        "desiredBehavior": "Keep the safety-data correction path separate, and describe the workflow improvement that would make the task easier.",
+        "examples": "Examples: batch labels, prepared-solution reprint, SDS review, export columns, or label preview handoff."
+      },
+      "sourceConflictCorrection": {
+        "count": 0,
+        "href": "",
+        "template": "",
+        "labels": "",
+        "title": "",
+        "body": "",
+        "casNumber": "",
+        "chemicalName": "",
+        "issueType": "",
+        "currentOutput": "",
+        "expectedOutput": "",
+        "evidenceUrl": "",
+        "evidenceType": "",
+        "localContext": "",
+        "workflowArea": "",
+        "goal": "",
+        "currentProblem": "",
+        "desiredBehavior": "",
+        "examples": ""
+      },
+      "multipleClassificationReviewActions": [
+        {
+          "testId": "data-quality-action-multiple-classifications-7647-01-0",
+          "text": "Multiple GHS classifications"
+        }
+      ],
+      "sourceBadges": [
+        {
+          "testId": "source-badge-echa-7647-01-0",
+          "text": "ECHA",
+          "title": "Aggregated GHS information provided per 5109 reports by companies from 116 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies."
+        }
+      ],
+      "sdsHref": "https://pubchem.ncbi.nlm.nih.gov/compound/313#section=Safety-and-Hazards",
+      "sdsProtocol": "https",
+      "sdsHost": "pubchem.ncbi.nlm.nih.gov"
+    },
+    "exportPreviewSurface": {
+      "headers": [
+        "CAS No.",
+        "English Name",
+        "Chinese Name",
+        "GHS Label",
+        "Signal Word",
+        "Hazard Statements",
+        "Precautionary Statements",
+        "Data State",
+        "Printable",
+        "Needs Review",
+        "Review Reasons",
+        "Review Signal Count",
+        "Primary Review Action",
+        "Primary Source",
+        "Report Count",
+        "Retrieved At",
+        "Cache State",
+        "Reference Links",
+        "Source Conflict",
+        "Missing Trusted Chinese Name",
+        "Multiple GHS Status",
+        "Classification Selection"
+      ],
+      "bodyText": "Export PreviewConfirm Visible filtered (1 row(s)) and columns before downloading CSV.Export ScopeVisible filtered · 1 row(s)Ready0 readyNeeds review1 reviewUnresolved0 unresolvedColumns22 column(s)Choose export scopeAll results1 total row(s)Visible filtered1 currently visible row(s)Printable / ready0 row(s) ready with no review reasonsNeeds review1 found row(s) with review reasonsUnresolved0 unresolved lookup row(s), excluding upstream outagesFormatExcel .xlsxCSV .csvReview handoff columnsCSV and XLSX include review signal count and the first recommended action, so overlapping issues stay visible after download.Previewing first 1 row(s)CAS No.English NameChinese NameGHS LabelSignal WordHazard StatementsPrecautionary StatementsData StatePrintableNeeds ReviewReview ReasonsReview Signal CountPrimary Review ActionPrimary SourceReport CountRetrieved AtCache StateReference LinksSource ConflictMissing Trusted Chinese NameMultiple GHS StatusClassification Selection7647-01-0Hydrochloric acid鹽酸GHS04 (Compressed Gas), GHS05 (Corrosive), GHS06 (Toxic), GHS07 (Irritant)DangerH280: H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]; H290: H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]; H314: H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]; H318: H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]; H331: H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]; H335: H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]P234: Keep only in original packaging.; P260: Do not breathe dust, fume, gas, mist, vapours, spray.; P261: Avoid breathing dust, fume, gas, mist, vapours, spray.; P264: Wash hands thoroughly after handling.; P264+P265: Wash all exposed body parts thoroughly after handling.; P271: Use only outdoors or in a well-ventilated area.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P301+P330+P331: IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.; P302+P361+P354: IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.; P304+P340: IF INHALED: Remove person to fresh air and keep comfortable for breathing.; P305+P354+P338: IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.; P316: Get emergency medical help immediately.; P317: Get emergency medical help.; P319: Get medical help if you feel unwell.; P321: Specific treatment (see ... on this label).; P363: Wash contaminated clothing before reuse.; P390: Absorb spillage to prevent material damage.; P403+P233: Store in a well-ventilated place. Keep container tightly closed.; P405: Store locked up.; P406: Store in a corrosion-resistant container with a resistant inner liner.; P410+P403: Protect from sunlight. Store in a well-ventilated place.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 5109 reports by companies from 116 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.51092026-06-21T17:00:56.752369+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classificationExported data is still a quick reference. Verify final labels against the SDS, supplier label, and local regulations. Formula-like text is neutralized by the export flow to prevent spreadsheet auto-execution.CancelDownload CSV",
+      "hasDataState": true,
+      "hasPrimarySource": true,
+      "hasClassificationSelection": true,
+      "hasRenderableState": true,
+      "hasSourceEvidence": true,
+      "hasPrintable": true,
+      "hasReviewRequired": true,
+      "hasReviewReasons": true,
+      "hasReviewSignalCount": true,
+      "hasPrimaryReviewAction": true,
+      "hasReviewActionColumnNote": true,
+      "reviewActionColumnNoteText": "Review handoff columnsCSV and XLSX include review signal count and the first recommended action, so overlapping issues stay visible after download.",
+      "hasMultipleGhsStatus": true
+    },
+    "detailTrustSurface": {
+      "trustStripCount": 1,
+      "authoritativeNoteCount": 1,
+      "verificationHintCount": 1,
+      "sourceConflictNoteCount": 1,
+      "sourceConflictCorrection": {
+        "count": 1,
+        "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction&title=Source+conflict%3A+7647-01-0&body=%23%23+Correction+request%0A-+CAS%3A+7647-01-0%0A-+English+name%3A+Hydrochloric+acid%0A-+Chinese+name%3A+%E9%B9%BD%E9%85%B8%0A-+Issue+type%3A+Source%2Fprovenance+display%0A-+Issue+key%3A+source-conflict%0A-+Current+output%3A+The+app+found+multiple+public+GHS+classifications+or+source+variants+for+this+chemical.%0A-+Expected+output%3A+Identify+the+SDS%2Fsupplier%2Flocal-rule+evidence+that+should+guide+the+preferred+classification.%0A-+Evidence+type%3A+Other%0A-+Evidence+prompt%3A+SDS%2C+supplier+label%2C+or+local+regulatory+source%0A-+Local+context%3A+Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.%0A%23%23+Evidence+%2F+source%0APlease+include+SDS%2C+supplier+label%2C+or+another+authoritative+source+before+this+is+accepted+into+the+curated+dictionary.&cas_number=7647-01-0&chemical_name=Hydrochloric+acid+%2F+%E9%B9%BD%E9%85%B8&issue_type=Source%2Fprovenance+display&current_output=The+app+found+multiple+public+GHS+classifications+or+source+variants+for+this+chemical.&expected_output=Identify+the+SDS%2Fsupplier%2Flocal-rule+evidence+that+should+guide+the+preferred+classification.&evidence_type=Other&local_context=Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.",
+        "template": "data-correction.yml",
+        "labels": "data-correction",
+        "title": "Source conflict: 7647-01-0",
+        "body": "## Correction request\n- CAS: 7647-01-0\n- English name: Hydrochloric acid\n- Chinese name: 鹽酸\n- Issue type: Source/provenance display\n- Issue key: source-conflict\n- Current output: The app found multiple public GHS classifications or source variants for this chemical.\n- Expected output: Identify the SDS/supplier/local-rule evidence that should guide the preferred classification.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, or local regulatory source\n- Local context: Please keep safety-data corrections separate from workflow or product requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+        "casNumber": "7647-01-0",
+        "chemicalName": "Hydrochloric acid / 鹽酸",
+        "issueType": "Source/provenance display",
+        "currentOutput": "The app found multiple public GHS classifications or source variants for this chemical.",
+        "expectedOutput": "Identify the SDS/supplier/local-rule evidence that should guide the preferred classification.",
+        "evidenceUrl": "",
+        "evidenceType": "Other",
+        "localContext": "Please keep safety-data corrections separate from workflow or product requests.",
+        "workflowArea": "",
+        "goal": "",
+        "currentProblem": "",
+        "desiredBehavior": "",
+        "examples": ""
+      },
+      "references": [
+        {
+          "testId": "detail-reference-link-sds",
+          "href": "https://pubchem.ncbi.nlm.nih.gov/compound/313#section=Safety-and-Hazards",
+          "linkType": "sds",
+          "source": "pubchem",
+          "scheme": "https",
+          "sourceChipText": "PubChem"
+        },
+        {
+          "testId": "detail-reference-link-regulatory",
+          "href": "https://chem.echa.europa.eu/substance-search?searchText=7647-01-0",
+          "linkType": "regulatory",
+          "source": "echa",
+          "scheme": "https",
+          "sourceChipText": "ECHA"
+        },
+        {
+          "testId": "detail-reference-link-occupational",
+          "href": "https://www.cdc.gov/niosh/npg/default.html",
+          "linkType": "occupational",
+          "source": "niosh",
+          "scheme": "https",
+          "sourceChipText": "NIOSH"
+        },
+        {
+          "testId": "detail-reference-link-reference",
+          "href": "https://pubchem.ncbi.nlm.nih.gov/compound/313",
+          "linkType": "reference",
+          "source": "pubchem",
+          "scheme": "https",
+          "sourceChipText": "PubChem"
+        }
+      ]
+    },
+    "detailKeyboardSurface": {
+      "label": "detail-modal",
+      "modalTestId": "detail-modal",
+      "modalPresent": true,
+      "modalAriaModal": "true",
+      "modalAriaHidden": null,
+      "modalHasInertAttribute": false,
+      "modalInertProperty": false,
+      "count": 18,
+      "first": {
+        "index": 0,
+        "tag": "button",
+        "testId": "",
+        "id": "",
+        "ariaLabel": "Copied 7647-01-0",
+        "title": "Copied 7647-01-0",
+        "text": "",
+        "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+      },
+      "last": {
+        "index": 17,
+        "tag": "a",
+        "testId": "detail-pubchem-link",
+        "id": "",
+        "ariaLabel": "",
+        "title": "",
+        "text": "View on PubChem",
+        "key": "a|detail-pubchem-link||||View on PubChem"
+      },
+      "focusables": [
+        {
+          "index": 0,
+          "tag": "button",
+          "testId": "",
+          "id": "",
+          "ariaLabel": "Copied 7647-01-0",
+          "title": "Copied 7647-01-0",
+          "text": "",
+          "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+        },
+        {
+          "index": 1,
+          "tag": "button",
+          "testId": "",
+          "id": "",
+          "ariaLabel": "Add to favorites",
+          "title": "Add to favorites",
+          "text": "",
+          "key": "button|||Add to favorites|Add to favorites|"
+        },
+        {
+          "index": 2,
+          "tag": "button",
+          "testId": "close-modal-btn",
+          "id": "",
+          "ariaLabel": "Close",
+          "title": "",
+          "text": "",
+          "key": "button|close-modal-btn||Close||"
+        },
+        {
+          "index": 3,
+          "tag": "a",
+          "testId": "detail-report-source-conflict-link",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Report source issue",
+          "key": "a|detail-report-source-conflict-link||||Report source issue"
+        },
+        {
+          "index": 4,
+          "tag": "input",
+          "testId": "",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "",
+          "key": "input|||||"
+        },
+        {
+          "index": 5,
+          "tag": "button",
+          "testId": "set-primary-1",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-1||||Set as primary"
+        },
+        {
+          "index": 6,
+          "tag": "button",
+          "testId": "set-primary-2",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-2||||Set as primary"
+        },
+        {
+          "index": 7,
+          "tag": "button",
+          "testId": "set-primary-3",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-3||||Set as primary"
+        },
+        {
+          "index": 8,
+          "tag": "button",
+          "testId": "set-primary-4",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-4||||Set as primary"
+        },
+        {
+          "index": 9,
+          "tag": "button",
+          "testId": "set-primary-5",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-5||||Set as primary"
+        },
+        {
+          "index": 10,
+          "tag": "button",
+          "testId": "set-primary-6",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Set as primary",
+          "key": "button|set-primary-6||||Set as primary"
+        },
+        {
+          "index": 11,
+          "tag": "a",
+          "testId": "detail-reference-link-sds",
+          "id": "",
+          "ariaLabel": "PubChem Safety & Hazards SDS PubChem",
+          "title": "",
+          "text": "PubChem Safety & HazardsSDSPubChem",
+          "key": "a|detail-reference-link-sds||PubChem Safety & Hazards SDS PubChem||PubChem Safety & HazardsSDSPubChem"
+        },
+        {
+          "index": 12,
+          "tag": "a",
+          "testId": "detail-reference-link-regulatory",
+          "id": "",
+          "ariaLabel": "ECHA Substance Search Regulatory ECHA",
+          "title": "",
+          "text": "ECHA Substance SearchRegulatoryECHA",
+          "key": "a|detail-reference-link-regulatory||ECHA Substance Search Regulatory ECHA||ECHA Substance SearchRegulatoryECHA"
+        },
+        {
+          "index": 13,
+          "tag": "a",
+          "testId": "detail-reference-link-occupational",
+          "id": "",
+          "ariaLabel": "NIOSH Pocket Guide Occupational NIOSH",
+          "title": "",
+          "text": "NIOSH Pocket GuideOccupationalNIOSH",
+          "key": "a|detail-reference-link-occupational||NIOSH Pocket Guide Occupational NIOSH||NIOSH Pocket GuideOccupationalNIOSH"
+        },
+        {
+          "index": 14,
+          "tag": "a",
+          "testId": "detail-reference-link-reference",
+          "id": "",
+          "ariaLabel": "PubChem Compound Overview Reference PubChem",
+          "title": "",
+          "text": "PubChem Compound OverviewReferencePubChem",
+          "key": "a|detail-reference-link-reference||PubChem Compound Overview Reference PubChem||PubChem Compound OverviewReferencePubChem"
+        },
+        {
+          "index": 15,
+          "tag": "button",
+          "testId": "detail-print-label-btn",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Print Label",
+          "key": "button|detail-print-label-btn||||Print Label"
+        },
+        {
+          "index": 16,
+          "tag": "button",
+          "testId": "prepare-solution-btn",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Prepare solution",
+          "key": "button|prepare-solution-btn||||Prepare solution"
+        },
+        {
+          "index": 17,
+          "tag": "a",
+          "testId": "detail-pubchem-link",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "View on PubChem",
+          "key": "a|detail-pubchem-link||||View on PubChem"
+        }
+      ],
+      "focusedLastBeforeForward": true,
+      "focusedFirstBeforeBackward": true,
+      "afterForwardTab": {
+        "tag": "button",
+        "testId": "",
+        "id": "",
+        "ariaLabel": "Copied 7647-01-0",
+        "title": "Copied 7647-01-0",
+        "text": "",
+        "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+      },
+      "afterBackwardTab": {
+        "tag": "a",
+        "testId": "detail-pubchem-link",
+        "id": "",
+        "ariaLabel": "",
+        "title": "",
+        "text": "View on PubChem",
+        "key": "a|detail-pubchem-link||||View on PubChem"
+      },
+      "forwardWrapOk": true,
+      "backwardWrapOk": true,
+      "ok": true
+    },
+    "prepareStackingSurface": {
+      "stackedState": {
+        "detail": {
+          "label": "detail-stacked",
+          "modalTestId": "detail-modal",
+          "modalPresent": true,
+          "modalAriaModal": null,
+          "modalAriaHidden": "true",
+          "modalHasInertAttribute": true,
+          "modalInertProperty": true,
+          "count": 18,
+          "first": {
+            "index": 0,
+            "tag": "button",
+            "testId": "",
+            "id": "",
+            "ariaLabel": "Copied 7647-01-0",
+            "title": "Copied 7647-01-0",
+            "text": "",
+            "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+          },
+          "last": {
+            "index": 17,
+            "tag": "a",
+            "testId": "detail-pubchem-link",
+            "id": "",
+            "ariaLabel": "",
+            "title": "",
+            "text": "View on PubChem",
+            "key": "a|detail-pubchem-link||||View on PubChem"
+          },
+          "focusables": [
+            {
+              "index": 0,
+              "tag": "button",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "Copied 7647-01-0",
+              "title": "Copied 7647-01-0",
+              "text": "",
+              "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+            },
+            {
+              "index": 1,
+              "tag": "button",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "Add to favorites",
+              "title": "Add to favorites",
+              "text": "",
+              "key": "button|||Add to favorites|Add to favorites|"
+            },
+            {
+              "index": 2,
+              "tag": "button",
+              "testId": "close-modal-btn",
+              "id": "",
+              "ariaLabel": "Close",
+              "title": "",
+              "text": "",
+              "key": "button|close-modal-btn||Close||"
+            },
+            {
+              "index": 3,
+              "tag": "a",
+              "testId": "detail-report-source-conflict-link",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Report source issue",
+              "key": "a|detail-report-source-conflict-link||||Report source issue"
+            },
+            {
+              "index": 4,
+              "tag": "input",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|||||"
+            },
+            {
+              "index": 5,
+              "tag": "button",
+              "testId": "set-primary-1",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-1||||Set as primary"
+            },
+            {
+              "index": 6,
+              "tag": "button",
+              "testId": "set-primary-2",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-2||||Set as primary"
+            },
+            {
+              "index": 7,
+              "tag": "button",
+              "testId": "set-primary-3",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-3||||Set as primary"
+            },
+            {
+              "index": 8,
+              "tag": "button",
+              "testId": "set-primary-4",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-4||||Set as primary"
+            },
+            {
+              "index": 9,
+              "tag": "button",
+              "testId": "set-primary-5",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-5||||Set as primary"
+            },
+            {
+              "index": 10,
+              "tag": "button",
+              "testId": "set-primary-6",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-6||||Set as primary"
+            },
+            {
+              "index": 11,
+              "tag": "a",
+              "testId": "detail-reference-link-sds",
+              "id": "",
+              "ariaLabel": "PubChem Safety & Hazards SDS PubChem",
+              "title": "",
+              "text": "PubChem Safety & HazardsSDSPubChem",
+              "key": "a|detail-reference-link-sds||PubChem Safety & Hazards SDS PubChem||PubChem Safety & HazardsSDSPubChem"
+            },
+            {
+              "index": 12,
+              "tag": "a",
+              "testId": "detail-reference-link-regulatory",
+              "id": "",
+              "ariaLabel": "ECHA Substance Search Regulatory ECHA",
+              "title": "",
+              "text": "ECHA Substance SearchRegulatoryECHA",
+              "key": "a|detail-reference-link-regulatory||ECHA Substance Search Regulatory ECHA||ECHA Substance SearchRegulatoryECHA"
+            },
+            {
+              "index": 13,
+              "tag": "a",
+              "testId": "detail-reference-link-occupational",
+              "id": "",
+              "ariaLabel": "NIOSH Pocket Guide Occupational NIOSH",
+              "title": "",
+              "text": "NIOSH Pocket GuideOccupationalNIOSH",
+              "key": "a|detail-reference-link-occupational||NIOSH Pocket Guide Occupational NIOSH||NIOSH Pocket GuideOccupationalNIOSH"
+            },
+            {
+              "index": 14,
+              "tag": "a",
+              "testId": "detail-reference-link-reference",
+              "id": "",
+              "ariaLabel": "PubChem Compound Overview Reference PubChem",
+              "title": "",
+              "text": "PubChem Compound OverviewReferencePubChem",
+              "key": "a|detail-reference-link-reference||PubChem Compound Overview Reference PubChem||PubChem Compound OverviewReferencePubChem"
+            },
+            {
+              "index": 15,
+              "tag": "button",
+              "testId": "detail-print-label-btn",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Print Label",
+              "key": "button|detail-print-label-btn||||Print Label"
+            },
+            {
+              "index": 16,
+              "tag": "button",
+              "testId": "prepare-solution-btn",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Prepare solution",
+              "key": "button|prepare-solution-btn||||Prepare solution"
+            },
+            {
+              "index": 17,
+              "tag": "a",
+              "testId": "detail-pubchem-link",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "View on PubChem",
+              "key": "a|detail-pubchem-link||||View on PubChem"
+            }
+          ]
+        },
+        "prepare": {
+          "label": "prepare-stacked",
+          "modalTestId": "prepare-solution-modal",
+          "modalPresent": true,
+          "modalAriaModal": "true",
+          "modalAriaHidden": null,
+          "modalHasInertAttribute": false,
+          "modalInertProperty": false,
+          "count": 8,
+          "first": {
+            "index": 0,
+            "tag": "button",
+            "testId": "prepare-solution-close-btn",
+            "id": "",
+            "ariaLabel": "Cancel",
+            "title": "",
+            "text": "",
+            "key": "button|prepare-solution-close-btn||Cancel||"
+          },
+          "last": {
+            "index": 7,
+            "tag": "button",
+            "testId": "prepare-solution-cancel-btn",
+            "id": "",
+            "ariaLabel": "",
+            "title": "",
+            "text": "Cancel",
+            "key": "button|prepare-solution-cancel-btn||||Cancel"
+          },
+          "focusables": [
+            {
+              "index": 0,
+              "tag": "button",
+              "testId": "prepare-solution-close-btn",
+              "id": "",
+              "ariaLabel": "Cancel",
+              "title": "",
+              "text": "",
+              "key": "button|prepare-solution-close-btn||Cancel||"
+            },
+            {
+              "index": 1,
+              "tag": "input",
+              "testId": "prepared-concentration-input",
+              "id": "prepared-concentration",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-concentration-input|prepared-concentration|||"
+            },
+            {
+              "index": 2,
+              "tag": "input",
+              "testId": "prepared-solvent-input",
+              "id": "prepared-solvent",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-solvent-input|prepared-solvent|||"
+            },
+            {
+              "index": 3,
+              "tag": "input",
+              "testId": "prepared-prepared-by-input",
+              "id": "prepared-prepared-by",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-prepared-by-input|prepared-prepared-by|||"
+            },
+            {
+              "index": 4,
+              "tag": "input",
+              "testId": "prepared-prepared-date-input",
+              "id": "prepared-prepared-date",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-prepared-date-input|prepared-prepared-date|||"
+            },
+            {
+              "index": 5,
+              "tag": "input",
+              "testId": "prepared-expiry-date-input",
+              "id": "prepared-expiry-date",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-expiry-date-input|prepared-expiry-date|||"
+            },
+            {
+              "index": 6,
+              "tag": "input",
+              "testId": "prepared-preset-name-input",
+              "id": "prepared-preset-name",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|prepared-preset-name-input|prepared-preset-name|||"
+            },
+            {
+              "index": 7,
+              "tag": "button",
+              "testId": "prepare-solution-cancel-btn",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Cancel",
+              "key": "button|prepare-solution-cancel-btn||||Cancel"
+            }
+          ]
+        },
+        "activeAfterOpen": {
+          "tag": "input",
+          "testId": "prepared-concentration-input",
+          "id": "prepared-concentration",
+          "ariaLabel": "",
+          "title": "",
+          "text": "",
+          "key": "input|prepared-concentration-input|prepared-concentration|||"
+        }
+      },
+      "prepareFocusWrap": {
+        "label": "prepare-solution-modal",
+        "modalTestId": "prepare-solution-modal",
+        "modalPresent": true,
+        "modalAriaModal": "true",
+        "modalAriaHidden": null,
+        "modalHasInertAttribute": false,
+        "modalInertProperty": false,
+        "count": 8,
+        "first": {
+          "index": 0,
+          "tag": "button",
+          "testId": "prepare-solution-close-btn",
+          "id": "",
+          "ariaLabel": "Cancel",
+          "title": "",
+          "text": "",
+          "key": "button|prepare-solution-close-btn||Cancel||"
+        },
+        "last": {
+          "index": 7,
+          "tag": "button",
+          "testId": "prepare-solution-cancel-btn",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Cancel",
+          "key": "button|prepare-solution-cancel-btn||||Cancel"
+        },
+        "focusables": [
+          {
+            "index": 0,
+            "tag": "button",
+            "testId": "prepare-solution-close-btn",
+            "id": "",
+            "ariaLabel": "Cancel",
+            "title": "",
+            "text": "",
+            "key": "button|prepare-solution-close-btn||Cancel||"
+          },
+          {
+            "index": 1,
+            "tag": "input",
+            "testId": "prepared-concentration-input",
+            "id": "prepared-concentration",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-concentration-input|prepared-concentration|||"
+          },
+          {
+            "index": 2,
+            "tag": "input",
+            "testId": "prepared-solvent-input",
+            "id": "prepared-solvent",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-solvent-input|prepared-solvent|||"
+          },
+          {
+            "index": 3,
+            "tag": "input",
+            "testId": "prepared-prepared-by-input",
+            "id": "prepared-prepared-by",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-prepared-by-input|prepared-prepared-by|||"
+          },
+          {
+            "index": 4,
+            "tag": "input",
+            "testId": "prepared-prepared-date-input",
+            "id": "prepared-prepared-date",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-prepared-date-input|prepared-prepared-date|||"
+          },
+          {
+            "index": 5,
+            "tag": "input",
+            "testId": "prepared-expiry-date-input",
+            "id": "prepared-expiry-date",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-expiry-date-input|prepared-expiry-date|||"
+          },
+          {
+            "index": 6,
+            "tag": "input",
+            "testId": "prepared-preset-name-input",
+            "id": "prepared-preset-name",
+            "ariaLabel": "",
+            "title": "",
+            "text": "",
+            "key": "input|prepared-preset-name-input|prepared-preset-name|||"
+          },
+          {
+            "index": 7,
+            "tag": "button",
+            "testId": "prepare-solution-cancel-btn",
+            "id": "",
+            "ariaLabel": "",
+            "title": "",
+            "text": "Cancel",
+            "key": "button|prepare-solution-cancel-btn||||Cancel"
+          }
+        ],
+        "focusedLastBeforeForward": true,
+        "focusedFirstBeforeBackward": true,
+        "afterForwardTab": {
+          "tag": "button",
+          "testId": "prepare-solution-close-btn",
+          "id": "",
+          "ariaLabel": "Cancel",
+          "title": "",
+          "text": "",
+          "key": "button|prepare-solution-close-btn||Cancel||"
+        },
+        "afterBackwardTab": {
+          "tag": "button",
+          "testId": "prepare-solution-cancel-btn",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Cancel",
+          "key": "button|prepare-solution-cancel-btn||||Cancel"
+        },
+        "forwardWrapOk": true,
+        "backwardWrapOk": true,
+        "ok": true
+      },
+      "restoredState": {
+        "detail": {
+          "label": "detail-restored",
+          "modalTestId": "detail-modal",
+          "modalPresent": true,
+          "modalAriaModal": "true",
+          "modalAriaHidden": null,
+          "modalHasInertAttribute": false,
+          "modalInertProperty": false,
+          "count": 18,
+          "first": {
+            "index": 0,
+            "tag": "button",
+            "testId": "",
+            "id": "",
+            "ariaLabel": "Copied 7647-01-0",
+            "title": "Copied 7647-01-0",
+            "text": "",
+            "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+          },
+          "last": {
+            "index": 17,
+            "tag": "a",
+            "testId": "detail-pubchem-link",
+            "id": "",
+            "ariaLabel": "",
+            "title": "",
+            "text": "View on PubChem",
+            "key": "a|detail-pubchem-link||||View on PubChem"
+          },
+          "focusables": [
+            {
+              "index": 0,
+              "tag": "button",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "Copied 7647-01-0",
+              "title": "Copied 7647-01-0",
+              "text": "",
+              "key": "button|||Copied 7647-01-0|Copied 7647-01-0|"
+            },
+            {
+              "index": 1,
+              "tag": "button",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "Add to favorites",
+              "title": "Add to favorites",
+              "text": "",
+              "key": "button|||Add to favorites|Add to favorites|"
+            },
+            {
+              "index": 2,
+              "tag": "button",
+              "testId": "close-modal-btn",
+              "id": "",
+              "ariaLabel": "Close",
+              "title": "",
+              "text": "",
+              "key": "button|close-modal-btn||Close||"
+            },
+            {
+              "index": 3,
+              "tag": "a",
+              "testId": "detail-report-source-conflict-link",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Report source issue",
+              "key": "a|detail-report-source-conflict-link||||Report source issue"
+            },
+            {
+              "index": 4,
+              "tag": "input",
+              "testId": "",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "",
+              "key": "input|||||"
+            },
+            {
+              "index": 5,
+              "tag": "button",
+              "testId": "set-primary-1",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-1||||Set as primary"
+            },
+            {
+              "index": 6,
+              "tag": "button",
+              "testId": "set-primary-2",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-2||||Set as primary"
+            },
+            {
+              "index": 7,
+              "tag": "button",
+              "testId": "set-primary-3",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-3||||Set as primary"
+            },
+            {
+              "index": 8,
+              "tag": "button",
+              "testId": "set-primary-4",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-4||||Set as primary"
+            },
+            {
+              "index": 9,
+              "tag": "button",
+              "testId": "set-primary-5",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-5||||Set as primary"
+            },
+            {
+              "index": 10,
+              "tag": "button",
+              "testId": "set-primary-6",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Set as primary",
+              "key": "button|set-primary-6||||Set as primary"
+            },
+            {
+              "index": 11,
+              "tag": "a",
+              "testId": "detail-reference-link-sds",
+              "id": "",
+              "ariaLabel": "PubChem Safety & Hazards SDS PubChem",
+              "title": "",
+              "text": "PubChem Safety & HazardsSDSPubChem",
+              "key": "a|detail-reference-link-sds||PubChem Safety & Hazards SDS PubChem||PubChem Safety & HazardsSDSPubChem"
+            },
+            {
+              "index": 12,
+              "tag": "a",
+              "testId": "detail-reference-link-regulatory",
+              "id": "",
+              "ariaLabel": "ECHA Substance Search Regulatory ECHA",
+              "title": "",
+              "text": "ECHA Substance SearchRegulatoryECHA",
+              "key": "a|detail-reference-link-regulatory||ECHA Substance Search Regulatory ECHA||ECHA Substance SearchRegulatoryECHA"
+            },
+            {
+              "index": 13,
+              "tag": "a",
+              "testId": "detail-reference-link-occupational",
+              "id": "",
+              "ariaLabel": "NIOSH Pocket Guide Occupational NIOSH",
+              "title": "",
+              "text": "NIOSH Pocket GuideOccupationalNIOSH",
+              "key": "a|detail-reference-link-occupational||NIOSH Pocket Guide Occupational NIOSH||NIOSH Pocket GuideOccupationalNIOSH"
+            },
+            {
+              "index": 14,
+              "tag": "a",
+              "testId": "detail-reference-link-reference",
+              "id": "",
+              "ariaLabel": "PubChem Compound Overview Reference PubChem",
+              "title": "",
+              "text": "PubChem Compound OverviewReferencePubChem",
+              "key": "a|detail-reference-link-reference||PubChem Compound Overview Reference PubChem||PubChem Compound OverviewReferencePubChem"
+            },
+            {
+              "index": 15,
+              "tag": "button",
+              "testId": "detail-print-label-btn",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Print Label",
+              "key": "button|detail-print-label-btn||||Print Label"
+            },
+            {
+              "index": 16,
+              "tag": "button",
+              "testId": "prepare-solution-btn",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "Prepare solution",
+              "key": "button|prepare-solution-btn||||Prepare solution"
+            },
+            {
+              "index": 17,
+              "tag": "a",
+              "testId": "detail-pubchem-link",
+              "id": "",
+              "ariaLabel": "",
+              "title": "",
+              "text": "View on PubChem",
+              "key": "a|detail-pubchem-link||||View on PubChem"
+            }
+          ]
+        },
+        "preparePresent": false,
+        "activeAfterEscape": {
+          "tag": "div",
+          "testId": "detail-modal-panel",
+          "id": "",
+          "ariaLabel": "",
+          "title": "",
+          "text": "Hydrochloric acid鹽酸CAS: 7647-01-0SourceECHARetrievedthis minuteClassification510",
+          "key": "div|detail-modal-panel||||Hydrochloric acid鹽酸CAS: 7647-01-0SourceECHARetrievedthis minuteClassification510"
+        }
+      },
+      "detailSuppressedOk": true,
+      "prepareOwnsModalOk": true,
+      "escapeRestoresDetailOk": true
+    },
+    "detailComparisonColumnCount": 7,
+    "detailComparisonEvidencePanelCount": 7,
+    "detailComparisonEvidenceBadgeIds": [
+      {
+        "testId": "comparison-evidence-badge-selected-0",
+        "text": "Currently selected"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-0",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-0",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-0",
+        "text": "4 icon(s) · 6 H · 22 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-1",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-1",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-1",
+        "text": "5 icon(s) · 9 H · 28 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-2",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-2",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-2",
+        "text": "5 icon(s) · 8 H · 27 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-3",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-3",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-3",
+        "text": "3 icon(s) · 4 H · 18 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-4",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-4",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-4",
+        "text": "3 icon(s) · 2 H · 15 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-5",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-5",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-5",
+        "text": "2 icon(s) · 2 H · 16 P"
+      },
+      {
+        "testId": "comparison-evidence-badge-report-count-6",
+        "text": "Report count not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-source-6",
+        "text": "Source not listed"
+      },
+      {
+        "testId": "comparison-evidence-badge-coverage-6",
+        "text": "1 icon(s) · 1 H · 3 P"
+      }
+    ],
+    "detailComparisonMetrics": [
+      {
+        "label": "detail-comparison-0",
+        "size": "md",
+        "variant": "selected",
+        "count": 4,
+        "width": 194,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS07",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS07"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-1",
+        "size": "md",
+        "variant": "comparison",
+        "count": 5,
+        "width": 205,
+        "height": 118,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-2",
+        "size": "md",
+        "variant": "comparison",
+        "count": 5,
+        "width": 205,
+        "height": 118,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-3",
+        "size": "md",
+        "variant": "comparison",
+        "count": 3,
+        "width": 144,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-4",
+        "size": "md",
+        "variant": "comparison",
+        "count": 3,
+        "width": 144,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-5",
+        "size": "md",
+        "variant": "comparison",
+        "count": 2,
+        "width": 94,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS07",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS07"
+          }
+        ]
+      },
+      {
+        "label": "detail-comparison-6",
+        "size": "md",
+        "variant": "comparison",
+        "count": 1,
+        "width": 44,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      }
+    ],
+    "imageWaits": [
+      {
+        "label": "primary-result-row",
+        "count": 4,
+        "failed": []
+      },
+      {
+        "label": "expanded-classifications",
+        "count": 19,
+        "failed": []
+      },
+      {
+        "label": "detail-comparison-table",
+        "count": 23,
+        "failed": []
+      },
+      {
+        "label": "mobile-detail-comparison",
+        "count": 23,
+        "failed": []
+      }
+    ],
+    "verticalRisks": [],
+    "mobileReadFirst": {
+      "viewportWidth": 390,
+      "documentScrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "resultsClientWidth": 356,
+      "resultsScrollWidth": 356,
+      "tableDisplay": "table",
+      "tableRect": {
+        "x": 17,
+        "y": 1340,
+        "width": 356,
+        "height": 567,
+        "right": 373,
+        "bottom": 1907
+      },
+      "rowRect": {
+        "x": 17,
+        "y": 1340,
+        "width": 356,
+        "height": 567,
+        "right": 373,
+        "bottom": 1907
+      },
+      "decisionGuideRect": {
+        "x": 17,
+        "y": 1125,
+        "width": 356,
+        "height": 114,
+        "right": 373,
+        "bottom": 1239
+      },
+      "decisionStepRects": [
+        {
+          "x": 36,
+          "y": 1166,
+          "width": 135,
+          "height": 26,
+          "right": 171,
+          "bottom": 1192,
+          "text": "Confirm identity"
+        },
+        {
+          "x": 179,
+          "y": 1166,
+          "width": 153,
+          "height": 26,
+          "right": 332,
+          "bottom": 1192,
+          "text": "Verify SDS / source"
+        },
+        {
+          "x": 36,
+          "y": 1200,
+          "width": 125,
+          "height": 26,
+          "right": 161,
+          "bottom": 1226,
+          "text": "Print or export"
+        }
+      ],
+      "detailButton": {
+        "x": 46,
+        "y": 1838,
+        "width": 71,
+        "height": 44,
+        "right": 117,
+        "bottom": 1882
+      },
+      "sdsButton": {
+        "x": 123,
+        "y": 1838,
+        "width": 100,
+        "height": 44,
+        "right": 223,
+        "bottom": 1882
+      },
+      "rowText": "7647-01-0Hydrochloric acid鹽酸ECHA5109 reportsCachedMultiple GHS classificationsSystem-suggested primary GHSPrimary reason: Multiple GHS classifications/Next: Open classification chooserGHS04: Compressed GasGHS05: CorrosiveGHS06: ToxicGHS07: Irritant6 other classification(s)DangerDetails View SDS"
+    },
+    "mobileDetailReadFirst": {
+      "viewportWidth": 390,
+      "documentScrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "modalRect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "right": 390,
+        "bottom": 844
+      },
+      "panelRect": {
+        "x": 12,
+        "y": 12,
+        "width": 366,
+        "height": 812,
+        "right": 378,
+        "bottom": 824
+      },
+      "panelClientWidth": 364,
+      "panelScrollWidth": 364,
+      "comparisonLayout": "mobile-cards",
+      "comparisonRect": {
+        "x": 37,
+        "y": 877,
+        "width": 316,
+        "height": 11614,
+        "right": 353,
+        "bottom": 12491
+      },
+      "comparisonClientWidth": 314,
+      "comparisonScrollWidth": 314,
+      "cardCount": 7,
+      "firstCardRect": {
+        "x": 50,
+        "y": 890,
+        "width": 290,
+        "height": 1922,
+        "right": 340,
+        "bottom": 2812
+      },
+      "modalText": "Hydrochloric acid鹽酸CAS: 7647-01-0SourceECHARetrievedthis minuteClassification5109 reportsReferences4 links Custom Classification SettingsKeep the default unless your SDS, supplier label, or local rule supports a different report.Multiple public classifications foundThe app keeps these reports separate instead of merging them. Change the selected report only when your SDS, supplier label, or local rule supports it; this selection affects detail, preview, and print output.Report source issueGHS Hazard Pictogram Classification(7 total)Default classificationCurrentPictogramsGHS04: Compressed GasGHS04GHS05: CorrosiveGHS05GHS06: ToxicGHS06GHS07: IrritantGHS07Not presentGHS08GHS09Signal WordDangerSelection EvidenceCurrently selectedReport count not listedSource not listed4 icon(s) · 6 H · 22 PHazard StatementsH280H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]H290H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]H314H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H318H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]H331H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]H335H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]Precautionary StatementsP234Keep only in original packaging.P260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P264+P265Wash all exposed body parts thoroughly after handling.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316Get emergency medical help immediately.P317Get emergency medical help.P319Get medical help if you feel unwell.P321Specific treatment (see ... on this label).P363Wash contaminated clothing before reuse.P390Absorb spillage to prevent material damage.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P406Store in a corrosion-resistant container with a resistant inner liner.P410+P403Protect from sunlight. Store in a well-ventilated place.P501Dispose of contents and container in accordance with local regulations.Source-Classification 2Set as primaryPictogramsGHS04: Compressed GasGHS04GHS05: CorrosiveGHS05GHS06: ToxicGHS06GHS08: Health HazardGHS08GHS09: Environmental HazardGHS09Not presentGHS07Signal WordDangerSelection EvidenceReport count not listedSource not listed5 icon(s) · 9 H · 28 PHazard StatementsH280H280: Contains gas under pressure; may explode if heated [Warning Gases under pressure]H301H301: Toxic if swallowed [Danger Acute toxicity, oral]H314H314: Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H318H318: Causes serious eye damage [Danger Serious eye damage/eye irritation]H330H330: Fatal if inhaled [Danger Acute toxicity, inhalation]H331H331: Toxic if inhaled [Danger Acute toxicity, inhalation]H334H334: May cause allergy or asthma symptoms or breathing difficulties if inhaled [Danger Sensitization, respiratory]H370H370: Causes damage to organs [Danger Specific target organ toxicity, single exposure]H372H372: Causes damage to organs through prolonged or repeated exposure [Danger Specific target organ toxicity, repeated exposure]Precautionary StatementsP233Keep container tightly closed.P260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P264+P265Wash all exposed body parts thoroughly after handling.P270Do not eat, drink or smoke when using this product.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P284In case of inadequate ventilation wear respiratory protection.P301+P316IF SWALLOWED: Get emergency medical help immediately.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P308+P316IF exposed or concerned: Get emergency medical help immediately.P316Get emergency medical help immediately.P317Get emergency medical help.P319Get medical help if you feel unwell.P320Specific treatment is urgent (see ... on this label).P321Specific treatment (see ... on this label).P330Rinse mouth.P342+P316If experiencing respiratory symptoms: Get emergency medical help immediately.P363Wash contaminated clothing before reuse.P403Store in a well-ventilated place.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P410+P403Protect from sunlight. Store in a well-ventilated place.P501Dispose of contents and container in accordance with local regulations.Source-Classification 3Set as primaryPictogramsGHS04: Compressed GasGHS04GHS05: CorrosiveGHS05GHS06: ToxicGHS06GHS08: Health HazardGHS08GHS09: Environmental HazardGHS09Not presentGHS07Signal WordDangerSelection EvidenceReport count not listedSource not listed5 icon(s) · 8 H · 27 PHazard StatementsH301H301: Toxic if swallowed [Danger Acute toxicity, oral]H314H314: Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H318H318: Causes serious eye damage [Danger Serious eye damage/eye irritation]H330H330: Fatal if inhaled [Danger Acute toxicity, inhalation]H331H331: Toxic if inhaled [Danger Acute toxicity, inhalation]H334H334: May cause allergy or asthma symptoms or breathing difficulties if inhaled [Danger Sensitization, respiratory]H370H370: Causes damage to organs [Danger Specific target organ toxicity, single exposure]H372H372: Causes damage to organs through prolonged or repeated exposure [Danger Specific target organ toxicity, repeated exposure]Precautionary StatementsP233Keep container tightly closed.P260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P264+P265Wash all exposed body parts thoroughly after handling.P270Do not eat, drink or smoke when using this product.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P284In case of inadequate ventilation wear respiratory protection.P301+P316IF SWALLOWED: Get emergency medical help immediately.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P308+P316IF exposed or concerned: Get emergency medical help immediately.P316Get emergency medical help immediately.P317Get emergency medical help.P319Get medical help if you feel unwell.P320Specific treatment is urgent (see ... on this label).P321Specific treatment (see ... on this label).P330Rinse mouth.P342+P316If experiencing respiratory symptoms: Get emergency medical help immediately.P363Wash contaminated clothing before reuse.P403Store in a well-ventilated place.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P501Dispose of contents and container in accordance with local regulations.Source-Classification 4Set as primaryPictogramsGHS04: Compressed GasGHS04GHS05: CorrosiveGHS05GHS06: ToxicGHS06Not presentGHS07GHS08GHS09Signal WordDangerSelection EvidenceReport count not listedSource not listed3 icon(s) · 4 H · 18 PHazard StatementsH280H280: Contains gas under pressure; may explode if heated [Warning Gases under pressure]H314H314: Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H318H318: Causes serious eye damage [Danger Serious eye damage/eye irritation]H331H331: Toxic if inhaled [Danger Acute toxicity, inhalation]Precautionary StatementsP260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P264+P265Wash all exposed body parts thoroughly after handling.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316Get emergency medical help immediately.P317Get emergency medical help.P321Specific treatment (see ... on this label).P363Wash contaminated clothing before reuse.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P410+P403Protect from sunlight. Store in a well-ventilated place.P501Dispose of contents and container in accordance with local regulations.Source-Classification 5Set as primaryPictogramsGHS04: Compressed GasGHS04GHS05: CorrosiveGHS05GHS06: ToxicGHS06Not presentGHS07GHS08GHS09Signal WordDangerSelection EvidenceReport count not listedSource not listed3 icon(s) · 2 H · 15 PHazard StatementsH314H314: Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H331H331: Toxic if inhaled [Danger Acute toxicity, inhalation]Precautionary StatementsP260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316Get emergency medical help immediately.P321Specific treatment (see ... on this label).P363Wash contaminated clothing before reuse.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P501Dispose of contents and container in accordance with local regulations.Source-Classification 6Set as primaryPictogramsGHS05: CorrosiveGHS05GHS07: IrritantGHS07Not presentGHS04GHS06GHS08GHS09Signal WordDangerSelection EvidenceReport count not listedSource not listed2 icon(s) · 2 H · 16 PHazard StatementsH314H314: Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H335H335: May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]Precautionary StatementsP260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316Get emergency medical help immediately.P319Get medical help if you feel unwell.P321Specific treatment (see ... on this label).P363Wash contaminated clothing before reuse.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P501Dispose of contents and container in accordance with local regulations.Source-Classification 7Set as primaryPictogramsGHS09: Environmental HazardGHS09Not presentGHS04GHS05GHS06GHS07GHS08Signal WordWarningSelection EvidenceReport count not listedSource not listed1 icon(s) · 1 H · 3 PHazard StatementsH400H400: Very toxic to aquatic life [Warning Hazardous to the aquatic environment, acute hazard]Precautionary StatementsP273Avoid release to the environment.P391Collect spillage.P501Dispose of contents and container in accordance with local regulations.Source- Review differences before switching. The selected report is saved locally and used by preview and printing.Hazard StatementsH280H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]H290H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]H314H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H318H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]H331H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]H335H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]Precautionary StatementsP234Keep only in original packaging.P260Do not breathe dust, fume, gas, mist, vapours, spray.P261Avoid breathing dust, fume, gas, mist, vapours, spray.P264Wash hands thoroughly after handling.P264+P265Wash all exposed body parts thoroughly after handling.P271Use only outdoors or in a well-ventilated area.P280Wear protective gloves, protective clothing, eye protection, face protection.P301+P330+P331IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P361+P354IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P354+P338IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316Get emergency medical help immediately.P317Get emergency medical help.P319Get medical help if you feel unwell.P321Specific treatment (see ... on this label).P363Wash contaminated clothing before reuse.P390Absorb spillage to prevent material damage.P403+P233Store in a well-ventilated place. Keep container tightly closed.P405Store locked up.P406Store in a corrosion-resistant container with a resistant inner liner.P410+P403Protect from sunlight. Store in a well-ventilated place.P501Dispose of contents and container in accordance with local regulations. Safety Data Sheet (SDS)Use these links as verification starting points. Final label text still depends on the current SDS, supplier label, and local rules.PubChem Safety & HazardsSDSPubChemECHA Substance SearchRegulatoryECHANIOSH Pocket GuideOccupationalNIOSHPubChem Compound OverviewReferencePubChem Data ProvenanceSource:Aggregated GHS information provided per 5109 reports by companies from 116 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.5109 reportsRetrieved:this minuteCachedVerify before useQuick reference only. The official Safety Data Sheet (SDS), supplier label, and local regulations remain the authoritative source for final hazard classification.Check official SDSCheck supplier labelCheck local rules Print Label Prepare solution View on PubChem"
+    },
+    "noGhsState": {
+      "term": "57-13-6",
+      "result": {
+        "attempts": 1,
+        "rowText": "57-13-6Urea尿素CachedNo GHS dataPrimary reason: No GHS data/Next: Report no-GHS gap after SDS checkNo GHS classification on fileAbsence does not imply safety — consult the SDS.-Details View SDS",
+        "noGhsBannerCount": 1,
+        "textOnlyBannerCount": 0,
+        "resultCheckboxCount": 0,
+        "resultPrintButtonDisabled": true,
+        "resultPrintButtonTitle": "No printable GHS hazard data is available for this selection. Review the SDS or source links before making a hazard label.",
+        "noGhsCorrection": {
+          "count": 1,
+          "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction&title=No+GHS+data%3A+57-13-6&body=%23%23+Correction+request%0A-+CAS%3A+57-13-6%0A-+English+name%3A+Urea%0A-+Chinese+name%3A+%E5%B0%BF%E7%B4%A0%0A-+Issue+type%3A+Other+data+issue%0A-+Issue+key%3A+no-ghs-data%0A-+Current+output%3A+The+app+found+this+chemical+identity%2C+but+no+GHS+hazard+content+was+available.%0A-+Expected+output%3A+Provide+reviewed+SDS%2C+supplier+label%2C+or+regulatory+evidence+for+the+missing+GHS+classification.%0A-+Evidence+type%3A+Other%0A-+Evidence+prompt%3A+SDS%2C+supplier+label%2C+or+regulatory+source%0A-+Local+context%3A+Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.%0A%23%23+Evidence+%2F+source%0APlease+include+SDS%2C+supplier+label%2C+or+another+authoritative+source+before+this+is+accepted+into+the+curated+dictionary.&cas_number=57-13-6&chemical_name=Urea+%2F+%E5%B0%BF%E7%B4%A0&issue_type=Other+data+issue&current_output=The+app+found+this+chemical+identity%2C+but+no+GHS+hazard+content+was+available.&expected_output=Provide+reviewed+SDS%2C+supplier+label%2C+or+regulatory+evidence+for+the+missing+GHS+classification.&evidence_type=Other&local_context=Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.",
+          "template": "data-correction.yml",
+          "labels": "data-correction",
+          "title": "No GHS data: 57-13-6",
+          "body": "## Correction request\n- CAS: 57-13-6\n- English name: Urea\n- Chinese name: 尿素\n- Issue type: Other data issue\n- Issue key: no-ghs-data\n- Current output: The app found this chemical identity, but no GHS hazard content was available.\n- Expected output: Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, or regulatory source\n- Local context: Please keep safety-data corrections separate from workflow or product requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+          "casNumber": "57-13-6",
+          "chemicalName": "Urea / 尿素",
+          "issueType": "Other data issue",
+          "currentOutput": "The app found this chemical identity, but no GHS hazard content was available.",
+          "expectedOutput": "Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.",
+          "evidenceUrl": "",
+          "evidenceType": "Other",
+          "localContext": "Please keep safety-data corrections separate from workflow or product requests.",
+          "workflowArea": "",
+          "goal": "",
+          "currentProblem": "",
+          "desiredBehavior": "",
+          "examples": ""
+        }
+      },
+      "detail": {
+        "noGhsBannerCount": 1,
+        "textOnlyBannerCount": 0,
+        "printButtonDisabled": true,
+        "printButtonTitle": "No printable GHS hazard data is available for this selection. Review the SDS or source links before making a hazard label.",
+        "noGhsCorrection": {
+          "count": 1,
+          "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction&title=No+GHS+data%3A+57-13-6&body=%23%23+Correction+request%0A-+CAS%3A+57-13-6%0A-+English+name%3A+Urea%0A-+Chinese+name%3A+%E5%B0%BF%E7%B4%A0%0A-+Issue+type%3A+Other+data+issue%0A-+Issue+key%3A+no-ghs-data%0A-+Current+output%3A+The+app+found+this+chemical+identity%2C+but+no+GHS+hazard+content+was+available.%0A-+Expected+output%3A+Provide+reviewed+SDS%2C+supplier+label%2C+or+regulatory+evidence+for+the+missing+GHS+classification.%0A-+Evidence+type%3A+Other%0A-+Evidence+prompt%3A+SDS%2C+supplier+label%2C+or+regulatory+source%0A-+Local+context%3A+Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.%0A%23%23+Evidence+%2F+source%0APlease+include+SDS%2C+supplier+label%2C+or+another+authoritative+source+before+this+is+accepted+into+the+curated+dictionary.&cas_number=57-13-6&chemical_name=Urea+%2F+%E5%B0%BF%E7%B4%A0&issue_type=Other+data+issue&current_output=The+app+found+this+chemical+identity%2C+but+no+GHS+hazard+content+was+available.&expected_output=Provide+reviewed+SDS%2C+supplier+label%2C+or+regulatory+evidence+for+the+missing+GHS+classification.&evidence_type=Other&local_context=Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.",
+          "template": "data-correction.yml",
+          "labels": "data-correction",
+          "title": "No GHS data: 57-13-6",
+          "body": "## Correction request\n- CAS: 57-13-6\n- English name: Urea\n- Chinese name: 尿素\n- Issue type: Other data issue\n- Issue key: no-ghs-data\n- Current output: The app found this chemical identity, but no GHS hazard content was available.\n- Expected output: Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, or regulatory source\n- Local context: Please keep safety-data corrections separate from workflow or product requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+          "casNumber": "57-13-6",
+          "chemicalName": "Urea / 尿素",
+          "issueType": "Other data issue",
+          "currentOutput": "The app found this chemical identity, but no GHS hazard content was available.",
+          "expectedOutput": "Provide reviewed SDS, supplier label, or regulatory evidence for the missing GHS classification.",
+          "evidenceUrl": "",
+          "evidenceType": "Other",
+          "localContext": "Please keep safety-data corrections separate from workflow or product requests.",
+          "workflowArea": "",
+          "goal": "",
+          "currentProblem": "",
+          "desiredBehavior": "",
+          "examples": ""
+        }
+      }
+    },
+    "missingChineseNameCorrection": {
+      "noteCount": 1,
+      "linkCount": 1,
+      "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction&title=Missing+trusted+Chinese+name%3A+107-18-6&body=%23%23+Correction+request%0A-+CAS%3A+107-18-6%0A-+English+name%3A+Allyl+Alcohol%0A-+Chinese+name%3A+%28please+fill+in%29%0A-+Issue+type%3A+Chemical+identity+or+alias%0A-+Issue+key%3A+missing-chinese-name%0A-+Current+output%3A+The+app+does+not+have+a+trusted+Chinese+name%2C+or+the+available+Chinese+field+repeats+English.%0A-+Expected+output%3A+Provide+a+reviewed+Traditional+Chinese+name+with+source+evidence+before+dictionary+approval.%0A-+Evidence+type%3A+Other%0A-+Evidence+prompt%3A+SDS%2C+supplier+label%2C+catalog%2C+or+regulatory+source%0A-+Local+context%3A+Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.%0A%23%23+Evidence+%2F+source%0APlease+include+SDS%2C+supplier+label%2C+or+another+authoritative+source+before+this+is+accepted+into+the+curated+dictionary.&cas_number=107-18-6&chemical_name=Allyl+Alcohol&issue_type=Chemical+identity+or+alias&current_output=The+app+does+not+have+a+trusted+Chinese+name%2C+or+the+available+Chinese+field+repeats+English.&expected_output=Provide+a+reviewed+Traditional+Chinese+name+with+source+evidence+before+dictionary+approval.&evidence_type=Other&local_context=Please+keep+safety-data+corrections+separate+from+workflow+or+product+requests.",
+      "template": "data-correction.yml",
+      "labels": "data-correction",
+      "title": "Missing trusted Chinese name: 107-18-6",
+      "body": "## Correction request\n- CAS: 107-18-6\n- English name: Allyl Alcohol\n- Chinese name: (please fill in)\n- Issue type: Chemical identity or alias\n- Issue key: missing-chinese-name\n- Current output: The app does not have a trusted Chinese name, or the available Chinese field repeats English.\n- Expected output: Provide a reviewed Traditional Chinese name with source evidence before dictionary approval.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, catalog, or regulatory source\n- Local context: Please keep safety-data corrections separate from workflow or product requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+      "casNumber": "107-18-6",
+      "issueType": "Chemical identity or alias",
+      "evidenceType": "Other",
+      "currentOutput": "The app does not have a trusted Chinese name, or the available Chinese field repeats English.",
+      "expectedOutput": "Provide a reviewed Traditional Chinese name with source evidence before dictionary approval.",
+      "rowLinkCount": 1,
+      "rowTemplate": "data-correction.yml",
+      "rowLabels": "data-correction",
+      "rowTitle": "Missing trusted Chinese name: 107-18-6",
+      "rowBody": "## Correction request\n- CAS: 107-18-6\n- English name: Allyl Alcohol\n- Chinese name: (please fill in)\n- Issue type: Chemical identity or alias\n- Issue key: missing-chinese-name\n- Current output: The app does not have a trusted Chinese name, or the available Chinese field repeats English.\n- Expected output: Provide a reviewed Traditional Chinese name with source evidence before dictionary approval.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, catalog, or regulatory source\n- Local context: Please keep safety-data corrections separate from workflow or product requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+      "rowCasNumber": "107-18-6",
+      "rowIssueType": "Chemical identity or alias",
+      "rowEvidenceType": "Other",
+      "rowCurrentOutput": "The app does not have a trusted Chinese name, or the available Chinese field repeats English.",
+      "rowExpectedOutput": "Provide a reviewed Traditional Chinese name with source evidence before dictionary approval."
+    },
+    "unresolvedSearchCorrection": {
+      "rowText": "999-99-9CAS number not found in PubChemUnresolved lookupPrimary reason: Unresolved lookup/Next: Send lookup gap to correction--",
+      "correction": {
+        "count": 1,
+        "href": "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction&title=Unresolved+lookup%3A+999-99-9&body=%23%23+Correction+request%0A-+CAS%3A+999-99-9%0A-+English+name%3A+%28not+provided%29%0A-+Chinese+name%3A+%28please+fill+in%29%0A-+Issue+type%3A+Chemical+identity+or+alias%0A-+Issue+key%3A+unresolved-search%0A-+Current+output%3A+The+app+could+not+resolve+this+lookup+to+a+reviewed+chemical+identity.%0A-+Expected+output%3A+Provide+a+reviewed+CAS%2Fname+mapping+with+source+evidence+before+dictionary+approval.%0A-+Evidence+type%3A+Other%0A-+Evidence+prompt%3A+SDS%2C+supplier+label%2C+catalog%2C+or+regulatory+source%0A-+Local+context%3A+Do+not+treat+unresolved+lookup+as+no+hazards%3B+route+it+to+admin+dictionary+curation+and+keep+safety-data+corrections+separate+from+workflow+requests.%0A%23%23+Evidence+%2F+source%0APlease+include+SDS%2C+supplier+label%2C+or+another+authoritative+source+before+this+is+accepted+into+the+curated+dictionary.&cas_number=999-99-9&issue_type=Chemical+identity+or+alias&current_output=The+app+could+not+resolve+this+lookup+to+a+reviewed+chemical+identity.&expected_output=Provide+a+reviewed+CAS%2Fname+mapping+with+source+evidence+before+dictionary+approval.&evidence_type=Other&local_context=Do+not+treat+unresolved+lookup+as+no+hazards%3B+route+it+to+admin+dictionary+curation+and+keep+safety-data+corrections+separate+from+workflow+requests.",
+        "template": "data-correction.yml",
+        "labels": "data-correction",
+        "title": "Unresolved lookup: 999-99-9",
+        "body": "## Correction request\n- CAS: 999-99-9\n- English name: (not provided)\n- Chinese name: (please fill in)\n- Issue type: Chemical identity or alias\n- Issue key: unresolved-search\n- Current output: The app could not resolve this lookup to a reviewed chemical identity.\n- Expected output: Provide a reviewed CAS/name mapping with source evidence before dictionary approval.\n- Evidence type: Other\n- Evidence prompt: SDS, supplier label, catalog, or regulatory source\n- Local context: Do not treat unresolved lookup as no hazards; route it to admin dictionary curation and keep safety-data corrections separate from workflow requests.\n## Evidence / source\nPlease include SDS, supplier label, or another authoritative source before this is accepted into the curated dictionary.",
+        "casNumber": "999-99-9",
+        "chemicalName": "",
+        "issueType": "Chemical identity or alias",
+        "currentOutput": "The app could not resolve this lookup to a reviewed chemical identity.",
+        "expectedOutput": "Provide a reviewed CAS/name mapping with source evidence before dictionary approval.",
+        "evidenceUrl": "",
+        "evidenceType": "Other",
+        "localContext": "Do not treat unresolved lookup as no hazards; route it to admin dictionary curation and keep safety-data corrections separate from workflow requests.",
+        "workflowArea": "",
+        "goal": "",
+        "currentProblem": "",
+        "desiredBehavior": "",
+        "examples": ""
+      },
+      "checkboxCount": 0,
+      "detailButtonCount": 0
+    },
+    "batchInputNormalization": {
+      "readySummary": "7 valid unique CAS value(s) ready from 9 pasted item(s).",
+      "diagnostics": "1 duplicate CAS value(s) ignored. Batch search sends only the first occurrence.1 invalid CAS value(s) were not sent: 344-04-072 spreadsheet CAS value(s) were cleaned up before search: 67641 -> 67-64-1, 0118-12-7 -> 118-12-7",
+      "diagnosticSummaries": {
+        "duplicate": "1 duplicate CAS value(s) ignored. Batch search sends only the first occurrence.",
+        "invalid": "1 invalid CAS value(s) were not sent: 344-04-07",
+        "rehyphenated": "2 spreadsheet CAS value(s) were cleaned up before search: 67641 -> 67-64-1, 0118-12-7 -> 118-12-7"
+      },
+      "searchButtonDisabled": false,
+      "overLimitAlertCount": 0,
+      "resultSummary": {
+        "rowCount": 7,
+        "workflowSummaryVisible": true,
+        "foundValue": "7/7",
+        "labelReadyValue": "2",
+        "reviewValue": "5",
+        "exportValue": "7",
+        "filteredScopeCount": 0,
+        "reviewActionQueueCount": 1,
+        "reviewActionQueueText": "Review action queueMultiple GHS classifications5Next: Open classification chooser",
+        "nextActionTitle": "Review 5 item(s) before output",
+        "nextActionBody": "Start with Multiple GHS classifications (5). 2 item(s) have no review reasons and can move to print or export first.",
+        "nextActionCta": "Show affected rows"
+      }
+    },
+    "urlQueryHydration": {
+      "queryUrl": "https://ghs-frontend.zeabur.app/?productionSearchUiQa=1782061309948&cas=7647-01-0",
+      "inputValue": "7647-01-0",
+      "rowText": "7647-01-0Hydrochloric acid鹽酸ECHA5109 reportsCachedMultiple GHS classificationsSystem-suggested primary GHSPrimary reason: Multiple GHS classifications/Next: Open classification chooserGHS04: Compressed GasGHS05: CorrosiveGHS06: ToxicGHS07: Irritant6 other classification(s)DangerDetails View SDS",
+      "singleTabClass": "notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors border-b-2 border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]",
+      "batchReadySummaryCount": 0
+    },
+    "mobileDetailComparisonCardCount": 7,
+    "mobileDetailComparisonEvidencePanelCount": 7,
+    "mobileDetailComparisonMetrics": [
+      {
+        "label": "mobile-detail-comparison-0",
+        "size": "md",
+        "variant": "selected",
+        "count": 4,
+        "width": 194,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS07",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS07"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-1",
+        "size": "md",
+        "variant": "comparison",
+        "count": 5,
+        "width": 244,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-2",
+        "size": "md",
+        "variant": "comparison",
+        "count": 5,
+        "width": 244,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          },
+          {
+            "code": "GHS08",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS08"
+          },
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-3",
+        "size": "md",
+        "variant": "comparison",
+        "count": 3,
+        "width": 144,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-4",
+        "size": "md",
+        "variant": "comparison",
+        "count": 3,
+        "width": 144,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS04",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS04"
+          },
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS06",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS06"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-5",
+        "size": "md",
+        "variant": "comparison",
+        "count": 2,
+        "width": 94,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS05",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS05"
+          },
+          {
+            "code": "GHS07",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS07"
+          }
+        ]
+      },
+      {
+        "label": "mobile-detail-comparison-6",
+        "size": "md",
+        "variant": "comparison",
+        "count": 1,
+        "width": 44,
+        "height": 56,
+        "tiles": [
+          {
+            "code": "GHS09",
+            "tileWidth": 44,
+            "tileHeight": 56,
+            "frameWidth": 44,
+            "frameHeight": 44,
+            "imageWidth": 38,
+            "imageHeight": 40,
+            "imageComplete": true,
+            "naturalWidth": 70,
+            "naturalHeight": 70,
+            "codeText": "GHS09"
+          }
+        ]
+      }
+    ]
+  }
+}

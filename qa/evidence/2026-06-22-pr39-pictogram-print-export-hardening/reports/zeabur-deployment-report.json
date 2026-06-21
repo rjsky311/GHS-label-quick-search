@@ -1,0 +1,166 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T17:01:04.528Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+  "serviceId": "69626873d9479ab33ad4590e",
+  "environmentId": "696262d9a7aaff0c1152b3d6",
+  "expectedGitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+  "zeaburCommand": "npx zeabur deployment list --service-id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "parseError": ""
+  },
+  "zeaburServiceCommand": "npx zeabur service get --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburServiceCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "zeaburVariableCommand": "npx zeabur variable list --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --json --interactive=false",
+  "zeaburVariableCli": {
+    "status": 0,
+    "stderr": "",
+    "error": ""
+  },
+  "serviceBuildVariables": {
+    "keys": [
+      "GHS_BACKEND_HOST",
+      "GHS_BACKEND_HOST",
+      "MONGODB_HOST",
+      "PORT",
+      "REACT_APP_BACKEND_URL",
+      "VITE_BACKEND_URL",
+      "ZBPACK_APP_DIR",
+      "ZBPACK_BUILD_COMMAND",
+      "ZBPACK_OUTPUT_DIR"
+    ],
+    "expected": {
+      "ZBPACK_APP_DIR": "frontend",
+      "ZBPACK_BUILD_COMMAND": "npm ci && npm run build",
+      "ZBPACK_OUTPUT_DIR": "build",
+      "VITE_BACKEND_URL": "https://ghs-backend.zeabur.app"
+    },
+    "matchesExpected": true
+  },
+  "service": {
+    "id": "69626873d9479ab33ad4590e",
+    "name": "ghs-frontend",
+    "template": "PREBUILT_V2",
+    "status": "RUNNING",
+    "rootDirectory": "",
+    "customBuildCommand": "",
+    "outputDir": "",
+    "watchPaths": [
+      "*"
+    ]
+  },
+  "buildLogCommand": "npx zeabur deployment log --deployment-id 6a381857e0cdac27161d5e81 --type build --json --interactive=false",
+  "buildLogCli": {
+    "status": 0,
+    "stderr": "",
+    "error": "",
+    "skipped": false,
+    "entryCount": 427
+  },
+  "localConfig": {
+    "zeaburYaml": {
+      "exists": true,
+      "hasFrontendServiceName": true,
+      "hasBackendServiceName": true,
+      "hasLegacyFrontendName": false,
+      "hasLegacyBackendName": false
+    },
+    "frontendZbpack": {
+      "exists": true,
+      "appDir": "frontend",
+      "buildCommand": "npm ci && npm run build",
+      "outputDir": "build",
+      "matchesExpected": true
+    }
+  },
+  "latestDeployment": {
+    "id": "6a381857e0cdac27161d5e81",
+    "status": "RUNNING",
+    "commitSHA": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+    "commitMessage": "Harden GHS pictogram print and export checks (#39)\n\nCo-authored-by: rjsky311 <rjsky311@users.noreply.github.com>",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T16:59:03.69Z",
+    "scheduledAt": "2026-06-21T16:59:05.664Z",
+    "startedAt": "2026-06-21T16:59:07.766Z",
+    "finishedAt": "2026-06-21T17:00:13.326Z",
+    "started": true,
+    "finished": true
+  },
+  "latestDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "runningDeployment": {
+    "id": "6a381857e0cdac27161d5e81",
+    "status": "RUNNING",
+    "commitSHA": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+    "commitMessage": "Harden GHS pictogram print and export checks (#39)\n\nCo-authored-by: rjsky311 <rjsky311@users.noreply.github.com>",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T16:59:03.69Z",
+    "scheduledAt": "2026-06-21T16:59:05.664Z",
+    "startedAt": "2026-06-21T16:59:07.766Z",
+    "finishedAt": "2026-06-21T17:00:13.326Z",
+    "started": true,
+    "finished": true
+  },
+  "runningDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "expectedDeployment": {
+    "id": "6a381857e0cdac27161d5e81",
+    "status": "RUNNING",
+    "commitSHA": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+    "commitMessage": "Harden GHS pictogram print and export checks (#39)\n\nCo-authored-by: rjsky311 <rjsky311@users.noreply.github.com>",
+    "ref": "refs/heads/main",
+    "createdAt": "2026-06-21T16:59:03.69Z",
+    "scheduledAt": "2026-06-21T16:59:05.664Z",
+    "startedAt": "2026-06-21T16:59:07.766Z",
+    "finishedAt": "2026-06-21T17:00:13.326Z",
+    "started": true,
+    "finished": true
+  },
+  "expectedDeploymentAge": {
+    "createdAgeMinutes": 2,
+    "scheduledAgeMinutes": 2,
+    "startedAgeMinutes": 2,
+    "finishedAgeMinutes": 1
+  },
+  "expectedDeployments": [
+    {
+      "id": "6a381857e0cdac27161d5e81",
+      "status": "RUNNING",
+      "commitSHA": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+      "commitMessage": "Harden GHS pictogram print and export checks (#39)\n\nCo-authored-by: rjsky311 <rjsky311@users.noreply.github.com>",
+      "ref": "refs/heads/main",
+      "createdAt": "2026-06-21T16:59:03.69Z",
+      "scheduledAt": "2026-06-21T16:59:05.664Z",
+      "startedAt": "2026-06-21T16:59:07.766Z",
+      "finishedAt": "2026-06-21T17:00:13.326Z",
+      "started": true,
+      "finished": true
+    }
+  ],
+  "deploymentCount": 5,
+  "statusCategory": "fresh-running",
+  "recovery": {
+    "redeployCommand": "npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id 696262d9a7aaff0c1152b3d6 --yes --json --interactive=false",
+    "inspectDeploymentCommand": "npx zeabur deployment get --deployment-id 6a381857e0cdac27161d5e81 --json --interactive=false",
+    "nextActions": [
+      "Proceed with heavier production QA."
+    ]
+  },
+  "failures": [],
+  "guidance": []
+}

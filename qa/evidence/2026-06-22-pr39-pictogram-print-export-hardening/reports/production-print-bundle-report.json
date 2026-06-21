@@ -1,0 +1,78 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T17:01:31.116Z",
+  "productionUrl": "https://ghs-frontend.zeabur.app/",
+  "htmlUrl": "https://ghs-frontend.zeabur.app/?printQaBundleCheck=1782061289823",
+  "assetUrl": "https://ghs-frontend.zeabur.app/assets/index-BoN1YhVb.js",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-bundle-report.json",
+  "maxAttempts": 3,
+  "timeoutMs": 10000,
+  "retryDelayMs": 750,
+  "attempts": {
+    "html": [
+      {
+        "attempt": 1,
+        "ok": true
+      }
+    ],
+    "asset": [
+      {
+        "attempt": 1,
+        "ok": true
+      }
+    ]
+  },
+  "assetUrls": [
+    "https://ghs-frontend.zeabur.app/assets/index-BoN1YhVb.js",
+    "https://ghs-frontend.zeabur.app/assets/vendor-C8NZpg4a.js",
+    "https://ghs-frontend.zeabur.app/assets/vendor-app-DjLi0yk_.js",
+    "https://ghs-frontend.zeabur.app/assets/vendor-i18n-B9GbsE1B.js",
+    "https://ghs-frontend.zeabur.app/assets/vendor-react-C2x9V5Sw.js",
+    "https://ghs-frontend.zeabur.app/assets/ClassificationComparisonTable-ChYczyJ7.js",
+    "https://ghs-frontend.zeabur.app/assets/ComparisonModal-BB0FfweD.js",
+    "https://ghs-frontend.zeabur.app/assets/DataCorrectionDialog-DFw6NEpv.js",
+    "https://ghs-frontend.zeabur.app/assets/DetailModal-DNAYijMC.js",
+    "https://ghs-frontend.zeabur.app/assets/ExportPreviewModal-CDsbxpVg.js",
+    "https://ghs-frontend.zeabur.app/assets/FavoritesSidebar-BYxU5PbB.js",
+    "https://ghs-frontend.zeabur.app/assets/GHSPictogramStrip-_zvcs6yO.js",
+    "https://ghs-frontend.zeabur.app/assets/HistorySidebar-D0Ma5hyn.js",
+    "https://ghs-frontend.zeabur.app/assets/LabelPrintModal-C5FZpsga.js",
+    "https://ghs-frontend.zeabur.app/assets/PilotDashboardSidebar-DCqHUOfb.js",
+    "https://ghs-frontend.zeabur.app/assets/PrepareSolutionModal-Dha42htm.js",
+    "https://ghs-frontend.zeabur.app/assets/PreparedSidebar-BhTK8KML.js",
+    "https://ghs-frontend.zeabur.app/assets/ResultsTable-BToFDTQZ.js",
+    "https://ghs-frontend.zeabur.app/assets/exportData-D5puxoZw.js",
+    "https://ghs-frontend.zeabur.app/assets/exportRows-Cd3heL5V.js",
+    "https://ghs-frontend.zeabur.app/assets/formatDate-BqFQm5om.js",
+    "https://ghs-frontend.zeabur.app/assets/modalViewport-D5ONfIU-.js",
+    "https://ghs-frontend.zeabur.app/assets/printLabels-DXOcDoBq.js",
+    "https://ghs-frontend.zeabur.app/assets/sdsLinks-Y76ivgAD.js"
+  ],
+  "assetCount": 24,
+  "assetBytes": 1102191,
+  "requiredMarkers": [
+    "layoutBlockedDetailed",
+    "casNumbers",
+    "labelWidthMm",
+    "ready_with_continuation",
+    "continuation-badge",
+    "preview-page-controls",
+    "preview-context-strip",
+    "ghs-print-qa-status",
+    "autoFitLevel",
+    "print_autofit_retry",
+    "label-fit-level-",
+    "label-purpose",
+    "qrSupplement",
+    "quickId",
+    "label-stock-small-strip",
+    "label-stock-brother-62mm-continuous",
+    "ghs-lookup",
+    "GHS Label Quick Search",
+    "searchParams.set",
+    "printAcknowledgedBatchAction",
+    "data-batch-category"
+  ],
+  "missingMarkers": [],
+  "failure": ""
+}

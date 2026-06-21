@@ -1,0 +1,158 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T17:09:58.318Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-product-qa-report.json",
+  "summaryReportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-qa-summary.json",
+  "defaultStepTimeoutMs": 1800000,
+  "stepTimeouts": {
+    "production-smoke": 7200000,
+    "production-prepared": 1200000,
+    "production-batch-print": 1200000,
+    "production-summary": 120000
+  },
+  "steps": [
+    {
+      "id": "production-smoke",
+      "command": "npm run qa:production-smoke",
+      "timeoutMs": 7200000,
+      "startedAt": "2026-06-21T17:01:28.985Z",
+      "finishedAt": "2026-06-21T17:08:22.146Z",
+      "durationMs": 413161,
+      "status": "passed",
+      "exitCode": 0,
+      "timedOut": false,
+      "error": ""
+    },
+    {
+      "id": "production-prepared",
+      "command": "npm run qa:production-prepared",
+      "timeoutMs": 1200000,
+      "startedAt": "2026-06-21T17:08:22.146Z",
+      "finishedAt": "2026-06-21T17:09:12.311Z",
+      "durationMs": 50165,
+      "status": "passed",
+      "exitCode": 0,
+      "timedOut": false,
+      "error": ""
+    },
+    {
+      "id": "production-batch-print",
+      "command": "npm run qa:production-batch-print",
+      "timeoutMs": 1200000,
+      "startedAt": "2026-06-21T17:09:12.312Z",
+      "finishedAt": "2026-06-21T17:09:58.120Z",
+      "durationMs": 45808,
+      "status": "passed",
+      "exitCode": 0,
+      "timedOut": false,
+      "error": ""
+    },
+    {
+      "id": "production-summary",
+      "command": "npm run qa:production-summary",
+      "timeoutMs": 120000,
+      "startedAt": "2026-06-21T17:09:58.121Z",
+      "finishedAt": "2026-06-21T17:09:58.317Z",
+      "durationMs": 196,
+      "status": "passed",
+      "exitCode": 0,
+      "timedOut": false,
+      "error": ""
+    }
+  ],
+  "failure": null,
+  "productBlocks": [
+    {
+      "id": "deployment-freshness",
+      "name": "Production deployment freshness",
+      "reports": [
+        "zeabur-deployment",
+        "production-health"
+      ],
+      "ok": true,
+      "evidence": "Production deployment freshness is proven by production health/build metadata; Zeabur deployment state is included when CLI auth is available."
+    },
+    {
+      "id": "production-availability",
+      "name": "Production frontend/backend availability",
+      "reports": [
+        "production-health"
+      ],
+      "ok": true,
+      "evidence": "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and Zeabur request-id capture."
+    },
+    {
+      "id": "print-renderer-stock-fit",
+      "name": "Print renderer and stock fit robustness",
+      "reports": [
+        "bundle-freshness",
+        "print-qa-matrix",
+        "production-print-smoke-report"
+      ],
+      "ok": true,
+      "evidence": "Production bundle freshness, print QA matrix, and deployed print handoff checks cover complete-primary and compact stock paths."
+    },
+    {
+      "id": "result-table-pictograms",
+      "name": "Result table and GHS pictogram visual unity",
+      "reports": [
+        "search-ui"
+      ],
+      "ok": true,
+      "evidence": "Production search UI QA checks result-row, expanded classification, and detail comparison pictogram geometry."
+    },
+    {
+      "id": "trust-source-sds",
+      "name": "Trust, source, SDS, and safety boundaries",
+      "reports": [
+        "search-ui"
+      ],
+      "ok": true,
+      "evidence": "Production search UI QA checks authoritative notes, source chips, safe SDS/reference links, and support-link separation."
+    },
+    {
+      "id": "prepared-solution-reprint",
+      "name": "Prepared solution and reprint workflow maturity",
+      "reports": [
+        "prepared-production"
+      ],
+      "ok": true,
+      "evidence": "Production prepared QA covers prepared print, recent reprint, and saved preset reuse across primary, bottle, and tube outputs."
+    },
+    {
+      "id": "fixed-stock-batch-printing",
+      "name": "Fixed-stock batch label printing",
+      "reports": [
+        "fixed-stock-batch-print"
+      ],
+      "ok": true,
+      "evidence": "Production batch print QA searches a mixed batch, opens the fixed-stock modal, verifies the batch fit report, switches representative preview, and checks ready-batch handoff."
+    },
+    {
+      "id": "whole-product-ux-brand-utility",
+      "name": "Whole-product UX and brand-utility convergence",
+      "reports": [
+        "search-ui",
+        "production-health",
+        "bundle-freshness",
+        "production-print-smoke-report",
+        "prepared-production",
+        "fixed-stock-batch-print"
+      ],
+      "ok": true,
+      "evidence": "Core deployed walkthroughs keep search, detail, modal keyboard containment, trust/support, print, prepared, and batch workflows in one production gate."
+    }
+  ],
+  "summary": {
+    "presentReports": 8,
+    "failedReports": 0,
+    "failedReportNames": [],
+    "failedRequiredFreshnessBlocks": [],
+    "failedProductBlocks": [],
+    "incompleteProductBlocks": [],
+    "actionableFailures": [],
+    "reportLevelFailures": [],
+    "reportWarnings": [],
+    "failureTriage": []
+  }
+}

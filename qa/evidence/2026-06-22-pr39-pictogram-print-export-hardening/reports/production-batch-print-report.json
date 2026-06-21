@@ -1,0 +1,221 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T17:09:41.870Z",
+  "productionUrl": "https://ghs-frontend.zeabur.app",
+  "fixtureName": "default",
+  "fixture": {
+    "rawCount": 51,
+    "uniqueCount": 51,
+    "duplicateCount": 0,
+    "invalidLikeCount": 0,
+    "invalidLike": []
+  },
+  "casCount": 51,
+  "casList": [
+    "64-17-5",
+    "7647-01-0",
+    "90-41-5",
+    "67-56-1",
+    "7664-93-9",
+    "1310-73-2",
+    "7722-84-1",
+    "50-00-0",
+    "75-07-0",
+    "108-88-3",
+    "67-64-1",
+    "71-43-2",
+    "109-99-9",
+    "110-54-3",
+    "75-05-8",
+    "7782-50-5",
+    "7664-41-7",
+    "7697-37-2",
+    "7783-06-4",
+    "100-41-4",
+    "1330-20-7",
+    "108-95-2",
+    "75-09-2",
+    "79-01-6",
+    "107-06-2",
+    "127-18-4",
+    "7782-44-7",
+    "7727-37-9",
+    "124-38-9",
+    "7775-09-9",
+    "1313-99-1",
+    "7440-43-9",
+    "7439-97-6",
+    "7440-38-2",
+    "7440-66-6",
+    "7778-50-9",
+    "7758-99-8",
+    "12125-02-9",
+    "10043-35-3",
+    "7446-70-0",
+    "10025-87-3",
+    "10026-13-8",
+    "7790-94-5",
+    "108-24-7",
+    "64-19-7",
+    "107-21-1",
+    "100-42-5",
+    "75-21-8",
+    "75-15-0",
+    "7440-02-0",
+    "7439-92-1"
+  ],
+  "batchInputState": {
+    "readySummary": "51 valid unique CAS value(s) ready from 51 pasted item(s).",
+    "duplicateSummary": "",
+    "invalidSummary": ""
+  },
+  "printableCount": 39,
+  "batchResultsState": {
+    "workflowSummary": [
+      {
+        "key": "input-total",
+        "text": "Total input51Everything pasted into this batch.",
+        "value": "51"
+      },
+      {
+        "key": "valid-unique",
+        "text": "Valid unique51CAS values sent to lookup after cleanup.",
+        "value": "51"
+      },
+      {
+        "key": "duplicate-ignored",
+        "text": "Duplicates ignored0Repeated CAS values skipped automatically.",
+        "value": "0"
+      },
+      {
+        "key": "invalid-rejected",
+        "text": "Invalid rejected0Malformed or checksum-failed CAS values.",
+        "value": "0"
+      },
+      {
+        "key": "found",
+        "text": "Found42/51Confirm the chemical identity first.",
+        "value": "42/51"
+      },
+      {
+        "key": "unresolved",
+        "text": "Unresolved0Lookup gaps that need correction or reporting.",
+        "value": "0"
+      },
+      {
+        "key": "label-ready",
+        "text": "Ready output0Rows with GHS data and no review reasons.",
+        "value": "0"
+      },
+      {
+        "key": "needs-review",
+        "text": "Needs review51Includes source retries, lookup gaps, source conflicts, missing Chinese names, or GHS data gaps.",
+        "value": "51"
+      },
+      {
+        "key": "export",
+        "text": "Batch rows51Full batch size before filters; exports follow the current visible scope.",
+        "value": "51"
+      }
+    ],
+    "nextAction": {
+      "title": "Review 51 item(s) before output",
+      "body": "Start with Upstream retry needed (9). 0 item(s) have no review reasons and can move to print or export first.",
+      "cta": "Show affected rows"
+    },
+    "reviewActionQueueText": "Review action queue58 signals / 51 rowsSignal counts can be higher than rows needing review because one chemical can have several issues. Start with the recommended next step, then filter each issue type.Upstream retry needed9Next: Retry upstream sourceNo GHS data3Next: Report no-GHS gap after SDS checkMultiple GHS classifications39Next: Open classification chooserMissing trusted Chinese name7Next: Submit Chinese-name evidence",
+    "reviewActions": [
+      {
+        "type": "upstream-error",
+        "text": "Upstream retry needed9Next: Retry upstream source"
+      },
+      {
+        "type": "no-ghs-data",
+        "text": "No GHS data3Next: Report no-GHS gap after SDS check"
+      },
+      {
+        "type": "multiple-classifications",
+        "text": "Multiple GHS classifications39Next: Open classification chooser"
+      },
+      {
+        "type": "missing-chinese-name",
+        "text": "Missing trusted Chinese name7Next: Submit Chinese-name evidence"
+      }
+    ]
+  },
+  "exportPreviewSurface": {
+    "available": true,
+    "headers": [
+      "CAS No.",
+      "English Name",
+      "Chinese Name",
+      "GHS Label",
+      "Signal Word",
+      "Hazard Statements",
+      "Precautionary Statements",
+      "Data State",
+      "Printable",
+      "Needs Review",
+      "Review Reasons",
+      "Review Signal Count",
+      "Primary Review Action",
+      "Primary Source",
+      "Report Count",
+      "Retrieved At",
+      "Cache State",
+      "Reference Links",
+      "Source Conflict",
+      "Missing Trusted Chinese Name",
+      "Multiple GHS Status",
+      "Classification Selection"
+    ],
+    "bodyText": "Export PreviewConfirm Visible filtered (51 row(s)) and columns before downloading CSV.Export ScopeVisible filtered · 51 row(s)Ready0 readyNeeds review51 reviewUnresolved0 unresolvedColumns22 column(s)Choose export scopeAll results51 total row(s)Visible filtered51 currently visible row(s)Printable / ready0 row(s) ready with no review reasonsNeeds review51 found row(s) with review reasonsUnresolved0 unresolved lookup row(s), excluding upstream outagesFormatExcel .xlsxCSV .csvReview handoff columnsCSV and XLSX include review signal count and the first recommended action, so overlapping issues stay visible after download.Previewing first 5 row(s)46 more row(s) will also be exported.CAS No.English NameChinese NameGHS LabelSignal WordHazard StatementsPrecautionary StatementsData StatePrintableNeeds ReviewReview ReasonsReview Signal CountPrimary Review ActionPrimary SourceReport CountRetrieved AtCache StateReference LinksSource ConflictMissing Trusted Chinese NameMultiple GHS StatusClassification Selection64-17-5Ethanol乙醇GHS02 (Flammable), GHS07 (Irritant)DangerH225: H225 (> 99.9%): Highly Flammable liquid and vapor [Danger Flammable liquids]; H319: H319 (37.7%): Causes serious eye irritation [Warning Serious eye damage/eye irritation]P210: Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.; P233: Keep container tightly closed.; P240: Ground and bond container and receiving equipment.; P241: Use explosion-proof electrical, ventilating, lighting and other equipment.; P242: Use non-sparking tools.; P243: Take action to prevent static discharges.; P264+P265: Wash all exposed body parts thoroughly after handling.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P303+P361+P353: IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water or shower.; P305+P351+P338: IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.; P337+P317: If eye irritation persists: Get emergency medical help.; P370+P378: In case of fire: Use ... for extinction.; P403+P235: Store in a well-ventilated place. Keep cool.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 13886 reports by companies from 79 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.138862026-06-21T17:00:55.704985+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classification7647-01-0Hydrochloric acid鹽酸GHS04 (Compressed Gas), GHS05 (Corrosive), GHS06 (Toxic), GHS07 (Irritant)DangerH280: H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]; H290: H290 (22.8%): May be corrosive to metals [Warning Corrosive to Metals]; H314: H314 (99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]; H318: H318 (20%): Causes serious eye damage [Danger Serious eye damage/eye irritation]; H331: H331 (49.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]; H335: H335 (59%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]P234: Keep only in original packaging.; P260: Do not breathe dust, fume, gas, mist, vapours, spray.; P261: Avoid breathing dust, fume, gas, mist, vapours, spray.; P264: Wash hands thoroughly after handling.; P264+P265: Wash all exposed body parts thoroughly after handling.; P271: Use only outdoors or in a well-ventilated area.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P301+P330+P331: IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.; P302+P361+P354: IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.; P304+P340: IF INHALED: Remove person to fresh air and keep comfortable for breathing.; P305+P354+P338: IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.; P316: Get emergency medical help immediately.; P317: Get emergency medical help.; P319: Get medical help if you feel unwell.; P321: Specific treatment (see ... on this label).; P363: Wash contaminated clothing before reuse.; P390: Absorb spillage to prevent material damage.; P403+P233: Store in a well-ventilated place. Keep container tightly closed.; P405: Store locked up.; P406: Store in a corrosion-resistant container with a resistant inner liner.; P410+P403: Protect from sunlight. Store in a well-ventilated place.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 5109 reports by companies from 116 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.51092026-06-21T17:00:56.752369+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classification90-41-52-Aminobiphenyl2-胺基聯苯GHS07 (Irritant), GHS08 (Health Hazard)WarningH302: H302 (100%): Harmful if swallowed [Warning Acute toxicity, oral]; H351: H351 (99.3%): Suspected of causing cancer [Warning Carcinogenicity]; H412: H412 (100%): Harmful to aquatic life with long lasting effects [Hazardous to the aquatic environment, long-term hazard]P203: Obtain, read and follow all safety instructions before use.; P264: Wash hands thoroughly after handling.; P270: Do not eat, drink or smoke when using this product.; P273: Avoid release to the environment.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P301+P317: IF SWALLOWED: Get medical help.; P318: If exposed or concerned, get medical advice.; P330: Rinse mouth.; P405: Store locked up.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 152 reports by companies from 5 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.1522026-06-21T17:01:41.195002+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classification67-56-1Methyl alcohol (Methanol)甲醇GHS02 (Flammable), GHS06 (Toxic), GHS08 (Health Hazard)DangerH225: H225 (> 99.9%): Highly Flammable liquid and vapor [Danger Flammable liquids]; H301: H301 (99.9%): Toxic if swallowed [Danger Acute toxicity, oral]; H311: H311 (99.9%): Toxic in contact with skin [Danger Acute toxicity, dermal]; H331: H331 (99.4%): Toxic if inhaled [Danger Acute toxicity, inhalation]; H370: H370 (> 99.9%): Causes damage to organs [Danger Specific target organ toxicity, single exposure]P210: Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.; P233: Keep container tightly closed.; P240: Ground and bond container and receiving equipment.; P241: Use explosion-proof electrical, ventilating, lighting and other equipment.; P242: Use non-sparking tools.; P243: Take action to prevent static discharges.; P260: Do not breathe dust, fume, gas, mist, vapours, spray.; P261: Avoid breathing dust, fume, gas, mist, vapours, spray.; P262: Do not get in eyes, on skin, or on clothing.; P264: Wash hands thoroughly after handling.; P270: Do not eat, drink or smoke when using this product.; P271: Use only outdoors or in a well-ventilated area.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P301+P316: IF SWALLOWED: Get emergency medical help immediately.; P302+P352: IF ON SKIN: Wash with plenty of water.; P303+P361+P353: IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water or shower.; P304+P340: IF INHALED: Remove person to fresh air and keep comfortable for breathing.; P308+P316: IF exposed or concerned: Get emergency medical help immediately.; P316: Get emergency medical help immediately.; P321: Specific treatment (see ... on this label).; P330: Rinse mouth.; P361+P364: Take off immediately all contaminated clothing and wash it before reuse.; P370+P378: In case of fire: Use ... for extinction.; P403+P233: Store in a well-ventilated place. Keep container tightly closed.; P403+P235: Store in a well-ventilated place. Keep cool.; P405: Store locked up.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 7623 reports by companies from 149 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.76232026-06-21T17:00:55.237979+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classification7664-93-9Sulfuric acid硫酸GHS05 (Corrosive)DangerH314: H314 (> 99.9%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]P260: Do not breathe dust, fume, gas, mist, vapours, spray.; P264: Wash hands thoroughly after handling.; P280: Wear protective gloves, protective clothing, eye protection, face protection.; P301+P330+P331: IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.; P302+P361+P354: IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.; P304+P340: IF INHALED: Remove person to fresh air and keep comfortable for breathing.; P305+P354+P338: IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.; P316: Get emergency medical help immediately.; P321: Specific treatment (see ... on this label).; P363: Wash contaminated clothing before reuse.; P405: Store locked up.; P501: Dispose of contents and container in accordance with local regulations.Found with renderable GHS pictogramsYesYesMultiple GHS classifications1Confirm primary GHS classificationAggregated GHS information provided per 8811 reports by companies from 59 notifications to the ECHA C&L Inventory.88112026-06-21T17:00:57.166942+00:00Cached4 reference link(s)NoNoMultiple classifications; using system-suggested primaryDefault primary classificationExported data is still a quick reference. Verify final labels against the SDS, supplier label, and local regulations. Formula-like text is neutralized by the export flow to prevent spreadsheet auto-execution.CancelDownload CSV",
+    "hasPrintable": true,
+    "hasReviewRequired": true,
+    "hasReviewReasons": true,
+    "hasMultipleGhsStatus": true,
+    "hasClassificationSelection": true,
+    "hasSourceEvidence": true
+  },
+  "fitReport": {
+    "ready": "Ready39",
+    "review": "Needs review0",
+    "excluded": "Excluded0",
+    "outputContract": {
+      "text": "Selected to print39 item(s)Physical output39 label(s) / 39 page(s)Fixed stockComplete / A4 Primary",
+      "selectedItems": "39",
+      "outputLabels": "39",
+      "outputPages": "39"
+    },
+    "active": "EthanolReady",
+    "multipleGhsWarning": "39 item(s) have multiple GHS versionsThis print will use the system-suggested primary classification unless you confirm a different version in the result row or detail view before printing.64-17-5 · Ethanol7647-01-0 · Hydrochloric acid90-41-5 · 2-Aminobiphenyl+36 more",
+    "printAction": "Print 39 ready Complete labels on A4 Primary (39 labels / 39 pages; 0 excluded)",
+    "labelClass": "label label-full label-compliance label-stock-a4-primary label-size-large label-form-full-page label-fit-level-0 label-content-complete-primary label-hazard-mode-full-hp label-precaution-mode-full-text label-kind-complete-primary label-output-full-page-primary label-pictogram-count-2 label-pictogram-density-sparse label-purpose-shipping label-full-page-primary label-a4-primary"
+  },
+  "initialActionNamesBatch": true,
+  "scopeBefore": {
+    "visible": false,
+    "hasReducedControl": false,
+    "hasContinuationControl": false,
+    "summary": ""
+  },
+  "scopeAfter": null,
+  "scopeExerciseStock": "a4-primary",
+  "representative": {
+    "activeText": "Ethylene OxideReady, tightened",
+    "labelText": "Ethylene Oxide QA LabPhone: 02-0000-0000QA Address CAS75-21-8 危險 / Danger Hazard statements H220極易燃氣體 / H220 (> 99.9%): Extremely flammable gas [Danger Flammable gases]H230可能以爆炸方式反應，即使沒有空氣 / H230 (18.4%): May react explosively even in the absence of air [Danger Flammable gases]H280內含高壓氣體；遇熱可能爆炸 / H280 (86%): Contains gas under pressure; may explode if heated [Warning Gases under pressure]H301吞食有毒 / H301 (20.4%): Toxic if swallowed [Danger Acute toxicity, oral]H302吞食有害 / H302 (61.6%): Harmful if swallowed [Warning Acute toxicity, oral]H314造成嚴重皮膚灼傷和眼睛損傷 / H314 (20.1%): Causes severe skin burns and eye damage [Danger Skin corrosion/irritation]H315造成皮膚刺激 / H315 (79.9%): Causes skin irritation [Warning Skin corrosion/irritation]H318造成嚴重眼睛損傷 / H318 (20.1%): Causes serious eye damage [Danger Serious eye damage/eye irritation]H319造成嚴重眼睛刺激 / H319 (79.9%): Causes serious eye irritation [Warning Serious eye damage/eye irritation]H331吸入有毒 / H331 (99.3%): Toxic if inhaled [Danger Acute toxicity, inhalation]H335可能造成呼吸道刺激 / H335 (> 99.9%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]H336可能造成昏睡或頭暈 / H336 (20.3%): May cause drowsiness or dizziness [Warning Specific target organ toxicity, single exposure; Narcotic effects]H340可能導致遺傳性缺陷 / H340 (> 99.9%): May cause genetic defects [Danger Germ cell mutagenicity]H350可能致癌 / H350 (> 99.9%): May cause cancer [Danger Carcinogenicity]H360可能損害生育能力或胎兒 / H360 (19.5%): May damage fertility or the unborn child [Danger Reproductive toxicity]H372長期或反覆暴露會對器官造成損害 / H372 (78.9%): Causes damage to organs through prolonged or repeated exposure [Danger Specific target organ toxicity, repeated exposure] Precautionary statements P203使用前取得、閱讀並遵循所有安全指示。 / Obtain, read and follow all safety instructions before use.P210遠離熱源、熱表面、火花、明火及其他點火源。禁止吸煙。 / Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.P222切勿接觸空氣。 / Do not allow contact with air.P260勿吸入粉塵、煙霧、氣體、霧滴、蒸氣或噴霧。 / Do not breathe dust, fume, gas, mist, vapours, spray.P261避免吸入粉塵、煙霧、氣體、霧滴、蒸氣或噴霧。 / Avoid breathing dust, fume, gas, mist, vapours, spray.P264操作後徹底清洗雙手。 / Wash hands thoroughly after handling.P264+P265操作後徹底清洗所有接觸部位。 / Wash all exposed body parts thoroughly after handling.P270使用本品時勿飲食或吸煙。 / Do not eat, drink or smoke when using this product.P271僅於室外或通風良好處使用。 / Use only outdoors or in a well-ventilated area.P280佩戴防護手套、防護衣物、護眼用具及護面用具。 / Wear protective gloves, protective clothing, eye protection, face protection.P301+P316若吞食：立即取得緊急醫療協助。 / IF SWALLOWED: Get emergency medical help immediately.P301+P317若吞食：尋求醫療協助。 / IF SWALLOWED: Get medical help.P301+P330+P331若吞食：漱口。請勿催吐。 / IF SWALLOWED: Rinse mouth. Do NOT induce vomiting.P302+P352若皮膚接觸：以大量肥皂和清水清洗。 / IF ON SKIN: Wash with plenty of water.P302+P361+P354若皮膚接觸：立即脫除所有受污染的衣物，立即以水沖洗數分鐘。 / IF ON SKIN: Take off immediately all contaminated clothing. Immediately rinse with water for several minutes.P304+P340若吸入：將患者移至空氣新鮮處，保持呼吸舒適的姿勢休息。 / IF INHALED: Remove person to fresh air and keep comfortable for breathing.P305+P351+P338若眼睛接觸：以清水小心沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。 / IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P305+P354+P338若眼睛接觸：立即以水沖洗數分鐘。如配戴隱形眼鏡且可輕易取出，請取出隱形眼鏡，繼續沖洗。 / IF IN EYES: Immediately rinse with water for several minutes. Remove contact lenses, if present and easy to do. Continue rinsing.P316立即取得緊急醫療協助。 / Get emergency medical help immediately.P317立即諮詢醫師。 / Get emergency medical help.P318若曾接觸或有疑慮，請諮詢醫師。 / If exposed or concerned, get medical advice.P319若感到不適，尋求醫療協助。 / Get medical help if you feel unwell.P321需要進行特定治療（見本標示上的……）。 / Specific treatment (see ... on this label).P330漱口。 / Rinse mouth.P332+P317若皮膚刺激發生：尋求醫療協助。 / If skin irritation occurs: Get medical help.P337若眼睛不適持續： / If eye irritation persists:P337+P317若眼睛不適持續：立即諮詢醫師。 / If eye irritation persists: Get emergency medical help.P362+P364脫除受污染的衣物，並在重新使用前先清洗。 / Take off contaminated clothing and wash it before reuse.P363清洗後，受污染的衣物在重新使用前應先清洗。 / Wash contaminated clothing before reuse.P377閥門漏氣起火：若安全可行，設法堵住洩漏；否則讓其燃燒直至燃料耗盡。 / Leaking gas fire: Do not extinguish, unless leak can be stopped safely.P381若安全可行，消除所有點火源。 / In case of leakage, eliminate all ignition sources.P403儲存於通風良好處。 / Store in a well-ventilated place.P403+P233儲存於通風良好處，保持容器密閉。 / Store in a well-ventilated place. Keep container tightly closed.P405存放於加鎖處。 / Store locked up.P410+P403防止陽光照射，儲存於通風良好處。 / Protect from sunlight. Store in a well-ventilated place.P501依照地方、區域、國家及國際法規處置內容物及容器。 / Dispose of contents and container in accordance with local regulations. QA LabPhone: 02-0000-0000QA Address Hazard source: PubChem/SDS reference Verify against SDS, supplier label, and local regulations before use. Scan to open this chemical lookup"
+  },
+  "printHandoff": {
+    "status": "qa_handoff",
+    "stockPreset": "a4-primary",
+    "issueTypes": "",
+    "totalLabels": "39",
+    "totalPages": "39",
+    "text": "Print handoff ready: complete-primary; GHS02,GHS07,GHS04,GHS05,GHS06,GHS08,GHS03,GHS09"
+  },
+  "dialogMessages": [],
+  "screenshotDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-batch-print-screenshots",
+  "allowExternalUpstreamDegradedPass": false,
+  "warnings": [],
+  "failures": []
+}

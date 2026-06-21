@@ -197,6 +197,16 @@ Current baseline capabilities:
   `qa/evidence/2026-06-21-h-code-wording-closure/`. Use
   `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before reopening another wording
   or print-quality slice.
+- The 2026-06-22 PR #39 pictogram print/export hardening checkpoint has
+  shipped on production at `2f81602cb3082b247a0527cf53e0cb0ed623c84a`.
+  PR #39 tightened the safety boundary for text-only GHS data, made export
+  `Printable` require renderable GHS pictograms, locked QR and identification
+  small labels to complete identity plus pictograms, and fixed the mixed
+  `pictograms: []` / `ghs_pictograms` fallback edge case. GitHub main CI,
+  Zeabur deployment freshness, production health, production product QA,
+  prepared print QA, and batch print QA all passed against the expected SHA.
+  Evidence lives in
+  `qa/evidence/2026-06-22-pr39-pictogram-print-export-hardening/`.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared

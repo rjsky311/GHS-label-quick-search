@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "generatedAt": "2026-06-21T17:01:29.670Z",
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-health-report.json",
+  "frontendUrl": "https://ghs-frontend.zeabur.app/",
+  "backendHealthUrl": "https://ghs-backend.zeabur.app/api/health",
+  "maxAttempts": 6,
+  "timeoutMs": 15000,
+  "retryDelayMs": 1000,
+  "expectedAssetTextCount": 0,
+  "expectedGitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+  "checks": [
+    {
+      "name": "frontend-html-and-asset",
+      "ok": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "frontendUrl": "https://ghs-frontend.zeabur.app/",
+          "htmlUrl": "https://ghs-frontend.zeabur.app/?productionHealthCheck=1782061289213",
+          "assetUrl": "https://ghs-frontend.zeabur.app/assets/index-BoN1YhVb.js",
+          "html": {
+            "status": 200,
+            "ok": true,
+            "elapsedMs": 150,
+            "requestId": "hnd1::76b4ae77efd327c307e7e3693a92ce0d",
+            "server": "nginx/1.31.2"
+          },
+          "asset": {
+            "status": 200,
+            "ok": true,
+            "elapsedMs": 43,
+            "requestId": "hnd1::28201a69d39553306c175a3cfc33b0c1",
+            "server": "nginx/1.31.2"
+          },
+          "buildInfo": {
+            "url": "https://ghs-frontend.zeabur.app/build-info.json?productionHealthCheck=1782061289408",
+            "status": 200,
+            "ok": true,
+            "elapsedMs": 121,
+            "requestId": "hnd1::0190321f46342243d64b1fb1baf93d03",
+            "server": "nginx/1.31.2",
+            "app": "ghs-label-quick-search",
+            "version": "1.10.0",
+            "gitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+            "gitShortSha": "2f81602cb308",
+            "gitBranch": "main",
+            "builtAt": "2026-06-21T17:00:10.164Z",
+            "parseError": "",
+            "expectedGitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+            "gitShaMatches": true
+          },
+          "warnings": []
+        }
+      ]
+    },
+    {
+      "name": "backend-health",
+      "ok": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "backendHealthUrl": "https://ghs-backend.zeabur.app/api/health",
+          "healthUrl": "https://ghs-backend.zeabur.app/api/health?productionHealthCheck=1782061289530",
+          "health": {
+            "status": 200,
+            "ok": true,
+            "elapsedMs": 139,
+            "requestId": "hnd1::380077c6723aee3b4b7309198ccdba9c",
+            "server": "uvicorn"
+          },
+          "version": "1.10.0",
+          "status": "healthy",
+          "gitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+          "gitShortSha": "2f81602cb308",
+          "expectedGitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
+          "gitShaMatches": true,
+          "parseError": "",
+          "error": ""
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "warnings": []
+}

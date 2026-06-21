@@ -1,0 +1,1691 @@
+{
+  "ok": true,
+  "startedAt": "2026-06-21T17:08:22.385Z",
+  "finishedAt": "2026-06-21T17:09:12.295Z",
+  "productionUrl": "https://ghs-frontend.zeabur.app/",
+  "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "headless": true,
+  "preparedCaseAttempts": 3,
+  "preparedPageAttempts": 10,
+  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-report.json",
+  "screenshotDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots",
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "failedCases": [],
+  "results": [
+    {
+      "id": "prepared-a4-primary",
+      "label": "Prepared HCl A4 complete primary",
+      "passed": true,
+      "failures": [],
+      "entryMode": "create",
+      "entryEvidence": {},
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "Hydrochloric acid 鹽酸 配製溶液 / Prepared solution 濃度 / Concentration: 1 M 溶劑 / Solvent: Water 配製人 / Prepared by: QA Analyst 配製日期 / Prepared date: 2026-06-22 有效期限 / Expiry date: 2026-07-22 母化學品危害資料 / Parent chemical hazard data — 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use. CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pr",
+        "labelKind": "complete-primary",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": true,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 17.91,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 156,
+            "top": 20,
+            "right": 324.34,
+            "bottom": 259.97,
+            "width": 168.34,
+            "height": 239.97
+          },
+          "pictograms": [
+            {
+              "left": 159.75,
+              "top": 67.61,
+              "right": 177.66,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 178.46,
+              "top": 67.61,
+              "right": 196.37,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 197.17,
+              "top": 67.61,
+              "right": 215.08,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 215.88,
+              "top": 67.61,
+              "right": 233.78,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-a4-primary.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "188",
+        "data-label-height-mm": "268",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "full",
+        "data-stock-preset": "a4-primary",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-qr-supplement",
+      "label": "Prepared HCl QR small label",
+      "passed": true,
+      "failures": [],
+      "entryMode": "create",
+      "entryEvidence": {},
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "qr-supplement",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 63.65,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 290.92,
+            "width": 419.94,
+            "height": 270.92
+          },
+          "pictograms": [
+            {
+              "left": 41.42,
+              "top": 114.7,
+              "right": 105.07,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 108.79,
+              "top": 114.7,
+              "right": 172.44,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 176.17,
+              "top": 114.7,
+              "right": 239.81,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 41.42,
+              "top": 181.18,
+              "right": 105.07,
+              "bottom": 244.83,
+              "width": 63.65,
+              "height": 63.65
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-qr-supplement.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "qr-supplement",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "62",
+        "data-label-height-mm": "40",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "qrcode",
+        "data-stock-preset": "brother-62mm-continuous",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: qr-supplement; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-tube-quick-id",
+      "label": "Prepared HCl tube quick-ID",
+      "passed": true,
+      "failures": [],
+      "entryMode": "create",
+      "entryEvidence": {},
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "quick-id",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": false,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 50.37,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 163.97,
+            "width": 419.94,
+            "height": 143.97
+          },
+          "pictograms": [
+            {
+              "left": 40.47,
+              "top": 88.82,
+              "right": 90.84,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 93.52,
+              "top": 88.82,
+              "right": 143.89,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 146.57,
+              "top": 88.82,
+              "right": 196.94,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 199.62,
+              "top": 88.82,
+              "right": 249.99,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-tube-quick-id.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "quick-id",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "false",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "70",
+        "data-label-height-mm": "24",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "icon",
+        "data-stock-preset": "small-strip",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: quick-id; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-reprint-a4-primary",
+      "label": "Prepared HCl A4 complete primary via recent reprint",
+      "passed": true,
+      "failures": [],
+      "entryMode": "reprint",
+      "entryEvidence": {
+        "recentText": "1 M 鹽酸，以Water配製7647-01-0Hydrochloric acid / 鹽酸配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22直接重印"
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "Hydrochloric acid 鹽酸 配製溶液 / Prepared solution 濃度 / Concentration: 1 M 溶劑 / Solvent: Water 配製人 / Prepared by: QA Analyst 配製日期 / Prepared date: 2026-06-22 有效期限 / Expiry date: 2026-07-22 母化學品危害資料 / Parent chemical hazard data — 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use. CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pr",
+        "labelKind": "complete-primary",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": true,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 17.91,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 156,
+            "top": 20,
+            "right": 324.34,
+            "bottom": 259.97,
+            "width": 168.34,
+            "height": 239.97
+          },
+          "pictograms": [
+            {
+              "left": 159.75,
+              "top": 67.61,
+              "right": 177.66,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 178.46,
+              "top": 67.61,
+              "right": 196.37,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 197.17,
+              "top": 67.61,
+              "right": 215.08,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 215.88,
+              "top": 67.61,
+              "right": 233.78,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-a4-primary.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "188",
+        "data-label-height-mm": "268",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "full",
+        "data-stock-preset": "a4-primary",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-reprint-qr-supplement",
+      "label": "Prepared HCl QR small label via recent reprint",
+      "passed": true,
+      "failures": [],
+      "entryMode": "reprint",
+      "entryEvidence": {
+        "recentText": "1 M 鹽酸，以Water配製7647-01-0Hydrochloric acid / 鹽酸配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22直接重印"
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "qr-supplement",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 63.65,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 290.92,
+            "width": 419.94,
+            "height": 270.92
+          },
+          "pictograms": [
+            {
+              "left": 41.42,
+              "top": 114.7,
+              "right": 105.07,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 108.79,
+              "top": 114.7,
+              "right": 172.44,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 176.17,
+              "top": 114.7,
+              "right": 239.81,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 41.42,
+              "top": 181.18,
+              "right": 105.07,
+              "bottom": 244.83,
+              "width": 63.65,
+              "height": 63.65
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-qr-supplement.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "qr-supplement",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "62",
+        "data-label-height-mm": "40",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "qrcode",
+        "data-stock-preset": "brother-62mm-continuous",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: qr-supplement; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-reprint-tube-quick-id",
+      "label": "Prepared HCl tube quick-ID via recent reprint",
+      "passed": true,
+      "failures": [],
+      "entryMode": "reprint",
+      "entryEvidence": {
+        "recentText": "1 M 鹽酸，以Water配製7647-01-0Hydrochloric acid / 鹽酸配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22直接重印"
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "quick-id",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": false,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 50.37,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 163.97,
+            "width": 419.94,
+            "height": 143.97
+          },
+          "pictograms": [
+            {
+              "left": 40.47,
+              "top": 88.82,
+              "right": 90.84,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 93.52,
+              "top": 88.82,
+              "right": 143.89,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 146.57,
+              "top": 88.82,
+              "right": 196.94,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 199.62,
+              "top": 88.82,
+              "right": 249.99,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-reprint-tube-quick-id.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "quick-id",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "false",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "70",
+        "data-label-height-mm": "24",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "icon",
+        "data-stock-preset": "small-strip",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: quick-id; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-preset-a4-primary",
+      "label": "Prepared HCl A4 complete primary via saved preset reuse",
+      "passed": true,
+      "failures": [],
+      "entryMode": "preset",
+      "entryEvidence": {
+        "presetName": "QA HCl 1M preset",
+        "savedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "reopenedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "printModalAfterSaveVisible": false,
+        "prefillValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "",
+          "presetName": "QA HCl 1M preset"
+        },
+        "finalValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "QA Analyst",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "2026-07-22",
+          "presetName": "QA HCl 1M preset"
+        }
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "Hydrochloric acid 鹽酸 配製溶液 / Prepared solution 濃度 / Concentration: 1 M 溶劑 / Solvent: Water 配製人 / Prepared by: QA Analyst 配製日期 / Prepared date: 2026-06-22 有效期限 / Expiry date: 2026-07-22 母化學品危害資料 / Parent chemical hazard data — 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use. CAS 7647-01-0 危險 / Danger 危害說明 / HAZARD STATEMENTS H280 內含高壓氣體；遇熱可能爆炸 / H280 (24.3%): Contains gas under pressure; may explode if heated [Warning Gases under pr",
+        "labelKind": "complete-primary",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": true,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 17.91,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 156,
+            "top": 20,
+            "right": 324.34,
+            "bottom": 259.97,
+            "width": 168.34,
+            "height": 239.97
+          },
+          "pictograms": [
+            {
+              "left": 159.75,
+              "top": 67.61,
+              "right": 177.66,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 178.46,
+              "top": 67.61,
+              "right": 196.37,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 197.17,
+              "top": 67.61,
+              "right": 215.08,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            },
+            {
+              "left": 215.88,
+              "top": 67.61,
+              "right": 233.78,
+              "bottom": 85.51,
+              "width": 17.91,
+              "height": 17.91
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-a4-primary.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "complete-primary",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "188",
+        "data-label-height-mm": "268",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "full",
+        "data-stock-preset": "a4-primary",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: complete-primary; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-preset-qr-supplement",
+      "label": "Prepared HCl QR small label via saved preset reuse",
+      "passed": true,
+      "failures": [],
+      "entryMode": "preset",
+      "entryEvidence": {
+        "presetName": "QA HCl 1M preset",
+        "savedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "reopenedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "printModalAfterSaveVisible": false,
+        "prefillValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "",
+          "presetName": "QA HCl 1M preset"
+        },
+        "finalValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "QA Analyst",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "2026-07-22",
+          "presetName": "QA HCl 1M preset"
+        }
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "qr-supplement",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": true,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 63.65,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 290.92,
+            "width": 419.94,
+            "height": 270.92
+          },
+          "pictograms": [
+            {
+              "left": 41.42,
+              "top": 114.7,
+              "right": 105.07,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 108.79,
+              "top": 114.7,
+              "right": 172.44,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 176.17,
+              "top": 114.7,
+              "right": 239.81,
+              "bottom": 178.35,
+              "width": 63.65,
+              "height": 63.65
+            },
+            {
+              "left": 41.42,
+              "top": 181.18,
+              "right": 105.07,
+              "bottom": 244.83,
+              "width": 63.65,
+              "height": 63.65
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-qr-supplement.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "qr-supplement",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "true",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "62",
+        "data-label-height-mm": "40",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "qrcode",
+        "data-stock-preset": "brother-62mm-continuous",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: qr-supplement; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    },
+    {
+      "id": "prepared-preset-tube-quick-id",
+      "label": "Prepared HCl tube quick-ID via saved preset reuse",
+      "passed": true,
+      "failures": [],
+      "entryMode": "preset",
+      "entryEvidence": {
+        "presetName": "QA HCl 1M preset",
+        "savedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "reopenedPresetText": "配方QA HCl 1M preset1 M 鹽酸，以Water配製",
+        "printModalAfterSaveVisible": false,
+        "prefillValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "",
+          "presetName": "QA HCl 1M preset"
+        },
+        "finalValues": {
+          "concentration": "1 M",
+          "solvent": "Water",
+          "preparedBy": "QA Analyst",
+          "preparedDate": "2026-06-22",
+          "expiryDate": "2026-07-22",
+          "presetName": "QA HCl 1M preset"
+        }
+      },
+      "selectedSummary": {
+        "displayVisible": true,
+        "metaText": "Water 中 1 M",
+        "operationalText": "配製人: QA Analyst配製: 2026-06-22有效期限: 2026-07-22"
+      },
+      "preview": {
+        "bodyTextSample": "CAS 7647-01-0 Hydrochloric acid 鹽酸",
+        "labelKind": "quick-id",
+        "pictogramCodes": [
+          "GHS04",
+          "GHS05",
+          "GHS06",
+          "GHS07"
+        ],
+        "hasQrImage": false,
+        "hasPreparedTexts": true,
+        "hasPreparedBadge": false,
+        "hasCas": true,
+        "labelVisible": true,
+        "labelWithinViewport": true,
+        "documentHasScrollOverflow": false,
+        "clippedCriticalElements": [],
+        "clippedContentElements": [],
+        "minPictogramSidePx": 50.37,
+        "pictogramSizeOk": true,
+        "qrStateOk": true,
+        "geometry": {
+          "label": {
+            "left": 30.5,
+            "top": 20,
+            "right": 450.44,
+            "bottom": 163.97,
+            "width": 419.94,
+            "height": 143.97
+          },
+          "pictograms": [
+            {
+              "left": 40.47,
+              "top": 88.82,
+              "right": 90.84,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 93.52,
+              "top": 88.82,
+              "right": 143.89,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 146.57,
+              "top": 88.82,
+              "right": 196.94,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            },
+            {
+              "left": 199.62,
+              "top": 88.82,
+              "right": 249.99,
+              "bottom": 139.2,
+              "width": 50.37,
+              "height": 50.37
+            }
+          ]
+        },
+        "screenshotPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-screenshots/prepared-preset-tube-quick-id.png"
+      },
+      "status": {
+        "data-status": "qa_handoff",
+        "data-label-kind": "quick-id",
+        "data-pictograms": "GHS04,GHS05,GHS06,GHS07",
+        "data-has-qr": "false",
+        "data-cas-numbers": "7647-01-0",
+        "data-has-cas": "true",
+        "data-label-width-mm": "70",
+        "data-label-height-mm": "24",
+        "data-page-size": "A4",
+        "data-color-mode": "color",
+        "data-name-display": "both",
+        "data-template": "icon",
+        "data-stock-preset": "small-strip",
+        "data-total-labels": "1",
+        "data-total-pages": "1",
+        "data-issue-types": "",
+        "data-support-chips": ""
+      },
+      "statusText": "Print handoff ready: quick-id; GHS04,GHS05,GHS06,GHS07",
+      "attempt": 1,
+      "diagnostics": {
+        "stage": "read-print-status",
+        "pageErrors": [],
+        "consoleMessages": [
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          },
+          {
+            "type": "error",
+            "text": "The Content Security Policy directive 'frame-ancestors' is ignored when delivered via a <meta> element."
+          }
+        ],
+        "serverErrors": [],
+        "failedRequests": []
+      },
+      "retryable": false
+    }
+  ]
+}
