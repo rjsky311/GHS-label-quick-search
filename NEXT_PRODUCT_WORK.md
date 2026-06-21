@@ -124,6 +124,14 @@ checkpoint is now closed on production at
 `PRODUCTION_UI_CHECKPOINT_2026_06_18.md` and
 `qa/evidence/production-visual-acceptance-2026-06-18/` before reopening visual
 polish.
+The 2026-06-21 safety/QA hardening checkpoint is now closed on production at
+`5d9c0c384fd2b174430f1794e8ff093caba5008e`. It hardened public dictionary
+read boundaries, P-code wording coverage, search race guards, print output
+configuration, backend git-SHA health evidence, Zeabur freshness reporting, and
+production summary gating. `qa:production-health`, `qa:zeabur-deployment`, and
+`qa:production-product` passed against that expected SHA. The follow-up GitHub
+resource cleanup removed expired Actions artifacts and left
+`qa:github-resource` green with no warnings.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -172,6 +180,19 @@ cannot complete the intended job.
   label, QR small label, and batch print modal. This closes the visual polish
   slice unless new screenshot/PDF/physical-print/CI/deployment/admin evidence
   opens a concrete issue.
+- 2026-06-21 safety and production-QA hardening checkpoint: production served
+  `5d9c0c384fd2b174430f1794e8ff093caba5008e` after a P0-P2 review/fix round.
+  Backend public reads now filter legacy invalid CAS and fake Chinese-name
+  values; public correction intake is source-bounded; P-code coverage fails on
+  missing payload text; frontend search and print state are guarded against
+  stale responses/config loops; and CI/production QA now verifies frontend and
+  backend git SHA freshness. Expected-SHA `qa:production-health`,
+  `qa:zeabur-deployment`, and full `qa:production-product` passed. GitHub
+  resource patrol was cleaned up by deleting expired Actions artifacts:
+  `qa:github-resource` now reports PUBLIC visibility, 11.92 MiB repo disk,
+  94.02 MiB active artifacts, 0.00 MiB expired artifacts, 367.79 MiB caches,
+  and no warnings. Reopen only from fresh production QA, code-review,
+  screenshot/PDF/physical-print, admin, or GitHub resource evidence.
 - 2026-06-02 LINER survey workflow critique: the uploaded survey dataset had
   16 AI simulated respondents and 128 responses across the batch lookup,
   review, print, export, and correction/admin path. The strongest actionable

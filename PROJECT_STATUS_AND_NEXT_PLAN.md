@@ -173,6 +173,11 @@ Current baseline capabilities:
   screen, simplified print modal, prepared print, and batch print covered by
   green production product QA plus the visual evidence package in
   `qa/evidence/production-visual-acceptance-2026-06-18/`.
+- The 2026-06-21 safety/QA hardening checkpoint has shipped on production at
+  `5d9c0c384fd2b174430f1794e8ff093caba5008e`, with backend public-data
+  boundaries, P-code wording coverage, frontend search/print state guards,
+  backend git-SHA health reporting, Zeabur deployment freshness, and
+  production summary gating covered by green local and production QA.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared
@@ -216,6 +221,10 @@ Current validation gates:
   reports repository disk usage, Actions artifacts, Actions caches, and
   visibility. Public visibility is the default expected state; override
   `GITHUB_RESOURCE_EXPECTED_VISIBILITY` only if the product decision changes.
+  The 2026-06-21 cleanup removed expired GitHub Actions artifacts; the clean
+  baseline is PUBLIC visibility, 11.92 MiB repository disk usage,
+  94.02 MiB active artifacts, 0.00 MiB expired artifacts, and 367.79 MiB
+  Actions caches.
 - P-code wording coverage patrol: `npm run qa:p-code-coverage` from
   `frontend/` queries the bounded backend smoke set and fails when observed
   precautionary statement codes are missing English or Traditional Chinese
