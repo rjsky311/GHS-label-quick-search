@@ -185,10 +185,13 @@ Current baseline capabilities:
   allowlisting, and expected-SHA production QA. Production deployment,
   health, search UI, batch print, prepared print, and product QA passed
   against the expected SHA. The follow-up manual-directed spot check found the
-  next concrete P1 issue: alternate classifications still contain Traditional
-  Chinese placeholder hazard wording for H360 variants (`H360FD` and
-  `H360Fd`). Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before opening the
-  next wording or print-quality slice.
+  next concrete P1 issue: alternate classifications still contained
+  Traditional Chinese placeholder hazard wording for H360 variants (`H360FD`
+  and `H360Fd`). Implementation commit
+  `9f868deda22626e6def370d93baf151c66cdba55` adds reviewed H360-family wording
+  and a bounded H-code patrol covering primary and alternate classifications.
+  Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` before reopening another
+  wording or print-quality slice.
 - Batch review, export preview, and admin triage now share the same
   data-quality terminology for missing trusted Chinese names, upstream retry
   states, no-GHS data, and source conflicts. Admin triage consumes the shared

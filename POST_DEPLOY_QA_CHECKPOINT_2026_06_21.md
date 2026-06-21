@@ -92,6 +92,12 @@ surface the placeholder to users.
 
 ### P1 - Close H360 Variant Chinese Wording Gaps
 
+Implementation update: commit
+`9f868deda22626e6def370d93baf151c66cdba55` adds reviewed Traditional Chinese
+wording for `H350i`, `H360F`, `H360D`, `H360FD`, `H360Fd`, `H360Df`,
+`H361f`, `H361d`, and `H361fd`, plus a focused regression test for the
+H360 reproductive-toxicity variants.
+
 Source: post-deploy manual-directed content spot check on production.
 
 Affected user job: lookup trust and classification comparison. Users reviewing
@@ -119,6 +125,13 @@ Stop condition:
   coverage prevents reintroduction.
 
 ### P1 - Add Alternate-Classification Wording Patrol
+
+Implementation update: commit
+`9f868deda22626e6def370d93baf151c66cdba55` adds
+`backend/scripts/audit_h_code_coverage.py` and `npm run qa:h-code-coverage`.
+The audit scans primary and `other_classifications` hazard statements for
+missing Traditional Chinese wording, missing payload text, renamed payload
+fields, and the `尚無完整文字 - 使用前請核對 SDS。` placeholder.
 
 Source: same spot check. Existing QA was strong enough for primary print paths
 but did not fail on alternate classification H-code placeholders.

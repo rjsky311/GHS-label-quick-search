@@ -87,11 +87,13 @@ shipped/monitoring Batch-First owner doc,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
-Latest concrete next-slice candidate: the 2026-06-21 post-deploy
-manual-directed QA checkpoint found Traditional Chinese placeholder hazard
-wording in alternate classifications for H360 variants (`H360FD` and
-`H360Fd`). Use `POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md` as the owner
-checkpoint if opening that P1 wording/coverage slice.
+Latest closed concrete slice: implementation commit
+`9f868deda22626e6def370d93baf151c66cdba55` covers the 2026-06-21
+post-deploy H360 variant wording gap by adding reviewed H360-family
+Traditional Chinese wording and a bounded H-code coverage patrol for primary
+and alternate classifications. Production proof still comes from expected-SHA
+freshness plus `npm run qa:h-code-coverage`; reopen only if that gate or fresh
+lookup/print evidence fails.
 
 Open a new slice only when the evidence states:
 
