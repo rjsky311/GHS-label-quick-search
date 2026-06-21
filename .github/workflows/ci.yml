@@ -85,6 +85,7 @@ jobs:
           api_models.py
           api_validation.py
           export_helpers.py
+          h_code_translations.py
           h_code_coverage_audit.py
           pilot_admin_routes.py
           pilot_store.py

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from server import H_CODE_MISSING_TEXT_ZH, H_CODE_TRANSLATIONS
+from h_code_translations import H_CODE_MISSING_TEXT_ZH, H_CODE_TRANSLATIONS
 
 
 def parse_cas_values(values: list[str]) -> list[str]:

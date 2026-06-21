@@ -156,7 +156,7 @@ npm run qa:production-product
 Run backend commands from `backend/`:
 
 ```powershell
-python -m py_compile server.py api_models.py api_validation.py export_helpers.py
+python -m py_compile server.py api_models.py api_validation.py export_helpers.py h_code_translations.py h_code_coverage_audit.py
 python -m pytest -q
 python scripts\audit_p_code_coverage.py --fail-on-gaps
 python scripts\audit_h_code_coverage.py --fail-on-gaps
