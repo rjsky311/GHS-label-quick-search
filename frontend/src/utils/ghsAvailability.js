@@ -9,12 +9,30 @@
 
 export function hasGhsData(classification) {
   if (!classification) return false;
-  const pic =
-    classification.pictograms || classification.ghs_pictograms || [];
+  const pic = [
+    ...(classification.pictograms || []),
+    ...(classification.ghs_pictograms || []),
+  ];
   const haz = classification.hazard_statements || [];
   const pre = classification.precautionary_statements || [];
   const sig = classification.signal_word;
   return pic.length > 0 || haz.length > 0 || pre.length > 0 || Boolean(sig);
+}
+
+export function hasRenderableGhsPictograms(classification) {
+  if (!classification) return false;
+  const pic = [
+    ...(classification.pictograms || []),
+    ...(classification.ghs_pictograms || []),
+  ];
+  return pic.length > 0;
+}
+
+export function hasTextOnlyGhsData(classification) {
+  return (
+    hasGhsData(classification) &&
+    !hasRenderableGhsPictograms(classification)
+  );
 }
 
 export function hasRenderableGhsVisual(result) {

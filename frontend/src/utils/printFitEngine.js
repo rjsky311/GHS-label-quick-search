@@ -10,7 +10,9 @@ import {
   resolvePrintContentPolicy,
   shouldUseHazardCodesOnly,
 } from "@/utils/printContentPolicy";
+import { hasTextOnlyGhsData } from "@/utils/ghsAvailability";
 import {
+  isSmallLabelIdentityLayout,
   isFullPagePrimaryStockId,
   resolvePrintLayoutConfig,
 } from "@/constants/labelStocks";
@@ -852,6 +854,9 @@ const inspectCustomIdentityFields = (
   );
 };
 
+const rendersCustomIdentityFields = (layout = {}) =>
+  !isSmallLabelIdentityLayout(layout);
+
 export const estimatePrintContentTextWeight = (
   content,
   layout = {},
@@ -892,11 +897,14 @@ const estimateSupplementalPrintContentTextWeight = (
         ? Math.min(pictogramCount, 4)
         : pictogramCount;
   const pictogramReserve = pictogramReserveCount * 26;
+  const renderedCustomLabelFields = rendersCustomIdentityFields(layout)
+    ? customLabelFields
+    : {};
 
   if (layout.template === "icon") {
     return Math.round(
       identityTextWeight(content, layout, locale) +
-        customIdentityTextWeight(customLabelFields) +
+        customIdentityTextWeight(renderedCustomLabelFields) +
         pictogramReserve,
     );
   }
@@ -910,13 +918,13 @@ const estimateSupplementalPrintContentTextWeight = (
     if (compactQrCodeOnly) {
       return Math.round(
         identityTextWeight(content, layout, locale) +
-          customIdentityTextWeight(customLabelFields) +
+          customIdentityTextWeight(renderedCustomLabelFields) +
           pictogramReserve,
       );
     }
     return Math.round(
       identityTextWeight(content, layout, locale) +
-        customIdentityTextWeight(customLabelFields) +
+        customIdentityTextWeight(renderedCustomLabelFields) +
         statementTextWeight(hazards.slice(0, hazardTeasers), layout, {
           locale,
           codeOnly: compactQrCodeOnly,
@@ -937,7 +945,7 @@ const estimateSupplementalPrintContentTextWeight = (
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
-      customIdentityTextWeight(customLabelFields) +
+      customIdentityTextWeight(renderedCustomLabelFields) +
       statementTextWeight(renderedHazards, layout, {
         codeOnly: hazardCodeOnly,
         locale,
@@ -988,9 +996,16 @@ const inspectSupplementalContentFitForContents = (
 ) => {
   const maxTextWeight = getMaxSupplementalTextWeight(layout);
   const maxPictograms = getMaxSupplementalPictogramCount(layout);
+  const renderedCustomLabelFields = rendersCustomIdentityFields(layout)
+    ? customLabelFields
+    : {};
   return contents.flatMap((content) => {
     const issues = [
-      ...inspectCustomIdentityFields(customLabelFields, layout, content.index),
+      ...inspectCustomIdentityFields(
+        renderedCustomLabelFields,
+        layout,
+        content.index,
+      ),
     ];
     if ((content.counts?.pictograms || 0) > maxPictograms) {
       issues.push({
@@ -1020,6 +1035,25 @@ const inspectSupplementalContentFitForContents = (
       },
     ];
   });
+};
+
+const inspectTextOnlySmallLabelIssues = (contents, layout = {}) => {
+  if (!isSmallLabelIdentityLayout(layout)) return [];
+
+  return contents
+    .filter((content) =>
+      hasTextOnlyGhsData({
+        pictograms: content.pictograms || [],
+        hazard_statements: content.hazardStatements || [],
+        precautionary_statements: content.precautionaryStatements || [],
+        signal_word: content.signalWord,
+      }),
+    )
+    .map((content) => ({
+      type: "ghs-text-no-pictograms",
+      index: content.index,
+      cas: content.cas,
+    }));
 };
 
 export function inspectPrintContentFit(model) {
@@ -1191,7 +1225,11 @@ export function evaluatePrintReadiness({
         locale,
         customLabelFields,
       );
+  const textOnlySmallLabelIssues = isCompletePrimary
+    ? []
+    : inspectTextOnlySmallLabelIssues(contents, layout || {});
   const isSupplementalDense = supplementalFitIssues.length > 0;
+  const hasTextOnlySmallLabelIssue = textOnlySmallLabelIssues.length > 0;
   const isFullPagePrimary = isFullPagePrimaryLayout(layout);
   const elementSummary = summarizeElements(
     contents,
@@ -1221,7 +1259,7 @@ export function evaluatePrintReadiness({
     };
   }
 
-  const issues = [...supplementalFitIssues];
+  const issues = [...textOnlySmallLabelIssues, ...supplementalFitIssues];
   if (isDense) {
     if (maxStatementCount > maxStatements) {
       issues.push({
@@ -1267,7 +1305,7 @@ export function evaluatePrintReadiness({
     };
   }
 
-  if (isSupplementalDense) {
+  if (hasTextOnlySmallLabelIssue || isSupplementalDense) {
     return {
       state: PRINT_READINESS_STATE.BLOCKED_INVALID,
       canPrint: false,

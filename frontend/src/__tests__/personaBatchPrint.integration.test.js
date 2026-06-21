@@ -207,6 +207,8 @@ describe('persona gate: lab graduate student batch print', () => {
 
     const printButton = screen.getByTestId('print-label-action');
     expect(printButton).not.toBeDisabled();
+    expect(printButton).toHaveTextContent('4');
+    expect(printButton).toHaveTextContent('1 excluded');
 
     await act(async () => {
       fireEvent.click(printButton);
@@ -215,7 +217,10 @@ describe('persona gate: lab graduate student batch print', () => {
     expect(printLabels).toHaveBeenCalled();
     const [printedChemicals, printConfig] = printLabels.mock.calls.at(-1);
     expect(printedChemicals.map((chemical) => chemical.cas_number)).toEqual(
-      selectedCas
+      selectedCas.filter((cas) => cas !== '50-00-0')
+    );
+    expect(printedChemicals.map((chemical) => chemical.cas_number)).not.toContain(
+      '50-00-0'
     );
     expect(printConfig).toEqual(
       expect.objectContaining({

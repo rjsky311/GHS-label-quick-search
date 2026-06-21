@@ -52,6 +52,21 @@ const makeSimpleSupplementalChemical = () => ({
   precautionary_statements: [],
 });
 
+const makeTextOnlyGhsChemical = () => ({
+  ...makeSimpleSupplementalChemical(),
+  cas_number: "100-00-5",
+  name_en: "Text-only GHS sample",
+  name_zh: "文字型 GHS 樣品",
+  ghs_pictograms: [],
+  hazard_statements: [
+    { code: "H302", text_en: "Harmful if swallowed." },
+  ],
+  precautionary_statements: [
+    { code: "P264", text_en: "Wash hands thoroughly after handling." },
+  ],
+  signal_word: "Warning",
+});
+
 const makeDenseSupplementalChemical = () => ({
   ...makeChemical(4),
   name_en:
@@ -423,7 +438,29 @@ describe("printFitEngine", () => {
     expect(readiness.issues).toEqual([]);
   });
 
-  it("blocks custom identity values that cannot fit the selected stock", () => {
+  it.each([
+    ["QR small label", "qrSupplement", "qrcode"],
+    ["identification small label", "quickId", "icon"],
+  ])("blocks text-only GHS from %s readiness", (_label, labelPurpose, template) => {
+    const readiness = evaluatePrintReadiness({
+      selectedForLabel: [makeTextOnlyGhsChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose,
+        template,
+        stockPreset: "small-strip",
+        nameDisplay: "both",
+      }),
+      resolvedLabProfile: {},
+    });
+
+    expect(readiness.canPrint).toBe(false);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.BLOCKED_INVALID);
+    expect(readiness.issues).toEqual([
+      expect.objectContaining({ type: "ghs-text-no-pictograms" }),
+    ]);
+  });
+
+  it("ignores non-rendered batch and date fields for small-label readiness", () => {
     const readiness = evaluatePrintReadiness({
       selectedForLabel: [makeSimpleSupplementalChemical()],
       layout: resolvePrintLayoutConfig({
@@ -434,19 +471,14 @@ describe("printFitEngine", () => {
       }),
       customLabelFields: {
         batchNumber: "CASE-2026-0007-EXTRA-LONG-LOCATION-SUFFIX",
+        date: "2026-06-21-TARGET-LABEL-AUDIT-EXTRA-LONG",
       },
       resolvedLabProfile: {},
     });
 
-    expect(readiness.state).toBe(PRINT_READINESS_STATE.BLOCKED_INVALID);
-    expect(readiness.canPrint).toBe(false);
-    expect(readiness.issues).toEqual([
-      expect.objectContaining({
-        type: "custom-identity-too-long-for-stock",
-        valueLength: 41,
-        maxLength: 22,
-      }),
-    ]);
+    expect(readiness.state).toBe(PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY);
+    expect(readiness.canPrint).toBe(true);
+    expect(readiness.issues).toEqual([]);
   });
 
   it("blocks complete primary labels until responsible profile is complete", () => {

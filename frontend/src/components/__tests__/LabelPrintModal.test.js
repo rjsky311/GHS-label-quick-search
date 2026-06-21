@@ -722,7 +722,7 @@ describe("LabelPrintModal", () => {
     );
   });
 
-  it("keeps the selected print identity language when switching output type", () => {
+  it("forces bilingual identity when switching to a small-label output type", () => {
     const { props } = renderModal({
       selectedForLabel: [makeChem()],
       labelConfig: {
@@ -737,8 +737,37 @@ describe("LabelPrintModal", () => {
       expect.objectContaining({
         labelPurpose: "qrSupplement",
         template: "qrcode",
-        nameDisplay: "en",
+        nameDisplay: "both",
       }),
+    );
+  });
+
+  it.each([
+    ["QR small label", "qrSupplement", "qrcode"],
+    ["identification small label", "quickId", "icon"],
+  ])("does not expose single-language identity choices for %s", (_label, labelPurpose, template) => {
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose,
+        template,
+        nameDisplay: "en",
+      },
+    });
+
+    const outputControls = screen.getByTestId("core-output-controls");
+    expect(outputControls).toHaveTextContent("Bilingual");
+    expect(outputControls).not.toHaveTextContent("Choose whether");
+    expect(outputControls).toHaveTextContent(
+      "Small labels always print CAS, English, and trusted Chinese identity.",
+    );
+    expect(screen.getByTestId("fixed-identity-display")).toBeInTheDocument();
+    expect(screen.queryByTestId("label-config-option-en")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("label-config-option-zh")).not.toBeInTheDocument();
+
+    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
+      expect.objectContaining({ nameDisplay: "both" }),
     );
   });
 
@@ -1655,7 +1684,13 @@ describe("LabelPrintModal", () => {
       "small-label-continuation",
     );
     expect(screen.getByTestId("print-recovery-route")).toHaveTextContent(
-      "Use English-only or complete A4/Letter",
+      "Use complete A4/Letter",
+    );
+    expect(screen.getByTestId("print-recovery-route")).not.toHaveTextContent(
+      "English-only",
+    );
+    expect(screen.getByTestId("recommended-output-summary")).not.toHaveTextContent(
+      "English-only",
     );
     expect(screen.getByTestId("print-label-action")).toHaveTextContent(
       "Simplify small label first",

@@ -66,6 +66,20 @@ const mockChemicalNoGHS = {
   signal_word_zh: "",
 };
 
+const mockTextOnlyGhsChemical = {
+  cas_number: "100-00-5",
+  name_en: "Text-only GHS sample",
+  name_zh: "文字型 GHS 樣品",
+  ghs_pictograms: [],
+  hazard_statements: [
+    { code: "H302", text_en: "Harmful if swallowed." },
+  ],
+  precautionary_statements: [
+    { code: "P264", text_en: "Wash hands thoroughly after handling." },
+  ],
+  signal_word: "Warning",
+};
+
 // ── Helper to create mock iframe ──
 // The iframe's contentWindow also records `afterprint` listeners so
 // tests can simulate the browser firing the event when the print
@@ -1245,14 +1259,15 @@ describe("printLabels", () => {
     jest.advanceTimersByTime(300);
 
     expect(mockIframeDoc.write).toHaveBeenCalledTimes(2);
-    expect(mockIframeDoc.write.mock.calls[1][0]).toContain("label-fit-level-1");
+    expect(mockIframeDoc.write.mock.calls[0][0]).toContain("label-fit-level-1");
+    expect(mockIframeDoc.write.mock.calls[1][0]).toContain("label-fit-level-2");
     expect(recordObservabilityEvent).toHaveBeenCalledWith(
       "print_autofit_retry",
       expect.objectContaining({
         status: "retry",
         meta: expect.objectContaining({
-          autoFitLevel: 0,
-          nextAutoFitLevel: 1,
+          autoFitLevel: 1,
+          nextAutoFitLevel: 2,
           issueTypes: expect.arrayContaining(["label-overflow"]),
         }),
       }),
@@ -2242,6 +2257,46 @@ describe("printLabels", () => {
         ".label-icon.label-form-strip .cas {\n      display: none;",
       );
       expect(preview.html).toContain("border-bottom: 0");
+    });
+
+    it("does not render text-only GHS quick-ID labels as no-hazard labels", () => {
+      const preview = buildPrintPreviewDocument(
+        [mockTextOnlyGhsChemical],
+        {
+          labelPurpose: "quickId",
+          template: "icon",
+          stockPreset: "small-strip",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).not.toContain("No hazard label");
+      expect(preview.fragmentHtml).toContain("GHS pictogram review required");
+    });
+
+    it("does not render text-only GHS QR labels as ordinary QR-only labels", () => {
+      const preview = buildPrintPreviewDocument(
+        [mockTextOnlyGhsChemical],
+        {
+          labelPurpose: "qrSupplement",
+          template: "qrcode",
+          stockPreset: "brother-62mm-continuous",
+          nameDisplay: "both",
+        },
+        {},
+        {},
+        {},
+        {},
+        { mode: "label" },
+      );
+
+      expect(preview.fragmentHtml).not.toContain("No hazard label");
+      expect(preview.fragmentHtml).toContain("GHS pictogram review required");
     });
 
     it("uses readable small-label identity typography without clipping descenders", () => {
@@ -4477,8 +4532,14 @@ describe("printLabels", () => {
       });
     });
 
-    it("prints English-only identity on compact icon and QR templates when requested", () => {
-      ["icon", "qrcode"].forEach((template) => {
+    it.each([
+      ["icon", "en"],
+      ["icon", "zh"],
+      ["qrcode", "en"],
+      ["qrcode", "zh"],
+    ])(
+      "prints complete small-label identity on %s template even when nameDisplay is %s",
+      (template, nameDisplay) => {
         const mocks = createMockIframe();
         createElementSpy.mockImplementation((tag) =>
           tag === "iframe" ? mocks.mockIframe : {},
@@ -4491,16 +4552,17 @@ describe("printLabels", () => {
             size: "medium",
             template,
             orientation: "portrait",
-            nameDisplay: "en",
+            nameDisplay,
           },
           {},
         );
         const html = mocks.mockIframeDoc.write.mock.calls[0][0];
         expect(html).toContain("small-cas");
+        expect(html).toContain("64-17-5");
         expect(html).toContain("Ethanol");
-        expect(html).not.toContain(mockChemical.name_zh);
-      });
-    });
+        expect(html).toContain(mockChemical.name_zh);
+      },
+    );
 
     it("does not fake a missing Chinese small-label name by repeating English", () => {
       const missingChineseName = {

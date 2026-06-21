@@ -11,6 +11,7 @@ import {
   arePrintLabelConfigsEqual,
   FULL_PAGE_PRIMARY_STOCK_IDS,
   getLabelStockPresetDisplay,
+  isSmallLabelIdentityLayout,
 } from "@/constants/labelStocks";
 import {
   ALL_STOCK_PRESETS,
@@ -82,9 +83,7 @@ import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import useLabelPrintPreviewState from "@/hooks/useLabelPrintPreviewState";
-import {
-  resolveEffectiveLabelNameDisplay,
-} from "@/utils/ghsText";
+import { resolveEffectiveLabelNameDisplay } from "@/utils/ghsText";
 
 const normalizePublicPrintConfig = (config = {}) => {
   const layout = resolveLayoutProfile(config);
@@ -108,6 +107,7 @@ const normalizePublicPrintConfig = (config = {}) => {
       ...config,
       labelPurpose: "qrSupplement",
       template: "qrcode",
+      nameDisplay: "both",
     };
   }
 
@@ -116,6 +116,7 @@ const normalizePublicPrintConfig = (config = {}) => {
       ...config,
       labelPurpose: "quickId",
       template: "icon",
+      nameDisplay: "both",
     };
   }
 
@@ -395,6 +396,7 @@ export default function LabelPrintModal({
   const isQuickIdOutput =
     labelPurpose === "quickId" ||
     outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
+  const isSmallLabelIdentityLocked = isQrSupplementOutput || isQuickIdOutput;
   const isSmallLabelContinuationBlocked =
     outputPlan.state === PRINT_OUTPUT_PLAN_STATE.SMALL_LABEL_CONTINUATION_LIMIT;
   const smallLabelContinuationIssue = outputPlan.issues.find(
@@ -966,7 +968,7 @@ export default function LabelPrintModal({
                 : isSmallLabelContinuationBlocked
                   ? tx(
                       "label.outputPlanSmallLabelLimitBody",
-                      "{{target}} would need {{count}} labels. This workflow stops small labels at {{max}}; simplify the language mode or print the complete A4/Letter label instead.",
+                      "{{target}} would need {{count}} labels. This workflow stops small labels at {{max}} so identity and GHS pictograms are not dropped; print the complete A4/Letter label instead.",
                       {
                         target: smallLabelOutputName,
                         count: smallLabelContinuationPageCount,
@@ -1053,13 +1055,13 @@ export default function LabelPrintModal({
                   label: tx("label.recoveryRouteLabel", "Recommended recovery"),
                   value: tx(
                     "label.recoverySmallLabelContinuationValue",
-                    "Use English-only or complete A4/Letter",
+                    "Use complete A4/Letter",
                   ),
                   currentStock: currentStockName,
                   targetStock: recommendedFullPageLabel,
                   description: tx(
                     "label.recoverySmallLabelContinuationBody",
-                    "Try English-only identity if name length is creating the pressure. If the pictograms still need more than {{max}} small labels, use the complete A4/Letter label instead.",
+                    "Small labels keep CAS, English, trusted Chinese, and GHS pictograms together. If that exceeds {{max}} labels, use the complete A4/Letter label instead of dropping identity or pictograms.",
                     { max: smallLabelContinuationMaxLabels },
                   ),
                 }
@@ -1160,7 +1162,7 @@ export default function LabelPrintModal({
               : isSmallLabelContinuationBlocked
                 ? tx(
                     "label.outputOutcomeSmallLabelLimitBody",
-                    "This {{target}} would need {{count}} labels. Small labels stop at {{max}} so identity and GHS pictograms stay readable; use English-only identity or print the complete A4/Letter label.",
+                    "This {{target}} would need {{count}} labels. Small labels stop at {{max}} so identity and GHS pictograms stay readable; print the complete A4/Letter label instead of dropping identity or pictograms.",
                     {
                       target: smallLabelOutputName,
                       count: smallLabelContinuationPageCount,
@@ -1532,15 +1534,19 @@ export default function LabelPrintModal({
   };
 
   const updateVisualConfig = (patch) => {
-    onLabelConfigChange({ ...effectiveLabelConfig, ...patch });
+    onLabelConfigChange(
+      normalizePublicPrintConfig({ ...effectiveLabelConfig, ...patch }),
+    );
   };
 
   const updateLayoutConfig = (patch) => {
-    onLabelConfigChange({
-      ...effectiveLabelConfig,
-      ...patch,
-      stockPreset: patch.stockPreset ?? "custom",
-    });
+    onLabelConfigChange(
+      normalizePublicPrintConfig({
+        ...effectiveLabelConfig,
+        ...patch,
+        stockPreset: patch.stockPreset ?? "custom",
+      }),
+    );
   };
 
   const applyStockPreset = (preset) => {
@@ -1579,7 +1585,7 @@ export default function LabelPrintModal({
       nextConfig.template = "icon";
     }
 
-    onLabelConfigChange(nextConfig);
+    onLabelConfigChange(normalizePublicPrintConfig(nextConfig));
   };
 
   const handleUseFullPagePrimary = () => {
@@ -1631,7 +1637,9 @@ export default function LabelPrintModal({
       ...effectiveLabelConfig,
       labelPurpose: option.purpose,
       template: option.template,
-      nameDisplay: effectiveLabelConfig.nameDisplay || "both",
+      nameDisplay: isSmallLabelIdentityLayout(option)
+        ? "both"
+        : effectiveLabelConfig.nameDisplay || "both",
       stockPreset: preset.id,
       size: preset.size,
       orientation: preset.orientation,
@@ -1657,7 +1665,7 @@ export default function LabelPrintModal({
         : option.template || "standard";
     }
 
-    onLabelConfigChange(nextConfig);
+    onLabelConfigChange(normalizePublicPrintConfig(nextConfig));
   };
 
   useEffect(() => {
@@ -1901,17 +1909,44 @@ export default function LabelPrintModal({
               {tx("label.identityDisplay", "Printed identity")}
             </h4>
             <p className="text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
-              {tx(
-                "label.identityDisplayHint",
-                "CAS always prints first. Choose whether the physical label shows both names or one language.",
-              )}
+              {isSmallLabelIdentityLocked
+                ? tx(
+                    "label.identityDisplayFixedHint",
+                    "Small labels always print CAS, English, and trusted Chinese identity.",
+                  )
+                : tx(
+                    "label.identityDisplayHint",
+                    "CAS always prints first. Choose whether the physical label shows both names or one language.",
+                  )}
             </p>
-            <ConfigButtonGrid
-              options={NAME_DISPLAY_OPTIONS}
-              value={effectiveLabelConfig.nameDisplay || "both"}
-              onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
-              t={t}
-            />
+            {isSmallLabelIdentityLocked ? (
+              <div
+                className="notebook-control notebook-control-primary rounded-md p-3 text-left"
+                data-testid="fixed-identity-display"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex h-6 w-8 shrink-0 items-center justify-center text-xs font-semibold text-current"
+                    data-testid="label-config-icon-slot"
+                  >
+                    中/EN
+                  </span>
+                  <span className="min-w-0 font-medium">
+                    {t("label.nameDisplayBoth")}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+                  {t("label.nameDisplayBothDesc")}
+                </div>
+              </div>
+            ) : (
+              <ConfigButtonGrid
+                options={NAME_DISPLAY_OPTIONS}
+                value={effectiveLabelConfig.nameDisplay || "both"}
+                onSelect={(nameDisplay) => updateVisualConfig({ nameDisplay })}
+                t={t}
+              />
+            )}
           </section>
 
           <section className="space-y-3">

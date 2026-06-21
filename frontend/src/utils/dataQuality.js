@@ -7,7 +7,10 @@ import {
   DATA_QUALITY_ISSUE_TYPES,
   DATA_QUALITY_REVIEW_ISSUE_ORDER,
 } from "@/constants/dataQualityIssueLabels";
-import { hasGhsData } from "@/utils/ghsAvailability";
+import {
+  hasGhsData,
+  hasRenderableGhsPictograms,
+} from "@/utils/ghsAvailability";
 import { resolveEnglishName, resolveTrustedChineseName } from "@/utils/ghsText";
 
 export {
@@ -45,9 +48,6 @@ export function sortDataQualityIssuesForReview(issues = []) {
     return orderA - orderB;
   });
 }
-
-const getPictograms = (classification = {}) =>
-  classification?.pictograms || classification?.ghs_pictograms || [];
 
 const getCorrectionUrl = (result, issueType) =>
   buildDataCorrectionUrl({
@@ -118,7 +118,7 @@ export function getDataQualityIssues(result = {}, effectiveClassification = null
         DATA_QUALITY_ISSUE_TYPES.NO_GHS_DATA,
       ),
     });
-  } else if (getPictograms(effective).length === 0) {
+  } else if (!hasRenderableGhsPictograms(effective)) {
     issues.push({
       type: DATA_QUALITY_ISSUE_TYPES.GHS_TEXT_NO_PICTOGRAMS,
       severity: "review",

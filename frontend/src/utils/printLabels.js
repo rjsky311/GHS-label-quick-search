@@ -107,6 +107,7 @@ const PRINT_TEXT_FALLBACKS = {
   en: {
     "print.title": "GHS Label Print",
     "print.noHazardLabel": "No hazard label",
+    "print.pictogramReviewRequired": "GHS pictogram review required",
     "print.noHazardStatement": "No hazard statements",
     "print.noPrecautionaryStatement": "No precautionary statements",
     "print.hazardStatementsLabel": "Hazard statements",
@@ -183,6 +184,7 @@ const PRINT_TEXT_FALLBACKS = {
   "zh-TW": {
     "print.title": "GHS 標籤列印",
     "print.noHazardLabel": "無危害標示",
+    "print.pictogramReviewRequired": "GHS 圖示需審核",
     "print.noHazardStatement": "無危害說明",
     "print.noPrecautionaryStatement": "無預防措施說明",
     "print.hazardStatementsLabel": "危害說明 / Hazard statements",
@@ -1116,11 +1118,36 @@ const getLabelContentForRender = (chemical, model) => {
   };
 };
 
+const hasTextOnlyGhsContent = ({
+  pictograms = [],
+  hazardStatements = [],
+  precautionaryStatements = [],
+  signalWord = "",
+} = {}) =>
+  pictograms.length === 0 &&
+  (hazardStatements.length > 0 ||
+    precautionaryStatements.length > 0 ||
+    Boolean(signalWord));
+
+const renderPictogramReviewRequired = (model) =>
+  `<div class="no-hazard no-hazard-review">${escapeHtml(
+    model.t("print.pictogramReviewRequired"),
+  )}</div>`;
+
 const renderIconTemplate = (chemical, model) => {
   const {
     effectiveChemical: effectiveChem,
     pictograms,
+    hazardStatements,
+    precautionaryStatements,
+    signalWord,
   } = getLabelContentForRender(chemical, model);
+  const textOnlyGhs = hasTextOnlyGhsContent({
+    pictograms,
+    hazardStatements,
+    precautionaryStatements,
+    signalWord,
+  });
 
   return `
     <div class="label label-icon ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${isPrepared(effectiveChem) ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
@@ -1132,7 +1159,9 @@ const renderIconTemplate = (chemical, model) => {
         ${
           pictograms.length > 0
             ? renderPictograms(pictograms, "pictograms-icon")
-            : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
+            : textOnlyGhs
+              ? renderPictogramReviewRequired(model)
+              : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
         }
       </div>
     </div>
@@ -1145,6 +1174,7 @@ const renderStandardTemplate = (chemical, model) => {
     pictograms,
     hazardStatements: hazards,
     precautionaryStatements: precautions,
+    signalWord: contentSignalWord,
   } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
@@ -1155,6 +1185,12 @@ const renderStandardTemplate = (chemical, model) => {
   const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
   const hazardRenderMode = getStandardHazardRenderMode(model.layout);
   const prepared = isPrepared(effectiveChem);
+  const textOnlyGhs = hasTextOnlyGhsContent({
+    pictograms,
+    hazardStatements: hazards,
+    precautionaryStatements: precautions,
+    signalWord: contentSignalWord,
+  });
 
   return `
     <div class="label label-standard ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}>
@@ -1208,7 +1244,9 @@ const renderStandardTemplate = (chemical, model) => {
                         : ""
                     }
                   </div>`
-                : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
+                : textOnlyGhs
+                  ? renderPictogramReviewRequired(model)
+                  : `<div class="no-hazard">${escapeHtml(model.t("print.noHazardLabel"))}</div>`
             }
             ${renderCompactPrecautions(
               precautions,
@@ -1355,12 +1393,21 @@ const renderQRCodeTemplate = (chemical, model) => {
   const {
     effectiveChemical: effectiveChem,
     pictograms,
+    hazardStatements,
+    precautionaryStatements,
+    signalWord,
   } = getLabelContentForRender(chemical, model);
   const prepared = isPrepared(effectiveChem);
   const qrTarget = getChemicalLookupUrl(effectiveChem.cas_number);
   const showQr = !continuation || continuation.showQr !== false;
   const continuationClass = continuation ? " label-continuation-page" : "";
   const qrNoCodeClass = showQr ? "" : " label-qr-no-code";
+  const textOnlyGhs = hasTextOnlyGhsContent({
+    pictograms,
+    hazardStatements,
+    precautionaryStatements,
+    signalWord,
+  });
 
   return `
     <div class="label label-qr ${getPhysicalLabelClasses(model.layout)} ${getPictogramDensityClasses(pictograms)}${continuationClass}${qrNoCodeClass}${prepared ? " label-prepared" : ""}" ${renderLabelDataAttributes(chemical, model)}${continuation ? ` data-continuation-page="${escapeHtml(continuation.current)}" data-continuation-total="${escapeHtml(continuation.total)}"` : ""}>
@@ -1372,7 +1419,9 @@ const renderQRCodeTemplate = (chemical, model) => {
         ${
           pictograms.length > 0
             ? `<div class="qr-support-row qr-support-row-primary">${renderPictograms(pictograms, "qr-pics")}</div>`
-            : ""
+            : textOnlyGhs
+              ? `<div class="qr-support-row qr-support-row-primary">${renderPictogramReviewRequired(model)}</div>`
+              : ""
         }
       </div>
       ${

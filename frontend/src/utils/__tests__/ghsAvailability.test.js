@@ -1,4 +1,9 @@
-import { hasGhsData, hasRenderableGhsVisual } from "../ghsAvailability";
+import {
+  hasGhsData,
+  hasRenderableGhsPictograms,
+  hasRenderableGhsVisual,
+  hasTextOnlyGhsData,
+} from "../ghsAvailability";
 
 describe("hasGhsData", () => {
   it("returns false for null / undefined", () => {
@@ -54,6 +59,20 @@ describe("hasGhsData", () => {
     expect(hasGhsData({ pictograms: [{ code: "GHS07" }] })).toBe(true);
     // The raw ChemicalResult shape
     expect(hasGhsData({ ghs_pictograms: [{ code: "GHS07" }] })).toBe(true);
+  });
+
+  it("does not let an empty pictograms array hide raw ghs_pictograms", () => {
+    const mixedShape = {
+      pictograms: [],
+      ghs_pictograms: [{ code: "GHS05" }],
+      hazard_statements: [],
+      precautionary_statements: [],
+      signal_word: "",
+    };
+
+    expect(hasGhsData(mixedShape)).toBe(true);
+    expect(hasRenderableGhsPictograms(mixedShape)).toBe(true);
+    expect(hasTextOnlyGhsData(mixedShape)).toBe(false);
   });
 });
 

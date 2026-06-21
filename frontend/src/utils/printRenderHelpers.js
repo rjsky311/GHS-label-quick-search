@@ -10,6 +10,7 @@ import {
 import {
   getCompactPictogramCapacity as getContractCompactPictogramCapacity,
 } from "@/utils/printOutputContract";
+import { isSmallLabelIdentityLayout } from "@/constants/labelStocks";
 
 const ALLOWED_TEMPLATES = new Set(["icon", "standard", "full", "qrcode"]);
 
@@ -91,6 +92,10 @@ export const canRenderCompactBilingualName = (chemical, layout = {}) => {
 };
 
 export const resolveNameDisplayForChemical = (chemical, model) => {
+  if (isSmallLabelIdentityLayout(model?.layout)) {
+    return "both";
+  }
+
   const requestedDisplay = model?.layout?.nameDisplay;
   if (requestedDisplay === "en" || requestedDisplay === "zh") {
     return requestedDisplay;

@@ -226,6 +226,63 @@ describe('buildExportPreview', () => {
     expect(preview.rows[0].cells[20]).toBe('export.multipleGhsSystemSuggested');
   });
 
+  it('marks text-only GHS rows as not printable and requiring pictogram review', () => {
+    const preview = buildExportPreview(
+      [
+        {
+          ...mockResult,
+          cas_number: '100-00-5',
+          name_en: 'Text-only GHS sample',
+          name_zh: '文字型 GHS 樣品',
+          ghs_pictograms: [],
+          hazard_statements: [
+            { code: 'H302', text_en: 'Harmful if swallowed.' },
+          ],
+          precautionary_statements: [
+            { code: 'P264', text_en: 'Wash hands thoroughly after handling.' },
+          ],
+          signal_word: 'Warning',
+          signal_word_zh: '警告',
+        },
+      ],
+      { t: (key) => key },
+    );
+
+    expect(preview.summary).toEqual({
+      total: 1,
+      found: 1,
+      ready: 0,
+      needsReview: 1,
+      unresolved: 0,
+      upstreamError: 0,
+    });
+    expect(preview.rows[0].cells[7]).toBe('export.dataStateTextOnly');
+    expect(preview.rows[0].cells[8]).toBe('export.no');
+    expect(preview.rows[0].cells[9]).toBe('export.yes');
+    expect(preview.rows[0].cells[10]).toContain(
+      'dataQuality.issue.ghsTextNoPictograms',
+    );
+    expect(preview.rows[0].cells[12]).toBe('export.reviewActionReviewPictograms');
+  });
+
+  it('keeps rows printable when raw ghs_pictograms exist beside an empty pictograms array', () => {
+    const preview = buildExportPreview(
+      [
+        {
+          ...mockResult,
+          pictograms: [],
+          ghs_pictograms: [{ code: 'GHS05', name_zh: '腐蝕' }],
+        },
+      ],
+      { t: (key) => key },
+    );
+
+    expect(preview.summary.ready).toBe(1);
+    expect(preview.summary.needsReview).toBe(0);
+    expect(preview.rows[0].cells[7]).toBe('export.dataStateRenderable');
+    expect(preview.rows[0].cells[8]).toBe('export.yes');
+  });
+
   it('previews every real-roster review reason without merging them into one generic state', () => {
     const needsReviewRows = getExportScopeOptions({
       allResults: inventoryDataQualityFixtureResults,

@@ -1,3 +1,5 @@
+import { isSmallLabelIdentityLayout } from "@/constants/labelStocks";
+
 export function resolveDisplayLocale(languageLike = "zh") {
   return String(languageLike).toLowerCase().startsWith("en") ? "en" : "zh";
 }
@@ -17,6 +19,10 @@ export function resolveEffectiveLabelNameDisplay(
       ? layoutOrNameDisplay
       : null;
   const requested = layout ? layout.nameDisplay : layoutOrNameDisplay;
+
+  if (layout && isSmallLabelIdentityLayout(layout)) {
+    return "both";
+  }
 
   if (requested === "en" || requested === "zh") return requested;
   if (requested !== "both") return resolveDisplayLocale(fallbackLanguage);
@@ -41,14 +47,8 @@ export function resolveEffectiveLabelNameDisplay(
     return "both";
   }
 
-  if (layout.template === "icon" || layout.template === "qrcode") {
-    return "both";
-  }
-
   const isCompactPhysicalLabel =
     layout.labelPurpose !== "shipping" ||
-    layout.template === "icon" ||
-    layout.template === "qrcode" ||
     layout.outputRole === "supplemental" ||
     layout.formFactor === "strip" ||
     layout.formFactor === "compact" ||

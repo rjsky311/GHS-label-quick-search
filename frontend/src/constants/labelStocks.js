@@ -352,6 +352,12 @@ const VALID_PAGE_SIZES = new Set(["A4", "Letter"]);
 const MIN_AUTO_FIT_LEVEL = 0;
 const MAX_AUTO_FIT_LEVEL = 4;
 
+export const isSmallLabelIdentityLayout = (layout = {}) =>
+  layout.labelPurpose === "qrSupplement" ||
+  layout.labelPurpose === "quickId" ||
+  layout.template === "qrcode" ||
+  layout.template === "icon";
+
 const formatMm = (value) => `${value}mm`;
 const roundTo = (value, places = 1) => {
   const factor = 10 ** places;
@@ -849,23 +855,28 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
         min: 1,
         max: 12,
       });
+  const template = coerceEnum(
+    labelConfig.template,
+    VALID_TEMPLATES,
+    DEFAULT_LABEL_CONFIG.template,
+  );
+  const requestedNameDisplay = coerceEnum(
+    labelConfig.nameDisplay,
+    VALID_NAME_DISPLAYS,
+    DEFAULT_LABEL_CONFIG.nameDisplay,
+  );
+  const nameDisplay = isSmallLabelIdentityLayout({ labelPurpose, template })
+    ? "both"
+    : requestedNameDisplay;
 
   return {
     schemaVersion: 2,
     labelPurpose,
-    template: coerceEnum(
-      labelConfig.template,
-      VALID_TEMPLATES,
-      DEFAULT_LABEL_CONFIG.template,
-    ),
+    template,
     size,
     orientation,
     pageOrientation,
-    nameDisplay: coerceEnum(
-      labelConfig.nameDisplay,
-      VALID_NAME_DISPLAYS,
-      DEFAULT_LABEL_CONFIG.nameDisplay,
-    ),
+    nameDisplay,
     colorMode: coerceEnum(
       labelConfig.colorMode,
       VALID_COLOR_MODES,

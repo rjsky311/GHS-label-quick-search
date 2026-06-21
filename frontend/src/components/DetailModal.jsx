@@ -23,7 +23,10 @@ import {
 } from "@/constants/supportLinks";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import { formatRelativeTime } from "@/utils/formatDate";
-import { hasGhsData } from "@/utils/ghsAvailability";
+import {
+  hasGhsData,
+  hasRenderableGhsPictograms,
+} from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,7 +60,7 @@ const getClassificationSummary = (effective, reportCount, t) => {
 };
 
 const hasPictogramData = (classification) =>
-  (classification?.pictograms || classification?.ghs_pictograms || []).length > 0;
+  hasRenderableGhsPictograms(classification);
 
 export default function DetailModal({
   result,

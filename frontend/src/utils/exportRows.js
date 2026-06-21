@@ -5,7 +5,10 @@ import {
   getLocalizedStatementText,
   resolveTrustedChineseName,
 } from "@/utils/ghsText";
-import { hasGhsData } from "@/utils/ghsAvailability";
+import {
+  hasGhsData,
+  hasRenderableGhsPictograms,
+} from "@/utils/ghsAvailability";
 import { getReferenceLinks } from "@/utils/sdsLinks";
 import {
   DATA_QUALITY_ISSUE_TYPES,
@@ -23,7 +26,7 @@ export const EXPORT_SCOPE_KEYS = Object.freeze({
 });
 
 function hasDirectPictogramVisual(result) {
-  return (result?.ghs_pictograms || result?.pictograms || []).length > 0;
+  return hasRenderableGhsPictograms(result);
 }
 
 function getExportReviewReasonLabel(type, t) {
@@ -168,7 +171,11 @@ function buildExportTrustCells(result, t) {
   );
   return [
     resolveExportDataState(result, t),
-    result?.found !== false && hasGhsData(result) ? t("export.yes") : t("export.no"),
+    result?.found !== false &&
+    hasGhsData(result) &&
+    hasDirectPictogramVisual(result)
+      ? t("export.yes")
+      : t("export.no"),
     reviewIssues.length ? t("export.yes") : t("export.no"),
     reviewIssues.length
       ? reviewIssues
