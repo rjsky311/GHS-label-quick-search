@@ -142,6 +142,7 @@ npm run test:docs
 npm run build
 npm run qa:bundle-budget
 npm run qa:github-resource
+npm run qa:h-code-coverage
 npm run qa:p-code-coverage
 npm run test:print-contract
 npm run qa:print-pdf
@@ -158,6 +159,7 @@ Run backend commands from `backend/`:
 python -m py_compile server.py api_models.py api_validation.py export_helpers.py
 python -m pytest -q
 python scripts\audit_p_code_coverage.py --fail-on-gaps
+python scripts\audit_h_code_coverage.py --fail-on-gaps
 python scripts\audit_inventory_workbook.py <path-to-xlsx>
 python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>

@@ -2945,6 +2945,28 @@ class TestHCodeExtraction:
         assert statements[0]["text_zh"] == server.H_CODE_TRANSLATIONS["H315"]
         assert statements[1]["text_zh"] == server.H_CODE_TRANSLATIONS["H319"]
 
+    def test_h360_reproductive_variant_h_codes_have_reviewed_chinese_wording(self):
+        data = _make_ghs_data(
+            _pic_info(["GHS08"]),
+            _signal_info("Danger"),
+            _hazard_info(
+                "H360FD: May damage fertility. May damage the unborn child.",
+                "H360Fd: May damage fertility. Suspected of damaging the unborn child.",
+                "H360Df: Suspected of damaging fertility. May damage the unborn child.",
+            ),
+        )
+
+        reports = extract_all_ghs_classifications(data)
+        statements = {stmt["code"]: stmt for stmt in reports[0]["hazard_statements"]}
+
+        assert statements["H360FD"]["text_zh"] == "可能損害生育能力，可能損害胎兒"
+        assert statements["H360Fd"]["text_zh"] == "可能損害生育能力，懷疑會損害胎兒"
+        assert statements["H360Df"]["text_zh"] == "懷疑會損害生育能力，可能損害胎兒"
+        assert all(
+            stmt["text_zh"] != server.H_CODE_MISSING_TEXT_ZH
+            for stmt in statements.values()
+        )
+
     def test_missing_h_code_zh_uses_chinese_placeholder(self):
         pubchem_text = "H999: Experimental English-only hazard wording"
         data = _make_ghs_data(

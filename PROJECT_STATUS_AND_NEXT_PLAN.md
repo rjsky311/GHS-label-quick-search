@@ -240,6 +240,11 @@ Current validation gates:
   `frontend/` queries the bounded backend smoke set and fails when observed
   precautionary statement codes are missing English or Traditional Chinese
   wording, or when the API payload has already degraded to code-only text.
+- H-code wording coverage patrol: `npm run qa:h-code-coverage` from
+  `frontend/` queries the same bounded backend smoke set and fails when
+  observed primary or alternate hazard statement codes are missing reviewed
+  Traditional Chinese wording, or when the API payload has already degraded to
+  the missing-wording placeholder.
 - Print contract: `npm run test:print-contract`
 - Print PDF QA: `npm run qa:print-pdf`
 - Production availability and freshness: `npm run qa:production-health`

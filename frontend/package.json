@@ -66,6 +66,7 @@
     "preview": "vite preview",
     "qa:bundle-budget": "node scripts/check-bundle-budget.mjs",
     "qa:github-resource": "node scripts/check-github-resource-usage.mjs",
+    "qa:h-code-coverage": "python ../backend/scripts/audit_h_code_coverage.py --fail-on-gaps",
     "qa:p-code-coverage": "python ../backend/scripts/audit_p_code_coverage.py --fail-on-gaps",
     "qa:workbench": "node scripts/check-experiment-notebook-workbench.mjs",
     "test:docs": "node scripts/check-docs-drift.mjs",

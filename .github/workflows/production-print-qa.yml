@@ -119,6 +119,9 @@ jobs:
       - name: Check P-code wording coverage
         run: npm run qa:p-code-coverage
 
+      - name: Check H-code wording coverage
+        run: npm run qa:h-code-coverage
+
       - name: Run selected production print QA
         run: |
           set -euo pipefail
