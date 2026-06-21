@@ -33,8 +33,15 @@ function collectStaticKeys() {
   const keys = new Set();
   const sourceFiles = walkFiles(srcRoot);
   const callPattern = /\b(?:t|tx)\(\s*["'`]([^"'`]+)["'`]/g;
+  const keyNames =
+    "labelKey|descKey|tipKey|placeholderKey|nameKey|titleKey|bodyKey";
   const keyPropertyPattern =
-    /\b(?:labelKey|descKey|tipKey|placeholderKey|nameKey)\s*:\s*["'`]([^"'`]+)["'`]/g;
+    new RegExp(`\\b(?:${keyNames})\\s*:\\s*["'\`]([^"'\`]+)["'\`]`, "g");
+  const keyAssignmentPattern = new RegExp(
+    `\\b(?:const\\s+|let\\s+|var\\s+)?(?:${keyNames})\\s*=\\s*([\\s\\S]*?);`,
+    "g",
+  );
+  const stringLiteralPattern = /["'`]([^"'`]+)["'`]/g;
 
   for (const file of sourceFiles) {
     const source = fs.readFileSync(file, "utf8");
@@ -42,6 +49,16 @@ function collectStaticKeys() {
       let match;
       while ((match = pattern.exec(source))) {
         keys.add(match[1]);
+      }
+    }
+    let assignmentMatch;
+    while ((assignmentMatch = keyAssignmentPattern.exec(source))) {
+      const expression = assignmentMatch[1];
+      let stringMatch;
+      while ((stringMatch = stringLiteralPattern.exec(expression))) {
+        if (stringMatch[1].includes(".")) {
+          keys.add(stringMatch[1]);
+        }
       }
     }
   }

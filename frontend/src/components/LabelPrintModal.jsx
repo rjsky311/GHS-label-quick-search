@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  arePrintLabelConfigsEqual,
   FULL_PAGE_PRIMARY_STOCK_IDS,
   getLabelStockPresetDisplay,
 } from "@/constants/labelStocks";
@@ -85,6 +86,42 @@ import {
   resolveEffectiveLabelNameDisplay,
 } from "@/utils/ghsText";
 
+const normalizePublicPrintConfig = (config = {}) => {
+  const layout = resolveLayoutProfile(config);
+  const isFullPagePrimary =
+    layout.outputRole === "full-page-primary" ||
+    FULL_PAGE_PRIMARY_STOCK_IDS.includes(layout.stockPreset) ||
+    FULL_PAGE_PRIMARY_STOCK_IDS.includes(config.stockPreset) ||
+    (Number(layout.widthMm || config.labelWidthMm || 0) >= 170 &&
+      Number(layout.heightMm || config.labelHeightMm || 0) >= 200);
+
+  if (config.labelPurpose === "shipping" && isFullPagePrimary) {
+    return {
+      ...config,
+      labelPurpose: "shipping",
+      template: "full",
+    };
+  }
+
+  if (config.labelPurpose === "qrSupplement" || config.template === "qrcode") {
+    return {
+      ...config,
+      labelPurpose: "qrSupplement",
+      template: "qrcode",
+    };
+  }
+
+  if (config.labelPurpose === "quickId" || config.template === "icon") {
+    return {
+      ...config,
+      labelPurpose: "quickId",
+      template: "icon",
+    };
+  }
+
+  return config;
+};
+
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
@@ -138,7 +175,7 @@ export default function LabelPrintModal({
   const effectiveLabelConfig = useMemo(() => {
     const allowedStocks = STOCK_IDS_BY_PRINT_TARGET[rawPrintTarget] || [];
     if (allowedStocks.includes(rawLayoutProfile.stockPreset)) {
-      return labelConfig;
+      return normalizePublicPrintConfig(labelConfig);
     }
 
     const fallbackOption =
@@ -150,7 +187,7 @@ export default function LabelPrintModal({
 
     if (!fallbackOption || !fallbackPreset) return labelConfig;
 
-    return {
+    return normalizePublicPrintConfig({
       ...labelConfig,
       labelPurpose: fallbackOption.purpose,
       template: fallbackOption.template,
@@ -169,7 +206,7 @@ export default function LabelPrintModal({
       offsetXmm: fallbackPreset.offsetXmm,
       offsetYmm: fallbackPreset.offsetYmm,
       pageSize: fallbackPreset.pageSize || "A4",
-    };
+    });
   }, [
     labelConfig,
     rawLayoutProfile.stockPreset,
@@ -1624,7 +1661,7 @@ export default function LabelPrintModal({
   };
 
   useEffect(() => {
-    if (effectiveLabelConfig === labelConfig) return;
+    if (arePrintLabelConfigsEqual(effectiveLabelConfig, labelConfig)) return;
     onLabelConfigChange(effectiveLabelConfig);
   }, [
     effectiveLabelConfig,
@@ -2028,6 +2065,7 @@ export default function LabelPrintModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t("common.close", { defaultValue: "Close" })}
             className="text-slate-500 transition-colors hover:text-slate-900"
           >
             <X className="h-6 w-6" />

@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   frontend:
     name: Frontend
@@ -38,11 +42,20 @@ jobs:
       - name: Run tests
         run: npm test -- --runInBand
 
+      - name: Run QA script tests
+        run: npm run test:qa-scripts
+
       - name: Build
         run: npm run build
 
       - name: Check bundle budget
         run: npm run qa:bundle-budget
+
+      - name: Check GitHub resource budget
+        run: npm run qa:github-resource
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_RESOURCE_REPO: ${{ github.repository }}
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

@@ -23,6 +23,7 @@ from openpyxl.styles import Border, Side
 import csv
 import random
 import re
+import subprocess
 import time
 from cachetools import TTLCache
 from pilot_store import (
@@ -90,6 +91,42 @@ load_dotenv(ROOT_DIR / '.env')
 
 
 APP_VERSION = "1.10.0"
+
+
+def _resolve_build_git_sha() -> str:
+    """Resolve a deploy commit SHA from hosting metadata, falling back to git."""
+    for key in (
+        "VITE_GIT_SHA",
+        "GITHUB_SHA",
+        "ZEABUR_GIT_COMMIT_SHA",
+        "ZEABUR_COMMIT_SHA",
+        "ZEABUR_GIT_SHA",
+        "SOURCE_COMMIT",
+        "COMMIT_SHA",
+        "SOURCE_VERSION",
+        "BUILD_GIT_SHA",
+    ):
+        value = (os.environ.get(key) or "").strip()
+        if value:
+            return value
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT_DIR.parent,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except Exception:
+        return ""
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+BUILD_GIT_SHA = _resolve_build_git_sha()
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -250,7 +287,10 @@ def _is_cas_like_query(query: str) -> bool:
 
 def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
     pairs = []
-    for entry in pilot_store.list_manual_entries(status=APPROVED_MANUAL_ENTRY_STATUS):
+    for entry in pilot_store.list_manual_entries(
+        status=APPROVED_MANUAL_ENTRY_STATUS,
+        public_only=True,
+    ):
         if locale == "zh":
             name = (entry.get("name_zh") or "").strip()
         else:
@@ -262,7 +302,11 @@ def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
 
 def _approved_alias_pairs(locale: str) -> list[tuple[str, str]]:
     pairs = []
-    for alias in pilot_store.list_aliases(status=APPROVED_ALIAS_STATUS, locale=locale):
+    for alias in pilot_store.list_aliases(
+        status=APPROVED_ALIAS_STATUS,
+        locale=locale,
+        public_only=True,
+    ):
         key = (alias.get("alias_text") or "").strip()
         if not key:
             continue
@@ -659,9 +703,20 @@ async def pubchem_get_json(
                 try:
                     return status, resp.json()
                 except ValueError:
-                    # 200 with non-JSON body — treat as no usable data
-                    return status, None
-            if status in _PUBCHEM_TRANSIENT_STATUS:
+                    # 200 with non-JSON body is still an upstream failure.
+                    # Treat it like a transient response so callers do not
+                    # mistake malformed PubChem output for "no hazards".
+                    transient = True
+                    last_error = "HTTP 200 invalid JSON"
+                    _record_upstream_failure(
+                        "invalid_json",
+                        url,
+                        attempt + 1,
+                        status_code=status,
+                    )
+            if transient:
+                pass
+            elif status in _PUBCHEM_TRANSIENT_STATUS:
                 transient = True
                 if status == 429:
                     retry_after = resp.headers.get("Retry-After")
@@ -1479,6 +1534,8 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
+        "gitSha": BUILD_GIT_SHA,
+        "gitShortSha": BUILD_GIT_SHA[:12] if BUILD_GIT_SHA else "",
     }
 
 

@@ -283,16 +283,25 @@ const checkFrontend = () =>
 const checkBackend = () =>
   runAttemptedCheck("backend-health", async () => {
     const healthUrl = withCacheBuster(backendHealthUrl, "productionHealthCheck");
-    const { response, elapsedMs } = await elapsedFetch(healthUrl);
-    const meta = responseMeta(response, elapsedMs);
-    let body = null;
-    try {
-      body = await response.json();
-    } catch {
-      body = null;
+    const { response, meta, body, parseError } = await fetchJsonMeta(healthUrl);
+    const backendGitSha =
+      body?.gitSha || body?.git_sha || body?.build?.gitSha || body?.build?.git_sha || "";
+    const backendGitShaMatches = expectedGitSha
+      ? gitShaMatches(backendGitSha, expectedGitSha)
+      : undefined;
+    const healthy =
+      response.ok &&
+      body?.status === "healthy" &&
+      (!expectedGitSha || backendGitShaMatches);
+    let error = "";
+    if (!response.ok || body?.status !== "healthy") {
+      error = `backend health returned HTTP ${response.status} with status ${body?.status || "unknown"}`;
+    } else if (expectedGitSha && !backendGitShaMatches) {
+      error = "backend health git SHA did not match the expected deployed commit";
+    } else if (parseError) {
+      error = `backend health JSON could not be parsed: ${parseError}`;
     }
 
-    const healthy = response.ok && body?.status === "healthy";
     return {
       ok: healthy,
       backendHealthUrl,
@@ -300,9 +309,12 @@ const checkBackend = () =>
       health: meta,
       version: body?.version || "",
       status: body?.status || "",
-      error: healthy
-        ? ""
-        : `backend health returned HTTP ${response.status} with status ${body?.status || "unknown"}`,
+      gitSha: backendGitSha,
+      gitShortSha: body?.gitShortSha || body?.git_short_sha || "",
+      expectedGitSha: expectedGitSha || undefined,
+      gitShaMatches: backendGitShaMatches,
+      parseError,
+      error,
     };
   });
 

@@ -33,6 +33,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: production-print-qa-${{ github.event_name }}-${{ github.event.inputs.mode || 'scheduled-product' }}
@@ -66,6 +67,10 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies
         run: npm ci
 
@@ -75,6 +80,44 @@ jobs:
 
       - name: Wait for production freshness
         run: npm run qa:production-health
+
+      - name: Probe Zeabur deployment freshness
+        if: always()
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if [ -z "${ZEABUR_TOKEN:-}" ]; then
+            mkdir -p build
+            node <<'NODE'
+            const fs = require("fs");
+            const path = "build/zeabur-deployment-report.json";
+            const report = {
+              ok: true,
+              generatedAt: new Date().toISOString(),
+              reportPath: path,
+              statusCategory: "skipped-no-token",
+              expectedGitSha: process.env.PRINT_QA_EXPECTED_GIT_SHA || "",
+              guidance: [
+                "Zeabur deployment CLI probe skipped because ZEABUR_TOKEN is not configured for this workflow.",
+                "Production health/build metadata remains the blocking freshness gate.",
+              ],
+              failures: [],
+              recovery: {
+                nextActions: [
+                  "Add ZEABUR_TOKEN repository secret to enable strict Zeabur deployment diagnostics in CI.",
+                ],
+              },
+            };
+            fs.writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`);
+            NODE
+            exit 0
+          fi
+          npm run qa:zeabur-deployment
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+
+      - name: Check P-code wording coverage
+        run: npm run qa:p-code-coverage
 
       - name: Run selected production print QA
         run: |
@@ -137,13 +180,11 @@ jobs:
             echo "Skipping physical print validation plan; build/print-qa-report.json was not generated for this mode."
           fi
 
-      - name: Probe Zeabur deployment freshness
-        if: always()
-        run: npm run qa:zeabur-deployment || true
-
       - name: Write production QA summary
         if: always()
-        run: npm run qa:production-summary || true
+        run: npm run qa:production-summary
+        env:
+          PRINT_QA_REQUIRE_PRODUCT_BLOCKS: ${{ contains(fromJSON('["product","full","all"]'), github.event.inputs.mode || 'product') && '1' || '0' }}
 
       - name: Add job summary
         if: always()
@@ -157,6 +198,9 @@ jobs:
           const failedBlocks = Array.isArray(r.summary?.failedProductBlocks)
             ? r.summary.failedProductBlocks
             : [];
+          const failedFreshnessBlocks = Array.isArray(r.summary?.failedRequiredFreshnessBlocks)
+            ? r.summary.failedRequiredFreshnessBlocks
+            : [];
           const failureTriage = Array.isArray(r.summary?.failureTriage)
             ? r.summary.failureTriage
             : [];
@@ -167,6 +211,7 @@ jobs:
             `OK: ${String(r.ok ?? "unknown")}`,
             `Present reports: ${String(r.summary?.presentReports ?? 0)}`,
             `Failed reports: ${String(r.summary?.failedReports ?? 0)}`,
+            `Failed required freshness blocks: ${failedFreshnessBlocks.length ? failedFreshnessBlocks.join(", ") : "none"}`,
             `Failed product blocks: ${failedBlocks.length ? failedBlocks.join(", ") : "none"}`,
             "",
           ];

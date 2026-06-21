@@ -206,4 +206,5 @@ describe("persona gate: general single lookup trust", () => {
     expect(screen.getByTestId("provenance-cache-badge")).toBeInTheDocument();
     expect(screen.getByTestId("authoritative-source-note-detail")).toBeInTheDocument();
   });
+
 });

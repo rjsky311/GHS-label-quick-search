@@ -187,7 +187,8 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/search$/),
-      { cas_numbers: ['67-64-1', '90-90-4'] }
+      { cas_numbers: ['67-64-1', '90-90-4'] },
+      { signal: expect.any(AbortSignal) }
     );
     expect(screen.getByTestId('batch-input-diagnostics')).toHaveTextContent(
       'search.batchDuplicateSummary'

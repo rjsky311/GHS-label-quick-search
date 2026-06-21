@@ -134,6 +134,7 @@ export default function ExportPreviewModal({
             type="button"
             onClick={handleClose}
             disabled={submitting}
+            aria-label={t("common.close", { defaultValue: "Close" })}
             className="text-slate-400 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="export-preview-close"
           >

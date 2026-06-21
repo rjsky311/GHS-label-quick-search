@@ -18,16 +18,17 @@ def temp_store(tmp_path, monkeypatch):
 
 
 def test_manual_entry_and_approved_alias_resolve_name(temp_store):
+    cas_number = "123-45-5"
     temp_store.upsert_dictionary_entry(
-        "123-45-6",
+        cas_number,
         name_en="Custom Buffer",
-        name_zh="Custom Buffer ZH",
+        name_zh="自訂緩衝液",
     )
-    temp_store.upsert_alias("Buffer X", "en", "123-45-6", status="approved")
+    temp_store.upsert_alias("Buffer X", "en", cas_number, status="approved")
 
-    assert server.resolve_name_to_cas("Custom Buffer") == "123-45-6"
-    assert server.resolve_name_to_cas("buffer x") == "123-45-6"
-    assert server.resolve_name_to_cas("Custom Buffer ZH") == "123-45-6"
+    assert server.resolve_name_to_cas("Custom Buffer") == cas_number
+    assert server.resolve_name_to_cas("buffer x") == cas_number
+    assert server.resolve_name_to_cas("自訂緩衝液") == cas_number
 
 
 def test_pending_manual_entries_do_not_resolve_public_lookup(temp_store):
@@ -113,10 +114,10 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
 
 
 def test_dictionary_summary_tracks_alias_statuses(temp_store):
-    temp_store.upsert_alias("Approved Alias", "en", "111-11-1", status="approved")
-    temp_store.upsert_alias("Pending Alias", "en", "222-22-2", status="pending")
-    temp_store.upsert_alias("Evidence Alias", "en", "333-33-3", status="needs_evidence")
-    temp_store.upsert_alias("Rejected Alias", "en", "444-44-4", status="rejected")
+    temp_store.upsert_alias("Approved Alias", "en", "111-11-5", status="approved")
+    temp_store.upsert_alias("Pending Alias", "en", "222-22-0", status="pending")
+    temp_store.upsert_alias("Evidence Alias", "en", "333-33-5", status="needs_evidence")
+    temp_store.upsert_alias("Rejected Alias", "en", "444-44-0", status="rejected")
 
     summary = temp_store.get_dictionary_summary()
 
@@ -135,8 +136,8 @@ def test_dictionary_summary_tracks_alias_statuses(temp_store):
 
 
 def test_manual_alias_update_can_change_final_status(temp_store):
-    temp_store.upsert_alias("Retired Alias", "en", "444-44-4", status="approved")
-    temp_store.upsert_alias("Retired Alias", "en", "444-44-4", status="rejected")
+    temp_store.upsert_alias("Retired Alias", "en", "444-44-0", status="approved")
+    temp_store.upsert_alias("Retired Alias", "en", "444-44-0", status="rejected")
 
     assert temp_store.get_alias_exact("Retired Alias", "en", statuses=None)["status"] == "rejected"
     assert temp_store.get_alias_exact("Retired Alias", "en") is None
@@ -154,11 +155,11 @@ def test_automated_alias_capture_does_not_override_final_status(temp_store):
 
     assert temp_store.get_alias_exact("Stable Alias", "en", statuses=None)["status"] == "approved"
 
-    temp_store.upsert_alias("Needs Review Alias", "en", "666-66-6", status="needs_evidence")
+    temp_store.upsert_alias("Needs Review Alias", "en", "666-66-0", status="needs_evidence")
     temp_store.upsert_alias(
         "Needs Review Alias",
         "en",
-        "666-66-6",
+        "666-66-0",
         source="pubchem_synonym",
         status="pending",
     )

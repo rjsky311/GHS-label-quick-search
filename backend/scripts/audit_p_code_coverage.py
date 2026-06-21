@@ -31,6 +31,7 @@ DEFAULT_CAS_VALUES = (
     "7782-50-5",
     "108-88-3",
 )
+DEFAULT_MIN_UNIQUE_P_CODE_COUNT = 30
 
 
 def read_json_payload(input_path: str) -> Any:
@@ -102,6 +103,15 @@ def main() -> int:
         action="store_true",
         help="Exit with status 1 when missing wording or code-only payload is found.",
     )
+    parser.add_argument(
+        "--min-p-code-count",
+        type=int,
+        default=DEFAULT_MIN_UNIQUE_P_CODE_COUNT,
+        help=(
+            "Minimum unique P-code count expected when any result is found. "
+            "Use 0 only for narrow debugging fixtures."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -121,7 +131,10 @@ def main() -> int:
             "casNumbers": cas_numbers,
         }
 
-    report = audit_p_code_coverage(results)
+    report = audit_p_code_coverage(
+        results,
+        min_unique_code_count=max(0, args.min_p_code_count),
+    )
     report["source"] = source
     write_payload(report, args.output)
     if args.fail_on_gaps and report["summary"]["blockedForCompleteLabels"]:

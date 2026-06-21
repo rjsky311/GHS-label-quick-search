@@ -200,7 +200,7 @@ def create_pilot_admin_router(
             evidence_type=payload.evidence_type,
             local_context=payload.local_context,
             candidate=payload.candidate,
-            source=payload.source,
+            source="public",
         )
         record_ops_counter("dictionary.correction_request.created")
         return {"ok": True, "record": record}

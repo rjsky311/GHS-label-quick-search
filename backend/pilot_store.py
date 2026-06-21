@@ -7,6 +7,7 @@ import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
+from urllib.parse import urlparse
 
 DEFAULT_SCOPE = "default"
 DEFAULT_DOC_KEY = "default"
@@ -46,6 +47,8 @@ _WHITESPACE_RE = re.compile(r"\s+")
 _EN_COMPACT_RE = re.compile(r"[^a-z0-9]+")
 _ZH_COMPACT_RE = re.compile(r"[\s\u3000()（）\[\]{}\-_/.,;:]+")
 _CAS_LIKE_RE = re.compile(r"^\d{2,7}-\d{2}-\d$")
+_REFERENCE_LINK_TYPES = {"sds", "regulatory", "occupational", "reference"}
+_SAFE_REFERENCE_SCHEMES = {"http", "https"}
 
 
 def utc_now_iso() -> str:
@@ -97,6 +100,69 @@ def normalize_reference_link_status(status: Optional[str]) -> str:
     normalized = (status or ACTIVE_REFERENCE_STATUS).strip().lower()
     if normalized not in REFERENCE_LINK_STATUSES:
         raise ValueError("reference link status must be active or inactive")
+    return normalized
+
+
+def normalize_alias_status(status: Optional[str]) -> str:
+    normalized = (status or APPROVED_ALIAS_STATUS).strip().lower()
+    if normalized not in ALIAS_STATUSES:
+        raise ValueError("alias status must be approved, pending, needs_evidence, or rejected")
+    return normalized
+
+
+def _has_valid_cas_checksum(cas_number: str) -> bool:
+    if not _CAS_LIKE_RE.fullmatch(cas_number or ""):
+        return False
+    digits = cas_number.replace("-", "")
+    check_digit = int(digits[-1])
+    checksum = sum(
+        int(digit) * multiplier
+        for multiplier, digit in enumerate(reversed(digits[:-1]), start=1)
+    )
+    return checksum % 10 == check_digit
+
+
+def normalize_valid_cas_for_store(cas_number: Optional[str]) -> str:
+    normalized = (cas_number or "").strip()
+    if not _has_valid_cas_checksum(normalized):
+        raise ValueError("valid CAS number with checksum is required")
+    return normalized
+
+
+def public_manual_entry_or_none(entry: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    if not entry:
+        return None
+    cas_number = str(entry.get("cas_number") or "").strip()
+    if not _has_valid_cas_checksum(cas_number):
+        return None
+    public_entry = dict(entry)
+    name_zh = public_entry.get("name_zh")
+    if name_zh and not _CJK_RE.search(str(name_zh)):
+        public_entry["name_zh"] = None
+    return public_entry
+
+
+def public_alias_or_none(alias: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    if not alias:
+        return None
+    cas_number = str(alias.get("cas_number") or "").strip()
+    if not _has_valid_cas_checksum(cas_number):
+        return None
+    return dict(alias)
+
+
+def _safe_reference_url_for_store(url: str) -> str:
+    normalized = (url or "").strip()
+    parsed = urlparse(normalized)
+    if parsed.scheme.lower() not in _SAFE_REFERENCE_SCHEMES or not parsed.netloc:
+        raise ValueError("reference link URL must be a safe http(s) URL")
+    return normalized
+
+
+def _safe_reference_type_for_store(link_type: str) -> str:
+    normalized = (link_type or "").strip().lower()
+    if normalized not in _REFERENCE_LINK_TYPES:
+        raise ValueError("reference link type must be sds, regulatory, occupational, or reference")
     return normalized
 
 
@@ -497,9 +563,12 @@ class PilotStore:
         status: str = APPROVED_MANUAL_ENTRY_STATUS,
     ) -> dict[str, Any]:
         updated_at = utc_now_iso()
+        cas_number = normalize_valid_cas_for_store(cas_number)
         status = normalize_manual_entry_status(status)
         name_en_norm = normalize_query_text(name_en, locale="en") if name_en else ""
         name_zh_norm = normalize_query_text(name_zh, locale="zh") if name_zh else ""
+        if name_zh and not _CJK_RE.search(name_zh):
+            raise ValueError("name_zh must contain CJK text")
         name_en_compact = normalize_compact_text(name_en, locale="en") if name_en else ""
         name_zh_compact = normalize_compact_text(name_zh, locale="zh") if name_zh else ""
         with self._lock:
@@ -646,7 +715,12 @@ class PilotStore:
             sql,
             params,
         )
-        return dict(row) if row is not None else None
+        if row is None:
+            return None
+        entry = dict(row)
+        if include_unapproved:
+            return entry
+        return public_manual_entry_or_none(entry)
 
     def get_manual_entry_by_name(
         self,
@@ -683,7 +757,10 @@ class PilotStore:
             [normalized, *status_params],
         )
         if row is not None:
-            return dict(row)
+            entry = dict(row)
+            if include_unapproved:
+                return entry
+            return public_manual_entry_or_none(entry)
 
         if allow_compact and compact:
             row = self._fetchone(
@@ -697,7 +774,10 @@ class PilotStore:
                 [compact, *status_params],
             )
             if row is not None:
-                return dict(row)
+                entry = dict(row)
+                if include_unapproved:
+                    return entry
+                return public_manual_entry_or_none(entry)
         return None
 
     def list_manual_entries(
@@ -705,6 +785,7 @@ class PilotStore:
         *,
         status: Optional[str] = None,
         limit: Optional[int] = None,
+        public_only: bool = False,
     ) -> list[dict[str, Any]]:
         sql = """
             SELECT cas_number, name_en, name_zh, notes, source, status, updated_at
@@ -722,7 +803,15 @@ class PilotStore:
             sql,
             params,
         )
-        return [dict(row) for row in rows]
+        entries = [dict(row) for row in rows]
+        if not public_only:
+            return entries
+        public_entries = []
+        for entry in entries:
+            public_entry = public_manual_entry_or_none(entry)
+            if public_entry is not None:
+                public_entries.append(public_entry)
+        return public_entries
 
     # Alias workflow ------------------------------------------------------
     def upsert_alias(
@@ -739,6 +828,11 @@ class PilotStore:
         alias_text = (alias_text or "").strip()
         if not alias_text:
             return None
+        locale = (locale or "").strip().lower()
+        if locale not in {"en", "zh"}:
+            raise ValueError("alias locale must be en or zh")
+        cas_number = normalize_valid_cas_for_store(cas_number)
+        status = normalize_alias_status(status)
 
         alias_norm = normalize_compact_text(alias_text, locale=locale)
         if not alias_norm:
@@ -891,7 +985,10 @@ class PilotStore:
                 )
                 conn.commit()
 
-        return dict(row)
+        alias = dict(row)
+        if statuses and APPROVED_ALIAS_STATUS in statuses:
+            return public_alias_or_none(alias)
+        return alias
 
     def list_aliases(
         self,
@@ -900,6 +997,7 @@ class PilotStore:
         locale: Optional[str] = None,
         cas_number: Optional[str] = None,
         limit: Optional[int] = None,
+        public_only: bool = False,
     ) -> list[dict[str, Any]]:
         sql = """
             SELECT id, alias_text, locale, cas_number, source, confidence, status, notes, first_seen_at, last_seen_at, hit_count
@@ -921,7 +1019,15 @@ class PilotStore:
             sql += " LIMIT ?"
             params.append(int(limit))
         rows = self._fetchall(sql, params)
-        return [dict(row) for row in rows]
+        aliases = [dict(row) for row in rows]
+        if not public_only:
+            return aliases
+        public_aliases = []
+        for alias in aliases:
+            public_alias = public_alias_or_none(alias)
+            if public_alias is not None:
+                public_aliases.append(public_alias)
+        return public_aliases
 
     def capture_alias_candidates(
         self,
@@ -1263,10 +1369,10 @@ class PilotStore:
         status: str = ACTIVE_REFERENCE_STATUS,
         cid: Optional[int] = None,
     ) -> Optional[dict[str, Any]]:
-        cas_number = (cas_number or "").strip()
-        url = (url or "").strip()
+        cas_number = normalize_valid_cas_for_store(cas_number)
+        url = _safe_reference_url_for_store(url)
         label = (label or "").strip()
-        link_type = (link_type or "").strip()
+        link_type = _safe_reference_type_for_store(link_type)
         if not cas_number or not url or not label or not link_type:
             return None
         status = normalize_reference_link_status(status)

@@ -3,7 +3,15 @@ import os from "node:os";
 import path from "node:path";
 
 const env = process.env;
+const expectedGitSha = (
+  env.PRINT_QA_EXPECTED_GIT_SHA ||
+  env.PRODUCTION_HEALTH_EXPECTED_GIT_SHA ||
+  env.GITHUB_SHA ||
+  ""
+).trim();
 const requireProductBlocks = env.PRINT_QA_REQUIRE_PRODUCT_BLOCKS === "1";
+const requireDeploymentFreshness =
+  env.PRINT_QA_REQUIRE_DEPLOYMENT_FRESHNESS === "1" || Boolean(expectedGitSha);
 const buildDir = path.resolve(process.cwd(), "build");
 const outputPath = path.resolve(
   process.cwd(),
@@ -458,15 +466,17 @@ const isPassingOrAbsentReport = (report) =>
 
 const handoffReportsPassing =
   reports.handoff.length > 0 && reports.handoff.every(isPassingReport);
+const deploymentFreshnessPassing =
+  isPassingReport(reports.health) && isPassingOrAbsentReport(reports.deployment);
 
 const buildProductBlocks = () => [
   {
     id: "deployment-freshness",
     name: "Production deployment freshness",
     reports: [reports.deployment.name, reports.health.name],
-    ok: isPassingOrAbsentReport(reports.deployment) && isPassingReport(reports.health),
+    ok: deploymentFreshnessPassing,
     evidence:
-      "Production deployment freshness is proven when Zeabur has a running deployment for the expected commit and production health/build metadata matches the deployed app.",
+      "Production deployment freshness is proven by production health/build metadata; Zeabur deployment state is included when CLI auth is available.",
   },
   {
     id: "production-availability",
@@ -548,21 +558,31 @@ const buildProductBlocks = () => [
 
 const productBlocks = buildProductBlocks();
 const incompleteProductBlocks = productBlocks.filter((block) => !block.ok);
+const failedRequiredFreshnessBlocks = requireDeploymentFreshness
+  ? productBlocks.filter((block) =>
+      ["deployment-freshness", "production-availability"].includes(block.id),
+    ).filter((block) => !block.ok)
+  : [];
 const failedProductBlocks = requireProductBlocks ? incompleteProductBlocks : [];
 
 const result = {
   ok:
     failedReports.length === 0 &&
+    failedRequiredFreshnessBlocks.length === 0 &&
     (!requireProductBlocks || failedProductBlocks.length === 0),
   generatedAt: new Date().toISOString(),
   reportPath: outputPath,
   requireProductBlocks,
+  requireDeploymentFreshness,
   reports,
   productBlocks,
   summary: {
     presentReports: presentReports.length,
     failedReports: failedReports.length,
     failedReportNames: failedReports.map((report) => report.name),
+    failedRequiredFreshnessBlocks: failedRequiredFreshnessBlocks.map(
+      (block) => block.id,
+    ),
     failedProductBlocks: failedProductBlocks.map((block) => block.id),
     incompleteProductBlocks: incompleteProductBlocks.map((block) => block.id),
     actionableFailures,
@@ -588,6 +608,6 @@ console.log(
   ),
 );
 
-if (!result.ok && requireProductBlocks) {
+if (!result.ok && (requireProductBlocks || requireDeploymentFreshness)) {
   process.exitCode = 1;
 }

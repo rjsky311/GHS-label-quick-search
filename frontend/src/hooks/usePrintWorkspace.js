@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  arePrintLabelConfigsEqual,
   DEFAULT_LABEL_CONFIG,
   normalizePrintLabelConfig,
 } from "@/constants/labelStocks";
@@ -52,7 +53,8 @@ export default function usePrintWorkspace() {
     setLabelConfigState((prev) => {
       const resolved =
         typeof nextConfig === "function" ? nextConfig(prev) : nextConfig;
-      return normalizePrintLabelConfig(resolved);
+      const normalized = normalizePrintLabelConfig(resolved);
+      return arePrintLabelConfigsEqual(prev, normalized) ? prev : normalized;
     });
   }, []);
 

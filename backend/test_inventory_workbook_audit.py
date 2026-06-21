@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+import csv
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -10,6 +11,7 @@ from inventory_workbook_audit import (
     has_valid_cas_checksum,
     normalize_cas_token_detailed,
 )
+from export_helpers import spreadsheet_safe
 
 
 def save_workbook(path: Path, sheets: list[tuple[str, list[list[object]]]]) -> Path:
@@ -267,3 +269,51 @@ def test_inventory_workbook_audit_cli_writes_handoff_packet(tmp_path):
         encoding="utf-8-sig"
     )
     assert "review-only" in (handoff_dir / "README.md").read_text(encoding="utf-8")
+
+
+def test_inventory_workbook_handoff_csv_neutralizes_formula_values(tmp_path):
+    workbook_path = save_workbook(
+        tmp_path / "handoff-formula.xlsx",
+        [
+            (
+                "Inventory",
+                [
+                    ["CAS", "Name", "\u4e2d\u6587\u540d"],
+                    ["123-45-5", "@HYPERLINK(\"https://bad.example\",\"click\")", "\u5f85\u5be9\u4e2d\u6587\u540d"],
+                    ["111-11-5", "+cmd|calc", "\u53e6\u4e00\u500b\u5f85\u5be9\u540d"],
+                    ["333-33-5", "-1+1", "\u7b2c\u56db\u500b\u5f85\u5be9\u540d"],
+                ],
+            )
+        ],
+    )
+    handoff_dir = tmp_path / "handoff"
+
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/audit_inventory_workbook.py",
+            str(workbook_path),
+            "--handoff-dir",
+            str(handoff_dir),
+            "--max-examples",
+            "5",
+        ],
+        cwd=Path(__file__).parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    csv_path = handoff_dir / "workbook-chinese-name-candidates.csv"
+    with csv_path.open(encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    neutralized_names = {row["name_en"] for row in rows}
+    assert spreadsheet_safe("=HYPERLINK(\"https://bad.example\",\"click\")").startswith(
+        "'=HYPERLINK"
+    )
+    assert spreadsheet_safe("\tmalicious").startswith("'\tmalicious")
+    assert spreadsheet_safe("\rmalicious").startswith("'\rmalicious")
+    assert any(name.startswith("'@HYPERLINK") for name in neutralized_names)
+    assert any(name.startswith("'+cmd") for name in neutralized_names)
+    assert any(name.startswith("'-1+1") for name in neutralized_names)

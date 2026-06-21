@@ -2,6 +2,9 @@ FROM python:3.11-slim
 LABEL "language"="python"
 LABEL "framework"="fastapi"
 
+ARG BUILD_GIT_SHA=""
+ENV BUILD_GIT_SHA=${BUILD_GIT_SHA}
+
 WORKDIR /app
 
 # Install dependencies from backend directory

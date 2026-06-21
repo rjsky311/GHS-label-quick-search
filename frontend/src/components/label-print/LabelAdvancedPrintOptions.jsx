@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Settings2 } from "lucide-react";
+import { CalendarDays, Settings2 } from "lucide-react";
 import {
   ConfigButtonGrid,
 } from "@/components/label-print/LabelPrintConfigControls";
@@ -8,66 +8,6 @@ import {
   SIZE_OPTIONS,
   TEMPLATE_OPTIONS,
 } from "@/components/label-print/labelPrintModalOptions";
-
-function TemplateOverrideControls({ labelConfig, updateVisualConfig, t, tx }) {
-  return (
-    <details
-      className="notebook-print-settings-section rounded-md p-3"
-      data-testid="advanced-template-controls"
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-[hsl(var(--notebook-ink))]">
-        <FileText className="h-4 w-4 text-[hsl(var(--notebook-action))]" />
-        {tx("label.templateOverrideTitle", "Template override")}
-      </summary>
-      <p className="mt-2 text-xs text-[hsl(var(--notebook-muted-ink))]">
-        {tx(
-          "label.templateOverrideHint",
-          "Purpose presets choose the recommended template automatically; override only for a special label job.",
-        )}
-      </p>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
-        {TEMPLATE_OPTIONS.map((template) => {
-          const Icon = template.icon;
-          const selected = labelConfig.template === template.value;
-
-          return (
-            <button
-              key={template.value}
-              type="button"
-              onClick={() => updateVisualConfig({ template: template.value })}
-              className={`rounded-md border p-3 text-left transition-colors ${
-                selected
-                  ? "border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft)/0.62)]"
-                  : "border-[hsl(var(--notebook-rule)/0.72)] bg-[hsl(var(--notebook-surface)/0.62)] hover:border-[hsl(var(--notebook-action-border)/0.72)] hover:bg-[hsl(var(--notebook-action-soft)/0.36)]"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="rounded-md bg-[hsl(var(--notebook-action-soft)/0.58)] p-2 text-[hsl(var(--notebook-action))]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span
-                  className={`font-medium ${
-                    selected
-                      ? "text-[hsl(var(--notebook-action))]"
-                      : "text-[hsl(var(--notebook-ink))]"
-                  }`}
-                >
-                  {t(template.labelKey)}
-                </span>
-              </div>
-              <div className="mt-2 text-sm text-[hsl(var(--notebook-muted-ink))]">
-                {t(template.descKey)}
-              </div>
-              <div className="mt-2 text-xs text-[hsl(var(--notebook-muted-ink))]">
-                {t(template.tipKey)}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </details>
-  );
-}
 
 function NumberField({ field, onChange }) {
   return (
@@ -358,7 +298,6 @@ export default function LabelAdvancedPrintOptions({
   visibleRecentPrints,
   currentLocale,
   formatPrintTimestamp,
-  updateVisualConfig,
   updateLayoutConfig,
   onCustomLabelFieldsChange,
   onLoadTemplate,
@@ -384,7 +323,7 @@ export default function LabelAdvancedPrintOptions({
             <span className="mt-0.5 block text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
               {tx(
                 "label.advancedPrintOptionsSummary",
-                "Templates, calibration, saved jobs, and optional fields.",
+                "Calibration, saved jobs, and optional fields.",
               )}
             </span>
           </span>
@@ -393,16 +332,10 @@ export default function LabelAdvancedPrintOptions({
       <p className="mt-3 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
         {tx(
           "label.advancedPrintOptionsHint",
-          "Template overrides, density, calibration, custom fields, and saved jobs are kept here so the main workflow stays focused on choosing and printing the right label.",
+          "Density, calibration, custom fields, and saved jobs are kept here so the main workflow stays focused on choosing and printing the right label.",
         )}
       </p>
       <div className="mt-4 space-y-3">
-        <TemplateOverrideControls
-          labelConfig={labelConfig}
-          updateVisualConfig={updateVisualConfig}
-          t={t}
-          tx={tx}
-        />
         <AdvancedLayoutControls
           labelConfig={labelConfig}
           layoutProfile={layoutProfile}

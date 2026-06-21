@@ -103,25 +103,25 @@ def test_discovers_approved_manual_candidate_but_ignores_pending(tmp_path):
     store = make_store(tmp_path)
     try:
         store.upsert_dictionary_entry(
-            "123-45-6",
+            "123-45-5",
             name_en="Reviewed Solvent",
             name_zh="\u5be9\u6838\u6eb6\u5291",
             status="approved",
         )
         store.upsert_dictionary_entry(
-            "234-56-7",
+            "234-56-0",
             name_en="Pending Solvent",
             name_zh="\u5f85\u5be9\u6eb6\u5291",
             status="pending",
         )
 
         approved = discover_candidates_for_item(
-            cas_number="123-45-6",
+            cas_number="123-45-5",
             store=store,
             sources=("manual",),
         )
         pending = discover_candidates_for_item(
-            cas_number="234-56-7",
+            cas_number="234-56-0",
             store=store,
             sources=("manual",),
         )

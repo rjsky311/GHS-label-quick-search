@@ -357,6 +357,37 @@ async def test_dictionary_correction_request_records_public_intake(monkeypatch):
     }
 
 
+async def test_dictionary_correction_request_ignores_client_controlled_source(monkeypatch):
+    captured = {}
+
+    def fake_record_correction_request(**payload):
+        captured.update(payload)
+        return {"id": 9, **payload, "status": "open"}
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "record_correction_request",
+        fake_record_correction_request,
+    )
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/correction-requests",
+            json={
+                "issue_type": "other-data-quality",
+                "cas_number": "64-17-5",
+                "chemical_name": "Ethanol",
+                "current_output": "Wrong display",
+                "expected_output": "Needs review",
+                "source": "inventory-workbook-audit",
+            },
+        )
+
+    assert response.status_code == 200
+    assert captured["source"] == "public"
+
+
 def test_dictionary_correction_request_endpoint_is_rate_limited():
     limits = route_limits_for("create_dictionary_correction_request")
     assert any(
@@ -2155,6 +2186,14 @@ class _FakeResponse:
         return self._json
 
 
+class _InvalidJsonResponse(_FakeResponse):
+    def __init__(self, status_code=200, headers=None):
+        super().__init__(status_code, headers=headers)
+
+    def json(self):
+        raise ValueError("invalid json")
+
+
 class _ScriptedClient:
     """Scripted httpx replacement. Each `get` call pops the next entry
     from `.script`. Entries may be:
@@ -2212,6 +2251,28 @@ async def test_pubchem_get_json_retries_503_then_succeeds():
     assert status == 200
     assert data == {"ok": True}
     assert client.calls == 2
+
+
+async def test_pubchem_get_json_retries_200_invalid_json_then_succeeds():
+    client = _ScriptedClient([
+        _InvalidJsonResponse(),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert data == {"ok": True}
+    assert client.calls == 2
+
+
+async def test_pubchem_get_json_raises_after_200_invalid_json_retries_exhausted():
+    client = _ScriptedClient([
+        _InvalidJsonResponse(),
+        _InvalidJsonResponse(),
+        _InvalidJsonResponse(),
+    ])
+    with pytest.raises(PubChemError):
+        await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert client.calls == 3
 
 
 async def test_pubchem_get_json_retries_429_with_retry_after():
@@ -2288,6 +2349,34 @@ async def test_search_chemical_surfaces_upstream_error_on_ghs_outage(monkeypatch
     assert result.ghs_pictograms == []
     assert result.hazard_statements == []
     assert "PubChem 暫時無法回應" in (result.error or "")
+
+
+async def test_search_chemical_surfaces_upstream_error_on_invalid_ghs_json(monkeypatch):
+    """A PubChem 200 response with malformed JSON is still an upstream
+    failure. It must never become found=True with empty hazards."""
+    import server as srv
+
+    async def fake_get_cid(*_a, **_k):
+        return 702
+
+    async def fake_get_name(*_a, **_k):
+        return ("Ethanol", "乙醇")
+
+    monkeypatch.setattr(srv, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(srv, "get_compound_name", fake_get_name)
+
+    client = _ScriptedClient([
+        _InvalidJsonResponse(),
+        _InvalidJsonResponse(),
+        _InvalidJsonResponse(),
+    ])
+
+    result = await srv.search_chemical("64-17-5", client)
+
+    assert result.found is False
+    assert result.upstream_error is True
+    assert result.ghs_pictograms == []
+    assert result.hazard_statements == []
 
 
 async def test_search_chemical_skips_name_lookup_when_dictionary_has_display_names(monkeypatch):

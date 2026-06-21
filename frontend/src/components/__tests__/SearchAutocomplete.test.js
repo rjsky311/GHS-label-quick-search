@@ -278,6 +278,43 @@ describe('SearchAutocomplete', () => {
       expect(onSearch).toHaveBeenCalled();
     });
 
+    it('Enter does not start a second search while parent search is loading', () => {
+      const onSearch = jest.fn();
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="unknown"
+          onSearch={onSearch}
+          loading={true}
+        />
+      );
+
+      fireEvent.keyDown(screen.getByTestId('single-cas-input'), { key: 'Enter' });
+
+      expect(onSearch).not.toHaveBeenCalled();
+    });
+
+    it('selecting a suggestion does not start a second search while parent search is loading', () => {
+      const onChange = jest.fn();
+      const onSearch = jest.fn();
+      render(
+        <SearchAutocomplete
+          {...defaultProps}
+          value="ol"
+          onChange={onChange}
+          onSearch={onSearch}
+          favorites={favItems}
+          loading={true}
+        />
+      );
+
+      fireEvent.focus(screen.getByTestId('single-cas-input'));
+      fireEvent.click(screen.getByText('64-17-5').closest('[role="option"]'));
+
+      expect(onChange).not.toHaveBeenCalled();
+      expect(onSearch).not.toHaveBeenCalled();
+    });
+
     it('Enter with active suggestion selects it', () => {
       const { input, onChange, onSearch } = renderWithSuggestions();
       fireEvent.keyDown(input, { key: 'ArrowDown' }); // activeIndex = 0

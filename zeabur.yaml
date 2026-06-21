@@ -12,6 +12,9 @@ services:
       # with an explicit comma-separated list for multi-origin deploys.
       # `*` is rejected at runtime because it is unsafe for a public API.
       - CORS_ORIGINS=${CORS_ORIGINS:-https://ghs-frontend.zeabur.app}
+      # Surface the deployment commit to /api/health even when the runtime
+      # image does not contain a .git directory.
+      - BUILD_GIT_SHA=${ZEABUR_GIT_COMMIT_SHA}
     healthcheck:
       path: /api/health
       port: 8001

@@ -1384,9 +1384,7 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("advanced-layout-controls").tagName).toBe(
       "DETAILS",
     );
-    expect(screen.getByTestId("advanced-template-controls").tagName).toBe(
-      "DETAILS",
-    );
+    expect(screen.queryByTestId("advanced-template-controls")).not.toBeInTheDocument();
     expect(screen.getByTestId("advanced-custom-fields").tagName).toBe(
       "DETAILS",
     );
@@ -1395,9 +1393,6 @@ describe("LabelPrintModal", () => {
     );
     expect(advancedOptions).toContainElement(
       screen.getByTestId("advanced-layout-controls"),
-    );
-    expect(advancedOptions).toContainElement(
-      screen.getByTestId("advanced-template-controls"),
     );
     expect(advancedOptions).toContainElement(
       screen.getByTestId("advanced-custom-fields"),
@@ -1469,6 +1464,37 @@ describe("LabelPrintModal", () => {
     expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
     expect(props.onPrintLabels).toHaveBeenCalledWith(
       expect.objectContaining({ stockPreset: "small-strip", template: "icon" }),
+      undefined,
+    );
+  });
+
+  it("sanitizes legacy A4 complete label configs back to the full template before printing", () => {
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "shipping",
+        template: "standard",
+        stockPreset: "a4-primary",
+        labelWidthMm: 188,
+        labelHeightMm: 268,
+        perPage: 1,
+      },
+      labProfile: {
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+
+    fireEvent.click(screen.getByTestId("print-label-action"));
+
+    expect(props.onPrintLabels).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labelPurpose: "shipping",
+        stockPreset: "a4-primary",
+        template: "full",
+      }),
       undefined,
     );
   });
@@ -2522,15 +2548,12 @@ describe("LabelPrintModal", () => {
     expect(screen.getByText("label.noneSelected")).toBeInTheDocument();
   });
 
-  it("updates template and color config controls", () => {
+  it("updates color config controls without exposing template overrides", () => {
     const { props } = renderModal();
 
-    fireEvent.click(screen.getByText("label.templateIcon"));
     fireEvent.click(screen.getByText("label.colorBW"));
 
-    expect(props.onLabelConfigChange).toHaveBeenCalledWith(
-      expect.objectContaining({ template: "icon" }),
-    );
+    expect(screen.queryByText("label.templateIcon")).not.toBeInTheDocument();
     expect(props.onLabelConfigChange).toHaveBeenCalledWith(
       expect.objectContaining({ colorMode: "bw" }),
     );

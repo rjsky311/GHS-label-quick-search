@@ -166,6 +166,19 @@ function App() {
   // ── Refs ──
   const searchInputRef = useRef(null);
   const hydratedLookupQueryRef = useRef(false);
+  const singleSearchRequestRef = useRef(0);
+  const singleSearchAbortRef = useRef(null);
+  const batchSearchRequestRef = useRef(0);
+  const batchSearchAbortRef = useRef(null);
+  const batchProgressClearTimeoutRef = useRef(null);
+
+  const isCanceledRequest = useCallback(
+    (error) =>
+      error?.name === "CanceledError" ||
+      error?.code === "ERR_CANCELED" ||
+      axios.isCancel?.(error),
+    [],
+  );
 
   // ── Custom Hooks ──
   const { history, saveToHistory, clearHistory } = useSearchHistory();
@@ -285,6 +298,13 @@ function App() {
   // ── Keyboard Shortcut: "/" or Ctrl+K to focus search ──
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const modalIsOpen = Boolean(
+        document.querySelector(
+          '[role="dialog"][aria-modal="true"], .modal-viewport-overlay',
+        ),
+      );
+      if (modalIsOpen) return;
+
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -491,21 +511,40 @@ function App() {
     }
     setError("");
     setLoading(true);
+    singleSearchAbortRef.current?.abort?.();
+    const controller = new AbortController();
+    singleSearchAbortRef.current = controller;
+    const requestId = singleSearchRequestRef.current + 1;
+    singleSearchRequestRef.current = requestId;
     try {
       const response = await axios.get(`${API}/search-single`, {
         params: { q: query },
+        signal: controller.signal,
       });
+      if (singleSearchRequestRef.current !== requestId) return;
       const result = response.data;
       replaceResultsView([result]);
       saveToHistory([result]);
       logUnresolvedSearch(query, "single", result, { activeTab: "single" });
     } catch (e) {
+      if (isCanceledRequest(e)) return;
+      if (singleSearchRequestRef.current !== requestId) return;
       console.error(e);
       setError(t("search.errorSingle"));
     } finally {
-      setLoading(false);
+      if (singleSearchRequestRef.current === requestId) {
+        setLoading(false);
+        singleSearchAbortRef.current = null;
+      }
     }
-  }, [singleCas, t, replaceResultsView, saveToHistory, logUnresolvedSearch]);
+  }, [
+    singleCas,
+    t,
+    replaceResultsView,
+    saveToHistory,
+    logUnresolvedSearch,
+    isCanceledRequest,
+  ]);
 
   const searchBatch = async () => {
     if (!batchCas.trim()) {
@@ -546,11 +585,23 @@ function App() {
     }
 
     logBatchInputNormalization("sent");
+    if (batchProgressClearTimeoutRef.current) {
+      clearTimeout(batchProgressClearTimeoutRef.current);
+      batchProgressClearTimeoutRef.current = null;
+    }
     setBatchProgress({ current: 0, total: casNumbers.length });
+    batchSearchAbortRef.current?.abort?.();
+    const controller = new AbortController();
+    batchSearchAbortRef.current = controller;
+    const requestId = batchSearchRequestRef.current + 1;
+    batchSearchRequestRef.current = requestId;
     try {
       const response = await axios.post(`${API}/search`, {
         cas_numbers: casNumbers,
+      }, {
+        signal: controller.signal,
       });
+      if (batchSearchRequestRef.current !== requestId) return;
       const batchResults = Array.isArray(response.data) ? response.data : [];
       setBatchProgress({ current: casNumbers.length, total: casNumbers.length });
       replaceResultsView(batchResults);
@@ -563,11 +614,21 @@ function App() {
         });
       });
     } catch (e) {
+      if (isCanceledRequest(e)) return;
+      if (batchSearchRequestRef.current !== requestId) return;
       console.error(e);
       setError(t("search.errorBatch"));
     } finally {
-      setLoading(false);
-      setTimeout(() => setBatchProgress(null), 800);
+      if (batchSearchRequestRef.current === requestId) {
+        setLoading(false);
+        batchSearchAbortRef.current = null;
+        batchProgressClearTimeoutRef.current = setTimeout(() => {
+          if (batchSearchRequestRef.current === requestId) {
+            setBatchProgress(null);
+          }
+          batchProgressClearTimeoutRef.current = null;
+        }, 800);
+      }
     }
   };
 

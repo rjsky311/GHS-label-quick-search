@@ -134,6 +134,47 @@ describe("printBatchPlanner", () => {
     ).toBe(BATCH_PRINT_ITEM_CATEGORY.READY);
   });
 
+  it("excludes QR small-label items that would need more than two same-stock labels", () => {
+    const overLimitChemical = {
+      ...batchPrintMixedFixture50[0],
+      cas_number: "999999-99-9",
+      found: true,
+      upstream_error: false,
+      ghs_pictograms: Array.from({ length: 19 }, (_, index) => ({
+        code: `GHS${String(index + 1).padStart(2, "0")}`,
+      })),
+      hazard_statements: [],
+      precautionary_statements: [],
+    };
+
+    const plan = buildBatchPrintPlan({
+      selectedForLabel: [overLimitChemical],
+      layout: resolvePrintLayoutConfig({
+        stockPreset: "brother-62mm-continuous",
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        nameDisplay: "both",
+      }),
+      purpose: BATCH_PRINT_PURPOSE.SUPPLEMENTAL,
+      resolvedLabProfile: {},
+      locale: "en-US",
+    });
+
+    expect(plan.summary.counts[BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT]).toBe(1);
+    expect(plan.summary.printableByDefault).toBe(0);
+    expect(plan.items[0]).toEqual(
+      expect.objectContaining({
+        category: BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT,
+        reason: expect.objectContaining({
+          type: "small-label-continuation-limit",
+          pageCount: 3,
+          maxLabels: 2,
+        }),
+      }),
+    );
+    expect(buildBatchPrintableItems(plan)).toEqual([]);
+  });
+
   it("does not let one dense complete-primary item block printable same-stock items", () => {
     const plan = buildBatchPrintPlan({
       selectedForLabel: batchPrintMixedFixture50,

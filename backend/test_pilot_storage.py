@@ -35,15 +35,16 @@ def test_workspace_document_roundtrip(tmp_path):
 def test_dictionary_entry_alias_and_reference_roundtrip(tmp_path):
     store = make_store(tmp_path)
     try:
+        cas_number = "123-45-5"
         store.upsert_dictionary_entry(
-            "123-45-6",
+            cas_number,
             name_en="Custom Buffer",
             name_zh="自訂緩衝液",
             notes="pilot entry",
         )
-        store.upsert_alias("Buffer X", "en", "123-45-6", status="approved")
+        store.upsert_alias("Buffer X", "en", cas_number, status="approved")
         store.upsert_reference_link(
-            "123-45-6",
+            cas_number,
             label="Internal SDS",
             url="https://lab.example/internal-sds",
             link_type="sds",
@@ -57,14 +58,65 @@ def test_dictionary_entry_alias_and_reference_roundtrip(tmp_path):
             include_unapproved=True,
         )
         alias = store.get_alias_exact("buffer x", "en")
-        links = store.list_reference_links("123-45-6")
+        links = store.list_reference_links(cas_number)
 
         assert manual is not None
-        assert manual["cas_number"] == "123-45-6"
+        assert manual["cas_number"] == cas_number
         assert manual_admin["status"] == "approved"
         assert alias is not None
-        assert alias["cas_number"] == "123-45-6"
+        assert alias["cas_number"] == cas_number
         assert links[0]["label"] == "Internal SDS"
+    finally:
+        store.close()
+
+
+def test_pilot_store_rejects_invalid_manual_dictionary_writes(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        with pytest.raises(ValueError, match="valid CAS"):
+            store.upsert_dictionary_entry(
+                "123-45-6",
+                name_en="Invalid checksum",
+                name_zh="\u932f\u8aa4",
+                status="approved",
+            )
+
+        with pytest.raises(ValueError, match="name_zh"):
+            store.upsert_dictionary_entry(
+                "123-45-5",
+                name_en="English Display",
+                name_zh="English Display",
+                status="approved",
+            )
+
+        with pytest.raises(ValueError, match="manual entry status"):
+            store.upsert_dictionary_entry(
+                "123-45-5",
+                name_en="Review Buffer",
+                name_zh="\u5be9\u6838",
+                status="draft",
+            )
+    finally:
+        store.close()
+
+
+def test_pilot_store_rejects_invalid_alias_and_reference_writes(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        with pytest.raises(ValueError, match="valid CAS"):
+            store.upsert_alias("Bad CAS Alias", "en", "123-45-6", status="approved")
+
+        with pytest.raises(ValueError, match="alias status"):
+            store.upsert_alias("Bad Status", "en", "123-45-5", status="draft")
+
+        with pytest.raises(ValueError, match="reference link URL"):
+            store.upsert_reference_link(
+                "123-45-5",
+                label="Unsafe link",
+                url="javascript:alert(1)",
+                link_type="sds",
+                status="active",
+            )
     finally:
         store.close()
 
@@ -172,7 +224,7 @@ def test_dictionary_entry_status_migration_defaults_legacy_rows(tmp_path):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                "777-77-7",
+                "777-77-5",
                 "Legacy Buffer",
                 "\u820a\u7de9\u885d\u6db2",
                 "legacy buffer",
@@ -190,11 +242,235 @@ def test_dictionary_entry_status_migration_defaults_legacy_rows(tmp_path):
 
     store = PilotStore(db_path).connect()
     try:
-        migrated = store.get_manual_entry_by_cas("777-77-7")
+        migrated = store.get_manual_entry_by_cas("777-77-5")
 
         assert migrated is not None
         assert migrated["status"] == "approved"
         assert store.get_dictionary_summary()["approvedManualEntryCount"] == 1
+    finally:
+        store.close()
+
+
+def test_legacy_invalid_manual_entry_is_filtered_from_public_lookup(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        conn = store._require_conn()
+        conn.execute(
+            """
+            INSERT INTO dictionary_entries(
+              cas_number,
+              name_en,
+              name_zh,
+              name_en_norm,
+              name_zh_norm,
+              name_en_compact,
+              name_zh_compact,
+              notes,
+              source,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "123-45-6",
+                "Legacy Invalid CAS",
+                "舊資料",
+                "legacy invalid cas",
+                "舊資料",
+                "legacyinvalidcas",
+                "舊資料",
+                "legacy row bypassed current validators",
+                "manual",
+                "approved",
+                "2026-05-21T00:00:00+00:00",
+            ),
+        )
+        conn.commit()
+
+        assert store.get_manual_entry_by_cas("123-45-6") is None
+        assert store.get_manual_entry_by_name("Legacy Invalid CAS", "en") is None
+        assert (
+            store.get_manual_entry_by_cas(
+                "123-45-6",
+                include_unapproved=True,
+            )["name_en"]
+            == "Legacy Invalid CAS"
+        )
+    finally:
+        store.close()
+
+
+def test_legacy_fake_chinese_name_is_removed_from_public_manual_entry(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        conn = store._require_conn()
+        conn.execute(
+            """
+            INSERT INTO dictionary_entries(
+              cas_number,
+              name_en,
+              name_zh,
+              name_en_norm,
+              name_zh_norm,
+              name_en_compact,
+              name_zh_compact,
+              notes,
+              source,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "123-45-5",
+                "Legacy Fake Chinese",
+                "Legacy Fake Chinese",
+                "legacy fake chinese",
+                "Legacy Fake Chinese",
+                "legacyfakechinese",
+                "LegacyFakeChinese",
+                "legacy row bypassed current validators",
+                "manual",
+                "approved",
+                "2026-05-21T00:00:00+00:00",
+            ),
+        )
+        conn.commit()
+
+        public_entry = store.get_manual_entry_by_cas("123-45-5")
+        admin_entry = store.get_manual_entry_by_cas(
+            "123-45-5",
+            include_unapproved=True,
+        )
+
+        assert public_entry is not None
+        assert public_entry["name_en"] == "Legacy Fake Chinese"
+        assert public_entry["name_zh"] is None
+        assert admin_entry["name_zh"] == "Legacy Fake Chinese"
+    finally:
+        store.close()
+
+
+def test_public_manual_and_alias_lists_filter_legacy_unsafe_rows(tmp_path):
+    store = make_store(tmp_path)
+    try:
+        conn = store._require_conn()
+        conn.execute(
+            """
+            INSERT INTO dictionary_entries(
+              cas_number,
+              name_en,
+              name_zh,
+              name_en_norm,
+              name_zh_norm,
+              name_en_compact,
+              name_zh_compact,
+              notes,
+              source,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "123-45-6",
+                "Legacy Invalid CAS",
+                "舊資料",
+                "legacy invalid cas",
+                "舊資料",
+                "legacyinvalidcas",
+                "舊資料",
+                "legacy row bypassed current validators",
+                "manual",
+                "approved",
+                "2026-05-21T00:00:00+00:00",
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO dictionary_entries(
+              cas_number,
+              name_en,
+              name_zh,
+              name_en_norm,
+              name_zh_norm,
+              name_en_compact,
+              name_zh_compact,
+              notes,
+              source,
+              status,
+              updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "123-45-5",
+                "Legacy Fake Chinese",
+                "Legacy Fake Chinese",
+                "legacy fake chinese",
+                "Legacy Fake Chinese",
+                "legacyfakechinese",
+                "LegacyFakeChinese",
+                "legacy row bypassed current validators",
+                "manual",
+                "approved",
+                "2026-05-21T00:00:00+00:00",
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO dictionary_aliases(
+              alias_text,
+              alias_norm,
+              locale,
+              cas_number,
+              source,
+              confidence,
+              status,
+              notes,
+              first_seen_at,
+              last_seen_at,
+              hit_count
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "Bad Legacy Alias",
+                "badlegacyalias",
+                "en",
+                "123-45-6",
+                "manual",
+                1.0,
+                "approved",
+                "legacy alias bypassed current validators",
+                "2026-05-21T00:00:00+00:00",
+                "2026-05-21T00:00:00+00:00",
+                1,
+            ),
+        )
+        conn.commit()
+
+        raw_entries = store.list_manual_entries(status="approved")
+        public_entries = store.list_manual_entries(
+            status="approved",
+            public_only=True,
+        )
+        raw_aliases = store.list_aliases(status="approved", locale="en")
+        public_aliases = store.list_aliases(
+            status="approved",
+            locale="en",
+            public_only=True,
+        )
+
+        assert any(entry["cas_number"] == "123-45-6" for entry in raw_entries)
+        assert all(entry["cas_number"] != "123-45-6" for entry in public_entries)
+        fake_entry = next(
+            entry for entry in public_entries if entry["cas_number"] == "123-45-5"
+        )
+        assert fake_entry["name_zh"] is None
+        assert any(alias["cas_number"] == "123-45-6" for alias in raw_aliases)
+        assert all(alias["cas_number"] != "123-45-6" for alias in public_aliases)
     finally:
         store.close()
 
@@ -363,7 +639,7 @@ def test_inventory_handoff_request_requires_approved_manual_entry_before_approva
         store.upsert_dictionary_entry(
             "7783-46-2",
             name_en="Lead fluoride",
-            name_zh="Different reviewed name",
+            name_zh="不同審核名稱",
             source="correction-request",
             status="approved",
         )

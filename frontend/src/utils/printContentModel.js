@@ -1,5 +1,6 @@
 import { resolvePrintContentPolicy } from "@/utils/printContentPolicy";
 import { resolveTrustedChineseName } from "@/utils/ghsText";
+import { applySelectedGhsClassification } from "@/utils/selectedGhsClassification";
 
 export const PRINT_LABEL_ELEMENT_STATUS = Object.freeze({
   PRESENT: "present",
@@ -23,43 +24,7 @@ export function resolveEffectiveChemicalForPrint(
   chemical,
   customGHSSettings,
 ) {
-  const customSetting = customGHSSettings?.[chemical.cas_number];
-
-  if (customSetting && customSetting.selectedIndex != null) {
-    const allClassifications = [
-      {
-        pictograms: chemical.ghs_pictograms || [],
-        hazard_statements: chemical.hazard_statements || [],
-        precautionary_statements: chemical.precautionary_statements || [],
-        signal_word: chemical.signal_word,
-        signal_word_zh: chemical.signal_word_zh,
-        source: chemical.primary_source,
-        report_count: chemical.primary_report_count,
-      },
-      ...(chemical.other_classifications || []),
-    ];
-
-    if (customSetting.selectedIndex < allClassifications.length) {
-      const selectedClassification =
-        allClassifications[customSetting.selectedIndex];
-      return {
-        ...chemical,
-        ghs_pictograms: selectedClassification.pictograms || [],
-        hazard_statements: selectedClassification.hazard_statements || [],
-        precautionary_statements:
-          selectedClassification.precautionary_statements || [],
-        signal_word: selectedClassification.signal_word,
-        signal_word_zh: selectedClassification.signal_word_zh,
-        primary_source: selectedClassification.source || chemical.primary_source,
-        primary_report_count:
-          selectedClassification.report_count || chemical.primary_report_count,
-        selected_classification_index: customSetting.selectedIndex,
-        customNote: customSetting.note,
-      };
-    }
-  }
-
-  return chemical;
+  return applySelectedGhsClassification(chemical, customGHSSettings);
 }
 
 export const countResponsibleProfileFields = (profile = {}) =>

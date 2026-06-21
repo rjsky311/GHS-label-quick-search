@@ -608,6 +608,23 @@ export default function ResultsTable({
       : <ArrowDown className="ml-1 inline h-3 w-3 text-blue-700" />;
   };
 
+  const ariaSortForColumn = (columnKey) => {
+    if (sortConfig.key !== columnKey) return "none";
+    return sortConfig.direction === "asc" ? "ascending" : "descending";
+  };
+
+  const SortHeaderButton = ({ columnKey, children }) => (
+    <button
+      type="button"
+      className="inline-flex w-full items-center justify-start gap-1 text-left text-xs font-semibold uppercase tracking-wider text-inherit hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+      onClick={() => onRequestSort(columnKey)}
+      title={t("sort.tooltip")}
+    >
+      {children}
+      <SortIcon columnKey={columnKey} />
+    </button>
+  );
+
   return (
     <div
       className="results-workbench notebook-surface notebook-results-sheet overflow-hidden rounded-md"
@@ -1091,28 +1108,31 @@ export default function ResultsTable({
                 {t("results.colFavorite")}
               </th>
               <th
-                className="w-28 cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
-                onClick={() => onRequestSort("cas_number")}
-                title={t("sort.tooltip")}
+                className="w-28 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600"
+                aria-sort={ariaSortForColumn("cas_number")}
               >
-                {t("results.colCAS")} <SortIcon columnKey="cas_number" />
+                <SortHeaderButton columnKey="cas_number">
+                  {t("results.colCAS")}
+                </SortHeaderButton>
               </th>
               <th
-                className="min-w-[200px] cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
-                onClick={() => onRequestSort("name")}
-                title={t("sort.tooltip")}
+                className="min-w-[200px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600"
+                aria-sort={ariaSortForColumn("name")}
               >
-                {t("results.colName")} <SortIcon columnKey="name" />
+                <SortHeaderButton columnKey="name">
+                  {t("results.colName")}
+                </SortHeaderButton>
               </th>
               <th className="w-72 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colGHS")}
               </th>
               <th
-                className="w-20 cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-950"
-                onClick={() => onRequestSort("signal_word")}
-                title={t("sort.tooltip")}
+                className="w-20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600"
+                aria-sort={ariaSortForColumn("signal_word")}
               >
-                {t("results.colSignalWord")} <SortIcon columnKey="signal_word" />
+                <SortHeaderButton columnKey="signal_word">
+                  {t("results.colSignalWord")}
+                </SortHeaderButton>
               </th>
               <th className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t("results.colAction")}

@@ -322,7 +322,9 @@ export default function DetailModal({
             <p className="mt-1 flex items-center gap-2 font-mono text-[hsl(var(--notebook-action))]">
               CAS: {result.cas_number}
               <button
+                type="button"
                 onClick={() => copyCAS(result.cas_number)}
+                aria-label={t("detail.copyCAS", { cas: result.cas_number })}
                 className="text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-[hsl(var(--notebook-action))]"
                 title={t("detail.copyCAS", { cas: result.cas_number })}
               >
@@ -332,7 +334,9 @@ export default function DetailModal({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => onToggleFavorite(result)}
+              aria-label={isFavorited(result.cas_number) ? t("favorites.removeFavorite") : t("favorites.addFavorite")}
               className={`transition-colors ${
                 isFavorited(result.cas_number)
                   ? "text-amber-500 hover:text-amber-600"
@@ -343,7 +347,9 @@ export default function DetailModal({
               <Star className={`w-6 h-6 ${isFavorited(result.cas_number) ? "fill-current" : ""}`} />
             </button>
             <button
+              type="button"
               onClick={onClose}
+              aria-label={t("common.close", { defaultValue: "Close" })}
               className="text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
               data-testid="close-modal-btn"
             >

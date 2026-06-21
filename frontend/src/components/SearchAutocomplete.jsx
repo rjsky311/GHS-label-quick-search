@@ -14,6 +14,7 @@ export default function SearchAutocomplete({
   history,
   favorites,
   searchInputRef,
+  loading = false,
 }) {
   const { t } = useTranslation();
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -153,13 +154,19 @@ export default function SearchAutocomplete({
   }, []);
 
   const handleSelect = useCallback((item) => {
+    if (loading) return;
     onChange(item.cas_number);
     setShowSuggestions(false);
     setServerResults([]);
     onSearch(item.cas_number);
-  }, [onChange, onSearch]);
+  }, [loading, onChange, onSearch]);
 
   const handleKeyDown = useCallback((e) => {
+    if (loading && e.key === "Enter") {
+      e.preventDefault();
+      return;
+    }
+
     if (!showSuggestions || allSuggestions.length === 0) {
       if (e.key === "Enter") onSearch();
       return;
@@ -189,7 +196,7 @@ export default function SearchAutocomplete({
       default:
         break;
     }
-  }, [showSuggestions, allSuggestions, activeIndex, handleSelect, onSearch]);
+  }, [loading, showSuggestions, allSuggestions, activeIndex, handleSelect, onSearch]);
 
   const hasDropdownContent = allSuggestions.length > 0 || serverLoading;
 

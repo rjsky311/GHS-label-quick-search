@@ -7,6 +7,12 @@ import {
   evaluatePrintReadiness,
   getMaxSupplementalPictogramCount,
 } from "@/utils/printFitEngine";
+import {
+  getPrintOutputIdForLayout,
+  getSmallLabelContinuationPolicy,
+  requiresSmallLabelRecovery,
+} from "@/utils/printOutputContract";
+import { splitCompactPictograms } from "@/utils/printRenderHelpers";
 import { resolveTrustedChineseName } from "@/utils/ghsText";
 
 export const BATCH_PRINT_PURPOSE = Object.freeze({
@@ -158,13 +164,44 @@ const dataIssueForContent = (content, purpose) => {
   return null;
 };
 
-const readinessIsPrintableForPurpose = (readiness, purpose) => {
+const getSmallLabelContinuationIssue = (readiness, layout = {}) => {
+  const outputId = getPrintOutputIdForLayout(layout, layout.template);
+  const policy = getSmallLabelContinuationPolicy(outputId);
+  if (!policy) return null;
+
+  const overLimitItems = (readiness.contents || [])
+    .map((content, index) => {
+      const pages = splitCompactPictograms(
+        content.pictograms || [],
+        layout,
+        layout.template,
+      );
+      return {
+        index,
+        cas: content.cas,
+        pageCount: pages.length,
+      };
+    })
+    .filter((item) => requiresSmallLabelRecovery(outputId, item.pageCount));
+
+  if (overLimitItems.length === 0) return null;
+
+  return buildReason("small-label-continuation-limit", {
+    outputId,
+    maxLabels: policy.maxLabels,
+    pageCount: Math.max(...overLimitItems.map((item) => item.pageCount)),
+    items: overLimitItems,
+  });
+};
+
+const readinessIsPrintableForPurpose = (readiness, purpose, layout = {}) => {
   if (purpose === BATCH_PRINT_PURPOSE.COMPLETE) {
     return readiness.state === PRINT_READINESS_STATE.READY_COMPLETE;
   }
   return (
     readiness.state === PRINT_READINESS_STATE.SUPPLEMENTAL_ONLY &&
-    readiness.canPrint
+    readiness.canPrint &&
+    !getSmallLabelContinuationIssue(readiness, layout)
   );
 };
 
@@ -216,7 +253,7 @@ const evaluateItemWithAutoFit = ({
       locale,
     });
     attempts.push(attempt);
-    if (readinessIsPrintableForPurpose(attempt.readiness, purpose)) {
+    if (readinessIsPrintableForPurpose(attempt.readiness, purpose, attempt.layout)) {
       return { ...attempt, attempts };
     }
   }
@@ -384,7 +421,11 @@ const evaluateAlternatePurpose = (options, alternatePurpose) => {
     ...options,
     purpose: alternatePurpose,
   });
-  return readinessIsPrintableForPurpose(attempt.readiness, alternatePurpose)
+  return readinessIsPrintableForPurpose(
+    attempt.readiness,
+    alternatePurpose,
+    attempt.layout,
+  )
     ? attempt
     : null;
 };
@@ -443,7 +484,21 @@ function classifyBatchItem({
     });
   }
 
-  if (readinessIsPrintableForPurpose(attempt.readiness, purpose)) {
+  const smallLabelContinuationIssue = getSmallLabelContinuationIssue(
+    attempt.readiness,
+    attempt.layout,
+  );
+
+  if (smallLabelContinuationIssue) {
+    return classifyAs({
+      category: BATCH_PRINT_ITEM_CATEGORY.EXCLUDED_FIT,
+      reason: smallLabelContinuationIssue,
+      item: baseItem,
+      preferredPurpose: purpose,
+    });
+  }
+
+  if (readinessIsPrintableForPurpose(attempt.readiness, purpose, attempt.layout)) {
     return classifyPrintableAttempt({
       baseItem,
       purpose,

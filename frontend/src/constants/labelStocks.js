@@ -948,6 +948,19 @@ export function normalizePrintLabelConfig(labelConfig = {}) {
   };
 }
 
+export function arePrintLabelConfigsEqual(left = {}, right = {}) {
+  const keys = new Set([
+    ...Object.keys(left || {}),
+    ...Object.keys(right || {}),
+  ]);
+  for (const key of keys) {
+    if (!Object.is(left?.[key], right?.[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function getLabelStockPreset(labelConfig = {}) {
   const normalized = normalizePrintLabelConfig(labelConfig);
   return normalized.stockPreset === "custom"

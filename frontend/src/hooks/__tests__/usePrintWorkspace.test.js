@@ -172,6 +172,19 @@ describe("usePrintWorkspace", () => {
     });
   });
 
+  it("does not replace label config state when normalized config is unchanged", () => {
+    const { result } = renderHook(() => usePrintWorkspace());
+    const originalConfig = result.current.labelConfig;
+
+    act(() => {
+      result.current.setLabelConfig({
+        ...originalConfig,
+      });
+    });
+
+    expect(result.current.labelConfig).toBe(originalConfig);
+  });
+
   it("loadRecentPrint applies workspace state and returns the recent job items", () => {
     const { result } = renderHook(() => usePrintWorkspace());
     const record = makeRecentJob();

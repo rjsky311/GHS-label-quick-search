@@ -10,6 +10,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from inventory_workbook_audit import audit_inventory_workbook  # noqa: E402
+from export_helpers import spreadsheet_safe  # noqa: E402
 
 ACTION_QUEUE_FIELDS = (
     "key",
@@ -79,10 +80,10 @@ def csv_value(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (list, tuple)):
-        return "; ".join(csv_value(item) for item in value)
+        return spreadsheet_safe("; ".join(csv_value(item) for item in value))
     if value is None:
         return ""
-    return str(value)
+    return spreadsheet_safe(str(value))
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]], fields: tuple[str, ...]) -> None:

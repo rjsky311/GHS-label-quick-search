@@ -65,7 +65,9 @@ export default function ComparisonModal({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label={t("common.close", { defaultValue: "Close" })}
             className="text-slate-400 hover:text-slate-700"
             data-testid="close-comparison-btn"
           >

@@ -1231,23 +1231,38 @@ describe('ResultsTable', () => {
   describe('Sort columns', () => {
     it('clicking CAS column header calls onRequestSort("cas_number")', () => {
       render(<ResultsTable {...defaultProps} />);
-      const casHeader = screen.getByText('results.colCAS');
-      fireEvent.click(casHeader.closest('th'));
+      const casHeader = screen.getByRole('button', { name: /results\.colCAS/ });
+      expect(casHeader.closest('th')).toHaveAttribute('aria-sort', 'none');
+      fireEvent.click(casHeader);
       expect(defaultProps.onRequestSort).toHaveBeenCalledWith('cas_number');
     });
 
     it('clicking Name column header calls onRequestSort("name")', () => {
       render(<ResultsTable {...defaultProps} />);
-      const nameHeader = screen.getByText('results.colName');
-      fireEvent.click(nameHeader.closest('th'));
+      const nameHeader = screen.getByRole('button', { name: /results\.colName/ });
+      fireEvent.click(nameHeader);
       expect(defaultProps.onRequestSort).toHaveBeenCalledWith('name');
     });
 
     it('clicking Signal Word header calls onRequestSort("signal_word")', () => {
       render(<ResultsTable {...defaultProps} />);
-      const swHeader = screen.getByText('results.colSignalWord');
-      fireEvent.click(swHeader.closest('th'));
+      const swHeader = screen.getByRole('button', {
+        name: /results\.colSignalWord/,
+      });
+      fireEvent.click(swHeader);
       expect(defaultProps.onRequestSort).toHaveBeenCalledWith('signal_word');
+    });
+
+    it('marks the sorted column with aria-sort', () => {
+      render(
+        <ResultsTable
+          {...defaultProps}
+          sortConfig={{ key: 'name', direction: 'desc' }}
+        />
+      );
+      expect(
+        screen.getByRole('button', { name: /results\.colName/ }).closest('th')
+      ).toHaveAttribute('aria-sort', 'descending');
     });
   });
 
