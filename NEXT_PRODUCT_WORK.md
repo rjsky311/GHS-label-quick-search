@@ -87,14 +87,16 @@ shipped/monitoring Batch-First owner doc,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
-Latest closed concrete slice: the 2026-06-21 post-deploy H360 variant wording
-gap is now production-verified closed at
-`d0659b9e79496a37fdca07a4a5c9d9150e64647c`. The slice added reviewed
-H360-family Traditional Chinese wording, a bounded H-code coverage patrol for
-primary and alternate classifications, and a dependency-light audit module so
-GitHub Production Print QA can run the check before product QA. Evidence lives
-in `qa/evidence/2026-06-21-h-code-wording-closure/`. Reopen only if
-`npm run qa:h-code-coverage` or fresh lookup/print evidence fails.
+Latest closed concrete slice: the 2026-06-26 non-physical pilot evidence sweep
+and local admin alias triage is closed. Production product QA passed on
+`6bca02e874af00adc63632f49f13ffc1e94c2bcd`, local ignored
+`backend/data/pilot.db` alias review was triaged from 22 pending water-related
+PubChem synonym candidates to 0 open alias-review items, and correction-request
+candidate discovery found no work to open. Evidence lives in
+`qa/evidence/2026-06-26-non-physical-pilot-evidence-sweep/`. The latest
+production code hardening slice remains PR #39, shipped on production at
+`2f81602cb3082b247a0527cf53e0cb0ed623c84a`; evidence lives in
+`qa/evidence/2026-06-22-pr39-pictogram-print-export-hardening/`.
 
 Open a new slice only when the evidence states:
 
@@ -188,6 +190,22 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-06-26 non-physical pilot evidence sweep: with real-printer validation
+  still deferred, expected-SHA `npm run qa:production-product` passed on
+  production at `6bca02e874af00adc63632f49f13ffc1e94c2bcd`. The product report
+  listed all eight product blocks as green with zero failed reports, zero
+  incomplete blocks, zero actionable failures, and no triage buckets. The
+  local ignored pilot store had no correction requests, missing-name reports,
+  unresolved miss queries, manual entries in review, or inactive reference
+  links. It did have 22 pending water-related PubChem synonym aliases; those
+  were reviewed through the existing admin store path, approving 20 exact
+  water aliases and rejecting `Pur-wash` plus `Water, mineral` as ambiguous
+  product/mixture-like terms. After triage the pilot summary reported 0 open
+  work items and healthy recommended focus. Dry-run candidate discovery over
+  correction requests checked 0 items and changed no public data. Do not open
+  external discovery, admin UI, or runtime data-governance work from this
+  checkpoint; reopen only from fresh admin/export/user/QA evidence or an
+  explicit source/cost decision.
 - 2026-06-18 production UI checkpoint: PR #35 and follow-up QA stabilization
   commits shipped the experiment-notebook main screen and simplified print
   workflow polish to production. Zeabur served
