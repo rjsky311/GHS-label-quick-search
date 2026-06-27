@@ -86,31 +86,35 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: no further product implementation is open after Prepared
-Solution Entry Clarity and the follow-up CI hygiene closure. Source:
-owner/user evidence on 2026-06-27 that the prepared-solution / prepared-label
-entry was unclear enough that even the owner was unsure how to use the feature.
-Affected user job: create or reuse a prepared-solution label from a parent
-chemical while keeping the trust boundary clear. Local proof: the reviewed
-implementation plan in
-`docs/superpowers/plans/2026-06-28-prepared-solution-entry-clarity.md` defined
-the entry model and tests; the implementation clarified the header prepared
-control as recent/reprint access, kept the detail surface as the creation entry,
-added populated-sidebar reprint guidance, separated recent records from saved
-recipes, and pinned bilingual safety copy for parent-hazard reuse and
-non-reclassification. Production proof completed after deployment at
-`670e8701380d09dc2a36540f3515bbd8ee74368d`: GitHub CI passed, Zeabur frontend
-deployment `6a400c92faa82ae37d6dc68c` was `RUNNING` on the expected SHA,
-`qa:production-health` passed for frontend and backend, and
-`qa:production-prepared` passed 9/9 cases. The proof record was committed in
-`d5fb38e8ac5bb1258a7c0b6182816d1f0d1eafce`. A follow-up production-reliability
-slice fixed a false GitHub annotation in the Production Print QA Zeabur probe
-fallback when `ZEABUR_TOKEN` is absent; `c3b3bc3b65b6d74199f1691f86c823a4d0829a39`
-is now on production with GitHub CI run `28297550650` and Production Print QA
-run `28297591260` both passing. Stop condition: do not open another local
-product implementation slice from this roadmap until fresh owner/user evidence,
-production QA failure, admin/export evidence, an explicit scope/safety decision,
-or a concrete code-review finding selects it.
+Current active slice: Agent-Ready API Scope Decision. Source: the committed
+Lab Workflow Readiness roadmap plus owner/user questions about whether Coding
+Agents should crawl the website or receive structured label/tag information
+without human UI operation. Affected user job: a person or automation needs
+structured GHS lookup and label-summary data without scraping the UI, while
+keeping SDS, supplier labels, local regulations, and reviewed public data
+boundaries explicit. Expected proof: the reviewed scope-decision plan in
+`docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md`,
+`git diff --check`, and `npm run test:docs`. Stop condition: stop at the
+product/safety decision and the next implementation checklist; do not add
+runtime API behavior, `llms.txt`, robots/sitemap, schema code, write endpoints,
+agent approval paths, or new print behavior in this slice.
+
+Next candidate slice, only after the scope decision is verified: Agent-readable
+label summary contract v0 design/fixtures. Source: accepted Agent-Ready API
+Scope Decision. Expected proof: backend schema or snapshot tests for approved
+public lookup output only, examples for success, no-GHS, text-only-GHS,
+upstream-error, multiple-classification, stale/cache-hit, and
+unapproved-candidate-excluded states. Stop condition: stop at read-only
+schema/examples/tests; do not add write endpoints, compliance advice,
+autonomous data approval, DOM/print-HTML scraping contracts, or physical-print
+claims.
+
+The previous product implementation slice remains closed: Prepared Solution
+Entry Clarity shipped and was production-verified at
+`670e8701380d09dc2a36540f3515bbd8ee74368d`; the proof record was committed in
+`d5fb38e8ac5bb1258a7c0b6182816d1f0d1eafce`. Do not reopen Batch-First,
+prepared-label, print polish, admin tooling, or physical printing by inertia
+while this docs-only scope decision is active.
 
 Do not continue Batch-First work by default. Use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,
