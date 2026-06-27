@@ -87,11 +87,12 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 ### Active Slice
 
 Current active slice: no further product implementation is open after Prepared
-Solution Entry Clarity. Source: owner/user evidence on 2026-06-27 that the
-prepared-solution / prepared-label entry was unclear enough that even the owner
-was unsure how to use the feature. Affected user job: create or reuse a
-prepared-solution label from a parent chemical while keeping the trust boundary
-clear. Local proof: the reviewed implementation plan in
+Solution Entry Clarity and the follow-up CI hygiene closure. Source:
+owner/user evidence on 2026-06-27 that the prepared-solution / prepared-label
+entry was unclear enough that even the owner was unsure how to use the feature.
+Affected user job: create or reuse a prepared-solution label from a parent
+chemical while keeping the trust boundary clear. Local proof: the reviewed
+implementation plan in
 `docs/superpowers/plans/2026-06-28-prepared-solution-entry-clarity.md` defined
 the entry model and tests; the implementation clarified the header prepared
 control as recent/reprint access, kept the detail surface as the creation entry,
@@ -101,10 +102,15 @@ non-reclassification. Production proof completed after deployment at
 `670e8701380d09dc2a36540f3515bbd8ee74368d`: GitHub CI passed, Zeabur frontend
 deployment `6a400c92faa82ae37d6dc68c` was `RUNNING` on the expected SHA,
 `qa:production-health` passed for frontend and backend, and
-`qa:production-prepared` passed 9/9 cases. Stop condition: do not open another
-local product slice from this roadmap until fresh owner/user evidence,
-production QA failure, admin/export evidence, or a concrete code-review finding
-selects it.
+`qa:production-prepared` passed 9/9 cases. The proof record was committed in
+`d5fb38e8ac5bb1258a7c0b6182816d1f0d1eafce`. A follow-up production-reliability
+slice fixed a false GitHub annotation in the Production Print QA Zeabur probe
+fallback when `ZEABUR_TOKEN` is absent; `c3b3bc3b65b6d74199f1691f86c823a4d0829a39`
+is now on production with GitHub CI run `28297550650` and Production Print QA
+run `28297591260` both passing. Stop condition: do not open another local
+product implementation slice from this roadmap until fresh owner/user evidence,
+production QA failure, admin/export evidence, an explicit scope/safety decision,
+or a concrete code-review finding selects it.
 
 Do not continue Batch-First work by default. Use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,
@@ -113,10 +119,26 @@ Do not continue Batch-First work by default. Use
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
-Latest closed concrete slice: the 2026-06-28 prepared-solution entry clarity
-slice is closed on production. Implementation commit: `592e777`; production
-evidence commit: `670e870`. It replaced ambiguous "prepared" and "dilution"
-entry wording with visible recent/reprint access in the header, a
+Latest closed concrete slice: the 2026-06-28 Production Print QA Zeabur probe
+fallback hygiene slice is closed on production. Source: Production Print QA run
+`28297133276` passed but logged a false `exit code 2` annotation in the
+continue-on-error Zeabur deployment probe when `ZEABUR_TOKEN` was absent.
+Affected user job: production reliability and maintainer trust in CI gate
+signals. Implementation commit: `c3b3bc3`. It replaced the fragile inline
+here-doc fallback with `node -e`, preserving the existing skipped-no-token
+report contract without emitting a shell syntax error. Local proof:
+`git diff --check`, YAML parsing with Ruby, and direct execution of the fallback
+script producing `ok: true`, `statusCategory: "skipped-no-token"`, and
+`failures: 0`. Remote proof: GitHub CI run `28297550650` passed; Production
+Print QA run `28297591260` passed at
+`c3b3bc3b65b6d74199f1691f86c823a4d0829a39`; the log search showed
+`failedReports: 0`, no actionable failures, no report warnings, and no remaining
+`exit code 2` or `##[error]` annotation.
+
+Previous closed product slice: the 2026-06-28 prepared-solution entry clarity
+slice is closed on production. Implementation commit: `592e777`; closure/state
+commits: `670e870` and `d5fb38e`. It replaced ambiguous "prepared" and
+"dilution" entry wording with visible recent/reprint access in the header, a
 parent-chemical creation CTA in the detail surface, populated sidebar guidance
 that reprint refreshes parent data before print review, and runtime i18n tests
 for the safety boundary that user-entered fields do not infer, reduce, weaken,

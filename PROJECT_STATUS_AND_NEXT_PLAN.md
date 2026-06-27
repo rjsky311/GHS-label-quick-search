@@ -15,7 +15,11 @@ next slices oriented around human-first lab workflow clarity: prepared-solution
 entry, batch review/export handoff, data correction/source trust, safe
 agent-readable access, and daily-use comfort. Its first recommended slice is a
 Prepared Solution Entry Clarity design slice, opened from owner-observed
-confusion about how to start and reuse the prepared-solution workflow.
+confusion about how to start and reuse the prepared-solution workflow; that
+slice is now shipped and production-verified. The latest follow-up closure is
+the `c3b3bc3` Production Print QA Zeabur-probe fallback hygiene fix, which
+removed a false skipped-token shell annotation while keeping production
+freshness and product QA green.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
