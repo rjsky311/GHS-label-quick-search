@@ -1,9 +1,10 @@
 # Lab Workflow Readiness Roadmap
 
 Status: selected roadmap direction on 2026-06-27; revised after five read-only
-sub-agent reviews. This is a direction document, not the canonical active
-queue. `PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md` still select
-active work.
+sub-agent reviews; reconciled on 2026-06-28 after the first shipped slices.
+This is a direction document, not the canonical active queue.
+`PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md` still select active
+work.
 
 Subtitle: Human-first GHS lookup, prepared-label workflow, batch handoff, and
 safe machine-readable access.
@@ -17,7 +18,7 @@ inertia.
 
 The next product bottleneck is workflow clarity: users should understand how to
 move from lookup into real lab tasks such as prepared-solution labels, batch
-review, export handoff, data correction, and safe future agent/API access.
+review, export handoff, data correction, and safe agent/API access.
 
 Opening evidence:
 
@@ -30,9 +31,13 @@ Roadmap context and hypotheses:
   stock, printer scaling, QR scanning, and pictogram readability can be tested.
 - Current batch, export, correction/admin, and production QA baselines are
   shipped or monitoring; new slices should come from concrete workflow evidence.
-- The public API exists, but the product is not yet packaged as an explicit
-  agent-safe, machine-readable GHS utility. That hypothesis must not open an
-  implementation slice without a scope/safety decision.
+- Prepared Solution Entry Clarity is shipped and production-verified. The
+  creation entry now starts from a parent chemical detail surface, while header
+  prepared controls are positioned as recent/reprint access.
+- The Agent-ready reference/draft access sequence is shipped through the scope
+  decision, versioned summary schema, read-only endpoint, `/llms.txt`, and live
+  production availability audit. Future agent work still needs new integration
+  evidence or an explicit scope/safety decision.
 
 ## North Star
 
@@ -73,14 +78,18 @@ on making the non-physical workflow clear, trustworthy, and repeatable.
 All five themes belong in the roadmap, but they are not a checklist to work
 through by inertia:
 
-- `Now`: one active design slice.
+- `Shipped / monitoring`: closed themes with proof in the canonical status
+  docs.
 - `Next`: candidate themes, not scheduled milestones. Promote one only through
   fresh evidence recorded in `NEXT_PRODUCT_WORK.md`.
 - `Later`: important directions that need a new evidence trigger and, for broad
   workflow/API/visual-system changes, `PRODUCT_SCOPE_GATE.md` before
   implementation.
 
-## Now: 1. Prepared Solution Entry Clarity Design Slice
+Current state: no autonomous implementation slice is open from this roadmap.
+Open the next slice only from evidence recorded in `NEXT_PRODUCT_WORK.md`.
+
+## Shipped / Monitoring: 1. Prepared Solution Entry Clarity
 
 Purpose: make the prepared-solution / prepared-label workflow obvious before
 adding more capabilities.
@@ -89,9 +98,24 @@ Affected user job: a lab user has found a parent chemical and wants a label for
 a working solution, dilution, or prepared reagent without changing the GHS
 classification.
 
-Current design slice source: owner/user evidence on 2026-06-27 that the
-prepared-solution / prepared-label entry is unclear enough that even the owner
-is unsure how to use the feature.
+Original design slice source: owner/user evidence on 2026-06-27 that the
+prepared-solution / prepared-label entry was unclear enough that even the owner
+was unsure how to use the feature.
+
+Current shipped state:
+
+- The ambiguous standalone prepared/dilution entry was reframed around creating
+  a prepared-solution label from a found parent chemical.
+- Header prepared controls now communicate recent/reprint access rather than a
+  standalone create flow.
+- Detail surfaces expose the parent-chemical creation CTA.
+- Empty/sidebar guidance tells users to search the parent chemical first and
+  keeps reprint/preset reuse distinct.
+- Runtime i18n tests cover the safety boundary that user-entered concentration,
+  solvent, prepared-by, prepared-date, and expiry metadata do not infer, reduce,
+  weaken, modify, or reclassify hazards.
+- Production prepared QA passed for create, reprint, and preset cases across
+  Complete A4, QR small label, and Identification small label outputs.
 
 Plain user flow to make visible:
 
@@ -132,7 +156,7 @@ Concrete work:
 - Say plainly that prepared-solution labels reuse parent hazard data and do not
   infer, weaken, or reclassify hazards.
 
-Design proof before implementation:
+Historical design proof before implementation:
 
 - A focused design/spec confirms the entry model, glossary, bilingual copy,
   non-goals, tests, production QA, and stop conditions.
@@ -150,9 +174,11 @@ Implementation proof after accepted design:
 - `npm run build`
 - After deployment, `npm run qa:production-prepared` with report/screenshots.
 
-Stop condition for the design slice:
+Current stop condition:
 
-- Stop when the design/spec is accepted and no code implementation is open yet.
+- The original design and implementation slices are closed. Do not reopen this
+  theme unless fresh owner/user evidence, a screenshot, a production QA failure,
+  or a code-review finding shows the prepared-solution entry is still unclear.
 
 Implementation non-goals unless a later accepted design changes them:
 
@@ -163,7 +189,7 @@ Implementation non-goals unless a later accepted design changes them:
 - No localStorage schema change.
 - No print renderer or hazard-data algorithm change.
 
-## Next: 2. Batch Review And Export Handoff Clarity
+## Next Candidate: 2. Batch Review And Export Handoff Clarity
 
 Purpose: make batch results and exports useful as a lab-manager handoff while
 physical print validation is deferred.
@@ -201,7 +227,7 @@ Stop condition:
 - Stop when the handoff question raised by the evidence is resolved.
 - Do not reopen broad batch-print polish or physical print validation.
 
-## Next: 3. Data Correction And Source Trust Loop
+## Next Candidate: 3. Data Correction And Source Trust Loop
 
 Purpose: make data gaps, source conflicts, missing trusted Chinese names, and
 unresolved searches safe to report, triage, and curate.
@@ -245,7 +271,7 @@ Stop condition:
 - Do not let candidate evidence silently change public lookup, labels, exports,
   or QR targets.
 
-## Later: 4. Agent-Ready API Contract
+## Shipped / Monitoring: 4. Agent-Ready API Contract
 
 Purpose: make the product safer and more useful for coding agents, scripts,
 LIMS, ELN, or inventory workflows without requiring DOM scraping.
@@ -253,11 +279,28 @@ LIMS, ELN, or inventory workflows without requiring DOM scraping.
 Affected user job: a person or automation needs structured GHS lookup and label
 summary data, with explicit warnings and review status.
 
-Promotion trigger: an explicit product/safety decision or integration example
-shows that an agent, script, LIMS, ELN, or inventory workflow needs stable
-machine-readable GHS reference output.
+Original promotion trigger: an explicit product/safety decision or integration
+example shows that an agent, script, LIMS, ELN, or inventory workflow needs
+stable machine-readable GHS reference output.
 
-Concrete work:
+Current shipped state:
+
+- The Agent-Ready API Scope Decision chose OpenAPI plus versioned JSON schema as
+  the machine-readable authority, with `llms.txt`, robots, and sitemap limited
+  to navigation guidance.
+- `agent_label_summary.v0` defines a read-only reference/draft response with
+  identity, GHS pictograms, H/P statements, source/report metadata,
+  reference-link and QR target metadata, upstream status, review flags, and
+  SDS/supplier-label/local-regulation authority boundaries.
+- `GET /api/agent/label-summary?q=<CAS-or-name>` exposes the schema through
+  OpenAPI with bounded input and rate limiting.
+- `/llms.txt` points agents to OpenAPI and the label-summary endpoint while
+  stating read-only, no-write, no-approval, SDS/supplier/local-rule, and
+  unapproved-candidate boundaries.
+- A live production availability audit verified that production OpenAPI,
+  `/llms.txt`, and the label-summary endpoint are reachable.
+
+Completed first-version work:
 
 - Document the existing public API and OpenAPI shape for safe lookup use.
 - Define a versioned `label_summary` schema with `schema_version`, identity,
@@ -278,7 +321,7 @@ Concrete work:
 - Do not add write endpoints, automatic candidate promotion, or agent-generated
   approval workflows.
 
-Expected proof:
+Current proof:
 
 - Schema or snapshot tests for the agent-facing response shape.
 - API tests showing bounded input, safe URLs, clear source metadata, and no
@@ -288,15 +331,18 @@ Expected proof:
   cases.
 - Documentation examples that show SDS/supplier/local-rule verification and do
   not imply compliance approval.
+- Production availability checks for OpenAPI, `/llms.txt`, and the
+  label-summary endpoint.
 
-Stop condition:
+Current stop condition:
 
-- Stop at reference/draft output for automation.
+- The first reference/draft automation output is closed. Future agent work
+  requires new integration evidence or an explicit scope/safety decision.
 - Stop before any autonomous compliance decision, hazard reclassification,
   write-back to public data, automatic public dictionary writer, or
   agent-generated approval workflow.
 
-## Later: 5. Daily-Use Comfort
+## Later / Evidence-Gated: 5. Daily-Use Comfort
 
 Purpose: improve repeated daily use without distracting from workflow trust.
 
@@ -347,8 +393,9 @@ standard is not already clear.
 
 ## Recommended First Slice
 
-Open a design slice for `Prepared Solution Entry Clarity`. No code
-implementation is open until that design is reviewed and accepted.
+Historical recommendation: open a design slice for `Prepared Solution Entry
+Clarity`. That design and implementation sequence is now shipped and
+production-verified.
 
 Source: owner/user evidence on 2026-06-27 that the prepared-solution /
 prepared-label entry is unclear.
@@ -372,4 +419,5 @@ The first design should decide:
   Chinese;
 - which tests and production QA prove the workflow is clearer.
 
-Do not implement this slice until the design is reviewed and accepted.
+Do not reopen this slice from the historical recommendation. Use the slice
+selection rules above and the active queue in `NEXT_PRODUCT_WORK.md`.
