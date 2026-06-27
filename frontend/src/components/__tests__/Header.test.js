@@ -151,6 +151,29 @@ describe('Header', () => {
     expect(badge.textContent).toBe('3');
   });
 
+  it('describes the prepared header button as recent/reprint access', () => {
+    render(<Header {...defaultProps} />);
+
+    const preparedBtn = screen.getByTestId('prepared-toggle-btn');
+    expect(preparedBtn).toHaveTextContent('header.prepared');
+    expect(preparedBtn).toHaveAttribute('aria-label', 'header.preparedTitle');
+    expect(preparedBtn).toHaveAttribute('title', 'header.preparedTitle');
+  });
+
+  it('includes prepared count in the recent/reprint accessible label', () => {
+    render(<Header {...defaultProps} preparedCount={3} />);
+
+    const preparedBtn = screen.getByTestId('prepared-toggle-btn');
+    expect(preparedBtn).toHaveAttribute(
+      'aria-label',
+      'header.preparedTitleWithCount'
+    );
+    expect(preparedBtn).toHaveAttribute(
+      'title',
+      'header.preparedTitleWithCount'
+    );
+  });
+
   it('clicking prepared button calls onTogglePrepared', () => {
     render(<Header {...defaultProps} />);
     fireEvent.click(screen.getByTestId('prepared-toggle-btn'));

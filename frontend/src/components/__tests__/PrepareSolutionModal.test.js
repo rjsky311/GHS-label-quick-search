@@ -104,6 +104,55 @@ describe("PrepareSolutionModal", () => {
     expect(summary.textContent.match(/Allyl Alcohol/g)).toHaveLength(1);
   });
 
+  it("surfaces parent creation, recipe-only presets, recent prefill, and safety note copy", () => {
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        recents={[
+          {
+            createdAt: "2026-04-16T10:00:00.000Z",
+            parentCas: "64-17-5",
+            parentNameEn: "Ethanol",
+            parentNameZh: "乙醇",
+            concentration: "10%",
+            solvent: "Water",
+            preparedBy: "A. Chen",
+            preparedDate: "2026-04-16",
+            expiryDate: null,
+          },
+        ]}
+        presets={[
+          {
+            id: "ethanol-water-10",
+            parentCas: "64-17-5",
+            parentNameEn: "Ethanol",
+            parentNameZh: "乙醇",
+            concentration: "10%",
+            solvent: "Water",
+            presetName: "10% ethanol",
+            updatedAt: "2026-04-16T10:00:00.000Z",
+          },
+        ]}
+        onSubmit={jest.fn()}
+        onClose={jest.fn()}
+        onSavePreset={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("prepared.title")).toBeInTheDocument();
+    expect(screen.getByText("prepared.subtitle")).toBeInTheDocument();
+    expect(screen.getByText("prepared.presetHeading")).toBeInTheDocument();
+    expect(screen.getByText("prepared.presetHint")).toBeInTheDocument();
+    expect(screen.getByText("prepared.presetBadge")).toBeInTheDocument();
+    expect(screen.getByText("prepared.saveAsPreset")).toBeInTheDocument();
+    expect(screen.getByText("prepared.presetName")).toBeInTheDocument();
+    expect(screen.getByText("prepared.recentHeading")).toBeInTheDocument();
+    expect(screen.getByText("prepared.recentHint")).toBeInTheDocument();
+    expect(screen.getByTestId("prepare-solution-form-note")).toHaveTextContent(
+      "prepared.formNote"
+    );
+  });
+
   it("uses notebook fields and action controls for prepared-solution data entry", () => {
     render(
       <PrepareSolutionModal

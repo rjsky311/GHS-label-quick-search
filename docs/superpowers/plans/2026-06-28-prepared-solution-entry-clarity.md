@@ -41,8 +41,9 @@ Recommended bilingual copy:
 
 | Key | zh-TW | en |
 |---|---|---|
-| `header.prepared` | `配製重印` | `Reprint labels` |
+| `header.prepared` | `配製重印` | `Reprint` |
 | `header.preparedTitle` | `查看近期配製標籤與重印` | `View recent prepared labels and reprint` |
+| `header.preparedTitleWithCount` | `查看 {{count}} 筆近期配製標籤與重印` | `View {{count}} recent prepared labels and reprint` |
 | `detail.prepareSolution` | `用此化學品建立配製標籤` | `Create prepared label from this chemical` |
 | `prepared.title` | `建立配製溶液標籤` | `Create prepared solution label` |
 | `prepared.subtitle` | `從目前選取的母化學品建立工作液、配製溶液或配製試劑標籤；危害資料會沿用母化學品。` | `Create a label for a working solution, prepared solution, or prepared reagent from the selected parent chemical. Hazard data is copied from the parent.` |
@@ -59,6 +60,7 @@ Recommended bilingual copy:
 | `prepared.sidebarHint` | `重印會重新取得母化學品資料並開啟列印確認；列印前請再確認濃度、溶劑與日期資訊。` | `Reprint refreshes the parent chemical data and opens print review; confirm concentration, solvent, and dates before printing.` |
 | `prepared.sidebarEmpty` | `還沒有近期配製標籤` | `No recent prepared labels yet` |
 | `prepared.sidebarEmptyHint` | `先搜尋母化學品，從詳細資料建立配製溶液標籤；完成後可在這裡用最新的母化學品危害資料重印。` | `Search for a parent chemical first, then create a prepared-solution label from its detail view. After that, reprint here with fresh parent hazard data.` |
+| `prepared.closeSidebar` | `關閉近期配製標籤` | `Close recent prepared labels` |
 | `prepared.reprint` | `重印` | `Reprint` |
 
 Implementation should avoid using `稀釋液` as the umbrella term. It can still appear in historical comments or print-specific compatibility text where changing it would broaden scope, but the first-run entry flow should use `配製標籤` / `配製溶液標籤` / `工作液、配製溶液或配製試劑`.
@@ -67,9 +69,9 @@ Implementation should avoid using `稀釋液` as the umbrella term. It can still
 
 Modify:
 
-- `frontend/src/components/Header.jsx`: add `aria-label` and `title` to the prepared header button using `header.preparedTitle`; keep button behavior unchanged.
+- `frontend/src/components/Header.jsx`: add `aria-label` and `title` to the prepared header button using `header.preparedTitle` or `header.preparedTitleWithCount`; keep button behavior unchanged.
 - `frontend/src/components/DetailModal.jsx`: no JSX structure change expected; it should continue rendering `detail.prepareSolution` from i18n.
-- `frontend/src/components/PreparedSidebar.jsx`: add a persistent populated-state hint using `prepared.sidebarHint` so reprint is visibly framed as refreshed parent data plus print review, not an old-label immediate print.
+- `frontend/src/components/PreparedSidebar.jsx`: add a persistent populated-state hint using `prepared.sidebarHint` so reprint is visibly framed as refreshed parent data plus print review, and give the icon-only close button an accessible name using `prepared.closeSidebar`.
 - `frontend/src/components/PrepareSolutionModal.jsx`: no structure change expected; existing title, subtitle, headings, hints, and form note are the intended surfaces.
 - `frontend/src/i18n/locales/zh-TW.json`: update prepared-entry copy and add `header.preparedTitle`.
 - `frontend/src/i18n/locales/en.json`: update prepared-entry copy and add `header.preparedTitle`.
@@ -110,6 +112,20 @@ it('describes the prepared header button as recent/reprint access', () => {
   expect(preparedBtn).toHaveAttribute('aria-label', 'header.preparedTitle');
   expect(preparedBtn).toHaveAttribute('title', 'header.preparedTitle');
 });
+
+it('includes prepared count in the recent/reprint accessible label', () => {
+  render(<Header {...defaultProps} preparedCount={3} />);
+
+  const preparedBtn = screen.getByTestId('prepared-toggle-btn');
+  expect(preparedBtn).toHaveAttribute(
+    'aria-label',
+    'header.preparedTitleWithCount'
+  );
+  expect(preparedBtn).toHaveAttribute(
+    'title',
+    'header.preparedTitleWithCount'
+  );
+});
 ```
 
 - [ ] **Step 2: Run the header test and confirm the failure**
@@ -135,14 +151,19 @@ Received:
 In `frontend/src/components/Header.jsx`, change the prepared button to include the new i18n key:
 
 ```jsx
+const preparedButtonTitle =
+  preparedCount > 0
+    ? t("header.preparedTitleWithCount", { count: preparedCount })
+    : t("header.preparedTitle");
+
 <Button
   onClick={onTogglePrepared}
   variant="notebookUtility"
   size="notebookIcon"
   className={headerButtonBase}
   data-testid="prepared-toggle-btn"
-  aria-label={t("header.preparedTitle")}
-  title={t("header.preparedTitle")}
+  aria-label={preparedButtonTitle}
+  title={preparedButtonTitle}
 >
 ```
 
@@ -153,13 +174,15 @@ In `frontend/src/i18n/locales/zh-TW.json` update the header block to:
 ```json
 "header.prepared": "配製重印",
 "header.preparedTitle": "查看近期配製標籤與重印",
+"header.preparedTitleWithCount": "查看 {{count}} 筆近期配製標籤與重印",
 ```
 
 In `frontend/src/i18n/locales/en.json` update the header block to:
 
 ```json
-"header.prepared": "Reprint labels",
+"header.prepared": "Reprint",
 "header.preparedTitle": "View recent prepared labels and reprint",
+"header.preparedTitleWithCount": "View {{count}} recent prepared labels and reprint",
 ```
 
 - [ ] **Step 5: Re-run the header test**
@@ -192,6 +215,9 @@ test("pins Traditional Chinese prepared-label entry copy", async () => {
 
   expect(i18n.t("header.prepared")).toBe("配製重印");
   expect(i18n.t("header.preparedTitle")).toBe("查看近期配製標籤與重印");
+  expect(i18n.t("header.preparedTitleWithCount", { count: 3 })).toBe(
+    "查看 3 筆近期配製標籤與重印"
+  );
   expect(i18n.t("detail.prepareSolution")).toBe("用此化學品建立配製標籤");
   expect(i18n.t("prepared.title")).toBe("建立配製溶液標籤");
   expect(i18n.t("prepared.subtitle")).toContain("母化學品");
@@ -227,6 +253,7 @@ test("pins Traditional Chinese prepared-label entry copy", async () => {
   expect(i18n.t("prepared.sidebarEmptyHint")).toBe(
     "先搜尋母化學品，從詳細資料建立配製溶液標籤；完成後可在這裡用最新的母化學品危害資料重印。"
   );
+  expect(i18n.t("prepared.closeSidebar")).toBe("關閉近期配製標籤");
   expect(i18n.t("prepared.reprint")).toBe("重印");
 });
 ```
@@ -242,9 +269,12 @@ test("pins English prepared-label entry copy", async () => {
   const { default: i18n, i18nReady } = await import("@/i18n");
   await i18nReady;
 
-  expect(i18n.t("header.prepared")).toBe("Reprint labels");
+  expect(i18n.t("header.prepared")).toBe("Reprint");
   expect(i18n.t("header.preparedTitle")).toBe(
     "View recent prepared labels and reprint"
+  );
+  expect(i18n.t("header.preparedTitleWithCount", { count: 3 })).toBe(
+    "View 3 recent prepared labels and reprint"
   );
   expect(i18n.t("detail.prepareSolution")).toBe(
     "Create prepared label from this chemical"
@@ -284,6 +314,7 @@ test("pins English prepared-label entry copy", async () => {
   expect(i18n.t("prepared.sidebarEmptyHint")).toBe(
     "Search for a parent chemical first, then create a prepared-solution label from its detail view. After that, reprint here with fresh parent hazard data."
   );
+  expect(i18n.t("prepared.closeSidebar")).toBe("Close recent prepared labels");
   expect(i18n.t("prepared.reprint")).toBe("Reprint");
 });
 ```
@@ -296,7 +327,7 @@ Run from `frontend/`:
 npm test -- --runInBand src/i18n/__tests__/i18n.test.js
 ```
 
-Expected failure before implementation: assertions for `header.prepared`, `detail.prepareSolution`, `prepared.title`, `prepared.subtitle`, `prepared.formNote`, `prepared.labelPrefix`, `prepared.recentHeading`, `prepared.presetHeading`, `prepared.recentHint`, `prepared.presetHint`, `prepared.sidebarHint`, `prepared.sidebarEmptyHint`, and `prepared.reprint` fail against the current copy.
+Expected failure before implementation: assertions for `header.prepared`, `header.preparedTitleWithCount`, `detail.prepareSolution`, `prepared.title`, `prepared.subtitle`, `prepared.formNote`, `prepared.labelPrefix`, `prepared.recentHeading`, `prepared.presetHeading`, `prepared.recentHint`, `prepared.presetHint`, `prepared.sidebarHint`, `prepared.sidebarEmptyHint`, `prepared.closeSidebar`, and `prepared.reprint` fail against the current copy.
 
 - [ ] **Step 4: Update locale copy**
 
@@ -304,6 +335,7 @@ Update `frontend/src/i18n/locales/zh-TW.json`:
 
 ```json
 "detail.prepareSolution": "用此化學品建立配製標籤",
+"header.preparedTitleWithCount": "查看 {{count}} 筆近期配製標籤與重印",
 "prepared.title": "建立配製溶液標籤",
 "prepared.subtitle": "從目前選取的母化學品建立工作液、配製溶液或配製試劑標籤；危害資料會沿用母化學品。",
 "prepared.formNote": "此流程不會重新計算混合物的 GHS 分類，也不會因濃度、溶劑、稀釋比例、配製人、日期或有效期限而推導、降低、弱化或修改危害。標籤會以母化學品危害資料加上你輸入的欄位註記；使用前請以官方安全資料表（SDS）、供應商標籤與所在地規範為準。",
@@ -314,6 +346,7 @@ Update `frontend/src/i18n/locales/en.json`:
 
 ```json
 "detail.prepareSolution": "Create prepared label from this chemical",
+"header.preparedTitleWithCount": "View {{count}} recent prepared labels and reprint",
 "prepared.title": "Create prepared solution label",
 "prepared.subtitle": "Create a label for a working solution, prepared solution, or prepared reagent from the selected parent chemical. Hazard data is copied from the parent.",
 "prepared.formNote": "This workflow does not re-classify the mixture and does not infer, reduce, weaken, or modify hazards from concentration, solvent, dilution, operator, date, or expiry fields. The label uses the parent chemical's hazard data plus the label notes you enter. Verify against the official SDS, supplier label, and local rules before use.",
@@ -345,6 +378,10 @@ Extend the existing "renders an empty state" test in `frontend/src/components/__
 expect(screen.getByText("prepared.sidebarTitle")).toBeInTheDocument();
 expect(screen.getByText("prepared.sidebarEmpty")).toBeInTheDocument();
 expect(screen.getByText("prepared.sidebarEmptyHint")).toBeInTheDocument();
+expect(screen.getByTestId("close-prepared-sidebar-btn")).toHaveAttribute(
+  "aria-label",
+  "prepared.closeSidebar"
+);
 ```
 
 - [ ] **Step 2: Add a populated-state reprint hint test**
@@ -405,6 +442,8 @@ In `frontend/src/components/PreparedSidebar.jsx`, replace the sticky header bloc
         onClick={onClose}
         className="text-slate-400 hover:text-slate-700"
         data-testid="close-prepared-sidebar-btn"
+        aria-label={t("prepared.closeSidebar")}
+        title={t("prepared.closeSidebar")}
       >
         <X className="w-5 h-5" />
       </button>
@@ -426,6 +465,7 @@ Update `frontend/src/i18n/locales/zh-TW.json`:
 "prepared.sidebarHint": "重印會重新取得母化學品資料並開啟列印確認；列印前請再確認濃度、溶劑與日期資訊。",
 "prepared.sidebarEmpty": "還沒有近期配製標籤",
 "prepared.sidebarEmptyHint": "先搜尋母化學品，從詳細資料建立配製溶液標籤；完成後可在這裡用最新的母化學品危害資料重印。",
+"prepared.closeSidebar": "關閉近期配製標籤",
 ```
 
 Update `frontend/src/i18n/locales/en.json`:
@@ -434,6 +474,7 @@ Update `frontend/src/i18n/locales/en.json`:
 "prepared.sidebarHint": "Reprint refreshes the parent chemical data and opens print review; confirm concentration, solvent, and dates before printing.",
 "prepared.sidebarEmpty": "No recent prepared labels yet",
 "prepared.sidebarEmptyHint": "Search for a parent chemical first, then create a prepared-solution label from its detail view. After that, reprint here with fresh parent hazard data.",
+"prepared.closeSidebar": "Close recent prepared labels",
 ```
 
 - [ ] **Step 6: Re-run the sidebar and i18n tests**

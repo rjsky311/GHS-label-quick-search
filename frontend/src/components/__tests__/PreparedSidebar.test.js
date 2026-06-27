@@ -34,6 +34,24 @@ describe("PreparedSidebar", () => {
 
     expect(screen.getByText("prepared.sidebarTitle")).toBeInTheDocument();
     expect(screen.getByText("prepared.sidebarEmpty")).toBeInTheDocument();
+    expect(screen.getByText("prepared.sidebarEmptyHint")).toBeInTheDocument();
+    expect(screen.getByTestId("close-prepared-sidebar-btn")).toHaveAttribute(
+      "aria-label",
+      "prepared.closeSidebar"
+    );
+  });
+
+  it("explains that reprint refreshes parent data before print review", () => {
+    render(
+      <PreparedSidebar
+        recents={[makeRecent()]}
+        onClose={jest.fn()}
+        onClearRecents={jest.fn()}
+        onReprint={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("prepared.sidebarHint")).toBeInTheDocument();
   });
 
   it("renders workflow recents and reprints through the current handler", () => {

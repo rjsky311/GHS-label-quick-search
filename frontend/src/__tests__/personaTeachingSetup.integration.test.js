@@ -133,6 +133,9 @@ async function openPrepareSolutionModal() {
   await waitFor(() =>
     expect(screen.getByTestId("detail-modal")).toBeInTheDocument()
   );
+  expect(screen.getByTestId("prepare-solution-btn")).toHaveTextContent(
+    "detail.prepareSolution"
+  );
 
   await act(async () => {
     fireEvent.click(screen.getByTestId("prepare-solution-btn"));

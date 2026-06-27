@@ -34,6 +34,10 @@ export default function Header({
     "relative min-h-12 w-auto min-w-[4.25rem] shrink-0 flex-col gap-1 px-2 py-1.5 text-xs sm:min-w-28 sm:flex-row sm:justify-start sm:px-3 sm:py-2";
   const headerButtonLabelClass =
     "max-w-[3.75rem] truncate sm:max-w-none";
+  const preparedButtonTitle =
+    preparedCount > 0
+      ? t("header.preparedTitleWithCount", { count: preparedCount })
+      : t("header.preparedTitle");
 
   const handleHomeClick = (event) => {
     event.preventDefault();
@@ -141,6 +145,8 @@ export default function Header({
               size="notebookIcon"
               className={headerButtonBase}
               data-testid="prepared-toggle-btn"
+              aria-label={preparedButtonTitle}
+              title={preparedButtonTitle}
             >
               <FlaskConical className="h-4 w-4 shrink-0 text-blue-700" />
               <span className={headerButtonLabelClass}>

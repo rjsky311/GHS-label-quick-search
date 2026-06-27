@@ -86,16 +86,22 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: Prepared Solution Entry Clarity design/planning only.
-Source: owner/user evidence on 2026-06-27 that the prepared-solution /
-prepared-label entry is unclear enough that even the owner is unsure how to use
-the feature. Affected user job: create or reuse a prepared-solution label from a
-parent chemical while keeping the trust boundary clear. Expected proof: a
-focused design/spec that defines entry naming, header/sidebar role, empty
-states, modal guidance, reuse surfaces, bilingual terminology, tests,
-production QA, and stop conditions before implementation. Stop condition:
-accepted design/spec; no code implementation is open until that design is
-reviewed and accepted.
+Current active slice: no further local product implementation is open after
+Prepared Solution Entry Clarity. Source: owner/user evidence on 2026-06-27 that
+the prepared-solution / prepared-label entry was unclear enough that even the
+owner was unsure how to use the feature. Affected user job: create or reuse a
+prepared-solution label from a parent chemical while keeping the trust boundary
+clear. Local proof: the reviewed implementation plan in
+`docs/superpowers/plans/2026-06-28-prepared-solution-entry-clarity.md` defined
+the entry model and tests; the implementation clarified the header prepared
+control as recent/reprint access, kept the detail surface as the creation entry,
+added populated-sidebar reprint guidance, separated recent records from saved
+recipes, and pinned bilingual safety copy for parent-hazard reuse and
+non-reclassification. Next proof, after push/deploy only:
+`qa:production-health` with the expected SHA and `qa:production-prepared`.
+Stop condition: do not open another local product slice from this roadmap until
+deployment QA, fresh owner/user evidence, production QA failure, admin/export
+evidence, or a concrete code-review finding selects it.
 
 Do not continue Batch-First work by default. Use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,
@@ -104,8 +110,15 @@ Do not continue Batch-First work by default. Use
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and
 `PILOT_RUNBOOK.md` as the operator checklist.
 
-Latest closed concrete slice: the 2026-06-26 non-physical pilot evidence sweep
-and local admin alias triage is closed. Production product QA passed on
+Latest closed concrete slice: the 2026-06-28 prepared-solution entry clarity
+slice is locally closed pending push/deploy production QA. It replaced ambiguous
+"prepared" and "dilution" entry wording with visible recent/reprint access in
+the header, a parent-chemical creation CTA in the detail surface, populated
+sidebar guidance that reprint refreshes parent data before print review, and
+runtime i18n tests for the safety boundary that user-entered fields do not
+infer, reduce, weaken, modify, or reclassify hazards. The previous concrete
+slice was the 2026-06-26 non-physical pilot evidence sweep and local admin
+alias triage: production product QA passed on
 `6bca02e874af00adc63632f49f13ffc1e94c2bcd`, local ignored
 `backend/data/pilot.db` alias review was triaged from 22 pending water-related
 PubChem synonym candidates to 0 open alias-review items, and correction-request

@@ -52,29 +52,38 @@ export default function PreparedSidebar({
         className="absolute right-0 top-0 h-full w-96 overflow-y-auto bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-4">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-950">
-            <FlaskConical className="h-5 w-5 text-blue-700" />
-            {t("prepared.sidebarTitle")}
-          </h2>
-          <div className="flex gap-2">
-            {recents.length > 0 && (
+        <div className="sticky top-0 border-b border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-950">
+              <FlaskConical className="h-5 w-5 text-blue-700" />
+              {t("prepared.sidebarTitle")}
+            </h2>
+            <div className="flex gap-2">
+              {recents.length > 0 && (
+                <button
+                  onClick={onClearRecents}
+                  className="text-sm font-medium text-red-600 hover:text-red-700"
+                  data-testid="clear-prepared-recents-btn"
+                >
+                  {t("prepared.clearAll")}
+                </button>
+              )}
               <button
-                onClick={onClearRecents}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
-                data-testid="clear-prepared-recents-btn"
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-700"
+                data-testid="close-prepared-sidebar-btn"
+                aria-label={t("prepared.closeSidebar")}
+                title={t("prepared.closeSidebar")}
               >
-                {t("prepared.clearAll")}
+                <X className="w-5 h-5" />
               </button>
-            )}
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-700"
-              data-testid="close-prepared-sidebar-btn"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            </div>
           </div>
+          {recents.length > 0 ? (
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+              {t("prepared.sidebarHint")}
+            </p>
+          ) : null}
         </div>
 
         {recents.length === 0 ? (
