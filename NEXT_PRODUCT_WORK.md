@@ -86,20 +86,17 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: Agent `/llms.txt` guide. Source: the accepted Agent-Ready
-API Scope Decision and the closed read-only Agent label summary endpoint v0
-slice on `2b9dfe4b654514b5e5eeee87cdaadad6f628680d`. Affected user job: a
-person, script, LIMS/ELN helper, inventory-cleanup workflow, or Coding Agent
-needs to discover the public OpenAPI document and read-only label-summary
-endpoint without scraping the UI or confusing guide text with GHS authority.
-Expected proof: the reviewed implementation plan in
-`docs/superpowers/plans/2026-06-28-agent-llms-guide.md`, docs-check coverage
-for the guide's required links and boundaries, frontend build, diff checks,
-GitHub CI, and Production Print QA if triggered. Stop condition: stop at a
-static `/llms.txt` guide and docs check; do not add robots/sitemap,
-crawler policy changes, new API endpoints, write endpoints, compliance advice,
-autonomous data approval, DOM/print-HTML scraping contracts, or physical-print
-claims.
+Current active slice: no further autonomous product implementation is open
+after the prepared-solution entry clarity work and the safe agent-readable
+access sequence. Source: the Lab Workflow Readiness roadmap plus owner/user
+questions about Coding Agent crawling and structured label/tag access. Affected
+user job now covered by the latest closed slices: a person, script, LIMS/ELN
+helper, inventory-cleanup workflow, or Coding Agent can discover OpenAPI,
+request a read-only structured label summary, and see SDS/supplier/local-rule
+boundaries without scraping the UI. Stop condition: do not open another local
+product implementation slice from this roadmap until fresh owner/user evidence,
+production QA failure, admin/export evidence, an explicit scope/safety decision,
+or a concrete code-review finding selects it.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
@@ -178,6 +175,24 @@ failures, and no report warnings. The slice added
 `GET /api/agent/label-summary?q=<CAS-or-name>` with
 `response_model=AgentLabelSummaryV0`; it did not add write paths, approval,
 compliance advice, `llms.txt`, robots/sitemap, or print behavior.
+
+Latest closed guide slice: the 2026-06-28 Agent `/llms.txt` guide slice is
+closed on `e582f0c`. Source: the accepted Agent-Ready API Scope Decision and the
+closed read-only Agent label summary endpoint v0 slice. Affected user job:
+Coding Agents and scripts need a stable public starting point for OpenAPI and
+the read-only label-summary endpoint without treating guide text as GHS
+authority. Local proof: `npm run test:docs` first failed because
+`frontend/public/llms.txt` was missing, then passed after the guide was added;
+`npm run lint`, `git diff --check`, and `npm run build` passed, and the build
+output included `build/llms.txt`. Remote proof: GitHub CI run `28299689999`
+passed and Production Print QA run `28299728718` passed at
+`e582f0c1e30ae1cc5c220ff5e60841ddffa4197f`; Production Print QA reported
+`failedReports: 0`, no failed freshness/product blocks, no actionable failures,
+and no report warnings. The slice added a static `/llms.txt` guide and docs
+checks for OpenAPI, read-only endpoint, SDS/supplier/local-rule authority,
+no-write, no-approval, and unapproved-candidate boundaries; it did not add
+robots/sitemap, crawler policy changes, new API endpoints, compliance advice,
+or print behavior.
 
 Previous closed product slice: the 2026-06-28 prepared-solution entry clarity
 slice is closed on production. Implementation commit: `592e777`; closure/state
