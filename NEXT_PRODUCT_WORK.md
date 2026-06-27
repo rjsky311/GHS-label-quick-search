@@ -111,13 +111,14 @@ Do not continue Batch-First work by default. Use
 `PILOT_RUNBOOK.md` as the operator checklist.
 
 Latest closed concrete slice: the 2026-06-28 prepared-solution entry clarity
-slice is locally closed pending push/deploy production QA. It replaced ambiguous
-"prepared" and "dilution" entry wording with visible recent/reprint access in
-the header, a parent-chemical creation CTA in the detail surface, populated
-sidebar guidance that reprint refreshes parent data before print review, and
-runtime i18n tests for the safety boundary that user-entered fields do not
-infer, reduce, weaken, modify, or reclassify hazards. The previous concrete
-slice was the 2026-06-26 non-physical pilot evidence sweep and local admin
+slice is locally closed pending push/deploy production QA. Implementation
+commit: `592e777`. It replaced ambiguous "prepared" and "dilution" entry
+wording with visible recent/reprint access in the header, a parent-chemical
+creation CTA in the detail surface, populated sidebar guidance that reprint
+refreshes parent data before print review, and runtime i18n tests for the
+safety boundary that user-entered fields do not infer, reduce, weaken, modify,
+or reclassify hazards. The previous concrete slice was the 2026-06-26
+non-physical pilot evidence sweep and local admin
 alias triage: production product QA passed on
 `6bca02e874af00adc63632f49f13ffc1e94c2bcd`, local ignored
 `backend/data/pilot.db` alias review was triaged from 22 pending water-related
