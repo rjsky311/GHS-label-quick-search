@@ -15,10 +15,12 @@ next slices oriented around human-first lab workflow clarity: prepared-solution
 entry, batch review/export handoff, data correction/source trust, safe
 agent-readable access, and daily-use comfort. Prepared Solution Entry Clarity
 is now shipped and production-verified, and the latest follow-up closure is the
-`c3b3bc3` Production Print QA Zeabur-probe fallback hygiene fix. The active
-roadmap slice is now the Agent-Ready API Scope Decision: a docs-only
-product/safety decision for future read-only machine-readable lookup output,
-not a runtime API or `llms.txt` implementation.
+`c3b3bc3` Production Print QA Zeabur-probe fallback hygiene fix. The
+Agent-Ready API Scope Decision is now closed on `35c3067`, with CI and
+Production Print QA green. The active roadmap slice is the Agent-readable label
+summary contract v0 design/fixtures slice: read-only backend schema, examples,
+and tests for future machine-readable lookup output, not a public endpoint,
+agent write path, `llms.txt`, robots, sitemap, or print-model change.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior

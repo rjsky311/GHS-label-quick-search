@@ -86,28 +86,20 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: Agent-Ready API Scope Decision. Source: the committed
-Lab Workflow Readiness roadmap plus owner/user questions about whether Coding
-Agents should crawl the website or receive structured label/tag information
-without human UI operation. Affected user job: a person or automation needs
-structured GHS lookup and label-summary data without scraping the UI, while
-keeping SDS, supplier labels, local regulations, and reviewed public data
-boundaries explicit. Expected proof: the reviewed scope-decision plan in
-`docs/superpowers/plans/2026-06-28-agent-ready-api-scope-decision.md`,
-`git diff --check`, and `npm run test:docs`. Stop condition: stop at the
-product/safety decision and the next implementation checklist; do not add
-runtime API behavior, `llms.txt`, robots/sitemap, schema code, write endpoints,
-agent approval paths, or new print behavior in this slice.
-
-Next candidate slice, only after the scope decision is verified: Agent-readable
-label summary contract v0 design/fixtures. Source: accepted Agent-Ready API
-Scope Decision. Expected proof: backend schema or snapshot tests for approved
-public lookup output only, examples for success, no-GHS, text-only-GHS,
-upstream-error, multiple-classification, stale/cache-hit, and
-unapproved-candidate-excluded states. Stop condition: stop at read-only
-schema/examples/tests; do not add write endpoints, compliance advice,
-autonomous data approval, DOM/print-HTML scraping contracts, or physical-print
-claims.
+Current active slice: Agent-readable label summary contract v0 design/fixtures.
+Source: the accepted Agent-Ready API Scope Decision, verified locally and
+remotely on `35c3067bafa7d382127753b967ff29f6a40bfc97`. Affected user job: a
+person, script, LIMS/ELN helper, inventory-cleanup workflow, or Coding Agent
+needs structured GHS lookup and label-summary data without scraping the UI.
+Expected proof: the reviewed implementation plan in
+`docs/superpowers/plans/2026-06-28-agent-readable-label-summary-contract-v0.md`,
+backend schema/fixture tests for approved public lookup output only, full
+backend tests, Python compile checks, `git diff --check`, `npm run test:docs`,
+GitHub CI, and Production Print QA if triggered. Stop condition: stop at
+read-only schema/examples/tests; do not add public runtime endpoints, write
+endpoints, compliance advice, autonomous data approval, DOM/print-HTML scraping
+contracts, `llms.txt`, robots/sitemap, OpenAPI publication changes, or
+physical-print claims.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
@@ -138,6 +130,20 @@ Print QA run `28297591260` passed at
 `c3b3bc3b65b6d74199f1691f86c823a4d0829a39`; the log search showed
 `failedReports: 0`, no actionable failures, no report warnings, and no remaining
 `exit code 2` or `##[error]` annotation.
+
+Latest closed decision slice: the 2026-06-28 Agent-Ready API Scope Decision is
+closed on `35c3067`. Source: the Lab Workflow Readiness roadmap and owner/user
+questions about whether Coding Agents should crawl the website or receive
+structured label/tag information. Affected user job: safe, structured,
+read-only machine consumption of public lookup output without blurring SDS,
+supplier-label, local-regulation, or reviewed-data boundaries. Local proof:
+`git diff --check` and `npm run test:docs` passed. Remote proof: GitHub CI run
+`28298425068` passed and Production Print QA run `28298464625` passed at
+`35c3067bafa7d382127753b967ff29f6a40bfc97`; Production Print QA reported
+`failedReports: 0`, no failed freshness/product blocks, no actionable failures,
+and no report warnings. The decision chose OpenAPI plus versioned JSON schema
+as the future authority, with `llms.txt`, robots, and sitemap limited to
+navigation guidance rather than chemical-data authority.
 
 Previous closed product slice: the 2026-06-28 prepared-solution entry clarity
 slice is closed on production. Implementation commit: `592e777`; closure/state
