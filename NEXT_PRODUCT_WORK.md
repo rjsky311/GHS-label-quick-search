@@ -86,20 +86,19 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: Agent-readable label summary contract v0 design/fixtures.
-Source: the accepted Agent-Ready API Scope Decision, verified locally and
-remotely on `35c3067bafa7d382127753b967ff29f6a40bfc97`. Affected user job: a
-person, script, LIMS/ELN helper, inventory-cleanup workflow, or Coding Agent
-needs structured GHS lookup and label-summary data without scraping the UI.
-Expected proof: the reviewed implementation plan in
-`docs/superpowers/plans/2026-06-28-agent-readable-label-summary-contract-v0.md`,
-backend schema/fixture tests for approved public lookup output only, full
-backend tests, Python compile checks, `git diff --check`, `npm run test:docs`,
-GitHub CI, and Production Print QA if triggered. Stop condition: stop at
-read-only schema/examples/tests; do not add public runtime endpoints, write
-endpoints, compliance advice, autonomous data approval, DOM/print-HTML scraping
-contracts, `llms.txt`, robots/sitemap, OpenAPI publication changes, or
-physical-print claims.
+Current active slice: Agent label summary endpoint v0. Source: the accepted
+Agent-Ready API Scope Decision and the closed `agent_label_summary.v0`
+contract/fixture slice on `b0260bb8850fedc42b24d8b7dc1653e01340958e`.
+Affected user job: a person, script, LIMS/ELN helper, inventory-cleanup
+workflow, or Coding Agent needs structured GHS lookup and label-summary data
+without scraping the UI. Expected proof: the reviewed implementation plan in
+`docs/superpowers/plans/2026-06-28-agent-label-summary-endpoint-v0.md`,
+endpoint/OpenAPI tests, full backend tests, Python compile checks,
+`git diff --check`, `npm run test:docs`, GitHub CI, and Production Print QA if
+triggered. Stop condition: stop at a read-only API/OpenAPI endpoint that
+returns the already tested summary contract; do not add write endpoints,
+compliance advice, autonomous data approval, DOM/print-HTML scraping contracts,
+`llms.txt`, robots/sitemap, crawler policy changes, or physical-print claims.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
@@ -144,6 +143,23 @@ supplier-label, local-regulation, or reviewed-data boundaries. Local proof:
 and no report warnings. The decision chose OpenAPI plus versioned JSON schema
 as the future authority, with `llms.txt`, robots, and sitemap limited to
 navigation guidance rather than chemical-data authority.
+
+Latest closed contract slice: the 2026-06-28 Agent-readable label summary
+contract v0 design/fixtures slice is closed on `b0260bb`. Source: the accepted
+Agent-Ready API Scope Decision and the prior live-queue candidate. Affected
+user job: structured, read-only machine consumption of public lookup output
+without DOM scraping. Local proof: `python -m pytest -q test_agent_label_summary.py`
+passed 4 tests, full backend pytest passed 269 tests with one existing
+Starlette/httpx deprecation warning, Python compile checks passed,
+`git diff --check` passed, and `npm run test:docs` passed. Remote proof:
+GitHub CI run `28298909358` passed and Production Print QA run `28298948790`
+passed at
+`b0260bb8850fedc42b24d8b7dc1653e01340958e`; Production Print QA reported
+`failedReports: 0`, no failed freshness/product blocks, no actionable failures,
+and no report warnings. The slice added backend-only Pydantic schema and pure
+conversion for `agent_label_summary.v0`; it did not add a public endpoint,
+write path, `llms.txt`, robots/sitemap, OpenAPI publication change, or print
+behavior.
 
 Previous closed product slice: the 2026-06-28 prepared-solution entry clarity
 slice is closed on production. Implementation commit: `592e777`; closure/state

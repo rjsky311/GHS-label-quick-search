@@ -1,6 +1,10 @@
 import json
 
+from httpx import ASGITransport, AsyncClient
+
+import server
 from api_models import ChemicalResult, GHSReport
+from api_validation import MAX_PUBLIC_SEARCH_QUERY_LENGTH
 from agent_label_summary import (
     AgentLabelSummaryV0,
     build_agent_label_summary_v0,
@@ -205,3 +209,81 @@ def test_agent_label_summary_v0_schema_declares_boundary_and_read_only_contract(
     assert "reference_links" in schema["properties"]
     assert "candidate" not in schema["properties"]
     assert "manual_entry" not in schema["properties"]
+
+
+async def test_agent_label_summary_endpoint_returns_read_only_summary(monkeypatch):
+    async def fake_search_chemical(cas_number, _http_client):
+        return ChemicalResult(
+            cas_number=cas_number,
+            cid=702,
+            name_en="Ethanol",
+            name_zh="乙醇",
+            found=True,
+            ghs_pictograms=[
+                {"code": "GHS02", "name": "Flammable", "name_zh": "易燃物"},
+            ],
+            hazard_statements=[
+                {"code": "H225", "text": "Highly flammable liquid and vapor."},
+            ],
+            signal_word="Danger",
+            primary_source="ECHA C&L Notifications Summary",
+            primary_report_count="236",
+            reference_links=[
+                {
+                    "label": "Supplier SDS",
+                    "url": "https://example.com/sds",
+                    "link_type": "sds",
+                    "source": "manual",
+                }
+            ],
+        )
+
+    monkeypatch.setattr(server, "search_chemical", fake_search_chemical)
+
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/api/agent/label-summary", params={"q": "64-17-5"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["schema_version"] == "agent_label_summary.v0"
+    assert body["cas_number"] == "64-17-5"
+    assert body["ghs_pictograms"][0]["asset_path"] == "/ghs/GHS02.svg"
+    assert body["primary_source"]["source"] == "ECHA C&L Notifications Summary"
+    assert body["qr_target"]["target_type"] == "ghs-lookup"
+    assert body["authority_boundary"]["status"] == "reference_draft"
+    assert "candidate" not in body
+    assert "manual_entry" not in body
+
+
+async def test_agent_label_summary_endpoint_rejects_blank_and_overlong_queries():
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        blank_response = await ac.get(
+            "/api/agent/label-summary",
+            params={"q": "   "},
+        )
+        overlong_response = await ac.get(
+            "/api/agent/label-summary",
+            params={"q": "x" * (MAX_PUBLIC_SEARCH_QUERY_LENGTH + 1)},
+        )
+
+    assert blank_response.status_code == 400
+    assert overlong_response.status_code == 422
+
+
+def test_agent_label_summary_endpoint_is_visible_in_openapi():
+    server.app.openapi_schema = None
+    schema = server.app.openapi()
+
+    route = schema["paths"]["/api/agent/label-summary"]["get"]
+    response_schema = route["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["$ref"].endswith("/AgentLabelSummaryV0")
+
+    model_schema = schema["components"]["schemas"]["AgentLabelSummaryV0"]
+    assert model_schema["properties"]["schema_version"]["const"] == (
+        "agent_label_summary.v0"
+    )
+    assert "authority_boundary" in model_schema["properties"]
+    assert "qr_target" in model_schema["properties"]
+    assert "candidate" not in model_schema["properties"]

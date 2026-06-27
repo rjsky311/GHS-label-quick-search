@@ -49,6 +49,7 @@ from api_models import (
     MAX_EXPORT_ROWS,
     WorkspaceDocumentPayload,
 )
+from agent_label_summary import AgentLabelSummaryV0, build_agent_label_summary_v0
 from api_validation import (
     WORKSPACE_DOC_TYPES,
     MAX_ADMIN_NAME_LENGTH,
@@ -1690,6 +1691,17 @@ async def search_single_chemical(
     """Search by CAS number or chemical name.
     Auto-detects whether input is a CAS number or name."""
     return await _search_single_query(cas_number)
+
+
+@api_router.get("/agent/label-summary", response_model=AgentLabelSummaryV0)
+@limiter.limit("30/minute")
+async def agent_label_summary(
+    request: Request,
+    q: str = Query(..., max_length=MAX_PUBLIC_SEARCH_QUERY_LENGTH),
+):
+    """Return a read-only structured lookup summary for agents and scripts."""
+    result = await _search_single_query(q)
+    return build_agent_label_summary_v0(result)
 
 
 @api_router.post("/export/xlsx")
