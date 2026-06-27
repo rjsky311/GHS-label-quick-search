@@ -10,6 +10,10 @@ stop conditions, verification, pushing, deployment, and production QA rules.
 Use `PRODUCT_REQUIREMENTS_DECISIONS.md` for the current product decisions,
 priority order, correction-intake direction, Chinese-name candidate policy, and
 done criteria.
+Use `LAB_WORKFLOW_READINESS_ROADMAP.md` for the current next-phase roadmap while
+physical printing is deferred: prepared-solution entry clarity first, then batch
+review/export handoff, data correction/source trust, safe agent-readable access,
+and daily-use comfort.
 For the next label-printing refactor, use
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` as the current public print contract.
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
@@ -73,15 +77,28 @@ of expanding the queue by inertia.
 The 95% Lab-Ready Pilot, Pilot Operations Ready, Pilot Evidence And
 Maintainability Pass, and Batch-First Lab Pilot v1 targets have shipped. The
 next product round should not keep adding QA, print polish, or admin tooling by
-inertia. Choose the next major target from monitoring evidence: user-provided
-batch lists, production QA failures, admin queue evidence, export handoff
-confusion, or a recurring data-governance issue.
+inertia. The 2026-06-27 owner review selected `Lab Workflow Readiness` as the
+next roadmap direction: make non-physical lab workflows clearer and more useful
+while real printer/stock validation stays deferred. Choose the next major target
+from monitoring evidence: user-provided batch lists, production QA failures,
+admin queue evidence, export handoff confusion, a recurring data-governance
+issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: none unless fresh evidence opens one. Do not continue
-Batch-First work by default. Use `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the
-shipped/monitoring Batch-First owner doc,
+Current active slice: Prepared Solution Entry Clarity design/planning only.
+Source: owner/user evidence on 2026-06-27 that the prepared-solution /
+prepared-label entry is unclear enough that even the owner is unsure how to use
+the feature. Affected user job: create or reuse a prepared-solution label from a
+parent chemical while keeping the trust boundary clear. Expected proof: a
+focused design/spec that defines entry naming, header/sidebar role, empty
+states, modal guidance, reuse surfaces, bilingual terminology, tests,
+production QA, and stop conditions before implementation. Stop condition:
+accepted design/spec; no code implementation is open until that design is
+reviewed and accepted.
+
+Do not continue Batch-First work by default. Use
+`BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,
 `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` as the shipped evidence packet,
 `POST_95_REPRIORITIZATION.md` as the post-95 decision history,
 `PILOT_OPERATIONS_READY_PLAN.md` as the shipped pilot-operations baseline, and

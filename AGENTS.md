@@ -39,6 +39,9 @@ before choosing the next autonomous product slice.
 ## Planning And Scope Selection
 
 - Read `PROJECT_STATUS_AND_NEXT_PLAN.md` first.
+- `LAB_WORKFLOW_READINESS_ROADMAP.md` is the current next-phase roadmap while
+  physical printing remains deferred; its first recommended slice is Prepared
+  Solution Entry Clarity design/planning.
 - `NEXT_PRODUCT_WORK.md` is only the short live queue.
 - `NEXT_REMAINING_PRODUCT_WORK.md` is detailed backlog context, not the
   priority selector.

@@ -9,6 +9,14 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
+Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
+product phase while real physical printing remains deferred. Use it to keep the
+next slices oriented around human-first lab workflow clarity: prepared-solution
+entry, batch review/export handoff, data correction/source trust, safe
+agent-readable access, and daily-use comfort. Its first recommended slice is a
+Prepared Solution Entry Clarity design slice, opened from owner-observed
+confusion about how to start and reuse the prepared-solution workflow.
+
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
 first-level print UI model with exactly three outputs: complete A4/Letter
