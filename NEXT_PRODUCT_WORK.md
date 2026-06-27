@@ -194,6 +194,28 @@ no-write, no-approval, and unapproved-candidate boundaries; it did not add
 robots/sitemap, crawler policy changes, new API endpoints, compliance advice,
 or print behavior.
 
+Latest closed live availability audit: the 2026-06-28 Agent-readable production
+availability audit verified the deployed discovery path without changing
+runtime behavior. Source: completion audit after the closed Agent `/llms.txt`
+guide slice. Affected user job: Coding Agents, scripts, LIMS/ELN helpers, and
+inventory-cleanup workflows can discover OpenAPI, read `/llms.txt`, and request
+a structured read-only label summary without scraping DOM, print HTML,
+screenshots, or UI copy. Live proof: `https://ghs-backend.zeabur.app/openapi.json`
+returned `200`, included `/api/agent/label-summary`, and exposed
+`AgentLabelSummaryV0` with `upstream` and `authority_boundary`;
+`https://ghs-frontend.zeabur.app/llms.txt` returned `200 text/plain` and
+included OpenAPI, `agent_label_summary.v0`, read-only, SDS, supplier-label,
+local-regulation, and unapproved-candidate boundaries; and
+`https://ghs-backend.zeabur.app/api/agent/label-summary?q=64-17-5` returned
+`200`, `schema_version: agent_label_summary.v0`, an `upstream` object, and
+`authority_boundary.status: reference_draft`. Remote baseline at audit time:
+GitHub CI run `28300015087` and Production Print QA run `28300050620` passed at
+`afd7ed5c64a884b76d31de241ae02e802f65be99`, with Production Print QA reporting
+`failedReports: 0`, no failed freshness/product blocks, no actionable failures,
+and no report warnings. Non-goals: no new endpoint, no write path, no crawler
+policy change, no compliance advice, no print behavior change, and no public
+data approval workflow.
+
 Previous closed product slice: the 2026-06-28 prepared-solution entry clarity
 slice is closed on production. Implementation commit: `592e777`; closure/state
 commits: `670e870` and `d5fb38e`. It replaced ambiguous "prepared" and

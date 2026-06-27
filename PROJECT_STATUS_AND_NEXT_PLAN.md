@@ -19,11 +19,14 @@ is now shipped and production-verified, and the latest follow-up closure is the
 Agent-Ready API Scope Decision is now closed on `35c3067`, and the
 `agent_label_summary.v0` backend contract/fixture slice is closed on
 `b0260bb`; the Agent label summary endpoint v0 slice is closed on `2b9dfe4`.
-The Agent `/llms.txt` guide slice is closed on `e582f0c`. All four have green
-CI and Production Print QA. No further local product implementation slice is
-open from the Lab Workflow Readiness roadmap until fresh owner/user evidence,
-production QA failure, admin/export evidence, explicit scope/safety decision,
-or a concrete code-review finding selects it.
+The Agent `/llms.txt` guide slice is closed on `e582f0c`, and the follow-up
+live availability audit verified that production OpenAPI, `/llms.txt`, and the
+read-only label-summary endpoint are reachable. All four implementation slices
+and the availability audit have green local or remote evidence at the slice
+boundary. No further local product implementation slice is open from the Lab
+Workflow Readiness roadmap until fresh owner/user evidence, production QA
+failure, admin/export evidence, explicit scope/safety decision, or a concrete
+code-review finding selects it.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
