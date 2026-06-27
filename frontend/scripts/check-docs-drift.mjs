@@ -94,6 +94,7 @@ const docs = {
   "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md": readText(
     "CANDIDATE_DISCOVERY_DRY_RUN_PLAN.md",
   ),
+  "frontend/public/llms.txt": readText("frontend/public/llms.txt"),
 };
 
 const rootMarkdownDocs = Object.fromEntries(
@@ -257,6 +258,34 @@ requireIncludes(
   "BATCH_FIRST_LAB_PILOT_V1_PLAN.md",
   "shipped/monitoring batch-first owner doc must stay discoverable from the canonical plan",
 );
+
+requireMaxLineCount(
+  "frontend/public/llms.txt",
+  docs["frontend/public/llms.txt"],
+  120,
+  "agent guide should stay concise",
+);
+for (const [needle, reason] of [
+  ["# GHS Label Quick Search", "guide title"],
+  [
+    "https://ghs-backend.zeabur.app/openapi.json",
+    "agents should discover the authoritative OpenAPI document",
+  ],
+  [
+    "https://ghs-backend.zeabur.app/api/agent/label-summary?q=64-17-5",
+    "agents should discover the read-only label summary endpoint",
+  ],
+  ["agent_label_summary.v0", "guide should name the response contract"],
+  ["read-only", "guide must state the no-write boundary"],
+  ["no write endpoints", "guide must not imply agent write-back"],
+  ["not approval", "guide must not imply approval authority"],
+  ["SDS", "guide must preserve SDS authority"],
+  ["supplier labels", "guide must preserve supplier-label authority"],
+  ["local regulations", "guide must preserve local-rule authority"],
+  ["unapproved candidate", "guide must exclude pending/candidate evidence"],
+]) {
+  requireIncludes("frontend/public/llms.txt", docs["frontend/public/llms.txt"], needle, reason);
+}
 requireIncludes(
   "POST_95_REPRIORITIZATION.md",
   docs["POST_95_REPRIORITIZATION.md"],

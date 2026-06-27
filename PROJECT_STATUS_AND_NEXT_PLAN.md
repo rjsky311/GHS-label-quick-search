@@ -18,10 +18,11 @@ is now shipped and production-verified, and the latest follow-up closure is the
 `c3b3bc3` Production Print QA Zeabur-probe fallback hygiene fix. The
 Agent-Ready API Scope Decision is now closed on `35c3067`, and the
 `agent_label_summary.v0` backend contract/fixture slice is closed on
-`b0260bb`; both have green CI and Production Print QA. The active roadmap slice
-is the Agent label summary endpoint v0 slice: expose that tested contract
-through a bounded read-only API/OpenAPI route, not an agent write path,
-`llms.txt`, robots, sitemap, compliance-advice surface, or print-model change.
+`b0260bb`; the Agent label summary endpoint v0 slice is closed on `2b9dfe4`.
+All three have green CI and Production Print QA. The active roadmap slice is
+the Agent `/llms.txt` guide slice: publish a concise static guide pointing
+agents to OpenAPI and the read-only endpoint, not robots, sitemap, agent write
+paths, compliance-advice surfaces, or print-model changes.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior

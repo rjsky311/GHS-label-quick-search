@@ -1,0 +1,45 @@
+# GHS Label Quick Search
+
+> Free public GHS lookup and label-printing reference tool for lab,
+> operations, teaching, and safety-adjacent workflows.
+
+This file is navigation guidance for agents. It is not chemical-data authority,
+not approval, and not compliance advice.
+
+## Primary API
+
+- [OpenAPI JSON](https://ghs-backend.zeabur.app/openapi.json): authoritative
+  machine-readable API description.
+- [Agent label summary v0](https://ghs-backend.zeabur.app/api/agent/label-summary?q=64-17-5):
+  read-only lookup summary using the `agent_label_summary.v0` response contract.
+- [API health](https://ghs-backend.zeabur.app/api/health): backend health and
+  deployed git SHA.
+
+## Safe Use
+
+- Treat output as reference/draft data for review, inventory cleanup, LIMS/ELN
+  helpers, scripts, or Coding Agent workflows.
+- Verify hazard communication against SDS, supplier labels, and local regulations
+  before use.
+- Use `reference_links`, `review_flags`, `upstream`, and `authority_boundary`
+  fields to decide whether human review is needed.
+- Retry later when `upstream.upstream_error` is true.
+
+## Boundaries
+
+- The public API is read-only and has no write endpoints for agents.
+- API output is not approval for chemical use, storage, disposal, PPE,
+  transport, waste handling, or regulatory compliance.
+- Do not use agent output to approve public dictionary data, aliases, reference
+  links, correction requests, QR targets, or labels.
+- Do not treat any unapproved candidate, pending manual entry, workbook text,
+  or external suggestion as approved public data.
+- Do not scrape DOM, print HTML, screenshots, or UI copy as the data contract.
+
+## Project Context
+
+- [Project status and next plan](https://github.com/rjsky311/GHS-label-quick-search/blob/main/PROJECT_STATUS_AND_NEXT_PLAN.md):
+  current roadmap state.
+- [Data governance and safety boundaries](https://github.com/rjsky311/GHS-label-quick-search/blob/main/DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md):
+  reviewed-data and authority boundaries.
+- [Public repository](https://github.com/rjsky311/GHS-label-quick-search)
