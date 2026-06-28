@@ -28,10 +28,13 @@ remote evidence at the slice boundary. Follow-up docs-only reconciliations on
 stale active-slice wording. This cleanup record is intentionally non-recursive:
 later no-op audits or wording-only maintenance do not become new product-slice
 evidence unless they change slice status, evidence gates, or promotion
-triggers. No further local product implementation slice is open from the Lab
-Workflow Readiness roadmap until fresh owner/user evidence, production QA
-failure, admin/export evidence, explicit scope/safety decision, or a concrete
-code-review finding selects it.
+triggers. On 2026-06-28, the owner explicitly approved both Daily-use Comfort /
+Dark Bench and Batch Review And Export Handoff Clarity as next roadmap
+directions and delegated ordering. Open Daily-use Comfort / Dark Bench first
+because the explicit theme decision is a valid roadmap trigger; keep
+Batch/export handoff second and evidence-gated until a real batch list, export
+example, workbook audit, production QA failure, screenshot, or user report
+selects the concrete handoff issue.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior

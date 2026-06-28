@@ -86,24 +86,26 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Active Slice
 
-Current active slice: no further autonomous product implementation is open
-after the prepared-solution entry clarity work and the safe agent-readable
-access sequence. Source: the Lab Workflow Readiness roadmap plus owner/user
-questions about Coding Agent crawling and structured label/tag access. Affected
-user job now covered by the latest closed slices: a person, script, LIMS/ELN
-helper, inventory-cleanup workflow, or Coding Agent can discover OpenAPI,
-request a read-only structured label summary, and see SDS/supplier/local-rule
-boundaries without scraping the UI. Stop condition: do not open another local
-product implementation slice from this roadmap until fresh owner/user evidence,
-production QA failure, admin/export evidence, an explicit scope/safety decision,
-or a concrete code-review finding selects it.
+Current active slice: Daily-use Comfort / Dark Bench Activation v0. Source: the
+2026-06-28 owner decision approving both Daily-use Comfort / Dark Bench and
+Batch Review And Export Handoff Clarity, with ordering delegated to Codex, plus
+the scope decision plan in
+`docs/superpowers/plans/2026-06-28-daily-use-comfort-dark-bench-scope-decision.md`.
+Chosen order: Dark Bench first, Batch/export handoff second. Affected user job:
+a repeated daily user should be able to work in a low-glare app chrome without
+losing print or safety clarity. Expected proof: focused theme/header/CSS token
+tests, `npm run test:i18n`, `npm run build`, and Dark Bench workbench QA; after
+deployment, production health and Dark Bench workbench QA against the live site.
+Stop condition: add only a persisted app-chrome theme toggle and Dark Bench
+workbench QA coverage; do not change print rendering, label output models,
+export behavior, admin tooling, backend APIs, or agent-readable contracts.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
 `670e8701380d09dc2a36540f3515bbd8ee74368d`; the proof record was committed in
 `d5fb38e8ac5bb1258a7c0b6182816d1f0d1eafce`. Do not reopen Batch-First,
 prepared-label, print polish, admin tooling, or physical printing by inertia
-while this docs-only scope decision is active.
+while the Dark Bench activation slice is active.
 
 Do not continue Batch-First work by default. Use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,
@@ -125,6 +127,12 @@ non-recursive: future no-op audits or wording-only maintenance commits should
 not be promoted into product work unless they change slice status, evidence
 gates, or promotion triggers. These commits do not create a new product
 implementation slice; they preserve the evidence gate.
+
+Second ordered direction after Dark Bench: Batch Review And Export Handoff
+Clarity. Keep it queued behind the theme slice, but do not implement it until
+one of its own evidence triggers arrives: a real batch list, export workbook,
+screenshot, workbook audit, production QA failure, or user report showing the
+handoff confusion.
 
 Latest closed concrete slice: the 2026-06-28 Production Print QA Zeabur probe
 fallback hygiene slice is closed on production. Source: Production Print QA run

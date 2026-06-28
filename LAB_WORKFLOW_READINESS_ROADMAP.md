@@ -38,6 +38,11 @@ Roadmap context and hypotheses:
   decision, versioned summary schema, read-only endpoint, `/llms.txt`, and live
   production availability audit. Future agent work still needs new integration
   evidence or an explicit scope/safety decision.
+- The owner explicitly approved both Daily-use Comfort / Dark Bench and Batch
+  Review And Export Handoff Clarity on 2026-06-28 and delegated ordering.
+  Daily-use Comfort / Dark Bench is first because explicit theme approval is a
+  valid roadmap trigger; Batch/export handoff remains second and needs its own
+  concrete batch/export evidence before implementation.
 
 ## North Star
 
@@ -86,8 +91,9 @@ through by inertia:
   workflow/API/visual-system changes, `PRODUCT_SCOPE_GATE.md` before
   implementation.
 
-Current state: no autonomous implementation slice is open from this roadmap.
-Open the next slice only from evidence recorded in `NEXT_PRODUCT_WORK.md`.
+Current state: Daily-use Comfort / Dark Bench Activation v0 is the active
+implementation slice recorded in `NEXT_PRODUCT_WORK.md`. Open only that bounded
+theme slice unless newer evidence changes the order.
 
 ## Shipped / Monitoring: 1. Prepared Solution Entry Clarity
 
@@ -342,20 +348,28 @@ Current stop condition:
   write-back to public data, automatic public dictionary writer, or
   agent-generated approval workflow.
 
-## Later / Evidence-Gated: 5. Daily-Use Comfort
+## Next Candidate: 5. Daily-Use Comfort / Dark Bench
 
 Purpose: improve repeated daily use without distracting from workflow trust.
 
 Affected user job: users should be able to work comfortably on desktop, mobile,
 and long sessions without losing print or safety clarity.
 
-Promotion trigger: a production screenshot, user report, accessibility issue,
-mobile/narrow QA failure, or explicit theme decision shows a comfort issue is
-blocking real workflow.
+Promotion trigger: accepted on 2026-06-28 through explicit owner approval of
+Daily-use Comfort / Dark Bench as one of the next two roadmap directions.
+Future comfort work beyond Dark Bench v0 still needs a production screenshot,
+user report, accessibility issue, mobile/narrow QA failure, or explicit theme
+decision showing a concrete workflow issue.
 
 Concrete work:
 
-- Add Dark Bench only as an app chrome theme; printed label previews stay white.
+- Add Dark Bench only as an app chrome theme; printed label previews stay white
+  and print-faithful.
+- Use the existing `theme-dark-bench` tokens and keep Comfort Dim as the
+  default.
+- Add a compact header toggle with local browser persistence.
+- Extend workbench QA so screenshots can be captured in Dark Bench on desktop
+  and mobile.
 - Improve narrow/mobile reading when screenshots or QA show regressions.
 - Extend accessibility tests when new complex dialogs or flows are added.
 - Keep low-noise UX improvements tied to real confusion, not decorative polish.
@@ -370,8 +384,11 @@ Expected proof:
 
 Stop condition:
 
-- Stop when the concrete comfort issue is resolved.
-- Do not redesign the whole app or alter label meaning as part of visual polish.
+- Stop Dark Bench v0 when app chrome can toggle and persist, desktop/mobile
+  workbench QA passes in Dark Bench, and tests prove printable preview surfaces
+  remain white.
+- Do not redesign the whole app, restyle every modal, change print/export/API
+  behavior, or alter label meaning as part of visual polish.
 
 ## Slice Selection Rules
 
