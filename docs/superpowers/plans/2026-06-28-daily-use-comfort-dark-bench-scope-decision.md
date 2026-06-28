@@ -947,3 +947,13 @@ WORKBENCH_QA_URL=https://ghs-frontend.zeabur.app/ WORKBENCH_QA_THEME=dark-bench 
 ```
 
 If production QA passes, update roadmap state with the deployment proof in a separate state-closure commit only if it changes slice status or evidence gates. Do not create a recursive no-op commit only to mention the state-closure commit itself.
+
+Production follow-up result on 2026-06-28: passed. Commit `2d1de99` was pushed
+to `main` and deployed as production SHA
+`2d1de9915bb8c10cfb8fc2fd1138269e91b58f31`. GitHub CI run `28322688691`
+completed successfully, Production Print QA run `28322728851` completed
+successfully, expected-SHA production health returned `ok: true` for frontend
+`build-info.json` and backend `/api/health`, and live Dark Bench workbench QA
+returned `ok: true` with desktop/mobile `theme-dark-bench`, no missing
+selectors, and no horizontal overflow. The slice can be recorded as shipped /
+monitoring; future comfort work still needs fresh evidence.

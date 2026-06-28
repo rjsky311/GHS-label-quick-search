@@ -31,9 +31,11 @@ evidence unless they change slice status, evidence gates, or promotion
 triggers. On 2026-06-28, the owner explicitly approved both Daily-use Comfort /
 Dark Bench and Batch Review And Export Handoff Clarity as next roadmap
 directions and delegated ordering. Daily-use Comfort / Dark Bench Activation v0
-is locally implemented and verified, with production readiness still pending
-deployment, expected-SHA production health, and live Dark Bench workbench QA.
-Local implementation commit: `0ea7aab`. Keep Batch/export handoff second and
+is shipped and production-verified: implementation commit `0ea7aab`, local
+state record `2d1de99`, production SHA
+`2d1de9915bb8c10cfb8fc2fd1138269e91b58f31`, GitHub CI run `28322688691`,
+Production Print QA run `28322728851`, expected-SHA production health, and
+live Dark Bench workbench QA all passed. Keep Batch/export handoff second and
 evidence-gated until a real batch list, export example, workbook audit,
 production QA failure, screenshot, or user report selects the concrete handoff
 issue.
