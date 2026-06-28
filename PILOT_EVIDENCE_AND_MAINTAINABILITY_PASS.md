@@ -574,8 +574,9 @@ Evidence:
 
 - Owner doc exists and records the target scope, non-goals, evidence, and
   closure criteria.
-- `NEXT_PRODUCT_WORK.md` now uses this target as shipped evidence and points to
-  `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the active slice.
+- `NEXT_PRODUCT_WORK.md` now uses this target as shipped evidence and, at that
+  checkpoint, pointed to `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the next owner
+  doc.
 - Pilot evidence is recorded from production health, production search UI, and
   production lab-ready batch gates.
 - Admin/report and candidate-discovery evidence is backed by focused backend
