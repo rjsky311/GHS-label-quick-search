@@ -295,10 +295,11 @@ allowlisting, and expected-SHA production QA. `qa:zeabur-deployment`,
 `qa:production-health`, `qa:production-search-ui`,
 `qa:production-batch-print`, and `qa:production-product` passed against that
 expected SHA. The evidence package is
-`qa/evidence/2026-06-21-post-deploy-manual-qa/`. The next concrete P1 issue is
-not more print polish: it is closing H360 variant Traditional Chinese wording
-gaps in alternate classifications and adding coverage so that class of gap is
-not found only by manual spot check.
+`qa/evidence/2026-06-21-post-deploy-manual-qa/`. That checkpoint then opened
+the H360 variant Traditional Chinese wording closure, which later shipped with
+reviewed H360-family wording and patrol coverage. Do not treat the historical
+H360 finding as the current next slice; reopen wording work only from fresh
+coverage, QA, screenshot, export, or code-review evidence.
 
 The 2026-05-26 closure audit moved `Batch-First Lab Pilot v1` to
 `Shipped / Monitoring`. The next slice should now be selected from monitoring
@@ -384,9 +385,11 @@ cannot complete the intended job.
   artifacts, 0.00 MiB expired artifacts, 367.79 MiB caches, and no warnings.
   A manual-directed content spot check found `H360FD` and `H360Fd`
   Traditional Chinese placeholder wording in alternate classifications for
-  Methanol and Ethylene Oxide. Open the next slice from that concrete wording
-  evidence or from fresher screenshot/PDF/physical-print/admin/export/CI
-  evidence; do not reopen broad UI or print polish by inertia.
+  Methanol and Ethylene Oxide. That wording gap was later closed with reviewed
+  H360-family wording and coverage, so this log item is historical evidence,
+  not an open slice. Reopen wording only from fresh screenshot/PDF/admin/export,
+  QA, CI, or code-review evidence; do not reopen broad UI or print polish by
+  inertia.
 - 2026-06-02 LINER survey workflow critique: the uploaded survey dataset had
   16 AI simulated respondents and 128 responses across the batch lookup,
   review, print, export, and correction/admin path. The strongest actionable

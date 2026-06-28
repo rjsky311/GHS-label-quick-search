@@ -569,7 +569,8 @@ For admin/correction changes:
 
 - The active docs were previously stale after
   `PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md` shipped; docs drift checks must
-  now protect this active target.
+  now protect this shipped/monitoring baseline from being mistaken for an
+  active target.
 - The largest frontend/backend files remain large enough to slow future work:
   `printLabels.js`, `printLabelStyles.js`, `LabelPrintModal.jsx`,
   `PilotDashboardSidebar.jsx`, `server.py`, and `pilot_store.py`.

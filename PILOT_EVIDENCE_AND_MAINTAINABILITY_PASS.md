@@ -594,7 +594,7 @@ Remaining work after this target:
 
 - Do not reopen this pass unless new pilot evidence contradicts the current
   conclusion.
-- The next active slice should be chosen from actual pilot queue evidence. If
-  there is still no real pilot queue, the narrowest next slice is likely either
-  `PilotTriagePanel` extraction or a data-quality review pass focused on
-  multiple-GHS confirmation clarity.
+- Future work should be chosen from actual pilot queue evidence. If there is
+  still no real pilot queue, do not start `PilotTriagePanel` extraction or a
+  data-quality review pass from this historical recommendation alone; promote
+  one only when current queue evidence or a concrete review finding selects it.
