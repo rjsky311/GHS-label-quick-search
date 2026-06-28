@@ -43,8 +43,9 @@ Roadmap context and hypotheses:
   Daily-use Comfort / Dark Bench Activation v0 is locally implemented and
   verified because explicit theme approval was a valid roadmap trigger; its
   production follow-up still needs deployment, expected-SHA production health,
-  and live Dark Bench workbench QA. Batch/export handoff remains second and
-  needs its own concrete batch/export evidence before implementation.
+  and live Dark Bench workbench QA. Local implementation commit: `0ea7aab`.
+  Batch/export handoff remains second and needs its own concrete batch/export
+  evidence before implementation.
 
 ## North Star
 
@@ -368,6 +369,7 @@ Current local state:
 
 - Dark Bench v0 adds only a persisted app-chrome theme toggle and workbench QA
   theme forcing.
+- Local implementation commit: `0ea7aab`.
 - Local verification covers focused theme/Header/App/CSS token tests,
   generated print-preview white contract coverage, i18n parity, QA script
   gates, frontend build, docs whitespace, and local desktop/mobile Dark Bench

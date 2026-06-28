@@ -33,9 +33,10 @@ Dark Bench and Batch Review And Export Handoff Clarity as next roadmap
 directions and delegated ordering. Daily-use Comfort / Dark Bench Activation v0
 is locally implemented and verified, with production readiness still pending
 deployment, expected-SHA production health, and live Dark Bench workbench QA.
-Keep Batch/export handoff second and evidence-gated until a real batch list,
-export example, workbook audit, production QA failure, screenshot, or user
-report selects the concrete handoff issue.
+Local implementation commit: `0ea7aab`. Keep Batch/export handoff second and
+evidence-gated until a real batch list, export example, workbook audit,
+production QA failure, screenshot, or user report selects the concrete handoff
+issue.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior

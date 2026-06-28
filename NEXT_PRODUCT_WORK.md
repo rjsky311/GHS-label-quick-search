@@ -93,15 +93,16 @@ delegated to Codex, plus the scope decision plan in
 `docs/superpowers/plans/2026-06-28-daily-use-comfort-dark-bench-scope-decision.md`.
 Chosen order: Dark Bench first, Batch/export handoff second. Affected user job:
 a repeated daily user should be able to work in a low-glare app chrome without
-losing print or safety clarity. Local proof covers focused theme/header/App/CSS
-token tests, the generated print-preview white contract test, `npm run
-test:i18n`, `npm run test:qa-scripts`, `npm run build`, `git diff --check`, and
-local Dark Bench workbench QA with desktop/mobile screenshots. Production
-follow-up remains pending until deployment verifies the expected SHA and live
-Dark Bench workbench QA. Stop condition for the local slice is met by adding
-only a persisted app-chrome theme toggle and Dark Bench workbench QA coverage;
-do not change print rendering, label output models, export behavior, admin
-tooling, backend APIs, or agent-readable contracts.
+losing print or safety clarity. Local implementation commit: `0ea7aab`. Local
+proof covers focused theme/header/App/CSS token tests, the generated
+print-preview white contract test, `npm run test:i18n`, `npm run
+test:qa-scripts`, `npm run build`, `git diff --check`, and local Dark Bench
+workbench QA with desktop/mobile screenshots. Production follow-up remains
+pending until deployment verifies the expected SHA and live Dark Bench
+workbench QA. Stop condition for the local slice is met by adding only a
+persisted app-chrome theme toggle and Dark Bench workbench QA coverage; do not
+change print rendering, label output models, export behavior, admin tooling,
+backend APIs, or agent-readable contracts.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
