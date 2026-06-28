@@ -896,6 +896,43 @@ describe("print layout model", () => {
     );
   });
 
+  it("keeps generated preview and printed label surfaces white", () => {
+    const labelPreview = buildPrintPreviewDocument(
+      [mockChemical],
+      { size: "medium", template: "qrcode", orientation: "portrait" },
+      {},
+      {},
+      { "64-17-5": 1 },
+      {},
+      { mode: "label" },
+    );
+    const sheetPreview = buildPrintPreviewDocument(
+      [mockChemical, mockChemicalNoGHS],
+      { size: "medium", template: "standard", orientation: "portrait" },
+      {},
+      {},
+      { "64-17-5": 1, "7732-18-5": 1 },
+      {},
+      { mode: "sheet" },
+    );
+
+    const expectSharedWhitePrintStyles = (html) => {
+      expect(html).toContain("body.preview-body");
+      expect(html).toMatch(/\.preview-card\s*{[^}]*background:\s*#ffffff;/s);
+      expect(html).toMatch(/body\s*{[^}]*background:\s*#fff;/s);
+      expect(html).toMatch(/\.label\s*{[^}]*background:\s*#fff;/s);
+      expect(html).not.toContain("theme-dark-bench");
+      expect(html).not.toContain("--notebook-app");
+      expect(html).not.toContain("--notebook-surface");
+    };
+
+    expectSharedWhitePrintStyles(labelPreview.html);
+    expectSharedWhitePrintStyles(sheetPreview.html);
+    expect(sheetPreview.html).toMatch(
+      /\.preview-sheet-viewport\s*{[^}]*background:\s*#ffffff;/s,
+    );
+  });
+
   it("sizes standalone label previews from generated metrics across curated stocks", () => {
     [
       ["A4 primary", "a4-primary", "full", "shipping"],

@@ -45,6 +45,13 @@ import {
 } from "@/constants/admin";
 import { recordDictionaryMissQuery } from "@/utils/workspaceDocuments";
 import { lazyWithRetry } from "@/utils/lazyWithRetry";
+import {
+  THEME_MODES,
+  getNextThemeMode,
+  getThemeModeClassName,
+  loadThemeMode,
+  persistThemeMode,
+} from "@/utils/themeMode";
 
 // Components
 import AdminAccessDialog from "@/components/AdminAccessDialog";
@@ -126,6 +133,7 @@ function App() {
   const [error, setError] = useState("");
   const [pilotAdminError, setPilotAdminError] = useState("");
   const [pilotAdminKey, setPilotAdminKey] = useState(() => loadPilotAdminKey());
+  const [themeMode, setThemeMode] = useState(() => loadThemeMode());
   const [selectedResult, setSelectedResult] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -1111,13 +1119,27 @@ function App() {
     setShowFavorites(true);
   }, [invalidateFavoritePrintLookup, showFavorites]);
 
+  const handleToggleThemeMode = useCallback(() => {
+    setThemeMode((currentMode) => getNextThemeMode(currentMode));
+  }, []);
+
+  useEffect(() => {
+    persistThemeMode(themeMode);
+  }, [themeMode]);
+
   // ── Render ──
+  const appThemeClassName = getThemeModeClassName(themeMode);
+  const toastTheme = themeMode === THEME_MODES.DARK_BENCH ? "dark" : "light";
+
   return (
-    <div className="theme-comfort-dim notebook-app min-h-screen">
+    <div
+      className={`${appThemeClassName} notebook-app min-h-screen`}
+      data-testid="app-shell"
+    >
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-blue-700 focus:text-white focus:rounded-md">
         {t("a11y.skipToContent")}
       </a>
-      <Toaster position="top-right" theme="light" richColors />
+      <Toaster position="top-right" theme={toastTheme} richColors />
 
       <Header
         favorites={favorites}
@@ -1130,10 +1152,12 @@ function App() {
         showFavorites={showFavorites}
         showHistory={showHistory}
         showPilotDashboard={showPilotDashboard}
+        themeMode={themeMode}
         onTogglePilotDashboard={handleTogglePilotDashboard}
         onToggleFavorites={handleToggleFavorites}
         onToggleHistory={() => setShowHistory(!showHistory)}
         onTogglePrepared={() => setShowPrepared(!showPrepared)}
+        onToggleThemeMode={handleToggleThemeMode}
         onGoHome={handleGoHome}
       />
 

@@ -9,6 +9,16 @@ const outputDir = path.resolve(
   env.WORKBENCH_QA_OUTPUT_DIR || "build/experiment-notebook-workbench",
 );
 const headless = env.WORKBENCH_QA_HEADLESS !== "0";
+const requestedTheme = env.WORKBENCH_QA_THEME?.trim() || "comfort-dim";
+const allowedThemes = new Set(["comfort-dim", "dark-bench"]);
+if (!allowedThemes.has(requestedTheme)) {
+  console.error(
+    `Unsupported WORKBENCH_QA_THEME "${requestedTheme}". Expected one of: comfort-dim, dark-bench.`,
+  );
+  process.exit(1);
+}
+const qaTheme = requestedTheme;
+const themeStorageKey = "ghs-theme-mode";
 
 const selectors = {
   search: '[data-testid="search-workbench"]',
@@ -81,6 +91,7 @@ const roundedRect = (rect) =>
 
 const inspectWorkbench = async (page) =>
   page.evaluate((selectorMap) => {
+    const appShell = document.querySelector('[data-testid="app-shell"]');
     const rectOf = (selector) => {
       const node = document.querySelector(selector);
       if (!node) return null;
@@ -135,6 +146,8 @@ const inspectWorkbench = async (page) =>
       tools: rectOf(selectorMap.tools),
       trustSlot: rectOf(selectorMap.trustSlot),
       trustPanel: rectOf(selectorMap.trustPanel),
+      appShellClassName: appShell?.className || "",
+      appShellClassList: appShell ? Array.from(appShell.classList) : [],
       missingSelectors,
       overflowNodes,
     };
@@ -154,6 +167,12 @@ const inspectViewport = async (browser, viewport, screenshotName) => {
     deviceScaleFactor: 1,
     locale: "zh-TW",
   });
+  await context.addInitScript(
+    ({ key, value }) => {
+      window.localStorage.setItem(key, value);
+    },
+    { key: themeStorageKey, value: qaTheme },
+  );
   const page = await context.newPage();
   page.setDefaultTimeout(60000);
 
@@ -194,6 +213,7 @@ const writeReport = ({ failures, desktop = null, mobile = null }) => {
     ok: failures.length === 0,
     appUrl,
     outputDir,
+    theme: qaTheme,
     failures,
     desktop,
     mobile,
@@ -255,6 +275,12 @@ try {
   }
   if (mobile.missingSelectors.length > 0) {
     failures.push("mobile-missing-selectors");
+  }
+  if (!desktop.appShellClassList.includes(`theme-${qaTheme}`)) {
+    failures.push("desktop-theme-class-mismatch");
+  }
+  if (!mobile.appShellClassList.includes(`theme-${qaTheme}`)) {
+    failures.push("mobile-theme-class-mismatch");
   }
   if (mobile.overflowNodes.length > 0) {
     failures.push("mobile-text-overflow");

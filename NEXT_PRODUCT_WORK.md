@@ -84,28 +84,31 @@ from monitoring evidence: user-provided batch lists, production QA failures,
 admin queue evidence, export handoff confusion, a recurring data-governance
 issue, or owner/user evidence that a shipped workflow is unclear.
 
-### Active Slice
+### Current Slice State
 
-Current active slice: Daily-use Comfort / Dark Bench Activation v0. Source: the
-2026-06-28 owner decision approving both Daily-use Comfort / Dark Bench and
-Batch Review And Export Handoff Clarity, with ordering delegated to Codex, plus
-the scope decision plan in
+Daily-use Comfort / Dark Bench Activation v0 is locally implemented and
+verified. Source: the 2026-06-28 owner decision approving both Daily-use
+Comfort / Dark Bench and Batch Review And Export Handoff Clarity, with ordering
+delegated to Codex, plus the scope decision plan in
 `docs/superpowers/plans/2026-06-28-daily-use-comfort-dark-bench-scope-decision.md`.
 Chosen order: Dark Bench first, Batch/export handoff second. Affected user job:
 a repeated daily user should be able to work in a low-glare app chrome without
-losing print or safety clarity. Expected proof: focused theme/header/CSS token
-tests, `npm run test:i18n`, `npm run build`, and Dark Bench workbench QA; after
-deployment, production health and Dark Bench workbench QA against the live site.
-Stop condition: add only a persisted app-chrome theme toggle and Dark Bench
-workbench QA coverage; do not change print rendering, label output models,
-export behavior, admin tooling, backend APIs, or agent-readable contracts.
+losing print or safety clarity. Local proof covers focused theme/header/App/CSS
+token tests, the generated print-preview white contract test, `npm run
+test:i18n`, `npm run test:qa-scripts`, `npm run build`, `git diff --check`, and
+local Dark Bench workbench QA with desktop/mobile screenshots. Production
+follow-up remains pending until deployment verifies the expected SHA and live
+Dark Bench workbench QA. Stop condition for the local slice is met by adding
+only a persisted app-chrome theme toggle and Dark Bench workbench QA coverage;
+do not change print rendering, label output models, export behavior, admin
+tooling, backend APIs, or agent-readable contracts.
 
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
 `670e8701380d09dc2a36540f3515bbd8ee74368d`; the proof record was committed in
 `d5fb38e8ac5bb1258a7c0b6182816d1f0d1eafce`. Do not reopen Batch-First,
 prepared-label, print polish, admin tooling, or physical printing by inertia
-while the Dark Bench activation slice is active.
+while Dark Bench production follow-up is pending.
 
 Do not continue Batch-First work by default. Use
 `BATCH_FIRST_LAB_PILOT_V1_PLAN.md` as the shipped/monitoring Batch-First owner doc,

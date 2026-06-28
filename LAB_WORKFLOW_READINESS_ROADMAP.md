@@ -40,9 +40,11 @@ Roadmap context and hypotheses:
   evidence or an explicit scope/safety decision.
 - The owner explicitly approved both Daily-use Comfort / Dark Bench and Batch
   Review And Export Handoff Clarity on 2026-06-28 and delegated ordering.
-  Daily-use Comfort / Dark Bench is first because explicit theme approval is a
-  valid roadmap trigger; Batch/export handoff remains second and needs its own
-  concrete batch/export evidence before implementation.
+  Daily-use Comfort / Dark Bench Activation v0 is locally implemented and
+  verified because explicit theme approval was a valid roadmap trigger; its
+  production follow-up still needs deployment, expected-SHA production health,
+  and live Dark Bench workbench QA. Batch/export handoff remains second and
+  needs its own concrete batch/export evidence before implementation.
 
 ## North Star
 
@@ -91,9 +93,10 @@ through by inertia:
   workflow/API/visual-system changes, `PRODUCT_SCOPE_GATE.md` before
   implementation.
 
-Current state: Daily-use Comfort / Dark Bench Activation v0 is the active
-implementation slice recorded in `NEXT_PRODUCT_WORK.md`. Open only that bounded
-theme slice unless newer evidence changes the order.
+Current state: Daily-use Comfort / Dark Bench Activation v0 is locally
+implemented and verified, with production follow-up pending as recorded in
+`NEXT_PRODUCT_WORK.md`. Do not open another comfort slice unless newer evidence
+changes the order.
 
 ## Shipped / Monitoring: 1. Prepared Solution Entry Clarity
 
@@ -348,7 +351,7 @@ Current stop condition:
   write-back to public data, automatic public dictionary writer, or
   agent-generated approval workflow.
 
-## Next Candidate: 5. Daily-Use Comfort / Dark Bench
+## Locally Implemented / Production Follow-Up Pending: 5. Daily-Use Comfort / Dark Bench
 
 Purpose: improve repeated daily use without distracting from workflow trust.
 
@@ -360,6 +363,17 @@ Daily-use Comfort / Dark Bench as one of the next two roadmap directions.
 Future comfort work beyond Dark Bench v0 still needs a production screenshot,
 user report, accessibility issue, mobile/narrow QA failure, or explicit theme
 decision showing a concrete workflow issue.
+
+Current local state:
+
+- Dark Bench v0 adds only a persisted app-chrome theme toggle and workbench QA
+  theme forcing.
+- Local verification covers focused theme/Header/App/CSS token tests,
+  generated print-preview white contract coverage, i18n parity, QA script
+  gates, frontend build, docs whitespace, and local desktop/mobile Dark Bench
+  workbench QA screenshots.
+- Production verification is still pending deployment, expected-SHA production
+  health, and live Dark Bench workbench QA.
 
 Concrete work:
 

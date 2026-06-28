@@ -11,10 +11,12 @@ const defaultProps = {
   showFavorites: false,
   showHistory: false,
   showPilotDashboard: false,
+  themeMode: 'comfort-dim',
   onTogglePilotDashboard: jest.fn(),
   onToggleFavorites: jest.fn(),
   onToggleHistory: jest.fn(),
   onTogglePrepared: jest.fn(),
+  onToggleThemeMode: jest.fn(),
   onGoHome: jest.fn(),
 };
 
@@ -23,6 +25,7 @@ describe('Header', () => {
     defaultProps.onToggleFavorites.mockClear();
     defaultProps.onToggleHistory.mockClear();
     defaultProps.onTogglePrepared.mockClear();
+    defaultProps.onToggleThemeMode.mockClear();
     defaultProps.onTogglePilotDashboard.mockClear();
     defaultProps.onGoHome.mockClear();
   });
@@ -72,6 +75,7 @@ describe('Header', () => {
     [
       ['pilot-dashboard-toggle-btn', 'header.adminTools'],
       ['language-toggle-btn', 'header.langToggle'],
+      ['theme-toggle-btn', 'header.themeComfortShort'],
       ['favorites-toggle-btn', 'header.favorites'],
       ['prepared-toggle-btn', 'header.prepared'],
       ['history-toggle-btn', 'header.history'],
@@ -89,6 +93,43 @@ describe('Header', () => {
       'aria-label',
       'header.switchToChinese'
     );
+  });
+
+  it('renders an accessible theme toggle', () => {
+    render(<Header {...defaultProps} />);
+
+    const button = screen.getByTestId('theme-toggle-btn');
+    expect(button).toHaveClass('notebook-control', 'notebook-control-utility');
+    expect(button).toHaveTextContent('header.themeComfortShort');
+    expect(button).toHaveAttribute(
+      'aria-label',
+      'header.themeComfortShort. header.switchToDarkBench'
+    );
+    expect(button).toHaveAttribute(
+      'title',
+      'header.themeComfortShort. header.switchToDarkBench'
+    );
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    expect(button.querySelector('svg')).toHaveClass('shrink-0');
+
+    fireEvent.click(button);
+    expect(defaultProps.onToggleThemeMode).toHaveBeenCalledTimes(1);
+  });
+
+  it('names the return path from Dark Bench to Comfort Dim', () => {
+    render(<Header {...defaultProps} themeMode="dark-bench" />);
+
+    const button = screen.getByTestId('theme-toggle-btn');
+    expect(button).toHaveTextContent('header.themeDarkShort');
+    expect(button).toHaveAttribute(
+      'aria-label',
+      'header.themeDarkShort. header.switchToComfortDim'
+    );
+    expect(button).toHaveAttribute(
+      'title',
+      'header.themeDarkShort. header.switchToComfortDim'
+    );
+    expect(button).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('shows favorites count badge when favorites exist', () => {

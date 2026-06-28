@@ -40,7 +40,8 @@ Content contract:
 
 - Header may expose a compact theme toggle.
 - The toggle may use short labels such as `Bench` / `Dim` plus title and aria text.
-- Printed label previews and preview canvases must stay white or near-white in both themes.
+- Printed label previews, preview canvases, and generated print-preview iframe
+  documents must stay white in both themes.
 - Safety, SDS, supplier-label, local-regulation, and review-boundary copy must not be softened or hidden.
 
 Affected surfaces:
@@ -63,8 +64,13 @@ Acceptance criteria:
 - App starts in Comfort Dim when no saved preference exists.
 - App uses Dark Bench after the user toggles it and persists that preference in localStorage.
 - Header toggle is keyboard/click accessible with icon, short visible label, `title`, and `aria-label`.
+- Header toggle exposes `aria-pressed` so assistive technology can identify
+  whether Dark Bench is currently active.
 - `theme-dark-bench` never changes `--notebook-print-surface` away from white.
 - `.notebook-print-preview` uses `--notebook-print-surface`.
+- Generated `buildPrintPreviewDocument()` label and sheet HTML keeps preview
+  cards, sheet viewports, and printed label surfaces white and does not import
+  Dark Bench app tokens into print/preview HTML.
 - Workbench QA can run in Dark Bench and confirms no desktop/mobile horizontal overflow or missing selectors.
 - Production-facing implementation still passes build and i18n tests.
 
@@ -72,10 +78,13 @@ Verification gates:
 
 ```bash
 cd frontend
-npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js src/__tests__/themeTokens.test.js
+npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js src/__tests__/App.themeMode.test.js src/__tests__/themeTokens.test.js
+npm test -- --runInBand src/utils/__tests__/printLabels.test.js --testNamePattern="keeps generated preview and printed label surfaces white"
 npm run test:i18n
+npm run test:qa-scripts
 npm run build
-WORKBENCH_QA_THEME=dark-bench npm run qa:workbench
+npm run dev -- --host 127.0.0.1 --port 5173
+WORKBENCH_QA_THEME=dark-bench WORKBENCH_QA_URL=http://127.0.0.1:5173/ npm run qa:workbench
 ```
 
 After deploy:
@@ -96,11 +105,18 @@ Stop condition:
 - Create `frontend/src/utils/themeMode.js`: constants and helpers for supported theme modes, localStorage read/write, root class names, and next-mode selection.
 - Create `frontend/src/utils/__tests__/themeMode.test.js`: helper tests for defaults, invalid storage fallback, persistence, and next-mode selection.
 - Create `frontend/src/__tests__/themeTokens.test.js`: filesystem-backed CSS token test proving Dark Bench keeps `--notebook-print-surface: 0 0% 100%` and `.notebook-print-preview` uses that token.
+- Create `frontend/src/__tests__/App.themeMode.test.js`: App-shell integration test proving root class, toggle persistence, invalid storage fallback, and Sonner theme wiring.
+- Modify `frontend/src/utils/__tests__/printLabels.test.js`: add a print-preview white contract test against generated label/sheet preview HTML.
 - Modify `frontend/src/App.jsx`: load theme mode with a lazy initializer, apply the root class dynamically, pass theme props to `Header`, and set `Toaster` to `dark` only in Dark Bench.
 - Modify `frontend/src/components/Header.jsx`: add a compact theme toggle button using lucide `Moon` and `Sun` icons.
 - Modify `frontend/src/components/__tests__/Header.test.js`: cover the new toggle without making mobile header labels disappear.
 - Modify `frontend/src/i18n/locales/en.json` and `frontend/src/i18n/locales/zh-TW.json`: add concise theme labels and accessible titles.
 - Modify `frontend/scripts/check-experiment-notebook-workbench.mjs`: support `WORKBENCH_QA_THEME=dark-bench` by seeding localStorage before page load and reporting the app root theme class.
+- Create `frontend/scripts/__tests__/workbench-theme-gate.test.mjs`: fail fast
+  when `WORKBENCH_QA_THEME` is misspelled or unsupported so Dark Bench QA cannot
+  silently run Comfort Dim.
+- Modify `frontend/package.json`: include the Workbench theme gate test in
+  `npm run test:qa-scripts`.
 - Modify `NEXT_PRODUCT_WORK.md`, `PROJECT_STATUS_AND_NEXT_PLAN.md`, and `LAB_WORKFLOW_READINESS_ROADMAP.md`: keep roadmap state and ordering in sync after implementation.
 
 ## Task 1: Theme Mode Helper
@@ -147,6 +163,28 @@ describe("themeMode", () => {
     expect(window.localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(
       THEME_MODES.COMFORT_DIM,
     );
+  });
+
+  it("falls back to comfort dim when storage reads fail", () => {
+    const blockedStorage = {
+      getItem: () => {
+        throw new Error("storage blocked");
+      },
+    };
+
+    expect(loadThemeMode(blockedStorage)).toBe(THEME_MODES.COMFORT_DIM);
+  });
+
+  it("does not throw when storage writes fail", () => {
+    const blockedStorage = {
+      setItem: () => {
+        throw new Error("storage blocked");
+      },
+    };
+
+    expect(
+      persistThemeMode(THEME_MODES.DARK_BENCH, blockedStorage),
+    ).toBe(THEME_MODES.DARK_BENCH);
   });
 
   it("maps modes to app root class names", () => {
@@ -200,18 +238,24 @@ export function normalizeThemeMode(value) {
   return SUPPORTED_THEME_MODES.has(value) ? value : THEME_MODES.COMFORT_DIM;
 }
 
-export function loadThemeMode(storage = globalThis.localStorage) {
+function resolveThemeStorage(storage) {
+  return storage === undefined ? globalThis.localStorage : storage;
+}
+
+export function loadThemeMode(storage) {
   try {
-    return normalizeThemeMode(storage?.getItem(THEME_MODE_STORAGE_KEY));
+    return normalizeThemeMode(
+      resolveThemeStorage(storage)?.getItem(THEME_MODE_STORAGE_KEY),
+    );
   } catch {
     return THEME_MODES.COMFORT_DIM;
   }
 }
 
-export function persistThemeMode(mode, storage = globalThis.localStorage) {
+export function persistThemeMode(mode, storage) {
   const normalized = normalizeThemeMode(mode);
   try {
-    storage?.setItem(THEME_MODE_STORAGE_KEY, normalized);
+    resolveThemeStorage(storage)?.setItem(THEME_MODE_STORAGE_KEY, normalized);
   } catch {
     // Storage failures should not block label lookup or printing.
   }
@@ -277,7 +321,15 @@ it("renders an accessible theme toggle", () => {
   const button = screen.getByTestId("theme-toggle-btn");
   expect(button).toHaveClass("notebook-control", "notebook-control-utility");
   expect(button).toHaveTextContent("header.themeComfortShort");
-  expect(button).toHaveAttribute("aria-label", "header.switchToDarkBench");
+  expect(button).toHaveAttribute(
+    "aria-label",
+    "header.themeComfortShort. header.switchToDarkBench",
+  );
+  expect(button).toHaveAttribute(
+    "title",
+    "header.themeComfortShort. header.switchToDarkBench",
+  );
+  expect(button).toHaveAttribute("aria-pressed", "false");
   expect(button.querySelector("svg")).toHaveClass("shrink-0");
 
   fireEvent.click(button);
@@ -289,7 +341,15 @@ it("names the return path from Dark Bench to Comfort Dim", () => {
 
   const button = screen.getByTestId("theme-toggle-btn");
   expect(button).toHaveTextContent("header.themeDarkShort");
-  expect(button).toHaveAttribute("aria-label", "header.switchToComfortDim");
+  expect(button).toHaveAttribute(
+    "aria-label",
+    "header.themeDarkShort. header.switchToComfortDim",
+  );
+  expect(button).toHaveAttribute(
+    "title",
+    "header.themeDarkShort. header.switchToComfortDim",
+  );
+  expect(button).toHaveAttribute("aria-pressed", "true");
 });
 ```
 
@@ -333,9 +393,13 @@ Add derived values after `preparedButtonTitle`:
 
 ```js
 const isDarkBench = themeMode === "dark-bench";
-const themeToggleTitle = isDarkBench
+const themeToggleVisibleLabel = isDarkBench
+  ? t("header.themeDarkShort")
+  : t("header.themeComfortShort");
+const themeToggleActionLabel = isDarkBench
   ? t("header.switchToComfortDim")
   : t("header.switchToDarkBench");
+const themeToggleTitle = `${themeToggleVisibleLabel}. ${themeToggleActionLabel}`;
 const ThemeIcon = isDarkBench ? Sun : Moon;
 ```
 
@@ -349,13 +413,12 @@ Add the button after the language toggle:
   className={headerButtonBase}
   title={themeToggleTitle}
   aria-label={themeToggleTitle}
+  aria-pressed={isDarkBench}
   data-testid="theme-toggle-btn"
 >
   <ThemeIcon className="h-4 w-4 shrink-0" />
   <span className={headerButtonLabelClass}>
-    {isDarkBench
-      ? t("header.themeDarkShort")
-      : t("header.themeComfortShort")}
+    {themeToggleVisibleLabel}
   </span>
 </Button>
 ```
@@ -400,15 +463,20 @@ Add state near other top-level UI state:
 const [themeMode, setThemeMode] = useState(() => loadThemeMode());
 ```
 
-Add handler near other callbacks:
+Add a pure handler near other callbacks:
 
 ```js
 const handleToggleThemeMode = useCallback(() => {
-  setThemeMode((currentMode) => {
-    const nextMode = getNextThemeMode(currentMode);
-    return persistThemeMode(nextMode);
-  });
+  setThemeMode((currentMode) => getNextThemeMode(currentMode));
 }, []);
+```
+
+Persist the normalized mode in an effect after the state update:
+
+```js
+useEffect(() => {
+  persistThemeMode(themeMode);
+}, [themeMode]);
 ```
 
 Before render return, derive:
@@ -435,21 +503,108 @@ themeMode={themeMode}
 onToggleThemeMode={handleToggleThemeMode}
 ```
 
-- [ ] **Step 6: Run focused Header and theme helper tests**
+- [ ] **Step 6: Add App shell integration tests**
+
+Create `frontend/src/__tests__/App.themeMode.test.js`:
+
+```js
+import { fireEvent, render, screen } from "@testing-library/react";
+import axios from "axios";
+import App from "@/App";
+import {
+  THEME_MODE_STORAGE_KEY,
+  THEME_MODES,
+} from "@/utils/themeMode";
+
+jest.mock("axios");
+
+jest.mock("sonner", () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
+  Toaster: ({ theme }) => (
+    <div data-testid="sonner-toaster" data-theme={theme} />
+  ),
+}));
+
+jest.mock("@/components/SearchSection", () => {
+  return function MockSearchSection() {
+    return <div data-testid="mock-search-section" />;
+  };
+});
+
+describe("App theme mode shell", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    jest.clearAllMocks();
+    axios.get.mockResolvedValue({ data: {} });
+    axios.post.mockResolvedValue({ data: [] });
+  });
+
+  it("starts in Comfort Dim without a saved preference", () => {
+    render(<App />);
+
+    expect(screen.getByTestId("app-shell")).toHaveClass("theme-comfort-dim");
+    expect(screen.getByTestId("sonner-toaster")).toHaveAttribute(
+      "data-theme",
+      "light",
+    );
+  });
+
+  it("falls back to Comfort Dim for an invalid saved preference", () => {
+    window.localStorage.setItem(THEME_MODE_STORAGE_KEY, "warm-light");
+
+    render(<App />);
+
+    expect(screen.getByTestId("app-shell")).toHaveClass("theme-comfort-dim");
+  });
+
+  it("starts in Dark Bench from a saved preference", () => {
+    window.localStorage.setItem(
+      THEME_MODE_STORAGE_KEY,
+      THEME_MODES.DARK_BENCH,
+    );
+
+    render(<App />);
+
+    expect(screen.getByTestId("app-shell")).toHaveClass("theme-dark-bench");
+    expect(screen.getByTestId("sonner-toaster")).toHaveAttribute(
+      "data-theme",
+      "dark",
+    );
+  });
+
+  it("toggles and persists Dark Bench from the header", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByTestId("theme-toggle-btn"));
+
+    expect(screen.getByTestId("app-shell")).toHaveClass("theme-dark-bench");
+    expect(window.localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(
+      THEME_MODES.DARK_BENCH,
+    );
+  });
+});
+```
+
+- [ ] **Step 7: Run focused Header, App, and theme helper tests**
 
 Run:
 
 ```bash
 cd frontend
-npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js
+npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js src/__tests__/App.themeMode.test.js
 ```
 
 Expected: pass.
 
-## Task 3: Print Preview White Safety Test
+## Task 3: Print Preview White Safety Tests
 
 **Files:**
 - Create: `frontend/src/__tests__/themeTokens.test.js`
+- Modify: `frontend/src/utils/__tests__/printLabels.test.js`
 
 - [ ] **Step 1: Add CSS token safety test**
 
@@ -462,22 +617,43 @@ import path from "node:path";
 const cssPath = path.resolve(__dirname, "../index.css");
 const css = fs.readFileSync(cssPath, "utf8");
 
-const extractRule = (selector) =>
-  css.match(new RegExp(`${selector}\\s*{[^}]+}`, "s"))?.[0] || "";
+const extractRules = (selector) =>
+  Array.from(css.matchAll(new RegExp(`${selector}\\s*{(?<body>[^}]+)}`, "gs")))
+    .map((match) => match.groups?.body || "");
+
+const parseDeclarations = (ruleBody) =>
+  Object.fromEntries(
+    ruleBody
+      .split(";")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [property, ...valueParts] = line.split(":");
+        return [property.trim(), valueParts.join(":").trim()];
+      }),
+  );
 
 describe("theme tokens", () => {
   it("keeps Dark Bench print preview surfaces white", () => {
-    const darkBenchRule = extractRule("\\.theme-dark-bench");
-    expect(darkBenchRule).toContain("--notebook-print-surface: 0 0% 100%");
-    expect(darkBenchRule).toContain("--notebook-print-ink: 220 24% 12%");
+    const [darkBenchRule] = extractRules("\\.theme-dark-bench");
+    const declarations = parseDeclarations(darkBenchRule);
+
+    expect(declarations["--notebook-print-surface"]).toBe("0 0% 100%");
+    expect(declarations["--notebook-print-ink"]).toBe("220 24% 12%");
   });
 
   it("uses the print-surface token for preview canvases", () => {
-    const printPreviewRule = extractRule("\\.notebook-print-preview");
-    expect(printPreviewRule).toContain(
-      "background-color: hsl(var(--notebook-print-surface))",
+    const [printPreviewRule] = extractRules("\\.notebook-print-preview");
+    const declarations = parseDeclarations(printPreviewRule);
+
+    expect(declarations["background-color"]).toBe(
+      "hsl(var(--notebook-print-surface))",
     );
-    expect(printPreviewRule).toContain("color: hsl(var(--notebook-print-ink))");
+    expect(declarations.color).toBe("hsl(var(--notebook-print-ink))");
+  });
+
+  it("does not add Dark Bench-specific preview background overrides", () => {
+    expect(css).not.toMatch(/\.theme-dark-bench\s+\.notebook-print-preview/);
   });
 });
 ```
@@ -493,6 +669,56 @@ npm test -- --runInBand src/__tests__/themeTokens.test.js
 
 Expected: pass because the current CSS already pins print preview tokens.
 
+- [ ] **Step 3: Add generated preview document white contract test**
+
+Add this test near the existing `buildPrintPreviewDocument reuses the shared renderer` test in
+`frontend/src/utils/__tests__/printLabels.test.js`:
+
+```js
+it("keeps generated preview and printed label surfaces white", () => {
+  const labelPreview = buildPrintPreviewDocument(
+    [mockChemical],
+    { size: "medium", template: "qrcode", orientation: "portrait" },
+    {},
+    {},
+    { "64-17-5": 1 },
+    {},
+    { mode: "label" },
+  );
+  const sheetPreview = buildPrintPreviewDocument(
+    [mockChemical, mockChemicalNoGHS],
+    { size: "medium", template: "standard", orientation: "portrait" },
+    {},
+    {},
+    { "64-17-5": 1, "7732-18-5": 1 },
+    {},
+    { mode: "sheet" },
+  );
+
+  [labelPreview.html, sheetPreview.html].forEach((html) => {
+    expect(html).toContain("body.preview-body");
+    expect(html).toContain("background: #ffffff;");
+    expect(html).toContain("background: #fff;");
+    expect(html).not.toContain("theme-dark-bench");
+    expect(html).not.toContain("--notebook-app");
+    expect(html).not.toContain("--notebook-surface");
+  });
+  expect(sheetPreview.html).toContain(".preview-sheet-viewport");
+  expect(sheetPreview.html).toContain("background: #ffffff;");
+});
+```
+
+- [ ] **Step 4: Run generated preview white contract test**
+
+Run:
+
+```bash
+cd frontend
+npm test -- --runInBand src/utils/__tests__/printLabels.test.js --testNamePattern="keeps generated preview and printed label surfaces white"
+```
+
+Expected: pass because current generated print/preview styles already keep preview cards, sheet viewports, and label bodies white.
+
 ## Task 4: Workbench QA Theme Forcing
 
 **Files:**
@@ -503,11 +729,15 @@ Expected: pass because the current CSS already pins print preview tokens.
 After `const headless = env.WORKBENCH_QA_HEADLESS !== "0";`, add:
 
 ```js
-const requestedTheme = env.WORKBENCH_QA_THEME || "comfort-dim";
+const requestedTheme = env.WORKBENCH_QA_THEME?.trim() || "comfort-dim";
 const allowedThemes = new Set(["comfort-dim", "dark-bench"]);
-const qaTheme = allowedThemes.has(requestedTheme)
-  ? requestedTheme
-  : "comfort-dim";
+if (!allowedThemes.has(requestedTheme)) {
+  console.error(
+    `Unsupported WORKBENCH_QA_THEME "${requestedTheme}". Expected one of: comfort-dim, dark-bench.`,
+  );
+  process.exit(1);
+}
+const qaTheme = requestedTheme;
 const themeStorageKey = "ghs-theme-mode";
 ```
 
@@ -532,6 +762,7 @@ Return:
 
 ```js
 appShellClassName: appShell?.className || "",
+appShellClassList: appShell ? Array.from(appShell.classList) : [],
 ```
 
 Include `theme: qaTheme` in `writeReport` output.
@@ -539,21 +770,71 @@ Include `theme: qaTheme` in `writeReport` output.
 Add failure checks after missing selector checks:
 
 ```js
-if (!desktop.appShellClassName.includes(`theme-${qaTheme}`)) {
+if (!desktop.appShellClassList.includes(`theme-${qaTheme}`)) {
   failures.push("desktop-theme-class-mismatch");
 }
-if (!mobile.appShellClassName.includes(`theme-${qaTheme}`)) {
+if (!mobile.appShellClassList.includes(`theme-${qaTheme}`)) {
   failures.push("mobile-theme-class-mismatch");
 }
 ```
 
-- [ ] **Step 2: Run dark-bench workbench QA locally**
+Create `frontend/scripts/__tests__/workbench-theme-gate.test.mjs`:
+
+```js
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const frontendRoot = path.resolve(scriptDir, "../..");
+const workbenchScript = path.join(
+  frontendRoot,
+  "scripts/check-experiment-notebook-workbench.mjs",
+);
+
+test("workbench QA fails fast for unsupported theme values", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "ghs-workbench-theme-"));
+  const result = spawnSync(process.execPath, [workbenchScript], {
+    cwd,
+    env: {
+      ...process.env,
+      WORKBENCH_QA_THEME: "darkbench",
+    },
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Unsupported WORKBENCH_QA_THEME "darkbench"/);
+  assert.doesNotMatch(
+    result.stderr,
+    /Could not find Chrome|ECONNREFUSED|net::ERR_CONNECTION_REFUSED/,
+  );
+});
+```
+
+Add the new test file to `npm run test:qa-scripts` in `frontend/package.json`.
+
+- [ ] **Step 2: Start a local workbench QA server**
+
+Run in `frontend/` and keep the process open until QA finishes:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Expected: Vite serves the app at `http://127.0.0.1:5173/`.
+
+- [ ] **Step 3: Run dark-bench workbench QA locally**
 
 Run:
 
 ```bash
 cd frontend
-WORKBENCH_QA_THEME=dark-bench npm run qa:workbench
+WORKBENCH_QA_THEME=dark-bench WORKBENCH_QA_URL=http://127.0.0.1:5173/ npm run qa:workbench
 ```
 
 Expected: pass and write:
@@ -573,7 +854,9 @@ The report must include `"theme": "dark-bench"` and app shell classes containing
 
 ```bash
 cd frontend
-npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js src/__tests__/themeTokens.test.js
+npm test -- --runInBand src/utils/__tests__/themeMode.test.js src/components/__tests__/Header.test.js src/__tests__/App.themeMode.test.js src/__tests__/themeTokens.test.js
+npm test -- --runInBand src/utils/__tests__/printLabels.test.js --testNamePattern="keeps generated preview and printed label surfaces white"
+npm run test:qa-scripts
 ```
 
 Expected: all tests pass.
@@ -598,9 +881,17 @@ Expected: Vite build exits 0 and includes `build/llms.txt`.
 
 - [ ] **Step 4: Run Dark Bench workbench QA**
 
+Start Vite in `frontend/` first:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Then run:
+
 ```bash
 cd frontend
-WORKBENCH_QA_THEME=dark-bench npm run qa:workbench
+WORKBENCH_QA_THEME=dark-bench WORKBENCH_QA_URL=http://127.0.0.1:5173/ npm run qa:workbench
 ```
 
 Expected: `ok: true`, no desktop/mobile horizontal overflow, no missing selectors, and screenshot paths in `build/experiment-notebook-workbench/`.
@@ -620,18 +911,21 @@ Expected: exit 0.
 - Modify: `NEXT_PRODUCT_WORK.md`
 - Modify: `LAB_WORKFLOW_READINESS_ROADMAP.md`
 
-- [ ] **Step 1: Record implementation closure**
+- [x] **Step 1: Record implementation closure**
 
-After implementation and verification, update the docs to move `Daily-use Comfort / Dark Bench Activation v0` from active implementation to shipped/monitoring. Record local proof commands and production proof after deployment.
+After implementation and verification, update the docs to record
+`Daily-use Comfort / Dark Bench Activation v0` as locally implemented and
+locally verified. Record production readiness only after the deployment
+follow-up passes.
 
-- [ ] **Step 2: Keep Batch/export second and evidence-gated**
+- [x] **Step 2: Keep Batch/export second and evidence-gated**
 
 Record that `Batch Review And Export Handoff Clarity` remains second, but still needs one of its evidence triggers before implementation: real batch list, export workbook, screenshot, workbook audit, production QA failure, or user report.
 
 - [ ] **Step 3: Stage exact files**
 
 ```bash
-git add frontend/src/utils/themeMode.js frontend/src/utils/__tests__/themeMode.test.js frontend/src/__tests__/themeTokens.test.js frontend/src/App.jsx frontend/src/components/Header.jsx frontend/src/components/__tests__/Header.test.js frontend/src/i18n/locales/en.json frontend/src/i18n/locales/zh-TW.json frontend/scripts/check-experiment-notebook-workbench.mjs PROJECT_STATUS_AND_NEXT_PLAN.md NEXT_PRODUCT_WORK.md LAB_WORKFLOW_READINESS_ROADMAP.md
+git add frontend/src/utils/themeMode.js frontend/src/utils/__tests__/themeMode.test.js frontend/src/__tests__/App.themeMode.test.js frontend/src/__tests__/themeTokens.test.js frontend/src/utils/__tests__/printLabels.test.js frontend/src/App.jsx frontend/src/components/Header.jsx frontend/src/components/__tests__/Header.test.js frontend/src/i18n/locales/en.json frontend/src/i18n/locales/zh-TW.json frontend/scripts/check-experiment-notebook-workbench.mjs frontend/scripts/__tests__/workbench-theme-gate.test.mjs frontend/package.json PROJECT_STATUS_AND_NEXT_PLAN.md NEXT_PRODUCT_WORK.md LAB_WORKFLOW_READINESS_ROADMAP.md
 ```
 
 - [ ] **Step 4: Commit**

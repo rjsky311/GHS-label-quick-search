@@ -6,6 +6,8 @@ import {
   Globe,
   FlaskConical,
   LockKeyhole,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -19,10 +21,12 @@ export default function Header({
   showPilotDashboard = false,
   showPilotDashboardButton = false,
   pilotAdminUnlocked = false,
+  themeMode = "comfort-dim",
   onTogglePilotDashboard,
   onToggleFavorites,
   onToggleHistory,
   onTogglePrepared,
+  onToggleThemeMode,
   onGoHome,
 }) {
   const { t, i18n } = useTranslation();
@@ -38,6 +42,15 @@ export default function Header({
     preparedCount > 0
       ? t("header.preparedTitleWithCount", { count: preparedCount })
       : t("header.preparedTitle");
+  const isDarkBench = themeMode === "dark-bench";
+  const themeToggleVisibleLabel = isDarkBench
+    ? t("header.themeDarkShort")
+    : t("header.themeComfortShort");
+  const themeToggleActionLabel = isDarkBench
+    ? t("header.switchToComfortDim")
+    : t("header.switchToDarkBench");
+  const themeToggleTitle = `${themeToggleVisibleLabel}. ${themeToggleActionLabel}`;
+  const ThemeIcon = isDarkBench ? Sun : Moon;
 
   const handleHomeClick = (event) => {
     event.preventDefault();
@@ -120,6 +133,21 @@ export default function Header({
               <Globe className="h-4 w-4 shrink-0" />
               <span className={headerButtonLabelClass}>
                 {t("header.langToggle")}
+              </span>
+            </Button>
+            <Button
+              onClick={onToggleThemeMode}
+              variant="notebookUtility"
+              size="notebookIcon"
+              className={headerButtonBase}
+              title={themeToggleTitle}
+              aria-label={themeToggleTitle}
+              aria-pressed={isDarkBench}
+              data-testid="theme-toggle-btn"
+            >
+              <ThemeIcon className="h-4 w-4 shrink-0" />
+              <span className={headerButtonLabelClass}>
+                {themeToggleVisibleLabel}
               </span>
             </Button>
             <Button
