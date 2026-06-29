@@ -109,6 +109,18 @@ toggle and Dark Bench workbench QA coverage; do not change print rendering,
 label output models, export behavior, admin tooling, backend APIs, or
 agent-readable contracts.
 
+Dark Bench legibility follow-up is locally verified from the 2026-06-29
+owner/user report that some text/colors were unclear on the main page, after
+query, and before printing. Scope: app chrome and pre-print controls only;
+printed/preview label fragments and GHS pictogram tiles remain white and
+print-faithful. Proof: focused frontend tests for theme tokens, Header,
+SearchSection, ResultsTable, LabelPrintModal, Footer, and App theme shell;
+`npm run test:i18n`; `npm run build`; `git diff --check`; local Dark Bench
+workbench QA; and reviewed desktop/mobile screenshots plus manual browser
+checks for main, results, and pre-print states. This closes the concrete user
+report without reopening print output, backend/API, export, admin, or
+agent-readable work.
+
 The previous product implementation slice remains closed: Prepared Solution
 Entry Clarity shipped and was production-verified at
 `670e8701380d09dc2a36540f3515bbd8ee74368d`; the proof record was committed in

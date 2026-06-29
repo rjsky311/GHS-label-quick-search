@@ -210,15 +210,17 @@ export default function LabelPreviewPanel({
             <section
               className={`notebook-print-stage-section rounded-md p-3 text-sm ${
                 isPrintFitBlocked
-                  ? "border-red-200 text-red-900"
-                  : "border-amber-200 text-amber-900"
+                  ? "border-[hsl(var(--notebook-danger)/0.52)] text-[hsl(var(--notebook-danger))]"
+                  : "border-[hsl(var(--notebook-warning)/0.5)] text-[hsl(var(--notebook-warning))]"
               }`}
               data-testid="preview-warning-banner"
             >
               <div className="flex items-start gap-2">
                 <AlertTriangle
                   className={`mt-0.5 h-4 w-4 shrink-0 ${
-                    isPrintFitBlocked ? "text-red-600" : "text-amber-500"
+                    isPrintFitBlocked
+                      ? "text-[hsl(var(--notebook-danger))]"
+                      : "text-[hsl(var(--notebook-warning))]"
                   }`}
                 />
                 <div>

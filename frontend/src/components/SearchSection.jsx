@@ -148,7 +148,7 @@ export default function SearchSection({
                   {t("search.batchHint")}
                 </p>
                 {batchCount > 0 && (
-                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "text-red-600" : "text-[hsl(var(--notebook-action))]"}`}>
+                  <span className={`text-xs font-medium ${batchCount > BATCH_SEARCH_LIMIT ? "notebook-tone-danger" : "notebook-tone-action"}`}>
                     {batchCount > BATCH_SEARCH_LIMIT
                       ? t("search.batchOverLimit", { count: batchCount, limit: BATCH_SEARCH_LIMIT })
                       : t("search.batchDetected", { count: batchCount })}
@@ -202,7 +202,7 @@ export default function SearchSection({
               )}
               {batchCount > BATCH_SEARCH_LIMIT && (
                 <div
-                  className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-red-700"
+                  className="notebook-note notebook-tone-danger mt-3 flex items-start gap-2 rounded-md border-[hsl(var(--notebook-danger)/0.5)] bg-[hsl(var(--notebook-danger-soft)/0.45)] p-3"
                   role="alert"
                   data-testid="batch-over-limit-alert"
                 >
@@ -255,16 +255,16 @@ export default function SearchSection({
             {/* Batch Progress Bar */}
             {batchProgress && (
               <div className="mt-3">
-                <div className="mb-1 flex justify-between text-xs text-slate-500">
-                  <span>{t("search.progress")}</span>
-                  <span>{batchProgress.current === batchProgress.total ? t("search.progressDone") : t("search.progressProcessing")} ({batchProgress.current}/{batchProgress.total})</span>
+                <div className="mb-1 flex justify-between text-xs">
+                  <span className="notebook-tone-muted">{t("search.progress")}</span>
+                  <span className="notebook-tone-muted">{batchProgress.current === batchProgress.total ? t("search.progressDone") : t("search.progressProcessing")} ({batchProgress.current}/{batchProgress.total})</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[hsl(var(--notebook-surface-raised))]">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       batchProgress.current === batchProgress.total
-                        ? "bg-emerald-500"
-                        : "bg-blue-600 progress-bar-animated"
+                        ? "bg-[hsl(var(--notebook-ready))]"
+                        : "bg-[hsl(var(--notebook-action))] progress-bar-animated"
                     }`}
                     style={{ width: `${progressPercent}%` }}
                     role="progressbar"
@@ -281,7 +281,7 @@ export default function SearchSection({
 
         {error && (
           <div
-            className="mt-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-4 text-red-700"
+            className="notebook-note notebook-tone-danger mt-4 flex items-center gap-2 rounded-md border-[hsl(var(--notebook-danger)/0.5)] bg-[hsl(var(--notebook-danger-soft)/0.45)] p-4"
             data-testid="error-message"
           >
             <AlertTriangle className="w-4 h-4 shrink-0" /> {error}

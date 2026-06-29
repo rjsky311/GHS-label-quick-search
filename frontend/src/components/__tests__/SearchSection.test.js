@@ -168,10 +168,11 @@ describe('SearchSection', () => {
       expect(screen.getByText('search.batchDetected')).toBeInTheDocument();
     });
 
-    it('shows red warning text when batchCount > 100', () => {
+    it('shows semantic danger warning text when batchCount > 100', () => {
       render(<SearchSection {...defaultProps} activeTab="batch" batchCount={150} />);
       const warning = screen.getByText('search.batchOverLimit');
-      expect(warning.className).toContain('text-red-600');
+      expect(warning).toHaveClass('notebook-tone-danger');
+      expect(warning.className).not.toMatch(/text-red-/);
     });
 
     it('batch search button disabled when batchCount > 100', () => {
@@ -209,6 +210,8 @@ describe('SearchSection', () => {
       const alert = screen.getByTestId('batch-over-limit-alert');
       expect(alert).toBeInTheDocument();
       expect(alert).toHaveAttribute('role', 'alert');
+      expect(alert).toHaveClass('notebook-tone-danger');
+      expect(alert.className).not.toMatch(/text-red-|bg-red-|border-red-/);
       // i18n mock returns keys as-is
       expect(alert.textContent).toContain('search.batchOverLimitDetail');
     });
@@ -358,6 +361,20 @@ describe('SearchSection', () => {
       );
       expect(screen.getByText(/search\.progressDone/)).toBeInTheDocument();
     });
+
+    it('uses notebook tone colors for Dark Bench progress status', () => {
+      render(
+        <SearchSection
+          {...defaultProps}
+          activeTab="batch"
+          batchProgress={{ current: 3, total: 10 }}
+        />
+      );
+
+      expect(screen.getByText('search.progress')).toHaveClass('notebook-tone-muted');
+      expect(screen.getByRole('progressbar')).toHaveClass('bg-[hsl(var(--notebook-action))]');
+      expect(screen.getByText(/search\.progressProcessing/)).toHaveClass('notebook-tone-muted');
+    });
   });
 
   describe('Error display', () => {
@@ -368,7 +385,10 @@ describe('SearchSection', () => {
 
     it('renders error message when error string is provided', () => {
       render(<SearchSection {...defaultProps} error="Something went wrong" />);
-      expect(screen.getByTestId('error-message')).toBeInTheDocument();
+      const error = screen.getByTestId('error-message');
+      expect(error).toBeInTheDocument();
+      expect(error).toHaveClass('notebook-tone-danger');
+      expect(error.className).not.toMatch(/text-red-|bg-red-|border-red-/);
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
   });

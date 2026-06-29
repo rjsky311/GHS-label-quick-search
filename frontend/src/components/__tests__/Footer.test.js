@@ -24,6 +24,18 @@ describe('Footer', () => {
     expect(link).toHaveAttribute('href', 'https://pubchem.ncbi.nlm.nih.gov/');
   });
 
+  it('uses notebook token colors instead of fixed light-theme footer classes', () => {
+    render(<Footer />);
+
+    const footer = screen.getByText('PubChem (NIH)').closest('footer');
+    expect(footer).toHaveClass('border-[hsl(var(--notebook-border)/0.72)]');
+    expect(footer.className).not.toMatch(/border-slate-|bg-white/);
+    expect(screen.getByText('PubChem (NIH)')).toHaveClass('notebook-tone-action');
+    expect(screen.getByText('footer.workflowRequest')).toHaveClass(
+      'notebook-tone-action',
+    );
+  });
+
   it('renders GitHub issues link', () => {
     render(<Footer />);
     const link = screen.getByText('footer.reportIssue');

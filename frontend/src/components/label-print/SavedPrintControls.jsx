@@ -41,28 +41,28 @@ export default function SavedPrintControls({
 
   return (
     <details
-      className="rounded-md border border-slate-200 bg-white p-3"
+      className="notebook-print-stage-section rounded-md p-3"
       data-testid="saved-print-controls"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800">
-        <Bookmark className="h-4 w-4 text-blue-600" />
+      <summary className="notebook-tone-ink flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
+        <Bookmark className="h-4 w-4 notebook-tone-action" />
         {tx("label.savedPrintControlsTitle", "Saved jobs and presets")}
       </summary>
       <div className="mt-4 space-y-4">
-        <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-            <Bookmark className="h-4 w-4 text-blue-600" />
+        <section className="notebook-print-stage-section rounded-md p-4">
+          <div className="notebook-tone-ink flex items-center gap-2 text-sm font-medium">
+            <Bookmark className="h-4 w-4 notebook-tone-action" />
             {t("label.quickTemplates")}
           </div>
           <div className="mt-3">
             {printTemplates.length === 0 && !showSaveInput ? (
-              <p className="text-xs text-slate-500">{t("label.noTemplates")}</p>
+              <p className="notebook-tone-muted text-xs">{t("label.noTemplates")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {printTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="group flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50"
+                    className="group flex items-center gap-1 rounded-md border border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.58)] px-3 py-1.5 text-sm notebook-tone-muted transition-colors hover:border-[hsl(var(--notebook-action-border)/0.54)] hover:bg-[hsl(var(--notebook-action-soft)/0.58)] hover:text-[hsl(var(--notebook-action))]"
                   >
                     <button
                       type="button"
@@ -92,7 +92,7 @@ export default function SavedPrintControls({
                           toast.success(t("label.deleteTemplateSuccess"));
                         }
                       }}
-                      className="ml-1 text-slate-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                      className="ml-1 text-[hsl(var(--notebook-muted-ink)/0.74)] opacity-0 transition-opacity hover:text-[hsl(var(--notebook-danger))] group-hover:opacity-100"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -108,12 +108,12 @@ export default function SavedPrintControls({
                 <button
                   type="button"
                   onClick={() => setShowSaveInput(true)}
-                  className="flex items-center gap-1 text-xs font-medium text-blue-700 transition-colors hover:text-blue-800"
+                  className="flex items-center gap-1 text-xs font-medium notebook-tone-action transition-colors hover:text-[hsl(var(--notebook-action-border))]"
                 >
                   <Plus className="h-3 w-3" /> {t("label.saveCurrentBtn")}
                 </button>
               ) : (
-                <p className="text-xs text-amber-500">
+                <p className="text-xs notebook-tone-warning">
                   {t("label.templateLimitHint")}
                 </p>
               )
@@ -126,7 +126,7 @@ export default function SavedPrintControls({
                     setTemplateName(event.target.value.slice(0, 30))
                   }
                   placeholder={t("label.templateNamePlaceholder")}
-                  className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                  className="notebook-field min-h-8 flex-1 rounded-md px-2 py-1 text-sm"
                   autoFocus
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && templateName.trim()) {
@@ -164,10 +164,10 @@ export default function SavedPrintControls({
           </div>
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <section className="notebook-print-stage-section rounded-md p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <LayoutPanelTop className="h-4 w-4 text-blue-600" />
+            <div className="notebook-tone-ink flex items-center gap-2 text-sm font-medium">
+              <LayoutPanelTop className="h-4 w-4 notebook-tone-action" />
               {tx("label.recentPrintsTitle", "Recent print queue")}
             </div>
             {visibleRecentPrints.length > 0 &&
@@ -175,14 +175,14 @@ export default function SavedPrintControls({
                 <button
                   type="button"
                   onClick={onClearRecentPrints}
-                  className="text-xs text-slate-500 transition-colors hover:text-slate-900"
+                  className="notebook-tone-muted text-xs transition-colors hover:text-[hsl(var(--notebook-ink))]"
                 >
                   {tx("label.recentPrintsClear", "Clear")}
                 </button>
               )}
           </div>
           {visibleRecentPrints.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="notebook-tone-muted mt-3 text-xs">
               {tx(
                 "label.recentPrintsEmpty",
                 "Recent print jobs will appear here so you can reload a label set in one click.",
@@ -211,14 +211,14 @@ export default function SavedPrintControls({
                 return (
                   <div
                     key={job.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-md border border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.58)] px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-slate-900">
+                      <div className="truncate text-sm font-medium notebook-tone-ink">
                         {primaryLabel}
                         {remaining > 0 ? ` +${remaining}` : ""}
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
+                      <div className="notebook-tone-muted mt-1 flex flex-wrap gap-2 text-xs">
                         <span>{formatPrintTimestamp(job.createdAt)}</span>
                         <span>
                           {tx("label.recentPrintLabels", "{{count}} labels", {
@@ -231,7 +231,7 @@ export default function SavedPrintControls({
                     <button
                       type="button"
                       onClick={() => onLoadRecentPrint?.(job)}
-                      className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+                      className="rounded-md bg-[hsl(var(--notebook-action-soft)/0.62)] px-3 py-1.5 text-xs font-medium notebook-tone-action transition-colors hover:bg-[hsl(var(--notebook-action-soft))]"
                     >
                       {tx("label.recentPrintLoad", "Load")}
                     </button>

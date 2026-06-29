@@ -10,13 +10,13 @@ export default function MultipleGhsPrintWarning({
 
   return (
     <details
-      className="notebook-print-stage-section mt-3 rounded-md border-amber-200 p-3 text-amber-900"
+      className="notebook-print-stage-section mt-3 rounded-md border-[hsl(var(--notebook-warning)/0.44)] p-3 text-[hsl(var(--notebook-ink))]"
       data-testid="print-multiple-ghs-warning"
     >
       <summary className="flex cursor-pointer list-none items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-warning))]" />
         <div className="min-w-0">
-          <div className="text-sm font-semibold">
+          <div className="text-sm font-semibold text-[hsl(var(--notebook-warning))]">
             {tx(
               "label.multipleGhsPrintWarningTitle",
               "{{count}} item(s) have multiple GHS versions",
@@ -26,7 +26,7 @@ export default function MultipleGhsPrintWarning({
         </div>
       </summary>
       <div className="mt-2 pl-6">
-        <p className="text-xs leading-5 text-amber-900">
+        <p className="text-xs leading-5 text-[hsl(var(--notebook-ink))]">
           {tx(
             "label.multipleGhsPrintWarningBody",
             "This print will use the system-suggested primary classification unless you confirm a different version in the result row or detail view before printing.",
@@ -40,13 +40,13 @@ export default function MultipleGhsPrintWarning({
             {examples.map((item) => (
               <span
                 key={item}
-                className="notebook-print-stage-fact rounded-full border-amber-200 px-2 py-1 text-xs font-medium text-amber-900"
+                className="notebook-print-stage-fact rounded-full border-[hsl(var(--notebook-warning)/0.34)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-warning))]"
               >
                 {item}
               </span>
             ))}
             {remainingCount > 0 && (
-              <span className="notebook-print-stage-fact rounded-full border-amber-200 px-2 py-1 text-xs font-medium text-amber-900">
+              <span className="notebook-print-stage-fact rounded-full border-[hsl(var(--notebook-warning)/0.34)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-warning))]">
                 {tx("label.multipleGhsPrintWarningMore", "+{{count}} more", {
                   count: remainingCount,
                 })}

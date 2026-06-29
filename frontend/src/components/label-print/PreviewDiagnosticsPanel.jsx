@@ -99,9 +99,9 @@ export default function PreviewDiagnosticsPanel({
         >
           <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--notebook-ink))]">
             {isPreviewChecklistReady ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 notebook-tone-ready" />
             ) : (
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertTriangle className="h-4 w-4 notebook-tone-warning" />
             )}
             {tx("label.previewDiagnosticsTitle", "Output checks")}
           </div>
@@ -115,8 +115,8 @@ export default function PreviewDiagnosticsPanel({
               </div>
             ))}
           </div>
-          <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 p-3 text-sm text-amber-900">
-            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div className="notebook-tone-warning mt-3 flex items-start gap-2 rounded-md border border-[hsl(var(--notebook-warning)/0.44)] p-3 text-sm">
+            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{t("label.previewHint")}</span>
           </div>
         </section>
@@ -163,7 +163,7 @@ export default function PreviewDiagnosticsPanel({
                 style={{ height: sheetPreviewHeight }}
               />
             ) : (
-              <div className="flex h-60 items-center justify-center px-4 text-sm text-slate-500">
+              <div className="flex h-60 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
                 {tx(
                   "label.previewFocusEmptyBody",
                   "Select at least one chemical to preview real content density.",

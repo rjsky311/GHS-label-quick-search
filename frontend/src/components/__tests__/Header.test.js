@@ -95,6 +95,30 @@ describe('Header', () => {
     );
   });
 
+  it('uses semantic notebook tones for fixed header icon accents', () => {
+    render(<Header {...defaultProps} />);
+
+    expect(screen.getByTestId('header-home-link').querySelector('svg')).toHaveClass(
+      'notebook-tone-danger'
+    );
+    expect(screen.getByTestId('prepared-toggle-btn').querySelector('svg')).toHaveClass(
+      'notebook-tone-action'
+    );
+    expect(screen.getByTestId('history-toggle-btn').querySelector('svg')).toHaveClass(
+      'notebook-tone-muted'
+    );
+
+    [
+      screen.getByTestId('header-home-link'),
+      screen.getByTestId('prepared-toggle-btn'),
+      screen.getByTestId('history-toggle-btn'),
+    ].forEach((node) => {
+      expect(node.querySelector('svg')?.className.baseVal).not.toMatch(
+        /text-(red|blue|slate)-/
+      );
+    });
+  });
+
   it('renders an accessible theme toggle', () => {
     render(<Header {...defaultProps} />);
 
@@ -156,8 +180,9 @@ describe('Header', () => {
   it('shows history count badge when history exists', () => {
     render(<Header {...defaultProps} history={[{ cas_number: '64-17-5' }]} />);
     const histBtn = screen.getByTestId('history-toggle-btn');
-    const badge = histBtn.querySelector('.bg-amber-500');
+    const badge = histBtn.querySelector('.notebook-count-badge-warning');
     expect(badge).not.toBeNull();
+    expect(badge).toHaveClass('notebook-count-badge');
     expect(badge.textContent).toBe('1');
   });
 
@@ -187,8 +212,9 @@ describe('Header', () => {
   it('shows prepared count badge when prepared recents exist', () => {
     render(<Header {...defaultProps} preparedCount={3} />);
     const preparedBtn = screen.getByTestId('prepared-toggle-btn');
-    const badge = preparedBtn.querySelector('.bg-cyan-500');
+    const badge = preparedBtn.querySelector('.notebook-count-badge-action');
     expect(badge).not.toBeNull();
+    expect(badge).toHaveClass('notebook-count-badge');
     expect(badge.textContent).toBe('3');
   });
 

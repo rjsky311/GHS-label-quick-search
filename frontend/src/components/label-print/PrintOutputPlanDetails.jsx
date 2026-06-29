@@ -52,7 +52,7 @@ export default function PrintOutputPlanDetails({
           </div>
           <div className="mt-1 text-sm font-semibold">{outputPlanTitle}</div>
         </div>
-        <span className="shrink-0 rounded-full bg-white/70 px-2 py-1 text-xs font-medium ring-1 ring-current/10">
+        <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-medium ring-1 ring-current/10">
           {outputRoleSummary}
         </span>
       </summary>

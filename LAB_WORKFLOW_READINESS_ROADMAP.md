@@ -379,6 +379,14 @@ Current shipped state:
 - Production verification passed through GitHub CI run `28322688691`,
   Production Print QA run `28322728851`, expected-SHA production health, and
   live Dark Bench workbench QA.
+- The 2026-06-29 Dark Bench legibility follow-up is locally verified from an
+  owner/user report that text colors were unclear on the main page, after
+  query, and before printing. Scope stayed in app chrome/control/readability:
+  notebook semantic tone utilities now cover the reported surfaces, while GHS
+  pictogram tiles and printed/preview label fragments stay white and
+  print-faithful. Proof includes focused frontend tests, i18n/build/diff
+  checks, local Dark Bench workbench QA, and reviewed desktop/mobile screenshots
+  for main, results, and pre-print modal states.
 
 Concrete work:
 

@@ -110,7 +110,7 @@ function DeferredOverlayFallback() {
       aria-live="polite"
       data-testid="deferred-overlay-loading"
     >
-      <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg">
+      <div className="rounded-lg border border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface-raised))] px-4 py-3 text-sm font-semibold text-[hsl(var(--notebook-ink))] shadow-lg">
         {t("common.loading", { defaultValue: "Loading..." })}
       </div>
     </div>
@@ -1136,7 +1136,7 @@ function App() {
       className={`${appThemeClassName} notebook-app min-h-screen`}
       data-testid="app-shell"
     >
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-blue-700 focus:text-white focus:rounded-md">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-md focus:bg-[hsl(var(--notebook-action))] focus:px-4 focus:py-2 focus:text-[hsl(var(--notebook-surface))]">
         {t("a11y.skipToContent")}
       </a>
       <Toaster position="top-right" theme={toastTheme} richColors />

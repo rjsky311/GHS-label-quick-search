@@ -36,10 +36,10 @@ export default function StockSizeSelector({
             <div className="text-xs font-semibold uppercase tracking-normal text-[hsl(var(--notebook-muted-ink))]">
               {tx("label.outputStockTitle", "Target size")}
             </div>
-            <div className="mt-1 text-base font-semibold text-slate-900">
+            <div className="notebook-tone-ink mt-1 text-base font-semibold">
               {currentStockName}
             </div>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
+            <p className="notebook-tone-muted mt-1 text-xs leading-5">
               {tx(
                 "label.selectedStockSummary",
                 "{{width}} x {{height}} mm · {{perPage}}/page · {{orientation}}",

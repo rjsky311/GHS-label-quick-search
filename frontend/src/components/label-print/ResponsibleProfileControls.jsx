@@ -61,7 +61,7 @@ export default function ResponsibleProfileControls({
             </span>
           </span>
         </span>
-        <span className="shrink-0 rounded-full bg-white/70 px-2 py-1 text-xs font-semibold ring-1 ring-current/10">
+        <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-semibold ring-1 ring-current/10">
           {presentCount}/{fieldTotal}
         </span>
       </summary>
@@ -83,7 +83,7 @@ export default function ResponsibleProfileControls({
             <button
               type="button"
               onClick={onClearLabProfile}
-              className="shrink-0 text-xs text-red-600 transition-colors hover:text-red-700"
+              className="shrink-0 text-xs notebook-tone-danger transition-colors hover:text-[hsl(var(--notebook-danger))]"
             >
               {t("label.profileClear")}
             </button>
@@ -113,7 +113,7 @@ export default function ResponsibleProfileControls({
                     })
                   }
                   placeholder={t(field.placeholderKey)}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                  className="notebook-field rounded-md px-3 py-2 text-sm"
                 />
               </div>
             );

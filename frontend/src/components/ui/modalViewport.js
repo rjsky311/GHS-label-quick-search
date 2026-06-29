@@ -16,4 +16,7 @@ export const modalViewportBodyClassName = (className) =>
   cn("modal-viewport-body min-h-0 flex-1 overflow-y-auto", className);
 
 export const modalViewportFooterClassName = (className) =>
-  cn("modal-viewport-footer shrink-0 border-t border-slate-200 bg-white", className);
+  cn(
+    "modal-viewport-footer shrink-0 border-t border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface-raised)/0.96)]",
+    className,
+  );

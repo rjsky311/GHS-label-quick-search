@@ -85,7 +85,7 @@ export default function Header({
             data-testid="header-home-link"
           >
             <div className="notebook-hazard-mark flex h-10 w-10 items-center justify-center rounded-md">
-              <AlertTriangle className="h-5 w-5 text-red-700" />
+              <AlertTriangle className="h-5 w-5 notebook-tone-danger" />
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-xl font-semibold text-[hsl(var(--notebook-ink))]">{t("header.title")}</h1>
@@ -115,7 +115,7 @@ export default function Header({
                   {t("header.adminTools", { defaultValue: "Admin" })}
                 </span>
                 {pilotAdminUnlocked && (pilotAttentionCount > 0 || opsEventCount > 0) ? (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-100 px-1 text-xs font-semibold text-blue-800 ring-1 ring-blue-200">
+                  <span className="notebook-count-badge notebook-count-badge-action absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ring-1 ring-[hsl(var(--notebook-action-border)/0.45)]">
                     {pilotAttentionCount > 0 ? pilotAttentionCount : opsEventCount}
                   </span>
                 ) : null}
@@ -157,12 +157,12 @@ export default function Header({
               className={headerButtonBase}
               data-testid="favorites-toggle-btn"
             >
-              <Star className="h-4 w-4 shrink-0 text-amber-500" />
+              <Star className="h-4 w-4 shrink-0 notebook-tone-warning" />
               <span className={headerButtonLabelClass}>
                 {t("header.favorites")}
               </span>
               {favorites.length > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span className="notebook-count-badge notebook-count-badge-danger absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs">
                   {favorites.length}
                 </span>
               ) : null}
@@ -176,12 +176,12 @@ export default function Header({
               aria-label={preparedButtonTitle}
               title={preparedButtonTitle}
             >
-              <FlaskConical className="h-4 w-4 shrink-0 text-blue-700" />
+              <FlaskConical className="h-4 w-4 shrink-0 notebook-tone-action" />
               <span className={headerButtonLabelClass}>
                 {t("header.prepared")}
               </span>
               {preparedCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-500 px-1 text-xs font-semibold text-slate-900">
+                <span className="notebook-count-badge notebook-count-badge-action absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs">
                   {preparedCount}
                 </span>
               ) : null}
@@ -193,12 +193,12 @@ export default function Header({
               className={headerButtonBase}
               data-testid="history-toggle-btn"
             >
-              <ClipboardList className="h-4 w-4 shrink-0 text-slate-600" />
+              <ClipboardList className="h-4 w-4 shrink-0 notebook-tone-muted" />
               <span className={headerButtonLabelClass}>
                 {t("header.history")}
               </span>
               {history.length > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs text-white">
+                <span className="notebook-count-badge notebook-count-badge-warning absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs">
                   {history.length}
                 </span>
               ) : null}

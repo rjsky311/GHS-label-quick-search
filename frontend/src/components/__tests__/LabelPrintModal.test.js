@@ -91,6 +91,22 @@ function expectNotebookPrintControl(button) {
   expect(button).not.toHaveClass("notebook-control-primary");
 }
 
+const FIXED_LIGHT_TONE_CLASS = /(?:^|:)(?:border|bg|ring|text)-(?:red|amber|slate|blue)-\d/;
+
+function expectNoFixedLightToneClasses(element, { ignoreSelector } = {}) {
+  const nodes = [element, ...element.querySelectorAll("[class]")].filter((node) => {
+    if (!ignoreSelector) return true;
+    return !node.matches(ignoreSelector) && !node.closest(ignoreSelector);
+  });
+  const fixedClasses = nodes.flatMap((node) =>
+    Array.from(node.classList).filter((className) =>
+      FIXED_LIGHT_TONE_CLASS.test(className),
+    ),
+  );
+
+  expect(fixedClasses).toEqual([]);
+}
+
 function tx(_key, defaultValue, options = {}) {
   if (!defaultValue) return _key;
   return Object.entries(options).reduce(
@@ -234,6 +250,10 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("label-preview-panel").parentElement).not.toHaveClass(
       "order-first",
     );
+    expectNoFixedLightToneClasses(screen.getByTestId("label-modal-panel"), {
+      ignoreSelector:
+        '[data-testid="label-fragment-preview"], [data-testid="label-sheet-preview"]',
+    });
   });
 
   it("starts with task-first target choice and keeps actions sticky", () => {
@@ -1008,6 +1028,7 @@ describe("LabelPrintModal", () => {
     const feedback = screen.getByTestId("print-blocked-feedback");
     expect(feedback).toHaveAttribute("role", "alert");
     expect(feedback).toHaveClass("notebook-print-stage-section", "rounded-md");
+    expectNoFixedLightToneClasses(feedback);
     expect(feedback.className).not.toContain("bg-red-50");
     expect(feedback).toHaveTextContent("Printing paused before handoff");
     expect(feedback).toHaveTextContent("Required label images did not load.");
@@ -1073,6 +1094,9 @@ describe("LabelPrintModal", () => {
     );
     expect(screen.getByTestId("print-multiple-ghs-warning")).toHaveClass(
       "notebook-print-stage-section",
+    );
+    expectNoFixedLightToneClasses(
+      screen.getByTestId("print-multiple-ghs-warning"),
     );
     expect(screen.getByTestId("print-multiple-ghs-warning").className).not.toContain(
       "bg-amber-50",
@@ -1218,6 +1242,9 @@ describe("LabelPrintModal", () => {
     expect(screen.getByTestId("batch-fit-report")).toHaveTextContent(
       "Batch fit report",
     );
+    expectNoFixedLightToneClasses(screen.getByTestId("batch-fit-report"), {
+      ignoreSelector: "input",
+    });
     expect(screen.getByTestId("batch-fit-ready")).toHaveTextContent("Ready");
     expect(screen.getByTestId("batch-fit-review")).toHaveTextContent(
       "Needs review",
@@ -1624,7 +1651,7 @@ describe("LabelPrintModal", () => {
       "English, Chinese",
     );
     expect(screen.getByTestId("recommended-output-summary")).toHaveClass(
-      "border-emerald-200",
+      "border-[hsl(var(--notebook-ready)/0.5)]",
     );
     expect(screen.getByTestId("print-output-plan")).not.toHaveAttribute("open");
     expect(screen.getByTestId("authoritative-source-note-print")).toHaveAttribute(
@@ -1807,6 +1834,7 @@ describe("LabelPrintModal", () => {
     const warning = screen.getByTestId("preview-warning-banner");
     const requiredOutput = screen.getByTestId("required-output-checklist");
     expect(warning).toHaveClass("notebook-print-stage-section");
+    expectNoFixedLightToneClasses(warning);
     expect(warning.className).not.toContain("bg-red-50");
     expect(warning.className).not.toContain("bg-amber-50");
 

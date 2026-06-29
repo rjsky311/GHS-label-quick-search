@@ -39,6 +39,13 @@ live Dark Bench workbench QA all passed. Keep Batch/export handoff second and
 evidence-gated until a real batch list, export example, workbook audit,
 production QA failure, screenshot, or user report selects the concrete handoff
 issue.
+The 2026-06-29 Dark Bench legibility follow-up is locally verified from an
+owner/user report that main-page, post-query, and pre-print text colors were
+unclear. It keeps print previews and label output white/unchanged, replaces
+fixed light-theme chrome/control colors with notebook tokens across the
+reported surfaces, and adds regression tests plus desktop/mobile browser
+screenshots for the three surfaces. This is a follow-up comfort slice, not a
+new print-product or backend/API scope change.
 
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior

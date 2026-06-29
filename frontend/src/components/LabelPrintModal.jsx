@@ -1812,7 +1812,7 @@ export default function LabelPrintModal({
       role="alert"
     >
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-danger))]" />
         <div className="min-w-0 space-y-2">
           <p className="font-semibold">
             {tx(
@@ -1832,7 +1832,7 @@ export default function LabelPrintModal({
               {printBlockedInfo.issueTypes.map((issueType) => (
                 <span
                   key={issueType}
-                  className="notebook-print-stage-fact rounded-md border-red-200 px-2 py-0.5 text-xs font-medium text-red-800"
+                  className="notebook-print-stage-fact rounded-md border-[hsl(var(--notebook-danger)/0.42)] px-2 py-0.5 text-xs font-medium text-[hsl(var(--notebook-danger))]"
                   data-testid="print-blocked-issue"
                 >
                   {issueType}
@@ -2078,19 +2078,21 @@ export default function LabelPrintModal({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={modalViewportPanelClassName("max-w-7xl bg-white")}
+        className={modalViewportPanelClassName(
+          "max-w-7xl bg-[hsl(var(--notebook-surface-raised))]",
+        )}
         data-testid="label-modal-panel"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface-raised)/0.96)] px-6 py-4">
           <div>
             <h2
               id="label-modal-title"
-              className="flex items-center gap-2 text-xl font-bold text-slate-950"
+              className="flex items-center gap-2 text-xl font-bold text-[hsl(var(--notebook-ink))]"
             >
-              <Tag className="h-5 w-5 text-blue-600" /> {t("label.title")}
+              <Tag className="h-5 w-5 text-[hsl(var(--notebook-action))]" /> {t("label.title")}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-[hsl(var(--notebook-muted-ink))]">
               {tx(
                 "label.settingsPreviewIntro",
                 "The app chooses a printable output first. Adjust only when the preview needs a different physical stock.",
@@ -2101,7 +2103,7 @@ export default function LabelPrintModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.close", { defaultValue: "Close" })}
-            className="text-slate-500 transition-colors hover:text-slate-900"
+            className="text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-[hsl(var(--notebook-ink))]"
           >
             <X className="h-6 w-6" />
           </button>

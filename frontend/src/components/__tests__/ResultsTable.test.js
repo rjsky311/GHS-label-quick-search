@@ -372,6 +372,18 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-multiple-ghs-review-body')
       ).toHaveTextContent('results.multipleGhsReviewBody');
+      expect(screen.getByTestId('results-multiple-ghs-review-body')).toHaveClass(
+        'notebook-tone-warning',
+      );
+      expect(
+        screen.getByTestId('results-multiple-ghs-review-body').className,
+      ).not.toMatch(/text-amber-/);
+      expect(screen.getByTestId('results-multiple-ghs-review-primary')).toHaveClass(
+        'notebook-tone-warning',
+      );
+      expect(
+        screen.getByTestId('results-multiple-ghs-review-primary').className,
+      ).not.toMatch(/text-amber-/);
       expect(
         screen.queryByTestId('results-multiple-ghs-review-callout')
       ).not.toBeInTheDocument();
@@ -487,9 +499,18 @@ describe('ResultsTable', () => {
       expect(
         screen.getByTestId('results-workflow-review-signal-note')
       ).toHaveTextContent('results.workflowReviewSignalNote');
+      expect(screen.getByTestId('results-workflow-review-signal-count')).toHaveClass(
+        'notebook-tone-warning',
+      );
+      expect(screen.getByTestId('results-workflow-review-signal-count').className).not.toMatch(
+        /text-amber-|bg-amber-|ring-amber-/,
+      );
       expect(
         screen.getByTestId('results-workflow-review-action-source-conflict'),
       ).toHaveTextContent('results.reviewActionReviewSourceConflict');
+      expect(
+        screen.getByTestId('results-workflow-review-action-source-conflict').className,
+      ).not.toMatch(/text-blue-|text-slate-|bg-blue-|bg-slate-/);
       expect(
         screen.getByTestId('results-workflow-review-action-multiple-classifications'),
       ).toHaveTextContent('results.reviewActionConfirmMultipleGhs');
@@ -839,6 +860,24 @@ describe('ResultsTable', () => {
         'notebook-inline-action',
         'whitespace-nowrap'
       );
+    });
+
+    it('uses notebook tone colors for result row identity text and table headers', () => {
+      render(<ResultsTable {...defaultProps} />);
+
+      expect(screen.getByText('64-17-5')).toHaveClass('notebook-tone-action');
+      expect(screen.getByText('64-17-5').className).not.toMatch(/text-blue-/);
+      expect(screen.getByText('Ethanol')).toHaveClass('notebook-tone-ink');
+      expect(screen.getByText('Ethanol').className).not.toMatch(/text-slate-/);
+      expect(screen.getByText('乙醇')).toHaveClass('notebook-tone-muted');
+      expect(screen.getByText('乙醇').className).not.toMatch(/text-slate-/);
+
+      expect(screen.getByText('results.colSelect').closest('th')).toHaveClass(
+        'notebook-tone-muted',
+      );
+      expect(
+        screen.getByText('results.colSelect').closest('th')?.className,
+      ).not.toMatch(/text-slate-/);
     });
 
     it('keeps the results readable on narrow screens without a desktop-only minimum table width', () => {

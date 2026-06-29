@@ -22,7 +22,7 @@ function NumberField({ field, onChange }) {
         max={field.max}
         step={field.step}
         onChange={(event) => onChange(field, event.target.value)}
-        className="w-full rounded-md border border-[hsl(var(--notebook-rule))] bg-white px-3 py-2 text-sm text-[hsl(var(--notebook-ink))] focus:border-[hsl(var(--notebook-action-border))] focus:outline-none"
+        className="notebook-field w-full rounded-md px-3 py-2 text-sm"
       />
     </label>
   );
@@ -278,7 +278,7 @@ function CustomFieldsControls({
                 })
               }
               placeholder={t(field.placeholderKey)}
-              className="rounded-md border border-[hsl(var(--notebook-rule))] bg-white px-3 py-2 text-sm text-[hsl(var(--notebook-ink))] placeholder:text-slate-400 focus:border-[hsl(var(--notebook-action-border))] focus:outline-none"
+              className="notebook-field rounded-md px-3 py-2 text-sm"
             />
           </div>
         ))}

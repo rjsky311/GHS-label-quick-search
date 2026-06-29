@@ -56,15 +56,15 @@ export default function BatchFitReport({
 
   return (
     <div
-      className="mt-3 rounded-md border border-slate-200 bg-white/80 p-3"
+      className="mt-3 rounded-md border border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.68)] p-3 text-[hsl(var(--notebook-ink))]"
       data-testid="batch-fit-report"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <div className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+          <div className="text-xs font-semibold uppercase tracking-normal text-[hsl(var(--notebook-muted-ink))]">
             {tx("label.batchFitReportTitle", "Batch fit report")}
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-600">
+          <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
             {tx(
               "label.batchFitReportBody",
               "One fixed stock is kept for this batch. Ready labels can print now; review or excluded labels stay visible before handoff.",
@@ -72,7 +72,7 @@ export default function BatchFitReport({
           </p>
         </div>
         <span
-          className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+          className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.38)]"
           data-testid="batch-fit-stock-purpose"
         >
           {batchPrintPurposeLabel} / {currentStockName}
@@ -95,13 +95,13 @@ export default function BatchFitReport({
       </div>
       {batchSelectedPrintItems.length > 0 && (
         <div
-          className="mt-3 grid gap-2 rounded-md border border-blue-100 bg-blue-50/70 p-2 text-xs text-blue-950 sm:grid-cols-3"
+          className="mt-3 grid gap-2 rounded-md border border-[hsl(var(--notebook-action-border)/0.28)] bg-[hsl(var(--notebook-action-soft)/0.62)] p-2 text-xs text-[hsl(var(--notebook-ink))] sm:grid-cols-3"
           data-testid="batch-output-contract"
           data-selected-items={batchSelectedPrintItems.length}
           data-output-labels={plannedPrintLabelCount}
           data-output-pages={plannedPrintPageCount}
         >
-          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+          <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.76)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-action-border)/0.18)]">
             <div className="font-medium opacity-70">
               {tx("label.batchOutputSelected", "Selected to print")}
             </div>
@@ -111,7 +111,7 @@ export default function BatchFitReport({
               })}
             </div>
           </div>
-          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+          <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.76)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-action-border)/0.18)]">
             <div className="font-medium opacity-70">
               {tx("label.batchOutputPhysical", "Physical output")}
             </div>
@@ -126,7 +126,7 @@ export default function BatchFitReport({
               )}
             </div>
           </div>
-          <div className="rounded-md bg-white/75 px-3 py-2 ring-1 ring-blue-100">
+          <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.76)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-action-border)/0.18)]">
             <div className="font-medium opacity-70">
               {tx("label.batchOutputStock", "Fixed stock")}
             </div>
@@ -138,7 +138,7 @@ export default function BatchFitReport({
       )}
       {batchPrintPlan.representatives.worstFit && (
         <p
-          className="mt-2 text-xs leading-5 text-slate-500"
+          className="mt-2 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]"
           data-testid="batch-fit-worst"
         >
           {tx("label.batchWorstFit", "Highest pressure")}:{" "}
@@ -147,10 +147,10 @@ export default function BatchFitReport({
       )}
       {batchRepresentativeOptions.length > 0 && (
         <div
-          className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-2"
+          className="mt-3 rounded-md border border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.58)] p-2"
           data-testid="batch-preview-selector"
         >
-          <div className="text-xs font-semibold uppercase tracking-normal text-slate-500">
+          <div className="text-xs font-semibold uppercase tracking-normal text-[hsl(var(--notebook-muted-ink))]">
             {tx("label.batchPreviewSelectorTitle", "Representative preview")}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -169,14 +169,14 @@ export default function BatchFitReport({
                   }}
                   className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     isActive
-                      ? "border-blue-300 bg-blue-50 text-blue-800"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700"
+                      ? "border-[hsl(var(--notebook-action-border)/0.72)] bg-[hsl(var(--notebook-action-soft)/0.78)] text-[hsl(var(--notebook-action))]"
+                      : "border-[hsl(var(--notebook-border)/0.5)] bg-[hsl(var(--notebook-surface-raised)/0.86)] text-[hsl(var(--notebook-muted-ink))] hover:border-[hsl(var(--notebook-action-border)/0.52)] hover:text-[hsl(var(--notebook-action))]"
                   }`}
                   data-testid={`batch-preview-rep-${representative}`}
                 >
                   {getBatchRepresentativeLabel(representative, tx)}
                   {rep?.identity ? (
-                    <span className="ml-1 text-slate-400">
+                    <span className="ml-1 text-[hsl(var(--notebook-muted-ink)/0.74)]">
                       #{rep.index + 1}
                     </span>
                   ) : null}
@@ -211,23 +211,23 @@ export default function BatchFitReport({
       )}
       {batchReducedPurposeItems.length > 0 && (
         <div
-          className="mt-3 rounded-md border border-amber-200 bg-amber-50/70 p-3"
+          className="mt-3 rounded-md border border-[hsl(var(--notebook-warning)/0.42)] bg-[hsl(var(--notebook-warning-soft)/0.68)] p-3"
           data-testid="batch-print-scope-controls"
         >
-          <div className="text-xs font-semibold uppercase tracking-normal text-amber-800">
+          <div className="text-xs font-semibold uppercase tracking-normal text-[hsl(var(--notebook-warning))]">
             {tx("label.batchPrintScopeTitle", "Print scope")}
           </div>
-          <p className="mt-1 text-xs leading-5 text-amber-900/80">
+          <p className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-ink))]">
             {tx(
               "label.batchPrintScopeBody",
               "Ready labels and required extra labels are included by default. Add compact fallback labels only if that is acceptable for this batch.",
             )}
           </p>
           <div className="mt-3 grid gap-2">
-            <label className="flex items-start gap-2 rounded-md border border-amber-200 bg-white/80 px-3 py-2 text-xs text-slate-700">
+            <label className="flex items-start gap-2 rounded-md border border-[hsl(var(--notebook-warning)/0.34)] bg-[hsl(var(--notebook-surface)/0.76)] px-3 py-2 text-xs text-[hsl(var(--notebook-ink))]">
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 h-4 w-4 rounded border-[hsl(var(--notebook-border))] text-[hsl(var(--notebook-action))] focus:ring-[hsl(var(--notebook-action-border))]"
                 checked={batchIncludeReducedPurpose}
                 onChange={(event) =>
                   setBatchIncludeReducedPurpose(event.target.checked)
@@ -235,16 +235,16 @@ export default function BatchFitReport({
                 data-testid="batch-include-reduced-purpose"
               />
               <span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-[hsl(var(--notebook-ink))]">
                   {tx(
                     "label.batchIncludeReducedPurpose",
                     "Include compact fallback labels",
                   )}
                 </span>
-                <span className="ml-1 text-slate-500">
+                <span className="ml-1 text-[hsl(var(--notebook-muted-ink))]">
                   ({batchReducedPurposeItems.length})
                 </span>
-                <span className="block leading-5 text-slate-500">
+                <span className="block leading-5 text-[hsl(var(--notebook-muted-ink))]">
                   {tx(
                     "label.batchIncludeReducedPurposeHint",
                     "These keep identity and pictograms on the chosen stock, but they are not complete A4/Letter labels.",
@@ -254,7 +254,7 @@ export default function BatchFitReport({
             </label>
           </div>
           <div
-            className="mt-2 rounded-md bg-white/70 px-3 py-2 text-xs font-medium text-amber-900"
+            className="mt-2 rounded-md bg-[hsl(var(--notebook-surface)/0.72)] px-3 py-2 text-xs font-medium text-[hsl(var(--notebook-warning))]"
             data-testid="batch-print-scope-summary"
           >
             {tx(
@@ -273,17 +273,17 @@ export default function BatchFitReport({
       )}
       {batchItemsNeedingReview.length > 0 && (
         <details
-          className="mt-3 rounded-md border border-slate-200 bg-white p-2"
+          className="mt-3 rounded-md border border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.68)] p-2"
           data-testid="batch-review-list"
         >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-700">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-[hsl(var(--notebook-ink))]">
             <span>
               {tx(
                 "label.batchReviewListTitle",
                 "Items needing review or exclusion",
               )}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+            <span className="rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.38)]">
               {batchItemsNeedingReview.length}
             </span>
           </summary>
@@ -291,14 +291,14 @@ export default function BatchFitReport({
             {batchItemsNeedingReview.slice(0, 12).map((item) => (
               <div
                 key={`${item.index}-${item.cas}`}
-                className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs sm:grid-cols-[minmax(0,1fr)_auto]"
+                className="grid gap-2 rounded-md border border-[hsl(var(--notebook-rule)/0.64)] bg-[hsl(var(--notebook-surface)/0.58)] p-2 text-xs sm:grid-cols-[minmax(0,1fr)_auto]"
                 data-testid={`batch-review-item-${item.index}`}
               >
                 <div className="min-w-0">
-                  <div className="truncate font-semibold text-slate-800">
+                  <div className="truncate font-semibold text-[hsl(var(--notebook-ink))]">
                     #{item.index + 1} {item.identity || item.cas}
                   </div>
-                  <div className="mt-1 leading-5 text-slate-600">
+                  <div className="mt-1 leading-5 text-[hsl(var(--notebook-muted-ink))]">
                     {getBatchCategoryLabel(item.category, tx)} /{" "}
                     {getBatchReasonLabel(item.reason, tx)}
                   </div>
@@ -306,7 +306,7 @@ export default function BatchFitReport({
                 <button
                   type="button"
                   onClick={() => setBatchPreviewItemIndex(item.index)}
-                  className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 py-1.5 font-medium text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700"
+                  className="inline-flex items-center justify-center rounded-md border border-[hsl(var(--notebook-border)/0.58)] bg-[hsl(var(--notebook-surface-raised)/0.86)] px-2.5 py-1.5 font-medium text-[hsl(var(--notebook-muted-ink))] transition-colors hover:border-[hsl(var(--notebook-action-border)/0.52)] hover:text-[hsl(var(--notebook-action))]"
                   data-testid={`batch-review-preview-${item.index}`}
                 >
                   {tx("label.batchPreviewItemAction", "Preview")}
@@ -314,7 +314,7 @@ export default function BatchFitReport({
               </div>
             ))}
             {batchItemsNeedingReview.length > 12 && (
-              <div className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+              <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.58)] px-3 py-2 text-xs text-[hsl(var(--notebook-muted-ink))]">
                 {tx(
                   "label.batchReviewListMore",
                   "{{count}} more item(s) in the exported review list",
@@ -325,7 +325,7 @@ export default function BatchFitReport({
             <button
               type="button"
               onClick={handleExportBatchReviewList}
-              className="inline-flex w-fit items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700"
+              className="inline-flex w-fit items-center gap-2 rounded-md border border-[hsl(var(--notebook-border)/0.58)] bg-[hsl(var(--notebook-surface-raised)/0.86)] px-3 py-2 text-xs font-semibold text-[hsl(var(--notebook-muted-ink))] transition-colors hover:border-[hsl(var(--notebook-action-border)/0.52)] hover:text-[hsl(var(--notebook-action))]"
               data-testid="batch-export-review-list"
             >
               <FileSpreadsheet className="h-4 w-4" />

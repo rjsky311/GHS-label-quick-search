@@ -42,4 +42,19 @@ describe("theme tokens", () => {
   it("does not add Dark Bench-specific preview background overrides", () => {
     expect(css).not.toMatch(/\.theme-dark-bench\s+\.notebook-print-preview/);
   });
+
+  it("defines semantic notebook tone utilities for Dark Bench legibility", () => {
+    expect(css).toMatch(
+      /\.notebook-tone-muted\s*{[^}]*color:\s*hsl\(var\(--notebook-muted-ink\)\)/s,
+    );
+    expect(css).toMatch(
+      /\.notebook-tone-action\s*{[^}]*color:\s*hsl\(var\(--notebook-action\)\)/s,
+    );
+    expect(css).toMatch(
+      /\.notebook-tone-warning\s*{[^}]*color:\s*hsl\(var\(--notebook-warning\)\)/s,
+    );
+    expect(css).toMatch(
+      /\.notebook-tone-danger\s*{[^}]*color:\s*hsl\(var\(--notebook-danger\)\)/s,
+    );
+  });
 });

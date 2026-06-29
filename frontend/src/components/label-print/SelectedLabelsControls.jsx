@@ -236,7 +236,7 @@ export default function SelectedLabelsControls({
 	                  <button
 	                    type="button"
 	                    onClick={() => onToggleSelectForLabel(chem)}
-	                    className="px-2 text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-red-600"
+	                    className="px-2 text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-[hsl(var(--notebook-danger))]"
 	                    data-testid="selected-label-remove"
 	                  >
                     <X className="h-4 w-4" />

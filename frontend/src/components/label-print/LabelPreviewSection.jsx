@@ -137,7 +137,7 @@ export default function LabelPreviewSection({
             style={{ height: labelFragmentPreviewHeight }}
           />
         ) : (
-          <div className="flex h-72 items-center justify-center px-4 text-sm text-slate-500">
+          <div className="flex h-72 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
             {tx(
               "label.previewFocusEmptyBody",
               "Select at least one chemical to preview real content density.",

@@ -17,17 +17,23 @@ import {
 import { escapeCsvCell } from "@/utils/csvCell";
 
 export const READINESS_TONE_CLASSES = {
-  ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  neutral: "border-slate-200 bg-white text-slate-700",
-  caution: "border-amber-200 bg-amber-50 text-amber-900",
-  danger: "border-red-200 bg-red-50 text-red-900",
+  ready:
+    "border-[hsl(var(--notebook-ready)/0.38)] bg-[hsl(var(--notebook-ready-soft)/0.74)] text-[hsl(var(--notebook-ready))]",
+  neutral:
+    "border-[hsl(var(--notebook-rule)/0.7)] bg-[hsl(var(--notebook-surface)/0.68)] text-[hsl(var(--notebook-ink))]",
+  caution:
+    "border-[hsl(var(--notebook-warning)/0.42)] bg-[hsl(var(--notebook-warning-soft)/0.78)] text-[hsl(var(--notebook-warning))]",
+  danger:
+    "border-[hsl(var(--notebook-danger)/0.44)] bg-[hsl(var(--notebook-danger-soft)/0.84)] text-[hsl(var(--notebook-danger))]",
 };
 
 export const READINESS_TONE_ACCENT_CLASSES = {
-  ready: "border-emerald-200 text-emerald-800",
-  neutral: "border-slate-200 text-slate-700",
-  caution: "border-amber-200 text-amber-900",
-  danger: "border-red-200 text-red-900",
+  ready: "border-[hsl(var(--notebook-ready)/0.5)] text-[hsl(var(--notebook-ready))]",
+  neutral: "border-[hsl(var(--notebook-rule)/0.72)] text-[hsl(var(--notebook-ink))]",
+  caution:
+    "border-[hsl(var(--notebook-warning)/0.5)] text-[hsl(var(--notebook-warning))]",
+  danger:
+    "border-[hsl(var(--notebook-danger)/0.52)] text-[hsl(var(--notebook-danger))]",
 };
 
 export const BATCH_CATEGORY_TONE = {
@@ -66,13 +72,15 @@ export const getPreparedExpiryBadge = (expiryDate) => {
   if (status === "expired") {
     return {
       labelKey: "prepared.expiryExpired",
-      className: "border-red-200 bg-red-50 text-red-700",
+      className:
+        "border-[hsl(var(--notebook-danger)/0.42)] bg-[hsl(var(--notebook-danger-soft)/0.84)] text-[hsl(var(--notebook-danger))]",
     };
   }
   if (status === "expiringSoon") {
     return {
       labelKey: "prepared.expiryExpiringSoon",
-      className: "border-amber-200 bg-amber-50 text-amber-700",
+      className:
+        "border-[hsl(var(--notebook-warning)/0.42)] bg-[hsl(var(--notebook-warning-soft)/0.78)] text-[hsl(var(--notebook-warning))]",
     };
   }
   return null;

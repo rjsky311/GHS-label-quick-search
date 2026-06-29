@@ -615,6 +615,14 @@ code {
         background-color: hsl(var(--notebook-ready));
     }
 
+    .notebook-count-badge-warning {
+        background-color: hsl(var(--notebook-warning));
+    }
+
+    .notebook-count-badge-danger {
+        background-color: hsl(var(--notebook-danger));
+    }
+
     .notebook-visual-plate {
         border: 1px solid hsl(var(--notebook-rule) / 0.66);
         background:
@@ -875,5 +883,29 @@ code {
         min-height: 2.5rem;
         border-bottom-color: hsl(var(--notebook-action-border) / 0.6);
         box-shadow: 0 -1px 0 hsl(var(--notebook-rule) / 0.7) inset;
+    }
+
+    .notebook-tone-ink {
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-tone-muted {
+        color: hsl(var(--notebook-muted-ink));
+    }
+
+    .notebook-tone-action {
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-tone-warning {
+        color: hsl(var(--notebook-warning));
+    }
+
+    .notebook-tone-danger {
+        color: hsl(var(--notebook-danger));
+    }
+
+    .notebook-tone-ready {
+        color: hsl(var(--notebook-ready));
     }
 }
