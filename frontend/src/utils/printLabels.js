@@ -1620,6 +1620,17 @@ export function buildPrintPreviewDocument(
   };
 }
 
+const resolvePrintFrameViewport = (documentBundle) => {
+  const page = documentBundle?.model?.layout?.page || {};
+  const widthMm = Number(page.widthMm) || 210;
+  const heightMm = Number(page.heightMm) || 297;
+
+  return {
+    width: `${widthMm}mm`,
+    height: `${heightMm}mm`,
+  };
+};
+
 export function printLabels(
   selectedForLabel,
   labelConfig,
@@ -1650,8 +1661,9 @@ export function printLabels(
 
   const iframe = document.createElement("iframe");
   iframe.id = "ghs-print-frame";
+  const printFrameViewport = resolvePrintFrameViewport(documentBundle);
   iframe.style.cssText =
-    "position:fixed;right:0;bottom:0;width:0;height:0;border:none;opacity:0;pointer-events:none;";
+    `position:fixed;left:-10000px;top:0;width:${printFrameViewport.width};height:${printFrameViewport.height};border:none;opacity:0;pointer-events:none;z-index:-1;overflow:hidden;max-width:none;max-height:none;`;
   document.body.appendChild(iframe);
 
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;

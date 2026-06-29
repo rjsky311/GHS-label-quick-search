@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Building2, MapPin, Phone } from "lucide-react";
 import { READINESS_TONE_CLASSES } from "@/components/label-print/labelPrintModalHelpers";
 
@@ -22,6 +23,12 @@ const PROFILE_FIELDS = [
   },
 ];
 
+const normalizeProfileDraft = (profile = {}) => ({
+  organization: profile.organization || "",
+  phone: profile.phone || "",
+  address: profile.address || "",
+});
+
 export default function ResponsibleProfileControls({
   open,
   tone,
@@ -35,8 +42,49 @@ export default function ResponsibleProfileControls({
   t,
   tx,
 }) {
+  const [draftProfile, setDraftProfile] = useState(() =>
+    normalizeProfileDraft(labProfile),
+  );
+  const composingFieldsRef = useRef(new Set());
   const hasProfileValues =
     labProfile.organization || labProfile.phone || labProfile.address;
+
+  useEffect(() => {
+    if (composingFieldsRef.current.size > 0) return;
+    setDraftProfile(normalizeProfileDraft(labProfile));
+  }, [labProfile.organization, labProfile.phone, labProfile.address]);
+
+  const commitProfileField = (key, value, profileDraft = draftProfile) => {
+    onLabProfileChange?.({
+      ...profileDraft,
+      [key]: value,
+    });
+  };
+
+  const handleProfileFieldChange = (key, value) => {
+    const nextDraft = {
+      ...draftProfile,
+      [key]: value,
+    };
+    setDraftProfile(nextDraft);
+    if (!composingFieldsRef.current.has(key)) {
+      commitProfileField(key, value, nextDraft);
+    }
+  };
+
+  const handleProfileCompositionStart = (key) => {
+    composingFieldsRef.current.add(key);
+  };
+
+  const handleProfileCompositionEnd = (key, value) => {
+    composingFieldsRef.current.delete(key);
+    const nextDraft = {
+      ...draftProfile,
+      [key]: value,
+    };
+    setDraftProfile(nextDraft);
+    commitProfileField(key, value, nextDraft);
+  };
 
   return (
     <details
@@ -105,12 +153,18 @@ export default function ResponsibleProfileControls({
                 <input
                   type="text"
                   data-testid={`responsible-profile-field-${field.key}`}
-                  value={labProfile[field.key] || ""}
+                  value={draftProfile[field.key] || ""}
                   onChange={(event) =>
-                    onLabProfileChange?.({
-                      ...labProfile,
-                      [field.key]: event.target.value,
-                    })
+                    handleProfileFieldChange(field.key, event.target.value)
+                  }
+                  onCompositionStart={() =>
+                    handleProfileCompositionStart(field.key)
+                  }
+                  onCompositionEnd={(event) =>
+                    handleProfileCompositionEnd(
+                      field.key,
+                      event.currentTarget.value,
+                    )
                   }
                   placeholder={t(field.placeholderKey)}
                   className="notebook-field rounded-md px-3 py-2 text-sm"
