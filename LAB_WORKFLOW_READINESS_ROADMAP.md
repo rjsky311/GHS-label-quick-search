@@ -212,6 +212,13 @@ Promotion trigger: a real batch list, export handoff example, screenshot,
 workbook audit, production QA failure, or user report shows that review states,
 export scope, filenames, sheets, or handoff categories are confusing.
 
+Current evidence trigger: on 2026-06-29 the owner selected a local Organic
+inventory CSV in Downloads for this theme. The first pass is local evidence
+quality, not runtime export UI: the inventory sampler should classify invalid
+CAS cells with the same checksum boundary as the runtime batch parser, keep
+blank source names out of representative short-name samples, and surface source
+`NO GHS` cells as review-only roster notes rather than GHS authority.
+
 Concrete work:
 
 - Improve only from real batch lists, export handoff examples, screenshots, QA

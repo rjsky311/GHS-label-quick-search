@@ -1,4 +1,5 @@
 const CAS_FORMAT_PATTERN = /^\d{2,7}-\d{2}-\d$/;
+const SOURCE_NO_GHS_PATTERN = /^no\s*-?\s*ghs$/i;
 
 const DEFAULT_RECOMMENDED_OUTPUTS = Object.freeze([
   "complete",
@@ -155,6 +156,24 @@ export const normalizeCas = (value = "") =>
     .replace(/\s+/g, "")
     .replace(/[.,;:，。；：]+$/g, "");
 
+const hasValidCasChecksum = (cas = "") => {
+  if (!CAS_FORMAT_PATTERN.test(cas)) return false;
+
+  const digits = cas.replace(/-/g, "");
+  const checkDigit = Number(digits.slice(-1));
+  const bodyDigits = digits
+    .slice(0, -1)
+    .split("")
+    .reverse()
+    .map((digit) => Number(digit));
+  const checksum = bodyDigits.reduce(
+    (sum, digit, index) => sum + digit * (index + 1),
+    0,
+  );
+
+  return checksum % 10 === checkDigit;
+};
+
 const optionalCellIndex = (headerRow, candidates) => {
   const normalizedCandidates = new Set(candidates.map(normalizeHeaderCell));
   return headerRow.findIndex((cell) =>
@@ -165,6 +184,17 @@ const optionalCellIndex = (headerRow, candidates) => {
 const getCell = (row, index) => (index >= 0 ? String(row[index] || "").trim() : "");
 
 const hasMeaningfulRow = (row) => row.some((cell) => String(cell || "").trim());
+
+const isSourceNoGhsCell = (cell) =>
+  SOURCE_NO_GHS_PATTERN.test(toHalfWidth(String(cell || "").trim()));
+
+const getSourceNoGhsMarkerCell = (row) => {
+  for (const cell of row) {
+    const markerCell = toHalfWidth(String(cell || "").trim());
+    if (isSourceNoGhsCell(markerCell)) return markerCell;
+  }
+  return "";
+};
 
 const recordFromRow = ({
   row,
@@ -189,7 +219,12 @@ const recordFromRow = ({
   };
 
   if (!rawCas && !name) return { kind: "empty" };
-  if (!CAS_FORMAT_PATTERN.test(cas)) return { kind: "invalid", record: base };
+  if (!CAS_FORMAT_PATTERN.test(cas)) {
+    return { kind: "invalid", record: { ...base, reason: "format" } };
+  }
+  if (!hasValidCasChecksum(cas)) {
+    return { kind: "invalid", record: { ...base, reason: "checksum" } };
+  }
   return { kind: "valid", record: base };
 };
 
@@ -201,6 +236,8 @@ export const extractInventoryRecords = (csvText = "") => {
       headerRowIndex: -1,
       records: [],
       invalidCasRows: [],
+      missingSourceNameRows: [],
+      sourceNoGhsRows: [],
       rows,
     };
   }
@@ -211,6 +248,8 @@ export const extractInventoryRecords = (csvText = "") => {
   const quantityIndex = optionalCellIndex(headerRow, ["數量", "数量", "quantity"]);
   const records = [];
   const invalidCasRows = [];
+  const missingSourceNameRows = [];
+  const sourceNoGhsRows = [];
 
   rows.slice(header.headerRowIndex + 1).forEach((row, offset) => {
     const rowIndex = header.headerRowIndex + 1 + offset;
@@ -226,7 +265,21 @@ export const extractInventoryRecords = (csvText = "") => {
       quantityIndex,
     });
 
-    if (parsed.kind === "valid") records.push(parsed.record);
+    const markerCell = getSourceNoGhsMarkerCell(row);
+    if (markerCell) {
+      const markerRecord = parsed.record || {
+        sourceRow: rowIndex + 1,
+        rawCas: getCell(row, header.casIndex),
+        cas: normalizeCas(getCell(row, header.casIndex)),
+        name: getCell(row, header.nameIndex),
+      };
+      sourceNoGhsRows.push({ ...markerRecord, markerCell });
+    }
+
+    if (parsed.kind === "valid") {
+      records.push(parsed.record);
+      if (!parsed.record.name) missingSourceNameRows.push(parsed.record);
+    }
     if (parsed.kind === "invalid" && parsed.record.rawCas) {
       invalidCasRows.push(parsed.record);
     }
@@ -236,6 +289,8 @@ export const extractInventoryRecords = (csvText = "") => {
     headerRowIndex: header.headerRowIndex,
     records,
     invalidCasRows,
+    missingSourceNameRows,
+    sourceNoGhsRows,
     rows,
   };
 };
@@ -249,10 +304,14 @@ const findLongestNameRecord = (records) =>
   }, null);
 
 const findShortestNameRecord = (records) =>
-  records.reduce((winner, record) => {
-    if (!winner) return record;
-    return displayLength(record.name) < displayLength(winner.name) ? record : winner;
-  }, null);
+  records
+    .filter((record) => record.name)
+    .reduce((winner, record) => {
+      if (!winner) return record;
+      return displayLength(record.name) < displayLength(winner.name)
+        ? record
+        : winner;
+    }, null);
 
 const getDuplicateRecord = (records) => {
   const groups = new Map();
@@ -356,6 +415,8 @@ export const buildInventoryPrintSampleReport = (csvText = "", options = {}) => {
       uniqueCasCount: uniqueCas.size,
       duplicateCasCount: duplicateCasCount(records),
       invalidCasRowCount: extracted.invalidCasRows.length,
+      missingSourceNameRowCount: extracted.missingSourceNameRows.length,
+      sourceNoGhsMarkerCount: extracted.sourceNoGhsRows.length,
     },
     selectionRules: [
       "Use inventory records for source-shape, CAS parsing, long-name, duplicate, and batch-boundary coverage.",
@@ -367,7 +428,25 @@ export const buildInventoryPrintSampleReport = (csvText = "", options = {}) => {
       sourceRow: record.sourceRow,
       rawCas: record.rawCas,
       name: record.name,
-      reason: "Invalid CAS-like cell from inventory source.",
+      reason: record.reason,
+    })),
+    missingSourceNameSamples: extracted.missingSourceNameRows.slice(0, 5).map((record) => ({
+      sourceRow: record.sourceRow,
+      cas: record.cas,
+      rawCas: record.rawCas,
+      location: record.location,
+      vendor: record.vendor,
+      quantity: record.quantity,
+      reason: "Checksum-valid CAS row with blank source name.",
+    })),
+    sourceNoGhsSamples: extracted.sourceNoGhsRows.slice(0, 5).map((record) => ({
+      sourceRow: record.sourceRow,
+      cas: record.cas,
+      rawCas: record.rawCas,
+      name: record.name,
+      markerCell: record.markerCell,
+      reason:
+        "Source NO GHS marker is review-only and does not override lookup authority.",
     })),
     syntheticStressCases: buildSyntheticSamples(),
   };
@@ -379,52 +458,96 @@ const tableCell = (value = "") =>
     .replace(/\|/g, "\\|")
     .trim();
 
-const inventorySampleRow = (sample) =>
-  `| ${tableCell(sample.id)} | ${tableCell(sample.cas)} | ${tableCell(sample.name)} | ${tableCell(sample.reason)} | ${tableCell(sample.recommendedOutputs.join(", "))} |`;
+const inventorySampleRow = (sample = {}) => {
+  const recommendedOutputs = Array.isArray(sample.recommendedOutputs)
+    ? sample.recommendedOutputs.join(", ")
+    : "";
+  return `| ${tableCell(sample.id)} | ${tableCell(sample.cas)} | ${tableCell(sample.name)} | ${tableCell(sample.reason)} | ${tableCell(recommendedOutputs)} |`;
+};
 
-const syntheticSampleRow = (sample) =>
+const syntheticSampleRow = (sample = {}) =>
   `| ${tableCell(sample.id)} | ${tableCell(sample.output)} | ${tableCell(sample.stockPreset)} | ${sample.pictogramCount} | ${tableCell(sample.expectedLayout)} |`;
 
-export const renderInventoryPrintSampleMarkdown = (report) => {
+export const renderInventoryPrintSampleMarkdown = (report = {}) => {
+  const summary = report.summary || {};
+  const selectionRules = report.selectionRules || [];
+  const inventorySamples = report.inventorySamples || [];
+  const syntheticStressCases = report.syntheticStressCases || [];
+  const invalidCasSamples = report.invalidCasSamples || [];
+  const missingSourceNameSamples = report.missingSourceNameSamples || [];
+  const sourceNoGhsSamples = report.sourceNoGhsSamples || [];
+
   const lines = [
     "# Inventory Print Sampling Report",
     "",
     "This is review-only QA evidence. Do not treat inventory names as approved dictionary data.",
     "",
-    `- Source: ${report.sourceName}`,
-    `- Generated: ${report.generatedAt}`,
-    `- Valid records: ${report.summary.validRecordCount}`,
-    `- Unique CAS: ${report.summary.uniqueCasCount}`,
-    `- Duplicate CAS groups: ${report.summary.duplicateCasCount}`,
-    `- Invalid CAS rows: ${report.summary.invalidCasRowCount}`,
+    `- Source: ${report.sourceName || "inventory.csv"}`,
+    `- Generated: ${report.generatedAt || ""}`,
+    `- Valid records: ${summary.validRecordCount ?? 0}`,
+    `- Unique CAS: ${summary.uniqueCasCount ?? 0}`,
+    `- Duplicate CAS groups: ${summary.duplicateCasCount ?? 0}`,
+    `- Invalid CAS rows: ${summary.invalidCasRowCount ?? 0}`,
+    `- Missing source-name rows: ${summary.missingSourceNameRowCount ?? 0}`,
+    `- Source NO GHS marker rows: ${summary.sourceNoGhsMarkerCount ?? 0}`,
     "",
     "## Selection Rules",
     "",
-    ...report.selectionRules.map((rule) => `- ${rule}`),
+    ...selectionRules.map((rule) => `- ${rule}`),
     "",
     "## Inventory Samples",
     "",
     "| ID | CAS | Name | Reason | Outputs |",
     "| --- | --- | --- | --- | --- |",
-    ...report.inventorySamples.map(inventorySampleRow),
+    ...inventorySamples.map(inventorySampleRow),
     "",
     "## Synthetic Stress Cases",
     "",
     "| ID | Output | Stock | GHS count | Expected layout |",
     "| --- | --- | --- | ---: | --- |",
-    ...report.syntheticStressCases.map(syntheticSampleRow),
+    ...syntheticStressCases.map(syntheticSampleRow),
   ];
 
-  if (report.invalidCasSamples.length > 0) {
+  if (invalidCasSamples.length > 0) {
     lines.push(
       "",
       "## Invalid CAS Samples",
       "",
       "| Source row | Raw CAS | Name | Reason |",
       "| ---: | --- | --- | --- |",
-      ...report.invalidCasSamples.map(
+      ...invalidCasSamples.map(
         (sample) =>
           `| ${sample.sourceRow} | ${tableCell(sample.rawCas)} | ${tableCell(sample.name)} | ${tableCell(sample.reason)} |`,
+      ),
+    );
+  }
+
+  if (missingSourceNameSamples.length > 0) {
+    lines.push(
+      "",
+      "## Missing Source Name Samples",
+      "",
+      "| Source row | CAS | Raw CAS | Location | Vendor | Quantity | Reason |",
+      "| ---: | --- | --- | --- | --- | --- | --- |",
+      ...missingSourceNameSamples.map(
+        (sample) =>
+          `| ${sample.sourceRow} | ${tableCell(sample.cas)} | ${tableCell(sample.rawCas)} | ${tableCell(sample.location)} | ${tableCell(sample.vendor)} | ${tableCell(sample.quantity)} | ${tableCell(sample.reason)} |`,
+      ),
+    );
+  }
+
+  if (sourceNoGhsSamples.length > 0) {
+    lines.push(
+      "",
+      "## Source NO GHS Marker Samples",
+      "",
+      "These rows contain a source marker only; they do not override lookup authority or prove GHS hazard absence.",
+      "",
+      "| Source row | CAS | Raw CAS | Name | Marker cell | Reason |",
+      "| ---: | --- | --- | --- | --- | --- |",
+      ...sourceNoGhsSamples.map(
+        (sample) =>
+          `| ${sample.sourceRow} | ${tableCell(sample.cas)} | ${tableCell(sample.rawCas)} | ${tableCell(sample.name)} | ${tableCell(sample.markerCell)} | ${tableCell(sample.reason)} |`,
       ),
     );
   }
