@@ -212,12 +212,14 @@ Promotion trigger: a real batch list, export handoff example, screenshot,
 workbook audit, production QA failure, or user report shows that review states,
 export scope, filenames, sheets, or handoff categories are confusing.
 
-Current evidence trigger: on 2026-06-29 the owner selected a local Organic
-inventory CSV in Downloads for this theme. The first pass is local evidence
-quality, not runtime export UI: the inventory sampler should classify invalid
-CAS cells with the same checksum boundary as the runtime batch parser, keep
-blank source names out of representative short-name samples, and surface source
-`NO GHS` cells as review-only roster notes rather than GHS authority.
+Current local example/probe note, not a promotion trigger: on 2026-06-29 the
+owner selected a local Organic inventory CSV in Downloads as an example/probe
+for this theme. The first pass is local evidence quality, not runtime export UI
+and not an upstream reference or admin-import workflow: the inventory sampler
+should classify invalid CAS cells with the same checksum boundary as the
+runtime batch parser, keep blank source names out of representative short-name
+samples, and surface source `NO GHS` cells as review-only roster notes rather
+than GHS authority.
 
 Concrete work:
 
@@ -229,16 +231,20 @@ Concrete work:
   and primary next actions understandable without reading code or docs.
 - Preserve review flags, source context, formula neutralization, and safe active
   QR/reference URLs in exported CSV/XLSX data.
-- Add parser or export fixtures only when real examples expose new separators,
-  prefixes, duplicate patterns, invalid CAS cells, or confusing review rows.
+- Add local sampler fixtures from real examples only for evidence-report QA.
+  Add runtime parser/export fixtures only after a separate product decision
+  opens that scope from user-facing confusion.
+- Do not promote an example roster into public dictionary, backend/admin
+  curation, inventory import, or upstream reference work unless a separate
+  evidence trigger explicitly opens that scope.
 
 Expected proof:
 
 - Focused frontend/backend export tests.
 - `qa:production-search-ui`, `qa:production-batch-print`, or
   `qa:production-product` when behavior reaches production.
-- A generated XLSX/CSV artifact path tied to the input evidence, so a lab
-  manager can inspect the handoff.
+- For a separately accepted runtime export slice, a generated XLSX/CSV artifact
+  path tied to the input evidence, so a lab manager can inspect the handoff.
 
 Stop condition:
 

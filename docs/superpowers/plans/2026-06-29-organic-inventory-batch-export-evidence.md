@@ -1,13 +1,13 @@
-# Organic Inventory Batch Export Evidence Implementation Plan
+# Organic CSV Local Sampling Evidence Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 Status: completed locally on 2026-06-29. The source Organic CSV and generated
 row-level report stayed local/ignored.
 
-**Goal:** Make the inventory sampling evidence used for the Organic CSV align with runtime batch CAS validation and surface review-only handoff signals for invalid CAS, blank source names, duplicate CAS, and source-provided `NO GHS` markers.
+**Goal:** Use the Organic CSV only as an example/probe to make local batch-handoff sampling evidence align with runtime batch CAS validation and surface review-only handoff signals for invalid CAS, blank source names, duplicate CAS, and source-provided `NO GHS` markers.
 
-**Architecture:** Keep this as a local QA/evidence improvement only. Update `frontend/scripts/inventory-print-sampling.mjs` and its Node tests so the sampler validates CAS checksums like `frontend/src/utils/batchSearchInput.js`, excludes checksum-invalid rows from representative valid records, avoids blank-name rows for short-name layout samples, and reports source markers without treating inventory values as approved public data.
+**Architecture:** Keep this as a local QA/evidence improvement only, not an upstream reference, backend/admin import, public dictionary, or runtime export contract change. Update `frontend/scripts/inventory-print-sampling.mjs` and its Node tests so the sampler validates CAS checksums like `frontend/src/utils/batchSearchInput.js`, excludes checksum-invalid rows from representative valid records, avoids blank-name rows for short-name layout samples, and reports source markers without treating inventory values as approved public data.
 
 **Tech Stack:** Node.js scripts, `node:test`, existing frontend QA scripts, Markdown evidence output.
 
@@ -15,9 +15,9 @@ row-level report stayed local/ignored.
 
 ## Evidence And Scope
 
-Source: `/Users/yuchelin/Downloads/最新藥品清冊 - Organic (1).csv`, selected by the owner in Finder on 2026-06-29. Read-only triage found about 401 core inventory rows, hundreds of CAS-like rows, repeated CAS values, checksum/format-invalid CAS cells, at least one valid-CAS row with a blank source name, and many source-side `NO GHS` markers.
+Source: `/Users/yuchelin/Downloads/最新藥品清冊 - Organic (1).csv`, selected by the owner in Finder on 2026-06-29 as an example/probe. Read-only triage found about 401 core inventory rows, hundreds of CAS-like rows, repeated CAS values, checksum/format-invalid CAS cells, at least one valid-CAS row with a blank source name, and many source-side `NO GHS` markers.
 
-Affected user job: a maintainer or lab manager should be able to turn a real inventory CSV into batch/export handoff evidence without silently treating invalid CAS cells or source roster notes as searchable/printable GHS truth.
+Affected user job: a user should be able to use a realistic noisy batch list to understand valid, excluded, duplicated, and review-only handoff states without silently treating invalid CAS cells or source roster notes as searchable/printable GHS truth.
 
 Non-goals:
 
@@ -26,6 +26,7 @@ Non-goals:
 - Do not change runtime lookup, hazard classification, label output, export payloads, backend APIs, or admin approval behavior in this slice.
 - Do not send the Organic CSV to production services as part of implementation.
 - Do not treat source `NO GHS` markers as authoritative GHS absence; they are review-only source notes.
+- Do not create an inventory import, action queue, admin curation workflow, or upstream reference-data layer from this example/probe unless a separate product decision opens that scope.
 
 Stop condition:
 
@@ -172,11 +173,18 @@ Expected: the report shows checksum-aware invalid CAS counts, missing source-nam
 
 Update `NEXT_PRODUCT_WORK.md` and `LAB_WORKFLOW_READINESS_ROADMAP.md` with:
 
-- source: owner-selected Organic CSV in Downloads;
-- affected job: batch/export handoff evidence;
+- source: owner-selected Organic CSV in Downloads as an example/probe only;
+- affected job: user-facing batch handoff clarity evidence, not upstream
+  reference or admin curation;
 - proof: focused sampler test and regenerated ignored local evidence report;
-- boundary: source CSV and raw row-level artifacts are not committed and do not update public dictionary data;
-- next action: only open runtime export/UI changes if the local evidence report shows a user-facing handoff gap that current export cannot answer.
+- boundary: source CSV and raw row-level artifacts are not committed and do not
+  update public dictionary data;
+- explicit non-scope: no upstream reference, public dictionary, backend/admin
+  import, runtime export contract, production behavior, or action queue is
+  created from this example/probe;
+- next action: only open runtime export/UI changes after a separate request or
+  separately accepted user-facing handoff gap that current export cannot
+  answer.
 
 - [x] **Step 4: Run docs and diff checks**
 

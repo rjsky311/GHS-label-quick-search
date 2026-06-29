@@ -154,24 +154,27 @@ one of its own evidence triggers arrives: a real batch list, export workbook,
 screenshot, workbook audit, production QA failure, or user report showing the
 handoff confusion.
 
-Organic inventory batch/export evidence pass is open on 2026-06-29 from the
+Organic CSV local example/probe was recorded on 2026-06-29 from the
 owner-selected local CSV `Downloads/最新藥品清冊 - Organic (1).csv`. Source:
-real inventory CSV evidence selected in Finder, not a broad backlog request.
-Affected user job: maintainers need to turn a noisy organic inventory roster
-into batch/export handoff evidence without treating roster notes as public GHS
-truth. Local proof so far: the inventory sampler now matches runtime batch CAS
-checksum validation, keeps checksum-invalid CAS cells out of valid sample
-records, avoids blank-name rows as short-name layout samples, and reports
-source `NO GHS` markers as source-marker-only review evidence. Regenerated
-ignored local report:
+real inventory CSV selected in Finder as an example/probe, not a broad backlog
+request, active product slice, or new upstream reference source. Affected user
+job: a user pastes a realistic noisy batch list and needs to understand what
+would be valid, excluded, duplicated, or review-only before treating results as
+searchable/printable GHS handoff output. Local proof so far: the inventory
+sampler now matches runtime batch CAS checksum validation, keeps
+checksum-invalid CAS cells out of valid sample records, avoids blank-name rows
+as short-name layout samples, and reports source `NO GHS` markers as
+source-marker-only review evidence. Regenerated ignored local report:
 `frontend/build/organic-drug-list-evidence-2026-06-29/inventory-print-sampling-report.md`
 summarized 389 valid records, 337 unique CAS values, 40 duplicate CAS groups,
 12 invalid CAS rows, 1 missing source-name row, and 91 exact-cell source
 `NO GHS` marker rows. Boundary: the source CSV and generated row-level evidence
 stay local/ignored; no public dictionary, lookup, label, export, backend, admin,
-or production behavior changes are made in this evidence pass. Next action:
-only open a runtime export/UI change if this local report exposes a concrete
-handoff question that existing export preview/workbook columns cannot answer.
+inventory import, upstream reference, action queue, or production behavior
+changes are made in this evidence pass. No runtime export/UI, backend/admin,
+import, upstream-reference, action-queue, or production work should be opened
+from this probe unless separately requested or backed by a separate
+user-facing handoff gap.
 
 Latest closed concrete slice: the 2026-06-28 Production Print QA Zeabur probe
 fallback hygiene slice is closed on production. Source: Production Print QA run
