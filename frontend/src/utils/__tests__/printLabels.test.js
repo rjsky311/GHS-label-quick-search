@@ -1123,16 +1123,34 @@ describe("printLabels", () => {
     expect(mockIframe.id).toBe("ghs-print-frame");
   });
 
-  it("sets iframe to invisible with correct styles", () => {
+  it("sets iframe to invisible with a page-sized layout viewport", () => {
     printLabels(
       [mockChemicalNoGHS],
       { size: "medium", template: "standard", orientation: "portrait" },
       {},
     );
     expect(mockIframe.style.cssText).toContain("position:fixed");
-    expect(mockIframe.style.cssText).toContain("width:0");
-    expect(mockIframe.style.cssText).toContain("height:0");
+    expect(mockIframe.style.cssText).toContain("left:-10000px");
+    expect(mockIframe.style.cssText).toContain("width:210mm");
+    expect(mockIframe.style.cssText).toContain("height:297mm");
+    expect(mockIframe.style.cssText).not.toContain("width:0");
+    expect(mockIframe.style.cssText).not.toContain("height:0");
     expect(mockIframe.style.cssText).toContain("opacity:0");
+  });
+
+  it("sizes the hidden print iframe from the selected physical page", () => {
+    printLabels(
+      [mockChemical],
+      {
+        stockPreset: "avery-5163",
+        template: "standard",
+        labelPurpose: "shipping",
+      },
+      {},
+    );
+
+    expect(mockIframe.style.cssText).toContain("width:279mm");
+    expect(mockIframe.style.cssText).toContain("height:216mm");
   });
 
   it("appends iframe to document.body", () => {

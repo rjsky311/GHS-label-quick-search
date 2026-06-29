@@ -2090,6 +2090,72 @@ describe("LabelPrintModal", () => {
     expect(printButton).not.toBeDisabled();
   });
 
+  it("does not mark the responsible profile complete while an IME draft is composing", async () => {
+    function ProfileHarness() {
+      const [labProfile, setLabProfile] = React.useState({
+        organization: "Lab A",
+        phone: "02-1234",
+        address: "",
+      });
+
+      return (
+        <LabelPrintModal
+          selectedForLabel={[makeChem()]}
+          labelConfig={{
+            ...baseConfig,
+            labelPurpose: "shipping",
+            template: "full",
+            size: "large",
+            stockPreset: "a4-primary",
+            labelWidthMm: 188,
+            labelHeightMm: 268,
+            perPage: 1,
+          }}
+          onLabelConfigChange={jest.fn()}
+          customLabelFields={baseFields}
+          onCustomLabelFieldsChange={jest.fn()}
+          labProfile={labProfile}
+          onLabProfileChange={setLabProfile}
+          onClearLabProfile={jest.fn()}
+          labelQuantities={{}}
+          onLabelQuantitiesChange={jest.fn()}
+          onPrintLabels={jest.fn()}
+          onToggleSelectForLabel={jest.fn()}
+          printTemplates={[]}
+          onSaveTemplate={jest.fn(() => true)}
+          onLoadTemplate={jest.fn()}
+          onDeleteTemplate={jest.fn()}
+          onClose={jest.fn()}
+        />
+      );
+    }
+
+    render(<ProfileHarness />);
+
+    const address = screen.getByTestId("responsible-profile-field-address");
+    fireEvent.compositionStart(address);
+    fireEvent.change(address, { target: { value: "ㄅ" } });
+
+    expect(address).toHaveValue("ㄅ");
+    expect(screen.getByTestId("responsible-profile-status")).toHaveTextContent(
+      "Required for complete primary",
+    );
+    expect(
+      screen.getByTestId("required-output-responsible-profile"),
+    ).toHaveTextContent("2/3");
+
+    fireEvent.compositionEnd(address, { target: { value: "北" } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("required-output-responsible-profile"),
+      ).toHaveTextContent("3/3");
+    });
+    expect(screen.getByTestId("responsible-profile-status")).toHaveTextContent(
+      "Ready for complete primary",
+    );
+  });
+
   it("updates quantity controls within the valid range", () => {
     const chem = makeChem();
     const { props, rerender } = renderModal({
