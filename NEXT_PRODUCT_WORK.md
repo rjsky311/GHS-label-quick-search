@@ -87,7 +87,8 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 ### Current Slice State
 
 Latest closed implementation slice: the 2026-07-05 Name-Resolution Index Cache
-backend maintainability slice is locally verified. Source: 2026-07-05
+backend maintainability slice is shipped and production-verified. Source:
+2026-07-05
 full-code review finding, owner-approved as bounded maintainability/performance
 margin work rather than a user-visible bug. Affected user job: name/CAS lookup
 and autocomplete keep the same public behavior while avoiding repeated
@@ -103,8 +104,14 @@ tests for index reuse, display-name precomputation, and immediate rebuild after
 approved alias/manual writes; `python -m pytest test_name_search.py -v` passed
 184 tests; `python -m py_compile server.py api_models.py api_validation.py
 export_helpers.py h_code_translations.py h_code_coverage_audit.py` passed;
-`python -m pytest -q` passed 278 tests; `git diff --check` passed. Stop
-condition met locally: store-unchanged name resolution and autocomplete reuse
+`python -m pytest -q` passed 278 tests; `git diff --check` passed. Production
+proof on 2026-07-05: implementation commit `4479025`, deployed production SHA
+`4479025eeecc2831f65f6a37545dccdeef9603e6`, GitHub CI run `28742043330` passed,
+Production Print QA run `28742085733` passed, expected-SHA
+`qa:production-health` passed with zero failures/warnings, and
+`qa:production-product` passed with 7 reports present, zero failed reports,
+and zero actionable failures. Stop condition met: store-unchanged name
+resolution and autocomplete reuse
 the cached index, and approved manual/alias writes are visible on the next
 public lookup. Observation: public alias exact reads no longer depend on
 `get_alias_exact`'s hit-count write side effect; if alias usage analytics become
@@ -112,8 +119,8 @@ important, add explicit bounded telemetry rather than reintroducing writes on
 the hot public read path.
 
 Previous closed implementation slice: the 2026-07-05 Batch Chunked Submission
-frontend reliability slice is locally verified. Source: 2026-07-05 full-code
-review finding that 100 cold CAS lookups were sent as one `/api/search` POST,
+frontend reliability slice is shipped and production-verified. Source:
+2026-07-05 full-code review finding that 100 cold CAS lookups were sent as one `/api/search` POST,
 which could serialize 200-400 PubChem calls behind the backend's global
 throttle and create false `upstream_error` retry rows near the tail of the
 batch. Affected user job: first-time realistic batch lookup for 50-100 CAS
@@ -128,11 +135,17 @@ chunking, progress, order, cancellation, partial failure, and unresolved index;
 passed; `npm run build` passed; `git diff --check` passed; local in-app Browser
 smoke against a mock backend accepted 45 valid CAS, showed progress from 0/45
 to 20/45 to completion, rendered 45 result rows, and reported no console
-warnings/errors or framework overlay. Stop condition met locally: the frontend
-no longer submits 100 items in a single POST, progress advances by completed
-chunk, and partial chunk failure keeps completed results visible. Post-deploy
-proof still needed after merge/deploy: `npm run qa:production-batch-print` and
-`npm run qa:production-search-ui`.
+warnings/errors or framework overlay. Production proof on 2026-07-05:
+implementation commit `759f973`, deployed production SHA
+`4479025eeecc2831f65f6a37545dccdeef9603e6`, GitHub CI run `28742043330` passed,
+Production Print QA run `28742085733` passed, expected-SHA
+`qa:production-health` passed with zero failures/warnings,
+`qa:production-batch-print` passed with a 47-label complete-primary handoff
+and zero failures/warnings, `qa:production-search-ui` passed with zero failed
+images, and `qa:production-product` passed with 7 reports present and zero
+failed reports. Stop condition met: the frontend no longer submits 100 items
+in a single POST, progress advances by completed chunk, and partial chunk
+failure keeps completed results visible.
 
 Daily-use Comfort / Dark Bench Activation v0 is shipped and
 production-verified. Source: the 2026-06-28 owner decision approving both
