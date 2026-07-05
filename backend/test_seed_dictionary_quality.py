@@ -39,6 +39,24 @@ def test_tetrachloropalladate_is_not_mislabelled_as_platinate():
     assert CAS_TO_ZH["10025-99-7"] == "四氯鉑酸鉀"
 
 
+def test_mida_and_dithiolanethione_are_not_swapped_with_other_identities():
+    # PubChem-verified on 2026-07-05: 4408-64-4 is N-methyliminodiacetic acid
+    # (CID 20441) and 822-38-8 is 1,3-dithiolane-2-thione (CID 13196). Former
+    # seed rows carried cerium(IV) sulfate hydrate and MIDA names respectively,
+    # which displayed wrong identities over correct PubChem hazard data.
+    assert CAS_TO_EN["4408-64-4"] == "N-Methyliminodiacetic acid"
+    assert CAS_TO_ZH["4408-64-4"] == "N-甲基亞胺二醋酸"
+    assert CAS_TO_EN["822-38-8"] == "1,3-Dithiolane-2-thione"
+    assert CAS_TO_ZH["822-38-8"] == "1,3-二硫雜環戊烷-2-硫酮"
+    # Cerium(IV) sulfate hydrate keeps exactly one catalog-verified CAS entry.
+    cerium_cas = [
+        cas
+        for cas, name in CAS_TO_EN.items()
+        if name == "Cerium(IV) sulfate hydrate"
+    ]
+    assert cerium_cas == ["123333-60-8"]
+
+
 def test_known_suspect_cas_identity_is_not_published_as_hydrazine():
     assert CAS_TO_EN["865-49-6"] == "Chloroform-d"
     assert CAS_TO_ZH["865-49-6"] == "氘代氯仿"
