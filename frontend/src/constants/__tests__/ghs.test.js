@@ -1,4 +1,16 @@
-import { GHS_IMAGES } from "@/constants/ghs";
+import {
+  BATCH_SEARCH_CHUNK_SIZE,
+  BATCH_SEARCH_LIMIT,
+  GHS_IMAGES,
+} from "@/constants/ghs";
+
+describe("batch search constants", () => {
+  it("keeps frontend batch submissions within the backend public limit", () => {
+    expect(BATCH_SEARCH_LIMIT).toBe(100);
+    expect(BATCH_SEARCH_CHUNK_SIZE).toBe(20);
+    expect(BATCH_SEARCH_LIMIT / BATCH_SEARCH_CHUNK_SIZE).toBeLessThanOrEqual(5);
+  });
+});
 
 describe("GHS_IMAGES", () => {
   it("uses stable public asset paths for all official pictograms", () => {

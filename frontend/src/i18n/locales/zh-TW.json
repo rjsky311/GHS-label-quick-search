@@ -40,6 +40,7 @@
   "search.errorNoValid": "未偵測到有效的 CAS 號碼",
   "search.errorSingle": "查詢失敗，請檢查網路連線或稍後再試",
   "search.errorBatch": "批次查詢失敗，請檢查網路連線或稍後再試",
+  "search.errorBatchPartial": "此批次有部分項目未完成。已完成的結果會先顯示在下方；請稍後重試剩餘項目。",
   "search.progress": "查詢進度",
   "search.progressDone": "完成",
   "search.progressProcessing": "處理中...",

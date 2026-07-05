@@ -86,6 +86,29 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
+Latest closed implementation slice: the 2026-07-05 Batch Chunked Submission
+frontend reliability slice is locally verified. Source: 2026-07-05 full-code
+review finding that 100 cold CAS lookups were sent as one `/api/search` POST,
+which could serialize 200-400 PubChem calls behind the backend's global
+throttle and create false `upstream_error` retry rows near the tail of the
+batch. Affected user job: first-time realistic batch lookup for 50-100 CAS
+values should progress predictably without making users manually retry large
+parts of the list. Implementation: frontend batch search now sends sequential
+20-item chunks, preserves input-order result concatenation, keeps stale/new
+request abort semantics, records unresolved `batchIndex` with the chunk offset,
+and shows completed chunk results with a partial-batch retry message if a later
+chunk fails. Local proof: focused red/green App chunking tests for multi-POST
+chunking, progress, order, cancellation, partial failure, and unresolved index;
+`npm test -- --runInBand` passed 90 suites / 1268 tests; `npm run test:i18n`
+passed; `npm run build` passed; `git diff --check` passed; local in-app Browser
+smoke against a mock backend accepted 45 valid CAS, showed progress from 0/45
+to 20/45 to completion, rendered 45 result rows, and reported no console
+warnings/errors or framework overlay. Stop condition met locally: the frontend
+no longer submits 100 items in a single POST, progress advances by completed
+chunk, and partial chunk failure keeps completed results visible. Post-deploy
+proof still needed after merge/deploy: `npm run qa:production-batch-print` and
+`npm run qa:production-search-ui`.
+
 Daily-use Comfort / Dark Bench Activation v0 is shipped and
 production-verified. Source: the 2026-06-28 owner decision approving both
 Daily-use Comfort / Dark Bench and Batch Review And Export Handoff Clarity,

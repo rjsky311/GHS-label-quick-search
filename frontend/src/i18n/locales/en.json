@@ -40,6 +40,7 @@
   "search.errorNoValid": "No valid CAS numbers detected",
   "search.errorSingle": "Search failed. Please check your connection and try again.",
   "search.errorBatch": "Batch search failed. Please check your connection and try again.",
+  "search.errorBatchPartial": "Part of this batch did not finish. The completed results are shown below; please retry the remaining items later.",
   "search.progress": "Progress",
   "search.progressDone": "Done",
   "search.progressProcessing": "Processing...",

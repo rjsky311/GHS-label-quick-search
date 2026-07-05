@@ -24,7 +24,11 @@ import usePilotDashboard from "@/hooks/usePilotDashboard";
 import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
-import { API, BATCH_SEARCH_LIMIT } from "@/constants/ghs";
+import {
+  API,
+  BATCH_SEARCH_CHUNK_SIZE,
+  BATCH_SEARCH_LIMIT,
+} from "@/constants/ghs";
 import { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getDataQualityIssues } from "@/utils/dataQuality";
@@ -617,29 +621,67 @@ function App() {
     batchSearchAbortRef.current = controller;
     const requestId = batchSearchRequestRef.current + 1;
     batchSearchRequestRef.current = requestId;
-    try {
-      const response = await axios.post(`${API}/search`, {
-        cas_numbers: casNumbers,
-      }, {
-        signal: controller.signal,
-      });
-      if (batchSearchRequestRef.current !== requestId) return;
-      const batchResults = Array.isArray(response.data) ? response.data : [];
-      setBatchProgress({ current: casNumbers.length, total: casNumbers.length });
+    const completedEntries = [];
+    const commitCompletedResults = () => {
+      const batchResults = completedEntries.map((entry) => entry.result);
       replaceResultsView(batchResults);
       saveToHistory(batchResults);
-      batchResults.forEach((result, index) => {
-        logUnresolvedSearch(casNumbers[index] || result?.cas_number || "", "batch", result, {
+      completedEntries.forEach(({ result, query, batchIndex }) => {
+        logUnresolvedSearch(query, "batch", result, {
           activeTab: "batch",
           batchSize: casNumbers.length,
-          batchIndex: index,
+          batchIndex,
         });
       });
+    };
+
+    try {
+      for (
+        let start = 0;
+        start < casNumbers.length;
+        start += BATCH_SEARCH_CHUNK_SIZE
+      ) {
+        if (batchSearchRequestRef.current !== requestId) return;
+        const chunkCasNumbers = casNumbers.slice(
+          start,
+          start + BATCH_SEARCH_CHUNK_SIZE,
+        );
+        const response = await axios.post(
+          `${API}/search`,
+          {
+            cas_numbers: chunkCasNumbers,
+          },
+          {
+            signal: controller.signal,
+          },
+        );
+        if (batchSearchRequestRef.current !== requestId) return;
+        const chunkResults = Array.isArray(response.data) ? response.data : [];
+        chunkResults.forEach((result, index) => {
+          const batchIndex = start + index;
+          completedEntries.push({
+            result,
+            query: chunkCasNumbers[index] || result?.cas_number || "",
+            batchIndex,
+          });
+        });
+        setBatchProgress({
+          current: Math.min(start + chunkCasNumbers.length, casNumbers.length),
+          total: casNumbers.length,
+        });
+      }
+
+      commitCompletedResults();
     } catch (e) {
       if (isCanceledRequest(e)) return;
       if (batchSearchRequestRef.current !== requestId) return;
       console.error(e);
-      setError(t("search.errorBatch"));
+      if (completedEntries.length > 0) {
+        commitCompletedResults();
+        setError(t("search.errorBatchPartial"));
+      } else {
+        setError(t("search.errorBatch"));
+      }
     } finally {
       if (batchSearchRequestRef.current === requestId) {
         setLoading(false);
