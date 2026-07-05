@@ -1,5 +1,6 @@
 from collections import Counter, deque
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Path as ApiPath, Query
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ import csv
 import random
 import re
 import subprocess
+import threading
 import time
 from cachetools import TTLCache
 from pilot_store import (
@@ -287,12 +289,60 @@ def _is_cas_like_query(query: str) -> bool:
     return bool(re.match(r"^[\d-]+$", query.strip()))
 
 
-def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
-    pairs = []
-    for entry in pilot_store.list_manual_entries(
-        status=APPROVED_MANUAL_ENTRY_STATUS,
-        public_only=True,
-    ):
+def _normalize_valid_lookup_cas(cas: Optional[str]) -> Optional[str]:
+    normalized = normalize_cas(str(cas or ""))
+    return normalized if normalized and is_valid_cas(normalized) else None
+
+
+@dataclass(frozen=True)
+class _NameAutocompleteEntry:
+    locale: str
+    name: str
+    cas_number: str
+    alias: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class _NameResolutionIndex:
+    manual_pairs: Dict[str, list[tuple[str, str]]]
+    alias_pairs: Dict[str, list[tuple[str, str]]]
+    manual_exact: Dict[str, Dict[str, str]]
+    manual_compact: Dict[str, Dict[str, str]]
+    seed_exact: Dict[str, Dict[str, str]]
+    alias_exact: Dict[str, Dict[str, str]]
+    combined_exact: Dict[str, Dict[str, str]]
+    combined_compact: Dict[str, Dict[str, str]]
+    autocomplete_entries: list[_NameAutocompleteEntry]
+    names_by_cas: Dict[str, Dict[str, str]]
+
+
+_NAME_RESOLUTION_INDEX_CACHE: Dict[str, Any] = {
+    "store_id": None,
+    "version": None,
+    "seed_signature": None,
+    "index": None,
+}
+_NAME_RESOLUTION_INDEX_LOCK = threading.RLock()
+
+
+def _seed_dictionary_signature() -> tuple[int, int, int, int, int, int]:
+    return (
+        len(ZH_TO_CAS),
+        len(EN_TO_CAS),
+        len(CAS_TO_ZH),
+        len(CAS_TO_EN),
+        len(ALIASES_ZH),
+        len(ALIASES_EN),
+    )
+
+
+def _dictionary_data_version() -> int:
+    return int(getattr(pilot_store, "dictionary_data_version", 0))
+
+
+def _manual_pairs_from_entries(entries: list[dict[str, Any]], locale: str) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    for entry in entries:
         if locale == "zh":
             name = (entry.get("name_zh") or "").strip()
         else:
@@ -302,13 +352,9 @@ def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
     return pairs
 
 
-def _approved_alias_pairs(locale: str) -> list[tuple[str, str]]:
-    pairs = []
-    for alias in pilot_store.list_aliases(
-        status=APPROVED_ALIAS_STATUS,
-        locale=locale,
-        public_only=True,
-    ):
+def _alias_pairs_from_aliases(aliases: list[dict[str, Any]], locale: str) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    for alias in aliases:
         key = (alias.get("alias_text") or "").strip()
         if not key:
             continue
@@ -316,25 +362,217 @@ def _approved_alias_pairs(locale: str) -> list[tuple[str, str]]:
     return pairs
 
 
-def _combined_lookup_map(locale: str) -> Dict[str, str]:
-    if locale == "zh":
-        combined = dict(ZH_TO_CAS)
-    else:
-        combined = dict(EN_TO_CAS)
+def _last_valid_match_map(pairs: list[tuple[str, str]]) -> Dict[str, str]:
+    matches: Dict[str, str] = {}
+    for key, cas in pairs:
+        normalized = _normalize_valid_lookup_cas(cas)
+        if key and normalized:
+            matches[key] = normalized
+    return matches
 
-    for key, cas in _manual_name_pairs(locale):
-        combined[key] = cas
 
-    for key, cas in _approved_alias_pairs(locale):
-        if key not in combined:
+def _first_valid_match_map(pairs: list[tuple[str, str]]) -> Dict[str, str]:
+    matches: Dict[str, str] = {}
+    for key, cas in pairs:
+        normalized = _normalize_valid_lookup_cas(cas)
+        if key and normalized and key not in matches:
+            matches[key] = normalized
+    return matches
+
+
+def _unique_valid_match_map(pairs: list[tuple[str, str]]) -> Dict[str, str]:
+    buckets: Dict[str, set[str]] = {}
+    for key, cas in pairs:
+        normalized = _normalize_valid_lookup_cas(cas)
+        if key and normalized:
+            buckets.setdefault(key, set()).add(normalized)
+    return {
+        key: next(iter(matches))
+        for key, matches in buckets.items()
+        if len(matches) == 1
+    }
+
+
+def _alias_resolution_rank(alias: dict[str, Any]) -> tuple[float, int]:
+    try:
+        confidence = float(alias.get("confidence") or 0)
+    except (TypeError, ValueError):
+        confidence = 0.0
+    try:
+        hit_count = int(alias.get("hit_count") or 0)
+    except (TypeError, ValueError):
+        hit_count = 0
+    return (-confidence, -hit_count)
+
+
+def _compact_lookup_from_exact(exact_map: Dict[str, str], locale: str) -> Dict[str, str]:
+    return _unique_valid_match_map([
+        (normalize_compact_text(key, locale=locale), cas)
+        for key, cas in exact_map.items()
+    ])
+
+
+def _build_name_resolution_index() -> _NameResolutionIndex:
+    manual_entries = pilot_store.list_manual_entries(
+        status=APPROVED_MANUAL_ENTRY_STATUS,
+        public_only=True,
+    )
+    aliases_by_locale = {
+        locale: pilot_store.list_aliases(
+            status=APPROVED_ALIAS_STATUS,
+            locale=locale,
+            public_only=True,
+        )
+        for locale in ("zh", "en")
+    }
+
+    manual_pairs = {
+        locale: _manual_pairs_from_entries(manual_entries, locale)
+        for locale in ("zh", "en")
+    }
+    alias_pairs = {
+        locale: _alias_pairs_from_aliases(aliases_by_locale[locale], locale)
+        for locale in ("zh", "en")
+    }
+
+    seed_exact = {
+        "zh": dict(ZH_TO_CAS),
+        "en": dict(EN_TO_CAS),
+    }
+    manual_exact = {
+        locale: _last_valid_match_map(manual_pairs[locale])
+        for locale in ("zh", "en")
+    }
+    manual_compact = {
+        locale: _unique_valid_match_map([
+            (normalize_compact_text(name, locale=locale), cas)
+            for name, cas in manual_pairs[locale]
+        ])
+        for locale in ("zh", "en")
+    }
+    alias_exact: Dict[str, Dict[str, str]] = {}
+    for locale in ("zh", "en"):
+        ranked_aliases = sorted(aliases_by_locale[locale], key=_alias_resolution_rank)
+        alias_exact[locale] = _first_valid_match_map([
+            (
+                normalize_compact_text(alias.get("alias_text"), locale=locale),
+                alias.get("cas_number"),
+            )
+            for alias in ranked_aliases
+        ])
+
+    combined_exact: Dict[str, Dict[str, str]] = {}
+    for locale in ("zh", "en"):
+        combined = dict(seed_exact[locale])
+        for key, cas in manual_pairs[locale]:
             combined[key] = cas
+        for key, cas in alias_pairs[locale]:
+            if key not in combined:
+                combined[key] = cas
+        combined_exact[locale] = combined
 
-    return combined
+    combined_compact = {
+        locale: _compact_lookup_from_exact(combined_exact[locale], locale)
+        for locale in ("zh", "en")
+    }
+
+    names_by_cas: Dict[str, Dict[str, str]] = {}
+    for cas, name in CAS_TO_EN.items():
+        normalized = _normalize_valid_lookup_cas(cas)
+        if normalized and name:
+            names_by_cas.setdefault(normalized, {})["name_en"] = name
+    for cas, name in CAS_TO_ZH.items():
+        normalized = _normalize_valid_lookup_cas(cas)
+        if normalized and name:
+            names_by_cas.setdefault(normalized, {})["name_zh"] = name
+    for entry in manual_entries:
+        normalized = _normalize_valid_lookup_cas(entry.get("cas_number"))
+        if not normalized:
+            continue
+        name_en = (entry.get("name_en") or "").strip()
+        name_zh = (entry.get("name_zh") or "").strip()
+        if name_en:
+            names_by_cas.setdefault(normalized, {})["name_en"] = name_en
+        if name_zh:
+            names_by_cas.setdefault(normalized, {})["name_zh"] = name_zh
+
+    autocomplete_entries: list[_NameAutocompleteEntry] = []
+    for name, cas in ZH_TO_CAS.items():
+        autocomplete_entries.append(
+            _NameAutocompleteEntry("zh", name, cas, name if name in ALIASES_ZH else None)
+        )
+    for name, cas in EN_TO_CAS.items():
+        autocomplete_entries.append(
+            _NameAutocompleteEntry("en", name, cas, name if name in ALIASES_EN else None)
+        )
+    for name, cas in manual_pairs["zh"]:
+        autocomplete_entries.append(_NameAutocompleteEntry("zh", name, cas))
+    for name, cas in manual_pairs["en"]:
+        autocomplete_entries.append(_NameAutocompleteEntry("en", name, cas))
+    for alias_text, cas in alias_pairs["zh"]:
+        autocomplete_entries.append(_NameAutocompleteEntry("zh", alias_text, cas, alias_text))
+    for alias_text, cas in alias_pairs["en"]:
+        autocomplete_entries.append(_NameAutocompleteEntry("en", alias_text, cas, alias_text))
+
+    return _NameResolutionIndex(
+        manual_pairs=manual_pairs,
+        alias_pairs=alias_pairs,
+        manual_exact=manual_exact,
+        manual_compact=manual_compact,
+        seed_exact=seed_exact,
+        alias_exact=alias_exact,
+        combined_exact=combined_exact,
+        combined_compact=combined_compact,
+        autocomplete_entries=autocomplete_entries,
+        names_by_cas=names_by_cas,
+    )
 
 
-def _normalize_valid_lookup_cas(cas: Optional[str]) -> Optional[str]:
-    normalized = normalize_cas(str(cas or ""))
-    return normalized if normalized and is_valid_cas(normalized) else None
+def _get_name_resolution_index() -> _NameResolutionIndex:
+    store_id = id(pilot_store)
+    version = _dictionary_data_version()
+    seed_signature = _seed_dictionary_signature()
+    cached_index = _NAME_RESOLUTION_INDEX_CACHE.get("index")
+    if (
+        cached_index is not None
+        and _NAME_RESOLUTION_INDEX_CACHE.get("store_id") == store_id
+        and _NAME_RESOLUTION_INDEX_CACHE.get("version") == version
+        and _NAME_RESOLUTION_INDEX_CACHE.get("seed_signature") == seed_signature
+    ):
+        return cached_index
+
+    with _NAME_RESOLUTION_INDEX_LOCK:
+        cached_index = _NAME_RESOLUTION_INDEX_CACHE.get("index")
+        if (
+            cached_index is not None
+            and _NAME_RESOLUTION_INDEX_CACHE.get("store_id") == store_id
+            and _NAME_RESOLUTION_INDEX_CACHE.get("version") == version
+            and _NAME_RESOLUTION_INDEX_CACHE.get("seed_signature") == seed_signature
+        ):
+            return cached_index
+
+        index = _build_name_resolution_index()
+        _NAME_RESOLUTION_INDEX_CACHE.update(
+            {
+                "store_id": store_id,
+                "version": version,
+                "seed_signature": seed_signature,
+                "index": index,
+            }
+        )
+        return index
+
+
+def _manual_name_pairs(locale: str) -> list[tuple[str, str]]:
+    return list(_get_name_resolution_index().manual_pairs.get(locale, []))
+
+
+def _approved_alias_pairs(locale: str) -> list[tuple[str, str]]:
+    return list(_get_name_resolution_index().alias_pairs.get(locale, []))
+
+
+def _combined_lookup_map(locale: str) -> Dict[str, str]:
+    return dict(_get_name_resolution_index().combined_exact.get(locale, {}))
 
 
 def _compact_exact_match(query: str, locale: str) -> Optional[str]:
@@ -342,15 +580,7 @@ def _compact_exact_match(query: str, locale: str) -> Optional[str]:
     if not compact_query:
         return None
 
-    matches = set()
-    for key, cas in _combined_lookup_map(locale).items():
-        if normalize_compact_text(key, locale=locale) == compact_query:
-            normalized = _normalize_valid_lookup_cas(cas)
-            if normalized:
-                matches.add(normalized)
-    if len(matches) == 1:
-        return next(iter(matches))
-    return None
+    return _get_name_resolution_index().combined_compact.get(locale, {}).get(compact_query)
 
 
 def _build_reference_links(
@@ -704,38 +934,43 @@ def resolve_name_to_cas(query: str) -> Optional[str]:
         return None
 
     locale = infer_locale(q)
+    index = _get_name_resolution_index()
+    q_lower = q.lower()
+    compact_q = normalize_compact_text(q, locale=locale)
 
-    manual_entry = pilot_store.get_manual_entry_by_name(q, locale, allow_compact=True)
-    if manual_entry:
-        normalized = _normalize_valid_lookup_cas(manual_entry.get("cas_number"))
-        if normalized:
-            return normalized
+    manual_key = q if locale == "zh" else q_lower
+    manual_match = index.manual_exact.get(locale, {}).get(manual_key)
+    if manual_match:
+        return manual_match
+
+    if compact_q:
+        manual_match = index.manual_compact.get(locale, {}).get(compact_q)
+        if manual_match:
+            return manual_match
 
     # Try exact Chinese name match (includes aliases like 酒精, 漂白水, etc.)
-    if q in ZH_TO_CAS:
-        normalized = _normalize_valid_lookup_cas(ZH_TO_CAS[q])
+    if q in index.seed_exact["zh"]:
+        normalized = _normalize_valid_lookup_cas(index.seed_exact["zh"][q])
         if normalized:
             return normalized
 
     # Try exact English name match (case-insensitive, includes aliases like "bleach", "dmso")
-    q_lower = q.lower()
-    if q_lower in EN_TO_CAS:
-        normalized = _normalize_valid_lookup_cas(EN_TO_CAS[q_lower])
+    if q_lower in index.seed_exact["en"]:
+        normalized = _normalize_valid_lookup_cas(index.seed_exact["en"][q_lower])
         if normalized:
             return normalized
 
-    exact_alias = pilot_store.get_alias_exact(q, locale)
-    if exact_alias:
-        normalized = _normalize_valid_lookup_cas(exact_alias.get("cas_number"))
-        if normalized:
-            return normalized
+    if compact_q:
+        exact_alias = index.alias_exact.get(locale, {}).get(compact_q)
+        if exact_alias:
+            return exact_alias
 
     compact_match = _compact_exact_match(q, locale)
     if compact_match:
         return compact_match
 
-    en_lookup = _combined_lookup_map("en")
-    zh_lookup = _combined_lookup_map("zh")
+    en_lookup = index.combined_exact["en"]
+    zh_lookup = index.combined_exact["zh"]
 
     # Try English names containing the query as a word boundary match
     # e.g., "Methanol" matches "Methyl alcohol (Methanol)"
@@ -969,11 +1204,11 @@ def get_chinese_name_from_cas(cas_number: str) -> Optional[str]:
     """Get Chinese name directly from CAS number (most accurate method)"""
     if not cas_number:
         return None
-    cas_normalized = cas_number.strip()
+    cas_normalized = normalize_cas(cas_number.strip()) or cas_number.strip()
 
-    manual = pilot_store.get_manual_entry_by_cas(cas_normalized)
-    if manual and manual.get("name_zh"):
-        return manual["name_zh"]
+    indexed = _get_name_resolution_index().names_by_cas.get(cas_normalized, {})
+    if indexed.get("name_zh"):
+        return indexed["name_zh"]
     
     # Direct CAS lookup - highest priority
     if cas_normalized in CAS_TO_ZH:
@@ -985,11 +1220,11 @@ def get_english_name_from_cas(cas_number: str) -> Optional[str]:
     """Get English name from CAS number via local dictionary"""
     if not cas_number:
         return None
-    cas_normalized = cas_number.strip()
+    cas_normalized = normalize_cas(cas_number.strip()) or cas_number.strip()
 
-    manual = pilot_store.get_manual_entry_by_cas(cas_normalized)
-    if manual and manual.get("name_en"):
-        return manual["name_en"]
+    indexed = _get_name_resolution_index().names_by_cas.get(cas_normalized, {})
+    if indexed.get("name_en"):
+        return indexed["name_en"]
     
     # Direct lookup from CAS_TO_EN dictionary
     if cas_normalized in CAS_TO_EN:
@@ -1003,9 +1238,16 @@ def get_chinese_name_from_dict(name_en: str) -> Optional[str]:
         return None
     name_lower = name_en.lower().strip()
 
-    manual = pilot_store.get_manual_entry_by_name(name_en, "en", allow_compact=True)
-    if manual and manual.get("name_zh"):
-        return manual["name_zh"]
+    index = _get_name_resolution_index()
+    manual_cas = index.manual_exact["en"].get(name_lower)
+    if not manual_cas:
+        manual_cas = index.manual_compact["en"].get(
+            normalize_compact_text(name_en, locale="en")
+        )
+    if manual_cas:
+        manual_name_zh = index.names_by_cas.get(manual_cas, {}).get("name_zh")
+        if manual_name_zh:
+            return manual_name_zh
 
     # O(1) exact match in expanded dictionary
     if name_lower in CHEMICAL_NAMES_ZH_EXPANDED:
@@ -1579,6 +1821,7 @@ async def search_by_name(
         return {"results": [], "query": q}
 
     q_lower = q.lower()
+    index = _get_name_resolution_index()
     matches = []
     seen_rows = set()
 
@@ -1590,43 +1833,27 @@ async def search_by_name(
         if key in seen_rows:
             return
         seen_rows.add(key)
+        names = index.names_by_cas.get(normalized, {})
+        name_en = names.get("name_en") or CAS_TO_EN.get(normalized) or ""
+        name_zh = names.get("name_zh") or CAS_TO_ZH.get(normalized) or ""
         matches.append({
             "cas_number": normalized,
-            "name_en": get_english_name_from_cas(normalized) or "",
-            "name_zh": get_chinese_name_from_cas(normalized) or "",
+            "name_en": name_en,
+            "name_zh": name_zh,
             "alias": alias,
             "reference_links": _build_reference_links(
                 normalized,
                 None,
-                get_english_name_from_cas(normalized),
+                name_en,
             ),
         })
 
-    # Chinese name matches (substring) — includes seed aliases merged into ZH_TO_CAS
-    for name, cas in ZH_TO_CAS.items():
-        if q in name:
-            append_match(cas, alias=name if name in ALIASES_ZH else None)
-
-    # English name matches (case-insensitive substring) — includes seed aliases merged into EN_TO_CAS
-    for name, cas in EN_TO_CAS.items():
-        if q_lower in name:
-            append_match(cas, alias=name if name in ALIASES_EN else None)
-
-    for name, cas in _manual_name_pairs("zh"):
-        if q in name:
-            append_match(cas)
-
-    for name, cas in _manual_name_pairs("en"):
-        if q_lower in name:
-            append_match(cas)
-
-    for alias_text, cas in _approved_alias_pairs("zh"):
-        if q in alias_text:
-            append_match(cas, alias=alias_text)
-
-    for alias_text, cas in _approved_alias_pairs("en"):
-        if q_lower in alias_text:
-            append_match(cas, alias=alias_text)
+    for entry in index.autocomplete_entries:
+        if entry.locale == "zh":
+            if q in entry.name:
+                append_match(entry.cas_number, alias=entry.alias)
+        elif q_lower in entry.name:
+            append_match(entry.cas_number, alias=entry.alias)
 
     # Sort: exact match first, then alias matches, then by name length
     matches.sort(key=lambda m: (

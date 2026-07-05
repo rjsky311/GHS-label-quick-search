@@ -17,7 +17,7 @@ from server import (
     _classification_signature,
     _report_rank_key,
 )
-from pilot_store import PilotStore
+from pilot_store import APPROVED_ALIAS_STATUS, APPROVED_MANUAL_ENTRY_STATUS, PilotStore
 from chemical_dict import EN_TO_CAS, ZH_TO_CAS, CAS_TO_EN, CAS_TO_ZH, ALIASES_ZH, ALIASES_EN
 from api_validation import (
     MAX_EXPORT_SCALAR_CHARS,
@@ -31,6 +31,18 @@ def route_limits_for(endpoint_name):
         if key.endswith(f".{endpoint_name}"):
             return limits
     return []
+
+
+def count_method_calls(monkeypatch, obj, method_name):
+    calls = {"count": 0}
+    original = getattr(obj, method_name)
+
+    def counted(*args, **kwargs):
+        calls["count"] += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(obj, method_name, counted)
+    return calls
 
 
 # ─── Unit tests: resolve_name_to_cas ───────────────────────
@@ -88,6 +100,43 @@ class TestResolveNameToCas:
         monkeypatch.setitem(server.EN_TO_CAS, "review invalid seed", "64-17-6")
 
         assert resolve_name_to_cas("review invalid seed") is None
+
+    def test_name_resolution_index_reuses_store_reads_until_version_changes(self, tmp_path, monkeypatch):
+        store = PilotStore(str(tmp_path / "name-index.db")).connect()
+        try:
+            monkeypatch.setattr(server, "pilot_store", store)
+            counted_methods = {
+                "list_manual_entries": count_method_calls(monkeypatch, store, "list_manual_entries"),
+                "list_aliases": count_method_calls(monkeypatch, store, "list_aliases"),
+                "get_manual_entry_by_name": count_method_calls(monkeypatch, store, "get_manual_entry_by_name"),
+                "get_alias_exact": count_method_calls(monkeypatch, store, "get_alias_exact"),
+            }
+
+            def snapshot():
+                return {name: counter["count"] for name, counter in counted_methods.items()}
+
+            assert resolve_name_to_cas("Methanol") == "67-56-1"
+            first_counts = snapshot()
+
+            assert resolve_name_to_cas("Methanol") == "67-56-1"
+            assert snapshot() == first_counts
+
+            store.upsert_alias(
+                "Cache Probe Alias",
+                "en",
+                "64-17-5",
+                status=APPROVED_ALIAS_STATUS,
+            )
+            counts_after_write = snapshot()
+
+            assert resolve_name_to_cas("cache probe alias") == "64-17-5"
+            counts_after_rebuild = snapshot()
+            assert counts_after_rebuild["list_aliases"] > counts_after_write["list_aliases"]
+
+            assert resolve_name_to_cas("cache probe alias") == "64-17-5"
+            assert snapshot() == counts_after_rebuild
+        finally:
+            store.close()
 
 
 # ─── Unit tests: reverse dictionaries ─────────────────────
@@ -163,6 +212,61 @@ async def test_search_by_name_rejects_invalid_cas_like_seed_query(monkeypatch):
     assert response.status_code == 200
     data = response.json()
     assert data["results"] == []
+
+
+async def test_search_by_name_reuses_index_and_precomputed_display_names(tmp_path, monkeypatch):
+    store = PilotStore(str(tmp_path / "autocomplete-index.db")).connect()
+    try:
+        store.upsert_dictionary_entry(
+            "123-45-5",
+            name_en="Cache Autocomplete",
+            name_zh="快取自動完成",
+            status=APPROVED_MANUAL_ENTRY_STATUS,
+        )
+        monkeypatch.setattr(server, "pilot_store", store)
+        counted_methods = {
+            "list_manual_entries": count_method_calls(monkeypatch, store, "list_manual_entries"),
+            "list_aliases": count_method_calls(monkeypatch, store, "list_aliases"),
+            "get_manual_entry_by_cas": count_method_calls(monkeypatch, store, "get_manual_entry_by_cas"),
+        }
+
+        def snapshot():
+            return {name: counter["count"] for name, counter in counted_methods.items()}
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.get("/api/search-by-name/cache%20autocomplete")
+            assert response.status_code == 200
+            data = response.json()
+            assert any(result["cas_number"] == "123-45-5" for result in data["results"])
+
+            first_counts = snapshot()
+            assert first_counts["get_manual_entry_by_cas"] == 0
+
+            response = await ac.get("/api/search-by-name/cache%20autocomplete")
+            assert response.status_code == 200
+            assert snapshot() == first_counts
+
+            store.upsert_dictionary_entry(
+                "7732-18-5",
+                name_en="Cache Autocomplete Two",
+                name_zh="快取自動完成二",
+                status=APPROVED_MANUAL_ENTRY_STATUS,
+            )
+            counts_after_write = snapshot()
+
+            response = await ac.get("/api/search-by-name/cache%20autocomplete%20two")
+            assert response.status_code == 200
+            data = response.json()
+            assert any(result["cas_number"] == "7732-18-5" for result in data["results"])
+            counts_after_rebuild = snapshot()
+            assert counts_after_rebuild["list_manual_entries"] > counts_after_write["list_manual_entries"]
+            assert (
+                counts_after_rebuild["get_manual_entry_by_cas"]
+                == counts_after_write["get_manual_entry_by_cas"]
+            )
+    finally:
+        store.close()
 
 
 async def test_workspace_documents_require_admin_token(monkeypatch):

@@ -290,6 +290,10 @@ class PilotStore:
         self.db_path = Path(db_path)
         self._conn: Optional[sqlite3.Connection] = None
         self._lock = threading.RLock()
+        self.dictionary_data_version = 0
+
+    def _bump_dictionary_data_version_locked(self) -> None:
+        self.dictionary_data_version += 1
 
     def connect(self) -> "PilotStore":
         with self._lock:
@@ -629,6 +633,7 @@ class PilotStore:
                 manual_entry,
             )
             conn.commit()
+            self._bump_dictionary_data_version_locked()
         return self.get_manual_entry_by_cas(cas_number, include_unapproved=True) or {}
 
     def _sync_manual_entry_status_to_correction_candidates_locked(
@@ -918,6 +923,7 @@ class PilotStore:
                     ),
                 )
             conn.commit()
+            self._bump_dictionary_data_version_locked()
 
         return self.get_alias_exact(
             alias_text,

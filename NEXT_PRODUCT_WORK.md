@@ -86,7 +86,32 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
-Latest closed implementation slice: the 2026-07-05 Batch Chunked Submission
+Latest closed implementation slice: the 2026-07-05 Name-Resolution Index Cache
+backend maintainability slice is locally verified. Source: 2026-07-05
+full-code review finding, owner-approved as bounded maintainability/performance
+margin work rather than a user-visible bug. Affected user job: name/CAS lookup
+and autocomplete keep the same public behavior while avoiding repeated
+per-request seed-dictionary scans and pilot SQLite reads on hot
+name-resolution paths. Implementation: `PilotStore` now exposes an in-process
+`dictionary_data_version` and bumps it after dictionary entry and alias upserts;
+`server.py` builds one versioned combined name index with exact, compact,
+autocomplete, and CAS display-name data; `resolve_name_to_cas`,
+`_compact_exact_match`, `get_*_name_from_cas`, `get_chinese_name_from_dict`,
+and `/api/search-by-name/{query}` reuse that index until the version or seed
+dictionary signature changes. Local proof: added red/green backend regression
+tests for index reuse, display-name precomputation, and immediate rebuild after
+approved alias/manual writes; `python -m pytest test_name_search.py -v` passed
+184 tests; `python -m py_compile server.py api_models.py api_validation.py
+export_helpers.py h_code_translations.py h_code_coverage_audit.py` passed;
+`python -m pytest -q` passed 278 tests; `git diff --check` passed. Stop
+condition met locally: store-unchanged name resolution and autocomplete reuse
+the cached index, and approved manual/alias writes are visible on the next
+public lookup. Observation: public alias exact reads no longer depend on
+`get_alias_exact`'s hit-count write side effect; if alias usage analytics become
+important, add explicit bounded telemetry rather than reintroducing writes on
+the hot public read path.
+
+Previous closed implementation slice: the 2026-07-05 Batch Chunked Submission
 frontend reliability slice is locally verified. Source: 2026-07-05 full-code
 review finding that 100 cold CAS lookups were sent as one `/api/search` POST,
 which could serialize 200-400 PubChem calls behind the backend's global
