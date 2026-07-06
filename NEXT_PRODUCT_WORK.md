@@ -86,10 +86,14 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
-Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and Browserslist DB noise were cleaned with 0-warning lint, full frontend tests, build, bundle-budget, and diff-check proof.
+Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and
+Browserslist DB noise were cleaned with 0-warning lint, full frontend tests,
+build, bundle-budget, and diff-check proof. Shipped in commit `2e416ea` and
+production-verified together with the exemption slice below.
 
 Latest closed implementation slice: the 2026-07-06 Seed Dictionary Identity
-Reviewed Exemption List is locally verified. Source: triage of the first full
+Reviewed Exemption List is shipped and production-verified. Source: triage of
+the first full
 seed-dictionary identity audit report after the high-confidence identity-fix
 batch; the remaining mismatch rows were reviewed false positives or explicitly
 deferred evidence items that would otherwise reappear as noisy review work on
@@ -113,7 +117,12 @@ JSON plus active mismatch and reviewed-exemption CSVs. Summary: 1,080
 `title_match`, 556 `synonym_match`, 70 `reviewed_exemption`, 0 `mismatch`, 3
 `no_record`, 0 `upstream_error`; actionQueue has 0 items, mismatch CSV has 0
 rows, reviewed-exemption CSV has 70 rows, and all 17 pinned audit-verified
-identity pairs classified as title/synonym matches. Stop condition met: the
+identity pairs classified as title/synonym matches. Production proof on
+2026-07-06: implementation commit `63e64eb` shipped with the hygiene
+micro-slice head `2e416ea`; deployed production SHA
+`2e416ea43de04d5f7782f98c05bf94ac6184bf1e`, GitHub CI run `28793345336`
+passed, Production Print QA run `28793451264` passed, and expected-SHA
+`qa:production-health` passed with zero failures/warnings. Stop condition met: the
 reviewed-exemption mechanism, curated list, tests, docs, and full rerun report
 are complete. Observation: the final reviewed-exemption count is 70 because
 the evidence-deferred `77657-78-4` is now explicitly recorded in the same
