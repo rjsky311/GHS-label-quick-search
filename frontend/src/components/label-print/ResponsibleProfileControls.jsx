@@ -46,13 +46,24 @@ export default function ResponsibleProfileControls({
     normalizeProfileDraft(labProfile),
   );
   const composingFieldsRef = useRef(new Set());
+  const {
+    organization: labProfileOrganization,
+    phone: labProfilePhone,
+    address: labProfileAddress,
+  } = labProfile;
   const hasProfileValues =
-    labProfile.organization || labProfile.phone || labProfile.address;
+    labProfileOrganization || labProfilePhone || labProfileAddress;
 
   useEffect(() => {
     if (composingFieldsRef.current.size > 0) return;
-    setDraftProfile(normalizeProfileDraft(labProfile));
-  }, [labProfile.organization, labProfile.phone, labProfile.address]);
+    setDraftProfile(
+      normalizeProfileDraft({
+        organization: labProfileOrganization,
+        phone: labProfilePhone,
+        address: labProfileAddress,
+      }),
+    );
+  }, [labProfileAddress, labProfileOrganization, labProfilePhone]);
 
   const commitProfileField = (key, value, profileDraft = draftProfile) => {
     onLabProfileChange?.({

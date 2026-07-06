@@ -86,6 +86,8 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
+Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and Browserslist DB noise were cleaned with 0-warning lint, full frontend tests, build, bundle-budget, and diff-check proof.
+
 Latest closed implementation slice: the 2026-07-06 Seed Dictionary Identity
 Reviewed Exemption List is locally verified. Source: triage of the first full
 seed-dictionary identity audit report after the high-confidence identity-fix
