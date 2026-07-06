@@ -57,6 +57,22 @@ def test_mida_and_dithiolanethione_are_not_swapped_with_other_identities():
     assert cerium_cas == ["123333-60-8"]
 
 
+def test_cerium_iii_hydrate_chinese_names_include_cerium():
+    assert CAS_TO_EN["10294-41-4"] == "Cerium(III) nitrate hexahydrate"
+    assert CAS_TO_ZH["10294-41-4"] == "硝酸鈰(III)六水合物"
+    assert (
+        CHEMICAL_NAMES_ZH_EXPANDED["cerium(iii) nitrate hexahydrate"]
+        == "硝酸鈰(III)六水合物"
+    )
+
+    assert CAS_TO_EN["18618-55-8"] == "Cerium(III) chloride heptahydrate"
+    assert CAS_TO_ZH["18618-55-8"] == "氯化鈰(III)七水合物"
+    assert (
+        CHEMICAL_NAMES_ZH_EXPANDED["cerium(iii) chloride heptahydrate"]
+        == "氯化鈰(III)七水合物"
+    )
+
+
 def test_known_suspect_cas_identity_is_not_published_as_hydrazine():
     assert CAS_TO_EN["865-49-6"] == "Chloroform-d"
     assert CAS_TO_ZH["865-49-6"] == "氘代氯仿"

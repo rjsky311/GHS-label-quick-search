@@ -86,7 +86,47 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
-Latest closed implementation slice: the 2026-07-05 Name-Resolution Index Cache
+Latest closed implementation slice: the 2026-07-06 Seed Dictionary Identity
+Audit maintainer-tooling slice is locally verified. Source: 2026-07-05
+code-review finding that CAS checksum validation cannot catch checksum-valid
+but chemically wrong seed identities, with three confirmed recent fixes
+(`d61f5f1`, `68e0470`) and a paired row-shift pattern suggesting the
+Excel-derived seed dictionary needed a full review-only pass. Affected user
+job: lookup trust across search, labels, exports, and agent-readable outputs;
+wrong seed names can appear beside correct PubChem hazard data. Implementation:
+added `backend/seed_dictionary_identity_audit.py`,
+`backend/scripts/audit_seed_dictionary_identity.py`, and mock-HTTP tests for
+Title/synonym/mismatch/no-record/upstream-error classification, CID majority
+voting, normalization, checkpoint resume, review-only JSON/CSV output, and CLI
+help. The script is maintainer-only, uses PubChem request-start spacing,
+retry/backoff, checkpoint resume that retries prior upstream errors, and writes
+no public dictionary, pilot-store, or API data. The handoff's two known
+cerium(III) Chinese-name missing-character items were corrected with a targeted
+seed-quality regression test: `10294-41-4` now uses `硝酸鈰(III)六水合物` and
+`18618-55-8` now uses `氯化鈰(III)七水合物` in both `CAS_TO_ZH` and
+`CHEMICAL_NAMES_ZH_EXPANDED`.
+
+Local proof: `python -m pytest test_seed_dictionary_identity_audit.py -v`
+passed 11 tests; focused `python -m pytest
+test_seed_dictionary_identity_audit.py test_seed_dictionary_quality.py -q`
+passed 19 tests; Python compile checks for the new audit module/script,
+`chemical_dict.py`, and the standard backend compile target passed; full
+`python -m pytest -q` passed 291 tests with the existing Starlette/httpx
+deprecation warning; `git diff --check` passed. Real full audit proof:
+checkpointed run over all 1,702 `CAS_TO_EN` entries completed at
+`build/seed-dictionary-identity-audit-2026-07-06/`, writing
+`seed-dictionary-identity-audit.json` and
+`seed-dictionary-identity-mismatches.csv`. Summary: 1,071 `title_match`, 549
+`synonym_match`, 79 `mismatch`, 3 `no_record`, 0 `upstream_error`; actionQueue
+has 79 review-only mismatch items, and local notes flag one same-Chinese-name
+different-English-identity group (`水合聯氨 (水合肼)` for hydrazine hydrate /
+hydrazine monohydrate). Stop condition met: script, tests, and one full
+review-only report are complete. Observation: the audit intentionally creates
+more candidate work than confirmed fixes; each mismatch must still be
+bidirectionally verified in a separate correction slice before any seed
+identity change.
+
+Previous closed implementation slice: the 2026-07-05 Name-Resolution Index Cache
 backend maintainability slice is shipped and production-verified. Source:
 2026-07-05
 full-code review finding, owner-approved as bounded maintainability/performance
