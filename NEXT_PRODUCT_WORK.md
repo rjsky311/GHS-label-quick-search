@@ -87,7 +87,44 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 ### Current Slice State
 
 Latest closed implementation slice: the 2026-07-06 Seed Dictionary Identity
-Audit maintainer-tooling slice is locally verified. Source: 2026-07-05
+Fix Batch is shipped and production-verified. Source: triage of the 79
+review-only mismatches in the 2026-07-06 identity audit report; nine
+high-vote-ratio entries were confirmed bidirectionally against PubChem
+substance-xref majority CIDs as carrying another chemical's names. Affected
+user job: lookup trust — the worst entry displayed nitroethane names on
+nitromethane's CAS `75-52-5`. Implementation (`6ed57b1`): renamed nine
+entries to their verified identities (`75-52-5` nitromethane, `112-13-0`
+decanoyl chloride, `4044-65-9` p-phenylene diisothiocyanate, `43192-33-2`
+and `1310384-98-5` methoxy variants, `32247-96-4` benzyl bromide,
+`24596-19-8` 2,6-dimethylaniline, `34451-26-8` perfluorooctanethiol,
+`5575-48-4` decyltrimethoxysilane) and restored seven displaced-name
+chemicals under their verified CAS numbers (`79-24-3`, `104-49-4`,
+`1094546-99-2`, `328-70-1`, `56746-19-1`, `34143-74-3`, `3024-72-4`),
+growing the seed dictionary from 1,702 to 1,709 entries. `77657-78-4` was
+intentionally left unchanged: its (2E,4Z)/(2E,4E) mismatch rests on a single
+PubChem depositor record, below the verification bar, and stays in the
+review queue for SDS/supplier evidence. Local proof: backend pytest passed
+292 tests including a pinned-identity regression table of 17 audit-verified
+CAS/name pairs; re-running the identity audit against all 16 touched entries
+classified 9 `title_match` + 7 `synonym_match` with 0 `mismatch`. Production
+proof on 2026-07-06: deployed production SHA
+`6ed57b14fa1cf3447f5b837a7fbb7e3fd70c1495`, GitHub CI run `28766729698`
+passed, Production Print QA run `28766776968` passed, and a live production
+lookup for `75-52-5` returned 硝基甲烷 / Nitromethane. The earlier paired
+swapped-identity fix (`68e0470`, MIDA on `4408-64-4` and
+1,3-dithiolane-2-thione on `822-38-8`) is also production-verified: CI run
+`28743365626`, Production Print QA run `28743412051`, and live lookups for
+both CAS numbers returned the corrected names. Stop condition met: all
+triaged high-confidence mismatches are fixed or explicitly deferred with a
+recorded reason. Observation: roughly 60 remaining mismatches are
+naming-style or polymer/UVCB false positives (including PubChem's
+elemental-carbon-to-methane depositor quirk); if audit noise becomes a
+maintenance cost, a reviewed-exemption list in the audit tool is the next
+bounded improvement.
+
+Previous closed implementation slice: the 2026-07-06 Seed Dictionary Identity
+Audit maintainer-tooling slice is shipped and production-verified. Source:
+2026-07-05
 code-review finding that CAS checksum validation cannot catch checksum-valid
 but chemically wrong seed identities, with three confirmed recent fixes
 (`d61f5f1`, `68e0470`) and a paired row-shift pattern suggesting the
@@ -120,8 +157,13 @@ checkpointed run over all 1,702 `CAS_TO_EN` entries completed at
 `synonym_match`, 79 `mismatch`, 3 `no_record`, 0 `upstream_error`; actionQueue
 has 79 review-only mismatch items, and local notes flag one same-Chinese-name
 different-English-identity group (`水合聯氨 (水合肼)` for hydrazine hydrate /
-hydrazine monohydrate). Stop condition met: script, tests, and one full
-review-only report are complete. Observation: the audit intentionally creates
+hydrazine monohydrate). Production proof on 2026-07-06: implementation
+commit `88cf995`, GitHub CI run `28766568083` passed; the auto-triggered
+Production Print QA run `28766627949` failed only on the expected-SHA
+deployment-freshness race (production still served `68e0470` mid-deploy,
+the known platform bucket from `AGENTS.md`), and the next run `28766776968`
+against current production passed. Stop condition met: script, tests, and
+one full review-only report are complete. Observation: the audit intentionally creates
 more candidate work than confirmed fixes; each mismatch must still be
 bidirectionally verified in a separate correction slice before any seed
 identity change.
