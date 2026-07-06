@@ -27,7 +27,13 @@ def main() -> int:
         )
     )
     parser.add_argument("--checkpoint", help="Checkpoint JSON path for resumable runs.")
-    parser.add_argument("--output-dir", help="Directory for JSON report and mismatch CSV.")
+    parser.add_argument(
+        "--output-dir",
+        help=(
+            "Directory for the JSON report, active mismatch CSV, and reviewed "
+            "exemption CSV."
+        ),
+    )
     parser.add_argument(
         "--limit",
         type=int,

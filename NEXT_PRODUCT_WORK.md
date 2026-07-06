@@ -87,6 +87,37 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 ### Current Slice State
 
 Latest closed implementation slice: the 2026-07-06 Seed Dictionary Identity
+Reviewed Exemption List is locally verified. Source: triage of the first full
+seed-dictionary identity audit report after the high-confidence identity-fix
+batch; the remaining mismatch rows were reviewed false positives or explicitly
+deferred evidence items that would otherwise reappear as noisy review work on
+every rerun. Affected user job: maintainer lookup-trust workflow; future seed
+identity audits should surface new, unreviewed mismatches rather than mixing
+them with already-reviewed naming-style, polymer/UVCB, PubChem depositor-model,
+or evidence-deferred cases. Implementation: added
+`backend/seed_dictionary_identity_exemptions.py` with 70 reviewed entries,
+added `reviewed_exemption` audit classification and CSV output, kept title and
+synonym matches unchanged even when a CAS is listed, and made exemption
+matching require the current seed English name exactly so a dictionary rename
+invalidates the exemption. Local proof: red/green mock-HTTP tests cover
+exemption application, dictionary-name invalidation, match-category
+preservation, list/category/name validation, and summary/actionQueue/CSV
+behavior; `python -m pytest -q` passed 298 tests with the existing
+Starlette/httpx deprecation warning; Python compile for the audit module,
+exemption module, and CLI passed; `git diff --check` passed;
+`npm run test:docs` passed. Real full audit proof: fresh checkpointed run at
+`build/seed-dictionary-identity-audit-2026-07-06-reviewed-exemptions/` wrote
+JSON plus active mismatch and reviewed-exemption CSVs. Summary: 1,080
+`title_match`, 556 `synonym_match`, 70 `reviewed_exemption`, 0 `mismatch`, 3
+`no_record`, 0 `upstream_error`; actionQueue has 0 items, mismatch CSV has 0
+rows, reviewed-exemption CSV has 70 rows, and all 17 pinned audit-verified
+identity pairs classified as title/synonym matches. Stop condition met: the
+reviewed-exemption mechanism, curated list, tests, docs, and full rerun report
+are complete. Observation: the final reviewed-exemption count is 70 because
+the evidence-deferred `77657-78-4` is now explicitly recorded in the same
+review-only exemption channel; no new mismatch appeared in this rerun.
+
+Previous closed implementation slice: the 2026-07-06 Seed Dictionary Identity
 Fix Batch is shipped and production-verified. Source: triage of the 79
 review-only mismatches in the 2026-07-06 identity audit report; nine
 high-vote-ratio entries were confirmed bidirectionally against PubChem

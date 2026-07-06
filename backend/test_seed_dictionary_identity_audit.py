@@ -5,12 +5,17 @@ import sys
 
 import pytest
 
+from chemical_dict import CAS_TO_EN
 from seed_dictionary_identity_audit import (
     AUDIT_SOURCE,
     PubChemRateLimiter,
     audit_seed_dictionary,
     audit_seed_entry,
     normalize_identity_name,
+)
+from seed_dictionary_identity_exemptions import (
+    REVIEWED_IDENTITY_EXEMPTION_CATEGORIES,
+    REVIEWED_IDENTITY_EXEMPTIONS,
 )
 
 
@@ -101,11 +106,12 @@ class FakePubChemClient:
         raise AssertionError(f"Unknown CID: {cid}")
 
 
-def audit_entry(cas, name, records):
+def audit_entry(cas, name, records, reviewed_exemptions=None):
     return audit_seed_entry(
         cas,
         name,
         client=FakePubChemClient(records),
+        reviewed_exemptions=reviewed_exemptions,
         rate_limit_seconds=0,
         sleeper=lambda _seconds: None,
     )
@@ -116,6 +122,20 @@ def test_normalize_identity_name_removes_parenthetical_alias_suffix_and_punctuat
         "nmethyliminodiaceticacid"
     )
     assert normalize_identity_name(" Tin(IV) chloride ") == "tinivchloride"
+
+
+def test_reviewed_identity_exemption_list_matches_current_seed_names():
+    assert len(REVIEWED_IDENTITY_EXEMPTIONS) == 70
+    allowed_categories = set(REVIEWED_IDENTITY_EXEMPTION_CATEGORIES)
+    for cas_number, exemption in REVIEWED_IDENTITY_EXEMPTIONS.items():
+        assert exemption["dictionary_name_en"] == CAS_TO_EN[cas_number]
+        assert exemption["reason_category"] in allowed_categories
+        assert exemption["note"].strip()
+        assert exemption["reviewed_at"] == "2026-07-06"
+    assert (
+        REVIEWED_IDENTITY_EXEMPTIONS["77657-78-4"]["reason_category"]
+        == "insufficient_evidence_deferred"
+    )
 
 
 def test_rate_limiter_sleeps_only_for_remaining_request_start_interval():
@@ -194,6 +214,101 @@ def test_audit_entry_classifies_mismatch_without_writing_public_data():
     assert result["pubchemTitle"] == "N-Methyliminodiacetic acid"
     assert result["review_required"] is True
     assert result["public_data_changed"] is False
+
+
+def test_audit_entry_reclassifies_mismatch_when_reviewed_exemption_matches_name():
+    result = audit_entry(
+        "102-54-5",
+        "Ferrocene",
+        {
+            "102-54-5": {
+                "cid": 7611,
+                "substance_cids": [7611, 7611],
+                "title": "Bis(eta-cyclopentadienyl) iron",
+                "synonyms": [],
+            }
+        },
+        reviewed_exemptions={
+            "102-54-5": {
+                "dictionary_name_en": "Ferrocene",
+                "reason_category": "naming_style",
+                "note": "PubChem title uses a systematic organometallic name.",
+                "reviewed_at": "2026-07-06",
+            }
+        },
+    )
+
+    assert result["status"] == "reviewed_exemption"
+    assert result["rawStatus"] == "mismatch"
+    assert result["pubchemTitle"] == "Bis(eta-cyclopentadienyl) iron"
+    assert result["reviewedExemption"]["reason_category"] == "naming_style"
+    assert result["review_required"] is False
+    assert result["public_data_changed"] is False
+
+
+def test_audit_entry_invalidates_reviewed_exemption_when_dictionary_name_changes():
+    result = audit_entry(
+        "102-54-5",
+        "Ferrocene, changed",
+        {
+            "102-54-5": {
+                "cid": 7611,
+                "substance_cids": [7611],
+                "title": "Bis(eta-cyclopentadienyl) iron",
+                "synonyms": [],
+            }
+        },
+        reviewed_exemptions={
+            "102-54-5": {
+                "dictionary_name_en": "Ferrocene",
+                "reason_category": "naming_style",
+                "note": "PubChem title uses a systematic organometallic name.",
+                "reviewed_at": "2026-07-06",
+            }
+        },
+    )
+
+    assert result["status"] == "mismatch"
+    assert "reviewedExemption" not in result
+    assert result["review_required"] is True
+
+
+@pytest.mark.parametrize(
+    ("pubchem_title", "synonyms", "expected_status"),
+    [
+        ("Ferrocene", [], "title_match"),
+        ("Bis(eta-cyclopentadienyl) iron", ["Ferrocene"], "synonym_match"),
+    ],
+)
+def test_audit_entry_keeps_match_categories_even_when_exemption_exists(
+    pubchem_title,
+    synonyms,
+    expected_status,
+):
+    result = audit_entry(
+        "102-54-5",
+        "Ferrocene",
+        {
+            "102-54-5": {
+                "cid": 7611,
+                "substance_cids": [7611],
+                "title": pubchem_title,
+                "synonyms": synonyms,
+            }
+        },
+        reviewed_exemptions={
+            "102-54-5": {
+                "dictionary_name_en": "Ferrocene",
+                "reason_category": "naming_style",
+                "note": "PubChem title uses a systematic organometallic name.",
+                "reviewed_at": "2026-07-06",
+            }
+        },
+    )
+
+    assert result["status"] == expected_status
+    assert "rawStatus" not in result
+    assert "reviewedExemption" not in result
 
 
 def test_audit_entry_falls_back_to_compound_xref_when_substance_has_no_cids():
@@ -330,6 +445,66 @@ def test_audit_writes_review_only_report_and_mismatch_csv(tmp_path):
         rows = list(csv.DictReader(handle))
     assert rows[0]["cas_number"] == "4408-64-4"
     assert rows[0]["pubchemTitle"] == "N-Methyliminodiacetic acid"
+
+
+def test_audit_writes_reviewed_exemptions_without_action_queue_noise(tmp_path):
+    report = audit_seed_dictionary(
+        entries={
+            "102-54-5": "Ferrocene",
+            "4408-64-4": "Cerium(IV) sulfate hydrate",
+        },
+        client=FakePubChemClient(
+            {
+                "102-54-5": {
+                    "cid": 7611,
+                    "substance_cids": [7611],
+                    "title": "Bis(eta-cyclopentadienyl) iron",
+                    "synonyms": [],
+                },
+                "4408-64-4": {
+                    "cid": 20441,
+                    "substance_cids": [20441],
+                    "title": "N-Methyliminodiacetic acid",
+                    "synonyms": [],
+                },
+            }
+        ),
+        reviewed_exemptions={
+            "102-54-5": {
+                "dictionary_name_en": "Ferrocene",
+                "reason_category": "naming_style",
+                "note": "PubChem title uses a systematic organometallic name.",
+                "reviewed_at": "2026-07-06",
+            }
+        },
+        output_dir=tmp_path,
+        rate_limit_seconds=0,
+        sleeper=lambda _seconds: None,
+    )
+
+    mismatch_path = tmp_path / "seed-dictionary-identity-mismatches.csv"
+    reviewed_path = tmp_path / "seed-dictionary-identity-reviewed-exemptions.csv"
+    assert reviewed_path.exists()
+    assert report["summary"]["reviewed_exemption"] == 1
+    assert report["summary"]["mismatch"] == 1
+    assert [item["cas_number"] for item in report["actionQueue"]] == ["4408-64-4"]
+
+    stored = json.loads(
+        (tmp_path / "seed-dictionary-identity-audit.json").read_text(encoding="utf-8")
+    )
+    assert stored["details"]["reviewed_exemption"][0]["cas_number"] == "102-54-5"
+    assert stored["outputFiles"]["reviewedExemptionsCsv"].endswith(
+        "seed-dictionary-identity-reviewed-exemptions.csv"
+    )
+
+    with mismatch_path.open(encoding="utf-8-sig", newline="") as handle:
+        mismatch_rows = list(csv.DictReader(handle))
+    assert [row["cas_number"] for row in mismatch_rows] == ["4408-64-4"]
+
+    with reviewed_path.open(encoding="utf-8-sig", newline="") as handle:
+        reviewed_rows = list(csv.DictReader(handle))
+    assert reviewed_rows[0]["cas_number"] == "102-54-5"
+    assert reviewed_rows[0]["reason_category"] == "naming_style"
 
 
 def test_cli_help_is_available_without_network():

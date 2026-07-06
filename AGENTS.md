@@ -167,6 +167,7 @@ python scripts\audit_inventory_workbook.py <path-to-xlsx>
 python scripts\audit_inventory_workbook.py <path-to-xlsx> --handoff-dir <output-dir>
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json>
 python scripts\import_inventory_handoff.py <handoff-dir-or-audit-json> --apply
+python scripts/audit_seed_dictionary_identity.py --output-dir <dir> --checkpoint <file>
 ```
 
 The inventory audit output is review-only. Use `summary`, `actionQueue`,
@@ -178,6 +179,10 @@ enter the admin queue, while `--apply` creates correction requests only.
 Inventory handoff correction requests must not be marked `approved` until the
 candidate has become a manual dictionary review entry and that manual entry is
 approved.
+
+Seed dictionary identity audit exemptions live in
+`backend/seed_dictionary_identity_exemptions.py`; a dictionary name change
+invalidates its exemption automatically.
 
 Docs-only baseline:
 

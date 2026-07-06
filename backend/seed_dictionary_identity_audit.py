@@ -13,6 +13,7 @@ import httpx
 
 from chemical_dict import CAS_TO_EN, CAS_TO_ZH
 from export_helpers import spreadsheet_safe
+from seed_dictionary_identity_exemptions import REVIEWED_IDENTITY_EXEMPTIONS
 
 AUDIT_SOURCE = "seed-dictionary-identity-audit"
 PUBCHEM_BASE_URL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
@@ -20,14 +21,16 @@ TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}
 AUDIT_STATUSES = (
     "title_match",
     "synonym_match",
+    "reviewed_exemption",
     "mismatch",
     "no_record",
     "upstream_error",
 )
 REPORT_FILENAME = "seed-dictionary-identity-audit.json"
 MISMATCH_CSV_FILENAME = "seed-dictionary-identity-mismatches.csv"
+REVIEWED_EXEMPTION_CSV_FILENAME = "seed-dictionary-identity-reviewed-exemptions.csv"
 CHECKPOINT_SCHEMA_VERSION = 1
-REPORT_SCHEMA_VERSION = 1
+REPORT_SCHEMA_VERSION = 2
 
 _TRAILING_PARENTHETICAL_SUFFIX_RE = re.compile(r"\s*\([^)]{1,40}\)\s*$")
 _IDENTITY_COMPACT_RE = re.compile(r"[^a-z0-9]+")
@@ -305,6 +308,66 @@ def classify_seed_identity(
     return "mismatch", None
 
 
+def _resolved_reviewed_exemptions(
+    reviewed_exemptions: Optional[dict[str, dict[str, str]]],
+) -> dict[str, dict[str, str]]:
+    if reviewed_exemptions is None:
+        return REVIEWED_IDENTITY_EXEMPTIONS
+    return reviewed_exemptions
+
+
+def _matching_reviewed_exemption(
+    cas_number: str,
+    dictionary_name_en: str,
+    reviewed_exemptions: Optional[dict[str, dict[str, str]]],
+) -> Optional[dict[str, str]]:
+    exemption = _resolved_reviewed_exemptions(reviewed_exemptions).get(cas_number)
+    if not exemption:
+        return None
+    if exemption.get("dictionary_name_en") != dictionary_name_en:
+        return None
+    return {
+        "dictionary_name_en": exemption.get("dictionary_name_en", ""),
+        "reason_category": exemption.get("reason_category", ""),
+        "note": exemption.get("note", ""),
+        "reviewed_at": exemption.get("reviewed_at", ""),
+    }
+
+
+def _apply_reviewed_exemption(
+    result: dict[str, Any],
+    *,
+    cas_number: str,
+    dictionary_name_en: str,
+    reviewed_exemptions: Optional[dict[str, dict[str, str]]],
+) -> dict[str, Any]:
+    current = dict(result)
+    status = current.get("status")
+    raw_status = current.get("rawStatus") if status == "reviewed_exemption" else status
+    if raw_status != "mismatch":
+        return current
+
+    exemption = _matching_reviewed_exemption(
+        cas_number,
+        dictionary_name_en,
+        reviewed_exemptions,
+    )
+    if exemption:
+        current["status"] = "reviewed_exemption"
+        current["rawStatus"] = "mismatch"
+        current["reviewedExemption"] = exemption
+        current["review_required"] = False
+        current["public_data_changed"] = False
+        return current
+
+    current["status"] = "mismatch"
+    current.pop("rawStatus", None)
+    current.pop("reviewedExemption", None)
+    current["review_required"] = True
+    current["public_data_changed"] = False
+    return current
+
+
 def _base_result(cas_number: str, dictionary_name_en: str) -> dict[str, Any]:
     return {
         "cas_number": cas_number,
@@ -330,6 +393,7 @@ def audit_seed_entry(
     rate_limit_seconds: float = 0.25,
     rate_limiter: Optional[PubChemRateLimiter] = None,
     sleeper: Callable[[float], None] = time.sleep,
+    reviewed_exemptions: Optional[dict[str, dict[str, str]]] = None,
 ) -> dict[str, Any]:
     http_client, should_close = _make_client(client)
     entry_rate_limiter = rate_limiter or PubChemRateLimiter(
@@ -400,9 +464,12 @@ def audit_seed_entry(
                     "error": "",
                 }
             )
-            if status == "mismatch":
-                result["review_required"] = True
-            return result
+            return _apply_reviewed_exemption(
+                result,
+                cas_number=cas_number,
+                dictionary_name_en=dictionary_name_en,
+                reviewed_exemptions=reviewed_exemptions,
+            )
         except PubChemUpstreamError as exc:
             result = _base_result(cas_number, dictionary_name_en)
             result.update(
@@ -548,7 +615,12 @@ def write_audit_outputs(report: dict[str, Any], output_dir: Path | str) -> dict[
     directory.mkdir(parents=True, exist_ok=True)
     report_path = directory / REPORT_FILENAME
     mismatch_path = directory / MISMATCH_CSV_FILENAME
-    output_files = {"report": str(report_path), "mismatchesCsv": str(mismatch_path)}
+    reviewed_exemption_path = directory / REVIEWED_EXEMPTION_CSV_FILENAME
+    output_files = {
+        "report": str(report_path),
+        "mismatchesCsv": str(mismatch_path),
+        "reviewedExemptionsCsv": str(reviewed_exemption_path),
+    }
     report["outputFiles"] = output_files
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -571,6 +643,37 @@ def write_audit_outputs(report: dict[str, Any], output_dir: Path | str) -> dict[
         for row in report.get("details", {}).get("mismatch", []):
             writer.writerow({field: _csv_value(row.get(field, "")) for field in fields})
 
+    reviewed_fields = (
+        "cas_number",
+        "dictionaryNameEn",
+        "pubchemTitle",
+        "cid",
+        "cidVoteRatio",
+        "cidVoteCount",
+        "cidVoteTotal",
+        "cidSource",
+        "reason_category",
+        "note",
+        "reviewed_at",
+        "rawStatus",
+        "review_required",
+        "public_data_changed",
+    )
+    with reviewed_exemption_path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=reviewed_fields, extrasaction="ignore")
+        writer.writeheader()
+        for row in report.get("details", {}).get("reviewed_exemption", []):
+            exemption = row.get("reviewedExemption", {}) or {}
+            csv_row = {field: row.get(field, "") for field in reviewed_fields}
+            csv_row.update(
+                {
+                    "reason_category": exemption.get("reason_category", ""),
+                    "note": exemption.get("note", ""),
+                    "reviewed_at": exemption.get("reviewed_at", ""),
+                }
+            )
+            writer.writerow({field: _csv_value(csv_row.get(field, "")) for field in reviewed_fields})
+
     return output_files
 
 
@@ -584,6 +687,7 @@ def audit_seed_dictionary(
     max_retries: int = 2,
     rate_limit_seconds: float = 0.25,
     sleeper: Callable[[float], None] = time.sleep,
+    reviewed_exemptions: Optional[dict[str, dict[str, str]]] = None,
 ) -> dict[str, Any]:
     seed_entries = entries or CAS_TO_EN
     checkpoint = load_checkpoint(checkpoint_path)
@@ -595,7 +699,18 @@ def audit_seed_dictionary(
     try:
         for cas_number, dictionary_name_en in sorted(seed_entries.items()):
             checkpoint_result = completed.get(cas_number)
-            if checkpoint_result and checkpoint_result.get("status") != "upstream_error":
+            if (
+                checkpoint_result
+                and checkpoint_result.get("status") != "upstream_error"
+                and checkpoint_result.get("dictionaryNameEn") == dictionary_name_en
+            ):
+                checkpoint_result = _apply_reviewed_exemption(
+                    checkpoint_result,
+                    cas_number=cas_number,
+                    dictionary_name_en=dictionary_name_en,
+                    reviewed_exemptions=reviewed_exemptions,
+                )
+                completed[cas_number] = checkpoint_result
                 results.append(checkpoint_result)
                 continue
 
@@ -608,6 +723,7 @@ def audit_seed_dictionary(
                 rate_limit_seconds=rate_limit_seconds,
                 rate_limiter=rate_limiter,
                 sleeper=sleeper,
+                reviewed_exemptions=reviewed_exemptions,
             )
             completed[cas_number] = result
             results.append(result)
