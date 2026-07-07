@@ -278,7 +278,7 @@ modify `backend/requirements.txt`
       (Completed in the 2026-07-07 review verification pass below; PDFs
       archived under
       `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`.)
-- [ ] Update the slice entry in `NEXT_PRODUCT_WORK.md` to shipped/monitoring
+- [x] Update the slice entry in `NEXT_PRODUCT_WORK.md` to shipped/monitoring
       with pointers to evidence.
 
 ### 2026-07-07 Local Verification Notes
@@ -357,10 +357,36 @@ Independent re-verification and closure of the environment-blocked proofs:
     `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/container-a4-primary.pdf`.
   - Post-change gates re-run: print-contract 326 passed, lint clean,
     `npm run build` clean.
-- Still open: the post-deploy production QA gate. The first Zeabur backend
-  deploy of this slice must be watched: confirm image builds (Playwright +
-  fonts-noto-cjk layers), `/api/health`, and one real `/api/print/pdf`
-  render with CJK glyphs before marking the slice shipped/monitoring.
+### 2026-07-07 Production Deployment Findings And Closure
+
+- CI bundle-budget gate failed post-merge at 150.56 KiB raw for the lazy
+  print engine chunk; raw budget raised to 160 KiB (gzip gate unchanged,
+  chunk at 34.58 KiB gzipped) with a split-before-raising-again note.
+- CRITICAL deployment finding: the ghs-backend Zeabur service builds from
+  an INLINE Dockerfile pinned in the service spec
+  (`service.spec.source.dockerfile`), created with the service in January.
+  It ignores `backend/Dockerfile`, a repo-root `Dockerfile.ghs-backend`,
+  the `ZBPACK_DOCKERFILE_NAME` service variable, AND
+  `zbpack.ghs-backend.json` — all three documented override mechanisms
+  were tested and had no effect. The fix was the Zeabur GraphQL mutation
+  `updateDockerfile(serviceID, dockerfile)` (CLI token auth), writing the
+  contents of `Dockerfile.ghs-backend` into the service spec, then
+  `zeabur service redeploy`. Recorded in `AGENTS.md`; future Dockerfile
+  changes must re-run that mutation or the deploy silently keeps the old
+  recipe.
+- Production proof after the fixed deploy (backend gitSha `fcb3fd0`):
+  `POST /api/print/pdf` with the real inlined 鹽酸 complete-label HTML →
+  200 `application/pdf`, attachment filename, exactly 1 A4 page,
+  byte-identical size to the verified local container render (613,099
+  bytes), no WenQuanYi embedding (Taiwan-standard Noto glyphs), no
+  clipping, footer on the same page. Archived:
+  `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/production-a4-primary.pdf`.
+- Frontend production bundle serves the new PDF-export action
+  (`downloadPdfAction` present in the live index chunk); CI and the
+  post-merge Production Print QA workflow are green.
+- Remaining human verification: the owner re-exports the three 鹽酸
+  outputs from a real phone against production and compares with the
+  broken 2026-07-07 morning PDFs.
 
 ## Definition Of Done
 

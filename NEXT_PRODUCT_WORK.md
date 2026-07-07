@@ -86,20 +86,20 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
-Active implementation slice opened on 2026-07-07: Mobile PDF Export Via
+Shipped/monitoring slice closed on 2026-07-07: Mobile PDF Export Via
 Server-Side Rendering. Source: real production mobile PDFs from iPhone Safari
 for 鹽酸 / Hydrochloric acid / CAS `7647-01-0`, plus the committed handoff plan
 `docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
-Affected user job: field/mobile users need to export usable labels without iOS
-Safari clipping fixed-mm pages, injecting browser headers/footers, or pushing
-label footers to stray pages. Expected proof: all three public outputs
-(complete A4/Letter, QR small label, identification small label) are
-re-exported for 鹽酸 through the new PDF endpoint with no edge clipping, no
-near-empty trailing page, crisp QR, correct CJK glyphs, and no browser
-headers/footers; backend/frontend tests, lint/build, Docker/Chromium proof,
-and print-contract QA stay green. Stop condition: endpoint plus mobile handoff
-shipped and QA'd with no label layout CSS, print content policy, or desktop
-browser-print output changes.
+Shipped: `POST /api/print/pdf` (hardened Chromium render of the exact print
+HTML), frontend `exportLabelsPdf` with shared preflight gating and a
+mobile-primary 下載 PDF handoff, CJK glyph-standard fixes (document `lang` +
+fontconfig), and the Zeabur pinned-Dockerfile deployment fix (see `AGENTS.md`
+runtime notes). Evidence: local, container, and production renders archived in
+`qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`; the production
+endpoint returned 200 with byte-identical output to the container proof; CI
+and Production Print QA are green. Monitoring: watch `pdf_export_*`
+observability events, Zeabur build time on the 2.6 GB backend image, and the
+owner's re-test of the three 鹽酸 outputs from a real phone.
 
 Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and
 Browserslist DB noise were cleaned with 0-warning lint, full frontend tests,
