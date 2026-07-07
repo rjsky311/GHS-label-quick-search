@@ -80,19 +80,14 @@ before choosing the next autonomous product slice.
   `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and
   `VITE_BACKEND_URL`.
 - Backend service ID: `6962687391818d5fd9705a67`
-- CRITICAL (verified 2026-07-07): the `ghs-backend` service builds from an
-  INLINE Dockerfile pinned in its Zeabur service spec
-  (`service.spec.source.dockerfile`), not from any file in this repository.
-  `backend/Dockerfile`, a repo-root `Dockerfile.ghs-backend`, the
-  `ZBPACK_DOCKERFILE_NAME` variable, and `zbpack.ghs-backend.json` are ALL
-  ignored by production builds. To change the backend build recipe: edit
-  `Dockerfile.ghs-backend` (canonical copy, kept in the repo), then write it
-  into the service spec with the Zeabur GraphQL mutation
-  `updateDockerfile(serviceID, dockerfile)` (CLI token from
-  `~/.config/zeabur/cli.yaml` as a Bearer token against
-  `https://api.zeabur.com/graphql`), then `npx zeabur service redeploy`.
-  Verify the change landed by checking the build log for the expected layer
-  steps — a deploy that silently uses the old recipe looks successful.
+- CRITICAL (verified 2026-07-07): `ghs-backend` builds from an INLINE
+  Dockerfile pinned in its Zeabur service spec; every repo Dockerfile and
+  zbpack override is ignored. To change the build recipe, edit the canonical
+  `Dockerfile.ghs-backend`, push it into the spec via the Zeabur GraphQL
+  `updateDockerfile(serviceID, dockerfile)` mutation, redeploy, and confirm
+  the build log shows the new layer steps. Full procedure: deployment
+  findings in
+  `docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
 
 ## Architecture
 
