@@ -233,11 +233,13 @@ modify `backend/requirements.txt`
 
 **Files:** Modify `backend/Dockerfile`; verify `zeabur.yaml` needs no change
 
-- [ ] Install Playwright Chromium + system deps + `fonts-noto-cjk`; keep
+- [x] Install Playwright Chromium + system deps + `fonts-noto-cjk`; keep
       non-root `appuser` working; document image-size delta in the commit
-      message.
-- [ ] Local proof: `docker build` succeeds and a container answers
+      message. (2.64 GB image; see review verification notes.)
+- [x] Local proof: `docker build` succeeds and a container answers
       `/api/health` and renders a sample PDF with Chinese glyphs intact.
+      (Completed in the review verification pass; required a CJK
+      font-language fix recorded below.)
 
 ### Task 5: Frontend export path (TDD)
 
@@ -330,12 +332,35 @@ Independent re-verification and closure of the environment-blocked proofs:
   has used repo-root-context COPY paths since commit `5d9c0c3`
   (2026-06-21); the implementation's root-relative `COPY requirements.txt`
   would have broken the next backend deploy.
-- Still open: local `docker build` proof (Docker Desktop daemon did not
-  come up in this session) and the post-deploy production QA gate. The
-  first Zeabur backend deploy of this slice must be watched: confirm
-  image builds (Playwright + fonts-noto-cjk layers), `/api/health`, and
-  one real `/api/print/pdf` render with CJK glyphs before marking the
-  slice shipped/monitoring.
+- Docker/container proof completed after Docker Desktop came up:
+  - `docker build -f backend/Dockerfile .` (repo-root context, mirroring
+    the production Zeabur build) -> success; image `ghs-backend-pdf:local`
+    is 2.64 GB (Chromium `--with-deps` + CJK font layers dominate). Watch
+    Zeabur build time on the first deploy.
+  - Container run required `PILOT_STORE_PATH` pointing at a writable path
+    (pre-existing behavior: `/app/data` is root-owned under `appuser`;
+    production relies on its own storage path). `/api/health` -> healthy.
+  - Real `POST /api/print/pdf` against the container with the inlined
+    鹽酸 complete-label HTML -> 200, `application/pdf`, attachment
+    filename, exactly 1 A4 page, no clipping, footer on the same page.
+  - CJK font finding: the container first rendered Chinese with
+    WenQuanYi Zen Hei (PRC-leaning glyph shapes) because the print HTML
+    declared no document language, so Chromium's per-character fallback
+    ignored the installed `fonts-noto-cjk`. Fixes applied: (1)
+    `backend/fonts/local.conf` maps the stylesheet's CJK family names to
+    `Noto Sans CJK TC`; (2) the print/preview documents now declare
+    `<html lang="zh-TW">` (or `en`), which Chromium maps onto
+    fontconfig's `zh-tw` key. Note: `zh-Hant` does NOT work for this.
+    Verified: WQY no longer embedded; glyphs are Taiwan-standard
+    (complete-label PDF grew 399 KB -> 613 KB from outline embedding —
+    acceptable). Archived container proof:
+    `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/container-a4-primary.pdf`.
+  - Post-change gates re-run: print-contract 326 passed, lint clean,
+    `npm run build` clean.
+- Still open: the post-deploy production QA gate. The first Zeabur backend
+  deploy of this slice must be watched: confirm image builds (Playwright +
+  fonts-noto-cjk layers), `/api/health`, and one real `/api/print/pdf`
+  render with CJK glyphs before marking the slice shipped/monitoring.
 
 ## Definition Of Done
 

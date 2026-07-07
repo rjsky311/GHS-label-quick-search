@@ -332,6 +332,13 @@ export async function inlineGhsPictogramSvgs(html, options = {}) {
 const normalizePrintLocale = (locale) =>
   String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
 
+// Declaring the document language keeps Chromium's per-character font
+// fallback on Taiwan-standard CJK glyphs during server-side PDF rendering;
+// without it, Linux fontconfig prefers WenQuanYi/JP-variant glyph shapes.
+// Chromium maps "zh-TW" (not "zh-Hant") onto fontconfig's zh-tw lang key.
+const resolvePrintDocumentLang = (model) =>
+  normalizePrintLocale(model?.locale) === "en" ? "en" : "zh-TW";
+
 const interpolatePrintText = (template, values = {}) =>
   String(template || "").replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (_, key) =>
     values[key] === undefined || values[key] === null ? "" : String(values[key]),
@@ -1573,7 +1580,7 @@ export function buildPrintDocument(
     `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
     `print-purpose-${model.layout.labelPurpose}`,
   ].join(" ");
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
+  const html = `<!DOCTYPE html><html lang="${resolvePrintDocumentLang(model)}"><head><meta charset="UTF-8"><title>${escapeHtml(
     model.t("print.title"),
   )}</title><style>${styles}</style></head><body class="${bodyClass}">${pagesHtml}</body></html>`;
 
@@ -1673,7 +1680,7 @@ export function buildPrintPreviewDocument(
     `print-${model.layout.colorMode === "bw" ? "bw" : "color"}`,
     `print-purpose-${model.layout.labelPurpose}`,
   ].join(" ");
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(
+  const html = `<!DOCTYPE html><html lang="${resolvePrintDocumentLang(model)}"><head><meta charset="UTF-8"><title>${escapeHtml(
     model.t("print.title"),
   )}</title><style>${sharedStyles}${previewStyles.css}</style></head><body class="${bodyClass}"><div class="preview-shell preview-shell-${mode}"><div class="preview-card preview-card-${mode}">${fragmentHtml}</div></div></body></html>`;
 

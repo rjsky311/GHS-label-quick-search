@@ -20,6 +20,11 @@ RUN playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/* \
     && chmod -R a+rX /ms-playwright
 
+# Map the print stylesheet's CJK families to Noto Sans CJK TC so label PDFs
+# use Taiwan-standard glyphs instead of the WenQuanYi fallback that ships
+# with Chromium's dependency set.
+COPY backend/fonts/local.conf /etc/fonts/local.conf
+
 # Copy application code
 COPY backend/ .
 
