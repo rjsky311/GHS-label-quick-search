@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>選稿 R2 — Warm Balanced · 淺色強紙感（深色不變）</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ /* LIGHT · 暖紙 · 強紙感（提高顆粒 + 暖紙色） */
+    --bg:#f1ead9; --surface:#faf4e7; --card:#fffdf6;
+    --ink:#17130b; --ink2:#5a5344;
+    --rule-heavy:#17130b; --hair:#dbd2be;
+    --teal:#0c6b62; --teal-soft:#e0efec; --red:#cf3324;
+    --canvas:#e7ddc9; --disc-bg:#faf4e7;
+    --action-bg:#17130b; --action-fg:#f1ead9;
+    --rule-line:rgba(23,19,11,.045); --grain-blend:multiply; --grain-opacity:.14; --canvas-grain-op:.66;
+  }
+  html[data-theme="dark"]{ /* DARK · 暖中性石墨（維持 R，不變） */
+    --bg:#161714; --surface:#1e201c; --card:#232520;
+    --ink:#e8e7dd; --ink2:#8d8d80;
+    --rule-heavy:#33352c; --hair:#33352c;
+    --teal:#40d3c4; --teal-soft:#123734; --red:#f0806f;
+    --canvas:#0b0c08; --disc-bg:#191b16;
+    --action-bg:#40d3c4; --action-fg:#08201d;
+    --rule-line:rgba(255,255,250,.022); --grain-blend:screen; --grain-opacity:.055; --canvas-grain-op:.5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg)}
+  body{font-family:"IBM Plex Sans","Noto Sans TC",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+    background-color:var(--bg);background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 33px, var(--rule-line) 33px, var(--rule-line) 34px);
+    transition:background-color .25s,color .25s;position:relative;min-height:100vh}
+  /* 顆粒做細（150px + 較高頻）→ 讀成紙纖維而非斑塊 */
+  .grain{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.0' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:150px 150px;opacity:var(--grain-opacity);mix-blend-mode:var(--grain-blend)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 26px 70px;position:relative;z-index:1}
+  .toggle{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--ink);background:var(--surface);border:1px solid var(--hair);border-radius:7px;padding:8px 13px;cursor:pointer}
+  .toggle:hover{border-color:var(--teal);color:var(--teal)}
+  .mast{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--rule-heavy);padding:26px 0 12px}
+  .mast .logo{font-family:"Fraunces",serif;font-weight:900;font-size:24px;letter-spacing:-.01em}
+  .mast .logo span{color:var(--teal)}
+  .mast .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .mast .meta{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink2);text-align:right;line-height:1.5;text-transform:uppercase;letter-spacing:.05em}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:10px;margin:24px 0 6px}
+  .kicker::before{content:"";width:26px;height:2px;background:var(--teal)}
+  .searchband{border-bottom:1px solid var(--rule-heavy);padding:8px 0 18px;display:flex;gap:16px;align-items:center}
+  .searchband input{flex:1;border:0;background:transparent;font-family:"Fraunces",serif;font-weight:600;font-style:italic;font-size:30px;color:var(--ink);outline:0;padding:6px 0}
+  .searchband input::placeholder{color:var(--ink2);opacity:.55;font-style:italic}
+  .go{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;background:var(--action-bg);color:var(--action-fg);border:0;padding:14px 22px;cursor:pointer}
+  .go:hover{background:var(--teal);color:#fff}
+  .seg{display:flex;font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-top:14px}
+  .seg span{padding:8px 14px;border:1px solid var(--hair);cursor:pointer;color:var(--ink2);background:var(--surface)}
+  .seg span.on{background:var(--teal-soft);color:var(--teal);border-color:var(--teal)}
+  .seg span+span{border-left:0}
+  .grid{display:grid;grid-template-columns:1.25fr 1fr;border-bottom:1px solid var(--hair)}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .col-l{padding:30px 34px 34px 0;border-right:1px solid var(--hair)}
+  .col-r{padding:30px 0 34px 34px}
+  @media(max-width:880px){.col-l{border-right:0;border-bottom:1px solid var(--hair);padding-right:0}.col-r{padding-left:0}}
+  .idx{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--teal);font-weight:700;letter-spacing:.05em}
+  .name{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(40px,6vw,64px);line-height:.96;letter-spacing:-.02em;margin:8px 0 3px}
+  .name-zh{font-family:"Noto Sans TC";font-weight:900;font-size:26px;letter-spacing:.02em}
+  .metaline{display:flex;gap:14px;align-items:center;margin-top:20px;flex-wrap:wrap}
+  .cas{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:700;border:1.5px solid var(--ink);color:var(--ink);padding:6px 12px;background:var(--surface)}
+  .signal{font-family:"Fraunces",serif;font-weight:900;font-size:15px;color:#fff;background:var(--red);padding:7px 16px}
+  html[data-theme="dark"] .signal{color:#2a0f0b}
+  .source{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}
+  .pictorow{display:flex;gap:14px;margin:30px 0 8px}
+  .picto{width:86px;height:86px;background:#fff;border:2px solid var(--ink);padding:6px}
+  .picto img{width:100%;height:100%;display:block}
+  .hlist{margin-top:24px;border-top:2px solid var(--rule-heavy)}
+  .hrow{display:grid;grid-template-columns:66px 1fr;gap:16px;padding:13px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+  .hrow .c{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:13.5px;color:var(--red)}
+  .hrow .t{font-family:"Noto Sans TC";font-size:15px;line-height:1.4}
+  .hrow .t em{font-style:italic;color:var(--ink2);font-size:13px;display:block;font-family:"Fraunces";margin-top:2px}
+  .pcount{font-family:"IBM Plex Mono",monospace;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);padding:14px 0;cursor:pointer}
+  .pcount b{color:var(--teal);border-bottom:2px solid var(--teal)}
+  .out-nav{margin-bottom:22px}
+  .out{display:flex;justify-content:space-between;align-items:baseline;padding:13px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+  .out .on-name{font-family:"Fraunces",serif;font-weight:600;font-size:18px}
+  .out .on-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;text-transform:uppercase;color:var(--ink2);letter-spacing:.05em}
+  .out.active{border-bottom:2px solid var(--teal)}
+  .out.active .on-name{color:var(--teal);font-style:italic}
+  .out.active .on-sub{color:var(--teal)}
+  .out.active::before{content:"▸ ";color:var(--teal)}
+  .canvas{background:var(--canvas);padding:20px;border:2px solid var(--rule-heavy);position:relative;overflow:hidden}
+  .canvas::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");background-size:110px 110px;opacity:var(--canvas-grain-op);mix-blend-mode:var(--grain-blend)}
+  .canvas .ptag{position:absolute;top:8px;right:12px;font-family:"IBM Plex Mono";font-size:9px;color:var(--ink2);letter-spacing:.05em;z-index:1}
+  .label{position:relative;z-index:1;background:#fff;border:2px solid #111;padding:16px;box-shadow:0 8px 22px rgba(0,0,0,.22);color:#111}
+  .l-top{display:flex;justify-content:space-between;border-bottom:3px solid #111;padding-bottom:9px}
+  .l-name{font-family:"Fraunces",serif;font-weight:900;font-size:21px;line-height:1;color:#111}
+  .l-zh{font-family:"Noto Sans TC";font-weight:700;font-size:14px;color:#222;margin-top:2px}
+  .l-cas{font-family:"IBM Plex Mono";font-size:10px;font-weight:700;border:1.5px solid #111;padding:2px 6px;color:#111}
+  .l-sig{font-family:"Fraunces";font-weight:900;font-size:11px;color:#fff;background:#d8342a;padding:3px 9px;display:inline-block;margin-top:5px}
+  .l-mid{display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid #bbb}
+  .l-picto{width:44px;height:44px;border:1.5px solid #111;padding:3px}.l-picto img{width:100%;height:100%}
+  .l-h{font-family:"Noto Sans TC";font-size:11px;color:#111;line-height:1.35}.l-h b{font-family:"IBM Plex Mono";color:#111}
+  .l-foot{display:flex;justify-content:space-between;align-items:flex-end;padding-top:9px;font-size:8.5px;color:#444}
+  .l-qr{width:44px;height:44px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0/8px 8px}
+  .actions{display:flex;margin-top:22px}
+  .act{flex:1;font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;padding:15px;cursor:pointer;text-align:center;border:2px solid var(--rule-heavy)}
+  .act.print{background:var(--action-bg);color:var(--action-fg);border-color:var(--action-bg)}
+  .act.print:hover{background:var(--teal);border-color:var(--teal);color:#fff}
+  .act.pdf{background:transparent;color:var(--ink);border-left:0}
+  .act.pdf:hover{background:var(--action-bg);color:var(--action-fg)}
+  .disc{margin-top:22px;border:1px solid var(--hair);border-left:8px solid var(--red);padding:14px 16px;font-family:"Noto Sans TC";font-size:12.5px;line-height:1.55;color:var(--ink2);background:var(--disc-bg)}
+  .disc b{font-family:"Fraunces";font-weight:600;color:var(--ink)}
+  .toolrow{display:flex;justify-content:space-between;margin-top:16px;font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .toolrow a{color:var(--ink);cursor:pointer;border-bottom:1px solid var(--hair)}
+  .toolrow a:hover{color:var(--teal);border-color:var(--teal)}
+  .toolrow a.rep{color:var(--red);border-color:var(--red)}
+  .colo{margin-top:30px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.08em;text-align:center}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+  <div class="mast">
+    <div class="logo">GHS <span>Quick Safety</span></div>
+    <div class="right"><button class="toggle" id="tgl">◐ 切換深色</button><div class="meta">免費化學安全查詢工具 · REF ONLY / NOT SDS</div></div>
+  </div>
+  <div class="kicker">01 — 查詢 / Search</div>
+  <div class="searchband"><input value="7647-01-0" placeholder="名稱 或 CAS…"><button class="go">Search ⟶</button></div>
+  <div class="seg"><span class="on">單筆</span><span>批次</span></div>
+  <div class="kicker" style="margin-top:34px">02 — 結果與輸出 / Result &amp; Output</div>
+  <div class="grid">
+    <div class="col-l">
+      <div class="idx">CAS 7647-01-0 · CORROSIVE ACID</div>
+      <div class="name">Hydrochloric<br>acid</div>
+      <div class="name-zh">鹽酸</div>
+      <div class="metaline"><span class="signal">危險 Danger</span><span class="cas">7647-01-0</span><span class="source">Src · PubChem / SDS</span></div>
+      <div class="pictorow"><div class="picto"><img src="GHS05.svg" alt="腐蝕"></div><div class="picto"><img src="GHS07.svg" alt="驚嘆號"></div></div>
+      <div class="hlist">
+        <div class="hrow"><span class="c">H314</span><span class="t">造成嚴重皮膚灼傷和眼睛損傷<em>Causes severe skin burns and eye damage</em></span></div>
+        <div class="hrow"><span class="c">H335</span><span class="t">可能造成呼吸道刺激<em>May cause respiratory irritation</em></span></div>
+        <div class="pcount">預防措施 — <b>18 項 P 碼</b> 全部展開 ⟶</div>
+      </div>
+    </div>
+    <div class="col-r">
+      <div class="out-nav">
+        <div class="out active"><span class="on-name">完整 A4 標籤</span><span class="on-sub">Primary · H/P + QR</span></div>
+        <div class="out"><span class="on-name">QR 小標</span><span class="on-sub">Supplemental · Scan</span></div>
+        <div class="out"><span class="on-name">辨識小標</span><span class="on-sub">Supplemental · Icons</span></div>
+      </div>
+      <div class="canvas">
+        <span class="ptag">白底 = 印刷真相</span>
+        <div class="label">
+          <div class="l-top"><div><div class="l-name">Hydrochloric acid</div><div class="l-zh">鹽酸</div><div class="l-sig">危險 / Danger</div></div><div class="l-cas">7647-01-0</div></div>
+          <div class="l-mid"><div class="l-picto"><img src="GHS05.svg"></div><div class="l-picto"><img src="GHS07.svg"></div><div class="l-h"><div><b>H314</b> 嚴重皮膚灼傷／眼睛損傷</div><div><b>H335</b> 可能刺激呼吸道</div></div></div>
+          <div class="l-foot"><div>化學實驗室 · 12345678<br>REF ONLY — VERIFY SDS</div><div class="l-qr"></div></div>
+        </div>
+      </div>
+      <div class="actions"><button class="act print">⎙ 列印標籤</button><button class="act pdf">⬇ 下載 PDF</button></div>
+      <div class="disc"><b>僅供參考</b> — 使用前請對照官方安全資料表（SDS）、供應商標示與當地法規。本工具不取代 SDS 或最終合規判定。</div>
+      <div class="toolrow"><a>◱ 檢視來源</a><a class="rep">⚑ 回報資料問題</a></div>
+    </div>
+  </div>
+  <div class="colo" id="colo">選稿 R2 · Warm Balanced（淺色強紙感）— 淺色顆粒加重 + 暖紙 · 深色維持暖中性石墨</div>
+</div>
+<script>
+  (function(){var root=document.documentElement,btn=document.getElementById('tgl'),colo=document.getElementById('colo');
+  function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark'?'☀ 切換淺色':'◐ 切換深色');colo.textContent='選稿 R2 · Warm Balanced（淺色強紙感）— 目前：'+(t==='dark'?'深色 · 暖中性石墨（同 R）':'淺色 · 暖紙 · 強紙感')+'';}
+  apply('light');btn.addEventListener('click',function(){apply(root.dataset.theme==='dark'?'light':'dark')});})();
+</script>
+</body>
+</html>
