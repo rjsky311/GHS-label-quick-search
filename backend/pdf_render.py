@@ -1,8 +1,11 @@
 import asyncio
+import logging
 import re
 from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 MAX_PRINT_PDF_HTML_BYTES = 3 * 1024 * 1024
@@ -113,6 +116,12 @@ class PrintPdfRenderer:
         except Exception as exc:  # pragma: no cover - environment dependent
             self._startup_error = exc
             self._browser = None
+            # Surface the launch failure in runtime logs: a silent failure
+            # here degrades /api/print/pdf to opaque 503s in production.
+            logger.error(
+                "PDF renderer startup failed; /api/print/pdf will return 503: %r",
+                exc,
+            )
             if self._playwright is not None:
                 try:
                     await self._playwright.stop()

@@ -1,3 +1,11 @@
+# Canonical build recipe for the ghs-backend Zeabur service.
+#
+# The file name matters: Zeabur/zbpack only honors a repo-root
+# `Dockerfile.<service-name>` for this service; before this file existed,
+# zbpack generated its own Python Dockerfile and silently skipped the
+# Chromium + CJK font layers (backend/Dockerfile was never used by
+# production builds). Keep backend/Dockerfile in sync for local
+# `docker build -f` workflows.
 FROM python:3.11-slim
 LABEL "language"="python"
 LABEL "framework"="fastapi"
@@ -8,11 +16,6 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
-# NOTE: production Zeabur builds use the repo-root `Dockerfile.ghs-backend`,
-# not this file (zbpack only honors the service-named root Dockerfile). This
-# copy exists for local `docker build -f backend/Dockerfile .` workflows —
-# keep the two files in sync.
-#
 # Install Python dependencies and the Chromium runtime before switching to the
 # non-root app user so the browser cache stays readable at runtime.
 # COPY paths are relative to the repo root (the build context).
