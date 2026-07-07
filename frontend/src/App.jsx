@@ -1229,128 +1229,137 @@ function App() {
       className={`${appThemeClassName} notebook-app min-h-screen`}
       data-testid="app-shell"
     >
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-md focus:bg-[hsl(var(--notebook-action))] focus:px-4 focus:py-2 focus:text-[hsl(var(--notebook-surface))]">
-        {t("a11y.skipToContent")}
-      </a>
-      <Toaster position="top-right" theme={toastTheme} richColors />
-
-      <Header
-        favorites={favorites}
-        history={history}
-        preparedCount={preparedRecents.length}
-        opsEventCount={observabilityEventCount}
-        pilotAttentionCount={pilotAttentionCount}
-        showPilotDashboardButton={PILOT_ADMIN_ENABLED}
-        pilotAdminUnlocked={Boolean(pilotAdminKey)}
-        showFavorites={showFavorites}
-        showHistory={showHistory}
-        showPilotDashboard={showPilotDashboard}
-        themeMode={themeMode}
-        onTogglePilotDashboard={handleTogglePilotDashboard}
-        onToggleFavorites={handleToggleFavorites}
-        onToggleHistory={() => setShowHistory(!showHistory)}
-        onTogglePrepared={() => setShowPrepared(!showPrepared)}
-        onToggleThemeMode={handleToggleThemeMode}
-        onGoHome={handleGoHome}
+      <div
+        className="notebook-grain"
+        aria-hidden="true"
+        data-testid="notebook-grain"
       />
+      <div className="notebook-shell-content">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-md focus:bg-[hsl(var(--notebook-action))] focus:px-4 focus:py-2 focus:text-[hsl(var(--notebook-surface))]">
+          {t("a11y.skipToContent")}
+        </a>
+        <Toaster position="top-right" theme={toastTheme} richColors />
 
-      {showPilotAdminDialog && (
-        <AdminAccessDialog
-          error={pilotAdminError}
-          initialValue={pilotAdminKey}
-          onClose={() => setShowPilotAdminDialog(false)}
-          onSubmit={handleSubmitPilotAdminKey}
-        />
-      )}
-
-      <Suspense fallback={<DeferredOverlayFallback />}>
-        {showPilotDashboard && (
-          <PilotDashboardSidebar
-            report={pilotReport}
-            aliases={pilotAliases}
-            manualEntries={pilotManualEntries}
-            referenceLinks={pilotReferenceLinks}
-            correctionRequests={pilotCorrectionRequests}
-            loading={pilotLoading}
-            saving={pilotSaving}
-            error={pilotError}
-            onClose={() => setShowPilotDashboard(false)}
-            onRefresh={refreshPilotDashboard}
-            onExportObservabilityReport={() => exportObservabilityReport()}
-            onSaveManualEntry={savePilotManualEntry}
-            onSaveAlias={savePilotAlias}
-            onSaveReferenceLink={savePilotReferenceLink}
-            onResolveMissQuery={resolvePilotMissQuery}
-            onPurgeStaleMissQueries={purgePilotStaleMissQueries}
-            onUpdateCorrectionRequestStatus={updatePilotCorrectionRequestStatus}
-          />
-        )}
-
-        {showFavorites && (
-          <FavoritesSidebar
-            favorites={favorites}
-            onClose={handleCloseFavorites}
-            onClearFavorites={handleClearFavorites}
-            onToggleFavorite={handleToggleFavoriteFromFavorites}
-            onViewDetail={handleViewDetailFromFavorites}
-            onPrintLabel={handlePrintLabelFromFavorites}
-          />
-        )}
-
-        {showHistory && (
-          <HistorySidebar
-            history={history}
-            onClose={() => setShowHistory(false)}
-            onClearHistory={clearHistory}
-            onSelectHistoryItem={handleSelectHistoryItem}
-          />
-        )}
-
-        {showPrepared && (
-          <PreparedSidebar
-            recents={preparedRecents}
-            onClose={() => setShowPrepared(false)}
-            onClearRecents={clearPreparedRecents}
-            onReprint={handleReprintPreparedRecent}
-            reprintingId={preparedReprintingId}
-          />
-        )}
-
-        {showExportPreview && (
-          <ExportPreviewModal
-            results={exportResults}
-            allResults={allExportResults}
-            initialFormat={exportPreviewFormat}
-            onClose={() => setShowExportPreview(false)}
-            onConfirm={handleConfirmExport}
-          />
-        )}
-      </Suspense>
-
-      <main id="main-content" className="max-w-7xl mx-auto px-4 py-6">
-        <SearchSection
-          activeTab={activeTab}
-          singleCas={singleCas}
-          batchCas={batchCas}
-          loading={loading}
-          error={error}
-          batchCount={batchCount}
-          batchSummary={batchSearchInput}
-          searchInputRef={searchInputRef}
-          onSetActiveTab={setActiveTab}
-          onSetSingleCas={setSingleCas}
-          onSetBatchCas={setBatchCas}
-          onSearchSingle={searchSingle}
-          onSearchBatch={searchBatch}
-          history={history}
+        <Header
           favorites={favorites}
-          batchProgress={batchProgress}
+          history={history}
+          preparedCount={preparedRecents.length}
+          opsEventCount={observabilityEventCount}
+          pilotAttentionCount={pilotAttentionCount}
+          showPilotDashboardButton={PILOT_ADMIN_ENABLED}
+          pilotAdminUnlocked={Boolean(pilotAdminKey)}
+          showFavorites={showFavorites}
+          showHistory={showHistory}
+          showPilotDashboard={showPilotDashboard}
+          themeMode={themeMode}
+          onTogglePilotDashboard={handleTogglePilotDashboard}
+          onToggleFavorites={handleToggleFavorites}
+          onToggleHistory={() => setShowHistory(!showHistory)}
+          onTogglePrepared={() => setShowPrepared(!showPrepared)}
+          onToggleThemeMode={handleToggleThemeMode}
+          onGoHome={handleGoHome}
         />
+
+        {showPilotAdminDialog && (
+          <AdminAccessDialog
+            error={pilotAdminError}
+            initialValue={pilotAdminKey}
+            onClose={() => setShowPilotAdminDialog(false)}
+            onSubmit={handleSubmitPilotAdminKey}
+          />
+        )}
+
+        <Suspense fallback={<DeferredOverlayFallback />}>
+          {showPilotDashboard && (
+            <PilotDashboardSidebar
+              report={pilotReport}
+              aliases={pilotAliases}
+              manualEntries={pilotManualEntries}
+              referenceLinks={pilotReferenceLinks}
+              correctionRequests={pilotCorrectionRequests}
+              loading={pilotLoading}
+              saving={pilotSaving}
+              error={pilotError}
+              onClose={() => setShowPilotDashboard(false)}
+              onRefresh={refreshPilotDashboard}
+              onExportObservabilityReport={() => exportObservabilityReport()}
+              onSaveManualEntry={savePilotManualEntry}
+              onSaveAlias={savePilotAlias}
+              onSaveReferenceLink={savePilotReferenceLink}
+              onResolveMissQuery={resolvePilotMissQuery}
+              onPurgeStaleMissQueries={purgePilotStaleMissQueries}
+              onUpdateCorrectionRequestStatus={updatePilotCorrectionRequestStatus}
+            />
+          )}
+
+          {showFavorites && (
+            <FavoritesSidebar
+              favorites={favorites}
+              onClose={handleCloseFavorites}
+              onClearFavorites={handleClearFavorites}
+              onToggleFavorite={handleToggleFavoriteFromFavorites}
+              onViewDetail={handleViewDetailFromFavorites}
+              onPrintLabel={handlePrintLabelFromFavorites}
+            />
+          )}
+
+          {showHistory && (
+            <HistorySidebar
+              history={history}
+              onClose={() => setShowHistory(false)}
+              onClearHistory={clearHistory}
+              onSelectHistoryItem={handleSelectHistoryItem}
+            />
+          )}
+
+          {showPrepared && (
+            <PreparedSidebar
+              recents={preparedRecents}
+              onClose={() => setShowPrepared(false)}
+              onClearRecents={clearPreparedRecents}
+              onReprint={handleReprintPreparedRecent}
+              reprintingId={preparedReprintingId}
+            />
+          )}
+
+          {showExportPreview && (
+            <ExportPreviewModal
+              results={exportResults}
+              allResults={allExportResults}
+              initialFormat={exportPreviewFormat}
+              onClose={() => setShowExportPreview(false)}
+              onConfirm={handleConfirmExport}
+            />
+          )}
+        </Suspense>
+
+        <main id="main-content" className="max-w-7xl mx-auto px-4 py-6">
+          <SearchSection
+            activeTab={activeTab}
+            singleCas={singleCas}
+            batchCas={batchCas}
+            loading={loading}
+            error={error}
+            batchCount={batchCount}
+            batchSummary={batchSearchInput}
+            searchInputRef={searchInputRef}
+            onSetActiveTab={setActiveTab}
+            onSetSingleCas={setSingleCas}
+            onSetBatchCas={setBatchCas}
+            onSearchSingle={searchSingle}
+            onSearchBatch={searchBatch}
+            history={history}
+            favorites={favorites}
+            batchProgress={batchProgress}
+          />
 
         {loading && <SkeletonTable />}
 
         {results.length > 0 && !loading && (
           <>
+            <div className="notebook-kicker mt-8">
+              02 — {t("results.title")} / Output
+            </div>
             {/* v1.8 M1: warn when any row had a transient PubChem failure */}
             <UpstreamErrorBanner
               count={results.filter((r) => r.upstream_error).length}
@@ -1417,7 +1426,7 @@ function App() {
             }
           />
         )}
-      </main>
+        </main>
 
       <Suspense fallback={<DeferredOverlayFallback />}>
         {selectedResult && (
@@ -1503,7 +1512,8 @@ function App() {
         )}
       </Suspense>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

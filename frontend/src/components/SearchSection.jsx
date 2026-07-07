@@ -49,17 +49,19 @@ export default function SearchSection({
       : 0;
 
   return (
-    <div
-      className="search-workbench-control notebook-surface mb-4 overflow-hidden rounded-md"
-      data-testid="search-workbench"
-    >
+    <section className="notebook-search-shell mb-4" data-testid="search-section">
+      <div className="notebook-kicker">01 — {t("search.singleTab")} / Search</div>
+      <div
+        className="search-workbench-control notebook-surface overflow-hidden rounded-md"
+        data-testid="search-workbench"
+      >
       <div
         className="search-workbench-tabs flex border-b border-[hsl(var(--notebook-border)/0.72)]"
         data-testid="search-workbench-tabs"
       >
         <button
           onClick={() => onSetActiveTab("single")}
-          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
+          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-semibold transition-colors ${
             activeTab === "single"
               ? "border-b-2 border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]"
               : "text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
@@ -71,7 +73,7 @@ export default function SearchSection({
         </button>
         <button
           onClick={() => onSetActiveTab("batch")}
-          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-medium transition-colors ${
+          className={`notebook-control notebook-control-tab inline-flex flex-1 items-center justify-center gap-2 rounded-b-none px-6 py-4 text-sm font-semibold transition-colors ${
             activeTab === "batch"
               ? "border-b-2 border-[hsl(var(--notebook-action-border))] bg-[hsl(var(--notebook-action-soft))] text-[hsl(var(--notebook-action))]"
               : "text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
@@ -87,11 +89,11 @@ export default function SearchSection({
         {activeTab === "single" ? (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[hsl(var(--notebook-ink))]">
+              <label className="mb-2 block font-[var(--font-mono)] text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                 {t("search.inputLabel")}
               </label>
               <div
-                className="flex flex-col gap-3 sm:flex-row"
+                className="notebook-search-band flex flex-col gap-3 sm:flex-row"
                 data-testid="single-search-controls"
               >
                 <SearchAutocomplete
@@ -133,7 +135,7 @@ export default function SearchSection({
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-[hsl(var(--notebook-ink))]">
+              <label className="mb-2 block font-[var(--font-mono)] text-sm font-semibold text-[hsl(var(--notebook-ink))]">
                 {t("search.batchInputLabel")}
               </label>
               <textarea
@@ -288,6 +290,7 @@ export default function SearchSection({
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </section>
   );
 }

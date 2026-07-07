@@ -112,15 +112,15 @@ From R2, applied to the real shell/components (not the print preview internals):
 
 ### Phase 0 — Tokens + fonts + material primitives
 **Files:** `src/index.css`, `index.html`, `tailwind.config.js` (only if a font-family utility mapping is wanted)
-- [ ] Re-tone `:root` / `.theme-comfort-dim` / `.theme-dark-bench` `--notebook-*` values to the tables above (convert hex→HSL). Add the new color, material, and typography tokens.
-- [ ] Add the Google Fonts `<link>` + preconnects to `index.html`. Add `--font-display/-sans/-mono` and wire base `body`/heading font-family to them (app only).
-- [ ] Add the `.notebook-grain` fixed layer + ledger-rule background + `.notebook-canvas` grain helper as reusable classes/utilities.
+- [x] Re-tone `:root` / `.theme-comfort-dim` / `.theme-dark-bench` `--notebook-*` values to the tables above (convert hex→HSL). Add the new color, material, and typography tokens.
+- [x] Add the Google Fonts `<link>` + preconnects to `index.html`. Add `--font-display/-sans/-mono` and wire base `body`/heading font-family to them (app only).
+- [x] Add the `.notebook-grain` fixed layer + ledger-rule background + `.notebook-canvas` grain helper as reusable classes/utilities.
 - [ ] Gates green (see below). No visual regressions in unrelated flows.
 
 ### Phase 1 — Button/control primitives + shell & search  ⟵ STOP-FOR-REVIEW after this
 **Files:** `components/ui/*` button/control primitives as needed, `components/Header.jsx`, `components/SearchSection.jsx`, `SearchAutocomplete.jsx`, `App.jsx` shell wrappers, theme toggle control.
-- [ ] Apply the button language (primary solid, secondary outline, report stamp, segmented tabs) as shared classes/components.
-- [ ] Apply masthead rule, kickers, editorial search band, and mount the grain + ledger material on the shell. Verify the existing theme toggle flips comfort-dim ⇄ dark-bench and the new material/teal follow.
+- [x] Apply the button language (primary solid, secondary outline, report stamp, segmented tabs) as shared classes/components.
+- [x] Apply masthead rule, kickers, editorial search band, and mount the grain + ledger material on the shell. Verify the existing theme toggle flips comfort-dim ⇄ dark-bench and the new material/teal follow.
 - [ ] Desktop + mobile screenshots in BOTH themes. Gates green. **Commit and STOP; wait for maintainer review before Phase 2.**
 
 ### Phase 2 — Results surface

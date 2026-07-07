@@ -20,7 +20,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         notebookPrimary:
-          "notebook-control notebook-control-primary hover:text-[hsl(var(--notebook-action))]",
+          "notebook-control notebook-control-primary",
         notebookSecondary:
           "notebook-control notebook-control-secondary hover:text-[hsl(var(--notebook-action))]",
         notebookDanger:

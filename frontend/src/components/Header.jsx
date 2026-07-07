@@ -88,8 +88,8 @@ export default function Header({
               <AlertTriangle className="h-5 w-5 notebook-tone-danger" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-semibold text-[hsl(var(--notebook-ink))]">{t("header.title")}</h1>
-              <p className="truncate text-xs text-[hsl(var(--notebook-muted-ink))]">{t("header.subtitle")}</p>
+              <h1 className="truncate font-[var(--font-display)] text-2xl font-black text-[hsl(var(--notebook-ink))]">{t("header.title")}</h1>
+              <p className="truncate font-[var(--font-mono)] text-xs text-[hsl(var(--notebook-muted-ink))]">{t("header.subtitle")}</p>
             </div>
           </a>
           <div className="flex flex-wrap gap-2">

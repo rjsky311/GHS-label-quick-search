@@ -5,8 +5,7 @@
 body {
     margin: 0;
     font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
         sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -14,7 +13,8 @@ body {
 
 code {
     font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+        var(--font-mono), source-code-pro, Menlo, Monaco, Consolas,
+        "Courier New", monospace;
 }
 
 @layer base {
@@ -44,64 +44,100 @@ code {
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
-        --notebook-app: 42 29% 91%;
-        --notebook-ink: 220 24% 15%;
-        --notebook-muted-ink: 218 13% 43%;
-        --notebook-surface: 42 38% 96%;
-        --notebook-surface-raised: 42 45% 98%;
-        --notebook-border: 37 20% 77%;
-        --notebook-rule: 218 24% 83%;
-        --notebook-action: 218 72% 34%;
-        --notebook-action-soft: 216 82% 96%;
-        --notebook-action-border: 218 67% 42%;
-        --notebook-danger: 0 72% 48%;
-        --notebook-danger-soft: 0 86% 97%;
+        --notebook-app: 42 46% 90%;
+        --notebook-ink: 40 35% 7%;
+        --notebook-muted-ink: 41 14% 31%;
+        --notebook-surface: 41 66% 94%;
+        --notebook-surface-raised: 47 100% 98%;
+        --notebook-border: 41 29% 80%;
+        --notebook-rule: 40 35% 7%;
+        --notebook-action: 174 80% 23%;
+        --notebook-action-soft: 168 32% 91%;
+        --notebook-action-border: 174 80% 20%;
+        --notebook-danger: 5 71% 46%;
+        --notebook-danger-soft: 13 47% 94%;
         --notebook-warning: 36 92% 40%;
         --notebook-warning-soft: 39 90% 94%;
         --notebook-ready: 148 58% 32%;
         --notebook-ready-soft: 146 45% 93%;
         --notebook-print-surface: 0 0% 100%;
-        --notebook-print-ink: 220 24% 12%;
+        --notebook-print-ink: 40 35% 7%;
+        --notebook-action-solid: 40 35% 7%;
+        --notebook-action-solid-fg: 42 46% 90%;
+        --notebook-canvas: 40 38% 85%;
+        --notebook-disc: 41 66% 94%;
+        --notebook-rule-line: 23 19 11;
+        --notebook-rule-line-alpha: .045;
+        --notebook-grain-opacity: .14;
+        --notebook-grain-blend: multiply;
+        --notebook-canvas-grain-opacity: .66;
+        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }
     .theme-comfort-dim {
-        --notebook-app: 42 29% 91%;
-        --notebook-ink: 220 24% 15%;
-        --notebook-muted-ink: 218 13% 43%;
-        --notebook-surface: 42 38% 96%;
-        --notebook-surface-raised: 42 45% 98%;
-        --notebook-border: 37 20% 77%;
-        --notebook-rule: 218 24% 83%;
-        --notebook-action: 218 72% 34%;
-        --notebook-action-soft: 216 82% 96%;
-        --notebook-action-border: 218 67% 42%;
-        --notebook-danger: 0 72% 48%;
-        --notebook-danger-soft: 0 86% 97%;
+        --notebook-app: 42 46% 90%;
+        --notebook-ink: 40 35% 7%;
+        --notebook-muted-ink: 41 14% 31%;
+        --notebook-surface: 41 66% 94%;
+        --notebook-surface-raised: 47 100% 98%;
+        --notebook-border: 41 29% 80%;
+        --notebook-rule: 40 35% 7%;
+        --notebook-action: 174 80% 23%;
+        --notebook-action-soft: 168 32% 91%;
+        --notebook-action-border: 174 80% 20%;
+        --notebook-danger: 5 71% 46%;
+        --notebook-danger-soft: 13 47% 94%;
         --notebook-warning: 36 92% 40%;
         --notebook-warning-soft: 39 90% 94%;
         --notebook-ready: 148 58% 32%;
         --notebook-ready-soft: 146 45% 93%;
         --notebook-print-surface: 0 0% 100%;
-        --notebook-print-ink: 220 24% 12%;
+        --notebook-print-ink: 40 35% 7%;
+        --notebook-action-solid: 40 35% 7%;
+        --notebook-action-solid-fg: 42 46% 90%;
+        --notebook-canvas: 40 38% 85%;
+        --notebook-disc: 41 66% 94%;
+        --notebook-rule-line: 23 19 11;
+        --notebook-rule-line-alpha: .045;
+        --notebook-grain-opacity: .14;
+        --notebook-grain-blend: multiply;
+        --notebook-canvas-grain-opacity: .66;
+        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }
     .theme-dark-bench {
-        --notebook-app: 210 18% 8%;
-        --notebook-ink: 42 30% 91%;
-        --notebook-muted-ink: 215 14% 70%;
-        --notebook-surface: 210 16% 12%;
-        --notebook-surface-raised: 210 16% 15%;
-        --notebook-border: 210 12% 28%;
-        --notebook-rule: 204 16% 22%;
-        --notebook-action: 196 90% 76%;
-        --notebook-action-soft: 202 48% 18%;
-        --notebook-action-border: 198 84% 63%;
-        --notebook-danger: 4 78% 62%;
-        --notebook-danger-soft: 4 42% 16%;
+        --notebook-app: 80 7% 8%;
+        --notebook-ink: 55 19% 89%;
+        --notebook-muted-ink: 60 5% 53%;
+        --notebook-surface: 90 7% 12%;
+        --notebook-surface-raised: 84 7% 14%;
+        --notebook-border: 73 9% 19%;
+        --notebook-rule: 73 9% 19%;
+        --notebook-action: 174 63% 54%;
+        --notebook-action-soft: 175 51% 14%;
+        --notebook-action-border: 174 56% 53%;
+        --notebook-danger: 8 81% 69%;
+        --notebook-danger-soft: 8 40% 12%;
         --notebook-warning: 39 86% 64%;
         --notebook-warning-soft: 38 40% 16%;
         --notebook-ready: 142 55% 58%;
         --notebook-ready-soft: 142 33% 16%;
         --notebook-print-surface: 0 0% 100%;
         --notebook-print-ink: 220 24% 12%;
+        --notebook-action-solid: 174 63% 54%;
+        --notebook-action-solid-fg: 173 60% 8%;
+        --notebook-canvas: 75 20% 4%;
+        --notebook-disc: 80 7% 9%;
+        --notebook-rule-line: 255 255 250;
+        --notebook-rule-line-alpha: .022;
+        --notebook-grain-opacity: .055;
+        --notebook-grain-blend: screen;
+        --notebook-canvas-grain-opacity: .5;
+        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }
     .dark {
         --background: 0 0% 3.9%;
@@ -142,42 +178,78 @@ code {
 
 @layer components {
     .notebook-app {
+        position: relative;
+        isolation: isolate;
+        min-height: 100vh;
         background-color: hsl(var(--notebook-app));
         color: hsl(var(--notebook-ink));
-        background-image:
-            linear-gradient(
-                hsl(var(--notebook-rule) / 0.24) 1px,
-                transparent 1px
-            ),
-            radial-gradient(
-                hsl(var(--notebook-rule) / 0.18) 0.7px,
-                transparent 0.7px
-            );
-        background-size:
-            100% 2.35rem,
-            18px 18px;
+        background-image: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 33px,
+            rgb(var(--notebook-rule-line) / var(--notebook-rule-line-alpha)) 33px,
+            rgb(var(--notebook-rule-line) / var(--notebook-rule-line-alpha)) 34px
+        );
+        transition:
+            background-color 200ms ease,
+            color 200ms ease;
+    }
+
+    .notebook-shell-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .notebook-grain {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.0' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        background-size: 150px 150px;
+        opacity: var(--notebook-grain-opacity);
+        mix-blend-mode: var(--notebook-grain-blend);
+    }
+
+    .notebook-canvas {
+        position: relative;
+        overflow: hidden;
+        background-color: hsl(var(--notebook-canvas));
+    }
+
+    .notebook-canvas::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+        background-size: 110px 110px;
+        opacity: var(--notebook-canvas-grain-opacity);
+        mix-blend-mode: var(--notebook-grain-blend);
+    }
+
+    @media (max-width: 640px) {
+        .notebook-app {
+            background-image: none;
+        }
+
+        .notebook-grain {
+            opacity: calc(var(--notebook-grain-opacity) * 0.45);
+        }
     }
 
     .notebook-header {
-        border-color: hsl(var(--notebook-border) / 0.72);
-        background:
-            linear-gradient(
-                180deg,
-                hsl(var(--notebook-surface-raised) / 0.94),
-                hsl(var(--notebook-surface) / 0.88)
-            );
+        border-color: hsl(var(--notebook-rule));
+        border-bottom-width: 3px;
+        background-color: hsl(var(--notebook-app) / 0.94);
         color: hsl(var(--notebook-ink));
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.22) inset,
-            0 8px 18px hsl(220 18% 10% / 0.055);
+        box-shadow: none;
     }
 
     .notebook-hazard-mark {
-        border: 1px solid hsl(var(--notebook-danger) / 0.26);
-        background-color: hsl(var(--notebook-danger-soft) / 0.92);
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.24) inset,
-            0 4px 10px hsl(220 18% 10% / 0.05);
+        border: 1px solid hsl(var(--notebook-danger) / 0.42);
+        background-color: hsl(var(--notebook-danger-soft));
+        box-shadow: none;
     }
 
     .notebook-home-link {
@@ -211,10 +283,10 @@ code {
     }
 
     .notebook-surface {
-        border: 1px solid hsl(var(--notebook-border) / 0.78);
+        border: 1px solid hsl(var(--notebook-border));
         background-color: hsl(var(--notebook-surface));
         color: hsl(var(--notebook-ink));
-        box-shadow: 0 12px 28px hsl(220 18% 10% / 0.08);
+        box-shadow: none;
     }
 
     .notebook-panel {
@@ -385,9 +457,8 @@ code {
         border: 1px solid hsl(var(--notebook-border) / 0.9);
         background-color: hsl(var(--notebook-surface-raised));
         color: hsl(var(--notebook-ink));
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.34) inset,
-            0 4px 12px hsl(220 18% 10% / 0.055);
+        font-family: var(--font-mono);
+        box-shadow: none;
     }
 
     .notebook-field::placeholder {
@@ -396,8 +467,26 @@ code {
 
     .notebook-field:focus-visible {
         border-color: hsl(var(--notebook-action-border));
-        outline: 2px solid hsl(var(--notebook-action-border) / 0.48);
+        outline: 2px solid hsl(var(--notebook-action));
         outline-offset: 2px;
+    }
+
+    .notebook-search-input {
+        min-height: 3.75rem;
+        border: 0;
+        border-radius: 0;
+        background-color: transparent;
+        box-shadow: none;
+        font-family: var(--font-display);
+        font-size: clamp(1.55rem, 3vw, 2rem);
+        font-style: italic;
+        font-weight: 600;
+        line-height: 1.15;
+    }
+
+    .notebook-search-input:focus-visible {
+        outline: 3px solid hsl(var(--notebook-action) / 0.72);
+        outline-offset: 3px;
     }
 
     .notebook-field-clear {
@@ -485,32 +574,44 @@ code {
     }
 
     .search-workbench-control {
-        background:
-            linear-gradient(
-                90deg,
-                hsl(var(--notebook-action-border) / 0.16) 0,
-                hsl(var(--notebook-action-border) / 0.16) 4px,
-                transparent 4px
-            ),
-            linear-gradient(
-                hsl(var(--notebook-surface-raised) / 0.9),
-                hsl(var(--notebook-surface) / 0.92)
-            );
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.24) inset,
-            0 8px 18px hsl(220 18% 10% / 0.055);
+        border-color: hsl(var(--notebook-border));
+        background-color: hsl(var(--notebook-surface) / 0.82);
+        box-shadow: none;
     }
 
     .search-workbench-tabs {
-        background-color: hsl(var(--notebook-surface-raised) / 0.46);
+        background-color: hsl(var(--notebook-surface));
     }
 
     .search-workbench-body {
-        background-image: linear-gradient(
-            hsl(var(--notebook-rule) / 0.16) 1px,
-            transparent 1px
-        );
-        background-size: 100% 2.25rem;
+        background-color: hsl(var(--notebook-surface) / 0.64);
+        background-image: none;
+    }
+
+    .notebook-kicker {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        margin: 1.5rem 0 0.45rem;
+        color: hsl(var(--notebook-muted-ink));
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .notebook-kicker::before {
+        content: "";
+        width: 1.625rem;
+        height: 2px;
+        background-color: hsl(var(--notebook-action));
+    }
+
+    .notebook-search-band {
+        align-items: center;
+        border-bottom: 1px solid hsl(var(--notebook-rule));
+        padding-bottom: 0.9rem;
     }
 
     .empty-workbench {
@@ -810,13 +911,13 @@ code {
 
     .notebook-control {
         min-height: 2.75rem;
-        border-radius: 0.5rem;
+        border-radius: 0.4375rem;
         border: 1px solid hsl(var(--notebook-border) / 0.95);
         background-color: hsl(var(--notebook-surface-raised));
         color: hsl(var(--notebook-ink));
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.36) inset,
-            0 4px 10px hsl(220 18% 10% / 0.07);
+        font-family: var(--font-mono);
+        letter-spacing: 0;
+        box-shadow: none;
     }
 
     .notebook-control:hover {
@@ -826,36 +927,40 @@ code {
     }
 
     .notebook-control:focus-visible {
-        outline: 2px solid hsl(var(--notebook-action-border));
+        outline: 3px solid hsl(var(--notebook-action) / 0.72);
         outline-offset: 2px;
     }
 
     .notebook-control-primary {
-        border-color: hsl(var(--notebook-action-border));
-        background-color: hsl(var(--notebook-action-soft));
-        color: hsl(var(--notebook-action));
+        border-color: hsl(var(--notebook-action-solid));
+        background-color: hsl(var(--notebook-action-solid));
+        color: hsl(var(--notebook-action-solid-fg));
         font-weight: 700;
     }
 
-    .notebook-control-print {
+    .notebook-control-primary:hover {
         border-color: hsl(var(--notebook-action));
         background-color: hsl(var(--notebook-action));
-        color: hsl(var(--notebook-surface));
+        color: hsl(var(--notebook-action-solid-fg));
+    }
+
+    .notebook-control-print {
+        border-color: hsl(var(--notebook-action-solid));
+        background-color: hsl(var(--notebook-action-solid));
+        color: hsl(var(--notebook-action-solid-fg));
         font-weight: 800;
-        box-shadow:
-            0 1px 0 hsl(0 0% 100% / 0.2) inset,
-            0 8px 18px hsl(218 72% 24% / 0.18);
+        box-shadow: none;
     }
 
     .notebook-control-print:hover {
-        border-color: hsl(var(--notebook-action-border));
-        background-color: hsl(var(--notebook-action-border));
-        color: hsl(var(--notebook-surface));
+        border-color: hsl(var(--notebook-action));
+        background-color: hsl(var(--notebook-action));
+        color: hsl(var(--notebook-action-solid-fg));
     }
 
     .notebook-control-repair {
         border-color: hsl(var(--notebook-danger) / 0.58);
-        background-color: hsl(var(--notebook-surface-raised));
+        background-color: transparent;
         color: hsl(var(--notebook-danger));
         font-weight: 800;
     }
@@ -869,20 +974,27 @@ code {
     .notebook-control-secondary,
     .notebook-control-utility,
     .notebook-control-tab {
-        background-color: hsl(var(--notebook-surface-raised));
+        background-color: transparent;
+    }
+
+    .notebook-control-secondary:hover,
+    .notebook-control-utility:hover,
+    .notebook-control-tab:hover {
+        background-color: hsl(var(--notebook-action-soft));
     }
 
     .notebook-control-danger {
         border-color: hsl(var(--notebook-danger) / 0.88);
-        background-color: hsl(var(--notebook-danger-soft));
+        background-color: transparent;
         color: hsl(var(--notebook-danger));
         font-weight: 700;
     }
 
     .notebook-control-tab {
         min-height: 2.5rem;
+        border-color: hsl(var(--notebook-border));
         border-bottom-color: hsl(var(--notebook-action-border) / 0.6);
-        box-shadow: 0 -1px 0 hsl(var(--notebook-rule) / 0.7) inset;
+        box-shadow: none;
     }
 
     .notebook-tone-ink {

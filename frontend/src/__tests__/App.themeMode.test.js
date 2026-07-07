@@ -43,6 +43,17 @@ describe("App theme mode shell", () => {
     );
   });
 
+  it("mounts the shared material grain layer inside the themed app shell", () => {
+    render(<App />);
+
+    const shell = screen.getByTestId("app-shell");
+    const grain = screen.getByTestId("notebook-grain");
+
+    expect(shell).toContainElement(grain);
+    expect(grain).toHaveClass("notebook-grain");
+    expect(grain).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("falls back to Comfort Dim for an invalid saved preference", () => {
     window.localStorage.setItem(THEME_MODE_STORAGE_KEY, "warm-light");
 

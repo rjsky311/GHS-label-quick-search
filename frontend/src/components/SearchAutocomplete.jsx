@@ -213,7 +213,7 @@ export default function SearchAutocomplete({
         onFocus={() => value.trim() && setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
         placeholder={t("search.placeholder")}
-        className="notebook-field w-full rounded-md px-4 py-3 pr-10 font-mono"
+        className="notebook-field notebook-search-input w-full px-1 py-3 pr-10"
         data-testid="single-cas-input"
         role="combobox"
         aria-expanded={showSuggestions && hasDropdownContent}
