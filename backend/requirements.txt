@@ -15,6 +15,9 @@ openpyxl==3.1.5
 # Performance (Phase 3)
 cachetools==5.5.2
 
+# Server-side PDF rendering
+playwright==1.57.0
+
 # Rate limiting (Phase 1 security hardening)
 slowapi==0.1.9
 redis==7.4.0

@@ -1524,6 +1524,72 @@ describe("LabelPrintModal", () => {
     );
   });
 
+  it("keeps browser print primary on desktop and offers PDF as a secondary action", async () => {
+    const onExportLabelsPdf = jest.fn(() => Promise.resolve({ ok: true }));
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+      onExportLabelsPdf,
+    });
+
+    expect(screen.getByTestId("print-label-action")).toHaveTextContent("Print");
+    expect(screen.getByTestId("download-pdf-action")).toHaveTextContent(
+      "Download PDF",
+    );
+
+    fireEvent.click(screen.getByTestId("download-pdf-action"));
+
+    await waitFor(() => expect(onExportLabelsPdf).toHaveBeenCalledTimes(1));
+    expect(onExportLabelsPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ stockPreset: "small-strip", template: "icon" }),
+      undefined,
+    );
+    expect(props.onPrintLabels).not.toHaveBeenCalled();
+  });
+
+  it("makes PDF export primary on mobile while keeping browser print reachable", async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = jest.fn((query) => ({
+      matches: String(query).includes("pointer: coarse"),
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    }));
+    const onExportLabelsPdf = jest.fn(() => Promise.resolve({ ok: true }));
+    const { props } = renderModal({
+      selectedForLabel: [makeChem()],
+      labelConfig: {
+        ...baseConfig,
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+      onExportLabelsPdf,
+    });
+
+    expect(screen.getByTestId("download-pdf-action")).toHaveTextContent(
+      "Download PDF",
+    );
+    expect(screen.getByTestId("print-label-action-secondary")).toHaveTextContent(
+      "Print",
+    );
+
+    fireEvent.click(screen.getByTestId("download-pdf-action"));
+    await waitFor(() => expect(onExportLabelsPdf).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByTestId("print-label-action-secondary"));
+    expect(props.onPrintLabels).toHaveBeenCalledTimes(1);
+
+    window.matchMedia = originalMatchMedia;
+  });
+
   it("sanitizes legacy A4 complete label configs back to the full template before printing", () => {
     const { props } = renderModal({
       selectedForLabel: [makeChem()],

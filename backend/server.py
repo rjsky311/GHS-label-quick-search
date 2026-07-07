@@ -2,7 +2,7 @@ from collections import Counter, deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Path as ApiPath, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -89,6 +89,13 @@ from export_helpers import (
     spreadsheet_safe,
 )
 from pilot_admin_routes import create_pilot_admin_router
+from pdf_render import (
+    PdfRenderBusyError,
+    PdfRenderError,
+    PdfRenderUnavailableError,
+    PrintPdfRenderer,
+    PrintPdfRequest,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -147,6 +154,7 @@ RATE_LIMIT_STORAGE_URI = (
 
 # Shared httpx client (initialized in lifespan)
 shared_http_client: Optional[httpx.AsyncClient] = None
+pdf_renderer = PrintPdfRenderer()
 
 # In-memory caches (TTL = 24 hours, max 5000 entries each)
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
@@ -738,6 +746,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     global shared_http_client
     pilot_store.connect()
+    if pdf_renderer is not None and hasattr(pdf_renderer, "startup"):
+        await pdf_renderer.startup()
     shared_http_client = httpx.AsyncClient(
         timeout=30.0,
         limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
@@ -752,6 +762,8 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     await shared_http_client.aclose()
+    if pdf_renderer is not None and hasattr(pdf_renderer, "shutdown"):
+        await pdf_renderer.shutdown()
     pilot_store.close()
 
 # Create the main app with lifespan
@@ -1929,6 +1941,57 @@ async def agent_label_summary(
     """Return a read-only structured lookup summary for agents and scripts."""
     result = await _search_single_query(q)
     return build_agent_label_summary_v0(result)
+
+
+def _pdf_service_unavailable(code: str, message: str) -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail={
+            "code": code,
+            "message": message,
+        },
+    )
+
+
+@api_router.post("/print/pdf")
+@limiter.limit("10/minute")
+async def print_pdf(request: Request, payload: PrintPdfRequest):
+    """Render a self-contained label print document to PDF."""
+    renderer = pdf_renderer
+    if renderer is None:
+        raise _pdf_service_unavailable(
+            "pdf_renderer_unavailable",
+            "PDF renderer is unavailable",
+        )
+    started_at = time.monotonic()
+    try:
+        pdf_bytes = await renderer.render(payload)
+    except PdfRenderUnavailableError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderBusyError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    elapsed_ms = int((time.monotonic() - started_at) * 1000)
+    logger.info(
+        "Rendered label PDF",
+        extra={
+            "html_bytes": len(payload.html.encode("utf-8")),
+            "pdf_bytes": len(pdf_bytes),
+            "elapsed_ms": elapsed_ms,
+            "label_purpose": payload.meta.label_purpose,
+            "page_count_expected": payload.meta.page_count_expected,
+        },
+    )
+    filename = f"ghs-labels-{datetime.now(timezone.utc).date().isoformat()}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @api_router.post("/export/xlsx")

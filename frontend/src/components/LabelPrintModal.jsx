@@ -123,6 +123,20 @@ const normalizePublicPrintConfig = (config = {}) => {
   return config;
 };
 
+// Mobile PDF preference is capability-shaped: coarse pointer catches phones and
+// tablets, while the UA fallback covers iOS Safari variants whose print engine
+// injects headers/footers even when pointer media is unavailable.
+const isMobilePdfPreferredEnvironment = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.matchMedia?.("(pointer: coarse)")?.matches) return true;
+  } catch {
+    // Fall back to user agent below.
+  }
+  const ua = window.navigator?.userAgent || "";
+  return /iPhone|iPad|iPod|Android/i.test(ua);
+};
+
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
@@ -136,6 +150,7 @@ export default function LabelPrintModal({
   labelQuantities,
   onLabelQuantitiesChange,
   onPrintLabels,
+  onExportLabelsPdf,
   onToggleSelectForLabel,
   printTemplates = [],
   onSaveTemplate,
@@ -161,6 +176,9 @@ export default function LabelPrintModal({
   const [batchPreviewItemIndex, setBatchPreviewItemIndex] = useState(null);
   const [batchIncludeReducedPurpose, setBatchIncludeReducedPurpose] =
     useState(false);
+  const [isPdfExporting, setIsPdfExporting] = useState(false);
+  const [pdfExportError, setPdfExportError] = useState("");
+  const prefersPdfPrimary = useMemo(isMobilePdfPreferredEnvironment, []);
 
   const tx = (key, fallback, options = {}) => {
     const translated = t(key, { ...options, defaultValue: fallback });
@@ -1601,6 +1619,38 @@ export default function LabelPrintModal({
     );
   };
 
+  const handlePdfExportAction = async () => {
+    if (typeof onExportLabelsPdf !== "function" || isPdfExporting) return;
+    onClearPrintBlockedInfo?.();
+    setPdfExportError("");
+    setIsPdfExporting(true);
+    try {
+      const result = await onExportLabelsPdf(
+        effectiveLabelConfig,
+        canPrintBatchSelectedScope ? batchSelectedPrintItems : undefined,
+      );
+      if (!result?.ok) {
+        setPdfExportError(
+          result?.blockedInfo?.message ||
+            tx(
+              "label.pdfExportFailed",
+              "Could not generate the PDF. Please try again.",
+            ),
+        );
+      }
+    } catch (error) {
+      setPdfExportError(
+        error?.message ||
+          tx(
+            "label.pdfExportFailed",
+            "Could not generate the PDF. Please try again.",
+          ),
+      );
+    } finally {
+      setIsPdfExporting(false);
+    }
+  };
+
   const handleExportBatchReviewList = () => {
     const reviewItems = batchItemsNeedingReview.length
       ? batchItemsNeedingReview
@@ -2200,10 +2250,25 @@ export default function LabelPrintModal({
           canUseFullPagePrimary={canUseFullPagePrimary}
           isProfileBlocked={isProfileBlocked}
           isPrintFitBlocked={isPrintFitBlocked}
+          isPdfExportPrimary={prefersPdfPrimary}
+          isPdfExporting={isPdfExporting}
           onClose={onClose}
           onFocusResponsibleProfile={handleFocusResponsibleProfile}
+          onPdfExport={
+            typeof onExportLabelsPdf === "function"
+              ? handlePdfExportAction
+              : undefined
+          }
           onPrint={handlePrintAction}
           onUseFullPagePrimary={handleUseFullPagePrimary}
+          pdfExportActionLabel={
+            isPdfExporting
+              ? tx("label.pdfExportLoading", "Preparing PDF...")
+              : tx("label.downloadPdfAction", "Download PDF ({{count}})", {
+                  count: plannedPrintLabelCount,
+                })
+          }
+          pdfExportError={pdfExportError}
           profileCompleteActionLabel={profileCompleteFooterLabel}
           printActionLabel={printActionLabel}
           selectedCount={selectedForLabel.length}

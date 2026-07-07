@@ -3,15 +3,17 @@ jest.mock("@/i18n", () => ({
   language: "en",
 }));
 jest.mock("@/constants/ghs", () => ({
+  API: "/api",
   GHS_IMAGES: {
-    GHS01: "https://example.com/GHS01.svg",
-    GHS02: "https://example.com/GHS02.svg",
-    GHS03: "https://example.com/GHS03.svg",
-    GHS04: "https://example.com/GHS04.svg",
-    GHS05: "https://example.com/GHS05.svg",
-    GHS06: "https://example.com/GHS06.svg",
-    GHS07: "https://example.com/GHS07.svg",
-    GHS08: "https://example.com/GHS08.svg",
+    GHS01: "/ghs/GHS01.svg",
+    GHS02: "/ghs/GHS02.svg",
+    GHS03: "/ghs/GHS03.svg",
+    GHS04: "/ghs/GHS04.svg",
+    GHS05: "/ghs/GHS05.svg",
+    GHS06: "/ghs/GHS06.svg",
+    GHS07: "/ghs/GHS07.svg",
+    GHS08: "/ghs/GHS08.svg",
+    GHS09: "/ghs/GHS09.svg",
   },
 }));
 jest.mock("@/utils/observability", () => ({
@@ -22,9 +24,12 @@ import {
   buildPrintDocument,
   buildPrintDocumentModel,
   buildPrintPreviewDocument,
+  exportLabelsPdf,
   inspectPrintContentFit,
   inspectPrintLayoutDocument,
+  inlineGhsPictogramSvgs,
   printLabels,
+  resetPrintPdfExportCacheForTests,
   getQRCodeUrl,
   getChemicalLookupUrl,
   getHazardFontTier,
@@ -124,6 +129,50 @@ const expandedPictogramCodes = (preview) =>
       ? label.continuation.pictograms.map((pictogram) => pictogram.code)
       : (label.ghs_pictograms || []).map((pictogram) => pictogram.code),
   );
+
+const svgTextForCode = (code) => `<svg data-code="${code}">${code}</svg>`;
+
+const arrayBufferFromText = (text) => {
+  const bytes = Buffer.from(text, "utf8");
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+};
+
+describe("inlineGhsPictogramSvgs", () => {
+  beforeEach(() => {
+    resetPrintPdfExportCacheForTests();
+  });
+
+  it("inlines all nine checked-in GHS SVGs as byte-identical data URLs and caches fetches", async () => {
+    const html = Array.from({ length: 9 }, (_, index) => {
+      const code = `GHS0${index + 1}`;
+      return `<img alt="${code}" src="/ghs/${code}.svg">`;
+    }).join("");
+    const fetchImpl = jest.fn(async (url) => {
+      const code = String(url).match(/GHS0[1-9]/)?.[0];
+      return {
+        ok: true,
+        arrayBuffer: async () => arrayBufferFromText(svgTextForCode(code)),
+      };
+    });
+
+    const first = await inlineGhsPictogramSvgs(html, { fetchImpl });
+    const second = await inlineGhsPictogramSvgs(html, { fetchImpl });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
+    expect(first).toBe(second);
+    expect(first).not.toContain("/ghs/GHS");
+    for (let index = 1; index <= 9; index += 1) {
+      const code = `GHS0${index}`;
+      const expectedBase64 = Buffer.from(svgTextForCode(code), "utf8").toString(
+        "base64",
+      );
+      expect(first).toContain(`src="data:image/svg+xml;base64,${expectedBase64}"`);
+      expect(Buffer.from(expectedBase64, "base64").toString("utf8")).toBe(
+        svgTextForCode(code),
+      );
+    }
+  });
+});
 
 describe("getQRCodeUrl", () => {
   it("generates a local QR data URI with default size", () => {
@@ -1072,6 +1121,7 @@ describe("printLabels", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    resetPrintPdfExportCacheForTests();
     const mocks = createMockIframe();
     mockIframe = mocks.mockIframe;
     mockIframeDoc = mocks.mockIframeDoc;
@@ -1191,6 +1241,186 @@ describe("printLabels", () => {
     printLabels([mockChemical], config, {});
 
     expect(mockIframeDoc.write.mock.calls[0][0]).toBe(documentBundle.html);
+  });
+
+  it("blocks PDF export with the same preflight gate and never POSTs unsafe output", async () => {
+    const fetchMock = jest.fn();
+    const onPrintBlocked = jest.fn();
+    const overflowLabel = {
+      clientHeight: 20,
+      scrollHeight: 34,
+      clientWidth: 80,
+      scrollWidth: 80,
+      querySelector: jest.fn(() => null),
+    };
+    mockIframeDoc.querySelectorAll.mockImplementation((selector) => {
+      if (selector === "img") return [];
+      if (String(selector).includes(".label")) return [overflowLabel];
+      return [];
+    });
+
+    const result = await exportLabelsPdf(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "standard",
+        stockPreset: "medium-bottle",
+      },
+      {},
+      {},
+      {},
+      {},
+      { onPrintBlocked },
+      { fetchImpl: fetchMock, locale: "en" },
+    );
+
+    expect(result).toEqual(expect.objectContaining({ ok: false }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onPrintBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFailure: false,
+        issueTypes: expect.arrayContaining(["label-overflow"]),
+        message: "print.layoutBlockedDetailed",
+      }),
+    );
+    expect(mockIframe.remove).toHaveBeenCalled();
+    expect(mockIframeWindow.print).not.toHaveBeenCalled();
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "pdf_export_blocked",
+      expect.objectContaining({
+        status: "blocked",
+        meta: expect.objectContaining({
+          issueTypes: expect.arrayContaining(["label-overflow"]),
+        }),
+      }),
+    );
+  });
+
+  it("posts inlined print HTML with page metadata and downloads the PDF", async () => {
+    const anchor = {
+      href: "",
+      download: "",
+      click: jest.fn(),
+      remove: jest.fn(),
+    };
+    createElementSpy.mockImplementation((tag) => {
+      if (tag === "iframe") return mockIframe;
+      if (tag === "a") return anchor;
+      return document.createElement.wrappedMethod
+        ? document.createElement.wrappedMethod(tag)
+        : {};
+    });
+    const pdfBlob = new Blob(["%PDF-1.7"], { type: "application/pdf" });
+    let postedPayload = null;
+    const fetchMock = jest.fn(async (url, init = {}) => {
+      const urlText = String(url);
+      if (urlText.startsWith("/ghs/")) {
+        const code = urlText.match(/GHS0[1-9]/)?.[0];
+        return {
+          ok: true,
+          arrayBuffer: async () => arrayBufferFromText(svgTextForCode(code)),
+        };
+      }
+      if (urlText === "/api/print/pdf") {
+        postedPayload = JSON.parse(init.body);
+        return {
+          ok: true,
+          blob: async () => pdfBlob,
+        };
+      }
+      throw new Error(`Unexpected fetch URL: ${urlText}`);
+    });
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const createObjectUrlSpy = jest.fn(() => "blob:ghs-pdf");
+    const revokeObjectUrlSpy = jest.fn();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectUrlSpy,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectUrlSpy,
+    });
+
+    const result = await exportLabelsPdf(
+      [mockChemical],
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      {},
+      {},
+      {},
+      { organization: "Lab A", phone: "02-1234", address: "Taipei" },
+      {},
+      { fetchImpl: fetchMock, locale: "en" },
+    );
+
+    expect(result).toEqual(expect.objectContaining({ ok: true }));
+    expect(postedPayload).toEqual(
+      expect.objectContaining({
+        page: {
+          width_mm: 210,
+          height_mm: 297,
+          orientation: "portrait",
+          margin_mm: 5,
+        },
+        meta: {
+          label_purpose: "complete",
+          page_count_expected: 1,
+        },
+      }),
+    );
+    expect(postedPayload.html).toContain("Ethanol");
+    expect(postedPayload.html).not.toContain("/ghs/GHS02.svg");
+    expect(postedPayload.html).toContain("data:image/svg+xml;base64,");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/print/pdf",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: expect.any(String),
+      }),
+    );
+    expect(anchor.href).toBe("blob:ghs-pdf");
+    expect(anchor.download).toMatch(/^ghs-labels-\d{4}-\d{2}-\d{2}\.pdf$/);
+    expect(anchor.click).toHaveBeenCalled();
+    expect(anchor.remove).toHaveBeenCalled();
+    expect(createObjectUrlSpy).toHaveBeenCalledWith(pdfBlob);
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:ghs-pdf");
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "pdf_export_start",
+      expect.objectContaining({
+        status: "started",
+        meta: expect.objectContaining({ template: "full" }),
+      }),
+    );
+    expect(recordObservabilityEvent).toHaveBeenCalledWith(
+      "pdf_export_complete",
+      expect.objectContaining({
+        status: "download",
+        meta: expect.objectContaining({ template: "full" }),
+      }),
+    );
+
+    if (originalCreateObjectURL) {
+      Object.defineProperty(URL, "createObjectURL", {
+        configurable: true,
+        value: originalCreateObjectURL,
+      });
+    } else {
+      delete URL.createObjectURL;
+    }
+    if (originalRevokeObjectURL) {
+      Object.defineProperty(URL, "revokeObjectURL", {
+        configurable: true,
+        value: originalRevokeObjectURL,
+      });
+    } else {
+      delete URL.revokeObjectURL;
+    }
   });
 
   it("prints dense A4 primary labels as high-utilization single-page output", () => {

@@ -86,6 +86,21 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
+Active implementation slice opened on 2026-07-07: Mobile PDF Export Via
+Server-Side Rendering. Source: real production mobile PDFs from iPhone Safari
+for 鹽酸 / Hydrochloric acid / CAS `7647-01-0`, plus the committed handoff plan
+`docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
+Affected user job: field/mobile users need to export usable labels without iOS
+Safari clipping fixed-mm pages, injecting browser headers/footers, or pushing
+label footers to stray pages. Expected proof: all three public outputs
+(complete A4/Letter, QR small label, identification small label) are
+re-exported for 鹽酸 through the new PDF endpoint with no edge clipping, no
+near-empty trailing page, crisp QR, correct CJK glyphs, and no browser
+headers/footers; backend/frontend tests, lint/build, Docker/Chromium proof,
+and print-contract QA stay green. Stop condition: endpoint plus mobile handoff
+shipped and QA'd with no label layout CSS, print content policy, or desktop
+browser-print output changes.
+
 Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and
 Browserslist DB noise were cleaned with 0-warning lint, full frontend tests,
 build, bundle-budget, and diff-check proof. Shipped in commit `2e416ea` and

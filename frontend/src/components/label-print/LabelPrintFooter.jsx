@@ -1,14 +1,19 @@
-import { Building2, FileText, Printer } from "lucide-react";
+import { Building2, Download, FileText, Printer } from "lucide-react";
 import { modalViewportFooterClassName } from "@/components/ui/modalViewport";
 
 export default function LabelPrintFooter({
   canUseFullPagePrimary,
   isProfileBlocked,
   isPrintFitBlocked,
+  isPdfExportPrimary = false,
+  isPdfExporting = false,
   onClose,
   onFocusResponsibleProfile,
+  onPdfExport,
   onPrint,
   onUseFullPagePrimary,
+  pdfExportActionLabel,
+  pdfExportError = "",
   profileCompleteActionLabel,
   printActionLabel,
   selectedCount,
@@ -16,6 +21,40 @@ export default function LabelPrintFooter({
   cancelLabel,
 }) {
   const canRepairProfile = selectedCount > 0 && isProfileBlocked;
+  const actionDisabled = selectedCount === 0 || isPrintFitBlocked || isPdfExporting;
+  const hasPdfExport = typeof onPdfExport === "function";
+  const primaryAction = isPdfExportPrimary && hasPdfExport
+    ? {
+        label: pdfExportActionLabel,
+        onClick: onPdfExport,
+        icon: Download,
+        testId: "download-pdf-action",
+        className: "notebook-control notebook-control-primary",
+      }
+    : {
+        label: printActionLabel,
+        onClick: onPrint,
+        icon: Printer,
+        testId: "print-label-action",
+        className: "notebook-control notebook-control-print",
+      };
+  const secondaryAction = hasPdfExport
+    ? isPdfExportPrimary
+      ? {
+          label: printActionLabel,
+          onClick: onPrint,
+          icon: Printer,
+          testId: "print-label-action-secondary",
+        }
+      : {
+          label: pdfExportActionLabel,
+          onClick: onPdfExport,
+          icon: Download,
+          testId: "download-pdf-action",
+        }
+    : null;
+  const PrimaryIcon = primaryAction.icon;
+  const SecondaryIcon = secondaryAction?.icon;
 
   return (
     <div
@@ -45,16 +84,38 @@ export default function LabelPrintFooter({
           {profileCompleteActionLabel}
         </button>
       ) : (
-        <button
-          type="button"
-          onClick={onPrint}
-          disabled={selectedCount === 0 || isPrintFitBlocked}
-          className="notebook-control notebook-control-print flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          data-testid="print-label-action"
-        >
-          <Printer className="h-4 w-4" />
-          {printActionLabel}
-        </button>
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={primaryAction.onClick}
+            disabled={actionDisabled}
+            className={`${primaryAction.className} flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
+            data-testid={primaryAction.testId}
+          >
+            <PrimaryIcon className="h-4 w-4" />
+            {primaryAction.label}
+          </button>
+          {secondaryAction ? (
+            <button
+              type="button"
+              onClick={secondaryAction.onClick}
+              disabled={actionDisabled}
+              className="notebook-control notebook-control-secondary flex flex-1 items-center justify-center gap-2 px-5 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+              data-testid={secondaryAction.testId}
+            >
+              <SecondaryIcon className="h-4 w-4" />
+              {secondaryAction.label}
+            </button>
+          ) : null}
+          {pdfExportError ? (
+            <p
+              className="text-sm text-[hsl(var(--notebook-danger))] sm:basis-full"
+              data-testid="pdf-export-error"
+            >
+              {pdfExportError}
+            </p>
+          ) : null}
+        </div>
       )}
       <button
         type="button"

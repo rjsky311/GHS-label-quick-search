@@ -198,7 +198,7 @@ Hardening requirements (all mandatory, each needs a test):
 
 **Files:** Modify `NEXT_PRODUCT_WORK.md`
 
-- [ ] Add the slice entry: source (2026-07-07 mobile print evidence, this
+- [x] Add the slice entry: source (2026-07-07 mobile print evidence, this
       plan), affected user job (field/mobile user prints usable labels),
       expected proof (three 鹽酸 outputs re-exported clean via PDF endpoint),
       stop condition (endpoint + mobile handoff shipped and QA'd; no layout
@@ -209,24 +209,24 @@ Hardening requirements (all mandatory, each needs a test):
 **Files:** Create `backend/pdf_render.py`, `backend/test_pdf_render.py`;
 modify `backend/requirements.txt`
 
-- [ ] Request-model validation tests first: size cap, script/event-handler
+- [x] Request-model validation tests first: size cap, script/event-handler
       rejection, page-geometry bounds (50–500 mm), then implementation.
-- [ ] Renderer wrapper with lifespan-managed browser, per-request context,
+- [x] Renderer wrapper with lifespan-managed browser, per-request context,
       JS disabled, route interception blocking non-`data:` requests, 10 s
       timeout, semaphore(2). Unit-test the policy pieces without Chromium;
       mark real-render tests `@pytest.mark.pdfrender` and skip cleanly when
       Chromium is absent.
-- [ ] Real-render test (marked): valid A4 HTML in → bytes start `%PDF-`,
+- [x] Real-render test (marked): valid A4 HTML in → bytes start `%PDF-`,
       page count 1, media box ≈ 210×297 mm.
 
 ### Task 3: Endpoint wiring (TDD)
 
 **Files:** Modify `backend/server.py`; extend `backend/test_pdf_render.py`
 
-- [ ] `POST /api/print/pdf` on the existing `api_router`, slowapi
+- [x] `POST /api/print/pdf` on the existing `api_router`, slowapi
       `10/minute`, 422/503 semantics, `application/pdf` response with
       attachment filename, no request-body logging.
-- [ ] 503-when-unavailable test (monkeypatch renderer away) proving the rest
+- [x] 503-when-unavailable test (monkeypatch renderer away) proving the rest
       of the API still serves.
 
 ### Task 4: Dockerfile + deploy config
@@ -246,11 +246,11 @@ modify `backend/requirements.txt`
 `printPdfExport.js`), i18n resource files; extend
 `frontend/src/utils/__tests__/printLabels.test.js`
 
-- [ ] Jest tests first: pictogram inlining (all nine codes, caching, byte
+- [x] Jest tests first: pictogram inlining (all nine codes, caching, byte
       fidelity), preflight-blocked export emits `pdf_export_blocked` and
       never POSTs, successful flow POSTs the inlined HTML with correct
       `page` payload and triggers download.
-- [ ] Implement `exportLabelsPdf` sharing `buildPrintDocument` + preflight;
+- [x] Implement `exportLabelsPdf` sharing `buildPrintDocument` + preflight;
       observability events mirror `print_*` naming and payload shape.
 
 ### Task 6: UI handoff surface
@@ -258,23 +258,84 @@ modify `backend/requirements.txt`
 **Files:** Modify `frontend/src/App.jsx`, label-print modal components under
 `frontend/src/components/label-print/`
 
-- [ ] Add the 下載 PDF action (mobile-primary / desktop-secondary), wire
+- [x] Add the 下載 PDF action (mobile-primary / desktop-secondary), wire
       loading + error states, zh-TW and en strings.
-- [ ] `npm run lint` and full Jest suite green; `npm run build` clean.
+- [x] `npm run lint` and full Jest suite green; `npm run build` clean.
 
 ### Task 7: QA evidence + doc closure
 
 **Files:** Modify `PRINT_BROWSER_QA_CHECKLIST.md`, this plan file,
 `NEXT_PRODUCT_WORK.md`
 
-- [ ] Add a mobile-browser row (iOS Safari + Android Chrome, PDF-export path)
+- [x] Add a mobile-browser row (iOS Safari + Android Chrome, PDF-export path)
       to `PRINT_BROWSER_QA_CHECKLIST.md`.
-- [ ] Local end-to-end proof: export the same 鹽酸 (CAS 7647-01-0) three
+- [x] Local end-to-end proof: export the same 鹽酸 (CAS 7647-01-0) three
       outputs through the new endpoint; verify no edge clipping, no stray
       near-empty trailing page, no browser headers/footers, crisp QR, CJK
       glyphs correct. Record results as checked boxes + notes in this file.
+      (Completed in the 2026-07-07 review verification pass below; PDFs
+      archived under
+      `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`.)
 - [ ] Update the slice entry in `NEXT_PRODUCT_WORK.md` to shipped/monitoring
       with pointers to evidence.
+
+### 2026-07-07 Local Verification Notes
+
+- Code/test gates completed so far:
+  - Backend baseline before changes: `python -m pytest -q` -> 298 passed.
+  - Backend PDF focused gate: `python -m pytest test_pdf_render.py -q` ->
+    20 passed, 1 skipped (`pdfrender` skipped because local Playwright is not
+    installed).
+  - Backend full gate after endpoint wiring: `python -m pytest -q` -> 318
+    passed, 1 skipped.
+  - Frontend focused gates: `npx jest --runInBand printLabels.test.js
+    LabelPrintModal.test.js` -> 290 passed.
+  - i18n parity: `npm run test:i18n` -> OK.
+  - Lint: `npm run lint` -> clean.
+  - Frontend full Jest: `npm test -- --runInBand` -> 90 suites / 1273 tests
+    passed.
+  - Frontend build: `npm run build` -> clean.
+- Renderer/deployment proof is blocked in this local environment, not failed
+  by Chromium:
+  - `docker build -t ghs-backend-pdf:local backend` stopped before build with
+    `permission denied while trying to connect to the docker API ... docker.sock`.
+  - `python -m pip install -r requirements.txt` could not fetch Playwright
+    because DNS resolution for `pypi.org` is blocked.
+  - Therefore the three real 鹽酸 PDF exports, Docker image-size delta, CJK
+    glyph proof, and container `/api/health` + render proof remain unchecked.
+
+### 2026-07-07 Review Verification Pass (Claude, post-implementation)
+
+Independent re-verification and closure of the environment-blocked proofs:
+
+- Re-ran gates: backend `pytest` -> 318 passed, 1 skipped; frontend
+  `npm run test:print-contract` -> 326 passed; `npm run lint` -> clean;
+  `jest LabelPrintModal.test.js` -> 69 passed.
+- Installed `playwright==1.57.0` + Chromium into `backend/.venv`;
+  `pytest -m pdfrender` -> 1 passed (real render, no skip).
+- Real-render proof completed with authentic print-QA harness HTML
+  (`PRINT_QA_PRINT_HTML_DIR` output), pictograms inlined as data URLs the
+  same way `exportLabelsPdf` does, rendered through `PrintPdfRenderer`:
+  - `a4-primary` (Hydrochloric Acid / 鹽酸 complete label),
+    `qr-supplement`, `tube-vial-quick-id`, and `a4-primary-zh-bw`:
+    each exactly 1 page, MediaBox 594.96x841.92 pt (A4), `%PDF-` magic,
+    zero un-inlined pictogram srcs.
+  - Visual inspection: no left/right edge clipping (full title + CAS chip),
+    all pictograms and QR crisp, Traditional Chinese glyphs correct,
+    org-profile + QR footer on the SAME page (no stray page 2), and no
+    browser URL/date headers — all three original mobile symptoms absent.
+  - Archived: `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`.
+- Review fix applied: restored `COPY backend/requirements.txt` /
+  `COPY backend/ .` in `backend/Dockerfile`. The production Zeabur build
+  has used repo-root-context COPY paths since commit `5d9c0c3`
+  (2026-06-21); the implementation's root-relative `COPY requirements.txt`
+  would have broken the next backend deploy.
+- Still open: local `docker build` proof (Docker Desktop daemon did not
+  come up in this session) and the post-deploy production QA gate. The
+  first Zeabur backend deploy of this slice must be watched: confirm
+  image builds (Playwright + fonts-noto-cjk layers), `/api/health`, and
+  one real `/api/print/pdf` render with CJK glyphs before marking the
+  slice shipped/monitoring.
 
 ## Definition Of Done
 

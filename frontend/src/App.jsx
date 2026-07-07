@@ -990,6 +990,57 @@ function App() {
     i18n.language,
   ]);
 
+  const handleExportLabelsPdf = useCallback(async (configOverride, itemOverride) => {
+    const effectiveLabelConfig = configOverride || labelConfig;
+    const sourceSelection = itemOverride || selectedForLabel;
+    const printableSelection = sourceSelection.map((chemical) =>
+      resolveEffectiveChemicalForPrint(chemical, customGHSSettings)
+    );
+    setPrintBlockedInfo(null);
+
+    const { exportLabelsPdf } = await import("@/utils/printLabels");
+
+    const result = await exportLabelsPdf(
+      printableSelection,
+      effectiveLabelConfig,
+      {},
+      customLabelFields,
+      labelQuantities,
+      labProfile,
+      {
+        onPdfExportComplete: () => {
+          addRecentPrint({
+            items: printableSelection,
+            labelConfig: effectiveLabelConfig,
+            customLabelFields,
+            labelQuantities,
+            labProfile,
+          });
+          toast.success(t("label.pdfExportComplete"));
+        },
+        onPdfExportError: (blockedInfo) => {
+          toast.error(blockedInfo?.message || t("label.pdfExportFailed"));
+        },
+        onPrintBlocked: (blockedInfo) => {
+          setPrintBlockedInfo(blockedInfo);
+        },
+      },
+      { locale: i18n.language }
+    );
+
+    return result;
+  }, [
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile,
+    addRecentPrint,
+    i18n.language,
+    t,
+  ]);
+
   const handleLoadRecentPrint = useCallback(
     (record) => {
       const items = loadRecentPrint(record);
@@ -1436,6 +1487,7 @@ function App() {
             labelQuantities={labelQuantities}
             onLabelQuantitiesChange={setLabelQuantities}
             onPrintLabels={handlePrintLabels}
+            onExportLabelsPdf={handleExportLabelsPdf}
             onToggleSelectForLabel={toggleSelectForLabel}
             printTemplates={printTemplates}
             onSaveTemplate={saveTemplate}

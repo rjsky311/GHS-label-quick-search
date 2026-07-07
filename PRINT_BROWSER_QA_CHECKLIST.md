@@ -92,6 +92,13 @@ app still builds the print iframe, runs preflight, records lifecycle events, and
 publishes `print-qa-status`, but it does not open the native print dialog. Do
 not use this parameter for a normal manual print attempt.
 
+For the mobile PDF-export path added after the 2026-07-07 iPhone Safari print
+evidence, include this row in manual/browser QA before accepting the slice:
+
+| Browser target | Path | Expected result |
+| --- | --- | --- |
+| iOS Safari and Android Chrome | Open Hydrochloric Acid / 鹽酸 (`7647-01-0`), open label print, verify mobile shows `下載 PDF` / `Download PDF` as the primary handoff and browser print remains reachable; export Complete A4/Letter, QR small label, and Identification small label through `/api/print/pdf`. | Each PDF has no browser URL/date/page headers or footers, no edge clipping, no near-empty trailing page, crisp QR/pictograms, correct Traditional Chinese glyphs, and the same preflight blocks as browser print. |
+
 After generating `build/print-qa-report.json`, the production handoff can be
 checked with a local Chrome/Edge browser:
 
