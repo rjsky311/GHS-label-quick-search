@@ -384,9 +384,15 @@ Independent re-verification and closure of the environment-blocked proofs:
 - Frontend production bundle serves the new PDF-export action
   (`downloadPdfAction` present in the live index chunk); CI and the
   post-merge Production Print QA workflow are green.
-- Remaining human verification: the owner re-exports the three 鹽酸
-  outputs from a real phone against production and compares with the
-  broken 2026-07-07 morning PDFs.
+- Owner verification completed 2026-07-07 afternoon: the owner exported
+  all three 鹽酸 outputs from a real phone against production via the new
+  下載 PDF handoff, using the real lab profile. All three morning symptoms
+  are absent (no edge clipping, no off-page QR card, no stray trailing
+  page, no browser headers/footers; correct CJK glyphs; single page each).
+  Archived as `owner-phone-complete.pdf`, `owner-phone-qr.pdf`, and
+  `owner-phone-quick-id.pdf` in
+  `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`. The slice is
+  closed.
 
 ## Definition Of Done
 
