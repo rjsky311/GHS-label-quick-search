@@ -79,15 +79,10 @@ before choosing the next autonomous product slice.
 - The live frontend service also mirrors non-sensitive build settings through
   `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and
   `VITE_BACKEND_URL`.
-- Backend service ID: `6962687391818d5fd9705a67`
-- CRITICAL (verified 2026-07-07): `ghs-backend` builds from an INLINE
-  Dockerfile pinned in its Zeabur service spec; every repo Dockerfile and
-  zbpack override is ignored. To change the build recipe, edit the canonical
-  `Dockerfile.ghs-backend`, push it into the spec via the Zeabur GraphQL
-  `updateDockerfile(serviceID, dockerfile)` mutation, redeploy, and confirm
-  the build log shows the new layer steps. Full procedure: deployment
-  findings in
-  `docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
+- Backend service `6962687391818d5fd9705a67` builds from an INLINE Dockerfile
+  pinned in its Zeabur spec; repo Dockerfiles and zbpack overrides are
+  ignored. Update via `Dockerfile.ghs-backend` + GraphQL `updateDockerfile` +
+  redeploy; see `docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
 
 ## Architecture
 
