@@ -2129,16 +2129,19 @@ export default function LabelPrintModal({
         ref={dialogRef}
         tabIndex={-1}
         className={modalViewportPanelClassName(
-          "max-w-7xl bg-[hsl(var(--notebook-surface-raised))]",
+          "notebook-print-modal max-w-7xl",
         )}
         data-testid="label-modal-panel"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface-raised)/0.96)] px-6 py-4">
+        <div className="notebook-print-modal-header flex shrink-0 items-center justify-between px-6 py-4">
           <div>
+            <p className="notebook-kicker mt-0">
+              03 - {tx("label.previewTitle", "Live preview")}
+            </p>
             <h2
               id="label-modal-title"
-              className="flex items-center gap-2 text-xl font-bold text-[hsl(var(--notebook-ink))]"
+              className="flex items-center gap-2 font-[var(--font-display)] text-2xl font-black text-[hsl(var(--notebook-ink))]"
             >
               <Tag className="h-5 w-5 text-[hsl(var(--notebook-action))]" /> {t("label.title")}
             </h2>
@@ -2153,7 +2156,7 @@ export default function LabelPrintModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.close", { defaultValue: "Close" })}
-            className="text-[hsl(var(--notebook-muted-ink))] transition-colors hover:text-[hsl(var(--notebook-ink))]"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-[hsl(var(--notebook-muted-ink))] transition-colors hover:bg-[hsl(var(--notebook-action-soft)/0.58)] hover:text-[hsl(var(--notebook-ink))]"
           >
             <X className="h-6 w-6" />
           </button>
@@ -2167,7 +2170,7 @@ export default function LabelPrintModal({
         >
             <div
               ref={settingsColumnRef}
-              className="space-y-5 px-4 py-5 pb-28 sm:px-6 sm:py-6 sm:pb-6 lg:min-h-0 lg:overflow-y-auto"
+              className="notebook-print-settings-rail space-y-5 px-4 py-5 pb-28 sm:px-6 sm:py-6 sm:pb-6 lg:min-h-0 lg:overflow-y-auto"
               data-testid="label-settings-column"
             >
               <section

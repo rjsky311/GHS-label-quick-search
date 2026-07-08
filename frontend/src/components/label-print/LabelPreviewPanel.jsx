@@ -97,7 +97,7 @@ export default function LabelPreviewPanel({
 
   return (
     <aside
-      className="border-t border-[hsl(var(--notebook-border)/0.72)] bg-[hsl(var(--notebook-surface)/0.58)] lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0"
+      className="notebook-print-preview-rail border-t lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0"
       data-testid="label-preview-scroll-region"
     >
       <div
@@ -108,10 +108,10 @@ export default function LabelPreviewPanel({
         <div className="border-b border-[hsl(var(--notebook-border)/0.6)] px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-xs font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
+              <div className="font-mono text-xs font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
                 {tx("label.previewTitle", "Live preview")}
               </div>
-              <h3 className="mt-1 text-base font-semibold text-[hsl(var(--notebook-ink))]">
+              <h3 className="mt-1 font-[var(--font-display)] text-lg font-black text-[hsl(var(--notebook-ink))]">
                 {activeBatchPreviewItem
                   ? tx(
                       "label.previewFocusBatchRepresentative",
@@ -144,7 +144,7 @@ export default function LabelPreviewPanel({
                       )}
               </p>
             </div>
-            <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.38)]">
+            <span className="notebook-status-chip shrink-0 rounded px-2 py-1 text-xs font-medium">
               {layoutProfile.stockPreset === "custom"
                 ? tx("label.stockPresetCustom", "Custom tuning")
                 : stockPresetDisplay.name || layoutProfile.stockPresetName}
@@ -158,7 +158,7 @@ export default function LabelPreviewPanel({
             {previewContextItems.map((item) => (
               <div
                 key={item.key}
-                className="min-w-0 rounded-md bg-[hsl(var(--notebook-surface)/0.58)] px-2.5 py-1.5 ring-1 ring-[hsl(var(--notebook-border)/0.32)]"
+                className="notebook-status-chip min-w-0 rounded-md px-2.5 py-1.5"
                 data-testid={`preview-context-${item.key}`}
               >
                 <dt className="font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">

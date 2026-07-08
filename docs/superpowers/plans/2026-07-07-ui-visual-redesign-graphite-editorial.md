@@ -115,25 +115,39 @@ From R2, applied to the real shell/components (not the print preview internals):
 - [x] Re-tone `:root` / `.theme-comfort-dim` / `.theme-dark-bench` `--notebook-*` values to the tables above (convert hex→HSL). Add the new color, material, and typography tokens.
 - [x] Add the Google Fonts `<link>` + preconnects to `index.html`. Add `--font-display/-sans/-mono` and wire base `body`/heading font-family to them (app only).
 - [x] Add the `.notebook-grain` fixed layer + ledger-rule background + `.notebook-canvas` grain helper as reusable classes/utilities.
-- [ ] Gates green (see below). No visual regressions in unrelated flows.
+- [x] Gates green (see below). No visual regressions in unrelated flows.
 
 ### Phase 1 — Button/control primitives + shell & search  ⟵ STOP-FOR-REVIEW after this
 **Files:** `components/ui/*` button/control primitives as needed, `components/Header.jsx`, `components/SearchSection.jsx`, `SearchAutocomplete.jsx`, `App.jsx` shell wrappers, theme toggle control.
 - [x] Apply the button language (primary solid, secondary outline, report stamp, segmented tabs) as shared classes/components.
 - [x] Apply masthead rule, kickers, editorial search band, and mount the grain + ledger material on the shell. Verify the existing theme toggle flips comfort-dim ⇄ dark-bench and the new material/teal follow.
-- [ ] Desktop + mobile screenshots in BOTH themes. Gates green. **Commit and STOP; wait for maintainer review before Phase 2.**
+- [x] Desktop + mobile screenshots in BOTH themes. Gates green. **Commit and STOP; wait for maintainer review before Phase 2.**
 
 ### Phase 2 — Results surface
 **Files:** `ResultsTable.jsx`, `DetailModal.jsx`, `AuthoritativeSourceNote.jsx`, `GHSPictogramStrip.jsx`, `Footer.jsx`, `EmptyState.jsx`
-- [ ] Result identity, hazard board, source note, chips per the treatments above. Keep table structure stable; no texture behind dense rows.
+- [x] Result identity, hazard board, source note, chips per the treatments above. Keep table structure stable; no texture behind dense rows.
 
 ### Phase 3 — Label print modal (chrome only — NOT the preview sheet)
 **Files:** `LabelPrintModal.jsx`, `label-print/LabelOutputSelector.jsx`, `LabelPreviewPanel.jsx`/`LabelPreviewSection.jsx` (canvas backing only), `LabelPrintFooter.jsx`, `LabelPrintConfigControls.jsx`, `ResponsibleProfileControls.jsx`
-- [ ] Output selector, action buttons, config controls, and the label-stock canvas backing restyled. The white preview sheet contents stay print-true and untouched. `test:print-contract` stays green with zero print-HTML diff.
+- [x] Output selector, action buttons, config controls, and the label-stock canvas backing restyled. The white preview sheet contents stay print-true and untouched. `test:print-contract` stays green with zero print-HTML diff.
 
 ### Phase 4 — QA + docs closure
 **Files:** `EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md` (mark adopted), `NEXT_PRODUCT_WORK.md`, this plan
-- [ ] Full desktop + mobile screenshots, both themes, archived under `qa/evidence/2026-07-07-ui-redesign/`. Confirm all accessibility checks. Update docs to "adopted".
+- [x] Full desktop + mobile screenshots, both themes, archived under `qa/evidence/2026-07-07-ui-redesign/`. Confirm all accessibility checks. Update docs to "adopted".
+
+2026-07-08 closure evidence for the final Phase 2-4 chunk is archived in
+`qa/evidence/2026-07-07-ui-redesign/phase-2-4/`. The report
+`phase-2-4-screenshot-report.json` records desktop/mobile results and print
+modal captures for both themes, confirms the active theme classes, verifies the
+result identity/hazard board and three output choices, and checks the preview
+sheet remains white while the label-stock canvas changes by theme.
+
+Final local QA gates passed on 2026-07-08: `git diff --check`,
+`npm run lint`, `npm run test:i18n`, `npm test -- --runInBand`,
+`npm run build`, `npm run test:print-contract`, and `npm run test:docs`.
+Direct diff checks for `printLabels.js`, `printLabelStyles.js`,
+`printPreviewStyles.js`, and `printContentPolicy.js` were empty; searches for
+`Fraunces` and `lucide-react` in the frontend returned no matches.
 
 ## QA Gates (run per phase)
 

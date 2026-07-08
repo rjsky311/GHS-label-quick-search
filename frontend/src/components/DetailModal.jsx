@@ -258,7 +258,7 @@ export default function DetailModal({
     const baseClassName =
       "notebook-inline-action inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium";
     if (linkType === "sds") {
-      return `${baseClassName} text-emerald-800 hover:text-emerald-800`;
+      return `${baseClassName} text-[hsl(var(--notebook-ready))] hover:text-[hsl(var(--notebook-ready))]`;
     }
     if (linkType === "regulatory") {
       return `${baseClassName} text-[hsl(var(--notebook-action))]`;
@@ -315,15 +315,20 @@ export default function DetailModal({
           className="notebook-panel flex items-start justify-between gap-4 rounded-t-lg border-x-0 border-t-0 p-6"
           data-testid="detail-modal-header"
         >
-          <div>
-            <h2 id="detail-modal-title" className="text-xl font-semibold text-[hsl(var(--notebook-ink))]">
+          <div className="notebook-result-identity">
+            <p className="notebook-kicker mt-0">
+              {t("detail.ghsClassification")}
+            </p>
+            <h2 id="detail-modal-title" className="font-[var(--font-display)] text-2xl font-black leading-tight text-[hsl(var(--notebook-ink))]">
               {displayNames.primary}
             </h2>
             {displayNames.secondary && (
               <p className="text-[hsl(var(--notebook-muted-ink))]">{displayNames.secondary}</p>
             )}
-            <p className="mt-1 flex items-center gap-2 font-mono text-[hsl(var(--notebook-action))]">
-              CAS: {result.cas_number}
+            <p className="mt-2 flex items-center gap-2">
+              <span className="notebook-cas-chip inline-flex rounded px-2 py-1 text-xs font-semibold">
+                CAS: {result.cas_number}
+              </span>
               <button
                 type="button"
                 onClick={() => copyCAS(result.cas_number)}
@@ -340,7 +345,7 @@ export default function DetailModal({
               type="button"
               onClick={() => onToggleFavorite(result)}
               aria-label={isFavorited(result.cas_number) ? t("favorites.removeFavorite") : t("favorites.addFavorite")}
-              className={`transition-colors ${
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-md transition-colors ${
                 isFavorited(result.cas_number)
                   ? "text-amber-500 hover:text-amber-600"
                   : "text-slate-300 hover:text-amber-500"
@@ -353,7 +358,7 @@ export default function DetailModal({
               type="button"
               onClick={onClose}
               aria-label={t("common.close", { defaultValue: "Close" })}
-              className="text-[hsl(var(--notebook-muted-ink))] hover:text-[hsl(var(--notebook-ink))]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-[hsl(var(--notebook-muted-ink))] hover:bg-[hsl(var(--notebook-action-soft)/0.58)] hover:text-[hsl(var(--notebook-ink))]"
               data-testid="close-modal-btn"
             >
               <X className="w-6 h-6" />
@@ -404,15 +409,15 @@ export default function DetailModal({
             <div
               role="note"
               data-testid="detail-missing-chinese-name-note"
-              className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950 sm:flex-row sm:items-start sm:justify-between"
+              className="notebook-source-note notebook-source-note-warning flex flex-col gap-3 rounded-md p-3 text-sm sm:flex-row sm:items-start sm:justify-between"
             >
               <span className="flex min-w-0 items-start gap-2">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-warning))]" />
                 <span>
                   <span className="block font-semibold">
                     {t("detail.missingChineseNameTitle")}
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-amber-900">
+                  <span className="mt-1 block text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                     {t("detail.missingChineseNameHint")}
                   </span>
                 </span>
@@ -422,7 +427,7 @@ export default function DetailModal({
                 href: missingChineseNameReportUrl,
                 testId: "detail-report-missing-chinese-name-link",
                 className:
-                  "inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                  "notebook-inline-action inline-flex shrink-0 items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors",
                 iconClassName: "h-3.5 w-3.5",
                 label: t("detail.reportChineseNameCta"),
               })}
@@ -454,7 +459,7 @@ export default function DetailModal({
                       href: sourceConflictReportUrl,
                       testId: "detail-report-source-conflict-link",
                       className:
-                        "mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                        "notebook-inline-action mt-2 inline-flex items-center gap-1 rounded px-2 py-1 font-semibold transition-colors",
                       iconClassName: "h-3 w-3",
                       label: t("detail.reportSourceConflictCta"),
                     })
@@ -492,10 +497,10 @@ export default function DetailModal({
                 {t("detail.signalWord")}
               </h3>
               <span
-                className={`inline-block px-4 py-2 rounded-lg text-lg font-bold ${
-                  effective.signal_word === "Danger"
-                    ? "border border-red-200 bg-red-50 text-red-700"
-                    : "border border-amber-200 bg-amber-50 text-amber-700"
+                  className={`notebook-signal-stamp ${
+                    effective.signal_word === "Danger"
+                    ? "bg-[hsl(var(--notebook-danger-soft)/0.58)] text-[hsl(var(--notebook-danger))]"
+                    : "bg-[hsl(var(--notebook-warning-soft)/0.58)] text-[hsl(var(--notebook-warning))]"
                 }`}
               >
                 {getLocalizedSignalWord(effective, displayLocale)}
@@ -508,14 +513,14 @@ export default function DetailModal({
             <div
               role="note"
               data-testid="detail-ghs-text-no-pictograms-banner"
-              className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+              className="notebook-source-note notebook-source-note-warning flex items-start gap-2 rounded-md p-3 text-sm"
             >
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-warning))]" />
               <span>
                 <span className="block font-medium">
                   {t("detail.ghsDataNoPictograms")}
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-amber-800">
+                <span className="mt-1 block text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
                   {t("detail.ghsDataNoPictogramsHint")}
                 </span>
                 {pictogramGapReportUrl && (
@@ -524,7 +529,7 @@ export default function DetailModal({
                     href: pictogramGapReportUrl,
                     testId: "detail-report-pictogram-gap-link",
                     className:
-                      "mt-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100",
+                      "notebook-inline-action mt-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors",
                     iconClassName: "h-3 w-3",
                     label: t("detail.reportDataGapCta"),
                   })
@@ -591,7 +596,7 @@ export default function DetailModal({
                     className="notebook-status-card flex gap-3 rounded-md p-3"
                     data-testid={`detail-hazard-statement-${stmt.code}`}
                   >
-                    <span className="shrink-0 font-mono font-medium text-red-700">
+                    <span className="shrink-0 font-mono font-medium text-[hsl(var(--notebook-danger))]">
                       {stmt.code}
                     </span>
                     <span className="text-[hsl(var(--notebook-ink))]">
@@ -632,7 +637,7 @@ export default function DetailModal({
           {referenceLinks.length > 0 && (
             <div>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[hsl(var(--notebook-muted-ink))]">
-                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {t("sds.section")}
+                <ShieldCheck className="h-4 w-4 text-[hsl(var(--notebook-ready))]" /> {t("sds.section")}
               </h3>
               <p
                 className="mb-3 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]"
@@ -681,9 +686,9 @@ export default function DetailModal({
             <div
               role="note"
               data-testid="detail-no-ghs-data-banner"
-              className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+              className="notebook-source-note flex items-start gap-2 rounded-md p-3 text-sm"
             >
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-muted-ink))]" />
               <span>
                 <span>{t("detail.noGhsDataBanner")}</span>
                 {ghsGapReportUrl && (
@@ -692,7 +697,7 @@ export default function DetailModal({
                     href: ghsGapReportUrl,
                     testId: "detail-report-ghs-gap-link",
                     className:
-                      "mt-2 inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100",
+                      "notebook-inline-action mt-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors",
                     iconClassName: "h-3 w-3",
                     label: t("detail.reportDataGapCta"),
                   })
@@ -744,7 +749,7 @@ export default function DetailModal({
                       </span>
                       {result.cache_hit && (
                         <span
-                          className="ml-2 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700"
+                          className="notebook-status-chip notebook-tone-warning ml-2 inline-flex items-center rounded px-2 py-0.5 text-xs"
                           title={
                             result.retrieved_at
                               ? t("detail.provenanceCacheTooltipWithAge", {

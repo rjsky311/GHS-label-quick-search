@@ -86,6 +86,28 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
+UI Graphite Editorial final redesign chunk closed locally on 2026-07-08 on
+`codex/ui-redesign`, pending maintainer review. Source: owner request to finish
+Phases 2-4 of
+`docs/superpowers/plans/2026-07-07-ui-visual-redesign-graphite-editorial.md`
+with the 2026-07-08 identity addendum red lines. Affected user job: repeated
+lab users should scan search results, hazard identity, source notes, and print
+setup in the adopted Comfort Dim / Dark Bench language without changing lookup,
+print truth, routes, or the three-output print model. Shipped locally: Phase 2
+results-surface editorial treatments, Phase 3 print-modal chrome and
+label-stock canvas backing only, and Phase 4 closure evidence. Evidence:
+desktop/mobile screenshots in both themes, plus mobile preview-canvas captures,
+are archived under
+`qa/evidence/2026-07-07-ui-redesign/phase-2-4/`; the screenshot report confirms
+active theme classes, result identity/hazard board presence, three output
+choices, and a white preview sheet in both themes. Stop condition for this
+slice is met: `git diff --check`, `npm run lint`, `npm run test:i18n`,
+`npm test -- --runInBand`, `npm run build`, `npm run test:print-contract`, and
+`npm run test:docs` passed locally, with empty direct diffs for the protected
+print-truth files and no frontend `Fraunces` or `lucide-react` matches. Do not
+continue into new print, admin, backend, physical-printer, or product-scope
+work from this redesign by inertia.
+
 Shipped/monitoring slice closed on 2026-07-07: Mobile PDF Export Via
 Server-Side Rendering. Source: real production mobile PDFs from iPhone Safari
 for 鹽酸 / Hydrochloric acid / CAS `7647-01-0`, plus the committed handoff plan

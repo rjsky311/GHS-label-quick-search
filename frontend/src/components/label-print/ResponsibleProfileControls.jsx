@@ -100,7 +100,7 @@ export default function ResponsibleProfileControls({
   return (
     <details
       open={open}
-      className={`rounded-lg border p-4 ${
+      className={`notebook-print-note-section rounded-md p-4 ${
         READINESS_TONE_CLASSES[tone] || READINESS_TONE_CLASSES.neutral
       }`}
       data-testid="responsible-profile-controls"
@@ -120,7 +120,7 @@ export default function ResponsibleProfileControls({
             </span>
           </span>
         </span>
-        <span className="shrink-0 rounded-full bg-[hsl(var(--notebook-surface)/0.72)] px-2 py-1 text-xs font-semibold ring-1 ring-current/10">
+        <span className="notebook-status-chip shrink-0 rounded px-2 py-1 text-xs font-semibold">
           {presentCount}/{fieldTotal}
         </span>
       </summary>
@@ -142,7 +142,7 @@ export default function ResponsibleProfileControls({
             <button
               type="button"
               onClick={onClearLabProfile}
-              className="shrink-0 text-xs notebook-tone-danger transition-colors hover:text-[hsl(var(--notebook-danger))]"
+              className="notebook-report-link shrink-0 rounded px-2 py-1 text-xs font-semibold transition-colors"
             >
               {t("label.profileClear")}
             </button>

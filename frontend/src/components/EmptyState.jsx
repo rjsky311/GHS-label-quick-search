@@ -89,10 +89,10 @@ export default function EmptyState({
             className="empty-workbench-primary min-w-0 text-left lg:col-span-8"
             data-testid="empty-workbench-primary"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--notebook-action))]">
+            <p className="notebook-kicker mt-0 text-[hsl(var(--notebook-action))]">
               {t("empty.kicker")}
             </p>
-            <h2 className="mt-3 max-w-2xl text-2xl font-semibold text-[hsl(var(--notebook-ink))] md:text-3xl">
+            <h2 className="mt-3 max-w-2xl font-[var(--font-display)] text-2xl font-black text-[hsl(var(--notebook-ink))] md:text-3xl">
               {t("empty.title")}
             </h2>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[hsl(var(--notebook-muted-ink))]">
@@ -111,7 +111,7 @@ export default function EmptyState({
                     onClick={() => onQuickSearch(ex.cas)}
                     variant="notebookSecondary"
                     size="notebook"
-                    className="px-4"
+                    className="px-4 text-left"
                   >
                     <span className="font-mono text-[hsl(var(--notebook-action))]">
                       {ex.cas}
@@ -203,7 +203,7 @@ export default function EmptyState({
               {features.map(({ key, icon: Icon, titleKey, descKey }) => (
                 <li
                   key={titleKey}
-                  className="notebook-feature-note flex min-w-0 gap-2.5 text-left"
+                  className="notebook-feature-note notebook-ledger-row flex min-w-0 gap-2.5 rounded-md p-3 text-left"
                   data-testid={`empty-feature-card-${key}`}
                 >
                   <span className="notebook-feature-icon mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">

@@ -45,12 +45,20 @@ export function ConfigButtonGrid({
               <span className="min-w-0 font-medium">{t(option.labelKey)}</span>
             </div>
             {option.descKey && (
-              <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+              <div className={`mt-1 text-xs leading-5 ${
+                selected
+                  ? "text-[hsl(var(--notebook-action-solid-fg)/0.86)]"
+                  : "text-[hsl(var(--notebook-muted-ink))]"
+              }`}>
                 {t(option.descKey)}
               </div>
             )}
             {option.tipKey && (
-              <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+              <div className={`mt-1 text-xs leading-5 ${
+                selected
+                  ? "text-[hsl(var(--notebook-action-solid-fg)/0.86)]"
+                  : "text-[hsl(var(--notebook-muted-ink))]"
+              }`}>
                 {t(option.tipKey)}
               </div>
             )}
@@ -88,24 +96,32 @@ export function StockChoiceButton({
         <span className="font-medium">{display.name}</span>
         {selected && <Check className="h-4 w-4" />}
       </div>
-      <div className="mt-1 text-xs leading-5 text-[hsl(var(--notebook-muted-ink))]">
+      <div className={`mt-1 text-xs leading-5 ${
+        selected
+          ? "text-[hsl(var(--notebook-action-solid-fg)/0.86)]"
+          : "text-[hsl(var(--notebook-muted-ink))]"
+      }`}>
         {preset.labelWidthMm} x {preset.labelHeightMm} mm /{" "}
         {tx("label.previewPerPage", "{{count}}/page", {
           count: preset.perPage,
         })}
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-[hsl(var(--notebook-muted-ink))]">
-        <span className="notebook-chip rounded-full px-2 py-0.5">
+      <div className={`mt-2 flex flex-wrap gap-1.5 text-[11px] ${
+        selected
+          ? "text-[hsl(var(--notebook-action-solid-fg)/0.88)]"
+          : "text-[hsl(var(--notebook-muted-ink))]"
+      }`}>
+        <span className="notebook-status-chip rounded px-2 py-0.5">
           {preset.pageSize || "A4"}
         </span>
-        <span className="notebook-chip rounded-full px-2 py-0.5">
+        <span className="notebook-status-chip rounded px-2 py-0.5">
           {t(
             ORIENTATION_OPTIONS.find(
               (item) => item.value === preset.orientation,
             )?.labelKey || "label.portrait",
           )}
         </span>
-        <span className="notebook-chip rounded-full px-2 py-0.5">
+        <span className="notebook-status-chip rounded px-2 py-0.5">
           {isFullPage
             ? tx("label.completePrimaryStock", "complete")
             : labelPurpose === "shipping"

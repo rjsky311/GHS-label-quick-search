@@ -69,8 +69,10 @@ describe("GHSPictogramStrip", () => {
       "selected",
     );
     expect(screen.getByTestId("ghs-pictogram-frame")).toHaveClass(
-      "border-blue-200",
-      "bg-blue-50/60",
+      "border-[hsl(var(--notebook-action-border)/0.72)]",
+      "bg-white",
+      "ring-2",
+      "ring-[hsl(var(--notebook-action-soft))]",
     );
   });
 

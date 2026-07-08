@@ -1,9 +1,9 @@
 # Experiment Notebook Design Language
 
-Status: design-language baseline for future UI work. This document records the
-current preferred visual system before implementation. It does not change
-product behavior, print output rules, data trust boundaries, or version
-number.
+Status: adopted design language as of the 2026-07-08 graphite-editorial
+redesign branch. This document records the preferred visual system for future
+UI work. It does not change product behavior, print output rules, data trust
+boundaries, or version number.
 
 Use this after `PROJECT_STATUS_AND_NEXT_PLAN.md`, `DESIGN.md`, and
 `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` when opening a UI slice that touches app

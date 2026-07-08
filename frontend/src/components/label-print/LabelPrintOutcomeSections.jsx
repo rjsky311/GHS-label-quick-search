@@ -238,7 +238,7 @@ export function PrintOutcomeSummary({
         ].map((item, index) => (
           <span
             key={`${item}-${index}`}
-            className="rounded-full bg-[hsl(var(--notebook-surface)/0.66)] px-2 py-1 font-medium text-[hsl(var(--notebook-muted-ink))] ring-1 ring-[hsl(var(--notebook-border)/0.32)]"
+            className="notebook-status-chip rounded px-2 py-1 font-medium text-[hsl(var(--notebook-muted-ink))]"
             data-testid="print-outcome-fact"
           >
             {item}

@@ -23,13 +23,13 @@ describe("AuthoritativeSourceNote", () => {
     ).toHaveAttribute("role", "note");
   });
 
-  it("uses notebook note and chip styling for the general results note", () => {
+  it("uses editorial source note and quiet chip styling for the general results note", () => {
     render(<AuthoritativeSourceNote />);
 
     const note = screen.getByTestId("authoritative-source-note-results");
-    expect(note).toHaveClass("notebook-note");
+    expect(note).toHaveClass("notebook-source-note");
     expect(note).not.toHaveClass("bg-slate-50");
-    expect(screen.getByText("trust.verifySds")).toHaveClass("notebook-chip");
+    expect(screen.getByText("trust.verifySds")).toHaveClass("notebook-status-chip");
   });
 
   it("renders the i18n note key (mock returns as-is)", () => {
@@ -62,22 +62,30 @@ describe("AuthoritativeSourceNote", () => {
     expect(screen.getByText("trust.blockedNote")).toBeInTheDocument();
   });
 
-  it("uses the print notebook section language for print-mode warnings", () => {
+  it("uses the print source-note language for print-mode warnings", () => {
     const { rerender } = render(
       <AuthoritativeSourceNote mode="supplemental" variant="print" />,
     );
 
     const supplemental = screen.getByTestId("authoritative-source-note-print");
-    expect(supplemental).toHaveClass("notebook-print-check-section");
+    expect(supplemental).toHaveClass(
+      "notebook-source-note",
+      "notebook-source-note-print",
+      "notebook-source-note-warning",
+    );
     expect(supplemental).not.toHaveClass("notebook-print-stage-section");
     expect(supplemental.className).not.toContain("bg-amber-50");
     expect(screen.getByText("trust.verifySds")).toHaveClass(
-      "notebook-print-stage-fact",
+      "notebook-status-chip",
     );
 
     rerender(<AuthoritativeSourceNote mode="blocked" variant="print" />);
     const blocked = screen.getByTestId("authoritative-source-note-print");
-    expect(blocked).toHaveClass("notebook-print-check-section");
+    expect(blocked).toHaveClass(
+      "notebook-source-note",
+      "notebook-source-note-print",
+      "notebook-source-note-blocked",
+    );
     expect(blocked).not.toHaveClass("notebook-print-stage-section");
     expect(blocked.className).not.toContain("bg-red-50");
   });

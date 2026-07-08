@@ -153,17 +153,17 @@ export default function PreviewDiagnosticsPanel({
             )}
           </div>
 
-          <div className="mt-4 overflow-auto rounded-md border border-[hsl(var(--notebook-border)/0.72)] bg-white shadow-inner">
+          <div className="notebook-preview-canvas-frame notebook-canvas mt-4 overflow-auto rounded-md p-3">
             {sheetPreviewBundle ? (
               <iframe
                 title={tx("label.previewSheetTitle", "Sheet layout")}
                 srcDoc={sheetPreviewBundle.html}
                 data-testid="label-sheet-preview"
-                className="w-full bg-white"
+                className="notebook-preview-sheet-frame w-full bg-white"
                 style={{ height: sheetPreviewHeight }}
               />
             ) : (
-              <div className="flex h-60 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
+              <div className="notebook-preview-sheet-frame flex h-60 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
                 {tx(
                   "label.previewFocusEmptyBody",
                   "Select at least one chemical to preview real content density.",
@@ -180,19 +180,19 @@ export default function PreviewDiagnosticsPanel({
               {tx("label.previewSheetMetricsTitle", "Alignment details")}
             </summary>
             <div className="mt-3 grid grid-cols-2 gap-2 text-[hsl(var(--notebook-muted-ink))]">
-              <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              <div className="notebook-status-chip rounded px-3 py-2">
                 {tx("label.previewPadding", "Padding")}:{" "}
                 {layoutProfile.pagePaddingMm} mm
               </div>
-              <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              <div className="notebook-status-chip rounded px-3 py-2">
                 {tx("label.previewGap", "Gap")}: {layoutProfile.columnGapMm}/
                 {layoutProfile.rowGapMm} mm
               </div>
-              <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              <div className="notebook-status-chip rounded px-3 py-2">
                 {tx("label.previewOffsetX", "Offset X")}:{" "}
                 {layoutProfile.offsetXmm} mm
               </div>
-              <div className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-3 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]">
+              <div className="notebook-status-chip rounded px-3 py-2">
                 {tx("label.previewOffsetY", "Offset Y")}:{" "}
                 {layoutProfile.offsetYmm} mm
               </div>

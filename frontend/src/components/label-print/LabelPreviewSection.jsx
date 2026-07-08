@@ -48,7 +48,7 @@ export default function LabelPreviewSection({
 
   return (
     <section
-      className="notebook-print-preview rounded-md p-3"
+      className="notebook-label-preview-section rounded-md p-3"
       data-testid="primary-label-preview-section"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -126,18 +126,18 @@ export default function LabelPreviewSection({
         )}
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-md border border-[hsl(var(--notebook-border)/0.72)] bg-white shadow-inner">
+      <div className="notebook-preview-canvas-frame notebook-canvas mt-3 overflow-hidden rounded-md p-3">
         {labelPreviewBundle ? (
           <iframe
             title={tx("label.previewLabelTitle", "Label preview")}
             srcDoc={labelPreviewBundle.html}
             data-testid="label-fragment-preview"
             data-preview-mode={previewZoomMode}
-            className="w-full bg-white"
+            className="notebook-preview-sheet-frame w-full bg-white"
             style={{ height: labelFragmentPreviewHeight }}
           />
         ) : (
-          <div className="flex h-72 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
+          <div className="notebook-preview-sheet-frame flex h-72 items-center justify-center px-4 text-sm text-[hsl(var(--notebook-muted-ink))]">
             {tx(
               "label.previewFocusEmptyBody",
               "Select at least one chemical to preview real content density.",
@@ -165,7 +165,7 @@ export default function LabelPreviewSection({
           {previewInspectionItems.map((item) => (
             <div
               key={item.label}
-              className="rounded-md bg-[hsl(var(--notebook-surface)/0.52)] px-2.5 py-2 ring-1 ring-[hsl(var(--notebook-border)/0.5)]"
+            className="notebook-status-chip rounded px-2.5 py-2"
             >
               <dt className="font-semibold uppercase text-[hsl(var(--notebook-muted-ink))]">
                 {item.label}

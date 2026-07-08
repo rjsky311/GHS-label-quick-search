@@ -497,7 +497,7 @@ export default function ResultsTable({
         {issues.map((issue) => {
           const label = getDataQualityIssueLabel(issue.type, t);
           const className = getDataQualityIssueClassName(issue.severity);
-          const chipClassName = `inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${className}`;
+          const chipClassName = `notebook-status-chip inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${className}`;
           if (
             issue.type === DATA_QUALITY_ISSUE_TYPES.MULTIPLE_CLASSIFICATIONS &&
             result?.cas_number
@@ -598,7 +598,7 @@ export default function ResultsTable({
 
     return (
       <div
-        className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+        className={`notebook-status-chip mt-2 inline-flex rounded px-2 py-0.5 text-[11px] font-medium ${
           confirmed
             ? NOTEBOOK_READY_TONE
             : NOTEBOOK_WARNING_TONE
@@ -647,14 +647,17 @@ export default function ResultsTable({
         data-testid="results-workbench-header"
       >
         <div className="min-w-0">
+          <p className="notebook-kicker mt-0">
+            02 - {t("results.title")}
+          </p>
           <span
-            className="font-semibold text-[hsl(var(--notebook-ink))]"
+            className="block font-[var(--font-display)] text-2xl font-black leading-tight text-[hsl(var(--notebook-ink))]"
             data-testid="results-title"
           >
             {t("results.title")}
           </span>
           <span
-            className="ml-2 text-[hsl(var(--notebook-muted-ink))]"
+            className="mt-1 block text-sm text-[hsl(var(--notebook-muted-ink))]"
             data-testid="results-summary-copy"
           >
             {t("results.summary", { total: totalCount, found: results.filter((r) => r.found).length })}
@@ -750,7 +753,7 @@ export default function ResultsTable({
 
       {hasFoundResults && (
         <div
-          className="notebook-note notebook-decision-strip flex flex-wrap items-center gap-2 px-4 py-3 text-sm"
+          className="notebook-note notebook-decision-strip flex flex-wrap items-center gap-2 rounded-none border-x-0 px-4 py-3 text-sm"
           data-testid="results-decision-guide"
         >
           <span className="font-medium text-[hsl(var(--notebook-ink))]">
@@ -760,7 +763,7 @@ export default function ResultsTable({
             {decisionSteps.map(({ key, icon: Icon, label }) => (
               <span
                 key={key}
-                className="notebook-chip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                className="notebook-status-chip inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium"
                 data-testid={`results-decision-step-${key}`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--notebook-action))]" />
@@ -946,7 +949,7 @@ export default function ResultsTable({
                 </p>
                 {workflowReviewSignalsOverlap && (
                   <span
-                    className="notebook-tone-warning rounded-full bg-[hsl(var(--notebook-warning-soft)/0.58)] px-2 py-1 text-[11px] font-semibold ring-1 ring-[hsl(var(--notebook-warning)/0.35)]"
+                    className="notebook-status-chip notebook-tone-warning rounded px-2 py-1 text-[11px] font-semibold ring-1 ring-[hsl(var(--notebook-warning)/0.35)]"
                     data-testid="results-workflow-review-signal-count"
                   >
                     {t("results.workflowReviewSignalCount", {
@@ -971,7 +974,7 @@ export default function ResultsTable({
                     type="button"
                     onClick={() => setReviewIssueFilter(issue.type)}
                     disabled={!onSetAdvancedFilter}
-                    className={`notebook-chip-action rounded-md px-3 py-2 text-left text-xs transition-colors ${
+                    className={`notebook-chip-action rounded px-3 py-2 text-left text-xs transition-colors ${
                       activeReviewIssueType === issue.type
                         ? "border-[hsl(var(--notebook-action-border)/0.6)] bg-[hsl(var(--notebook-action-soft)/0.7)] notebook-tone-action"
                         : "border-[hsl(var(--notebook-rule)/0.66)] bg-[hsl(var(--notebook-surface)/0.46)] notebook-tone-muted hover:border-[hsl(var(--notebook-action-border)/0.6)] hover:bg-[hsl(var(--notebook-action-soft)/0.58)] hover:text-[hsl(var(--notebook-action))]"
@@ -980,7 +983,7 @@ export default function ResultsTable({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold">{issue.label}</span>
-                      <span className="rounded-full bg-[hsl(var(--notebook-surface-raised))] px-2 py-0.5 text-[11px] font-semibold notebook-tone-ink">
+                      <span className="notebook-status-chip rounded px-2 py-0.5 text-[11px] font-semibold notebook-tone-ink">
                         {issue.count}
                       </span>
                     </div>
@@ -1043,7 +1046,7 @@ export default function ResultsTable({
             <button
               key={f.value}
               onClick={() => onSetResultFilter(f.value)}
-              className={`notebook-chip-action px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`notebook-chip-action rounded px-3 py-1 text-xs font-medium transition-colors ${
                 resultFilter === f.value
                   ? f.color === "red" ? "bg-[hsl(var(--notebook-danger-soft)/0.58)] notebook-tone-danger ring-1 ring-[hsl(var(--notebook-danger)/0.35)]"
                   : f.color === "amber" ? "bg-[hsl(var(--notebook-warning-soft)/0.58)] notebook-tone-warning ring-1 ring-[hsl(var(--notebook-warning)/0.35)]"
@@ -1061,7 +1064,7 @@ export default function ResultsTable({
             <button
               key={n}
               onClick={() => onSetAdvancedFilter({ ...advancedFilter, minPictograms: advancedFilter.minPictograms === n ? 0 : n })}
-              className={`notebook-chip-action px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`notebook-chip-action rounded px-2 py-1 text-xs font-medium transition-colors ${
                 advancedFilter.minPictograms === n
                   ? "bg-[hsl(var(--notebook-action-soft)/0.7)] notebook-tone-action ring-1 ring-[hsl(var(--notebook-action-border)/0.42)]"
                   : "bg-[hsl(var(--notebook-surface-raised))] notebook-tone-muted ring-1 ring-[hsl(var(--notebook-rule)/0.64)] hover:bg-[hsl(var(--notebook-action-soft)/0.58)] hover:text-[hsl(var(--notebook-action))]"
@@ -1091,7 +1094,7 @@ export default function ResultsTable({
             <button
               type="button"
               onClick={() => onSetAdvancedFilter({ ...advancedFilter, reviewIssueType: "" })}
-              className="notebook-chip-action notebook-tone-action inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ring-1 ring-[hsl(var(--notebook-action-border)/0.42)] transition-colors hover:bg-[hsl(var(--notebook-action-soft)/0.58)]"
+              className="notebook-chip-action notebook-tone-action inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium ring-1 ring-[hsl(var(--notebook-action-border)/0.42)] transition-colors hover:bg-[hsl(var(--notebook-action-soft)/0.58)]"
               data-testid="active-review-reason-filter"
             >
               {t("filter.reviewReason", { reason: activeReviewIssueLabel })}
@@ -1107,7 +1110,7 @@ export default function ResultsTable({
       )}
 
       {/* Results Table */}
-      <div className="overflow-visible md:overflow-x-auto" data-testid="results-table-scroll">
+      <div className="notebook-results-table-zone overflow-visible md:overflow-x-auto" data-testid="results-table-scroll">
         <table className="w-full min-w-0 md:min-w-[1120px]" data-testid="results-table">
           <caption className="sr-only">{t("results.tableCaption")}</caption>
           <thead className="hidden md:table-header-group">
@@ -1197,7 +1200,7 @@ export default function ResultsTable({
                   )}
                 </td>
                 <td className="mt-3 block whitespace-nowrap px-0 py-0 align-top md:table-cell md:mt-0 md:px-4 md:py-4">
-                  <span className="font-mono notebook-tone-action">
+                  <span className="notebook-cas-chip notebook-tone-action inline-flex rounded px-2 py-1 text-xs font-semibold">
                     {result.cas_number}
                   </span>
                 </td>
@@ -1212,8 +1215,8 @@ export default function ResultsTable({
                         effectiveForSource?.report_count ||
                         result.primary_report_count;
                       return (
-                        <div>
-                          <div className="break-words font-medium notebook-tone-ink">
+                        <div className="notebook-result-identity">
+                          <div className="notebook-result-name notebook-tone-ink break-words text-base leading-6">
                             {displayNames.primary || t("results.loadingName")}
                           </div>
                           {displayNames.secondary && (
@@ -1236,7 +1239,7 @@ export default function ResultsTable({
                                 );
                                 return sourceBadge ? (
                                   <span
-                                    className={`inline-flex items-center rounded border px-1.5 py-0.5 ${sourceBadge.className}`}
+                                    className={`notebook-status-chip inline-flex items-center rounded px-1.5 py-0.5 ${sourceBadge.className}`}
                                     title={effectiveSource}
                                     data-testid={`source-badge-${sourceBadge.key}-${result.cas_number}`}
                                   >
@@ -1246,7 +1249,7 @@ export default function ResultsTable({
                               })()}
                               {effectiveReportCount && (
                                 <span
-                                  className="inline-flex items-center rounded bg-[hsl(var(--notebook-surface-raised))] px-1.5 py-0.5 notebook-tone-muted"
+                                  className="notebook-status-chip inline-flex items-center rounded px-1.5 py-0.5 notebook-tone-muted"
                                   title={t("detail.provenanceReportCountTooltip", {
                                     count: effectiveReportCount,
                                   })}
@@ -1258,7 +1261,7 @@ export default function ResultsTable({
                               )}
                               {result.cache_hit && (
                                 <span
-                                  className="inline-flex items-center rounded border border-[hsl(var(--notebook-warning)/0.45)] bg-[hsl(var(--notebook-warning-soft)/0.58)] px-1.5 py-0.5 notebook-tone-warning"
+                                  className="notebook-status-chip inline-flex items-center rounded border border-[hsl(var(--notebook-warning)/0.45)] bg-[hsl(var(--notebook-warning-soft)/0.58)] px-1.5 py-0.5 notebook-tone-warning"
                                   title={
                                     result.retrieved_at
                                       ? t(
@@ -1335,7 +1338,7 @@ export default function ResultsTable({
                       );
                     }
                     return (
-                      <div className="space-y-2">
+                      <div className="notebook-hazard-board space-y-2">
                         {(() => {
                           const effective = effectiveForRow;
                           const allClassifications = [
@@ -1386,7 +1389,7 @@ export default function ResultsTable({
                               <div>
                                 <button
                                   onClick={() => onToggleOtherClassifications(result.cas_number)}
-                                  className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--notebook-action-soft)/0.62)] px-2 py-1 text-xs font-medium notebook-tone-action ring-1 ring-[hsl(var(--notebook-action-border)/0.38)] transition-colors hover:bg-[hsl(var(--notebook-action-soft))]"
+                                  className="notebook-chip-action inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium notebook-tone-action ring-1 ring-[hsl(var(--notebook-action-border)/0.38)] transition-colors hover:bg-[hsl(var(--notebook-action-soft))]"
                                   aria-expanded={!!expandedOtherClassifications[result.cas_number]}
                                   data-testid={`other-classifications-toggle-${result.cas_number}`}
                                 >
@@ -1480,7 +1483,7 @@ export default function ResultsTable({
                       const effective = effectiveForRow;
                       return effective?.signal_word ? (
                         <span
-                          className={`px-2 py-1 rounded text-sm font-medium ${
+                          className={`notebook-signal-stamp ${
                             effective.signal_word === "Danger"
                               ? "bg-[hsl(var(--notebook-danger-soft)/0.58)] notebook-tone-danger ring-1 ring-[hsl(var(--notebook-danger)/0.35)]"
                               : "bg-[hsl(var(--notebook-warning-soft)/0.58)] notebook-tone-warning ring-1 ring-[hsl(var(--notebook-warning)/0.35)]"

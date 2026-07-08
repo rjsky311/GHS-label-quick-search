@@ -307,6 +307,39 @@ code {
         box-shadow: none;
     }
 
+    .notebook-source-note {
+        border: 1px solid hsl(var(--notebook-rule) / 0.62);
+        border-left-width: 5px;
+        border-left-color: hsl(var(--notebook-danger) / 0.84);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-danger-soft) / 0.62),
+                hsl(var(--notebook-surface) / 0.56) 54%
+            );
+        color: hsl(var(--notebook-ink));
+        box-shadow: none;
+    }
+
+    .notebook-source-note-warning {
+        border-left-color: hsl(var(--notebook-warning) / 0.84);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-warning-soft) / 0.58),
+                hsl(var(--notebook-surface) / 0.54) 54%
+            );
+    }
+
+    .notebook-source-note-blocked {
+        border-color: hsl(var(--notebook-danger) / 0.44);
+        border-left-color: hsl(var(--notebook-danger));
+    }
+
+    .notebook-source-note-print {
+        background-color: hsl(var(--notebook-surface) / 0.5);
+    }
+
     .notebook-safety-gate {
         border: 1px solid hsl(var(--notebook-warning) / 0.3);
         border-left: 4px solid hsl(var(--notebook-warning) / 0.82);
@@ -342,6 +375,51 @@ code {
         box-shadow:
             0 1px 0 hsl(0 0% 100% / 0.2) inset,
             0 8px 18px hsl(220 18% 10% / 0.045);
+    }
+
+    .notebook-print-modal {
+        border: 1px solid hsl(var(--notebook-border));
+        background-color: hsl(var(--notebook-surface-raised));
+        color: hsl(var(--notebook-ink));
+        box-shadow:
+            0 1px 0 hsl(0 0% 100% / 0.16) inset,
+            0 24px 70px hsl(220 18% 6% / 0.34);
+    }
+
+    .notebook-print-modal-header {
+        border-bottom: 2px solid hsl(var(--notebook-rule) / 0.9);
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-action-border) / 0.13) 0,
+                hsl(var(--notebook-action-border) / 0.13) 4px,
+                transparent 4px
+            ),
+            hsl(var(--notebook-surface-raised) / 0.96);
+    }
+
+    .notebook-print-settings-rail {
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-surface-raised) / 0.72),
+                hsl(var(--notebook-surface) / 0.42)
+            );
+    }
+
+    .notebook-print-preview-rail {
+        border-color: hsl(var(--notebook-border) / 0.72);
+        background-color: hsl(var(--notebook-surface) / 0.62);
+    }
+
+    .notebook-print-footer {
+        background:
+            linear-gradient(
+                90deg,
+                hsl(var(--notebook-action-border) / 0.1),
+                transparent 34%
+            ),
+            hsl(var(--notebook-surface-raised) / 0.96);
     }
 
     .notebook-print-settings-section {
@@ -402,6 +480,29 @@ code {
         box-shadow:
             0 1px 0 hsl(0 0% 100% / 0.2) inset,
             0 10px 24px hsl(220 18% 10% / 0.06);
+    }
+
+    .notebook-label-preview-section {
+        border: 1px solid hsl(var(--notebook-rule) / 0.72);
+        background-color: hsl(var(--notebook-surface) / 0.48);
+        color: hsl(var(--notebook-ink));
+        box-shadow: none;
+    }
+
+    .notebook-preview-canvas-frame {
+        border: 1px solid hsl(var(--notebook-border) / 0.76);
+        box-shadow:
+            inset 0 1px 0 hsl(0 0% 100% / 0.14),
+            0 8px 18px hsl(220 18% 10% / 0.08);
+    }
+
+    .notebook-preview-sheet-frame {
+        position: relative;
+        z-index: 1;
+        border: 1px solid hsl(var(--notebook-border) / 0.52);
+        background-color: hsl(var(--notebook-print-surface));
+        color: hsl(var(--notebook-print-ink));
+        box-shadow: 0 8px 18px hsl(220 18% 10% / 0.14);
     }
 
     .notebook-print-check-section {
@@ -523,21 +624,36 @@ code {
 
     .notebook-chip {
         border: 1px solid hsl(var(--notebook-border) / 0.72);
-        background-color: hsl(var(--notebook-surface-raised));
+        background-color: hsl(var(--notebook-surface) / 0.56);
         color: hsl(var(--notebook-muted-ink));
     }
 
     .notebook-chip-action {
         border: 1px solid hsl(var(--notebook-border) / 0.78);
-        background-color: hsl(var(--notebook-surface-raised));
+        background-color: hsl(var(--notebook-surface) / 0.56);
         color: hsl(var(--notebook-muted-ink));
-        box-shadow: 0 1px 0 hsl(0 0% 100% / 0.22) inset;
+        box-shadow: none;
     }
 
     .notebook-chip-action:hover {
         border-color: hsl(var(--notebook-action-border) / 0.64);
         background-color: hsl(var(--notebook-action-soft));
         color: hsl(var(--notebook-action));
+    }
+
+    .notebook-status-chip {
+        border: 1px solid hsl(var(--notebook-border) / 0.68);
+        background-color: hsl(var(--notebook-surface) / 0.5);
+        color: hsl(var(--notebook-muted-ink));
+        box-shadow: none;
+    }
+
+    .notebook-cas-chip {
+        border: 1px solid hsl(var(--notebook-action-border) / 0.34);
+        background-color: hsl(var(--notebook-action-soft) / 0.58);
+        color: hsl(var(--notebook-action));
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
     }
 
     .notebook-result-row {
@@ -554,6 +670,37 @@ code {
         background-color: hsl(var(--notebook-action-soft));
     }
 
+    .notebook-result-identity {
+        border-left: 3px solid hsl(var(--notebook-action-border) / 0.54);
+        padding-left: 0.75rem;
+    }
+
+    .notebook-result-name {
+        color: hsl(var(--notebook-ink));
+        font-family: var(--font-display);
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .notebook-hazard-board {
+        border-top: 2px solid hsl(var(--notebook-rule) / 0.82);
+        padding-top: 0.55rem;
+    }
+
+    .notebook-signal-stamp {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.25rem;
+        border: 1px solid currentColor;
+        padding: 0.35rem 0.55rem;
+        font-family: var(--font-display);
+        font-size: 0.92rem;
+        font-weight: 800;
+        line-height: 1.1;
+        box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.12);
+    }
+
     .notebook-inline-action {
         min-height: 2.75rem;
         border: 1px solid hsl(var(--notebook-border) / 0.9);
@@ -565,6 +712,30 @@ code {
         border-color: hsl(var(--notebook-action-border));
         background-color: hsl(var(--notebook-action-soft));
         color: hsl(var(--notebook-action));
+    }
+
+    .notebook-footer {
+        border-top: 2px solid hsl(var(--notebook-rule) / 0.86);
+        background-color: hsl(var(--notebook-surface) / 0.76);
+        color: hsl(var(--notebook-muted-ink));
+    }
+
+    .notebook-footer-version {
+        border: 1px solid hsl(var(--notebook-border) / 0.68);
+        background-color: hsl(var(--notebook-surface-raised) / 0.62);
+        color: hsl(var(--notebook-muted-ink));
+        font-family: var(--font-mono);
+    }
+
+    .notebook-report-link {
+        border: 1px solid hsl(var(--notebook-danger) / 0.54);
+        background-color: transparent;
+        color: hsl(var(--notebook-danger));
+    }
+
+    .notebook-report-link:hover {
+        background-color: hsl(var(--notebook-danger-soft));
+        color: hsl(var(--notebook-danger));
     }
 
     .notebook-print-preview {
@@ -635,19 +806,8 @@ code {
     }
 
     .notebook-results-sheet {
-        background-image:
-            linear-gradient(
-                hsl(var(--notebook-rule) / 0.14) 1px,
-                transparent 1px
-            ),
-            linear-gradient(
-                90deg,
-                hsl(var(--notebook-action-border) / 0.08),
-                transparent 8rem
-            );
-        background-size:
-            100% 2.18rem,
-            100% 100%;
+        background-color: hsl(var(--notebook-surface));
+        background-image: none;
         box-shadow:
             0 1px 0 hsl(0 0% 100% / 0.22) inset,
             0 10px 24px hsl(220 18% 10% / 0.065);
@@ -688,6 +848,47 @@ code {
             linear-gradient(hsl(var(--notebook-rule) / 0.14) 1px, transparent 1px),
             hsl(var(--notebook-surface-raised) / 0.4);
         background-size: 100% 2.15rem;
+    }
+
+    .notebook-results-table-zone {
+        background-color: hsl(var(--notebook-surface-raised) / 0.42);
+        background-image: none;
+    }
+
+    .notebook-output-list {
+        border-top: 2px solid hsl(var(--notebook-rule) / 0.82);
+    }
+
+    .notebook-output-option {
+        position: relative;
+        border: 1px solid hsl(var(--notebook-border) / 0.78);
+        border-left-width: 4px;
+        border-left-color: hsl(var(--notebook-border) / 0.78);
+        background-color: hsl(var(--notebook-surface-raised) / 0.62);
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-output-option:hover {
+        border-color: hsl(var(--notebook-action-border) / 0.72);
+        background-color: hsl(var(--notebook-action-soft) / 0.48);
+        color: hsl(var(--notebook-action));
+    }
+
+    .notebook-output-option-selected {
+        border-color: hsl(var(--notebook-action-border));
+        border-left-color: hsl(var(--notebook-action));
+        background-color: hsl(var(--notebook-action-soft) / 0.72);
+        color: hsl(var(--notebook-ink));
+    }
+
+    .notebook-output-option-selected::after {
+        content: "";
+        position: absolute;
+        left: 0.85rem;
+        right: 0.85rem;
+        bottom: 0.55rem;
+        height: 2px;
+        background-color: hsl(var(--notebook-action) / 0.72);
     }
 
     .notebook-workflow-section {
@@ -941,6 +1142,28 @@ code {
     .notebook-control-primary:hover {
         border-color: hsl(var(--notebook-action));
         background-color: hsl(var(--notebook-action));
+        color: hsl(var(--notebook-action-solid-fg));
+    }
+
+    .notebook-output-option-selected,
+    .notebook-output-option-selected:hover,
+    .notebook-output-option-selected span {
+        color: hsl(var(--notebook-action-solid-fg));
+    }
+
+    .notebook-output-option-selected .notebook-status-chip {
+        border-color: hsl(var(--notebook-action-solid-fg) / 0.45);
+        background-color: hsl(var(--notebook-action-solid-fg) / 0.12);
+        color: hsl(var(--notebook-action-solid-fg));
+    }
+
+    .notebook-output-option-selected-copy {
+        color: hsl(var(--notebook-action-solid-fg) / 0.88);
+    }
+
+    .notebook-output-option-selected-chip {
+        border-color: hsl(var(--notebook-action-solid-fg) / 0.45);
+        background-color: hsl(var(--notebook-action-solid-fg) / 0.12);
         color: hsl(var(--notebook-action-solid-fg));
     }
 

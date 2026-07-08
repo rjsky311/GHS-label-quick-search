@@ -347,7 +347,7 @@ describe("LabelPrintModal", () => {
       "grid-cols-1",
     );
     expect(screen.getByTestId("output-goal-controls")).toHaveClass(
-      "sm:grid-cols-3",
+      "notebook-output-list",
     );
     expect(screen.getByTestId("output-goal-controls")).not.toHaveClass(
       "2xl:grid-cols-4",
@@ -527,12 +527,13 @@ describe("LabelPrintModal", () => {
     );
 
     const outputControls = screen.getByTestId("output-goal-controls");
-    expect(outputControls).toHaveClass("grid-cols-1", "sm:grid-cols-3");
+    expect(outputControls).toHaveClass("grid-cols-1", "notebook-output-list");
     expect(outputControls).not.toHaveClass("sm:grid-cols-2");
+    expect(outputControls).not.toHaveClass("sm:grid-cols-3");
 
     for (const value of ["complete", "qrSupplement", "quickId"]) {
       const button = screen.getByTestId(`label-purpose-${value}`);
-      expect(button).toHaveClass("notebook-control");
+      expect(button).toHaveClass("notebook-control", "notebook-output-option");
       expect(button.className).not.toContain("border-blue-500");
       expect(button.className).not.toContain("bg-blue-50");
       expect(button.className).not.toContain("text-blue-900");
@@ -540,6 +541,7 @@ describe("LabelPrintModal", () => {
 
     expect(screen.getByTestId("label-purpose-complete")).toHaveClass(
       "notebook-control-primary",
+      "notebook-output-option-selected",
     );
     expect(screen.getByTestId("label-purpose-qrSupplement")).toHaveClass(
       "notebook-control-secondary",
@@ -932,7 +934,7 @@ describe("LabelPrintModal", () => {
     expect(outcome.className).not.toContain("bg-emerald-50");
     expect(screen.getAllByTestId("print-outcome-fact")).toHaveLength(4);
     screen.getAllByTestId("print-outcome-fact").forEach((fact) => {
-      expect(fact).toHaveClass("rounded-full");
+      expect(fact).toHaveClass("notebook-status-chip", "rounded");
       expect(fact).not.toHaveClass("notebook-control");
     });
   });

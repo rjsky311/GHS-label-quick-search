@@ -26,21 +26,20 @@ export default function AuthoritativeSourceNote({
         ? "trust.blockedNote"
         : "trust.authoritativeNote";
   const toneClass =
-    isPrint && mode !== "general"
-      ? "notebook-print-check-section"
-      : mode === "blocked"
-        ? "notebook-note border-red-200 text-red-900"
-        : mode === "supplemental"
-          ? "notebook-note border-amber-200 text-amber-900"
-          : "notebook-note";
+    mode === "blocked"
+      ? "notebook-source-note notebook-source-note-blocked"
+      : mode === "supplemental"
+        ? "notebook-source-note notebook-source-note-warning"
+        : "notebook-source-note";
   const checklistItemClass =
     isPrint
-      ? "notebook-print-stage-fact inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium"
+      ? "notebook-status-chip inline-flex items-center gap-1 rounded px-2 py-1 font-medium"
       : mode === "general"
-      ? "notebook-chip inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium"
-      : "notebook-chip inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium";
+      ? "notebook-status-chip inline-flex items-center gap-1 rounded px-2 py-1 font-medium"
+      : "notebook-status-chip inline-flex items-center gap-1 rounded px-2 py-1 font-medium";
   const wrapperClass = [
     variant === "detail" ? "mt-2" : isPrint ? "mt-3" : "mt-4",
+    isPrint ? "notebook-source-note-print" : "",
     "flex items-start gap-3 rounded-md p-3 text-xs",
     toneClass,
   ].join(" ");
@@ -57,9 +56,11 @@ export default function AuthoritativeSourceNote({
       data-mode={mode}
       className={wrapperClass}
     >
-      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 opacity-80" />
+      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--notebook-danger))]" />
       <div className="min-w-0">
-        <div className="font-semibold">{t(titleKey)}</div>
+        <div className="font-[var(--font-display)] text-sm font-extrabold">
+          {t(titleKey)}
+        </div>
         <p className="mt-1 leading-5 opacity-90">{t(bodyKey)}</p>
         <div
           className={`mt-2 flex flex-wrap gap-1.5 ${

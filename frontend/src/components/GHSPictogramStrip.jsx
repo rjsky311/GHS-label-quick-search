@@ -29,24 +29,24 @@ const SIZE_STYLES = {
 
 const VARIANT_STYLES = {
   primary: {
-    tile: "border-slate-200 bg-white shadow-sm shadow-slate-200/30",
-    code: "text-slate-500",
+    tile: "border-[hsl(var(--notebook-border)/0.78)] bg-white shadow-sm shadow-black/5",
+    code: "text-[hsl(var(--notebook-muted-ink))]",
   },
   custom: {
-    tile: "border-blue-200 bg-blue-50/60 shadow-sm shadow-blue-100/50",
-    code: "text-blue-700",
+    tile: "border-[hsl(var(--notebook-action-border)/0.72)] bg-white shadow-sm shadow-black/5 ring-2 ring-[hsl(var(--notebook-action-soft))]",
+    code: "text-[hsl(var(--notebook-action))]",
   },
   selected: {
-    tile: "border-blue-200 bg-blue-50/60 shadow-sm shadow-blue-100/50",
-    code: "text-blue-700",
+    tile: "border-[hsl(var(--notebook-action-border)/0.72)] bg-white shadow-sm shadow-black/5 ring-2 ring-[hsl(var(--notebook-action-soft))]",
+    code: "text-[hsl(var(--notebook-action))]",
   },
   muted: {
-    tile: "border-slate-200 bg-white/90",
-    code: "text-slate-500",
+    tile: "border-[hsl(var(--notebook-border)/0.64)] bg-white/95",
+    code: "text-[hsl(var(--notebook-muted-ink))]",
   },
   comparison: {
-    tile: "border-slate-200 bg-white shadow-sm shadow-slate-200/30",
-    code: "text-slate-500",
+    tile: "border-[hsl(var(--notebook-border)/0.78)] bg-white shadow-sm shadow-black/5",
+    code: "text-[hsl(var(--notebook-muted-ink))]",
   },
 };
 

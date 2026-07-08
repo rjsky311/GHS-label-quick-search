@@ -59,7 +59,7 @@ export default function LabelPrintFooter({
   return (
     <div
       className={modalViewportFooterClassName(
-        "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6",
+        "notebook-print-footer flex flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6",
       )}
       data-testid="label-modal-footer"
     >
@@ -67,7 +67,7 @@ export default function LabelPrintFooter({
         <button
           type="button"
           onClick={onUseFullPagePrimary}
-          className="notebook-control notebook-control-primary flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-colors"
+          className="notebook-control notebook-control-primary flex min-h-11 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition-colors"
           data-testid="use-full-page-primary-footer"
         >
           <FileText className="h-4 w-4" />
@@ -77,7 +77,7 @@ export default function LabelPrintFooter({
         <button
           type="button"
           onClick={onFocusResponsibleProfile}
-          className="notebook-control notebook-control-repair flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-colors"
+          className="notebook-control notebook-control-repair flex min-h-11 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition-colors"
           data-testid="fill-profile-footer"
         >
           <Building2 className="h-4 w-4" />
@@ -89,7 +89,7 @@ export default function LabelPrintFooter({
             type="button"
             onClick={primaryAction.onClick}
             disabled={actionDisabled}
-            className={`${primaryAction.className} flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`${primaryAction.className} flex min-h-11 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50`}
             data-testid={primaryAction.testId}
           >
             <PrimaryIcon className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default function LabelPrintFooter({
               type="button"
               onClick={secondaryAction.onClick}
               disabled={actionDisabled}
-              className="notebook-control notebook-control-secondary flex flex-1 items-center justify-center gap-2 px-5 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+              className="notebook-control notebook-control-secondary flex min-h-11 flex-1 items-center justify-center gap-2 px-5 py-3 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
               data-testid={secondaryAction.testId}
             >
               <SecondaryIcon className="h-4 w-4" />
@@ -120,7 +120,7 @@ export default function LabelPrintFooter({
       <button
         type="button"
         onClick={onClose}
-        className="notebook-control notebook-control-secondary flex items-center justify-center px-5 py-3 font-medium transition-colors sm:flex-none"
+        className="notebook-control notebook-control-secondary flex min-h-11 items-center justify-center px-5 py-3 font-semibold transition-colors sm:flex-none"
       >
         {cancelLabel}
       </button>
