@@ -1,4 +1,4 @@
-import { Clock3, FlaskConical, RotateCcw, X } from "lucide-react";
+import { Clock3, FlaskConical, RotateCcw, X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {

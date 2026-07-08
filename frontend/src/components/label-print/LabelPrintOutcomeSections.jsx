@@ -1,4 +1,4 @@
-import { AlertTriangle, Building2, CheckCircle2, FileText, Tag } from "lucide-react";
+import { AlertTriangle, Building2, CheckCircle2, FileText, Tag } from "@/components/icons";
 import {
   READINESS_TONE_ACCENT_CLASSES,
 } from "@/components/label-print/labelPrintModalHelpers";

@@ -1,4 +1,4 @@
-import { BookPlus, ExternalLink, ShieldAlert } from "lucide-react";
+import { BookPlus, ExternalLink, ShieldAlert } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import CorrectionCandidateEvidence from "@/components/pilot/CorrectionCandidateEvidence";
 import { hasApprovedManualEntryForCorrectionCandidate } from "@/utils/correctionCandidates";

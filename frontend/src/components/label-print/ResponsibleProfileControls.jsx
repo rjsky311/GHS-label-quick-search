@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Building2, MapPin, Phone } from "lucide-react";
+import { Building2, MapPin, Phone } from "@/components/icons";
 import { READINESS_TONE_CLASSES } from "@/components/label-print/labelPrintModalHelpers";
 
 const PROFILE_FIELDS = [

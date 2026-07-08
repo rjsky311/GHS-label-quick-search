@@ -21,6 +21,12 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.visualBadge')).toBeInTheDocument();
   });
 
+  it('uses the dark workflow visual in Dark Bench mode', () => {
+    render(<EmptyState onQuickSearch={onQuickSearch} themeMode="dark-bench" />);
+
+    expect(screen.getByTestId('empty-visual-asset')).toBeInTheDocument();
+  });
+
   it('renders the visual label as a non-interactive figure caption', () => {
     render(<EmptyState onQuickSearch={onQuickSearch} />);
 

@@ -1,4 +1,4 @@
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet } from "@/components/icons";
 import {
   BATCH_CATEGORY_TONE,
   READINESS_TONE_CLASSES,

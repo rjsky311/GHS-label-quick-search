@@ -71,7 +71,7 @@ code {
         --notebook-grain-opacity: .14;
         --notebook-grain-blend: multiply;
         --notebook-canvas-grain-opacity: .66;
-        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-display: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }
@@ -103,7 +103,7 @@ code {
         --notebook-grain-opacity: .14;
         --notebook-grain-blend: multiply;
         --notebook-canvas-grain-opacity: .66;
-        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-display: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }
@@ -135,7 +135,7 @@ code {
         --notebook-grain-opacity: .055;
         --notebook-grain-blend: screen;
         --notebook-canvas-grain-opacity: .5;
-        --font-display: "Fraunces", "Noto Serif TC", serif;
+        --font-display: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-sans: "IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif;
         --font-mono: "IBM Plex Mono", "Consolas", monospace;
     }

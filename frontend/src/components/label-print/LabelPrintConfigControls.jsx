@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import {
   FULL_PAGE_PRIMARY_STOCK_IDS,
   getLabelStockPresetDisplay,

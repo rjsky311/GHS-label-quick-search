@@ -1,4 +1,4 @@
-import { ClipboardList, FileText } from "lucide-react";
+import { ClipboardList, FileText } from "@/components/icons";
 import BatchFitReport from "@/components/label-print/BatchFitReport";
 import {
   READINESS_TONE_ACCENT_CLASSES,

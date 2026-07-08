@@ -1,4 +1,4 @@
-import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight, ExternalLink, Info } from "lucide-react";
+import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight, ExternalLink, Info } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import { Button } from "@/components/ui/button";

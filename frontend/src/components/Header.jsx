@@ -8,7 +8,7 @@ import {
   LockKeyhole,
   Moon,
   Sun,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 

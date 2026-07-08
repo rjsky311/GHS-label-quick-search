@@ -1,4 +1,4 @@
-import { BookPlus, Link2, Tags } from "lucide-react";
+import { BookPlus, Link2, Tags } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { SectionHeading } from "@/components/pilot/PilotDashboardPrimitives";
 import {

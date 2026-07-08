@@ -1417,6 +1417,7 @@ function App() {
         {results.length === 0 && !loading && (
           <EmptyState
             onQuickSearch={handleQuickSearch}
+            themeMode={themeMode}
             trustPanel={
               <ProductTrustPanel
                 variant="empty"

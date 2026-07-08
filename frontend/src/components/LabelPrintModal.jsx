@@ -6,7 +6,7 @@ import {
   Palette,
   Tag,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   arePrintLabelConfigsEqual,
   FULL_PAGE_PRIMARY_STOCK_IDS,

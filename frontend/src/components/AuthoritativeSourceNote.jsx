@@ -1,4 +1,4 @@
-import { CheckCircle2, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 
 /**

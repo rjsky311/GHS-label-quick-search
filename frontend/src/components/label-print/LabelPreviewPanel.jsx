@@ -1,4 +1,4 @@
-import { AlertTriangle, FileText } from "lucide-react";
+import { AlertTriangle, FileText } from "@/components/icons";
 import LabelPreviewSection from "@/components/label-print/LabelPreviewSection";
 import PreviewDiagnosticsPanel from "@/components/label-print/PreviewDiagnosticsPanel";
 import { PrintOutcomeSummary } from "@/components/label-print/LabelPrintOutcomeSections";

@@ -1,4 +1,4 @@
-import { Search, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
+import { Search, ClipboardList, Loader2, AlertTriangle } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import SearchAutocomplete from "@/components/SearchAutocomplete";

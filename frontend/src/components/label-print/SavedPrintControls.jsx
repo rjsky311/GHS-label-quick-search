@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, Check, LayoutPanelTop, Plus, X } from "lucide-react";
+import { Bookmark, Check, LayoutPanelTop, Plus, X } from "@/components/icons";
 import { toast } from "sonner";
 import { getOptionLabel } from "@/components/label-print/labelPrintModalHelpers";
 import { getLocalizedNames } from "@/utils/ghsText";

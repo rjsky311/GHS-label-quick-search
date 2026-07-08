@@ -73,7 +73,7 @@ describe("theme tokens", () => {
         expect(declarations[token]).toBe(value);
       });
       expect(declarations["--font-display"]).toBe(
-        '"Fraunces", "Noto Serif TC", serif',
+        '"IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif',
       );
       expect(declarations["--font-sans"]).toBe(
         '"IBM Plex Sans", "Noto Sans TC", system-ui, sans-serif',

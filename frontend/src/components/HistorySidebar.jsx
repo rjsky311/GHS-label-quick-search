@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/formatDate";
 import useFocusTrap from "@/hooks/useFocusTrap";

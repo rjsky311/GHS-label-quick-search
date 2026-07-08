@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, FlaskConical, Clock, Bookmark, Save } from "lucide-react";
+import { X, FlaskConical, Clock, Bookmark, Save } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {

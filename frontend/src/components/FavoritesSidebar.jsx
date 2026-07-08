@@ -1,4 +1,4 @@
-import { Star, X } from "lucide-react";
+import { Star, X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import useFocusTrap from "@/hooks/useFocusTrap";

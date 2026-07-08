@@ -4,7 +4,7 @@ import {
   ClipboardList,
   LayoutPanelTop,
   Lightbulb,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   READINESS_TONE_ACCENT_CLASSES,
 } from "@/components/label-print/labelPrintModalHelpers";

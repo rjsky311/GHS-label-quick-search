@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Search, Clock, Star, X, Loader2, Tag } from "lucide-react";
+import { Search, Clock, Star, X, Loader2, Tag } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { API } from "@/constants/ghs";

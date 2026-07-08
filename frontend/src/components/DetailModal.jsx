@@ -12,7 +12,7 @@ import {
   Database,
   Info,
   FlaskConical,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";

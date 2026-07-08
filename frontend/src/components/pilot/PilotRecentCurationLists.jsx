@@ -1,4 +1,4 @@
-import { Database, ExternalLink, Tags } from "lucide-react";
+import { Database, ExternalLink, Tags } from "@/components/icons";
 import {
   CurationStatusBadge,
   SectionHeading,

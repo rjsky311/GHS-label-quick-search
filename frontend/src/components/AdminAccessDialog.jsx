@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyRound, ShieldAlert, X } from "lucide-react";
+import { KeyRound, ShieldAlert, X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
 

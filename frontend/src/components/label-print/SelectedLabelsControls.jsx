@@ -1,4 +1,4 @@
-import { Tag, X } from "lucide-react";
+import { Tag, X } from "@/components/icons";
 import { getPreparedExpiryBadge } from "@/components/label-print/labelPrintModalHelpers";
 import { getLocalizedNames } from "@/utils/ghsText";
 import { formatPreparedDisplayName } from "@/utils/preparedSolution";

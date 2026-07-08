@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileSpreadsheet, FileText, Info, X } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Info, X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import {

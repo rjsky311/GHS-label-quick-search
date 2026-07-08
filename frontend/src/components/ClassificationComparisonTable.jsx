@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Star, CircleDot } from "lucide-react";
+import { Star, CircleDot } from "@/components/icons";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
 import {
   getLocalizedPictogramName,

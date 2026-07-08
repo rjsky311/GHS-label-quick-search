@@ -1,4 +1,4 @@
-import { Building2, Download, FileText, Printer } from "lucide-react";
+import { Building2, Download, FileText, Printer } from "@/components/icons";
 import { modalViewportFooterClassName } from "@/components/ui/modalViewport";
 
 export default function LabelPrintFooter({

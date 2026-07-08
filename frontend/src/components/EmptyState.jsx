@@ -6,13 +6,23 @@ import {
   Search,
   ShieldCheck,
   Star,
-} from "lucide-react";
+} from "@/components/icons";
 import { useTranslation } from "react-i18next";
-import emptyWorkflowVisual from "@/assets/generated/ghs-empty-workflow.webp";
+import emptyWorkflowVisualDark from "@/assets/generated/ghs-empty-workflow-dark.webp";
+import emptyWorkflowVisualLight from "@/assets/generated/ghs-empty-workflow-light.webp";
 import { Button } from "@/components/ui/button";
+import { THEME_MODES } from "@/utils/themeMode";
 
-export default function EmptyState({ onQuickSearch, trustPanel = null }) {
+export default function EmptyState({
+  onQuickSearch,
+  themeMode = THEME_MODES.COMFORT_DIM,
+  trustPanel = null,
+}) {
   const { t } = useTranslation();
+  const emptyWorkflowVisual =
+    themeMode === THEME_MODES.DARK_BENCH
+      ? emptyWorkflowVisualDark
+      : emptyWorkflowVisualLight;
   const examples = [
     { cas: "64-17-5", nameKey: "empty.ethanol" },
     { cas: "7732-18-5", nameKey: "empty.water" },

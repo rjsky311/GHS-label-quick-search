@@ -4,7 +4,8 @@ Project-bound bitmap assets in this folder are generated with Codex built-in ima
 
 ## Current Assets
 
-- `ghs-empty-workflow.webp` - empty-state workflow visual for the first-use screen. Generated on a flat chroma-key background, locally converted to alpha, resized to 960x640, and saved as transparent WebP.
+- `ghs-empty-workflow-light.webp` - Comfort Dim empty-state workflow visual for the first-use screen, with light workbench treatment and print-safe paper.
+- `ghs-empty-workflow-dark.webp` - Dark Bench empty-state workflow visual for the first-use screen, preserving white printed paper on the dark work surface.
 
 ## Guardrails
 

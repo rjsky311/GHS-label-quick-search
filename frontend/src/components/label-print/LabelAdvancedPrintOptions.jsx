@@ -1,4 +1,4 @@
-import { CalendarDays, Settings2 } from "lucide-react";
+import { CalendarDays, Settings2 } from "@/components/icons";
 import {
   ConfigButtonGrid,
 } from "@/components/label-print/LabelPrintConfigControls";

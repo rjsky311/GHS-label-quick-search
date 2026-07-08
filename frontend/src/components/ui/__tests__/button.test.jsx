@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { AlertTriangle, Search } from "lucide-react";
+import { AlertTriangle, Search } from "@/components/icons";
 import { Button, buttonVariants } from "../button";
 
 describe("Button notebook variants", () => {

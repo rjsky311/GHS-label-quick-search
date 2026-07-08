@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, ExternalLink, Send, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink, Send, X } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import useFocusTrap from "@/hooks/useFocusTrap";

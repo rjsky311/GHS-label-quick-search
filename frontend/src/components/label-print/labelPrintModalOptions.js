@@ -4,7 +4,7 @@ import {
   FileText,
   QrCode,
   Target,
-} from "lucide-react";
+} from "@/components/icons";
 
 export const TEMPLATE_OPTIONS = [
   {
