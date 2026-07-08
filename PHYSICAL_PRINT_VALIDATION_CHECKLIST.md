@@ -20,6 +20,32 @@ families in this checklist are historical/internal regression families and
 should not be treated as a mandate to reintroduce first-level bottle, rack,
 tube, or QR-supplement choices.
 
+## 0. Modal And Print Paths (2026-07-08 redesign)
+
+The print modal was restyled to the Graphite Editorial design language on
+2026-07-08 (chrome only). The white label preview and the generated print
+output are print-truth and did NOT change, so every output/stock/readability
+check below remains valid; only the surrounding UI labels were updated. In the
+modal the output selector still exposes exactly the three public outputs
+(`完整 A4/Letter 標籤` / `QR 小標` / `辨識小標`) and the preview has a
+`完整顯示 / 放大檢查` (Fit / Inspect) toggle for pre-print detail checks —
+neither affects printed output.
+
+There are now TWO print paths. Validate the one(s) users actually use on each
+device, and record which path each evidence line used:
+
+- **Browser print** (desktop default): pick an output, press
+  `列印標籤 (N 張)`, then print through the browser dialog with the Section 1
+  baseline settings.
+- **Download PDF** (mobile-primary, added 2026-07-07): press `下載 PDF (N 張)`.
+  This POSTs the exact print HTML to the server renderer
+  (`POST /api/print/pdf`, headless Chromium) and downloads a true PDF, which
+  sidesteps mobile-browser print clipping/headers. On phones this is the
+  PRIMARY recommended path — validate by opening the downloaded PDF and
+  printing it at 100% / actual size. The endpoint must be healthy
+  (`/api/print/pdf` returns `200 application/pdf`); a 503 means the render
+  service is down, not a layout finding.
+
 ## 1. Preconditions
 
 Run automated gates first so the physical print pass is not debugging basic
@@ -50,6 +76,8 @@ Use the production URL for final evidence:
 Record the following before printing:
 
 - Commit hash and deployed frontend asset name.
+- Print path used: browser print or download-PDF (see Section 0).
+- Device: desktop or mobile (mobile should use download-PDF).
 - Browser and version.
 - Operating system.
 - Printer model and driver.
@@ -69,6 +97,12 @@ Recommended baseline print settings:
 
 If a printer or driver cannot use actual size, record the automatic scaling
 percentage and treat any layout drift as a product finding.
+
+For the download-PDF path, the page geometry is fixed by the server render, so
+the only manual variable is the PDF viewer's print scaling: print at 100% /
+actual size and do not let the viewer "fit to page" shrink it. A PDF that is
+correct on screen but clipped on paper is a viewer/driver scaling finding, not
+an app-renderer finding.
 
 ## 2. Required Physical Stock Families
 
@@ -165,6 +199,8 @@ A physical print pass is complete only when:
   - App renderer/layout issue.
   - Browser print setting issue.
   - Printer driver scaling issue.
+  - PDF render service issue (download-PDF path returns 503 / no file).
+  - PDF viewer scaling issue (PDF correct on screen, clipped on paper).
   - Stock/media mismatch.
   - QR destination or scan issue.
   - Data/content issue.
@@ -187,6 +223,9 @@ Date:
 Commit:
 Production URL:
 Frontend asset:
+Print path: browser-print / download-PDF
+Device: desktop / mobile
+PDF endpoint (download-PDF path only): 200 / 503
 Browser / OS:
 Printer:
 Driver:
