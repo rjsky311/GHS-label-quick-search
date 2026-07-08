@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首頁線稿插畫種子 — 概念工作檯（獨立表情件）</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;font-family:"IBM Plex Sans","Noto Sans TC",sans-serif;background:#e9e3d5;color:#17130b;-webkit-font-smoothing:antialiased;padding:34px 24px 70px}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-weight:700;font-size:24px;letter-spacing:-.01em}
+  .lead{color:#5a5344;font-size:14px;margin:6px 0 24px;line-height:1.6}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+  .card{border-radius:8px;padding:22px;border:1px solid rgba(0,0,0,.12)}
+  .light{background:#f6f1e6;--ink:#17130b;--teal:#0c6b62;--red:#cf3324;--sub:#5a5344;--faint:#c9bfa6}
+  .dark{background:#161714;--ink:#e8e7dd;--teal:#40d3c4;--red:#f0806f;--sub:#8d8d80;--faint:#3a3b32;border-color:#33352c}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:14px}
+  .art{width:100%;color:var(--ink)}
+  .art svg{width:100%;height:auto;display:block}
+  .accent{stroke:var(--teal)} .accent-f{fill:var(--teal)}
+  .red{stroke:var(--red)} .red-f{fill:var(--red)}
+  .faint{stroke:var(--faint)}
+  .cap{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--sub);margin-top:8px}
+  .empty{margin-top:16px;border-top:1px dashed var(--faint);padding-top:14px}
+  .empty .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+  .empty .h{font-weight:700;font-size:18px;margin:6px 0 4px}
+  .empty .b{font-size:13px;color:var(--sub);line-height:1.5}
+  .note{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5a5344;line-height:1.6;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>首頁線稿插畫 · 概念工作檯</h1>
+  <div class="lead">獨立表情件(非 icon):線稿 + 青綠點綴,<code>currentColor</code> 走 token 深淺自動換色。比 icon 有層次:試劑瓶、印好的 GHS 標籤、放大鏡「查詢→核對」的敘事。角落標「概念示意」(呼應你 playbook 的概念插圖規範)。下方示範它擺在 empty state 的樣子。</div>
+
+  <div class="cols">
+    <!-- LIGHT -->
+    <div class="card light">
+      <div class="tag">Comfort Dim · 淺色</div>
+      <div class="art">
+        <svg viewBox="0 0 460 300" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <!-- bench -->
+          <path d="M28 258h404" stroke="currentColor" stroke-width="2.4"/>
+          <path class="faint" d="M46 266h388" stroke-width="1.6"/>
+
+          <!-- reagent bottle (left) -->
+          <g stroke-width="2.2">
+            <rect x="92" y="86" width="30" height="14" rx="2" stroke="currentColor"/>
+            <path d="M99 100v10M115 100v10" stroke="currentColor"/>
+            <path d="M96 110q-14 6-14 26v96a10 10 0 0 0 10 10h30a10 10 0 0 0 10-10v-96q0-20-14-26" stroke="currentColor"/>
+            <!-- label on bottle -->
+            <rect x="90" y="168" width="44" height="62" rx="3" stroke="currentColor"/>
+            <path d="M97 176l7-6 7 6-7 6z" class="red" stroke-width="1.6"/>
+            <path class="faint" d="M116 176h11M97 202h30M97 210h22M97 218h26" stroke-width="1.5"/>
+            <!-- liquid -->
+            <path class="accent" d="M83 150h56" stroke-width="2.2"/>
+            <path class="accent" d="M83 150v82a10 10 0 0 0 10 10h28a10 10 0 0 0 10-10v-82" stroke-width="0" opacity="0"/>
+          </g>
+
+          <!-- printed GHS label sheet (center-right, slight tilt) -->
+          <g transform="rotate(-5 300 150)" stroke-width="2.2">
+            <rect x="248" y="52" width="150" height="188" rx="5" stroke="currentColor" fill="none"/>
+            <path d="M262 84h122" stroke="currentColor" stroke-width="2.4"/>
+            <!-- diamond + signal -->
+            <path d="M270 64l8-7 8 7-8 7z" class="red" stroke-width="1.8"/>
+            <rect x="330" y="60" width="48" height="14" rx="2" class="red"/>
+            <!-- H rules -->
+            <path class="faint" d="M262 100h120M262 112h96M262 124h110M262 136h84" stroke-width="1.6"/>
+            <!-- QR + fineprint -->
+            <rect class="accent" x="330" y="196" width="34" height="34" rx="2"/>
+            <path class="accent" d="M337 203h6v6h-6zM351 203h6v6h-6zM337 217h6v6h-6z" stroke-width="1.4"/>
+            <path class="faint" d="M262 200h52M262 210h40M262 220h48" stroke-width="1.5"/>
+          </g>
+
+          <!-- magnifier over the label (search → verify) -->
+          <g stroke-width="2.4">
+            <circle class="accent" cx="300" cy="168" r="40"/>
+            <circle class="faint" cx="300" cy="168" r="40" opacity=".0"/>
+            <line class="accent" x1="330" y1="198" x2="356" y2="224"/>
+            <path class="accent" d="M287 168a13 13 0 0 1 13-13" stroke-width="1.8" opacity=".7"/>
+          </g>
+
+          <!-- small tube (far right) -->
+          <g stroke-width="2.2">
+            <path d="M410 96v70a10 10 0 0 0 20 0V96" stroke="currentColor"/>
+            <path d="M406 96h28" stroke="currentColor"/>
+            <path class="accent" d="M410 140h20" stroke-width="2.2"/>
+          </g>
+
+          <!-- conceptual label -->
+          <text x="30" y="292" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--sub)" letter-spacing="1">概念示意 · CONCEPTUAL</text>
+        </svg>
+      </div>
+      <div class="empty">
+        <div class="k">開始</div>
+        <div class="h">從 CAS 或化學品名稱開始</div>
+        <div class="b">先取得可追溯的危害參考,再列印標籤、匯出資料或保存常用項目。</div>
+      </div>
+    </div>
+
+    <!-- DARK -->
+    <div class="card dark">
+      <div class="tag">Dark Bench · 深色（同一份 SVG）</div>
+      <div class="art">
+        <svg viewBox="0 0 460 300" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M28 258h404" stroke="currentColor" stroke-width="2.4"/>
+          <path class="faint" d="M46 266h388" stroke-width="1.6"/>
+          <g stroke-width="2.2">
+            <rect x="92" y="86" width="30" height="14" rx="2" stroke="currentColor"/>
+            <path d="M99 100v10M115 100v10" stroke="currentColor"/>
+            <path d="M96 110q-14 6-14 26v96a10 10 0 0 0 10 10h30a10 10 0 0 0 10-10v-96q0-20-14-26" stroke="currentColor"/>
+            <rect x="90" y="168" width="44" height="62" rx="3" stroke="currentColor"/>
+            <path d="M97 176l7-6 7 6-7 6z" class="red" stroke-width="1.6"/>
+            <path class="faint" d="M116 176h11M97 202h30M97 210h22M97 218h26" stroke-width="1.5"/>
+            <path class="accent" d="M83 150h56" stroke-width="2.2"/>
+          </g>
+          <g transform="rotate(-5 300 150)" stroke-width="2.2">
+            <rect x="248" y="52" width="150" height="188" rx="5" stroke="currentColor"/>
+            <path d="M262 84h122" stroke="currentColor" stroke-width="2.4"/>
+            <path d="M270 64l8-7 8 7-8 7z" class="red" stroke-width="1.8"/>
+            <rect x="330" y="60" width="48" height="14" rx="2" class="red"/>
+            <path class="faint" d="M262 100h120M262 112h96M262 124h110M262 136h84" stroke-width="1.6"/>
+            <rect class="accent" x="330" y="196" width="34" height="34" rx="2"/>
+            <path class="accent" d="M337 203h6v6h-6zM351 203h6v6h-6zM337 217h6v6h-6z" stroke-width="1.4"/>
+            <path class="faint" d="M262 200h52M262 210h40M262 220h48" stroke-width="1.5"/>
+          </g>
+          <g stroke-width="2.4">
+            <circle class="accent" cx="300" cy="168" r="40"/>
+            <line class="accent" x1="330" y1="198" x2="356" y2="224"/>
+            <path class="accent" d="M287 168a13 13 0 0 1 13-13" stroke-width="1.8" opacity=".7"/>
+          </g>
+          <g stroke-width="2.2">
+            <path d="M410 96v70a10 10 0 0 0 20 0V96" stroke="currentColor"/>
+            <path d="M406 96h28" stroke="currentColor"/>
+            <path class="accent" d="M410 140h20" stroke-width="2.2"/>
+          </g>
+          <text x="30" y="292" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--sub)" letter-spacing="1">概念示意 · CONCEPTUAL</text>
+        </svg>
+      </div>
+      <div class="empty">
+        <div class="k">開始</div>
+        <div class="h">從 CAS 或化學品名稱開始</div>
+        <div class="b">先取得可追溯的危害參考,再列印標籤、匯出資料或保存常用項目。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">一份 SVG、currentColor + --teal token → 深淺自動換色(白色點陣 webp 換掉)。若構圖 OK,我把它定稿收進資產;若想調(元素增減、更抽象/更具象、放大鏡拿掉…)告訴我。GHS 菱形/signal 維持紅,不套青綠。</div>
+</div>
+</body>
+</html>

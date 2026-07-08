@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>字體對照 — B（保留 Fraunces）vs A（純 IBM Plex）</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f1ead9;--surface:#fffdf6;--ink:#17130b;--ink2:#5a5344;--hair:#dbd2be;
+    --teal:#0c6b62;--red:#cf3324;
+    --fdisplay:"Fraunces",serif; --fdisplay-zh:"Noto Serif TC",serif;
+    --fsans:"IBM Plex Sans",sans-serif; --fsans-zh:"Noto Sans TC",sans-serif;
+    --fmono:"IBM Plex Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--fsans),var(--fsans-zh);-webkit-font-smoothing:antialiased;padding:34px 24px 70px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-family:var(--fdisplay);font-weight:900;font-size:26px;letter-spacing:-.01em}
+  .lead{color:var(--ink2);font-size:14px;margin:6px 0 26px;line-height:1.6}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+  .card-tag{font-family:var(--fmono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:9px 16px;border-bottom:1px solid var(--hair);color:var(--ink2);display:flex;justify-content:space-between}
+  .card-tag b{color:var(--teal)}
+  .card-b{padding:20px}
+  .kick{font-family:var(--fmono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+  .name-en{line-height:.98;letter-spacing:-.02em;margin-bottom:2px}
+  .name-zh{margin-bottom:12px}
+  .sig{display:inline-block;color:#fff;background:var(--red);padding:5px 13px;font-size:13px;margin-right:10px}
+  .cas{font-family:var(--fmono);font-size:12px;font-weight:600;border:1.5px solid var(--ink);padding:5px 10px;display:inline-block}
+  .heading{margin:20px 0 8px;border-top:2px solid var(--ink);padding-top:12px}
+  .hrow{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--hair)}
+  .hcode{font-family:var(--fmono);font-weight:600;font-size:13px;color:var(--red)}
+  .htext{font-size:14.5px;line-height:1.45}
+  .outname{margin:18px 0 4px}
+  .outsub{font-family:var(--fmono);font-size:10px;text-transform:uppercase;color:var(--ink2);letter-spacing:.05em}
+  .body{font-size:14px;line-height:1.6;color:var(--ink2);margin:16px 0}
+  .btn{font-family:var(--fmono);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;background:var(--ink);color:var(--bg);border:0;padding:13px 20px;cursor:pointer;margin-top:6px}
+  /* Option B — Fraunces display + Noto Serif TC 中文襯線 */
+  .B .name-en{font-family:var(--fdisplay);font-weight:900;font-size:38px}
+  .B .name-zh{font-family:var(--fdisplay-zh);font-weight:900;font-size:24px}
+  .B .sig{font-family:var(--fdisplay);font-weight:900}
+  .B .heading{font-family:var(--fdisplay);font-weight:600;font-size:19px}
+  .B .heading .zh{font-family:var(--fdisplay-zh);font-weight:700}
+  .B .htext{font-family:var(--fsans-zh)}
+  .B .outname{font-family:var(--fdisplay);font-weight:600;font-size:18px}
+  /* Option A — 純 IBM Plex（無襯線） */
+  .A .name-en{font-family:var(--fsans);font-weight:700;font-size:36px}
+  .A .name-zh{font-family:var(--fsans-zh);font-weight:900;font-size:23px}
+  .A .sig{font-family:var(--fsans);font-weight:700}
+  .A .heading{font-family:var(--fsans);font-weight:700;font-size:18px}
+  .A .heading .zh{font-family:var(--fsans-zh);font-weight:700}
+  .A .htext{font-family:var(--fsans-zh)}
+  .A .outname{font-family:var(--fsans);font-weight:700;font-size:17px}
+  .note{font-family:var(--fmono);font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.5}
+  .darkstrip{margin-top:16px;background:#161714;border-radius:3px;padding:14px 16px;color:#e8e7dd}
+  .darkstrip .dn{line-height:1;letter-spacing:-.02em}
+  .B .darkstrip .dn{font-family:var(--fdisplay);font-weight:900;font-size:26px}
+  .A .darkstrip .dn{font-family:var(--fsans);font-weight:700;font-size:25px}
+  .darkstrip .dz{color:#8d8d80;font-size:13px;margin-top:2px}
+  .B .darkstrip .dz{font-family:var(--fdisplay-zh);font-weight:700}
+  .A .darkstrip .dz{font-family:var(--fsans-zh)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>字體對照 · 同內容,兩種嗓音</h1>
+  <div class="lead">左 = <b>Option B</b>:保留 Fraunces 當英文襯線,中文改用 <b>Noto Serif TC</b>(英中都襯線),內文/資料仍 IBM Plex。<br>右 = <b>Option A</b>:全部 IBM Plex(英)+ Noto Sans TC(中),無襯線,單一嗓音最一致。</div>
+
+  <div class="cols">
+    <!-- Option B -->
+    <div class="card B">
+      <div class="card-tag"><span>Option B · 保留 Fraunces + 中文襯線</span><b>編輯個性</b></div>
+      <div class="card-b">
+        <div class="kick">02 — 結果 / RESULT</div>
+        <div class="name-en">Hydrochloric acid</div>
+        <div class="name-zh">鹽酸</div>
+        <div><span class="sig">危險 Danger</span><span class="cas">CAS 7647-01-0</span></div>
+        <div class="heading"><span class="zh">危害說明</span> / Hazard</div>
+        <div class="hrow"><span class="hcode">H314</span><span class="htext">造成嚴重皮膚灼傷和眼睛損傷</span></div>
+        <div class="hrow"><span class="hcode">H335</span><span class="htext">可能造成呼吸道刺激</span></div>
+        <div class="outname">完整 A4 標籤</div>
+        <div class="outsub">Primary · H/P + QR</div>
+        <div class="body">適合實驗室、教學現場與小型研發團隊的免費快速工具。先取得可追溯的危害參考,再列印標籤。</div>
+        <button class="btn">列印標籤</button>
+        <div class="darkstrip"><div class="dn">Hydrochloric acid</div><div class="dz">鹽酸 · 危險 Danger</div></div>
+        <div class="note">中文用 Noto Serif TC → 與英文襯線同嗓音;Fraunces 無中文字,由 Noto Serif TC 承接(不會豆腐字)。</div>
+      </div>
+    </div>
+
+    <!-- Option A -->
+    <div class="card A">
+      <div class="card-tag"><span>Option A · 純 IBM Plex</span><b>一致 / 儀器</b></div>
+      <div class="card-b">
+        <div class="kick">02 — 結果 / RESULT</div>
+        <div class="name-en">Hydrochloric acid</div>
+        <div class="name-zh">鹽酸</div>
+        <div><span class="sig">危險 Danger</span><span class="cas">CAS 7647-01-0</span></div>
+        <div class="heading"><span class="zh">危害說明</span> / Hazard</div>
+        <div class="hrow"><span class="hcode">H314</span><span class="htext">造成嚴重皮膚灼傷和眼睛損傷</span></div>
+        <div class="hrow"><span class="hcode">H335</span><span class="htext">可能造成呼吸道刺激</span></div>
+        <div class="outname">完整 A4 標籤</div>
+        <div class="outsub">Primary · H/P + QR</div>
+        <div class="body">適合實驗室、教學現場與小型研發團隊的免費快速工具。先取得可追溯的危害參考,再列印標籤。</div>
+        <button class="btn">列印標籤</button>
+        <div class="darkstrip"><div class="dn">Hydrochloric acid</div><div class="dz">鹽酸 · 危險 Danger</div></div>
+        <div class="note">全 IBM Plex + Noto Sans TC → 一種嗓音,最一致、最技術。接近你 Deck 的字體選擇。</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

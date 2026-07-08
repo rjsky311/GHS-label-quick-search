@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon 語言種子 — 自訂手繪 SVG（石墨編輯 · 線稿+青綠）</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;font-family:"IBM Plex Sans","Noto Sans TC",sans-serif;background:#e9e3d5;color:#17130b;-webkit-font-smoothing:antialiased;padding:34px 24px 70px}
+  .wrap{max-width:1040px;margin:0 auto}
+  h1{font-family:"Fraunces",serif;font-weight:900;font-size:26px;letter-spacing:-.01em}
+  .lead{color:#5a5344;font-size:14px;margin:6px 0 24px;line-height:1.6}
+  .strip{border-radius:6px;padding:22px 24px;margin-bottom:20px;border:1px solid rgba(0,0,0,.12)}
+  .light{background:#f6f1e6;--ink:#17130b;--teal:#0c6b62;--red:#cf3324;--sub:#5a5344}
+  .dark{background:#161714;--ink:#e8e7dd;--teal:#40d3c4;--red:#f0806f;--sub:#8d8d80;border-color:#33352c}
+  .strip h2{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 16px;color:var(--sub)}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+  @media(max-width:720px){.grid{grid-template-columns:repeat(4,1fr)}}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .ic{width:30px;height:30px;color:var(--ink)}
+  .ic svg{width:100%;height:100%;display:block}
+  .lbl{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.03em}
+  .accent{stroke:var(--teal)}
+  .accent-f{fill:var(--teal)}
+  .red{stroke:var(--red)} .red-f{fill:var(--red)}
+  .big-row{display:flex;gap:26px;align-items:flex-end;margin-top:20px;flex-wrap:wrap}
+  .big{width:64px;height:64px;color:var(--ink)}
+  .fav{width:56px;height:56px}
+  .hero{width:230px;height:150px;color:var(--ink)}
+  .cap{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--sub);margin-top:6px}
+  .note{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5a5344;line-height:1.6;margin-top:6px}
+  .specs{display:flex;gap:22px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5a5344;margin-top:8px}
+  .specs b{color:#17130b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Icon 語言種子 · 自訂手繪 SVG</h1>
+  <div class="lead">提案語言:<b>石墨編輯線稿</b> — 24px 網格、1.9px 線寬、圓端圓角、<code>currentColor</code> 主線 + <b>青綠</b>點綴(危害標記維持 GHS 紅)。全部吃 token,深淺自動換色。先鎖這個語言,再照它把整套 54 個畫齊。</div>
+
+  <!-- LIGHT strip -->
+  <div class="strip light">
+    <h2>Comfort Dim · 淺色(currentColor = 墨,accent = 深青綠)</h2>
+    <div class="grid">
+      <!-- search -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor"/><line class="accent" x1="15.5" y1="15.5" x2="20.5" y2="20.5"/></svg></span><span class="lbl">search</span></div>
+      <!-- flask -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-4.5 8.2A2 2 0 0 0 7.3 20.5h9.4a2 2 0 0 0 1.8-3.3L14 9V3" stroke="currentColor"/><path class="accent" d="M7.3 15.5h9.4"/></svg></span><span class="lbl">flask</span></div>
+      <!-- star -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.87L12 17.9l-5.25 2.77 1-5.87L3.5 9.66l5.9-.86z" stroke="currentColor"/></svg></span><span class="lbl">star</span></div>
+      <!-- printer -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5" stroke="currentColor"/><path d="M6 9h12a2 2 0 0 1 2 2v5h-3" stroke="currentColor"/><path d="M6 16H4a0 0 0 0 1 0 0v-5a2 2 0 0 1 2-2" stroke="currentColor"/><rect class="accent" x="7" y="14" width="10" height="6" rx="1"/></svg></span><span class="lbl">printer</span></div>
+      <!-- download -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14" stroke="currentColor"/><path class="accent" d="M12 4v11m0 0l-4-4m4 4l4-4"/></svg></span><span class="lbl">download</span></div>
+      <!-- clipboard-list -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2" stroke="currentColor"/><path class="accent" d="M9 4h6v3H9z"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4" stroke="currentColor"/></svg></span><span class="lbl">history</span></div>
+      <!-- shield-alert -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.5v5.5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V5.5z" stroke="currentColor"/><path d="M12 8.5v4" stroke="currentColor"/><circle class="accent-f" cx="12" cy="15.6" r="1"/></svg></span><span class="lbl">safety</span></div>
+      <!-- external-link -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5h6v6" class="accent"/><path class="accent" d="M19 5l-8 8"/><path d="M17 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h4" stroke="currentColor"/></svg></span><span class="lbl">source</span></div>
+      <!-- theme (sun) -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2" stroke="currentColor"/><path class="accent" d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg></span><span class="lbl">theme</span></div>
+      <!-- chevron-right -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6" stroke="currentColor"/></svg></span><span class="lbl">chevron</span></div>
+      <!-- report flag -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4" stroke="currentColor"/><path class="red" d="M6 4.5h11l-2.2 3.5L17 11.5H6z"/></svg></span><span class="lbl">report</span></div>
+      <!-- building (supplier) -->
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V6l7-3v18M12 8h7v13" stroke="currentColor"/><path class="accent" d="M8 9h1.5M8 12h1.5M8 15h1.5M15 12h1.5M15 15h1.5"/></svg></span><span class="lbl">supplier</span></div>
+    </div>
+
+    <div class="big-row">
+      <div><span class="ic big"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-4.5 8.2A2 2 0 0 0 7.3 20.5h9.4a2 2 0 0 0 1.8-3.3L14 9V3" stroke="currentColor"/><path class="accent" d="M7.3 15.5h9.4"/><circle class="accent-f" cx="10.5" cy="17.6" r=".7"/><circle class="accent-f" cx="13.5" cy="18.2" r=".7"/></svg></span><div class="cap">放大 · flask</div></div>
+      <!-- favicon: GHS hazard diamond (red border per GHS convention) -->
+      <div><span class="ic fav"><svg viewBox="0 0 56 56" fill="none"><rect x="10" y="10" width="36" height="36" rx="4" transform="rotate(45 28 28)" class="red" stroke-width="3.4" fill="#fff"/><path d="M28 19v13" class="red" stroke-width="3.4" stroke-linecap="round"/><circle cx="28" cy="37.5" r="1.9" class="red-f"/></svg></span><div class="cap">favicon · GHS 菱形</div></div>
+      <!-- mini hero workbench illustration -->
+      <div>
+        <span class="ic hero"><svg viewBox="0 0 230 150" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 128h190" stroke="currentColor"/>
+          <!-- label sheet -->
+          <rect x="120" y="34" width="86" height="86" rx="4" stroke="currentColor"/>
+          <path d="M132 50h40M132 62h62M132 74h50" stroke="currentColor" opacity=".55"/>
+          <rect class="accent" x="132" y="92" width="20" height="20" rx="2"/>
+          <path class="accent" d="M162 96h32M162 104h24"/>
+          <!-- bottle -->
+          <path d="M52 60h20M56 60v-8h12v8M50 66l0 54a6 6 0 0 0 6 6h12a6 6 0 0 0 6-6V66a6 6 0 0 0-6-6H56a6 6 0 0 0-6 6z" stroke="currentColor"/>
+          <path class="accent" d="M50 96h28"/>
+          <path class="accent" d="M50 96v24a6 6 0 0 0 6 6h16a6 6 0 0 0 6-6V96" opacity=".35"/>
+          <!-- magnifier -->
+          <circle class="accent" cx="150" cy="82" r="20"/>
+          <line class="accent" x1="165" y1="97" x2="182" y2="114"/>
+        </svg></span>
+        <div class="cap">迷你首頁插圖 · 線稿工作檯(取代藍色點陣 webp)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DARK strip -->
+  <div class="strip dark">
+    <h2>Dark Bench · 深色(同一份 SVG,currentColor = 奶油墨,accent = 亮青綠)</h2>
+    <div class="grid">
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor"/><line class="accent" x1="15.5" y1="15.5" x2="20.5" y2="20.5"/></svg></span><span class="lbl">search</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-4.5 8.2A2 2 0 0 0 7.3 20.5h9.4a2 2 0 0 0 1.8-3.3L14 9V3" stroke="currentColor"/><path class="accent" d="M7.3 15.5h9.4"/></svg></span><span class="lbl">flask</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.87L12 17.9l-5.25 2.77 1-5.87L3.5 9.66l5.9-.86z" stroke="currentColor"/></svg></span><span class="lbl">star</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5" stroke="currentColor"/><path d="M6 9h12a2 2 0 0 1 2 2v5h-3" stroke="currentColor"/><path d="M6 16H4v-5a2 2 0 0 1 2-2" stroke="currentColor"/><rect class="accent" x="7" y="14" width="10" height="6" rx="1"/></svg></span><span class="lbl">printer</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14" stroke="currentColor"/><path class="accent" d="M12 4v11m0 0l-4-4m4 4l4-4"/></svg></span><span class="lbl">download</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2" stroke="currentColor"/><path class="accent" d="M9 4h6v3H9z"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4" stroke="currentColor"/></svg></span><span class="lbl">history</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.5v5.5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V5.5z" stroke="currentColor"/><path d="M12 8.5v4" stroke="currentColor"/><circle class="accent-f" cx="12" cy="15.6" r="1"/></svg></span><span class="lbl">safety</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5h6v6" class="accent"/><path class="accent" d="M19 5l-8 8"/><path d="M17 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h4" stroke="currentColor"/></svg></span><span class="lbl">source</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2" stroke="currentColor"/><path class="accent" d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg></span><span class="lbl">theme</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6" stroke="currentColor"/></svg></span><span class="lbl">chevron</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4" stroke="currentColor"/><path class="red" d="M6 4.5h11l-2.2 3.5L17 11.5H6z"/></svg></span><span class="lbl">report</span></div>
+      <div class="cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V6l7-3v18M12 8h7v13" stroke="currentColor"/><path class="accent" d="M8 9h1.5M8 12h1.5M8 15h1.5M15 12h1.5M15 15h1.5"/></svg></span><span class="lbl">supplier</span></div>
+    </div>
+    <div class="big-row">
+      <div><span class="ic fav"><svg viewBox="0 0 56 56" fill="none"><rect x="10" y="10" width="36" height="36" rx="4" transform="rotate(45 28 28)" class="red" stroke-width="3.4" fill="#fff"/><path d="M28 19v13" class="red" stroke-width="3.4" stroke-linecap="round"/><circle cx="28" cy="37.5" r="1.9" class="red-f"/></svg></span><div class="cap">favicon(白底菱形+紅框,深色也維持 GHS 標準)</div></div>
+      <div><span class="ic hero"><svg viewBox="0 0 230 150" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 128h190" stroke="currentColor"/>
+        <rect x="120" y="34" width="86" height="86" rx="4" stroke="currentColor"/>
+        <path d="M132 50h40M132 62h62M132 74h50" stroke="currentColor" opacity=".5"/>
+        <rect class="accent" x="132" y="92" width="20" height="20" rx="2"/>
+        <path class="accent" d="M162 96h32M162 104h24"/>
+        <path d="M52 60h20M56 60v-8h12v8M50 66l0 54a6 6 0 0 0 6 6h12a6 6 0 0 0 6-6V66a6 6 0 0 0-6-6H56a6 6 0 0 0-6 6z" stroke="currentColor"/>
+        <path class="accent" d="M50 96h28"/>
+        <circle class="accent" cx="150" cy="82" r="20"/>
+        <line class="accent" x1="165" y1="97" x2="182" y2="114"/>
+      </svg></span><div class="cap">同一份 SVG,深色底自動變亮青綠</div></div>
+    </div>
+  </div>
+
+  <div class="specs"><span>網格 <b>24px</b></span><span>線寬 <b>1.9px</b>(大圖 1.7)</span><span>端點/接角 <b>round</b></span><span>主線 <b>currentColor</b></span><span>點綴 <b>--teal</b></span><span>危害標記 <b>GHS 紅</b></span></div>
+  <div class="note">說明:一份 SVG 走 currentColor + token,深淺自動換色(不必兩份)。危害/GHS 菱形依規範維持紅框白底,不套青綠。若這個語言 OK,整套 54 個(Search/Flask/Star/Printer/Download/Shield/Chevron…)照此量產;若想更幾何/更手感/更粗,告訴我方向再重種一次。</div>
+</div>
+</body>
+</html>
