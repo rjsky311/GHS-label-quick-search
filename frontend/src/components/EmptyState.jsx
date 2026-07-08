@@ -172,7 +172,7 @@ export default function EmptyState({
                 data-testid="empty-visual-asset"
               />
               <div
-                className="nb-fig absolute bottom-3 left-3"
+                className="nb-fig absolute left-3 top-3"
                 data-testid="empty-visual-caption"
               >
                 {t("empty.visualBadge")}

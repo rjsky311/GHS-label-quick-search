@@ -92,7 +92,7 @@ export default function Header({
               <p className="truncate font-[var(--font-mono)] text-xs text-[hsl(var(--notebook-muted-ink))]">{t("header.subtitle")}</p>
             </div>
           </a>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-nowrap gap-2 overflow-x-auto py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:py-0">
             {showPilotDashboardButton ? (
               <Button
                 onClick={onTogglePilotDashboard}
