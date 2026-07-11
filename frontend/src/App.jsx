@@ -187,6 +187,8 @@ function App() {
   // ── Refs ──
   const searchInputRef = useRef(null);
   const hydratedLookupQueryRef = useRef(false);
+  // Synchronous mirror of the scalar owner for deferred-work checks.
+  const activeSidebarRef = useRef(null);
   const singleSearchRequestRef = useRef(0);
   const singleSearchAbortRef = useRef(null);
   const batchSearchRequestRef = useRef(0);
@@ -194,6 +196,8 @@ function App() {
   const favoritePrintRequestRef = useRef(0);
   const favoritePrintAbortRef = useRef(null);
   const favoritePrintCasRef = useRef("");
+  const preparedReprintRequestRef = useRef(0);
+  const preparedReprintAbortRef = useRef(null);
   const batchProgressClearTimeoutRef = useRef(null);
 
   const isCanceledRequest = useCallback(
@@ -211,19 +215,37 @@ function App() {
     favoritePrintCasRef.current = "";
   }, []);
 
+  const invalidatePreparedReprintLookup = useCallback(() => {
+    preparedReprintAbortRef.current?.abort?.();
+    preparedReprintAbortRef.current = null;
+    preparedReprintRequestRef.current += 1;
+    setPreparedReprintingId(null);
+  }, []);
+
+  const replaceSidebar = useCallback(
+    (sidebarId) => {
+      invalidateFavoritePrintLookup();
+      invalidatePreparedReprintLookup();
+      activeSidebarRef.current = sidebarId;
+      setActiveSidebar(sidebarId);
+    },
+    [invalidateFavoritePrintLookup, invalidatePreparedReprintLookup],
+  );
+
   const closeSidebar = useCallback(() => {
-    invalidateFavoritePrintLookup();
-    setActiveSidebar(null);
-  }, [invalidateFavoritePrintLookup]);
+    replaceSidebar(null);
+  }, [replaceSidebar]);
 
   const toggleSidebar = useCallback(
     (sidebarId) => {
       invalidateFavoritePrintLookup();
-      setActiveSidebar((currentSidebar) =>
-        currentSidebar === sidebarId ? null : sidebarId
-      );
+      invalidatePreparedReprintLookup();
+      const nextSidebar =
+        activeSidebarRef.current === sidebarId ? null : sidebarId;
+      activeSidebarRef.current = nextSidebar;
+      setActiveSidebar(nextSidebar);
     },
-    [invalidateFavoritePrintLookup]
+    [invalidateFavoritePrintLookup, invalidatePreparedReprintLookup]
   );
 
   // ── Custom Hooks ──
@@ -464,7 +486,7 @@ function App() {
   );
 
   const handleGoHome = useCallback(() => {
-    invalidateFavoritePrintLookup();
+    closeSidebar();
     setError("");
     setLoading(false);
     setBatchProgress(null);
@@ -479,7 +501,6 @@ function App() {
     });
     replaceResultsView([]);
     setSelectedResult(null);
-    setActiveSidebar(null);
     setShowPilotAdminDialog(false);
     setShowExportPreview(false);
     setShowComparisonModal(false);
@@ -488,7 +509,6 @@ function App() {
     setPrepareSolutionParent(null);
     setPreparedPresetNameDraft("");
     setPreparedFlowActive(false);
-    setPreparedReprintingId(null);
     setPrintBlockedInfo(null);
     setLabelQuantities({});
 
@@ -498,7 +518,7 @@ function App() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
-  }, [invalidateFavoritePrintLookup, replaceResultsView, setLabelQuantities]);
+  }, [closeSidebar, replaceResultsView, setLabelQuantities]);
 
   const logUnresolvedSearch = useCallback(
     (query, queryType, result, meta = {}) => {
@@ -738,27 +758,34 @@ function App() {
     searchSingle(casFromUrl);
   }, [searchSingle]);
 
-  const handleSelectHistoryItem = useCallback((cas) => {
-    setSingleCas(cas);
-    setActiveTab("single");
-    setActiveSidebar(null);
-  }, []);
+  const handleSelectHistoryItem = useCallback(
+    (cas) => {
+      setSingleCas(cas);
+      setActiveTab("single");
+      closeSidebar();
+    },
+    [closeSidebar],
+  );
 
   useEffect(() => {
-    if (!pilotAuthError) return;
+    if (
+      !pilotAuthError ||
+      activeSidebarRef.current !== SIDEBAR_IDS.PILOT
+    ) {
+      return;
+    }
 
     clearPilotAdminKey();
     setPilotAdminKey("");
-    setActiveSidebar(null);
+    closeSidebar();
     setPilotAdminError(pilotAuthError);
     setShowPilotAdminDialog(true);
-  }, [pilotAuthError]);
+  }, [closeSidebar, pilotAuthError]);
 
   const handleViewDetailFromFavorites = useCallback((item) => {
-    invalidateFavoritePrintLookup();
     setSelectedResult(item);
-    setActiveSidebar(null);
-  }, [invalidateFavoritePrintLookup]);
+    closeSidebar();
+  }, [closeSidebar]);
 
   const handleViewDetailFromResults = useCallback((item) => {
     invalidateFavoritePrintLookup();
@@ -803,8 +830,8 @@ function App() {
         return;
       }
       setSelectedForLabel([refreshedItem]);
+      closeSidebar();
       setShowLabelModal(true);
-      setActiveSidebar(null);
     } catch (error) {
       if (isCanceledRequest(error)) return;
       if (
@@ -825,6 +852,7 @@ function App() {
       }
     }
   }, [
+    closeSidebar,
     getEffectiveClassification,
     invalidateFavoritePrintLookup,
     isCanceledRequest,
@@ -876,9 +904,9 @@ function App() {
       setPilotAdminKey(normalized);
       setPilotAdminError("");
       setShowPilotAdminDialog(false);
-      setActiveSidebar(SIDEBAR_IDS.PILOT);
+      replaceSidebar(SIDEBAR_IDS.PILOT);
     },
-    [t]
+    [replaceSidebar, t]
   );
 
   const handleOpenLabelModal = useCallback(() => {
@@ -1103,14 +1131,29 @@ function App() {
 
   const handleReprintPreparedRecent = useCallback(
     async (record, recordId) => {
-      if (!record?.parentCas) return;
+      if (
+        !record?.parentCas ||
+        activeSidebarRef.current !== SIDEBAR_IDS.PREPARED
+      ) {
+        return;
+      }
       invalidateFavoritePrintLookup();
+      invalidatePreparedReprintLookup();
+      const controller = new AbortController();
+      const requestId = preparedReprintRequestRef.current + 1;
+      preparedReprintRequestRef.current = requestId;
+      preparedReprintAbortRef.current = controller;
       const activeId = recordId || record.createdAt || `recent-${record.parentCas}`;
       setPreparedReprintingId(activeId);
+      const requestStillOwnsPrepared = () =>
+        preparedReprintRequestRef.current === requestId &&
+        activeSidebarRef.current === SIDEBAR_IDS.PREPARED;
       try {
         const response = await axios.get(`${API}/search-single`, {
           params: { q: record.parentCas },
+          signal: controller.signal,
         });
+        if (!requestStillOwnsPrepared()) return;
         const parent = response.data;
         if (!parent?.found) {
           toast.error(t("prepared.reprintParentUnavailable"));
@@ -1124,16 +1167,28 @@ function App() {
         setSelectedForLabel([preparedItem]);
         setLabelQuantities({});
         setPreparedFlowActive(true);
-        setActiveSidebar(null);
+        closeSidebar();
         setShowLabelModal(true);
       } catch (e) {
+        if (isCanceledRequest(e) || !requestStillOwnsPrepared()) return;
         console.error(e);
         toast.error(t("prepared.reprintFailed"));
       } finally {
-        setPreparedReprintingId(null);
+        if (requestStillOwnsPrepared()) {
+          preparedReprintAbortRef.current = null;
+          setPreparedReprintingId(null);
+        }
       }
     },
-    [invalidateFavoritePrintLookup, setSelectedForLabel, setLabelQuantities, t]
+    [
+      closeSidebar,
+      invalidateFavoritePrintLookup,
+      invalidatePreparedReprintLookup,
+      isCanceledRequest,
+      setSelectedForLabel,
+      setLabelQuantities,
+      t,
+    ]
   );
 
   // Submit: build the derived item, hard-replace selection + quantities,
