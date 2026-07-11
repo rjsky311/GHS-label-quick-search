@@ -4,9 +4,15 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+import {
+  gitShasMatch,
+  httpOriginsMatch,
+  serviceIdentityMatches,
+} from "./production-qa-trust.mjs";
+
 const ZERO_TIME = "0001-01-01T00:00:00Z";
-const DEFAULT_FRONTEND_SERVICE_ID = "69626873d9479ab33ad4590e";
 const DEFAULT_ENVIRONMENT_ID = "696262d9a7aaff0c1152b3d6";
+const EXPECTED_ZEABUR_CLI_VERSION = "0.20.0";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const frontendRoot = path.resolve(scriptDir, "..");
@@ -19,53 +25,45 @@ const outputPath = path.resolve(
 const serviceId =
   process.env.ZEABUR_FRONTEND_SERVICE_ID ||
   process.env.ZEABUR_SERVICE_ID ||
-  DEFAULT_FRONTEND_SERVICE_ID;
+  "";
+const expectedServiceName = process.env.ZEABUR_EXPECTED_SERVICE_NAME || "";
+const expectedBackendOrigin = process.env.ZEABUR_EXPECTED_BACKEND_ORIGIN || "";
 const environmentId =
   process.env.ZEABUR_ENV_ID ||
   process.env.ZEABUR_ENVIRONMENT_ID ||
   DEFAULT_ENVIRONMENT_ID;
 
-const quoteWindowsArg = (arg) => {
-  const value = String(arg);
-  if (!/[()\s"&<>|^]/.test(value)) return value;
-  return `"${value.replace(/"/g, '""')}"`;
-};
-
-const runCommand = (command, args, options = {}) => {
-  if (process.platform === "win32") {
-    return spawnSync(
-      "cmd.exe",
-      ["/d", "/s", "/c", [command, ...args].map(quoteWindowsArg).join(" ")],
-      {
-        ...options,
-        encoding: "utf8",
-      },
-    );
-  }
-
-  return spawnSync(command, args, {
+const runCommand = (command, args, options = {}) =>
+  spawnSync(command, args, {
     ...options,
     encoding: "utf8",
   });
-};
 
 const stripAnsi = (text) =>
   String(text || "").replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
 
-const normalizeSha = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase();
-
-const shasMatch = (actual, expected) => {
-  const actualSha = normalizeSha(actual);
-  const expectedSha = normalizeSha(expected);
-  if (!actualSha || !expectedSha) return false;
-  return (
-    actualSha === expectedSha ||
-    actualSha.startsWith(expectedSha) ||
-    expectedSha.startsWith(actualSha)
+const resolveLocalZeaburBin = () => {
+  const packageJsonPath = path.resolve(
+    frontendRoot,
+    "node_modules/zeabur/package.json",
   );
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  const binEntry =
+    typeof packageJson.bin === "string"
+      ? packageJson.bin
+      : packageJson.bin?.zeabur;
+
+  if (packageJson.version !== EXPECTED_ZEABUR_CLI_VERSION || !binEntry) {
+    throw new Error(
+      `Expected repository-local zeabur ${EXPECTED_ZEABUR_CLI_VERSION} with a zeabur bin entry.`,
+    );
+  }
+
+  const binPath = path.resolve(path.dirname(packageJsonPath), binEntry);
+  if (!fs.existsSync(binPath)) {
+    throw new Error(`Repository-local Zeabur CLI bin was not found at ${binPath}.`);
+  }
+  return binPath;
 };
 
 const readGitHead = () => {
@@ -76,17 +74,67 @@ const readGitHead = () => {
   return result.stdout.trim();
 };
 
-const expectedGitSha = normalizeSha(
+const expectedGitSha = String(
   process.env.ZEABUR_EXPECTED_GIT_SHA ||
     process.env.PRODUCTION_HEALTH_EXPECTED_GIT_SHA ||
     process.env.PRINT_QA_EXPECTED_GIT_SHA ||
     process.env.GITHUB_SHA ||
     readGitHead(),
-);
+)
+  .trim()
+  .toLowerCase();
+const expectedServiceIdentity = {
+  id: serviceId,
+  name: expectedServiceName,
+};
+const preflightFailures = [];
+
+if (!gitShasMatch(expectedGitSha, expectedGitSha)) {
+  preflightFailures.push(
+    "Zeabur deployment QA requires an expected hexadecimal git SHA of at least 12 characters.",
+  );
+}
+if (!serviceIdentityMatches(expectedServiceIdentity, expectedServiceIdentity)) {
+  preflightFailures.push(
+    "Zeabur deployment QA requires ZEABUR_FRONTEND_SERVICE_ID and ZEABUR_EXPECTED_SERVICE_NAME.",
+  );
+}
+if (!httpOriginsMatch(expectedBackendOrigin, expectedBackendOrigin)) {
+  preflightFailures.push(
+    "Zeabur deployment QA requires ZEABUR_EXPECTED_BACKEND_ORIGIN as a credential-free HTTP(S) origin.",
+  );
+}
+
+let zeaburBinPath = "";
+try {
+  zeaburBinPath = resolveLocalZeaburBin();
+} catch (error) {
+  preflightFailures.push(error?.message || String(error));
+}
+
+if (preflightFailures.length) {
+  console.error(preflightFailures.join("\n"));
+  process.exit(1);
+}
+
+const runZeaburCommand = (args) => {
+  const commandArgs = [zeaburBinPath, ...args];
+  const result = runCommand(process.execPath, commandArgs, {
+    cwd: repoRoot,
+  });
+  return {
+    command: [process.execPath, ...commandArgs]
+      .map((value) => JSON.stringify(value))
+      .join(" "),
+    status: result.status,
+    stdout: stripAnsi(result.stdout),
+    stderr: stripAnsi(result.stderr),
+    error: result.error?.message || "",
+  };
+};
 
 const runZeaburDeploymentList = () => {
   const args = [
-    "zeabur",
     "deployment",
     "list",
     "--service-id",
@@ -96,21 +144,11 @@ const runZeaburDeploymentList = () => {
     "--json",
     "--interactive=false",
   ];
-  const result = runCommand("npx", args, {
-    cwd: repoRoot,
-  });
-  return {
-    command: `npx ${args.join(" ")}`,
-    status: result.status,
-    stdout: stripAnsi(result.stdout),
-    stderr: stripAnsi(result.stderr),
-    error: result.error?.message || "",
-  };
+  return runZeaburCommand(args);
 };
 
 const runZeaburServiceGet = () => {
   const args = [
-    "zeabur",
     "service",
     "get",
     "--id",
@@ -120,21 +158,11 @@ const runZeaburServiceGet = () => {
     "--json",
     "--interactive=false",
   ];
-  const result = runCommand("npx", args, {
-    cwd: repoRoot,
-  });
-  return {
-    command: `npx ${args.join(" ")}`,
-    status: result.status,
-    stdout: stripAnsi(result.stdout),
-    stderr: stripAnsi(result.stderr),
-    error: result.error?.message || "",
-  };
+  return runZeaburCommand(args);
 };
 
 const runZeaburVariableList = () => {
   const args = [
-    "zeabur",
     "variable",
     "list",
     "--id",
@@ -144,16 +172,7 @@ const runZeaburVariableList = () => {
     "--json",
     "--interactive=false",
   ];
-  const result = runCommand("npx", args, {
-    cwd: repoRoot,
-  });
-  return {
-    command: `npx ${args.join(" ")}`,
-    status: result.status,
-    stdout: stripAnsi(result.stdout),
-    stderr: stripAnsi(result.stderr),
-    error: result.error?.message || "",
-  };
+  return runZeaburCommand(args);
 };
 
 const runZeaburDeploymentLog = (deploymentId) => {
@@ -168,7 +187,6 @@ const runZeaburDeploymentLog = (deploymentId) => {
     };
   }
   const args = [
-    "zeabur",
     "deployment",
     "log",
     "--deployment-id",
@@ -178,15 +196,13 @@ const runZeaburDeploymentLog = (deploymentId) => {
     "--json",
     "--interactive=false",
   ];
-  const result = runCommand("npx", args, {
-    cwd: repoRoot,
-  });
+  const result = runZeaburCommand(args);
   return {
-    command: `npx ${args.join(" ")}`,
+    command: result.command,
     status: result.status,
-    stdout: stripAnsi(result.stdout),
-    stderr: stripAnsi(result.stderr),
-    error: result.error?.message || "",
+    stdout: result.stdout,
+    stderr: result.stderr,
+    error: result.error,
     skipped: false,
   };
 };
@@ -292,7 +308,7 @@ const latestDeployment = deployments[0] || null;
 const runningDeployment =
   deployments.find((deployment) => deployment.status === "RUNNING") || null;
 const expectedDeployments = deployments.filter((deployment) =>
-  shasMatch(deployment.commitSHA, expectedGitSha),
+  gitShasMatch(deployment.commitSHA, expectedGitSha),
 );
 const expectedDeployment = expectedDeployments[0] || null;
 const expectedRunning = expectedDeployments.find(
@@ -300,6 +316,10 @@ const expectedRunning = expectedDeployments.find(
 );
 const serviceGet = runZeaburServiceGet();
 const service = serviceGet.status === 0 ? safeJsonParse(serviceGet.stdout, null) : null;
+const serviceIdentity = {
+  id: service?.ID || service?.id || "",
+  name: service?.Name || service?.name || "",
+};
 const variableList = runZeaburVariableList();
 const variablePayload =
   variableList.status === 0 ? safeJsonParse(variableList.stdout, null) : null;
@@ -311,12 +331,12 @@ const buildLogEntries =
     ? safeJsonParse(buildLog.stdout, [])
     : [];
 const localConfig = readLocalZeaburConfig();
-const redeployCommand = `npx zeabur service redeploy --id ${serviceId} --env-id ${environmentId} --yes --json --interactive=false`;
+const redeployCommand = `npm exec --offline -- zeabur service redeploy --id ${serviceId} --env-id ${environmentId} --yes --json --interactive=false`;
 const inspectDeploymentCommand = expectedDeployment
-  ? `npx zeabur deployment get --deployment-id ${
+  ? `npm exec --offline -- zeabur deployment get --deployment-id ${
       expectedDeployment.ID || expectedDeployment.id
     } --json --interactive=false`
-  : `npx zeabur deployment list --service-id ${serviceId} --env-id ${environmentId} --json --interactive=false`;
+  : `npm exec --offline -- zeabur deployment list --service-id ${serviceId} --env-id ${environmentId} --json --interactive=false`;
 let statusCategory = "unknown";
 const nextActions = [];
 
@@ -352,15 +372,13 @@ serviceBuildVariables.matchesExpected =
   serviceBuildVariables.expected.ZBPACK_BUILD_COMMAND ===
     "npm ci && npm run build" &&
   serviceBuildVariables.expected.ZBPACK_OUTPUT_DIR === "build" &&
-  Boolean(serviceBuildVariables.expected.VITE_BACKEND_URL);
+  httpOriginsMatch(
+    serviceBuildVariables.expected.VITE_BACKEND_URL,
+    expectedBackendOrigin,
+  );
 
 const failures = [];
 const guidance = [];
-
-if (!expectedGitSha) {
-  failures.push("Could not resolve an expected git SHA.");
-  setStatusCategory("expected-sha-missing");
-}
 
 if (zeabur.status !== 0) {
   failures.push("Zeabur CLI deployment list command failed.");
@@ -370,13 +388,36 @@ if (zeabur.status !== 0) {
 }
 
 if (serviceGet.status !== 0) {
-  guidance.push("Zeabur service metadata could not be read; verify CLI auth before changing product code.");
+  failures.push(
+    "Zeabur service metadata could not be read, so the expected service identity could not be verified.",
+  );
+  setStatusCategory("service-identity-unavailable");
+  guidance.push("Verify CLI auth before changing product code.");
+} else if (!serviceIdentityMatches(serviceIdentity, expectedServiceIdentity)) {
+  failures.push(
+    `Zeabur service identity ${serviceIdentity.id || "missing-id"}/${serviceIdentity.name || "missing-name"} did not match expected ${expectedServiceIdentity.id}/${expectedServiceIdentity.name}.`,
+  );
+  setStatusCategory("service-identity-mismatch");
 }
 
 if (variableList.status !== 0) {
+  failures.push(
+    "Zeabur service variables could not be read, so the expected backend origin could not be verified.",
+  );
+  setStatusCategory("backend-origin-unavailable");
   guidance.push(
     "Zeabur service variables could not be read; verify CLI auth before changing product code.",
   );
+} else if (
+  !httpOriginsMatch(
+    serviceBuildVariables.expected.VITE_BACKEND_URL,
+    expectedBackendOrigin,
+  )
+) {
+  failures.push(
+    `Zeabur VITE_BACKEND_URL did not match expected backend origin ${expectedBackendOrigin}.`,
+  );
+  setStatusCategory("backend-origin-mismatch");
 }
 
 if (parseError) {
@@ -445,7 +486,10 @@ if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
   }
 }
 
-if (runningDeployment && !shasMatch(runningDeployment.commitSHA, expectedGitSha)) {
+if (
+  runningDeployment &&
+  !gitShasMatch(runningDeployment.commitSHA, expectedGitSha)
+) {
   failures.push(
     `Latest RUNNING deployment is ${runningDeployment.commitSHA}, not expected ${expectedGitSha}.`,
   );
@@ -464,7 +508,7 @@ if (expectedRunning && !runningDeployment) {
 const ok =
   failures.length === 0 &&
   Boolean(expectedRunning) &&
-  shasMatch(expectedRunning.commitSHA, expectedGitSha);
+  gitShasMatch(expectedRunning.commitSHA, expectedGitSha);
 
 if (ok) {
   statusCategory = "fresh-running";
@@ -478,6 +522,8 @@ const result = {
   generatedAt: new Date().toISOString(),
   reportPath: outputPath,
   serviceId,
+  expectedServiceName,
+  expectedBackendOrigin,
   environmentId,
   expectedGitSha,
   zeaburCommand: zeabur.command,
