@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import axios from "axios";
 import usePilotDashboard from "../usePilotDashboard";
@@ -55,6 +56,7 @@ function responseForEndpoint(url, owner) {
 
 let dashboardBatches;
 let dashboardGetIndex;
+let dashboardGetConfigs;
 
 function queueDashboardResponse(source) {
   dashboardBatches.push(source?.promise || Promise.resolve(source));
@@ -99,7 +101,9 @@ describe("usePilotDashboard auth-context isolation", () => {
     jest.clearAllMocks();
     dashboardBatches = [];
     dashboardGetIndex = 0;
-    axios.get.mockImplementation((url) => {
+    dashboardGetConfigs = [];
+    axios.get.mockImplementation((url, config) => {
+      dashboardGetConfigs.push(config);
       const batchIndex = Math.floor(
         dashboardGetIndex / DASHBOARD_ENDPOINTS.length
       );
@@ -112,6 +116,10 @@ describe("usePilotDashboard auth-context isolation", () => {
       }
       return batch.then((owner) => responseForEndpoint(url, owner));
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("masks every privileged field immediately when Pilot is disabled", async () => {
@@ -208,6 +216,91 @@ describe("usePilotDashboard auth-context isolation", () => {
     expect(result.current.authError).toBe("");
   });
 
+  it("passes one GET signal per refresh and releases a superseded controller immediately", async () => {
+    const olderRefresh = deferred();
+    const newerRefresh = deferred();
+    const abortSpy = jest.spyOn(AbortController.prototype, "abort");
+    queueDashboardResponse(olderRefresh);
+    const { result, rerender } = renderDashboard({
+      enabled: true,
+      adminKey: "key-a",
+    });
+    await waitFor(() =>
+      expect(axios.get).toHaveBeenCalledTimes(DASHBOARD_ENDPOINTS.length)
+    );
+
+    queueDashboardResponse(newerRefresh);
+    let newerRefreshPromise;
+    act(() => {
+      newerRefreshPromise = result.current.refresh();
+    });
+    await waitFor(() =>
+      expect(axios.get).toHaveBeenCalledTimes(DASHBOARD_ENDPOINTS.length * 2)
+    );
+
+    const olderConfigs = dashboardGetConfigs.slice(0, DASHBOARD_ENDPOINTS.length);
+    const newerConfigs = dashboardGetConfigs.slice(DASHBOARD_ENDPOINTS.length);
+    const olderSignal = olderConfigs[0].signal;
+    const newerSignal = newerConfigs[0].signal;
+    expect(new Set(olderConfigs.map(({ signal }) => signal))).toEqual(
+      new Set([olderSignal])
+    );
+    expect(new Set(newerConfigs.map(({ signal }) => signal))).toEqual(
+      new Set([newerSignal])
+    );
+    expect(olderSignal).toBeDefined();
+    expect(newerSignal).toBeDefined();
+    expect(olderSignal.aborted).toBe(true);
+    expect(newerSignal.aborted).toBe(false);
+    expect(abortSpy).toHaveBeenCalledTimes(1);
+
+    rerender({ enabled: false, adminKey: "key-a" });
+
+    expect(newerSignal.aborted).toBe(true);
+    expect(abortSpy).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      olderRefresh.resolve("older-late");
+      newerRefresh.resolve("newer-late");
+      await Promise.all([olderRefresh.promise, newerRefreshPromise]);
+    });
+    abortSpy.mockRestore();
+  });
+
+  it("survives StrictMode effect replay and aborts both replayed and unmounted GET signals", async () => {
+    const replayedRefresh = deferred();
+    const currentRefresh = deferred();
+    queueDashboardResponse(replayedRefresh);
+    queueDashboardResponse(currentRefresh);
+
+    const { unmount } = renderHook(
+      (props) => usePilotDashboard(props),
+      {
+        initialProps: { enabled: true, adminKey: "key-a" },
+        wrapper: StrictMode,
+      }
+    );
+
+    await waitFor(() =>
+      expect(axios.get).toHaveBeenCalledTimes(DASHBOARD_ENDPOINTS.length * 2)
+    );
+    const replayedSignal = dashboardGetConfigs[0].signal;
+    const currentSignal = dashboardGetConfigs[DASHBOARD_ENDPOINTS.length].signal;
+    expect(replayedSignal).toBeDefined();
+    expect(currentSignal).toBeDefined();
+    expect(replayedSignal.aborted).toBe(true);
+    expect(currentSignal.aborted).toBe(false);
+
+    unmount();
+
+    expect(currentSignal.aborted).toBe(true);
+    await act(async () => {
+      replayedRefresh.resolve("strict-replayed-late");
+      currentRefresh.resolve("strict-current-late");
+      await Promise.all([replayedRefresh.promise, currentRefresh.promise]);
+    });
+  });
+
   it("treats enabled A to disabled to enabled A as a new generation for late success", async () => {
     const priorActivation = deferred();
     queueDashboardResponse(priorActivation);
@@ -292,9 +385,13 @@ describe("usePilotDashboard auth-context isolation", () => {
     act(() => {
       mutationPromise = result.current.saveManualEntry({ cas_number: "64-17-5" });
     });
+    const mutationSignal = axios.post.mock.calls[0][2].signal;
+    expect(mutationSignal).toBeDefined();
+    expect(mutationSignal.aborted).toBe(false);
     queueDashboardResponse("stale-mutation-refresh");
 
     rerender({ enabled: false, adminKey: "key-a" });
+    expect(mutationSignal.aborted).toBe(true);
     expectPrivilegedStateMasked(result);
 
     await act(async () => {
@@ -326,12 +423,30 @@ describe("usePilotDashboard auth-context isolation", () => {
     const staleAuthError = axiosError(403, "stale mutation rejected");
     await act(async () => {
       mutation.reject(staleAuthError);
-      await expect(mutationPromise).rejects.toBe(staleAuthError);
+      await expect(mutationPromise).resolves.toBeNull();
     });
 
     expect(result.current.error).toBe("");
     expect(result.current.authError).toBe("");
     expectPrivilegedStateMasked(result);
+  });
+
+  it("keeps current-context mutation errors rejecting with current auth detail", async () => {
+    queueDashboardResponse("key-a");
+    const { result } = renderDashboard({ enabled: true, adminKey: "key-a" });
+    await waitForDatasetOwner(result, "key-a");
+
+    const currentAuthError = axiosError(403, "current mutation rejected");
+    axios.post.mockRejectedValueOnce(currentAuthError);
+
+    await act(async () => {
+      await expect(
+        result.current.saveAlias({ alias_text: "EtOH" })
+      ).rejects.toBe(currentAuthError);
+    });
+
+    expect(result.current.error).toBe("current mutation rejected");
+    expect(result.current.authError).toBe("current mutation rejected");
   });
 
   it("refuses mutations when the current auth context is inactive", async () => {

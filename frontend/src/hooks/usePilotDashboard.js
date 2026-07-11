@@ -96,7 +96,11 @@ export default function usePilotDashboard(options = {}) {
       return null;
     }
 
-    refreshControllerRef.current?.abort();
+    const previousRefreshController = refreshControllerRef.current;
+    if (previousRefreshController) {
+      previousRefreshController.abort();
+      activeControllersRef.current.delete(previousRefreshController);
+    }
     const controller = new AbortController();
     refreshControllerRef.current = controller;
     activeControllersRef.current.add(controller);
@@ -240,20 +244,20 @@ export default function usePilotDashboard(options = {}) {
         await refresh();
         return isCurrentMutation() ? response.data : null;
       } catch (mutationError) {
-        if (isCurrentMutation()) {
-          const status = mutationError?.response?.status;
-          const detail =
-            mutationError?.response?.data?.detail ||
-            mutationError?.message ||
-            "Admin access failed.";
-          if (isAdminAccessError(status)) {
-            clearPrivilegedState();
-          }
-          updateRequestState(authContextToken, {
-            error: detail,
-            authError: isAdminAccessError(status) ? detail : "",
-          });
+        if (!isCurrentMutation()) return null;
+
+        const status = mutationError?.response?.status;
+        const detail =
+          mutationError?.response?.data?.detail ||
+          mutationError?.message ||
+          "Admin access failed.";
+        if (isAdminAccessError(status)) {
+          clearPrivilegedState();
         }
+        updateRequestState(authContextToken, {
+          error: detail,
+          authError: isAdminAccessError(status) ? detail : "",
+        });
         throw mutationError;
       } finally {
         activeControllersRef.current.delete(controller);
