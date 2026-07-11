@@ -198,7 +198,11 @@ function getPrintQaDocumentText(documentBundle, iframeDoc) {
     .join("\n");
 }
 
-export function buildLayoutBlockedAlert(lifecycleMeta, preflightIssues) {
+export function buildLayoutBlockedAlert(
+  lifecycleMeta,
+  preflightIssues,
+  locale,
+) {
   const stock =
     lifecycleMeta.stockPresetName || lifecycleMeta.stockPreset || "current stock";
   const size =
@@ -210,6 +214,7 @@ export function buildLayoutBlockedAlert(lifecycleMeta, preflightIssues) {
   ].join(", ");
 
   return i18n.t("print.layoutBlockedDetailed", {
+    lng: locale,
     stock,
     size,
     issueTypes,

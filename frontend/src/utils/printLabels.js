@@ -1770,26 +1770,30 @@ const getSemanticBlockedMessage = (
   issueTypes,
   lifecycleMeta,
   preflightIssues,
+  locale,
 ) => {
   if (planState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA) {
     if (issueTypes.includes("upstream-error")) {
       return i18n.t("label.outputPlanUpstreamHazardData", {
+        lng: locale,
         defaultValue:
           "Hazard data could not be verified right now, so this output cannot be printed.",
       });
     }
     return i18n.t("label.outputPlanMissingHazardData", {
+      lng: locale,
       defaultValue:
         "This item does not have enough GHS hazard content to produce a hazard label.",
     });
   }
   if (planState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE) {
     return i18n.t("label.outputPlanMissingProfile", {
+      lng: locale,
       defaultValue:
         "Complete labels need a responsible lab or supplier name, phone, and address before printing.",
     });
   }
-  return buildLayoutBlockedAlert(lifecycleMeta, preflightIssues);
+  return buildLayoutBlockedAlert(lifecycleMeta, preflightIssues, locale);
 };
 
 const runSemanticPrintPreflight = (
@@ -1832,6 +1836,7 @@ const runSemanticPrintPreflight = (
     return {
       chemical,
       index,
+      locale: renderModel.locale,
       outputPlan,
     };
   });
@@ -1876,6 +1881,7 @@ const runSemanticPrintPreflight = (
     ),
   ];
   const planState = planStates[0] || "semantic_print_blocked";
+  const blockedLocale = blockedItemPlans[0]?.locale || model.locale;
   const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
   const blockedInfo = {
     imageFailure: false,
@@ -1888,6 +1894,7 @@ const runSemanticPrintPreflight = (
       issueTypes,
       lifecycleMeta,
       preflightIssues,
+      blockedLocale,
     ),
     planState,
     planStates,

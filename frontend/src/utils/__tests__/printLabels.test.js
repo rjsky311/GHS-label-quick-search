@@ -1,7 +1,19 @@
-jest.mock("@/i18n", () => ({
-  t: Object.assign((key) => key, { bind: () => (key) => key }),
-  language: "en",
-}));
+jest.mock("@/i18n", () => {
+  const translations = {
+    "label.outputPlanMissingProfile": {
+      en: "Complete labels need a responsible profile.",
+      "zh-TW": "完整標籤需要負責單位資料。",
+    },
+    "print.layoutBlockedDetailed": {
+      en: "The selected label layout is blocked.",
+      "zh-TW": "所選標籤版面無法列印。",
+    },
+  };
+  const t = (key, options = {}) =>
+    options.lng ? translations[key]?.[options.lng] || key : key;
+  t.bind = () => t;
+  return { t, language: "en" };
+});
 jest.mock("@/constants/ghs", () => ({
   API: "/api",
   GHS_IMAGES: {
@@ -1304,6 +1316,68 @@ describe("printLabels", () => {
     expect(mockIframeWindow.print).not.toHaveBeenCalled();
     expect(mockIframeWindow.addEventListener).not.toHaveBeenCalled();
   });
+
+  it.each([
+    [
+      "missing-profile message",
+      mockChemical,
+      {
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      },
+      "完整標籤需要負責單位資料。",
+    ],
+    [
+      "layout-blocked fallback",
+      mockTextOnlyGhsChemical,
+      {
+        labelPurpose: "quickId",
+        template: "icon",
+        stockPreset: "small-strip",
+      },
+      "所選標籤版面無法列印。",
+    ],
+  ])(
+    "uses the explicit print locale for the shared browser/PDF %s",
+    async (_caseName, chemical, config, expectedMessage) => {
+      const browserBlocked = jest.fn();
+      const pdfBlocked = jest.fn();
+      const fetchMock = jest.fn();
+
+      printLabels(
+        [chemical],
+        config,
+        {},
+        {},
+        {},
+        {},
+        { onPrintBlocked: browserBlocked },
+        { locale: "zh-TW" },
+      );
+      const pdfResult = await exportLabelsPdf(
+        [chemical],
+        config,
+        {},
+        {},
+        {},
+        {},
+        { onPrintBlocked: pdfBlocked },
+        { fetchImpl: fetchMock, locale: "zh-TW" },
+      );
+
+      const browserBlockedInfo = browserBlocked.mock.calls[0]?.[0];
+      expect(browserBlockedInfo.message).toBe(expectedMessage);
+      expect(pdfResult).toEqual({
+        ok: false,
+        status: "blocked",
+        blockedInfo: browserBlockedInfo,
+      });
+      expect(pdfBlocked).toHaveBeenCalledWith(browserBlockedInfo);
+      expect(createElementSpy).not.toHaveBeenCalledWith("iframe");
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("publishes semantic QA blocks as blocked without first reporting pending", () => {
     window.history.replaceState({}, "", "/?qaPrintHandoff=1");
