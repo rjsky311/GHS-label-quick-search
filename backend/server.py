@@ -1184,7 +1184,12 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                 raw_section,
                 f"Record.Section[{section_index}]",
             )
-            if section.get("TOCHeading") == "Safety and Hazards":
+            section_heading = _ghs_payload_optional_string(
+                section,
+                "TOCHeading",
+                f"Record.Section[{section_index}].TOCHeading",
+            )
+            if section_heading == "Safety and Hazards":
                 subsections = _ghs_payload_optional_list(
                     section,
                     "Section",
@@ -1195,7 +1200,12 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                         raw_subsection,
                         f"Safety and Hazards.Section[{subsection_index}]",
                     )
-                    if subsection.get("TOCHeading") == "Hazards Identification":
+                    subsection_heading = _ghs_payload_optional_string(
+                        subsection,
+                        "TOCHeading",
+                        f"Safety and Hazards.Section[{subsection_index}].TOCHeading",
+                    )
+                    if subsection_heading == "Hazards Identification":
                         ghs_sections = _ghs_payload_optional_list(
                             subsection,
                             "Section",
@@ -1206,7 +1216,12 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                 raw_ghs_section,
                                 f"Hazards Identification.Section[{ghs_index}]",
                             )
-                            if subsubsection.get("TOCHeading") == "GHS Classification":
+                            ghs_heading = _ghs_payload_optional_string(
+                                subsubsection,
+                                "TOCHeading",
+                                f"Hazards Identification.Section[{ghs_index}].TOCHeading",
+                            )
+                            if ghs_heading == "GHS Classification":
                                 # Parse each report entry
                                 current_report = None
 
@@ -1669,6 +1684,11 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
             raise PubChemPayloadError(
                 "Cached PubChem GHS value has invalid structure"
             ) from exc
+        if not isinstance(retrieved_at, str):
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS value has invalid retrieval timestamp"
+            )
         try:
             extract_all_ghs_classifications(data)
         except PubChemPayloadError:
@@ -1683,16 +1703,19 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     status, data = await pubchem_get_json(http_client, url, timeout=30.0)
     now = datetime.now(timezone.utc).isoformat()
     if status == 200:
+        if not data:
+            raise PubChemPayloadError("PubChem GHS HTTP 200 payload is empty")
         # Parse before caching so a valid prefix cannot hide a malformed tail.
         # The search layer parses again to build its response, including for
         # cache hits, inside its PubChemError boundary.
         extract_all_ghs_classifications(data)
-        if data:
-            ghs_cache[cid] = (data, now)
-            return data, False, now
-    # 404 / empty: don't cache a fresh miss (keeps retry-able) but still
-    # report the current timestamp so the caller can annotate the result.
-    return {}, False, now
+        ghs_cache[cid] = (data, now)
+        return data, False, now
+    if status == 404:
+        # Don't cache a fresh miss (keeps retry-able), but still report the
+        # current timestamp so the caller can annotate the result.
+        return {}, False, now
+    raise PubChemError(f"{url}: unexpected HTTP {status}")
 
 async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> ChemicalResult:
     """Search for a chemical by CAS number"""
