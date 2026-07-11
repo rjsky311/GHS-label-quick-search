@@ -2522,6 +2522,45 @@ async def test_pubchem_get_json_retries_429_with_retry_after():
     assert client.calls == 2
 
 
+async def test_pubchem_get_json_honors_real_httpx_retry_after_delay(monkeypatch):
+    request_count = 0
+    sleeps = []
+
+    def handler(_request):
+        nonlocal request_count
+        request_count += 1
+        if request_count == 1:
+            return _httpx_for_tests.Response(
+                429,
+                headers=_httpx_for_tests.Headers({"Retry-After": "1"}),
+            )
+        return _httpx_for_tests.Response(200, json={"ok": True})
+
+    async def no_rate_wait():
+        return None
+
+    async def capture_sleep(delay):
+        sleeps.append(delay)
+
+    monkeypatch.setattr(server, "_wait_for_pubchem_rate_slot", no_rate_wait)
+    monkeypatch.setattr(server.asyncio, "sleep", capture_sleep)
+    monkeypatch.setattr(server.random, "uniform", lambda *_args: 0)
+
+    transport = _httpx_for_tests.MockTransport(handler)
+    async with _httpx_for_tests.AsyncClient(transport=transport) as client:
+        status, data = await pubchem_get_json(
+            client,
+            "https://x/",
+            timeout=1.0,
+            retries=2,
+        )
+
+    assert status == 200
+    assert data == {"ok": True}
+    assert request_count == 2
+    assert sleeps == [1.0]
+
+
 async def test_pubchem_get_json_raises_after_exhausted_retries_on_5xx():
     client = _ScriptedClient([
         _FakeResponse(503),

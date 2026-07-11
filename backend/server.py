@@ -906,7 +906,7 @@ async def pubchem_get_json(
         retry_after: Optional[str] = None
         transient = False
         status: Optional[int] = None
-        response_headers: Dict[str, str] = {}
+        response_headers = httpx.Headers()
         parsed_json: Any = None
         # Bound the number of concurrent outbound PubChem requests so
         # a single burst of client traffic cannot balloon into a DoS
@@ -916,7 +916,7 @@ async def pubchem_get_json(
                 await _wait_for_pubchem_rate_slot()
                 async with http_client.stream("GET", url, timeout=timeout) as resp:
                     status = resp.status_code
-                    response_headers = dict(resp.headers)
+                    response_headers = resp.headers
                     if status == 200:
                         response_bytes = bytearray()
                         async for chunk in resp.aiter_bytes():
