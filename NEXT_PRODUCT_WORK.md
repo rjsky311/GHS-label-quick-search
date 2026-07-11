@@ -86,9 +86,10 @@ issue, or owner/user evidence that a shipped workflow is unclear.
 
 ### Current Slice State
 
-UI Graphite Editorial final redesign chunk closed locally on 2026-07-08 on
-`codex/ui-redesign`, pending maintainer review. Source: owner request to finish
-Phases 2-4 of
+Shipped/monitoring slice closed on 2026-07-08: UI Graphite Editorial final
+redesign. The redesign landed on `main` through `d5311e0`, followed by the
+header/hero fix at `deba358` and the physical-print checklist alignment at
+`62e67b4`. Source: owner request to finish Phases 2-4 of
 `docs/superpowers/plans/2026-07-07-ui-visual-redesign-graphite-editorial.md`
 with the 2026-07-08 identity addendum red lines. Affected user job: repeated
 lab users should scan search results, hazard identity, source notes, and print
@@ -104,9 +105,10 @@ choices, and a white preview sheet in both themes. Stop condition for this
 slice is met: `git diff --check`, `npm run lint`, `npm run test:i18n`,
 `npm test -- --runInBand`, `npm run build`, `npm run test:print-contract`, and
 `npm run test:docs` passed locally, with empty direct diffs for the protected
-print-truth files and no frontend `Fraunces` or `lucide-react` matches. Do not
-continue into new print, admin, backend, physical-printer, or product-scope
-work from this redesign by inertia.
+print-truth files and no frontend `Fraunces` or `lucide-react` matches. At the
+current `main` SHA `62e67b4`, CI run `28931964362` and Production Print QA run
+`28932055927` also passed. Do not continue into new print, admin, backend,
+physical-printer, or product-scope work from this redesign by inertia.
 
 Shipped/monitoring slice closed on 2026-07-07: Mobile PDF Export Via
 Server-Side Rendering. Source: real production mobile PDFs from iPhone Safari
