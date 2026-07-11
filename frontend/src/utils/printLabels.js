@@ -9,6 +9,10 @@ import {
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
 import {
+  PRINT_OUTPUT_PLAN_STATE,
+  buildPrintOutputPlan,
+} from "@/utils/printOutputPlanner";
+import {
   getCompletePrimaryContinuationCapacity,
 } from "@/utils/printFitEngine";
 import {
@@ -1761,6 +1765,158 @@ const getPrintBlockedInfo = (documentBundle, preflightIssues) => {
   };
 };
 
+const getSemanticBlockedMessage = (
+  planState,
+  issueTypes,
+  lifecycleMeta,
+  preflightIssues,
+) => {
+  if (planState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA) {
+    if (issueTypes.includes("upstream-error")) {
+      return i18n.t("label.outputPlanUpstreamHazardData", {
+        defaultValue:
+          "Hazard data could not be verified right now, so this output cannot be printed.",
+      });
+    }
+    return i18n.t("label.outputPlanMissingHazardData", {
+      defaultValue:
+        "This item does not have enough GHS hazard content to produce a hazard label.",
+    });
+  }
+  if (planState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE) {
+    return i18n.t("label.outputPlanMissingProfile", {
+      defaultValue:
+        "Complete labels need a responsible lab or supplier name, phone, and address before printing.",
+    });
+  }
+  return buildLayoutBlockedAlert(lifecycleMeta, preflightIssues);
+};
+
+const runSemanticPrintPreflight = (
+  selectedForLabel,
+  labelConfig,
+  customGHSSettings,
+  customLabelFields,
+  labelQuantities,
+  labProfile,
+  options,
+) => {
+  const model = buildPrintDocumentModel(
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile,
+    options,
+  );
+  if (!model) {
+    return {
+      canPrint: false,
+      documentBundle: null,
+      preflightIssues: [],
+      blockedInfo: null,
+    };
+  }
+
+  const itemPlans = model.selectedForLabel.map((chemical, index) => {
+    const renderModel = resolveRenderModelForChemical(chemical, model);
+    const outputPlan = buildPrintOutputPlan({
+      selectedForLabel: [chemical],
+      layout: renderModel.layout,
+      customGHSSettings: renderModel.customGHSSettings,
+      customLabelFields: renderModel.customLabelFields,
+      resolvedLabProfile: renderModel.resolvedLabProfile,
+      locale: renderModel.locale,
+    });
+    return {
+      chemical,
+      index,
+      outputPlan,
+    };
+  });
+  const blockedItemPlans = itemPlans.filter(
+    ({ outputPlan }) => outputPlan.canPrint !== true,
+  );
+  const documentBundle = { model };
+  if (blockedItemPlans.length === 0) {
+    return {
+      canPrint: true,
+      documentBundle,
+      preflightIssues: [],
+      blockedInfo: null,
+    };
+  }
+
+  const preflightIssues = blockedItemPlans.flatMap(
+    ({ chemical, index, outputPlan }) => {
+      const issues = outputPlan.issues?.length
+        ? outputPlan.issues
+        : [{ type: String(outputPlan.state || "semantic-print-blocked") }];
+      const sourceChemical = chemical?.sourceChemical || chemical;
+      return issues.map((issue) => ({
+        ...issue,
+        index,
+        cas: sourceChemical?.cas_number || issue.cas || "",
+        planState: outputPlan.state,
+      }));
+    },
+  );
+  const issueTypes = [
+    ...new Set(preflightIssues.map((issue) => issue.type).filter(Boolean)),
+  ];
+  const issueCasNumbers = [
+    ...new Set(preflightIssues.map((issue) => issue.cas).filter(Boolean)),
+  ];
+  const planStates = [
+    ...new Set(
+      blockedItemPlans
+        .map(({ outputPlan }) => outputPlan.state)
+        .filter(Boolean),
+    ),
+  ];
+  const planState = planStates[0] || "semantic_print_blocked";
+  const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
+  const blockedInfo = {
+    imageFailure: false,
+    issueCasNumbers,
+    issueCount: preflightIssues.length,
+    issueTypes,
+    lifecycleMeta,
+    message: getSemanticBlockedMessage(
+      planState,
+      issueTypes,
+      lifecycleMeta,
+      preflightIssues,
+    ),
+    planState,
+    planStates,
+  };
+
+  return {
+    canPrint: false,
+    documentBundle,
+    preflightIssues,
+    blockedInfo,
+  };
+};
+
+const recordSemanticBlockedEvent = (eventName, blockedInfo) => {
+  const lifecycleMeta = blockedInfo.lifecycleMeta || {};
+  recordObservabilityEvent(eventName, {
+    status: "blocked",
+    count: lifecycleMeta.totalLabels || 1,
+    meta: {
+      ...lifecycleMeta,
+      issueCount: blockedInfo.issueCount,
+      issueTypes: blockedInfo.issueTypes,
+      issueCasNumbers: blockedInfo.issueCasNumbers,
+      planState: blockedInfo.planState,
+      planStates: blockedInfo.planStates,
+    },
+  });
+};
+
 const recordPreflightBlockedEvent = (eventName, documentBundle, preflightIssues) => {
   const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
   recordObservabilityEvent(eventName, {
@@ -1889,6 +2045,31 @@ export async function exportLabelsPdf(
   lifecycleCallbacks = {},
   options = {},
 ) {
+  const semanticPreflight = runSemanticPrintPreflight(
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile,
+    options,
+  );
+  if (!semanticPreflight.documentBundle) {
+    return { ok: false, status: "empty" };
+  }
+  if (!semanticPreflight.canPrint) {
+    recordSemanticBlockedEvent(
+      "pdf_export_blocked",
+      semanticPreflight.blockedInfo,
+    );
+    notifyPrintBlocked(lifecycleCallbacks, semanticPreflight.blockedInfo);
+    return {
+      ok: false,
+      status: "blocked",
+      blockedInfo: semanticPreflight.blockedInfo,
+    };
+  }
+
   const documentBundle = buildPrintDocument(
     selectedForLabel,
     labelConfig,
@@ -2024,6 +2205,29 @@ export function printLabels(
   lifecycleCallbacks = {},
   options = {},
 ) {
+  const semanticPreflight = runSemanticPrintPreflight(
+    selectedForLabel,
+    labelConfig,
+    customGHSSettings,
+    customLabelFields,
+    labelQuantities,
+    labProfile,
+    options,
+  );
+  if (!semanticPreflight.documentBundle) return;
+  if (!semanticPreflight.canPrint) {
+    if (isPrintHandoffQaMode()) {
+      publishPrintBlockedQaStatus(
+        semanticPreflight.documentBundle,
+        semanticPreflight.preflightIssues,
+        PRINT_QA_LABEL_KIND_HELPERS,
+      );
+    }
+    recordSemanticBlockedEvent("print_blocked", semanticPreflight.blockedInfo);
+    notifyPrintBlocked(lifecycleCallbacks, semanticPreflight.blockedInfo);
+    return;
+  }
+
   const documentBundle = buildPrintDocument(
     selectedForLabel,
     labelConfig,
