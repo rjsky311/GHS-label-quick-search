@@ -6,8 +6,11 @@ Tests for name search functionality:
 - /api/search-by-name/{query} endpoint (local dictionary only, no network)
 - /api/search/{query} auto-detect (local only tests)
 """
+import json
+
 import pytest
 import server
+from cachetools import TTLCache
 from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient, ASGITransport
 from pydantic import ValidationError
@@ -2310,25 +2313,45 @@ from server import PubChemError, pubchem_get_json
 
 
 class _FakeResponse:
-    def __init__(self, status_code, json_body=None, headers=None):
+    def __init__(self, status_code, json_body=None, headers=None, raw_body=None):
         self.status_code = status_code
-        self._json = json_body if json_body is not None else {}
         self.headers = headers or {}
+        body = json_body if json_body is not None else {}
+        self._raw_body = (
+            raw_body
+            if raw_body is not None
+            else json.dumps(body, separators=(",", ":")).encode("utf-8")
+        )
+        self.closed = False
 
-    def json(self):
-        return self._json
+    async def aiter_bytes(self):
+        yield self._raw_body
+
+    async def aclose(self):
+        self.closed = True
 
 
 class _InvalidJsonResponse(_FakeResponse):
     def __init__(self, status_code=200, headers=None):
-        super().__init__(status_code, headers=headers)
+        super().__init__(status_code, headers=headers, raw_body=b"{invalid json")
 
-    def json(self):
-        raise ValueError("invalid json")
+
+class _ScriptedResponseContext:
+    def __init__(self, item):
+        self.item = item
+
+    async def __aenter__(self):
+        if isinstance(self.item, Exception):
+            raise self.item
+        return self.item
+
+    async def __aexit__(self, *_args):
+        if not isinstance(self.item, Exception):
+            await self.item.aclose()
 
 
 class _ScriptedClient:
-    """Scripted httpx replacement. Each `get` call pops the next entry
+    """Scripted httpx replacement. Each request pops the next entry
     from `.script`. Entries may be:
         - a _FakeResponse to return
         - an Exception instance to raise
@@ -2338,12 +2361,31 @@ class _ScriptedClient:
         self.script = list(script)
         self.calls = 0
 
-    async def get(self, url, timeout=None):
+    def stream(self, method, url, timeout=None):
         self.calls += 1
-        item = self.script.pop(0)
-        if isinstance(item, Exception):
-            raise item
-        return item
+        return _ScriptedResponseContext(self.script.pop(0))
+
+
+class _TrackingAsyncByteStream(_httpx_for_tests.AsyncByteStream):
+    def __init__(self, chunks):
+        self.chunks = list(chunks)
+        self.read_count = 0
+        self.closed = False
+
+    async def __aiter__(self):
+        for chunk in self.chunks:
+            self.read_count += 1
+            yield chunk
+
+    async def aclose(self):
+        self.closed = True
+
+
+@pytest.fixture
+def tracking_json_stream():
+    return _TrackingAsyncByteStream(
+        [b'{"payload":"', b"1234567890", b"abcdefghij", b'"}']
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -2365,6 +2407,57 @@ async def test_pubchem_get_json_returns_200_without_retry():
     assert status == 200
     assert data == {"ok": True}
     assert client.calls == 1
+
+
+async def test_pubchem_get_json_stops_reading_response_above_byte_limit(
+    monkeypatch,
+    tracking_json_stream,
+):
+    request_count = 0
+
+    def handler(_request):
+        nonlocal request_count
+        request_count += 1
+        return _httpx_for_tests.Response(200, stream=tracking_json_stream)
+
+    monkeypatch.setattr(server, "PUBCHEM_RESPONSE_MAX_BYTES", 18, raising=False)
+    transport = _httpx_for_tests.MockTransport(handler)
+    async with _httpx_for_tests.AsyncClient(transport=transport) as client:
+        with pytest.raises(PubChemError) as exc_info:
+            await pubchem_get_json(
+                client,
+                "https://x/",
+                timeout=1.0,
+                retries=3,
+            )
+
+    assert exc_info.type is server.PubChemResponseTooLarge
+    assert request_count == 1
+    assert tracking_json_stream.read_count < len(tracking_json_stream.chunks)
+    assert tracking_json_stream.closed is True
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        (None, 8),
+        ("invalid", 8),
+        ("1", 4),
+        ("99", 16),
+    ],
+)
+def test_bounded_byte_limit_parser_defaults_and_clamps(
+    monkeypatch,
+    raw_value,
+    expected,
+):
+    env_name = "TEST_BOUNDED_BYTE_LIMIT"
+    if raw_value is None:
+        monkeypatch.delenv(env_name, raising=False)
+    else:
+        monkeypatch.setenv(env_name, raw_value)
+
+    assert server._bounded_env_int(env_name, 8, minimum=4, maximum=16) == expected
 
 
 async def test_pubchem_get_json_returns_404_without_retry():
@@ -3084,6 +3177,83 @@ def _assert_upstream_error_has_no_safety_content(result):
     assert result.has_multiple_classifications is False
     assert result.primary_source is None
     assert result.primary_report_count is None
+
+
+def test_ghs_cache_retention_weights_entries_by_payload_bytes():
+    retrieved_at = "2026-07-11T00:00:00+00:00"
+    small = ({"Record": {"RecordTitle": "A"}}, retrieved_at)
+    large = ({"Record": {"RecordTitle": "A" * 1000}}, retrieved_at)
+
+    assert server._ghs_cache_entry_size(large) > server._ghs_cache_entry_size(small)
+
+
+async def test_ghs_cache_enforces_aggregate_byte_budget(monkeypatch):
+    payload = _make_ghs_data(_signal_info("Warning"))
+    sample_value = (payload, datetime.now(timezone.utc).isoformat())
+    entry_size = server._ghs_cache_entry_size(sample_value)
+    byte_cache = TTLCache(
+        maxsize=entry_size * 2,
+        ttl=86400,
+        getsizeof=server._ghs_cache_entry_size,
+    )
+    monkeypatch.setattr(server, "ghs_cache", byte_cache)
+
+    async def fake_pubchem_get_json(*_args, **_kwargs):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    for cid in (801, 802, 803):
+        data, cache_hit, retrieved_at = await server.get_ghs_classification(
+            cid,
+            http_client=None,
+        )
+        assert data == payload
+        assert cache_hit is False
+        assert isinstance(retrieved_at, str)
+
+    assert 801 not in byte_cache
+    assert set(byte_cache) == {802, 803}
+    assert byte_cache.currsize <= byte_cache.maxsize
+
+    for cid in (802, 803):
+        data, cache_hit, retrieved_at = await server.get_ghs_classification(
+            cid,
+            http_client=None,
+        )
+        assert data == payload
+        assert cache_hit is True
+        assert isinstance(retrieved_at, str)
+
+
+async def test_get_ghs_classification_oversize_skip_returns_uncached_response(
+    monkeypatch,
+):
+    cid = 804
+    payload = _make_ghs_data(_signal_info("Warning"))
+    byte_cache = TTLCache(
+        maxsize=1,
+        ttl=86400,
+        getsizeof=server._ghs_cache_entry_size,
+    )
+    monkeypatch.setattr(server, "ghs_cache", byte_cache)
+
+    async def fake_pubchem_get_json(*_args, **_kwargs):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    skip_count_before = server.ops_counters["cache.ghs.oversize_skip"]
+
+    data, cache_hit, retrieved_at = await server.get_ghs_classification(
+        cid,
+        http_client=None,
+    )
+
+    assert data == payload
+    assert cache_hit is False
+    assert isinstance(retrieved_at, str)
+    assert cid not in byte_cache
+    assert server.ops_counters["cache.ghs.oversize_skip"] == skip_count_before + 1
 
 
 def test_extract_all_ghs_classifications_never_returns_partial_reports_after_structural_error():

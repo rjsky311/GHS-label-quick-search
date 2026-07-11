@@ -9,6 +9,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from ipaddress import ip_address
+import json
 import os
 import secrets
 import logging
@@ -104,6 +105,21 @@ load_dotenv(ROOT_DIR / '.env')
 APP_VERSION = "1.10.0"
 
 
+def _bounded_env_int(
+    name: str,
+    default: int,
+    *,
+    minimum: int,
+    maximum: int,
+) -> int:
+    raw_value = os.environ.get(name)
+    try:
+        value = int(raw_value) if raw_value is not None else default
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(maximum, value))
+
+
 def _resolve_build_git_sha() -> str:
     """Resolve a deploy commit SHA from hosting metadata, falling back to git."""
     for key in (
@@ -156,9 +172,44 @@ RATE_LIMIT_STORAGE_URI = (
 shared_http_client: Optional[httpx.AsyncClient] = None
 pdf_renderer = PrintPdfRenderer()
 
-# In-memory caches (TTL = 24 hours, max 5000 entries each)
+# In-memory caches (TTL = 24 hours)
+PUBCHEM_RESPONSE_MAX_BYTES = _bounded_env_int(
+    "PUBCHEM_RESPONSE_MAX_BYTES",
+    8 * 1024 * 1024,
+    minimum=64 * 1024,
+    maximum=64 * 1024 * 1024,
+)
+GHS_CACHE_MAX_BYTES = _bounded_env_int(
+    "GHS_CACHE_MAX_BYTES",
+    64 * 1024 * 1024,
+    minimum=1024 * 1024,
+    maximum=512 * 1024 * 1024,
+)
+_GHS_CACHE_ENTRY_OVERHEAD_BYTES = 64
+
+
+def _ghs_cache_entry_size(value: tuple) -> int:
+    data, retrieved_at = value
+    payload_bytes = json.dumps(
+        data,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    timestamp_bytes = str(retrieved_at).encode("utf-8")
+    return (
+        len(payload_bytes)
+        + len(timestamp_bytes)
+        + _GHS_CACHE_ENTRY_OVERHEAD_BYTES
+    )
+
+
+# CID lookup remains entry-bounded; GHS payloads are byte-bounded.
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
-ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+ghs_cache: TTLCache = TTLCache(
+    maxsize=GHS_CACHE_MAX_BYTES,
+    ttl=86400,
+    getsizeof=_ghs_cache_entry_size,
+)
 ops_counters: Counter = Counter()
 ops_recent_events = deque(maxlen=50)
 OPS_STALE_THRESHOLD_HOURS = float(os.environ.get("OPS_STALE_THRESHOLD_HOURS", "12"))
@@ -818,6 +869,10 @@ class PubChemPayloadError(PubChemError):
     """Raised when PubChem returns structurally unusable JSON."""
 
 
+class PubChemResponseTooLarge(PubChemError):
+    """Raised when a PubChem response exceeds the configured byte limit."""
+
+
 _PUBCHEM_TRANSIENT_STATUS = {408, 429}
 
 
@@ -850,13 +905,51 @@ async def pubchem_get_json(
     while True:
         retry_after: Optional[str] = None
         transient = False
+        status: Optional[int] = None
+        response_headers: Dict[str, str] = {}
+        parsed_json: Any = None
         # Bound the number of concurrent outbound PubChem requests so
         # a single burst of client traffic cannot balloon into a DoS
         # of PubChem (and get our IP rate-limited for everyone).
         async with _pubchem_semaphore:
             try:
                 await _wait_for_pubchem_rate_slot()
-                resp = await http_client.get(url, timeout=timeout)
+                async with http_client.stream("GET", url, timeout=timeout) as resp:
+                    status = resp.status_code
+                    response_headers = dict(resp.headers)
+                    if status == 200:
+                        response_bytes = bytearray()
+                        async for chunk in resp.aiter_bytes():
+                            observed_bytes = len(response_bytes) + len(chunk)
+                            if observed_bytes > PUBCHEM_RESPONSE_MAX_BYTES:
+                                _record_upstream_failure(
+                                    "response_too_large",
+                                    url,
+                                    attempt + 1,
+                                    status_code=status,
+                                    observed_bytes=observed_bytes,
+                                    max_bytes=PUBCHEM_RESPONSE_MAX_BYTES,
+                                )
+                                raise PubChemResponseTooLarge(
+                                    f"{url}: response exceeds "
+                                    f"{PUBCHEM_RESPONSE_MAX_BYTES} bytes"
+                                )
+                            response_bytes.extend(chunk)
+
+                        try:
+                            parsed_json = json.loads(response_bytes)
+                        except ValueError:
+                            # 200 with non-JSON body is still an upstream
+                            # failure. Keep it retryable so callers do not
+                            # mistake malformed output for "no hazards".
+                            transient = True
+                            last_error = "HTTP 200 invalid JSON"
+                            _record_upstream_failure(
+                                "invalid_json",
+                                url,
+                                attempt + 1,
+                                status_code=status,
+                            )
             except httpx.TimeoutException as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
                 transient = True
@@ -876,30 +969,15 @@ async def pubchem_get_json(
                     attempt + 1,
                     detail=type(exc).__name__,
                 )
-                resp = None
-        if resp is not None:
-            status = resp.status_code
-            if status == 200:
-                try:
-                    return status, resp.json()
-                except ValueError:
-                    # 200 with non-JSON body is still an upstream failure.
-                    # Treat it like a transient response so callers do not
-                    # mistake malformed PubChem output for "no hazards".
-                    transient = True
-                    last_error = "HTTP 200 invalid JSON"
-                    _record_upstream_failure(
-                        "invalid_json",
-                        url,
-                        attempt + 1,
-                        status_code=status,
-                    )
+        if status is not None:
+            if status == 200 and not transient:
+                return status, parsed_json
             if transient:
                 pass
             elif status in _PUBCHEM_TRANSIENT_STATUS or 500 <= status < 600:
                 transient = True
                 if status == 429:
-                    retry_after = resp.headers.get("Retry-After")
+                    retry_after = response_headers.get("Retry-After")
                     _record_upstream_failure(
                         "http_429",
                         url,
@@ -1714,7 +1792,11 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
         # The search layer parses again to build its response, including for
         # cache hits, inside its PubChemError boundary.
         extract_all_ghs_classifications(data)
-        ghs_cache[cid] = (data, now)
+        try:
+            ghs_cache[cid] = (data, now)
+        except ValueError:
+            # Cache capacity is a retention policy, not an upstream failure.
+            _record_ops_counter("cache.ghs.oversize_skip")
         return data, False, now
     if status == 404:
         # Don't cache a fresh miss (keeps retry-able), but still report the

@@ -64,6 +64,11 @@ def create_pilot_admin_router(
             "cache": {
                 "cidEntries": len(cid_cache),
                 "ghsEntries": len(ghs_cache),
+                "ghs": {
+                    "entries": len(ghs_cache),
+                    "currentBytes": ghs_cache.currsize,
+                    "maxBytes": ghs_cache.maxsize,
+                },
             },
             "recentEvents": list(ops_recent_events),
             "dictionary": pilot_store.get_dictionary_summary(limit=10),
