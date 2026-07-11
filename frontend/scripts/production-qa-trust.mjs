@@ -58,6 +58,13 @@ export const httpOriginsMatch = (actual, expected) => {
   return Boolean(actualOrigin && expectedOrigin && actualOrigin === expectedOrigin);
 };
 
+export const backendHealthIsReady = (body) =>
+  Boolean(
+    body?.status === "healthy" &&
+      body?.readiness === "ready" &&
+      body?.capabilities?.pdf?.available === true,
+  );
+
 export const serviceIdentityMatches = (actual, { id, name } = {}) => {
   const actualId = String(actual?.id || "").trim();
   const actualName = String(actual?.name || "").trim();

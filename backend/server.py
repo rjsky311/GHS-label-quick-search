@@ -2056,8 +2056,13 @@ async def root():
 @api_router.get("/health")
 async def health_check():
     """Health check endpoint for monitoring and load balancers."""
+    pdf_available = bool(
+        pdf_renderer and getattr(pdf_renderer, "available", False)
+    )
     return {
         "status": "healthy",
+        "readiness": "ready" if pdf_available else "degraded",
+        "capabilities": {"pdf": {"available": pdf_available}},
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
         "gitSha": BUILD_GIT_SHA,

@@ -19,10 +19,37 @@ if (fs.existsSync(trustModulePath)) {
 
 const {
   MIN_GIT_SHA_PREFIX_LENGTH,
+  backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
   serviceIdentityMatches,
 } = trust;
+
+test("accepts an explicitly ready backend with PDF capability", () => {
+  assert.equal(
+    backendHealthIsReady({
+      status: "healthy",
+      readiness: "ready",
+      capabilities: { pdf: { available: true } },
+    }),
+    true,
+  );
+});
+
+test("rejects a backend with degraded PDF readiness", () => {
+  assert.equal(
+    backendHealthIsReady({
+      status: "healthy",
+      readiness: "degraded",
+      capabilities: { pdf: { available: false } },
+    }),
+    false,
+  );
+});
+
+test("rejects a legacy health body without explicit readiness", () => {
+  assert.equal(backendHealthIsReady({ status: "healthy" }), false);
+});
 
 test("matches exact Git SHAs and hexadecimal prefixes of at least 12 characters", () => {
   assert.equal(MIN_GIT_SHA_PREFIX_LENGTH, 12);
@@ -112,6 +139,7 @@ test("production QA scripts use the centralized trust policy", () => {
   assert.match(productionHealth, /from "\.\/production-qa-trust\.mjs"/);
   assert.match(productionHealth, /gitShasMatch/);
   assert.match(productionHealth, /httpOriginsMatch/);
+  assert.match(productionHealth, /backendHealthIsReady/);
   assert.match(deploymentQa, /from "\.\/production-qa-trust\.mjs"/);
   assert.match(deploymentQa, /gitShasMatch/);
   assert.match(deploymentQa, /httpOriginsMatch/);

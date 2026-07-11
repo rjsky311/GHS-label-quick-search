@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { resolveProductionQaExpectedSha } from "./production-expected-sha.mjs";
 import {
+  backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
 } from "./production-qa-trust.mjs";
@@ -305,11 +306,13 @@ const checkBackend = () =>
       : undefined;
     const healthy =
       response.ok &&
-      body?.status === "healthy" &&
+      backendHealthIsReady(body) &&
       (!expectedGitSha || backendGitShaMatches);
     let error = "";
     if (!response.ok || body?.status !== "healthy") {
       error = `backend health returned HTTP ${response.status} with status ${body?.status || "unknown"}`;
+    } else if (!backendHealthIsReady(body)) {
+      error = `backend health reported ${body?.readiness || "unknown"} readiness without available PDF capability`;
     } else if (expectedGitSha && !backendGitShaMatches) {
       error = "backend health git SHA did not match the expected deployed commit";
     } else if (parseError) {
@@ -323,6 +326,8 @@ const checkBackend = () =>
       health: meta,
       version: body?.version || "",
       status: body?.status || "",
+      readiness: body?.readiness || "",
+      capabilities: body?.capabilities || {},
       gitSha: backendGitSha,
       gitShortSha: body?.gitShortSha || body?.git_short_sha || "",
       expectedGitSha: expectedGitSha || undefined,
