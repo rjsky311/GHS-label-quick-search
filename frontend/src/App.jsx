@@ -121,6 +121,13 @@ function DeferredOverlayFallback() {
   );
 }
 
+const SIDEBAR_IDS = Object.freeze({
+  FAVORITES: "favorites",
+  HISTORY: "history",
+  PREPARED: "prepared",
+  PILOT: "pilot",
+});
+
 function App() {
   const { t, i18n } = useTranslation();
 
@@ -130,16 +137,13 @@ function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
-  const [showHistory, setShowHistory] = useState(false);
-  const [showPilotDashboard, setShowPilotDashboard] = useState(false);
+  const [activeSidebar, setActiveSidebar] = useState(null);
   const [showPilotAdminDialog, setShowPilotAdminDialog] = useState(false);
-  const [showPrepared, setShowPrepared] = useState(false);
   const [error, setError] = useState("");
   const [pilotAdminError, setPilotAdminError] = useState("");
   const [pilotAdminKey, setPilotAdminKey] = useState(() => loadPilotAdminKey());
   const [themeMode, setThemeMode] = useState(() => loadThemeMode());
   const [selectedResult, setSelectedResult] = useState(null);
-  const [showFavorites, setShowFavorites] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
   // v1.9 M3 Tier 1: parent chemical of the current prepare-solution flow.
   // Non-null ⇒ PrepareSolutionModal is visible. Separate from
@@ -171,6 +175,11 @@ function App() {
   const [dataCorrectionContext, setDataCorrectionContext] = useState(null);
   const [printBlockedInfo, setPrintBlockedInfo] = useState(null);
 
+  const showFavorites = activeSidebar === SIDEBAR_IDS.FAVORITES;
+  const showHistory = activeSidebar === SIDEBAR_IDS.HISTORY;
+  const showPrepared = activeSidebar === SIDEBAR_IDS.PREPARED;
+  const showPilotDashboard = activeSidebar === SIDEBAR_IDS.PILOT;
+
   useEffect(() => {
     document.title = t("header.title");
   }, [t, i18n.language]);
@@ -201,6 +210,21 @@ function App() {
     favoritePrintRequestRef.current += 1;
     favoritePrintCasRef.current = "";
   }, []);
+
+  const closeSidebar = useCallback(() => {
+    invalidateFavoritePrintLookup();
+    setActiveSidebar(null);
+  }, [invalidateFavoritePrintLookup]);
+
+  const toggleSidebar = useCallback(
+    (sidebarId) => {
+      invalidateFavoritePrintLookup();
+      setActiveSidebar((currentSidebar) =>
+        currentSidebar === sidebarId ? null : sidebarId
+      );
+    },
+    [invalidateFavoritePrintLookup]
+  );
 
   // ── Custom Hooks ──
   const { history, saveToHistory, clearHistory } = useSearchHistory();
@@ -455,10 +479,7 @@ function App() {
     });
     replaceResultsView([]);
     setSelectedResult(null);
-    setShowFavorites(false);
-    setShowHistory(false);
-    setShowPrepared(false);
-    setShowPilotDashboard(false);
+    setActiveSidebar(null);
     setShowPilotAdminDialog(false);
     setShowExportPreview(false);
     setShowComparisonModal(false);
@@ -720,7 +741,7 @@ function App() {
   const handleSelectHistoryItem = useCallback((cas) => {
     setSingleCas(cas);
     setActiveTab("single");
-    setShowHistory(false);
+    setActiveSidebar(null);
   }, []);
 
   useEffect(() => {
@@ -728,7 +749,7 @@ function App() {
 
     clearPilotAdminKey();
     setPilotAdminKey("");
-    setShowPilotDashboard(false);
+    setActiveSidebar(null);
     setPilotAdminError(pilotAuthError);
     setShowPilotAdminDialog(true);
   }, [pilotAuthError]);
@@ -736,7 +757,7 @@ function App() {
   const handleViewDetailFromFavorites = useCallback((item) => {
     invalidateFavoritePrintLookup();
     setSelectedResult(item);
-    setShowFavorites(false);
+    setActiveSidebar(null);
   }, [invalidateFavoritePrintLookup]);
 
   const handleViewDetailFromResults = useCallback((item) => {
@@ -783,7 +804,7 @@ function App() {
       }
       setSelectedForLabel([refreshedItem]);
       setShowLabelModal(true);
-      setShowFavorites(false);
+      setActiveSidebar(null);
     } catch (error) {
       if (isCanceledRequest(error)) return;
       if (
@@ -830,17 +851,14 @@ function App() {
 
   const handleTogglePilotDashboard = useCallback(() => {
     if (!PILOT_ADMIN_ENABLED) return;
-    if (showPilotDashboard) {
-      setShowPilotDashboard(false);
-      return;
-    }
     if (!pilotAdminKey) {
+      closeSidebar();
       setPilotAdminError("");
       setShowPilotAdminDialog(true);
       return;
     }
-    setShowPilotDashboard(true);
-  }, [pilotAdminKey, showPilotDashboard]);
+    toggleSidebar(SIDEBAR_IDS.PILOT);
+  }, [closeSidebar, pilotAdminKey, toggleSidebar]);
 
   const handleSubmitPilotAdminKey = useCallback(
     (value) => {
@@ -858,7 +876,7 @@ function App() {
       setPilotAdminKey(normalized);
       setPilotAdminError("");
       setShowPilotAdminDialog(false);
-      setShowPilotDashboard(true);
+      setActiveSidebar(SIDEBAR_IDS.PILOT);
     },
     [t]
   );
@@ -1106,7 +1124,7 @@ function App() {
         setSelectedForLabel([preparedItem]);
         setLabelQuantities({});
         setPreparedFlowActive(true);
-        setShowPrepared(false);
+        setActiveSidebar(null);
         setShowLabelModal(true);
       } catch (e) {
         console.error(e);
@@ -1188,11 +1206,6 @@ function App() {
     }
   }, [preparedFlowActive, setSelectedForLabel, setLabelQuantities]);
 
-  const handleCloseFavorites = useCallback(() => {
-    invalidateFavoritePrintLookup();
-    setShowFavorites(false);
-  }, [invalidateFavoritePrintLookup]);
-
   const handleClearFavorites = useCallback(() => {
     invalidateFavoritePrintLookup();
     clearFavorites();
@@ -1204,13 +1217,16 @@ function App() {
   }, [invalidateFavoritePrintLookup, toggleFavorite]);
 
   const handleToggleFavorites = useCallback(() => {
-    if (showFavorites) {
-      invalidateFavoritePrintLookup();
-      setShowFavorites(false);
-      return;
-    }
-    setShowFavorites(true);
-  }, [invalidateFavoritePrintLookup, showFavorites]);
+    toggleSidebar(SIDEBAR_IDS.FAVORITES);
+  }, [toggleSidebar]);
+
+  const handleToggleHistory = useCallback(() => {
+    toggleSidebar(SIDEBAR_IDS.HISTORY);
+  }, [toggleSidebar]);
+
+  const handleTogglePrepared = useCallback(() => {
+    toggleSidebar(SIDEBAR_IDS.PREPARED);
+  }, [toggleSidebar]);
 
   const handleToggleThemeMode = useCallback(() => {
     setThemeMode((currentMode) => getNextThemeMode(currentMode));
@@ -1254,8 +1270,8 @@ function App() {
           themeMode={themeMode}
           onTogglePilotDashboard={handleTogglePilotDashboard}
           onToggleFavorites={handleToggleFavorites}
-          onToggleHistory={() => setShowHistory(!showHistory)}
-          onTogglePrepared={() => setShowPrepared(!showPrepared)}
+          onToggleHistory={handleToggleHistory}
+          onTogglePrepared={handleTogglePrepared}
           onToggleThemeMode={handleToggleThemeMode}
           onGoHome={handleGoHome}
         />
@@ -1280,7 +1296,7 @@ function App() {
               loading={pilotLoading}
               saving={pilotSaving}
               error={pilotError}
-              onClose={() => setShowPilotDashboard(false)}
+              onClose={closeSidebar}
               onRefresh={refreshPilotDashboard}
               onExportObservabilityReport={() => exportObservabilityReport()}
               onSaveManualEntry={savePilotManualEntry}
@@ -1295,7 +1311,7 @@ function App() {
           {showFavorites && (
             <FavoritesSidebar
               favorites={favorites}
-              onClose={handleCloseFavorites}
+              onClose={closeSidebar}
               onClearFavorites={handleClearFavorites}
               onToggleFavorite={handleToggleFavoriteFromFavorites}
               onViewDetail={handleViewDetailFromFavorites}
@@ -1306,7 +1322,7 @@ function App() {
           {showHistory && (
             <HistorySidebar
               history={history}
-              onClose={() => setShowHistory(false)}
+              onClose={closeSidebar}
               onClearHistory={clearHistory}
               onSelectHistoryItem={handleSelectHistoryItem}
             />
@@ -1315,7 +1331,7 @@ function App() {
           {showPrepared && (
             <PreparedSidebar
               recents={preparedRecents}
-              onClose={() => setShowPrepared(false)}
+              onClose={closeSidebar}
               onClearRecents={clearPreparedRecents}
               onReprint={handleReprintPreparedRecent}
               reprintingId={preparedReprintingId}
