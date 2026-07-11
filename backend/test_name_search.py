@@ -3222,6 +3222,20 @@ async def test_get_ghs_classification_evicts_non_string_retrieved_at_before_hit_
         server.ghs_cache.clear()
 
 
+async def test_get_ghs_classification_evicts_empty_cached_sentinel_before_hit_observation():
+    cid = 706
+    hit_count_before = server.ops_counters["cache.ghs.hit"]
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = ({}, "2026-07-11T00:00:00+00:00")
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+        assert server.ops_counters["cache.ghs.hit"] == hit_count_before
+    finally:
+        server.ghs_cache.clear()
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -3305,6 +3319,33 @@ async def test_search_chemical_evicts_malformed_cached_ghs_and_returns_upstream_
     try:
         result = await server.search_chemical("123-45-5", http_client=None)
         assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_evicts_empty_cached_sentinel_and_returns_upstream_error(
+    monkeypatch,
+):
+    cid = 706
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Cached empty GHS test compound", None)
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+
+    hit_count_before = server.ops_counters["cache.ghs.hit"]
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = ({}, "2026-07-11T00:00:00+00:00")
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+        assert server.ops_counters["cache.ghs.hit"] == hit_count_before
     finally:
         server.ghs_cache.clear()
 

@@ -1684,6 +1684,11 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
             raise PubChemPayloadError(
                 "Cached PubChem GHS value has invalid structure"
             ) from exc
+        if not data:
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS payload is empty"
+            )
         if not isinstance(retrieved_at, str):
             ghs_cache.pop(cid, None)
             raise PubChemPayloadError(
