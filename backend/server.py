@@ -811,10 +811,14 @@ for _en_name, _zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
     _CLEAN_NAME_INDEX[_clean] = _zh_name
 
 class PubChemError(Exception):
-    """Raised when PubChem is transiently unavailable after retries."""
+    """Raised when PubChem cannot provide a trustworthy response."""
 
 
-_PUBCHEM_TRANSIENT_STATUS = {429, 500, 502, 503, 504}
+class PubChemPayloadError(PubChemError):
+    """Raised when PubChem returns structurally unusable JSON."""
+
+
+_PUBCHEM_TRANSIENT_STATUS = {408, 429}
 
 
 async def pubchem_get_json(
@@ -832,14 +836,14 @@ async def pubchem_get_json(
     (status_code, parsed_json_or_None)
         - (200, dict)         : success
         - (404, None)         : resource truly does not exist (no retry)
-        - (4xx_other, None)   : treat as no-data (no retry)
 
     Raises
     ------
     PubChemError
-        All retries exhausted on transient errors (timeout / 429 / 5xx /
-        network). Callers should treat this as "upstream unavailable",
-        NOT "no hazard data".
+        All retries exhausted on transient errors (timeout / 408 / 429 /
+        5xx / network), or PubChem returns any unexpected non-404 status.
+        Callers should treat this as "upstream unavailable", NOT "no hazard
+        data".
     """
     attempt = 0
     last_error = "unknown"
@@ -892,7 +896,7 @@ async def pubchem_get_json(
                     )
             if transient:
                 pass
-            elif status in _PUBCHEM_TRANSIENT_STATUS:
+            elif status in _PUBCHEM_TRANSIENT_STATUS or 500 <= status < 600:
                 transient = True
                 if status == 429:
                     retry_after = resp.headers.get("Retry-After")
@@ -909,10 +913,24 @@ async def pubchem_get_json(
                         attempt + 1,
                         status_code=status,
                     )
+                else:
+                    _record_upstream_failure(
+                        "http_408",
+                        url,
+                        attempt + 1,
+                        status_code=status,
+                    )
                 last_error = f"HTTP {status}"
-            else:
-                # 4xx other than 429 (incl. 404) — definitive, no retry
+            elif status == 404:
                 return status, None
+            else:
+                _record_upstream_failure(
+                    "unexpected_status",
+                    url,
+                    attempt + 1,
+                    status_code=status,
+                )
+                raise PubChemError(f"{url}: unexpected HTTP {status}")
 
         if not transient:
             # Shouldn't reach here, but guard against logic drift.
@@ -1202,8 +1220,9 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                 if current_report is not None and _ghs_report_has_content(current_report):
                                     reports.append(current_report)
     
-    except Exception as e:
+    except (AttributeError, TypeError) as e:
         logger.error(f"Error extracting GHS classifications: {e}")
+        raise PubChemPayloadError("PubChem GHS payload has invalid structure") from e
     
     # Keep text-only PubChem GHS reports. Missing pictograms must not collapse
     # available signal/H-code text into "no GHS data".
@@ -1512,9 +1531,14 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     status, data = await pubchem_get_json(http_client, url, timeout=30.0)
     now = datetime.now(timezone.utc).isoformat()
-    if status == 200 and data:
-        ghs_cache[cid] = (data, now)
-        return data, False, now
+    if status == 200:
+        # Parse before caching so a valid prefix cannot hide a malformed tail.
+        # The search layer parses again to build its response, including for
+        # cache hits, inside its PubChemError boundary.
+        extract_all_ghs_classifications(data)
+        if data:
+            ghs_cache[cid] = (data, now)
+            return data, False, now
     # 404 / empty: don't cache a fresh miss (keeps retry-able) but still
     # report the current timestamp so the caller can annotate the result.
     return {}, False, now
@@ -1616,6 +1640,10 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             name_result, ghs_result = await asyncio.gather(name_task, ghs_task)
             name_en, name_zh = name_result
             ghs_data, cache_hit, retrieved_at = ghs_result
+
+        # Keep structural payload failures inside the same fail-closed boundary
+        # as fetch failures, including malformed data already present in cache.
+        all_classifications = extract_all_ghs_classifications(ghs_data)
     except PubChemError as e:
         logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
         return ChemicalResult(
@@ -1627,9 +1655,6 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             upstream_error=True,
             error="PubChem 暫時無法回應，請稍後再試 (GHS classification fetch failed)"
         )
-    
-    # Extract ALL GHS classification reports
-    all_classifications = extract_all_ghs_classifications(ghs_data)
     
     # Separate primary (first) classification from others
     primary_pictograms = []

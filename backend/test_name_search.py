@@ -2386,6 +2386,17 @@ async def test_pubchem_get_json_retries_503_then_succeeds():
     assert client.calls == 2
 
 
+async def test_pubchem_get_json_retries_408_then_succeeds():
+    client = _ScriptedClient([
+        _FakeResponse(408),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert data == {"ok": True}
+    assert client.calls == 2
+
+
 async def test_pubchem_get_json_retries_200_invalid_json_then_succeeds():
     client = _ScriptedClient([
         _InvalidJsonResponse(),
@@ -2445,12 +2456,12 @@ async def test_pubchem_get_json_timeout_then_success():
     assert client.calls == 2
 
 
-async def test_pubchem_get_json_returns_none_for_non_transient_4xx():
-    client = _ScriptedClient([_FakeResponse(400)])
-    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
-    assert status == 400
-    assert data is None
-    assert client.calls == 1  # 400 is not retriable
+@pytest.mark.parametrize("status_code", [400, 403, 204, 418])
+async def test_pubchem_get_json_raises_for_unexpected_non_absence_status(status_code):
+    client = _ScriptedClient([_FakeResponse(status_code)])
+    with pytest.raises(PubChemError, match=rf"HTTP {status_code}"):
+        await pubchem_get_json(client, "https://x/", timeout=1.0)
+    assert client.calls == 1
 
 
 async def test_search_chemical_surfaces_upstream_error_on_ghs_outage(monkeypatch):
@@ -3030,6 +3041,53 @@ def _precaution_info(codes_csv):
         "Name": "Precautionary Statement Codes",
         "Value": {"StringWithMarkup": [{"String": codes_csv}]},
     }
+
+
+def _malformed_ghs_data_with_valid_prefix():
+    """Two valid GHS reports followed by an invalid Information item."""
+    return _make_ghs_data(
+        _pic_info(["GHS02"]),
+        _hazard_info("H225: Highly flammable liquid and vapor"),
+        _pic_info(["GHS07"]),
+        _hazard_info("H315: Causes skin irritation"),
+        None,
+    )
+
+
+def test_extract_all_ghs_classifications_never_returns_partial_reports_after_structural_error():
+    with pytest.raises(PubChemError) as exc_info:
+        extract_all_ghs_classifications(_malformed_ghs_data_with_valid_prefix())
+
+    assert exc_info.type is server.PubChemPayloadError
+
+
+async def test_search_chemical_rejects_parseable_malformed_ghs_without_partial_reports(monkeypatch):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Malformed GHS test compound", None)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, _malformed_ghs_data_with_valid_prefix()
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    server.ghs_cache.clear()
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        was_cached = cid in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    assert result.found is False
+    assert result.upstream_error is True
+    assert result.ghs_pictograms == []
+    assert was_cached is False
 
 
 class TestHCodeExtraction:
