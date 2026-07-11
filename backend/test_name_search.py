@@ -3054,11 +3054,140 @@ def _malformed_ghs_data_with_valid_prefix():
     )
 
 
+def _numeric_signal_ghs_data():
+    return _make_ghs_data(_signal_info(123))
+
+
+def _assert_upstream_error_has_no_safety_content(result):
+    assert result.found is False
+    assert result.upstream_error is True
+    assert result.ghs_pictograms == []
+    assert result.hazard_statements == []
+    assert result.precautionary_statements == []
+    assert result.signal_word is None
+    assert result.signal_word_zh is None
+    assert result.other_classifications == []
+    assert result.has_multiple_classifications is False
+    assert result.primary_source is None
+    assert result.primary_report_count is None
+
+
 def test_extract_all_ghs_classifications_never_returns_partial_reports_after_structural_error():
     with pytest.raises(PubChemError) as exc_info:
         extract_all_ghs_classifications(_malformed_ghs_data_with_valid_prefix())
 
     assert exc_info.type is server.PubChemPayloadError
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        {"UnexpectedRoot": {}},
+        {"Record": []},
+    ],
+    ids=["pubchem-fault", "missing-record", "wrong-record-type"],
+)
+def test_extract_all_ghs_classifications_rejects_truthy_payload_without_valid_record_root(payload):
+    with pytest.raises(server.PubChemPayloadError):
+        extract_all_ghs_classifications(payload)
+
+
+def test_extract_all_ghs_classifications_rejects_numeric_signal_leaf():
+    with pytest.raises(server.PubChemPayloadError):
+        extract_all_ghs_classifications(_numeric_signal_ghs_data())
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        {"UnexpectedRoot": {}},
+        {"Record": []},
+        _numeric_signal_ghs_data(),
+    ],
+    ids=["pubchem-fault", "missing-record", "wrong-record-type", "numeric-signal"],
+)
+async def test_get_ghs_classification_rejects_malformed_200_before_cache_insertion(
+    monkeypatch,
+    payload,
+):
+    cid = 702
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    server.ghs_cache.clear()
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        _numeric_signal_ghs_data(),
+    ],
+    ids=["pubchem-fault", "numeric-signal"],
+)
+async def test_search_chemical_contains_malformed_200_as_upstream_error(
+    monkeypatch,
+    payload,
+):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Malformed GHS test compound", None)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    server.ghs_cache.clear()
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_evicts_malformed_cached_ghs_and_returns_upstream_error(monkeypatch):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Cached malformed GHS test compound", None)
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = (
+        _numeric_signal_ghs_data(),
+        "2026-07-11T00:00:00+00:00",
+    )
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
 
 
 async def test_search_chemical_rejects_parseable_malformed_ghs_without_partial_reports(monkeypatch):
@@ -3084,10 +3213,24 @@ async def test_search_chemical_rejects_parseable_malformed_ghs_without_partial_r
     finally:
         server.ghs_cache.clear()
 
-    assert result.found is False
-    assert result.upstream_error is True
-    assert result.ghs_pictograms == []
+    _assert_upstream_error_has_no_safety_content(result)
     assert was_cached is False
+
+
+def test_extract_all_ghs_classifications_accepts_absent_optional_sections():
+    assert extract_all_ghs_classifications({"Record": {"RecordTitle": "No GHS"}}) == []
+
+
+def test_extract_all_ghs_classifications_ignores_unknown_string_named_information():
+    data = _make_ghs_data(
+        {"Name": "Experimental Metadata", "Value": 123},
+        _signal_info("Warning"),
+    )
+
+    reports = extract_all_ghs_classifications(data)
+
+    assert len(reports) == 1
+    assert reports[0]["signal_word"] == "Warning"
 
 
 class TestHCodeExtraction:

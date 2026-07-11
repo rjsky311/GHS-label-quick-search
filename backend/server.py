@@ -1107,6 +1107,60 @@ def _ghs_report_has_content(report: Dict[str, Any]) -> bool:
     )
 
 
+def _ghs_payload_mapping(value: Any, path: str) -> Dict[str, Any]:
+    if not isinstance(value, dict):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} container"
+        )
+    return value
+
+
+def _ghs_payload_optional_list(
+    container: Dict[str, Any],
+    key: str,
+    path: str,
+) -> List[Any]:
+    if key not in container:
+        return []
+    value = container[key]
+    if not isinstance(value, list):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} container"
+        )
+    return value
+
+
+def _ghs_payload_optional_string(
+    container: Dict[str, Any],
+    key: str,
+    path: str,
+) -> str:
+    if key not in container:
+        return ""
+    value = container[key]
+    if not isinstance(value, str):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} value"
+        )
+    return value
+
+
+def _ghs_information_markups(
+    info: Dict[str, Any],
+    info_name: str,
+) -> List[Dict[str, Any]]:
+    value = _ghs_payload_mapping(info.get("Value"), f"{info_name}.Value")
+    raw_markups = _ghs_payload_optional_list(
+        value,
+        "StringWithMarkup",
+        f"{info_name}.Value.StringWithMarkup",
+    )
+    return [
+        _ghs_payload_mapping(markup, f"{info_name}.Value.StringWithMarkup[]")
+        for markup in raw_markups
+    ]
+
+
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     """
     Extract ALL GHS classification reports from PubChem data.
@@ -1114,20 +1168,63 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     The first report is typically the primary/most common classification.
     """
     reports = []
+
+    if not isinstance(ghs_data, dict):
+        raise PubChemPayloadError("PubChem GHS payload root must be an object")
+    if not ghs_data:
+        # Internal sentinel for a definitive PubChem 404 / no GHS section.
+        return []
+
+    record = _ghs_payload_mapping(ghs_data.get("Record"), "Record")
     
     try:
-        sections = ghs_data.get("Record", {}).get("Section", [])
-        for section in sections:
+        sections = _ghs_payload_optional_list(record, "Section", "Record.Section")
+        for section_index, raw_section in enumerate(sections):
+            section = _ghs_payload_mapping(
+                raw_section,
+                f"Record.Section[{section_index}]",
+            )
             if section.get("TOCHeading") == "Safety and Hazards":
-                for subsection in section.get("Section", []):
+                subsections = _ghs_payload_optional_list(
+                    section,
+                    "Section",
+                    "Safety and Hazards.Section",
+                )
+                for subsection_index, raw_subsection in enumerate(subsections):
+                    subsection = _ghs_payload_mapping(
+                        raw_subsection,
+                        f"Safety and Hazards.Section[{subsection_index}]",
+                    )
                     if subsection.get("TOCHeading") == "Hazards Identification":
-                        for subsubsection in subsection.get("Section", []):
+                        ghs_sections = _ghs_payload_optional_list(
+                            subsection,
+                            "Section",
+                            "Hazards Identification.Section",
+                        )
+                        for ghs_index, raw_ghs_section in enumerate(ghs_sections):
+                            subsubsection = _ghs_payload_mapping(
+                                raw_ghs_section,
+                                f"Hazards Identification.Section[{ghs_index}]",
+                            )
                             if subsubsection.get("TOCHeading") == "GHS Classification":
                                 # Parse each report entry
                                 current_report = None
-                                
-                                for info in subsubsection.get("Information", []):
-                                    info_name = info.get("Name", "")
+
+                                information = _ghs_payload_optional_list(
+                                    subsubsection,
+                                    "Information",
+                                    "GHS Classification.Information",
+                                )
+                                for info_index, raw_info in enumerate(information):
+                                    info = _ghs_payload_mapping(
+                                        raw_info,
+                                        f"GHS Classification.Information[{info_index}]",
+                                    )
+                                    info_name = _ghs_payload_optional_string(
+                                        info,
+                                        "Name",
+                                        f"GHS Classification.Information[{info_index}].Name",
+                                    )
                                     
                                     if info_name == "Pictogram(s)":
                                         # Start a new report when we encounter Pictogram(s)
@@ -1138,10 +1235,29 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         
                                         # Extract pictogram codes
                                         seen_codes = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            for extra in markup.get("Markup", []):
-                                                if extra.get("Type") == "Icon":
-                                                    url = extra.get("URL", "")
+                                        markups = _ghs_information_markups(info, info_name)
+                                        for markup_index, markup in enumerate(markups):
+                                            extras = _ghs_payload_optional_list(
+                                                markup,
+                                                "Markup",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].Markup",
+                                            )
+                                            for extra_index, raw_extra in enumerate(extras):
+                                                extra = _ghs_payload_mapping(
+                                                    raw_extra,
+                                                    f"{info_name}.Markup[{extra_index}]",
+                                                )
+                                                markup_type = _ghs_payload_optional_string(
+                                                    extra,
+                                                    "Type",
+                                                    f"{info_name}.Markup[{extra_index}].Type",
+                                                )
+                                                if markup_type == "Icon":
+                                                    url = _ghs_payload_optional_string(
+                                                        extra,
+                                                        "URL",
+                                                        f"{info_name}.Markup[{extra_index}].URL",
+                                                    )
                                                     match = re.search(r'(GHS\d{2})', url)
                                                     if match:
                                                         pic_code = match.group(1)
@@ -1156,8 +1272,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
                                         signal_translations = {"Danger": "危險", "Warning": "警告"}
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            signal = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            signal = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             if signal:
                                                 current_report["signal_word"] = signal
                                                 current_report["signal_word_zh"] = signal_translations.get(signal, signal)
@@ -1167,8 +1289,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
                                         seen_codes = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             for h_match in H_CODE_PATTERN.finditer(text):
                                                 h_code = h_match.group(0)
                                                 if h_code not in seen_codes:
@@ -1188,8 +1316,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         # e.g. "P210, P233, P240, P303+P361+P353, and P501".
                                         # Combined codes like P301+P310 are kept intact.
                                         seen_p = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             # Extract every P-code token (single or combined)
                                             for p_match in re.finditer(r'(P\d{3}(?:\+P\d{3})*)', text):
                                                 p_code = p_match.group(1)
@@ -1206,8 +1340,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                     elif info_name == "ECHA C&L Notifications Summary":
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             if text:
                                                 current_report["source"] = text
                                                 # Extract report count if available
@@ -1522,7 +1662,18 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     """
     cached = ghs_cache.get(cid)
     if cached is not None:
-        data, retrieved_at = cached
+        try:
+            data, retrieved_at = cached
+        except (TypeError, ValueError) as exc:
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS value has invalid structure"
+            ) from exc
+        try:
+            extract_all_ghs_classifications(data)
+        except PubChemPayloadError:
+            ghs_cache.pop(cid, None)
+            raise
         _observe_ghs_cache_hit(cid, retrieved_at)
         return data, True, retrieved_at
 
