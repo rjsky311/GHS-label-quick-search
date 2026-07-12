@@ -563,7 +563,7 @@ code {
     }
 
     .notebook-field::placeholder {
-        color: hsl(var(--notebook-muted-ink) / 0.58);
+        color: hsl(var(--notebook-muted-ink));
     }
 
     .notebook-field:focus-visible {

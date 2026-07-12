@@ -95,6 +95,15 @@ describe("theme tokens", () => {
     expect(declarations["--notebook-print-surface"]).toBe("0 0% 100%");
   });
 
+  it("keeps field placeholders on the contrast-checked token without opacity", () => {
+    const [placeholderRule] = extractRules("\\.notebook-field::placeholder");
+    const placeholderDeclarations = parseDeclarations(placeholderRule);
+
+    expect(placeholderDeclarations.color).toBe(
+      "hsl(var(--notebook-muted-ink))",
+    );
+  });
+
   it("defines material primitives without targeting the print sheet internals", () => {
     expect(css).toMatch(/\.notebook-grain\s*{[^}]*position:\s*fixed/s);
     expect(css).toMatch(
