@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import PilotDashboardSidebar from "../PilotDashboardSidebar";
 import PilotTriagePanel from "../pilot/PilotTriagePanel";
 import { toast } from "sonner";
@@ -9,6 +9,16 @@ jest.mock("sonner", () => ({
     error: jest.fn(),
   },
 }));
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
 
 const baseProps = {
   report: {
@@ -265,6 +275,197 @@ const baseProps = {
 describe("PilotDashboardSidebar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it.each([
+    {
+      name: "manual-entry form submit",
+      mutationProp: "onSaveManualEntry",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.change(screen.getByTestId("manual-entry-cas-input"), {
+          target: { value: "321-54-7" },
+        });
+        fireEvent.change(screen.getByTestId("manual-entry-name-en-input"), {
+          target: { value: "Deferred Solvent" },
+        });
+        fireEvent.click(screen.getByTestId("manual-entry-submit-btn"));
+      },
+      expectLocalStatePreserved: () => {
+        expect(screen.getByTestId("manual-entry-cas-input")).toHaveValue(
+          "321-54-7"
+        );
+      },
+    },
+    {
+      name: "alias form submit",
+      mutationProp: "onSaveAlias",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.change(screen.getByPlaceholderText("pilot.aliasPlaceholder"), {
+          target: { value: "Deferred alias" },
+        });
+        fireEvent.change(
+          screen.getAllByPlaceholderText("pilot.casPlaceholder")[1],
+          { target: { value: "321-54-7" } }
+        );
+        fireEvent.click(screen.getByText("pilot.saveAlias"));
+      },
+      expectLocalStatePreserved: () => {
+        expect(screen.getByPlaceholderText("pilot.aliasPlaceholder")).toHaveValue(
+          "Deferred alias"
+        );
+      },
+    },
+    {
+      name: "reference-link form submit",
+      mutationProp: "onSaveReferenceLink",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.change(screen.getByTestId("reference-link-cas-input"), {
+          target: { value: "64-17-5" },
+        });
+        fireEvent.change(screen.getByTestId("reference-link-label-input"), {
+          target: { value: "Deferred SDS" },
+        });
+        fireEvent.change(screen.getByTestId("reference-link-url-input"), {
+          target: { value: "https://example.test/deferred-sds" },
+        });
+        fireEvent.click(screen.getByTestId("reference-link-submit-btn"));
+      },
+      expectLocalStatePreserved: () => {
+        expect(screen.getByTestId("reference-link-label-input")).toHaveValue(
+          "Deferred SDS"
+        );
+      },
+    },
+    {
+      name: "reference-link status update",
+      mutationProp: "onSaveReferenceLink",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.click(screen.getByTestId("reference-link-inactive-10"));
+      },
+    },
+    {
+      name: "pending-alias decision",
+      mutationProp: "onSaveAlias",
+      run: () => {
+        fireEvent.click(screen.getByTestId("approve-alias-buffer x"));
+      },
+    },
+    {
+      name: "recent-alias status update",
+      mutationProp: "onSaveAlias",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.click(screen.getByTestId("alias-reject-21"));
+      },
+    },
+    {
+      name: "pending-manual-entry decision",
+      mutationProp: "onSaveManualEntry",
+      run: () => {
+        fireEvent.click(screen.getByTestId("approve-manual-entry-555-55-5"));
+      },
+    },
+    {
+      name: "miss-query resolution",
+      mutationProp: "onResolveMissQuery",
+      run: () => {
+        fireEvent.change(screen.getByTestId("miss-query-resolved-cas-101"), {
+          target: { value: "64-17-5" },
+        });
+        fireEvent.click(screen.getByTestId("resolve-miss-query-101"));
+      },
+      expectLocalStatePreserved: () => {
+        expect(screen.getByTestId("miss-query-resolved-cas-101")).toHaveValue(
+          "64-17-5"
+        );
+      },
+    },
+    {
+      name: "correction-request status update",
+      mutationProp: "onUpdateCorrectionRequestStatus",
+      run: () => {
+        fireEvent.change(screen.getByTestId("correction-request-notes-201"), {
+          target: { value: "Deferred evidence" },
+        });
+        fireEvent.click(screen.getByTestId("candidate-correction-request-201"));
+      },
+      expectLocalStatePreserved: () => {
+        expect(screen.getByTestId("correction-request-notes-201")).toHaveValue(
+          "Deferred evidence"
+        );
+      },
+    },
+    {
+      name: "manual-entry creation from a correction candidate",
+      mutationProp: "onSaveManualEntry",
+      run: () => {
+        fireEvent.click(screen.getByTestId("pilot-tab-dictionary"));
+        fireEvent.click(
+          screen.getByTestId("create-manual-entry-from-candidate-recent-202")
+        );
+      },
+      expectLocalStatePreserved: () => {
+        expect(baseProps.onUpdateCorrectionRequestStatus).not.toHaveBeenCalled();
+      },
+    },
+    {
+      name: "stale miss-query purge",
+      mutationProp: "onPurgeStaleMissQueries",
+      run: () => {
+        jest.spyOn(window, "confirm").mockReturnValue(true);
+        fireEvent.click(screen.getByTestId("purge-stale-miss-queries-btn"));
+      },
+    },
+  ])(
+    "treats a null result from $name as stale without UI side effects",
+    async ({ mutationProp, run, expectLocalStatePreserved }) => {
+      const mutation = deferred();
+      const mutationHandler = jest.fn(() => mutation.promise);
+      render(
+        <PilotDashboardSidebar
+          {...baseProps}
+          {...{ [mutationProp]: mutationHandler }}
+        />
+      );
+
+      run();
+      await waitFor(() => expect(mutationHandler).toHaveBeenCalled());
+
+      await act(async () => {
+        mutation.resolve(null);
+        await mutation.promise;
+      });
+
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
+      expectLocalStatePreserved?.();
+    }
+  );
+
+  it("keeps current-context mutation errors visible to the Pilot consumer", async () => {
+    const currentError = new Error("current alias rejected");
+    currentError.response = {
+      status: 403,
+      data: { detail: "current alias rejected" },
+    };
+    const onSaveAlias = jest.fn().mockRejectedValue(currentError);
+    render(
+      <PilotDashboardSidebar {...baseProps} onSaveAlias={onSaveAlias} />
+    );
+
+    fireEvent.click(screen.getByTestId("approve-alias-buffer x"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("current alias rejected");
+    });
   });
 
   it("renders overview metrics and miss queries", () => {

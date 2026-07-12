@@ -9,6 +9,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from ipaddress import ip_address
+import json
 import os
 import secrets
 import logging
@@ -104,6 +105,21 @@ load_dotenv(ROOT_DIR / '.env')
 APP_VERSION = "1.10.0"
 
 
+def _bounded_env_int(
+    name: str,
+    default: int,
+    *,
+    minimum: int,
+    maximum: int,
+) -> int:
+    raw_value = os.environ.get(name)
+    try:
+        value = int(raw_value) if raw_value is not None else default
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(maximum, value))
+
+
 def _resolve_build_git_sha() -> str:
     """Resolve a deploy commit SHA from hosting metadata, falling back to git."""
     for key in (
@@ -156,9 +172,44 @@ RATE_LIMIT_STORAGE_URI = (
 shared_http_client: Optional[httpx.AsyncClient] = None
 pdf_renderer = PrintPdfRenderer()
 
-# In-memory caches (TTL = 24 hours, max 5000 entries each)
+# In-memory caches (TTL = 24 hours)
+PUBCHEM_RESPONSE_MAX_BYTES = _bounded_env_int(
+    "PUBCHEM_RESPONSE_MAX_BYTES",
+    8 * 1024 * 1024,
+    minimum=64 * 1024,
+    maximum=64 * 1024 * 1024,
+)
+GHS_CACHE_MAX_BYTES = _bounded_env_int(
+    "GHS_CACHE_MAX_BYTES",
+    64 * 1024 * 1024,
+    minimum=1024 * 1024,
+    maximum=512 * 1024 * 1024,
+)
+_GHS_CACHE_ENTRY_OVERHEAD_BYTES = 64
+
+
+def _ghs_cache_entry_size(value: tuple) -> int:
+    data, retrieved_at = value
+    payload_bytes = json.dumps(
+        data,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    timestamp_bytes = str(retrieved_at).encode("utf-8")
+    return (
+        len(payload_bytes)
+        + len(timestamp_bytes)
+        + _GHS_CACHE_ENTRY_OVERHEAD_BYTES
+    )
+
+
+# CID lookup remains entry-bounded; GHS payloads are byte-bounded.
 cid_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
-ghs_cache: TTLCache = TTLCache(maxsize=5000, ttl=86400)
+ghs_cache: TTLCache = TTLCache(
+    maxsize=GHS_CACHE_MAX_BYTES,
+    ttl=86400,
+    getsizeof=_ghs_cache_entry_size,
+)
 ops_counters: Counter = Counter()
 ops_recent_events = deque(maxlen=50)
 OPS_STALE_THRESHOLD_HOURS = float(os.environ.get("OPS_STALE_THRESHOLD_HOURS", "12"))
@@ -811,10 +862,18 @@ for _en_name, _zh_name in CHEMICAL_NAMES_ZH_EXPANDED.items():
     _CLEAN_NAME_INDEX[_clean] = _zh_name
 
 class PubChemError(Exception):
-    """Raised when PubChem is transiently unavailable after retries."""
+    """Raised when PubChem cannot provide a trustworthy response."""
 
 
-_PUBCHEM_TRANSIENT_STATUS = {429, 500, 502, 503, 504}
+class PubChemPayloadError(PubChemError):
+    """Raised when PubChem returns structurally unusable JSON."""
+
+
+class PubChemResponseTooLarge(PubChemError):
+    """Raised when a PubChem response exceeds the configured byte limit."""
+
+
+_PUBCHEM_TRANSIENT_STATUS = {408, 429}
 
 
 async def pubchem_get_json(
@@ -832,27 +891,65 @@ async def pubchem_get_json(
     (status_code, parsed_json_or_None)
         - (200, dict)         : success
         - (404, None)         : resource truly does not exist (no retry)
-        - (4xx_other, None)   : treat as no-data (no retry)
 
     Raises
     ------
     PubChemError
-        All retries exhausted on transient errors (timeout / 429 / 5xx /
-        network). Callers should treat this as "upstream unavailable",
-        NOT "no hazard data".
+        All retries exhausted on transient errors (timeout / 408 / 429 /
+        5xx / network), or PubChem returns any unexpected non-404 status.
+        Callers should treat this as "upstream unavailable", NOT "no hazard
+        data".
     """
     attempt = 0
     last_error = "unknown"
     while True:
         retry_after: Optional[str] = None
         transient = False
+        status: Optional[int] = None
+        response_headers = httpx.Headers()
+        parsed_json: Any = None
         # Bound the number of concurrent outbound PubChem requests so
         # a single burst of client traffic cannot balloon into a DoS
         # of PubChem (and get our IP rate-limited for everyone).
         async with _pubchem_semaphore:
             try:
                 await _wait_for_pubchem_rate_slot()
-                resp = await http_client.get(url, timeout=timeout)
+                async with http_client.stream("GET", url, timeout=timeout) as resp:
+                    status = resp.status_code
+                    response_headers = resp.headers
+                    if status == 200:
+                        response_bytes = bytearray()
+                        async for chunk in resp.aiter_bytes():
+                            observed_bytes = len(response_bytes) + len(chunk)
+                            if observed_bytes > PUBCHEM_RESPONSE_MAX_BYTES:
+                                _record_upstream_failure(
+                                    "response_too_large",
+                                    url,
+                                    attempt + 1,
+                                    status_code=status,
+                                    observed_bytes=observed_bytes,
+                                    max_bytes=PUBCHEM_RESPONSE_MAX_BYTES,
+                                )
+                                raise PubChemResponseTooLarge(
+                                    f"{url}: response exceeds "
+                                    f"{PUBCHEM_RESPONSE_MAX_BYTES} bytes"
+                                )
+                            response_bytes.extend(chunk)
+
+                        try:
+                            parsed_json = json.loads(response_bytes)
+                        except ValueError:
+                            # 200 with non-JSON body is still an upstream
+                            # failure. Keep it retryable so callers do not
+                            # mistake malformed output for "no hazards".
+                            transient = True
+                            last_error = "HTTP 200 invalid JSON"
+                            _record_upstream_failure(
+                                "invalid_json",
+                                url,
+                                attempt + 1,
+                                status_code=status,
+                            )
             except httpx.TimeoutException as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
                 transient = True
@@ -872,30 +969,15 @@ async def pubchem_get_json(
                     attempt + 1,
                     detail=type(exc).__name__,
                 )
-                resp = None
-        if resp is not None:
-            status = resp.status_code
-            if status == 200:
-                try:
-                    return status, resp.json()
-                except ValueError:
-                    # 200 with non-JSON body is still an upstream failure.
-                    # Treat it like a transient response so callers do not
-                    # mistake malformed PubChem output for "no hazards".
-                    transient = True
-                    last_error = "HTTP 200 invalid JSON"
-                    _record_upstream_failure(
-                        "invalid_json",
-                        url,
-                        attempt + 1,
-                        status_code=status,
-                    )
+        if status is not None:
+            if status == 200 and not transient:
+                return status, parsed_json
             if transient:
                 pass
-            elif status in _PUBCHEM_TRANSIENT_STATUS:
+            elif status in _PUBCHEM_TRANSIENT_STATUS or 500 <= status < 600:
                 transient = True
                 if status == 429:
-                    retry_after = resp.headers.get("Retry-After")
+                    retry_after = response_headers.get("Retry-After")
                     _record_upstream_failure(
                         "http_429",
                         url,
@@ -909,10 +991,24 @@ async def pubchem_get_json(
                         attempt + 1,
                         status_code=status,
                     )
+                else:
+                    _record_upstream_failure(
+                        "http_408",
+                        url,
+                        attempt + 1,
+                        status_code=status,
+                    )
                 last_error = f"HTTP {status}"
-            else:
-                # 4xx other than 429 (incl. 404) — definitive, no retry
+            elif status == 404:
                 return status, None
+            else:
+                _record_upstream_failure(
+                    "unexpected_status",
+                    url,
+                    attempt + 1,
+                    status_code=status,
+                )
+                raise PubChemError(f"{url}: unexpected HTTP {status}")
 
         if not transient:
             # Shouldn't reach here, but guard against logic drift.
@@ -1089,6 +1185,60 @@ def _ghs_report_has_content(report: Dict[str, Any]) -> bool:
     )
 
 
+def _ghs_payload_mapping(value: Any, path: str) -> Dict[str, Any]:
+    if not isinstance(value, dict):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} container"
+        )
+    return value
+
+
+def _ghs_payload_optional_list(
+    container: Dict[str, Any],
+    key: str,
+    path: str,
+) -> List[Any]:
+    if key not in container:
+        return []
+    value = container[key]
+    if not isinstance(value, list):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} container"
+        )
+    return value
+
+
+def _ghs_payload_optional_string(
+    container: Dict[str, Any],
+    key: str,
+    path: str,
+) -> str:
+    if key not in container:
+        return ""
+    value = container[key]
+    if not isinstance(value, str):
+        raise PubChemPayloadError(
+            f"PubChem GHS payload has invalid {path} value"
+        )
+    return value
+
+
+def _ghs_information_markups(
+    info: Dict[str, Any],
+    info_name: str,
+) -> List[Dict[str, Any]]:
+    value = _ghs_payload_mapping(info.get("Value"), f"{info_name}.Value")
+    raw_markups = _ghs_payload_optional_list(
+        value,
+        "StringWithMarkup",
+        f"{info_name}.Value.StringWithMarkup",
+    )
+    return [
+        _ghs_payload_mapping(markup, f"{info_name}.Value.StringWithMarkup[]")
+        for markup in raw_markups
+    ]
+
+
 def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     """
     Extract ALL GHS classification reports from PubChem data.
@@ -1096,20 +1246,78 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
     The first report is typically the primary/most common classification.
     """
     reports = []
+
+    if not isinstance(ghs_data, dict):
+        raise PubChemPayloadError("PubChem GHS payload root must be an object")
+    if not ghs_data:
+        # Internal sentinel for a definitive PubChem 404 / no GHS section.
+        return []
+
+    record = _ghs_payload_mapping(ghs_data.get("Record"), "Record")
     
     try:
-        sections = ghs_data.get("Record", {}).get("Section", [])
-        for section in sections:
-            if section.get("TOCHeading") == "Safety and Hazards":
-                for subsection in section.get("Section", []):
-                    if subsection.get("TOCHeading") == "Hazards Identification":
-                        for subsubsection in subsection.get("Section", []):
-                            if subsubsection.get("TOCHeading") == "GHS Classification":
+        sections = _ghs_payload_optional_list(record, "Section", "Record.Section")
+        for section_index, raw_section in enumerate(sections):
+            section = _ghs_payload_mapping(
+                raw_section,
+                f"Record.Section[{section_index}]",
+            )
+            section_heading = _ghs_payload_optional_string(
+                section,
+                "TOCHeading",
+                f"Record.Section[{section_index}].TOCHeading",
+            )
+            if section_heading == "Safety and Hazards":
+                subsections = _ghs_payload_optional_list(
+                    section,
+                    "Section",
+                    "Safety and Hazards.Section",
+                )
+                for subsection_index, raw_subsection in enumerate(subsections):
+                    subsection = _ghs_payload_mapping(
+                        raw_subsection,
+                        f"Safety and Hazards.Section[{subsection_index}]",
+                    )
+                    subsection_heading = _ghs_payload_optional_string(
+                        subsection,
+                        "TOCHeading",
+                        f"Safety and Hazards.Section[{subsection_index}].TOCHeading",
+                    )
+                    if subsection_heading == "Hazards Identification":
+                        ghs_sections = _ghs_payload_optional_list(
+                            subsection,
+                            "Section",
+                            "Hazards Identification.Section",
+                        )
+                        for ghs_index, raw_ghs_section in enumerate(ghs_sections):
+                            subsubsection = _ghs_payload_mapping(
+                                raw_ghs_section,
+                                f"Hazards Identification.Section[{ghs_index}]",
+                            )
+                            ghs_heading = _ghs_payload_optional_string(
+                                subsubsection,
+                                "TOCHeading",
+                                f"Hazards Identification.Section[{ghs_index}].TOCHeading",
+                            )
+                            if ghs_heading == "GHS Classification":
                                 # Parse each report entry
                                 current_report = None
-                                
-                                for info in subsubsection.get("Information", []):
-                                    info_name = info.get("Name", "")
+
+                                information = _ghs_payload_optional_list(
+                                    subsubsection,
+                                    "Information",
+                                    "GHS Classification.Information",
+                                )
+                                for info_index, raw_info in enumerate(information):
+                                    info = _ghs_payload_mapping(
+                                        raw_info,
+                                        f"GHS Classification.Information[{info_index}]",
+                                    )
+                                    info_name = _ghs_payload_optional_string(
+                                        info,
+                                        "Name",
+                                        f"GHS Classification.Information[{info_index}].Name",
+                                    )
                                     
                                     if info_name == "Pictogram(s)":
                                         # Start a new report when we encounter Pictogram(s)
@@ -1120,10 +1328,29 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         
                                         # Extract pictogram codes
                                         seen_codes = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            for extra in markup.get("Markup", []):
-                                                if extra.get("Type") == "Icon":
-                                                    url = extra.get("URL", "")
+                                        markups = _ghs_information_markups(info, info_name)
+                                        for markup_index, markup in enumerate(markups):
+                                            extras = _ghs_payload_optional_list(
+                                                markup,
+                                                "Markup",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].Markup",
+                                            )
+                                            for extra_index, raw_extra in enumerate(extras):
+                                                extra = _ghs_payload_mapping(
+                                                    raw_extra,
+                                                    f"{info_name}.Markup[{extra_index}]",
+                                                )
+                                                markup_type = _ghs_payload_optional_string(
+                                                    extra,
+                                                    "Type",
+                                                    f"{info_name}.Markup[{extra_index}].Type",
+                                                )
+                                                if markup_type == "Icon":
+                                                    url = _ghs_payload_optional_string(
+                                                        extra,
+                                                        "URL",
+                                                        f"{info_name}.Markup[{extra_index}].URL",
+                                                    )
                                                     match = re.search(r'(GHS\d{2})', url)
                                                     if match:
                                                         pic_code = match.group(1)
@@ -1138,8 +1365,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
                                         signal_translations = {"Danger": "危險", "Warning": "警告"}
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            signal = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            signal = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             if signal:
                                                 current_report["signal_word"] = signal
                                                 current_report["signal_word_zh"] = signal_translations.get(signal, signal)
@@ -1149,8 +1382,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
                                         seen_codes = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             for h_match in H_CODE_PATTERN.finditer(text):
                                                 h_code = h_match.group(0)
                                                 if h_code not in seen_codes:
@@ -1170,8 +1409,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         # e.g. "P210, P233, P240, P303+P361+P353, and P501".
                                         # Combined codes like P301+P310 are kept intact.
                                         seen_p = set()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             # Extract every P-code token (single or combined)
                                             for p_match in re.finditer(r'(P\d{3}(?:\+P\d{3})*)', text):
                                                 p_code = p_match.group(1)
@@ -1188,8 +1433,14 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                     elif info_name == "ECHA C&L Notifications Summary":
                                         if current_report is None:
                                             current_report = _empty_ghs_report()
-                                        for markup in info.get("Value", {}).get("StringWithMarkup", []):
-                                            text = markup.get("String", "")
+                                        for markup_index, markup in enumerate(
+                                            _ghs_information_markups(info, info_name)
+                                        ):
+                                            text = _ghs_payload_optional_string(
+                                                markup,
+                                                "String",
+                                                f"{info_name}.Value.StringWithMarkup[{markup_index}].String",
+                                            )
                                             if text:
                                                 current_report["source"] = text
                                                 # Extract report count if available
@@ -1202,8 +1453,9 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                 if current_report is not None and _ghs_report_has_content(current_report):
                                     reports.append(current_report)
     
-    except Exception as e:
+    except (AttributeError, TypeError) as e:
         logger.error(f"Error extracting GHS classifications: {e}")
+        raise PubChemPayloadError("PubChem GHS payload has invalid structure") from e
     
     # Keep text-only PubChem GHS reports. Missing pictograms must not collapse
     # available signal/H-code text into "no GHS data".
@@ -1503,7 +1755,28 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     """
     cached = ghs_cache.get(cid)
     if cached is not None:
-        data, retrieved_at = cached
+        try:
+            data, retrieved_at = cached
+        except (TypeError, ValueError) as exc:
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS value has invalid structure"
+            ) from exc
+        if not data:
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS payload is empty"
+            )
+        if not isinstance(retrieved_at, str):
+            ghs_cache.pop(cid, None)
+            raise PubChemPayloadError(
+                "Cached PubChem GHS value has invalid retrieval timestamp"
+            )
+        try:
+            extract_all_ghs_classifications(data)
+        except PubChemPayloadError:
+            ghs_cache.pop(cid, None)
+            raise
         _observe_ghs_cache_hit(cid, retrieved_at)
         return data, True, retrieved_at
 
@@ -1512,12 +1785,24 @@ async def get_ghs_classification(cid: int, http_client: httpx.AsyncClient) -> tu
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     status, data = await pubchem_get_json(http_client, url, timeout=30.0)
     now = datetime.now(timezone.utc).isoformat()
-    if status == 200 and data:
-        ghs_cache[cid] = (data, now)
+    if status == 200:
+        if not data:
+            raise PubChemPayloadError("PubChem GHS HTTP 200 payload is empty")
+        # Parse before caching so a valid prefix cannot hide a malformed tail.
+        # The search layer parses again to build its response, including for
+        # cache hits, inside its PubChemError boundary.
+        extract_all_ghs_classifications(data)
+        try:
+            ghs_cache[cid] = (data, now)
+        except ValueError:
+            # Cache capacity is a retention policy, not an upstream failure.
+            _record_ops_counter("cache.ghs.oversize_skip")
         return data, False, now
-    # 404 / empty: don't cache a fresh miss (keeps retry-able) but still
-    # report the current timestamp so the caller can annotate the result.
-    return {}, False, now
+    if status == 404:
+        # Don't cache a fresh miss (keeps retry-able), but still report the
+        # current timestamp so the caller can annotate the result.
+        return {}, False, now
+    raise PubChemError(f"{url}: unexpected HTTP {status}")
 
 async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> ChemicalResult:
     """Search for a chemical by CAS number"""
@@ -1616,6 +1901,10 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             name_result, ghs_result = await asyncio.gather(name_task, ghs_task)
             name_en, name_zh = name_result
             ghs_data, cache_hit, retrieved_at = ghs_result
+
+        # Keep structural payload failures inside the same fail-closed boundary
+        # as fetch failures, including malformed data already present in cache.
+        all_classifications = extract_all_ghs_classifications(ghs_data)
     except PubChemError as e:
         logger.warning(f"PubChem unavailable during GHS lookup for CID {cid}: {e}")
         return ChemicalResult(
@@ -1627,9 +1916,6 @@ async def search_chemical(cas_number: str, http_client: httpx.AsyncClient) -> Ch
             upstream_error=True,
             error="PubChem 暫時無法回應，請稍後再試 (GHS classification fetch failed)"
         )
-    
-    # Extract ALL GHS classification reports
-    all_classifications = extract_all_ghs_classifications(ghs_data)
     
     # Separate primary (first) classification from others
     primary_pictograms = []
@@ -1770,8 +2056,13 @@ async def root():
 @api_router.get("/health")
 async def health_check():
     """Health check endpoint for monitoring and load balancers."""
+    pdf_available = bool(
+        pdf_renderer and getattr(pdf_renderer, "available", False)
+    )
     return {
         "status": "healthy",
+        "readiness": "ready" if pdf_available else "degraded",
+        "capabilities": {"pdf": {"available": pdf_available}},
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
         "gitSha": BUILD_GIT_SHA,

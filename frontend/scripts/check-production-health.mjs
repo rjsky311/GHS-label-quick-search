@@ -3,6 +3,11 @@ import os from "node:os";
 import path from "node:path";
 
 import { resolveProductionQaExpectedSha } from "./production-expected-sha.mjs";
+import {
+  backendHealthIsReady,
+  gitShasMatch,
+  httpOriginsMatch,
+} from "./production-qa-trust.mjs";
 
 const DEFAULT_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
 const DEFAULT_BACKEND_HEALTH_URL = "https://ghs-backend.zeabur.app/api/health";
@@ -13,6 +18,8 @@ const frontendUrl =
   DEFAULT_FRONTEND_URL;
 const backendHealthUrl =
   process.env.PRODUCTION_HEALTH_BACKEND_URL || DEFAULT_BACKEND_HEALTH_URL;
+const expectedBackendOrigin =
+  process.env.PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN || "";
 const outputPath = path.resolve(
   process.cwd(),
   process.env.PRODUCTION_HEALTH_REPORT_PATH ||
@@ -39,6 +46,24 @@ const expectedGitSha = (() => {
     process.exit(1);
   }
 })();
+
+const backendHealthOrigin = (() => {
+  try {
+    const url = new URL(backendHealthUrl);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    if (url.username || url.password) return "";
+    return url.origin;
+  } catch {
+    return "";
+  }
+})();
+
+if (!httpOriginsMatch(backendHealthOrigin, expectedBackendOrigin)) {
+  console.error(
+    "Production health QA requires PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN to be a credential-free HTTP(S) origin matching the configured backend health URL.",
+  );
+  process.exit(1);
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -87,22 +112,6 @@ const fetchJsonMeta = async (url) => {
     parseError = error?.message || String(error);
   }
   return { response, meta, body, parseError };
-};
-
-const normalizeSha = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase();
-
-const gitShaMatches = (actual, expected) => {
-  const actualSha = normalizeSha(actual);
-  const expectedSha = normalizeSha(expected);
-  if (!actualSha || !expectedSha) return false;
-  return (
-    actualSha === expectedSha ||
-    actualSha.startsWith(expectedSha) ||
-    expectedSha.startsWith(actualSha)
-  );
 };
 
 const resolveIndexAsset = (html, baseUrl) => {
@@ -237,7 +246,7 @@ const checkFrontend = () =>
         builtAt: buildInfoResult.body?.builtAt || "",
         parseError: buildInfoResult.parseError,
         gitShaMatches: expectedGitSha
-          ? gitShaMatches(buildInfoResult.body?.gitSha, expectedGitSha)
+          ? gitShasMatch(buildInfoResult.body?.gitSha, expectedGitSha)
           : undefined,
       };
     } catch (error) {
@@ -293,15 +302,17 @@ const checkBackend = () =>
     const backendGitSha =
       body?.gitSha || body?.git_sha || body?.build?.gitSha || body?.build?.git_sha || "";
     const backendGitShaMatches = expectedGitSha
-      ? gitShaMatches(backendGitSha, expectedGitSha)
+      ? gitShasMatch(backendGitSha, expectedGitSha)
       : undefined;
     const healthy =
       response.ok &&
-      body?.status === "healthy" &&
+      backendHealthIsReady(body) &&
       (!expectedGitSha || backendGitShaMatches);
     let error = "";
     if (!response.ok || body?.status !== "healthy") {
       error = `backend health returned HTTP ${response.status} with status ${body?.status || "unknown"}`;
+    } else if (!backendHealthIsReady(body)) {
+      error = `backend health reported ${body?.readiness || "unknown"} readiness without available PDF capability`;
     } else if (expectedGitSha && !backendGitShaMatches) {
       error = "backend health git SHA did not match the expected deployed commit";
     } else if (parseError) {
@@ -315,6 +326,8 @@ const checkBackend = () =>
       health: meta,
       version: body?.version || "",
       status: body?.status || "",
+      readiness: body?.readiness || "",
+      capabilities: body?.capabilities || {},
       gitSha: backendGitSha,
       gitShortSha: body?.gitShortSha || body?.git_short_sha || "",
       expectedGitSha: expectedGitSha || undefined,
@@ -339,6 +352,7 @@ const result = {
   reportPath: outputPath,
   frontendUrl,
   backendHealthUrl,
+  expectedBackendOrigin,
   maxAttempts,
   timeoutMs,
   retryDelayMs,

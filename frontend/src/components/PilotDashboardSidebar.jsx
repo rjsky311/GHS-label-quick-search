@@ -317,7 +317,8 @@ export default function PilotDashboardSidebar(props) {
       if (manualEntryForm.status !== "approved") {
         payload.status = manualEntryForm.status;
       }
-      await onSaveManualEntry(payload);
+      const result = await onSaveManualEntry(payload);
+      if (result === null) return;
       toast.success(
         t("pilot.manualEntrySaved", { defaultValue: "Manual dictionary entry saved." })
       );
@@ -342,13 +343,14 @@ export default function PilotDashboardSidebar(props) {
   const submitAlias = async (event) => {
     event.preventDefault();
     try {
-      await onSaveAlias({
+      const result = await onSaveAlias({
         alias_text: aliasForm.alias_text.trim(),
         locale: aliasForm.locale,
         cas_number: aliasForm.cas_number.trim(),
         status: aliasForm.status,
         notes: aliasForm.notes.trim(),
       });
+      if (result === null) return;
       toast.success(t("pilot.aliasSaved", { defaultValue: "Alias saved." }));
       setAliasForm({
         alias_text: "",
@@ -369,7 +371,7 @@ export default function PilotDashboardSidebar(props) {
   const submitReferenceLink = async (event) => {
     event.preventDefault();
     try {
-      await onSaveReferenceLink({
+      const result = await onSaveReferenceLink({
         cas_number: referenceForm.cas_number.trim(),
         label: referenceForm.label.trim(),
         url: referenceForm.url.trim(),
@@ -377,6 +379,7 @@ export default function PilotDashboardSidebar(props) {
         priority: Number(referenceForm.priority || 50),
         status: referenceForm.status,
       });
+      if (result === null) return;
       toast.success(
         t("pilot.referenceSaved", { defaultValue: "Reference link saved." })
       );
@@ -401,7 +404,7 @@ export default function PilotDashboardSidebar(props) {
 
   const handleReferenceLinkStatusUpdate = async (link, status) => {
     try {
-      await onSaveReferenceLink({
+      const result = await onSaveReferenceLink({
         cas_number: link.casNumber,
         label: link.label,
         url: link.url,
@@ -410,6 +413,7 @@ export default function PilotDashboardSidebar(props) {
         status,
         cid: link.cid ?? undefined,
       });
+      if (result === null) return;
       toast.success(
         status === "active"
           ? t("pilot.referenceActivated", {
@@ -432,13 +436,14 @@ export default function PilotDashboardSidebar(props) {
 
   const handlePendingAliasDecision = async (alias, status) => {
     try {
-      await onSaveAlias({
+      const result = await onSaveAlias({
         alias_text: alias.alias_text,
         locale: alias.locale,
         cas_number: alias.cas_number,
         status,
         notes: alias.notes || "",
       });
+      if (result === null) return;
       if (status === "approved") {
         toast.success(t("pilot.aliasApproved", { defaultValue: "Alias approved." }));
       } else if (status === "needs_evidence") {
@@ -463,13 +468,14 @@ export default function PilotDashboardSidebar(props) {
 
   const handleAliasStatusUpdate = async (alias, status) => {
     try {
-      await onSaveAlias({
+      const result = await onSaveAlias({
         alias_text: alias.alias_text,
         locale: alias.locale,
         cas_number: alias.cas_number,
         status,
         notes: alias.notes || "",
       });
+      if (result === null) return;
       if (status === "approved") {
         toast.success(t("pilot.aliasApproved", { defaultValue: "Alias approved." }));
       } else if (status === "needs_evidence") {
@@ -495,7 +501,7 @@ export default function PilotDashboardSidebar(props) {
   const handlePendingManualEntryDecision = async (entry, status) => {
     if (!entry?.cas_number || !onSaveManualEntry) return;
     try {
-      await onSaveManualEntry({
+      const result = await onSaveManualEntry({
         cas_number: entry.cas_number,
         name_en: entry.name_en || null,
         name_zh: entry.name_zh || null,
@@ -503,6 +509,7 @@ export default function PilotDashboardSidebar(props) {
         source: entry.source || "manual",
         status,
       });
+      if (result === null) return;
       toast.success(
         status === "approved"
           ? t("pilot.manualEntryApproved", {
@@ -542,10 +549,11 @@ export default function PilotDashboardSidebar(props) {
     }
 
     try {
-      await onResolveMissQuery(missId, {
+      const result = await onResolveMissQuery(missId, {
         resolution_status: status,
         resolved_cas: resolvedCas,
       });
+      if (result === null) return;
       if (status === "resolved") {
         setMissResolutionDrafts((prev) => ({ ...prev, [missId]: "" }));
       }
@@ -581,7 +589,8 @@ export default function PilotDashboardSidebar(props) {
       if (status === "candidate_found") {
         payload.candidate = buildCorrectionCandidateEvidence(item, draftNotes);
       }
-      await onUpdateCorrectionRequestStatus(requestId, payload);
+      const result = await onUpdateCorrectionRequestStatus(requestId, payload);
+      if (result === null) return;
       if (draftNotes) {
         setCorrectionReviewDrafts((prev) => ({ ...prev, [requestId]: "" }));
       }
@@ -622,13 +631,18 @@ export default function PilotDashboardSidebar(props) {
     }
 
     try {
-      await onSaveManualEntry(payload);
+      const manualEntryResult = await onSaveManualEntry(payload);
+      if (manualEntryResult === null) return;
       if (requestId && onUpdateCorrectionRequestStatus) {
         const statusPayload = buildCorrectionRequestManualEntryConversionPayload(
           item,
           draftNotes,
         );
-        await onUpdateCorrectionRequestStatus(requestId, statusPayload);
+        const statusResult = await onUpdateCorrectionRequestStatus(
+          requestId,
+          statusPayload,
+        );
+        if (statusResult === null) return;
         if (draftNotes) {
           setCorrectionReviewDrafts((prev) => ({ ...prev, [requestId]: "" }));
         }
@@ -675,6 +689,7 @@ export default function PilotDashboardSidebar(props) {
       const result = await onPurgeStaleMissQueries({
         retention_days: missRetention.retentionDays || 90,
       });
+      if (result === null) return;
       toast.success(
         t("pilot.purgeMissDone", {
           count: result?.retention?.deletedCount || 0,

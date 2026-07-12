@@ -27,9 +27,13 @@ def reset_observability_state():
     ghs_cache.clear()
 
 
-async def test_ops_report_endpoint_returns_current_counters(monkeypatch):
+async def test_ops_report_endpoint_returns_currentBytes_and_current_counters(monkeypatch):
     _record_ops_counter("cache.ghs.hit")
     _record_ops_event("cache_stale_hit", cid=123, age_hours=18.5)
+    ghs_cache[123] = (
+        {"Record": {"RecordTitle": "Ops cache test"}},
+        "2026-07-11T00:00:00+00:00",
+    )
     monkeypatch.setattr(server, "ADMIN_API_TOKEN", "test-admin")
 
     transport = ASGITransport(app=app)
@@ -43,6 +47,12 @@ async def test_ops_report_endpoint_returns_current_counters(monkeypatch):
     data = response.json()
     assert data["counters"]["cache.ghs.hit"] == 1
     assert data["recentEvents"][0]["type"] == "cache_stale_hit"
+    assert data["cache"]["ghsEntries"] == 1
+    assert data["cache"]["ghs"] == {
+        "entries": 1,
+        "currentBytes": ghs_cache.currsize,
+        "maxBytes": ghs_cache.maxsize,
+    }
     assert "dictionary" in data
     assert "pilotTriage" in data["dictionary"]
     assert "attentionCounts" in data["dictionary"]["pilotTriage"]
@@ -63,8 +73,15 @@ async def test_get_ghs_classification_counts_stale_cache_hits():
 
 
 class _TimeoutClient:
-    async def get(self, *_args, **_kwargs):
-        raise httpx.ReadTimeout("timeout")
+    def stream(self, *_args, **_kwargs):
+        class _TimeoutContext:
+            async def __aenter__(self):
+                raise httpx.ReadTimeout("timeout")
+
+            async def __aexit__(self, *_exc):
+                return None
+
+        return _TimeoutContext()
 
 
 async def test_pubchem_timeout_is_recorded_in_observability_counters():
@@ -88,9 +105,17 @@ async def test_pubchem_get_json_paces_before_outbound_request(monkeypatch):
         calls.append("pace")
 
     class _OkClient:
-        async def get(self, *_args, **_kwargs):
+        def stream(self, *_args, **_kwargs):
             calls.append("get")
-            return httpx.Response(200, json={"ok": True})
+
+            class _OkContext:
+                async def __aenter__(self):
+                    return httpx.Response(200, json={"ok": True})
+
+                async def __aexit__(self, *_exc):
+                    return None
+
+            return _OkContext()
 
     monkeypatch.setattr(server, "_wait_for_pubchem_rate_slot", fake_rate_slot, raising=False)
 

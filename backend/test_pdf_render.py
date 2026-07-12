@@ -366,19 +366,43 @@ def test_print_pdf_endpoint_does_not_log_submitted_html(monkeypatch, caplog):
     assert VALID_HTML not in caplog.text
 
 
-def test_print_pdf_unavailable_does_not_break_health(monkeypatch):
+def test_health_stays_live_and_reports_degraded_when_pdf_is_unavailable(monkeypatch):
     import server
 
-    monkeypatch.setattr(server, "pdf_renderer", None)
+    class UnavailableRenderer:
+        available = False
+        startup_error = RuntimeError("sensitive /internal/chromium/path")
+
+    monkeypatch.setattr(server, "pdf_renderer", UnavailableRenderer())
     client = TestClient(server.app)
 
-    pdf_response = client.post("/api/print/pdf", json=make_request().model_dump())
     health_response = client.get("/api/health")
+    body = health_response.json()
 
-    assert pdf_response.status_code == 503
-    assert pdf_response.json()["detail"]["code"] == "pdf_renderer_unavailable"
     assert health_response.status_code == 200
-    assert health_response.json()["status"] == "healthy"
+    assert body["status"] == "healthy"
+    assert body["readiness"] == "degraded"
+    assert body["capabilities"] == {"pdf": {"available": False}}
+    assert "sensitive" not in health_response.text
+    assert "/internal/chromium/path" not in health_response.text
+
+
+def test_health_reports_ready_when_pdf_is_available(monkeypatch):
+    import server
+
+    class AvailableRenderer:
+        available = True
+
+    monkeypatch.setattr(server, "pdf_renderer", AvailableRenderer())
+    client = TestClient(server.app)
+
+    health_response = client.get("/api/health")
+    body = health_response.json()
+
+    assert health_response.status_code == 200
+    assert body["status"] == "healthy"
+    assert body["readiness"] == "ready"
+    assert body["capabilities"] == {"pdf": {"available": True}}
 
 
 def test_print_pdf_endpoint_has_ten_per_minute_route_limit():

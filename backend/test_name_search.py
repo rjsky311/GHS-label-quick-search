@@ -6,8 +6,11 @@ Tests for name search functionality:
 - /api/search-by-name/{query} endpoint (local dictionary only, no network)
 - /api/search/{query} auto-detect (local only tests)
 """
+import json
+
 import pytest
 import server
+from cachetools import TTLCache
 from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient, ASGITransport
 from pydantic import ValidationError
@@ -2310,25 +2313,45 @@ from server import PubChemError, pubchem_get_json
 
 
 class _FakeResponse:
-    def __init__(self, status_code, json_body=None, headers=None):
+    def __init__(self, status_code, json_body=None, headers=None, raw_body=None):
         self.status_code = status_code
-        self._json = json_body if json_body is not None else {}
         self.headers = headers or {}
+        body = json_body if json_body is not None else {}
+        self._raw_body = (
+            raw_body
+            if raw_body is not None
+            else json.dumps(body, separators=(",", ":")).encode("utf-8")
+        )
+        self.closed = False
 
-    def json(self):
-        return self._json
+    async def aiter_bytes(self):
+        yield self._raw_body
+
+    async def aclose(self):
+        self.closed = True
 
 
 class _InvalidJsonResponse(_FakeResponse):
     def __init__(self, status_code=200, headers=None):
-        super().__init__(status_code, headers=headers)
+        super().__init__(status_code, headers=headers, raw_body=b"{invalid json")
 
-    def json(self):
-        raise ValueError("invalid json")
+
+class _ScriptedResponseContext:
+    def __init__(self, item):
+        self.item = item
+
+    async def __aenter__(self):
+        if isinstance(self.item, Exception):
+            raise self.item
+        return self.item
+
+    async def __aexit__(self, *_args):
+        if not isinstance(self.item, Exception):
+            await self.item.aclose()
 
 
 class _ScriptedClient:
-    """Scripted httpx replacement. Each `get` call pops the next entry
+    """Scripted httpx replacement. Each request pops the next entry
     from `.script`. Entries may be:
         - a _FakeResponse to return
         - an Exception instance to raise
@@ -2338,12 +2361,31 @@ class _ScriptedClient:
         self.script = list(script)
         self.calls = 0
 
-    async def get(self, url, timeout=None):
+    def stream(self, method, url, timeout=None):
         self.calls += 1
-        item = self.script.pop(0)
-        if isinstance(item, Exception):
-            raise item
-        return item
+        return _ScriptedResponseContext(self.script.pop(0))
+
+
+class _TrackingAsyncByteStream(_httpx_for_tests.AsyncByteStream):
+    def __init__(self, chunks):
+        self.chunks = list(chunks)
+        self.read_count = 0
+        self.closed = False
+
+    async def __aiter__(self):
+        for chunk in self.chunks:
+            self.read_count += 1
+            yield chunk
+
+    async def aclose(self):
+        self.closed = True
+
+
+@pytest.fixture
+def tracking_json_stream():
+    return _TrackingAsyncByteStream(
+        [b'{"payload":"', b"1234567890", b"abcdefghij", b'"}']
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -2367,6 +2409,57 @@ async def test_pubchem_get_json_returns_200_without_retry():
     assert client.calls == 1
 
 
+async def test_pubchem_get_json_stops_reading_response_above_byte_limit(
+    monkeypatch,
+    tracking_json_stream,
+):
+    request_count = 0
+
+    def handler(_request):
+        nonlocal request_count
+        request_count += 1
+        return _httpx_for_tests.Response(200, stream=tracking_json_stream)
+
+    monkeypatch.setattr(server, "PUBCHEM_RESPONSE_MAX_BYTES", 18, raising=False)
+    transport = _httpx_for_tests.MockTransport(handler)
+    async with _httpx_for_tests.AsyncClient(transport=transport) as client:
+        with pytest.raises(PubChemError) as exc_info:
+            await pubchem_get_json(
+                client,
+                "https://x/",
+                timeout=1.0,
+                retries=3,
+            )
+
+    assert exc_info.type is server.PubChemResponseTooLarge
+    assert request_count == 1
+    assert tracking_json_stream.read_count < len(tracking_json_stream.chunks)
+    assert tracking_json_stream.closed is True
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        (None, 8),
+        ("invalid", 8),
+        ("1", 4),
+        ("99", 16),
+    ],
+)
+def test_bounded_byte_limit_parser_defaults_and_clamps(
+    monkeypatch,
+    raw_value,
+    expected,
+):
+    env_name = "TEST_BOUNDED_BYTE_LIMIT"
+    if raw_value is None:
+        monkeypatch.delenv(env_name, raising=False)
+    else:
+        monkeypatch.setenv(env_name, raw_value)
+
+    assert server._bounded_env_int(env_name, 8, minimum=4, maximum=16) == expected
+
+
 async def test_pubchem_get_json_returns_404_without_retry():
     client = _ScriptedClient([_FakeResponse(404)])
     status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
@@ -2378,6 +2471,17 @@ async def test_pubchem_get_json_returns_404_without_retry():
 async def test_pubchem_get_json_retries_503_then_succeeds():
     client = _ScriptedClient([
         _FakeResponse(503),
+        _FakeResponse(200, {"ok": True}),
+    ])
+    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
+    assert status == 200
+    assert data == {"ok": True}
+    assert client.calls == 2
+
+
+async def test_pubchem_get_json_retries_408_then_succeeds():
+    client = _ScriptedClient([
+        _FakeResponse(408),
         _FakeResponse(200, {"ok": True}),
     ])
     status, data = await pubchem_get_json(client, "https://x/", timeout=1.0, retries=2)
@@ -2418,6 +2522,45 @@ async def test_pubchem_get_json_retries_429_with_retry_after():
     assert client.calls == 2
 
 
+async def test_pubchem_get_json_honors_real_httpx_retry_after_delay(monkeypatch):
+    request_count = 0
+    sleeps = []
+
+    def handler(_request):
+        nonlocal request_count
+        request_count += 1
+        if request_count == 1:
+            return _httpx_for_tests.Response(
+                429,
+                headers=_httpx_for_tests.Headers({"Retry-After": "1"}),
+            )
+        return _httpx_for_tests.Response(200, json={"ok": True})
+
+    async def no_rate_wait():
+        return None
+
+    async def capture_sleep(delay):
+        sleeps.append(delay)
+
+    monkeypatch.setattr(server, "_wait_for_pubchem_rate_slot", no_rate_wait)
+    monkeypatch.setattr(server.asyncio, "sleep", capture_sleep)
+    monkeypatch.setattr(server.random, "uniform", lambda *_args: 0)
+
+    transport = _httpx_for_tests.MockTransport(handler)
+    async with _httpx_for_tests.AsyncClient(transport=transport) as client:
+        status, data = await pubchem_get_json(
+            client,
+            "https://x/",
+            timeout=1.0,
+            retries=2,
+        )
+
+    assert status == 200
+    assert data == {"ok": True}
+    assert request_count == 2
+    assert sleeps == [1.0]
+
+
 async def test_pubchem_get_json_raises_after_exhausted_retries_on_5xx():
     client = _ScriptedClient([
         _FakeResponse(503),
@@ -2445,12 +2588,12 @@ async def test_pubchem_get_json_timeout_then_success():
     assert client.calls == 2
 
 
-async def test_pubchem_get_json_returns_none_for_non_transient_4xx():
-    client = _ScriptedClient([_FakeResponse(400)])
-    status, data = await pubchem_get_json(client, "https://x/", timeout=1.0)
-    assert status == 400
-    assert data is None
-    assert client.calls == 1  # 400 is not retriable
+@pytest.mark.parametrize("status_code", [400, 403, 204, 418])
+async def test_pubchem_get_json_raises_for_unexpected_non_absence_status(status_code):
+    client = _ScriptedClient([_FakeResponse(status_code)])
+    with pytest.raises(PubChemError, match=rf"HTTP {status_code}"):
+        await pubchem_get_json(client, "https://x/", timeout=1.0)
+    assert client.calls == 1
 
 
 async def test_search_chemical_surfaces_upstream_error_on_ghs_outage(monkeypatch):
@@ -3030,6 +3173,435 @@ def _precaution_info(codes_csv):
         "Name": "Precautionary Statement Codes",
         "Value": {"StringWithMarkup": [{"String": codes_csv}]},
     }
+
+
+def _malformed_ghs_data_with_valid_prefix():
+    """Two valid GHS reports followed by an invalid Information item."""
+    return _make_ghs_data(
+        _pic_info(["GHS02"]),
+        _hazard_info("H225: Highly flammable liquid and vapor"),
+        _pic_info(["GHS07"]),
+        _hazard_info("H315: Causes skin irritation"),
+        None,
+    )
+
+
+def _numeric_signal_ghs_data():
+    return _make_ghs_data(_signal_info(123))
+
+
+def _ghs_data_with_toc_heading(level, heading):
+    data = _make_ghs_data(_signal_info("Warning"))
+    safety_section = data["Record"]["Section"][0]
+    hazards_section = safety_section["Section"][0]
+    ghs_section = hazards_section["Section"][0]
+    sections_by_level = {
+        "safety": safety_section,
+        "hazards": hazards_section,
+        "ghs": ghs_section,
+    }
+    sections_by_level[level]["TOCHeading"] = heading
+    return data
+
+
+def _assert_upstream_error_has_no_safety_content(result):
+    assert result.found is False
+    assert result.upstream_error is True
+    assert result.ghs_pictograms == []
+    assert result.hazard_statements == []
+    assert result.precautionary_statements == []
+    assert result.signal_word is None
+    assert result.signal_word_zh is None
+    assert result.other_classifications == []
+    assert result.has_multiple_classifications is False
+    assert result.primary_source is None
+    assert result.primary_report_count is None
+
+
+def test_ghs_cache_retention_weights_entries_by_payload_bytes():
+    retrieved_at = "2026-07-11T00:00:00+00:00"
+    small = ({"Record": {"RecordTitle": "A"}}, retrieved_at)
+    large = ({"Record": {"RecordTitle": "A" * 1000}}, retrieved_at)
+
+    assert server._ghs_cache_entry_size(large) > server._ghs_cache_entry_size(small)
+
+
+async def test_ghs_cache_enforces_aggregate_byte_budget(monkeypatch):
+    payload = _make_ghs_data(_signal_info("Warning"))
+    sample_value = (payload, datetime.now(timezone.utc).isoformat())
+    entry_size = server._ghs_cache_entry_size(sample_value)
+    byte_cache = TTLCache(
+        maxsize=entry_size * 2,
+        ttl=86400,
+        getsizeof=server._ghs_cache_entry_size,
+    )
+    monkeypatch.setattr(server, "ghs_cache", byte_cache)
+
+    async def fake_pubchem_get_json(*_args, **_kwargs):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    for cid in (801, 802, 803):
+        data, cache_hit, retrieved_at = await server.get_ghs_classification(
+            cid,
+            http_client=None,
+        )
+        assert data == payload
+        assert cache_hit is False
+        assert isinstance(retrieved_at, str)
+
+    assert 801 not in byte_cache
+    assert set(byte_cache) == {802, 803}
+    assert byte_cache.currsize <= byte_cache.maxsize
+
+    for cid in (802, 803):
+        data, cache_hit, retrieved_at = await server.get_ghs_classification(
+            cid,
+            http_client=None,
+        )
+        assert data == payload
+        assert cache_hit is True
+        assert isinstance(retrieved_at, str)
+
+
+async def test_get_ghs_classification_oversize_skip_returns_uncached_response(
+    monkeypatch,
+):
+    cid = 804
+    payload = _make_ghs_data(_signal_info("Warning"))
+    byte_cache = TTLCache(
+        maxsize=1,
+        ttl=86400,
+        getsizeof=server._ghs_cache_entry_size,
+    )
+    monkeypatch.setattr(server, "ghs_cache", byte_cache)
+
+    async def fake_pubchem_get_json(*_args, **_kwargs):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    skip_count_before = server.ops_counters["cache.ghs.oversize_skip"]
+
+    data, cache_hit, retrieved_at = await server.get_ghs_classification(
+        cid,
+        http_client=None,
+    )
+
+    assert data == payload
+    assert cache_hit is False
+    assert isinstance(retrieved_at, str)
+    assert cid not in byte_cache
+    assert server.ops_counters["cache.ghs.oversize_skip"] == skip_count_before + 1
+
+
+def test_extract_all_ghs_classifications_never_returns_partial_reports_after_structural_error():
+    with pytest.raises(PubChemError) as exc_info:
+        extract_all_ghs_classifications(_malformed_ghs_data_with_valid_prefix())
+
+    assert exc_info.type is server.PubChemPayloadError
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        {"UnexpectedRoot": {}},
+        {"Record": []},
+    ],
+    ids=["pubchem-fault", "missing-record", "wrong-record-type"],
+)
+def test_extract_all_ghs_classifications_rejects_truthy_payload_without_valid_record_root(payload):
+    with pytest.raises(server.PubChemPayloadError):
+        extract_all_ghs_classifications(payload)
+
+
+def test_extract_all_ghs_classifications_rejects_numeric_signal_leaf():
+    with pytest.raises(server.PubChemPayloadError):
+        extract_all_ghs_classifications(_numeric_signal_ghs_data())
+
+
+@pytest.mark.parametrize(
+    "level",
+    ["safety", "hazards", "ghs"],
+    ids=["safety-and-hazards", "hazards-identification", "ghs-classification"],
+)
+def test_extract_all_ghs_classifications_rejects_non_string_toc_heading(level):
+    with pytest.raises(server.PubChemPayloadError):
+        extract_all_ghs_classifications(_ghs_data_with_toc_heading(level, 123))
+
+
+@pytest.mark.parametrize(
+    "level",
+    ["safety", "hazards", "ghs"],
+    ids=["safety-and-hazards", "hazards-identification", "ghs-classification"],
+)
+def test_extract_all_ghs_classifications_ignores_unknown_string_toc_heading(level):
+    payload = _ghs_data_with_toc_heading(level, "Future PubChem Section")
+
+    assert extract_all_ghs_classifications(payload) == []
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        {"UnexpectedRoot": {}},
+        {"Record": []},
+        _numeric_signal_ghs_data(),
+    ],
+    ids=["pubchem-fault", "missing-record", "wrong-record-type", "numeric-signal"],
+)
+async def test_get_ghs_classification_rejects_malformed_200_before_cache_insertion(
+    monkeypatch,
+    payload,
+):
+    cid = 702
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    server.ghs_cache.clear()
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+
+async def test_get_ghs_classification_rejects_empty_200_before_cache_insertion(
+    monkeypatch,
+):
+    cid = 703
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, {}
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    server.ghs_cache.clear()
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+
+@pytest.mark.parametrize(
+    "level",
+    ["safety", "hazards", "ghs"],
+    ids=["safety-and-hazards", "hazards-identification", "ghs-classification"],
+)
+async def test_get_ghs_classification_rejects_non_string_toc_heading_before_cache_insertion(
+    monkeypatch,
+    level,
+):
+    cid = 704
+    payload = _ghs_data_with_toc_heading(level, 123)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    server.ghs_cache.clear()
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+
+async def test_get_ghs_classification_evicts_non_string_retrieved_at_before_hit_observation():
+    cid = 705
+    hit_count_before = server.ops_counters["cache.ghs.hit"]
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = (
+        _make_ghs_data(_signal_info("Warning")),
+        123,
+    )
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+        assert server.ops_counters["cache.ghs.hit"] == hit_count_before
+    finally:
+        server.ghs_cache.clear()
+
+
+async def test_get_ghs_classification_evicts_empty_cached_sentinel_before_hit_observation():
+    cid = 706
+    hit_count_before = server.ops_counters["cache.ghs.hit"]
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = ({}, "2026-07-11T00:00:00+00:00")
+    try:
+        with pytest.raises(server.PubChemPayloadError):
+            await server.get_ghs_classification(cid, http_client=None)
+        assert cid not in server.ghs_cache
+        assert server.ops_counters["cache.ghs.hit"] == hit_count_before
+    finally:
+        server.ghs_cache.clear()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"Fault": {"Code": "PUGREST.BadRequest"}},
+        _numeric_signal_ghs_data(),
+    ],
+    ids=["pubchem-fault", "numeric-signal"],
+)
+async def test_search_chemical_contains_malformed_200_as_upstream_error(
+    monkeypatch,
+    payload,
+):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Malformed GHS test compound", None)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, payload
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    server.ghs_cache.clear()
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_contains_empty_200_as_upstream_error(monkeypatch):
+    cid = 703
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Empty GHS test compound", None)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, {}
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    server.ghs_cache.clear()
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_evicts_malformed_cached_ghs_and_returns_upstream_error(monkeypatch):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Cached malformed GHS test compound", None)
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = (
+        _numeric_signal_ghs_data(),
+        "2026-07-11T00:00:00+00:00",
+    )
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_evicts_empty_cached_sentinel_and_returns_upstream_error(
+    monkeypatch,
+):
+    cid = 706
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Cached empty GHS test compound", None)
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+
+    hit_count_before = server.ops_counters["cache.ghs.hit"]
+    server.ghs_cache.clear()
+    server.ghs_cache[cid] = ({}, "2026-07-11T00:00:00+00:00")
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        assert cid not in server.ghs_cache
+        assert server.ops_counters["cache.ghs.hit"] == hit_count_before
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+
+
+async def test_search_chemical_rejects_parseable_malformed_ghs_without_partial_reports(monkeypatch):
+    cid = 702
+
+    async def fake_get_cid(*_a, **_k):
+        return cid
+
+    async def fake_get_name(*_a, **_k):
+        return ("Malformed GHS test compound", None)
+
+    async def fake_pubchem_get_json(*_a, **_k):
+        return 200, _malformed_ghs_data_with_valid_prefix()
+
+    monkeypatch.setattr(server, "get_cid_from_cas", fake_get_cid)
+    monkeypatch.setattr(server, "get_compound_name", fake_get_name)
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+
+    server.ghs_cache.clear()
+    try:
+        result = await server.search_chemical("123-45-5", http_client=None)
+        was_cached = cid in server.ghs_cache
+    finally:
+        server.ghs_cache.clear()
+
+    _assert_upstream_error_has_no_safety_content(result)
+    assert was_cached is False
+
+
+def test_extract_all_ghs_classifications_accepts_absent_optional_sections():
+    assert extract_all_ghs_classifications({"Record": {"RecordTitle": "No GHS"}}) == []
+
+
+def test_extract_all_ghs_classifications_ignores_unknown_string_named_information():
+    data = _make_ghs_data(
+        {"Name": "Experimental Metadata", "Value": 123},
+        _signal_info("Warning"),
+    )
+
+    reports = extract_all_ghs_classifications(data)
+
+    assert len(reports) == 1
+    assert reports[0]["signal_word"] == "Warning"
 
 
 class TestHCodeExtraction:
