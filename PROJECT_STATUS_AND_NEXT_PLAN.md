@@ -47,6 +47,16 @@ reported surfaces, and adds regression tests plus desktop/mobile browser
 screenshots for the three surfaces. This is a follow-up comfort slice, not a
 new print-product or backend/API scope change.
 
+Diagnostic closure checkpoint (2026-07-15): PR #44 contains the remaining
+release-trust, active PDF canary, bounded pilot-read, dependency-boundary,
+inline-Dockerfile-parity, structured-observability, and frontend-maintainability
+fixes from the 2026-07-11 diagnostic. Local and CI gates are green; the
+line-by-line evidence record is
+`docs/evidence/2026-07-15-diagnostic-closure.md`. Do not call this slice
+Production Ready until a different write-access reviewer approves the PR, the
+merge SHA is running on both Zeabur services, and the listed production gates
+are rerun against that exact SHA.
+
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
 first-level print UI model with exactly three outputs: complete A4/Letter
