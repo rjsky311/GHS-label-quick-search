@@ -405,6 +405,43 @@ def test_health_reports_ready_when_pdf_is_available(monkeypatch):
     assert body["capabilities"] == {"pdf": {"available": True}}
 
 
+def test_pdf_health_canary_renders_a_minimal_pdf(monkeypatch):
+    import server
+
+    renderer = EndpointRenderer(pdf=b"%PDF-1.4\n/Type /Page\n%%EOF")
+    monkeypatch.setattr(server, "pdf_renderer", renderer)
+    client = TestClient(server.app)
+
+    response = client.get("/api/health/pdf-canary")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "ok": True,
+        "bytes": len(renderer.pdf),
+        "pdfHeader": True,
+    }
+    assert renderer.requests[0].page.width_mm == 210
+    assert renderer.requests[0].page.height_mm == 297
+    assert renderer.requests[0].meta.page_count_expected == 1
+
+
+def test_pdf_health_canary_returns_503_when_renderer_is_unavailable(monkeypatch):
+    import server
+
+    monkeypatch.setattr(server, "pdf_renderer", None)
+    client = TestClient(server.app)
+
+    response = client.get("/api/health/pdf-canary")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": {
+            "code": "pdf_renderer_unavailable",
+            "message": "PDF renderer is unavailable",
+        }
+    }
+
+
 def test_print_pdf_endpoint_has_ten_per_minute_route_limit():
     import server
 

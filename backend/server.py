@@ -2070,6 +2070,58 @@ async def health_check():
     }
 
 
+@api_router.get("/health/pdf-canary")
+@limiter.limit("2/minute")
+async def health_pdf_canary(request: Request):
+    """Render a bounded, data-only PDF to prove the live renderer works."""
+    renderer = pdf_renderer
+    if renderer is None or getattr(renderer, "available", True) is False:
+        raise _pdf_service_unavailable(
+            "pdf_renderer_unavailable",
+            "PDF renderer is unavailable",
+        )
+
+    payload = PrintPdfRequest.model_validate(
+        {
+            "html": (
+                "<!doctype html><html><head>"
+                "<style>@page { size: 210mm 297mm; margin: 10mm; }</style>"
+                "</head><body><main>GHS PDF health canary</main></body></html>"
+            ),
+            "page": {
+                "width_mm": 210,
+                "height_mm": 297,
+                "orientation": "portrait",
+                "margin_mm": 10,
+            },
+            "meta": {
+                "label_purpose": "complete",
+                "page_count_expected": 1,
+            },
+        }
+    )
+    try:
+        pdf_bytes = await renderer.render(payload)
+    except PdfRenderUnavailableError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderBusyError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+
+    pdf_header = pdf_bytes.startswith(b"%PDF-")
+    if not pdf_header:
+        raise _pdf_service_unavailable(
+            "pdf_render_invalid",
+            "PDF renderer returned an invalid document",
+        )
+    return {
+        "ok": True,
+        "bytes": len(pdf_bytes),
+        "pdfHeader": pdf_header,
+    }
+
+
 api_router.include_router(
     create_pilot_admin_router(
         limiter=limiter,

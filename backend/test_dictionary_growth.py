@@ -288,6 +288,21 @@ async def test_dictionary_admin_endpoints_roundtrip(temp_store):
     assert links.json()["items"][0]["label"] == "Vendor SDS"
 
 
+async def test_admin_and_workspace_responses_disable_browser_caching(temp_store):
+    transport = ASGITransport(app=server.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        report = await ac.get("/api/dictionary/report", headers=ADMIN_HEADERS)
+        workspace = await ac.get(
+            "/api/workspace/lab_profile",
+            headers=ADMIN_HEADERS,
+        )
+
+    assert report.status_code == 200
+    assert workspace.status_code == 200
+    assert report.headers["cache-control"] == "private, no-store"
+    assert workspace.headers["cache-control"] == "private, no-store"
+
+
 async def test_dictionary_admin_endpoints_require_admin_key(temp_store):
     transport = ASGITransport(app=server.app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
