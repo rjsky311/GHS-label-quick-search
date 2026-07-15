@@ -1683,10 +1683,22 @@ class PilotStore:
         if normalized_source:
             where_clauses.append("source = ?")
             params.append(normalized_source)
+        if exclude_converted_manual_entries:
+            where_clauses.append(
+                """
+                CASE
+                  WHEN json_valid(candidate_json) = 1
+                    THEN COALESCE(
+                      json_extract(candidate_json, '$.converted_to_manual_entry'),
+                      0
+                    )
+                  ELSE 0
+                END != 1
+                """
+            )
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        limit_clause = "" if exclude_converted_manual_entries else "LIMIT ?"
-        if not exclude_converted_manual_entries:
-            params.append(limit)
+        limit_clause = "LIMIT ?"
+        params.append(limit)
         rows = self._fetchall(
             f"""
             SELECT
@@ -1720,14 +1732,7 @@ class PilotStore:
                 row,
                 include_context=include_context,
             )
-            if (
-                exclude_converted_manual_entries
-                and item.get("candidate", {}).get("converted_to_manual_entry") is True
-            ):
-                continue
             items.append(item)
-            if len(items) >= limit:
-                break
         return items
 
     def get_correction_request_status_counts(
@@ -1830,24 +1835,19 @@ class PilotStore:
         return {str(row["source"]): int(row["count"]) for row in rows}
 
     def get_converted_correction_candidate_count(self) -> int:
-        rows = self._fetchall(
-            """
-            SELECT candidate_json
-            FROM dictionary_correction_requests
-            WHERE status = ?
-              AND candidate_json IS NOT NULL
-            """,
-            ("candidate_found",),
+        return int(
+            self._scalar(
+                """
+                SELECT COUNT(*)
+                FROM dictionary_correction_requests
+                WHERE status = ?
+                  AND json_valid(candidate_json) = 1
+                  AND json_extract(candidate_json, '$.converted_to_manual_entry') = 1
+                """,
+                ("candidate_found",),
+            )
+            or 0
         )
-        count = 0
-        for row in rows:
-            try:
-                candidate = json.loads(row["candidate_json"] or "{}")
-            except json.JSONDecodeError:
-                continue
-            if candidate.get("converted_to_manual_entry") is True:
-                count += 1
-        return count
 
     def list_converted_correction_candidates(
         self,
@@ -1877,27 +1877,21 @@ class PilotStore:
               updated_at
             FROM dictionary_correction_requests
             WHERE status = ?
-              AND candidate_json IS NOT NULL
+              AND json_valid(candidate_json) = 1
+              AND json_extract(candidate_json, '$.converted_to_manual_entry') = 1
             ORDER BY updated_at DESC, id DESC
+            LIMIT ?
             """,
-            ("candidate_found",),
+            ("candidate_found", limit),
         )
         converted: list[dict[str, Any]] = []
         for row in rows:
-            try:
-                candidate = json.loads(row["candidate_json"] or "{}")
-            except json.JSONDecodeError:
-                continue
-            if candidate.get("converted_to_manual_entry") is not True:
-                continue
             converted.append(
                 self._correction_request_row_to_dict(
                     row,
                     include_context=include_context,
                 )
             )
-            if len(converted) >= limit:
-                break
         return converted
 
     def get_pilot_triage_summary(self) -> dict[str, Any]:
@@ -2309,10 +2303,12 @@ class PilotStore:
     def get_dictionary_summary(self, *, limit: int = 10) -> dict[str, Any]:
         pending_manual_entries = []
         for status in MANUAL_ENTRY_REVIEW_STATUSES:
-            pending_manual_entries.extend(self.list_manual_entries(status=status))
+            pending_manual_entries.extend(
+                self.list_manual_entries(status=status, limit=limit)
+            )
         pending_aliases = []
         for status in ALIAS_REVIEW_STATUSES:
-            pending_aliases.extend(self.list_aliases(status=status))
+            pending_aliases.extend(self.list_aliases(status=status, limit=limit))
         metrics = {
             "manualEntryCount": self._scalar("SELECT COUNT(*) FROM dictionary_entries"),
             "approvedManualEntryCount": self._scalar(

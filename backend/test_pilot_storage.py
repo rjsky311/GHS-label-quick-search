@@ -754,6 +754,46 @@ def test_correction_request_deduplicates_open_matching_reports(tmp_path):
         store.close()
 
 
+def test_correction_review_lists_apply_conversion_filter_and_limit_in_sql(tmp_path):
+    store = make_store(tmp_path)
+    statements: list[str] = []
+    try:
+        for index in range(5):
+            store.record_correction_request(
+                issue_type="missing-chinese-name",
+                cas_number=f"{100 + index:03d}-45-5",
+                chemical_name=f"Chemical {index}",
+                current_output="English name only.",
+                expected_output="Needs review.",
+                status="candidate_found",
+                candidate={
+                    "name_zh": f"候選 {index}",
+                    "converted_to_manual_entry": index < 3,
+                },
+            )
+
+        connection = store._require_conn()
+        connection.set_trace_callback(statements.append)
+        visible = store.list_correction_requests(
+            limit=2,
+            statuses=("candidate_found",),
+            exclude_converted_manual_entries=True,
+        )
+        converted = store.list_converted_correction_candidates(limit=2)
+        connection.set_trace_callback(None)
+
+        assert [item["candidate"]["name_zh"] for item in visible] == [
+            "候選 4",
+            "候選 3",
+        ]
+        assert len(converted) == 2
+        review_sql = "\n".join(statements)
+        assert "json_extract(candidate_json, '$.converted_to_manual_entry')" in review_sql
+        assert "LIMIT 2" in review_sql
+    finally:
+        store.close()
+
+
 def test_pilot_triage_keeps_roster_data_quality_queues_separate(tmp_path):
     store = make_store(tmp_path)
     try:

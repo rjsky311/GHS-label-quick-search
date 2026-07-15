@@ -337,6 +337,11 @@ const healthPath = path.resolve(
   env.PRODUCTION_HEALTH_REPORT_PATH ||
     "build/production-health-report.json",
 );
+const pdfCanaryPath = path.resolve(
+  process.cwd(),
+  env.PRODUCTION_PDF_CANARY_REPORT_PATH ||
+    "build/production-pdf-canary-report.json",
+);
 const zeaburDeploymentPath = path.resolve(
   process.cwd(),
   env.ZEABUR_DEPLOYMENT_REPORT_PATH ||
@@ -379,6 +384,11 @@ const reports = {
     healthPath,
     readJsonIfExists(healthPath),
   ),
+  pdfCanary: summarizeGenericReport(
+    "production-pdf-canary",
+    pdfCanaryPath,
+    readJsonIfExists(pdfCanaryPath),
+  ),
   bundle: summarizeGenericReport(
     "bundle-freshness",
     bundlePath,
@@ -417,6 +427,7 @@ const reports = {
 const presentReports = [
   reports.deployment,
   reports.health,
+  reports.pdfCanary,
   reports.bundle,
   reports.searchUi,
   reports.printQa,
@@ -481,8 +492,8 @@ const buildProductBlocks = () => [
   {
     id: "production-availability",
     name: "Production frontend/backend availability",
-    reports: [reports.health.name],
-    ok: isPassingReport(reports.health),
+    reports: [reports.health.name, reports.pdfCanary.name],
+    ok: isPassingReport(reports.health) && isPassingReport(reports.pdfCanary),
     evidence:
       "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and Zeabur request-id capture.",
   },
@@ -492,11 +503,13 @@ const buildProductBlocks = () => [
     reports: [
       reports.bundle.name,
       reports.printQa.name,
+      reports.pdfCanary.name,
       ...reports.handoff.map((report) => report.name),
     ],
     ok:
       isPassingReport(reports.bundle) &&
       isPassingReport(reports.printQa) &&
+      isPassingReport(reports.pdfCanary) &&
       handoffReportsPassing,
     evidence:
       "Production bundle freshness, print QA matrix, and deployed print handoff checks cover complete-primary and compact stock paths.",
@@ -539,6 +552,7 @@ const buildProductBlocks = () => [
     reports: [
       reports.searchUi.name,
       reports.health.name,
+      reports.pdfCanary.name,
       reports.bundle.name,
       ...reports.handoff.map((report) => report.name),
       reports.prepared.name,
@@ -546,6 +560,7 @@ const buildProductBlocks = () => [
     ],
     ok:
       isPassingReport(reports.health) &&
+      isPassingReport(reports.pdfCanary) &&
       isPassingReport(reports.searchUi) &&
       isPassingReport(reports.bundle) &&
       handoffReportsPassing &&

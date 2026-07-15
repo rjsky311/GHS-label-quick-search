@@ -73,10 +73,13 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
+
+      - name: Check runtime dependency boundary
+        run: python scripts/check_runtime_dependencies.py
 
       - name: Syntax check
         run: >
@@ -87,6 +90,7 @@ jobs:
           export_helpers.py
           h_code_translations.py
           h_code_coverage_audit.py
+          observability.py
           pilot_admin_routes.py
           pilot_store.py
           inventory_workbook_audit.py

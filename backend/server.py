@@ -50,6 +50,7 @@ from api_models import (
     ExportRequest,
     GHSReport,
     MAX_EXPORT_ROWS,
+    TelemetryEventPayload,
     WorkspaceDocumentPayload,
 )
 from agent_label_summary import AgentLabelSummaryV0, build_agent_label_summary_v0
@@ -90,6 +91,7 @@ from export_helpers import (
     spreadsheet_safe,
 )
 from pilot_admin_routes import create_pilot_admin_router
+from observability import emit_structured_event, record_telemetry_event
 from pdf_render import (
     PdfRenderBusyError,
     PdfRenderError,
@@ -258,13 +260,13 @@ def _record_ops_counter(key: str, amount: int = 1) -> None:
 
 
 def _record_ops_event(event_type: str, **payload: Any) -> None:
-    ops_recent_events.append(
-        {
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "type": event_type,
-            **payload,
-        }
-    )
+    event = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "type": event_type,
+        **payload,
+    }
+    ops_recent_events.append(event)
+    emit_structured_event(event_type, source="backend", payload=event)
 
 
 def _parse_iso_ts(value: Optional[str]) -> Optional[datetime]:
@@ -2053,6 +2055,16 @@ async def bounded_search_chemical(
 async def root():
     return {"message": "GHS Label Quick Search API"}
 
+
+@api_router.post("/telemetry")
+@limiter.limit("60/minute")
+async def collect_telemetry(request: Request, payload: TelemetryEventPayload):
+    try:
+        event = record_telemetry_event(payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True, "eventId": event["id"]}
+
 @api_router.get("/health")
 async def health_check():
     """Health check endpoint for monitoring and load balancers."""
@@ -2067,6 +2079,58 @@ async def health_check():
         "version": APP_VERSION,
         "gitSha": BUILD_GIT_SHA,
         "gitShortSha": BUILD_GIT_SHA[:12] if BUILD_GIT_SHA else "",
+    }
+
+
+@api_router.get("/health/pdf-canary")
+@limiter.limit("2/minute")
+async def health_pdf_canary(request: Request):
+    """Render a bounded, data-only PDF to prove the live renderer works."""
+    renderer = pdf_renderer
+    if renderer is None or getattr(renderer, "available", True) is False:
+        raise _pdf_service_unavailable(
+            "pdf_renderer_unavailable",
+            "PDF renderer is unavailable",
+        )
+
+    payload = PrintPdfRequest.model_validate(
+        {
+            "html": (
+                "<!doctype html><html><head>"
+                "<style>@page { size: 210mm 297mm; margin: 10mm; }</style>"
+                "</head><body><main>GHS PDF health canary</main></body></html>"
+            ),
+            "page": {
+                "width_mm": 210,
+                "height_mm": 297,
+                "orientation": "portrait",
+                "margin_mm": 10,
+            },
+            "meta": {
+                "label_purpose": "complete",
+                "page_count_expected": 1,
+            },
+        }
+    )
+    try:
+        pdf_bytes = await renderer.render(payload)
+    except PdfRenderUnavailableError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderBusyError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+    except PdfRenderError as exc:
+        raise _pdf_service_unavailable(exc.code, str(exc)) from exc
+
+    pdf_header = pdf_bytes.startswith(b"%PDF-")
+    if not pdf_header:
+        raise _pdf_service_unavailable(
+            "pdf_render_invalid",
+            "PDF renderer returned an invalid document",
+        )
+    return {
+        "ok": True,
+        "bytes": len(pdf_bytes),
+        "pdfHeader": pdf_header,
     }
 
 

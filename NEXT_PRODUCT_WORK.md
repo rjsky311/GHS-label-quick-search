@@ -67,6 +67,15 @@ next autonomous slice is, why it matters now, when to stop, and when to switch
 workstreams. Use `AUTONOMOUS_WORKFLOW.md` for the dynamic re-rank loop; do not
 treat this queue as a permanent order.
 
+### Governance closure checkpoint
+
+The 2026-07-11 diagnostic closure is implementation-complete in PR #44 with
+green local/CI evidence, but it is still a release gate rather than a new
+product slice. Finish the required independent review, merge/deploy, and
+production re-audit recorded in
+`docs/evidence/2026-07-15-diagnostic-closure.md` before selecting another
+roadmap item.
+
 When closing a slice, include proactive observations from the work: what newly
 noticed risk, stale assumption, repeated pattern, or QA/user-purpose mismatch
 should affect the next slice. If there is no new observation, say that instead

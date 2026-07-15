@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from api_models import (
     DictionaryAliasPayload,
@@ -17,6 +17,10 @@ from api_models import (
 
 ADMIN_DASHBOARD_LIST_DEFAULT_LIMIT = 250
 ADMIN_DASHBOARD_LIST_MAX_LIMIT = 500
+
+
+def _set_private_no_store(response: Response) -> None:
+    response.headers["Cache-Control"] = "private, no-store"
 
 
 def _bounded_admin_list_limit(
@@ -51,7 +55,7 @@ def create_pilot_admin_router(
     is_dictionary_miss_capture_enabled: Callable[[], bool],
     record_ops_counter: Callable[[str], None],
 ) -> APIRouter:
-    router = APIRouter()
+    router = APIRouter(dependencies=[Depends(_set_private_no_store)])
 
     @router.get("/ops/report")
     async def ops_report(request: Request):

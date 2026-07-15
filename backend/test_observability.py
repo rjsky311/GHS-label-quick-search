@@ -3,6 +3,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 import server
+from observability import record_telemetry_event
 from server import (
     PubChemError,
     _record_ops_counter,
@@ -57,6 +58,79 @@ async def test_ops_report_endpoint_returns_currentBytes_and_current_counters(mon
     assert "pilotTriage" in data["dictionary"]
     assert "attentionCounts" in data["dictionary"]["pilotTriage"]
     assert "generatedAt" in data
+    assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_structured_observability_event_is_bounded_and_redacts_secrets(caplog):
+    caplog.set_level("INFO", logger="ghs.observability")
+
+    event = record_telemetry_event(
+        {
+            "type": "print_complete",
+            "source": "frontend",
+            "query": "Acetone",
+            "meta": {
+                "secret": "do-not-log",
+                "operatorEmail": "person@example.test",
+                "stock": "A4",
+            },
+        }
+    )
+
+    assert event["query"] == ""
+    assert "secret" not in event["meta"]
+    assert "operatorEmail" not in event["meta"]
+    assert "do-not-log" not in caplog.text
+    assert '"event"' in caplog.text
+
+
+async def test_public_telemetry_endpoint_accepts_allowlisted_events(caplog):
+    caplog.set_level("INFO", logger="ghs.observability")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/telemetry",
+            json={
+                "type": "print_complete",
+                "source": "frontend",
+                "meta": {"labelKind": "complete"},
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert response.json()["eventId"]
+    assert '"type":"print_complete"' in caplog.text
+
+
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        "search_unresolved",
+        "print_autofit_retry",
+        "print_continuation_tightening_retry",
+    ],
+)
+async def test_public_telemetry_endpoint_accepts_workflow_events(event_type):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/telemetry",
+            json={"type": event_type, "status": "started"},
+        )
+
+    assert response.status_code == 200
+
+
+async def test_public_telemetry_endpoint_rejects_unknown_events():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/telemetry",
+            json={"type": "send_password_to_somewhere"},
+        )
+
+    assert response.status_code == 422
 
 
 async def test_get_ghs_classification_counts_stale_cache_hits():

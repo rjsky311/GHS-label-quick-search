@@ -18,7 +18,7 @@ if (fs.existsSync(trustModulePath)) {
 }
 
 const {
-  MIN_GIT_SHA_PREFIX_LENGTH,
+  FULL_GIT_SHA_LENGTH,
   backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
@@ -51,22 +51,20 @@ test("rejects a legacy health body without explicit readiness", () => {
   assert.equal(backendHealthIsReady({ status: "healthy" }), false);
 });
 
-test("matches exact Git SHAs and hexadecimal prefixes of at least 12 characters", () => {
-  assert.equal(MIN_GIT_SHA_PREFIX_LENGTH, 12);
-
+test("matches only exact full-length Git SHAs", () => {
+  assert.equal(FULL_GIT_SHA_LENGTH, 40);
   const fullSha = "31075ddc31cf0bbff54746964159146777b75bc4";
-  const minimumPrefix = fullSha.slice(0, MIN_GIT_SHA_PREFIX_LENGTH);
 
   assert.equal(gitShasMatch(fullSha, fullSha), true);
-  assert.equal(gitShasMatch(fullSha, minimumPrefix), true);
-  assert.equal(gitShasMatch(minimumPrefix, fullSha), true);
-  assert.equal(gitShasMatch(fullSha.toUpperCase(), minimumPrefix), true);
+  assert.equal(gitShasMatch(fullSha.toUpperCase(), fullSha), true);
+  assert.equal(gitShasMatch(fullSha, `${fullSha.slice(0, 39)}0`), false);
+  assert.equal(gitShasMatch(`${fullSha.slice(0, 39)}0`, fullSha), false);
 });
 
 test("rejects short and non-hexadecimal Git SHA values", () => {
   const fullSha = "31075ddc31cf0bbff54746964159146777b75bc4";
 
-  assert.equal(gitShasMatch(fullSha, "31075ddc31c"), false);
+  assert.equal(gitShasMatch(fullSha, "31075ddc31cf0bbff54746964159146777b75bc"), false);
   assert.equal(gitShasMatch(fullSha, "31075ddc31cz"), false);
   assert.equal(gitShasMatch("", fullSha), false);
 });
@@ -173,4 +171,24 @@ test("Production Print QA pins service identity and backend origins after npm ci
   assert.notEqual(npmCiIndex, -1);
   assert.ok(npmCiIndex < workflow.indexOf("run: npm run qa:production-health"));
   assert.ok(npmCiIndex < workflow.indexOf("npm run qa:zeabur-deployment"));
+  assert.match(workflow, /statusCategory: "missing-token"/);
+  assert.match(workflow, /ZEABUR_TOKEN is required/);
+});
+
+test("Production Print QA includes the active PDF canary", () => {
+  const productionProductQa = fs.readFileSync(
+    path.join(frontendRoot, "scripts/run-production-product-qa.mjs"),
+    "utf8",
+  );
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"),
+  );
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github/workflows/production-print-qa.yml"),
+    "utf8",
+  );
+
+  assert.match(productionProductQa, /qa:production-pdf-canary/);
+  assert.equal(packageJson.scripts["qa:production-pdf-canary"], "node scripts/check-production-pdf-canary.mjs");
+  assert.match(workflow, /npm run qa:production-pdf-canary/);
 });

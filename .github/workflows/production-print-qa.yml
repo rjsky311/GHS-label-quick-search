@@ -87,7 +87,6 @@ jobs:
 
       - name: Probe Zeabur deployment freshness
         if: always()
-        continue-on-error: true
         run: |
           set -euo pipefail
           if [ -z "${ZEABUR_TOKEN:-}" ]; then
@@ -96,27 +95,34 @@ jobs:
             const fs = require("fs");
             const path = "build/zeabur-deployment-report.json";
             const report = {
-              ok: true,
+              ok: false,
               generatedAt: new Date().toISOString(),
               reportPath: path,
-              statusCategory: "skipped-no-token",
+              statusCategory: "missing-token",
               expectedGitSha: process.env.PRINT_QA_EXPECTED_GIT_SHA || "",
               guidance: [
-                "Zeabur deployment CLI probe skipped because ZEABUR_TOKEN is not configured for this workflow.",
-                "Production health/build metadata remains the blocking freshness gate.",
+                "ZEABUR_TOKEN is required for the strict Zeabur deployment freshness gate.",
               ],
-              failures: [],
+              failures: ["ZEABUR_TOKEN is required for strict service identity and deployment verification."],
               recovery: {
                 nextActions: [
-                  "Add ZEABUR_TOKEN repository secret to enable strict Zeabur deployment diagnostics in CI.",
+                    "Add the repository ZEABUR_TOKEN secret, then rerun Production Print QA.",
                 ],
               },
             };
             fs.writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`);
             '
-            exit 0
+            exit 1
           fi
           npm run qa:zeabur-deployment
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+
+      - name: Check inline backend Dockerfile parity
+        run: >
+          python ../backend/scripts/check_inline_dockerfile_parity.py
+          --canonical ../Dockerfile.ghs-backend
+          --service-id 6962687391818d5fd9705a67
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
 
@@ -137,6 +143,7 @@ jobs:
               ;;
             health)
               npm run qa:production-health
+              npm run qa:production-pdf-canary
               npm run qa:production-summary
               ;;
             smoke)
@@ -153,12 +160,14 @@ jobs:
               ;;
             prepared)
               npm run qa:production-health
+              npm run qa:production-pdf-canary
               npm run qa:production-bundle
               npm run qa:production-prepared
               npm run qa:production-summary
               ;;
             batch)
               npm run qa:production-health
+              npm run qa:production-pdf-canary
               npm run qa:production-bundle
               npm run qa:production-batch-print
               npm run qa:production-summary

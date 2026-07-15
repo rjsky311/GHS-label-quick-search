@@ -4,12 +4,7 @@ import { toast } from "sonner";
 import { API } from "@/constants/ghs";
 import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
 import { escapeCsvCell } from "@/utils/csvCell";
-import {
-  readJsonStorage,
-  writeJsonStorage,
-} from "@/utils/localStorageJson";
 
-export const OBSERVABILITY_STORAGE_KEY = "ghs_observability_events";
 export const OBSERVABILITY_UPDATE_EVENT = "ghs:observability-updated";
 export const MAX_OBSERVABILITY_EVENTS = 250;
 export const MAX_OBSERVABILITY_STRING_LENGTH = 240;
@@ -17,6 +12,8 @@ export const MAX_OBSERVABILITY_META_KEYS = 24;
 export const MAX_OBSERVABILITY_META_ARRAY_ITEMS = 25;
 
 const DEFAULT_SOURCE = "frontend";
+const CAS_IDENTIFIER_PATTERN = /^\d{2,7}-\d{2}-\d$/;
+let inMemoryObservabilityEvents = [];
 
 function truncateString(value, maxLength = MAX_OBSERVABILITY_STRING_LENGTH) {
   const text = String(value).trim();
@@ -25,6 +22,11 @@ function truncateString(value, maxLength = MAX_OBSERVABILITY_STRING_LENGTH) {
 
 function sanitizeString(value, maxLength = MAX_OBSERVABILITY_STRING_LENGTH) {
   return typeof value === "string" ? truncateString(value, maxLength) : "";
+}
+
+function sanitizeCasIdentifier(value) {
+  const candidate = sanitizeString(value, 32);
+  return CAS_IDENTIFIER_PATTERN.test(candidate) ? candidate : "";
 }
 
 function sanitizeMetaValue(value) {
@@ -40,7 +42,15 @@ function sanitizeMetaValue(value) {
   }
   if (typeof value === "object") {
     try {
-      return truncateString(JSON.stringify(value));
+      const redacted = Object.entries(value).reduce((result, [key, item]) => {
+        if (/token|secret|password|authorization|cookie|email/i.test(key)) {
+          return result;
+        }
+        const sanitized = sanitizeMetaValue(item);
+        if (sanitized !== undefined) result[key] = sanitized;
+        return result;
+      }, {});
+      return truncateString(JSON.stringify(redacted));
     } catch {
       return undefined;
     }
@@ -57,6 +67,9 @@ function sanitizeMeta(value) {
     .reduce((meta, [rawKey, rawValue]) => {
       const key = sanitizeString(rawKey, 80);
       if (!key) return meta;
+      if (/token|secret|password|authorization|cookie|email/i.test(key)) {
+        return meta;
+      }
       const sanitizedValue = sanitizeMetaValue(rawValue);
       if (sanitizedValue !== undefined) {
         meta[key] = sanitizedValue;
@@ -83,9 +96,9 @@ export function normalizeObservabilityEvent(raw) {
     ts,
     source: sanitizeString(raw.source) || DEFAULT_SOURCE,
     type,
-    query: sanitizeString(raw.query),
+    query: sanitizeCasIdentifier(raw.query),
     queryType: sanitizeString(raw.queryType),
-    cas: sanitizeString(raw.cas),
+    cas: sanitizeCasIdentifier(raw.cas),
     status: sanitizeString(raw.status),
     count: Number.isFinite(count) && count > 0 ? count : 1,
     meta: sanitizeMeta(raw.meta),
@@ -93,14 +106,11 @@ export function normalizeObservabilityEvent(raw) {
 }
 
 export function loadObservabilityEvents() {
-  const parsed = readJsonStorage(OBSERVABILITY_STORAGE_KEY, [], {
-    validate: Array.isArray,
-  });
-  return parsed.map(normalizeObservabilityEvent).filter(Boolean);
+  return inMemoryObservabilityEvents.map(normalizeObservabilityEvent).filter(Boolean);
 }
 
 function persistObservabilityEvents(events) {
-  writeJsonStorage(OBSERVABILITY_STORAGE_KEY, events);
+  inMemoryObservabilityEvents = events;
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(
@@ -108,6 +118,38 @@ function persistObservabilityEvents(events) {
         detail: { count: events.length },
       })
     );
+  }
+}
+
+export function clearObservabilityEvents() {
+  inMemoryObservabilityEvents = [];
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent(OBSERVABILITY_UPDATE_EVENT, { detail: { count: 0 } })
+    );
+  }
+}
+
+function forwardObservabilityEvent(event) {
+  const payload = {
+    id: event.id,
+    ts: event.ts,
+    source: event.source,
+    type: event.type,
+    query: event.query || null,
+    query_type: event.queryType || null,
+    cas: event.cas || null,
+    status: event.status || null,
+    count: event.count,
+    meta: event.meta,
+  };
+
+  try {
+    Promise.resolve(
+      axios.post(`${API}/telemetry`, payload, { timeout: 3000 })
+    ).catch(() => {});
+  } catch {
+    // Observability must never change the user-facing workflow.
   }
 }
 
@@ -132,6 +174,7 @@ export function recordObservabilityEvent(type, payload = {}) {
     MAX_OBSERVABILITY_EVENTS
   );
   persistObservabilityEvents(nextEvents);
+  forwardObservabilityEvent(event);
   return event;
 }
 
@@ -223,7 +266,8 @@ export async function exportObservabilityReport({
   const report = {
     exportedAt: new Date().toISOString(),
     frontend: {
-      storageKey: OBSERVABILITY_STORAGE_KEY,
+      storageKey: null,
+      persistence: "memory-only",
       totalEvents: clientEvents.length,
       summary: summarizeObservabilityEvents(clientEvents),
       recentEvents: clientEvents,

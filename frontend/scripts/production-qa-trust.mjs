@@ -1,4 +1,4 @@
-export const MIN_GIT_SHA_PREFIX_LENGTH = 12;
+export const FULL_GIT_SHA_LENGTH = 40;
 
 const normalizeGitSha = (value) =>
   String(value || "")
@@ -6,7 +6,7 @@ const normalizeGitSha = (value) =>
     .toLowerCase();
 
 const isTrustedGitSha = (value) =>
-  value.length >= MIN_GIT_SHA_PREFIX_LENGTH && /^[0-9a-f]+$/.test(value);
+  value.length === FULL_GIT_SHA_LENGTH && /^[0-9a-f]+$/.test(value);
 
 export const gitShasMatch = (actual, expected) => {
   const actualSha = normalizeGitSha(actual);
@@ -15,11 +15,7 @@ export const gitShasMatch = (actual, expected) => {
     return false;
   }
 
-  return (
-    actualSha === expectedSha ||
-    actualSha.startsWith(expectedSha) ||
-    expectedSha.startsWith(actualSha)
-  );
+  return actualSha === expectedSha;
 };
 
 const parseHttpOrigin = (value) => {

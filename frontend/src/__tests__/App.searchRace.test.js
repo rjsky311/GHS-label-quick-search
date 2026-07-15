@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
 import App from "@/App";
-import { OBSERVABILITY_STORAGE_KEY } from "@/utils/observability";
+import {
+  clearObservabilityEvents,
+  loadObservabilityEvents,
+} from "@/utils/observability";
 
 jest.mock("axios");
 
@@ -122,6 +125,7 @@ const deferred = () => {
 describe("App single-search request ordering", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    clearObservabilityEvents();
     jest.clearAllMocks();
     axios.post.mockResolvedValue({ data: [] });
   });
@@ -163,6 +167,7 @@ describe("App single-search request ordering", () => {
 describe("App batch-search chunking", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    clearObservabilityEvents();
     jest.clearAllMocks();
     axios.get.mockResolvedValue({ data: {} });
     axios.post.mockResolvedValue({ data: [] });
@@ -235,9 +240,9 @@ describe("App batch-search chunking", () => {
       ),
     );
 
-    const unresolvedEvents = JSON.parse(
-      window.localStorage.getItem(OBSERVABILITY_STORAGE_KEY) || "[]",
-    ).filter((event) => event.type === "search_unresolved");
+    const unresolvedEvents = loadObservabilityEvents().filter(
+      (event) => event.type === "search_unresolved",
+    );
     expect(unresolvedEvents).toHaveLength(1);
     expect(unresolvedEvents[0]).toEqual(
       expect.objectContaining({

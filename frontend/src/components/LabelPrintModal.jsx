@@ -65,14 +65,9 @@ import {
 import {
   PRINT_OUTPUT_KIND,
   PRINT_OUTPUT_PLAN_STATE,
-  buildPrintOutputPlan,
 } from "@/utils/printOutputPlanner";
 import {
-  BATCH_PRINT_ITEM_CATEGORY,
-  BATCH_PRINT_PURPOSE,
   BATCH_PRINT_REPRESENTATIVE,
-  buildBatchPrintableItems,
-  buildBatchPrintPlan,
 } from "@/utils/printBatchPlanner";
 import {
   PRINT_CONTENT_ROLE,
@@ -83,6 +78,7 @@ import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import useLabelPrintPreviewState from "@/hooks/useLabelPrintPreviewState";
+import useLabelPrintOutputPlan from "@/hooks/useLabelPrintOutputPlan";
 import { resolveEffectiveLabelNameDisplay } from "@/utils/ghsText";
 
 const normalizePublicPrintConfig = (config = {}) => {
@@ -345,59 +341,33 @@ export default function LabelPrintModal({
     "label.previewRiskReady",
     "This combination looks balanced for the current content load.",
   );
-  const outputPlan = buildPrintOutputPlan({
+  const {
+    outputPlan,
+    outputPlanState,
+    outputPlanHasUpstreamError,
+    batchPrintPurpose,
+    batchPrintPlan,
+    hasBatchPrintPlan,
+    batchReducedPurposeItems,
+    batchSelectedPrintItems,
+    canPrintBatchSelectedScope,
+    batchAcknowledgedPrintCount,
+    isQrSupplementOutput,
+    isQuickIdOutput,
+    isSmallLabelIdentityLocked,
+    isSmallLabelContinuationBlocked,
+    smallLabelContinuationPageCount,
+    smallLabelContinuationMaxLabels,
+  } = useLabelPrintOutputPlan({
     selectedForLabel,
     layout: layoutProfile,
     customGHSSettings,
     customLabelFields,
     resolvedLabProfile: resolvedResponsibleProfile,
     locale: currentLocale,
+    labelPurpose,
+    batchIncludeReducedPurpose,
   });
-  const batchPrintPurpose =
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY
-      ? BATCH_PRINT_PURPOSE.COMPLETE
-      : outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
-        ? BATCH_PRINT_PURPOSE.QUICK_ID
-        : BATCH_PRINT_PURPOSE.SUPPLEMENTAL;
-  const batchPrintPlan = useMemo(
-    () =>
-      buildBatchPrintPlan({
-        selectedForLabel,
-        layout: layoutProfile,
-        purpose: batchPrintPurpose,
-        customGHSSettings,
-        customLabelFields,
-        resolvedLabProfile: resolvedResponsibleProfile,
-        locale: currentLocale,
-      }),
-    [
-      selectedForLabel,
-      layoutProfile,
-      batchPrintPurpose,
-      customGHSSettings,
-      customLabelFields,
-      resolvedResponsibleProfile,
-      currentLocale,
-    ],
-  );
-  const hasBatchPrintPlan = selectedForLabel.length > 1;
-  const batchReducedPurposeItems = hasBatchPrintPlan
-    ? batchPrintPlan.items.filter(
-        (item) => item.category === BATCH_PRINT_ITEM_CATEGORY.REDUCED_PURPOSE,
-      )
-    : [];
-  const batchSelectedPrintItems = hasBatchPrintPlan
-    ? buildBatchPrintableItems(batchPrintPlan, {
-        includeReducedPurpose: batchIncludeReducedPurpose,
-        includeContinuation: true,
-      })
-    : [];
-  const canPrintBatchSelectedScope =
-    hasBatchPrintPlan && batchSelectedPrintItems.length > 0;
-  const batchAcknowledgedPrintCount = Math.max(
-    0,
-    batchSelectedPrintItems.length - batchPrintPlan.summary.printableByDefault,
-  );
   const printReadiness = outputPlan.readiness;
   const recommendedFullPagePreset = ALL_STOCK_PRESETS.find(
     (preset) => preset.id === outputPlan.recommendedFullPageStockId,
@@ -405,25 +375,6 @@ export default function LabelPrintModal({
   const recommendedFullPageLabel = recommendedFullPagePreset
     ? getLabelStockPresetDisplay(recommendedFullPagePreset, t).name
     : tx("label.fullPagePrimaryFallback", "full-page primary");
-  const outputPlanHasUpstreamError = outputPlan.issues.some(
-    (issue) => issue.type === "upstream-error",
-  );
-  const isQrSupplementOutput =
-    labelPurpose === "qrSupplement" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT;
-  const isQuickIdOutput =
-    labelPurpose === "quickId" ||
-    outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID;
-  const isSmallLabelIdentityLocked = isQrSupplementOutput || isQuickIdOutput;
-  const isSmallLabelContinuationBlocked =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.SMALL_LABEL_CONTINUATION_LIMIT;
-  const smallLabelContinuationIssue = outputPlan.issues.find(
-    (issue) => issue.type === "small-label-continuation-limit",
-  );
-  const smallLabelContinuationPageCount =
-    smallLabelContinuationIssue?.pageCount || 3;
-  const smallLabelContinuationMaxLabels =
-    smallLabelContinuationIssue?.maxLabels || 2;
   const smallLabelOutputName = isQrSupplementOutput
     ? tx("label.targetQrSmall", "QR small label")
     : tx("label.targetIdentitySmall", "Identification small label");
@@ -461,28 +412,28 @@ export default function LabelPrintModal({
   const selectableStockCount =
     primaryStockChoices.length + secondaryStockChoices.length;
   const plannerPreviewRisk =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
       ? tx(
           "label.outputPlanRecommendFullPage",
           "This stock cannot carry the complete primary label clearly. Use {{stock}} and keep this smaller label as supplemental if needed.",
           { stock: recommendedFullPageLabel },
         )
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx(
             "label.outputPlanContinuationNotice",
             "This content is too dense for one physical label, so the app will print the complete label with extra pages.",
           )
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
         ? tx(
             "label.outputPlanMissingProfile",
             "Complete primary labels need responsible lab or supplier name, phone, and address before printing.",
           )
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+        : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
           ? tx(
               "label.outputPlanSupplementalNotice",
               "This output is printable as a supplemental label, not a complete primary container label.",
             )
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
             ? outputPlanHasUpstreamError
               ? tx(
                   "label.outputPlanUpstreamHazardData",
@@ -544,7 +495,7 @@ export default function LabelPrintModal({
     tx,
   });
   const visiblePreviewRisks =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
     plannerPreviewRisk
       ? [plannerPreviewRisk]
       : plannerPreviewRisk && plannerPreviewRisk !== readyPreviewMessage
@@ -562,34 +513,34 @@ export default function LabelPrintModal({
       ? `${summary.present}/${summary.expected}`
       : outputNotApplicableLabel;
   const outputPlanTone =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY
       ? "ready"
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? "caution"
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? "caution"
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
-            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-            outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+        : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
+            outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+            outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
             isSmallLabelContinuationBlocked
           ? "danger"
           : "caution";
   const shouldOpenOutputPlanDetails =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
     isSmallLabelContinuationBlocked;
   const hasAnyPictograms =
     printReadiness.elementSummary.pictograms.expected > 0;
   const isContinuationOutput =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION;
   const isSupplementalOutput =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE ||
     isSmallLabelContinuationBlocked;
   const printTrustMode =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
     isSmallLabelContinuationBlocked
       ? "blocked"
       : isSupplementalOutput || isQrSupplementOutput || isQuickIdOutput
@@ -597,7 +548,7 @@ export default function LabelPrintModal({
         : "general";
   const shouldShowPrintTrustNote =
     selectedForLabel.length > 0 &&
-    outputPlan.state !== PRINT_OUTPUT_PLAN_STATE.PENDING_SELECTION;
+    outputPlanState !== PRINT_OUTPUT_PLAN_STATE.PENDING_SELECTION;
   const contentPolicy =
     outputPlan.readiness?.contentPolicy ||
     printReadiness.contentPolicy ||
@@ -606,7 +557,7 @@ export default function LabelPrintModal({
     isSupplementalOutput &&
     contentPolicy.role === PRINT_CONTENT_ROLE.CONTAINER_FRONT;
   const outputRoleSummary =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.decisionRoleComplete", "Complete primary")
     : isSmallLabelContinuationBlocked
       ? tx("label.decisionRoleSmallLabelBlocked", "Small label too dense")
@@ -615,21 +566,21 @@ export default function LabelPrintModal({
           "label.decisionRoleContinuation",
           "Complete A4/Letter with extra pages",
         )
-    : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+    : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
         outputPlan.outputKind === PRINT_OUTPUT_KIND.QR_SUPPLEMENT
       ? tx("label.decisionRoleQrSupplement", "QR supplement")
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
           outputPlan.outputKind === PRINT_OUTPUT_KIND.QUICK_ID
         ? tx("label.decisionRoleQuickId", "Identification supplement")
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? isContainerFrontOutput
           ? tx("label.decisionRoleContainerFront", "Container front label")
           : tx("label.decisionRoleSupplemental", "Small label")
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
             ? tx("label.decisionRoleUseFullPage", "Use A4/Letter label")
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
               ? tx("label.decisionRoleBlockedHazards", "Needs hazard data")
-              : outputPlan.state ===
+              : outputPlanState ===
                   PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
                 ? tx("label.decisionRoleBlockedProfile", "Profile required")
                 : tx("label.decisionRolePending", "Select content");
@@ -640,13 +591,13 @@ export default function LabelPrintModal({
       )} · ${getBatchCategoryLabel(activeBatchPreviewItem.category, tx)}`
     : outputRoleSummary;
   const pictogramSummary =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
       ? tx("label.decisionIconsNeedData", "Need verified hazard data")
       : hasAnyPictograms
         ? tx("label.decisionIconsAllKept", "All pictograms kept")
         : tx("label.decisionIconsNotAvailable", "No pictograms available");
   const statementSummary =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
       ? tx("label.decisionTextBlocked", "Do not print yet")
       : isSmallLabelContinuationBlocked
         ? tx("label.decisionTextSimplifySmallLabel", "Simplify before print")
@@ -698,7 +649,7 @@ export default function LabelPrintModal({
       label: tx("label.decisionIconsLabel", "GHS icons"),
       value: pictogramSummary,
       tone:
-        outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+        outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
           ? "danger"
           : hasAnyPictograms
             ? "ready"
@@ -709,9 +660,9 @@ export default function LabelPrintModal({
       label: tx("label.decisionTextLabel", "Hazard text"),
       value: statementSummary,
       tone:
-        outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+        outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
           ? "danger"
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
             ? "caution"
             : "ready",
     },
@@ -722,7 +673,7 @@ export default function LabelPrintModal({
   const responsibleProfileRequired =
     outputPlan.outputKind === PRINT_OUTPUT_KIND.COMPLETE_PRIMARY;
   const responsibleProfileMissing =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const responsibleProfileTone = responsibleProfileMissing
     ? "danger"
     : responsibleProfileRequired
@@ -905,18 +856,18 @@ export default function LabelPrintModal({
     !outputPlan.canPrint &&
     !canPrintBatchSelectedScope;
   const isProfileBlocked =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE;
   const printBlockedLabel = isProfileBlocked
     ? tx("label.printFixProfileRequired", "Add lab/supplier profile first")
     : outputPlanHasUpstreamError
       ? tx("label.printFixVerifyHazards", "Verify hazard data first")
     : isSmallLabelContinuationBlocked
       ? tx("label.printFixSmallLabelContinuation", "Simplify small label first")
-    : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+    : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
       ? tx("label.printFixContinuationRequired", "Use extra pages first")
       : tx("label.printFixRequired", "Choose a printable stock first");
   const canUseFullPagePrimary =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE &&
     Boolean(recommendedFullPagePreset) &&
     layoutProfile.stockPreset !== recommendedFullPagePreset.id &&
     !canPrintBatchSelectedScope;
@@ -937,21 +888,21 @@ export default function LabelPrintModal({
     visiblePreviewRisks.find((risk) => risk !== readyPreviewMessage) ||
     "";
   const outputPlanTitle =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx("label.outputPlanReadyTitle", "Complete output ready")
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx("label.outputPlanContinuationTitle", "Extra-page output ready")
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? isContainerFrontOutput
           ? tx("label.outputPlanContainerFrontTitle", "Container front label ready")
           : tx("label.outputPlanSupplementalTitle", "Supplemental output")
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+        : outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
           ? tx("label.outputPlanFullPageTitle", "Use a full-page primary label")
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
             ? tx("label.outputPlanProfileTitle", "Responsible profile required")
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
               ? tx("label.outputPlanHazardTitle", "Hazard data required")
-              : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+              : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
                 ? tx("label.outputPlanInvalidTitle", "Needs a larger output")
                 : isSmallLabelContinuationBlocked
                   ? tx(
@@ -960,25 +911,25 @@ export default function LabelPrintModal({
                     )
                 : tx("label.outputPlanPendingTitle", "Output plan pending");
   const outputPlanBody =
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY
       ? tx(
           "label.outputPlanReadyBody",
           "The selected stock can print the current output without hiding safety-critical content.",
         )
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_CONTINUATION
         ? tx(
             "label.outputPlanContinuationBody",
             "This complete A4/Letter label uses extra pages so all available pictograms and H/P text remain printable.",
           )
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? plannerPreviewRisk
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
+        : outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE
           ? plannerPreviewRisk
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_REQUIRED_PROFILE
             ? plannerPreviewRisk
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+            : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
               ? plannerPreviewRisk
-              : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+              : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
                 ? tx(
                     "label.outputPlanInvalidBody",
                     "Even this complete stock is too dense for one label. Use extra pages before printing.",
@@ -1036,7 +987,7 @@ export default function LabelPrintModal({
                 { stock: currentStockName },
               ),
             }
-        : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+        : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
           ? {
               kind: "hazard-data",
               tone: "danger",
@@ -1049,7 +1000,7 @@ export default function LabelPrintModal({
                 "The app cannot print a hazard label until this result has usable GHS hazard content. Verify SDS/source data before choosing a label stock.",
               ),
             }
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
             ? {
                 kind: "invalid-stock",
                 tone: "danger",
@@ -1087,7 +1038,7 @@ export default function LabelPrintModal({
   const outputOutcomeTone =
     selectedForLabel.length === 0
       ? "neutral"
-      : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
+      : outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE
         ? "ready"
         : outputPlanTone;
   const outputOutcomeTitle =
@@ -1104,12 +1055,12 @@ export default function LabelPrintModal({
               "label.outputOutcomeProfileTitle",
               "Add lab/supplier profile before printing",
             )
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
             ? tx(
                 "label.outputOutcomeHazardsTitle",
                 "Verify hazard data before printing",
               )
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+            : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
               ? tx("label.outputOutcomeInvalidTitle", "Choose a larger output")
               : isSmallLabelContinuationBlocked
                 ? tx(
@@ -1166,13 +1117,13 @@ export default function LabelPrintModal({
               "label.outputOutcomeProfileBody",
               "Complete primary labels need responsible lab or supplier name, phone, and address. Supplemental labels can stay secondary.",
             )
-          : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
+          : outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA
             ? plannerPreviewRisk ||
               tx(
                 "label.outputOutcomeHazardsBody",
                 "The app will not print a hazard label when source GHS data is unavailable or unverified.",
               )
-            : outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
+            : outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK
               ? tx(
                   "label.outputOutcomeInvalidBody",
                   "This stock cannot produce a truthful label. Use a larger primary label or extra pages.",
@@ -1217,7 +1168,7 @@ export default function LabelPrintModal({
   const shouldShowPreviewOutcomeSummary =
     selectedForLabel.length === 0 ||
     (outputOutcomeTone === "danger" && !isProfileBlocked) ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE;
   const useFullPagePrimaryLabel = tx(
     "label.useFullPagePrimaryForComplete",
     "Use {{stock}} for complete label",
@@ -2018,9 +1969,9 @@ export default function LabelPrintModal({
 
   const shouldOpenDecisionDetails =
     (isPrintFitBlocked && !isProfileBlocked) ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
-    outputPlan.state === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.RECOMMEND_FULL_PAGE ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA ||
+    outputPlanState === PRINT_OUTPUT_PLAN_STATE.INVALID_STOCK ||
     isSmallLabelContinuationBlocked;
 
   const recommendedPrintDecision = (
