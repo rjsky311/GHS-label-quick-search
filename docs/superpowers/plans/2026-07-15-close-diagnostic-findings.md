@@ -4,10 +4,11 @@
 
 **Goal:** Close every OPEN or PARTIAL item from the 2026-07-11 project diagnostic, with regression tests, release evidence, and a final production re-audit.
 
-**Execution checkpoint (2026-07-15):** Tasks 1–7 are implemented in commits
-`b322868` and `0d14fc6`; local and GitHub CI gates are green. Task 8 is in
-progress: PR #44 is awaiting an independent write-access approval before the
-merge/deploy/final production re-audit can be truthfully marked complete.
+**Execution checkpoint (2026-07-15):** Tasks 1–8 are complete. PR #44 was
+merged as `c7737436e1121fd83cdc01556ce3de9d8d97e25c`; main CI run
+`29417232746` and Production Print QA run `29417342863` passed the exact SHA,
+and the final 18-item evidence record is
+`docs/evidence/2026-07-15-diagnostic-closure.md`.
 
 **Architecture:** Work from the current `main` baseline in one isolated branch. First close the release-trust chain and safety gates, then bound backend data access and runtime dependencies, then remove confirmed dead frontend surface area and extract the print-plan derivation seam. Docker parity and observability use repository-owned, provider-neutral checks: the live Zeabur inline recipe is compared against the canonical repository recipe, and browser/server events are emitted as bounded structured logs captured by the platform rather than written only to process-local/browser-local storage.
 

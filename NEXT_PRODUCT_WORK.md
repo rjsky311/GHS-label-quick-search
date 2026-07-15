@@ -69,12 +69,12 @@ treat this queue as a permanent order.
 
 ### Governance closure checkpoint
 
-The 2026-07-11 diagnostic closure is implementation-complete in PR #44 with
-green local/CI evidence, but it is still a release gate rather than a new
-product slice. Finish the required independent review, merge/deploy, and
-production re-audit recorded in
-`docs/evidence/2026-07-15-diagnostic-closure.md` before selecting another
-roadmap item.
+The 2026-07-11 diagnostic closure was merged and production-verified on
+2026-07-15 in PR #44 / SHA `c7737436e1121fd83cdc01556ce3de9d8d97e25c`.
+Production Print QA run `29417342863` is the evidence boundary; no new product
+slice should be opened from this governance work by inertia. Continue using
+the evidence-gated Lab Workflow Readiness roadmap, with physical printing
+still deferred.
 
 When closing a slice, include proactive observations from the work: what newly
 noticed risk, stale assumption, repeated pattern, or QA/user-purpose mismatch
