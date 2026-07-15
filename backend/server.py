@@ -50,6 +50,7 @@ from api_models import (
     ExportRequest,
     GHSReport,
     MAX_EXPORT_ROWS,
+    TelemetryEventPayload,
     WorkspaceDocumentPayload,
 )
 from agent_label_summary import AgentLabelSummaryV0, build_agent_label_summary_v0
@@ -90,6 +91,7 @@ from export_helpers import (
     spreadsheet_safe,
 )
 from pilot_admin_routes import create_pilot_admin_router
+from observability import emit_structured_event, record_telemetry_event
 from pdf_render import (
     PdfRenderBusyError,
     PdfRenderError,
@@ -258,13 +260,13 @@ def _record_ops_counter(key: str, amount: int = 1) -> None:
 
 
 def _record_ops_event(event_type: str, **payload: Any) -> None:
-    ops_recent_events.append(
-        {
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "type": event_type,
-            **payload,
-        }
-    )
+    event = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "type": event_type,
+        **payload,
+    }
+    ops_recent_events.append(event)
+    emit_structured_event(event_type, source="backend", payload=event)
 
 
 def _parse_iso_ts(value: Optional[str]) -> Optional[datetime]:
@@ -2052,6 +2054,16 @@ async def bounded_search_chemical(
 @api_router.get("/")
 async def root():
     return {"message": "GHS Label Quick Search API"}
+
+
+@api_router.post("/telemetry")
+@limiter.limit("60/minute")
+async def collect_telemetry(request: Request, payload: TelemetryEventPayload):
+    try:
+        event = record_telemetry_event(payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True, "eventId": event["id"]}
 
 @api_router.get("/health")
 async def health_check():

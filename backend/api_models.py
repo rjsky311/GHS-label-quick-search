@@ -37,6 +37,8 @@ from api_validation import (
     MAX_PUBLIC_CAS_QUERY_LENGTH,
     MAX_REFERENCE_PRIORITY,
     MAX_WORKSPACE_DOCUMENT_JSON_CHARS,
+    MAX_TELEMETRY_META_JSON_CHARS,
+    MAX_TELEMETRY_META_KEYS,
     MISS_QUERY_STATUSES,
     REFERENCE_LINK_TYPES,
     _is_safe_reference_url,
@@ -96,6 +98,27 @@ class ChemicalResult(BaseModel):
     retrieved_at: Optional[str] = None
     cache_hit: bool = False
     reference_links: List[Dict[str, Any]] = []
+
+
+class TelemetryEventPayload(BaseModel):
+    id: Optional[str] = Field(default=None, max_length=240)
+    ts: Optional[str] = Field(default=None, max_length=80)
+    source: str = Field(default="frontend", max_length=80)
+    type: str = Field(..., min_length=1, max_length=80, pattern=r"^[a-z0-9][a-z0-9_.:-]*$")
+    query: Optional[str] = Field(default=None, max_length=240)
+    query_type: Optional[str] = Field(default=None, max_length=80)
+    cas: Optional[str] = Field(default=None, max_length=32)
+    status: Optional[str] = Field(default=None, max_length=80)
+    count: int = Field(default=1, ge=1, le=1000)
+    meta: Dict[str, Any] = Field(default_factory=dict, max_length=MAX_TELEMETRY_META_KEYS)
+
+    @field_validator("meta")
+    @classmethod
+    def meta_must_stay_bounded(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        encoded = json.dumps(value or {}, ensure_ascii=False, sort_keys=True, default=str)
+        if len(encoded) > MAX_TELEMETRY_META_JSON_CHARS:
+            raise ValueError("telemetry metadata is too large")
+        return value
 
 
 def _validate_export_value(value: Any, *, depth: int = 0) -> None:

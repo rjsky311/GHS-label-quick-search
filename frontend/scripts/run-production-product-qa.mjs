@@ -30,6 +30,10 @@ const stepTimeouts = {
     process.env.PRODUCTION_PRODUCT_QA_SMOKE_TIMEOUT_MS || "7200000",
     10,
   ),
+  "production-pdf-canary": Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_PDF_CANARY_TIMEOUT_MS || "120000",
+    10,
+  ),
   "production-prepared": Number.parseInt(
     process.env.PRODUCTION_PRODUCT_QA_PREPARED_TIMEOUT_MS || "1200000",
     10,
@@ -212,6 +216,7 @@ const run = (id, args, extraEnv = {}) =>
   });
 
 try {
+  await run("production-pdf-canary", ["run", "qa:production-pdf-canary"]);
   await run("production-smoke", ["run", "qa:production-smoke"]);
   await run("production-prepared", ["run", "qa:production-prepared"]);
   await run("production-batch-print", ["run", "qa:production-batch-print"]);

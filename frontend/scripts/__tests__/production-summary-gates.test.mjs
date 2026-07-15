@@ -26,6 +26,11 @@ const makeWorkspace = () => {
     productionUrl: "https://ghs-frontend.example/",
     summary: { checked: true },
   });
+  writeJson(path.join(buildDir, "production-pdf-canary-report.json"), {
+    ok: true,
+    bytes: 128,
+    pdfHeader: true,
+  });
   writeJson(path.join(buildDir, "zeabur-deployment-report.json"), {
     ok: true,
     statusCategory: "fresh-running",

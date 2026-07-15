@@ -13,11 +13,9 @@ export default function useObservability() {
     const sync = () => setEventCount(loadObservabilityEvents().length);
 
     window.addEventListener(OBSERVABILITY_UPDATE_EVENT, sync);
-    window.addEventListener("storage", sync);
 
     return () => {
       window.removeEventListener(OBSERVABILITY_UPDATE_EVENT, sync);
-      window.removeEventListener("storage", sync);
     };
   }, []);
 

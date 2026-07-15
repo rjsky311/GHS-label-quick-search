@@ -8,8 +8,8 @@ import {
   loadObservabilityEvents,
   MAX_OBSERVABILITY_META_ARRAY_ITEMS,
   MAX_OBSERVABILITY_STRING_LENGTH,
-  OBSERVABILITY_STORAGE_KEY,
   recordObservabilityEvent,
+  clearObservabilityEvents,
 } from "../observability";
 
 jest.mock("axios");
@@ -28,6 +28,7 @@ describe("observability admin report", () => {
     jest.clearAllMocks();
     localStorage.clear();
     sessionStorage.clear();
+    clearObservabilityEvents();
   });
 
   it("fetches the backend report with the active admin key", async () => {
@@ -65,9 +66,9 @@ describe("observability admin report", () => {
     expect(toast.warning).not.toHaveBeenCalled();
   });
 
-  it("stores bounded frontend event metadata", () => {
+  it("keeps bounded frontend event metadata in memory and forwards it to the backend", () => {
     const event = recordObservabilityEvent("batch_input_normalized", {
-      query: "  ".concat("x".repeat(MAX_OBSERVABILITY_STRING_LENGTH + 20)),
+      query: "Acetone",
       meta: {
         acceptedCount: 2,
         sentCasPreview: Array.from({ length: 40 }, (_, index) => `${index}-00-0`),
@@ -77,7 +78,7 @@ describe("observability admin report", () => {
       },
     });
 
-    expect(event.query).toHaveLength(MAX_OBSERVABILITY_STRING_LENGTH);
+    expect(event.query).toBe("");
     expect(event.meta.acceptedCount).toBe(2);
     expect(event.meta.sentCasPreview).toHaveLength(
       MAX_OBSERVABILITY_META_ARRAY_ITEMS
@@ -88,8 +89,16 @@ describe("observability admin report", () => {
     expect(event.meta.nested).toHaveLength(MAX_OBSERVABILITY_STRING_LENGTH);
     expect(event.meta).not.toHaveProperty("ignored");
     expect(loadObservabilityEvents()).toEqual([event]);
-    expect(JSON.parse(localStorage.getItem(OBSERVABILITY_STORAGE_KEY))).toEqual([
-      event,
-    ]);
+    expect(localStorage.length).toBe(0);
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/telemetry$/),
+      expect.objectContaining({
+        id: event.id,
+        type: event.type,
+        source: event.source,
+        query: null,
+      }),
+      { timeout: 3000 }
+    );
   });
 });

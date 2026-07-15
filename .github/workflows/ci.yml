@@ -90,6 +90,7 @@ jobs:
           export_helpers.py
           h_code_translations.py
           h_code_coverage_audit.py
+          observability.py
           pilot_admin_routes.py
           pilot_store.py
           inventory_workbook_audit.py

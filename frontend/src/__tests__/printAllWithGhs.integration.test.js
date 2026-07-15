@@ -22,7 +22,10 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import axios from 'axios';
 import App from '@/App';
 import { printLabels } from '@/utils/printLabels';
-import { OBSERVABILITY_STORAGE_KEY } from '@/utils/observability';
+import {
+  clearObservabilityEvents,
+  loadObservabilityEvents,
+} from '@/utils/observability';
 
 jest.mock('axios');
 
@@ -98,6 +101,7 @@ jest.mock('@/components/GHSImage', () => (props) => (
 // localStorage is jsdom-provided; ensure a clean slate each test.
 beforeEach(() => {
   window.localStorage.clear();
+  clearObservabilityEvents();
   jest.clearAllMocks();
 });
 
@@ -197,9 +201,7 @@ describe('v1.8 M2 PR-B — Print all with GHS data (App integration)', () => {
       'search.batchInvalidSummary'
     );
 
-    const events = JSON.parse(
-      localStorage.getItem(OBSERVABILITY_STORAGE_KEY) || '[]'
-    );
+    const events = loadObservabilityEvents();
     const normalizationEvent = events.find(
       (event) => event.type === 'batch_input_normalized'
     );
