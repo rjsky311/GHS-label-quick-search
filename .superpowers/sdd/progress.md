@@ -35,6 +35,9 @@
   safe 503 responses, observable cleanup/rejection counters, and conservative
   retention that preserves reviewed/final rows. See
   `.superpowers/sdd/task-4-report.md`.
-- Task 5: pending — admin authority lifecycle
+- Task 5: complete — the admin key is memory-only under one authority owner;
+  explicit/idle/absolute lock, epoch/request invalidation, immediate protected
+  state masking, blank reload behavior, and explicit workspace/observability
+  key propagation are verified. See `.superpowers/sdd/task-5-report.md`.
 - Task 6: pending — secondary production gates and documentation alignment
 - Task 7: pending — integration, deployment, and second review

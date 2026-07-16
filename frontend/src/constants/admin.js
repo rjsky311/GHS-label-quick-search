@@ -7,28 +7,20 @@ const readDefinedPilotAdminFlag = () =>
     : null;
 
 export const PILOT_ADMIN_SESSION_KEY = "ghs.pilotAdminKey";
+export const PILOT_ADMIN_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+export const PILOT_ADMIN_ABSOLUTE_LIFETIME_MS = 8 * 60 * 60 * 1000;
 export const PILOT_ADMIN_ENABLED =
   readDefinedPilotAdminFlag() ??
   (readEnv("VITE_ENABLE_PILOT_ADMIN").trim().toLowerCase() === "true");
 
-export function loadPilotAdminKey() {
-  if (typeof window === "undefined") return "";
-  return window.sessionStorage.getItem(PILOT_ADMIN_SESSION_KEY) || "";
-}
-
-export function persistPilotAdminKey(value) {
-  if (typeof window === "undefined") return;
-  const normalized = typeof value === "string" ? value.trim() : "";
-  if (!normalized) {
-    window.sessionStorage.removeItem(PILOT_ADMIN_SESSION_KEY);
-    return;
-  }
-  window.sessionStorage.setItem(PILOT_ADMIN_SESSION_KEY, normalized);
-}
-
 export function clearPilotAdminKey() {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(PILOT_ADMIN_SESSION_KEY);
+  try {
+    window.sessionStorage.removeItem(PILOT_ADMIN_SESSION_KEY);
+  } catch {
+    // Storage may be unavailable under strict browser privacy settings. The
+    // active key still lives only in React memory and is cleared by its owner.
+  }
 }
 
 export function buildPilotAdminHeaders(adminKey) {

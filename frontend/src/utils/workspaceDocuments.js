@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API } from "@/constants/ghs";
-import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
+import { buildPilotAdminHeaders } from "@/constants/admin";
 
 const readEnv = (key) =>
   typeof process !== "undefined" && process.env ? process.env[key] || "" : "";
@@ -72,26 +72,30 @@ function localOnlyResponse(docType, payload = null) {
   };
 }
 
-function workspaceRequestConfig() {
+function workspaceRequestConfig(adminKey) {
   return {
-    headers: buildPilotAdminHeaders(loadPilotAdminKey()),
+    headers: buildPilotAdminHeaders(adminKey),
   };
 }
 
-export async function fetchWorkspaceDocument(docType) {
-  if (!WORKSPACE_SYNC_ENABLED) {
+export async function fetchWorkspaceDocument(docType, adminKey = "") {
+  const normalizedAdminKey =
+    typeof adminKey === "string" ? adminKey.trim() : "";
+  if (!WORKSPACE_SYNC_ENABLED || !normalizedAdminKey) {
     return localOnlyResponse(docType);
   }
 
   const response = await axios.get(
     `${API}/workspace/${docType}`,
-    workspaceRequestConfig()
+    workspaceRequestConfig(normalizedAdminKey)
   );
   return response.data;
 }
 
-export async function saveWorkspaceDocument(docType, payload) {
-  if (!WORKSPACE_SYNC_ENABLED) {
+export async function saveWorkspaceDocument(docType, payload, adminKey = "") {
+  const normalizedAdminKey =
+    typeof adminKey === "string" ? adminKey.trim() : "";
+  if (!WORKSPACE_SYNC_ENABLED || !normalizedAdminKey) {
     return localOnlyResponse(docType, payload);
   }
 
@@ -100,7 +104,7 @@ export async function saveWorkspaceDocument(docType, payload) {
     {
       payload,
     },
-    workspaceRequestConfig()
+    workspaceRequestConfig(normalizedAdminKey)
   );
   return response.data;
 }

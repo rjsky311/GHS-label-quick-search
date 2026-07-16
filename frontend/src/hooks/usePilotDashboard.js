@@ -27,18 +27,34 @@ const EMPTY_REQUEST_STATE = {
   authError: "",
 };
 
-const isAdminAccessError = (status) => [401, 403, 503].includes(status);
+const isAdminAccessError = (status, responseData) =>
+  [401, 403].includes(status) ||
+  (status === 503 && responseData?.detail?.code !== "review_queue_full");
+
+const getErrorDetail = (error, fallback) => {
+  const detail = error?.response?.data?.detail;
+  if (typeof detail === "string" && detail) return detail;
+  if (detail && typeof detail.message === "string") return detail.message;
+  return error?.message || fallback;
+};
 
 export default function usePilotDashboard(options = {}) {
   const config =
     typeof options === "boolean" ? { enabled: options } : options || {};
   const enabled = Boolean(config.enabled);
   const adminKey = typeof config.adminKey === "string" ? config.adminKey : "";
+  const authorityEpoch = Number.isFinite(Number(config.authorityEpoch))
+    ? Number(config.authorityEpoch)
+    : 0;
   const activeContext = enabled && Boolean(adminKey);
 
   const authContextToken = useMemo(
-    () => ({ enabled, adminKey }),
-    [adminKey, enabled]
+    () => ({
+      enabled,
+      authorityEpoch,
+      hasCredential: Boolean(adminKey),
+    }),
+    [adminKey, authorityEpoch, enabled]
   );
   const currentContextTokenRef = useRef(authContextToken);
   const generationRef = useRef(0);
@@ -165,17 +181,21 @@ export default function usePilotDashboard(options = {}) {
       if (!isCurrentRequest()) return null;
 
       const status = fetchError?.response?.status;
-      const detail =
-        fetchError?.response?.data?.detail ||
-        fetchError?.message ||
-        "Failed to load admin dashboard data.";
+      const detail = getErrorDetail(
+        fetchError,
+        "Failed to load admin dashboard data.",
+      );
+      const accessError = isAdminAccessError(
+        status,
+        fetchError?.response?.data,
+      );
 
-      if (isAdminAccessError(status)) {
+      if (accessError) {
         clearPrivilegedState();
       }
       updateRequestState(authContextToken, {
         error: detail,
-        authError: isAdminAccessError(status) ? detail : "",
+        authError: accessError ? detail : "",
       });
       return null;
     } finally {
@@ -247,16 +267,17 @@ export default function usePilotDashboard(options = {}) {
         if (!isCurrentMutation()) return null;
 
         const status = mutationError?.response?.status;
-        const detail =
-          mutationError?.response?.data?.detail ||
-          mutationError?.message ||
-          "Admin access failed.";
-        if (isAdminAccessError(status)) {
+        const detail = getErrorDetail(mutationError, "Admin access failed.");
+        const accessError = isAdminAccessError(
+          status,
+          mutationError?.response?.data,
+        );
+        if (accessError) {
           clearPrivilegedState();
         }
         updateRequestState(authContextToken, {
           error: detail,
-          authError: isAdminAccessError(status) ? detail : "",
+          authError: accessError ? detail : "",
         });
         throw mutationError;
       } finally {

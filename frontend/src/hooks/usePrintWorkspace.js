@@ -37,7 +37,7 @@ function persistCustomLabelFields(fields) {
   writeJsonStorage(CUSTOM_FIELDS_KEY, fields);
 }
 
-export default function usePrintWorkspace() {
+export default function usePrintWorkspace(adminKey = "") {
   const [labelConfig, setLabelConfigState] = useState(() =>
     normalizePrintLabelConfig(DEFAULT_LABEL_CONFIG)
   );
@@ -45,9 +45,9 @@ export default function usePrintWorkspace() {
     loadCustomLabelFields()
   );
   const [labelQuantities, setLabelQuantities] = useState({});
-  const { templates, saveTemplate: persistTemplate, deleteTemplate } = usePrintTemplates();
-  const { labProfile, setLabProfile, clearLabProfile } = useLabProfile();
-  const { recentPrints, addRecentPrint, clearRecentPrints } = usePrintRecents();
+  const { templates, saveTemplate: persistTemplate, deleteTemplate } = usePrintTemplates(adminKey);
+  const { labProfile, setLabProfile, clearLabProfile } = useLabProfile(adminKey);
+  const { recentPrints, addRecentPrint, clearRecentPrints } = usePrintRecents(adminKey);
 
   const setLabelConfig = useCallback((nextConfig) => {
     setLabelConfigState((prev) => {
@@ -64,10 +64,10 @@ export default function usePrintWorkspace() {
         typeof nextFields === "function" ? nextFields(prev) : nextFields;
       const normalized = normalizeCustomLabelFields(resolved);
       persistCustomLabelFields(normalized);
-      void saveWorkspaceDocument("print_custom_label_fields", normalized).catch(() => {});
+      void saveWorkspaceDocument("print_custom_label_fields", normalized, adminKey).catch(() => {});
       return normalized;
     });
-  }, []);
+  }, [adminKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +75,7 @@ export default function usePrintWorkspace() {
 
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("print_custom_label_fields");
+        const remote = await fetchWorkspaceDocument("print_custom_label_fields", adminKey);
         const remoteFields = normalizeCustomLabelFields(remote?.payload);
 
         if (hasMeaningfulWorkspacePayload(remoteFields)) {
@@ -87,7 +87,7 @@ export default function usePrintWorkspace() {
         }
 
         if (hasMeaningfulWorkspacePayload(localSnapshot)) {
-          await saveWorkspaceDocument("print_custom_label_fields", localSnapshot);
+          await saveWorkspaceDocument("print_custom_label_fields", localSnapshot, adminKey);
         }
       } catch {
         // Local fallback remains active if backend sync is unavailable.
@@ -98,7 +98,7 @@ export default function usePrintWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const saveTemplate = useCallback(
     (name) => persistTemplate(name, labelConfig, customLabelFields),

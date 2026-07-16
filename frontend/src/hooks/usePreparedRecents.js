@@ -62,7 +62,7 @@ function persist(list) {
   writeJsonStorage(RECENTS_KEY, list);
 }
 
-export default function usePreparedRecents() {
+export default function usePreparedRecents(adminKey = "") {
   // Lazy init so the first render already sees persisted entries —
   // avoids a flash where the Recent section is empty on modal open.
   const [recents, setRecents] = useState(() => loadFromStorage());
@@ -73,7 +73,7 @@ export default function usePreparedRecents() {
 
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("prepared_recents");
+        const remote = await fetchWorkspaceDocument("prepared_recents", adminKey);
         const remotePayload = Array.isArray(remote?.payload)
           ? remote.payload.map(normalizePreparedRecentRecord).filter(Boolean)
           : [];
@@ -87,7 +87,7 @@ export default function usePreparedRecents() {
         }
 
         if (localSnapshot.length > 0) {
-          await saveWorkspaceDocument("prepared_recents", localSnapshot);
+          await saveWorkspaceDocument("prepared_recents", localSnapshot, adminKey);
         }
       } catch {
         // Local fallback stays authoritative when the backend is
@@ -100,7 +100,7 @@ export default function usePreparedRecents() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const addRecent = useCallback((record) => {
     const normalized = normalizePreparedRecentRecord(record);
@@ -113,16 +113,16 @@ export default function usePreparedRecents() {
       const filtered = prev.filter((r) => preparedRecentKey(r) !== key);
       const next = [normalized, ...filtered].slice(0, MAX_PREPARED_RECENTS);
       persist(next);
-      void saveWorkspaceDocument("prepared_recents", next).catch(() => {});
+      void saveWorkspaceDocument("prepared_recents", next, adminKey).catch(() => {});
       return next;
     });
-  }, []);
+  }, [adminKey]);
 
   const clearRecents = useCallback(() => {
     setRecents([]);
     persist([]);
-    void saveWorkspaceDocument("prepared_recents", []).catch(() => {});
-  }, []);
+    void saveWorkspaceDocument("prepared_recents", [], adminKey).catch(() => {});
+  }, [adminKey]);
 
   return {
     recents,

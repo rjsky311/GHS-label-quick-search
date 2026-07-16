@@ -16,7 +16,7 @@ import {
 const TEMPLATES_KEY = "ghs_print_templates";
 const MAX_TEMPLATES = 10;
 
-export default function usePrintTemplates() {
+export default function usePrintTemplates(adminKey = "") {
   const [templates, setTemplates] = useState([]);
 
   // Load from localStorage on mount
@@ -36,7 +36,7 @@ export default function usePrintTemplates() {
     let cancelled = false;
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("print_templates");
+        const remote = await fetchWorkspaceDocument("print_templates", adminKey);
         const remotePayload = Array.isArray(remote?.payload)
           ? remote.payload.map(normalizePrintTemplate).filter(Boolean)
           : [];
@@ -50,7 +50,7 @@ export default function usePrintTemplates() {
         }
 
         if (localTemplates.length > 0) {
-          await saveWorkspaceDocument("print_templates", localTemplates);
+          await saveWorkspaceDocument("print_templates", localTemplates, adminKey);
         }
       } catch {
         // Local fallback remains active when backend sync fails.
@@ -61,7 +61,7 @@ export default function usePrintTemplates() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const saveTemplate = useCallback((name, labelConfig, customLabelFields) => {
     if (!name || !name.trim()) return false;
@@ -78,27 +78,27 @@ export default function usePrintTemplates() {
       if (!newTemplate) return prev;
       const updated = [newTemplate, ...prev];
       writeJsonStorage(TEMPLATES_KEY, updated);
-      void saveWorkspaceDocument("print_templates", updated).catch(() => {});
+      void saveWorkspaceDocument("print_templates", updated, adminKey).catch(() => {});
       saved = true;
       return updated;
     });
     return saved;
-  }, []);
+  }, [adminKey]);
 
   const deleteTemplate = useCallback((templateId) => {
     setTemplates((prev) => {
       const updated = prev.filter((t) => t.id !== templateId);
       writeJsonStorage(TEMPLATES_KEY, updated);
-      void saveWorkspaceDocument("print_templates", updated).catch(() => {});
+      void saveWorkspaceDocument("print_templates", updated, adminKey).catch(() => {});
       return updated;
     });
-  }, []);
+  }, [adminKey]);
 
   const clearTemplates = useCallback(() => {
     setTemplates([]);
     removeStorageItem(TEMPLATES_KEY);
-    void saveWorkspaceDocument("print_templates", []).catch(() => {});
-  }, []);
+    void saveWorkspaceDocument("print_templates", [], adminKey).catch(() => {});
+  }, [adminKey]);
 
   return {
     templates,

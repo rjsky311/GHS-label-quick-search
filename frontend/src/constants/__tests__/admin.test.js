@@ -29,14 +29,13 @@ describe("admin constants", () => {
     expect(PILOT_ADMIN_ENABLED).toBe(true);
   });
 
-  it("builds admin headers only when a session key exists", () => {
-    const { buildPilotAdminHeaders, persistPilotAdminKey } = require("../admin");
+  it("builds admin headers from an explicit in-memory key without persisting it", () => {
+    const { buildPilotAdminHeaders } = require("../admin");
 
     expect(buildPilotAdminHeaders("")).toEqual({});
-
-    persistPilotAdminKey(" secret ");
-    expect(buildPilotAdminHeaders(sessionStorage.getItem("ghs.pilotAdminKey"))).toEqual({
+    expect(buildPilotAdminHeaders(" secret ")).toEqual({
       "x-ghs-admin-key": "secret",
     });
+    expect(sessionStorage.getItem("ghs.pilotAdminKey")).toBeNull();
   });
 });

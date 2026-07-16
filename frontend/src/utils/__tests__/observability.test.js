@@ -1,7 +1,6 @@
 import axios from "axios";
 import { saveAs } from "file-saver";
 import { toast } from "sonner";
-import { PILOT_ADMIN_SESSION_KEY } from "@/constants/admin";
 import {
   exportObservabilityReport,
   fetchObservabilityReport,
@@ -32,10 +31,9 @@ describe("observability admin report", () => {
   });
 
   it("fetches the backend report with the active admin key", async () => {
-    sessionStorage.setItem(PILOT_ADMIN_SESSION_KEY, "secret");
     axios.get.mockResolvedValue({ data: { counters: { ok: 1 } } });
 
-    await expect(fetchObservabilityReport()).resolves.toEqual({
+    await expect(fetchObservabilityReport("secret")).resolves.toEqual({
       counters: { ok: 1 },
     });
 
@@ -48,10 +46,12 @@ describe("observability admin report", () => {
   });
 
   it("exports backend data instead of falling back when admin is unlocked", async () => {
-    sessionStorage.setItem(PILOT_ADMIN_SESSION_KEY, "secret");
     axios.get.mockResolvedValue({ data: { counters: { ok: 1 } } });
 
-    const report = await exportObservabilityReport({ format: "json" });
+    const report = await exportObservabilityReport({
+      format: "json",
+      adminKey: "secret",
+    });
 
     expect(report.backend).toEqual({ counters: { ok: 1 } });
     expect(report.backendError).toBeNull();

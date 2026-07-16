@@ -81,7 +81,6 @@ async function startPreparedReprint(lookup) {
 }
 
 async function startPilotRequest(request) {
-  window.sessionStorage.setItem("ghs.pilotAdminKey", "pilot-secret");
   axios.get.mockImplementation((url) =>
     url.includes("/api/ops/") || url.includes("/api/dictionary/")
       ? request.promise
@@ -90,6 +89,11 @@ async function startPilotRequest(request) {
 
   render(<App />);
   fireEvent.click(screen.getByTestId("pilot-dashboard-toggle-btn"));
+  await expectOnlyModalDialog("pilot.adminAccessTitle");
+  fireEvent.change(screen.getByTestId("pilot-admin-key-input"), {
+    target: { value: "pilot-secret" },
+  });
+  fireEvent.click(screen.getByTestId("pilot-admin-submit-btn"));
   await expectOnlyModalDialog("pilot.sidebarTitle");
   await waitFor(() =>
     expect(axios.get).toHaveBeenCalledWith(
@@ -160,15 +164,20 @@ describe("App sidebar ownership", () => {
   });
 
   it("lets an unlocked Pilot dashboard replace an open public sidebar", async () => {
-    window.sessionStorage.setItem("ghs.pilotAdminKey", "pilot-secret");
     render(<App />);
 
     fireEvent.click(screen.getByTestId("favorites-toggle-btn"));
     await expectOnlyModalDialog("favorites.title");
 
     fireEvent.click(screen.getByTestId("pilot-dashboard-toggle-btn"));
+    await expectOnlyModalDialog("pilot.adminAccessTitle");
+    fireEvent.change(screen.getByTestId("pilot-admin-key-input"), {
+      target: { value: "pilot-secret" },
+    });
+    fireEvent.click(screen.getByTestId("pilot-admin-submit-btn"));
     await expectOnlyModalDialog("pilot.sidebarTitle");
     expect(screen.queryByTestId("pilot-admin-dialog")).not.toBeInTheDocument();
+    expect(window.sessionStorage.getItem("ghs.pilotAdminKey")).toBeNull();
   });
 
   it("closes an open sidebar before requesting locked Pilot access", async () => {
@@ -258,9 +267,7 @@ describe("App sidebar ownership", () => {
 
       await expectOnlyModalDialog("favorites.title");
       expect(screen.queryByTestId("pilot-admin-dialog")).not.toBeInTheDocument();
-      expect(window.sessionStorage.getItem("ghs.pilotAdminKey")).toBe(
-        "pilot-secret",
-      );
+      expect(window.sessionStorage.getItem("ghs.pilotAdminKey")).toBeNull();
     },
   );
 
@@ -280,6 +287,22 @@ describe("App sidebar ownership", () => {
 
     await expectOnlyModalDialog("pilot.adminAccessTitle");
     expect(window.sessionStorage.getItem("ghs.pilotAdminKey")).toBeNull();
+  });
+
+  it("explicitly locks Pilot authority and requires the key again", async () => {
+    const request = deferred();
+    await startPilotRequest(request);
+
+    fireEvent.click(screen.getByTestId("pilot-lock-btn"));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "pilot.sidebarTitle" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByTestId("pilot-dashboard-toggle-btn"));
+    await expectOnlyModalDialog("pilot.adminAccessTitle");
+    expect(screen.getByTestId("pilot-admin-key-input")).toHaveValue("");
   });
 
   it("restores focus to the opener after Escape closes a sidebar", async () => {

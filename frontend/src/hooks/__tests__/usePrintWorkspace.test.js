@@ -141,7 +141,7 @@ describe("usePrintWorkspace", () => {
   });
 
   it("setCustomLabelFields persists locally and syncs to backend", async () => {
-    const { result } = renderHook(() => usePrintWorkspace());
+    const { result } = renderHook(() => usePrintWorkspace("secret"));
 
     act(() => {
       result.current.setCustomLabelFields({
@@ -167,7 +167,8 @@ describe("usePrintWorkspace", () => {
           labName: "",
           date: "2026-04-18",
           batchNumber: "B-9",
-        }
+        },
+        "secret",
       );
     });
   });

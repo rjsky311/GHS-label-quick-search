@@ -85,15 +85,19 @@ describe("usePrintRecents", () => {
     const saved = [makeRecentJob()];
     localStorage.setItem(RECENT_PRINTS_KEY, JSON.stringify(saved));
 
-    renderHook(() => usePrintRecents());
+    renderHook(() => usePrintRecents("secret"));
 
     await waitFor(() => {
-      expect(saveWorkspaceDocument).toHaveBeenCalledWith("print_recents", saved);
+      expect(saveWorkspaceDocument).toHaveBeenCalledWith(
+        "print_recents",
+        saved,
+        "secret",
+      );
     });
   });
 
   it("addRecentPrint prepends, dedupes, caps, and persists", async () => {
-    const { result } = renderHook(() => usePrintRecents());
+    const { result } = renderHook(() => usePrintRecents("secret"));
 
     act(() => {
       for (let i = 0; i < MAX_RECENT_PRINTS + 2; i += 1) {
@@ -141,14 +145,24 @@ describe("usePrintRecents", () => {
     await waitFor(() => {
       expect(saveWorkspaceDocument).toHaveBeenLastCalledWith(
         "print_recents",
-        expect.any(Array)
+        expect.any(Array),
+        "secret",
       );
     });
   });
 
   it("clearRecentPrints empties local and backend state", async () => {
     localStorage.setItem(RECENT_PRINTS_KEY, JSON.stringify([makeRecentJob()]));
-    const { result } = renderHook(() => usePrintRecents());
+    const { result } = renderHook(() => usePrintRecents("secret"));
+
+    await waitFor(() => {
+      expect(fetchWorkspaceDocument).toHaveBeenCalledWith(
+        "print_recents",
+        "secret",
+      );
+    });
+    await waitFor(() => expect(saveWorkspaceDocument).toHaveBeenCalled());
+    saveWorkspaceDocument.mockClear();
 
     act(() => {
       result.current.clearRecentPrints();
@@ -157,7 +171,11 @@ describe("usePrintRecents", () => {
     expect(result.current.recentPrints).toEqual([]);
     expect(JSON.parse(localStorage.getItem(RECENT_PRINTS_KEY))).toEqual([]);
     await waitFor(() => {
-      expect(saveWorkspaceDocument).toHaveBeenLastCalledWith("print_recents", []);
+      expect(saveWorkspaceDocument).toHaveBeenLastCalledWith(
+        "print_recents",
+        [],
+        "secret",
+      );
     });
   });
 });
