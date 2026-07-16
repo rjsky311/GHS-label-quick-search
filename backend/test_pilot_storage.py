@@ -13,6 +13,55 @@ def make_store(tmp_path: Path, **kwargs) -> PilotStore:
     return PilotStore(tmp_path / "pilot-test.db", **kwargs).connect()
 
 
+def test_alias_commit_failure_rolls_back_without_advancing_dictionary_version(tmp_path):
+    store = make_store(tmp_path)
+    delegate = store._conn
+
+    class CommitFailingConnection:
+        def __init__(self, connection):
+            self.connection = connection
+            self.rollback_called = False
+
+        def __getattr__(self, name):
+            return getattr(self.connection, name)
+
+        def commit(self):
+            raise sqlite3.OperationalError("simulated commit failure")
+
+        def rollback(self):
+            self.rollback_called = True
+            return self.connection.rollback()
+
+    failing_connection = CommitFailingConnection(delegate)
+    store._conn = failing_connection
+    starting_version = store.dictionary_data_version
+
+    try:
+        with pytest.raises(sqlite3.OperationalError, match="simulated commit failure"):
+            store.upsert_alias(
+                "Commit failure alias",
+                "en",
+                "64-17-5",
+                status="approved",
+            )
+
+        assert failing_connection.rollback_called is True
+        assert store.dictionary_data_version == starting_version
+        store._conn = delegate
+        assert (
+            store.get_alias_exact(
+                "Commit failure alias",
+                "en",
+                cas_number="64-17-5",
+                statuses=None,
+            )
+            is None
+        )
+    finally:
+        store._conn = delegate
+        store.close()
+
+
 def test_workspace_document_roundtrip(tmp_path):
     store = make_store(tmp_path)
     try:

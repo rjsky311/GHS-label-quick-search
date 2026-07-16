@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from starlette.requests import ClientDisconnect, Request
 from starlette.testclient import TestClient
 
 from resource_limits import (
@@ -135,6 +136,31 @@ async def test_allowed_chunked_body_is_replayed_exactly_once_to_downstream():
             "more_body": False,
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_partial_body_disconnect_reaches_downstream_without_waiting_for_chunks():
+    downstream_completed = False
+
+    async def downstream(scope, receive, send):
+        nonlocal downstream_completed
+        request = Request(scope, receive=receive)
+        with pytest.raises(ClientDisconnect):
+            await request.body()
+        downstream_completed = True
+
+    middleware = PublicJsonBodyLimitMiddleware(downstream, default_limit=32)
+    messages = await _run_asgi(
+        middleware,
+        _scope(),
+        [
+            {"type": "http.request", "body": b'{"cas_', "more_body": True},
+            {"type": "http.disconnect"},
+        ],
+    )
+
+    assert downstream_completed is True
+    assert messages == []
 
 
 def test_route_limits_cover_all_mutating_api_routes_with_tighter_defaults():

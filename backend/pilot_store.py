@@ -7,7 +7,7 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 from urllib.parse import urlparse
 
 DEFAULT_SCOPE = "default"
@@ -388,17 +388,22 @@ class PilotStore:
         self.dictionary_data_version += 1
 
     @contextmanager
-    def _immediate_transaction(self):
+    def _immediate_transaction(
+        self,
+        *,
+        after_commit: Optional[Callable[[], None]] = None,
+    ):
         with self._lock:
             conn = self._require_conn()
             conn.execute("BEGIN IMMEDIATE")
             try:
                 yield conn
+                conn.commit()
             except Exception:
                 conn.rollback()
                 raise
-            else:
-                conn.commit()
+            if after_commit is not None:
+                after_commit()
 
     def connect(self) -> "PilotStore":
         with self._lock:
@@ -1103,7 +1108,9 @@ class PilotStore:
             return None
 
         now = utc_now_iso()
-        with self._immediate_transaction() as conn:
+        with self._immediate_transaction(
+            after_commit=self._bump_dictionary_data_version_locked,
+        ) as conn:
             existing = conn.execute(
                 """
                 SELECT id, status, source, confidence, notes, hit_count
@@ -1209,8 +1216,6 @@ class PilotStore:
                         cas_number,
                     ),
                 )
-            self._bump_dictionary_data_version_locked()
-
         return self.get_alias_exact(
             alias_text,
             locale,
