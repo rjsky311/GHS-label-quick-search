@@ -10,6 +10,11 @@ import {
 } from "@/utils/localStorageJson";
 
 export const LAB_PROFILE_KEY = "ghs_lab_profile";
+export const LAB_PROFILE_LIMITS = Object.freeze({
+  organization: 120,
+  phone: 60,
+  address: 240,
+});
 
 const EMPTY_PROFILE = Object.freeze({
   organization: "",
@@ -18,11 +23,14 @@ const EMPTY_PROFILE = Object.freeze({
 });
 
 function sanitizeProfile(raw) {
+  const boundedString = (value, key) =>
+    typeof value === "string"
+      ? Array.from(value).slice(0, LAB_PROFILE_LIMITS[key]).join("")
+      : "";
   return {
-    organization:
-      typeof raw?.organization === "string" ? raw.organization : "",
-    phone: typeof raw?.phone === "string" ? raw.phone : "",
-    address: typeof raw?.address === "string" ? raw.address : "",
+    organization: boundedString(raw?.organization, "organization"),
+    phone: boundedString(raw?.phone, "phone"),
+    address: boundedString(raw?.address, "address"),
   };
 }
 

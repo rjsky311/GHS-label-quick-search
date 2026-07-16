@@ -18,10 +18,14 @@
 
 ## Tasks
 
-- Task 1: completed — baseline and RED contract tests committed; see
-  `.superpowers/sdd/task-1-report.md` for commands, pass counts, and
-  intentional failures.
-- Task 2: pending — agent summary and print semantic integrity
+- Task 1: complete (commits 39bf350..40804df, review clean) — baseline and RED
+  contract tests; see `.superpowers/sdd/task-1-report.md` for commands, pass
+  counts, and intentional failures.
+- Task 2: complete — agent summary and print semantic integrity; bilingual
+  statements, per-item hazard readiness, stable classification identity,
+  bounded/inspected responsible profiles, indexed layout findings, and
+  fresh-lookup-only historical print reuse are verified. See
+  `.superpowers/sdd/task-2-report.md`.
 - Task 3: pending — public resource admission and PDF postconditions
 - Task 4: pending — durable review-ingestion lifecycle
 - Task 5: pending — admin authority lifecycle

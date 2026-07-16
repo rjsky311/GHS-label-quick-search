@@ -30,6 +30,7 @@ import {
   BATCH_SEARCH_LIMIT,
 } from "@/constants/ghs";
 import { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
+import { rehydrateHistoricalPrintItems } from "@/utils/printStorage";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getDataQualityIssues } from "@/utils/dataQuality";
 import {
@@ -196,6 +197,8 @@ function App() {
   const favoritePrintRequestRef = useRef(0);
   const favoritePrintAbortRef = useRef(null);
   const favoritePrintCasRef = useRef("");
+  const recentPrintRequestRef = useRef(0);
+  const recentPrintAbortRef = useRef(null);
   const preparedReprintRequestRef = useRef(0);
   const preparedReprintAbortRef = useRef(null);
   const batchProgressClearTimeoutRef = useRef(null);
@@ -213,6 +216,9 @@ function App() {
     favoritePrintAbortRef.current = null;
     favoritePrintRequestRef.current += 1;
     favoritePrintCasRef.current = "";
+    recentPrintAbortRef.current?.abort?.();
+    recentPrintAbortRef.current = null;
+    recentPrintRequestRef.current += 1;
   }, []);
 
   const invalidatePreparedReprintLookup = useCallback(() => {
@@ -1088,15 +1094,90 @@ function App() {
   ]);
 
   const handleLoadRecentPrint = useCallback(
-    (record) => {
-      const items = loadRecentPrint(record);
-      if (items.length === 0) return;
+    async (record) => {
+      const historicalItems = Array.isArray(record?.items) ? record.items : [];
+      const casNumbers = [
+        ...new Set(
+          historicalItems
+            .map(
+              (item) =>
+                item?.preparedSolution?.parentCas || item?.cas_number || "",
+            )
+            .filter(Boolean),
+        ),
+      ];
       invalidateFavoritePrintLookup();
+      if (casNumbers.length === 0) {
+        toast.error(
+          t("label.recentPrintRefreshFailed", {
+            defaultValue:
+              "Could not refresh this historical print job. Search the chemicals again before printing.",
+          }),
+        );
+        return;
+      }
+
+      const controller = new AbortController();
+      const requestId = recentPrintRequestRef.current + 1;
+      recentPrintRequestRef.current = requestId;
+      recentPrintAbortRef.current = controller;
       setPrintBlockedInfo(null);
-      setSelectedForLabel(items);
-      setShowLabelModal(true);
+      try {
+        const response = await axios.post(
+          `${API}/search`,
+          { cas_numbers: casNumbers },
+          { signal: controller.signal },
+        );
+        if (recentPrintRequestRef.current !== requestId) return;
+
+        const refreshed = rehydrateHistoricalPrintItems(
+          record,
+          Array.isArray(response.data) ? response.data : [],
+        );
+        if (refreshed.issues.length > 0 || refreshed.items.length === 0) {
+          toast.error(
+            t("label.recentPrintRefreshFailed", {
+              defaultValue:
+                "This historical print job no longer matches current lookup data. Search and review the chemicals again before printing.",
+            }),
+          );
+          return;
+        }
+
+        refreshed.classificationSelections.forEach((selection) => {
+          setCustomClassification(
+            selection.casNumber,
+            selection.selectedIndex,
+            selection.note,
+            selection.classification,
+          );
+        });
+        loadRecentPrint(record);
+        setSelectedForLabel(refreshed.items);
+        setShowLabelModal(true);
+      } catch (error) {
+        if (isCanceledRequest(error)) return;
+        if (recentPrintRequestRef.current !== requestId) return;
+        toast.error(
+          t("label.recentPrintRefreshFailed", {
+            defaultValue:
+              "Could not refresh this historical print job. Search the chemicals again before printing.",
+          }),
+        );
+      } finally {
+        if (recentPrintRequestRef.current === requestId) {
+          recentPrintAbortRef.current = null;
+        }
+      }
     },
-    [invalidateFavoritePrintLookup, loadRecentPrint, setSelectedForLabel]
+    [
+      invalidateFavoritePrintLookup,
+      isCanceledRequest,
+      loadRecentPrint,
+      setCustomClassification,
+      setSelectedForLabel,
+      t,
+    ],
   );
 
   // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────

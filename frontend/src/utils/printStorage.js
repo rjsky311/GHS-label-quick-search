@@ -1,7 +1,15 @@
 import { normalizePrintLabelConfig } from "@/constants/labelStocks";
+import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
+import {
+  applySelectedGhsClassification,
+  getGhsClassificationFingerprint,
+  listGhsClassifications,
+} from "@/utils/selectedGhsClassification";
 
 export const PRINT_TEMPLATE_SCHEMA = 2;
-export const PRINT_JOB_SCHEMA = 1;
+export const PRINT_JOB_SCHEMA = 2;
+export const PRINT_JOB_SNAPSHOT_KIND = "historical-print-snapshot";
+export const PRINT_JOB_REQUERY_POLICY = "fresh-lookup-required-before-reuse";
 
 export const EMPTY_CUSTOM_LABEL_FIELDS = Object.freeze({
   date: "",
@@ -60,8 +68,51 @@ export function normalizeCustomLabelFields(raw) {
   };
 }
 
-export function sanitizeChemicalForPrintRecord(chemical) {
+export function sanitizeChemicalForPrintRecord(
+  chemical,
+  { deriveFingerprint = true } = {},
+) {
   if (!chemical || typeof chemical !== "object") return null;
+
+  const pictograms = Array.isArray(chemical?.ghs_pictograms)
+    ? chemical.ghs_pictograms
+        .map(sanitizePictogram)
+        .filter((pictogram) => pictogram.code)
+    : [];
+  const hazardStatements = Array.isArray(chemical?.hazard_statements)
+    ? chemical.hazard_statements
+        .map(sanitizeStatement)
+        .filter(
+          (statement) =>
+            statement.code || statement.text_zh || statement.text_en,
+        )
+    : [];
+  const precautionaryStatements = Array.isArray(
+    chemical?.precautionary_statements,
+  )
+    ? chemical.precautionary_statements
+        .map(sanitizeStatement)
+        .filter(
+          (statement) =>
+            statement.code || statement.text_zh || statement.text_en,
+        )
+    : [];
+  const primarySource = sanitizeString(chemical?.primary_source);
+  const storedClassificationFingerprint = sanitizeString(
+    chemical?.selected_classification_fingerprint ||
+      chemical?.classification_fingerprint,
+  );
+  const classificationFingerprint =
+    storedClassificationFingerprint ||
+    (deriveFingerprint
+      ? getGhsClassificationFingerprint({
+          pictograms,
+          hazard_statements: hazardStatements,
+          precautionary_statements: precautionaryStatements,
+          signal_word: chemical?.signal_word,
+          source: primarySource,
+        })
+      : "");
 
   return {
     cas_number: sanitizeString(chemical.cas_number),
@@ -71,27 +122,13 @@ export function sanitizeChemicalForPrintRecord(chemical) {
     found: chemical?.found !== false,
     signal_word: sanitizeString(chemical.signal_word),
     signal_word_zh: sanitizeString(chemical.signal_word_zh),
-    ghs_pictograms: Array.isArray(chemical?.ghs_pictograms)
-      ? chemical.ghs_pictograms
-          .map(sanitizePictogram)
-          .filter((pictogram) => pictogram.code)
-      : [],
-    hazard_statements: Array.isArray(chemical?.hazard_statements)
-      ? chemical.hazard_statements
-          .map(sanitizeStatement)
-          .filter(
-            (statement) =>
-              statement.code || statement.text_zh || statement.text_en,
-          )
-      : [],
-    precautionary_statements: Array.isArray(chemical?.precautionary_statements)
-      ? chemical.precautionary_statements
-          .map(sanitizeStatement)
-          .filter(
-            (statement) =>
-              statement.code || statement.text_zh || statement.text_en,
-          )
-      : [],
+    ghs_pictograms: pictograms,
+    hazard_statements: hazardStatements,
+    precautionary_statements: precautionaryStatements,
+    primary_source: primarySource,
+    retrieved_at: sanitizeString(chemical?.retrieved_at),
+    classification_fingerprint: classificationFingerprint,
+    snapshot_kind: PRINT_JOB_SNAPSHOT_KIND,
     customNote: sanitizeString(chemical?.customNote),
     isPreparedSolution: Boolean(chemical?.isPreparedSolution),
     preparedSolution: sanitizePreparedSolution(chemical?.preparedSolution),
@@ -192,6 +229,8 @@ export function buildPrintJobRecord({
     schemaVersion: PRINT_JOB_SCHEMA,
     id: `print-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
+    snapshotKind: PRINT_JOB_SNAPSHOT_KIND,
+    requeryPolicy: PRINT_JOB_REQUERY_POLICY,
     items: sanitizedItems,
     labelConfig: normalizedConfig,
     customLabelFields: normalizedFields,
@@ -206,7 +245,9 @@ export function normalizePrintJob(record) {
   if (!record || typeof record !== "object") return null;
   const items = Array.isArray(record.items)
     ? record.items
-        .map(sanitizeChemicalForPrintRecord)
+        .map((item) =>
+          sanitizeChemicalForPrintRecord(item, { deriveFingerprint: false }),
+        )
         .filter((item) => item && item.cas_number)
     : [];
 
@@ -216,6 +257,8 @@ export function normalizePrintJob(record) {
     schemaVersion: PRINT_JOB_SCHEMA,
     id: sanitizeString(record.id) || `print-${Date.now()}`,
     createdAt: sanitizeString(record.createdAt) || new Date().toISOString(),
+    snapshotKind: PRINT_JOB_SNAPSHOT_KIND,
+    requeryPolicy: PRINT_JOB_REQUERY_POLICY,
     items,
     labelConfig: normalizePrintLabelConfig(record.labelConfig),
     customLabelFields: normalizeCustomLabelFields(record.customLabelFields),
@@ -230,6 +273,85 @@ export function normalizePrintJob(record) {
         0,
       ),
   };
+}
+
+export function rehydrateHistoricalPrintItems(record, currentResults) {
+  const snapshots = Array.isArray(record?.items) ? record.items : [];
+  const currentByCas = new Map(
+    (Array.isArray(currentResults) ? currentResults : [])
+      .filter((item) => item?.cas_number)
+      .map((item) => [item.cas_number, item]),
+  );
+  const items = [];
+  const classificationSelections = [];
+  const issues = [];
+
+  snapshots.forEach((snapshot) => {
+    const cas =
+      sanitizeString(snapshot?.preparedSolution?.parentCas) ||
+      sanitizeString(snapshot?.cas_number);
+    const current = currentByCas.get(cas);
+    if (!current?.found) {
+      issues.push({ type: "historical-item-unavailable", cas });
+      return;
+    }
+
+    const storedFingerprint = sanitizeString(
+      snapshot?.classification_fingerprint,
+    );
+    let effective = current;
+    if (storedFingerprint) {
+      const classifications = listGhsClassifications(current);
+      const selectedIndex = classifications.findIndex(
+        (classification) =>
+          getGhsClassificationFingerprint(classification) === storedFingerprint,
+      );
+      if (selectedIndex < 0) {
+        issues.push({
+          type: "historical-classification-changed",
+          cas,
+          classificationFingerprint: storedFingerprint,
+        });
+        return;
+      }
+
+      const selectedClassification = classifications[selectedIndex];
+      effective = applySelectedGhsClassification(current, {
+        [cas]: {
+          selectedIndex,
+          classificationFingerprint: storedFingerprint,
+          note: sanitizeString(snapshot?.customNote),
+        },
+      });
+      classificationSelections.push({
+        casNumber: cas,
+        selectedIndex,
+        classification: selectedClassification,
+        classificationFingerprint: storedFingerprint,
+        note: sanitizeString(snapshot?.customNote),
+      });
+    }
+
+    if (snapshot?.isPreparedSolution) {
+      const prepared = buildPreparedSolutionItem(
+        effective,
+        snapshot.preparedSolution,
+      );
+      if (!prepared) {
+        issues.push({ type: "historical-prepared-item-invalid", cas });
+        return;
+      }
+      items.push(prepared);
+      return;
+    }
+
+    items.push(effective);
+  });
+
+  if (issues.length > 0) {
+    return { items: [], classificationSelections: [], issues };
+  }
+  return { items, classificationSelections, issues: [] };
 }
 
 export function mergeRecentPrints(records, nextRecord, limit = 10) {

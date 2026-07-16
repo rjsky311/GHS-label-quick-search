@@ -35,6 +35,9 @@ export const AUTO_FIT_RETRY_ISSUE_TYPES = new Set([
   "signal-overflow",
   "qr-panel-overflow",
   "qr-caption-overflow",
+  "profile-block-overflow",
+  "profile-row-overflow",
+  "profile-value-overflow",
   "statement-code-overflow",
   "content-text-too-dense",
   "supplemental-content-too-dense",
@@ -47,6 +50,9 @@ export const CONTINUATION_TIGHTENING_ISSUE_TYPES = new Set([
   "compliance-hazards-overflow",
   "compliance-precautions-overflow",
   "compliance-footer-clipped",
+  "profile-block-overflow",
+  "profile-row-overflow",
+  "profile-value-overflow",
   "statement-code-overflow",
 ]);
 

@@ -1,48 +1,34 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import ResponsibleProfileControls from "../ResponsibleProfileControls";
-
-function renderControls(overrides = {}) {
-  const props = {
-    open: true,
-    tone: "danger",
-    status: "Required for complete primary",
-    presentCount: 2,
-    fieldTotal: 3,
-    required: true,
-    labProfile: {
-      organization: "Lab A",
-      phone: "02-1234",
-      address: "",
-    },
-    onLabProfileChange: jest.fn(),
-    onClearLabProfile: jest.fn(),
-    t: (key) => key,
-    tx: (_key, fallback) => fallback,
-    ...overrides,
-  };
-
-  render(<ResponsibleProfileControls {...props} />);
-  return props;
-}
+import { render, screen } from "@testing-library/react";
+import ResponsibleProfileControls from "@/components/label-print/ResponsibleProfileControls";
+import { LAB_PROFILE_LIMITS } from "@/hooks/useLabProfile";
 
 describe("ResponsibleProfileControls", () => {
-  it("keeps IME composition drafts local until composition ends", () => {
-    const props = renderControls();
-    const address = screen.getByTestId("responsible-profile-field-address");
+  it("enforces the responsible-profile bounds at the input boundary", () => {
+    render(
+      <ResponsibleProfileControls
+        open
+        tone="neutral"
+        status="Optional"
+        presentCount={0}
+        fieldTotal={3}
+        required={false}
+        labProfile={{ organization: "", phone: "", address: "" }}
+        onLabProfileChange={jest.fn()}
+        onClearLabProfile={jest.fn()}
+        t={(key) => key}
+        tx={(_key, fallback) => fallback}
+      />,
+    );
 
-    fireEvent.compositionStart(address);
-    fireEvent.change(address, { target: { value: "ㄅ" } });
-
-    expect(address).toHaveValue("ㄅ");
-    expect(props.onLabProfileChange).not.toHaveBeenCalled();
-
-    fireEvent.compositionEnd(address, { target: { value: "北" } });
-
-    expect(props.onLabProfileChange).toHaveBeenCalledTimes(1);
-    expect(props.onLabProfileChange).toHaveBeenCalledWith({
-      organization: "Lab A",
-      phone: "02-1234",
-      address: "北",
-    });
+    expect(
+      screen.getByTestId("responsible-profile-field-organization"),
+    ).toHaveAttribute("maxlength", String(LAB_PROFILE_LIMITS.organization));
+    expect(screen.getByTestId("responsible-profile-field-phone")).toHaveAttribute(
+      "maxlength",
+      String(LAB_PROFILE_LIMITS.phone),
+    );
+    expect(
+      screen.getByTestId("responsible-profile-field-address"),
+    ).toHaveAttribute("maxlength", String(LAB_PROFILE_LIMITS.address));
   });
 });

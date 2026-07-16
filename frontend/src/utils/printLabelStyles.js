@@ -563,9 +563,10 @@ export const buildPrintStyles = (model) => {
       min-width: 0;
       font-size: 9.4px;
       line-height: 1.08;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
     }
     .label-full-page-primary .compliance-footer .profile-org {
       flex: 0 0 auto;
@@ -1313,9 +1314,10 @@ export const buildPrintStyles = (model) => {
 	      min-width: 0;
 	      font-size: 8.4px;
 	      line-height: 1.05;
-	      white-space: nowrap;
-	      overflow: hidden;
-	      text-overflow: ellipsis;
+	      white-space: normal;
+	      overflow: visible;
+	      text-overflow: clip;
+	      overflow-wrap: anywhere;
 	    }
 	    .label-continuation-page.label-full-page-primary .compliance-footer .profile-org {
 	      flex: 0 0 auto;
