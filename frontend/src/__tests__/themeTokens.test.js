@@ -36,7 +36,8 @@ describe("theme tokens", () => {
     "--notebook-action-solid": "40 35% 7%",
     "--notebook-action-solid-fg": "42 46% 90%",
     "--notebook-canvas": "40 38% 85%",
-    "--notebook-rule-line": "23 19 11",
+    "--notebook-sheet-rule-alpha": ".14",
+    "--notebook-rule-spacing": "2.15rem",
     "--notebook-grain-opacity": ".14",
     "--notebook-grain-blend": "multiply",
     "--notebook-canvas-grain-opacity": ".66",
@@ -57,7 +58,8 @@ describe("theme tokens", () => {
     "--notebook-action-solid": "174 63% 54%",
     "--notebook-action-solid-fg": "173 60% 8%",
     "--notebook-canvas": "75 20% 4%",
-    "--notebook-rule-line": "255 255 250",
+    "--notebook-sheet-rule-alpha": ".2",
+    "--notebook-rule-spacing": "2.15rem",
     "--notebook-grain-opacity": ".055",
     "--notebook-grain-blend": "screen",
     "--notebook-canvas-grain-opacity": ".5",
@@ -111,6 +113,28 @@ describe("theme tokens", () => {
     );
     expect(css).toMatch(/\.notebook-canvas::before\s*{/);
     expect(css).not.toMatch(/\.notebook-print-preview::before/);
+  });
+
+  it("keeps ruled texture on the workbench sheet instead of layering the page canvas", () => {
+    const [appRule] = extractRules("\\.notebook-app");
+    const [workbenchRule] = extractRules("\\.empty-workbench");
+    const [processRule] = extractRules("\\.nb-process");
+    const [featureLedgerRule] = extractRules("\\.notebook-feature-ledger");
+    const [trustStripRule] = extractRules("\\.notebook-trust-strip");
+    const [warmNoteRule] = extractRules("\\.notebook-warm-note");
+
+    expect(parseDeclarations(appRule)["background-image"]).toBe("none");
+    expect(workbenchRule).toMatch(
+      /background-image:\s*linear-gradient\([\s\S]*--notebook-sheet-rule-alpha/,
+    );
+    expect(workbenchRule).toMatch(
+      /background-size:\s*100% var\(--notebook-rule-spacing\)/,
+    );
+
+    [processRule, featureLedgerRule, trustStripRule].forEach((ruleBody) => {
+      expect(ruleBody).not.toMatch(/background-image|linear-gradient/);
+    });
+    expect(warmNoteRule).not.toMatch(/--notebook-rule/);
   });
 
   it("keeps Dark Bench print preview surfaces white", () => {

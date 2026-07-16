@@ -92,6 +92,15 @@ const roundedRect = (rect) =>
 const inspectWorkbench = async (page) =>
   page.evaluate((selectorMap) => {
     const appShell = document.querySelector('[data-testid="app-shell"]');
+    const materialStyleOf = (node) => {
+      if (!node) return null;
+      const style = getComputedStyle(node);
+      return {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backgroundSize: style.backgroundSize,
+      };
+    };
     const rectOf = (selector) => {
       const node = document.querySelector(selector);
       if (!node) return null;
@@ -148,6 +157,8 @@ const inspectWorkbench = async (page) =>
       trustPanel: rectOf(selectorMap.trustPanel),
       appShellClassName: appShell?.className || "",
       appShellClassList: appShell ? Array.from(appShell.classList) : [],
+      appShellMaterial: materialStyleOf(appShell),
+      workbenchMaterial: materialStyleOf(workbenchNode),
       missingSelectors,
       overflowNodes,
     };
@@ -281,6 +292,22 @@ try {
   }
   if (!mobile.appShellClassList.includes(`theme-${qaTheme}`)) {
     failures.push("mobile-theme-class-mismatch");
+  }
+  if (desktop.appShellMaterial?.backgroundImage !== "none") {
+    failures.push("desktop-layered-page-canvas-texture");
+  }
+  if (mobile.appShellMaterial?.backgroundImage !== "none") {
+    failures.push("mobile-layered-page-canvas-texture");
+  }
+  if (
+    !desktop.workbenchMaterial?.backgroundImage?.includes("linear-gradient")
+  ) {
+    failures.push("desktop-workbench-rule-texture-missing");
+  }
+  if (
+    !mobile.workbenchMaterial?.backgroundImage?.includes("linear-gradient")
+  ) {
+    failures.push("mobile-workbench-rule-texture-missing");
   }
   if (mobile.overflowNodes.length > 0) {
     failures.push("mobile-text-overflow");
