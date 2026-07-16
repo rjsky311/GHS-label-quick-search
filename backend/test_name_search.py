@@ -524,6 +524,44 @@ async def test_dictionary_correction_request_ignores_client_controlled_source(mo
     assert captured["source"] == "public"
 
 
+async def test_dictionary_correction_queue_full_returns_stable_service_error(monkeypatch):
+    from pilot_store import ReviewQueueLimitError
+
+    def reject_correction_request(**_payload):
+        raise ReviewQueueLimitError(
+            queue="correction request",
+            limit_type="global_rows",
+        )
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "record_correction_request",
+        reject_correction_request,
+    )
+    before = server.ops_counters["dictionary.correction_request.rejected"]
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/dictionary/correction-requests",
+            json={
+                "issue_type": "missing-chinese-name",
+                "cas_number": "64-17-5",
+                "chemical_name": "Ethanol",
+            },
+        )
+
+    assert response.status_code == 503
+    assert response.headers["retry-after"] == "3600"
+    assert response.json() == {
+        "detail": {
+            "code": "review_queue_full",
+            "message": "Review queue capacity is temporarily unavailable",
+            "queue": "correction_request",
+        }
+    }
+    assert server.ops_counters["dictionary.correction_request.rejected"] == before + 1
+
+
 def test_dictionary_correction_request_endpoint_is_rate_limited():
     limits = route_limits_for("create_dictionary_correction_request")
     assert any(
@@ -958,6 +996,64 @@ async def test_admin_miss_query_retention_rejects_unbounded_window(monkeypatch):
         )
 
     assert response.status_code == 422
+
+
+async def test_admin_can_view_and_purge_review_queue_retention(monkeypatch):
+    monkeypatch.setattr(server, "ADMIN_API_TOKEN", "secret")
+    captured = {}
+
+    def fake_summary():
+        return {
+            "retentionDays": 90,
+            "pendingAliasRows": 4,
+            "openCorrectionRows": 3,
+        }
+
+    def fake_purge(*, retention_days):
+        captured["retention_days"] = retention_days
+        return {
+            "retentionDays": retention_days,
+            "deletedAliasCount": 2,
+            "deletedCorrectionCount": 1,
+        }
+
+    monkeypatch.setattr(
+        server.pilot_store,
+        "get_review_queue_retention_summary",
+        fake_summary,
+    )
+    monkeypatch.setattr(server.pilot_store, "purge_stale_review_rows", fake_purge)
+    alias_counter = server.ops_counters[
+        "dictionary.review_queue.alias_rows_purged"
+    ]
+    correction_counter = server.ops_counters[
+        "dictionary.review_queue.correction_rows_purged"
+    ]
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        view_response = await ac.get(
+            "/api/dictionary/review-queues/retention",
+            headers={"x-ghs-admin-key": "secret"},
+        )
+        purge_response = await ac.post(
+            "/api/dictionary/review-queues/retention/purge",
+            headers={"x-ghs-admin-key": "secret"},
+            json={"retention_days": 30},
+        )
+
+    assert view_response.status_code == 200
+    assert view_response.json()["retention"]["pendingAliasRows"] == 4
+    assert purge_response.status_code == 200
+    assert captured == {"retention_days": 30}
+    assert purge_response.json()["retention"]["deletedCorrectionCount"] == 1
+    assert (
+        server.ops_counters["dictionary.review_queue.alias_rows_purged"]
+        == alias_counter + 2
+    )
+    assert (
+        server.ops_counters["dictionary.review_queue.correction_rows_purged"]
+        == correction_counter + 1
+    )
 
 
 def test_admin_dictionary_payloads_trim_safe_fields():

@@ -1,4 +1,6 @@
 import sqlite3
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -832,6 +834,280 @@ def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
         ] == ["correction-approved"]
     finally:
         store.close()
+
+
+def test_review_queues_enforce_per_cas_byte_and_duplicate_report_limits(tmp_path):
+    alias_store = PilotStore(
+        tmp_path / "alias-limits.db",
+        max_pending_alias_rows=10,
+        max_pending_alias_rows_per_cas=1,
+        max_pending_alias_bytes=10_000,
+        max_pending_alias_bytes_per_cas=10_000,
+    ).connect()
+    try:
+        alias_store.upsert_alias(
+            "Ethanol candidate one",
+            "en",
+            "64-17-5",
+            status="pending",
+        )
+        with pytest.raises(ValueError, match="pending alias quota"):
+            alias_store.upsert_alias(
+                "Ethanol candidate two",
+                "en",
+                "64-17-5",
+                status="pending",
+            )
+        assert len(alias_store.list_aliases(status="pending")) == 1
+    finally:
+        alias_store.close()
+
+    alias_byte_store = PilotStore(
+        tmp_path / "alias-byte-limit.db",
+        max_pending_alias_bytes=1,
+    ).connect()
+    try:
+        with pytest.raises(ValueError, match="pending alias quota"):
+            alias_byte_store.upsert_alias(
+                "bounded candidate",
+                "en",
+                "64-17-5",
+                status="pending",
+            )
+        assert alias_byte_store.list_aliases(status="pending") == []
+    finally:
+        alias_byte_store.close()
+
+    alias_per_cas_byte_store = PilotStore(
+        tmp_path / "alias-per-cas-byte-limit.db",
+        max_pending_alias_bytes=10_000,
+        max_pending_alias_bytes_per_cas=1,
+    ).connect()
+    try:
+        with pytest.raises(ValueError, match="pending alias quota"):
+            alias_per_cas_byte_store.upsert_alias(
+                "per-CAS bounded candidate",
+                "en",
+                "64-17-5",
+                status="pending",
+            )
+    finally:
+        alias_per_cas_byte_store.close()
+
+    correction_store = PilotStore(
+        tmp_path / "correction-report-limit.db",
+        max_open_correction_rows=10,
+        max_open_correction_reports=2,
+    ).connect()
+    try:
+        correction_store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="64-17-5",
+            query_text="duplicate report",
+        )
+        duplicate = correction_store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="64-17-5",
+            query_text="duplicate report",
+        )
+        assert duplicate["duplicateCount"] == 2
+        with pytest.raises(ValueError, match="correction request quota"):
+            correction_store.record_correction_request(
+                issue_type="missing-chinese-name",
+                cas_number="64-17-5",
+                query_text="duplicate report",
+            )
+        listed = correction_store.list_correction_requests(statuses=("open",))
+        assert len(listed) == 1
+        assert listed[0]["duplicateCount"] == 2
+    finally:
+        correction_store.close()
+
+    correction_per_cas_store = PilotStore(
+        tmp_path / "correction-per-cas-limit.db",
+        max_open_correction_rows=10,
+        max_open_correction_rows_per_cas=1,
+        max_open_correction_reports=100,
+        max_open_correction_reports_per_cas=100,
+    ).connect()
+    try:
+        correction_per_cas_store.record_correction_request(
+            issue_type="missing-chinese-name",
+            cas_number="64-17-5",
+            query_text="per-CAS report one",
+        )
+        with pytest.raises(ValueError, match="correction request quota"):
+            correction_per_cas_store.record_correction_request(
+                issue_type="source-conflict",
+                cas_number="64-17-5",
+                query_text="per-CAS report two",
+            )
+        different_cas = correction_per_cas_store.record_correction_request(
+            issue_type="source-conflict",
+            cas_number="67-56-1",
+            query_text="different CAS report",
+        )
+        assert different_cas["status"] == "open"
+    finally:
+        correction_per_cas_store.close()
+
+    correction_byte_store = PilotStore(
+        tmp_path / "correction-byte-limit.db",
+        max_open_correction_bytes=1,
+    ).connect()
+    try:
+        with pytest.raises(ValueError, match="correction request quota"):
+            correction_byte_store.record_correction_request(
+                issue_type="missing-chinese-name",
+                cas_number="64-17-5",
+                query_text="bounded report",
+            )
+        assert correction_byte_store.list_correction_requests(statuses=("open",)) == []
+    finally:
+        correction_byte_store.close()
+
+    correction_per_cas_byte_store = PilotStore(
+        tmp_path / "correction-per-cas-byte-limit.db",
+        max_open_correction_bytes=10_000,
+        max_open_correction_bytes_per_cas=1,
+    ).connect()
+    try:
+        with pytest.raises(ValueError, match="correction request quota"):
+            correction_per_cas_byte_store.record_correction_request(
+                issue_type="missing-chinese-name",
+                cas_number="64-17-5",
+                query_text="per-CAS bounded report",
+            )
+    finally:
+        correction_per_cas_byte_store.close()
+
+
+def test_review_queue_summary_and_purge_cover_all_review_states(tmp_path):
+    store = PilotStore(tmp_path / "review-retention.db", review_retention_days=30).connect()
+    try:
+        store.upsert_alias(
+            "Pending alias",
+            "en",
+            "64-17-5",
+            status="pending",
+        )
+        store.upsert_alias(
+            "Evidence alias",
+            "en",
+            "67-56-1",
+            status="needs_evidence",
+        )
+        store.upsert_alias(
+            "Approved alias",
+            "en",
+            "67-64-1",
+            status="approved",
+        )
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            query_text="open correction",
+        )
+        candidate = store.record_correction_request(
+            issue_type="source-conflict",
+            query_text="candidate correction",
+        )
+        store.update_correction_request_status(
+            candidate["id"],
+            status="candidate_found",
+        )
+        store.record_correction_request(
+            issue_type="no-ghs-data",
+            query_text="approved correction",
+            status="approved",
+        )
+
+        summary = store.get_review_queue_retention_summary()
+        assert summary["retentionDays"] == 30
+        assert summary["pendingAliasRows"] == 2
+        assert summary["openCorrectionRows"] == 2
+        assert summary["openCorrectionReports"] == 2
+        assert summary["pendingAliasBytes"] > 0
+        assert summary["openCorrectionBytes"] > 0
+
+        old_timestamp = (
+            datetime.now(timezone.utc) - timedelta(days=31)
+        ).isoformat()
+        connection = store._require_conn()
+        connection.execute(
+            "UPDATE dictionary_aliases SET last_seen_at = ?",
+            (old_timestamp,),
+        )
+        connection.execute(
+            "UPDATE dictionary_correction_requests SET updated_at = ?",
+            (old_timestamp,),
+        )
+        connection.commit()
+
+        purged = store.purge_stale_review_rows(now=datetime.now(timezone.utc))
+        assert purged == {
+            "retentionDays": 30,
+            "deletedAliasCount": 1,
+            "deletedCorrectionCount": 1,
+        }
+        assert [
+            item["alias_text"]
+            for item in store.list_aliases(status="approved")
+        ] == ["Approved alias"]
+        assert [
+            item["alias_text"]
+            for item in store.list_aliases(status="needs_evidence")
+        ] == ["Evidence alias"]
+        assert [
+            item["query_text"]
+            for item in store.list_correction_requests(statuses=("approved",))
+        ] == ["approved correction"]
+        assert [
+            item["query_text"]
+            for item in store.list_correction_requests(
+                statuses=("candidate_found",)
+            )
+        ] == ["candidate correction"]
+    finally:
+        store.close()
+
+
+def test_review_queue_count_and_insert_are_atomic_across_connections(tmp_path):
+    db_path = tmp_path / "atomic-review-queue.db"
+    first_store = PilotStore(db_path, max_pending_alias_rows=1).connect()
+    second_store = PilotStore(db_path, max_pending_alias_rows=1).connect()
+    barrier = threading.Barrier(2)
+
+    def insert_candidate(store, alias_text):
+        barrier.wait()
+        try:
+            store.upsert_alias(
+                alias_text,
+                "en",
+                "64-17-5",
+                status="pending",
+            )
+            return "inserted"
+        except ValueError as exc:
+            assert "pending alias quota" in str(exc)
+            return "rejected"
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(
+                executor.map(
+                    lambda args: insert_candidate(*args),
+                    [
+                        (first_store, "Concurrent candidate one"),
+                        (second_store, "Concurrent candidate two"),
+                    ],
+                )
+            )
+
+        assert sorted(results) == ["inserted", "rejected"]
+        assert len(first_store.list_aliases(status="pending")) == 1
+    finally:
+        first_store.close()
+        second_store.close()
 
 
 def test_correction_review_lists_apply_conversion_filter_and_limit_in_sql(tmp_path):

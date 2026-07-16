@@ -30,7 +30,11 @@
   decoding (including chunked bodies), valid bodies retain streaming-response
   semantics, and rendered PDFs are byte/page/MediaBox validated with a real
   parser. See `.superpowers/sdd/task-3-report.md`.
-- Task 4: pending — durable review-ingestion lifecycle
+- Task 4: complete — pending alias and open correction admission now has
+  transactional global/per-CAS row and byte limits, duplicate-report quotas,
+  safe 503 responses, observable cleanup/rejection counters, and conservative
+  retention that preserves reviewed/final rows. See
+  `.superpowers/sdd/task-4-report.md`.
 - Task 5: pending — admin authority lifecycle
 - Task 6: pending — secondary production gates and documentation alignment
 - Task 7: pending — integration, deployment, and second review

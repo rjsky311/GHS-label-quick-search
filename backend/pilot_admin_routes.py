@@ -12,8 +12,10 @@ from api_models import (
     DictionaryMissQueryResolutionPayload,
     DictionaryMissQueryRetentionPayload,
     DictionaryReferenceLinkPayload,
+    ReviewQueueRetentionPayload,
     WorkspaceDocumentPayload,
 )
+from pilot_store import ReviewQueueLimitError
 
 ADMIN_DASHBOARD_LIST_DEFAULT_LIMIT = 250
 ADMIN_DASHBOARD_LIST_MAX_LIMIT = 500
@@ -40,6 +42,14 @@ def _bounded_admin_list_limit(
     return min(normalized, maximum)
 
 
+def _review_queue_capacity_error(exc: ReviewQueueLimitError) -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail=exc.as_detail(),
+        headers={"Retry-After": "3600"},
+    )
+
+
 def create_pilot_admin_router(
     *,
     limiter,
@@ -53,7 +63,7 @@ def create_pilot_admin_router(
     ghs_cache,
     ops_recent_events,
     is_dictionary_miss_capture_enabled: Callable[[], bool],
-    record_ops_counter: Callable[[str], None],
+    record_ops_counter: Callable[..., None],
 ) -> APIRouter:
     router = APIRouter(dependencies=[Depends(_set_private_no_store)])
 
@@ -144,15 +154,19 @@ def create_pilot_admin_router(
     @router.post("/dictionary/aliases")
     async def upsert_dictionary_alias(request: Request, payload: DictionaryAliasPayload):
         require_admin(request)
-        record = pilot_store.upsert_alias(
-            payload.alias_text,
-            payload.locale,
-            payload.cas_number,
-            source=payload.source,
-            confidence=payload.confidence,
-            status=payload.status,
-            notes=payload.notes,
-        )
+        try:
+            record = pilot_store.upsert_alias(
+                payload.alias_text,
+                payload.locale,
+                payload.cas_number,
+                source=payload.source,
+                confidence=payload.confidence,
+                status=payload.status,
+                notes=payload.notes,
+            )
+        except ReviewQueueLimitError as exc:
+            record_ops_counter("dictionary.alias.rejected")
+            raise _review_queue_capacity_error(exc) from exc
         return {"ok": True, "record": record}
 
     @router.get("/dictionary/reference-links")
@@ -198,19 +212,23 @@ def create_pilot_admin_router(
         request: Request,
         payload: DictionaryCorrectionRequestPayload,
     ):
-        record = pilot_store.record_correction_request(
-            issue_type=payload.issue_type,
-            cas_number=payload.cas_number,
-            chemical_name=payload.chemical_name,
-            query_text=payload.query_text,
-            current_output=payload.current_output,
-            expected_output=payload.expected_output,
-            evidence_url=payload.evidence_url,
-            evidence_type=payload.evidence_type,
-            local_context=payload.local_context,
-            candidate=payload.candidate,
-            source="public",
-        )
+        try:
+            record = pilot_store.record_correction_request(
+                issue_type=payload.issue_type,
+                cas_number=payload.cas_number,
+                chemical_name=payload.chemical_name,
+                query_text=payload.query_text,
+                current_output=payload.current_output,
+                expected_output=payload.expected_output,
+                evidence_url=payload.evidence_url,
+                evidence_type=payload.evidence_type,
+                local_context=payload.local_context,
+                candidate=payload.candidate,
+                source="public",
+            )
+        except ReviewQueueLimitError as exc:
+            record_ops_counter("dictionary.correction_request.rejected")
+            raise _review_queue_capacity_error(exc) from exc
         record_ops_counter("dictionary.correction_request.created")
         return {"ok": True, "record": record}
 
@@ -256,6 +274,33 @@ def create_pilot_admin_router(
         if record is None:
             raise HTTPException(status_code=404, detail="Correction request not found.")
         return {"ok": True, "record": record}
+
+    @router.get("/dictionary/review-queues/retention")
+    async def dictionary_review_queue_retention(request: Request):
+        require_admin(request)
+        return {
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "retention": pilot_store.get_review_queue_retention_summary(),
+        }
+
+    @router.post("/dictionary/review-queues/retention/purge")
+    async def purge_dictionary_review_queues(
+        request: Request,
+        payload: ReviewQueueRetentionPayload,
+    ):
+        require_admin(request)
+        result = pilot_store.purge_stale_review_rows(
+            retention_days=payload.retention_days,
+        )
+        record_ops_counter(
+            "dictionary.review_queue.alias_rows_purged",
+            result["deletedAliasCount"],
+        )
+        record_ops_counter(
+            "dictionary.review_queue.correction_rows_purged",
+            result["deletedCorrectionCount"],
+        )
+        return {"ok": True, "retention": result}
 
     @router.post("/dictionary/miss-query")
     @limiter.limit("30/minute")

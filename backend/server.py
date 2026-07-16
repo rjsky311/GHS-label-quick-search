@@ -33,6 +33,7 @@ from pilot_store import (
     APPROVED_MANUAL_ENTRY_STATUS,
     APPROVED_ALIAS_STATUS,
     PilotStore,
+    ReviewQueueLimitError,
     infer_locale,
     normalize_compact_text,
 )
@@ -800,6 +801,15 @@ async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     global shared_http_client
     pilot_store.connect()
+    review_purge = pilot_store.purge_stale_review_rows()
+    _record_ops_counter(
+        "dictionary.review_queue.alias_rows_purged",
+        review_purge["deletedAliasCount"],
+    )
+    _record_ops_counter(
+        "dictionary.review_queue.correction_rows_purged",
+        review_purge["deletedCorrectionCount"],
+    )
     if pdf_renderer is not None and hasattr(pdf_renderer, "startup"):
         await pdf_renderer.startup()
     shared_http_client = httpx.AsyncClient(
@@ -1709,7 +1719,12 @@ async def get_compound_name(
             if not compact or compact in excluded:
                 continue
             candidate_synonyms.append(synonym)
-        pilot_store.capture_alias_candidates(cas_number, candidate_synonyms)
+        try:
+            pilot_store.capture_alias_candidates(cas_number, candidate_synonyms)
+        except ReviewQueueLimitError:
+            # Synonym capture is auxiliary review intake. A full review queue
+            # must not turn a successful public chemical lookup into an error.
+            _record_ops_counter("dictionary.alias.rejected")
 
     return name_en, name_zh
 
