@@ -78,3 +78,33 @@ tests together. In particular, queue quotas must be enforced at the durable
 persistence boundary and retention must not delete reviewed/approved rows by
 default. The PDF fixtures are deliberately minimal byte-level fixtures so
 the validator cannot rely on browser internals or submitted HTML.
+
+## Reviewer follow-up (commit after `a618a00`)
+
+- Strengthened the classification-reorder fixture with three reports. The
+  fingerprint target now remains at nonzero index `1`, while the stale
+  persisted index `2` points to a different report; an index-only or
+  primary-only implementation therefore cannot satisfy the assertion.
+- Added stale approved alias and approved correction rows to the retention
+  fixture. The test ages every row, then asserts purge removes only the two
+  pending aliases and two open correction rows and leaves both reviewed rows
+  intact.
+
+Focused reruns after these test-only changes:
+
+```text
+cd frontend && npm test -- --runInBand src/utils/__tests__/printOutputPlanner.test.js src/utils/__tests__/selectedGhsClassification.test.js src/hooks/__tests__/useLabProfile.test.js
+```
+
+Result: expected RED, `3` suites failed, `4` tests failed, `19` tests passed.
+The failures remain the two hazard/batch contracts, missing fingerprint
+helper, and missing `LAB_PROFILE_LIMITS` export.
+
+```text
+cd backend && python -m pytest -q test_agent_label_summary.py test_pdf_render.py test_pilot_storage.py
+```
+
+Result: expected RED, `4` failed, `50` passed (plus the existing Playwright
+dependency warning). Failures remain the bilingual statement mapping, two
+PDF postcondition cases, and the not-yet-implemented queue constructor/
+retention API. No production code was changed.

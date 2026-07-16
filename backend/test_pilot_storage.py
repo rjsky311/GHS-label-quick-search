@@ -767,6 +767,13 @@ def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
             ["Ethanol alias one", "Ethanol alias two"],
         )
         assert len(store.list_aliases(status="pending")) == 2
+        approved_alias = store.upsert_alias(
+            "Ethanol approved alias",
+            "en",
+            "64-17-5",
+            status="approved",
+        )
+        assert approved_alias["status"] == "approved"
 
         with pytest.raises(ValueError, match="pending alias quota"):
             store.capture_alias_candidates(
@@ -782,6 +789,12 @@ def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
             issue_type="missing-chinese-name",
             query_text="correction-two",
         )
+        approved_correction = store.record_correction_request(
+            issue_type="missing-chinese-name",
+            query_text="correction-approved",
+            status="approved",
+        )
+        assert approved_correction["status"] == "approved"
         with pytest.raises(ValueError, match="correction request quota"):
             store.record_correction_request(
                 issue_type="missing-chinese-name",
@@ -793,11 +806,11 @@ def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
         ).isoformat()
         connection = store._require_conn()
         connection.execute(
-            "UPDATE dictionary_aliases SET last_seen_at = ? WHERE status = 'pending'",
+            "UPDATE dictionary_aliases SET last_seen_at = ?",
             (old_timestamp,),
         )
         connection.execute(
-            "UPDATE dictionary_correction_requests SET updated_at = ? WHERE status = 'open'",
+            "UPDATE dictionary_correction_requests SET updated_at = ?",
             (old_timestamp,),
         )
         connection.commit()
@@ -810,6 +823,13 @@ def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
         assert purged["deletedCorrectionCount"] == 2
         assert store.list_aliases(status="pending") == []
         assert store.list_correction_requests(statuses=("open",)) == []
+        assert [item["alias_text"] for item in store.list_aliases(status="approved")] == [
+            "Ethanol approved alias"
+        ]
+        assert [
+            item["query_text"]
+            for item in store.list_correction_requests(statuses=("approved",))
+        ] == ["correction-approved"]
     finally:
         store.close()
 
