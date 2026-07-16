@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -6,8 +7,8 @@ import pytest
 from pilot_store import INVENTORY_HANDOFF_CORRECTION_SOURCE, PilotStore
 
 
-def make_store(tmp_path: Path) -> PilotStore:
-    return PilotStore(tmp_path / "pilot-test.db").connect()
+def make_store(tmp_path: Path, **kwargs) -> PilotStore:
+    return PilotStore(tmp_path / "pilot-test.db", **kwargs).connect()
 
 
 def test_workspace_document_roundtrip(tmp_path):
@@ -750,6 +751,65 @@ def test_correction_request_deduplicates_open_matching_reports(tmp_path):
             "duplicateCorrectionReports"
         ] == 1
         assert summary["pilotTriage"]["signals"]["hasDuplicateCorrectionReports"] is True
+    finally:
+        store.close()
+
+
+def test_pending_review_queues_enforce_row_limits_and_retention(tmp_path):
+    store = make_store(
+        tmp_path,
+        max_pending_alias_rows=2,
+        max_open_correction_rows=2,
+    )
+    try:
+        store.capture_alias_candidates(
+            "64-17-5",
+            ["Ethanol alias one", "Ethanol alias two"],
+        )
+        assert len(store.list_aliases(status="pending")) == 2
+
+        with pytest.raises(ValueError, match="pending alias quota"):
+            store.capture_alias_candidates(
+                "64-17-5",
+                ["Ethanol alias three"],
+            )
+
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            query_text="correction-one",
+        )
+        store.record_correction_request(
+            issue_type="missing-chinese-name",
+            query_text="correction-two",
+        )
+        with pytest.raises(ValueError, match="correction request quota"):
+            store.record_correction_request(
+                issue_type="missing-chinese-name",
+                query_text="correction-three",
+            )
+
+        old_timestamp = (
+            datetime.now(timezone.utc) - timedelta(days=120)
+        ).isoformat()
+        connection = store._require_conn()
+        connection.execute(
+            "UPDATE dictionary_aliases SET last_seen_at = ? WHERE status = 'pending'",
+            (old_timestamp,),
+        )
+        connection.execute(
+            "UPDATE dictionary_correction_requests SET updated_at = ? WHERE status = 'open'",
+            (old_timestamp,),
+        )
+        connection.commit()
+
+        purged = store.purge_stale_review_rows(
+            retention_days=90,
+            now=datetime.now(timezone.utc),
+        )
+        assert purged["deletedAliasCount"] == 2
+        assert purged["deletedCorrectionCount"] == 2
+        assert store.list_aliases(status="pending") == []
+        assert store.list_correction_requests(statuses=("open",)) == []
     finally:
         store.close()
 

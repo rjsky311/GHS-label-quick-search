@@ -170,6 +170,51 @@ def test_agent_label_summary_v0_flags_text_only_and_excludes_unapproved_fields()
         assert key not in serialized
 
 
+def test_agent_label_summary_v0_preserves_bilingual_hazard_and_precaution_text():
+    result = ChemicalResult(
+        cas_number="7647-01-0",
+        name_en="Hydrochloric acid",
+        name_zh="鹽酸",
+        found=True,
+        ghs_pictograms=[{"code": "GHS05"}],
+        hazard_statements=[
+            {
+                "code": "H314",
+                "text_en": "Causes severe skin burns and eye damage.",
+                "text_zh": "造成嚴重皮膚灼傷和眼睛損傷。",
+            }
+        ],
+        precautionary_statements=[
+            {
+                "code": "P280",
+                "text_en": "Wear protective gloves.",
+                "text_zh": "戴防護手套。",
+            }
+        ],
+        signal_word="Danger",
+        signal_word_zh="危險",
+    )
+
+    payload = build_agent_label_summary_v0(result).model_dump()
+
+    assert payload["hazard_statements"] == [
+        {
+            "code": "H314",
+            "text": "Causes severe skin burns and eye damage.",
+            "text_en": "Causes severe skin burns and eye damage.",
+            "text_zh": "造成嚴重皮膚灼傷和眼睛損傷。",
+        }
+    ]
+    assert payload["precautionary_statements"] == [
+        {
+            "code": "P280",
+            "text": "Wear protective gloves.",
+            "text_en": "Wear protective gloves.",
+            "text_zh": "戴防護手套。",
+        }
+    ]
+
+
 def test_agent_label_summary_v0_flags_upstream_retry_and_no_ghs_states():
     upstream_retry = build_agent_label_summary_v0(
         ChemicalResult(

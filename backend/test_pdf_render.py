@@ -202,6 +202,34 @@ class FakeBrowser:
         return context
 
 
+class MismatchedOutputPage(FakePage):
+    def __init__(self, pdf_bytes):
+        super().__init__()
+        self.pdf_bytes = pdf_bytes
+
+    async def pdf(self, **kwargs):
+        self.pdf_calls.append(kwargs)
+        return self.pdf_bytes
+
+
+class MismatchedOutputContext(FakeContext):
+    def __init__(self, pdf_bytes):
+        super().__init__()
+        self.page = MismatchedOutputPage(pdf_bytes)
+
+
+class MismatchedOutputBrowser(FakeBrowser):
+    def __init__(self, pdf_bytes):
+        super().__init__()
+        self.pdf_bytes = pdf_bytes
+
+    async def new_context(self, **kwargs):
+        self.context_kwargs.append(kwargs)
+        context = MismatchedOutputContext(self.pdf_bytes)
+        self.contexts.append(context)
+        return context
+
+
 @pytest.mark.asyncio
 async def test_renderer_uses_js_disabled_context_network_blocking_and_css_page_size():
     browser = FakeBrowser()
@@ -232,6 +260,32 @@ async def test_renderer_uses_js_disabled_context_network_blocking_and_css_page_s
             },
         }
     ]
+
+
+@pytest.mark.parametrize(
+    "pdf_bytes",
+    [
+        (
+            b"%PDF-1.7\n"
+            b"1 0 obj << /Type /Page /MediaBox [0 0 595.28 841.89] >> endobj\n"
+            b"2 0 obj << /Type /Page /MediaBox [0 0 595.28 841.89] >> endobj\n"
+            b"%%EOF"
+        ),
+        (
+            b"%PDF-1.7\n"
+            b"1 0 obj << /Type /Page /MediaBox [0 0 1000 1000] >> endobj\n"
+            b"%%EOF"
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_renderer_rejects_authoritative_pdf_output_mismatch(pdf_bytes):
+    renderer = PrintPdfRenderer(browser=MismatchedOutputBrowser(pdf_bytes))
+
+    with pytest.raises(PdfRenderError) as exc_info:
+        await renderer.render(make_request())
+
+    assert exc_info.value.code == "pdf_render_invalid_output"
 
 
 @pytest.mark.asyncio

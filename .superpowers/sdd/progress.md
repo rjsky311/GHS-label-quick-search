@@ -1,0 +1,29 @@
+# Production-readiness hardening SDD ledger
+
+- Plan: `docs/superpowers/plans/2026-07-16-production-readiness-hardening.md`
+- Base: `origin/main` at `39bf350d48b6a19086123a06a9d7b109690adf42`
+- Branch: `codex/production-ready-hardening`
+- Baseline: clean checkout at `39bf350d48b6a19086123a06a9d7b109690adf42`
+  (`origin/main`); pre-existing untracked `backend/build/` is preserved.
+- Task 1 target commands:
+  - `cd frontend && npm test -- --runInBand printOutputPlanner.test.js selectedGhsClassification.test.js useLabProfile.test.js`
+  - `cd backend && python -m pytest -q test_agent_label_summary.py test_pdf_render.py test_pilot_storage.py`
+  - `git diff --check`
+- Task 1 acceptance evidence: RED tests must cover hazard-content and batch
+  fail-closed semantics, classification identity across reorder, bounded
+  responsible-profile storage, bilingual agent-summary statements,
+  post-render PDF validation, and bounded/retained review queues. The RED
+  run and its intentional failures are recorded in
+  `.superpowers/sdd/task-1-report.md`; later tasks own the production fixes.
+
+## Tasks
+
+- Task 1: completed — baseline and RED contract tests committed; see
+  `.superpowers/sdd/task-1-report.md` for commands, pass counts, and
+  intentional failures.
+- Task 2: pending — agent summary and print semantic integrity
+- Task 3: pending — public resource admission and PDF postconditions
+- Task 4: pending — durable review-ingestion lifecycle
+- Task 5: pending — admin authority lifecycle
+- Task 6: pending — secondary production gates and documentation alignment
+- Task 7: pending — integration, deployment, and second review

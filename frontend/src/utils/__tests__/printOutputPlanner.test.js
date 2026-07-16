@@ -67,6 +67,28 @@ const makeTextOnlyGhsChemical = () => ({
   signal_word: "Warning",
 });
 
+const makeSignalOnlyChemical = () => ({
+  ...makeSimpleSupplementalChemical(),
+  cas_number: "100-00-6",
+  name_en: "Signal-only GHS sample",
+  name_zh: "僅信號詞 GHS 樣品",
+  ghs_pictograms: [],
+  hazard_statements: [],
+  precautionary_statements: [],
+  signal_word: "Warning",
+});
+
+const makeNoHazardChemical = () => ({
+  ...makeSimpleSupplementalChemical(),
+  cas_number: "100-00-7",
+  name_en: "No-hazard GHS sample",
+  name_zh: "無危害資料樣品",
+  ghs_pictograms: [],
+  hazard_statements: [],
+  precautionary_statements: [],
+  signal_word: undefined,
+});
+
 const makeDenseSupplementalChemical = () => ({
   ...makeChemical(4),
   name_en:
@@ -381,6 +403,49 @@ describe("printOutputPlanner", () => {
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE);
     expect(plan.outputKind).toBe(PRINT_OUTPUT_KIND.QUICK_ID);
     expect(plan.canPrint).toBe(true);
+  });
+
+  it("does not mark a complete label ready when the only GHS content is a signal word", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeSignalOnlyChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      }),
+      resolvedLabProfile: completeProfile,
+      locale: "zh-TW",
+    });
+
+    expect(plan.canPrint).toBe(false);
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA);
+    expect(plan.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "missing-hazard-data" }),
+      ]),
+    );
+  });
+
+  it("does not let one valid item mask a missing-hazard item in a complete-label batch", () => {
+    const plan = buildPrintOutputPlan({
+      selectedForLabel: [makeChemical(2), makeNoHazardChemical()],
+      layout: resolvePrintLayoutConfig({
+        labelPurpose: "shipping",
+        template: "full",
+        stockPreset: "a4-primary",
+      }),
+      resolvedLabProfile: completeProfile,
+      locale: "zh-TW",
+    });
+
+    expect(plan.canPrint).toBe(false);
+    expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA);
+    expect(plan.readiness.contents).toHaveLength(2);
+    expect(plan.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "missing-hazard-data" }),
+      ]),
+    );
   });
 
   it.each([
