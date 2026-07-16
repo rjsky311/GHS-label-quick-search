@@ -27,7 +27,7 @@ function persist(list) {
   writeJsonStorage(RECENT_PRINTS_KEY, list);
 }
 
-export default function usePrintRecents() {
+export default function usePrintRecents(adminKey = "") {
   const [recentPrints, setRecentPrints] = useState(() => loadFromStorage());
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function usePrintRecents() {
 
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("print_recents");
+        const remote = await fetchWorkspaceDocument("print_recents", adminKey);
         const remotePayload = Array.isArray(remote?.payload)
           ? remote.payload.map(normalizePrintJob).filter(Boolean)
           : [];
@@ -50,7 +50,7 @@ export default function usePrintRecents() {
         }
 
         if (localSnapshot.length > 0) {
-          await saveWorkspaceDocument("print_recents", localSnapshot);
+          await saveWorkspaceDocument("print_recents", localSnapshot, adminKey);
         }
       } catch {
         // Local fallback remains authoritative when backend sync fails.
@@ -61,7 +61,7 @@ export default function usePrintRecents() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const addRecentPrint = useCallback((payload) => {
     const record = buildPrintJobRecord(payload);
@@ -70,18 +70,18 @@ export default function usePrintRecents() {
     setRecentPrints((prev) => {
       const next = mergeRecentPrints(prev, record, MAX_RECENT_PRINTS);
       persist(next);
-      void saveWorkspaceDocument("print_recents", next).catch(() => {});
+      void saveWorkspaceDocument("print_recents", next, adminKey).catch(() => {});
       return next;
     });
 
     return record;
-  }, []);
+  }, [adminKey]);
 
   const clearRecentPrints = useCallback(() => {
     setRecentPrints([]);
     persist([]);
-    void saveWorkspaceDocument("print_recents", []).catch(() => {});
-  }, []);
+    void saveWorkspaceDocument("print_recents", [], adminKey).catch(() => {});
+  }, [adminKey]);
 
   return {
     recentPrints,

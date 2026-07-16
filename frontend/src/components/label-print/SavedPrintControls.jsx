@@ -226,14 +226,29 @@ export default function SavedPrintControls({
                           })}
                         </span>
                         <span>{templateLabel}</span>
+                        <span>
+                          {tx(
+                            "label.recentPrintHistorical",
+                            "Historical snapshot",
+                          )}
+                        </span>
                       </div>
+                      <p className="notebook-tone-muted mt-1 text-[11px] leading-4">
+                        {tx(
+                          "label.recentPrintRequeryHint",
+                          "A fresh lookup is required before this job can be reused.",
+                        )}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => onLoadRecentPrint?.(job)}
                       className="rounded-md bg-[hsl(var(--notebook-action-soft)/0.62)] px-3 py-1.5 text-xs font-medium notebook-tone-action transition-colors hover:bg-[hsl(var(--notebook-action-soft))]"
                     >
-                      {tx("label.recentPrintLoad", "Load")}
+                      {tx(
+                        "label.recentPrintRefreshLoad",
+                        "Refresh & load",
+                      )}
                     </button>
                   </div>
                 );

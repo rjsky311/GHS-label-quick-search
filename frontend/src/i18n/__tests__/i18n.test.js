@@ -12,6 +12,7 @@ describe("i18n runtime resources", () => {
 
     expect(i18n.t("header.title")).toBe("GHS 標籤快速查詢");
     expect(i18n.t("empty.title")).not.toBe("empty.title");
+    expect(document.documentElement.lang).toBe("zh-TW");
   });
 
   test("loads English translations before render when English is selected", async () => {
@@ -22,6 +23,10 @@ describe("i18n runtime resources", () => {
 
     expect(i18n.t("header.title")).toBe("GHS Label Quick Search");
     expect(i18n.t("empty.title")).not.toBe("empty.title");
+    expect(document.documentElement.lang).toBe("en");
+
+    await i18n.changeLanguage("zh-TW");
+    expect(document.documentElement.lang).toBe("zh-TW");
   });
 
   test("pins Traditional Chinese prepared-label entry copy", async () => {

@@ -54,6 +54,17 @@ export const httpOriginsMatch = (actual, expected) => {
   return Boolean(actualOrigin && expectedOrigin && actualOrigin === expectedOrigin);
 };
 
+export const strictTransportSecurityIsReady = (value) => {
+  const directives = String(value || "")
+    .split(";")
+    .map((directive) => directive.trim().toLowerCase())
+    .filter(Boolean);
+  const maxAge = directives
+    .find((directive) => directive.startsWith("max-age="))
+    ?.slice("max-age=".length);
+  return /^\d+$/.test(maxAge || "") && Number(maxAge) >= 31_536_000;
+};
+
 export const backendHealthIsReady = (body) =>
   Boolean(
     body?.status === "healthy" &&

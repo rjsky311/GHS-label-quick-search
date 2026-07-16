@@ -2332,7 +2332,13 @@ describe("LabelPrintModal", () => {
       onClearRecentPrints: jest.fn(),
     });
 
-    fireEvent.click(screen.getByText("Load"));
+    expect(screen.getByText("Historical snapshot")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "A fresh lookup is required before this job can be reused.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Refresh & load"));
     expect(props.onLoadRecentPrint).toHaveBeenCalledWith(recentJob);
 
     fireEvent.click(screen.getByText("Clear"));

@@ -10,6 +10,11 @@ import {
 } from "@/utils/localStorageJson";
 
 export const LAB_PROFILE_KEY = "ghs_lab_profile";
+export const LAB_PROFILE_LIMITS = Object.freeze({
+  organization: 120,
+  phone: 60,
+  address: 240,
+});
 
 const EMPTY_PROFILE = Object.freeze({
   organization: "",
@@ -18,11 +23,14 @@ const EMPTY_PROFILE = Object.freeze({
 });
 
 function sanitizeProfile(raw) {
+  const boundedString = (value, key) =>
+    typeof value === "string"
+      ? Array.from(value).slice(0, LAB_PROFILE_LIMITS[key]).join("")
+      : "";
   return {
-    organization:
-      typeof raw?.organization === "string" ? raw.organization : "",
-    phone: typeof raw?.phone === "string" ? raw.phone : "",
-    address: typeof raw?.address === "string" ? raw.address : "",
+    organization: boundedString(raw?.organization, "organization"),
+    phone: boundedString(raw?.phone, "phone"),
+    address: boundedString(raw?.address, "address"),
   };
 }
 
@@ -52,7 +60,7 @@ function persist(profile) {
   writeJsonStorage(LAB_PROFILE_KEY, profile);
 }
 
-export default function useLabProfile() {
+export default function useLabProfile(adminKey = "") {
   const [labProfile, setLabProfileState] = useState(() => loadFromStorage());
 
   useEffect(() => {
@@ -61,7 +69,7 @@ export default function useLabProfile() {
 
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("lab_profile");
+        const remote = await fetchWorkspaceDocument("lab_profile", adminKey);
         const remoteProfile = sanitizeProfile(remote?.payload);
 
         if (hasMeaningfulWorkspacePayload(remoteProfile)) {
@@ -73,7 +81,7 @@ export default function useLabProfile() {
         }
 
         if (hasMeaningfulWorkspacePayload(localSnapshot)) {
-          await saveWorkspaceDocument("lab_profile", localSnapshot);
+          await saveWorkspaceDocument("lab_profile", localSnapshot, adminKey);
         }
       } catch {
         // Keep local fallback behaviour if the pilot backend is unreachable.
@@ -84,7 +92,7 @@ export default function useLabProfile() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const setLabProfile = useCallback((nextProfile) => {
     setLabProfileState((prev) => {
@@ -92,17 +100,17 @@ export default function useLabProfile() {
         typeof nextProfile === "function" ? nextProfile(prev) : nextProfile;
       const sanitized = sanitizeProfile(resolved);
       persist(sanitized);
-      void saveWorkspaceDocument("lab_profile", sanitized).catch(() => {});
+      void saveWorkspaceDocument("lab_profile", sanitized, adminKey).catch(() => {});
       return sanitized;
     });
-  }, []);
+  }, [adminKey]);
 
   const clearLabProfile = useCallback(() => {
     const empty = { ...EMPTY_PROFILE };
     persist(empty);
     setLabProfileState(empty);
-    void saveWorkspaceDocument("lab_profile", empty).catch(() => {});
-  }, []);
+    void saveWorkspaceDocument("lab_profile", empty, adminKey).catch(() => {});
+  }, [adminKey]);
 
   return {
     labProfile,

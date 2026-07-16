@@ -574,7 +574,9 @@ describe("print acceptance matrix", () => {
 
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA);
     expect(plan.canPrint).toBe(false);
-    expect(plan.issues).toContainEqual({ type: "missing-hazard-data" });
+    expect(plan.issues).toContainEqual(
+      expect.objectContaining({ type: "missing-hazard-data" }),
+    );
   });
 
   it("distinguishes upstream lookup failure from confirmed no-GHS content", () => {
@@ -592,6 +594,8 @@ describe("print acceptance matrix", () => {
     expect(plan.state).toBe(PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA);
     expect(plan.canPrint).toBe(false);
     expect(plan.issues).toContainEqual({ type: "upstream-error" });
-    expect(plan.issues).toContainEqual({ type: "missing-hazard-data" });
+    expect(plan.issues).toContainEqual(
+      expect.objectContaining({ type: "missing-hazard-data" }),
+    );
   });
 });

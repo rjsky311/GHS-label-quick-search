@@ -4,7 +4,11 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 from export_helpers import _has_cjk_text
-from pilot_store import APPROVED_ALIAS_STATUS, APPROVED_MANUAL_ENTRY_STATUS
+from pilot_store import (
+    APPROVED_ALIAS_STATUS,
+    APPROVED_MANUAL_ENTRY_STATUS,
+    DEFAULT_REVIEW_QUEUE_RETENTION_DAYS,
+)
 from api_validation import (
     ALLOWED_ALIAS_LOCALES,
     ALLOWED_ALIAS_STATUSES,
@@ -243,6 +247,14 @@ class DictionaryMissQueryResolutionPayload(BaseModel):
 class DictionaryMissQueryRetentionPayload(BaseModel):
     retention_days: int = Field(
         DEFAULT_MISS_QUERY_RETENTION_DAYS,
+        ge=1,
+        le=365,
+    )
+
+
+class ReviewQueueRetentionPayload(BaseModel):
+    retention_days: int = Field(
+        DEFAULT_REVIEW_QUEUE_RETENTION_DAYS,
         ge=1,
         le=365,
     )

@@ -4,9 +4,10 @@ import json
 import re
 import sqlite3
 import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 from urllib.parse import urlparse
 
 DEFAULT_SCOPE = "default"
@@ -18,6 +19,7 @@ MANUAL_ENTRY_REVIEW_STATUSES = ("pending", "needs_evidence")
 APPROVED_ALIAS_STATUS = "approved"
 ALIAS_STATUSES = ("approved", "pending", "needs_evidence", "rejected")
 ALIAS_REVIEW_STATUSES = ("pending", "needs_evidence")
+ALIAS_PURGEABLE_STATUSES = ("pending",)
 ACTIVE_REFERENCE_STATUS = "active"
 REFERENCE_LINK_STATUSES = {"active", "inactive"}
 MISS_QUERY_STATUSES = {"open", "needs_evidence", "resolved", "ignored"}
@@ -30,6 +32,7 @@ CORRECTION_REQUEST_STATUS_ORDER = (
 )
 CORRECTION_REQUEST_STATUSES = set(CORRECTION_REQUEST_STATUS_ORDER)
 CORRECTION_REQUEST_REVIEW_STATUSES = ("open", "candidate_found")
+CORRECTION_REQUEST_PURGEABLE_STATUSES = ("open",)
 INVENTORY_HANDOFF_CORRECTION_SOURCE = "inventory-workbook-audit"
 CORRECTION_REQUEST_TYPES = {
     "missing-chinese-name",
@@ -41,6 +44,39 @@ CORRECTION_REQUEST_TYPES = {
     "other-data-quality",
 }
 DEFAULT_MISS_QUERY_RETENTION_DAYS = 90
+DEFAULT_REVIEW_QUEUE_RETENTION_DAYS = 90
+DEFAULT_MAX_PENDING_ALIAS_ROWS = 10_000
+DEFAULT_MAX_PENDING_ALIAS_ROWS_PER_CAS = 100
+DEFAULT_MAX_PENDING_ALIAS_BYTES = 8 * 1024 * 1024
+DEFAULT_MAX_PENDING_ALIAS_BYTES_PER_CAS = 128 * 1024
+DEFAULT_MAX_OPEN_CORRECTION_ROWS = 10_000
+DEFAULT_MAX_OPEN_CORRECTION_ROWS_PER_CAS = 100
+DEFAULT_MAX_OPEN_CORRECTION_REPORTS = 50_000
+DEFAULT_MAX_OPEN_CORRECTION_REPORTS_PER_CAS = 500
+DEFAULT_MAX_OPEN_CORRECTION_BYTES = 32 * 1024 * 1024
+DEFAULT_MAX_OPEN_CORRECTION_BYTES_PER_CAS = 512 * 1024
+
+_ALIAS_REVIEW_BYTES_SQL = """
+    length(CAST(COALESCE(alias_text, '') AS BLOB))
+  + length(CAST(COALESCE(alias_norm, '') AS BLOB))
+  + length(CAST(COALESCE(locale, '') AS BLOB))
+  + length(CAST(COALESCE(cas_number, '') AS BLOB))
+  + length(CAST(COALESCE(source, '') AS BLOB))
+  + length(CAST(COALESCE(notes, '') AS BLOB))
+"""
+_CORRECTION_REVIEW_BYTES_SQL = """
+    length(CAST(COALESCE(issue_type, '') AS BLOB))
+  + length(CAST(COALESCE(cas_number, '') AS BLOB))
+  + length(CAST(COALESCE(chemical_name, '') AS BLOB))
+  + length(CAST(COALESCE(query_text, '') AS BLOB))
+  + length(CAST(COALESCE(current_output, '') AS BLOB))
+  + length(CAST(COALESCE(expected_output, '') AS BLOB))
+  + length(CAST(COALESCE(evidence_url, '') AS BLOB))
+  + length(CAST(COALESCE(evidence_type, '') AS BLOB))
+  + length(CAST(COALESCE(local_context, '') AS BLOB))
+  + length(CAST(COALESCE(candidate_json, '') AS BLOB))
+  + length(CAST(COALESCE(source, '') AS BLOB))
+"""
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -49,6 +85,24 @@ _ZH_COMPACT_RE = re.compile(r"[\s\u3000()（）\[\]{}\-_/.,;:]+")
 _CAS_LIKE_RE = re.compile(r"^\d{2,7}-\d{2}-\d$")
 _REFERENCE_LINK_TYPES = {"sds", "regulatory", "occupational", "reference"}
 _SAFE_REFERENCE_SCHEMES = {"http", "https"}
+
+
+class ReviewQueueLimitError(ValueError):
+    def __init__(self, *, queue: str, limit_type: str):
+        self.queue = str(queue or "review queue").strip().replace("_", " ")
+        self.limit_type = str(limit_type or "capacity").strip()
+        super().__init__(f"{self.queue} quota exceeded ({self.limit_type})")
+
+    @property
+    def queue_code(self) -> str:
+        return self.queue.replace(" ", "_")
+
+    def as_detail(self) -> dict[str, str]:
+        return {
+            "code": "review_queue_full",
+            "message": "Review queue capacity is temporarily unavailable",
+            "queue": self.queue_code,
+        }
 
 
 def utc_now_iso() -> str:
@@ -286,14 +340,70 @@ def require_inventory_handoff_approval_boundary(
 
 
 class PilotStore:
-    def __init__(self, db_path: Path):
+    def __init__(
+        self,
+        db_path: Path,
+        *,
+        max_pending_alias_rows: int = DEFAULT_MAX_PENDING_ALIAS_ROWS,
+        max_pending_alias_rows_per_cas: int = DEFAULT_MAX_PENDING_ALIAS_ROWS_PER_CAS,
+        max_pending_alias_bytes: int = DEFAULT_MAX_PENDING_ALIAS_BYTES,
+        max_pending_alias_bytes_per_cas: int = DEFAULT_MAX_PENDING_ALIAS_BYTES_PER_CAS,
+        max_open_correction_rows: int = DEFAULT_MAX_OPEN_CORRECTION_ROWS,
+        max_open_correction_rows_per_cas: int = DEFAULT_MAX_OPEN_CORRECTION_ROWS_PER_CAS,
+        max_open_correction_reports: int = DEFAULT_MAX_OPEN_CORRECTION_REPORTS,
+        max_open_correction_reports_per_cas: int = DEFAULT_MAX_OPEN_CORRECTION_REPORTS_PER_CAS,
+        max_open_correction_bytes: int = DEFAULT_MAX_OPEN_CORRECTION_BYTES,
+        max_open_correction_bytes_per_cas: int = DEFAULT_MAX_OPEN_CORRECTION_BYTES_PER_CAS,
+        review_retention_days: int = DEFAULT_REVIEW_QUEUE_RETENTION_DAYS,
+    ):
         self.db_path = Path(db_path)
         self._conn: Optional[sqlite3.Connection] = None
         self._lock = threading.RLock()
         self.dictionary_data_version = 0
+        self.max_pending_alias_rows = max(1, int(max_pending_alias_rows))
+        self.max_pending_alias_rows_per_cas = max(
+            1, int(max_pending_alias_rows_per_cas)
+        )
+        self.max_pending_alias_bytes = max(1, int(max_pending_alias_bytes))
+        self.max_pending_alias_bytes_per_cas = max(
+            1, int(max_pending_alias_bytes_per_cas)
+        )
+        self.max_open_correction_rows = max(1, int(max_open_correction_rows))
+        self.max_open_correction_rows_per_cas = max(
+            1, int(max_open_correction_rows_per_cas)
+        )
+        self.max_open_correction_reports = max(
+            1, int(max_open_correction_reports)
+        )
+        self.max_open_correction_reports_per_cas = max(
+            1, int(max_open_correction_reports_per_cas)
+        )
+        self.max_open_correction_bytes = max(1, int(max_open_correction_bytes))
+        self.max_open_correction_bytes_per_cas = max(
+            1, int(max_open_correction_bytes_per_cas)
+        )
+        self.review_retention_days = max(1, int(review_retention_days))
 
     def _bump_dictionary_data_version_locked(self) -> None:
         self.dictionary_data_version += 1
+
+    @contextmanager
+    def _immediate_transaction(
+        self,
+        *,
+        after_commit: Optional[Callable[[], None]] = None,
+    ):
+        with self._lock:
+            conn = self._require_conn()
+            conn.execute("BEGIN IMMEDIATE")
+            try:
+                yield conn
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+            if after_commit is not None:
+                after_commit()
 
     def connect(self) -> "PilotStore":
         with self._lock:
@@ -818,6 +928,160 @@ class PilotStore:
                 public_entries.append(public_entry)
         return public_entries
 
+    @staticmethod
+    def _payload_bytes(*values: Any) -> int:
+        return sum(len(str(value or "").encode("utf-8")) for value in values)
+
+    def _assert_alias_review_capacity_locked(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        cas_number: str,
+        projected_bytes: int,
+        exclude_id: Optional[int] = None,
+    ) -> None:
+        exclude_sql = " AND id != ?" if exclude_id is not None else ""
+        base_params: list[Any] = list(ALIAS_REVIEW_STATUSES)
+        if exclude_id is not None:
+            base_params.append(exclude_id)
+
+        global_row = conn.execute(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM({_ALIAS_REVIEW_BYTES_SQL}), 0) AS byte_count
+            FROM dictionary_aliases
+            WHERE status IN (?, ?){exclude_sql}
+            """,
+            base_params,
+        ).fetchone()
+        if int(global_row["row_count"] or 0) + 1 > self.max_pending_alias_rows:
+            raise ReviewQueueLimitError(
+                queue="pending alias",
+                limit_type="global_rows",
+            )
+        if (
+            int(global_row["byte_count"] or 0) + projected_bytes
+            > self.max_pending_alias_bytes
+        ):
+            raise ReviewQueueLimitError(
+                queue="pending alias",
+                limit_type="global_bytes",
+            )
+
+        per_cas_params: list[Any] = [*ALIAS_REVIEW_STATUSES, cas_number]
+        if exclude_id is not None:
+            per_cas_params.append(exclude_id)
+        per_cas_row = conn.execute(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM({_ALIAS_REVIEW_BYTES_SQL}), 0) AS byte_count
+            FROM dictionary_aliases
+            WHERE status IN (?, ?)
+              AND cas_number = ?{exclude_sql}
+            """,
+            per_cas_params,
+        ).fetchone()
+        if (
+            int(per_cas_row["row_count"] or 0) + 1
+            > self.max_pending_alias_rows_per_cas
+        ):
+            raise ReviewQueueLimitError(
+                queue="pending alias",
+                limit_type="per_cas_rows",
+            )
+        if (
+            int(per_cas_row["byte_count"] or 0) + projected_bytes
+            > self.max_pending_alias_bytes_per_cas
+        ):
+            raise ReviewQueueLimitError(
+                queue="pending alias",
+                limit_type="per_cas_bytes",
+            )
+
+    def _assert_correction_review_capacity_locked(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        cas_number: Optional[str],
+        row_increment: int,
+        report_increment: int,
+        byte_increment: int,
+    ) -> None:
+        global_row = conn.execute(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM(duplicate_count), 0) AS report_count,
+              COALESCE(SUM({_CORRECTION_REVIEW_BYTES_SQL}), 0) AS byte_count
+            FROM dictionary_correction_requests
+            WHERE status IN (?, ?)
+            """,
+            CORRECTION_REQUEST_REVIEW_STATUSES,
+        ).fetchone()
+        checks = (
+            (
+                int(global_row["row_count"] or 0) + row_increment,
+                self.max_open_correction_rows,
+                "global_rows",
+            ),
+            (
+                int(global_row["report_count"] or 0) + report_increment,
+                self.max_open_correction_reports,
+                "global_reports",
+            ),
+            (
+                int(global_row["byte_count"] or 0) + byte_increment,
+                self.max_open_correction_bytes,
+                "global_bytes",
+            ),
+        )
+        for projected, limit, limit_type in checks:
+            if projected > limit:
+                raise ReviewQueueLimitError(
+                    queue="correction request",
+                    limit_type=limit_type,
+                )
+
+        if not cas_number:
+            return
+        per_cas_row = conn.execute(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM(duplicate_count), 0) AS report_count,
+              COALESCE(SUM({_CORRECTION_REVIEW_BYTES_SQL}), 0) AS byte_count
+            FROM dictionary_correction_requests
+            WHERE status IN (?, ?)
+              AND cas_number = ?
+            """,
+            (*CORRECTION_REQUEST_REVIEW_STATUSES, cas_number),
+        ).fetchone()
+        per_cas_checks = (
+            (
+                int(per_cas_row["row_count"] or 0) + row_increment,
+                self.max_open_correction_rows_per_cas,
+                "per_cas_rows",
+            ),
+            (
+                int(per_cas_row["report_count"] or 0) + report_increment,
+                self.max_open_correction_reports_per_cas,
+                "per_cas_reports",
+            ),
+            (
+                int(per_cas_row["byte_count"] or 0) + byte_increment,
+                self.max_open_correction_bytes_per_cas,
+                "per_cas_bytes",
+            ),
+        )
+        for projected, limit, limit_type in per_cas_checks:
+            if projected > limit:
+                raise ReviewQueueLimitError(
+                    queue="correction request",
+                    limit_type=limit_type,
+                )
+
     # Alias workflow ------------------------------------------------------
     def upsert_alias(
         self,
@@ -844,11 +1108,12 @@ class PilotStore:
             return None
 
         now = utc_now_iso()
-        with self._lock:
-            conn = self._require_conn()
+        with self._immediate_transaction(
+            after_commit=self._bump_dictionary_data_version_locked,
+        ) as conn:
             existing = conn.execute(
                 """
-                SELECT id, status, source, confidence, hit_count
+                SELECT id, status, source, confidence, notes, hit_count
                 FROM dictionary_aliases
                 WHERE alias_norm = ? AND locale = ? AND cas_number = ?
                 """,
@@ -856,6 +1121,19 @@ class PilotStore:
             ).fetchone()
 
             if existing is None:
+                if status in ALIAS_REVIEW_STATUSES:
+                    self._assert_alias_review_capacity_locked(
+                        conn,
+                        cas_number=cas_number,
+                        projected_bytes=self._payload_bytes(
+                            alias_text,
+                            alias_norm,
+                            locale,
+                            cas_number,
+                            source,
+                            notes,
+                        ),
+                    )
                 conn.execute(
                     """
                     INSERT INTO dictionary_aliases(
@@ -892,6 +1170,22 @@ class PilotStore:
                     next_status = status
                 elif next_status == "pending" and status:
                     next_status = status
+                next_source = existing["source"] or source
+                next_notes = notes if notes else existing["notes"]
+                if next_status in ALIAS_REVIEW_STATUSES:
+                    self._assert_alias_review_capacity_locked(
+                        conn,
+                        cas_number=cas_number,
+                        projected_bytes=self._payload_bytes(
+                            alias_text,
+                            alias_norm,
+                            locale,
+                            cas_number,
+                            next_source,
+                            next_notes,
+                        ),
+                        exclude_id=int(existing["id"]),
+                    )
                 conn.execute(
                     """
                     UPDATE dictionary_aliases
@@ -910,7 +1204,7 @@ class PilotStore:
                     """,
                     (
                         alias_text,
-                        existing["source"] or source,
+                        next_source,
                         max(float(existing["confidence"] or 0), float(confidence or 0)),
                         next_status,
                         notes,
@@ -922,9 +1216,6 @@ class PilotStore:
                         cas_number,
                     ),
                 )
-            conn.commit()
-            self._bump_dictionary_data_version_locked()
-
         return self.get_alias_exact(
             alias_text,
             locale,
@@ -1362,6 +1653,120 @@ class PilotStore:
             "purgedAt": utc_now_iso(),
         }
 
+    def get_review_queue_retention_summary(
+        self,
+        *,
+        retention_days: Optional[int] = None,
+        now: Optional[datetime] = None,
+    ) -> dict[str, Any]:
+        days = (
+            self.review_retention_days
+            if retention_days is None
+            else int(retention_days)
+        )
+        cutoff_at = _miss_query_retention_cutoff(days, now=now)
+        alias_row = self._fetchone(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM({_ALIAS_REVIEW_BYTES_SQL}), 0) AS byte_count,
+              COALESCE(SUM(
+                CASE WHEN status = ? AND last_seen_at < ? THEN 1 ELSE 0 END
+              ), 0)
+                AS purgeable_count
+            FROM dictionary_aliases
+            WHERE status IN (?, ?)
+            """,
+            (*ALIAS_PURGEABLE_STATUSES, cutoff_at, *ALIAS_REVIEW_STATUSES),
+        )
+        correction_row = self._fetchone(
+            f"""
+            SELECT
+              COUNT(*) AS row_count,
+              COALESCE(SUM(duplicate_count), 0) AS report_count,
+              COALESCE(SUM({_CORRECTION_REVIEW_BYTES_SQL}), 0) AS byte_count,
+              COALESCE(SUM(
+                CASE WHEN status = ? AND updated_at < ? THEN 1 ELSE 0 END
+              ), 0)
+                AS purgeable_count
+            FROM dictionary_correction_requests
+            WHERE status IN (?, ?)
+            """,
+            (
+                *CORRECTION_REQUEST_PURGEABLE_STATUSES,
+                cutoff_at,
+                *CORRECTION_REQUEST_REVIEW_STATUSES,
+            ),
+        )
+        assert alias_row is not None
+        assert correction_row is not None
+        return {
+            "retentionDays": days,
+            "cutoffAt": cutoff_at,
+            "pendingAliasRows": int(alias_row["row_count"] or 0),
+            "pendingAliasBytes": int(alias_row["byte_count"] or 0),
+            "purgeableAliasRows": int(alias_row["purgeable_count"] or 0),
+            "openCorrectionRows": int(correction_row["row_count"] or 0),
+            "openCorrectionReports": int(correction_row["report_count"] or 0),
+            "openCorrectionBytes": int(correction_row["byte_count"] or 0),
+            "purgeableCorrectionRows": int(
+                correction_row["purgeable_count"] or 0
+            ),
+            "limits": {
+                "pendingAliasRows": self.max_pending_alias_rows,
+                "pendingAliasRowsPerCas": self.max_pending_alias_rows_per_cas,
+                "pendingAliasBytes": self.max_pending_alias_bytes,
+                "pendingAliasBytesPerCas": self.max_pending_alias_bytes_per_cas,
+                "openCorrectionRows": self.max_open_correction_rows,
+                "openCorrectionRowsPerCas": self.max_open_correction_rows_per_cas,
+                "openCorrectionReports": self.max_open_correction_reports,
+                "openCorrectionReportsPerCas": (
+                    self.max_open_correction_reports_per_cas
+                ),
+                "openCorrectionBytes": self.max_open_correction_bytes,
+                "openCorrectionBytesPerCas": (
+                    self.max_open_correction_bytes_per_cas
+                ),
+            },
+        }
+
+    def purge_stale_review_rows(
+        self,
+        *,
+        retention_days: Optional[int] = None,
+        now: Optional[datetime] = None,
+    ) -> dict[str, int]:
+        days = (
+            self.review_retention_days
+            if retention_days is None
+            else int(retention_days)
+        )
+        cutoff_at = _miss_query_retention_cutoff(days, now=now)
+        with self._immediate_transaction() as conn:
+            alias_cursor = conn.execute(
+                """
+                DELETE FROM dictionary_aliases
+                WHERE status = ?
+                  AND last_seen_at < ?
+                """,
+                (*ALIAS_PURGEABLE_STATUSES, cutoff_at),
+            )
+            correction_cursor = conn.execute(
+                """
+                DELETE FROM dictionary_correction_requests
+                WHERE status = ?
+                  AND updated_at < ?
+                """,
+                (*CORRECTION_REQUEST_PURGEABLE_STATUSES, cutoff_at),
+            )
+            deleted_alias_count = int(alias_cursor.rowcount or 0)
+            deleted_correction_count = int(correction_cursor.rowcount or 0)
+        return {
+            "retentionDays": days,
+            "deletedAliasCount": deleted_alias_count,
+            "deletedCorrectionCount": deleted_correction_count,
+        }
+
     # Reference links -----------------------------------------------------
     def upsert_reference_link(
         self,
@@ -1547,6 +1952,19 @@ class PilotStore:
         normalized_evidence_url = (evidence_url or "").strip() or None
         normalized_evidence_type = (evidence_type or "").strip() or None
         normalized_local_context = (local_context or "").strip() or None
+        projected_bytes = self._payload_bytes(
+            normalized_issue_type,
+            normalized_cas_number,
+            normalized_chemical_name,
+            normalized_query_text,
+            normalized_current_output,
+            normalized_expected_output,
+            normalized_evidence_url,
+            normalized_evidence_type,
+            normalized_local_context,
+            candidate_json,
+            source,
+        )
         approved_manual_entry = self._approved_manual_entry_for_correction_candidate(
             candidate or {},
             request_cas_number=normalized_cas_number,
@@ -1560,11 +1978,10 @@ class PilotStore:
             request_chemical_name=normalized_chemical_name,
         )
 
-        with self._lock:
-            conn = self._require_conn()
+        with self._immediate_transaction() as conn:
             existing = conn.execute(
                 """
-                SELECT id
+                SELECT id, cas_number, local_context, duplicate_count
                 FROM dictionary_correction_requests
                 WHERE issue_type = ?
                   AND COALESCE(cas_number, '') = ?
@@ -1597,6 +2014,18 @@ class PilotStore:
             ).fetchone()
             if existing is not None:
                 request_id = int(existing["id"])
+                context_byte_increment = 0
+                if not existing["local_context"] and normalized_local_context:
+                    context_byte_increment = self._payload_bytes(
+                        normalized_local_context
+                    )
+                self._assert_correction_review_capacity_locked(
+                    conn,
+                    cas_number=existing["cas_number"],
+                    row_increment=0,
+                    report_increment=1,
+                    byte_increment=context_byte_increment,
+                )
                 conn.execute(
                     """
                     UPDATE dictionary_correction_requests
@@ -1608,51 +2037,55 @@ class PilotStore:
                     """,
                     (normalized_local_context, now, request_id),
                 )
-                conn.commit()
-                record = self._fetch_correction_request_by_id(request_id)
-                assert record is not None
-                return record
+            else:
+                if normalized_status in CORRECTION_REQUEST_REVIEW_STATUSES:
+                    self._assert_correction_review_capacity_locked(
+                        conn,
+                        cas_number=normalized_cas_number,
+                        row_increment=1,
+                        report_increment=1,
+                        byte_increment=projected_bytes,
+                    )
 
-            cursor = conn.execute(
-                """
-                INSERT INTO dictionary_correction_requests(
-                  issue_type,
-                  cas_number,
-                  chemical_name,
-                  query_text,
-                  current_output,
-                  expected_output,
-                  evidence_url,
-                  evidence_type,
-                  local_context,
-                  candidate_json,
-                  source,
-                  status,
-                  review_notes,
-                  created_at,
-                  updated_at
+                cursor = conn.execute(
+                    """
+                    INSERT INTO dictionary_correction_requests(
+                      issue_type,
+                      cas_number,
+                      chemical_name,
+                      query_text,
+                      current_output,
+                      expected_output,
+                      evidence_url,
+                      evidence_type,
+                      local_context,
+                      candidate_json,
+                      source,
+                      status,
+                      review_notes,
+                      created_at,
+                      updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?)
+                    """,
+                    (
+                        normalized_issue_type,
+                        normalized_cas_number,
+                        normalized_chemical_name,
+                        normalized_query_text,
+                        normalized_current_output,
+                        normalized_expected_output,
+                        normalized_evidence_url,
+                        normalized_evidence_type,
+                        normalized_local_context,
+                        candidate_json,
+                        source,
+                        normalized_status,
+                        now,
+                        now,
+                    ),
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?)
-                """,
-                (
-                    normalized_issue_type,
-                    normalized_cas_number,
-                    normalized_chemical_name,
-                    normalized_query_text,
-                    normalized_current_output,
-                    normalized_expected_output,
-                    normalized_evidence_url,
-                    normalized_evidence_type,
-                    normalized_local_context,
-                    candidate_json,
-                    source,
-                    normalized_status,
-                    now,
-                    now,
-                ),
-            )
-            conn.commit()
-            request_id = int(cursor.lastrowid)
+                request_id = int(cursor.lastrowid)
 
         record = self._fetch_correction_request_by_id(request_id)
         assert record is not None
@@ -2336,6 +2769,7 @@ class PilotStore:
                 """,
                 ALIAS_REVIEW_STATUSES,
             ),
+            "reviewQueueRetention": self.get_review_queue_retention_summary(),
             "aliasStatusCounts": self.get_alias_status_counts(),
             "missQueryCount": self._scalar("SELECT COUNT(*) FROM dictionary_miss_queries"),
             "openMissQueryCount": self._scalar(

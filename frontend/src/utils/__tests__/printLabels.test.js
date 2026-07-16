@@ -384,13 +384,54 @@ describe("inspectPrintLayoutDocument", () => {
       scrollWidth: { value: 72, configurable: true },
     });
 
-    expect(inspectPrintLayoutDocument(root).map((issue) => issue.type)).toEqual(
-      [
-        "label-overflow",
-        "compliance-footer-clipped",
-        "statement-code-overflow",
-      ],
-    );
+    const issues = inspectPrintLayoutDocument(root);
+    expect(issues.map((issue) => issue.type)).toEqual([
+      "label-overflow",
+      "compliance-footer-clipped",
+      "statement-code-overflow",
+    ]);
+    expect(issues[2]).toMatchObject({
+      index: 0,
+      labelIndex: 0,
+      statementIndex: 0,
+    });
+  });
+
+  it("blocks clipped responsible-profile rows instead of silently ellipsizing them", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="label">
+        <div class="profile-block">
+          <div class="profile-row" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Long responsible organization identity</div>
+        </div>
+      </div>
+    `;
+    const label = root.querySelector(".label");
+    const profileBlock = root.querySelector(".profile-block");
+    const profileRow = root.querySelector(".profile-row");
+    [label, profileBlock].forEach((element) => {
+      Object.defineProperties(element, {
+        clientHeight: { value: 20, configurable: true },
+        scrollHeight: { value: 20, configurable: true },
+        clientWidth: { value: 120, configurable: true },
+        scrollWidth: { value: 120, configurable: true },
+      });
+    });
+    Object.defineProperties(profileRow, {
+      clientHeight: { value: 14, configurable: true },
+      scrollHeight: { value: 14, configurable: true },
+      clientWidth: { value: 80, configurable: true },
+      scrollWidth: { value: 180, configurable: true },
+    });
+
+    expect(inspectPrintLayoutDocument(root)).toEqual([
+      expect.objectContaining({
+        type: "profile-row-overflow",
+        index: 0,
+        labelIndex: 0,
+        elementIndex: 0,
+      }),
+    ]);
   });
 
   it("reports required identity text that is visually clipped by print CSS", () => {

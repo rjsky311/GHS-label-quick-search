@@ -176,6 +176,31 @@ describe("usePilotDashboard auth-context isolation", () => {
     expect(result.current.authError).toBe("");
   });
 
+  it("ignores a late success after the same key is re-unlocked with a new authority epoch", async () => {
+    const olderAuthority = deferred();
+    queueDashboardResponse(olderAuthority);
+    const { result, rerender } = renderDashboard({
+      enabled: true,
+      adminKey: "same-key",
+      authorityEpoch: 1,
+    });
+    queueDashboardResponse("same-key-new-epoch");
+
+    rerender({
+      enabled: true,
+      adminKey: "same-key",
+      authorityEpoch: 2,
+    });
+    await waitForDatasetOwner(result, "same-key-new-epoch");
+
+    await act(async () => {
+      olderAuthority.resolve("same-key-old-epoch");
+      await olderAuthority.promise;
+    });
+
+    expectDatasetOwner(result, "same-key-new-epoch");
+  });
+
   it("ignores a late success from a superseded refresh in the same context", async () => {
     const olderRefresh = deferred();
     queueDashboardResponse(olderRefresh);
@@ -447,6 +472,34 @@ describe("usePilotDashboard auth-context isolation", () => {
 
     expect(result.current.error).toBe("current mutation rejected");
     expect(result.current.authError).toBe("current mutation rejected");
+  });
+
+  it("keeps authority active when the bounded review queue reports capacity", async () => {
+    queueDashboardResponse("key-a");
+    const { result } = renderDashboard({ enabled: true, adminKey: "key-a" });
+    await waitForDatasetOwner(result, "key-a");
+
+    const queueFullError = new Error("Review queue is at capacity.");
+    queueFullError.response = {
+      status: 503,
+      data: {
+        detail: {
+          code: "review_queue_full",
+          message: "Review queue is at capacity.",
+        },
+      },
+    };
+    axios.post.mockRejectedValueOnce(queueFullError);
+
+    await act(async () => {
+      await expect(
+        result.current.saveAlias({ alias_text: "EtOH" }),
+      ).rejects.toBe(queueFullError);
+    });
+
+    expectDatasetOwner(result, "key-a");
+    expect(result.current.error).toBe("Review queue is at capacity.");
+    expect(result.current.authError).toBe("");
   });
 
   it("refuses mutations when the current auth context is inactive", async () => {

@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import useCustomGHS from '../useCustomGHS';
+import { getGhsClassificationFingerprint } from '@/utils/selectedGhsClassification';
 
 const CUSTOM_GHS_KEY = 'ghs_custom_settings';
 
@@ -91,6 +92,27 @@ describe('useCustomGHS', () => {
     expect(saved['64-17-5'].selectedIndex).toBe(1);
     expect(saved['64-17-5'].note).toBe('test note');
     expect(saved['64-17-5']).toHaveProperty('updatedAt');
+  });
+
+  it('persists a stable fingerprint with the selected classification', () => {
+    const { result } = renderHook(() => useCustomGHS());
+    const alternate = mockResult.other_classifications[0];
+
+    act(() =>
+      result.current.setCustomClassification(
+        '64-17-5',
+        1,
+        'reviewed alternate',
+        alternate,
+      ),
+    );
+
+    const saved = JSON.parse(localStorage.getItem(CUSTOM_GHS_KEY));
+    expect(saved['64-17-5']).toMatchObject({
+      selectedIndex: 1,
+      note: 'reviewed alternate',
+      classificationFingerprint: getGhsClassificationFingerprint(alternate),
+    });
   });
 
   it('getEffectiveClassification respects custom selectedIndex', () => {

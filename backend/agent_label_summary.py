@@ -1,7 +1,7 @@
 from typing import Dict, List, Literal, Optional
 from urllib.parse import quote
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_serializer
 
 from api_models import ChemicalResult, GHSReport
 from api_validation import _is_safe_reference_url
@@ -34,6 +34,20 @@ class AgentGhsPictogram(BaseModel):
 class AgentGhsStatement(BaseModel):
     code: Optional[str] = None
     text: str
+    # The public parser keeps bilingual statement text in these explicit
+    # fields.  Keep them optional so older records that only have ``text``
+    # remain byte-for-byte compatible when serialized.
+    text_en: Optional[str] = None
+    text_zh: Optional[str] = None
+
+    @model_serializer(mode="plain")
+    def _serialize_statement(self):
+        payload = {"code": self.code, "text": self.text}
+        if self.text_en is not None:
+            payload["text_en"] = self.text_en
+        if self.text_zh is not None:
+            payload["text_zh"] = self.text_zh
+        return payload
 
 
 class AgentClassificationSource(BaseModel):
@@ -121,11 +135,21 @@ def _statement_items(items: List[Dict[str, str]]) -> List[AgentGhsStatement]:
     statements: List[AgentGhsStatement] = []
     for item in items or []:
         code = str(item.get("code") or "").strip() or None
-        text = str(item.get("text") or "").strip()
+        text_en = str(item.get("text_en") or "").strip() or None
+        text_zh = str(item.get("text_zh") or "").strip() or None
+        legacy_text = str(item.get("text") or "").strip()
+        text = text_en or legacy_text or text_zh or ""
         if not text and code:
             text = code
         if text:
-            statements.append(AgentGhsStatement(code=code, text=text))
+            statements.append(
+                AgentGhsStatement(
+                    code=code,
+                    text=text,
+                    text_en=text_en,
+                    text_zh=text_zh,
+                )
+            )
     return statements
 
 

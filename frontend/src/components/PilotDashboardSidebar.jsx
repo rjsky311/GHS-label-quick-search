@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Database,
+  LockKeyhole,
   RefreshCw,
   ShieldAlert,
   Tags,
@@ -109,6 +110,7 @@ export default function PilotDashboardSidebar(props) {
     saving = false,
     error = "",
     onClose,
+    onLock,
     onRefresh,
     onExportObservabilityReport,
     onSaveManualEntry,
@@ -753,6 +755,15 @@ export default function PilotDashboardSidebar(props) {
                 data-testid="pilot-export-report-btn"
               >
                 {t("pilot.export", { defaultValue: "Export report" })}
+              </button>
+              <button
+                type="button"
+                onClick={onLock}
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+                data-testid="pilot-lock-btn"
+              >
+                <LockKeyhole className="mr-1 inline h-4 w-4" />
+                {t("pilot.lockAdmin", { defaultValue: "Lock" })}
               </button>
               <button
                 type="button"

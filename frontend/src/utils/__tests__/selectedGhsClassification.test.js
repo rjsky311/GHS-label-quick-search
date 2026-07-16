@@ -1,5 +1,7 @@
 import {
   applySelectedGhsClassification,
+  getGhsClassificationFingerprint,
+  listGhsClassifications,
   resolveSelectedGhsClassification,
 } from "@/utils/selectedGhsClassification";
 
@@ -56,6 +58,58 @@ describe("selectedGhsClassification", () => {
       primary_report_count: "3",
       selected_classification_index: 1,
       customNote: "Use alternate",
+    });
+  });
+
+  it("uses a stable classification fingerprint when reports reorder", () => {
+    const classifications = listGhsClassifications(chemical);
+    const alternateFingerprint = getGhsClassificationFingerprint(
+      classifications[1],
+    );
+    const reorderedPrimary = {
+      pictograms: [{ code: "GHS08" }],
+      hazard_statements: [{ code: "H373" }],
+      precautionary_statements: [{ code: "P260" }],
+      signal_word: "Warning",
+      signal_word_zh: "警告",
+      source: "Third reordered report",
+      report_count: "1",
+    };
+    const reorderedChemical = {
+      ...chemical,
+      ghs_pictograms: reorderedPrimary.pictograms,
+      hazard_statements: reorderedPrimary.hazard_statements,
+      precautionary_statements: reorderedPrimary.precautionary_statements,
+      signal_word: reorderedPrimary.signal_word,
+      signal_word_zh: reorderedPrimary.signal_word_zh,
+      primary_source: reorderedPrimary.source,
+      primary_report_count: reorderedPrimary.report_count,
+      other_classifications: [
+        {
+          ...classifications[1],
+        },
+        {
+          ...classifications[0],
+        },
+      ],
+    };
+
+    const selected = resolveSelectedGhsClassification(reorderedChemical, {
+      "64-17-5": {
+        // The stale UI index points at the original primary report (index 2
+        // after reorder); the fingerprint target is now at the nonzero index 1.
+        selectedIndex: 2,
+        classificationFingerprint: alternateFingerprint,
+        note: "Use alternate",
+      },
+    });
+
+    expect(selected).toMatchObject({
+      signal_word: "Warning",
+      source: "Alternate SDS",
+      report_count: "3",
+      isCustom: true,
+      customIndex: 1,
     });
   });
 });

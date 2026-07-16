@@ -472,8 +472,13 @@ export default function DetailModal({
                   placeholder={t("detail.customNotePlaceholder")}
                   value={customGHSSettings[result.cas_number]?.note || ""}
                   onChange={(e) => {
-                    const currentIndex = customGHSSettings[result.cas_number]?.selectedIndex || 0;
-                    onSetCustomClassification(result.cas_number, currentIndex, e.target.value);
+                    const currentIndex = effective?.customIndex || 0;
+                    onSetCustomClassification(
+                      result.cas_number,
+                      currentIndex,
+                      e.target.value,
+                      allClassifications[currentIndex],
+                    );
                   }}
                   className="notebook-field flex-1 rounded-md px-3 py-2 text-sm"
                 />
@@ -557,7 +562,8 @@ export default function DetailModal({
                   onSetCustomClassification(
                     result.cas_number,
                     idx,
-                    customGHSSettings[result.cas_number]?.note || ""
+                    customGHSSettings[result.cas_number]?.note || "",
+                    allClassifications[idx],
                   )
                 }
               />

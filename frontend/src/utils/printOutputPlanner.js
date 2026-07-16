@@ -87,14 +87,19 @@ export function buildFullPagePrimaryPatch({
   };
 }
 
-const hasHazardContent = (readiness) =>
-  readiness.contents.some(
-    (content) =>
-      content.counts.pictograms > 0 ||
-      content.counts.hazardStatements > 0 ||
-      content.counts.precautionaryStatements > 0 ||
-      Boolean(content.signalWord),
-  );
+const contentHasHazardEvidence = (content = {}) =>
+  content.counts?.pictograms > 0 ||
+  content.counts?.hazardStatements > 0 ||
+  content.counts?.precautionaryStatements > 0;
+
+const getMissingHazardContents = (readiness) =>
+  (readiness.contents || [])
+    .filter((content) => !contentHasHazardEvidence(content))
+    .map((content) => ({
+      type: "missing-hazard-data",
+      index: content.index,
+      cas: content.cas,
+    }));
 
 const hasUpstreamError = (readiness) =>
   readiness.contents.some((content) => content.effectiveChemical?.upstream_error);
@@ -162,6 +167,7 @@ export function buildPrintOutputPlan({
     stockId: recommendedFullPageStockId,
   });
   const issues = [...(readiness.issues || [])];
+  const missingHazardContents = getMissingHazardContents(readiness);
   const smallLabelContinuationIssue = getSmallLabelContinuationIssue(
     readiness,
     layout || {},
@@ -179,11 +185,14 @@ export function buildPrintOutputPlan({
     };
   }
 
-  if (!hasHazardContent(readiness)) {
+  // A signal word is not sufficient evidence for a complete hazard label.
+  // Evaluate every selected item independently so one valid result cannot
+  // mask a missing or upstream-failed item in a batch.
+  if (missingHazardContents.length > 0) {
     if (hasUpstreamError(readiness)) {
       issues.push({ type: "upstream-error" });
     }
-    issues.push({ type: "missing-hazard-data" });
+    issues.push(...missingHazardContents);
     return {
       state: PRINT_OUTPUT_PLAN_STATE.MISSING_HAZARD_DATA,
       canPrint: false,

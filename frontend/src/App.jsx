@@ -21,6 +21,7 @@ import usePreparedRecents from "@/hooks/usePreparedRecents";
 import usePreparedPresets from "@/hooks/usePreparedPresets";
 import useObservability from "@/hooks/useObservability";
 import usePilotDashboard from "@/hooks/usePilotDashboard";
+import useAdminAuthority from "@/hooks/useAdminAuthority";
 import usePrintWorkspace from "@/hooks/usePrintWorkspace";
 
 // Constants & Utils
@@ -30,6 +31,7 @@ import {
   BATCH_SEARCH_LIMIT,
 } from "@/constants/ghs";
 import { resolveEffectiveChemicalForPrint } from "@/utils/printContentModel";
+import { rehydrateHistoricalPrintItems } from "@/utils/printStorage";
 import { hasGhsData } from "@/utils/ghsAvailability";
 import { getDataQualityIssues } from "@/utils/dataQuality";
 import {
@@ -42,9 +44,6 @@ import {
   buildRecentRecord,
 } from "@/utils/preparedSolution";
 import {
-  clearPilotAdminKey,
-  loadPilotAdminKey,
-  persistPilotAdminKey,
   PILOT_ADMIN_ENABLED,
 } from "@/constants/admin";
 import { recordDictionaryMissQuery } from "@/utils/workspaceDocuments";
@@ -141,7 +140,6 @@ function App() {
   const [showPilotAdminDialog, setShowPilotAdminDialog] = useState(false);
   const [error, setError] = useState("");
   const [pilotAdminError, setPilotAdminError] = useState("");
-  const [pilotAdminKey, setPilotAdminKey] = useState(() => loadPilotAdminKey());
   const [themeMode, setThemeMode] = useState(() => loadThemeMode());
   const [selectedResult, setSelectedResult] = useState(null);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -196,6 +194,8 @@ function App() {
   const favoritePrintRequestRef = useRef(0);
   const favoritePrintAbortRef = useRef(null);
   const favoritePrintCasRef = useRef("");
+  const recentPrintRequestRef = useRef(0);
+  const recentPrintAbortRef = useRef(null);
   const preparedReprintRequestRef = useRef(0);
   const preparedReprintAbortRef = useRef(null);
   const batchProgressClearTimeoutRef = useRef(null);
@@ -213,6 +213,9 @@ function App() {
     favoritePrintAbortRef.current = null;
     favoritePrintRequestRef.current += 1;
     favoritePrintCasRef.current = "";
+    recentPrintAbortRef.current?.abort?.();
+    recentPrintAbortRef.current = null;
+    recentPrintRequestRef.current += 1;
   }, []);
 
   const invalidatePreparedReprintLookup = useCallback(() => {
@@ -257,6 +260,14 @@ function App() {
     exportReport: exportObservabilityReport,
   } = useObservability();
   const {
+    adminKey: pilotAdminKey,
+    unlocked: pilotAdminUnlocked,
+    epoch: pilotAuthorityEpoch,
+    lockReason: pilotAuthorityLockReason,
+    unlock: unlockPilotAdmin,
+    lock: lockPilotAdmin,
+  } = useAdminAuthority({ enabled: PILOT_ADMIN_ENABLED });
+  const {
     report: pilotReport,
     aliases: pilotAliases,
     manualEntries: pilotManualEntries,
@@ -274,8 +285,9 @@ function App() {
     purgeStaleMissQueries: purgePilotStaleMissQueries,
     updateCorrectionRequestStatus: updatePilotCorrectionRequestStatus,
   } = usePilotDashboard({
-    enabled: showPilotDashboard && PILOT_ADMIN_ENABLED && Boolean(pilotAdminKey),
+    enabled: showPilotDashboard && pilotAdminUnlocked,
     adminKey: pilotAdminKey,
+    authorityEpoch: pilotAuthorityEpoch,
   });
   const {
     customGHSSettings,
@@ -310,7 +322,7 @@ function App() {
     addRecentPrint,
     clearRecentPrints,
     loadRecentPrint,
-  } = usePrintWorkspace();
+  } = usePrintWorkspace(pilotAdminKey);
   // Tier 2 PR-2A: recent prepared-solution workflow inputs. localStorage-
   // only, parent-scoped on read inside PrepareSolutionModal. Carries
   // NO GHS data — hazards still come from the current parent result
@@ -320,13 +332,13 @@ function App() {
     addRecent: addPreparedRecent,
     clearRecents: clearPreparedRecents,
   } =
-    usePreparedRecents();
+    usePreparedRecents(pilotAdminKey);
   // Tier 2 PR-2B: saved prepared-solution presets. Like recents, but
   // more restrictive: only parent identity + concentration + solvent.
   // Operational fields (preparedBy / preparedDate / expiryDate) are
   // intentionally not stored — see buildPresetRecord for the reason.
   const { presets: preparedPresets, addPreset: addPreparedPreset } =
-    usePreparedPresets();
+    usePreparedPresets(pilotAdminKey);
 
   // Tier 2 PR-2B: "Save as preset" handler. Accepts a formValues
   // payload (same shape PrepareSolutionModal already hands to onSubmit)
@@ -775,12 +787,36 @@ function App() {
       return;
     }
 
-    clearPilotAdminKey();
-    setPilotAdminKey("");
+    lockPilotAdmin("auth-error");
     closeSidebar();
     setPilotAdminError(pilotAuthError);
     setShowPilotAdminDialog(true);
-  }, [closeSidebar, pilotAuthError]);
+  }, [closeSidebar, lockPilotAdmin, pilotAuthError]);
+
+  useEffect(() => {
+    if (
+      pilotAdminUnlocked ||
+      !["idle-timeout", "absolute-timeout"].includes(
+        pilotAuthorityLockReason,
+      ) ||
+      activeSidebarRef.current !== SIDEBAR_IDS.PILOT
+    ) {
+      return;
+    }
+    closeSidebar();
+    setPilotAdminError(
+      t("pilot.adminSessionExpired", {
+        defaultValue:
+          "Admin access expired. Enter the key again to continue.",
+      }),
+    );
+    setShowPilotAdminDialog(true);
+  }, [
+    closeSidebar,
+    pilotAdminUnlocked,
+    pilotAuthorityLockReason,
+    t,
+  ]);
 
   const handleViewDetailFromFavorites = useCallback((item) => {
     setSelectedResult(item);
@@ -879,14 +915,14 @@ function App() {
 
   const handleTogglePilotDashboard = useCallback(() => {
     if (!PILOT_ADMIN_ENABLED) return;
-    if (!pilotAdminKey) {
+    if (!pilotAdminUnlocked) {
       closeSidebar();
       setPilotAdminError("");
       setShowPilotAdminDialog(true);
       return;
     }
     toggleSidebar(SIDEBAR_IDS.PILOT);
-  }, [closeSidebar, pilotAdminKey, toggleSidebar]);
+  }, [closeSidebar, pilotAdminUnlocked, toggleSidebar]);
 
   const handleSubmitPilotAdminKey = useCallback(
     (value) => {
@@ -900,14 +936,20 @@ function App() {
         return;
       }
 
-      persistPilotAdminKey(normalized);
-      setPilotAdminKey(normalized);
+      unlockPilotAdmin(normalized);
       setPilotAdminError("");
       setShowPilotAdminDialog(false);
       replaceSidebar(SIDEBAR_IDS.PILOT);
     },
-    [replaceSidebar, t]
+    [replaceSidebar, t, unlockPilotAdmin]
   );
+
+  const handleLockPilotAdmin = useCallback(() => {
+    lockPilotAdmin("manual");
+    closeSidebar();
+    setPilotAdminError("");
+    setShowPilotAdminDialog(false);
+  }, [closeSidebar, lockPilotAdmin]);
 
   const handleOpenLabelModal = useCallback(() => {
     invalidateFavoritePrintLookup();
@@ -1088,15 +1130,90 @@ function App() {
   ]);
 
   const handleLoadRecentPrint = useCallback(
-    (record) => {
-      const items = loadRecentPrint(record);
-      if (items.length === 0) return;
+    async (record) => {
+      const historicalItems = Array.isArray(record?.items) ? record.items : [];
+      const casNumbers = [
+        ...new Set(
+          historicalItems
+            .map(
+              (item) =>
+                item?.preparedSolution?.parentCas || item?.cas_number || "",
+            )
+            .filter(Boolean),
+        ),
+      ];
       invalidateFavoritePrintLookup();
+      if (casNumbers.length === 0) {
+        toast.error(
+          t("label.recentPrintRefreshFailed", {
+            defaultValue:
+              "Could not refresh this historical print job. Search the chemicals again before printing.",
+          }),
+        );
+        return;
+      }
+
+      const controller = new AbortController();
+      const requestId = recentPrintRequestRef.current + 1;
+      recentPrintRequestRef.current = requestId;
+      recentPrintAbortRef.current = controller;
       setPrintBlockedInfo(null);
-      setSelectedForLabel(items);
-      setShowLabelModal(true);
+      try {
+        const response = await axios.post(
+          `${API}/search`,
+          { cas_numbers: casNumbers },
+          { signal: controller.signal },
+        );
+        if (recentPrintRequestRef.current !== requestId) return;
+
+        const refreshed = rehydrateHistoricalPrintItems(
+          record,
+          Array.isArray(response.data) ? response.data : [],
+        );
+        if (refreshed.issues.length > 0 || refreshed.items.length === 0) {
+          toast.error(
+            t("label.recentPrintRefreshFailed", {
+              defaultValue:
+                "This historical print job no longer matches current lookup data. Search and review the chemicals again before printing.",
+            }),
+          );
+          return;
+        }
+
+        refreshed.classificationSelections.forEach((selection) => {
+          setCustomClassification(
+            selection.casNumber,
+            selection.selectedIndex,
+            selection.note,
+            selection.classification,
+          );
+        });
+        loadRecentPrint(record);
+        setSelectedForLabel(refreshed.items);
+        setShowLabelModal(true);
+      } catch (error) {
+        if (isCanceledRequest(error)) return;
+        if (recentPrintRequestRef.current !== requestId) return;
+        toast.error(
+          t("label.recentPrintRefreshFailed", {
+            defaultValue:
+              "Could not refresh this historical print job. Search the chemicals again before printing.",
+          }),
+        );
+      } finally {
+        if (recentPrintRequestRef.current === requestId) {
+          recentPrintAbortRef.current = null;
+        }
+      }
     },
-    [invalidateFavoritePrintLookup, loadRecentPrint, setSelectedForLabel]
+    [
+      invalidateFavoritePrintLookup,
+      isCanceledRequest,
+      loadRecentPrint,
+      setCustomClassification,
+      setSelectedForLabel,
+      t,
+    ],
   );
 
   // ── v1.9 M3 Tier 1: prepare-solution flow ───────────────
@@ -1117,10 +1234,10 @@ function App() {
   }, []);
 
   const handleCorrectionSubmitted = useCallback(() => {
-    if (showPilotDashboard && pilotAdminKey) {
+    if (showPilotDashboard && pilotAdminUnlocked) {
       refreshPilotDashboard();
     }
-  }, [pilotAdminKey, refreshPilotDashboard, showPilotDashboard]);
+  }, [pilotAdminUnlocked, refreshPilotDashboard, showPilotDashboard]);
 
   // Cancel / close the PrepareSolutionModal without submitting.
   // Must not touch any selection state: user intent was "never mind".
@@ -1318,7 +1435,7 @@ function App() {
           opsEventCount={observabilityEventCount}
           pilotAttentionCount={pilotAttentionCount}
           showPilotDashboardButton={PILOT_ADMIN_ENABLED}
-          pilotAdminUnlocked={Boolean(pilotAdminKey)}
+          pilotAdminUnlocked={pilotAdminUnlocked}
           showFavorites={showFavorites}
           showHistory={showHistory}
           showPilotDashboard={showPilotDashboard}
@@ -1334,14 +1451,14 @@ function App() {
         {showPilotAdminDialog && (
           <AdminAccessDialog
             error={pilotAdminError}
-            initialValue={pilotAdminKey}
+            initialValue=""
             onClose={() => setShowPilotAdminDialog(false)}
             onSubmit={handleSubmitPilotAdminKey}
           />
         )}
 
         <Suspense fallback={<DeferredOverlayFallback />}>
-          {showPilotDashboard && (
+          {showPilotDashboard && pilotAdminUnlocked && (
             <PilotDashboardSidebar
               report={pilotReport}
               aliases={pilotAliases}
@@ -1352,8 +1469,11 @@ function App() {
               saving={pilotSaving}
               error={pilotError}
               onClose={closeSidebar}
+              onLock={handleLockPilotAdmin}
               onRefresh={refreshPilotDashboard}
-              onExportObservabilityReport={() => exportObservabilityReport()}
+              onExportObservabilityReport={() =>
+                exportObservabilityReport({ adminKey: pilotAdminKey })
+              }
               onSaveManualEntry={savePilotManualEntry}
               onSaveAlias={savePilotAlias}
               onSaveReferenceLink={savePilotReferenceLink}

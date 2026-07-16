@@ -59,6 +59,23 @@ def test_pending_manual_entries_do_not_resolve_public_lookup(temp_store):
     assert server.resolve_name_to_cas("\u5be9\u6838\u7de9\u885d\u6db2") == "555-55-5"
 
 
+def test_open_correction_candidate_never_enters_public_lookup(temp_store):
+    temp_store.record_correction_request(
+        issue_type="unresolved-search",
+        cas_number="123-45-5",
+        chemical_name="Correction Candidate Solvent",
+        candidate={
+            "name_en": "Correction Candidate Solvent",
+            "name_zh": "更正候選溶劑",
+            "review_required": True,
+            "approved_for_public_use": False,
+        },
+    )
+
+    assert server.resolve_name_to_cas("Correction Candidate Solvent") is None
+    assert server.resolve_name_to_cas("更正候選溶劑") is None
+
+
 async def test_search_by_name_logs_autocomplete_miss(temp_store):
     transport = ASGITransport(app=server.app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -111,6 +128,46 @@ async def test_get_compound_name_captures_pending_alias_candidates(monkeypatch, 
     assert name_zh
     pending_aliases = temp_store.list_aliases(status="pending")
     assert any(alias["alias_text"] == "Dimethyl ketone" for alias in pending_aliases)
+
+
+async def test_full_alias_review_queue_does_not_break_public_name_lookup(
+    monkeypatch,
+    temp_store,
+):
+    from pilot_store import ReviewQueueLimitError
+
+    async def fake_pubchem_get_json(_http_client, url, **_kwargs):
+        if "property/IUPACName,Title" in url:
+            return 200, {"PropertyTable": {"Properties": [{"Title": "Acetone"}]}}
+        if "synonyms/JSON" in url:
+            return 200, {
+                "InformationList": {
+                    "Information": [{"Synonym": ["Acetone", "Acetone Alias"]}]
+                }
+            }
+        if "description/JSON" in url:
+            return 200, {"InformationList": {"Information": []}}
+        return 404, None
+
+    def reject_aliases(*_args, **_kwargs):
+        raise ReviewQueueLimitError(
+            queue="pending alias",
+            limit_type="global_rows",
+        )
+
+    monkeypatch.setattr(server, "pubchem_get_json", fake_pubchem_get_json)
+    monkeypatch.setattr(temp_store, "capture_alias_candidates", reject_aliases)
+    before = server.ops_counters["dictionary.alias.rejected"]
+
+    name_en, name_zh = await server.get_compound_name(
+        180,
+        http_client=None,
+        cas_number="67-64-1",
+    )
+
+    assert name_en == "Acetone"
+    assert name_zh
+    assert server.ops_counters["dictionary.alias.rejected"] == before + 1
 
 
 def test_dictionary_summary_tracks_alias_statuses(temp_store):

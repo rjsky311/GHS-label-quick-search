@@ -4,7 +4,10 @@ import {
   removeStorageItem,
   writeJsonStorage,
 } from "@/utils/localStorageJson";
-import { resolveSelectedGhsClassification } from "@/utils/selectedGhsClassification";
+import {
+  getGhsClassificationFingerprint,
+  resolveSelectedGhsClassification,
+} from "@/utils/selectedGhsClassification";
 
 const CUSTOM_GHS_KEY = "ghs_custom_settings";
 
@@ -38,13 +41,22 @@ export default function useCustomGHS() {
   );
 
   const setCustomClassification = useCallback(
-    (casNumber, selectedIndex, note = "") => {
+    (casNumber, selectedIndex, note = "", classification = null) => {
       setCustomGHSSettings((prev) => {
+        const previous = prev[casNumber];
+        const classificationFingerprint = classification
+          ? getGhsClassificationFingerprint(classification)
+          : previous?.selectedIndex === selectedIndex
+            ? previous?.classificationFingerprint
+            : undefined;
         const newSettings = {
           ...prev,
           [casNumber]: {
             selectedIndex,
             note,
+            ...(classificationFingerprint
+              ? { classificationFingerprint }
+              : {}),
             updatedAt: new Date().toISOString(),
           },
         };

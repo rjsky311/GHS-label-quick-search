@@ -2,7 +2,7 @@ import axios from "axios";
 import { saveAs } from "file-saver";
 import { toast } from "sonner";
 import { API } from "@/constants/ghs";
-import { buildPilotAdminHeaders, loadPilotAdminKey } from "@/constants/admin";
+import { buildPilotAdminHeaders } from "@/constants/admin";
 import { escapeCsvCell } from "@/utils/csvCell";
 
 export const OBSERVABILITY_UPDATE_EVENT = "ghs:observability-updated";
@@ -185,7 +185,7 @@ export function summarizeObservabilityEvents(events = []) {
   }, {});
 }
 
-export async function fetchObservabilityReport(adminKey = loadPilotAdminKey()) {
+export async function fetchObservabilityReport(adminKey = "") {
   const response = await axios.get(`${API}/ops/report`, {
     headers: buildPilotAdminHeaders(adminKey),
   });
@@ -248,7 +248,7 @@ function buildObservabilityCsvRows({ clientEvents, backendReport, backendError }
 
 export async function exportObservabilityReport({
   format = "json",
-  adminKey = loadPilotAdminKey(),
+  adminKey = "",
 } = {}) {
   const clientEvents = loadObservabilityEvents();
   let backendReport = null;

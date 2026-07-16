@@ -55,9 +55,8 @@ describe("workspaceDocuments", () => {
     expect(axios.put).not.toHaveBeenCalled();
   });
 
-  it("uses the admin session key when explicit workspace sync is enabled", async () => {
+  it("requires an explicit in-memory admin key when workspace sync is enabled", async () => {
     globalThis.__APP_WORKSPACE_SYNC_ENABLED__ = true;
-    sessionStorage.setItem("ghs.pilotAdminKey", "secret");
     const { axios, workspaceDocuments } = loadModule();
     axios.get.mockResolvedValue({
       data: { docType: "lab_profile", payload: { organization: "Lab A" } },
@@ -66,12 +65,12 @@ describe("workspaceDocuments", () => {
       data: { docType: "lab_profile", payload: { organization: "Lab B" } },
     });
 
-    await expect(workspaceDocuments.fetchWorkspaceDocument("lab_profile")).resolves.toEqual({
+    await expect(workspaceDocuments.fetchWorkspaceDocument("lab_profile", "secret")).resolves.toEqual({
       docType: "lab_profile",
       payload: { organization: "Lab A" },
     });
     await expect(
-      workspaceDocuments.saveWorkspaceDocument("lab_profile", { organization: "Lab B" })
+      workspaceDocuments.saveWorkspaceDocument("lab_profile", { organization: "Lab B" }, "secret")
     ).resolves.toEqual({
       docType: "lab_profile",
       payload: { organization: "Lab B" },
@@ -86,6 +85,33 @@ describe("workspaceDocuments", () => {
       { payload: { organization: "Lab B" } },
       { headers: { "x-ghs-admin-key": "secret" } }
     );
+  });
+
+  it("does not attempt workspace sync while admin authority is locked", async () => {
+    globalThis.__APP_WORKSPACE_SYNC_ENABLED__ = true;
+    const { axios, workspaceDocuments } = loadModule();
+
+    await expect(workspaceDocuments.fetchWorkspaceDocument("lab_profile")).resolves.toEqual({
+      docType: "lab_profile",
+      payload: null,
+      updatedAt: null,
+      localOnly: true,
+    });
+
+    expect(axios.get).not.toHaveBeenCalled();
+  });
+
+  it("treats a whitespace-only workspace key as locked", async () => {
+    globalThis.__APP_WORKSPACE_SYNC_ENABLED__ = true;
+    const { axios, workspaceDocuments } = loadModule();
+
+    await workspaceDocuments.saveWorkspaceDocument(
+      "lab_profile",
+      { organization: "Lab A" },
+      "   ",
+    );
+
+    expect(axios.put).not.toHaveBeenCalled();
   });
 
   it("keeps dictionary miss capture disabled unless explicitly enabled", async () => {

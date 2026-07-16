@@ -47,7 +47,7 @@ export default function AdminAccessDialog({
             <p className="mt-1 text-sm text-slate-600">
               {t("pilot.adminAccessHint", {
                 defaultValue:
-                  "Dictionary curation and pilot telemetry are now admin-only. Enter the server admin key for this session.",
+                  "Dictionary curation and pilot telemetry are admin-only. The key stays in memory and must be entered again after reload or timeout.",
               })}
             </p>
           </div>

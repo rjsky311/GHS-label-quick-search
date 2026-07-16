@@ -1,9 +1,11 @@
 import asyncio
+from io import BytesIO
 import logging
 import re
 from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +13,9 @@ logger = logging.getLogger(__name__)
 MAX_PRINT_PDF_HTML_BYTES = 3 * 1024 * 1024
 DEFAULT_RENDER_TIMEOUT_MS = 10_000
 DEFAULT_MAX_CONCURRENT_RENDERS = 2
+DEFAULT_MAX_RENDERED_PDF_BYTES = 64 * 1024 * 1024
+PDF_POINTS_PER_MM = 72 / 25.4
+PDF_GEOMETRY_TOLERANCE_POINTS = 3
 
 _SCRIPT_TAG_PATTERN = re.compile(r"<\s*script\b", re.IGNORECASE)
 _JAVASCRIPT_URL_PATTERN = re.compile(r"javascript\s*:", re.IGNORECASE)
@@ -82,6 +87,57 @@ def _format_mm(value: float) -> str:
     return f"{value:g}mm"
 
 
+def _invalid_pdf(reason: str) -> PdfRenderError:
+    logger.warning(
+        "Rejected generated PDF output",
+        extra={"validation_reason": reason},
+    )
+    return PdfRenderError(
+        "pdf_render_invalid_output",
+        "Generated PDF did not match the requested page contract",
+    )
+
+
+def validate_rendered_pdf(
+    pdf_bytes: bytes,
+    payload: PrintPdfRequest,
+    *,
+    max_output_bytes: int = DEFAULT_MAX_RENDERED_PDF_BYTES,
+) -> None:
+    """Validate browser output without logging or retaining document data."""
+    if not isinstance(pdf_bytes, bytes) or not pdf_bytes.startswith(b"%PDF-"):
+        raise _invalid_pdf("invalid_header")
+    if len(pdf_bytes) > max_output_bytes:
+        raise _invalid_pdf("byte_limit_exceeded")
+
+    try:
+        reader = PdfReader(BytesIO(pdf_bytes), strict=True)
+        if reader.is_encrypted:
+            raise _invalid_pdf("encrypted_output")
+        pages = list(reader.pages)
+    except PdfRenderError:
+        raise
+    except Exception as exc:
+        raise _invalid_pdf("malformed_document") from exc
+
+    if len(pages) != payload.meta.page_count_expected:
+        raise _invalid_pdf("page_count_mismatch")
+
+    expected_width = payload.page.width_mm * PDF_POINTS_PER_MM
+    expected_height = payload.page.height_mm * PDF_POINTS_PER_MM
+    for page in pages:
+        try:
+            width = float(page.mediabox.width)
+            height = float(page.mediabox.height)
+        except Exception as exc:
+            raise _invalid_pdf("invalid_media_box") from exc
+        if (
+            abs(width - expected_width) > PDF_GEOMETRY_TOLERANCE_POINTS
+            or abs(height - expected_height) > PDF_GEOMETRY_TOLERANCE_POINTS
+        ):
+            raise _invalid_pdf("page_geometry_mismatch")
+
+
 class PrintPdfRenderer:
     def __init__(
         self,
@@ -89,11 +145,13 @@ class PrintPdfRenderer:
         browser: Optional[Any] = None,
         timeout_ms: int = DEFAULT_RENDER_TIMEOUT_MS,
         max_concurrent: int = DEFAULT_MAX_CONCURRENT_RENDERS,
+        max_output_bytes: int = DEFAULT_MAX_RENDERED_PDF_BYTES,
     ):
         self._browser = browser
         self._playwright = None
         self._startup_error: Optional[Exception] = None
         self.timeout_ms = timeout_ms
+        self.max_output_bytes = max(1, int(max_output_bytes))
         self._semaphore = asyncio.Semaphore(max_concurrent)
 
     @property
@@ -170,7 +228,7 @@ class PrintPdfRenderer:
                 timeout=self.timeout_ms,
             )
             margin = _format_mm(payload.page.margin_mm)
-            return await page.pdf(
+            pdf_bytes = await page.pdf(
                 print_background=True,
                 prefer_css_page_size=True,
                 width=_format_mm(payload.page.width_mm),
@@ -182,5 +240,11 @@ class PrintPdfRenderer:
                     "left": margin,
                 },
             )
+            validate_rendered_pdf(
+                pdf_bytes,
+                payload,
+                max_output_bytes=self.max_output_bytes,
+            )
+            return pdf_bytes
         finally:
             await context.close()

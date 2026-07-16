@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Building2, MapPin, Phone } from "@/components/icons";
 import { READINESS_TONE_CLASSES } from "@/components/label-print/labelPrintModalHelpers";
+import { LAB_PROFILE_LIMITS } from "@/hooks/useLabProfile";
 
 const PROFILE_FIELDS = [
   {
@@ -163,6 +164,7 @@ export default function ResponsibleProfileControls({
                 </label>
                 <input
                   type="text"
+                  maxLength={LAB_PROFILE_LIMITS[field.key]}
                   data-testid={`responsible-profile-field-${field.key}`}
                   value={draftProfile[field.key] || ""}
                   onChange={(event) =>

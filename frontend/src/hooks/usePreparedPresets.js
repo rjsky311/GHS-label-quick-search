@@ -63,7 +63,7 @@ function persist(list) {
   writeJsonStorage(PRESETS_KEY, list);
 }
 
-export default function usePreparedPresets() {
+export default function usePreparedPresets(adminKey = "") {
   const [presets, setPresets] = useState(() => loadFromStorage());
   const presetsRef = useRef(presets);
 
@@ -77,7 +77,7 @@ export default function usePreparedPresets() {
 
     async function syncFromBackend() {
       try {
-        const remote = await fetchWorkspaceDocument("prepared_presets");
+        const remote = await fetchWorkspaceDocument("prepared_presets", adminKey);
         const remotePayload = Array.isArray(remote?.payload)
           ? remote.payload.map(normalizePreparedPresetRecord).filter(Boolean)
           : [];
@@ -91,7 +91,7 @@ export default function usePreparedPresets() {
         }
 
         if (localSnapshot.length > 0) {
-          await saveWorkspaceDocument("prepared_presets", localSnapshot);
+          await saveWorkspaceDocument("prepared_presets", localSnapshot, adminKey);
         }
       } catch {
         // Local fallback stays in place when backend persistence is unavailable.
@@ -102,7 +102,7 @@ export default function usePreparedPresets() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminKey]);
 
   const addPreset = useCallback((record) => {
     const normalized = normalizePreparedPresetRecord(record);
@@ -121,7 +121,7 @@ export default function usePreparedPresets() {
     presetsRef.current = next;
     setPresets(next);
     persist(next);
-    void saveWorkspaceDocument("prepared_presets", next).catch(() => {});
+    void saveWorkspaceDocument("prepared_presets", next, adminKey).catch(() => {});
 
     return {
       saved: true,
@@ -129,7 +129,7 @@ export default function usePreparedPresets() {
       reason: deduped ? "updated" : "created",
       record: normalized,
     };
-  }, []);
+  }, [adminKey]);
 
   return {
     presets,

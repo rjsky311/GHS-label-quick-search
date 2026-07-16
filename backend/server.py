@@ -33,6 +33,7 @@ from pilot_store import (
     APPROVED_MANUAL_ENTRY_STATUS,
     APPROVED_ALIAS_STATUS,
     PilotStore,
+    ReviewQueueLimitError,
     infer_locale,
     normalize_compact_text,
 )
@@ -99,6 +100,7 @@ from pdf_render import (
     PrintPdfRenderer,
     PrintPdfRequest,
 )
+from resource_limits import PublicJsonBodyLimitMiddleware
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -799,6 +801,15 @@ async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     global shared_http_client
     pilot_store.connect()
+    review_purge = pilot_store.purge_stale_review_rows()
+    _record_ops_counter(
+        "dictionary.review_queue.alias_rows_purged",
+        review_purge["deletedAliasCount"],
+    )
+    _record_ops_counter(
+        "dictionary.review_queue.correction_rows_purged",
+        review_purge["deletedCorrectionCount"],
+    )
     if pdf_renderer is not None and hasattr(pdf_renderer, "startup"):
         await pdf_renderer.startup()
     shared_http_client = httpx.AsyncClient(
@@ -828,6 +839,7 @@ app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(PublicJsonBodyLimitMiddleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -1707,7 +1719,12 @@ async def get_compound_name(
             if not compact or compact in excluded:
                 continue
             candidate_synonyms.append(synonym)
-        pilot_store.capture_alias_candidates(cas_number, candidate_synonyms)
+        try:
+            pilot_store.capture_alias_candidates(cas_number, candidate_synonyms)
+        except ReviewQueueLimitError:
+            # Synonym capture is auxiliary review intake. A full review queue
+            # must not turn a successful public chemical lookup into an error.
+            _record_ops_counter("dictionary.alias.rejected")
 
     return name_en, name_zh
 
@@ -2502,6 +2519,10 @@ app.add_middleware(
 #     scripts, load no images, etc. `frame-ancestors 'none'`
 #     prevents API responses from being framed at all.
 #
+#   - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+#     The public API is HTTPS-only. Emit HSTS from the application response so
+#     it survives the Zeabur TLS proxy boundary and can be verified end-to-end.
+#
 # The frontend is a static site and carries its own CSP via a meta
 # tag in index.html (added alongside this change).
 @app.middleware("http")
@@ -2516,5 +2537,9 @@ async def security_headers_middleware(request, call_next):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'none'; frame-ancestors 'none'",
+    )
+    response.headers.setdefault(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains",
     )
     return response

@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import App from "@/App";
 import useFavorites from "@/hooks/useFavorites";
+import { buildPrintJobRecord } from "@/utils/printStorage";
 
 jest.mock("axios");
 
@@ -116,10 +117,24 @@ jest.mock("@/components/FavoritesSidebar", () => {
 });
 
 jest.mock("@/components/LabelPrintModal", () => {
-  return function MockLabelPrintModal({ customGHSSettings, selectedForLabel }) {
+  return function MockLabelPrintModal({
+    customGHSSettings,
+    selectedForLabel,
+    recentPrints = [],
+    onLoadRecentPrint,
+  }) {
     return (
       <div data-testid="mock-label-print-modal">
         {JSON.stringify({ customGHSSettings, selectedForLabel })}
+        {recentPrints[0] && (
+          <button
+            type="button"
+            data-testid="load-recent-print"
+            onClick={() => onLoadRecentPrint(recentPrints[0])}
+          >
+            load recent
+          </button>
+        )}
       </div>
     );
   };
@@ -318,6 +333,78 @@ describe("App favorites print rehydration", () => {
     const modal = await screen.findByTestId("mock-label-print-modal");
     expect(modal).toHaveTextContent("P210");
     expect(modal).toHaveTextContent("pubchem-live");
+  });
+
+  it("requeries historical recent-print snapshots before replacing the active print selection", async () => {
+    const historicalMethanol = {
+      ...secondFreshFullResult,
+      hazard_statements: [
+        { code: "H225", text_en: "Historical flammable wording." },
+        { code: "H301", text_en: "Historical toxic wording." },
+      ],
+      precautionary_statements: [
+        { code: "P301+P310", text_en: "Historical response wording." },
+      ],
+      retrieved_at: "2026-07-15T00:01:00Z",
+      provenance: undefined,
+      retrieval: undefined,
+      source: undefined,
+    };
+    const record = buildPrintJobRecord({
+      items: [historicalMethanol],
+      labelConfig: { stockPreset: "a4-primary" },
+      customLabelFields: {},
+      labelQuantities: { "67-56-1": 1 },
+      labProfile: {
+        organization: "Materials Lab",
+        phone: "02-1234",
+        address: "Taipei",
+      },
+    });
+    localStorage.setItem("ghs_recent_print_jobs", JSON.stringify([record]));
+
+    let resolveRecentLookup;
+    const recentLookupPromise = new Promise((resolve) => {
+      resolveRecentLookup = resolve;
+    });
+    axios.get.mockResolvedValueOnce({ data: freshFullResult });
+    axios.post.mockReturnValueOnce(recentLookupPromise);
+
+    render(<App />);
+    fireEvent.click(screen.getByTestId("favorites-toggle-btn"));
+    fireEvent.click(await screen.findByTestId("favorite-print-64-17-5"));
+    const modal = await screen.findByTestId("mock-label-print-modal");
+    expect(modal).toHaveTextContent("Ethanol");
+
+    fireEvent.click(screen.getByTestId("load-recent-print"));
+    await waitFor(() =>
+      expect(axios.post).toHaveBeenCalledWith(
+        expect.stringMatching(/\/api\/search$/),
+        { cas_numbers: ["67-56-1"] },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
+    );
+    expect(screen.getByTestId("mock-label-print-modal")).toHaveTextContent(
+      "Ethanol",
+    );
+    expect(screen.getByTestId("mock-label-print-modal")).not.toHaveTextContent(
+      "Historical toxic wording",
+    );
+
+    await act(async () => {
+      resolveRecentLookup({ data: [secondFreshFullResult] });
+      await recentLookupPromise;
+    });
+
+    expect(screen.getByTestId("mock-label-print-modal")).toHaveTextContent(
+      "Methanol",
+    );
+    expect(screen.getByTestId("mock-label-print-modal")).toHaveTextContent(
+      "Immediately call a POISON CENTER",
+    );
+    expect(screen.getByTestId("mock-label-print-modal")).not.toHaveTextContent(
+      "Historical toxic wording",
+    );
   });
 
   it("looks up an identity-only favorite and opens print with refreshed full GHS content", async () => {

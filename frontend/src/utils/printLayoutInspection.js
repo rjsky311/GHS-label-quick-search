@@ -143,6 +143,7 @@ export function inspectPrintLayoutDocument(documentLike) {
   labels.forEach((label, index) => {
     const issueMeta = {
       index,
+      labelIndex: index,
     };
     if (elementVerticallyOverflows(label, 2)) {
       issues.push({ type: "label-overflow", ...issueMeta });
@@ -175,6 +176,9 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".signal", "signal-overflow"],
       [".qrcode-panel", "qr-panel-overflow"],
       [".qrcode-caption", "qr-caption-overflow"],
+      [".profile-block", "profile-block-overflow"],
+      [".profile-row", "profile-row-overflow"],
+      [".profile-value", "profile-value-overflow"],
     ].forEach(([selector, type]) => {
       const elements =
         typeof label.querySelectorAll === "function"
@@ -207,15 +211,23 @@ export function inspectPrintLayoutDocument(documentLike) {
     ) {
       issues.push({ type: "compliance-footer-clipped", ...issueMeta });
     }
-  });
 
-  Array.from(root.querySelectorAll(".statement-code"))
-    .filter((element) => "scrollWidth" in element || "scrollHeight" in element)
-    .forEach((code, index) => {
-      if (elementOverflows(code, 1)) {
-        issues.push({ type: "statement-code-overflow", index });
-      }
-    });
+    (typeof label.querySelectorAll === "function"
+      ? Array.from(label.querySelectorAll(".statement-code"))
+      : [label.querySelector?.(".statement-code")].filter(Boolean))
+      .filter(
+        (element) => "scrollWidth" in element || "scrollHeight" in element,
+      )
+      .forEach((code, statementIndex) => {
+        if (elementOverflows(code, 1)) {
+          issues.push({
+            type: "statement-code-overflow",
+            ...issueMeta,
+            statementIndex,
+          });
+        }
+      });
+  });
 
   return issues;
 }

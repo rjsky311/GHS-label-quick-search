@@ -287,9 +287,7 @@ describe('persona gate: admin data curator triage', () => {
       expect(screen.getByTestId('pilot-triage-panel')).toBeInTheDocument()
     );
 
-    expect(window.sessionStorage.getItem('ghs.pilotAdminKey')).toBe(
-      'pilot-secret'
-    );
+    expect(window.sessionStorage.getItem('ghs.pilotAdminKey')).toBeNull();
     expect(mockUsePilotDashboard).toHaveBeenCalledWith(
       expect.objectContaining({
         enabled: true,
