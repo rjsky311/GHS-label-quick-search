@@ -26,7 +26,10 @@
   bounded/inspected responsible profiles, indexed layout findings, and
   fresh-lookup-only historical print reuse are verified. See
   `.superpowers/sdd/task-2-report.md`.
-- Task 3: pending — public resource admission and PDF postconditions
+- Task 3: complete — raw POST/PUT/PATCH API bytes are bounded before JSON
+  decoding (including chunked bodies), valid bodies retain streaming-response
+  semantics, and rendered PDFs are byte/page/MediaBox validated with a real
+  parser. See `.superpowers/sdd/task-3-report.md`.
 - Task 4: pending — durable review-ingestion lifecycle
 - Task 5: pending — admin authority lifecycle
 - Task 6: pending — secondary production gates and documentation alignment

@@ -27,6 +27,50 @@ VALID_HTML = """<!DOCTYPE html>
 """
 
 
+def make_pdf_bytes(page_sizes=((595.28, 841.89),)):
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        (
+            b"<< /Type /Pages /Kids ["
+            + b" ".join(
+                f"{index + 3} 0 R".encode("ascii")
+                for index in range(len(page_sizes))
+            )
+            + f"] /Count {len(page_sizes)} >>".encode("ascii")
+        ),
+    ]
+    for width, height in page_sizes:
+        objects.append(
+            (
+                "<< /Type /Page /Parent 2 0 R "
+                f"/MediaBox [0 0 {width:g} {height:g}] >>"
+            ).encode("ascii")
+        )
+
+    pdf = bytearray(b"%PDF-1.7\n")
+    offsets = [0]
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(pdf))
+        pdf.extend(f"{number} 0 obj\n".encode("ascii"))
+        pdf.extend(body)
+        pdf.extend(b"\nendobj\n")
+    xref_offset = len(pdf)
+    pdf.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    pdf.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.extend(
+        (
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+            f"startxref\n{xref_offset}\n%%EOF\n"
+        ).encode("ascii")
+    )
+    return bytes(pdf)
+
+
+VALID_A4_PDF = make_pdf_bytes()
+
+
 def make_request(**overrides):
     payload = {
         "html": VALID_HTML,
@@ -171,7 +215,7 @@ class FakePage:
 
     async def pdf(self, **kwargs):
         self.pdf_calls.append(kwargs)
-        return b"%PDF-FAKE"
+        return VALID_A4_PDF
 
 
 class FakeContext:
@@ -238,7 +282,7 @@ async def test_renderer_uses_js_disabled_context_network_blocking_and_css_page_s
 
     pdf = await renderer.render(request)
 
-    assert pdf == b"%PDF-FAKE"
+    assert pdf == VALID_A4_PDF
     assert browser.context_kwargs == [{"java_script_enabled": False}]
     context = browser.contexts[0]
     assert context.routes[0][0] == "**/*"
@@ -265,22 +309,52 @@ async def test_renderer_uses_js_disabled_context_network_blocking_and_css_page_s
 @pytest.mark.parametrize(
     "pdf_bytes",
     [
-        (
-            b"%PDF-1.7\n"
-            b"1 0 obj << /Type /Page /MediaBox [0 0 595.28 841.89] >> endobj\n"
-            b"2 0 obj << /Type /Page /MediaBox [0 0 595.28 841.89] >> endobj\n"
-            b"%%EOF"
-        ),
-        (
-            b"%PDF-1.7\n"
-            b"1 0 obj << /Type /Page /MediaBox [0 0 1000 1000] >> endobj\n"
-            b"%%EOF"
-        ),
+        make_pdf_bytes(((595.28, 841.89), (595.28, 841.89))),
+        make_pdf_bytes(((1000, 1000),)),
     ],
 )
 @pytest.mark.asyncio
 async def test_renderer_rejects_authoritative_pdf_output_mismatch(pdf_bytes):
     renderer = PrintPdfRenderer(browser=MismatchedOutputBrowser(pdf_bytes))
+
+    with pytest.raises(PdfRenderError) as exc_info:
+        await renderer.render(make_request())
+
+    assert exc_info.value.code == "pdf_render_invalid_output"
+
+
+@pytest.mark.asyncio
+async def test_renderer_rejects_malformed_or_truncated_pdf_output():
+    renderer = PrintPdfRenderer(
+        browser=MismatchedOutputBrowser(b"%PDF-1.7\ntruncated")
+    )
+
+    with pytest.raises(PdfRenderError) as exc_info:
+        await renderer.render(make_request())
+
+    assert exc_info.value.code == "pdf_render_invalid_output"
+
+
+@pytest.mark.asyncio
+async def test_renderer_checks_media_box_on_every_expected_page():
+    pdf_bytes = make_pdf_bytes(((595.28, 841.89), (1000, 1000)))
+    renderer = PrintPdfRenderer(browser=MismatchedOutputBrowser(pdf_bytes))
+    request = make_request(
+        meta={"label_purpose": "complete", "page_count_expected": 2}
+    )
+
+    with pytest.raises(PdfRenderError) as exc_info:
+        await renderer.render(request)
+
+    assert exc_info.value.code == "pdf_render_invalid_output"
+
+
+@pytest.mark.asyncio
+async def test_renderer_rejects_output_above_configured_byte_ceiling():
+    renderer = PrintPdfRenderer(
+        browser=MismatchedOutputBrowser(VALID_A4_PDF),
+        max_output_bytes=len(VALID_A4_PDF) - 1,
+    )
 
     with pytest.raises(PdfRenderError) as exc_info:
         await renderer.render(make_request())

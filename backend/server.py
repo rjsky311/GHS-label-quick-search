@@ -99,6 +99,7 @@ from pdf_render import (
     PrintPdfRenderer,
     PrintPdfRequest,
 )
+from resource_limits import PublicJsonBodyLimitMiddleware
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -828,6 +829,7 @@ app = FastAPI(title="GHS Label Quick Search API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(PublicJsonBodyLimitMiddleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
