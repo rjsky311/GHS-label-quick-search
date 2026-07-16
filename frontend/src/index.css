@@ -66,8 +66,8 @@ code {
         --notebook-action-solid-fg: 42 46% 90%;
         --notebook-canvas: 40 38% 85%;
         --notebook-disc: 41 66% 94%;
-        --notebook-rule-line: 23 19 11;
-        --notebook-rule-line-alpha: .045;
+        --notebook-sheet-rule-alpha: .14;
+        --notebook-rule-spacing: 2.15rem;
         --notebook-grain-opacity: .14;
         --notebook-grain-blend: multiply;
         --notebook-canvas-grain-opacity: .66;
@@ -98,8 +98,8 @@ code {
         --notebook-action-solid-fg: 42 46% 90%;
         --notebook-canvas: 40 38% 85%;
         --notebook-disc: 41 66% 94%;
-        --notebook-rule-line: 23 19 11;
-        --notebook-rule-line-alpha: .045;
+        --notebook-sheet-rule-alpha: .14;
+        --notebook-rule-spacing: 2.15rem;
         --notebook-grain-opacity: .14;
         --notebook-grain-blend: multiply;
         --notebook-canvas-grain-opacity: .66;
@@ -130,8 +130,8 @@ code {
         --notebook-action-solid-fg: 173 60% 8%;
         --notebook-canvas: 75 20% 4%;
         --notebook-disc: 80 7% 9%;
-        --notebook-rule-line: 255 255 250;
-        --notebook-rule-line-alpha: .022;
+        --notebook-sheet-rule-alpha: .2;
+        --notebook-rule-spacing: 2.15rem;
         --notebook-grain-opacity: .055;
         --notebook-grain-blend: screen;
         --notebook-canvas-grain-opacity: .5;
@@ -183,13 +183,7 @@ code {
         min-height: 100vh;
         background-color: hsl(var(--notebook-app));
         color: hsl(var(--notebook-ink));
-        background-image: repeating-linear-gradient(
-            to bottom,
-            transparent 0,
-            transparent 33px,
-            rgb(var(--notebook-rule-line) / var(--notebook-rule-line-alpha)) 33px,
-            rgb(var(--notebook-rule-line) / var(--notebook-rule-line-alpha)) 34px
-        );
+        background-image: none;
         transition:
             background-color 200ms ease,
             color 200ms ease;
@@ -229,10 +223,6 @@ code {
     }
 
     @media (max-width: 640px) {
-        .notebook-app {
-            background-image: none;
-        }
-
         .notebook-grain {
             opacity: calc(var(--notebook-grain-opacity) * 0.45);
         }
@@ -788,10 +778,10 @@ code {
     .empty-workbench {
         background-image:
             linear-gradient(
-                hsl(var(--notebook-rule) / 0.2) 1px,
+                hsl(var(--notebook-rule) / var(--notebook-sheet-rule-alpha)) 1px,
                 transparent 1px
             );
-        background-size: 100% 2.15rem;
+        background-size: 100% var(--notebook-rule-spacing);
     }
 
     .notebook-workbench-sheet {
@@ -963,10 +953,7 @@ code {
         overflow: hidden;
         border-top: 1px solid hsl(var(--notebook-rule) / 0.72);
         border-bottom: 1px solid hsl(var(--notebook-rule) / 0.58);
-        background:
-            linear-gradient(hsl(var(--notebook-rule) / 0.14) 1px, transparent 1px),
-            hsl(var(--notebook-surface) / 0.42);
-        background-size: 100% 2.15rem;
+        background-color: hsl(var(--notebook-surface) / 0.42);
         box-shadow: none;
     }
 
@@ -1039,13 +1026,7 @@ code {
         border-bottom: 1px solid hsl(var(--notebook-rule) / 0.56);
         border-left: 0;
         border-right: 0;
-        background:
-            linear-gradient(
-                hsl(var(--notebook-rule) / 0.16) 1px,
-                transparent 1px
-            ),
-            hsl(var(--notebook-surface) / 0.32);
-        background-size: 100% 2.15rem;
+        background-color: hsl(var(--notebook-surface) / 0.32);
     }
 
     .notebook-feature-note {
@@ -1069,10 +1050,7 @@ code {
         border-bottom: 1px solid hsl(var(--notebook-rule) / 0.64);
         border-left: 0;
         border-right: 0;
-        background:
-            linear-gradient(hsl(var(--notebook-rule) / 0.13) 1px, transparent 1px),
-            hsl(var(--notebook-surface) / 0.42);
-        background-size: 100% 2.15rem;
+        background-color: hsl(var(--notebook-surface) / 0.42);
         color: hsl(var(--notebook-ink));
         box-shadow: none;
     }
@@ -1084,12 +1062,8 @@ code {
                 hsl(var(--notebook-warning-soft) / 0.18),
                 transparent 28%
             ),
-            linear-gradient(hsl(var(--notebook-rule) / 0.13) 1px, transparent 1px),
             hsl(var(--notebook-surface) / 0.42);
-        background-size:
-            100% 100%,
-            100% 2.15rem,
-            100% 100%;
+        background-size: 100% 100%;
     }
 
     .notebook-trust-item {
