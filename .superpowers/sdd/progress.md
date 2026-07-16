@@ -43,8 +43,11 @@
   language, deployed CJK/semantic smoke, immutable Action pins, explicit code
   ownership, private vulnerability guidance, and enabled GitHub private
   reporting are verified locally. See `.superpowers/sdd/task-6-report.md`.
-- Task 7: in progress — local integration, dependency audits, 42-case rendered
-  PDF QA, and two-pass independent review are complete with no unresolved
-  Critical/Important issue. Protected publication, exact-SHA Zeabur production
-  proof, canonical evidence reconciliation, and removal of this repo from the
-  Genspark builder app remain. See `.superpowers/sdd/task-7-report.md`.
+- Task 7: complete — local integration, dependency audits, 42-case rendered
+  PDF QA, two-pass independent review, official PR review remediation,
+  Genspark repo detachment, protected PR #46 publication, exact-SHA Zeabur
+  frontend/backend deployment, main CI, Production Print QA, and the full
+  production product suite passed. Canonical evidence is recorded in
+  `docs/evidence/2026-07-16-production-readiness-hardening.md`; only physical
+  printer/stock/readability/QR checks remain as external owner validation. See
+  `.superpowers/sdd/task-7-report.md`.
