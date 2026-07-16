@@ -11,6 +11,11 @@ const normalizeLanguage = (language) =>
     ? LANGUAGE_EN
     : LANGUAGE_ZH_TW;
 
+const applyDocumentLanguage = (language) => {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = normalizeLanguage(language);
+};
+
 const readInitialLanguage = () => {
   if (typeof window !== "undefined") {
     const storedLanguage = window.localStorage?.getItem("ghs_language");
@@ -83,10 +88,14 @@ export const i18nReady = (async () => {
     },
   });
 
+  applyDocumentLanguage(i18n.resolvedLanguage || i18n.language);
+
   const changeLanguage = i18n.changeLanguage.bind(i18n);
   i18n.changeLanguage = async (language, ...args) => {
     const normalizedLanguage = await loadLanguageResources(language);
-    return changeLanguage(normalizedLanguage, ...args);
+    const result = await changeLanguage(normalizedLanguage, ...args);
+    applyDocumentLanguage(normalizedLanguage);
+    return result;
   };
 
   return i18n;

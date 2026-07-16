@@ -2519,6 +2519,10 @@ app.add_middleware(
 #     scripts, load no images, etc. `frame-ancestors 'none'`
 #     prevents API responses from being framed at all.
 #
+#   - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+#     The public API is HTTPS-only. Emit HSTS from the application response so
+#     it survives the Zeabur TLS proxy boundary and can be verified end-to-end.
+#
 # The frontend is a static site and carries its own CSP via a meta
 # tag in index.html (added alongside this change).
 @app.middleware("http")
@@ -2533,5 +2537,9 @@ async def security_headers_middleware(request, call_next):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'none'; frame-ancestors 'none'",
+    )
+    response.headers.setdefault(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains",
     )
     return response

@@ -19,6 +19,9 @@ const mobileViewport = {
   height: Number.parseInt(env.PRODUCTION_SEARCH_UI_MOBILE_HEIGHT || "844", 10),
 };
 const browserLocale = env.PRODUCTION_SEARCH_UI_LOCALE || "en-US";
+const expectedDocumentLanguage = browserLocale.toLowerCase().startsWith("en")
+  ? "en"
+  : "zh-TW";
 const searchTerm = env.PRODUCTION_SEARCH_UI_TERM || "7647-01-0";
 const noGhsSearchTerm = env.PRODUCTION_SEARCH_UI_NO_GHS_TERM || "57-13-6";
 const unresolvedSearchTerm =
@@ -200,6 +203,78 @@ const closeBrowserWithTimeout = async (browserInstance) => {
     );
   }
 };
+
+const inspectDocumentAccessibilityAndFonts = async (page) =>
+  page.evaluate(async ({ expectedLanguage }) => {
+    let cjkFontFaces = [];
+    let cjkFontError = "";
+    try {
+      const loadedFaces = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("CJK font load timed out")),
+          15000,
+        );
+        document.fonts
+          .load('16px "Noto Sans TC"', "危險標籤")
+          .then(resolve, reject)
+          .finally(() => clearTimeout(timeout));
+      });
+      cjkFontFaces = loadedFaces.map((face) => ({
+        family: face.family,
+        status: face.status,
+      }));
+    } catch (error) {
+      cjkFontError = error?.message || String(error);
+    }
+
+    const isVisible = (element) => {
+      const style = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        rect.width > 0 &&
+        rect.height > 0
+      );
+    };
+    const accessibleButtonName = (button) => {
+      const labelledByText = String(button.getAttribute("aria-labelledby") || "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((id) => document.getElementById(id)?.textContent || "")
+        .join(" ")
+        .trim();
+      return (
+        button.getAttribute("aria-label") ||
+        labelledByText ||
+        button.textContent ||
+        button.getAttribute("title") ||
+        ""
+      ).trim();
+    };
+    const unlabeledVisibleButtons = Array.from(
+      document.querySelectorAll("button"),
+    )
+      .filter(isVisible)
+      .filter((button) => !accessibleButtonName(button))
+      .map((button) => button.outerHTML.slice(0, 240));
+    const mainLandmarks = Array.from(document.querySelectorAll("main"));
+    const documentLanguage = document.documentElement.lang;
+
+    return {
+      expectedDocumentLanguage: expectedLanguage,
+      documentLanguage,
+      languageMatches: documentLanguage === expectedLanguage,
+      mainLandmarkCount: mainLandmarks.length,
+      mainLandmarkId: mainLandmarks[0]?.id || "",
+      unlabeledVisibleButtons,
+      cjkFontFaces,
+      cjkFontError,
+      cjkFontReady:
+        cjkFontFaces.length > 0 &&
+        cjkFontFaces.every((face) => face.status === "loaded"),
+    };
+  }, { expectedLanguage: expectedDocumentLanguage });
 
 const parseIssueUrl = (href) => {
   try {
@@ -1672,6 +1747,20 @@ const summarizeSearchUiReportForConsole = (report) => {
           prepareStacking.escapeRestoresDetailOk,
         ),
       },
+      accessibility: {
+        documentLanguage:
+          metrics.documentReadiness?.documentLanguage || "",
+        expectedDocumentLanguage:
+          metrics.documentReadiness?.expectedDocumentLanguage || "",
+        languageMatches: Boolean(
+          metrics.documentReadiness?.languageMatches,
+        ),
+        mainLandmarkCount:
+          metrics.documentReadiness?.mainLandmarkCount || 0,
+        unlabeledVisibleButtonCount:
+          metrics.documentReadiness?.unlabeledVisibleButtons?.length || 0,
+        cjkFontReady: Boolean(metrics.documentReadiness?.cjkFontReady),
+      },
       mobileReadFirst: {
         resultHorizontalOverflow:
           mobileReadFirst.documentScrollWidth >
@@ -1778,6 +1867,22 @@ try {
   const page = await context.newPage();
 
   await gotoApp(page, withQaParam(productionUrl));
+  const documentReadiness = await inspectDocumentAccessibilityAndFonts(page);
+  if (!documentReadiness.languageMatches) {
+    failures.push("document-language-does-not-match-active-locale");
+  }
+  if (
+    documentReadiness.mainLandmarkCount !== 1 ||
+    documentReadiness.mainLandmarkId !== "main-content"
+  ) {
+    failures.push("document-main-landmark-invalid");
+  }
+  if (documentReadiness.unlabeledVisibleButtons.length > 0) {
+    failures.push("document-visible-button-accessible-name-missing");
+  }
+  if (!documentReadiness.cjkFontReady) {
+    failures.push("document-cjk-font-not-ready");
+  }
   const searchAttempts = await searchUntilUsableResult(page, searchTerm);
 
   const screenshotPath = path.join(screenshotDir, "search-results.png");
@@ -2740,6 +2845,7 @@ try {
     metrics: {
       detailButton,
       sdsButton,
+      documentReadiness,
       pictogramTiles,
       resultPictogramMetrics,
       expandedClassificationCount,

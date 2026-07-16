@@ -23,6 +23,7 @@ const {
   gitShasMatch,
   httpOriginsMatch,
   serviceIdentityMatches,
+  strictTransportSecurityIsReady,
 } = trust;
 
 test("accepts an explicitly ready backend with PDF capability", () => {
@@ -107,6 +108,68 @@ test("matches only credential-free root HTTP(S) origins", () => {
   assert.equal(httpOriginsMatch(`${expected}?redirect=evil`, expected), false);
   assert.equal(httpOriginsMatch(`${expected}#fragment`, expected), false);
   assert.equal(httpOriginsMatch("ftp://ghs-backend.zeabur.app", expected), false);
+});
+
+test("requires a one-year HSTS policy for production responses", () => {
+  assert.equal(
+    strictTransportSecurityIsReady(
+      "max-age=31536000; includeSubDomains",
+    ),
+    true,
+  );
+  assert.equal(strictTransportSecurityIsReady("max-age=300"), false);
+  assert.equal(strictTransportSecurityIsReady(""), false);
+});
+
+test("pins every GitHub Action to its reviewed immutable commit", () => {
+  const workflows = ["ci.yml", "production-print-qa.yml"].map((name) =>
+    fs.readFileSync(path.join(repoRoot, ".github", "workflows", name), "utf8"),
+  );
+  const workflowText = workflows.join("\n");
+
+  assert.doesNotMatch(
+    workflowText,
+    /uses:\s*actions\/(?:checkout|setup-node|setup-python|upload-artifact)@v\d+/,
+  );
+  assert.match(workflowText, /actions\/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10/);
+  assert.match(workflowText, /actions\/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38/);
+  assert.match(workflowText, /actions\/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1/);
+  assert.match(workflowText, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
+});
+
+test("keeps private security reporting and code ownership discoverable", () => {
+  const security = fs.readFileSync(path.join(repoRoot, "SECURITY.md"), "utf8");
+  const codeowners = fs.readFileSync(
+    path.join(repoRoot, ".github", "CODEOWNERS"),
+    "utf8",
+  );
+
+  assert.match(security, /security\/advisories\/new/);
+  assert.match(security, /Do not open a public GitHub issue/i);
+  assert.match(codeowners, /^\*\s+@rjsky311$/m);
+});
+
+test("production gates cover HSTS, document language, CJK font loading, and semantic landmarks", () => {
+  const healthQa = fs.readFileSync(
+    path.join(frontendRoot, "scripts/check-production-health.mjs"),
+    "utf8",
+  );
+  const searchQa = fs.readFileSync(
+    path.join(frontendRoot, "scripts/check-production-search-ui.mjs"),
+    "utf8",
+  );
+  const nginx = fs.readFileSync(
+    path.join(frontendRoot, "nginx.conf"),
+    "utf8",
+  );
+
+  assert.match(healthQa, /strictTransportSecurityIsReady/);
+  assert.match(healthQa, /strict-transport-security/);
+  assert.match(nginx, /Strict-Transport-Security/);
+  assert.match(searchQa, /document\.fonts\s*\.load/);
+  assert.match(searchQa, /document\.documentElement\.lang/);
+  assert.match(searchQa, /querySelectorAll\("main"\)/);
+  assert.match(searchQa, /unlabeledVisibleButtons/);
 });
 
 test("pins the Zeabur CLI dependency and has no npx network fallback", () => {

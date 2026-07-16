@@ -39,5 +39,8 @@
   explicit/idle/absolute lock, epoch/request invalidation, immediate protected
   state masking, blank reload behavior, and explicit workspace/observability
   key propagation are verified. See `.superpowers/sdd/task-5-report.md`.
-- Task 6: pending — secondary production gates and documentation alignment
+- Task 6: complete — live-response HSTS enforcement/gating, correct document
+  language, deployed CJK/semantic smoke, immutable Action pins, explicit code
+  ownership, private vulnerability guidance, and enabled GitHub private
+  reporting are verified locally. See `.superpowers/sdd/task-6-report.md`.
 - Task 7: pending — integration, deployment, and second review

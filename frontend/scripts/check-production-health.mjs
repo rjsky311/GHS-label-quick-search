@@ -7,6 +7,7 @@ import {
   backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
+  strictTransportSecurityIsReady,
 } from "./production-qa-trust.mjs";
 
 const DEFAULT_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
@@ -99,6 +100,8 @@ const responseMeta = (response, elapsedMs) => ({
   elapsedMs,
   requestId: response.headers.get("x-zeabur-request-id") || "",
   server: response.headers.get("server") || "",
+  strictTransportSecurity:
+    response.headers.get("strict-transport-security") || "",
 });
 
 const fetchJsonMeta = async (url) => {
@@ -164,6 +167,15 @@ const checkFrontend = () =>
         htmlUrl,
         html: htmlMeta,
         error: `frontend HTML returned HTTP ${htmlResponse.status}`,
+      };
+    }
+    if (!strictTransportSecurityIsReady(htmlMeta.strictTransportSecurity)) {
+      return {
+        ok: false,
+        frontendUrl,
+        htmlUrl,
+        html: htmlMeta,
+        error: "frontend HTML response did not include a one-year HSTS policy",
       };
     }
 
@@ -307,12 +319,15 @@ const checkBackend = () =>
     const healthy =
       response.ok &&
       backendHealthIsReady(body) &&
+      strictTransportSecurityIsReady(meta.strictTransportSecurity) &&
       (!expectedGitSha || backendGitShaMatches);
     let error = "";
     if (!response.ok || body?.status !== "healthy") {
       error = `backend health returned HTTP ${response.status} with status ${body?.status || "unknown"}`;
     } else if (!backendHealthIsReady(body)) {
       error = `backend health reported ${body?.readiness || "unknown"} readiness without available PDF capability`;
+    } else if (!strictTransportSecurityIsReady(meta.strictTransportSecurity)) {
+      error = "backend health response did not include a one-year HSTS policy";
     } else if (expectedGitSha && !backendGitShaMatches) {
       error = "backend health git SHA did not match the expected deployed commit";
     } else if (parseError) {

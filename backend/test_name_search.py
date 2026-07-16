@@ -3146,6 +3146,15 @@ async def test_health_response_has_nosniff_header():
     assert response.headers.get("x-content-type-options") == "nosniff"
 
 
+async def test_health_response_has_hsts_header():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="https://test") as ac:
+        response = await ac.get("/api/health")
+    hsts = response.headers.get("strict-transport-security", "")
+    assert "max-age=31536000" in hsts
+    assert "includesubdomains" in hsts.lower()
+
+
 async def test_health_response_has_referrer_policy():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
