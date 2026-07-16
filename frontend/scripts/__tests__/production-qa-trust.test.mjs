@@ -162,10 +162,33 @@ test("production gates cover HSTS, document language, CJK font loading, and sema
     path.join(frontendRoot, "nginx.conf"),
     "utf8",
   );
+  const staticHeaders = fs.readFileSync(
+    path.join(frontendRoot, "public", "_headers"),
+    "utf8",
+  );
 
   assert.match(healthQa, /strictTransportSecurityIsReady/);
   assert.match(healthQa, /strict-transport-security/);
   assert.match(nginx, /Strict-Transport-Security/);
+  assert.match(staticHeaders, /^\/\*$/m);
+  assert.match(
+    staticHeaders,
+    /^\s+Strict-Transport-Security: max-age=31536000; includeSubDomains$/m,
+  );
+  assert.match(staticHeaders, /^\s+X-Content-Type-Options: nosniff$/m);
+  assert.match(staticHeaders, /^\s+X-Frame-Options: DENY$/m);
+  assert.match(
+    staticHeaders,
+    /^\s+Content-Security-Policy: frame-ancestors 'none'$/m,
+  );
+  assert.match(
+    staticHeaders,
+    /^\s+Referrer-Policy: strict-origin-when-cross-origin$/m,
+  );
+  assert.match(
+    staticHeaders,
+    /^\s+Permissions-Policy: camera=\(\), microphone=\(\), geolocation=\(\), payment=\(\), usb=\(\)$/m,
+  );
   assert.match(searchQa, /document\.fonts\s*\.load/);
   assert.match(searchQa, /document\.documentElement\.lang/);
   assert.match(searchQa, /querySelectorAll\("main"\)/);
