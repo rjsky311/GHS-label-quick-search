@@ -1,8 +1,10 @@
-# Task 7 review — local integration and independent review
+# Task 7 review — integration, publication, and production closure
 
 - **Local integration: PASS**
 - **Independent Critical/Important review: PASS**
-- **Publication/deployment: PENDING**
+- **Protected publication: PASS**
+- **Exact-SHA Zeabur deployment: PASS**
+- **Production product evidence: PASS**
 
 All local suites, generated PDF cases, coverage audits, dependency audits, and
 static gates pass. The independent whole-diff review produced one supported
@@ -16,9 +18,13 @@ tests rather than assertion alone. The supported transaction finding now rolls
 back commit failures and delays its in-memory cache/version signal until after a
 successful commit under the same store lock.
 
-Task 7 cannot be marked complete before the repository is removed from the
-Genspark builder app, protected PR requirements pass, and production proves the
-exact merged SHA. Physical printer, paper/stock scaling, thermal quality,
-pictogram readability, and real-device QR scanning remain external validation,
-not software evidence.
+The repository was removed from the Genspark builder app, PR #46 passed its
+required checks and review remediation, branch protection was restored after
+the owner-authorized merge, and both Zeabur services plus the complete
+production suite proved merge SHA
+`655b155c9f06ad095ddaaa23f141c1f3ead277bf`. The production summary has all
+8 product blocks green with no report failures or warnings.
 
+Task 7 is complete. Physical printer, paper/stock scaling, thermal quality,
+pictogram readability, and real-device QR scanning remain external owner
+validation, not unfinished software evidence.

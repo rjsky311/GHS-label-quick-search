@@ -76,6 +76,15 @@ slice should be opened from this governance work by inertia. Continue using
 the evidence-gated Lab Workflow Readiness roadmap, with physical printing
 still deferred.
 
+The 2026-07-16 production-readiness hardening pass is also closed in PR #46 /
+SHA `655b155c9f06ad095ddaaa23f141c1f3ead277bf`. Main CI run `29478467505`,
+Production Print QA run `29478558444`, both exact-SHA Zeabur deployments, and
+the full production product suite are green; Genspark no longer has access to
+this repository and the normal one-review protection is restored. Use
+`docs/evidence/2026-07-16-production-readiness-hardening.md` as the evidence
+boundary. The physical printer/stock/QR checklist remains an owner handoff,
+not an invitation to continue software hardening without new evidence.
+
 When closing a slice, include proactive observations from the work: what newly
 noticed risk, stale assumption, repeated pattern, or QA/user-purpose mismatch
 should affect the next slice. If there is no new observation, say that instead

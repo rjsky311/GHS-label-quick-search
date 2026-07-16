@@ -57,6 +57,22 @@ line-by-line evidence record is
 The original main protection (including one-review requirement) was restored
 after the owner-authorized merge.
 
+Production-readiness hardening checkpoint (2026-07-16): PR #46 was merged as
+`655b155c9f06ad095ddaaa23f141c1f3ead277bf`. Main CI run `29478467505`,
+Production Print QA run `29478558444`, exact-SHA Zeabur freshness, live HSTS,
+backend readiness/PDF capability, active PDF canary, search UI, 6/6 print
+handoff cases, 9/9 prepared/reprint/preset cases, the 51-item batch workflow,
+and all 8 product blocks passed with zero report failures or warnings. The
+repository was removed from the Genspark builder app without changing the
+app's 27 other selected repositories, and the original one-review branch
+protection was restored immediately after the owner-authorized merge. The
+canonical evidence record is
+`docs/evidence/2026-07-16-production-readiness-hardening.md`. This hardening
+slice is closed; only real printer/paper/stock, thermal quality, physical
+readability, and printed-QR device checks remain as external owner validation.
+Do not open another software slice from this checkpoint without fresh product
+or operational evidence.
+
 Active print simplification baseline: `SIMPLIFIED_LABEL_OUTPUT_MODEL.md` is the
 canonical product model for label-printing work. It replaces the prior
 first-level print UI model with exactly three outputs: complete A4/Letter
