@@ -47,7 +47,23 @@ const stepTimeouts = {
     10,
   ),
 };
+const batchMaxAttempts = Math.max(
+  1,
+  Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_BATCH_ATTEMPTS || "2",
+    10,
+  ),
+);
+const batchRetryDelayMs = Math.max(
+  0,
+  Number.parseInt(
+    process.env.PRODUCTION_PRODUCT_QA_BATCH_RETRY_DELAY_MS || "5000",
+    10,
+  ),
+);
 const steps = [];
+const retryEvents = [];
+const flakyWarnings = [];
 
 const env = {
   ...process.env,
@@ -111,7 +127,11 @@ const writeProductReport = ({ ok, failure = null }) => {
     summaryReportPath: summaryPath,
     defaultStepTimeoutMs,
     stepTimeouts,
+    batchMaxAttempts,
+    batchRetryDelayMs,
     steps,
+    retryEvents,
+    flakyWarnings,
     failure,
     productBlocks: summary.productBlocks || [],
     summary: summary.summary || {},
@@ -122,7 +142,7 @@ const writeProductReport = ({ ok, failure = null }) => {
   return productReport;
 };
 
-const run = (id, args, extraEnv = {}) =>
+const run = (id, args, extraEnv = {}, attempt = 1, maxAttempts = 1) =>
   new Promise((resolve, reject) => {
     const childArgs = isWindows ? ["/d", "/s", "/c", "npm", ...args] : args;
     const startedAt = new Date();
@@ -138,6 +158,8 @@ const run = (id, args, extraEnv = {}) =>
       exitCode: null,
       timedOut: false,
       error: "",
+      attempt,
+      maxAttempts,
     };
     console.log(
       JSON.stringify(
@@ -146,6 +168,8 @@ const run = (id, args, extraEnv = {}) =>
           id: step.id,
           command: step.command,
           timeoutMs: stepTimeoutMs,
+          attempt,
+          maxAttempts,
         },
         null,
         2,
@@ -179,6 +203,8 @@ const run = (id, args, extraEnv = {}) =>
             exitCode: step.exitCode,
             durationMs: step.durationMs,
             timedOut: step.timedOut,
+            attempt: step.attempt,
+            maxAttempts: step.maxAttempts,
           },
           null,
           2,
@@ -215,11 +241,72 @@ const run = (id, args, extraEnv = {}) =>
     });
   });
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const runWithRetries = async (
+  id,
+  args,
+  { extraEnv = {}, maxAttempts = 1, retryDelayMs = 0 } = {},
+) => {
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await run(id, args, extraEnv, attempt, maxAttempts);
+      if (attempt > 1) {
+        const warning = {
+          id,
+          status: "flaky_recovered",
+          passedAttempt: attempt,
+          failedAttempts: attempt - 1,
+        };
+        flakyWarnings.push(warning);
+        console.warn(
+          JSON.stringify(
+            { event: "production-product-step-flaky-recovered", ...warning },
+            null,
+            2,
+          ),
+        );
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= maxAttempts) throw error;
+      const retryEvent = {
+        id,
+        status: "retrying",
+        failedAttempt: attempt,
+        nextAttempt: attempt + 1,
+        maxAttempts,
+        retryDelayMs,
+        error: error?.message || String(error),
+      };
+      retryEvents.push(retryEvent);
+      console.warn(
+        JSON.stringify(
+          { event: "production-product-step-retry", ...retryEvent },
+          null,
+          2,
+        ),
+      );
+      if (retryDelayMs > 0) await sleep(retryDelayMs);
+    }
+  }
+  throw lastError;
+};
+
 try {
   await run("production-pdf-canary", ["run", "qa:production-pdf-canary"]);
   await run("production-smoke", ["run", "qa:production-smoke"]);
   await run("production-prepared", ["run", "qa:production-prepared"]);
-  await run("production-batch-print", ["run", "qa:production-batch-print"]);
+  await runWithRetries(
+    "production-batch-print",
+    ["run", "qa:production-batch-print"],
+    {
+      maxAttempts: batchMaxAttempts,
+      retryDelayMs: batchRetryDelayMs,
+    },
+  );
   await run("production-summary", ["run", "qa:production-summary"], {
     PRINT_QA_REQUIRE_PRODUCT_BLOCKS: "1",
   });
@@ -244,7 +331,11 @@ try {
           status: step.status,
           durationMs: step.durationMs,
           timedOut: step.timedOut,
+          attempt: step.attempt,
+          maxAttempts: step.maxAttempts,
         })),
+        retryEvents: productReport.retryEvents,
+        flakyWarnings: productReport.flakyWarnings,
         productBlocks: productReport.productBlocks.map((block) => ({
           id: block.id,
           ok: block.ok,
@@ -280,7 +371,11 @@ try {
           durationMs: step.durationMs,
           timedOut: step.timedOut,
           error: step.error,
+          attempt: step.attempt,
+          maxAttempts: step.maxAttempts,
         })),
+        retryEvents: productReport.retryEvents,
+        flakyWarnings: productReport.flakyWarnings,
       },
       null,
       2,
