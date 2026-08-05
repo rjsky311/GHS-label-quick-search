@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit installed dependencies
+        run: npm audit --audit-level=high
+
       - name: Check i18n parity
         run: npm run test:i18n
 
@@ -56,9 +59,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_RESOURCE_REPO: ${{ github.repository }}
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
 
   backend:
     name: Backend

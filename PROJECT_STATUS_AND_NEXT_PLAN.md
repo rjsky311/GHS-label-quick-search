@@ -958,9 +958,12 @@ Current status:
   bucket.
 - `qa:production-health` checks the deployed frontend HTML, current Vite index
   asset, generated `/build-info.json`, and backend `/api/health` with bounded
-  retries. It writes `build/production-health-report.json` with request IDs,
-  timing, and deployed git SHA evidence so a 502 or stale-deploy incident can
-  be diagnosed without replaying ad hoc curl commands.
+  retries. The build-info gate also requires the deployed frontend to report
+  the pinned Node 22 build major, so a Zeabur builder fallback cannot silently
+  diverge from the CI/runtime contract. It writes
+  `build/production-health-report.json` with request IDs, timing, deployed git
+  SHA, and Node build evidence so a 502, stale-deploy, or builder-version
+  incident can be diagnosed without replaying ad hoc curl commands.
   Set `PRINT_QA_EXPECTED_ASSET_TEXT` or
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker from the new UI
   when a production-facing change needs proof that Zeabur is serving the
