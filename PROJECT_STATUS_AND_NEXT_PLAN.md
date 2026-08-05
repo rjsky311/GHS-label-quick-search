@@ -204,11 +204,12 @@ Production:
   `zeabur.yaml` service names now match those live names. The frontend service
   also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
   monorepo app directory (`frontend`), build command, and static output
-  directory for the actual frontend service. Root-level `.node-version` pins
-  the zbpack build image to Node 22; keep it aligned with
-  `frontend/package.json` because zbpack resolves the runtime version from the
-  repository root before switching to the configured app directory. The live
-  frontend service also
+  directory for the actual frontend service. Root-level and frontend
+  `.node-version` files pin the zbpack build image to Node 22; keep both aligned
+  with the exact-major `frontend/package.json` engine. This covers zbpack
+  planners that resolve the runtime before switching to the configured app
+  directory as well as older planners that parse only the effective app root
+  and do not understand an `x` wildcard. The live frontend service also
   mirrors those settings through non-sensitive `ZBPACK_APP_DIR`,
   `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL`
   variables because Zeabur service metadata can remain blank even when the
