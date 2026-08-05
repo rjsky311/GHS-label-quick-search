@@ -34,6 +34,18 @@ test("accepts only the configured frontend build Node.js major", () => {
   assert.equal(nodeVersionMatchesMajor("v22.23.1", ""), false);
 });
 
+test("pins the Zeabur build Node.js major at the repository root", () => {
+  const rootNodeVersion = fs
+    .readFileSync(path.join(repoRoot, ".node-version"), "utf8")
+    .trim();
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"),
+  );
+
+  assert.equal(rootNodeVersion, "22");
+  assert.equal(packageJson.engines?.node, "22.x");
+});
+
 test("accepts an explicitly ready backend with PDF capability", () => {
   assert.equal(
     backendHealthIsReady({
