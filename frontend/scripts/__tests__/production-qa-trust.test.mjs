@@ -50,6 +50,28 @@ test("pins the Zeabur build Node.js major at both planner roots", () => {
   assert.equal(packageJson.engines?.node, "22");
 });
 
+test("pins the live frontend service Docker build to Node.js 22", () => {
+  const serviceDockerfile = fs.readFileSync(
+    path.join(repoRoot, "Dockerfile.ghs-frontend"),
+    "utf8",
+  );
+  const localDockerfile = fs.readFileSync(
+    path.join(frontendRoot, "Dockerfile"),
+    "utf8",
+  );
+
+  assert.match(serviceDockerfile, /^FROM node:22-alpine AS builder$/m);
+  assert.match(localDockerfile, /^FROM node:22-alpine AS builder$/m);
+  assert.match(
+    serviceDockerfile,
+    /^COPY frontend\/package\.json frontend\/package-lock\.json \.\/$/m,
+  );
+  assert.match(
+    serviceDockerfile,
+    /^COPY frontend\/nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf$/m,
+  );
+});
+
 test("accepts an explicitly ready backend with PDF capability", () => {
   assert.equal(
     backendHealthIsReady({
