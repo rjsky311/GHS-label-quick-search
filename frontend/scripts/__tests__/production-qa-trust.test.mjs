@@ -322,6 +322,10 @@ test("Production Print QA pins service identity and backend origins after npm ci
   assert.notEqual(npmCiIndex, -1);
   assert.ok(npmCiIndex < workflow.indexOf("run: npm run qa:production-health"));
   assert.ok(npmCiIndex < workflow.indexOf("npm run qa:zeabur-deployment"));
+  assert.match(workflow, /--canonical \.\.\/Dockerfile\.ghs-backend/);
+  assert.match(workflow, /--service-id 6962687391818d5fd9705a67/);
+  assert.match(workflow, /--canonical \.\.\/Dockerfile\.ghs-frontend/);
+  assert.match(workflow, /--service-id 69626873d9479ab33ad4590e/);
   assert.match(workflow, /statusCategory: "missing-token"/);
   assert.match(workflow, /ZEABUR_TOKEN is required/);
 });

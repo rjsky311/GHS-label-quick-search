@@ -127,6 +127,15 @@ jobs:
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
 
+      - name: Check inline frontend Dockerfile parity
+        run: >
+          python ../backend/scripts/check_inline_dockerfile_parity.py
+          --canonical ../Dockerfile.ghs-frontend
+          --service-id 69626873d9479ab33ad4590e
+          --report build/inline-frontend-dockerfile-parity-report.json
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+
       - name: Check P-code wording coverage
         run: npm run qa:p-code-coverage
 

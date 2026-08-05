@@ -204,14 +204,16 @@ Production:
   `zeabur.yaml` service names now match those live names. The frontend service
   also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
   monorepo app directory (`frontend`), build command, and static output
-  directory for the actual frontend service. `Dockerfile.ghs-frontend` is the
-  canonical live-service build recipe and pins its builder to Node 22; keep it
-  aligned with `frontend/Dockerfile`. Root-level and frontend `.node-version`
-  files plus the exact-major `frontend/package.json` engine retain the same
-  contract for local work and zbpack fallback. The live frontend service also
-  mirrors those settings through non-sensitive `ZBPACK_APP_DIR`,
-  `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, `ZBPACK_DOCKERFILE_NAME`, and
-  `VITE_BACKEND_URL`
+  directory for the actual frontend service. The frontend service builds from
+  an INLINE Dockerfile pinned in the Zeabur service spec. Treat
+  `Dockerfile.ghs-frontend` as canonical, update the spec through GraphQL
+  `updateDockerfile`, and redeploy; repository buildpack overrides do not
+  replace stale inline content. The canonical recipe pins Node 22 + Nginx and
+  should remain aligned with `frontend/Dockerfile`. Root-level and frontend
+  `.node-version` files plus the exact-major `frontend/package.json` engine
+  retain the same contract for local work and zbpack fallback. The live
+  frontend service also mirrors non-sensitive `ZBPACK_APP_DIR`,
+  `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL`
   variables because Zeabur service metadata can remain blank even when the
   deployment should consume buildpack configuration.
 

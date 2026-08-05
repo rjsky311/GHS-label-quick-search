@@ -74,10 +74,10 @@ before choosing the next autonomous product slice.
 - Frontend service ID: `69626873d9479ab33ad4590e`
 - Live service names are `ghs-frontend` and `ghs-backend`.
 - `zeabur.yaml` service names should stay aligned with those live names.
-- `Dockerfile.ghs-frontend` pins the live Node 22 + Nginx build;
-  `zbpack.ghs-frontend.json` remains the monorepo buildpack fallback.
+- Frontend uses an INLINE Dockerfile; sync `Dockerfile.ghs-frontend` via
+  GraphQL `updateDockerfile` + redeploy. `zbpack.ghs-frontend.json` is fallback.
 - Live build variables include `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`,
-  `ZBPACK_OUTPUT_DIR`, `ZBPACK_DOCKERFILE_NAME`, and `VITE_BACKEND_URL`.
+  `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL`.
 - Backend service `6962687391818d5fd9705a67` builds from an INLINE Dockerfile
   pinned in its Zeabur spec; repo Dockerfiles and zbpack overrides are
   ignored. Update via `Dockerfile.ghs-backend` + GraphQL `updateDockerfile` +
