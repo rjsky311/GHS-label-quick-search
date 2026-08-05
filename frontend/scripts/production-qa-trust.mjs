@@ -65,6 +65,14 @@ export const strictTransportSecurityIsReady = (value) => {
   return /^\d+$/.test(maxAge || "") && Number(maxAge) >= 31_536_000;
 };
 
+export const nodeVersionMatchesMajor = (value, expectedMajor) => {
+  const version = String(value || "").trim();
+  const major = String(expectedMajor || "").trim();
+  if (!/^\d+$/.test(major)) return false;
+
+  return new RegExp(`^v?${major}(?:\\.|$)`).test(version);
+};
+
 export const backendHealthIsReady = (body) =>
   Boolean(
     body?.status === "healthy" &&

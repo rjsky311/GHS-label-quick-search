@@ -7,6 +7,7 @@ import {
   backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
+  nodeVersionMatchesMajor,
   strictTransportSecurityIsReady,
 } from "./production-qa-trust.mjs";
 
@@ -21,6 +22,8 @@ const backendHealthUrl =
   process.env.PRODUCTION_HEALTH_BACKEND_URL || DEFAULT_BACKEND_HEALTH_URL;
 const expectedBackendOrigin =
   process.env.PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN || "";
+const expectedFrontendNodeMajor =
+  process.env.PRODUCTION_HEALTH_EXPECTED_NODE_MAJOR || "22";
 const outputPath = path.resolve(
   process.cwd(),
   process.env.PRODUCTION_HEALTH_REPORT_PATH ||
@@ -240,9 +243,12 @@ const checkFrontend = () =>
       gitShortSha: "",
       gitBranch: "",
       builtAt: "",
+      nodeVersion: "",
       parseError: "",
       expectedGitSha: expectedGitSha || undefined,
       gitShaMatches: expectedGitSha ? false : undefined,
+      expectedNodeMajor: expectedFrontendNodeMajor,
+      nodeVersionMatches: false,
     };
     try {
       const buildInfoResult = await fetchJsonMeta(buildInfoUrl.toString());
@@ -256,10 +262,15 @@ const checkFrontend = () =>
         gitShortSha: buildInfoResult.body?.gitShortSha || "",
         gitBranch: buildInfoResult.body?.gitBranch || "",
         builtAt: buildInfoResult.body?.builtAt || "",
+        nodeVersion: buildInfoResult.body?.nodeVersion || "",
         parseError: buildInfoResult.parseError,
         gitShaMatches: expectedGitSha
           ? gitShasMatch(buildInfoResult.body?.gitSha, expectedGitSha)
           : undefined,
+        nodeVersionMatches: nodeVersionMatchesMajor(
+          buildInfoResult.body?.nodeVersion,
+          expectedFrontendNodeMajor,
+        ),
       };
     } catch (error) {
       buildInfo = {
@@ -286,6 +297,20 @@ const checkFrontend = () =>
         buildInfo,
         warnings,
         error: "frontend build-info git SHA did not match the expected deployed commit",
+      };
+    }
+
+    if (!buildInfo.nodeVersionMatches) {
+      return {
+        ok: false,
+        frontendUrl,
+        htmlUrl,
+        assetUrl,
+        html: htmlMeta,
+        asset: assetMeta,
+        buildInfo,
+        warnings,
+        error: `frontend build-info Node.js version did not match expected major ${expectedFrontendNodeMajor}`,
       };
     }
 

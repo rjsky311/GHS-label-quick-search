@@ -22,9 +22,17 @@ const {
   backendHealthIsReady,
   gitShasMatch,
   httpOriginsMatch,
+  nodeVersionMatchesMajor,
   serviceIdentityMatches,
   strictTransportSecurityIsReady,
 } = trust;
+
+test("accepts only the configured frontend build Node.js major", () => {
+  assert.equal(nodeVersionMatchesMajor("v22.23.1", "22"), true);
+  assert.equal(nodeVersionMatchesMajor("22.9.0", 22), true);
+  assert.equal(nodeVersionMatchesMajor("v20.20.2", "22"), false);
+  assert.equal(nodeVersionMatchesMajor("v22.23.1", ""), false);
+});
 
 test("accepts an explicitly ready backend with PDF capability", () => {
   assert.equal(
@@ -137,6 +145,23 @@ test("pins every GitHub Action to its reviewed immutable commit", () => {
   assert.match(workflowText, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
 });
 
+test("CI audits all installed dependencies before expensive frontend checks", () => {
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github", "workflows", "ci.yml"),
+    "utf8",
+  );
+  const installIndex = workflow.indexOf("run: npm ci");
+  const auditIndex = workflow.indexOf("run: npm audit --audit-level=high");
+  const testIndex = workflow.indexOf("run: npm test -- --runInBand");
+
+  assert.notEqual(installIndex, -1);
+  assert.notEqual(auditIndex, -1);
+  assert.notEqual(testIndex, -1);
+  assert.ok(installIndex < auditIndex);
+  assert.ok(auditIndex < testIndex);
+  assert.doesNotMatch(workflow, /npm audit[^\n]*--omit=dev/);
+});
+
 test("keeps private security reporting and code ownership discoverable", () => {
   const security = fs.readFileSync(path.join(repoRoot, "SECURITY.md"), "utf8");
   const codeowners = fs.readFileSync(
@@ -168,6 +193,8 @@ test("production gates cover HSTS, document language, CJK font loading, and sema
   );
 
   assert.match(healthQa, /strictTransportSecurityIsReady/);
+  assert.match(healthQa, /nodeVersionMatchesMajor/);
+  assert.match(healthQa, /PRODUCTION_HEALTH_EXPECTED_NODE_MAJOR/);
   assert.match(healthQa, /strict-transport-security/);
   assert.match(nginx, /Strict-Transport-Security/);
   assert.match(staticHeaders, /^\/\*$/m);
