@@ -181,25 +181,31 @@ test("pins every GitHub Action to its reviewed immutable commit", () => {
   assert.match(workflowText, /actions\/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38/);
   assert.match(workflowText, /actions\/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1/);
   assert.match(workflowText, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
+  assert.match(
+    workflowText,
+    /actions\/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294/,
+  );
 });
 
-test("CI audits all lockfile dependencies before expensive frontend checks", () => {
+test("CI reviews dependency changes before expensive frontend checks", () => {
   const workflow = fs.readFileSync(
     path.join(repoRoot, ".github", "workflows", "ci.yml"),
     "utf8",
   );
   const installIndex = workflow.indexOf("run: npm ci --no-audit");
-  const auditIndex = workflow.indexOf(
-    "run: npm audit --package-lock-only --audit-level=high",
+  const reviewIndex = workflow.indexOf(
+    "uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
   );
   const testIndex = workflow.indexOf("run: npm test -- --runInBand");
 
   assert.notEqual(installIndex, -1);
-  assert.notEqual(auditIndex, -1);
+  assert.notEqual(reviewIndex, -1);
   assert.notEqual(testIndex, -1);
-  assert.ok(installIndex < auditIndex);
-  assert.ok(auditIndex < testIndex);
-  assert.doesNotMatch(workflow, /npm audit[^\n]*--omit=dev/);
+  assert.ok(reviewIndex < installIndex);
+  assert.ok(installIndex < testIndex);
+  assert.match(workflow, /fail-on-severity: high/);
+  assert.match(workflow, /fail-on-scopes: runtime, development, unknown/);
+  assert.doesNotMatch(workflow, /warn-only:\s*true/);
 });
 
 test("keeps private security reporting and code ownership discoverable", () => {

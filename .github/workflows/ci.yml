@@ -21,6 +21,26 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          fail-on-scopes: runtime, development, unknown
+          license-check: false
+          show-openssf-scorecard: false
+
+      - name: Review dependency changes
+        if: github.event_name == 'push'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          base-ref: ${{ github.event.before }}
+          head-ref: ${{ github.sha }}
+          fail-on-severity: high
+          fail-on-scopes: runtime, development, unknown
+          license-check: false
+          show-openssf-scorecard: false
+
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
@@ -32,14 +52,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit
-
-      - name: Audit lockfile dependencies
-        run: npm audit --package-lock-only --audit-level=high
-        env:
-          npm_config_fetch_retries: 1
-          npm_config_fetch_retry_mintimeout: 1000
-          npm_config_fetch_retry_maxtimeout: 10000
-          npm_config_fetch_timeout: 15000
 
       - name: Check i18n parity
         run: npm run test:i18n
