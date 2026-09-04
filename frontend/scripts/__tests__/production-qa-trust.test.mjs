@@ -183,13 +183,15 @@ test("pins every GitHub Action to its reviewed immutable commit", () => {
   assert.match(workflowText, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a/);
 });
 
-test("CI audits all installed dependencies before expensive frontend checks", () => {
+test("CI audits all lockfile dependencies before expensive frontend checks", () => {
   const workflow = fs.readFileSync(
     path.join(repoRoot, ".github", "workflows", "ci.yml"),
     "utf8",
   );
-  const installIndex = workflow.indexOf("run: npm ci");
-  const auditIndex = workflow.indexOf("run: npm audit --audit-level=high");
+  const installIndex = workflow.indexOf("run: npm ci --no-audit");
+  const auditIndex = workflow.indexOf(
+    "run: npm audit --package-lock-only --audit-level=high",
+  );
   const testIndex = workflow.indexOf("run: npm test -- --runInBand");
 
   assert.notEqual(installIndex, -1);
