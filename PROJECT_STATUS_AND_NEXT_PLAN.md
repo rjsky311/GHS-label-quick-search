@@ -342,27 +342,15 @@ Current validation gates:
   `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or
   `GITHUB_SHA` is present, this gate fails if the deployed build metadata does
   not match the expected commit.
-- Production deploy freshness: `npm run qa:zeabur-deployment` checks whether
-  Zeabur has a `RUNNING` frontend deployment for the expected git SHA and
-  writes `build/zeabur-deployment-report.json`. Run it before heavier
-  production QA when `qa:production-health` reports stale `/build-info.json`
-  metadata or when Zeabur deployment status is uncertain. If production remains
-  on an older Vite asset and Zeabur has no deployment for the latest `main`
-  commit,
-  use `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
-  696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
-  `npm run qa:zeabur-deployment` to report `ok: true` before heavier
-  production QA.
-  If the new deployment stays before build start (`startedAt` unset) or has no
-  build log, do not treat that as a frontend build failure; classify it as a
-  Zeabur/GitHub integration or platform-scheduling blocker and keep production
-  verification blocked until `/build-info.json` proves the expected git SHA.
-  If Zeabur creates a deployment before build start while the service metadata
-  shows an empty root directory or missing build/output settings, confirm
-  `zeabur.yaml` uses the live service names, the service-name-specific
-  `zbpack.ghs-frontend.json` is present on `main`, and the frontend service
-  exposes the matching `ZBPACK_*` build variables, then redeploy and re-run
-  this gate.
+- Production deploy evidence: `npm run qa:zeabur-deployment` consumes the
+  preceding `build/production-health-report.json`, requires the public
+  frontend and backend to expose the exact expected git SHA, verifies the
+  configured backend origin, and queries Zeabur GraphQL read-only for the
+  pinned frontend service ID/name. It writes
+  `build/zeabur-deployment-report.json`. The repository no longer depends on
+  Zeabur CLI JSON output for this gate because the CLI can exit successfully
+  with empty output. Inline Dockerfile parity remains a separate direct
+  GraphQL gate for both live services.
   The Production Print QA workflow now runs this probe in its always-run
   evidence phase and the production summary consumes
   `build/zeabur-deployment-report.json` when present. Use the summary's
@@ -977,18 +965,13 @@ Current status:
   refreshed frontend bundle, not only a reachable older asset.
   Prefer `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` or the
   GitHub workflow-provided `PRINT_QA_EXPECTED_GIT_SHA` for commit-level proof.
-- `qa:zeabur-deployment` checks Zeabur's deployment list for the expected git
-  SHA and fails when the expected deployment is missing, not `RUNNING`, stuck
-  before build start (`startedAt` unset), or when the latest `RUNNING`
-  deployment is still an older commit. It writes
-  `build/zeabur-deployment-report.json` with deployment status, service
-  metadata, build-log availability, local `zeabur.yaml`/`zbpack` config
-  evidence, deployment age, a `statusCategory`, and recovery commands so stale
-  production and platform scheduling failures can be reported without manually
-  comparing CLI JSON. A `stuck-before-build` category means the expected commit
-  reached Zeabur but never started building; retry the reported redeploy command
-  once, then inspect the Zeabur service queue/GitHub integration rather than
-  changing product code.
+- `qa:zeabur-deployment` is an evidence-composition gate: it revalidates the
+  exact frontend/backend SHA and backend origin captured by
+  `qa:production-health`, then confirms the expected frontend service identity
+  through Zeabur GraphQL. A stale public deployment, mismatched service, missing
+  token, or unavailable API remains a hard failure. Deployment queue or build
+  scheduling diagnosis belongs in the Zeabur dashboard/log path and is not
+  inferred from empty CLI output.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.

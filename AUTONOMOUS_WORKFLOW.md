@@ -223,19 +223,14 @@ For print workflow changes, the default validation stack is:
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker string from the new
   bundle when you need to prove production has refreshed instead of validating
   an older deployed asset.
-- If the expected asset marker stays on the previous Vite bundle after CI
-  passes, verify Zeabur's own deployment state instead of waiting blindly:
-  `npm run qa:zeabur-deployment`. This writes
-  `build/zeabur-deployment-report.json` and fails when the expected commit is
-  missing, not `RUNNING`, stuck before build start (`startedAt` unset), or when
-  production still runs an older commit. Use the report's service metadata,
-  build-log entry count, and local `zeabur.yaml`/`zbpack` evidence before
-  changing product code in response to a stale deployment. If the latest `main`
-  commit is missing, trigger the existing frontend service with
-  `npx zeabur service redeploy --id 69626873d9479ab33ad4590e --env-id
-  696262d9a7aaff0c1152b3d6 --yes --json --interactive=false`, then wait for
-  `npm run qa:zeabur-deployment` to report `ok: true` before rerunning
-  production QA.
+- After `qa:production-health`, run `npm run qa:zeabur-deployment` to compose
+  strict deployment evidence. It requires exact public frontend/backend SHAs,
+  the pinned backend origin, and a direct read-only Zeabur GraphQL match for the
+  frontend service ID/name. It writes
+  `build/zeabur-deployment-report.json`. Do not diagnose or redeploy from an
+  empty Zeabur CLI JSON response; inspect the Zeabur dashboard/logs when the
+  public SHA remains stale, and keep infrastructure mutation as a separate
+  explicit action.
 - `npm run qa:production-bundle` after Zeabur deploy
 - `npm run qa:production-search-ui` after Zeabur deploy when search results,
   result actions, GHS result strips, or first-screen polish changed.

@@ -268,7 +268,7 @@ test("production gates cover HSTS, document language, CJK font loading, and sema
   assert.match(searchQa, /unlabeledVisibleButtons/);
 });
 
-test("pins the Zeabur CLI dependency and has no npx network fallback", () => {
+test("Zeabur deployment evidence uses direct GraphQL and no CLI dependency", () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"),
   );
@@ -277,10 +277,12 @@ test("pins the Zeabur CLI dependency and has no npx network fallback", () => {
     "utf8",
   );
 
-  assert.equal(packageJson.devDependencies?.zeabur, "0.20.0");
+  assert.equal(packageJson.devDependencies?.zeabur, undefined);
   assert.doesNotMatch(deploymentQa, /\bnpx\s+zeabur\b/);
-  assert.doesNotMatch(deploymentQa, /runCommand\(\s*["']npx["']/);
-  assert.match(deploymentQa, /process\.execPath/);
+  assert.doesNotMatch(deploymentQa, /node_modules\/zeabur/);
+  assert.match(deploymentQa, /https:\/\/api\.zeabur\.com\/graphql/);
+  assert.match(deploymentQa, /ProductionServiceIdentity/);
+  assert.match(deploymentQa, /production-health-report\.json/);
 });
 
 test("production QA scripts use the centralized trust policy", () => {
