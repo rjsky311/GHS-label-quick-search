@@ -609,7 +609,7 @@ def test_dictionary_miss_query_resolution_survives_recapture(tmp_path):
 
 
 def test_dictionary_miss_query_retention_purges_only_unprotected_stale_rows(tmp_path):
-    now = datetime(2026, 5, 21, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
     old_seen_at = (now - timedelta(days=120)).isoformat()
     fresh_seen_at = (now - timedelta(days=10)).isoformat()
     store = PilotStore(tmp_path / "pilot.db").connect()
