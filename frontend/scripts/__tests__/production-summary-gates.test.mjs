@@ -33,7 +33,7 @@ const makeWorkspace = () => {
   });
   writeJson(path.join(buildDir, "zeabur-deployment-report.json"), {
     ok: true,
-    statusCategory: "fresh-running",
+    statusCategory: "fresh-serving",
     expectedGitSha: "0123456789abcdef",
   });
   return cwd;

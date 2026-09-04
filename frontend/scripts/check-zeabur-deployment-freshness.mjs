@@ -1,8 +1,6 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 
 import {
   gitShasMatch,
@@ -10,17 +8,25 @@ import {
   serviceIdentityMatches,
 } from "./production-qa-trust.mjs";
 
-const ZERO_TIME = "0001-01-01T00:00:00Z";
-const DEFAULT_ENVIRONMENT_ID = "696262d9a7aaff0c1152b3d6";
-const EXPECTED_ZEABUR_CLI_VERSION = "0.20.0";
+const DEFAULT_GRAPHQL_ENDPOINT = "https://api.zeabur.com/graphql";
+const DEFAULT_HEALTH_REPORT_PATH = "build/production-health-report.json";
+const DEFAULT_OUTPUT_PATH = "build/zeabur-deployment-report.json";
+const SERVICE_QUERY = `
+query ProductionServiceIdentity($serviceID: ObjectID!) {
+  service(_id: $serviceID) {
+    _id
+    name
+  }
+}`.trim();
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const frontendRoot = path.resolve(scriptDir, "..");
-const repoRoot = path.resolve(frontendRoot, "..");
+const cwd = process.cwd();
 const outputPath = path.resolve(
-  frontendRoot,
-  process.env.ZEABUR_DEPLOYMENT_REPORT_PATH ||
-    "build/zeabur-deployment-report.json",
+  cwd,
+  process.env.ZEABUR_DEPLOYMENT_REPORT_PATH || DEFAULT_OUTPUT_PATH,
+);
+const healthReportPath = path.resolve(
+  cwd,
+  process.env.PRODUCTION_HEALTH_REPORT_PATH || DEFAULT_HEALTH_REPORT_PATH,
 );
 const serviceId =
   process.env.ZEABUR_FRONTEND_SERVICE_ID ||
@@ -28,558 +34,211 @@ const serviceId =
   "";
 const expectedServiceName = process.env.ZEABUR_EXPECTED_SERVICE_NAME || "";
 const expectedBackendOrigin = process.env.ZEABUR_EXPECTED_BACKEND_ORIGIN || "";
-const environmentId =
-  process.env.ZEABUR_ENV_ID ||
-  process.env.ZEABUR_ENVIRONMENT_ID ||
-  DEFAULT_ENVIRONMENT_ID;
-
-const runCommand = (command, args, options = {}) =>
-  spawnSync(command, args, {
-    ...options,
-    encoding: "utf8",
-  });
-
-const stripAnsi = (text) =>
-  String(text || "").replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
-
-const resolveLocalZeaburBin = () => {
-  const packageJsonPath = path.resolve(
-    frontendRoot,
-    "node_modules/zeabur/package.json",
-  );
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-  const binEntry =
-    typeof packageJson.bin === "string"
-      ? packageJson.bin
-      : packageJson.bin?.zeabur;
-
-  if (packageJson.version !== EXPECTED_ZEABUR_CLI_VERSION || !binEntry) {
-    throw new Error(
-      `Expected repository-local zeabur ${EXPECTED_ZEABUR_CLI_VERSION} with a zeabur bin entry.`,
-    );
-  }
-
-  const binPath = path.resolve(path.dirname(packageJsonPath), binEntry);
-  if (!fs.existsSync(binPath)) {
-    throw new Error(`Repository-local Zeabur CLI bin was not found at ${binPath}.`);
-  }
-  return binPath;
-};
-
-const readGitHead = () => {
-  const result = runCommand("git", ["rev-parse", "HEAD"], {
-    cwd: repoRoot,
-  });
-  if (result.status !== 0) return "";
-  return result.stdout.trim();
-};
-
 const expectedGitSha = String(
   process.env.ZEABUR_EXPECTED_GIT_SHA ||
     process.env.PRODUCTION_HEALTH_EXPECTED_GIT_SHA ||
     process.env.PRINT_QA_EXPECTED_GIT_SHA ||
     process.env.GITHUB_SHA ||
-    readGitHead(),
+    "",
 )
   .trim()
   .toLowerCase();
-const expectedServiceIdentity = {
-  id: serviceId,
-  name: expectedServiceName,
-};
-const preflightFailures = [];
+const graphqlEndpoint =
+  process.env.ZEABUR_GRAPHQL_ENDPOINT || DEFAULT_GRAPHQL_ENDPOINT;
+const token = process.env.ZEABUR_TOKEN || "";
 
-if (!gitShasMatch(expectedGitSha, expectedGitSha)) {
-  preflightFailures.push(
-    "Zeabur deployment QA requires an expected hexadecimal git SHA of at least 12 characters.",
-  );
-}
-if (!serviceIdentityMatches(expectedServiceIdentity, expectedServiceIdentity)) {
-  preflightFailures.push(
-    "Zeabur deployment QA requires ZEABUR_FRONTEND_SERVICE_ID and ZEABUR_EXPECTED_SERVICE_NAME.",
-  );
-}
-if (!httpOriginsMatch(expectedBackendOrigin, expectedBackendOrigin)) {
-  preflightFailures.push(
-    "Zeabur deployment QA requires ZEABUR_EXPECTED_BACKEND_ORIGIN as a credential-free HTTP(S) origin.",
-  );
-}
-
-let zeaburBinPath = "";
-try {
-  zeaburBinPath = resolveLocalZeaburBin();
-} catch (error) {
-  preflightFailures.push(error?.message || String(error));
-}
-
-if (preflightFailures.length) {
-  console.error(preflightFailures.join("\n"));
-  process.exit(1);
-}
-
-const runZeaburCommand = (args) => {
-  const commandArgs = [zeaburBinPath, ...args];
-  const result = runCommand(process.execPath, commandArgs, {
-    cwd: repoRoot,
-  });
-  return {
-    command: [process.execPath, ...commandArgs]
-      .map((value) => JSON.stringify(value))
-      .join(" "),
-    status: result.status,
-    stdout: stripAnsi(result.stdout),
-    stderr: stripAnsi(result.stderr),
-    error: result.error?.message || "",
-  };
-};
-
-const runZeaburDeploymentList = () => {
-  const args = [
-    "deployment",
-    "list",
-    "--service-id",
-    serviceId,
-    "--env-id",
-    environmentId,
-    "--json",
-    "--interactive=false",
-  ];
-  return runZeaburCommand(args);
-};
-
-const runZeaburServiceGet = () => {
-  const args = [
-    "service",
-    "get",
-    "--id",
-    serviceId,
-    "--env-id",
-    environmentId,
-    "--json",
-    "--interactive=false",
-  ];
-  return runZeaburCommand(args);
-};
-
-const runZeaburVariableList = () => {
-  const args = [
-    "variable",
-    "list",
-    "--id",
-    serviceId,
-    "--env-id",
-    environmentId,
-    "--json",
-    "--interactive=false",
-  ];
-  return runZeaburCommand(args);
-};
-
-const runZeaburDeploymentLog = (deploymentId) => {
-  if (!deploymentId) {
-    return {
-      command: "",
-      status: null,
-      stdout: "",
-      stderr: "",
-      error: "",
-      skipped: true,
-    };
-  }
-  const args = [
-    "deployment",
-    "log",
-    "--deployment-id",
-    deploymentId,
-    "--type",
-    "build",
-    "--json",
-    "--interactive=false",
-  ];
-  const result = runZeaburCommand(args);
-  return {
-    command: result.command,
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    error: result.error,
-    skipped: false,
-  };
-};
-
-const deploymentStarted = (deployment) =>
-  Boolean(deployment?.startedAt && deployment.startedAt !== ZERO_TIME);
-
-const deploymentFinished = (deployment) =>
-  Boolean(deployment?.finishedAt && deployment.finishedAt !== ZERO_TIME);
-
-const summarizeDeployment = (deployment) => {
-  if (!deployment) return null;
-  return {
-    id: deployment.ID || deployment.id || "",
-    status: deployment.status || "",
-    commitSHA: deployment.commitSHA || "",
-    commitMessage: deployment.commitMessage || "",
-    ref: deployment.ref || "",
-    createdAt: deployment.createdAt || "",
-    scheduledAt: deployment.scheduledAt || "",
-    startedAt: deployment.startedAt || "",
-    finishedAt: deployment.finishedAt || "",
-    started: deploymentStarted(deployment),
-    finished: deploymentFinished(deployment),
-  };
-};
-
-const parseTimestamp = (value) => {
-  if (!value || value === ZERO_TIME) return null;
-  const time = Date.parse(value);
-  return Number.isFinite(time) ? time : null;
-};
-
-const ageMinutesSince = (value) => {
-  const timestamp = parseTimestamp(value);
-  if (!timestamp) return null;
-  return Math.max(0, Math.round((Date.now() - timestamp) / 60000));
-};
-
-const summarizeDeploymentAge = (deployment) => {
-  if (!deployment) return null;
-  return {
-    createdAgeMinutes: ageMinutesSince(deployment.createdAt),
-    scheduledAgeMinutes: ageMinutesSince(deployment.scheduledAt),
-    startedAgeMinutes: ageMinutesSince(deployment.startedAt),
-    finishedAgeMinutes: ageMinutesSince(deployment.finishedAt),
-  };
-};
-
-const safeJsonParse = (text, fallback) => {
+const readJson = (filePath) => {
   try {
-    return JSON.parse(text);
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
   } catch {
-    return fallback;
+    return null;
   }
 };
 
-const readLocalZeaburConfig = () => {
-  const yamlPath = path.resolve(repoRoot, "zeabur.yaml");
-  const zbpackPath = path.resolve(repoRoot, "zbpack.ghs-frontend.json");
-  const yaml = fs.existsSync(yamlPath) ? fs.readFileSync(yamlPath, "utf8") : "";
-  const zbpack = fs.existsSync(zbpackPath)
-    ? safeJsonParse(fs.readFileSync(zbpackPath, "utf8"), null)
-    : null;
-
-  return {
-    zeaburYaml: {
-      exists: Boolean(yaml),
-      hasFrontendServiceName: /\bname:\s*ghs-frontend\b/.test(yaml),
-      hasBackendServiceName: /\bname:\s*ghs-backend\b/.test(yaml),
-      hasLegacyFrontendName: /\bname:\s*frontend\b/.test(yaml),
-      hasLegacyBackendName: /\bname:\s*backend\b/.test(yaml),
-    },
-    frontendZbpack: {
-      exists: Boolean(zbpack),
-      appDir: zbpack?.app_dir || "",
-      buildCommand: zbpack?.build_command || "",
-      outputDir: zbpack?.output_dir || "",
-      matchesExpected:
-        zbpack?.app_dir === "frontend" &&
-        zbpack?.build_command === "npm ci && npm run build" &&
-        zbpack?.output_dir === "build",
-    },
-  };
-};
-
-let deployments = [];
-const zeabur = runZeaburDeploymentList();
-let parseError = "";
-if (zeabur.status === 0) {
-  try {
-    deployments = JSON.parse(zeabur.stdout);
-    if (!Array.isArray(deployments)) {
-      parseError = "Zeabur CLI JSON output was not an array.";
-      deployments = [];
-    }
-  } catch (error) {
-    parseError = error?.message || String(error);
-  }
-}
-
-const latestDeployment = deployments[0] || null;
-const runningDeployment =
-  deployments.find((deployment) => deployment.status === "RUNNING") || null;
-const expectedDeployments = deployments.filter((deployment) =>
-  gitShasMatch(deployment.commitSHA, expectedGitSha),
-);
-const expectedDeployment = expectedDeployments[0] || null;
-const expectedRunning = expectedDeployments.find(
-  (deployment) => deployment.status === "RUNNING",
-);
-const serviceGet = runZeaburServiceGet();
-const service = serviceGet.status === 0 ? safeJsonParse(serviceGet.stdout, null) : null;
-const serviceIdentity = {
-  id: service?.ID || service?.id || "",
-  name: service?.Name || service?.name || "",
-};
-const variableList = runZeaburVariableList();
-const variablePayload =
-  variableList.status === 0 ? safeJsonParse(variableList.stdout, null) : null;
-const buildLog = runZeaburDeploymentLog(
-  expectedDeployment?.ID || expectedDeployment?.id || latestDeployment?.ID || latestDeployment?.id,
-);
-const buildLogEntries =
-  buildLog.status === 0 && buildLog.stdout.trim()
-    ? safeJsonParse(buildLog.stdout, [])
-    : [];
-const localConfig = readLocalZeaburConfig();
-const redeployCommand = `npm exec --offline -- zeabur service redeploy --id ${serviceId} --env-id ${environmentId} --yes --json --interactive=false`;
-const inspectDeploymentCommand = expectedDeployment
-  ? `npm exec --offline -- zeabur deployment get --deployment-id ${
-      expectedDeployment.ID || expectedDeployment.id
-    } --json --interactive=false`
-  : `npm exec --offline -- zeabur deployment list --service-id ${serviceId} --env-id ${environmentId} --json --interactive=false`;
-let statusCategory = "unknown";
-const nextActions = [];
-
-const setStatusCategory = (category) => {
-  if (statusCategory === "unknown") {
-    statusCategory = category;
-  }
-};
-
-const allServiceVariables = [
-  ...(Array.isArray(variablePayload?.readonlyVariables)
-    ? variablePayload.readonlyVariables
-    : []),
-  ...(Array.isArray(variablePayload?.variables) ? variablePayload.variables : []),
-];
-const getVariableValue = (key) =>
-  allServiceVariables.find((variable) => variable?.key === key)?.value || "";
-const serviceBuildVariables = {
-  keys: allServiceVariables
-    .map((variable) => variable?.key)
-    .filter(Boolean)
-    .filter((key) => !/(password|secret|token|key|credential)/i.test(key))
-    .sort(),
-  expected: {
-    ZBPACK_APP_DIR: getVariableValue("ZBPACK_APP_DIR"),
-    ZBPACK_BUILD_COMMAND: getVariableValue("ZBPACK_BUILD_COMMAND"),
-    ZBPACK_OUTPUT_DIR: getVariableValue("ZBPACK_OUTPUT_DIR"),
-    VITE_BACKEND_URL: getVariableValue("VITE_BACKEND_URL"),
-  },
-};
-serviceBuildVariables.matchesExpected =
-  serviceBuildVariables.expected.ZBPACK_APP_DIR === "frontend" &&
-  serviceBuildVariables.expected.ZBPACK_BUILD_COMMAND ===
-    "npm ci && npm run build" &&
-  serviceBuildVariables.expected.ZBPACK_OUTPUT_DIR === "build" &&
-  httpOriginsMatch(
-    serviceBuildVariables.expected.VITE_BACKEND_URL,
-    expectedBackendOrigin,
-  );
+const successfulAttempt = (report, name) =>
+  report?.checks
+    ?.find((check) => check?.name === name)
+    ?.attempts?.find((attempt) => attempt?.ok) || null;
 
 const failures = [];
 const guidance = [];
+let statusCategory = "unknown";
 
-if (zeabur.status !== 0) {
-  failures.push("Zeabur CLI deployment list command failed.");
-  setStatusCategory("zeabur-cli-failure");
-  guidance.push("Confirm Zeabur CLI auth and network access, then rerun this gate.");
-  nextActions.push("Confirm Zeabur CLI auth/network access, then rerun npm run qa:zeabur-deployment.");
+const fail = (category, message, nextGuidance = "") => {
+  if (statusCategory === "unknown") statusCategory = category;
+  failures.push(message);
+  if (nextGuidance) guidance.push(nextGuidance);
+};
+
+if (!gitShasMatch(expectedGitSha, expectedGitSha)) {
+  fail(
+    "invalid-expected-sha",
+    "Deployment QA requires a full expected git SHA.",
+  );
 }
-
-if (serviceGet.status !== 0) {
-  failures.push(
-    "Zeabur service metadata could not be read, so the expected service identity could not be verified.",
-  );
-  setStatusCategory("service-identity-unavailable");
-  guidance.push("Verify CLI auth before changing product code.");
-} else if (!serviceIdentityMatches(serviceIdentity, expectedServiceIdentity)) {
-  failures.push(
-    `Zeabur service identity ${serviceIdentity.id || "missing-id"}/${serviceIdentity.name || "missing-name"} did not match expected ${expectedServiceIdentity.id}/${expectedServiceIdentity.name}.`,
-  );
-  setStatusCategory("service-identity-mismatch");
-}
-
-if (variableList.status !== 0) {
-  failures.push(
-    "Zeabur service variables could not be read, so the expected backend origin could not be verified.",
-  );
-  setStatusCategory("backend-origin-unavailable");
-  guidance.push(
-    "Zeabur service variables could not be read; verify CLI auth before changing product code.",
-  );
-} else if (
-  !httpOriginsMatch(
-    serviceBuildVariables.expected.VITE_BACKEND_URL,
-    expectedBackendOrigin,
+if (
+  !serviceIdentityMatches(
+    { id: serviceId, name: expectedServiceName },
+    { id: serviceId, name: expectedServiceName },
   )
 ) {
-  failures.push(
-    `Zeabur VITE_BACKEND_URL did not match expected backend origin ${expectedBackendOrigin}.`,
+  fail(
+    "invalid-service-identity",
+    "Deployment QA requires the expected Zeabur frontend service ID and name.",
   );
-  setStatusCategory("backend-origin-mismatch");
 }
-
-if (parseError) {
-  failures.push(`Could not parse Zeabur deployment JSON: ${parseError}`);
-}
-
-if (!deployments.length && zeabur.status === 0 && !parseError) {
-  failures.push("Zeabur CLI returned no deployments for the frontend service.");
-  setStatusCategory("no-deployments");
-}
-
-if (expectedGitSha && deployments.length && !expectedDeployment) {
-  failures.push(`No Zeabur deployment was found for expected commit ${expectedGitSha}.`);
-  setStatusCategory("expected-deployment-missing");
-  guidance.push(
-    "Trigger the frontend service redeploy, then wait for the expected commit to reach RUNNING before heavier production QA.",
+if (!httpOriginsMatch(expectedBackendOrigin, expectedBackendOrigin)) {
+  fail(
+    "invalid-backend-origin",
+    "Deployment QA requires a credential-free expected backend HTTP(S) origin.",
   );
-  nextActions.push(`Trigger a frontend redeploy: ${redeployCommand}`);
+}
+if (!token) {
+  fail(
+    "missing-token",
+    "ZEABUR_TOKEN is required for strict service identity verification.",
+    "Add the repository ZEABUR_TOKEN secret, then rerun Production Print QA.",
+  );
 }
 
-if (expectedDeployment && expectedDeployment.status !== "RUNNING") {
-  if (
-    (expectedDeployment.status === "BUILDING" ||
-      expectedDeployment.status === "FAILED") &&
-    !deploymentStarted(expectedDeployment)
-  ) {
-    failures.push(
-      `Expected deployment ${expectedDeployment.ID} is ${expectedDeployment.status} but has not reached build start.`,
+const healthReport = readJson(healthReportPath);
+if (!healthReport) {
+  fail(
+    "production-health-unavailable",
+    "The production health report was missing or invalid.",
+    "Run qa:production-health before the deployment evidence gate.",
+  );
+} else if (!healthReport.ok) {
+  fail(
+    "production-health-failed",
+    "The production health gate did not pass.",
+    "Resolve the public frontend or backend freshness failure before heavier production QA.",
+  );
+}
+
+const frontendAttempt = successfulAttempt(
+  healthReport,
+  "frontend-html-and-asset",
+);
+const backendAttempt = successfulAttempt(healthReport, "backend-health");
+const frontendGitSha = frontendAttempt?.buildInfo?.gitSha || "";
+const backendGitSha = backendAttempt?.gitSha || "";
+const healthBackendOrigin = healthReport?.expectedBackendOrigin || "";
+
+if (healthReport) {
+  if (!gitShasMatch(healthReport.expectedGitSha, expectedGitSha)) {
+    fail(
+      "health-report-sha-mismatch",
+      "The production health report was generated for a different expected commit.",
     );
-    setStatusCategory("stuck-before-build");
-    guidance.push(
-      "Treat this as a Zeabur/GitHub integration or platform scheduling blocker, not a frontend build regression.",
+  }
+  if (!gitShasMatch(frontendGitSha, expectedGitSha)) {
+    fail(
+      "frontend-stale",
+      "The public frontend build metadata did not match the expected commit.",
     );
-    nextActions.push(
-      `The expected deployment has not started building; retry once with: ${redeployCommand}`,
+  }
+  if (!gitShasMatch(backendGitSha, expectedGitSha)) {
+    fail(
+      "backend-stale",
+      "The public backend health metadata did not match the expected commit.",
     );
-    nextActions.push(
-      "If a redeploy still has no build log or build start time, inspect the Zeabur dashboard service queue/GitHub integration before changing product code.",
+  }
+  if (!httpOriginsMatch(healthBackendOrigin, expectedBackendOrigin)) {
+    fail(
+      "backend-origin-mismatch",
+      "The production health report used a different backend origin.",
     );
-    if (buildLog.status === 0 && buildLogEntries.length === 0) {
-      guidance.push(
-        "No build logs were returned for the stuck deployment; inspect the Zeabur service queue/integration in the dashboard.",
-      );
-    }
-    if (
-      service &&
-      !service.RootDirectory &&
-      !service.CustomBuildCommand &&
-      !service.OutputDir
-    ) {
-      if (serviceBuildVariables.matchesExpected) {
-        guidance.push(
-          "Zeabur service metadata still shows empty root/build/output fields, but service build variables now provide ZBPACK_APP_DIR, ZBPACK_BUILD_COMMAND, ZBPACK_OUTPUT_DIR, and VITE_BACKEND_URL. If the next deployment still never starts, inspect Zeabur's queue/integration rather than product code.",
-        );
-      } else {
-        guidance.push(
-          "Zeabur service metadata still shows empty root/build/output fields; confirm the dashboard is consuming zeabur.yaml, zbpack.ghs-frontend.json, or the ZBPACK_* service variables.",
-        );
-      }
-    }
-  } else {
-    failures.push(
-      `Expected deployment ${expectedDeployment.ID} is ${expectedDeployment.status}, not RUNNING.`,
-    );
-    setStatusCategory("expected-deployment-not-running");
   }
 }
 
+let service = null;
+let graphqlStatus = 0;
+let graphqlErrors = [];
+if (token && serviceId) {
+  try {
+    const response = await fetch(graphqlEndpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "user-agent": "ghs-production-deployment-evidence/1",
+      },
+      body: JSON.stringify({
+        query: SERVICE_QUERY,
+        variables: { serviceID: serviceId },
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    graphqlStatus = response.status;
+    const payload = await response.json();
+    graphqlErrors = Array.isArray(payload?.errors) ? payload.errors : [];
+    service = payload?.data?.service || null;
+    if (!response.ok || graphqlErrors.length) {
+      fail(
+        "service-identity-unavailable",
+        `Zeabur service identity query failed with HTTP ${response.status}.`,
+        "Verify the Zeabur token and GraphQL service access before changing product code.",
+      );
+    }
+  } catch {
+    fail(
+      "service-identity-unavailable",
+      "Zeabur service identity could not be queried.",
+      "Verify Zeabur API availability and token access, then rerun Production Print QA.",
+    );
+  }
+}
+
+const actualServiceIdentity = {
+  id: service?._id || "",
+  name: service?.name || "",
+};
 if (
-  runningDeployment &&
-  !gitShasMatch(runningDeployment.commitSHA, expectedGitSha)
+  token &&
+  !graphqlErrors.length &&
+  !serviceIdentityMatches(actualServiceIdentity, {
+    id: serviceId,
+    name: expectedServiceName,
+  })
 ) {
-  failures.push(
-    `Latest RUNNING deployment is ${runningDeployment.commitSHA}, not expected ${expectedGitSha}.`,
+  fail(
+    "service-identity-mismatch",
+    `Zeabur service identity ${actualServiceIdentity.id || "missing-id"}/${actualServiceIdentity.name || "missing-name"} did not match ${serviceId}/${expectedServiceName}.`,
   );
-  setStatusCategory("stale-running-deployment");
-  guidance.push(
-    "Production is stale until /build-info.json and Zeabur RUNNING deployment agree with the expected commit.",
-  );
-  nextActions.push(`Trigger a frontend redeploy: ${redeployCommand}`);
 }
 
-if (expectedRunning && !runningDeployment) {
-  failures.push("The expected deployment is RUNNING but no RUNNING deployment was identified.");
-  setStatusCategory("running-state-inconsistent");
-}
-
-const ok =
-  failures.length === 0 &&
-  Boolean(expectedRunning) &&
-  gitShasMatch(expectedRunning.commitSHA, expectedGitSha);
-
-if (ok) {
-  statusCategory = "fresh-running";
-  nextActions.push("Proceed with heavier production QA.");
-} else if (!nextActions.length) {
-  nextActions.push(`Inspect current Zeabur deployment state: ${inspectDeploymentCommand}`);
-}
+const ok = failures.length === 0;
+if (ok) statusCategory = "fresh-serving";
 
 const result = {
   ok,
   generatedAt: new Date().toISOString(),
   reportPath: outputPath,
-  serviceId,
-  expectedServiceName,
-  expectedBackendOrigin,
-  environmentId,
-  expectedGitSha,
-  zeaburCommand: zeabur.command,
-  zeaburCli: {
-    status: zeabur.status,
-    stderr: zeabur.stderr.trim(),
-    error: zeabur.error,
-    parseError,
-  },
-  zeaburServiceCommand: serviceGet.command,
-  zeaburServiceCli: {
-    status: serviceGet.status,
-    stderr: serviceGet.stderr.trim(),
-    error: serviceGet.error,
-  },
-  zeaburVariableCommand: variableList.command,
-  zeaburVariableCli: {
-    status: variableList.status,
-    stderr: variableList.stderr.trim(),
-    error: variableList.error,
-  },
-  serviceBuildVariables,
-  service: service
-    ? {
-        id: service.ID || service.id || "",
-        name: service.Name || service.name || "",
-        template: service.Template || service.template || "",
-        status: service.Status || service.status || "",
-        rootDirectory: service.RootDirectory ?? "",
-        customBuildCommand: service.CustomBuildCommand ?? "",
-        outputDir: service.OutputDir ?? "",
-        watchPaths: service.WatchPaths || [],
-      }
-    : null,
-  buildLogCommand: buildLog.command,
-  buildLogCli: {
-    status: buildLog.status,
-    stderr: buildLog.stderr.trim(),
-    error: buildLog.error,
-    skipped: buildLog.skipped,
-    entryCount: Array.isArray(buildLogEntries) ? buildLogEntries.length : 0,
-  },
-  localConfig,
-  latestDeployment: summarizeDeployment(latestDeployment),
-  latestDeploymentAge: summarizeDeploymentAge(latestDeployment),
-  runningDeployment: summarizeDeployment(runningDeployment),
-  runningDeploymentAge: summarizeDeploymentAge(runningDeployment),
-  expectedDeployment: summarizeDeployment(expectedDeployment),
-  expectedDeploymentAge: summarizeDeploymentAge(expectedDeployment),
-  expectedDeployments: expectedDeployments.map(summarizeDeployment),
-  deploymentCount: deployments.length,
+  healthReportPath,
   statusCategory,
+  expectedGitSha,
+  expectedBackendOrigin,
+  service: service
+    ? { id: actualServiceIdentity.id, name: actualServiceIdentity.name }
+    : null,
+  productionEvidence: {
+    frontendGitSha,
+    backendGitSha,
+    healthBackendOrigin,
+  },
+  graphql: {
+    endpoint: graphqlEndpoint,
+    status: graphqlStatus,
+    errorCount: graphqlErrors.length,
+  },
+  latestDeployment: null,
+  expectedDeployment: null,
+  runningDeployment: null,
   recovery: {
-    redeployCommand,
-    inspectDeploymentCommand,
-    nextActions,
+    nextActions: ok
+      ? ["Proceed with heavier production QA."]
+      : ["Resolve the reported evidence failure, then rerun Production Print QA."],
   },
   failures,
   guidance,
@@ -587,9 +246,6 @@ const result = {
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}${os.EOL}`);
-
 console.log(JSON.stringify(result, null, 2));
 
-if (!result.ok) {
-  process.exitCode = 1;
-}
+if (!ok) process.exitCode = 1;
