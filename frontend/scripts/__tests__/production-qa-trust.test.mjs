@@ -303,7 +303,7 @@ test("production QA scripts use the centralized trust policy", () => {
   assert.match(deploymentQa, /serviceIdentityMatches/);
 });
 
-test("Production Print QA pins service identity and backend origins after npm ci", () => {
+test("Production Print QA aligns npm and pins service identity before production gates", () => {
   const workflow = fs.readFileSync(
     path.join(repoRoot, ".github/workflows/production-print-qa.yml"),
     "utf8",
@@ -326,8 +326,13 @@ test("Production Print QA pins service identity and backend origins after npm ci
     /^\s+PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN: https:\/\/ghs-backend\.zeabur\.app$/m,
   );
 
-  const npmCiIndex = workflow.indexOf("run: npm ci");
+  const npmAlignIndex = workflow.indexOf(
+    "run: npm install --global npm@11.6.2",
+  );
+  const npmCiIndex = workflow.indexOf("run: npm ci --no-audit");
+  assert.notEqual(npmAlignIndex, -1);
   assert.notEqual(npmCiIndex, -1);
+  assert.ok(npmAlignIndex < npmCiIndex);
   assert.ok(npmCiIndex < workflow.indexOf("run: npm run qa:production-health"));
   assert.ok(npmCiIndex < workflow.indexOf("npm run qa:zeabur-deployment"));
   assert.match(workflow, /--canonical \.\.\/Dockerfile\.ghs-backend/);
