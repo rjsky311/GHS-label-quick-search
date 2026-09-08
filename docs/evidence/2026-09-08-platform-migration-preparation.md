@@ -102,7 +102,9 @@ Railway backend:
 - Dockerfile: `Dockerfile.ghs-backend`
 - Healthcheck: `/api/health`
 - Successful deployment: `a60fcfc4-98f5-41d3-80d5-60ed0231b85f`
-- Deployed source SHA: `76e1129a324779ba8c7084744b789f9e316dabfe`
+- Version-alignment deployment:
+  `773ab46c-37bd-4ac9-b3fa-f096aa9e2933`
+- Deployed source SHA: `9dd936f47f902bc53ce200a532e75500abe62d47`
 
 The first Railway deployment (`08a1655c-ff87-4a2e-9b38-9c49d183bd82`)
 failed because the non-root container user could not create the default
@@ -116,7 +118,7 @@ Cloudflare Pages frontend:
 - Project: `ghs-label-quick-search-shadow`
 - URL: `https://ghs-label-quick-search-shadow.pages.dev`
 - Direct Upload artifact: 43 files, built with Node `v22.23.1`
-- Deployed source SHA: `76e1129a324779ba8c7084744b789f9e316dabfe`
+- Deployed source SHA: `9dd936f47f902bc53ce200a532e75500abe62d47`
 - Backend configuration:
   `https://ghs-backend-production.up.railway.app`
 - Canonical public origin: `https://ghs.yuchelab.com`
@@ -124,6 +126,17 @@ Cloudflare Pages frontend:
 Cloudflare's Wrangler OAuth request included broad unrelated account scopes.
 It was cancelled. The existing authenticated dashboard and Pages Direct Upload
 were used instead, so no persistent CLI token or unrelated Worker was created.
+
+The first deployed frontend artifact also revealed an independent shadow-only
+failure: its HTML CSP allowed the reserved first-party API origin but not the
+temporary Railway backend origin configured by `VITE_BACKEND_URL`. The earlier
+browser timeout therefore had two causes: PubChem really was returning 503
+through both backends, while the shadow browser was additionally blocking its
+own backend request before it left the page. Commit `9dd936f` now derives the
+credential-free HTTP(S) backend origin at build time, injects it into
+`connect-src`, and falls back safely to the canonical API origin. The same
+change removes an ineffective meta `frame-ancestors` directive and unused GHS
+preloads; the response-header frame policy remains unchanged.
 
 ## Batch 3 Configuration Contract
 
@@ -171,11 +184,12 @@ custom-domain/DNS cutover batch.
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Exact SHA and runtime readiness | Pass | Frontend `build-info.json` and backend `/api/health` both report `76e1129a324779ba8c7084744b789f9e316dabfe`; backend is `ready`, PDF is available, HSTS is present. |
+| Exact SHA and runtime readiness | Pass | Frontend `build-info.json` and backend `/api/health` both report `9dd936f47f902bc53ce200a532e75500abe62d47`; backend is `ready`, PDF is available, HSTS is present. |
 | CORS boundary | Pass | Preflight from `https://ghs-label-quick-search-shadow.pages.dev` returns the matching allow-origin header; `https://evil.example` is rejected with HTTP 400 and no allow-origin header. |
-| PDF canary | Pass | Shadow canary returned a non-empty `%PDF-` document (7,974 bytes). |
-| Search and downstream product workflows | Externally blocked | The live browser QA exhausted both runs because PubChem's GHS Classification endpoint returned HTTP 503 `PUGVIEW.ServerBusy`. The same CAS failed through the unchanged Zeabur backend, and a direct PubChem probe returned the same 503 with `Retry-After: 30`; this isolates the failure from the new platforms. No search result means the dependent batch/label/export browser gates cannot truthfully pass yet. |
-| Canonical QR contract | Locally verified, live proof pending | The portability tests and frontend suite pass; a live generated-result check remains coupled to the blocked search gate. |
+| PDF rendering | Pass | A real synthetic complete-label request to `/api/print/pdf` returned HTTP 200, `application/pdf`, `%PDF-`, one page, and 10,145 bytes. |
+| Live PubChem integration | Externally blocked, monitoring stopped | PubChem's GHS Classification endpoint returned HTTP 503 `PUGVIEW.ServerBusy` through the Railway and unchanged Zeabur backends and by direct probe. At the owner's request, repeated waiting and the scheduled recovery tracker were stopped; this remains a live-provider evidence gap rather than a shadow-platform defect. |
+| Downstream product workflows | Pass with deployed synthetic fixtures | Against the deployed Pages artifact, a fixed six-row API fixture exercised ready/review/blocked buckets, ready-scope XLSX export, complete/QR-small/identification-small labels, pictograms, desktop and 390 px mobile layout, and console health. All checks passed; this proves deterministic frontend behavior but is not a substitute for the unavailable live PubChem response. |
+| Canonical QR contract | Pass with deployed synthetic fixtures | Complete and QR-small output both generated `https://ghs.yuchelab.com/?cas=67-64-1`; the identification-small output correctly generated no QR. |
 | Admin/miss-capture isolation | Pass | Railway variables contain no admin token, capture flag, DB/Redis/volume, or pilot-store override. `/api/ops/report` reports that admin is not configured; miss capture returns `skipped: true`. |
 | Rollback availability | Pass | Existing Zeabur services and settings were not changed or deleted. |
 
@@ -184,17 +198,24 @@ Local verification after the container fix:
 - Backend: `404 passed` (one Starlette/httpx deprecation warning).
 - Frontend: `94` test suites and `1,352` tests passed under the repository's
   normal Jest gate.
+- Frontend QA-script tests: `46` passed, including five build-time CSP tests.
+- Deployed synthetic browser QA passed with six rows, a 10,734-byte XLSX,
+  all three label purposes, two pictograms per accepted output, canonical QR
+  targets, no mobile horizontal overflow, and no console errors or warnings.
+- Agent label-summary focused backend tests: `8` passed.
 - Node 22 production build completed and generated the exact-SHA artifact used
   by Pages.
-- Hosting-neutral production health and PDF canary passed against the shadow.
-- The aggregate production-product QA correctly failed at the live search UI
-  gate because of the external PubChem 503; later dependent steps were not
-  misreported as executed.
+- Hosting-neutral production health and real PDF rendering passed against the
+  shadow after both tiers were aligned to the same source SHA.
+- Browser automation used regular Playwright because no supported browser
+  plugin was available in this session; evidence stayed outside the repo.
 
-Current decision: the replacement infrastructure is established and its
-platform-level gates are green, but Batch 3 is not a full product acceptance
-until the live search-dependent QA is rerun after PubChem recovers. Do not cut
-DNS on partial evidence.
+Current decision: the replacement infrastructure and deterministic downstream
+product behavior are accepted. The only remaining acceptance gap is the live
+PubChem-dependent lookup path. Repeated waiting is intentionally closed; do
+not describe synthetic fixtures as live-provider proof. DNS remains unchanged
+and still requires an explicit owner decision after weighing the continuity
+deadline against that external evidence gap.
 
 ## Retention And Cleanup
 

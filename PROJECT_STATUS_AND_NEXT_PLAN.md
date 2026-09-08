@@ -15,21 +15,27 @@ complete on `codex/ghs-platform-portability`. The Railway backend is healthy at
 `https://ghs-backend-production.up.railway.app`, and the Cloudflare Pages
 frontend is live at `https://ghs-label-quick-search-shadow.pages.dev`; both
 report deployed source SHA
-`76e1129a324779ba8c7084744b789f9e316dabfe`. Exact-SHA health, CORS, HSTS, PDF
-canary, and admin/miss-capture isolation gates passed. Live search-dependent
-product QA remains blocked by PubChem's GHS endpoint returning HTTP 503
-`PUGVIEW.ServerBusy`; the unchanged Zeabur backend and a direct PubChem probe
-show the same upstream failure. Do not cut DNS until that gate is rerun and
-all downstream search/batch/label/export/QR checks pass. DNS, payment/plan
-state, Zeabur services, and credentials remain unchanged. The reserved
+`9dd936f47f902bc53ce200a532e75500abe62d47`. Exact-SHA health, CORS, HSTS, real
+PDF rendering, admin/miss-capture isolation, and deployed synthetic-fixture
+batch/export/all-three-label/QR/mobile/console gates passed. That browser pass
+also found and closed an independent shadow CSP bug: the built page now allows
+the credential-free origin derived from `VITE_BACKEND_URL`. Live PubChem-backed
+lookup remains unavailable because its GHS endpoint returns HTTP 503
+`PUGVIEW.ServerBusy`; the Railway backend, unchanged Zeabur backend, and direct
+probe showed the same upstream state. Repeated waiting and the scheduled
+recovery tracker were stopped at the owner's request. Treat the live-provider
+path as an explicit evidence gap, not as a failed downstream UI gate and not
+as a reason to keep polling. DNS, payment/plan state, Zeabur services, and
+credentials remain unchanged. The reserved
 first-party targets are `https://ghs.yuchelab.com` and
 `https://ghs-api.yuchelab.com`; the detailed resource IDs, failure/fix record,
 and remaining acceptance gate are in
 `docs/evidence/2026-09-08-platform-migration-preparation.md`. The shared Zeabur
-Dev plan is scheduled to downgrade to Free on 2026-09-10, so rerun the blocked
-shadow product gate promptly when PubChem recovers; if green, the next batch is
-an explicitly authorized DNS/custom-domain cutover with the old Zeabur services
-retained for a short rollback observation window.
+Dev plan is scheduled to downgrade to Free on 2026-09-10. The next migration
+decision is therefore an explicitly authorized DNS/custom-domain cutover after
+the owner weighs that continuity deadline against the remaining live-provider
+evidence gap; retain the old Zeabur services for a short rollback observation
+window if cutover is authorized.
 
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
