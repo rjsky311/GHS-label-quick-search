@@ -74,8 +74,12 @@ before choosing the next autonomous product slice.
   `7b62aa42-2376-4636-ae67-546b94e38a27`, service
   `38153323-7009-42ed-b6b6-76fd8f945e29` serves `ghs-backend`.
 - `Dockerfile.ghs-backend` is the Railway backend image definition.
+- Release mode is manual/provider-native: Cloudflare Pages Direct Upload plus
+  Railway native deploy. GitHub is source/CI only; do not add deploy secrets or
+  automation without a new owner decision.
 - Every production promotion must set/report the full `origin/main` SHA and
   pass first-party health, CORS, security-header, and PDF canary checks.
+- Non-runtime commits may leave production behind `main`; report both SHAs.
 - The dedicated legacy Zeabur GHS project and repository `ZEABUR_TOKEN` were
   retired on 2026-09-08. Do not restore Zeabur-only configs or diagnostics.
 
@@ -236,6 +240,8 @@ npm run qa:production-health
 - Real physical printing remains deferred until actual paper, label stock,
   printer scaling, thermal quality, QR scanning, and pictogram readability can
   be tested.
+- Real batch/export validation is also deferred; no implementation batch is
+  active until a documented evidence trigger appears.
 - Code splitting, docs consolidation, CI/production QA, and maintainability are
   in maintenance mode. Reopen them only when evidence shows a real blocker or
   the next product change touches that boundary.
