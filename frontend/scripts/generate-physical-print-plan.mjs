@@ -11,14 +11,8 @@ const DEFAULT_PHYSICAL_CASE_IDS = Object.freeze([
   "a4-primary",
   "letter-primary",
   "ethylene-oxide-a4-primary-continuation",
-  "bottle-supplemental-with-case",
-  "large-primary-front-label",
-  "tube-vial-quick-id-with-case",
-  "medium-rack-quick-id",
-  "brother-62mm-quick-id",
+  "tube-vial-quick-id",
   "brother-62mm-qr-supplement",
-  "prepared-bottle-supplemental",
-  "prepared-tube-quick-id",
   "custom-tiny-complete-primary-blocked",
 ]);
 
@@ -59,6 +53,12 @@ const PHYSICAL_CASE_NOTES = Object.freeze({
     evidence:
       "Case number and CAS stay legible, and every pictogram remains recognizable on the physical strip.",
   },
+  "tube-vial-quick-id": {
+    family: "Identification small label",
+    purpose: "Current public identification-only output on 70 x 24 mm stock.",
+    evidence:
+      "CAS and chemical identity stay readable, every available pictogram remains present, and QR, signal word, and H/P text remain omitted.",
+  },
   "medium-rack-quick-id": {
     family: "Rack label",
     purpose: "Rack-sized quick-ID output.",
@@ -72,8 +72,8 @@ const PHYSICAL_CASE_NOTES = Object.freeze({
       "Roll output does not clip at either edge and pictograms remain large enough after driver scaling.",
   },
   "brother-62mm-qr-supplement": {
-    family: "QR supplement",
-    purpose: "Continuous-roll QR supplement.",
+    family: "QR small label",
+    purpose: "Current public QR output on 62 x 40 mm continuous stock.",
     evidence:
       "QR scans quickly while GHS pictograms remain present and visually secondary to the QR only where appropriate.",
   },
@@ -101,7 +101,7 @@ const CHECKLIST_BY_KIND = Object.freeze({
   "complete-primary": [
     "Full label boundary is inside the physical page or die cut.",
     "Identity, CAS, signal word, every pictogram, and H/P body are visible.",
-    "No QR code is inserted into the required complete-primary body.",
+    "QR lookup link is present, scans to the intended safe http(s) target, and does not replace required H/P or pictogram content.",
     "Continuation pages, when present, print in order and preserve identity context.",
   ],
   supplemental: [
@@ -111,13 +111,16 @@ const CHECKLIST_BY_KIND = Object.freeze({
     "User would still know to use an SDS, primary label, or local rule for complete details.",
   ],
   "quick-id": [
-    "Output is visibly a quick-ID label and not described as complete primary.",
-    "Chemical identity, CAS or selected case field, signal word, and every pictogram are visible.",
+    "Output is visibly an Identification small label and not described as complete.",
+    "CAS, English name, Chinese name, and every available pictogram are present across the same-output label set.",
+    "QR, signal word, H/P text, and H-code chips remain omitted.",
     "Pictograms are recognizable at close handling distance.",
     "No text or chip crosses the physical edge or die cut.",
   ],
   "qr-supplement": [
-    "Output is visibly a QR supplement and not described as complete primary.",
+    "Output is visibly a QR small label and not described as complete.",
+    "CAS, English name, Chinese name, QR, and every available pictogram are present across the same-output label set.",
+    "Signal word, H/P text, and H-code chips remain omitted.",
     "QR scans quickly from normal handling distance or close bench distance.",
     "QR destination is http(s) and points to the expected SDS/detail/reference path.",
     "QR does not replace, hide, or crop required GHS pictograms.",
@@ -222,13 +225,13 @@ const buildSteps = (browserCase) =>
 const roleLabel = (labelKind) => {
   switch (labelKind) {
     case "complete-primary":
-      return "complete primary";
+      return "Complete A4/Letter label";
     case "qr-supplement":
-      return "QR supplement";
+      return "QR small label";
     case "quick-id":
-      return "quick-ID";
+      return "Identification small label";
     case "supplemental":
-      return "supplemental";
+      return "legacy supplemental";
     default:
       return labelKind || "unknown";
   }
@@ -349,6 +352,8 @@ const buildMarkdown = (artifact) => {
     "# Physical Print Validation Plan",
     "",
     "Generated from the automated print QA matrix. Use this artifact as the physical-print work order after automated Browser/PDF/production gates pass.",
+    "",
+    "The default work order covers the current three public outputs, complete-label continuation, and one blocked-output control. Set `PHYSICAL_PRINT_CASES=all` only when a specific legacy/internal stock needs regression evidence.",
     "",
     "This is not a legal compliance certificate. Final use still requires SDS, supplier-label, and local-regulation review.",
     "",

@@ -54,8 +54,8 @@ renderer failures:
 - `npm run test:print-contract`
 - `PRINT_QA_REPORT_PATH=build/print-qa-report.json npm run qa:print-report`
 - `npm run qa:print-pdf`
-- `npm run qa:production-product` after Zeabur deploy when the change is
-  user-facing
+- `npm run qa:production-product` after the canonical Cloudflare Pages and
+  Railway deployment when the change is user-facing
 - `npm run qa:physical-print-plan`
 
 `qa:physical-print-plan` reads `frontend/build/print-qa-report.json` and writes:
@@ -68,6 +68,13 @@ pin the current representative cases, expected stock, output role, pictograms,
 QR expectations, browser steps, and per-case evidence fields. Regenerate them
 after print-matrix or stock-preset changes so the manual evidence follows the
 same contract as automated QA.
+
+The default work order is intentionally small: Complete A4/Letter, the
+complete-label continuation path, QR small label, Identification small label,
+and one blocked-output control. Legacy/internal bottle, rack, tube, prepared,
+and supplemental fixtures remain available only through
+`PHYSICAL_PRINT_CASES=all npm run qa:physical-print-plan` or an explicit
+comma-separated case list when a specific regression needs physical evidence.
 
 Use the production URL for final evidence:
 

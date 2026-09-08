@@ -1143,9 +1143,10 @@ Current status:
   workflow for paper/stock, printer scaling, QR scan success, and physical
   readability.
 - `npm run qa:physical-print-plan` converts the current print QA matrix report
-  into `frontend/build/physical-print-validation-plan.md` and `.json`, giving
-  each physical stock family a generated work order with expected output role,
-  pictograms, QR expectations, browser steps, and evidence fields.
+  into `frontend/build/physical-print-validation-plan.md` and `.json`. Its
+  default work order covers the three public outputs, complete-label
+  continuation, and one blocked-output control; legacy/internal stock cases
+  remain opt-in through `PHYSICAL_PRINT_CASES=all` or an explicit case list.
 - Real-printer validation is intentionally deferred until physical paper/stock
   and printer access are available.
 - Automated Browser/PDF/production QA remains the precondition before physical
