@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+import { injectBackendConnectSrc } from "./scripts/content-security-policy.mjs";
+
 const BUILD_SHA_ENV_KEYS = [
   "VITE_GIT_SHA",
   "GITHUB_SHA",
@@ -64,6 +66,13 @@ const createBuildInfoPlugin = () => ({
       fileName: "build-info.json",
       source: `${JSON.stringify(buildInfo, null, 2)}\n`,
     });
+  },
+});
+
+const createContentSecurityPolicyPlugin = (backendUrl) => ({
+  name: "ghs-content-security-policy",
+  transformIndexHtml(html) {
+    return injectBackendConnectSrc(html, backendUrl);
   },
 });
 
@@ -335,6 +344,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      createContentSecurityPolicyPlugin(backendUrl),
       createBuildInfoPlugin(),
       env.ENABLE_HEALTH_CHECK === "true" ? createViteHealthCheckPlugin() : null,
     ].filter(Boolean),
