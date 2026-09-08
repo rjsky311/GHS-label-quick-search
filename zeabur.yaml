@@ -8,10 +8,11 @@ services:
     ports:
       - 8001
     env:
-      # Default to the production frontend only. Override CORS_ORIGINS
-      # with an explicit comma-separated list for multi-origin deploys.
+      # Keep the first-party origin plus the temporary Zeabur rollback origin
+      # during migration. Remove the latter only after retirement approval.
       # `*` is rejected at runtime because it is unsafe for a public API.
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://ghs-frontend.zeabur.app}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://ghs.yuchelab.com,https://ghs-frontend.zeabur.app}
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://ghs.yuchelab.com}
       # Surface the deployment commit to /api/health even when the runtime
       # image does not contain a .git directory.
       - BUILD_GIT_SHA=${ZEABUR_GIT_COMMIT_SHA}
@@ -27,3 +28,4 @@ services:
     context: ./frontend
     env:
       - VITE_BACKEND_URL=${BACKEND_URL}
+      - VITE_PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://ghs.yuchelab.com}

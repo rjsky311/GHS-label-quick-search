@@ -236,11 +236,8 @@ describe("getQRCodeUrl", () => {
 describe("getChemicalLookupUrl", () => {
   it("allows expected production and local lookup origins", () => {
     expect(
-      getChemicalLookupUrl("64-17-5", "https://ghs-frontend.zeabur.app"),
-    ).toBe("https://ghs-frontend.zeabur.app/?cas=64-17-5");
-    expect(
-      getChemicalLookupUrl("64-17-5", "https://ghs-backend.zeabur.app"),
-    ).toBe("https://ghs-backend.zeabur.app/?cas=64-17-5");
+      getChemicalLookupUrl("64-17-5", "https://ghs.yuchelab.com"),
+    ).toBe("https://ghs.yuchelab.com/?cas=64-17-5");
     expect(getChemicalLookupUrl("64-17-5", "http://localhost:5173")).toBe(
       "http://localhost:5173/?cas=64-17-5",
     );
@@ -251,14 +248,23 @@ describe("getChemicalLookupUrl", () => {
 
   it("blocks unsafe QR lookup origins and falls back to the public frontend", () => {
     expect(getChemicalLookupUrl("64-17-5", "https://evil.example")).toBe(
-      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+      "https://ghs.yuchelab.com/?cas=64-17-5",
     );
     expect(getChemicalLookupUrl("64-17-5", "javascript:alert(1)")).toBe(
-      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+      "https://ghs.yuchelab.com/?cas=64-17-5",
     );
     expect(getChemicalLookupUrl("64-17-5", "data:text/html,owned")).toBe(
-      "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+      "https://ghs.yuchelab.com/?cas=64-17-5",
     );
+  });
+
+  it("does not retain former provider origins as QR targets", () => {
+    expect(
+      getChemicalLookupUrl("64-17-5", "https://ghs-frontend.zeabur.app"),
+    ).toBe("https://ghs.yuchelab.com/?cas=64-17-5");
+    expect(
+      getChemicalLookupUrl("64-17-5", "https://ghs-backend.zeabur.app"),
+    ).toBe("https://ghs.yuchelab.com/?cas=64-17-5");
   });
 });
 
@@ -1887,7 +1893,7 @@ describe("printLabels", () => {
     const bodyHtml = html.slice(html.indexOf("<body"));
     expect(bodyHtml).not.toContain("label-continuation-page");
     expect(bodyHtml).toContain('class="qrcode-img"');
-    expect(bodyHtml).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
+    expect(bodyHtml).toContain('data-qr-target="https://ghs.yuchelab.com/?cas=64-17-5"');
     expect(bodyHtml).not.toContain("hazard-more");
     expect(bodyHtml).not.toContain("precaution-more");
     expect((bodyHtml.match(/class="qrcode-img"/g) || [])).toHaveLength(1);
@@ -3874,7 +3880,7 @@ describe("printLabels", () => {
       expect(preview.html).not.toContain("font-size: 9px !important");
       expect(preview.html).toContain("compliance-qr");
       expect(preview.html).toContain("qrcode-img");
-      expect(preview.html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
+      expect(preview.html).toContain('data-qr-target="https://ghs.yuchelab.com/?cas=64-17-5"');
       expect(preview.html).toMatch(
         /\.label-full-page-primary \.compliance-footer \{[\s\S]*border: 0\.25mm solid #cbd5e1;[\s\S]*border-left: 0\.8mm solid #64748b;[\s\S]*background: #f8fafc;[\s\S]*align-items: center;/,
       );
@@ -4838,7 +4844,7 @@ describe("printLabels", () => {
       expect(html).not.toMatch(/<div\s+class="hazard-more qr-hazard-more"/);
       expect(html).not.toContain("H300");
       expect(html).not.toContain("print.moreHazardsShort");
-      expect(html).toContain('data-qr-target="http://localhost/?cas=64-17-5"');
+      expect(html).toContain('data-qr-target="https://ghs.yuchelab.com/?cas=64-17-5"');
     });
 
     it("keeps supplemental workflow notices out of the printed label body", () => {
@@ -6462,7 +6468,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data-qr-target=\"http://localhost/?cas=64-17-5\"",
+        "data-qr-target=\"https://ghs.yuchelab.com/?cas=64-17-5\"",
       );
       expect(html).toContain('data-qr-target-type="ghs-lookup"');
       expect(html).toContain('data-qr-target-source="ghs-label-quick-search"');
@@ -6477,7 +6483,7 @@ describe("prepared solution print rendering", () => {
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
       expect(html).toContain(
-        "data-qr-target=\"http://localhost/?cas=64-17-5\"",
+        "data-qr-target=\"https://ghs.yuchelab.com/?cas=64-17-5\"",
       );
       expect(html).toContain('data-qr-target-type="ghs-lookup"');
       expect(html).toContain('data-qr-target-source="ghs-label-quick-search"');

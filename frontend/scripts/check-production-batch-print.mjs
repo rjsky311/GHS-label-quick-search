@@ -3,7 +3,7 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 import { resolveBatchSearchGate } from "./production-batch-print-search-gate.mjs";
 
-const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app";
+const DEFAULT_PRODUCTION_URL = "https://ghs.yuchelab.com";
 const SEARCH_TIMEOUT_MS = Number.parseInt(
   process.env.BATCH_PRINT_QA_SEARCH_TIMEOUT_MS || "120000",
   10,

@@ -4,9 +4,13 @@ import { execFileSync } from "node:child_process";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+import { injectBackendConnectSrc } from "./scripts/content-security-policy.mjs";
+
 const BUILD_SHA_ENV_KEYS = [
   "VITE_GIT_SHA",
   "GITHUB_SHA",
+  "CF_PAGES_COMMIT_SHA",
+  "RAILWAY_GIT_COMMIT_SHA",
   "ZEABUR_GIT_COMMIT_SHA",
   "ZEABUR_COMMIT_SHA",
   "SOURCE_COMMIT",
@@ -39,7 +43,13 @@ const createBuildInfoPlugin = () => ({
   generateBundle() {
     const gitSha = resolveBuildGitSha();
     const gitBranch =
-      (process.env.GITHUB_REF_NAME || process.env.ZEABUR_GIT_BRANCH || "").trim() ||
+      (
+        process.env.GITHUB_REF_NAME ||
+        process.env.CF_PAGES_BRANCH ||
+        process.env.RAILWAY_GIT_BRANCH ||
+        process.env.ZEABUR_GIT_BRANCH ||
+        ""
+      ).trim() ||
       readGitValue(["rev-parse", "--abbrev-ref", "HEAD"]);
     const buildInfo = {
       app: "ghs-label-quick-search",
@@ -56,6 +66,13 @@ const createBuildInfoPlugin = () => ({
       fileName: "build-info.json",
       source: `${JSON.stringify(buildInfo, null, 2)}\n`,
     });
+  },
+});
+
+const createContentSecurityPolicyPlugin = (backendUrl) => ({
+  name: "ghs-content-security-policy",
+  transformIndexHtml(html) {
+    return injectBackendConnectSrc(html, backendUrl);
   },
 });
 
@@ -318,6 +335,7 @@ function createViteHealthCheckPlugin() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const backendUrl = (env.VITE_BACKEND_URL || "").trim();
+  const publicAppUrl = (env.VITE_PUBLIC_APP_URL || "").trim();
   const pilotAdminEnabled =
     (env.VITE_ENABLE_PILOT_ADMIN || "").trim().toLowerCase() === "true";
   const workspaceSyncEnabled =
@@ -326,6 +344,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      createContentSecurityPolicyPlugin(backendUrl),
       createBuildInfoPlugin(),
       env.ENABLE_HEALTH_CHECK === "true" ? createViteHealthCheckPlugin() : null,
     ].filter(Boolean),
@@ -351,6 +370,7 @@ export default defineConfig(({ mode }) => {
     envPrefix: ["VITE_"],
     define: {
       "globalThis.__APP_BACKEND_URL__": JSON.stringify(backendUrl),
+      "globalThis.__APP_PUBLIC_APP_URL__": JSON.stringify(publicAppUrl),
       "globalThis.__APP_PILOT_ADMIN_ENABLED__": JSON.stringify(pilotAdminEnabled),
       "globalThis.__APP_WORKSPACE_SYNC_ENABLED__": JSON.stringify(workspaceSyncEnabled),
     },

@@ -139,21 +139,21 @@ test("requires the expected Zeabur service ID and name", () => {
 });
 
 test("matches only credential-free root HTTP(S) origins", () => {
-  const expected = "https://ghs-backend.zeabur.app";
+  const expected = "https://ghs-api.yuchelab.com";
 
   assert.equal(httpOriginsMatch(`${expected}/`, expected), true);
   assert.equal(
-    httpOriginsMatch("https://ghs-backend.zeabur.app.evil.test", expected),
+    httpOriginsMatch("https://ghs-api.yuchelab.com.evil.test", expected),
     false,
   );
   assert.equal(httpOriginsMatch(`${expected}/api/health`, expected), false);
   assert.equal(
-    httpOriginsMatch("https://user:password@ghs-backend.zeabur.app", expected),
+    httpOriginsMatch("https://user:password@ghs-api.yuchelab.com", expected),
     false,
   );
   assert.equal(httpOriginsMatch(`${expected}?redirect=evil`, expected), false);
   assert.equal(httpOriginsMatch(`${expected}#fragment`, expected), false);
-  assert.equal(httpOriginsMatch("ftp://ghs-backend.zeabur.app", expected), false);
+  assert.equal(httpOriginsMatch("ftp://ghs-api.yuchelab.com", expected), false);
 });
 
 test("requires a one-year HSTS policy for production responses", () => {
@@ -305,7 +305,7 @@ test("production QA scripts use the centralized trust policy", () => {
   assert.match(deploymentQa, /serviceIdentityMatches/);
 });
 
-test("Production Print QA aligns npm and pins service identity before production gates", () => {
+test("Production Print QA aligns npm and uses first-party production origins", () => {
   const workflow = fs.readFileSync(
     path.join(repoRoot, ".github/workflows/production-print-qa.yml"),
     "utf8",
@@ -313,20 +313,9 @@ test("Production Print QA aligns npm and pins service identity before production
 
   assert.match(
     workflow,
-    /^\s+ZEABUR_FRONTEND_SERVICE_ID: 69626873d9479ab33ad4590e$/m,
+    /^\s+PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN: https:\/\/ghs-api\.yuchelab\.com$/m,
   );
-  assert.match(
-    workflow,
-    /^\s+ZEABUR_EXPECTED_SERVICE_NAME: ghs-frontend$/m,
-  );
-  assert.match(
-    workflow,
-    /^\s+ZEABUR_EXPECTED_BACKEND_ORIGIN: https:\/\/ghs-backend\.zeabur\.app$/m,
-  );
-  assert.match(
-    workflow,
-    /^\s+PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN: https:\/\/ghs-backend\.zeabur\.app$/m,
-  );
+  assert.match(workflow, /default: https:\/\/ghs\.yuchelab\.com\//);
 
   const npmAlignIndex = workflow.indexOf(
     "run: npm install --global npm@11.6.2",
@@ -336,13 +325,9 @@ test("Production Print QA aligns npm and pins service identity before production
   assert.notEqual(npmCiIndex, -1);
   assert.ok(npmAlignIndex < npmCiIndex);
   assert.ok(npmCiIndex < workflow.indexOf("run: npm run qa:production-health"));
-  assert.ok(npmCiIndex < workflow.indexOf("npm run qa:zeabur-deployment"));
-  assert.match(workflow, /--canonical \.\.\/Dockerfile\.ghs-backend/);
-  assert.match(workflow, /--service-id 6962687391818d5fd9705a67/);
-  assert.match(workflow, /--canonical \.\.\/Dockerfile\.ghs-frontend/);
-  assert.match(workflow, /--service-id 69626873d9479ab33ad4590e/);
-  assert.match(workflow, /statusCategory: "missing-token"/);
-  assert.match(workflow, /ZEABUR_TOKEN is required/);
+  assert.doesNotMatch(workflow, /ZEABUR_TOKEN/);
+  assert.doesNotMatch(workflow, /qa:zeabur-deployment/);
+  assert.doesNotMatch(workflow, /check_inline_dockerfile_parity/);
 });
 
 test("Production Print QA includes the active PDF canary", () => {

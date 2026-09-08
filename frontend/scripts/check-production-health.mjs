@@ -11,8 +11,8 @@ import {
   strictTransportSecurityIsReady,
 } from "./production-qa-trust.mjs";
 
-const DEFAULT_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
-const DEFAULT_BACKEND_HEALTH_URL = "https://ghs-backend.zeabur.app/api/health";
+const DEFAULT_FRONTEND_URL = "https://ghs.yuchelab.com/";
+const DEFAULT_BACKEND_HEALTH_URL = "https://ghs-api.yuchelab.com/api/health";
 
 const frontendUrl =
   process.env.PRODUCTION_HEALTH_FRONTEND_URL ||
@@ -282,7 +282,7 @@ const checkFrontend = () =>
     const warnings = [];
     if (buildInfo.parseError || !buildInfo.app || !buildInfo.version) {
       warnings.push(
-        "frontend build-info metadata was not readable; run qa:zeabur-deployment or set an expected git SHA before treating production freshness as proven",
+        "frontend build-info metadata was not readable; set an expected git SHA before treating production freshness as proven",
       );
     }
 

@@ -17,7 +17,7 @@ from p_code_coverage_audit import (  # noqa: E402
 )
 
 
-DEFAULT_API_URL = "https://ghs-backend.zeabur.app/api"
+DEFAULT_API_URL = "https://ghs-api.yuchelab.com/api"
 DEFAULT_CAS_VALUES = (
     "64-17-5",
     "67-56-1",

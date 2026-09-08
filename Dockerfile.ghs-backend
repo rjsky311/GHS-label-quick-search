@@ -1,11 +1,8 @@
-# Canonical build recipe for the ghs-backend Zeabur service.
+# Canonical build recipe for the ghs-backend container service.
 #
-# The file name matters: Zeabur/zbpack only honors a repo-root
-# `Dockerfile.<service-name>` for this service; before this file existed,
-# zbpack generated its own Python Dockerfile and silently skipped the
-# Chromium + CJK font layers (backend/Dockerfile was never used by
-# production builds). Keep backend/Dockerfile in sync for local
-# `docker build -f` workflows.
+# Zeabur's inline specification and a future Railway service should both stay
+# aligned with this file so Chromium, CJK fonts, and PDF rendering are never
+# silently omitted. Keep backend/Dockerfile in sync for local builds.
 FROM python:3.11-slim
 LABEL "language"="python"
 LABEL "framework"="fastapi"
@@ -13,6 +10,7 @@ LABEL "framework"="fastapi"
 ARG BUILD_GIT_SHA=""
 ENV BUILD_GIT_SHA=${BUILD_GIT_SHA}
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PORT=8001
 
 WORKDIR /app
 
@@ -35,12 +33,15 @@ COPY backend/fonts/local.conf /etc/fonts/local.conf
 # Copy application code
 COPY backend/ .
 
-# Create non-root user for security
-RUN adduser --disabled-password --gecos '' appuser
+# Create the non-root user and give it ownership only of the default ephemeral
+# pilot-store directory. Application code remains root-owned and read-only.
+RUN adduser --disabled-password --gecos '' appuser \
+    && mkdir -p /app/data \
+    && chown -R appuser:appuser /app/data
 USER appuser
 
 # Expose port
 EXPOSE 8001
 
 # Run the application
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["sh", "-c", "exec uvicorn server:app --host 0.0.0.0 --port \"${PORT:-8001}\""]

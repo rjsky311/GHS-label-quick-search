@@ -6,6 +6,11 @@ const rawBackendUrl =
 export const BACKEND_URL = rawBackendUrl.trim().replace(/\/+$/, "");
 export const API = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
 
+export {
+  CANONICAL_PUBLIC_APP_URL,
+  PUBLIC_APP_URL,
+} from "@/constants/publicApp";
+
 // Mirrors the backend's Pydantic `CASQuery.cas_numbers` max_length.
 // Keep these in sync: oversized batch requests are already rejected
 // by the backend with HTTP 422 via Pydantic validation; this constant

@@ -71,7 +71,8 @@ same contract as automated QA.
 
 Use the production URL for final evidence:
 
-- https://ghs-frontend.zeabur.app/
+- Use the current canonical frontend URL in
+  `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 
 Record the following before printing:
 

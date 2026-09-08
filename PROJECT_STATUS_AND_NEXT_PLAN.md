@@ -9,6 +9,35 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
+Platform migration checkpoint (2026-09-08): the owner-authorized first-party
+domain cutover and immediate acceptance batch are complete on
+`codex/ghs-platform-portability`. The canonical frontend is now
+`https://ghs.yuchelab.com` on Cloudflare Pages and the canonical backend is
+`https://ghs-api.yuchelab.com` on Railway. Both report deployed source SHA
+`1b96d752afebf7d81f06992ecc4735af515cf41a`; both custom domains have valid
+TLS, the frontend CSP points to the canonical API, canonical and rollback
+frontend origins pass CORS, and an unrelated origin is rejected. A real A4
+PDF render and an eight-row deployed synthetic-fixture browser pass covering
+batch summary, export preview, all three label outputs, canonical QR targets,
+390 px layout, and console health passed. Namecheap DNS gained only the three
+planned records for `ghs`, `ghs-api`, and Railway ownership verification.
+Provider URLs and unchanged Zeabur services remain available for a short
+rollback window; no service, credential, plan, or payment setting was removed
+or changed, and no GitHub Actions minutes were used for the cutover. Live
+PubChem-backed lookup remains an explicit external evidence gap because the
+same upstream GHS endpoint was returning HTTP 503 across both hosting paths;
+repeated polling stays closed. The full record is
+`docs/evidence/2026-09-08-platform-migration-preparation.md`. The migration
+source-promotion gate is self-validating: it is complete only when this
+checkpoint is present on `origin/main` and both canonical deployment health
+surfaces report that same `origin/main` head SHA. Until then, use one
+controlled source-promotion PR/CI run and do not retire rollback
+infrastructure. After the gate passes, Zeabur/provider retirement and
+credential cleanup remain a separately authorized exact-list batch. The short
+24-72 hour observation period reflects the absence of printed labels or
+external promotion. The shared Zeabur Dev plan is still scheduled to downgrade
+to Free on 2026-09-10.
+
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
 next slices oriented around human-first lab workflow clarity: prepared-solution
@@ -189,8 +218,14 @@ request.
 
 Production:
 
-- Frontend: https://ghs-frontend.zeabur.app
-- Backend: https://ghs-backend.zeabur.app
+- Frontend: https://ghs.yuchelab.com (Cloudflare Pages)
+- Backend: https://ghs-api.yuchelab.com (Railway)
+- Rollback provider URLs:
+  `https://ghs-label-quick-search-shadow.pages.dev` and
+  `https://ghs-backend-production.up.railway.app`.
+- Legacy Zeabur services remain unchanged during the short observation window:
+  `https://ghs-frontend.zeabur.app` and
+  `https://ghs-backend.zeabur.app`.
 - GitHub repository visibility is intentionally public so the website's
   GitHub Issues feedback links remain usable for outside users.
 - Public repository safety pass on 2026-06-20 replaced the tracked inventory
@@ -199,7 +234,8 @@ Production:
   inventory-derived files still exist in git history at commit `a080588`; do
   not rewrite history unless the owner explicitly opens a coordinated
   history-purge slice.
-- Zeabur auto-deploys on push to `main`.
+- The legacy Zeabur services auto-deploy on push to `main` until a separately
+  authorized retirement batch removes them.
 - Zeabur's live service names are `ghs-frontend` and `ghs-backend`. The
   `zeabur.yaml` service names now match those live names. The frontend service
   also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
@@ -219,7 +255,9 @@ Production:
 
 Current baseline capabilities:
 
-- Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
+- Vite/npm frontend build and FastAPI backend have hosting-neutral Cloudflare
+  Pages/Railway production gates; Zeabur-specific diagnostics remain only for
+  rollback-period checks.
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
   the evidence packet for that milestone. The shipped post-95 target selection
   lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target owner

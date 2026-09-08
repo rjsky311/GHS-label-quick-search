@@ -3,7 +3,7 @@ import path from "node:path";
 
 const canaryUrl =
   process.env.PRODUCTION_PDF_CANARY_URL ||
-  "https://ghs-backend.zeabur.app/api/health/pdf-canary";
+  "https://ghs-api.yuchelab.com/api/health/pdf-canary";
 const expectedOrigin = process.env.PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN || "";
 const outputPath = path.resolve(
   process.cwd(),

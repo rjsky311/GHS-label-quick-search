@@ -224,7 +224,7 @@ describe("print acceptance matrix", () => {
         expect(preview.fragmentHtml).toContain("qrcode-img");
         expect(preview.fragmentHtml).toContain("data:image/gif;base64");
         expect(preview.fragmentHtml).toContain(
-          "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
+          "data-qr-target=\"https://ghs.yuchelab.com/?cas=7647-01-0\"",
         );
       } else {
         expect(preview.fragmentHtml).not.toContain("qrcode-img");
@@ -245,7 +245,7 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-a4-primary");
     expect(preview.fragmentHtml).toContain("qrcode-img");
     expect(preview.fragmentHtml).toContain(
-      "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
+      "data-qr-target=\"https://ghs.yuchelab.com/?cas=7647-01-0\"",
     );
     expect(preview.fragmentHtml).not.toContain("hazard-more");
     expect(preview.fragmentHtml).not.toContain("precaution-more");
@@ -271,7 +271,7 @@ describe("print acceptance matrix", () => {
     expect(preview.html).toContain("size: Letter");
     expect(preview.fragmentHtml).toContain("qrcode-img");
     expect(preview.fragmentHtml).toContain(
-      "data-qr-target=\"http://localhost/?cas=7647-01-0\"",
+      "data-qr-target=\"https://ghs.yuchelab.com/?cas=7647-01-0\"",
     );
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
   });

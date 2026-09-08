@@ -81,7 +81,9 @@ Use this loop when continuing autonomously:
 7. Add or update tests at the same layer that would have caught the failure.
 8. Run targeted tests first, then broader tests based on blast radius.
 9. For production-facing frontend changes, build, push, wait for CI/deploy, and
-   run production QA against `https://ghs-frontend.zeabur.app`.
+   run production QA against the current canonical production URL recorded in
+   `PROJECT_STATUS_AND_NEXT_PLAN.md`. During a hosting migration, pass the
+   shadow URL explicitly rather than changing DNS early.
 10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
 11. Report what changed, what was verified, proactive observations from the

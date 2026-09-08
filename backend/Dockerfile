@@ -5,13 +5,13 @@ LABEL "framework"="fastapi"
 ARG BUILD_GIT_SHA=""
 ENV BUILD_GIT_SHA=${BUILD_GIT_SHA}
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PORT=8001
 
 WORKDIR /app
 
-# NOTE: production Zeabur builds use the repo-root `Dockerfile.ghs-backend`,
-# not this file (zbpack only honors the service-named root Dockerfile). This
-# copy exists for local `docker build -f backend/Dockerfile .` workflows —
-# keep the two files in sync.
+# NOTE: hosted container services should use the repo-root
+# `Dockerfile.ghs-backend`. This copy exists for local
+# `docker build -f backend/Dockerfile .` workflows; keep them in sync.
 #
 # Install Python dependencies and the Chromium runtime before switching to the
 # non-root app user so the browser cache stays readable at runtime.
@@ -32,12 +32,15 @@ COPY backend/fonts/local.conf /etc/fonts/local.conf
 # Copy application code
 COPY backend/ .
 
-# Create non-root user for security
-RUN adduser --disabled-password --gecos '' appuser
+# Create the non-root user and give it ownership only of the default ephemeral
+# pilot-store directory. Application code remains root-owned and read-only.
+RUN adduser --disabled-password --gecos '' appuser \
+    && mkdir -p /app/data \
+    && chown -R appuser:appuser /app/data
 USER appuser
 
 # Expose port
 EXPOSE 8001
 
 # Run the application
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["sh", "-c", "exec uvicorn server:app --host 0.0.0.0 --port \"${PORT:-8001}\""]

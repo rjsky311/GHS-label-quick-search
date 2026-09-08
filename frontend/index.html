@@ -21,9 +21,8 @@
         img-src 'self' data: https://pubchem.ncbi.nlm.nih.gov https://api.qrserver.com;
         script-src 'self';
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        connect-src 'self' http://localhost:8001 http://127.0.0.1:8001 https://ghs-backend.zeabur.app ws://localhost:5173 ws://127.0.0.1:5173;
+        connect-src 'self' __GHS_BACKEND_CONNECT_SRC__ ws://localhost:5173 ws://127.0.0.1:5173;
         font-src 'self' data: https://fonts.gstatic.com;
-        frame-ancestors 'none';
         base-uri 'self';
         form-action 'self';
       "
@@ -36,15 +35,6 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS01.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS02.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS03.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS04.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS05.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS06.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS07.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS08.svg" />
-    <link rel="preload" as="image" type="image/svg+xml" href="/ghs/GHS09.svg" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'><rect x='17' y='17' width='66' height='66' rx='7' transform='rotate(45 50 50)' fill='%23fff' stroke='%2317130b' stroke-width='5'/><rect x='23' y='23' width='54' height='54' rx='5' transform='rotate(45 50 50)' stroke='%23cf3324' stroke-width='5'/><path d='M50 31v23' stroke='%23cf3324' stroke-width='6' stroke-linecap='round'/><circle cx='50' cy='64' r='4' fill='%23cf3324'/></svg>"

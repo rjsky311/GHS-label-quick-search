@@ -1,4 +1,8 @@
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
+import {
+  CANONICAL_PUBLIC_APP_URL,
+  PUBLIC_APP_URL,
+} from "@/constants/publicApp";
 import i18n from "@/i18n";
 import qrcode from "qrcode-generator";
 import { buildPrintLabelContent } from "@/utils/printContentModel";
@@ -23,10 +27,10 @@ import {
   resolvePrintableChineseName,
 } from "@/utils/printRenderHelpers";
 
-const PUBLIC_LOOKUP_ORIGIN = "https://ghs-frontend.zeabur.app";
+const PUBLIC_LOOKUP_ORIGIN = PUBLIC_APP_URL;
 const ALLOWED_LOOKUP_HOSTNAMES = new Set([
-  "ghs-frontend.zeabur.app",
-  "ghs-backend.zeabur.app",
+  new URL(CANONICAL_PUBLIC_APP_URL).hostname,
+  new URL(PUBLIC_APP_URL).hostname,
   "localhost",
   "127.0.0.1",
   "::1",
@@ -62,16 +66,7 @@ export function getQRCodeUrl(text, size = 100) {
   return qr.createDataURL(cellSize, 0);
 }
 
-const getCurrentLookupOrigin = () => {
-  if (
-    typeof window !== "undefined" &&
-    window.location?.origin &&
-    window.location.origin !== "null"
-  ) {
-    return window.location.origin;
-  }
-  return PUBLIC_LOOKUP_ORIGIN;
-};
+const getCurrentLookupOrigin = () => PUBLIC_LOOKUP_ORIGIN;
 
 const isAllowedLookupOrigin = (url) =>
   ["http:", "https:"].includes(url.protocol) &&

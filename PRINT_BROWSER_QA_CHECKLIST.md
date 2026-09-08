@@ -13,20 +13,21 @@ supplement describe internal regression coverage or historical fixture names.
 Do not use those terms as a reason to re-expand the first-level print UI.
 
 This checklist turns the print acceptance contract into repeatable Browser Use
-verification after meaningful print-workflow changes and after Zeabur deploys.
+verification after meaningful print-workflow changes and hosted deploys.
 It is not a legal compliance certificate; it verifies that the app UI, preview,
 and rendered print fragments still match the product contract.
 
 Use the production URL unless the purpose is local development debugging:
 
-- Production: `https://ghs-frontend.zeabur.app/`
+- Production: use the current canonical URL in
+  `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 - Local: `http://127.0.0.1:5173/`
 
 Before using production, verify the deployed bundle contains the expected new
-strings or behavior from the commit being tested. This catches stale Zeabur
+strings or behavior from the commit being tested. This catches stale hosted
 assets before doing visual QA.
 
-For print-workflow changes, run the bundle freshness check after Zeabur deploys:
+For print-workflow changes, run the bundle freshness check after deploys:
 
 ```bash
 cd frontend

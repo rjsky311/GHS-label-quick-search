@@ -32,6 +32,15 @@ def test_docker_recipes_install_only_runtime_manifest():
         assert "pip install --no-cache-dir -r requirements.txt" in text
 
 
+def test_docker_recipes_prepare_writable_default_pilot_store_before_non_root_user():
+    for dockerfile in (REPO_ROOT / "Dockerfile.ghs-backend", BACKEND_ROOT / "Dockerfile"):
+        text = dockerfile.read_text()
+        before_user = text[: text.index("USER appuser")]
+
+        assert "mkdir -p /app/data" in before_user
+        assert "chown -R appuser:appuser /app/data" in before_user
+
+
 def test_runtime_dependency_checker_passes_for_repository_manifests():
     result = subprocess.run(
         [sys.executable, "scripts/check_runtime_dependencies.py"],
