@@ -267,9 +267,10 @@ site was not externally promoted, a long compatibility period is unnecessary;
 however, retirement and credential cleanup remain a separate destructive
 batch that requires a fresh exact-target authorization.
 
-Source promotion remains open: `codex/ghs-platform-portability` is six commits
-ahead of `origin/main`, and no pull request exists yet. During the observation
-window, open one controlled PR, spend one CI run after local gates are green,
+Source promotion remains open: `codex/ghs-platform-portability` contains
+multiple commits not yet in `origin/main`, and no pull request exists yet.
+During the observation window, open one controlled PR, spend one CI run after
+local gates are green,
 merge the migration source into `main`, and realign both canonical deployments
 to the merged SHA. Do not retire rollback infrastructure while the durable
 source of truth still lives only on the migration branch.

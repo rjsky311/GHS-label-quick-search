@@ -28,8 +28,8 @@ PubChem-backed lookup remains an explicit external evidence gap because the
 same upstream GHS endpoint was returning HTTP 503 across both hosting paths;
 repeated polling stays closed. The full record is
 `docs/evidence/2026-09-08-platform-migration-preparation.md`. The migration
-branch is six commits ahead of `origin/main` and has no open PR, so the next
-control-plane slice is a single controlled source-promotion PR/CI run while
+branch contains multiple unmerged migration commits and has no open PR, so the
+next control-plane slice is a single controlled source-promotion PR/CI run while
 the canonical domains undergo a 24-72 hour observation window. After merge,
 realign both canonical deployments to the merged `main` SHA before a
 separately authorized, exact-list Zeabur/provider retirement and credential
