@@ -32,8 +32,11 @@ COPY backend/fonts/local.conf /etc/fonts/local.conf
 # Copy application code
 COPY backend/ .
 
-# Create non-root user for security
-RUN adduser --disabled-password --gecos '' appuser
+# Create the non-root user and give it ownership only of the default ephemeral
+# pilot-store directory. Application code remains root-owned and read-only.
+RUN adduser --disabled-password --gecos '' appuser \
+    && mkdir -p /app/data \
+    && chown -R appuser:appuser /app/data
 USER appuser
 
 # Expose port
