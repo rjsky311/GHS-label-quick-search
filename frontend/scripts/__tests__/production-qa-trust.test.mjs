@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -267,6 +268,45 @@ test("Production Print QA aligns npm and uses first-party production origins", (
   assert.doesNotMatch(workflow, /qa:zeabur-deployment/);
   assert.doesNotMatch(workflow, /check_inline_dockerfile_parity/);
   assert.match(workflow, /Externally blocked product blocks/);
+  assert.match(workflow, /fetch-depth: 2/);
+  assert.match(workflow, /id: production_relevance/);
+  assert.match(
+    workflow,
+    /steps\.production_relevance\.outputs\.run_full == 'true'/,
+  );
+});
+
+test("automatic production QA skips only known non-runtime change sets", () => {
+  const classifierPath = path.join(
+    repoRoot,
+    ".github/scripts/classify-production-qa-change.sh",
+  );
+  const classify = (...changedPaths) => {
+    const result = spawnSync("bash", [classifierPath, ...changedPaths], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return result.stdout.trim();
+  };
+
+  assert.equal(classify(), "run");
+  assert.equal(
+    classify(
+      "PROJECT_STATUS_AND_NEXT_PLAN.md",
+      "docs/evidence/checkpoint.md",
+      ".github/workflows/production-print-qa.yml",
+      "backend/test_pilot_storage.py",
+      "frontend/scripts/__tests__/production-qa-trust.test.mjs",
+      "frontend/scripts/generate-physical-print-plan.mjs",
+    ),
+    "skip",
+  );
+  assert.equal(classify("frontend/src/App.jsx"), "run");
+  assert.equal(classify("backend/server.py"), "run");
+  assert.equal(classify("frontend/package.json"), "run");
+  assert.equal(classify("frontend/scripts/content-security-policy.mjs"), "run");
+  assert.equal(classify("frontend/public/runtime-guide.md"), "run");
 });
 
 test("retired Zeabur deployment artifacts cannot silently return", () => {

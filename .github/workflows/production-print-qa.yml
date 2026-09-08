@@ -62,33 +62,75 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+
+      - name: Classify production QA relevance
+        id: production_relevance
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" != "workflow_run" ]]; then
+            echo "run_full=true" >> "${GITHUB_OUTPUT}"
+            echo "Manual and scheduled runs always execute the requested production QA." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
+            echo "run_full=true" >> "${GITHUB_OUTPUT}"
+            echo "Could not resolve the previous commit; running full production QA conservatively." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          changed_files=()
+          while IFS= read -r changed_file; do
+            changed_files+=("${changed_file}")
+          done < <(git diff --name-only HEAD^ HEAD)
+          relevance="$(../.github/scripts/classify-production-qa-change.sh "${changed_files[@]}")"
+          if [[ "${relevance}" == "skip" ]]; then
+            echo "run_full=false" >> "${GITHUB_OUTPUT}"
+            {
+              echo "## Production Print QA"
+              echo
+              echo "Skipped the deployed product walk because the successful main CI changed only documentation, workflow, tests, or explicitly non-runtime maintenance files."
+            } >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "run_full=true" >> "${GITHUB_OUTPUT}"
+          fi
 
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        if: steps.production_relevance.outputs.run_full == 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Align npm version
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: npm install --global npm@11.6.2
 
       - name: Install dependencies
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: npm ci --no-audit
 
       - name: Check Chrome executable
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: |
           google-chrome --version || google-chrome-stable --version || chromium --version
 
       - name: Wait for production freshness
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: npm run qa:production-health
 
       - name: Check P-code wording coverage
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: npm run qa:p-code-coverage
 
       - name: Check H-code wording coverage
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: npm run qa:h-code-coverage
 
       - name: Run selected production print QA
+        if: steps.production_relevance.outputs.run_full == 'true'
         run: |
           set -euo pipefail
           MODE="${{ github.event.inputs.mode || 'product' }}"
@@ -143,7 +185,7 @@ jobs:
           esac
 
       - name: Generate physical print validation plan
-        if: always()
+        if: always() && steps.production_relevance.outputs.run_full == 'true'
         run: |
           set -euo pipefail
           if [ -f build/print-qa-report.json ]; then
@@ -153,14 +195,14 @@ jobs:
           fi
 
       - name: Write production QA summary
-        if: always()
+        if: always() && steps.production_relevance.outputs.run_full == 'true'
         run: npm run qa:production-summary
         env:
           PRINT_QA_REQUIRE_PRODUCT_BLOCKS: ${{ contains(fromJSON('["product","full","all"]'), github.event.inputs.mode || 'product') && '1' || '0' }}
           PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED: "1"
 
       - name: Add job summary
-        if: always()
+        if: always() && steps.production_relevance.outputs.run_full == 'true'
         run: |
           MODE="${{ github.event.inputs.mode || 'product' }}"
           node <<'NODE'
@@ -218,7 +260,7 @@ jobs:
           MODE: ${{ github.event.inputs.mode || 'product' }}
 
       - name: Upload production QA artifacts
-        if: always()
+        if: always() && steps.production_relevance.outputs.run_full == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: production-print-qa-${{ github.event.inputs.mode || 'scheduled-product' }}-${{ github.run_id }}

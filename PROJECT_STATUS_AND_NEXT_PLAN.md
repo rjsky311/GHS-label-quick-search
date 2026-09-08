@@ -33,6 +33,17 @@ full migration record is
 source-promotion gate remains self-validating: accepted production must expose
 the same full SHA as `origin/main` through both canonical health surfaces.
 
+Data Correction / Admin no-op audit checkpoint (2026-09-08): the local pilot
+store reported `openWorkItemCount: 0`, `attentionSignalCount: 0`, no open
+correction requests or miss queries, no manual entries or aliases awaiting
+review, and no inactive reference links. The maintainer-only candidate
+discovery dry run checked zero queued requests, returned zero candidates,
+reported `publicDataChanged: false`, and left the original `pilot.db` SHA-256
+unchanged. Focused backend storage/discovery/handoff/name-search tests passed
+269 tests; focused frontend correction/admin tests passed 87 tests. This closes
+the explicitly requested audit without inventing queue data or opening another
+admin feature slice. Reopen only when real queue or user evidence appears.
+
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
 next slices oriented around human-first lab workflow clarity: prepared-solution
@@ -404,10 +415,10 @@ Current completion snapshot:
   green GitHub CI, Zeabur production serving
   `bc56672332a970e2f09ca5d9c66f2913be3a1d7f`, and expected-SHA
   `npm run qa:production-health` passing at that time. Do not treat that SHA
-  as the current deployment; use the expected-SHA production health and
-  Zeabur deployment gates to prove current freshness. The current operating
-  mode remains monitoring/maintenance: open a new product slice only from
-  concrete user, production, admin, export, or code-review evidence.
+  as the current deployment; use the canonical Cloudflare Pages/Railway
+  expected-SHA production gates to prove current freshness. The current
+  operating mode remains monitoring/maintenance: open a new product slice only
+  from concrete user, production, admin, export, or code-review evidence.
 - **Post-95 re-rank checkpoint 2026-05-24**:
   `POST_95_REPRIORITIZATION.md` reviewed the last 20 commits and moved the
   next default target from broad lab-ready closure to a small pilot observation
@@ -946,6 +957,11 @@ Current status:
 
 - The `Production Print QA` GitHub Actions workflow exposes `product` mode as
   the manual default and scheduled fallback.
+- Automatic runs after a successful main CI first classify the changed paths.
+  Documentation, workflow, test-only, and explicitly non-runtime maintenance
+  changes exit successfully before Node setup or dependency installation;
+  runtime paths and any unknown path still run the full production gate.
+  Manual and scheduled runs always execute their requested QA mode.
 - The main `CI` workflow now supports manual dispatch in addition to normal
   `push` and `pull_request` triggers, so a pushed commit can still receive the
   full frontend/backend CI gate if GitHub creates deployment checks but no
@@ -1106,8 +1122,9 @@ Current status:
   `qa:production-product` plus the `fixed-stock-batch-printing` product block
   in the production QA summary.
 - Deployed batch evidence remains part of `qa:production-product`. The latest
-  post-handoff checkpoint passed production product QA after `a97bd97`, and the
-  docs checkpoint `cba6ae9` is live on Zeabur.
+  post-handoff checkpoint passed production product QA after `a97bd97`; the
+  later `cba6ae9` Zeabur deployment is retained only as historical evidence
+  from that provider era.
 - `qa:print-report` now also writes a 50-item fixed-stock compact batch print
   artifact, and `qa:print-pdf` checks that artifact for stock metadata, batch
   categories, required pictograms, identity text, clipping, and visual overlap.
@@ -1343,8 +1360,9 @@ Minimum closure requirements:
   change.
 - Add or update the test/QA layer that would have caught the issue.
 - Run targeted checks first, then broader checks based on blast radius.
-- For production-facing UI changes, verify the deployed production path after
-  Zeabur has refreshed the frontend asset.
+- For production-facing UI changes, verify the canonical Cloudflare Pages and
+  Railway paths report the expected full SHA before claiming production
+  closure.
 - For print changes, preserve the print contract: no silent missing required
   images, no hidden GHS pictograms, no clipped output treated as printable, and
   no QR/supplemental label presented as a complete primary label.
