@@ -173,6 +173,9 @@ jobs:
           const failedFreshnessBlocks = Array.isArray(r.summary?.failedRequiredFreshnessBlocks)
             ? r.summary.failedRequiredFreshnessBlocks
             : [];
+          const externallyBlockedBlocks = Array.isArray(r.summary?.externallyBlockedProductBlocks)
+            ? r.summary.externallyBlockedProductBlocks
+            : [];
           const failureTriage = Array.isArray(r.summary?.failureTriage)
             ? r.summary.failureTriage
             : [];
@@ -181,10 +184,12 @@ jobs:
             "",
             `Mode: ${process.env.MODE}`,
             `OK: ${String(r.ok ?? "unknown")}`,
+            `Status: ${r.statusCategory || "unknown"}`,
             `Present reports: ${String(r.summary?.presentReports ?? 0)}`,
             `Failed reports: ${String(r.summary?.failedReports ?? 0)}`,
             `Failed required freshness blocks: ${failedFreshnessBlocks.length ? failedFreshnessBlocks.join(", ") : "none"}`,
             `Failed product blocks: ${failedBlocks.length ? failedBlocks.join(", ") : "none"}`,
+            `Externally blocked product blocks: ${externallyBlockedBlocks.length ? externallyBlockedBlocks.join(", ") : "none"}`,
             "",
           ];
           if (failureTriage.length) {
@@ -199,7 +204,7 @@ jobs:
           if (blocks.length) {
             lines.push("| Product block | Status |", "| --- | --- |");
             for (const block of blocks) {
-              lines.push(`| ${block.name || block.id} | ${block.ok ? "pass" : "fail"} |`);
+              lines.push(`| ${block.name || block.id} | ${block.status || (block.ok ? "pass" : "fail")} |`);
             }
             lines.push("");
           }

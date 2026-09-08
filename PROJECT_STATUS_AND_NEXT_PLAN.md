@@ -9,34 +9,29 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
-Platform migration checkpoint (2026-09-08): the owner-authorized first-party
-domain cutover and immediate acceptance batch are complete on
-`codex/ghs-platform-portability`. The canonical frontend is now
+Platform migration and retirement checkpoint (2026-09-08): the
+owner-authorized first-party domain cutover was promoted through PR #67 and
+the dedicated legacy Zeabur `GHS-label` project was subsequently deleted after
+exact project/service confirmation. The repository `ZEABUR_TOKEN` and merged
+migration branch were also removed. The canonical frontend is
 `https://ghs.yuchelab.com` on Cloudflare Pages and the canonical backend is
 `https://ghs-api.yuchelab.com` on Railway. Both report deployed source SHA
-`1b96d752afebf7d81f06992ecc4735af515cf41a`; both custom domains have valid
-TLS, the frontend CSP points to the canonical API, canonical and rollback
-frontend origins pass CORS, and an unrelated origin is rejected. A real A4
-PDF render and an eight-row deployed synthetic-fixture browser pass covering
-batch summary, export preview, all three label outputs, canonical QR targets,
-390 px layout, and console health passed. Namecheap DNS gained only the three
-planned records for `ghs`, `ghs-api`, and Railway ownership verification.
-Provider URLs and unchanged Zeabur services remain available for a short
-rollback window; no service, credential, plan, or payment setting was removed
-or changed, and no GitHub Actions minutes were used for the cutover. Live
-PubChem-backed lookup remains an explicit external evidence gap because the
-same upstream GHS endpoint was returning HTTP 503 across both hosting paths;
-repeated polling stays closed. The full record is
+`051baa2f8c547d4f5a2c414dded9d91d28b90b99` at the promotion boundary; both
+custom domains have valid TLS, the frontend CSP points to the canonical API,
+canonical CORS is allowed, and an unrelated origin is rejected. A real A4 PDF
+render and an eight-row deployed synthetic-fixture browser pass covering batch
+summary, export preview, all three label outputs, canonical QR targets, 390 px
+layout, and console health passed. Provider-native Cloudflare/Railway URLs
+remain available, but they are aliases for the current infrastructure rather
+than a separate legacy stack. Live PubChem-backed lookup remains an external
+evidence gap because the upstream GHS endpoint returned HTTP 503. Production
+QA now records the bounded rendered retry contract as
+`external-upstream-unavailable`, keeps exact-SHA health/bundle/PDF gates hard,
+and stops downstream product walks that cannot run without source data. The
+full migration record is
 `docs/evidence/2026-09-08-platform-migration-preparation.md`. The migration
-source-promotion gate is self-validating: it is complete only when this
-checkpoint is present on `origin/main` and both canonical deployment health
-surfaces report that same `origin/main` head SHA. Until then, use one
-controlled source-promotion PR/CI run and do not retire rollback
-infrastructure. After the gate passes, Zeabur/provider retirement and
-credential cleanup remain a separately authorized exact-list batch. The short
-24-72 hour observation period reflects the absence of printed labels or
-external promotion. The shared Zeabur Dev plan is still scheduled to downgrade
-to Free on 2026-09-10.
+source-promotion gate remains self-validating: accepted production must expose
+the same full SHA as `origin/main` through both canonical health surfaces.
 
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
@@ -220,12 +215,11 @@ Production:
 
 - Frontend: https://ghs.yuchelab.com (Cloudflare Pages)
 - Backend: https://ghs-api.yuchelab.com (Railway)
-- Rollback provider URLs:
+- Provider-native aliases:
   `https://ghs-label-quick-search-shadow.pages.dev` and
   `https://ghs-backend-production.up.railway.app`.
-- Legacy Zeabur services remain unchanged during the short observation window:
-  `https://ghs-frontend.zeabur.app` and
-  `https://ghs-backend.zeabur.app`.
+- The dedicated legacy Zeabur project, its two services, repository token, and
+  deployment-only configuration were retired on 2026-09-08.
 - GitHub repository visibility is intentionally public so the website's
   GitHub Issues feedback links remain usable for outside users.
 - Public repository safety pass on 2026-06-20 replaced the tracked inventory
@@ -234,30 +228,14 @@ Production:
   inventory-derived files still exist in git history at commit `a080588`; do
   not rewrite history unless the owner explicitly opens a coordinated
   history-purge slice.
-- The legacy Zeabur services auto-deploy on push to `main` until a separately
-  authorized retirement batch removes them.
-- Zeabur's live service names are `ghs-frontend` and `ghs-backend`. The
-  `zeabur.yaml` service names now match those live names. The frontend service
-  also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
-  monorepo app directory (`frontend`), build command, and static output
-  directory for the actual frontend service. The frontend service builds from
-  an INLINE Dockerfile pinned in the Zeabur service spec. Treat
-  `Dockerfile.ghs-frontend` as canonical, update the spec through GraphQL
-  `updateDockerfile`, and redeploy; repository buildpack overrides do not
-  replace stale inline content. The canonical recipe pins Node 22 + Nginx and
-  should remain aligned with `frontend/Dockerfile`. Root-level and frontend
-  `.node-version` files plus the exact-major `frontend/package.json` engine
-  retain the same contract for local work and zbpack fallback. The live
-  frontend service also mirrors non-sensitive `ZBPACK_APP_DIR`,
-  `ZBPACK_BUILD_COMMAND`, `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL`
-  variables because Zeabur service metadata can remain blank even when the
-  deployment should consume buildpack configuration.
+- Root-level and frontend `.node-version` files plus the exact-major
+  `frontend/package.json` engine keep local, CI, and Cloudflare builds on Node
+  22. `Dockerfile.ghs-backend` is the Railway backend image definition.
 
 Current baseline capabilities:
 
 - Vite/npm frontend build and FastAPI backend have hosting-neutral Cloudflare
-  Pages/Railway production gates; Zeabur-specific diagnostics remain only for
-  rollback-period checks.
+  Pages/Railway production gates. No live Zeabur diagnostic remains.
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
   the evidence packet for that milestone. The shipped post-95 target selection
   lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target owner
@@ -376,25 +354,15 @@ Current validation gates:
 - Print PDF QA: `npm run qa:print-pdf`
 - Production availability and freshness: `npm run qa:production-health`
   (frontend HTML, current Vite asset, `/build-info.json`, backend
-  `/api/health`, bounded retries, Zeabur request IDs). When
+  `/api/health`, bounded retries, and provider-neutral request IDs). When
   `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or
   `GITHUB_SHA` is present, this gate fails if the deployed build metadata does
   not match the expected commit.
-- Production deploy evidence: `npm run qa:zeabur-deployment` consumes the
-  preceding `build/production-health-report.json`, requires the public
-  frontend and backend to expose the exact expected git SHA, verifies the
-  configured backend origin, and queries Zeabur GraphQL read-only for the
-  pinned frontend service ID/name. It writes
-  `build/zeabur-deployment-report.json`. The repository no longer depends on
-  Zeabur CLI JSON output for this gate because the CLI can exit successfully
-  with empty output. Inline Dockerfile parity remains a separate direct
-  GraphQL gate for both live services.
-  The Production Print QA workflow now runs this probe in its always-run
-  evidence phase and the production summary consumes
-  `build/zeabur-deployment-report.json` when present. Use the summary's
-  deployment-freshness block and failure bucket before deciding whether a QA
-  email needs product-code work, a Zeabur redeploy, or dashboard/integration
-  inspection.
+- Production deploy evidence is provider-neutral: the health gate requires
+  the canonical frontend build metadata and backend health response to expose
+  the exact expected Git SHA and verifies the configured backend origin.
+  Use the summary's deployment-freshness block before deciding whether a QA
+  result needs product-code work or infrastructure inspection.
   If `/build-info.json` is unreadable but no expected SHA was supplied,
   `qa:production-health` stays an availability check but records a warning;
   do not use that weaker pass as proof that production is on the latest commit.
@@ -972,7 +940,7 @@ Do next:
   cannot accidentally validate an old frontend asset.
 - Keep a fast production availability gate before heavy browser QA so transient
   or persistent 502/health failures are captured with response status,
-  latency, and Zeabur request IDs.
+  latency, and provider-neutral request IDs.
 
 Current status:
 
@@ -989,27 +957,25 @@ Current status:
   upstream/source, external image or QR asset, deployment freshness, QA-runner,
   product print/layout, or unknown, with a suggested next action for each
   bucket.
+- A verified PubChem retry state is reported as
+  `external-upstream-unavailable`. It can stop downstream source-dependent
+  walks without failing the product gate only when exact-SHA health, bundle,
+  PDF canary, upstream banner, and row-level upstream-state evidence all agree.
+  Missing or unhealthy platform evidence remains a hard failure.
 - `qa:production-health` checks the deployed frontend HTML, current Vite index
   asset, generated `/build-info.json`, and backend `/api/health` with bounded
   retries. The build-info gate also requires the deployed frontend to report
-  the pinned Node 22 build major, so a Zeabur builder fallback cannot silently
+  the pinned Node 22 build major, so a provider build cannot silently
   diverge from the CI/runtime contract. It writes
   `build/production-health-report.json` with request IDs, timing, deployed git
   SHA, and Node build evidence so a 502, stale-deploy, or builder-version
   incident can be diagnosed without replaying ad hoc curl commands.
   Set `PRINT_QA_EXPECTED_ASSET_TEXT` or
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker from the new UI
-  when a production-facing change needs proof that Zeabur is serving the
+  when a production-facing change needs proof that the canonical frontend serves the
   refreshed frontend bundle, not only a reachable older asset.
   Prefer `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` or the
   GitHub workflow-provided `PRINT_QA_EXPECTED_GIT_SHA` for commit-level proof.
-- `qa:zeabur-deployment` is an evidence-composition gate: it revalidates the
-  exact frontend/backend SHA and backend origin captured by
-  `qa:production-health`, then confirms the expected frontend service identity
-  through Zeabur GraphQL. A stale public deployment, mismatched service, missing
-  token, or unavailable API remains a hard failure. Deployment queue or build
-  scheduling diagnosis belongs in the Zeabur dashboard/log path and is not
-  inferred from empty CLI output.
 - Split modes remain available for focused reruns: `health`, `smoke`,
   `primary`, `compact`, `multi-chemical`, `prepared`, `batch`, `full`, and
   `all`.
@@ -1038,7 +1004,8 @@ Current status:
 Done means:
 
 - A user-facing frontend change can be traced from code change to CI result,
-  Zeabur deployment, production asset refresh, and production QA evidence.
+  Cloudflare/Railway deployment, production asset refresh, and production QA
+  evidence.
 - The final report can name which product block passed or failed.
 
 ### 2. Documentation Consolidation And Autonomous Continuation

@@ -10,10 +10,11 @@ not as a legal compliance authority.
 
 ## Production
 
-- Frontend: https://ghs-frontend.zeabur.app
-- Backend health: https://ghs-backend.zeabur.app/api/health
+- Frontend: https://ghs.yuchelab.com
+- Backend health: https://ghs-api.yuchelab.com/api/health
 - Current runtime version: `1.10.0`
-- Deployment: Zeabur auto-deploys from `main`
+- Deployment: Cloudflare Pages frontend and Railway backend, accepted only
+  when both report the exact `origin/main` SHA
 
 ## Safety Boundary
 
@@ -181,9 +182,7 @@ frontend/
   scripts/               QA and production verification scripts
 
 .github/workflows/      CI and production QA workflows
-zeabur.yaml             Zeabur deployment configuration
-zbpack.ghs-frontend.json
-                        Zeabur service-specific frontend monorepo build config
+Dockerfile.ghs-backend  Railway backend image definition
 ```
 
 ## Maintainer Entry Points

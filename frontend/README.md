@@ -36,4 +36,6 @@ public builds. Setting it to `true` makes the frontend try the admin-gated
 - Do not use CRA, CRACO, `react-scripts`, or `REACT_APP_*` variables for new work.
 - `@` resolves to `frontend/src` through `vite.config.js` and Jest module mapping.
 - CI runs `npm ci`, `npm test -- --runInBand`, and `npm run build`.
-- Production deploy uses Zeabur with the repo frontend Dockerfile / `zeabur.yaml`.
+- Production is built with Node 22 and deployed to Cloudflare Pages. Treat
+  `/build-info.json` on `https://ghs.yuchelab.com` as accepted only when its
+  full Git SHA matches `origin/main`.

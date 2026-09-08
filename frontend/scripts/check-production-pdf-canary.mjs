@@ -66,7 +66,11 @@ const run = async () => {
       canaryUrl: url.toString(),
       expectedOrigin,
       status: response.status,
-      requestId: response.headers.get("x-zeabur-request-id") || "",
+      requestId:
+        response.headers.get("x-request-id") ||
+        response.headers.get("x-railway-request-id") ||
+        response.headers.get("cf-ray") ||
+        "",
       contentType: response.headers.get("content-type") || "",
       body,
       failures,

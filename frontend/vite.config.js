@@ -11,8 +11,6 @@ const BUILD_SHA_ENV_KEYS = [
   "GITHUB_SHA",
   "CF_PAGES_COMMIT_SHA",
   "RAILWAY_GIT_COMMIT_SHA",
-  "ZEABUR_GIT_COMMIT_SHA",
-  "ZEABUR_COMMIT_SHA",
   "SOURCE_COMMIT",
   "COMMIT_SHA",
 ];
@@ -47,7 +45,6 @@ const createBuildInfoPlugin = () => ({
         process.env.GITHUB_REF_NAME ||
         process.env.CF_PAGES_BRANCH ||
         process.env.RAILWAY_GIT_BRANCH ||
-        process.env.ZEABUR_GIT_BRANCH ||
         ""
       ).trim() ||
       readGitValue(["rev-parse", "--abbrev-ref", "HEAD"]);

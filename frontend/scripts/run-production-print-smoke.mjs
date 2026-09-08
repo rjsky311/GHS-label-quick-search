@@ -1,7 +1,12 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 
 import { createProductionQaExpectedShaEnv } from "./production-expected-sha.mjs";
+import {
+  EXTERNAL_UPSTREAM_STATUS,
+  isExternalUpstreamUnavailableReport,
+} from "./production-upstream-gate.mjs";
 
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? "cmd.exe" : "npm";
@@ -178,14 +183,34 @@ const run = async (id, args) => {
 await run("production-health", ["run", "qa:production-health"]);
 await run("production-bundle", ["run", "qa:production-bundle"]);
 await run("production-search-ui", ["run", "qa:production-search-ui"]);
-await run("print-report", ["run", "qa:print-report"]);
-await run("production-handoff", ["run", "qa:production-handoff"]);
-await run("production-summary", ["run", "qa:production-summary"]);
+const searchReportPath = path.resolve(
+  process.cwd(),
+  process.env.PRODUCTION_SEARCH_UI_REPORT_PATH ||
+    "build/production-search-ui-report.json",
+);
+const searchReport = fs.existsSync(searchReportPath)
+  ? JSON.parse(fs.readFileSync(searchReportPath, "utf8").replace(/^\uFEFF/, ""))
+  : null;
+const externalUpstreamBlocked =
+  isExternalUpstreamUnavailableReport(searchReport);
+
+if (externalUpstreamBlocked) {
+  env.PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED = "1";
+  await run("production-summary", ["run", "qa:production-summary"]);
+} else {
+  await run("print-report", ["run", "qa:print-report"]);
+  await run("production-handoff", ["run", "qa:production-handoff"]);
+  await run("production-summary", ["run", "qa:production-summary"]);
+}
 
 console.log(
   JSON.stringify(
     {
       ok: true,
+      statusCategory: externalUpstreamBlocked
+        ? EXTERNAL_UPSTREAM_STATUS
+        : "complete",
+      stoppedEarly: externalUpstreamBlocked,
       stepTimeoutMs,
       cases: env.PRINT_QA_CASES.split(",").filter(Boolean),
       reportPath: path.resolve(process.cwd(), env.PRINT_QA_REPORT_PATH),

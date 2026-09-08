@@ -38,9 +38,6 @@ Out of scope for this runbook:
    - `npm run qa:production-health`
    - `npm run qa:production-search-ui`
    - `npm run qa:production-lab-ready-batch`
-   - During the temporary Zeabur rollback window only,
-     `npm run qa:zeabur-deployment` remains an optional provider diagnostic
-     when valid provider credentials are available.
 3. Confirm the pilot operator has the intended test list:
    - 10-20 rows for a first smoke pilot.
    - 50-100 rows for a realistic batch pilot.
@@ -179,9 +176,8 @@ Use this classification when turning pilot evidence into work:
 | Export hard to use | Product backlog | Prefer summary/scope improvements over more columns. |
 | Label output clipped | P0 print regression | Do not print clipped required content. |
 | Physical printer mismatch | Physical print checklist | Deferred until real materials exist. |
-| Production 502 or stale deploy | P0 production reliability | Use Zeabur health/deploy workflow; require `/build-info.json` git SHA proof before heavier production QA. |
+| Production 502 or stale deploy | P0 production reliability | Use canonical health/build metadata; require `/build-info.json` git SHA proof before heavier production QA. |
 | GitHub Actions checkout 403 or account-suspended message | P0 repository/CI access | This is not a product-code failure. Confirm with `gh run view <run-id> --log-failed`, resolve GitHub account/repository access, then rerun CI before trusting or dismissing checks. |
-| Zeabur deployment never starts or has no build log | P0 production reliability | If a redeploy stays pre-build (`startedAt` unset) or fails before build logs exist, treat it as Zeabur/GitHub integration or platform scheduling, not a Vite/build regression. Keep production QA pinned to `/build-info.json` commit proof. |
 | Production Print QA source/upstream outage | Source reliability / retry | Distinguish this from a print-layout regression before changing renderer code. |
 
 ## Closure Evidence For A Pilot Round

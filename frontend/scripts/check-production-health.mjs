@@ -101,7 +101,11 @@ const responseMeta = (response, elapsedMs) => ({
   status: response.status,
   ok: response.ok,
   elapsedMs,
-  requestId: response.headers.get("x-zeabur-request-id") || "",
+  requestId:
+    response.headers.get("x-request-id") ||
+    response.headers.get("x-railway-request-id") ||
+    response.headers.get("cf-ray") ||
+    "",
   server: response.headers.get("server") || "",
   strictTransportSecurity:
     response.headers.get("strict-transport-security") || "",

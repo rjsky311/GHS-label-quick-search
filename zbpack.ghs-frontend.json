@@ -1,5 +1,0 @@
-{
-  "app_dir": "frontend",
-  "build_command": "npm ci && npm run build",
-  "output_dir": "build"
-}

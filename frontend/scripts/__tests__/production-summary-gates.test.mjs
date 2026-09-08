@@ -31,11 +31,6 @@ const makeWorkspace = () => {
     bytes: 128,
     pdfHeader: true,
   });
-  writeJson(path.join(buildDir, "zeabur-deployment-report.json"), {
-    ok: true,
-    statusCategory: "fresh-serving",
-    expectedGitSha: "0123456789abcdef",
-  });
   return cwd;
 };
 
@@ -96,4 +91,68 @@ test("final product summary still blocks missing product reports", () => {
   assert.ok(
     summary.summary.failedProductBlocks.includes("fixed-stock-batch-printing"),
   );
+});
+
+test("final summary reports a bounded upstream outage without inventing product regressions", () => {
+  const cwd = makeWorkspace();
+  const buildDir = path.join(cwd, "build");
+  writeJson(path.join(buildDir, "production-print-bundle-report.json"), {
+    ok: true,
+  });
+  writeJson(path.join(buildDir, "production-search-ui-report.json"), {
+    ok: false,
+    statusCategory: "external-upstream-unavailable",
+    failures: ["source-upstream-unavailable"],
+    externalUpstream: {
+      source: "PubChem",
+      contractObserved: true,
+    },
+  });
+
+  const result = runSummary(cwd, {
+    PRINT_QA_REQUIRE_PRODUCT_BLOCKS: "1",
+    PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED: "1",
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const summary = JSON.parse(
+    fs.readFileSync(
+      path.join(buildDir, "production-print-qa-summary.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(summary.ok, true);
+  assert.equal(summary.statusCategory, "external-upstream-unavailable");
+  assert.equal(summary.summary.failedReports, 0);
+  assert.deepEqual(summary.summary.failedProductBlocks, []);
+  assert.ok(
+    summary.summary.externallyBlockedProductBlocks.includes(
+      "result-table-pictograms",
+    ),
+  );
+});
+
+test("external-upstream allowance cannot hide an unhealthy production gate", () => {
+  const cwd = makeWorkspace();
+  const buildDir = path.join(cwd, "build");
+  writeJson(path.join(buildDir, "production-health-report.json"), {
+    ok: false,
+    failures: ["expected-git-sha-mismatch"],
+  });
+  writeJson(path.join(buildDir, "production-print-bundle-report.json"), {
+    ok: true,
+  });
+  writeJson(path.join(buildDir, "production-search-ui-report.json"), {
+    ok: false,
+    statusCategory: "external-upstream-unavailable",
+    failures: ["source-upstream-unavailable"],
+    externalUpstream: { contractObserved: true },
+  });
+
+  const result = runSummary(cwd, {
+    PRINT_QA_REQUIRE_PRODUCT_BLOCKS: "1",
+    PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED: "1",
+  });
+
+  assert.equal(result.status, 1, result.stdout);
 });
