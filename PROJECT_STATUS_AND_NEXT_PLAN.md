@@ -9,18 +9,27 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
-Platform migration preparation (2026-09-08): read-only inventory and local
-portability changes are complete on `codex/ghs-platform-portability`. Current
-production remains on the Zeabur URLs listed below; no Cloudflare Pages or
-Railway resource, DNS record, secret, deployment, push, or Zeabur retirement
-has been performed. The reserved first-party targets are
-`https://ghs.yuchelab.com` and `https://ghs-api.yuchelab.com`. Continue only
-with the shadow-deployment batch and its explicit evidence gates in
-`docs/evidence/2026-09-08-platform-migration-preparation.md`. The shared
-Zeabur Dev plan is scheduled to downgrade to Free on 2026-09-10, and Zeabur's
-current downgrade documentation says deployed containerized services are
-automatically suspended. Treat the Railway backend shadow as time-critical;
-current green production health does not close that continuity risk.
+Platform migration checkpoint (2026-09-08): read-only inventory, local
+portability changes, and the owner-authorized isolated shadow resources are
+complete on `codex/ghs-platform-portability`. The Railway backend is healthy at
+`https://ghs-backend-production.up.railway.app`, and the Cloudflare Pages
+frontend is live at `https://ghs-label-quick-search-shadow.pages.dev`; both
+report deployed source SHA
+`76e1129a324779ba8c7084744b789f9e316dabfe`. Exact-SHA health, CORS, HSTS, PDF
+canary, and admin/miss-capture isolation gates passed. Live search-dependent
+product QA remains blocked by PubChem's GHS endpoint returning HTTP 503
+`PUGVIEW.ServerBusy`; the unchanged Zeabur backend and a direct PubChem probe
+show the same upstream failure. Do not cut DNS until that gate is rerun and
+all downstream search/batch/label/export/QR checks pass. DNS, payment/plan
+state, Zeabur services, and credentials remain unchanged. The reserved
+first-party targets are `https://ghs.yuchelab.com` and
+`https://ghs-api.yuchelab.com`; the detailed resource IDs, failure/fix record,
+and remaining acceptance gate are in
+`docs/evidence/2026-09-08-platform-migration-preparation.md`. The shared Zeabur
+Dev plan is scheduled to downgrade to Free on 2026-09-10, so rerun the blocked
+shadow product gate promptly when PubChem recovers; if green, the next batch is
+an explicitly authorized DNS/custom-domain cutover with the old Zeabur services
+retained for a short rollback observation window.
 
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the

@@ -7,9 +7,10 @@
   promoted.
 - User job: keep lookup, batch work, label generation, PDF export, and QR
   return paths working while hosting changes.
-- Completed here: Batch 1 read-only inventory and Batch 2 local portability.
-- Stop condition: stop before creating or changing Cloudflare Pages, Railway,
-  DNS, GitHub integrations/secrets, production deployments, or Zeabur state.
+- Completed here: Batch 1 read-only inventory, Batch 2 local portability, and
+  the owner-authorized Batch 3 isolated Railway/Cloudflare shadow deployment.
+- Stop condition: stop before custom-domain/DNS changes, payment or plan
+  changes, Zeabur retirement, credential rotation, or production promotion.
 
 ## Batch 1 — Verified Inventory
 
@@ -83,10 +84,50 @@ more specific about suspending already deployed containerized services.
   configuration belongs to the shadow deployment after a real project and
   service exist and can be validated with a configuration plan.
 
-## Batch 3 — Immediate Recommended Shadow Deployment Contract
+## Batch 3 — Shadow Deployment Result
 
-Do not cut DNS during this batch. Create isolated services only after explicit
-authorization.
+Owner authorization covered the existing Railway and Cloudflare accounts,
+isolated shadow resources, shadow acceptance, and one verified branch push. It
+did not cover DNS/custom-domain cutover, payment or plan changes, Zeabur
+retirement, or key rotation.
+
+Railway backend:
+
+- Project: `ghs-label-quick-search-shadow`
+- Project ID: `a7df1d13-d3f4-4562-a9c3-880150e92201`
+- Service: `ghs-backend`
+- Service ID: `38153323-7009-42ed-b6b6-76fd8f945e29`
+- Region: one replica in Singapore (`asia-southeast1-eqsg3a`)
+- URL: `https://ghs-backend-production.up.railway.app`
+- Dockerfile: `Dockerfile.ghs-backend`
+- Healthcheck: `/api/health`
+- Successful deployment: `a60fcfc4-98f5-41d3-80d5-60ed0231b85f`
+- Deployed source SHA: `76e1129a324779ba8c7084744b789f9e316dabfe`
+
+The first Railway deployment (`08a1655c-ff87-4a2e-9b38-9c49d183bd82`)
+failed because the non-root container user could not create the default
+SQLite file under `/app/data`. The container recipes now create and chown only
+`/app/data` before switching to `appuser`; application code remains owned by
+root. A manifest regression test covers both backend Docker recipes. The
+corrected deployment reached `SUCCESS` and its health/PDF checks are green.
+
+Cloudflare Pages frontend:
+
+- Project: `ghs-label-quick-search-shadow`
+- URL: `https://ghs-label-quick-search-shadow.pages.dev`
+- Direct Upload artifact: 43 files, built with Node `v22.23.1`
+- Deployed source SHA: `76e1129a324779ba8c7084744b789f9e316dabfe`
+- Backend configuration:
+  `https://ghs-backend-production.up.railway.app`
+- Canonical public origin: `https://ghs.yuchelab.com`
+
+Cloudflare's Wrangler OAuth request included broad unrelated account scopes.
+It was cancelled. The existing authenticated dashboard and Pages Direct Upload
+were used instead, so no persistent CLI token or unrelated Worker was created.
+
+## Batch 3 Configuration Contract
+
+DNS remained unchanged during this batch.
 
 Cloudflare Pages frontend:
 
@@ -125,6 +166,35 @@ Before any custom-domain or DNS change:
 
 Only after all six gates pass should the owner be asked to authorize the
 custom-domain/DNS cutover batch.
+
+### Acceptance Readback — 2026-09-08
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Exact SHA and runtime readiness | Pass | Frontend `build-info.json` and backend `/api/health` both report `76e1129a324779ba8c7084744b789f9e316dabfe`; backend is `ready`, PDF is available, HSTS is present. |
+| CORS boundary | Pass | Preflight from `https://ghs-label-quick-search-shadow.pages.dev` returns the matching allow-origin header; `https://evil.example` is rejected with HTTP 400 and no allow-origin header. |
+| PDF canary | Pass | Shadow canary returned a non-empty `%PDF-` document (7,974 bytes). |
+| Search and downstream product workflows | Externally blocked | The live browser QA exhausted both runs because PubChem's GHS Classification endpoint returned HTTP 503 `PUGVIEW.ServerBusy`. The same CAS failed through the unchanged Zeabur backend, and a direct PubChem probe returned the same 503 with `Retry-After: 30`; this isolates the failure from the new platforms. No search result means the dependent batch/label/export browser gates cannot truthfully pass yet. |
+| Canonical QR contract | Locally verified, live proof pending | The portability tests and frontend suite pass; a live generated-result check remains coupled to the blocked search gate. |
+| Admin/miss-capture isolation | Pass | Railway variables contain no admin token, capture flag, DB/Redis/volume, or pilot-store override. `/api/ops/report` reports that admin is not configured; miss capture returns `skipped: true`. |
+| Rollback availability | Pass | Existing Zeabur services and settings were not changed or deleted. |
+
+Local verification after the container fix:
+
+- Backend: `404 passed` (one Starlette/httpx deprecation warning).
+- Frontend: `94` test suites and `1,352` tests passed under the repository's
+  normal Jest gate.
+- Node 22 production build completed and generated the exact-SHA artifact used
+  by Pages.
+- Hosting-neutral production health and PDF canary passed against the shadow.
+- The aggregate production-product QA correctly failed at the live search UI
+  gate because of the external PubChem 503; later dependent steps were not
+  misreported as executed.
+
+Current decision: the replacement infrastructure is established and its
+platform-level gates are green, but Batch 3 is not a full product acceptance
+until the live search-dependent QA is rerun after PubChem recovers. Do not cut
+DNS on partial evidence.
 
 ## Retention And Cleanup
 
