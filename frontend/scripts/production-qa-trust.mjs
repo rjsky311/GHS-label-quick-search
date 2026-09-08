@@ -79,19 +79,3 @@ export const backendHealthIsReady = (body) =>
       body?.readiness === "ready" &&
       body?.capabilities?.pdf?.available === true,
   );
-
-export const serviceIdentityMatches = (actual, { id, name } = {}) => {
-  const actualId = String(actual?.id || "").trim();
-  const actualName = String(actual?.name || "").trim();
-  const expectedId = String(id || "").trim();
-  const expectedName = String(name || "").trim();
-
-  return Boolean(
-    actualId &&
-      actualName &&
-      expectedId &&
-      expectedName &&
-      actualId === expectedId &&
-      actualName === expectedName,
-  );
-};

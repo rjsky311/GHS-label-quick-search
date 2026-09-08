@@ -2,6 +2,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  EXTERNAL_UPSTREAM_STATUS,
+  canTreatExternalUpstreamAsNonActionable,
+} from "./production-upstream-gate.mjs";
+
 const env = process.env;
 const expectedGitSha = (
   env.PRINT_QA_EXPECTED_GIT_SHA ||
@@ -10,6 +15,8 @@ const expectedGitSha = (
   ""
 ).trim();
 const requireProductBlocks = env.PRINT_QA_REQUIRE_PRODUCT_BLOCKS === "1";
+const allowExternalUpstreamBlocked =
+  env.PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED === "1";
 const requireDeploymentFreshness =
   env.PRINT_QA_REQUIRE_DEPLOYMENT_FRESHNESS === "1" || Boolean(expectedGitSha);
 const buildDir = path.resolve(process.cwd(), "build");
@@ -131,7 +138,7 @@ const classifyFailure = (failure = {}) => {
   }
 
   if (
-    /deployment|zeabur|build-info|expected git sha|expected.*sha|stale|freshness|vite asset|asset url|commit/i.test(
+    /deployment|build-info|expected git sha|expected.*sha|stale|freshness|vite asset|asset url|commit/i.test(
       text,
     )
   ) {
@@ -139,7 +146,7 @@ const classifyFailure = (failure = {}) => {
       bucket: "deployment-freshness",
       label: "Deployment freshness",
       nextAction:
-        "Verify Zeabur reached a running deployment for the expected commit before debugging product behavior.",
+        "Verify the canonical frontend and backend expose the expected commit before debugging product behavior.",
     };
   }
 
@@ -250,6 +257,8 @@ const summarizeGenericReport = (name, reportPath, report) => {
     name,
     present: true,
     ok: derivedOk,
+    statusCategory: report.statusCategory || "",
+    externalUpstream: report.externalUpstream || null,
     reportPath,
     productionUrl: report.productionUrl || "",
     assetUrl: report.assetUrl || "",
@@ -259,57 +268,6 @@ const summarizeGenericReport = (name, reportPath, report) => {
     warnings: normalizeFailureList(report.warnings),
     failures: reportFailures,
     failedCases: failedCases.map(failureFromResult),
-  };
-};
-
-const summarizeZeaburDeploymentReport = (reportPath, report) => {
-  if (!report) {
-    return {
-      name: "zeabur-deployment",
-      present: false,
-      ok: null,
-      reportPath,
-    };
-  }
-
-  const reportFailures = normalizeFailureList(report.failures);
-  if (report.parseError) {
-    reportFailures.push(`parse-error: ${report.parseError}`);
-  }
-  if (report.ok === false && report.statusCategory && reportFailures.length === 0) {
-    reportFailures.push(`zeabur-deployment-${report.statusCategory}`);
-  }
-
-  return {
-    name: "zeabur-deployment",
-    present: true,
-    ok: Boolean(report.ok),
-    reportPath,
-    statusCategory: report.statusCategory || "",
-    expectedGitSha: report.expectedGitSha || "",
-    latestDeployment: report.latestDeployment || null,
-    expectedDeployment: report.expectedDeployment || null,
-    runningDeployment: report.runningDeployment || null,
-    recovery: report.recovery || null,
-    guidance: normalizeFailureList(report.guidance),
-    warnings: [],
-    failures: [],
-    failedCases: reportFailures.length
-      ? [
-          {
-            id: report.statusCategory || "zeabur-deployment",
-            failures: reportFailures,
-            statusText: [
-              "zeabur deployment",
-              report.statusCategory,
-              ...(report.guidance || []),
-              ...(report.recovery?.nextActions || []),
-            ]
-              .filter(Boolean)
-              .join(" "),
-          },
-        ]
-      : [],
   };
 };
 
@@ -342,11 +300,6 @@ const pdfCanaryPath = path.resolve(
   env.PRODUCTION_PDF_CANARY_REPORT_PATH ||
     "build/production-pdf-canary-report.json",
 );
-const zeaburDeploymentPath = path.resolve(
-  process.cwd(),
-  env.ZEABUR_DEPLOYMENT_REPORT_PATH ||
-    "build/zeabur-deployment-report.json",
-);
 const searchUiPath = path.resolve(
   process.cwd(),
   env.PRODUCTION_SEARCH_UI_REPORT_PATH ||
@@ -375,10 +328,6 @@ const handoffReportPaths = findReports(/^production-print-.*report\.json$/)
   .filter((filePath) => !/production-print-qa-summary\.json$/.test(filePath));
 
 const reports = {
-  deployment: summarizeZeaburDeploymentReport(
-    zeaburDeploymentPath,
-    readJsonIfExists(zeaburDeploymentPath),
-  ),
   health: summarizeGenericReport(
     "production-health",
     healthPath,
@@ -425,7 +374,6 @@ const reports = {
 };
 
 const presentReports = [
-  reports.deployment,
   reports.health,
   reports.pdfCanary,
   reports.bundle,
@@ -437,7 +385,20 @@ const presentReports = [
   ...reports.handoff,
 ].filter((report) => report.present);
 
-const failedReports = presentReports.filter((report) => report.ok === false);
+const externalUpstreamNonActionable =
+  allowExternalUpstreamBlocked &&
+  canTreatExternalUpstreamAsNonActionable({
+    searchUi: reports.searchUi,
+    health: reports.health,
+    bundle: reports.bundle,
+    pdfCanary: reports.pdfCanary,
+    requirePdfCanary: requireProductBlocks,
+  });
+const failedReports = presentReports.filter(
+  (report) =>
+    report.ok === false &&
+    !(externalUpstreamNonActionable && report === reports.searchUi),
+);
 const actionableFailures = presentReports.flatMap((report) =>
   (report.failedCases || []).map((failure) => ({
     report: report.name,
@@ -472,22 +433,19 @@ const failureTriage = buildFailureTriage([
 ]);
 
 const isPassingReport = (report) => Boolean(report?.present && report.ok === true);
-const isPassingOrAbsentReport = (report) =>
-  !report?.present || report.ok === true;
 
 const handoffReportsPassing =
   reports.handoff.length > 0 && reports.handoff.every(isPassingReport);
-const deploymentFreshnessPassing =
-  isPassingReport(reports.health) && isPassingOrAbsentReport(reports.deployment);
+const deploymentFreshnessPassing = isPassingReport(reports.health);
 
 const buildProductBlocks = () => [
   {
     id: "deployment-freshness",
     name: "Production deployment freshness",
-    reports: [reports.deployment.name, reports.health.name],
+    reports: [reports.health.name],
     ok: deploymentFreshnessPassing,
     evidence:
-      "Production deployment freshness is proven by first-party health and build metadata; an optional provider report may add infrastructure detail when available.",
+      "Production deployment freshness is proven by first-party health and build metadata for the expected Git SHA.",
   },
   {
     id: "production-availability",
@@ -571,14 +529,35 @@ const buildProductBlocks = () => [
   },
 ];
 
-const productBlocks = buildProductBlocks();
+const externalBlockableProductBlocks = new Set([
+  "print-renderer-stock-fit",
+  "result-table-pictograms",
+  "trust-source-sds",
+  "prepared-solution-reprint",
+  "fixed-stock-batch-printing",
+  "whole-product-ux-brand-utility",
+]);
+const productBlocks = buildProductBlocks().map((block) => ({
+  ...block,
+  status: block.ok
+    ? "pass"
+    : externalUpstreamNonActionable &&
+        externalBlockableProductBlocks.has(block.id)
+      ? "blocked-external"
+      : "fail",
+}));
 const incompleteProductBlocks = productBlocks.filter((block) => !block.ok);
+const externallyBlockedProductBlocks = productBlocks.filter(
+  (block) => block.status === "blocked-external",
+);
 const failedRequiredFreshnessBlocks = requireDeploymentFreshness
   ? productBlocks.filter((block) =>
       ["deployment-freshness", "production-availability"].includes(block.id),
     ).filter((block) => !block.ok)
   : [];
-const failedProductBlocks = requireProductBlocks ? incompleteProductBlocks : [];
+const failedProductBlocks = requireProductBlocks
+  ? incompleteProductBlocks.filter((block) => block.status === "fail")
+  : [];
 
 const result = {
   ok:
@@ -586,6 +565,11 @@ const result = {
     failedRequiredFreshnessBlocks.length === 0 &&
     (!requireProductBlocks || failedProductBlocks.length === 0),
   generatedAt: new Date().toISOString(),
+  statusCategory: externalUpstreamNonActionable
+    ? EXTERNAL_UPSTREAM_STATUS
+    : failedReports.length > 0 || failedProductBlocks.length > 0
+      ? "failed"
+      : "complete",
   reportPath: outputPath,
   requireProductBlocks,
   requireDeploymentFreshness,
@@ -600,6 +584,10 @@ const result = {
     ),
     failedProductBlocks: failedProductBlocks.map((block) => block.id),
     incompleteProductBlocks: incompleteProductBlocks.map((block) => block.id),
+    externallyBlockedProductBlocks: externallyBlockedProductBlocks.map(
+      (block) => block.id,
+    ),
+    externalUpstreamNonActionable,
     actionableFailures,
     reportLevelFailures,
     reportWarnings,

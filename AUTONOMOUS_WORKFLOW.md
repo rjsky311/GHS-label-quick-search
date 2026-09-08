@@ -42,7 +42,7 @@ stop condition below applies:
   small-label outputs, or block them with a clear recovery path, instead of
   pretending they are complete A4/Letter labels.
 - Push stable changes to `main` when tests pass, then track GitHub Actions,
-  Zeabur deployment, and production QA for user-facing changes.
+  Cloudflare/Railway deployment, and production QA for user-facing changes.
 - Search current best practices proactively when the answer may have changed,
   when a comparable domain has a stronger pattern, or when the current product
   direction feels under-specified.
@@ -121,9 +121,9 @@ Use this loop before choosing a new slice, especially after the user says
    If GitHub Actions fails inside `actions/checkout` with an account,
    repository, or 403 access message, classify it as repository/CI access
    until proven otherwise; do not keep changing product code to chase that
-   failure. If Zeabur creates a deployment but it never reaches a real
-   `startedAt` time or has no build logs, classify it as a deploy-platform or
-   GitHub-integration blocker before running heavier production QA.
+   failure. If a provider deployment never reaches a real running state or has
+   no build logs, classify it as a deploy-platform or integration blocker
+   before running heavier production QA.
 2. Review the last 10-20 commits when the recent direction is unclear or the
    last several slices have been in the same category. Classify the work as
    user-visible UX, print/rendering, data governance/admin, QA/CI, docs, or
@@ -163,7 +163,7 @@ Pause and ask the user only when one of these applies:
   destructive operation.
 - A legal/compliance claim would be strengthened beyond the project's
   "reference tool, verify with SDS/local rules" boundary.
-- External credentials, billing, Zeabur configuration, DNS, or non-repo secrets
+- External credentials, billing, provider configuration, DNS, or non-repo secrets
   are required.
 - A tool, quota, browser, CI, deploy, or network blocker prevents reliable
   verification.
@@ -214,9 +214,9 @@ For print workflow changes, the default validation stack is:
 - `npm run test:print-contract`
 - `PRINT_QA_PRINT_HTML_DIR=build/print-qa-html npm run qa:print-report`
 - `npm run qa:print-pdf`
-- `npm run qa:production-health` after Zeabur deploy, before heavier
+- `npm run qa:production-health` after production deploy, before heavier
   production QA, to confirm frontend HTML, current Vite asset, and backend
-  health are reachable and to capture Zeabur request IDs for 502 triage.
+  health are reachable and to capture provider-neutral request IDs for 502 triage.
   Current Vite builds also emit `/build-info.json`; set
   `PRODUCTION_HEALTH_EXPECTED_GIT_SHA=$(git rev-parse HEAD)` locally, or rely
   on `PRINT_QA_EXPECTED_GIT_SHA=${{ github.sha }}` in GitHub Actions, when the
@@ -225,18 +225,10 @@ For print workflow changes, the default validation stack is:
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT` to a short marker string from the new
   bundle when you need to prove production has refreshed instead of validating
   an older deployed asset.
-- After `qa:production-health`, run `npm run qa:zeabur-deployment` to compose
-  strict deployment evidence. It requires exact public frontend/backend SHAs,
-  the pinned backend origin, and a direct read-only Zeabur GraphQL match for the
-  frontend service ID/name. It writes
-  `build/zeabur-deployment-report.json`. Do not diagnose or redeploy from an
-  empty Zeabur CLI JSON response; inspect the Zeabur dashboard/logs when the
-  public SHA remains stale, and keep infrastructure mutation as a separate
-  explicit action.
-- `npm run qa:production-bundle` after Zeabur deploy
-- `npm run qa:production-search-ui` after Zeabur deploy when search results,
+- `npm run qa:production-bundle` after production deploy
+- `npm run qa:production-search-ui` after production deploy when search results,
   result actions, GHS result strips, or first-screen polish changed.
-- `npm run qa:production-smoke` after Zeabur deploy for routine frontend or
+- `npm run qa:production-smoke` after production deploy for routine frontend or
   print-flow iterations; it covers complete primary, continuation,
   identification small-label, 62 mm QR small-label handoff, and the search-results
   UI readability check in production Chrome.
@@ -260,7 +252,7 @@ For print workflow changes, the default validation stack is:
   positioning. Allow a generous local command timeout of at least 12 minutes; a
   healthy run can take several minutes because it opens production Chrome flows
   and generates print reports.
-- `npm run qa:production-print` after Zeabur deploy when the change affects
+- `npm run qa:production-print` after production deploy when the change affects
   preview, print handoff, stock presets, compact labels, renderer CSS, or when
   closing a larger print-workflow milestone. This is the full production matrix
   and can run longer than 15 minutes.

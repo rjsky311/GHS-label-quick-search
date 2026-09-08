@@ -270,10 +270,59 @@ batch that requires a fresh exact-target authorization.
 Source promotion uses a self-validating completion gate: this evidence record
 must be reachable from `origin/main`, and the canonical frontend build metadata
 and backend health endpoint must both report that same `origin/main` head SHA.
-Until all three conditions hold, source promotion remains open. Use one
-controlled PR after local gates are green, merge through the protected branch,
-and realign both canonical deployments to the resulting `main` SHA. Do not
-retire rollback infrastructure before that gate passes.
+PR #67 satisfied that gate at merge SHA
+`051baa2f8c547d4f5a2c414dded9d91d28b90b99`; both canonical deployments were
+realigned and read back at the same SHA before retirement began.
+
+## Batch 6 — Zeabur Retirement And QA Classification
+
+After a fresh exact-target confirmation, the owner selected deletion of the
+whole dedicated Zeabur project rather than leaving an empty project shell:
+
+- Deleted project: `GHS-label` (`696262d991818d5fd97058b3`).
+- Deleted with that project: `ghs-backend`
+  (`6962687391818d5fd9705a67`) and `ghs-frontend`
+  (`69626873d9479ab33ad4590e`), including their legacy domains and
+  deployments.
+- Readback after deletion listed only `chem-tools`, `skills-hub`, `bakecalc`,
+  and `dr-bond`; those projects were not changed.
+- Both former GHS Zeabur URLs returned HTTP 404 after deletion.
+- The repository `ZEABUR_TOKEN` was deleted only after `.github/workflows`
+  was verified to contain no reference to it.
+- The fully merged local and remote branch
+  `codex/ghs-platform-portability` was deleted after ancestry checks.
+- Canonical Cloudflare/Railway health was read back again after cleanup and
+  remained healthy on the expected promotion SHA with PDF capability ready.
+
+Repository cleanup removes the Zeabur service manifest, frontend zbpack file,
+Zeabur-only root frontend Dockerfile, GraphQL deployment-freshness script,
+inline-Dockerfile parity script/tests, dead environment fallbacks, and stale
+operational instructions. Historical evidence remains intact.
+
+Production QA now distinguishes a bounded source outage from a product
+regression. A non-actionable external-source result requires all of the
+following: exact-SHA production health, a fresh frontend bundle, a passing PDF
+canary, the visible upstream banner, the row-level `upstream-error` state, and
+the expected PubChem retry copy. When all agree, the summary records
+`external-upstream-unavailable`, lists source-dependent product blocks as
+`blocked-external`, and stops before print/prepared/batch walks that cannot run
+without live source data. If any platform gate or UI-contract evidence is
+missing, the run remains a hard failure.
+
+Acceptance evidence for this batch:
+
+- Backend syntax and test gate: `399 passed`; the only warning is the existing
+  Starlette/httpx deprecation notice.
+- Frontend regression gate: `94` suites and `1,352` tests passed.
+- Print contract: `9` suites and `338` tests passed.
+- QA-script gate: `51` tests passed, including negative cases proving an
+  unhealthy SHA/health gate cannot be hidden by the upstream allowance.
+- Node 22 build, lint, i18n parity, docs drift, and bundle budget passed.
+- A real production run observed one upstream banner, one row-level upstream
+  state, and the expected PubChem retry copy; it stopped after one search,
+  returned `external-upstream-unavailable`, left `failedProductBlocks` and
+  `actionableFailures` empty, and listed six source-dependent blocks as
+  `blocked-external` rather than failed.
 
 ## Retention And Cleanup
 
@@ -281,8 +330,6 @@ retire rollback infrastructure before that gate passes.
   `backend/data/pilot.db`.
 - Do not retain: generated frontend `build/` output, test screenshots, QA JSON,
   or temporary Python environments created solely for local validation.
-- Retain temporarily after this cutover: Zeabur services, provider URLs, and
-  their rollback access for the 24-72 hour observation window.
-- Remove only after a successful observation window and fresh authorization:
-  obsolete Zeabur services, stale provider secrets, old provider-specific
-  environment variables, and rollback-only artifacts.
+- Zeabur services, their provider URLs, the repository token, and
+  rollback-only source configuration were retired in Batch 6. Cloudflare and
+  Railway provider-native URLs remain aliases for the active infrastructure.

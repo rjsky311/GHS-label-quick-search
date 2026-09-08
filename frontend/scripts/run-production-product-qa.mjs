@@ -3,6 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createProductionQaExpectedShaEnv } from "./production-expected-sha.mjs";
+import {
+  EXTERNAL_UPSTREAM_STATUS,
+  isExternalUpstreamUnavailableReport,
+} from "./production-upstream-gate.mjs";
 
 const isWindows = process.platform === "win32";
 const npmCommand = isWindows ? "cmd.exe" : "npm";
@@ -106,6 +110,7 @@ const writeProductReport = ({ ok, failure = null }) => {
   const summary = readJsonIfExists(summaryPath) || {};
   const productReport = {
     ok,
+    statusCategory: summary.statusCategory || (ok ? "complete" : "failed"),
     generatedAt: new Date().toISOString(),
     reportPath: productReportPath,
     summaryReportPath: summaryPath,
@@ -218,10 +223,24 @@ const run = (id, args, extraEnv = {}) =>
 try {
   await run("production-pdf-canary", ["run", "qa:production-pdf-canary"]);
   await run("production-smoke", ["run", "qa:production-smoke"]);
-  await run("production-prepared", ["run", "qa:production-prepared"]);
-  await run("production-batch-print", ["run", "qa:production-batch-print"]);
+  const searchReportPath = path.resolve(
+    process.cwd(),
+    process.env.PRODUCTION_SEARCH_UI_REPORT_PATH ||
+      "build/production-search-ui-report.json",
+  );
+  const searchReport = readJsonIfExists(searchReportPath);
+  const externalUpstreamBlocked =
+    isExternalUpstreamUnavailableReport(searchReport);
+
+  if (!externalUpstreamBlocked) {
+    await run("production-prepared", ["run", "qa:production-prepared"]);
+    await run("production-batch-print", ["run", "qa:production-batch-print"]);
+  }
   await run("production-summary", ["run", "qa:production-summary"], {
     PRINT_QA_REQUIRE_PRODUCT_BLOCKS: "1",
+    PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED: externalUpstreamBlocked
+      ? "1"
+      : "0",
   });
 
   const summaryPath = path.resolve(
@@ -237,6 +256,7 @@ try {
     JSON.stringify(
       {
         ok: productReport.ok,
+        statusCategory: productReport.statusCategory,
         reportPath: productReport.reportPath,
         summaryReportPath: productReport.summaryReportPath,
         steps: productReport.steps.map((step) => ({
@@ -250,6 +270,8 @@ try {
           ok: block.ok,
         })),
         summary: productReport.summary,
+        stoppedEarlyForExternalUpstream:
+          productReport.statusCategory === EXTERNAL_UPSTREAM_STATUS,
       },
       null,
       2,

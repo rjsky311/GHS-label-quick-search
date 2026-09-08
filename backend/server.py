@@ -134,9 +134,6 @@ def _resolve_build_git_sha() -> str:
         "VITE_GIT_SHA",
         "GITHUB_SHA",
         "RAILWAY_GIT_COMMIT_SHA",
-        "ZEABUR_GIT_COMMIT_SHA",
-        "ZEABUR_COMMIT_SHA",
-        "ZEABUR_GIT_SHA",
         "SOURCE_COMMIT",
         "COMMIT_SHA",
         "SOURCE_VERSION",
@@ -792,7 +789,7 @@ def _client_ip(request: "Request") -> str:
 # slowapi limiter. In-memory storage is acceptable for a single-worker
 # deployment. Scaling to multiple workers/instances should set
 # RATE_LIMIT_STORAGE_URI/LIMITS_STORAGE_URI (for example a redis:// URL) or
-# push rate limiting out to the edge (Zeabur router, Cloudflare, etc.).
+# push rate limiting out to the edge (Cloudflare, Railway, etc.).
 limiter = Limiter(
     key_func=_client_ip,
     default_limits=[],  # no implicit global limit; per-route only
@@ -2045,7 +2042,7 @@ async def bounded_search_chemical(
 ) -> ChemicalResult:
     """Run one chemical lookup inside the public API timeout budget.
 
-    Zeabur's public gateway can return a 502 if a request stays open too long.
+    A public hosting gateway can return a 502 if a request stays open too long.
     A safety lookup should degrade into an explicit upstream_error row instead
     of leaving the browser, batch search, or production QA waiting until the
     proxy gives up.
@@ -2529,7 +2526,7 @@ app.add_middleware(
 #
 #   - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
 #     The public API is HTTPS-only. Emit HSTS from the application response so
-#     it survives the Zeabur TLS proxy boundary and can be verified end-to-end.
+#     it survives the hosting TLS proxy boundary and can be verified end-to-end.
 #
 # The frontend is a static site and carries its own CSP via a meta
 # tag in index.html (added alongside this change).

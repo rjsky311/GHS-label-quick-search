@@ -2,6 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright-core";
 
+import {
+  EXTERNAL_UPSTREAM_STATUS,
+  isBoundedExternalUpstreamUiState,
+} from "./production-upstream-gate.mjs";
+
 const env = process.env;
 const productionUrl = env.PRINT_QA_PRODUCTION_URL || "https://ghs.yuchelab.com/";
 const outputPath = path.resolve(
@@ -53,6 +58,16 @@ const BROWSER_CLOSE_TIMEOUT_MS = Number.parseInt(
 );
 const SUPPORT_REPORT_DATA_URL =
   "https://github.com/rjsky311/GHS-label-quick-search/issues/new?template=data-correction.yml&labels=data-correction";
+
+class ExternalUpstreamUnavailableError extends Error {
+  constructor(evidence) {
+    super(
+      `The production UI rendered the bounded external upstream retry state for ${evidence.term}.`,
+    );
+    this.name = "ExternalUpstreamUnavailableError";
+    this.evidence = evidence;
+  }
+}
 
 const isSearchTabActiveClass = (className = "") =>
   className.includes("text-[hsl(var(--notebook-action))]") ||
@@ -1136,6 +1151,30 @@ const searchUntilUsableResult = async (page, term = searchTerm) => {
       await page.getByTestId("result-row-0").waitFor({
         timeout: SEARCH_UI_TIMEOUT_MS,
       });
+      const rowText =
+        ((await page
+          .getByTestId("result-row-0")
+          .textContent()
+          .catch(() => "")) || "")
+          .replace(/\s+/g, " ")
+          .trim();
+      const externalUpstreamEvidence = {
+        term,
+        attempt,
+        rowText,
+        upstreamBannerCount: await page
+          .getByTestId("upstream-error-banner")
+          .count()
+          .catch(() => 0),
+        upstreamRowStateCount: await page
+          .getByTestId("result-row-0")
+          .locator('[data-testid^="data-quality-chip-upstream-error-"]')
+          .count()
+          .catch(() => 0),
+      };
+      if (isBoundedExternalUpstreamUiState(externalUpstreamEvidence)) {
+        throw new ExternalUpstreamUnavailableError(externalUpstreamEvidence);
+      }
       const detailButton = page.getByTestId("detail-btn-0");
       if (
         (await detailButton
@@ -1145,17 +1184,13 @@ const searchUntilUsableResult = async (page, term = searchTerm) => {
       ) {
         return attempt;
       }
-      const rowText =
-        ((await page
-          .getByTestId("result-row-0")
-          .textContent()
-          .catch(() => "")) || "")
-          .replace(/\s+/g, " ")
-          .trim();
       lastError = new Error(
         `Search attempt ${attempt} did not produce a usable detail action: ${rowText}`,
       );
     } catch (error) {
+      if (error instanceof ExternalUpstreamUnavailableError) {
+        throw error;
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error || "unknown");
       lastError = new Error(`Search attempt ${attempt} failed: ${errorMessage}`);
@@ -1849,6 +1884,7 @@ const summarizeSearchUiReportForConsole = (report) => {
 
 const failures = [];
 let browser;
+let activePage;
 
 try {
   const executablePath = resolveChromeExecutable();
@@ -1865,6 +1901,7 @@ try {
     locale: browserLocale,
   });
   const page = await context.newPage();
+  activePage = page;
 
   await gotoApp(page, withQaParam(productionUrl));
   const documentReadiness = await inspectDocumentAccessibilityAndFonts(page);
@@ -2883,6 +2920,38 @@ try {
     process.exitCode = 1;
   }
 } catch (error) {
+  if (error instanceof ExternalUpstreamUnavailableError) {
+    const screenshotPath = path.join(
+      screenshotDir,
+      "external-upstream-unavailable.png",
+    );
+    const screenshotCaptured = activePage
+      ? await activePage
+          .screenshot({ path: screenshotPath, fullPage: false })
+          .then(() => true)
+          .catch(() => false)
+      : false;
+    const report = {
+      ok: false,
+      statusCategory: EXTERNAL_UPSTREAM_STATUS,
+      productionUrl,
+      searchTerm,
+      failures: ["source-upstream-unavailable"],
+      warnings: [
+        "Live product walkthrough stopped after the bounded PubChem retry state was verified.",
+      ],
+      externalUpstream: {
+        source: "PubChem",
+        contractObserved: true,
+        ...error.evidence,
+      },
+      screenshotPath: screenshotCaptured ? screenshotPath : "",
+      error: error.message,
+    };
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
+    console.warn(JSON.stringify(report, null, 2));
+  } else {
   const report = {
     ok: false,
     productionUrl,
@@ -2894,6 +2963,7 @@ try {
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
   console.error(report.error);
   process.exitCode = 1;
+  }
 } finally {
   await closeBrowserWithTimeout(browser);
 }

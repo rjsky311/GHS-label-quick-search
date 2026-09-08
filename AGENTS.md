@@ -16,9 +16,9 @@ before choosing the next autonomous product slice.
 - GitHub: `rjsky311/GHS-label-quick-search` is intentionally public. Public
   visibility keeps the website's GitHub Issues feedback links usable for
   outside users.
-- Deployment: Zeabur auto-deploys from `main`.
-- Frontend: https://ghs-frontend.zeabur.app
-- Backend: https://ghs-backend.zeabur.app
+- Deployment: Cloudflare Pages frontend plus Railway backend.
+- Frontend: https://ghs.yuchelab.com
+- Backend: https://ghs-api.yuchelab.com
 
 ## Current Product Rules
 
@@ -67,21 +67,17 @@ before choosing the next autonomous product slice.
   inertia after the shipped monitoring baseline.
 - Explicitly: do not continue by backlog inertia.
 
-## Zeabur Infrastructure
+## Production Infrastructure
 
-- Project ID: `696262d991818d5fd97058b3`
-- Environment ID: `696262d9a7aaff0c1152b3d6`
-- Frontend service ID: `69626873d9479ab33ad4590e`
-- Live service names are `ghs-frontend` and `ghs-backend`.
-- `zeabur.yaml` service names should stay aligned with those live names.
-- Frontend uses an INLINE Dockerfile; sync `Dockerfile.ghs-frontend` via
-  GraphQL `updateDockerfile` + redeploy. `zbpack.ghs-frontend.json` is fallback.
-- Live build variables include `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`,
-  `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL`.
-- Backend service `6962687391818d5fd9705a67` builds from an INLINE Dockerfile
-  pinned in its Zeabur spec; repo Dockerfiles and zbpack overrides are
-  ignored. Update via `Dockerfile.ghs-backend` + GraphQL `updateDockerfile` +
-  redeploy; see `docs/superpowers/plans/2026-07-07-mobile-pdf-export-server-render.md`.
+- Cloudflare Pages serves the static frontend at `ghs.yuchelab.com`.
+- Railway project `a7df1d13-d3f4-4562-a9c3-880150e92201`, environment
+  `7b62aa42-2376-4636-ae67-546b94e38a27`, service
+  `38153323-7009-42ed-b6b6-76fd8f945e29` serves `ghs-backend`.
+- `Dockerfile.ghs-backend` is the Railway backend image definition.
+- Every production promotion must set/report the full `origin/main` SHA and
+  pass first-party health, CORS, security-header, and PDF canary checks.
+- The dedicated legacy Zeabur GHS project and repository `ZEABUR_TOKEN` were
+  retired on 2026-09-08. Do not restore Zeabur-only configs or diagnostics.
 
 ## Architecture
 
@@ -89,7 +85,7 @@ before choosing the next autonomous product slice.
 User Browser
   -> React 19 + Tailwind + Radix UI + Vite
   -> axios calls to ${VITE_BACKEND_URL}/api
-  -> FastAPI backend on Zeabur, port 8001
+  -> FastAPI backend on Railway, port 8001
   -> PubChem REST API plus local dictionaries/admin curation
 ```
 
@@ -153,7 +149,6 @@ npm run qa:p-code-coverage
 npm run test:print-contract
 npm run qa:print-pdf
 npm run qa:production-health
-npm run qa:zeabur-deployment
 npm run qa:production-search-ui
 npm run qa:production-batch-print
 npm run qa:production-product
@@ -224,11 +219,11 @@ npm run qa:production-health
 - Do not reintroduce yarn, CRA, CRACO, or `REACT_APP_*`.
 - Keep i18next 23.x, react-i18next 14.x, and language detector 7.x unless a
   dependency-refresh task explicitly changes them.
-- If Zeabur production is stale, run `qa:zeabur-deployment` before heavier
-  product QA.
-- If a Zeabur deployment is stuck before build start with no build log, treat
-  it as a platform/integration bucket after one redeploy attempt, not a
-  frontend build regression.
+- Verify the exact expected SHA through the canonical frontend build metadata
+  and backend health surface before heavier product QA.
+- A bounded PubChem retry screen is an external-source blocker only when exact
+  SHA health, bundle, PDF, and the structured upstream UI contract agree; all
+  other failures remain hard failures.
 - If GitHub Actions fails during checkout with an access/account 403, treat CI
   as externally blocked until repository or account access is restored.
 

@@ -23,7 +23,6 @@ const {
   gitShasMatch,
   httpOriginsMatch,
   nodeVersionMatchesMajor,
-  serviceIdentityMatches,
   strictTransportSecurityIsReady,
 } = trust;
 
@@ -34,7 +33,7 @@ test("accepts only the configured frontend build Node.js major", () => {
   assert.equal(nodeVersionMatchesMajor("v22.23.1", ""), false);
 });
 
-test("pins the Zeabur build Node.js major at both planner roots", () => {
+test("pins the frontend build Node.js major at both planner roots", () => {
   const rootNodeVersion = fs
     .readFileSync(path.join(repoRoot, ".node-version"), "utf8")
     .trim();
@@ -50,26 +49,13 @@ test("pins the Zeabur build Node.js major at both planner roots", () => {
   assert.equal(packageJson.engines?.node, "22");
 });
 
-test("pins the live frontend service Docker build to Node.js 22", () => {
-  const serviceDockerfile = fs.readFileSync(
-    path.join(repoRoot, "Dockerfile.ghs-frontend"),
-    "utf8",
-  );
+test("pins the portable frontend Docker build to Node.js 22", () => {
   const localDockerfile = fs.readFileSync(
     path.join(frontendRoot, "Dockerfile"),
     "utf8",
   );
 
-  assert.match(serviceDockerfile, /^FROM node:22-alpine AS builder$/m);
   assert.match(localDockerfile, /^FROM node:22-alpine AS builder$/m);
-  assert.match(
-    serviceDockerfile,
-    /^COPY frontend\/package\.json frontend\/package-lock\.json \.\/$/m,
-  );
-  assert.match(
-    serviceDockerfile,
-    /^COPY frontend\/nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf$/m,
-  );
 });
 
 test("accepts an explicitly ready backend with PDF capability", () => {
@@ -114,28 +100,6 @@ test("rejects short and non-hexadecimal Git SHA values", () => {
   assert.equal(gitShasMatch(fullSha, "31075ddc31cf0bbff54746964159146777b75bc"), false);
   assert.equal(gitShasMatch(fullSha, "31075ddc31cz"), false);
   assert.equal(gitShasMatch("", fullSha), false);
-});
-
-test("requires the expected Zeabur service ID and name", () => {
-  const expected = {
-    id: "69626873d9479ab33ad4590e",
-    name: "ghs-frontend",
-  };
-
-  assert.equal(serviceIdentityMatches(expected, expected), true);
-  assert.equal(
-    serviceIdentityMatches(
-      { ...expected, id: "6962687391818d5fd9705a67" },
-      expected,
-    ),
-    false,
-  );
-  assert.equal(
-    serviceIdentityMatches({ ...expected, name: "ghs-backend" }, expected),
-    false,
-  );
-  assert.equal(serviceIdentityMatches(expected, { id: expected.id }), false);
-  assert.equal(serviceIdentityMatches(expected, { name: expected.name }), false);
 });
 
 test("matches only credential-free root HTTP(S) origins", () => {
@@ -268,41 +232,15 @@ test("production gates cover HSTS, document language, CJK font loading, and sema
   assert.match(searchQa, /unlabeledVisibleButtons/);
 });
 
-test("Zeabur deployment evidence uses direct GraphQL and no CLI dependency", () => {
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"),
-  );
-  const deploymentQa = fs.readFileSync(
-    path.join(frontendRoot, "scripts/check-zeabur-deployment-freshness.mjs"),
-    "utf8",
-  );
-
-  assert.equal(packageJson.devDependencies?.zeabur, undefined);
-  assert.doesNotMatch(deploymentQa, /\bnpx\s+zeabur\b/);
-  assert.doesNotMatch(deploymentQa, /node_modules\/zeabur/);
-  assert.match(deploymentQa, /https:\/\/api\.zeabur\.com\/graphql/);
-  assert.match(deploymentQa, /ProductionServiceIdentity/);
-  assert.match(deploymentQa, /production-health-report\.json/);
-});
-
 test("production QA scripts use the centralized trust policy", () => {
   const productionHealth = fs.readFileSync(
     path.join(frontendRoot, "scripts/check-production-health.mjs"),
     "utf8",
   );
-  const deploymentQa = fs.readFileSync(
-    path.join(frontendRoot, "scripts/check-zeabur-deployment-freshness.mjs"),
-    "utf8",
-  );
-
   assert.match(productionHealth, /from "\.\/production-qa-trust\.mjs"/);
   assert.match(productionHealth, /gitShasMatch/);
   assert.match(productionHealth, /httpOriginsMatch/);
   assert.match(productionHealth, /backendHealthIsReady/);
-  assert.match(deploymentQa, /from "\.\/production-qa-trust\.mjs"/);
-  assert.match(deploymentQa, /gitShasMatch/);
-  assert.match(deploymentQa, /httpOriginsMatch/);
-  assert.match(deploymentQa, /serviceIdentityMatches/);
 });
 
 test("Production Print QA aligns npm and uses first-party production origins", () => {
@@ -328,6 +266,42 @@ test("Production Print QA aligns npm and uses first-party production origins", (
   assert.doesNotMatch(workflow, /ZEABUR_TOKEN/);
   assert.doesNotMatch(workflow, /qa:zeabur-deployment/);
   assert.doesNotMatch(workflow, /check_inline_dockerfile_parity/);
+  assert.match(workflow, /Externally blocked product blocks/);
+});
+
+test("retired Zeabur deployment artifacts cannot silently return", () => {
+  const retiredPaths = [
+    "zeabur.yaml",
+    "zbpack.ghs-frontend.json",
+    "Dockerfile.ghs-frontend",
+    "backend/scripts/check_inline_dockerfile_parity.py",
+    "backend/test_inline_dockerfile_parity.py",
+    "frontend/scripts/check-zeabur-deployment-freshness.mjs",
+  ];
+  for (const relativePath of retiredPaths) {
+    assert.equal(fs.existsSync(path.join(repoRoot, relativePath)), false);
+  }
+
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(frontendRoot, "package.json"), "utf8"),
+  );
+  assert.equal(packageJson.scripts?.["qa:zeabur-deployment"], undefined);
+});
+
+test("production product QA short-circuits only on the structured upstream gate", () => {
+  const productQa = fs.readFileSync(
+    path.join(frontendRoot, "scripts/run-production-product-qa.mjs"),
+    "utf8",
+  );
+  const smokeQa = fs.readFileSync(
+    path.join(frontendRoot, "scripts/run-production-print-smoke.mjs"),
+    "utf8",
+  );
+
+  assert.match(productQa, /isExternalUpstreamUnavailableReport/);
+  assert.match(productQa, /PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED/);
+  assert.match(smokeQa, /isExternalUpstreamUnavailableReport/);
+  assert.match(smokeQa, /stoppedEarly/);
 });
 
 test("Production Print QA includes the active PDF canary", () => {
