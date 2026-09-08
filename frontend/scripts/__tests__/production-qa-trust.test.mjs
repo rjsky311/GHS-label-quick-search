@@ -320,4 +320,8 @@ test("Production Print QA includes the active PDF canary", () => {
   assert.match(productionProductQa, /qa:production-pdf-canary/);
   assert.equal(packageJson.scripts["qa:production-pdf-canary"], "node scripts/check-production-pdf-canary.mjs");
   assert.match(workflow, /npm run qa:production-pdf-canary/);
+  assert.match(
+    workflow,
+    /PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED:\s*"1"/,
+  );
 });
