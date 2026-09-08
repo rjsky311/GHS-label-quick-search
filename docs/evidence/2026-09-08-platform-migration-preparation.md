@@ -7,10 +7,11 @@
   promoted.
 - User job: keep lookup, batch work, label generation, PDF export, and QR
   return paths working while hosting changes.
-- Completed here: Batch 1 read-only inventory, Batch 2 local portability, and
-  the owner-authorized Batch 3 isolated Railway/Cloudflare shadow deployment.
-- Stop condition: stop before custom-domain/DNS changes, payment or plan
-  changes, Zeabur retirement, credential rotation, or production promotion.
+- Completed here: Batch 1 read-only inventory, Batch 2 local portability,
+  Batch 3 isolated Railway/Cloudflare shadow deployment, Batch 4 first-party
+  custom-domain/DNS cutover, and Batch 5 immediate post-cutover acceptance.
+- Stop condition: stop before payment or plan changes, Zeabur retirement,
+  credential rotation, or removal of rollback provider URLs.
 
 ## Batch 1 — Verified Inventory
 
@@ -158,7 +159,8 @@ Railway backend:
 - Repository build context: repository root
 - Dockerfile: `Dockerfile.ghs-backend`
 - Healthcheck: `/api/health`
-- Required public variables: `CORS_ORIGINS=<Cloudflare preview origin>`,
+- Required public variables:
+  `CORS_ORIGINS=https://ghs.yuchelab.com,https://ghs-label-quick-search-shadow.pages.dev`,
   `PUBLIC_APP_URL=https://ghs.yuchelab.com`
 - Keep `ADMIN_API_TOKEN`, `CAPTURE_DICTIONARY_MISSES`, `PILOT_STORE_PATH`,
   Redis, database, and volume configuration unset for the stateless shadow.
@@ -210,12 +212,60 @@ Local verification after the container fix:
 - Browser automation used regular Playwright because no supported browser
   plugin was available in this session; evidence stayed outside the repo.
 
-Current decision: the replacement infrastructure and deterministic downstream
-product behavior are accepted. The only remaining acceptance gap is the live
-PubChem-dependent lookup path. Repeated waiting is intentionally closed; do
-not describe synthetic fixtures as live-provider proof. DNS remains unchanged
-and still requires an explicit owner decision after weighing the continuity
-deadline against that external evidence gap.
+## Batch 4 — First-Party Domain Cutover
+
+The owner authorized the custom-domain/DNS cutover after accepting the shadow
+evidence boundary. The cutover changed only the following scoped items:
+
+- Railway custom domain ID
+  `f4dfeaee-c5fa-4691-a2b1-b2ed7f8838a3` was created for
+  `ghs-api.yuchelab.com`.
+- Namecheap CNAME `ghs` now targets
+  `ghs-label-quick-search-shadow.pages.dev`.
+- Namecheap CNAME `ghs-api` now targets `sfjhrvyl.up.railway.app`.
+- Namecheap TXT `_railway-verify.ghs-api` contains Railway's ownership token.
+- Cloudflare Pages activated `ghs.yuchelab.com` with SSL enabled.
+- Railway verified ownership, reported the custom domain `ACTIVE`, and issued
+  a valid certificate for `ghs-api.yuchelab.com`.
+- Railway `CORS_ORIGINS` now allows the canonical frontend and the Pages
+  provider URL during the rollback window. `BUILD_GIT_SHA` was aligned to the
+  current source SHA in the same change, followed by one backend deployment.
+- Successful Railway cutover deployment:
+  `006229b1-cb45-4f28-9978-d849fead78af`.
+- Cloudflare Pages production deployment:
+  `https://9c7ac7b9.ghs-label-quick-search-shadow.pages.dev`.
+- The production Pages artifact was rebuilt with
+  `VITE_BACKEND_URL=https://ghs-api.yuchelab.com` and
+  `VITE_PUBLIC_APP_URL=https://ghs.yuchelab.com`.
+
+No other Namecheap records were edited. No Zeabur service, provider URL,
+credential, billing setting, or subscription setting was removed or changed.
+The cutover used local builds plus provider-native deployments and consumed no
+GitHub Actions minutes.
+
+## Batch 5 — Immediate Post-Cutover Acceptance
+
+Acceptance was read back against the canonical domains on 2026-09-08:
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| DNS and TLS | Pass | Both Namecheap authoritative nameservers and public resolvers returned the planned CNAMEs. Cloudflare reports the frontend domain `Active` with SSL enabled; Railway reports the backend domain `ACTIVE`, ownership verified, and certificate valid. |
+| Exact version | Pass | Canonical frontend `build-info.json` and backend `/api/health` both report `1b96d752afebf7d81f06992ecc4735af515cf41a`; backend readiness is `ready` and PDF capability is available. |
+| Frontend security headers | Pass | Canonical frontend returns HSTS, Cloudflare's frame-ancestor response policy, and an HTML CSP whose `connect-src` includes only the configured canonical API plus local development sockets. |
+| CORS and rollback | Pass | Canonical frontend origin and Pages provider origin each receive their matching allow-origin header; `https://evil.example` receives HTTP 400 with no allow-origin header. |
+| Real PDF renderer | Pass | A real synthetic complete-label POST returned HTTP 200, `application/pdf`, `%PDF-`, 10,145 bytes, one A4 page, and an attachment filename. |
+| Deployed browser workflow | Pass with synthetic fixtures | Eight fixed inventory-shaped rows exercised the live canonical artifact's batch request to `https://ghs-api.yuchelab.com/api/search`, produced the expected 6/8 found, 1 unresolved, 1 label-ready, 7 needs-review, and 8 export summary, exposed export trust/source columns, and opened all three public label outputs. |
+| QR and provider-host isolation | Pass with synthetic fixtures | Complete and QR-small previews use `https://ghs.yuchelab.com/?cas=67-64-1`; identification-small has no QR; no Pages, Railway, or Zeabur provider hostname leaked into label previews. |
+| Mobile and console | Pass with synthetic fixtures | At 390 px, document and body scroll widths remained exactly 390 px; browser console and page errors were empty. |
+| Live PubChem integration | External gap retained | This batch did not restart polling. The last verified PubChem state remained HTTP 503 across the replacement and legacy backends, so synthetic acceptance is not described as live-provider proof. |
+
+Current decision: first-party cutover and immediate deterministic acceptance
+are complete. The canonical Cloudflare Pages/Railway path is the active
+production path. Keep provider URLs and unchanged Zeabur services only for a
+short 24-72 hour observation window. Because no labels were printed and the
+site was not externally promoted, a long compatibility period is unnecessary;
+however, retirement and credential cleanup remain a separate destructive
+batch that requires a fresh exact-target authorization.
 
 ## Retention And Cleanup
 
@@ -223,8 +273,8 @@ deadline against that external evidence gap.
   `backend/data/pilot.db`.
 - Do not retain: generated frontend `build/` output, test screenshots, QA JSON,
   or temporary Python environments created solely for local validation.
-- Retain temporarily after a later cutover: Zeabur services and their rollback
-  access for the agreed observation window.
+- Retain temporarily after this cutover: Zeabur services, provider URLs, and
+  their rollback access for the 24-72 hour observation window.
 - Remove only after a successful observation window and fresh authorization:
   obsolete Zeabur services, stale provider secrets, old provider-specific
   environment variables, and rollback-only artifacts.

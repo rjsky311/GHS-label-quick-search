@@ -9,33 +9,29 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
-Platform migration checkpoint (2026-09-08): read-only inventory, local
-portability changes, and the owner-authorized isolated shadow resources are
-complete on `codex/ghs-platform-portability`. The Railway backend is healthy at
-`https://ghs-backend-production.up.railway.app`, and the Cloudflare Pages
-frontend is live at `https://ghs-label-quick-search-shadow.pages.dev`; both
-report deployed source SHA
-`9dd936f47f902bc53ce200a532e75500abe62d47`. Exact-SHA health, CORS, HSTS, real
-PDF rendering, admin/miss-capture isolation, and deployed synthetic-fixture
-batch/export/all-three-label/QR/mobile/console gates passed. That browser pass
-also found and closed an independent shadow CSP bug: the built page now allows
-the credential-free origin derived from `VITE_BACKEND_URL`. Live PubChem-backed
-lookup remains unavailable because its GHS endpoint returns HTTP 503
-`PUGVIEW.ServerBusy`; the Railway backend, unchanged Zeabur backend, and direct
-probe showed the same upstream state. Repeated waiting and the scheduled
-recovery tracker were stopped at the owner's request. Treat the live-provider
-path as an explicit evidence gap, not as a failed downstream UI gate and not
-as a reason to keep polling. DNS, payment/plan state, Zeabur services, and
-credentials remain unchanged. The reserved
-first-party targets are `https://ghs.yuchelab.com` and
-`https://ghs-api.yuchelab.com`; the detailed resource IDs, failure/fix record,
-and remaining acceptance gate are in
-`docs/evidence/2026-09-08-platform-migration-preparation.md`. The shared Zeabur
-Dev plan is scheduled to downgrade to Free on 2026-09-10. The next migration
-decision is therefore an explicitly authorized DNS/custom-domain cutover after
-the owner weighs that continuity deadline against the remaining live-provider
-evidence gap; retain the old Zeabur services for a short rollback observation
-window if cutover is authorized.
+Platform migration checkpoint (2026-09-08): the owner-authorized first-party
+domain cutover and immediate acceptance batch are complete on
+`codex/ghs-platform-portability`. The canonical frontend is now
+`https://ghs.yuchelab.com` on Cloudflare Pages and the canonical backend is
+`https://ghs-api.yuchelab.com` on Railway. Both report deployed source SHA
+`1b96d752afebf7d81f06992ecc4735af515cf41a`; both custom domains have valid
+TLS, the frontend CSP points to the canonical API, canonical and rollback
+frontend origins pass CORS, and an unrelated origin is rejected. A real A4
+PDF render and an eight-row deployed synthetic-fixture browser pass covering
+batch summary, export preview, all three label outputs, canonical QR targets,
+390 px layout, and console health passed. Namecheap DNS gained only the three
+planned records for `ghs`, `ghs-api`, and Railway ownership verification.
+Provider URLs and unchanged Zeabur services remain available for a short
+rollback window; no service, credential, plan, or payment setting was removed
+or changed, and no GitHub Actions minutes were used for the cutover. Live
+PubChem-backed lookup remains an explicit external evidence gap because the
+same upstream GHS endpoint was returning HTTP 503 across both hosting paths;
+repeated polling stays closed. The full record is
+`docs/evidence/2026-09-08-platform-migration-preparation.md`. The next
+migration slice is observation for 24-72 hours, shortened by the absence of
+printed labels or external promotion, followed by a separately authorized,
+exact-list Zeabur/provider retirement and credential cleanup. The shared
+Zeabur Dev plan is still scheduled to downgrade to Free on 2026-09-10.
 
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
@@ -217,8 +213,14 @@ request.
 
 Production:
 
-- Frontend: https://ghs-frontend.zeabur.app
-- Backend: https://ghs-backend.zeabur.app
+- Frontend: https://ghs.yuchelab.com (Cloudflare Pages)
+- Backend: https://ghs-api.yuchelab.com (Railway)
+- Rollback provider URLs:
+  `https://ghs-label-quick-search-shadow.pages.dev` and
+  `https://ghs-backend-production.up.railway.app`.
+- Legacy Zeabur services remain unchanged during the short observation window:
+  `https://ghs-frontend.zeabur.app` and
+  `https://ghs-backend.zeabur.app`.
 - GitHub repository visibility is intentionally public so the website's
   GitHub Issues feedback links remain usable for outside users.
 - Public repository safety pass on 2026-06-20 replaced the tracked inventory
@@ -227,7 +229,8 @@ Production:
   inventory-derived files still exist in git history at commit `a080588`; do
   not rewrite history unless the owner explicitly opens a coordinated
   history-purge slice.
-- Zeabur auto-deploys on push to `main`.
+- The legacy Zeabur services auto-deploy on push to `main` until a separately
+  authorized retirement batch removes them.
 - Zeabur's live service names are `ghs-frontend` and `ghs-backend`. The
   `zeabur.yaml` service names now match those live names. The frontend service
   also has a root-level `zbpack.ghs-frontend.json` so Zeabur can resolve the
@@ -247,7 +250,9 @@ Production:
 
 Current baseline capabilities:
 
-- Vite/npm frontend build and FastAPI backend are aligned for Zeabur.
+- Vite/npm frontend build and FastAPI backend have hosting-neutral Cloudflare
+  Pages/Railway production gates; Zeabur-specific diagnostics remain only for
+  rollback-period checks.
 - The 95% Lab-Ready Pilot target has shipped. `LAB_READY_PILOT_95_PLAN.md` is
   the evidence packet for that milestone. The shipped post-95 target selection
   lives in `POST_95_REPRIORITIZATION.md`, and the shipped post-95 target owner
