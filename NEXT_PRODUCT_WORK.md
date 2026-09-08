@@ -140,8 +140,8 @@ runtime notes). Evidence: local, container, and production renders archived in
 `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`; the production
 endpoint returned 200 with byte-identical output to the container proof; CI
 and Production Print QA are green. Monitoring: watch `pdf_export_*`
-observability events, Zeabur build time on the 2.6 GB backend image, and the
-owner's re-test of the three 鹽酸 outputs from a real phone.
+observability events, Railway build/runtime behavior for the 2.6 GB backend
+image, and the owner's re-test of the three 鹽酸 outputs from a real phone.
 
 Hygiene micro-slice closed on 2026-07-06: frontend lint warnings and
 Browserslist DB noise were cleaned with 0-warning lint, full frontend tests,
@@ -506,7 +506,8 @@ runtime behavior. Source: completion audit after the closed Agent `/llms.txt`
 guide slice. Affected user job: Coding Agents, scripts, LIMS/ELN helpers, and
 inventory-cleanup workflows can discover OpenAPI, read `/llms.txt`, and request
 a structured read-only label summary without scraping DOM, print HTML,
-screenshots, or UI copy. Live proof: `https://ghs-backend.zeabur.app/openapi.json`
+screenshots, or UI copy. Historical live proof at that slice boundary:
+`https://ghs-backend.zeabur.app/openapi.json`
 returned `200`, included `/api/agent/label-summary`, and exposed
 `AgentLabelSummaryV0` with `upstream` and `authority_boundary`;
 `https://ghs-frontend.zeabur.app/llms.txt` returned `200 text/plain` and
@@ -642,6 +643,21 @@ The items below are completed or monitoring evidence, not an open checklist.
 Reopen one only when fresh evidence contradicts it or shows the user still
 cannot complete the intended job.
 
+- 2026-09-08 Data Correction / Admin no-op audit: the local pilot store
+  reported zero open work items and zero attention signals across correction
+  requests, inventory handoff, candidate conversion, manual review, aliases,
+  unresolved searches, retention, and inactive reference links. The
+  maintainer-only candidate-discovery dry run checked zero queued requests,
+  returned zero candidates, reported `publicDataChanged: false`, and left the
+  original database SHA-256 unchanged. Focused backend tests passed 269 tests
+  and focused frontend correction/admin tests passed 87 tests. This is closure
+  evidence, not permission to create synthetic queue work or add admin UI by
+  inertia. The same maintenance batch also replaced current-operation Zeabur
+  instructions with the canonical Cloudflare Pages/Railway contract and added
+  a conservative Production Print QA relevance gate after a docs/QA-only main
+  commit was observed waiting for an impossible new production SHA. Automatic
+  runs now skip known non-runtime-only change sets before Node setup; manual,
+  scheduled, runtime, and unknown-path runs still execute full QA.
 - 2026-06-26 non-physical pilot evidence sweep: with real-printer validation
   still deferred, expected-SHA `npm run qa:production-product` passed on
   production at `6bca02e874af00adc63632f49f13ffc1e94c2bcd`. The product report
@@ -797,21 +813,13 @@ cannot complete the intended job.
 - Excel/roster data should be used as a representative QA corpus, not imported
   wholesale into the product. Users still run bounded batches, usually up to
   100 rows.
-- Deployment freshness is currently part of the evidence loop. Zeabur received
-  the latest frontend commit but showed the `ghs-frontend` deployment stuck
-  before build start with no build log and empty service build metadata. A
-  service-name-specific `zbpack.ghs-frontend.json` now pins `frontend` as the
-  app directory and `build` as the static output, and `zeabur.yaml` now uses
-  the live service names (`ghs-frontend`, `ghs-backend`). The live frontend
-  service also has non-sensitive `ZBPACK_APP_DIR`, `ZBPACK_BUILD_COMMAND`,
-  `ZBPACK_OUTPUT_DIR`, and `VITE_BACKEND_URL` variables to mirror the repo
-  config when dashboard metadata stays blank. After push, re-run
-  `npm run qa:zeabur-deployment` and expected-SHA
-  `npm run qa:production-health` before treating production QA as
-  authoritative. The deployment freshness report now includes deployment age,
-  `statusCategory`, and recovery commands; use `stuck-before-build` as a
-  platform/integration bucket after one redeploy attempt instead of opening
-  another product-code fix.
+- Historical Zeabur deployment incidents remain useful evidence that a green
+  CI run does not prove production freshness. The Zeabur-specific configs,
+  variables, services, and deployment gate were retired on 2026-09-08. Current
+  production closure must instead read back the full `origin/main` SHA from the
+  canonical Cloudflare Pages frontend and Railway backend health surfaces. Do
+  not restore `zbpack`, `zeabur.yaml`, Zeabur variables, or the retired
+  deployment diagnostic from this historical record.
 - Batch paste cleanup now includes pure numeric CAS rehyphenation, while
   duplicate, invalid-format, and checksum-failed rows remain separate. The
   representative roster fixture now also covers Chinese `CAS編號` headers,
@@ -858,15 +866,15 @@ cannot complete the intended job.
   load failures, deployment freshness problems, QA-runner failures, and true
   product print/layout regressions. Use that bucket before opening another
   product fix from a scheduled QA email.
-- Production Print QA now probes Zeabur deployment freshness in the always-run
-  evidence phase and folds `build/zeabur-deployment-report.json` into the
-  summary when present. A scheduled QA email should therefore show whether the
-  failure is `stuck-before-build`, stale deployment metadata, Zeabur CLI/auth,
-  or a real product QA regression before another product fix is opened.
+- Production Print QA now keeps exact-SHA frontend/backend freshness as a hard,
+  provider-neutral evidence gate. A scheduled QA result should distinguish
+  canonical Cloudflare Pages/Railway freshness, an external upstream outage,
+  a QA-runner problem, and a real product regression before another code slice
+  is opened.
 - `qa:production-health` now reports unreadable `/build-info.json` as a
   warning even when no expected SHA is supplied. Treat plain availability as
-  weaker evidence than commit-level freshness until either expected-SHA health
-  or `qa:zeabur-deployment` proves the deployed commit.
+  weaker evidence than commit-level freshness until expected-SHA health proves
+  both canonical deployed surfaces.
 - Admin triage now promotes the first recommended focus into a primary action
   card before the metric grid, so the maintainer can see the next data-quality
   action without scanning every correction, unresolved-search, candidate, and
@@ -949,8 +957,8 @@ Open the next slice from one of these evidence triggers:
    data-quality action quickly.
 3. A lab-manager export handoff example shows confusing scope, filenames,
    sheets, or review categories.
-4. Production QA, CI, Zeabur deployment freshness, or a user screenshot/PDF
-   proves a product regression.
+4. Production QA, CI, canonical Cloudflare Pages/Railway freshness, or a user
+   screenshot/PDF proves a product regression.
 5. A real lab workbook audit exposes a parser, seed-dictionary, duplicate-row,
    invalid-CAS, or Chinese-name candidate pattern that blocks batch use.
 6. A new product decision changes the public scope. Use `PRODUCT_SCOPE_GATE.md`
@@ -1179,18 +1187,18 @@ Current mode:
 - Completed current slice: `qa:production-health` can now require an expected
   frontend bundle marker via `PRINT_QA_EXPECTED_ASSET_TEXT` or
   `PRODUCTION_HEALTH_EXPECTED_ASSET_TEXT`. Use this after frontend UI changes
-  when Zeabur reports success but the production URL may still be serving an
-  older Vite asset.
+  when a provider reports success but the canonical frontend may still be
+  serving an older Vite asset.
 - Completed current slice: Vite production builds now emit `/build-info.json`
   with app version, git SHA, branch, build time, and Node version.
   `qa:production-health` can compare this file with
   `PRODUCTION_HEALTH_EXPECTED_GIT_SHA`, `PRINT_QA_EXPECTED_GIT_SHA`, or the
-  GitHub workflow SHA, so stale Zeabur deployments fail with explicit commit
-  evidence instead of only passing a generic 200 OK health check.
+  GitHub workflow SHA, so stale deployments fail with explicit commit evidence
+  instead of only passing a generic 200 OK health check.
 - Completed current slice: the main `CI` workflow now has a manual
-  `workflow_dispatch` fallback. If future pushes show Zeabur deployment checks
-  but no automatic GitHub Actions `CI` run, trigger `gh workflow run CI --ref
-  main` and watch that run instead of treating the missing run as a pass.
+  `workflow_dispatch` fallback. If future pushes show provider deployment
+  checks but no automatic GitHub Actions `CI` run, trigger `gh workflow run CI
+  --ref main` and watch that run instead of treating the missing run as a pass.
 - Completed current slice: the batch workflow summary now calls the final
   card "Batch rows" instead of "Export scope" because the cards summarize the
   whole batch while export buttons still follow the currently visible filtered
@@ -1200,23 +1208,17 @@ Current mode:
   explainable as unresolved lookup, no GHS data, source conflict, missing
   Chinese name, upstream error, or text-only GHS data. Production search UI QA
   now fails if a nonzero review count has no reason breakdown.
-- Completed current slice: Zeabur deploy freshness is now part of the working
-  agreement. This round showed GitHub CI can pass while the frontend production
-  service remains on the previous Vite asset because no Zeabur deployment was
-  created for the latest commit. `AUTONOMOUS_WORKFLOW.md` and
-  `PROJECT_STATUS_AND_NEXT_PLAN.md` now document the Zeabur CLI deployment
-  check and safe frontend `service redeploy` fallback before production QA.
-- Completed current slice: Zeabur deploy freshness now has a repeatable
-  `npm run qa:zeabur-deployment` gate. The report distinguishes missing
-  deployments, expected commits stuck before build start, non-`RUNNING`
-  deployments, and stale `RUNNING` production commits, so future work does not
-  rely on manual CLI JSON comparison before production QA.
+- Historical deployment-freshness slices established that GitHub CI can pass
+  while production still serves an older asset. Their Zeabur CLI commands and
+  `qa:zeabur-deployment` gate were retired with that provider on 2026-09-08;
+  retain the lesson, but use the canonical Cloudflare Pages/Railway full-SHA
+  health contract documented in `AUTONOMOUS_WORKFLOW.md` and
+  `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 - Completed current slice: production verification now explicitly separates
   code failures from external platform/access failures. If GitHub Actions fails
-  at checkout with 403/account access, or Zeabur creates a deployment that
-  never reaches build start and emits no build log, the next action is account
-  or platform recovery plus a fresh CI/deploy rerun, not more product-code
-  churn.
+  at checkout with 403/account access, or the active provider cannot start or
+  report a deployment, the next action is account or platform recovery plus a
+  fresh CI/deploy rerun, not more product-code churn.
 - Completed current slice: documentation drift checks now cover the active
   owner docs for data governance, simplified labels, print contract, physical
   print deferral, brand/support strategy, and scientific-skill evaluation. Each
@@ -1484,5 +1486,5 @@ proves the baseline needs to be reopened.
 
 A product slice is not complete just because code or docs changed. Close each
 slice with the relevant test/QA evidence, update the affected docs, and for
-production-facing UI changes verify the deployed Zeabur frontend path before
-claiming the work is stable.
+production-facing UI changes verify the canonical Cloudflare Pages frontend
+and Railway backend full-SHA evidence before claiming the work is stable.
