@@ -67,6 +67,31 @@ next autonomous slice is, why it matters now, when to stop, and when to switch
 workstreams. Use `AUTONOMOUS_WORKFLOW.md` for the dynamic re-rank loop; do not
 treat this queue as a permanent order.
 
+### Current queue state: no active implementation batch
+
+Owner decision on 2026-09-08: close the current planning round in
+monitoring/maintenance mode. The release path is manual and provider-native for
+low-frequency runtime changes: Cloudflare Pages Direct Upload for the frontend
+and Railway's provider-native deployment path for the backend, with exact
+full-SHA readback and production QA. GitHub remains source/CI only; do not add
+provider deployment secrets or an automatic deploy workflow. Non-runtime-only
+commits do not require a provider release solely to align production metadata.
+
+The following are intentionally deferred, not active tasks:
+
+- Physical print validation: wait for real paper/label stock, printer/scaling
+  conditions, and owner availability to scan QR codes and inspect pictogram and
+  text readability.
+- Batch review/export handoff validation: wait for a real batch file, real
+  recipient/handoff need, screenshot, workbook audit, or observed confusion.
+
+Do not manufacture sample work to keep the queue busy. Open the next slice only
+when one of those readiness signals appears, or when a runtime product request,
+user report, CI/production failure, admin queue signal, or Railway trial/billing
+decision provides concrete evidence. Until then, scheduled monitoring and
+ordinary dependency/provider awareness are sufficient; maintenance findings
+must still satisfy the same evidence gate before becoming implementation work.
+
 ### Governance closure checkpoint
 
 The 2026-07-11 diagnostic closure was merged and production-verified on

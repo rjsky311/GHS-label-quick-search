@@ -41,8 +41,10 @@ stop condition below applies:
 - Treat too-small physical stocks as QR small-label or Identification
   small-label outputs, or block them with a clear recovery path, instead of
   pretending they are complete A4/Letter labels.
-- Push stable changes to `main` when tests pass, then track GitHub Actions,
-  Cloudflare/Railway deployment, and production QA for user-facing changes.
+- Push stable changes to `main` when tests pass. For runtime-impacting changes,
+  use the manual provider-native release policy below, then track the
+  Cloudflare/Railway promotion and production QA. For explicitly non-runtime
+  changes, do not deploy merely to make the production SHA match `main`.
 - Search current best practices proactively when the answer may have changed,
   when a comparable domain has a stronger pattern, or when the current product
   direction feels under-specified.
@@ -80,10 +82,14 @@ Use this loop when continuing autonomously:
 6. Implement the smallest complete change that genuinely improves the product.
 7. Add or update tests at the same layer that would have caught the failure.
 8. Run targeted tests first, then broader tests based on blast radius.
-9. For production-facing frontend changes, build, push, wait for CI/deploy, and
-   run production QA against the current canonical production URL recorded in
-   `PROJECT_STATUS_AND_NEXT_PLAN.md`. During a hosting migration, pass the
-   shadow URL explicitly rather than changing DNS early.
+9. For runtime-impacting changes, build, push, wait for CI, release manually
+   through the current providers, verify both canonical health surfaces report
+   the exact release SHA, and then run production QA against the canonical URL
+   recorded in `PROJECT_STATUS_AND_NEXT_PLAN.md`. During a hosting migration,
+   pass the shadow URL explicitly rather than changing DNS early. For
+   explicitly non-runtime changes, stop after CI and the relevance-gated
+   production workflow; a production SHA that intentionally trails `main` is
+   acceptable when every intervening commit is non-runtime.
 10. Update the relevant docs when behavior, acceptance criteria, or workflow
    assumptions changed.
 11. Report what changed, what was verified, proactive observations from the
@@ -173,6 +179,42 @@ Pause and ask the user only when one of these applies:
 Use `PRODUCT_SCOPE_GATE.md` instead of an open-ended discussion when the only
 problem is unclear scope. The gate should produce a compact decision packet and
 then resume implementation once the critical choice is settled.
+
+## Manual Provider-Native Release Policy
+
+The owner selected a low-frequency, manual provider-native release model on
+2026-09-08. Keep GitHub as the source/CI layer, not the holder of provider
+deployment credentials. Do not add a GitHub deployment workflow, repository
+deployment tokens, or a new paid integration unless the owner reopens this
+decision because release frequency or operational burden has materially
+changed.
+
+Classify the merged change before release:
+
+- Runtime-impacting changes include frontend or backend application code,
+  runtime dependencies, build configuration, container/runtime definitions,
+  or production configuration that changes the delivered product. After local
+  gates and one PR/main CI pass, publish the frontend through Cloudflare Pages
+  Direct Upload and the backend through Railway's provider-native deployment
+  path as applicable. Record the full release SHA.
+- Explicitly non-runtime changes include documentation, tests/fixtures that are
+  not bundled into production, and repository-only CI/QA maintenance. Merge
+  them after the proportionate local and CI gates, allow the Production Print
+  QA relevance gate to skip, and do not create a provider deployment solely to
+  advance build metadata.
+- If a change mixes runtime and non-runtime paths, treat it as runtime-impacting.
+  Unknown paths also default to runtime-impacting.
+
+For a runtime release, acceptance requires both
+`https://ghs.yuchelab.com/build-info.json` and
+`https://ghs-api.yuchelab.com/api/health` to report the same expected full SHA
+before heavier production QA is run. Report `main` SHA and production runtime
+SHA separately whenever they differ. A trailing production SHA is acceptable
+only when the intervening commits were classified non-runtime and no production
+behavior was claimed from them.
+
+This policy does not authorize DNS, account, billing, secret, or provider-plan
+changes. Those remain stop conditions requiring a fresh owner decision.
 
 ## Research Rules
 

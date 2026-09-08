@@ -44,6 +44,27 @@ unchanged. Focused backend storage/discovery/handoff/name-search tests passed
 the explicitly requested audit without inventing queue data or opening another
 admin feature slice. Reopen only when real queue or user evidence appears.
 
+Release and monitoring-mode decision checkpoint (2026-09-08): the owner chose
+the recommended low-frequency manual provider-native release model. GitHub
+remains the source and CI layer; runtime-impacting releases use Cloudflare Pages
+Direct Upload for the frontend and Railway's provider-native deployment path
+for the backend, followed by exact full-SHA readback on both canonical health
+surfaces and production QA. Do not add GitHub deployment credentials or an
+automatic provider-deploy workflow. Explicitly non-runtime commits may advance
+`main` without advancing the production runtime SHA; report both SHAs and let
+the relevance-gated Production Print QA skip them. The detailed contract is in
+`AUTONOMOUS_WORKFLOW.md`.
+
+There is no active implementation batch after this checkpoint. Physical print
+validation remains deferred until the owner has actual paper/label stock,
+printer/scaling conditions, and QR/readability checks to perform. Real batch
+review/export handoff validation remains deferred until an actual batch file,
+recipient, or observed handoff problem exists. Do not generate synthetic work
+to simulate either deferred item. Reopen work only from a concrete trigger:
+runtime product change or user report, CI/production failure, physical-print
+readiness, a real batch/export handoff, real admin queue evidence, or a Railway
+trial/billing decision that requires owner action.
+
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
 next slices oriented around human-first lab workflow clarity: prepared-solution
