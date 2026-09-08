@@ -566,8 +566,8 @@ describe("print QA matrix report", () => {
       failed: 0,
     });
     expect(report.productionBrowserQa).toMatchObject({
-      targetUrl: "https://ghs-frontend.zeabur.app/",
-      qaHandoffUrl: "https://ghs-frontend.zeabur.app/?qaPrintHandoff=1",
+      targetUrl: "https://ghs.yuchelab.com/",
+      qaHandoffUrl: "https://ghs.yuchelab.com/?qaPrintHandoff=1",
       requiredStatusElement: "ghs-print-qa-status",
       responsibleProfile: PRINT_QA_PROFILE,
     });

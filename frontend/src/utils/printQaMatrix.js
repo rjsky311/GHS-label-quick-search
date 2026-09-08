@@ -3172,7 +3172,7 @@ export function buildPrintQaCaseResult({
   };
 }
 
-const PRODUCTION_FRONTEND_URL = "https://ghs-frontend.zeabur.app/";
+const PRODUCTION_FRONTEND_URL = "https://ghs.yuchelab.com/";
 
 const resolveProductionTargetValue = (testCase = {}) => {
   const config = testCase.labelConfig || {};

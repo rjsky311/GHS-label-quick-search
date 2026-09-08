@@ -8,11 +8,11 @@ not approval, and not compliance advice.
 
 ## Primary API
 
-- [OpenAPI JSON](https://ghs-backend.zeabur.app/openapi.json): authoritative
+- [OpenAPI JSON](https://ghs-api.yuchelab.com/openapi.json): authoritative
   machine-readable API description.
-- [Agent label summary v0](https://ghs-backend.zeabur.app/api/agent/label-summary?q=64-17-5):
+- [Agent label summary v0](https://ghs-api.yuchelab.com/api/agent/label-summary?q=64-17-5):
   read-only lookup summary using the `agent_label_summary.v0` response contract.
-- [API health](https://ghs-backend.zeabur.app/api/health): backend health and
+- [API health](https://ghs-api.yuchelab.com/api/health): backend health and
   deployed git SHA.
 
 ## Safe Use

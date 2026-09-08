@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app/";
+const DEFAULT_PRODUCTION_URL = "https://ghs.yuchelab.com/";
 
 const REQUIRED_PRINT_QA_MARKERS = [
   "layoutBlockedDetailed",

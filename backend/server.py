@@ -54,7 +54,11 @@ from api_models import (
     TelemetryEventPayload,
     WorkspaceDocumentPayload,
 )
-from agent_label_summary import AgentLabelSummaryV0, build_agent_label_summary_v0
+from agent_label_summary import (
+    DEFAULT_LOOKUP_BASE_URL,
+    AgentLabelSummaryV0,
+    build_agent_label_summary_v0,
+)
 from api_validation import (
     WORKSPACE_DOC_TYPES,
     MAX_ADMIN_NAME_LENGTH,
@@ -129,6 +133,7 @@ def _resolve_build_git_sha() -> str:
     for key in (
         "VITE_GIT_SHA",
         "GITHUB_SHA",
+        "RAILWAY_GIT_COMMIT_SHA",
         "ZEABUR_GIT_COMMIT_SHA",
         "ZEABUR_COMMIT_SHA",
         "ZEABUR_GIT_SHA",
@@ -158,6 +163,9 @@ def _resolve_build_git_sha() -> str:
 
 
 BUILD_GIT_SHA = _resolve_build_git_sha()
+PUBLIC_APP_URL = (
+    os.environ.get("PUBLIC_APP_URL") or DEFAULT_LOOKUP_BASE_URL
+).strip().rstrip("/")
 PILOT_STORE_PATH = Path(os.environ.get("PILOT_STORE_PATH") or (ROOT_DIR / "data" / "pilot.db"))
 pilot_store = PilotStore(PILOT_STORE_PATH)
 ADMIN_API_TOKEN = (os.environ.get("ADMIN_API_TOKEN") or "").strip()
@@ -2312,7 +2320,7 @@ async def agent_label_summary(
 ):
     """Return a read-only structured lookup summary for agents and scripts."""
     result = await _search_single_query(q)
-    return build_agent_label_summary_v0(result)
+    return build_agent_label_summary_v0(result, lookup_base_url=PUBLIC_APP_URL)
 
 
 def _pdf_service_unavailable(code: str, message: str) -> HTTPException:
@@ -2475,14 +2483,14 @@ app.include_router(api_router)
 #
 # Local development should set `CORS_ORIGINS=http://localhost:5173`
 # (or a comma-separated list) in `.env` / Docker compose.
-_raw_cors = os.environ.get("CORS_ORIGINS", "https://ghs-frontend.zeabur.app")
+_raw_cors = os.environ.get("CORS_ORIGINS", "https://ghs.yuchelab.com")
 _cors_origins = [o.strip() for o in _raw_cors.split(",") if o.strip()]
 if "*" in _cors_origins:
     logger.warning(
         "CORS_ORIGINS=* is unsafe for a public API; falling back to the "
         "production frontend. Set explicit origins for multi-origin deploys."
     )
-    _cors_origins = ["https://ghs-frontend.zeabur.app"]
+    _cors_origins = ["https://ghs.yuchelab.com"]
 
 app.add_middleware(
     CORSMiddleware,

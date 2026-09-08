@@ -32,13 +32,15 @@ Out of scope for this runbook:
 ## Before A Pilot Session
 
 1. Confirm production health:
-   - Frontend: https://ghs-frontend.zeabur.app
-   - Backend: https://ghs-backend.zeabur.app/api/health
+   - Use the current frontend and backend URLs in
+     `PROJECT_STATUS_AND_NEXT_PLAN.md`.
 2. Run or confirm the latest relevant gates:
-   - `npm run qa:zeabur-deployment`
    - `npm run qa:production-health`
    - `npm run qa:production-search-ui`
    - `npm run qa:production-lab-ready-batch`
+   - During the temporary Zeabur rollback window only,
+     `npm run qa:zeabur-deployment` remains an optional provider diagnostic
+     when valid provider credentials are available.
 3. Confirm the pilot operator has the intended test list:
    - 10-20 rows for a first smoke pilot.
    - 50-100 rows for a realistic batch pilot.

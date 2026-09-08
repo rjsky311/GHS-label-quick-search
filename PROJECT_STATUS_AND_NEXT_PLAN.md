@@ -9,6 +9,19 @@ autopilot. Use `AUTONOMOUS_WORKFLOW.md` to re-rank after several completed
 slices, after 10-20 commits cluster around one workstream, or when user
 feedback shows that another product bottleneck has become more important.
 
+Platform migration preparation (2026-09-08): read-only inventory and local
+portability changes are complete on `codex/ghs-platform-portability`. Current
+production remains on the Zeabur URLs listed below; no Cloudflare Pages or
+Railway resource, DNS record, secret, deployment, push, or Zeabur retirement
+has been performed. The reserved first-party targets are
+`https://ghs.yuchelab.com` and `https://ghs-api.yuchelab.com`. Continue only
+with the shadow-deployment batch and its explicit evidence gates in
+`docs/evidence/2026-09-08-platform-migration-preparation.md`. The shared
+Zeabur Dev plan is scheduled to downgrade to Free on 2026-09-10, and Zeabur's
+current downgrade documentation says deployed containerized services are
+automatically suspended. Treat the Railway backend shadow as time-critical;
+current green production health does not close that continuity risk.
+
 Current roadmap direction: `LAB_WORKFLOW_READINESS_ROADMAP.md` defines the next
 product phase while real physical printing remains deferred. Use it to keep the
 next slices oriented around human-first lab workflow clarity: prepared-solution

@@ -3,7 +3,7 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 
 const env = process.env;
-const productionUrl = env.PRINT_QA_PRODUCTION_URL || "https://ghs-frontend.zeabur.app/";
+const productionUrl = env.PRINT_QA_PRODUCTION_URL || "https://ghs.yuchelab.com/";
 const outputPath = path.resolve(
   process.cwd(),
   env.PRODUCTION_SEARCH_UI_REPORT_PATH ||

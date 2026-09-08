@@ -9,7 +9,7 @@ from export_helpers import _has_cjk_text
 
 
 SCHEMA_VERSION = "agent_label_summary.v0"
-DEFAULT_LOOKUP_BASE_URL = "https://ghs-frontend.zeabur.app"
+DEFAULT_LOOKUP_BASE_URL = "https://ghs.yuchelab.com"
 
 GHS_PICTOGRAM_LABELS: Dict[str, Dict[str, str]] = {
     "GHS01": {"name_en": "Explosive", "name_zh": "爆炸物"},

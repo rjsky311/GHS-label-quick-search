@@ -268,11 +268,11 @@ requireMaxLineCount(
 for (const [needle, reason] of [
   ["# GHS Label Quick Search", "guide title"],
   [
-    "https://ghs-backend.zeabur.app/openapi.json",
+    "https://ghs-api.yuchelab.com/openapi.json",
     "agents should discover the authoritative OpenAPI document",
   ],
   [
-    "https://ghs-backend.zeabur.app/api/agent/label-summary?q=64-17-5",
+    "https://ghs-api.yuchelab.com/api/agent/label-summary?q=64-17-5",
     "agents should discover the read-only label summary endpoint",
   ],
   ["agent_label_summary.v0", "guide should name the response contract"],

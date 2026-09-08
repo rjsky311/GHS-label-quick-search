@@ -52,7 +52,7 @@ def test_agent_label_summary_v0_maps_public_lookup_fields():
 
     summary = build_agent_label_summary_v0(
         result,
-        lookup_base_url="https://ghs-frontend.zeabur.app",
+        lookup_base_url="https://ghs.yuchelab.com",
     ).model_dump()
 
     assert summary["schema_version"] == "agent_label_summary.v0"
@@ -88,7 +88,7 @@ def test_agent_label_summary_v0_maps_public_lookup_fields():
         }
     ]
     assert summary["qr_target"] == {
-        "url": "https://ghs-frontend.zeabur.app/?cas=64-17-5",
+        "url": "https://ghs.yuchelab.com/?cas=64-17-5",
         "target_type": "ghs-lookup",
         "source": "ghs-label-quick-search",
         "label": "GHS Label Quick Search",
@@ -296,6 +296,7 @@ async def test_agent_label_summary_endpoint_returns_read_only_summary(monkeypatc
     assert body["ghs_pictograms"][0]["asset_path"] == "/ghs/GHS02.svg"
     assert body["primary_source"]["source"] == "ECHA C&L Notifications Summary"
     assert body["qr_target"]["target_type"] == "ghs-lookup"
+    assert body["qr_target"]["url"] == "https://ghs.yuchelab.com/?cas=64-17-5"
     assert body["authority_boundary"]["status"] == "reference_draft"
     assert "candidate" not in body
     assert "manual_entry" not in body

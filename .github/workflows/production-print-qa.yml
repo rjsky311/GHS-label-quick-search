@@ -26,7 +26,7 @@ on:
       production_url:
         description: Frontend production URL
         required: false
-        default: https://ghs-frontend.zeabur.app/
+        default: https://ghs.yuchelab.com/
         type: string
   schedule:
     - cron: "0 20 * * 1"
@@ -50,16 +50,13 @@ jobs:
         working-directory: frontend
     env:
       PRINT_QA_HEADLESS: "1"
-      PRINT_QA_PRODUCTION_URL: ${{ github.event.inputs.production_url || 'https://ghs-frontend.zeabur.app/' }}
+      PRINT_QA_PRODUCTION_URL: ${{ github.event.inputs.production_url || 'https://ghs.yuchelab.com/' }}
       PRINT_QA_EXPECTED_GIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
       PRINT_QA_SUMMARY_REPORT_PATH: build/production-print-qa-summary.json
       PRODUCTION_HEALTH_ATTEMPTS: "60"
       PRODUCTION_HEALTH_RETRY_DELAY_MS: "5000"
       PRODUCTION_HEALTH_EXPECTED_NODE_MAJOR: "22"
-      ZEABUR_FRONTEND_SERVICE_ID: 69626873d9479ab33ad4590e
-      ZEABUR_EXPECTED_SERVICE_NAME: ghs-frontend
-      ZEABUR_EXPECTED_BACKEND_ORIGIN: https://ghs-backend.zeabur.app
-      PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN: https://ghs-backend.zeabur.app
+      PRODUCTION_HEALTH_EXPECTED_BACKEND_ORIGIN: https://ghs-api.yuchelab.com
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -71,10 +68,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: "3.11"
 
       - name: Align npm version
         run: npm install --global npm@11.6.2
@@ -88,56 +81,6 @@ jobs:
 
       - name: Wait for production freshness
         run: npm run qa:production-health
-
-      - name: Probe Zeabur deployment freshness
-        if: always()
-        run: |
-          set -euo pipefail
-          if [ -z "${ZEABUR_TOKEN:-}" ]; then
-            mkdir -p build
-            node -e '
-            const fs = require("fs");
-            const path = "build/zeabur-deployment-report.json";
-            const report = {
-              ok: false,
-              generatedAt: new Date().toISOString(),
-              reportPath: path,
-              statusCategory: "missing-token",
-              expectedGitSha: process.env.PRINT_QA_EXPECTED_GIT_SHA || "",
-              guidance: [
-                "ZEABUR_TOKEN is required for the strict Zeabur deployment freshness gate.",
-              ],
-              failures: ["ZEABUR_TOKEN is required for strict service identity and deployment verification."],
-              recovery: {
-                nextActions: [
-                    "Add the repository ZEABUR_TOKEN secret, then rerun Production Print QA.",
-                ],
-              },
-            };
-            fs.writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`);
-            '
-            exit 1
-          fi
-          npm run qa:zeabur-deployment
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-
-      - name: Check inline backend Dockerfile parity
-        run: >
-          python ../backend/scripts/check_inline_dockerfile_parity.py
-          --canonical ../Dockerfile.ghs-backend
-          --service-id 6962687391818d5fd9705a67
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-
-      - name: Check inline frontend Dockerfile parity
-        run: >
-          python ../backend/scripts/check_inline_dockerfile_parity.py
-          --canonical ../Dockerfile.ghs-frontend
-          --service-id 69626873d9479ab33ad4590e
-          --report build/inline-frontend-dockerfile-parity-report.json
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
 
       - name: Check P-code wording coverage
         run: npm run qa:p-code-coverage

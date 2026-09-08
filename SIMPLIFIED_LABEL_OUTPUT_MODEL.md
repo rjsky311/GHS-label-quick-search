@@ -89,7 +89,7 @@ Required content:
 QR target:
 
 - QR should open this product's lookup page for the chemical, using a simple
-  CAS query URL such as `https://ghs-frontend.zeabur.app/?cas=7647-01-0`.
+  CAS query URL such as `https://ghs.yuchelab.com/?cas=7647-01-0`.
 - Direct CAS query hydration from URL params is now part of the product
   baseline and is covered by the production search UI gate. Future QR changes
   must keep `?cas=` lookup return working before they are treated as printable

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright-core";
 
-const DEFAULT_PRODUCTION_URL = "https://ghs-frontend.zeabur.app/";
+const DEFAULT_PRODUCTION_URL = "https://ghs.yuchelab.com/";
 const DEFAULT_REPORT_PATH = "build/production-prepared-print-report.json";
 const DEFAULT_SCREENSHOT_DIR = "build/production-prepared-print-screenshots";
 const STATUS_ATTRIBUTES = [

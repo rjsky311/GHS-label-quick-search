@@ -487,7 +487,7 @@ const buildProductBlocks = () => [
     reports: [reports.deployment.name, reports.health.name],
     ok: deploymentFreshnessPassing,
     evidence:
-      "Production deployment freshness is proven by production health/build metadata; Zeabur deployment state is included when CLI auth is available.",
+      "Production deployment freshness is proven by first-party health and build metadata; an optional provider report may add infrastructure detail when available.",
   },
   {
     id: "production-availability",
@@ -495,7 +495,7 @@ const buildProductBlocks = () => [
     reports: [reports.health.name, reports.pdfCanary.name],
     ok: isPassingReport(reports.health) && isPassingReport(reports.pdfCanary),
     evidence:
-      "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and Zeabur request-id capture.",
+      "Production health QA checks the frontend HTML, deployed Vite asset, and backend /api/health with bounded retries and provider request-id capture when available.",
   },
   {
     id: "print-renderer-stock-fit",
