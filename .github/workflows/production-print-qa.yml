@@ -157,6 +157,7 @@ jobs:
         run: npm run qa:production-summary
         env:
           PRINT_QA_REQUIRE_PRODUCT_BLOCKS: ${{ contains(fromJSON('["product","full","all"]'), github.event.inputs.mode || 'product') && '1' || '0' }}
+          PRINT_QA_ALLOW_EXTERNAL_UPSTREAM_BLOCKED: "1"
 
       - name: Add job summary
         if: always()
