@@ -1,5 +1,35 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-10-03 (`6f95cd5`)
+
+Runtime release for #74 (pypdf 6.16.1 → 6.19.0, eight PYSEC-2026-415x
+advisories) together with #73 (scheduled QA freshness target). Released by
+Codex under the manual provider-native model with the owner's authorization;
+accepted by Claude.
+
+- Release SHA: `6f95cd5d8d71df9d1c96d655d2f8e5eed3af5e1c` (equal to `main` at
+  release time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `74055581-99fb-4ae7-970f-741fdc0ceafc`; 43 files,
+  Node v22.23.1, same backend/public origins and feature flags as the previous
+  build (main JS byte-identical; only build metadata changed).
+- Backend: Railway `ghs-backend` native deploy
+  `cfd2e783-8aa9-4fea-8da4-7c3218cfc858`, `Dockerfile.ghs-backend`,
+  healthcheck `/api/health`; only the build SHA field was synced.
+- Rollback references: frontend `b34eaa99-3cc2-40ef-8df0-1cbc86c83736`,
+  backend `720407b3-de57-412e-8f06-801f2b85d280` (SHA `13c5694`).
+- Acceptance (Codex, re-verified by Claude): both `build-info.json` and
+  `/api/health` report the release SHA; health `healthy`/`ready`, PDF
+  available; `qa:production-health` and `qa:production-pdf-canary` passed;
+  CORS allows only the canonical and Pages origins; HSTS, nosniff,
+  referrer, permissions, CSP/frame headers present on both origins.
+- Manual Production Print QA in product mode (same mode as the weekly
+  schedule), run `37134532193`, passed end to end, including the new
+  "Resolve production freshness target" step, the freshness gate, and the
+  selected production print QA.
+- The Railway account moved from trial to the Hobby plan on 2026-10-03, so the
+  backend no longer depends on trial credits.
+
 ## Diagnosis checkpoint — 2026-10-03
 
 Root cause of the September 14/21/28 scheduled Production Print QA failures
