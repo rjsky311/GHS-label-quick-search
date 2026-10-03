@@ -1,5 +1,61 @@
 # Project Status And Next Plan
 
+## Diagnosis checkpoint — 2026-10-03
+
+Root cause of the September 14/21/28 scheduled Production Print QA failures
+(diagnosed read-only on 2026-10-03; fix below):
+
+- Production is healthy. `https://ghs.yuchelab.com/build-info.json` and
+  `https://ghs-api.yuchelab.com/api/health` both report `gitSha`
+  `13c5694260cb4fc66141933ee008e263d00bf983` (built 2026-09-08); health is
+  `healthy` / `ready`. Frontend is Cloudflare Pages
+  (`ghs-label-quick-search-shadow.pages.dev`); backend is Railway project
+  `ghs-label-quick-search-shadow`, service `ghs-backend` (`sfjhrvyl.up.railway.app`).
+- `main` moved to `4cef004` through five non-runtime commits (#70–#72: docs,
+  workflow, QA scripts/tests, `frontend/package.json` test-script list only),
+  so nothing was redeployed under manual release mode.
+- Scheduled runs skip the relevance classifier (`run_full=true`) and
+  `resolveProductionQaExpectedSha` falls back to `GITHUB_SHA` = `main` HEAD.
+  The freshness gate therefore waits for `4cef004` that will never be
+  deployed, exhausts 60 attempts for both `frontend-html-and-asset` and
+  `backend-health`, and skips print QA. It is a false freshness failure, not
+  an outage or print defect.
+- The next scheduled run (`0 20 * * 1`, Tue 04:00 Asia/Taipei) will fail the
+  same way until scheduled runs pin the expected SHA to the deployed or last
+  runtime-relevant commit, or the schedule is paused.
+- Fix (branch `claude/qa-deployed-freshness-target`): the job now exposes the
+  source commit as `PRINT_QA_SOURCE_GIT_SHA`, and a new "Resolve production
+  freshness target" step reads the live frontend `build-info.json` and runs
+  `.github/scripts/resolve-production-expected-sha.sh`. If the deployed commit
+  is an ancestor of the source commit and every change in between is
+  non-runtime (existing classifier; `frontend/package.json` counts as
+  non-runtime only when just `test:*`/`qa:*` scripts changed), the deployed
+  commit becomes `PRINT_QA_EXPECTED_GIT_SHA`; otherwise the source commit stays
+  the strict target. For the current state it resolves `4cef004` → `13c5694`.
+  Covered by new tests in `frontend/scripts/__tests__/production-qa-trust.test.mjs`.
+- Hosting risk: the Railway account trial notice (2026-09-30) says apps pause
+  when the trial expires (~2026-10-07) or credits run out; `ghs-backend` and
+  BakeCalc production both run on this account.
+
+## Monitoring checkpoint — 2026-09-29
+
+Read-only GitHub Actions verification found three consecutive failed scheduled
+Production Print QA runs on September 14, 21, and 28 (UTC), all at source
+`4cef004912fe72f2aa1e1533c833c88ab3391754`. The latest
+[run 36476562345](https://github.com/rjsky311/GHS-label-quick-search/actions/runs/36476562345)
+spent approximately 48 minutes in `Wait for production freshness` before
+failing: `frontend-html-and-asset` and `backend-health` each exhausted 60
+attempts. The downstream production print QA step was skipped. This proves
+a failed freshness gate, not a confirmed printing defect or current outage.
+
+Next maintenance triage should compare the intended runtime source, deployed
+frontend/backend versions, and the existing relevance gate before another
+run. The root cause and current live service health remain unverified. No
+workflow was rerun, canceled, disabled, or modified, and no release was made.
+The earlier September 8 release and manual-deployment decisions below remain
+historical evidence; this checkpoint adds a concrete monitoring issue without
+starting an implementation batch.
+
 This is the canonical planning entry point for the project. Read this file
 first when choosing the next autonomous product slice. Use the linked planning
 and QA files only after this file has set the priority.

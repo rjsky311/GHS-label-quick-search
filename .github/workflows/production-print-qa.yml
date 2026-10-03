@@ -51,7 +51,7 @@ jobs:
     env:
       PRINT_QA_HEADLESS: "1"
       PRINT_QA_PRODUCTION_URL: ${{ github.event.inputs.production_url || 'https://ghs.yuchelab.com/' }}
-      PRINT_QA_EXPECTED_GIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      PRINT_QA_SOURCE_GIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
       PRINT_QA_SUMMARY_REPORT_PATH: build/production-print-qa-summary.json
       PRODUCTION_HEALTH_ATTEMPTS: "60"
       PRODUCTION_HEALTH_RETRY_DELAY_MS: "5000"
@@ -96,6 +96,31 @@ jobs:
           else
             echo "run_full=true" >> "${GITHUB_OUTPUT}"
           fi
+
+      - name: Resolve production freshness target
+        if: steps.production_relevance.outputs.run_full == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_sha="${PRINT_QA_SOURCE_GIT_SHA}"
+          build_info_url="${PRINT_QA_PRODUCTION_URL%/}/build-info.json?freshnessTarget=${GITHUB_RUN_ID}"
+          deployed_sha="$(curl -fsS --max-time 20 "${build_info_url}" | jq -r '.gitSha // empty' 2>/dev/null || true)"
+          if [[ -n "${deployed_sha}" && "${deployed_sha}" != "${source_sha}" ]]; then
+            git fetch --no-tags --quiet --unshallow origin || git fetch --no-tags --quiet origin
+          fi
+          expected_sha="$(../.github/scripts/resolve-production-expected-sha.sh "${source_sha}" "${deployed_sha}")"
+          echo "PRINT_QA_EXPECTED_GIT_SHA=${expected_sha}" >> "${GITHUB_ENV}"
+          {
+            echo "## Production freshness target"
+            echo
+            echo "- Source commit: \`${source_sha}\`"
+            echo "- Deployed build-info commit: \`${deployed_sha:-unreadable}\`"
+            echo "- Expected commit for this run: \`${expected_sha}\`"
+            if [[ "${expected_sha}" != "${source_sha}" ]]; then
+              echo
+              echo "Only non-runtime files changed since the deployed commit, so production is treated as fresh at the deployed commit."
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         if: steps.production_relevance.outputs.run_full == 'true'
