@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -307,6 +308,92 @@ test("automatic production QA skips only known non-runtime change sets", () => {
   assert.equal(classify("frontend/package.json"), "run");
   assert.equal(classify("frontend/scripts/content-security-policy.mjs"), "run");
   assert.equal(classify("frontend/public/runtime-guide.md"), "run");
+});
+
+test("production freshness target tolerates only non-runtime commits after the deployed build", () => {
+  const resolverPath = path.join(
+    repoRoot,
+    ".github/scripts/resolve-production-expected-sha.sh",
+  );
+  const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "ghs-freshness-"));
+  const git = (...args) => {
+    const result = spawnSync("git", args, { cwd: tempRepo, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return result.stdout.trim();
+  };
+  const commitFile = (relativePath, content) => {
+    const filePath = path.join(tempRepo, relativePath);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content);
+    git("add", relativePath);
+    git("commit", "--quiet", "-m", `update ${relativePath}`);
+    return git("rev-parse", "HEAD");
+  };
+  const resolve = (...args) => {
+    const result = spawnSync("bash", [resolverPath, ...args], {
+      cwd: tempRepo,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return result.stdout.trim();
+  };
+
+  try {
+    git("init", "--quiet");
+    git("config", "user.email", "qa@example.invalid");
+    git("config", "user.name", "Production QA Test");
+    const packageJson = (scripts, dependencies) =>
+      `${JSON.stringify({ name: "frontend", scripts, dependencies }, null, 2)}\n`;
+    commitFile("frontend/src/App.jsx", "export default 1;\n");
+    const deployed = commitFile(
+      "frontend/package.json",
+      packageJson({ build: "vite build", "test:qa-scripts": "node --test a" }, { react: "19.0.0" }),
+    );
+    const docsOnly = commitFile("PROJECT_STATUS_AND_NEXT_PLAN.md", "status\n");
+    const workflowOnly = commitFile(".github/workflows/ci.yml", "name: CI\n");
+    const testScriptOnly = commitFile(
+      "frontend/package.json",
+      packageJson({ build: "vite build", "test:qa-scripts": "node --test a b" }, { react: "19.0.0" }),
+    );
+    const dependencyChange = commitFile(
+      "frontend/package.json",
+      packageJson({ build: "vite build", "test:qa-scripts": "node --test a b" }, { react: "19.1.0" }),
+    );
+    const runtime = commitFile("backend/server.py", "app = None\n");
+
+    assert.equal(resolve(workflowOnly, deployed), deployed);
+    assert.equal(resolve(docsOnly, deployed), deployed);
+    assert.equal(resolve(testScriptOnly, deployed), deployed);
+    assert.equal(resolve(testScriptOnly, workflowOnly), workflowOnly);
+    assert.equal(resolve(dependencyChange, deployed), dependencyChange);
+    assert.equal(resolve(runtime, deployed), runtime);
+    assert.equal(resolve(runtime, workflowOnly), runtime);
+    assert.equal(resolve(workflowOnly, workflowOnly), workflowOnly);
+    assert.equal(resolve(workflowOnly), workflowOnly);
+    assert.equal(resolve(workflowOnly, "0".repeat(40)), workflowOnly);
+    assert.equal(resolve(deployed, workflowOnly), deployed);
+  } finally {
+    fs.rmSync(tempRepo, { recursive: true, force: true });
+  }
+});
+
+test("Production Print QA resolves its freshness target before the health gate", () => {
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github/workflows/production-print-qa.yml"),
+    "utf8",
+  );
+
+  assert.match(
+    workflow,
+    /^\s+PRINT_QA_SOURCE_GIT_SHA: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}$/m,
+  );
+  assert.doesNotMatch(workflow, /^\s+PRINT_QA_EXPECTED_GIT_SHA:/m);
+  const resolveIndex = workflow.indexOf("name: Resolve production freshness target");
+  const healthIndex = workflow.indexOf("run: npm run qa:production-health");
+  assert.notEqual(resolveIndex, -1);
+  assert.ok(resolveIndex < healthIndex);
+  assert.match(workflow, /resolve-production-expected-sha\.sh/);
+  assert.match(workflow, /PRINT_QA_EXPECTED_GIT_SHA=\$\{expected_sha\}" >> "\$\{GITHUB_ENV\}"/);
 });
 
 test("retired Zeabur deployment artifacts cannot silently return", () => {
