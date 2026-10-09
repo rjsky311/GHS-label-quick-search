@@ -1,5 +1,39 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-10-09 (`4c04559`)
+
+Runtime release for #76 (frontend Dependabot advisories: axios 1.20.0,
+js-yaml 4.3.2, brace-expansion 1.1.21/2.1.7; Playwright 1.64.0). Released
+under the manual provider-native model with the owner's authorization:
+backend and build by Claude, frontend Direct Upload by Codex (Computer Use),
+acceptance by Claude.
+
+- Release SHA: `4c04559b090898c0f173af3e37e6fbde6f0a68df` (equal to `main` at
+  release time). No backend code changed since `6f95cd5`; the backend release
+  only synced `BUILD_GIT_SHA`.
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production. Built from a clean clone with Node v22.23.1 and npm 11.6.2 (the
+  `packageManager` pin; Node 22's bundled npm 10 rejects the new lockfile in
+  `npm ci`), same backend/public origins and feature flags as the previous
+  build. A rebuild of `6f95cd5` with those settings was byte-identical to the
+  previous production files; all 41 servable files now in production match the
+  verified `4c04559` build.
+- Backend: Railway `ghs-backend` native deploy
+  `b99f00d9-04c7-41d7-a3f8-e74d288c6e81`, `Dockerfile.ghs-backend`.
+- Rollback references: frontend `74055581-99fb-4ae7-970f-741fdc0ceafc`,
+  backend `cfd2e783-8aa9-4fea-8da4-7c3218cfc858` (SHA `6f95cd5`).
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed with no failures or warnings; CORS allows
+  only the canonical and Pages origins (`https://evil.example` gets 400 without
+  allow-origin); HSTS, nosniff, referrer, permissions, CSP/frame headers present
+  on both origins.
+- Manual Production Print QA in product mode, run `37919571166`, passed end to
+  end, including the freshness gate. The post-merge run `37801429611` failed
+  before the frontend release, as expected.
+- Remaining frontend `npm audit` findings (8) are all in the Tailwind v3 build
+  chain (`braces` has no patched version); they are build-time only.
+
 ## Release checkpoint — 2026-10-03 (`6f95cd5`)
 
 Runtime release for #74 (pypdf 6.16.1 → 6.19.0, eight PYSEC-2026-415x
