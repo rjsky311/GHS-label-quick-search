@@ -1,5 +1,41 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-10-24 (`ef2a9f2`)
+
+Runtime release for #79 (pypdf 6.19.0 → 6.21.2; CVE-2026-113786 and
+CVE-2026-113789 to CVE-2026-113795, which had started failing the Backend
+pip-audit step). Released under the manual provider-native model with the
+owner's authorization: backend, frontend build and Direct Upload (Claude in
+Chrome), and acceptance by Claude.
+
+- Release SHA: `ef2a9f2c06b7673dff56cbe27d80f3b0ac30dd06` (equal to `main` at
+  release time). Frontend source is unchanged since `4c04559`.
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `44f05441-ed05-49cb-8612-48b25733d024`. Built from a
+  clean clone with Node v22.23.1 and npm 11.6.2, same backend/public origins
+  and feature flags as before. Before upload, 40 of the 41 servable files were
+  byte-identical to the previous production build (only `build-info.json`
+  differed); after upload all 41 production files match the verified build.
+- Backend: Railway `ghs-backend` native deploy (`railway up` from the clean
+  clone) `498e14ce-24d0-43c7-9620-a5e1c558edd3`, `Dockerfile.ghs-backend`;
+  `BUILD_GIT_SHA` was set with `--skip-deploys` first, so only one deployment
+  was created. The build log shows `pypdf-6.21.2` installed.
+- Rollback references: frontend `30590404-a219-48df-b56e-17d67b707226`,
+  backend `b99f00d9-04c7-41d7-a3f8-e74d288c6e81` (SHA `4c04559`). The backend
+  reference predates Railway's 2026-10-21 security incident, and Railway warns
+  that redeploying pre-incident builds fails; if a backend rollback is needed,
+  run `railway up` from a clean clone of `4c04559` instead.
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed with no failures or warnings; CORS allows
+  only the canonical and Pages origins (`https://evil.example` gets 400 without
+  allow-origin); HSTS, nosniff, referrer, permissions, CSP/frame headers present
+  on both origins.
+- Manual Production Print QA in product mode, run `39997447442`, passed end to
+  end (19/19 steps), including the freshness gate. The post-merge run
+  `39996988227` also passed: the release finished while its freshness gate was
+  still waiting.
+
 ## Railway security disclosure — 2026-10-23 (no GHS action needed)
 
 Railway reported on 2026-10-21 that stored environment variables may have been
