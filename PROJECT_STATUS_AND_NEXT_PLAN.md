@@ -1,5 +1,79 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-10-24 (`06f38b1`)
+
+Runtime release for #80 (frontend advisories: follow-redirects 1.16.1,
+source-map-js 1.2.2, postcss-selector-parser 6.1.5, Vite 6.4.5). The frontend
+build output is byte-identical to the ef2a9f2 release except build-info.json;
+the backend release only syncs the build SHA. Released under the manual
+provider-native model with the owner's authorization; release and acceptance
+by Claude. Before merge, the four lockfile entries were checked against the npm
+registry (integrity matches, same publishers as the previous versions, Vite
+with SLSA provenance).
+
+- Release SHA: `06f38b19ba4d02114900fde19bad93c1d724f208` (equal to `main` at
+  release time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `4e8e335b-da4d-46b6-9d45-25743a4d1ee9`, Node v22.23.1
+  and npm 11.6.2 from a clean clone, same origins and feature flags; all 41
+  servable production files match the verified build.
+- Backend: Railway `ghs-backend` native deploy
+  `d07e9c06-33fc-421c-8490-0b3bfb0b71c5` (`railway up` from the clean clone
+  after setting `BUILD_GIT_SHA` with `--skip-deploys`).
+- Rollback references: frontend `44f05441-ed05-49cb-8612-48b25733d024`,
+  backend `498e14ce-24d0-43c7-9620-a5e1c558edd3` (SHA `ef2a9f2`).
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` (no failures
+  or warnings) and `qa:production-pdf-canary` passed; CORS allows only the
+  canonical and Pages origins (`https://evil.example` gets 400 without
+  allow-origin); security headers present on both origins.
+- Manual Production Print QA in product mode, run `40096444724`, passed end to
+  end (19/19 steps), including the freshness gate; the post-merge run
+  `40096179240` also passed. The run after #78 (docs only, `bf46aca`),
+  `40096593575`, passed against this deployment.
+- Remaining: Dependabot #59 stays open until GHSA-rj75-hqrm-r3gf lists 6.1.5
+  (the upstream 6.x backport) as patched; braces (#58) has no fix and its
+  advisory and alert were withdrawn on 2026-10-23. New alert #63: `black`
+  26.3.1 in `backend/requirements-dev.txt` (CVE-2026-114134, fixed in 26.10.1;
+  development only, and CI's pip-audit checks `requirements.txt` only) is left
+  for the next dependency batch.
+
+## Release checkpoint — 2026-10-24 (`ef2a9f2`)
+
+Runtime release for #79 (pypdf 6.19.0 → 6.21.2; CVE-2026-113786 and
+CVE-2026-113789 to CVE-2026-113795, which had started failing the Backend
+pip-audit step). Released under the manual provider-native model with the
+owner's authorization: backend, frontend build and Direct Upload (Claude in
+Chrome), and acceptance by Claude.
+
+- Release SHA: `ef2a9f2c06b7673dff56cbe27d80f3b0ac30dd06` (equal to `main` at
+  release time). Frontend source is unchanged since `4c04559`.
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `44f05441-ed05-49cb-8612-48b25733d024`. Built from a
+  clean clone with Node v22.23.1 and npm 11.6.2, same backend/public origins
+  and feature flags as before. Before upload, 40 of the 41 servable files were
+  byte-identical to the previous production build (only `build-info.json`
+  differed); after upload all 41 production files match the verified build.
+- Backend: Railway `ghs-backend` native deploy (`railway up` from the clean
+  clone) `498e14ce-24d0-43c7-9620-a5e1c558edd3`, `Dockerfile.ghs-backend`;
+  `BUILD_GIT_SHA` was set with `--skip-deploys` first, so only one deployment
+  was created. The build log shows `pypdf-6.21.2` installed.
+- Rollback references: frontend `30590404-a219-48df-b56e-17d67b707226`,
+  backend `b99f00d9-04c7-41d7-a3f8-e74d288c6e81` (SHA `4c04559`). The backend
+  reference predates Railway's 2026-10-21 security incident, and Railway warns
+  that redeploying pre-incident builds fails; if a backend rollback is needed,
+  run `railway up` from a clean clone of `4c04559` instead.
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` and
+  `qa:production-pdf-canary` passed with no failures or warnings; CORS allows
+  only the canonical and Pages origins (`https://evil.example` gets 400 without
+  allow-origin); HSTS, nosniff, referrer, permissions, CSP/frame headers present
+  on both origins.
+- Manual Production Print QA in product mode, run `39997447442`, passed end to
+  end (19/19 steps), including the freshness gate. The post-merge run
+  `39996988227` also passed: the release finished while its freshness gate was
+  still waiting.
+
 ## Railway security disclosure — 2026-10-23 (no GHS action needed)
 
 Railway reported on 2026-10-21 that stored environment variables may have been
