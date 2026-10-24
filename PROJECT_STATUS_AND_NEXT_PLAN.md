@@ -1,5 +1,17 @@
 # Project Status And Next Plan
 
+## Railway security disclosure — 2026-10-23 (no GHS action needed)
+
+Railway reported on 2026-10-21 that stored environment variables may have been
+decrypted by a third party and asked customers to rotate them. A names-only
+readback on 2026-10-23 showed `ghs-backend` holds only `BUILD_GIT_SHA`,
+`CORS_ORIGINS`, `PUBLIC_APP_URL` and Railway-provided metadata, no secrets, and
+the backend deploys natively rather than from GitHub, so Railway's GitHub token
+reset does not affect it. Decision: change nothing, because a variable change
+triggers a redeploy and Railway warns that redeploying pre-incident builds
+fails. `/api/health` was healthy at `4c04559`
+on 2026-10-23. Tracking: `Mac mini設置/Railway安全通報-換鑰匙清單-20261023.md`.
+
 ## Release checkpoint — 2026-10-09 (`4c04559`)
 
 Runtime release for #76 (frontend Dependabot advisories: axios 1.20.0,
