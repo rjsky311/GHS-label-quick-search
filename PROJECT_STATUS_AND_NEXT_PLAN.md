@@ -1,5 +1,51 @@
 # Project Status And Next Plan
 
+## Release checkpoint — 2026-11-01 (`ac2a88a`)
+
+Runtime release for #83 (pypdf 6.21.2 → 6.21.4; CVE-2026-119203 to
+CVE-2026-119209, which had started failing the Backend pip-audit step). #82
+(black 26.10.1) only touches `backend/requirements-dev.txt` and does not ship.
+The frontend build output is byte-identical to the 06f38b1 release except
+build-info.json. Released under the manual provider-native model with the
+owner's authorization; release and acceptance by Claude. Before release, the
+pypdf 6.21.4 wheel and sdist SHA-256 digests were checked against PyPI and
+their provenance attestations, which name the same trusted publisher as 6.21.2
+(GitHub `py-pdf/pypdf`, `publish-to-pypi.yaml`, environment `pypi`).
+
+- Release SHA: `ac2a88a3bc0947a431fb3a59eecfa161e60025f7` (equal to `main` at
+  release time).
+- Frontend: Cloudflare Pages `ghs-label-quick-search-shadow` Direct Upload,
+  production deployment `88df4e56-6eb5-48a8-8829-d7331fa0a939`, Node v22.23.1
+  and npm 11.6.2 from a clean clone, same origins and feature flags. Before
+  upload, 40 of the 41 servable files were byte-identical to production (only
+  `build-info.json` differed); after upload all 41 files on both the canonical
+  and Pages domains match the verified build.
+- Backend: Railway `ghs-backend` native deploy
+  `f0daedc9-afbf-43cd-ab06-824cb2d79268` (`railway up` from the clean clone
+  after setting `BUILD_GIT_SHA` with `--skip-deploys`, so only one deployment
+  was created). The build log shows `pypdf-6.21.4` installed.
+- Rollback references: frontend `4e8e335b-da4d-46b6-9d45-25743a4d1ee9`,
+  backend `d07e9c06-33fc-421c-8490-0b3bfb0b71c5` (SHA `06f38b1`, built after
+  Railway's 2026-10-21 incident).
+- Acceptance: both `build-info.json` and `/api/health` report the release SHA;
+  health `healthy`/`ready`, PDF available; `qa:production-health` (no failures
+  or warnings) and `qa:production-pdf-canary` passed; CORS allows only the
+  canonical and Pages origins (`https://evil.example` gets 400 without
+  allow-origin); security headers present on both origins.
+- Manual Production Print QA in product mode, run `41314663263`, passed end to
+  end (19/19 steps), including the freshness gate. Post-merge runs: the #83 run
+  `41313395273` (`aba9ceb`) failed only at the freshness gate after 60 attempts,
+  as expected, because production went from `06f38b1` straight to `ac2a88a`;
+  the #82 run `41313534528` (`ac2a88a`) then passed 19/19 against this
+  deployment.
+- Alerts: Dependabot #63 (`black`) closed as fixed when #82 merged. GitHub
+  never raised Dependabot alerts for the pypdf CVEs (pip-audit caught them), so
+  there is nothing to close there. #59 (postcss-selector-parser) has been
+  withdrawn. New on 2026-11-01 and left for the next dependency batch:
+  #70 `follow-redirects` 1.16.1 (runtime scope, high, fixed in 1.16.2), #72
+  `minimatch` (development, fixed in 11.0.1), #69 `deepmerge` (development,
+  low, no fix yet); #71 `glob` was auto-dismissed.
+
 ## Release checkpoint — 2026-10-24 (`06f38b1`)
 
 Runtime release for #80 (frontend advisories: follow-redirects 1.16.1,
