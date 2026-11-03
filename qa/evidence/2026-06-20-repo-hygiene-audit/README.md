@@ -47,8 +47,8 @@ website's GitHub Issues feedback links for outside users.
   The script writes `frontend/build/github-resource-report.json`, fails on
   configurable repository/artifact/cache size limits, and can enforce
   visibility. Public visibility is the default expected state.
-- Added the patrol to the Mac mini setup repo's report-only
-  `scripts/tool-layer-healthcheck.zsh`, plus its healthcheck/watchlist docs.
+- Added the patrol to the maintainer's local report-only tool health check,
+  which is kept outside this repository.
 - Did not delete local evidence directories.
 - Did not delete GitHub artifacts or caches.
 - Did not rewrite history or introduce Git LFS.

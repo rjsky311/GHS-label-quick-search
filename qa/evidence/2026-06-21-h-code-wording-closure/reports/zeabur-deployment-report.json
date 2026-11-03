@@ -1,7 +1,7 @@
 {
   "ok": true,
   "generatedAt": "2026-06-21T12:32:30.881Z",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+  "reportPath": "frontend/build/zeabur-deployment-report.json",
   "serviceId": "69626873d9479ab33ad4590e",
   "environmentId": "696262d9a7aaff0c1152b3d6",
   "expectedGitSha": "d0659b9e79496a37fdca07a4a5c9d9150e64647c",

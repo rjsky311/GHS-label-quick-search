@@ -1,7 +1,7 @@
 {
   "ok": true,
   "generatedAt": "2026-06-21T17:09:58.311Z",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-qa-summary.json",
+  "reportPath": "frontend/build/production-print-qa-summary.json",
   "requireProductBlocks": true,
   "requireDeploymentFreshness": true,
   "reports": {
@@ -9,7 +9,7 @@
       "name": "zeabur-deployment",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/zeabur-deployment-report.json",
+      "reportPath": "frontend/build/zeabur-deployment-report.json",
       "statusCategory": "fresh-running",
       "expectedGitSha": "2f81602cb3082b247a0527cf53e0cb0ed623c84a",
       "latestDeployment": {
@@ -67,7 +67,7 @@
       "name": "production-health",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-health-report.json",
+      "reportPath": "frontend/build/production-health-report.json",
       "productionUrl": "",
       "assetUrl": "",
       "summary": null,
@@ -81,7 +81,7 @@
       "name": "bundle-freshness",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-bundle-report.json",
+      "reportPath": "frontend/build/production-print-bundle-report.json",
       "productionUrl": "https://ghs-frontend.zeabur.app/",
       "assetUrl": "https://ghs-frontend.zeabur.app/assets/index-BoN1YhVb.js",
       "summary": null,
@@ -95,7 +95,7 @@
       "name": "search-ui",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-search-ui-report.json",
+      "reportPath": "frontend/build/production-search-ui-report.json",
       "productionUrl": "https://ghs-frontend.zeabur.app/",
       "assetUrl": "",
       "summary": null,
@@ -109,7 +109,7 @@
       "name": "print-qa-matrix",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-qa-report.json",
+      "reportPath": "frontend/build/print-qa-report.json",
       "productionUrl": "",
       "assetUrl": "",
       "summary": {
@@ -127,13 +127,13 @@
       "name": "print-pdf",
       "present": false,
       "ok": null,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-report.json"
+      "reportPath": "frontend/build/print-pdf-report.json"
     },
     "prepared": {
       "name": "prepared-production",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-prepared-print-report.json",
+      "reportPath": "frontend/build/production-prepared-print-report.json",
       "productionUrl": "https://ghs-frontend.zeabur.app/",
       "assetUrl": "",
       "summary": {
@@ -151,7 +151,7 @@
       "name": "fixed-stock-batch-print",
       "present": true,
       "ok": true,
-      "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-batch-print-report.json",
+      "reportPath": "frontend/build/production-batch-print-report.json",
       "productionUrl": "https://ghs-frontend.zeabur.app",
       "assetUrl": "",
       "summary": null,
@@ -166,7 +166,7 @@
         "name": "production-print-smoke-report",
         "present": true,
         "ok": true,
-        "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-print-smoke-report.json",
+        "reportPath": "frontend/build/production-print-smoke-report.json",
         "productionUrl": "https://ghs-frontend.zeabur.app/",
         "assetUrl": "",
         "summary": {

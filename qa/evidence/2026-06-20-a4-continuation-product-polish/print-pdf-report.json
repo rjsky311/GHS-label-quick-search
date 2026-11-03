@@ -1,8 +1,8 @@
 {
   "ok": true,
   "generatedAt": "2026-06-20T07:14:45.354Z",
-  "printHtmlDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-html-artifacts",
-  "pdfDir": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts",
+  "printHtmlDir": "frontend/build/print-html-artifacts",
+  "pdfDir": "frontend/build/print-pdf-artifacts",
   "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   "summary": {
     "total": 42,
@@ -51,7 +51,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/a4-primary.pdf",
+        "path": "frontend/build/print-pdf-artifacts/a4-primary.pdf",
         "bytes": 345174,
         "hasPdfHeader": true
       }
@@ -94,7 +94,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/aminobiphenyl-a4-primary.pdf",
+        "path": "frontend/build/print-pdf-artifacts/aminobiphenyl-a4-primary.pdf",
         "bytes": 254212,
         "hasPdfHeader": true
       }
@@ -139,7 +139,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/letter-primary.pdf",
+        "path": "frontend/build/print-pdf-artifacts/letter-primary.pdf",
         "bytes": 345121,
         "hasPdfHeader": true
       }
@@ -184,7 +184,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/a4-primary-zh-bw.pdf",
+        "path": "frontend/build/print-pdf-artifacts/a4-primary-zh-bw.pdf",
         "bytes": 361380,
         "hasPdfHeader": true
       }
@@ -229,7 +229,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/letter-primary-en-bw.pdf",
+        "path": "frontend/build/print-pdf-artifacts/letter-primary-en-bw.pdf",
         "bytes": 358361,
         "hasPdfHeader": true
       }
@@ -276,7 +276,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethylene-oxide-a4-primary-continuation.pdf",
+        "path": "frontend/build/print-pdf-artifacts/ethylene-oxide-a4-primary-continuation.pdf",
         "bytes": 274505,
         "hasPdfHeader": true
       }
@@ -321,7 +321,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bromothiophene-a4-primary-packing-regression.pdf",
+        "path": "frontend/build/print-pdf-artifacts/bromothiophene-a4-primary-packing-regression.pdf",
         "bytes": 338961,
         "hasPdfHeader": true
       }
@@ -366,7 +366,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bottle-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/bottle-supplemental.pdf",
         "bytes": 61548,
         "hasPdfHeader": true
       }
@@ -411,7 +411,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/bottle-supplemental-with-case.pdf",
+        "path": "frontend/build/print-pdf-artifacts/bottle-supplemental-with-case.pdf",
         "bytes": 76130,
         "hasPdfHeader": true
       }
@@ -456,7 +456,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/large-primary-front-label.pdf",
+        "path": "frontend/build/print-pdf-artifacts/large-primary-front-label.pdf",
         "bytes": 66459,
         "hasPdfHeader": true
       }
@@ -499,7 +499,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/large-primary-front-warning-batch-item.pdf",
+        "path": "frontend/build/print-pdf-artifacts/large-primary-front-warning-batch-item.pdf",
         "bytes": 59769,
         "hasPdfHeader": true
       }
@@ -544,7 +544,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/avery-5163-bottle-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/avery-5163-bottle-supplemental.pdf",
         "bytes": 61759,
         "hasPdfHeader": true
       }
@@ -589,7 +589,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/avery-5164-large-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/avery-5164-large-supplemental.pdf",
         "bytes": 62131,
         "hasPdfHeader": true
       }
@@ -634,7 +634,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/rack-landscape-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/rack-landscape-supplemental.pdf",
         "bytes": 64375,
         "hasPdfHeader": true
       }
@@ -679,7 +679,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/tube-vial-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/tube-vial-quick-id.pdf",
         "bytes": 52399,
         "hasPdfHeader": true
       }
@@ -724,7 +724,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/tube-vial-quick-id-with-case.pdf",
+        "path": "frontend/build/print-pdf-artifacts/tube-vial-quick-id-with-case.pdf",
         "bytes": 52399,
         "hasPdfHeader": true
       }
@@ -774,7 +774,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nine-pictogram-tube-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/nine-pictogram-tube-quick-id.pdf",
         "bytes": 87274,
         "hasPdfHeader": true
       }
@@ -819,7 +819,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/brother-62mm-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/brother-62mm-quick-id.pdf",
         "bytes": 52441,
         "hasPdfHeader": true
       }
@@ -864,7 +864,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/small-rack-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/small-rack-quick-id.pdf",
         "bytes": 52430,
         "hasPdfHeader": true
       }
@@ -909,7 +909,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/medium-rack-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/medium-rack-quick-id.pdf",
         "bytes": 52520,
         "hasPdfHeader": true
       }
@@ -954,7 +954,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/qr-supplement.pdf",
         "bytes": 55541,
         "hasPdfHeader": true
       }
@@ -999,7 +999,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/brother-62mm-qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/brother-62mm-qr-supplement.pdf",
         "bytes": 55536,
         "hasPdfHeader": true
       }
@@ -1049,7 +1049,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nine-pictogram-brother-62mm-qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/nine-pictogram-brother-62mm-qr-supplement.pdf",
         "bytes": 90575,
         "hasPdfHeader": true
       }
@@ -1094,7 +1094,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/small-rack-qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/small-rack-qr-supplement.pdf",
         "bytes": 55527,
         "hasPdfHeader": true
       }
@@ -1139,7 +1139,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/medium-rack-qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/medium-rack-qr-supplement.pdf",
         "bytes": 58087,
         "hasPdfHeader": true
       }
@@ -1184,7 +1184,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/custom-tiny-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/custom-tiny-supplemental.pdf",
         "bytes": 56398,
         "hasPdfHeader": true
       }
@@ -1227,7 +1227,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethanol-bottle-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/ethanol-bottle-supplemental.pdf",
         "bytes": 40897,
         "hasPdfHeader": true
       }
@@ -1270,7 +1270,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/ethanol-tube-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/ethanol-tube-quick-id.pdf",
         "bytes": 37404,
         "hasPdfHeader": true
       }
@@ -1313,7 +1313,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/sodium-hydroxide-qr-supplement.pdf",
+        "path": "frontend/build/print-pdf-artifacts/sodium-hydroxide-qr-supplement.pdf",
         "bytes": 54293,
         "hasPdfHeader": true
       }
@@ -1357,7 +1357,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/methanol-brother-quick-id-bw.pdf",
+        "path": "frontend/build/print-pdf-artifacts/methanol-brother-quick-id-bw.pdf",
         "bytes": 43785,
         "hasPdfHeader": true
       }
@@ -1401,7 +1401,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/hydrogen-peroxide-qr-supplement-en.pdf",
+        "path": "frontend/build/print-pdf-artifacts/hydrogen-peroxide-qr-supplement-en.pdf",
         "bytes": 47127,
         "hasPdfHeader": true
       }
@@ -1443,7 +1443,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/nitrogen-tube-quick-id-single-pictogram.pdf",
+        "path": "frontend/build/print-pdf-artifacts/nitrogen-tube-quick-id-single-pictogram.pdf",
         "bytes": 34612,
         "hasPdfHeader": true
       }
@@ -1485,7 +1485,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/zinc-oxide-small-qr-environmental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/zinc-oxide-small-qr-environmental.pdf",
         "bytes": 36689,
         "hasPdfHeader": true
       }
@@ -1527,7 +1527,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/boric-acid-bottle-supplemental-health.pdf",
+        "path": "frontend/build/print-pdf-artifacts/boric-acid-bottle-supplemental-health.pdf",
         "bytes": 47132,
         "hasPdfHeader": true
       }
@@ -1572,7 +1572,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-a4-primary.pdf",
+        "path": "frontend/build/print-pdf-artifacts/prepared-a4-primary.pdf",
         "bytes": 383529,
         "hasPdfHeader": true
       }
@@ -1617,7 +1617,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-bottle-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/prepared-bottle-supplemental.pdf",
         "bytes": 70525,
         "hasPdfHeader": true
       }
@@ -1662,7 +1662,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/prepared-tube-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/prepared-tube-quick-id.pdf",
         "bytes": 52399,
         "hasPdfHeader": true
       }
@@ -1705,7 +1705,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/long-name-bottle-supplemental.pdf",
+        "path": "frontend/build/print-pdf-artifacts/long-name-bottle-supplemental.pdf",
         "bytes": 51815,
         "hasPdfHeader": true
       }
@@ -1748,7 +1748,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/long-name-tube-quick-id.pdf",
+        "path": "frontend/build/print-pdf-artifacts/long-name-tube-quick-id.pdf",
         "bytes": 61230,
         "hasPdfHeader": true
       }
@@ -1801,7 +1801,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-quick-id-50-small-strip.pdf",
+        "path": "frontend/build/print-pdf-artifacts/batch-quick-id-50-small-strip.pdf",
         "bytes": 195794,
         "hasPdfHeader": true
       }
@@ -1854,7 +1854,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-qr-50-brother-62mm.pdf",
+        "path": "frontend/build/print-pdf-artifacts/batch-qr-50-brother-62mm.pdf",
         "bytes": 392342,
         "hasPdfHeader": true
       }
@@ -1907,7 +1907,7 @@
         "hasMinimumLabels": true
       },
       "pdf": {
-        "path": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/print-pdf-artifacts/batch-a4-complete-50.pdf",
+        "path": "frontend/build/print-pdf-artifacts/batch-a4-complete-50.pdf",
         "bytes": 760886,
         "hasPdfHeader": true
       }

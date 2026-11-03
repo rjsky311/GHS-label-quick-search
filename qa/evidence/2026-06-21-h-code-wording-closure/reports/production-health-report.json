@@ -1,7 +1,7 @@
 {
   "ok": true,
   "generatedAt": "2026-06-21T12:32:26.503Z",
-  "reportPath": "/Users/yuchelin/Documents/Projects/GHS-label-quick-search/frontend/build/production-health-report.json",
+  "reportPath": "frontend/build/production-health-report.json",
   "frontendUrl": "https://ghs-frontend.zeabur.app/",
   "backendHealthUrl": "https://ghs-backend.zeabur.app/api/health",
   "maxAttempts": 6,
