@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reconcile `LAB_WORKFLOW_READINESS_ROADMAP.md` with the current canonical state so agents do not reopen shipped Prepared Solution or Agent-ready work by inertia.
+**Goal:** Reconcile `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` with the current canonical state so agents do not reopen shipped Prepared Solution or Agent-ready work by inertia.
 
-**Architecture:** This is a docs-only roadmap maintenance slice. It updates the direction document to distinguish shipped/monitoring work from evidence-gated candidate themes while leaving `PROJECT_STATUS_AND_NEXT_PLAN.md` and `NEXT_PRODUCT_WORK.md` as the active selectors.
+**Architecture:** This is a docs-only roadmap maintenance slice. It updates the direction document to distinguish shipped/monitoring work from evidence-gated candidate themes while leaving `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md` and `docs/maintainers/NEXT_PRODUCT_WORK.md` as the active selectors.
 
 **Tech Stack:** Markdown roadmap docs, existing docs drift checker, git diff checks.
 
@@ -14,11 +14,11 @@
 
 **Files:**
 - Create: `docs/superpowers/plans/2026-06-28-lab-workflow-roadmap-state-reconciliation.md`
-- Modify: `LAB_WORKFLOW_READINESS_ROADMAP.md`
+- Modify: `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md`
 
 - [x] **Step 1: Record the evidence source**
 
-  In `LAB_WORKFLOW_READINESS_ROADMAP.md`, update the opening status/context to say:
+  In `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md`, update the opening status/context to say:
   - Prepared Solution Entry Clarity is shipped and production-verified.
   - The Agent-ready reference/draft sequence is shipped through scope decision, schema/fixtures, endpoint, `/llms.txt`, and live availability audit.
   - No autonomous implementation slice is currently open from this roadmap.
@@ -58,13 +58,13 @@
 
   ```bash
   git status --short
-  git add docs/superpowers/plans/2026-06-28-lab-workflow-roadmap-state-reconciliation.md LAB_WORKFLOW_READINESS_ROADMAP.md
+  git add docs/superpowers/plans/2026-06-28-lab-workflow-roadmap-state-reconciliation.md docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md
   git diff --cached --stat
   git commit -m "Reconcile lab workflow roadmap state"
   ```
 
   Expected:
-  - Only the new plan and `LAB_WORKFLOW_READINESS_ROADMAP.md` are staged.
+  - Only the new plan and `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md` are staged.
   - Commit succeeds with a docs-only diff.
 
 - [ ] **Step 6: Push and monitor remote checks**

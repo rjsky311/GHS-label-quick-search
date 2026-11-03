@@ -19,18 +19,9 @@ For the next label-printing refactor, use
 For broad or ambiguous product decisions, use `PRODUCT_SCOPE_GATE.md` before
 implementation so the goal, non-goals, acceptance criteria, and verification
 gates are explicit.
-For role-level workflow validation, use
-`PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` to decide whether the next
-slice should become a persona scenario gate or use
-`PERSONA_SURVEY_REVIEW_PACKET.md` for sanitized external survey research. The
-first LINER evidence checkpoint is recorded in
-`LINER_SURVEY_2026_06_02_FINDINGS.md`.
-For Claude Design output, use `CLAUDE_DESIGN_UI_REVIEW_PACKET.md` as the
-upload/prompt packet and `CLAUDE_DESIGN_ADOPTION_PLAN.md` as the adoption
-filter. Claude Design handoffs are advisory UI references, not product, data,
-or print-safety contracts.
-For moving development to macOS, use `MAC_MIGRATION_HANDOFF.md` as the setup
-and context-preservation checklist.
+For role-level workflow validation, prefer a persona scenario gate in the
+frontend test suite over open-ended survey research. External design output is
+an advisory UI reference, not a product, data, or print-safety contract.
 For the current post-95 target selection, use
 `POST_95_REPRIORITIZATION.md` after the canonical project entry point.
 The shipped post-95 owner doc is `PILOT_OPERATIONS_READY_PLAN.md`, and the
@@ -743,8 +734,9 @@ cannot complete the intended job.
   signal was not a new label model; it was that batch users need a self-service
   review path that separates ready output, review/warning rows, unresolved
   lookup rows, multi-GHS primary-classification confirmation, and missing
-  Chinese-name curation before print/export. The evidence and scope boundary
-  live in `LINER_SURVEY_2026_06_02_FINDINGS.md`.
+  Chinese-name curation before print/export. The survey was simulated
+  feedback, not GHS, legal, or QA evidence, and its write-up is no longer kept
+  in this repository.
 - 2026-05-30 evidence-driven monitoring checkpoint: no fresh product slice was
   open at that historical checkpoint. It recorded a clean product-code
   baseline on `main` at `bc56672`, green GitHub CI, and expected-SHA
@@ -1495,13 +1487,9 @@ The detailed execution backlog lives in
    `SCIENTIFIC_AGENT_SKILLS_EVALUATION.md`.
 8. Product scope gate decisions, tracked in `PRODUCT_SCOPE_GATE.md` when a
    future slice needs pre-implementation alignment.
-9. Persona integration and survey-research validation, tracked in
-   `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` when evidence shows that
-   feature-level QA is green but role-level workflow confidence is still weak.
-   Use `PERSONA_SURVEY_REVIEW_PACKET.md` for the safe external review prompt
-   packet and research-to-backlog rule. Use
-   `LINER_SURVEY_2026_06_02_FINDINGS.md` as the first survey evidence
-   checkpoint.
+9. Persona integration scenario gates, added as frontend tests when evidence
+   shows that feature-level QA is green but role-level workflow confidence is
+   still weak.
 
 Treat the older `NEXT_PRINT_WORKSTREAMS.md` and
 `PRINT_OUTPUT_REFACTOR_PLAN.md` as v1.10 baseline context unless a new failure

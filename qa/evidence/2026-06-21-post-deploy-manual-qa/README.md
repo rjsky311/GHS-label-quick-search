@@ -7,7 +7,7 @@ Production SHA:
 `0455d721ce883be6332cc0fee41d6b8379712040`
 
 Top-level checkpoint:
-`POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`
+`docs/maintainers/history/POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`
 
 ## Reports
 
@@ -77,7 +77,7 @@ still contain Traditional Chinese placeholder text:
 - Ethylene Oxide alternate classification: `H360Fd`.
 
 Those gaps are recorded as the next P1 issue in
-`POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`.
+`docs/maintainers/history/POST_DEPLOY_QA_CHECKPOINT_2026_06_21.md`.
 
 ## Interpretation Boundary
 

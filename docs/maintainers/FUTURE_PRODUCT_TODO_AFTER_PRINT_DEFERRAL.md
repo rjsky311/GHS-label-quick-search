@@ -737,9 +737,10 @@ served.
 
 Work items:
 
-- Completed: expanded `BRANDED_UTILITY_STRATEGY.md` with a current product
-  contract, surface matrix, regression expectations, and commercial-copy
-  review gate.
+- Completed: wrote a brand-utility product contract with a surface matrix,
+  regression expectations, and a commercial-copy review gate. The standalone
+  strategy note has since been retired; its rules live on in the items below
+  and in `PRINT_LABEL_CONTRACT.md`.
 - Keep printed labels, GHS pictograms, hazard statements, and SDS verification
   paths free of ads and unrelated promotion.
 - Limit brand/support surfaces to footer, support band, help/education,
@@ -760,9 +761,9 @@ Goal: capture useful feedback while preserving the safety boundary.
 
 Work items:
 
-- Completed: documented the split between data corrections and workflow help in
-  `BRANDED_UTILITY_STRATEGY.md`; existing ProductTrustPanel/Footer tests and
-  production search UI QA cover the separated issue-template links.
+- Completed: documented the split between data corrections and workflow help;
+  existing ProductTrustPanel/Footer tests and production search UI QA cover the
+  separated issue-template links.
 - Keep data-correction requests separate from workflow/product requests.
 - Completed: frontend support links now use structured issue-template
   prefill when context is available. Data-correction links carry evidence

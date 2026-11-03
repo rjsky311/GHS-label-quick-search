@@ -36,8 +36,8 @@
 ### Task 1: Commit The Design-Language Baseline
 
 **Files:**
-- Stage: `EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md`
-- Stage: `DESIGN.md`
+- Stage: `docs/maintainers/EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md`
+- Stage: `docs/maintainers/DESIGN.md`
 
 - [x] **Step 1: Verify docs-only changes are clean**
 
@@ -55,7 +55,7 @@ Expected: both commands exit 0.
 Run:
 
 ```bash
-git add EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md DESIGN.md
+git add docs/maintainers/EXPERIMENT_NOTEBOOK_DESIGN_LANGUAGE.md docs/maintainers/DESIGN.md
 ```
 
 - [x] **Step 3: Commit the design-language docs**

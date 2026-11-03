@@ -196,7 +196,7 @@ Hardening requirements (all mandatory, each needs a test):
 
 ### Task 1: Open the slice
 
-**Files:** Modify `NEXT_PRODUCT_WORK.md`
+**Files:** Modify `docs/maintainers/NEXT_PRODUCT_WORK.md`
 
 - [x] Add the slice entry: source (2026-07-07 mobile print evidence, this
       plan), affected user job (field/mobile user prints usable labels),
@@ -266,11 +266,11 @@ modify `backend/requirements.txt`
 
 ### Task 7: QA evidence + doc closure
 
-**Files:** Modify `PRINT_BROWSER_QA_CHECKLIST.md`, this plan file,
-`NEXT_PRODUCT_WORK.md`
+**Files:** Modify `docs/maintainers/PRINT_BROWSER_QA_CHECKLIST.md`, this plan file,
+`docs/maintainers/NEXT_PRODUCT_WORK.md`
 
 - [x] Add a mobile-browser row (iOS Safari + Android Chrome, PDF-export path)
-      to `PRINT_BROWSER_QA_CHECKLIST.md`.
+      to `docs/maintainers/PRINT_BROWSER_QA_CHECKLIST.md`.
 - [x] Local end-to-end proof: export the same 鹽酸 (CAS 7647-01-0) three
       outputs through the new endpoint; verify no edge clipping, no stray
       near-empty trailing page, no browser headers/footers, crisp QR, CJK
@@ -278,7 +278,7 @@ modify `backend/requirements.txt`
       (Completed in the 2026-07-07 review verification pass below; PDFs
       archived under
       `qa/evidence/2026-07-07-mobile-pdf-export-render-proof/`.)
-- [x] Update the slice entry in `NEXT_PRODUCT_WORK.md` to shipped/monitoring
+- [x] Update the slice entry in `docs/maintainers/NEXT_PRODUCT_WORK.md` to shipped/monitoring
       with pointers to evidence.
 
 ### 2026-07-07 Local Verification Notes

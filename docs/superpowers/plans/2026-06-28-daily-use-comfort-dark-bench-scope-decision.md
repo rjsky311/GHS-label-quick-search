@@ -117,7 +117,7 @@ Stop condition:
   silently run Comfort Dim.
 - Modify `frontend/package.json`: include the Workbench theme gate test in
   `npm run test:qa-scripts`.
-- Modify `NEXT_PRODUCT_WORK.md`, `PROJECT_STATUS_AND_NEXT_PLAN.md`, and `LAB_WORKFLOW_READINESS_ROADMAP.md`: keep roadmap state and ordering in sync after implementation.
+- Modify `docs/maintainers/NEXT_PRODUCT_WORK.md`, `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`, and `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md`: keep roadmap state and ordering in sync after implementation.
 
 ## Task 1: Theme Mode Helper
 
@@ -907,9 +907,9 @@ Expected: exit 0.
 ## Task 6: Roadmap State And Commit
 
 **Files:**
-- Modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
-- Modify: `NEXT_PRODUCT_WORK.md`
-- Modify: `LAB_WORKFLOW_READINESS_ROADMAP.md`
+- Modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md`
 
 - [x] **Step 1: Record implementation closure**
 
@@ -925,7 +925,7 @@ Record that `Batch Review And Export Handoff Clarity` remains second, but still 
 - [ ] **Step 3: Stage exact files**
 
 ```bash
-git add frontend/src/utils/themeMode.js frontend/src/utils/__tests__/themeMode.test.js frontend/src/__tests__/App.themeMode.test.js frontend/src/__tests__/themeTokens.test.js frontend/src/utils/__tests__/printLabels.test.js frontend/src/App.jsx frontend/src/components/Header.jsx frontend/src/components/__tests__/Header.test.js frontend/src/i18n/locales/en.json frontend/src/i18n/locales/zh-TW.json frontend/scripts/check-experiment-notebook-workbench.mjs frontend/scripts/__tests__/workbench-theme-gate.test.mjs frontend/package.json PROJECT_STATUS_AND_NEXT_PLAN.md NEXT_PRODUCT_WORK.md LAB_WORKFLOW_READINESS_ROADMAP.md
+git add frontend/src/utils/themeMode.js frontend/src/utils/__tests__/themeMode.test.js frontend/src/__tests__/App.themeMode.test.js frontend/src/__tests__/themeTokens.test.js frontend/src/utils/__tests__/printLabels.test.js frontend/src/App.jsx frontend/src/components/Header.jsx frontend/src/components/__tests__/Header.test.js frontend/src/i18n/locales/en.json frontend/src/i18n/locales/zh-TW.json frontend/scripts/check-experiment-notebook-workbench.mjs frontend/scripts/__tests__/workbench-theme-gate.test.mjs frontend/package.json docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md docs/maintainers/NEXT_PRODUCT_WORK.md docs/maintainers/LAB_WORKFLOW_READINESS_ROADMAP.md
 ```
 
 - [ ] **Step 4: Commit**

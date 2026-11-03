@@ -77,32 +77,6 @@ Source ranking, authority boundaries, SDS/reference behavior, QR target rules,
 and telemetry limits are documented in
 [DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md](./DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md).
 
-## Maintainer Planning
-
-The canonical planning entry point is
-[PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md). The
-current post-95 target ranking is
-[POST_95_REPRIORITIZATION.md](./POST_95_REPRIORITIZATION.md). The shipped
-post-95 target owner doc is
-[PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md), with pilot
-operator checks in [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md). The shipped
-short-term evidence pass is
-[PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md).
-The latest Batch-First productization owner doc is
-[BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md), now in
-shipped/monitoring status; use it as evidence for new monitoring-driven slices.
-The shipped 95% lab-ready pilot evidence packet is
-[LAB_READY_PILOT_95_PLAN.md](./LAB_READY_PILOT_95_PLAN.md). Use
-[PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) before broad product-direction
-changes. Use
-[PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md](./PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md)
-when the next question is whether role-based integration scenarios or external
-survey simulation would expose workflow blind spots that feature-level QA does
-not catch. Use
-[PERSONA_SURVEY_REVIEW_PACKET.md](./PERSONA_SURVEY_REVIEW_PACKET.md) as the
-safe prompt and screenshot packet before uploading anything to an external
-review tool.
-
 ## Local Development
 
 ### Backend
@@ -186,68 +160,68 @@ npm run test:docs
 ## Project Structure
 
 ```text
-backend/
-  server.py              FastAPI routes, PubChem client, admin APIs
-  api_models.py          Pydantic API payload/response models
-  api_validation.py      Bounded payload constants and validation helpers
-  export_helpers.py      CSV/XLSX export safety and pilot summary helpers
-  chemical_dict.py       Local CAS/name dictionaries and aliases
-  test_name_search.py    Backend regression tests
+README.md, AGENTS.md, CLAUDE.md     user entry point; coding-agent bootstrap (CLAUDE.md points to AGENTS.md)
+PRINT_LABEL_CONTRACT.md             what a printed label must and must not contain
+DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md
+                                    source roles, authority, and curation boundaries
+SECURITY.md, LICENSE                private vulnerability reporting; MIT license
+Dockerfile.ghs-backend              Railway backend image (Chromium and CJK fonts for PDF)
 
-frontend/
-  src/components/        React UI components
-  src/hooks/             Local persistence, workflow, modal, and admin hooks
-  src/utils/             Print, export, SDS, governance, and workflow helpers
-  src/i18n/              English and Traditional Chinese locales
-  scripts/               QA and production verification scripts
+backend/                            FastAPI service, Python 3.11
+  server.py                         app, PubChem client, search, export, and print-PDF routes
+  chemical_dict.py                  local CAS and Chinese/English name dictionaries
+  pilot_store.py                    SQLite store: manual entries, aliases, reference links,
+                                    correction requests, miss-query retention
+  pilot_admin_routes.py             admin-gated dictionary curation and correction review
+  api_models.py                     Pydantic request and response models
+  api_validation.py                 bounded payloads, CAS normalization, safe-URL checks
+  export_helpers.py                 CSV/XLSX export with formula-injection neutralization
+  pdf_render.py                     server-side label PDF rendering (Playwright Chromium)
+  agent_label_summary.py            read-only agent_label_summary.v0 response contract
+  observability.py                  bounded, structured log events and telemetry
+  resource_limits.py                request-body size limits for public JSON endpoints
+  candidate_discovery.py            review-only Chinese-name candidate discovery
+  inventory_workbook_audit.py       dry-run audit of lab inventory workbooks
+  inventory_handoff_import.py       audit handoff packet into the admin queue (dry run default)
+  seed_dictionary_identity_audit.py PubChem identity audit of the seed dictionary
+  seed_dictionary_identity_exemptions.py
+                                    reviewed exemptions for that audit
+  h_code_coverage_audit.py,
+  p_code_coverage_audit.py          H- and P-statement wording coverage audits
+  p_code_translations.py            Traditional Chinese P-statement wording
+  scripts/                          maintainer command-line wrappers for the audits above
+  test_*.py                         pytest suite
 
-.github/workflows/      CI and production QA workflows
-Dockerfile.ghs-backend  Railway backend image definition
+frontend/                           React 19 + Vite single-page app, Node 22
+  src/                              components/, hooks/, utils/ (print, export, SDS helpers),
+                                    i18n/ (English and Traditional Chinese), tests
+  public/                           static assets, llms.txt, Cloudflare Pages _headers
+  scripts/                          i18n, docs-drift, bundle-budget, and production QA scripts
+  plugins/, package.json, ...       build and tooling configuration
+
+docs/
+  CASE_STUDY.md                     how the project was specified, built, and verified
+  maintainers/                      planning, status, QA, and design notes (see below)
+  superpowers/                      per-slice design specs and implementation plans
+  evidence/                         dated hardening and migration evidence
+  design-mockups/, assets/          UI design exploration and preview images
+
+qa/
+  evidence/                         recorded QA reports, screenshots, and generated PDFs
+  fixtures/                         sanitized, synthetic QA input files
+
+.github/
+  workflows/                        CI and scheduled production QA
+  scripts/                          change classification and expected-SHA resolution
+  ISSUE_TEMPLATE/, CODEOWNERS       data-correction and workflow-request forms; code owner
 ```
 
-## Maintainer Entry Points
+## Maintainer Documents
 
-Use these files before starting product or safety-critical changes:
-
-- [AGENTS.md](./AGENTS.md) - coding-agent bootstrap context, architecture, and
-  current runtime state.
-- [PROJECT_STATUS_AND_NEXT_PLAN.md](./PROJECT_STATUS_AND_NEXT_PLAN.md) -
-  canonical current status, priority order, and done criteria.
-- [PILOT_OPERATIONS_READY_PLAN.md](./PILOT_OPERATIONS_READY_PLAN.md) - shipped
-  post-95 product target for small pilot operations, triage, export utility,
-  and QA cadence.
-- [PILOT_RUNBOOK.md](./PILOT_RUNBOOK.md) - pilot operator checklist and
-  finding-classification guide.
-- [PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md](./PILOT_EVIDENCE_AND_MAINTAINABILITY_PASS.md) -
-  shipped short-term evidence pass for representative pilot evidence, export
-  usability, data-quality next steps, maintainability boundaries, and
-  historical-doc cleanup.
-- [BATCH_FIRST_LAB_PILOT_V1_PLAN.md](./BATCH_FIRST_LAB_PILOT_V1_PLAN.md) -
-  shipped/monitoring Batch-First owner doc for batch review flow, batch label
-  confidence, batch export, correction/admin triage, and bounded
-  maintainability evidence.
-- [NEXT_PRODUCT_WORK.md](./NEXT_PRODUCT_WORK.md) - short evidence-triggered
-  live queue for choosing the next slice.
-- [PRODUCT_SCOPE_GATE.md](./PRODUCT_SCOPE_GATE.md) - project-level "grill me"
-  workflow for aligning broad or ambiguous product decisions before
-  implementation.
-- [PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md](./PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md) -
-  planned persona scenario gates and safe external survey-research workflow.
-- [PERSONA_SURVEY_REVIEW_PACKET.md](./PERSONA_SURVEY_REVIEW_PACKET.md) -
-  sanitized external review prompt packet and research-to-backlog rules.
-- [FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md](./FUTURE_PRODUCT_TODO_AFTER_PRINT_DEFERRAL.md) -
-  future non-physical-print tracker while real-printer validation is deferred.
-- [SCIENTIFIC_AGENT_SKILLS_EVALUATION.md](./SCIENTIFIC_AGENT_SKILLS_EVALUATION.md) -
-  optional scientific lookup skill whitelist and install-risk review.
-- [AUTONOMOUS_WORKFLOW.md](./AUTONOMOUS_WORKFLOW.md) - continuation, verification,
-  push, and stop rules.
-- [PRINT_LABEL_CONTRACT.md](./PRINT_LABEL_CONTRACT.md) - print safety contract.
-- [BATCH_LABEL_PRINT_REFACTOR_PLAN.md](./BATCH_LABEL_PRINT_REFACTOR_PLAN.md) -
-  fixed-stock, purpose-first batch label printing plan.
-- [PRINT_OUTPUT_REFACTOR_PLAN.md](./PRINT_OUTPUT_REFACTOR_PLAN.md) - current print
-  workflow baseline.
-- [PHYSICAL_PRINT_VALIDATION_CHECKLIST.md](./PHYSICAL_PRINT_VALIDATION_CHECKLIST.md) -
-  deferred real-printer validation checklist.
+Planning, status, QA, and design notes live in
+[docs/maintainers/](./docs/maintainers/README.md); the canonical entry point is
+[PROJECT_STATUS_AND_NEXT_PLAN.md](./docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md).
+Coding agents start at [AGENTS.md](./AGENTS.md).
 
 ## Reporting Corrections
 

@@ -186,8 +186,8 @@ Proof: output-plan state behavior is unchanged, direct duplication is removed, m
 ### Task 8: Final integration, deployment, and diagnostic closure
 
 **Files:**
-- Modify: `PROJECT_STATUS_AND_NEXT_PLAN.md`
-- Modify: `NEXT_PRODUCT_WORK.md`
+- Modify: `docs/maintainers/PROJECT_STATUS_AND_NEXT_PLAN.md`
+- Modify: `docs/maintainers/NEXT_PRODUCT_WORK.md`
 - Create: `docs/evidence/2026-07-15-diagnostic-closure.md`
 
 - [ ] Run backend full tests, frontend full tests, lint, build, i18n/docs drift, coverage, print contract, dependency manifest, Docker parity, and bundle gates.

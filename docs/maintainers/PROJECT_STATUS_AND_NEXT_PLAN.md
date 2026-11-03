@@ -130,7 +130,7 @@ the backend deploys natively rather than from GitHub, so Railway's GitHub token
 reset does not affect it. Decision: change nothing, because a variable change
 triggers a redeploy and Railway warns that redeploying pre-incident builds
 fails. `/api/health` was healthy at `4c04559`
-on 2026-10-23. Tracking: `Mac mini設置/Railway安全通報-換鑰匙清單-20261023.md`.
+on 2026-10-23.
 
 ## Release checkpoint — 2026-10-09 (`4c04559`)
 
@@ -398,23 +398,16 @@ changing product direction, label-printing models, data trust boundaries,
 workflow simplification, or multi-surface UX behavior when the acceptance
 standard is not already clear.
 
-Persona integration and survey research:
-`PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md` defines how to turn
-role-based workflows into scenario gates and how to use external survey
-simulation as product-research input without treating it as GHS correctness or
-compliance validation. `PERSONA_SURVEY_REVIEW_PACKET.md` is the sanitized
-packet to use before uploading prompts or screenshots to LINER or another
-external review tool. `LINER_SURVEY_2026_06_02_FINDINGS.md` records the first
-external survey dataset and the bounded Batch Review Self-Service Clarity slice
-opened from that evidence.
+Persona integration: role-based workflows are pinned as scenario gates in
+`frontend/src/__tests__/persona*.integration.test.js`. Simulated or external
+survey feedback is product-research input only; it is never GHS correctness,
+SDS, legal, or compliance validation. The first simulated survey opened the
+bounded Batch Review Self-Service Clarity slice, and its write-up is no longer
+kept in this repository.
 
-External design exploration: `CLAUDE_DESIGN_UI_REVIEW_PACKET.md` is the
-sanitized Claude Design upload/prompt packet for UI hierarchy, design-system,
-and implementation-handoff exploration. Use it only for design critique and
-handoff; do not treat Claude Design output as GHS, SDS, legal, data-trust, or
-print-safety authority. `CLAUDE_DESIGN_ADOPTION_PLAN.md` filters downloaded
-Claude Design handoffs into Adopt / Adapt / Reject / Needs Discussion before
-any product UI implementation. Do not apply Claude Design mock code directly.
+External design exploration: output from an external design tool is advisory
+input for UI hierarchy and handoff language only. It is not GHS, SDS, legal,
+data-trust, or print-safety authority, and mock code is never applied directly.
 
 Production UI checkpoint: `PRODUCTION_UI_CHECKPOINT_2026_06_18.md` records
 the shipped experiment-notebook main-screen and simplified print-workflow
@@ -422,10 +415,6 @@ polish baseline, the deployed SHA, green production QA, and the visual
 acceptance screenshot package. Treat that slice as closed unless fresh
 screenshot, PDF, physical-print, CI/deployment, or admin/export evidence opens
 a concrete new issue.
-
-Migration handoff: `MAC_MIGRATION_HANDOFF.md` records how to preserve project
-context in GitHub and resume development on the Mac mini M4 without committing
-local secrets, generated files, ignored databases, or temporary design zips.
 
 Proactive insight habit: `AUTONOMOUS_WORKFLOW.md` requires each meaningful
 work slice to surface newly noticed blind spots, repeated-fix patterns,
@@ -1557,10 +1546,9 @@ Current status:
   on phone-width viewports, keeping chemical identity, GHS pictograms, signal
   word, detail action, and SDS action inside the viewport instead of requiring
   horizontal table scrolling.
-- Brand/support boundaries are now pinned in `BRANDED_UTILITY_STRATEGY.md`:
-  conversion surfaces must stay outside GHS icons, signal words, H/P
-  statements, SDS authority copy, blocked-output warnings, and printed label
-  bodies.
+- Brand/support boundaries stay explicit: conversion surfaces must stay outside
+  GHS icons, signal words, H/P statements, SDS authority copy, blocked-output
+  warnings, and printed label bodies.
 - The detail modal's same-chemical classification comparison uses readable
   stacked cards on narrow viewports instead of a desktop-width comparison
   table, so alternate GHS reports can be inspected without horizontal dragging.
@@ -1662,20 +1650,11 @@ Use these files by role:
 
 - `AGENTS.md`: project context, architecture, current runtime state, and
   session bootstrap guidance.
-- `CLAUDE.md`: short compatibility entry point that delegates to `AGENTS.md`,
-  this file, `AUTONOMOUS_WORKFLOW.md`, and the future tracker.
+- `CLAUDE.md`: short compatibility entry point that delegates to `AGENTS.md`.
 - `AUTONOMOUS_WORKFLOW.md`: standing approval, default work loop, stop
   conditions, and verification rules.
 - `PRODUCT_SCOPE_GATE.md`: project-level scope alignment workflow for broad
   product decisions and repeated rework risks.
-- `PERSONA_INTEGRATION_AND_SURVEY_RESEARCH_PLAN.md`: planned persona-based
-  integration and survey-research owner doc for role-level workflow validation
-  beyond feature/block QA gates.
-- `PERSONA_SURVEY_REVIEW_PACKET.md`: safe external review packet with persona
-  prompts, screenshot checklist, output schema, and research-to-backlog rules.
-- `LINER_SURVEY_2026_06_02_FINDINGS.md`: first LINER survey findings, role
-  coverage, quantified signals, and the evidence-bounded batch review clarity
-  decision.
 - Repository hygiene, code splitting, the Batch-First handoff/export closure
   scope, and the Batch-First closure-audit patch have reviewable scopes.
   Future work should start from a new evidence-driven slice rather than
@@ -1731,6 +1710,6 @@ Use these files by role:
   history, not the active user-facing print model.
 - `NEXT_PRINT_WORKSTREAMS.md`: completed print workstream baseline; supporting
   history, not the active live queue.
-- `DESIGN.md`, `BRANDED_UTILITY_STRATEGY.md`, and `REDESIGN_ROADMAP.md`:
-  productized utility design direction; supporting history for the
-  shipped/monitoring Batch-First baseline and future evidence-driven slices.
+- `DESIGN.md` and `REDESIGN_ROADMAP.md`: productized utility design direction;
+  supporting history for the shipped/monitoring Batch-First baseline and future
+  evidence-driven slices.
