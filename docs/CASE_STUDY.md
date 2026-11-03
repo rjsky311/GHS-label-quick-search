@@ -64,4 +64,5 @@ stay under the owner's control.
 
 ## Code
 
-This repository. MIT License.
+This repository. MIT License. Planning, status, and QA notes for maintainers
+are indexed in [docs/maintainers/](./maintainers/README.md).
