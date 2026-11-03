@@ -25,8 +25,8 @@ Live at <https://ghs.yuchelab.com>.
 ## How it was built
 
 One person owns the product: Yu-Che Lin, a PhD chemist in organic electronic
-materials. Most of the code was written by AI coding agents (OpenAI Codex and
-Anthropic Claude) working from written specs. The split of work:
+materials, who wrote the specs and decides what ships. OpenAI Codex and Claude
+Code (Anthropic) wrote most of the code from those specs. The split of work:
 
 | Owner | Agents |
 |---|---|
