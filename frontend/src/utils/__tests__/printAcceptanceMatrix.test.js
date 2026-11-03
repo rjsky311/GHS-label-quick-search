@@ -27,10 +27,12 @@ const completeProfile = {
   address: "Taipei",
 };
 
-const hydrochloricAcid = {
+// CAS 7647-01-0 is hydrogen chloride; its data includes the gas (GHS04),
+// so this fixture is not a hydrochloric acid solution label.
+const hydrogenChloride = {
   cas_number: "7647-01-0",
-  name_en: "Hydrochloric Acid",
-  name_zh: "鹽酸",
+  name_en: "Hydrogen chloride",
+  name_zh: "氯化氫",
   cid: 313,
   ghs_pictograms: [
     { code: "GHS04" },
@@ -117,11 +119,11 @@ const expandedPictogramCodes = (preview) =>
       : (label.ghs_pictograms || []).map((pictogram) => pictogram.code),
   );
 
-const hydrochloricPictogramCodes = ["GHS04", "GHS05", "GHS06", "GHS07"];
+const hydrogenChloridePictogramCodes = ["GHS04", "GHS05", "GHS06", "GHS07"];
 
 const mmValue = (value) => Number.parseFloat(String(value).replace("mm", ""));
 
-const hydrochloricTargetMatrix = [
+const hydrogenChlorideTargetMatrix = [
   {
     id: "complete-a4",
     labelPurpose: "shipping",
@@ -165,7 +167,7 @@ const colorModeMatrix = ["color", "bw"];
 
 describe("print acceptance matrix", () => {
   it.each(
-    hydrochloricTargetMatrix.flatMap((target) =>
+    hydrogenChlorideTargetMatrix.flatMap((target) =>
       nameDisplayMatrix.flatMap((nameDisplay) =>
         colorModeMatrix.map((colorMode) => ({
           ...target,
@@ -176,7 +178,7 @@ describe("print acceptance matrix", () => {
       ),
     ),
   )(
-    "keeps hydrochloric acid printable across the production target matrix: $caseName",
+    "keeps hydrogen chloride (7647-01-0) printable across the production target matrix: $caseName",
     ({
       labelPurpose,
       template,
@@ -200,12 +202,12 @@ describe("print acceptance matrix", () => {
           ? completeProfile
           : {};
       const plan = buildPrintOutputPlan({
-        selectedForLabel: [hydrochloricAcid],
+        selectedForLabel: [hydrogenChloride],
         layout,
         resolvedLabProfile: profile,
         locale: nameDisplay === "en" ? "en-US" : "zh-TW",
       });
-      const preview = previewLabel(hydrochloricAcid, labelConfig, profile);
+      const preview = previewLabel(hydrogenChloride, labelConfig, profile);
 
       expect(plan.canPrint).toBe(true);
       expect(plan.outputKind).toBe(expectedKind);
@@ -215,9 +217,9 @@ describe("print acceptance matrix", () => {
       );
       expect(preview.fragmentHtml).not.toContain("more-pics");
       if (template === "qrcode") {
-        expect(expandedPictogramCodes(preview)).toEqual(hydrochloricPictogramCodes);
+        expect(expandedPictogramCodes(preview)).toEqual(hydrogenChloridePictogramCodes);
       } else {
-        expectEveryPictogram(preview.fragmentHtml, hydrochloricPictogramCodes);
+        expectEveryPictogram(preview.fragmentHtml, hydrogenChloridePictogramCodes);
       }
 
       if (expectsQr) {
@@ -233,7 +235,7 @@ describe("print acceptance matrix", () => {
   );
 
   it("renders complete A4 primary labels with QR and complete H/P text", () => {
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "a4-primary",
@@ -250,16 +252,16 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).not.toContain("hazard-more");
     expect(preview.fragmentHtml).not.toContain("precaution-more");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
-    hydrochloricAcid.hazard_statements.forEach((statement) => {
+    hydrogenChloride.hazard_statements.forEach((statement) => {
       expect(preview.fragmentHtml).toContain(`>${statement.code}</span>`);
     });
-    hydrochloricAcid.precautionary_statements.forEach((statement) => {
+    hydrogenChloride.precautionary_statements.forEach((statement) => {
       expect(preview.fragmentHtml).toContain(`>${statement.code}</span>`);
     });
   });
 
   it("renders complete Letter primary labels on Letter paper with QR", () => {
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "letter-primary",
@@ -284,12 +286,12 @@ describe("print acceptance matrix", () => {
       nameDisplay: "both",
     });
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [hydrochloricAcid],
+      selectedForLabel: [hydrogenChloride],
       layout,
       resolvedLabProfile: {},
       locale: "zh-TW",
     });
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "medium-bottle",
@@ -312,12 +314,12 @@ describe("print acceptance matrix", () => {
       nameDisplay: "both",
     });
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [hydrochloricAcid],
+      selectedForLabel: [hydrogenChloride],
       layout,
       resolvedLabProfile: completeProfile,
       locale: "zh-TW",
     });
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "large-primary",
@@ -332,7 +334,7 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("H314");
     expect(preview.fragmentHtml).not.toContain("P234");
     // Container front labels keep every H code instead of a "+N more" marker.
-    hydrochloricAcid.hazard_statements.forEach((statement) => {
+    hydrogenChloride.hazard_statements.forEach((statement) => {
       expect(preview.fragmentHtml).toContain(statement.code);
     });
     expect(preview.fragmentHtml).not.toContain("hazard-more");
@@ -348,12 +350,12 @@ describe("print acceptance matrix", () => {
       nameDisplay: "both",
     });
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [hydrochloricAcid],
+      selectedForLabel: [hydrogenChloride],
       layout,
       resolvedLabProfile: completeProfile,
       locale: "en-US",
     });
-    const supplementalPreview = previewLabel(hydrochloricAcid, {
+    const supplementalPreview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "avery-5163",
@@ -368,7 +370,7 @@ describe("print acceptance matrix", () => {
   });
 
   it("uses a strip pictogram row for small supplemental stock", () => {
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "small-strip",
@@ -389,12 +391,12 @@ describe("print acceptance matrix", () => {
       nameDisplay: "both",
     });
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [hydrochloricAcid],
+      selectedForLabel: [hydrogenChloride],
       layout,
       resolvedLabProfile: {},
       locale: "zh-TW",
     });
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "quickId",
       template: "icon",
       stockPreset: "small-strip",
@@ -408,8 +410,8 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-form-strip");
     expect(preview.fragmentHtml).toContain("small-cas");
     expect(preview.fragmentHtml).toContain("7647-01-0");
-    expect(preview.fragmentHtml).toContain("Hydrochloric Acid");
-    expect(preview.fragmentHtml).toContain(hydrochloricAcid.name_zh);
+    expect(preview.fragmentHtml).toContain("Hydrogen chloride");
+    expect(preview.fragmentHtml).toContain(hydrogenChloride.name_zh);
     expect(preview.fragmentHtml).not.toContain("qrcode-img");
     expect(preview.fragmentHtml).not.toContain("more-pics");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
@@ -463,7 +465,7 @@ describe("print acceptance matrix", () => {
     expect(layout.formFactor).toBe("strip");
 
     const plan = buildPrintOutputPlan({
-      selectedForLabel: [hydrochloricAcid],
+      selectedForLabel: [hydrogenChloride],
       layout,
       resolvedLabProfile: completeProfile,
       locale: "zh-TW",
@@ -475,7 +477,7 @@ describe("print acceptance matrix", () => {
   });
 
   it("still lets custom supplemental stock print an honest compact hazard label with every pictogram", () => {
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "custom",
@@ -493,7 +495,7 @@ describe("print acceptance matrix", () => {
   });
 
   it("renders QR small labels with complete identity even when English-only is requested", () => {
-    const preview = previewLabel(hydrochloricAcid, {
+    const preview = previewLabel(hydrogenChloride, {
       labelPurpose: "qrSupplement",
       template: "qrcode",
       stockPreset: "brother-62mm-continuous",
@@ -505,8 +507,8 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("label-kind-qr-supplement");
     expect(preview.fragmentHtml).toContain("qrcode-img");
     expect(preview.fragmentHtml).toContain("small-cas");
-    expect(preview.fragmentHtml).toContain("Hydrochloric Acid");
-    expect(preview.fragmentHtml).toContain(hydrochloricAcid.name_zh);
+    expect(preview.fragmentHtml).toContain("Hydrogen chloride");
+    expect(preview.fragmentHtml).toContain(hydrogenChloride.name_zh);
     expect(expandedPictogramCodes(preview)).toEqual([
       "GHS04",
       "GHS05",
@@ -517,13 +519,13 @@ describe("print acceptance matrix", () => {
   });
 
   it("makes orientation and page-size changes visible in preview and print HTML", () => {
-    const strip = previewLabel(hydrochloricAcid, {
+    const strip = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "standard",
       stockPreset: "small-strip",
       nameDisplay: "en",
     }, {});
-    const letter = previewLabel(hydrochloricAcid, {
+    const letter = previewLabel(hydrogenChloride, {
       labelPurpose: "shipping",
       template: "full",
       stockPreset: "letter-primary",

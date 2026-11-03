@@ -1,6 +1,7 @@
 import { Tag, FileSpreadsheet, FileText, Star, X, PenLine, Filter, ArrowUpDown, ArrowUp, ArrowDown, Search, ShieldCheck, LayoutGrid, Printer, ChevronDown, ChevronRight, ExternalLink, Info } from "@/components/icons";
 import { useTranslation } from "react-i18next";
 import GHSPictogramStrip from "@/components/GHSPictogramStrip";
+import SubstanceScopeNotes from "@/components/SubstanceScopeNotes";
 import { Button } from "@/components/ui/button";
 import { getPubChemSDSUrl } from "@/utils/sdsLinks";
 import { hasGhsData } from "@/utils/ghsAvailability";
@@ -1224,6 +1225,11 @@ export default function ResultsTable({
                               {displayNames.secondary}
                             </div>
                           )}
+                          <SubstanceScopeNotes
+                            chemical={result}
+                            compact
+                            testId={`result-substance-notes-${result.cas_number}`}
+                          />
                           {/* Provenance chips (v1.8 M1). Compact, glanceable.
                               Full provenance (timestamp, full source text) lives
                               in the detail modal to keep the results table

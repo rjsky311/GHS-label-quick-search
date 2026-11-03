@@ -982,6 +982,23 @@ export const buildPrintStyles = (model) => {
     .prepared-identity-block .prepared-solvent-hazards {
       grid-column: 1 / -1;
     }
+    .substance-scope-notes {
+      margin-top: 0.7mm;
+      display: grid;
+      gap: 0.4mm;
+    }
+    .substance-scope-note {
+      padding: 0.45mm 0.8mm;
+      border-radius: 0.5mm;
+      font-size: calc(${layout.typography.fontSize} - 2px);
+      font-weight: 600;
+      line-height: 1.2;
+      color: #78350f;
+      background: #fffbeb;
+      border: 0.22mm solid #fcd34d;
+      border-left: 1.1mm solid #d97706;
+      word-break: break-word;
+    }
     .meta-chip-prepared-solvent-missing {
       color: #7f1d1d;
       border-color: #dc2626;
@@ -2352,6 +2369,7 @@ export const buildPrintStyles = (model) => {
           body.print-bw .prepared-note,
           body.print-bw .prepared-parent-warning,
           body.print-bw .prepared-solvent-hazards,
+          body.print-bw .substance-scope-note,
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
           body.print-bw .hazard-text-omitted,

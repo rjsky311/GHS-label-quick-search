@@ -243,7 +243,7 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinPictogramSidePx: 26,
     expectedPrintMinQrSidePx: 0,
     expectedRequiredIdentityText: "",
-    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
+    expectedRequiredIdentityTexts: ["Hydrogen chloride", "Ethanol"],
     expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
   });
 
@@ -290,7 +290,7 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinQrSidePx: 48,
     expectedRequiredIdentityText: "",
     expectedRequiredIdentityTexts: [
-      "Hydrochloric Acid",
+      "Hydrogen chloride",
       "Peracetic Acid Solution",
     ],
     expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
@@ -319,7 +319,7 @@ const maybeWritePrintArtifacts = () => {
     expectedPrintMinPictogramSidePx: 18,
     expectedPrintMinQrSidePx: 30,
     expectedRequiredIdentityText: "",
-    expectedRequiredIdentityTexts: ["Hydrochloric Acid", "Ethanol"],
+    expectedRequiredIdentityTexts: ["Hydrogen chloride", "Ethanol"],
     expectedForbiddenIdentityTexts: ["Urea", "Pending Supplier Verification Item"],
   });
 
@@ -357,9 +357,9 @@ describe("print QA matrix report", () => {
       { locale: testCase.locale },
     );
 
-    expect(documentBundle.html).toContain("Hydrochloric Acid");
+    expect(documentBundle.html).toContain("Hydrogen chloride");
     expect(documentBundle.html).toContain("Hazard statements");
-    expect(documentBundle.html).not.toContain("鹽酸");
+    expect(documentBundle.html).not.toContain("氯化氫");
     expect(documentBundle.html).not.toContain("危險 / Danger");
     expect(documentBundle.html).not.toContain("內含高壓氣體");
     expect(documentBundle.html).not.toContain("危害說明");
@@ -759,7 +759,7 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["a4-primary-zh-bw"]).toMatchObject({
       expectedColorMode: "bw",
       expectedNameDisplay: "both",
-      expectedRequiredIdentityTexts: ["鹽酸", "Hydrochloric Acid"],
+      expectedRequiredIdentityTexts: ["氯化氫", "Hydrogen chloride"],
       expectedForbiddenIdentityTexts: [],
     });
 
@@ -778,8 +778,8 @@ describe("print QA matrix report", () => {
     expect(browserCaseById["letter-primary-en-bw"]).toMatchObject({
       expectedColorMode: "bw",
       expectedNameDisplay: "en",
-      expectedRequiredIdentityTexts: ["Hydrochloric Acid"],
-      expectedForbiddenIdentityTexts: ["鹽酸"],
+      expectedRequiredIdentityTexts: ["Hydrogen chloride"],
+      expectedForbiddenIdentityTexts: ["氯化氫"],
     });
 
     expect(byId["ethylene-oxide-a4-primary-continuation"]).toMatchObject({
@@ -1164,8 +1164,8 @@ describe("print QA matrix report", () => {
       expectedStockPreset: "small-strip",
       expectedHasSignalWord: false,
       expectedIdentityTexts: expect.arrayContaining([
-        "Hydrochloric Acid",
-        "鹽酸",
+        "Hydrogen chloride",
+        "氯化氫",
       ]),
       expectedMinPictogramSidePx: 26,
       expectedMinQrSidePx: 0,

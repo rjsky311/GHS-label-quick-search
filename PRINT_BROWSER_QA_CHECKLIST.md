@@ -98,7 +98,7 @@ evidence, include this row in manual/browser QA before accepting the slice:
 
 | Browser target | Path | Expected result |
 | --- | --- | --- |
-| iOS Safari and Android Chrome | Open Hydrochloric Acid / 鹽酸 (`7647-01-0`), open label print, verify mobile shows `下載 PDF` / `Download PDF` as the primary handoff and browser print remains reachable; export Complete A4/Letter, QR small label, and Identification small label through `/api/print/pdf`. | Each PDF has no browser URL/date/page headers or footers, no edge clipping, no near-empty trailing page, crisp QR/pictograms, correct Traditional Chinese glyphs, and the same preflight blocks as browser print. |
+| iOS Safari and Android Chrome | Open Hydrogen chloride / 氯化氫 (`7647-01-0`; search `鹽酸` also resolves here), open label print, verify mobile shows `下載 PDF` / `Download PDF` as the primary handoff and browser print remains reachable; export Complete A4/Letter, QR small label, and Identification small label through `/api/print/pdf`. | Each PDF has no browser URL/date/page headers or footers, no edge clipping, no near-empty trailing page, crisp QR/pictograms, correct Traditional Chinese glyphs, and the same preflight blocks as browser print. |
 
 After generating `build/print-qa-report.json`, the production handoff can be
 checked with a local Chrome/Edge browser:
@@ -271,11 +271,20 @@ pictogram unity, trust/source/SDS boundaries, prepared reprints, and
 whole-product UX/support positioning. Use this gate when closing broad
 productization rounds rather than a single renderer or search-table fix.
 
-## Baseline Scenario: Hydrochloric Acid
+## Baseline Scenario: Hydrogen Chloride (`7647-01-0`)
+
+CAS 7647-01-0 is hydrogen chloride. Its PubChem GHS data includes the gas, so
+it can show gas-only pictograms such as `GHS04`. That is the data for this
+CAS, not the expected label for a hydrochloric acid solution: do not use
+`GHS04` as a pass condition for "hydrochloric acid".
 
 1. Open the browser target.
-2. Search `7647-01-0`.
-3. Confirm the result contains `Hydrochloric Acid`.
+2. Search `7647-01-0`, then search `hydrochloric acid` and `鹽酸`.
+3. Confirm every search resolves to `7647-01-0` labelled `Hydrogen chloride` /
+   `氯化氫`, and the result row and detail view show the substance note (the
+   classification is for hydrogen chloride including the gas; solution
+   supplier labels are usually GHS05 and GHS07 with H290, H314, H335; the SDS
+   of the bottle in hand governs).
 4. Select the result checkbox.
 5. Open `Print Labels`.
 6. Confirm the modal decision summary says:
@@ -311,7 +320,11 @@ For both A4 Primary and Letter Primary:
 - Select the stock button.
 - Confirm `label-kind-complete-primary` is present in the label preview
   fragment.
-- Confirm `GHS04`, `GHS05`, `GHS06`, and `GHS07` are present.
+- Confirm every pictogram in the current lookup data is present (never
+  hidden). For `7647-01-0` that is the hydrogen chloride classification; check
+  the set against the result row, not against a fixed list.
+- Confirm the substance note prints on the complete label and shows in the
+  preview notes.
 - Confirm no `<img class="qrcode-img">` appears in the primary label fragment.
 - Confirm no `hazard-more`, `precaution-more`, or `more-pics` marker appears.
 - Confirm the print action is enabled only when the responsible profile is

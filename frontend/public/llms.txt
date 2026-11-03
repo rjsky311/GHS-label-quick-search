@@ -22,7 +22,9 @@ not approval, and not compliance advice.
 - Verify hazard communication against SDS, supplier labels, and local regulations
   before use.
 - Use `reference_links`, `review_flags`, `upstream`, and `authority_boundary`
-  fields to decide whether human review is needed.
+  fields to decide whether human review is needed. A `substance_scope_note`
+  flag means `substance_notes` explains which substance the GHS data covers
+  (for example CAS 7647-01-0 is hydrogen chloride, including the gas).
 - Retry later when `upstream.upstream_error` is true.
 
 ## Boundaries

@@ -20,6 +20,7 @@ import {
   getRecordedSolventHazards,
   getSolventHazardDisplayName,
 } from "@/utils/preparedSolventHazards";
+import { getSubstanceNoteText, getSubstanceNotes } from "@/utils/substanceNotes";
 
 export const READINESS_TONE_CLASSES = {
   ready:
@@ -252,6 +253,18 @@ export function buildPreparedSolventRisk({ previewChem, locale = "en", tx }) {
     );
   }
   return "";
+}
+
+/**
+ * Preview notes for substance scope reminders (e.g. CAS 7647-01-0 is
+ * hydrogen chloride including the gas). Shown first, like the solvent note.
+ */
+export function buildSubstanceNoteRisks({ previewChem, locale = "en", tx }) {
+  return getSubstanceNotes(previewChem).map((note) =>
+    tx("label.previewRiskSubstanceNote", "Substance note: {{note}}", {
+      note: getSubstanceNoteText(note, locale),
+    }),
+  );
 }
 
 export function buildPreviewRisks({

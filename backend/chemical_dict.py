@@ -1411,14 +1411,17 @@ CAS_TO_ZH = {
     "7646-79-9": "氯化鈷(II)",
     "7646-85-7": "氯化鋅",
     "7646-93-7": "硫酸氫鉀",
-    "7647-01-0": "鹽酸",
+    # 7647-01-0 is hydrogen chloride; its PubChem GHS data includes the gas.
+    # "鹽酸" (the aqueous acid) stays a search alias in ALIASES_ZH.
+    "7647-01-0": "氯化氫",
     "7647-10-1": "氯化鈀(II)",
     "7647-14-5": "氯化鈉 (食鹽)",
     "765-03-7": "1-十二炔",
     "765-10-6": "1-十四炔",
     "765-13-9": "1-十五炔",
     "7664-38-2": "磷酸",
-    "7664-41-7": "氨 (氨水)",
+    # Anhydrous ammonia. Ammonia water is 1336-21-6 (ALIASES_ZH "氨水").
+    "7664-41-7": "氨",
     "7664-93-9": "硫酸",
     "767-00-0": "4-氰基苯酚",
     "768-60-5": "4-乙炔基苯甲醚",
@@ -3124,7 +3127,7 @@ CAS_TO_EN = {
     "7646-79-9": "Cobalt(II) chloride",
     "7646-85-7": "Zinc chloride",
     "7646-93-7": "Potassium hydrogen sulphate",
-    "7647-01-0": "Hydrochloric acid",
+    "7647-01-0": "Hydrogen chloride",
     "7647-10-1": "Palladium(II) chloride",
     "7647-14-5": "Sodium chloride",
     "765-03-7": "1-Dodecyne",
@@ -4251,7 +4254,7 @@ CHEMICAL_NAMES_ZH_EXPANDED = {
     "aluminum chloride": "氯化鋁",
     "aluminum nitrate enneahydrate": "硝酸鋁九水合物",
     "aluminum oxide": "氧化鋁",
-    "ammonia": "氨 (氨水)",
+    "ammonia": "氨",
     "ammonium acetate": "醋酸銨",
     "ammonium chloride": "氯化銨",
     "ammonium fluoride": "氟化銨",
@@ -4600,6 +4603,7 @@ CHEMICAL_NAMES_ZH_EXPANDED = {
     "hydrazine monohydrate": "水合聯氨 (水合肼)",
     "hydriodic acid": "氫碘酸",
     "hydrochloric acid": "鹽酸",
+    "hydrogen chloride": "氯化氫",
     "hydrogen bromide": "溴化氫",
     "hydrogen fluoride pyridine complex (olah's reagent)": "氟化氫吡啶錯合物 (Olah試劑)",
     "hydrogen peroxide": "過氧化氫 (雙氧水)",
@@ -5320,7 +5324,7 @@ ALIASES_ZH = {
     "松節油": "8006-64-2",       # Turpentine
     "松香水": "8006-64-2",       # Turpentine (台灣常用)
     # ── 常見酸鹼 ──
-    "鹽酸": "7647-01-0",         # 氯化氫 Hydrochloric acid
+    "鹽酸": "7647-01-0",         # 氯化氫 Hydrogen chloride (GHS data includes the gas)
     "硫酸": "7664-93-9",         # Sulfuric acid
     "硝酸": "7697-37-2",         # Nitric acid
     "磷酸": "7664-38-2",         # Phosphoric acid
@@ -5417,6 +5421,7 @@ ALIASES_EN = {
     "mineral spirits": "64742-88-7",    # Stoddard solvent / mineral spirits
     "white spirit": "64742-88-7",       # Mineral spirits
     # ── Common acids/bases ──
+    "hydrochloric acid": "7647-01-0",   # Searches resolve to hydrogen chloride (GHS data includes the gas)
     "muriatic acid": "7647-01-0",       # Hydrochloric acid
     "battery acid": "7664-93-9",        # Sulfuric acid
     "oil of vitriol": "7664-93-9",      # Sulfuric acid

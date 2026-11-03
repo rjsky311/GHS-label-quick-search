@@ -80,6 +80,7 @@ import {
   getRecordedSolventHazards,
   getSolventHazardDisplayName,
 } from "@/utils/preparedSolventHazards";
+import { getSubstanceNotes } from "@/utils/substanceNotes";
 import { buildPrintStyles } from "@/utils/printLabelStyles";
 import { buildPrintPreviewStyles } from "@/utils/printPreviewStyles";
 
@@ -844,6 +845,22 @@ const renderPreparedSolventHazards = (chemical, model) => {
   )}">${escapeHtml(text)}</div>`;
 };
 
+// Which substance the GHS data describes (e.g. hydrogen chloride including
+// the gas, not hydrochloric acid solution). Printed on complete labels only;
+// QR and identification small labels carry no such text by contract.
+const renderSubstanceNotes = (chemical, model) => {
+  const notes = getSubstanceNotes(chemical);
+  if (notes.length === 0) return "";
+  return `<div class="substance-scope-notes" data-testid="substance-scope-notes">${notes
+    .map(
+      (note) =>
+        `<div class="substance-scope-note" data-substance-note-code="${escapeHtml(
+          note.code || "",
+        )}">${escapeHtml(getLocalizedTextForModel(note, model))}</div>`,
+    )
+    .join("")}</div>`;
+};
+
 const renderPreparedNote = (chemical, model, { fullPagePrimary = false } = {}) => {
   if (!isPrepared(chemical)) return "";
   const className = fullPagePrimary
@@ -1484,6 +1501,7 @@ const renderFullTemplate = (chemical, model) => {
             }),
           })}
           ${!fullPagePrimary ? renderContinuationBadge(continuation, model) : ""}
+          ${!continuation || continuation.current === 1 ? renderSubstanceNotes(effectiveChem, model) : ""}
           ${
             prepared
               ? fullPagePrimary

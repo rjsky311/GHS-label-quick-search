@@ -1,7 +1,9 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from substance_scope_notes import get_substance_scope_notes
 
 from export_helpers import _has_cjk_text
 from pilot_store import (
@@ -102,6 +104,16 @@ class ChemicalResult(BaseModel):
     retrieved_at: Optional[str] = None
     cache_hit: bool = False
     reference_links: List[Dict[str, Any]] = []
+    # Which substance the GHS data describes, when the everyday name points
+    # elsewhere (e.g. hydrochloric acid vs. hydrogen chloride). Reminders
+    # only; they never change the classification. See substance_scope_notes.
+    substance_notes: List[Dict[str, str]] = []
+
+    @model_validator(mode="after")
+    def attach_substance_scope_notes(self) -> "ChemicalResult":
+        if not self.substance_notes:
+            self.substance_notes = get_substance_scope_notes(self.cas_number)
+        return self
 
 
 class TelemetryEventPayload(BaseModel):

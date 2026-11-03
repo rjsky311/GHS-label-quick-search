@@ -12,6 +12,7 @@ import {
 } from "@/utils/printContentPolicy";
 import { hasTextOnlyGhsData } from "@/utils/ghsAvailability";
 import { planHazardStatementsForBudget } from "@/utils/printStatementPriority";
+import { getSubstanceNotes } from "@/utils/substanceNotes";
 import {
   isSmallLabelIdentityLayout,
   isFullPagePrimaryStockId,
@@ -873,11 +874,18 @@ export const estimatePrintContentTextWeight = (
   );
 
   const pictogramReserve = (content.counts?.pictograms || 0) * 26;
+  // Complete labels also print substance scope notes under the identity.
+  const substanceNoteWeight = getSubstanceNotes(content.effectiveChemical).reduce(
+    (total, note) =>
+      total + stringLength(getRenderedStatementText(note, layout, locale)),
+    0,
+  );
 
   return Math.round(
     statementWeight +
       identityTextWeight(content, layout, locale) +
-      pictogramReserve,
+      pictogramReserve +
+      substanceNoteWeight,
   );
 };
 

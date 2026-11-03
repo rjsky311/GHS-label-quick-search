@@ -21,6 +21,7 @@ The app uses multiple data sources with different roles:
 | Local seed dictionary | Search/name resolution aid | Does not override current GHS hazard data |
 | Manual dictionary entries | Admin-curated search/name resolution aid | Admin-gated; must not be treated as hazard classification authority |
 | Manual reference links | Admin-curated verification aids | Admin-gated; only `http`/`https`; typed as SDS, regulatory, occupational, or reference |
+| Substance scope notes (`backend/substance_scope_notes.py`) | Says which substance the GHS data covers when the everyday name points elsewhere (7647-01-0 is hydrogen chloride including the gas, not hydrochloric acid solution) | Reminder only, shown on results, detail, preview, and complete labels; never adds, removes, or changes pictograms, signal words, or H/P statements; every note cites its source |
 | SDS/supplier/local rules | Final authority for real use | Always mentioned in trust copy as required verification |
 
 Manual entries and aliases can help users find a CAS number. They must not

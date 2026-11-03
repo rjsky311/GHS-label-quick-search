@@ -28,6 +28,7 @@ import {
   hasRenderableGhsPictograms,
 } from "@/utils/ghsAvailability";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
+import SubstanceScopeNotes from "@/components/SubstanceScopeNotes";
 import { Button } from "@/components/ui/button";
 import {
   modalViewportBodyClassName,
@@ -405,6 +406,10 @@ export default function DetailModal({
           </div>
 
           <div className="space-y-6 p-6">
+          <SubstanceScopeNotes
+            chemical={result}
+            testId="detail-substance-notes"
+          />
           {missingChineseNameReportUrl ? (
             <div
               role="note"

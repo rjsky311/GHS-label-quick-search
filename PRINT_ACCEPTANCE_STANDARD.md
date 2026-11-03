@@ -221,25 +221,25 @@ Run this matrix before shipping print-workflow changes:
 
 | Chemical | Output | Language | Color | Required result |
 | --- | --- | --- | --- | --- |
-| Hydrochloric Acid | A4 Primary | Bilingual | Color | Complete primary continuation set when needed, QR included, no H/P summaries, all pictograms repeated, no clipping |
-| Hydrochloric Acid | Letter Primary | Bilingual | Color | Complete primary continuation set when needed, Letter page, QR included, all pictograms repeated, no clipping |
+| Hydrogen chloride (7647-01-0) | A4 Primary | Bilingual | Color | Complete primary continuation set when needed, QR included, no H/P summaries, all pictograms in the data repeated, substance note printed, no clipping |
+| Hydrogen chloride (7647-01-0) | Letter Primary | Bilingual | Color | Complete primary continuation set when needed, Letter page, QR included, all pictograms repeated, no clipping |
 | Formaldehyde | A4 Primary | Bilingual | Color | Complete primary continuation set, multiple pages, all pictograms repeated, no clipping |
-| Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
-| Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
-| Hydrochloric Acid | Large Primary | Bilingual | Color | Container front label when full content cannot fit; identity and pictograms are visually prominent, all pictograms, every H code (priority summaries or code chips), no `hazard-more` |
-| Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
-| Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
-| Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
-| Hydrochloric Acid | Small Rack Quick ID | Bilingual | Color | 54 x 32 mm compact output, all pictograms, CAS/signal/name visible, no visual overlap |
-| Hydrochloric Acid | Small Rack QR Supplement | Bilingual | Color | 54 x 32 mm QR supplement, QR plus all pictograms, no QR/pictogram collision |
-| Hydrochloric Acid | 62 mm Continuous Quick ID | Bilingual | Color | Compact roll output, all pictograms, identity chips do not clip or collide |
-| Hydrochloric Acid | Medium Rack Quick ID | Bilingual | Color | Stock-specific compact geometry, all pictograms, CAS/case identity remains readable |
-| Hydrochloric Acid | Medium Rack QR Supplement | Bilingual | Color | QR supplement on medium stock, QR and pictograms stay separated and visible |
-| Hydrochloric Acid | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
-| Hydrochloric Acid | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
-| Prepared Hydrochloric Acid | A4 Primary | Bilingual | Color | Prepared identity, concentration, solvent, CAS, signal word, all pictograms, and full H/P content remain visible |
-| Prepared Hydrochloric Acid | Standard Bottle | Bilingual | Color | Prepared supplemental output keeps parent identity, concentration, solvent, CAS, signal word, all pictograms, and truthful hazard summary |
-| Prepared Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Prepared quick-ID output keeps parent identity, concentration, solvent, CAS, signal word, and all pictograms without pretending to be complete primary |
+| Hydrogen chloride (7647-01-0) | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
+| Hydrogen chloride (7647-01-0) | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
+| Hydrogen chloride (7647-01-0) | Large Primary | Bilingual | Color | Container front label when full content cannot fit; identity and pictograms are visually prominent, all pictograms, every H code (priority summaries or code chips), no `hazard-more` |
+| Hydrogen chloride (7647-01-0) | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
+| Hydrogen chloride (7647-01-0) | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
+| Hydrogen chloride (7647-01-0) | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
+| Hydrogen chloride (7647-01-0) | Small Rack Quick ID | Bilingual | Color | 54 x 32 mm compact output, all pictograms, CAS/signal/name visible, no visual overlap |
+| Hydrogen chloride (7647-01-0) | Small Rack QR Supplement | Bilingual | Color | 54 x 32 mm QR supplement, QR plus all pictograms, no QR/pictogram collision |
+| Hydrogen chloride (7647-01-0) | 62 mm Continuous Quick ID | Bilingual | Color | Compact roll output, all pictograms, identity chips do not clip or collide |
+| Hydrogen chloride (7647-01-0) | Medium Rack Quick ID | Bilingual | Color | Stock-specific compact geometry, all pictograms, CAS/case identity remains readable |
+| Hydrogen chloride (7647-01-0) | Medium Rack QR Supplement | Bilingual | Color | QR supplement on medium stock, QR and pictograms stay separated and visible |
+| Hydrogen chloride (7647-01-0) | QR Supplement | English | B/W | QR present, all pictograms, no Chinese body text, B/W filter |
+| Hydrogen chloride (7647-01-0) | Custom tiny stock | Bilingual | Color | Cannot bypass full-page recommendation for complete primary; supplemental remains printable |
+| Prepared hydrogen chloride (7647-01-0) | A4 Primary | Bilingual | Color | Prepared identity, concentration, solvent, CAS, signal word, all pictograms, and full H/P content remain visible |
+| Prepared hydrogen chloride (7647-01-0) | Standard Bottle | Bilingual | Color | Prepared supplemental output keeps parent identity, concentration, solvent, CAS, signal word, all pictograms, and truthful hazard summary |
+| Prepared hydrogen chloride (7647-01-0) | Tube/Vial Quick ID | Bilingual | Color | Prepared quick-ID output keeps parent identity, concentration, solvent, CAS, signal word, and all pictograms without pretending to be complete primary |
 | Prepared chemical in Methanol | A4 Primary | Bilingual | Color | Methanol's pictograms and H/P statements are added by union, signal word is Danger, parent CAS stays, and the label says "Includes solvent hazards" with the solvent CAS |
 | Prepared chemical in Methanol, solvent lookup fails | A4 Primary | Bilingual | Color | Parent hazards print unchanged and the label prints "Solvent hazards not included"; the preview shows the same warning |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |

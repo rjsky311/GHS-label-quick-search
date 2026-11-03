@@ -22,6 +22,7 @@ import {
   buildBatchReviewCsv,
   buildPreparedSolventRisk,
   buildPreviewRisks,
+  buildSubstanceNoteRisks,
   formatMmValue,
   getBatchCategoryLabel,
   getBatchPurposeLabel,
@@ -510,10 +511,14 @@ export default function LabelPrintModal({
           ...previewRisks.filter((risk) => risk !== readyPreviewMessage),
         ]
       : previewRisks;
-  // The solvent note always shows, ahead of the planner's notice.
-  const visiblePreviewRisks = preparedSolventRisk
+  // Substance and solvent notes always show, ahead of the planner's notice.
+  const pinnedPreviewRisks = [
+    ...buildSubstanceNoteRisks({ previewChem, locale: currentLocale, tx }),
+    preparedSolventRisk,
+  ].filter(Boolean);
+  const visiblePreviewRisks = pinnedPreviewRisks.length
     ? [
-        preparedSolventRisk,
+        ...pinnedPreviewRisks,
         ...plannedPreviewRisks.filter((risk) => risk !== readyPreviewMessage),
       ]
     : plannedPreviewRisks;

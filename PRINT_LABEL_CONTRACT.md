@@ -33,6 +33,11 @@ The best path is a label workflow that a lab user can print without guessing:
   its H code, and the label shows how many statements are codes only. Space
   budgets fill by hazard severity, so chronic hazards such as H340/H350/H360
   and H372 are never the ones reduced first.
+- When the lookup data covers a different form than the everyday name (for
+  example CAS 7647-01-0 is hydrogen chloride including the gas, searched as
+  "hydrochloric acid"), the result, detail view, preview, and complete label
+  show the backend substance note. The note never changes or hides the
+  classification; QR and identification small labels carry no note text.
 - Prepared-solution labels start from the parent chemical's hazard data and
   are never reduced for concentration or dilution. When the solvent is not
   water, the solvent is looked up and its pictograms, H statements, and P
@@ -161,9 +166,9 @@ Automated tests should pin these behaviors:
 
 Run these in Browser Use after meaningful print-workflow changes:
 
-- Hydrochloric acid, shipped-container / full / Large Primary: the modal auto-applies A4 or Letter Primary, the print action is available when required profile data is complete, and all pictograms remain visible.
-- Hydrochloric acid on A4 or Letter Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
-- Hydrochloric acid after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
+- Hydrogen chloride (`7647-01-0`, searched as hydrochloric acid), shipped-container / full / Large Primary: the modal auto-applies A4 or Letter Primary, the print action is available when required profile data is complete, and all pictograms remain visible.
+- Hydrogen chloride (`7647-01-0`) on A4 or Letter Primary with an incomplete lab/supplier profile: print action remains disabled and the required-output checklist shows the missing profile fields.
+- Hydrogen chloride (`7647-01-0`) after completing lab/supplier name, phone, and address: print action becomes available; all pictograms remain visible in the live label preview.
 - A4 Primary preview shows the full label scaled inside the preview pane rather than cropping the top of the full-page label.
 - Ethanol, standard label: all pictograms visible; no `+N` pictogram summary appears.
 - QR small label: CAS, English name, Chinese name, QR, and every pictogram
