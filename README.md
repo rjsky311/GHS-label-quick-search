@@ -16,6 +16,26 @@ not as a legal compliance authority.
 - Deployment: Cloudflare Pages frontend and Railway backend, accepted only
   when both report the exact `origin/main` SHA
 
+## How It Is Built
+
+GHS Label Quick Search is built and maintained by one chemist, Yu-Che Lin
+(PhD, organic electronic materials), working with AI coding agents. The owner
+sets product and safety rules; agents implement them under written specs, and
+a second agent reviews and verifies each release.
+
+- Started January 2026; first prototyped on an AI app builder, then moved to a
+  self-owned React + FastAPI stack.
+- 371 backend test functions and about 1,300 frontend test cases, plus docs,
+  i18n-parity, bundle-budget, and print-contract checks in CI.
+- A release is accepted only when the frontend build and the backend health
+  endpoint report the same full `origin/main` commit and the production QA
+  scripts (health, search UI, PDF canary) pass.
+- Safety rules are written as contracts first and then enforced by tests; for
+  example, printing is blocked when a required GHS pictogram fails to load
+  (see [PRINT_LABEL_CONTRACT.md](./PRINT_LABEL_CONTRACT.md)).
+
+The longer write-up is in [docs/CASE_STUDY.md](./docs/CASE_STUDY.md).
+
 ## Safety Boundary
 
 This project is a safety-supporting reference utility. Users should verify
@@ -90,7 +110,7 @@ review tool.
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 ```
@@ -251,8 +271,10 @@ admin-gated, and traceable.
 
 ## License And Use
 
-No license file is currently included. Treat the code and data as private unless
-the project owner publishes an explicit license.
+The code is released under the [MIT License](./LICENSE). Hazard data comes
+from PubChem and the sources listed in
+[DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md](./DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md);
+check each source's own terms before reusing the data.
 
 This tool is provided as a reference aid. It does not replace SDS review,
 supplier labels, professional judgment, or local regulatory requirements.
