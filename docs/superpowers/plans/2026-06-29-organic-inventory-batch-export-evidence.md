@@ -15,7 +15,7 @@ row-level report stayed local/ignored.
 
 ## Evidence And Scope
 
-Source: `/Users/yuchelin/Downloads/最新藥品清冊 - Organic (1).csv`, selected by the owner in Finder on 2026-06-29 as an example/probe. Read-only triage found about 401 core inventory rows, hundreds of CAS-like rows, repeated CAS values, checksum/format-invalid CAS cells, at least one valid-CAS row with a blank source name, and many source-side `NO GHS` markers.
+Source: `~/Downloads/最新藥品清冊 - Organic (1).csv`, selected by the owner in Finder on 2026-06-29 as an example/probe. Read-only triage found about 401 core inventory rows, hundreds of CAS-like rows, repeated CAS values, checksum/format-invalid CAS cells, at least one valid-CAS row with a blank source name, and many source-side `NO GHS` markers.
 
 Affected user job: a user should be able to use a realistic noisy batch list to understand valid, excluded, duplicated, and review-only handoff states without silently treating invalid CAS cells or source roster notes as searchable/printable GHS truth.
 
@@ -153,7 +153,7 @@ Run:
 
 ```bash
 cd frontend
-npm run qa:inventory-print-samples -- --input "/Users/yuchelin/Downloads/最新藥品清冊 - Organic (1).csv" --output-dir build/organic-drug-list-evidence-2026-06-29 --source-name "Downloads/最新藥品清冊 - Organic (1).csv"
+npm run qa:inventory-print-samples -- --input "~/Downloads/最新藥品清冊 - Organic (1).csv" --output-dir build/organic-drug-list-evidence-2026-06-29 --source-name "Downloads/最新藥品清冊 - Organic (1).csv"
 ```
 
 Expected: command exits `0` and writes only ignored local build artifacts under `frontend/build/organic-drug-list-evidence-2026-06-29/`.
@@ -206,7 +206,7 @@ Run before completion:
 ```bash
 cd frontend
 npm run test:inventory-print-samples
-npm run qa:inventory-print-samples -- --input "/Users/yuchelin/Downloads/最新藥品清冊 - Organic (1).csv" --output-dir build/organic-drug-list-evidence-2026-06-29 --source-name "Downloads/最新藥品清冊 - Organic (1).csv"
+npm run qa:inventory-print-samples -- --input "~/Downloads/最新藥品清冊 - Organic (1).csv" --output-dir build/organic-drug-list-evidence-2026-06-29 --source-name "Downloads/最新藥品清冊 - Organic (1).csv"
 npm run test:docs
 cd ..
 git diff --check

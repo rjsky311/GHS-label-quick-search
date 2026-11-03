@@ -43,8 +43,8 @@ was fixed test-first so alias commits roll back cleanly and in-memory version
 state advances only after commit. The focused second pass reported no
 unresolved Critical or Important issue. Reports remain outside the repository:
 
-- `/Users/yuchelin/Documents/Mac mini設置/reports/second-opinions/20260716-140731-litellm-company-code-review.md`
-- `/Users/yuchelin/Documents/Mac mini設置/reports/second-opinions/20260716-141624-litellm-company-code-review.md`
+- `<owner-setup-notes>/reports/second-opinions/20260716-140731-litellm-company-code-review.md`
+- `<owner-setup-notes>/reports/second-opinions/20260716-141624-litellm-company-code-review.md`
 
 No Claude second-opinion route was used.
 

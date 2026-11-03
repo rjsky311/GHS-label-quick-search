@@ -13,7 +13,7 @@
 - Keep version `v1.10.0`; do not version-bump.
 - Do not deploy, call production QA, execute the Zeabur CLI, or mutate GitHub/Zeabur settings.
 - Do not touch the user's untracked design mockups or QA evidence in the original checkout.
-- Work only in `/Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation` on `codex/remediate-validated-findings`.
+- Work only in `<repo>-remediation` on `codex/remediate-validated-findings`.
 - Use TDD for every behavior change: add a narrowly focused failing test, record the expected failure, implement the minimum production change, then rerun focused and relevant regression tests.
 - Preserve the public three-output print model: Complete A4/Letter, QR small label, and Identification small label. Do not add H/P statements to small labels.
 - PubChem transient, malformed, or oversized responses must never become a successful “no hazard” result, a partial hazard result, or a cached value.
@@ -49,7 +49,7 @@
   From `backend/`:
 
   ```bash
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py -k 'malformed_ghs or structural_error or retries_408 or unexpected_non_absence'
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py -k 'malformed_ghs or structural_error or retries_408 or unexpected_non_absence'
   ```
 
   Expected RED evidence: the parser returns partial reports, malformed data is cached/exposed, 408 is not retried, and unexpected statuses do not raise.
@@ -67,15 +67,15 @@
 - [ ] **Step 4: Make the focused tests green**
 
   ```bash
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py -k 'malformed_ghs or structural_error or retries_408 or unexpected_non_absence'
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py -k 'malformed_ghs or structural_error or retries_408 or unexpected_non_absence'
   ```
 
 - [ ] **Step 5: Run task regressions and the full backend suite**
 
   ```bash
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py test_search_single_endpoint.py
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m py_compile server.py api_models.py api_validation.py export_helpers.py
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py test_search_single_endpoint.py
+  <repo>/backend/.venv/bin/python -m pytest -q
+  <repo>/backend/.venv/bin/python -m py_compile server.py api_models.py api_validation.py export_helpers.py
   ```
 
 - [ ] **Step 6: Self-review and commit**
@@ -83,8 +83,8 @@
   Verify no structural error path returns a partial prefix and no invalid response is cached. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add backend/server.py backend/test_name_search.py
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: fail closed on invalid PubChem hazard states"
+  git -C <repo>-remediation add backend/server.py backend/test_name_search.py
+  git -C <repo>-remediation commit -m "fix: fail closed on invalid PubChem hazard states"
   ```
 
 ---
@@ -114,7 +114,7 @@ Run test commands in this task from `backend/`.
 - [ ] **Step 2: Confirm RED**
 
   ```bash
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py -k 'byte_limit or payload_bytes or aggregate_byte_budget or currentBytes or oversize_skip'
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py -k 'byte_limit or payload_bytes or aggregate_byte_budget or currentBytes or oversize_skip'
   ```
 
 - [ ] **Step 3: Stream and bound decompressed upstream bytes**
@@ -138,10 +138,10 @@ Run test commands in this task from `backend/`.
 - [ ] **Step 5: Make focused and regression tests green**
 
   ```bash
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py -k 'byte_limit or payload_bytes or aggregate_byte_budget or currentBytes or oversize_skip'
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py test_search_single_endpoint.py
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m py_compile server.py pilot_admin_routes.py
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py -k 'byte_limit or payload_bytes or aggregate_byte_budget or currentBytes or oversize_skip'
+  <repo>/backend/.venv/bin/python -m pytest -q test_name_search.py test_observability.py test_search_single_endpoint.py
+  <repo>/backend/.venv/bin/python -m pytest -q
+  <repo>/backend/.venv/bin/python -m py_compile server.py pilot_admin_routes.py
   ```
 
 - [ ] **Step 6: Self-review and commit**
@@ -149,8 +149,8 @@ Run test commands in this task from `backend/`.
   Inspect the stream lifecycle, retry categories, entry sizing, and ops schema. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add backend/server.py backend/pilot_admin_routes.py backend/test_name_search.py backend/test_observability.py
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: bound PubChem response and cache bytes"
+  git -C <repo>-remediation add backend/server.py backend/pilot_admin_routes.py backend/test_name_search.py backend/test_observability.py
+  git -C <repo>-remediation commit -m "fix: bound PubChem response and cache bytes"
   ```
 
 ---
@@ -234,8 +234,8 @@ Run Node/npm commands in this task from `frontend/`; run git commands from the r
   Search for `npx zeabur`, permissive SHA slicing, and warning-only identity paths. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add .github/workflows/production-print-qa.yml frontend/package.json frontend/package-lock.json frontend/scripts
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: lock production QA trust inputs"
+  git -C <repo>-remediation add .github/workflows/production-print-qa.yml frontend/package.json frontend/package-lock.json frontend/scripts
+  git -C <repo>-remediation commit -m "fix: lock production QA trust inputs"
   ```
 
 ---
@@ -262,7 +262,7 @@ Run Node/npm commands in this task from `frontend/`; run git commands from the r
 - [ ] **Step 2: Confirm RED**
 
   ```bash
-  (cd backend && /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_pdf_render.py -k 'health')
+  (cd backend && <repo>/backend/.venv/bin/python -m pytest -q test_pdf_render.py -k 'health')
   (cd frontend && node --test scripts/__tests__/production-qa-trust.test.mjs)
   ```
 
@@ -285,9 +285,9 @@ Run Node/npm commands in this task from `frontend/`; run git commands from the r
 - [ ] **Step 4: Verify focused and full affected suites**
 
   ```bash
-  (cd backend && /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q test_pdf_render.py -k 'health')
+  (cd backend && <repo>/backend/.venv/bin/python -m pytest -q test_pdf_render.py -k 'health')
   (cd frontend && node --test scripts/__tests__/production-qa-trust.test.mjs)
-  (cd backend && /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q)
+  (cd backend && <repo>/backend/.venv/bin/python -m pytest -q)
   (cd frontend && npm run test:qa-scripts)
   (cd frontend && npm test -- --runInBand)
   (cd frontend && npm run build)
@@ -298,8 +298,8 @@ Run Node/npm commands in this task from `frontend/`; run git commands from the r
   Confirm health remains liveness-compatible while the release gate rejects degraded PDF capability. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add backend/server.py backend/test_pdf_render.py frontend/scripts
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: expose PDF readiness in health checks"
+  git -C <repo>-remediation add backend/server.py backend/test_pdf_render.py frontend/scripts
+  git -C <repo>-remediation commit -m "fix: expose PDF readiness in health checks"
   ```
 
 ---
@@ -354,8 +354,8 @@ Run test commands in this task from `frontend/`.
   Search for remaining independent sidebar setter paths and confirm the header API stays unchanged. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add frontend/src/App.jsx frontend/src/__tests__/App.sidebars.test.js
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: make app sidebars mutually exclusive"
+  git -C <repo>-remediation add frontend/src/App.jsx frontend/src/__tests__/App.sidebars.test.js
+  git -C <repo>-remediation commit -m "fix: make app sidebars mutually exclusive"
   ```
 
 ---
@@ -416,8 +416,8 @@ Run test commands in this task from `frontend/`.
   Check all async setters and mutation refreshes for generation guards. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add frontend/src/hooks/usePilotDashboard.js frontend/src/hooks/__tests__/usePilotDashboard.test.js
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: isolate pilot dashboard auth state"
+  git -C <repo>-remediation add frontend/src/hooks/usePilotDashboard.js frontend/src/hooks/__tests__/usePilotDashboard.test.js
+  git -C <repo>-remediation commit -m "fix: isolate pilot dashboard auth state"
   ```
 
 ---
@@ -479,8 +479,8 @@ Run test commands in this task from `frontend/`.
   Confirm browser and PDF share the same semantic source, per-item overrides are respected, previews remain available, and small-label content is unchanged. Commit:
 
   ```bash
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation add frontend/src/utils/printLabels.js frontend/src/utils/__tests__/printLabels.test.js
-  git -C /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation commit -m "fix: enforce semantic readiness at print handoff"
+  git -C <repo>-remediation add frontend/src/utils/printLabels.js frontend/src/utils/__tests__/printLabels.test.js
+  git -C <repo>-remediation commit -m "fix: enforce semantic readiness at print handoff"
   ```
 
 ---
@@ -492,11 +492,11 @@ Run test commands in this task from `frontend/`.
 - [ ] Run final verification from fresh command output:
 
   ```bash
-  cd /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation/backend
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m pytest -q
-  /Users/yuchelin/Documents/Projects/GHS-label-quick-search/backend/.venv/bin/python -m py_compile server.py api_models.py api_validation.py export_helpers.py h_code_translations.py h_code_coverage_audit.py
+  cd <repo>-remediation/backend
+  <repo>/backend/.venv/bin/python -m pytest -q
+  <repo>/backend/.venv/bin/python -m py_compile server.py api_models.py api_validation.py export_helpers.py h_code_translations.py h_code_coverage_audit.py
 
-  cd /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation/frontend
+  cd <repo>-remediation/frontend
   npm test -- --runInBand
   npm run test:i18n
   npm run test:docs
@@ -506,7 +506,7 @@ Run test commands in this task from `frontend/`.
   npm run build
   npm run qa:bundle-budget
 
-  cd /Users/yuchelin/Documents/Projects/GHS-label-quick-search-remediation
+  cd <repo>-remediation
   git diff --check
   git status --short --branch
   ```
