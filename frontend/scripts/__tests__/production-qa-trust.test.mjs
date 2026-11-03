@@ -401,6 +401,7 @@ test("retired Zeabur deployment artifacts cannot silently return", () => {
   const retiredPaths = [
     "zeabur.yaml",
     "zbpack.ghs-frontend.json",
+    "zbpack.ghs-backend.json",
     "Dockerfile.ghs-frontend",
     "backend/scripts/check_inline_dockerfile_parity.py",
     "backend/test_inline_dockerfile_parity.py",
