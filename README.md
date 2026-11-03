@@ -160,7 +160,8 @@ npm run test:docs
 ## Project Structure
 
 ```text
-README.md, AGENTS.md, CLAUDE.md     user entry point; coding-agent bootstrap (CLAUDE.md points to AGENTS.md)
+README.md                           user entry point
+AGENTS.md, CLAUDE.md                coding-agent bootstrap (CLAUDE.md points to AGENTS.md)
 PRINT_LABEL_CONTRACT.md             what a printed label must and must not contain
 DATA_GOVERNANCE_AND_SAFETY_BOUNDARIES.md
                                     source roles, authority, and curation boundaries
