@@ -15,6 +15,11 @@ import {
   resolveTrustedChineseName,
 } from "@/utils/ghsText";
 import { escapeCsvCell } from "@/utils/csvCell";
+import {
+  SOLVENT_HAZARD_STATUS,
+  getRecordedSolventHazards,
+  getSolventHazardDisplayName,
+} from "@/utils/preparedSolventHazards";
 
 export const READINESS_TONE_CLASSES = {
   ready:
@@ -223,6 +228,32 @@ export function resolveResponsibleProfile(customLabelFields = {}, labProfile = {
   };
 }
 
+/**
+ * Preview note for a prepared solution whose solvent is not water. It is
+ * kept outside buildPreviewRisks so the output planner's single notice
+ * cannot hide it: the caller always shows it first.
+ */
+export function buildPreparedSolventRisk({ previewChem, locale = "en", tx }) {
+  if (!previewChem?.isPreparedSolution) return "";
+  const solventHazards = getRecordedSolventHazards(previewChem);
+  if (solventHazards.status === SOLVENT_HAZARD_STATUS.NOT_INCLUDED) {
+    return tx(
+      "label.previewRiskSolventNotIncluded",
+      'Solvent hazards for "{{solvent}}" are not included. Check the solvent\'s SDS.',
+      { solvent: solventHazards.solvent },
+    );
+  }
+  if (solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED) {
+    const solventName = getSolventHazardDisplayName(solventHazards, locale);
+    return tx(
+      "label.previewRiskSolventIncluded",
+      "Hazards of the solvent {{solvent}} (CAS {{cas}}) are added to this label.",
+      { solvent: solventName, cas: solventHazards.solventCas || "-" },
+    );
+  }
+  return "";
+}
+
 export function buildPreviewRisks({
   previewChem,
   labelConfig,
@@ -241,6 +272,7 @@ export function buildPreviewRisks({
   }
 
   const risks = [];
+
   const longestName = displayNames.reduce(
     (longest, name) => Math.max(longest, name.length),
     0,

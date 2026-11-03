@@ -130,6 +130,7 @@ describe("buildPreparedSolutionItem", () => {
       preparedBy: null,
       preparedDate: null,
       expiryDate: null,
+      solventHazards: { status: "water", solvent: "Water" },
     });
   });
 

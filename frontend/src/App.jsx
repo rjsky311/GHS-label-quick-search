@@ -43,6 +43,7 @@ import {
   buildPresetRecord,
   buildRecentRecord,
 } from "@/utils/preparedSolution";
+import { getSolventLookupQuery } from "@/utils/preparedSolventHazards";
 import {
   PILOT_ADMIN_ENABLED,
 } from "@/constants/admin";
@@ -148,6 +149,10 @@ function App() {
   // selectedResult so closing DetailModal doesn't tear down the prepare
   // flow, and vice versa.
   const [prepareSolutionParent, setPrepareSolutionParent] = useState(null);
+  // True while a non-water solvent is looked up before a prepared label opens.
+  const [preparedSolventLookupPending, setPreparedSolventLookupPending] =
+    useState(false);
+  const preparedSolventLookupRef = useRef(0);
   // v1.9 M3 Tier 1: session flag for the prepared-solution print flow.
   // Flipped on at submit (we're entering LabelPrintModal with a prepared
   // item), flipped off when LabelPrintModal closes along with cleanup.
@@ -206,6 +211,29 @@ function App() {
       error?.code === "ERR_CANCELED" ||
       axios.isCancel?.(error),
     [],
+  );
+
+  // Prepared solutions: look a non-water solvent up through the normal
+  // single-search path so its hazards can join the label. Resolves to null
+  // for water, blank input, or any failure; the label then prints
+  // "Solvent hazards not included" for a non-water solvent. Cancellation
+  // is rethrown so the caller can stop.
+  const lookupPreparedSolvent = useCallback(
+    async (solvent, { signal } = {}) => {
+      const query = getSolventLookupQuery(solvent);
+      if (!query) return null;
+      try {
+        const response = await axios.get(`${API}/search-single`, {
+          params: { q: query },
+          ...(signal ? { signal } : {}),
+        });
+        return response?.data || null;
+      } catch (error) {
+        if (isCanceledRequest(error)) throw error;
+        return null;
+      }
+    },
+    [isCanceledRequest],
   );
 
   const invalidateFavoritePrintLookup = useCallback(() => {
@@ -1142,6 +1170,17 @@ function App() {
             .filter(Boolean),
         ),
       ];
+      // Prepared items whose solvent hazards were merged: look the solvent
+      // up again so the reprint carries current solvent data.
+      const solventCasNumbers = [
+        ...new Set(
+          historicalItems
+            .map((item) =>
+              item?.isPreparedSolution ? item?.preparedSolution?.solventCas || "" : "",
+            )
+            .filter((cas) => cas && !casNumbers.includes(cas)),
+        ),
+      ];
       invalidateFavoritePrintLookup();
       if (casNumbers.length === 0) {
         toast.error(
@@ -1161,7 +1200,7 @@ function App() {
       try {
         const response = await axios.post(
           `${API}/search`,
-          { cas_numbers: casNumbers },
+          { cas_numbers: [...casNumbers, ...solventCasNumbers] },
           { signal: controller.signal },
         );
         if (recentPrintRequestRef.current !== requestId) return;
@@ -1242,6 +1281,9 @@ function App() {
   // Cancel / close the PrepareSolutionModal without submitting.
   // Must not touch any selection state: user intent was "never mind".
   const handleClosePrepareSolution = useCallback(() => {
+    // Drop any solvent lookup still in flight so it cannot open a label.
+    preparedSolventLookupRef.current += 1;
+    setPreparedSolventLookupPending(false);
     setPreparedPresetNameDraft("");
     setPrepareSolutionParent(null);
   }, []);
@@ -1276,7 +1318,13 @@ function App() {
           toast.error(t("prepared.reprintParentUnavailable"));
           return;
         }
-        const preparedItem = buildPreparedSolutionItem(parent, record);
+        const solventResult = await lookupPreparedSolvent(record.solvent, {
+          signal: controller.signal,
+        });
+        if (!requestStillOwnsPrepared()) return;
+        const preparedItem = buildPreparedSolutionItem(parent, record, {
+          solventResult,
+        });
         if (!preparedItem) {
           toast.error(t("prepared.reprintBuildFailed"));
           return;
@@ -1302,6 +1350,7 @@ function App() {
       invalidateFavoritePrintLookup,
       invalidatePreparedReprintLookup,
       isCanceledRequest,
+      lookupPreparedSolvent,
       setSelectedForLabel,
       setLabelQuantities,
       t,
@@ -1312,13 +1361,11 @@ function App() {
   // close BOTH the prepare-solution modal and the underlying DetailModal,
   // then open LabelPrintModal. All state mutations happen in the same
   // tick so React batches them — no delegation to legacy handlers.
-  const handleSubmitPrepareSolution = useCallback(
-    (formValues) => {
-      if (!prepareSolutionParent) return;
-      const preparedItem = buildPreparedSolutionItem(
-        prepareSolutionParent,
-        formValues
-      );
+  const completePrepareSolutionSubmit = useCallback(
+    (parent, formValues, solventResult) => {
+      const preparedItem = buildPreparedSolutionItem(parent, formValues, {
+        solventResult,
+      });
       if (!preparedItem) return; // validation already blocked this in the modal, but guard anyway
 
       // Replace selection with exactly this one prepared item.
@@ -1345,7 +1392,6 @@ function App() {
       setShowLabelModal(true);
     },
     [
-      prepareSolutionParent,
       setSelectedForLabel,
       setLabelQuantities,
       setShowLabelModal,
@@ -1353,6 +1399,31 @@ function App() {
       setPreparedPresetNameDraft,
       invalidateFavoritePrintLookup,
     ]
+  );
+
+  // Water (or blank) builds synchronously, as before. Any other solvent is
+  // looked up first; submit stays disabled meanwhile, and closing the form
+  // drops the pending lookup.
+  const handleSubmitPrepareSolution = useCallback(
+    (formValues) => {
+      if (!prepareSolutionParent) return;
+      const parent = prepareSolutionParent;
+      if (!getSolventLookupQuery(formValues?.solvent)) {
+        completePrepareSolutionSubmit(parent, formValues, null);
+        return;
+      }
+      const requestId = preparedSolventLookupRef.current + 1;
+      preparedSolventLookupRef.current = requestId;
+      setPreparedSolventLookupPending(true);
+      lookupPreparedSolvent(formValues.solvent)
+        .catch(() => null)
+        .then((solventResult) => {
+          if (preparedSolventLookupRef.current !== requestId) return;
+          setPreparedSolventLookupPending(false);
+          completePrepareSolutionSubmit(parent, formValues, solventResult);
+        });
+    },
+    [prepareSolutionParent, completePrepareSolutionSubmit, lookupPreparedSolvent]
   );
 
   // LabelPrintModal close: if this close is ending a prepared-solution
@@ -1661,6 +1732,7 @@ function App() {
             onSavePreset={handleSavePreparedPreset}
             presetNameValue={preparedPresetNameDraft}
             onPresetNameChange={setPreparedPresetNameDraft}
+            submitPending={preparedSolventLookupPending}
           />
         )}
 

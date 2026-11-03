@@ -195,6 +195,15 @@ Keep these states separate in UI, planner logic, exports, and tests:
 The worst failure mode is silently converting upstream unavailability into
 "no hazards." Treat that as a safety regression.
 
+Prepared-solution solvents follow the same states. When the solvent is not
+water, the app looks it up through the same `/search-single` path; only a
+`found with renderable GHS` result is merged into the parent's data (union of
+pictograms, H and P statements, stronger signal word, nothing reduced for
+dilution, no mixture threshold calculation). Every other state for a
+non-water solvent prints "Solvent hazards not included" on the complete and
+container front labels and shows the same warning in the preview; it is never
+treated as a harmless solvent.
+
 ## 3. Reference Link Policy
 
 Reference links are verification aids. They can appear in detail views and can

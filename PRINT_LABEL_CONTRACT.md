@@ -33,6 +33,15 @@ The best path is a label workflow that a lab user can print without guessing:
   its H code, and the label shows how many statements are codes only. Space
   budgets fill by hazard severity, so chronic hazards such as H340/H350/H360
   and H372 are never the ones reduced first.
+- Prepared-solution labels start from the parent chemical's hazard data and
+  are never reduced for concentration or dilution. When the solvent is not
+  water, the solvent is looked up and its pictograms, H statements, and P
+  statements are added by union with the stronger signal word; complete and
+  container front labels then say "Includes solvent hazards". A non-water
+  solvent that cannot be confirmed prints "Solvent hazards not included" on
+  those labels and in the preview. QR and identification small labels carry
+  the merged pictograms but, per their content rules, no solvent text. There
+  is no mixture threshold calculation.
 - The public print modal exposes exactly three first-level outputs: Complete
   A4/Letter label, QR small label, and Identification small label.
 - A complete primary label includes product identifier, CAS, signal word, all

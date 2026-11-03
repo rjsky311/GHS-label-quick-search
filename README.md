@@ -61,7 +61,8 @@ Important boundaries:
 - Bilingual English/Traditional Chinese UI.
 - Purpose-first label print flow with three public outputs: A4/Letter complete
   labels, QR small labels, and identification small labels, with live preview,
-  recent prints, lab profile, and prepared-solution support.
+  recent prints, lab profile, and prepared-solution support (a non-water
+  solvent's hazards are added to the parent's, never reduced for dilution).
 - Admin-gated pilot tools for dictionary/manual-reference maintenance and
   optional workspace sync.
 

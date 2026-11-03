@@ -75,6 +75,11 @@ import {
   planHazardStatementsForBudget,
   prioritizePrecautionaryStatements,
 } from "@/utils/printStatementPriority";
+import {
+  SOLVENT_HAZARD_STATUS,
+  getRecordedSolventHazards,
+  getSolventHazardDisplayName,
+} from "@/utils/preparedSolventHazards";
 import { buildPrintStyles } from "@/utils/printLabelStyles";
 import { buildPrintPreviewStyles } from "@/utils/printPreviewStyles";
 
@@ -132,9 +137,15 @@ const PRINT_TEXT_FALLBACKS = {
     "print.solvent": "Solvent",
     "print.solventShort": "Solv.",
     "print.preparedNote":
-      "Prepared solution - hazard data copied from the parent chemical. Classification may differ for the actual mixture; verify against the official SDS before use.",
+      "Prepared solution - hazard data from the parent chemical (plus the solvent when listed). Classification may differ for the actual mixture; verify against the official SDS before use.",
     "print.preparedParentWarning":
       "Parent chemical hazard data - not verified mixture classification. Verify against the official SDS before use.",
+    "print.solventHazardsNotIncluded":
+      "Solvent hazards not included: {{solvent}}. Check the solvent's SDS.",
+    "print.solventHazardsIncluded":
+      "Includes solvent hazards: {{solvent}} (CAS {{cas}}). Not reduced for dilution.",
+    "print.solventHazardsNotIncludedShort": "Solvent hazards not included",
+    "print.solventHazardsIncludedShort": "Incl. solvent hazards",
     "print.preparedBy": "Prepared by",
     "print.preparedDate": "Prepared date",
     "print.expiryDate": "Expiry date",
@@ -211,9 +222,15 @@ const PRINT_TEXT_FALLBACKS = {
     "print.solvent": "溶劑 / Solvent",
     "print.solventShort": "溶劑 / Solv.",
     "print.preparedNote":
-      "此為配製溶液 / Prepared solution - 危害資料沿用母化學品；實際混合物分類可能不同。使用前請以官方安全資料表（SDS）為準 / Hazard data is copied from the parent chemical; verify against the official SDS before use.",
+      "此為配製溶液 / Prepared solution - 危害資料取自母化學品（列出溶劑危害時含溶劑）；實際混合物分類可能不同。使用前請以官方安全資料表（SDS）為準 / Hazard data from the parent chemical (plus the solvent when listed); verify against the official SDS before use.",
     "print.preparedParentWarning":
       "母化學品危害資料 / Parent chemical hazard data - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use.",
+    "print.solventHazardsNotIncluded":
+      "未納入溶劑危害：{{solvent}}，請查溶劑的安全資料表（SDS） / Solvent hazards not included: {{solvent}}. Check the solvent's SDS.",
+    "print.solventHazardsIncluded":
+      "含溶劑危害：{{solvent}}（CAS {{cas}}），未因稀釋減少危害 / Includes solvent hazards: {{solvent}} (CAS {{cas}}). Not reduced for dilution.",
+    "print.solventHazardsNotIncludedShort": "未納入溶劑危害 / Solvent hazards not included",
+    "print.solventHazardsIncludedShort": "含溶劑危害 / Incl. solvent hazards",
     "print.preparedBy": "配製人 / Prepared by",
     "print.preparedDate": "配製日期 / Prepared date",
     "print.expiryDate": "有效期限 / Expiry date",
@@ -675,6 +692,25 @@ const renderMetaRibbon = (
     preparedDetails.slice(0, preparedDetailLimit).forEach(([label, value]) => {
       chips.push(renderMetaChip(label, value, "meta-chip-prepared-detail"));
     });
+
+    const solventHazards = getRecordedSolventHazards(effectiveChem);
+    if (solventHazards.status === SOLVENT_HAZARD_STATUS.NOT_INCLUDED) {
+      chips.push(
+        renderMetaChip(
+          "",
+          model.t("print.solventHazardsNotIncludedShort"),
+          "meta-chip-prepared-solvent-missing support-chip-critical",
+        ),
+      );
+    } else if (solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED) {
+      chips.push(
+        renderMetaChip(
+          "",
+          model.t("print.solventHazardsIncludedShort"),
+          "meta-chip-prepared-solvent-included",
+        ),
+      );
+    }
   }
 
   if (chips.length === 0) return "";
@@ -782,6 +818,32 @@ const renderPreparedMeta = (chemical, model) => {
   return `<div class="prepared-meta" data-testid="prepared-meta">${rows.join("")}</div>`;
 };
 
+// Solvent hazard status for prepared items. Items built before the status
+// existed are treated conservatively: any non-water solvent reads as "not
+// included" so a missing lookup is never shown as "no solvent hazards".
+const renderPreparedSolventHazards = (chemical, model) => {
+  if (!isPrepared(chemical)) return "";
+  const solventHazards = getRecordedSolventHazards(chemical);
+  if (solventHazards.status === SOLVENT_HAZARD_STATUS.WATER) return "";
+  if (!String(solventHazards.solvent || "").trim()) return "";
+  const included = solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED;
+  const text = included
+    ? model.t("print.solventHazardsIncluded", {
+        solvent: getSolventHazardDisplayName(solventHazards, model.locale),
+        cas: solventHazards.solventCas || "-",
+      })
+    : model.t("print.solventHazardsNotIncluded", {
+        solvent: solventHazards.solvent,
+      });
+  return `<div class="prepared-solvent-hazards ${
+    included
+      ? "prepared-solvent-hazards-included"
+      : "prepared-solvent-hazards-missing"
+  }" data-testid="prepared-solvent-hazards" data-solvent-hazard-status="${escapeHtml(
+    solventHazards.status,
+  )}">${escapeHtml(text)}</div>`;
+};
+
 const renderPreparedNote = (chemical, model, { fullPagePrimary = false } = {}) => {
   if (!isPrepared(chemical)) return "";
   const className = fullPagePrimary
@@ -835,6 +897,7 @@ const renderPreparedFullPageBlock = (chemical, model) => {
   return `<div class="prepared-identity-block" data-testid="prepared-identity-block">
     ${renderPreparedFullPageIdentity(model)}
     ${renderPreparedMeta(chemical, model)}
+    ${renderPreparedSolventHazards(chemical, model)}
     ${renderPreparedOperational(chemical, model)}
     ${renderPreparedNote(chemical, model, { fullPagePrimary: true })}
   </div>`;
@@ -1427,6 +1490,7 @@ const renderFullTemplate = (chemical, model) => {
                 ? renderPreparedFullPageBlock(effectiveChem, model)
                 : renderPreparedBadge(model) +
                   renderPreparedMeta(effectiveChem, model) +
+                  renderPreparedSolventHazards(effectiveChem, model) +
                   renderPreparedOperational(effectiveChem, model)
               : ""
           }

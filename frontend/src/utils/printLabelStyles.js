@@ -958,6 +958,35 @@ export const buildPrintStyles = (model) => {
       font-weight: 700;
       line-height: 1.18;
     }
+    .prepared-solvent-hazards {
+      margin-top: 0.6mm;
+      padding: 0.45mm 0.8mm;
+      border-radius: 0.5mm;
+      font-size: calc(${layout.typography.fontSize} - 2px);
+      font-weight: 700;
+      line-height: 1.18;
+      word-break: break-word;
+    }
+    .prepared-solvent-hazards-missing {
+      color: #7f1d1d;
+      background: #fef2f2;
+      border: 0.22mm solid #fca5a5;
+      border-left: 1.1mm solid #dc2626;
+    }
+    .prepared-solvent-hazards-included {
+      color: #1e3a8a;
+      background: #eff6ff;
+      border: 0.22mm solid #bfdbfe;
+      border-left: 1.1mm solid #2563eb;
+    }
+    .prepared-identity-block .prepared-solvent-hazards {
+      grid-column: 1 / -1;
+    }
+    .meta-chip-prepared-solvent-missing {
+      color: #7f1d1d;
+      border-color: #dc2626;
+      font-weight: 800;
+    }
     .prepared-operational {
       margin-top: 0.6mm;
       font-size: calc(${layout.typography.fontSize} - 2px);
@@ -2322,6 +2351,7 @@ export const buildPrintStyles = (model) => {
           body.print-bw .prepared-badge,
           body.print-bw .prepared-note,
           body.print-bw .prepared-parent-warning,
+          body.print-bw .prepared-solvent-hazards,
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
           body.print-bw .hazard-text-omitted,

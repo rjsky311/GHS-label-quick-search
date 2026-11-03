@@ -240,6 +240,8 @@ Run this matrix before shipping print-workflow changes:
 | Prepared Hydrochloric Acid | A4 Primary | Bilingual | Color | Prepared identity, concentration, solvent, CAS, signal word, all pictograms, and full H/P content remain visible |
 | Prepared Hydrochloric Acid | Standard Bottle | Bilingual | Color | Prepared supplemental output keeps parent identity, concentration, solvent, CAS, signal word, all pictograms, and truthful hazard summary |
 | Prepared Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Prepared quick-ID output keeps parent identity, concentration, solvent, CAS, signal word, and all pictograms without pretending to be complete primary |
+| Prepared chemical in Methanol | A4 Primary | Bilingual | Color | Methanol's pictograms and H/P statements are added by union, signal word is Danger, parent CAS stays, and the label says "Includes solvent hazards" with the solvent CAS |
+| Prepared chemical in Methanol, solvent lookup fails | A4 Primary | Bilingual | Color | Parent hazards print unchanged and the label prints "Solvent hazards not included"; the preview shows the same warning |
 | Ethanol | Standard Bottle | Bilingual | Color | Lower-density supplemental/primary-candidate path remains readable |
 | Ethanol | Tube/Vial Quick ID | English | B/W | Compact ID output keeps both pictograms and remains readable |
 | Sodium Hydroxide | QR Supplement | Bilingual | Color | Corrosive QR output keeps QR and all pictograms |
@@ -283,6 +285,11 @@ Unit tests should keep these invariants pinned:
 - Prepared-solution cases must cover direct creation, prepared-sidebar reprint,
   and preset reuse. Preset reuse must not carry stale operational fields into a
   new print job.
+- Prepared-solution cases must cover water (no solvent lookup, no solvent
+  line) and a non-water solvent both found (hazards merged by union, never
+  reduced) and not found ("Solvent hazards not included" on the label and in
+  the preview). Reprints look the solvent up again rather than reusing stored
+  hazard data.
 - Browser Use production checks must include actual search, checkbox selection, modal opening, stock/purpose switching, language switching, color switching, and print-button enabled/disabled state.
 - Browser Use print-action checks should use `qaPrintHandoff=1` and verify
   `print-qa-status` data attributes for label kind, pictogram codes, QR state,
