@@ -54,7 +54,10 @@ Important boundaries:
 ## Main Capabilities
 
 - CAS and English/Chinese name search.
-- PubChem GHS lookup with local dictionary fallback for common names.
+- PubChem GHS lookup (mostly aggregated ECHA C&L notifications). The main
+  classification is the report that has pictograms and the most company
+  reports; other reports are shown when they disagree. A local dictionary maps
+  common and Chinese names to CAS numbers and never supplies hazard data.
 - Multiple GHS classification comparison where upstream data differs.
 - SDS/reference links with role-aware ordering.
 - Excel and CSV export.
@@ -70,8 +73,14 @@ Important boundaries:
 
 The app combines:
 
-- PubChem REST API data.
-- A local chemical dictionary with CAS/name mappings.
+- PubChem REST API data, including GHS classifications (mostly aggregated
+  ECHA C&L notifications). The main classification is chosen by: has
+  pictograms, then most company reports, then ECHA source, then more hazard
+  statements, then PubChem's order.
+- A local chemical dictionary with CAS/name mappings (names only, no hazard
+  data), plus short substance scope notes where a common name and the GHS data
+  cover different forms (for example 7647-01-0 is hydrogen chloride, including
+  the gas).
 - Optional admin-curated aliases, manual entries, and reference links.
 
 Source ranking, authority boundaries, SDS/reference behavior, QR target rules,

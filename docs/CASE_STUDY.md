@@ -6,7 +6,7 @@ A chemist-run, agent-built safety utility in production.
 
 Labs relabel and reorganize chemicals all the time: a new bottle, a prepared
 solution, a shared shelf. Looking up GHS hazard data one CAS number at a time
-and drawing a compliant label by hand is slow, and it is easy to drop a
+and drawing a complete label by hand is slow, and it is easy to drop a
 pictogram or copy the wrong hazard statement. The goal was a free tool that
 does batch lookup first, then batch printing, without pretending to be a
 regulatory authority.
@@ -14,8 +14,11 @@ regulatory authority.
 ## What it does
 
 - Search by CAS number or English/Chinese name, one at a time or as a batch.
-- Pull GHS classifications from PubChem, fall back to a local dictionary for
-  common names, and show it when sources disagree.
+- Pull GHS classifications from PubChem, mostly aggregated ECHA C&L
+  notifications. When PubChem lists several reports, the main one is the
+  report that has pictograms and the most company reports; the others are
+  shown when they disagree. A local dictionary only maps common and Chinese
+  names to CAS numbers.
 - Link to SDS and reference pages, export to Excel or CSV.
 - Print three kinds of labels (complete A4/Letter labels, QR small labels,
   identification small labels) with a live preview.

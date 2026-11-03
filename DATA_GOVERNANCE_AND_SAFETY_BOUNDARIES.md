@@ -16,7 +16,7 @@ The app uses multiple data sources with different roles:
 
 | Source | Role | Product treatment |
 | --- | --- | --- |
-| PubChem GHS data | Primary automated hazard lookup | Useful starting point; transient failures must be visible |
+| PubChem GHS data | Primary automated hazard lookup (mostly aggregated ECHA C&L notifications) | Useful starting point; transient failures must be visible; the main report is the one with pictograms and the most company reports |
 | ECHA report/source strings | Preferred regulatory signal when present in PubChem reports | Ranked higher when report count is otherwise tied |
 | Local seed dictionary | Search/name resolution aid | Does not override current GHS hazard data |
 | Manual dictionary entries | Admin-curated search/name resolution aid | Admin-gated; must not be treated as hazard classification authority |
@@ -257,8 +257,10 @@ fallback because it has the same role and better priority.
 When sources disagree:
 
 - Do not merge reports into a false certainty.
-- Keep the primary classification selection deterministic:
-  report count, ECHA/source signal, hazard count, then stable source order.
+- Keep the primary classification selection deterministic
+  (`_report_rank_key` in `backend/server.py`): reports with pictograms first,
+  then report count, ECHA/source signal, hazard count, then stable source
+  order.
 - Preserve alternate classifications where available so users can inspect
   differences.
 - Treat "multiple available public classifications" as a primary-selection

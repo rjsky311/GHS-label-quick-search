@@ -314,7 +314,7 @@
   "compare.classN": "Class. {{n}}",
   "compare.absent": "Not present",
   "compare.uniqueToThis": "Unique",
-  "compare.evidenceHint": "The system ranking favors report count, ECHA source, hazard coverage, then original source order for stable ties.",
+  "compare.evidenceHint": "GHS data comes from PubChem, mostly aggregated ECHA C&L notifications. The main classification is the report that has pictograms and the most company reports; ties go to the ECHA source, then more hazard statements, then PubChem's order. Other reports are listed when they differ.",
   "compare.evidenceSelected": "Currently selected",
   "compare.evidenceReportCount": "{{count}} report(s)",
   "compare.evidenceNoReportCount": "Report count not listed",
