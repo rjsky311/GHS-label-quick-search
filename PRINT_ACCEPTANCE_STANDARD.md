@@ -86,7 +86,7 @@ terms, not just CSS classes:
 | --- | --- | --- | --- |
 | Complete primary | Full H/P on the printed label | Full P text | Printed A4/Letter or other verified complete primary |
 | Complete primary continuation | Full H/P split across pages | Full P text split across pages | Printed continuation set |
-| Container front | H-code front label by default; very short priority summaries only when a verified stock-specific layout proves they fit | Omitted from the face label | A4/Letter primary, SDS/QR, or back/fold-out label |
+| Container front | H-code front label by default; very short priority summaries only when a verified stock-specific layout proves they fit. Every H code stays on the label: statements beyond the text budget print as codes only with a visible count, never dropped | Omitted from the face label | A4/Letter primary, SDS/QR, or back/fold-out label |
 | Quick-ID | No full H/P text | Omitted | Complete primary or SDS |
 | QR supplement | QR/SDS reference with optional teaser only when it fits | Omitted | QR/SDS path plus complete primary when required |
 
@@ -133,6 +133,9 @@ Acceptance gates:
   container front labels default to H-code chips because their job is fast
   recognition on the container face, not replacing the complete A4/Letter or
   SDS path.
+- Container front labels never drop an H code for space. When the full text
+  does not fit, the remaining statements print as H codes only and the label
+  shows how many statements lost their wording.
 - P-statements are intentionally omitted from the front face by default; the
   UI must state that complete H/P content belongs on A4/Letter primary,
   continuation pages, SDS/QR, or another complete source.
@@ -223,7 +226,7 @@ Run this matrix before shipping print-workflow changes:
 | Formaldehyde | A4 Primary | Bilingual | Color | Complete primary continuation set, multiple pages, all pictograms repeated, no clipping |
 | Hydrochloric Acid | Main Container Target | Bilingual | Color | Complete-primary intent is preserved; dense content routes to A4/Letter primary instead of supplemental fallback |
 | Hydrochloric Acid | Standard Bottle | Bilingual | Color | Supplemental, printable, all pictograms, no `more-pics` |
-| Hydrochloric Acid | Large Primary | Bilingual | Color | Container front label when full content cannot fit; identity and pictograms are visually prominent, all pictograms, priority H summaries only |
+| Hydrochloric Acid | Large Primary | Bilingual | Color | Container front label when full content cannot fit; identity and pictograms are visually prominent, all pictograms, every H code (priority summaries or code chips), no `hazard-more` |
 | Hydrochloric Acid | 2 x 4 in / medium sheet | Bilingual | Color | Recommends full-page primary and keeps the medium output supplemental |
 | Hydrochloric Acid | Vial Strip / Small Stock | Bilingual | Color | Supplemental, printable, all pictograms, strip pictogram row |
 | Hydrochloric Acid | Tube/Vial Quick ID | Bilingual | Color | Quick-ID supplemental output, printable, all pictograms, no QR body, no `more-pics` |
@@ -271,7 +274,7 @@ Unit tests should keep these invariants pinned:
 - Pictogram dimensions and visible H/P budgets increase with available physical label area.
 - Custom tiny complete-primary configs route to A4/Letter instead of enabling an invalid primary label.
 - Custom supplemental configs keep every pictogram and print as supplemental, not complete primary.
-- Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited.
+- Compact standard and QR labels show the highest-priority H/P items first when summary budgets are limited. Priority follows hazard severity (`frontend/src/utils/printStatementPriority.js`): explosive, pyrophoric, water-reactive, acute fatal/toxic, corrosive, category-1 CMR, STOT category 1, and respiratory sensitisation lead; suspected (category 2) CMR/STOT follow; then other physical hazards, H280/H290, irritant/harmful statements, and the rest. P201, P202, and P210 join the leading prevention statements.
 - The shared content policy is the source of truth for output role, H-text
   mode, P-text mode, QR reference behavior, and compact bilingual fallback.
   Planner, renderer, modal copy, and QA reports must not invent separate

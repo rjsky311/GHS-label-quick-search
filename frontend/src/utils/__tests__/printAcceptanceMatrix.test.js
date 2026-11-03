@@ -331,7 +331,11 @@ describe("print acceptance matrix", () => {
     expect(preview.fragmentHtml).toContain("hazard-code-list");
     expect(preview.fragmentHtml).toContain("H314");
     expect(preview.fragmentHtml).not.toContain("P234");
-    expect(preview.fragmentHtml).toContain("hazard-more");
+    // Container front labels keep every H code instead of a "+N more" marker.
+    hydrochloricAcid.hazard_statements.forEach((statement) => {
+      expect(preview.fragmentHtml).toContain(statement.code);
+    });
+    expect(preview.fragmentHtml).not.toContain("hazard-more");
     expect(preview.fragmentHtml).not.toContain("precaution-more");
     expectEveryPictogram(preview.fragmentHtml, ["GHS04", "GHS05", "GHS06", "GHS07"]);
   });

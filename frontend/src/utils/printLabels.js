@@ -72,7 +72,7 @@ import {
   getContinuationPageLimits,
 } from "@/utils/printContinuationPagination";
 import {
-  prioritizeHazardStatements,
+  planHazardStatementsForBudget,
   prioritizePrecautionaryStatements,
 } from "@/utils/printStatementPriority";
 import { buildPrintStyles } from "@/utils/printLabelStyles";
@@ -123,6 +123,7 @@ const PRINT_TEXT_FALLBACKS = {
       "Supplemental QR label - verify against SDS / primary label before use.",
     "print.supplierMissing": "Responsible lab / supplier information missing",
     "print.moreHazardsShort": "{{count}} more hazard(s)",
+    "print.hazardCodesOnlyCount": "{{count}} more as H code only",
     "print.morePrecautionary": "+{{count}} more",
     "print.preparedSolution": "Prepared solution",
     "print.preparedShort": "Prepared",
@@ -201,6 +202,7 @@ const PRINT_TEXT_FALLBACKS = {
       "QR 補充標籤 - 使用前請對照 SDS / 主要標籤確認。",
     "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
     "print.moreHazardsShort": "另有 {{count}} 項危害",
+    "print.hazardCodesOnlyCount": "另 {{count}} 項僅列 H 代碼",
     "print.morePrecautionary": "另有 {{count}} 項",
     "print.preparedSolution": "配製溶液 / Prepared solution",
     "print.preparedShort": "配製 / Prepared",
@@ -878,6 +880,22 @@ const renderHazardCode = (statement, className) =>
     statement.code,
   )}</div>`;
 
+const renderHazardCodeOverflow = (statements, model) => {
+  if (!statements.length) return "";
+  return `<div class="hazard-overflow-codes hazard-code-list" data-testid="hazard-overflow-codes">
+    ${statements
+      .map((statement) =>
+        renderHazardCode(statement, "hazard-item hazard-primary-item"),
+      )
+      .join("")}
+  </div>
+  <div class="hazard-text-omitted" data-testid="hazard-text-omitted" data-hazard-text-omitted-count="${escapeHtml(
+    statements.length,
+  )}">${escapeHtml(
+    model.t("print.hazardCodesOnlyCount", { count: statements.length }),
+  )}</div>`;
+};
+
 const renderMoreHazards = (count, model, className = "") => {
   if (count <= 0) return "";
   return `<div class="hazard-more${className ? ` ${className}` : ""}">${escapeHtml(
@@ -1254,15 +1272,26 @@ const renderStandardTemplate = (chemical, model) => {
     hazardStatements: hazards,
     precautionaryStatements: precautions,
     signalWord: contentSignalWord,
+    policy: contentPolicy,
   } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
-  const prioritizedHazards = prioritizeHazardStatements(hazards);
-  const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
-  const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
   const hazardRenderMode = getStandardHazardRenderMode(model.layout);
+  // Container hazard labels keep every H code: statements beyond the text
+  // budget print as codes only and the label shows how many lost their text.
+  const retainsAllHazardCodes = Boolean(contentPolicy?.retainsAllHazardCodes);
+  const hazardPlan = planHazardStatementsForBudget(hazards, {
+    fullTextBudget: budgets.primaryHazards,
+    codesOnly: hazardRenderMode === "code",
+    retainAllCodes: retainsAllHazardCodes,
+  });
+  const primaryHazards =
+    hazardRenderMode === "code" ? hazardPlan.codeOnly : hazardPlan.fullText;
+  const overflowCodeHazards =
+    hazardRenderMode === "code" ? [] : hazardPlan.codeOnly;
+  const omittedHazards = hazardPlan.omitted.length;
   const prepared = isPrepared(effectiveChem);
   const textOnlyGhs = hasTextOnlyGhsContent({
     pictograms,
@@ -1317,7 +1346,9 @@ const renderStandardTemplate = (chemical, model) => {
                             ),
                       )
                       .join("")}
+                    ${renderHazardCodeOverflow(overflowCodeHazards, model)}
                     ${
+                      retainsAllHazardCodes ||
                       shouldRenderMoreHazards(model.layout)
                         ? renderMoreHazards(omittedHazards, model)
                         : ""

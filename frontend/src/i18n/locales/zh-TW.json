@@ -1056,6 +1056,7 @@
   "label.stockPresetLetterPrimary": "Letter 主標",
   "label.stockPresetLetterPrimaryNote": "單張 US Letter 主標籤，適合北美紙張與內容密集的完整標籤。",
   "print.moreHazardsShort": "另有 {{count}} 項危害",
+  "print.hazardCodesOnlyCount": "另 {{count}} 項僅列 H 代碼",
   "label.previewHazardPlaceholder": "警示語、圖示與危害內容會顯示在這裡。",
   "label.previewIconFocus": "精簡模板應讓圖示與警示語保持主導。",
   "label.previewScanFocus": "掃碼優先模板只保留 QR 旁邊的必要資訊。",

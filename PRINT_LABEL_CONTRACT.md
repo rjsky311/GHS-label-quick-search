@@ -28,6 +28,11 @@ The best path is a label workflow that a lab user can print without guessing:
 ## Non-Negotiable Rules
 
 - GHS pictograms are never summarized, hidden behind `+N`, replaced by QR, or omitted from any printed hazard label when pictogram data exists.
+- Container hazard labels (complete primary and container front) never drop
+  an H code for space. A statement that does not fit as full text prints as
+  its H code, and the label shows how many statements are codes only. Space
+  budgets fill by hazard severity, so chronic hazards such as H340/H350/H360
+  and H372 are never the ones reduced first.
 - The public print modal exposes exactly three first-level outputs: Complete
   A4/Letter label, QR small label, and Identification small label.
 - A complete primary label includes product identifier, CAS, signal word, all

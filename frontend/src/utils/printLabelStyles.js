@@ -1180,7 +1180,11 @@ export const buildPrintStyles = (model) => {
       min-width: 0;
       overflow-wrap: anywhere;
     }
-    .hazard-more {
+    .hazard-overflow-codes {
+      display: flex;
+    }
+    .hazard-more,
+    .hazard-text-omitted {
       padding: 0.35mm 0.6mm;
       border-radius: 0.9mm;
       border: 1px dashed #cbd5e1;
@@ -1563,6 +1567,7 @@ export const buildPrintStyles = (model) => {
       line-height: 1.02;
     }
     .label-standard.label-form-strip .hazard-more,
+    .label-standard.label-form-strip .hazard-text-omitted,
     .label-standard.label-form-strip .precautions-compact,
     .label-standard.label-form-strip .precaution-more {
       font-size: 5px;
@@ -1927,7 +1932,8 @@ export const buildPrintStyles = (model) => {
       line-height: 1;
       padding: 0.85mm 1.1mm;
     }
-    .label-standard.label-stock-large-primary .hazard-more {
+    .label-standard.label-stock-large-primary .hazard-more,
+    .label-standard.label-stock-large-primary .hazard-text-omitted {
       padding: 0.42mm 0.75mm;
       font-size: 8px;
       line-height: 1.05;
@@ -2318,6 +2324,7 @@ export const buildPrintStyles = (model) => {
           body.print-bw .prepared-parent-warning,
           body.print-bw .hazard-primary-item,
           body.print-bw .hazard-more,
+          body.print-bw .hazard-text-omitted,
           body.print-bw .qr-hazard-chip,
           body.print-bw .profile-block-missing,
           body.print-bw .signal {

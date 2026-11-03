@@ -913,6 +913,7 @@
   "print.pdfExportFailed": "Could not generate the PDF right now. Please try again in a moment.",
   "print.totalItems": "{{count}} item(s)",
   "print.moreHazardsShort": "{{count}} more hazard(s)",
+  "print.hazardCodesOnlyCount": "{{count}} more as H code only",
   "print.morePrecautionary": "+{{count}} more",
   "print.preparedSolution": "Prepared solution",
   "print.preparedShort": "Prepared",

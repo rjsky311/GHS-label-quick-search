@@ -3602,7 +3602,11 @@ describe("printLabels", () => {
       expect(smallPreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
       );
-      expect(smallPreview.fragmentHtml).toContain("hazard-more");
+      // Container front labels keep every H code; nothing hides behind "+N".
+      manyHazards.hazard_statements.forEach(({ code }) => {
+        expect(smallPreview.fragmentHtml).toContain(code);
+      });
+      expect(smallPreview.fragmentHtml).not.toContain("hazard-more");
 
       expect(bottlePreview.fragmentHtml).toContain("label-form-bottle");
       expect(bottlePreview.fragmentHtml).toContain("label-kind-supplemental");
@@ -3612,14 +3616,14 @@ describe("printLabels", () => {
       expect(bottlePreview.html).toContain("width: 15mm");
       expect(bottlePreview.fragmentHtml).toContain("hazard-code-list");
       expect(bottlePreview.fragmentHtml.match(/hazard-primary-item/g)).toHaveLength(
-        2,
+        5,
       );
       expect(bottlePreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
       );
     });
 
-    it("standard template calls out omitted hazards instead of silently dropping them", () => {
+    it("standard container front template keeps every H code instead of dropping them", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 5 }, (_, i) => ({
@@ -3633,8 +3637,11 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain("hazard-more");
-      expect(html).toContain("3 more hazard(s)");
+      manyHazards.hazard_statements.forEach(({ code }) => {
+        expect(html).toContain(`hazard-code-only">${code}<`);
+      });
+      expect(html).not.toMatch(/<div\s+class="hazard-more"/);
+      expect(html).not.toContain("more hazard(s)");
     });
 
     it("prioritizes severe H statements before summarizing compact standard labels", () => {
@@ -3672,7 +3679,12 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-kind-supplemental");
       expect(preview.fragmentHtml).toContain("H314");
       expect(preview.fragmentHtml).not.toContain("H335 May cause");
-      expect(preview.fragmentHtml).toContain("hazard-more");
+      const codeOrder = ["H314", "H330", "H335", "H319"].map((code) =>
+        preview.fragmentHtml.indexOf(`hazard-code-only">${code}<`),
+      );
+      codeOrder.forEach((position) => expect(position).toBeGreaterThan(-1));
+      expect([...codeOrder].sort((a, b) => a - b)).toEqual(codeOrder);
+      expect(preview.fragmentHtml).not.toContain("hazard-more");
     });
 
     it("omits P codes from container front labels so H-code content stays readable", () => {
