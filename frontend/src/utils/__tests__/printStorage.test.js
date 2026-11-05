@@ -5,6 +5,7 @@ import {
   rehydrateHistoricalPrintItems,
 } from "@/utils/printStorage";
 import { getGhsClassificationFingerprint } from "@/utils/selectedGhsClassification";
+import { buildPreparedSolutionItem } from "@/utils/preparedSolution";
 
 const historicalChemical = {
   cas_number: "64-17-5",
@@ -105,5 +106,78 @@ describe("printStorage historical print jobs", () => {
         cas: "64-17-5",
       }),
     ]);
+  });
+});
+
+describe("printStorage prepared solutions with a non-water solvent", () => {
+  const parent = {
+    cas_number: "64-17-5",
+    name_en: "Ethanol",
+    found: true,
+    signal_word: "Danger",
+    primary_source: "PubChem",
+    ghs_pictograms: [{ code: "GHS02" }],
+    hazard_statements: [{ code: "H225" }],
+    precautionary_statements: [{ code: "P210" }],
+    other_classifications: [],
+  };
+  const methanol = {
+    cas_number: "67-56-1",
+    name_en: "Methanol",
+    found: true,
+    signal_word: "Danger",
+    ghs_pictograms: [{ code: "GHS02" }, { code: "GHS06" }, { code: "GHS08" }],
+    hazard_statements: [{ code: "H225" }, { code: "H301" }, { code: "H370" }],
+    precautionary_statements: [{ code: "P210" }],
+  };
+  const prepared = buildPreparedSolutionItem(
+    parent,
+    { concentration: "10 mM", solvent: "Methanol" },
+    { solventResult: methanol },
+  );
+  const record = buildPrintJobRecord({
+    items: [prepared],
+    labelConfig: { stockPreset: "a4-primary" },
+    customLabelFields: {},
+    labelQuantities: { "64-17-5": 1 },
+    labProfile: {},
+  });
+
+  it("stores the parent's classification identity and the solvent CAS, not solvent hazard data", () => {
+    const [snapshot] = record.items;
+    expect(snapshot.classification_fingerprint).toBe(
+      getGhsClassificationFingerprint({
+        pictograms: parent.ghs_pictograms,
+        hazard_statements: parent.hazard_statements,
+        precautionary_statements: parent.precautionary_statements,
+        signal_word: parent.signal_word,
+        source: parent.primary_source,
+      }),
+    );
+    expect(snapshot.preparedSolution.solventCas).toBe("67-56-1");
+    expect(snapshot.preparedSolution).not.toHaveProperty("solventHazards");
+  });
+
+  it("re-merges a freshly looked-up solvent on reprint", () => {
+    const refreshed = rehydrateHistoricalPrintItems(record, [parent, methanol]);
+    expect(refreshed.issues).toEqual([]);
+    const [item] = refreshed.items;
+    expect(item.ghs_pictograms.map((p) => p.code)).toEqual([
+      "GHS02",
+      "GHS06",
+      "GHS08",
+    ]);
+    expect(item.preparedSolution.solventHazards.status).toBe("included");
+  });
+
+  it("falls back to 'not included' when the solvent cannot be looked up again", () => {
+    const refreshed = rehydrateHistoricalPrintItems(record, [parent]);
+    expect(refreshed.issues).toEqual([]);
+    const [item] = refreshed.items;
+    expect(item.ghs_pictograms.map((p) => p.code)).toEqual(["GHS02"]);
+    expect(item.preparedSolution.solventHazards).toEqual({
+      status: "not_included",
+      solvent: "Methanol",
+    });
   });
 });

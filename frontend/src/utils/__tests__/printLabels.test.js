@@ -36,17 +36,19 @@ import {
   buildPrintDocument,
   buildPrintDocumentModel,
   buildPrintPreviewDocument,
-  exportLabelsPdf,
   inspectPrintContentFit,
   inspectPrintLayoutDocument,
-  inlineGhsPictogramSvgs,
   printLabels,
-  resetPrintPdfExportCacheForTests,
   getQRCodeUrl,
   getChemicalLookupUrl,
   getHazardFontTier,
   escapeHtml,
 } from "../printLabels";
+import {
+  exportLabelsPdf,
+  inlineGhsPictogramSvgs,
+  resetPrintPdfExportCacheForTests,
+} from "../printPdfExport";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import { recordObservabilityEvent } from "@/utils/observability";
 import { getFullPageStatementTier } from "@/utils/printDocumentLayoutHelpers";
@@ -3602,7 +3604,11 @@ describe("printLabels", () => {
       expect(smallPreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
       );
-      expect(smallPreview.fragmentHtml).toContain("hazard-more");
+      // Container front labels keep every H code; nothing hides behind "+N".
+      manyHazards.hazard_statements.forEach(({ code }) => {
+        expect(smallPreview.fragmentHtml).toContain(code);
+      });
+      expect(smallPreview.fragmentHtml).not.toContain("hazard-more");
 
       expect(bottlePreview.fragmentHtml).toContain("label-form-bottle");
       expect(bottlePreview.fragmentHtml).toContain("label-kind-supplemental");
@@ -3612,14 +3618,14 @@ describe("printLabels", () => {
       expect(bottlePreview.html).toContain("width: 15mm");
       expect(bottlePreview.fragmentHtml).toContain("hazard-code-list");
       expect(bottlePreview.fragmentHtml.match(/hazard-primary-item/g)).toHaveLength(
-        2,
+        5,
       );
       expect(bottlePreview.fragmentHtml.match(/alt="GHS0[2567]"/g)).toHaveLength(
         4,
       );
     });
 
-    it("standard template calls out omitted hazards instead of silently dropping them", () => {
+    it("standard container front template keeps every H code instead of dropping them", () => {
       const manyHazards = {
         ...mockChemical,
         hazard_statements: Array.from({ length: 5 }, (_, i) => ({
@@ -3633,8 +3639,11 @@ describe("printLabels", () => {
         {},
       );
       const html = mockIframeDoc.write.mock.calls[0][0];
-      expect(html).toContain("hazard-more");
-      expect(html).toContain("3 more hazard(s)");
+      manyHazards.hazard_statements.forEach(({ code }) => {
+        expect(html).toContain(`hazard-code-only">${code}<`);
+      });
+      expect(html).not.toMatch(/<div\s+class="hazard-more"/);
+      expect(html).not.toContain("more hazard(s)");
     });
 
     it("prioritizes severe H statements before summarizing compact standard labels", () => {
@@ -3672,7 +3681,12 @@ describe("printLabels", () => {
       expect(preview.fragmentHtml).toContain("label-kind-supplemental");
       expect(preview.fragmentHtml).toContain("H314");
       expect(preview.fragmentHtml).not.toContain("H335 May cause");
-      expect(preview.fragmentHtml).toContain("hazard-more");
+      const codeOrder = ["H314", "H330", "H335", "H319"].map((code) =>
+        preview.fragmentHtml.indexOf(`hazard-code-only">${code}<`),
+      );
+      codeOrder.forEach((position) => expect(position).toBeGreaterThan(-1));
+      expect([...codeOrder].sort((a, b) => a - b)).toEqual(codeOrder);
+      expect(preview.fragmentHtml).not.toContain("hazard-more");
     });
 
     it("omits P codes from container front labels so H-code content stays readable", () => {
@@ -3962,7 +3976,7 @@ describe("printLabels", () => {
       expect(documentBundle.pagesHtml).toContain("continuation-use-warning");
       expect(documentBundle.pagesHtml).toContain("compliance-footer-metadata");
       expect(documentBundle.pagesHtml).toContain(
-        "Hazard source: PubChem/SDS reference",
+        "Hazard source: PubChem",
       );
       expect(documentBundle.pagesHtml).toContain(
         "Verify against SDS, supplier label, and local regulations before use.",
@@ -4143,7 +4157,7 @@ describe("printLabels", () => {
         "GHS repeated for page matching",
       );
       expect(documentBundle.html).toContain(
-        "Hazard source: PubChem/SDS reference",
+        "Hazard source: PubChem",
       );
       expect(documentBundle.html).toContain(
         "Verify against SDS, supplier label, and local regulations before use.",
@@ -6266,7 +6280,7 @@ describe("prepared solution print rendering", () => {
       const html = documentBundle.html;
       expect(html).toContain("配製溶液 / Prepared solution");
       expect(html).toContain("prepared-identity-block");
-      expect(html).toContain("母化學品危害資料 / Parent chemical hazard data");
+      expect(html).toContain("危害資料取自母化學品（列出溶劑危害時含溶劑） / Hazard data from the parent chemical");
       expect(html).toContain("prepared-solution-identity");
       expect(html).toContain("prepared-parent-warning");
       expect(html).toContain("濃度 / Concentration");
@@ -6275,7 +6289,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain("危害說明 / Hazard statements");
       expect(html).toContain("預防措施 / Precautionary statements");
       expect(html).toContain("掃描開啟此化學品查詢頁 / Scan to open this chemical lookup");
-      expect(html).toContain("參考資料：PubChem/SDS / Reference data");
+      expect(html).toContain("參考資料：PubChem / Reference data");
       expect(html).toContain(
         "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
       );
@@ -6383,9 +6397,9 @@ describe("prepared solution print rendering", () => {
   });
 
   describe("icon template", () => {
-    // Space-constrained templates now keep the same simple identity contract
-    // as non-prepared chemicals: CAS, English name, Chinese name, and icons.
-    it("renders prepared chemicals with the compact identity block only", () => {
+    // Space-constrained templates add one line to the compact identity so a
+    // prepared solution does not read as the pure substance.
+    it("renders prepared chemicals with the compact identity and the solution line", () => {
       printLabels(
         [makePrepared()],
         { size: "medium", template: "icon", orientation: "portrait" },
@@ -6397,8 +6411,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(mockChemical.name_zh);
       expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
       expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
-      expect(html).not.toContain("10% (v/v)");
-      expect(html).not.toContain("Water");
+      expect(html).toMatch(/<div class="small-prepared-identity"[^>]*>10% \(v\/v\) in Water</);
     });
 
     it("does NOT render the full prepared-note on icon template (space)", () => {
@@ -6436,8 +6449,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(mockChemical.name_zh);
       expect(html).not.toMatch(/<div\s+class="meta-ribbon"/);
       expect(html).not.toContain("print.preparedShort");
-      expect(html).not.toContain("10% (v/v)");
-      expect(html).not.toContain("Water");
+      expect(html).toMatch(/<div class="small-prepared-identity"[^>]*>10% \(v\/v\) in Water</);
     });
 
     it("does NOT render the full prepared-note on qrcode template (space)", () => {

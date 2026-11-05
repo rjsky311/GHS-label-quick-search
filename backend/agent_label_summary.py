@@ -55,6 +55,15 @@ class AgentClassificationSource(BaseModel):
     report_count: Optional[str] = None
 
 
+class AgentSubstanceNote(BaseModel):
+    """Which substance the GHS data describes (a reminder, not data)."""
+
+    code: str
+    text_en: str
+    text_zh: str
+    source: str
+
+
 class AgentClassificationSummary(BaseModel):
     pictogram_codes: List[str] = Field(default_factory=list)
     hazard_statement_codes: List[str] = Field(default_factory=list)
@@ -120,6 +129,7 @@ class AgentLabelSummaryV0(BaseModel):
     reference_links: List[AgentReferenceLink] = Field(default_factory=list)
     qr_target: Optional[AgentQrTarget] = None
     upstream: AgentUpstreamState = Field(default_factory=AgentUpstreamState)
+    substance_notes: List[AgentSubstanceNote] = Field(default_factory=list)
     review_flags: List[str] = Field(default_factory=list)
     authority_boundary: AgentAuthorityBoundary = Field(default_factory=AgentAuthorityBoundary)
 
@@ -250,6 +260,8 @@ def _review_flags(
         flags.append("multiple_classifications")
     if result.found and result.name_en and not trusted_name_zh:
         flags.append("missing_trusted_chinese_name")
+    if result.substance_notes:
+        flags.append("substance_scope_note")
     return flags
 
 
@@ -293,6 +305,11 @@ def build_agent_label_summary_v0(
         reference_links=_reference_link_items(result.reference_links),
         qr_target=_qr_target(result.cas_number, lookup_base_url),
         upstream=upstream,
+        substance_notes=[
+            AgentSubstanceNote(**note)
+            for note in result.substance_notes
+            if all(note.get(key) for key in ("code", "text_en", "text_zh", "source"))
+        ],
         review_flags=_review_flags(
             result=result,
             trusted_name_zh=trusted_name_zh,

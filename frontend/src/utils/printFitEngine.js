@@ -11,6 +11,8 @@ import {
   shouldUseHazardCodesOnly,
 } from "@/utils/printContentPolicy";
 import { hasTextOnlyGhsData } from "@/utils/ghsAvailability";
+import { planHazardStatementsForBudget } from "@/utils/printStatementPriority";
+import { getSubstanceNotes } from "@/utils/substanceNotes";
 import {
   isSmallLabelIdentityLayout,
   isFullPagePrimaryStockId,
@@ -872,11 +874,18 @@ export const estimatePrintContentTextWeight = (
   );
 
   const pictogramReserve = (content.counts?.pictograms || 0) * 26;
+  // Complete labels also print substance scope notes under the identity.
+  const substanceNoteWeight = getSubstanceNotes(content.effectiveChemical).reduce(
+    (total, note) =>
+      total + stringLength(getRenderedStatementText(note, layout, locale)),
+    0,
+  );
 
   return Math.round(
     statementWeight +
       identityTextWeight(content, layout, locale) +
-      pictogramReserve,
+      pictogramReserve +
+      substanceNoteWeight,
   );
 };
 
@@ -934,7 +943,6 @@ const estimateSupplementalPrintContentTextWeight = (
   }
 
   const standardBudget = budgets.standard || {};
-  const renderedHazards = hazards.slice(0, standardBudget.primaryHazards || 1);
   const renderedPrecautions = precautions.slice(
     0,
     standardBudget.precautions || 0,
@@ -942,12 +950,26 @@ const estimateSupplementalPrintContentTextWeight = (
   const hazardCodeOnly =
     content.policy?.hazardTextMode === PRINT_HAZARD_TEXT_MODE.H_CODES_ONLY ||
     shouldUseHazardCodesOnly(layout);
+  // Mirror the renderer: the prioritized statements inside the text budget
+  // print with wording; container hazard labels print every remaining H code.
+  const hazardPlan = planHazardStatementsForBudget(hazards, {
+    fullTextBudget: standardBudget.primaryHazards || 1,
+    codesOnly: hazardCodeOnly,
+    retainAllCodes: Boolean(
+      content.policy?.retainsAllHazardCodes ??
+        resolvePrintContentPolicy(layout, { locale }).retainsAllHazardCodes,
+    ),
+  });
 
   return Math.round(
     identityTextWeight(content, layout, locale) +
       customIdentityTextWeight(renderedCustomLabelFields) +
-      statementTextWeight(renderedHazards, layout, {
-        codeOnly: hazardCodeOnly,
+      statementTextWeight(hazardPlan.fullText, layout, {
+        codeOnly: false,
+        locale,
+      }) +
+      statementTextWeight(hazardPlan.codeOnly, layout, {
+        codeOnly: true,
         locale,
       }) +
       statementTextWeight(renderedPrecautions, layout, {

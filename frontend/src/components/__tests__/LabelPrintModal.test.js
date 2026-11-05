@@ -2628,7 +2628,7 @@ describe("LabelPrintModal", () => {
     ).toContain("data-qr-target");
     expect(
       screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
-    ).not.toContain("70%");
+    ).toContain("70%");
     expect(
       screen.getByTestId("label-fragment-preview").getAttribute("srcdoc"),
     ).not.toContain("Lab A");

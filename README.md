@@ -25,7 +25,7 @@ a second agent reviews and verifies each release.
 
 - Started January 2026; first prototyped on an AI app builder, then moved to a
   self-owned React + FastAPI stack.
-- 371 backend test functions and about 1,300 frontend test cases, plus docs,
+- About 500 backend tests and 1,550 frontend test cases, plus docs,
   i18n-parity, bundle-budget, and print-contract checks in CI.
 - A release is accepted only when the frontend build and the backend health
   endpoint report the same full `origin/main` commit and the production QA
@@ -54,14 +54,20 @@ Important boundaries:
 ## Main Capabilities
 
 - CAS and English/Chinese name search.
-- PubChem GHS lookup with local dictionary fallback for common names.
+- PubChem GHS lookup (mostly aggregated ECHA C&L notifications). The main
+  classification is the report that has pictograms and the most company
+  reports; other reports are shown when they disagree. A local dictionary maps
+  common and Chinese names to CAS numbers and never supplies hazard data.
 - Multiple GHS classification comparison where upstream data differs.
 - SDS/reference links with role-aware ordering.
 - Excel and CSV export.
 - Bilingual English/Traditional Chinese UI.
 - Purpose-first label print flow with three public outputs: A4/Letter complete
   labels, QR small labels, and identification small labels, with live preview,
-  recent prints, lab profile, and prepared-solution support.
+  recent prints, lab profile, and prepared-solution support. Prepared-solution
+  labels combine the parent's hazards with a non-water solvent's, never reduced
+  for dilution, and every label says so if the solvent's hazards could not be
+  retrieved.
 - Admin-gated pilot tools for dictionary/manual-reference maintenance and
   optional workspace sync.
 
@@ -69,8 +75,14 @@ Important boundaries:
 
 The app combines:
 
-- PubChem REST API data.
-- A local chemical dictionary with CAS/name mappings.
+- PubChem REST API data, including GHS classifications (mostly aggregated
+  ECHA C&L notifications). The main classification is chosen by: has
+  pictograms, then most company reports, then ECHA source, then more hazard
+  statements, then PubChem's order.
+- A local chemical dictionary with CAS/name mappings (names only, no hazard
+  data), plus short substance scope notes where a common name and the GHS data
+  cover different forms (for example 7647-01-0 is hydrogen chloride, including
+  the gas).
 - Optional admin-curated aliases, manual entries, and reference links.
 
 Source ranking, authority boundaries, SDS/reference behavior, QR target rules,
@@ -132,9 +144,12 @@ rate-limit storage with `RATE_LIMIT_STORAGE_URI`, `LIMITS_STORAGE_URI`, or
 
 ```bash
 cd frontend
-npm ci
+npx npm@11.6.2 ci
 npm run dev
 ```
+
+Use Node 22. The lockfile matches the npm version pinned in
+`frontend/package.json`, so install with that version as shown.
 
 Frontend environment defaults are in [frontend/.env.example](./frontend/.env.example).
 For local development, `VITE_BACKEND_URL` normally points to

@@ -1136,13 +1136,14 @@ Hard rule: this string is a **workflow display**, not a canonical chemical ident
 #### 3.4 Trust-boundary reinforcement (same stance, more visible)
 
 - Parent-verbatim GHS remains — no union pictograms, no recomputation, no bridging, no cut-offs.
+  (Superseded 2026-11-04: a non-water solvent's looked-up pictograms and H/P statements are now added by union, never reduced, still with no recomputation or cut-offs; see `PRINT_LABEL_CONTRACT.md`.)
 - The existing printed trust note (PR-B) and in-form note (PR-A) stay; Tier 2 may extend the wording slightly to cover "prepared date / expiry are recorded by the user, not derived", if the operational fields get prominent placement.
 - SDS / supplier / local regulation continue to be cited as authoritative on every surface that mentions prepared items.
 
 ### 4. Out of Scope (locked out for Tier 2)
 
 - Multi-solute / multi-parent prepared items
-- Any automatic mixture classification, hazard merging, or cut-off logic
+- Any automatic mixture classification, hazard merging, or cut-off logic (superseded 2026-11-04 for the solvent only: union of the solvent's hazards, no classification or cut-off logic)
 - Backend changes of any kind (no new endpoints, no schema, no DB, no auth)
 - Audit / inventory / receiving workflows
 - Prepared items flowing into favorites / history / comparison

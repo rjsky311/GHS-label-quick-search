@@ -49,6 +49,15 @@ function sanitizePreparedSolution(raw) {
     preparedBy: sanitizeString(raw.preparedBy),
     preparedDate: sanitizeString(raw.preparedDate),
     expiryDate: sanitizeString(raw.expiryDate),
+    // Identifier of the solvent whose hazards were merged (not hazard
+    // data), so a reprint can look the solvent up again.
+    ...(sanitizeString(raw.solventHazards?.solventCas || raw.solventCas)
+      ? {
+          solventCas: sanitizeString(
+            raw.solventHazards?.solventCas || raw.solventCas,
+          ),
+        }
+      : {}),
   };
 }
 
@@ -333,9 +342,14 @@ export function rehydrateHistoricalPrintItems(record, currentResults) {
     }
 
     if (snapshot?.isPreparedSolution) {
+      // The solvent is looked up again by the caller (its CAS is in
+      // `currentResults`); without a fresh usable result the label prints
+      // "Solvent hazards not included" instead of reusing stored hazards.
+      const solventCas = sanitizeString(snapshot.preparedSolution?.solventCas);
       const prepared = buildPreparedSolutionItem(
         effective,
         snapshot.preparedSolution,
+        { solventResult: solventCas ? currentByCas.get(solventCas) || null : null },
       );
       if (!prepared) {
         issues.push({ type: "historical-prepared-item-invalid", cas });

@@ -1,4 +1,4 @@
-import { API, GHS_IMAGES } from "@/constants/ghs";
+import { GHS_IMAGES } from "@/constants/ghs";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import i18n from "@/i18n";
 import { recordObservabilityEvent } from "@/utils/observability";
@@ -25,6 +25,7 @@ import {
   publishPrintPendingQaStatus,
 } from "@/utils/printLifecycle";
 import { waitForRequiredPrintImages } from "@/utils/printImagePreflight";
+import { PRINT_TEXT_FALLBACKS } from "@/utils/printTextFallbacks";
 import {
   collectPrintPreflightIssues,
   hasRequiredImageFailure,
@@ -72,9 +73,15 @@ import {
   getContinuationPageLimits,
 } from "@/utils/printContinuationPagination";
 import {
-  prioritizeHazardStatements,
+  planHazardStatementsForBudget,
   prioritizePrecautionaryStatements,
 } from "@/utils/printStatementPriority";
+import {
+  SOLVENT_HAZARD_STATUS,
+  getRecordedSolventHazards,
+  getSolventHazardDisplayName,
+} from "@/utils/preparedSolventHazards";
+import { getSubstanceNotes } from "@/utils/substanceNotes";
 import { buildPrintStyles } from "@/utils/printLabelStyles";
 import { buildPrintPreviewStyles } from "@/utils/printPreviewStyles";
 
@@ -107,232 +114,7 @@ const compactContinuationPages = (pages, capacity, model) => {
   );
 };
 
-const PRINT_TEXT_FALLBACKS = {
-  en: {
-    "print.title": "GHS Label Print",
-    "print.noHazardLabel": "No hazard label",
-    "print.pictogramReviewRequired": "GHS pictogram review required",
-    "print.noHazardStatement": "No hazard statements",
-    "print.noPrecautionaryStatement": "No precautionary statements",
-    "print.hazardStatementsLabel": "Hazard statements",
-    "print.precautionaryStatementsLabel": "Precautionary statements",
-    "print.scanForDetail": "Scan for details",
-    "print.qrLookupCaption": "Scan to open this chemical lookup",
-    "print.qrLookupPageOneCaption": "QR lookup - Page 1 only",
-    "print.qrSupplementNotice":
-      "Supplemental QR label - verify against SDS / primary label before use.",
-    "print.supplierMissing": "Responsible lab / supplier information missing",
-    "print.moreHazardsShort": "{{count}} more hazard(s)",
-    "print.morePrecautionary": "+{{count}} more",
-    "print.preparedSolution": "Prepared solution",
-    "print.preparedShort": "Prepared",
-    "print.concentration": "Concentration",
-    "print.concentrationShort": "Conc.",
-    "print.solvent": "Solvent",
-    "print.solventShort": "Solv.",
-    "print.preparedNote":
-      "Prepared solution - hazard data copied from the parent chemical. Classification may differ for the actual mixture; verify against the official SDS before use.",
-    "print.preparedParentWarning":
-      "Parent chemical hazard data - not verified mixture classification. Verify against the official SDS before use.",
-    "print.preparedBy": "Prepared by",
-    "print.preparedDate": "Prepared date",
-    "print.expiryDate": "Expiry date",
-    "print.pageNumber": "Page {{current}} / {{total}}",
-    "print.batch": "Case",
-    "print.profilePhone": "Phone",
-    "print.continuationBadge": "Page {{current}} / {{total}}",
-    "print.continuationBadgeContinues":
-      "Page {{current}} / {{total}}",
-    "print.continuationBadgeFinal":
-      "Page {{current}} / {{total}}",
-    "print.continuationPagePlain":
-      "Page {{current}} of {{total}}",
-    "print.continuationMainStatus": "Main label",
-    "print.continuationStatus": "Continuation",
-    "print.continuationFinalStatus": "Final continuation",
-    "print.continuationMainPageActionSingle":
-      "Continue with Page 2",
-    "print.continuationMainPageAction":
-      "Continue with pages 2-{{total}}",
-    "print.continuationQrHere": "QR on this page",
-    "print.continuationQrOnFirstPage": "QR on Page 1 only",
-    "print.continuationUseWithFirstPage":
-      "Continuation page - use with Page 1",
-    "print.continuationSetRequired":
-      "Complete label set: {{total}} pages - keep all pages together",
-    "print.continuationOnlyBandTitle":
-      "CONTINUATION ONLY",
-    "print.continuationOnlyBandDetail":
-      "Do not use this page alone",
-    "print.continuationOnlyBandQr":
-      "Scan Page 1 for QR lookup",
-    "print.continuationPictogramAnchor":
-      "GHS pictograms repeated for page matching; QR lookup remains on Page 1",
-    "print.continuationCompactPictogramAnchor":
-      "GHS repeated for page matching",
-    "print.keepAllPagesTogether":
-      "Keep pages together",
-    "print.continuationDoNotUseAlone":
-      "Do not use this page alone",
-    "print.noQrOnContinuationPage":
-      "No QR on this page; scan Page 1",
-    "print.statementWordingUnavailable":
-      "Wording unavailable - verify SDS before use.",
-    "print.footerHazardSource":
-      "Hazard source: PubChem/SDS reference",
-    "print.footerVerifyShort":
-      "Verify against SDS, supplier label, and local regulations before use.",
-    "trust.printFooter":
-      "For reference only - confirm against the official SDS, supplier label, and local regulations before use.",
-  },
-  "zh-TW": {
-    "print.title": "GHS 標籤列印",
-    "print.noHazardLabel": "無危害標示",
-    "print.pictogramReviewRequired": "GHS 圖示需審核",
-    "print.noHazardStatement": "無危害說明",
-    "print.noPrecautionaryStatement": "無預防措施說明",
-    "print.hazardStatementsLabel": "危害說明 / Hazard statements",
-    "print.precautionaryStatementsLabel": "預防措施 / Precautionary statements",
-    "print.scanForDetail": "掃碼查看詳情",
-    "print.qrLookupCaption":
-      "掃描開啟此化學品查詢頁 / Scan to open this chemical lookup",
-    "print.qrLookupPageOneCaption": "QR 查詢碼 - 僅第 1 頁 / QR lookup - Page 1 only",
-    "print.qrSupplementNotice":
-      "QR 補充標籤 - 使用前請對照 SDS / 主要標籤確認。",
-    "print.supplierMissing": "尚未填寫負責實驗室 / 供應商資訊",
-    "print.moreHazardsShort": "另有 {{count}} 項危害",
-    "print.morePrecautionary": "另有 {{count}} 項",
-    "print.preparedSolution": "配製溶液 / Prepared solution",
-    "print.preparedShort": "配製 / Prepared",
-    "print.concentration": "濃度 / Concentration",
-    "print.concentrationShort": "濃度 / Conc.",
-    "print.solvent": "溶劑 / Solvent",
-    "print.solventShort": "溶劑 / Solv.",
-    "print.preparedNote":
-      "此為配製溶液 / Prepared solution - 危害資料沿用母化學品；實際混合物分類可能不同。使用前請以官方安全資料表（SDS）為準 / Hazard data is copied from the parent chemical; verify against the official SDS before use.",
-    "print.preparedParentWarning":
-      "母化學品危害資料 / Parent chemical hazard data - 尚未驗證實際混合物分類。使用前請以官方安全資料表（SDS）為準 / Not verified mixture classification; verify against the official SDS before use.",
-    "print.preparedBy": "配製人 / Prepared by",
-    "print.preparedDate": "配製日期 / Prepared date",
-    "print.expiryDate": "有效期限 / Expiry date",
-    "print.pageNumber": "第 {{current}} / {{total}} 頁",
-    "print.batch": "案件",
-    "print.profilePhone": "電話",
-    "print.continuationBadge": "續頁 {{current}} / {{total}}",
-    "print.continuationBadgeContinues":
-      "第 {{current}} / {{total}} 頁",
-    "print.continuationBadgeFinal":
-      "第 {{current}} / {{total}} 頁",
-    "print.continuationPagePlain":
-      "第 {{current}} / {{total}} 頁",
-    "print.continuationMainStatus": "主標頁",
-    "print.continuationStatus": "續頁",
-    "print.continuationFinalStatus": "最後續頁",
-    "print.continuationMainPageActionSingle":
-      "請接續第 2 頁",
-    "print.continuationMainPageAction":
-      "請接續第 2-{{total}} 頁",
-    "print.continuationQrHere": "QR 在本頁",
-    "print.continuationQrOnFirstPage": "QR 僅在第 1 頁",
-    "print.continuationUseWithFirstPage":
-      "續頁，需與第 1 頁一併使用",
-    "print.continuationSetRequired":
-      "完整標籤共 {{total}} 頁，請整套張貼或保存",
-    "print.continuationOnlyBandTitle":
-      "續頁 / CONTINUATION ONLY",
-    "print.continuationOnlyBandDetail":
-      "不能單獨貼用本頁",
-    "print.continuationOnlyBandQr":
-      "請掃第 1 頁 QR 查詢碼",
-    "print.continuationPictogramAnchor":
-      "GHS 圖示重複作為頁面對照；QR 查詢碼保留在第 1 頁",
-    "print.continuationCompactPictogramAnchor":
-      "GHS 圖示已重複方便配頁",
-    "print.keepAllPagesTogether":
-      "整套頁面一起保存",
-    "print.continuationDoNotUseAlone":
-      "不可單獨使用本頁",
-    "print.noQrOnContinuationPage":
-      "本頁無 QR；請掃第 1 頁",
-    "print.statementWordingUnavailable":
-      "尚無完整文字 - 使用前請核對 SDS。",
-    "print.footerHazardSource":
-      "參考資料：PubChem/SDS / Reference data: PubChem/SDS",
-    "print.footerVerifyShort":
-      "使用前請對照 SDS、供應商標示與當地法規 / Verify against SDS, supplier label, and local regulations before use.",
-    "trust.printFooter":
-      "僅供參考 - 使用前請對照官方安全資料表（SDS）、供應商標示與當地法規。",
-  },
-};
-
 const PRINT_FRAME_ID = "ghs-print-frame";
-const PDF_EXPORT_SVG_SRC_RE = /(src=)(["'])(\/ghs\/GHS0[1-9]\.svg)\2/g;
-const GHS_SVG_DATA_URL_CACHE = new Map();
-
-const arrayBufferToBase64 = (arrayBuffer) => {
-  const bytes = new Uint8Array(arrayBuffer);
-  const bufferCtor = globalThis.Buffer;
-  if (typeof bufferCtor?.from === "function") {
-    return bufferCtor.from(bytes).toString("base64");
-  }
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  return globalThis.btoa(binary);
-};
-
-const getFetchImplementation = (fetchImpl) => {
-  if (typeof fetchImpl === "function") return fetchImpl;
-  if (typeof globalThis.fetch === "function") {
-    return globalThis.fetch.bind(globalThis);
-  }
-  throw Object.assign(new Error("PDF export fetch is unavailable"), {
-    code: "pdf_export_fetch_unavailable",
-  });
-};
-
-const fetchGhsSvgDataUrl = async (src, fetchImpl) => {
-  if (GHS_SVG_DATA_URL_CACHE.has(src)) {
-    return GHS_SVG_DATA_URL_CACHE.get(src);
-  }
-  const response = await getFetchImplementation(fetchImpl)(src);
-  if (!response?.ok) {
-    throw Object.assign(new Error(`Could not load ${src}`), {
-      code: "pdf_export_pictogram_fetch_failed",
-    });
-  }
-  const arrayBuffer =
-    typeof response.arrayBuffer === "function"
-      ? await response.arrayBuffer()
-      : new TextEncoder().encode(await response.text()).buffer;
-  const dataUrl = `data:image/svg+xml;base64,${arrayBufferToBase64(arrayBuffer)}`;
-  GHS_SVG_DATA_URL_CACHE.set(src, dataUrl);
-  return dataUrl;
-};
-
-export const resetPrintPdfExportCacheForTests = () => {
-  GHS_SVG_DATA_URL_CACHE.clear();
-};
-
-export async function inlineGhsPictogramSvgs(html, options = {}) {
-  const matches = [...String(html || "").matchAll(PDF_EXPORT_SVG_SRC_RE)];
-  const uniqueSources = [...new Set(matches.map((match) => match[3]))];
-  if (uniqueSources.length === 0) return html;
-
-  const replacements = new Map();
-  await Promise.all(
-    uniqueSources.map(async (src) => {
-      replacements.set(src, await fetchGhsSvgDataUrl(src, options.fetchImpl));
-    }),
-  );
-
-  return html.replace(PDF_EXPORT_SVG_SRC_RE, (match, prefix, quote, src) => {
-    return `${prefix}${quote}${replacements.get(src)}${quote}`;
-  });
-}
-
 const normalizePrintLocale = (locale) =>
   String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
 
@@ -673,6 +455,25 @@ const renderMetaRibbon = (
     preparedDetails.slice(0, preparedDetailLimit).forEach(([label, value]) => {
       chips.push(renderMetaChip(label, value, "meta-chip-prepared-detail"));
     });
+
+    const solventHazards = getRecordedSolventHazards(effectiveChem);
+    if (solventHazards.status === SOLVENT_HAZARD_STATUS.NOT_INCLUDED) {
+      chips.push(
+        renderMetaChip(
+          "",
+          model.t("print.solventHazardsNotIncludedShort"),
+          "meta-chip-prepared-solvent-missing support-chip-critical",
+        ),
+      );
+    } else if (solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED) {
+      chips.push(
+        renderMetaChip(
+          "",
+          model.t("print.solventHazardsIncludedShort"),
+          "meta-chip-prepared-solvent-included",
+        ),
+      );
+    }
   }
 
   if (chips.length === 0) return "";
@@ -718,6 +519,31 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   </div>`;
 };
 
+// A small label for a prepared solution must not read as the pure substance:
+// it always names the concentration and solvent, and it says so when a
+// solvent's hazards could not be added, because the on-screen warning does not
+// travel with the container.
+const renderSmallPreparedIdentity = (chemical, model) => {
+  if (!isPrepared(chemical)) return "";
+  const meta = chemical.preparedSolution || {};
+  const concentration = String(meta.concentration || "").trim();
+  const solvent = String(meta.solvent || "").trim();
+  const identity =
+    concentration && solvent
+      ? model.t("print.preparedSmallIdentity", { concentration, solvent })
+      : concentration || solvent || model.t("print.preparedShort");
+  const solventHazards = getRecordedSolventHazards(chemical);
+  const warning =
+    solventHazards.status === SOLVENT_HAZARD_STATUS.NOT_INCLUDED
+      ? `<div class="small-prepared-warning" data-testid="small-prepared-warning">${escapeHtml(
+          model.t("print.solventHazardsNotIncludedShort"),
+        )}</div>`
+      : "";
+  return `<div class="small-prepared-identity" data-testid="small-prepared-identity">${escapeHtml(
+    identity,
+  )}</div>${warning}`;
+};
+
 const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
   const nameDisplay = resolveNameDisplayForChemical(effectiveChem, model);
   const englishName =
@@ -742,6 +568,7 @@ const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
     ${englishNameHtml}
     ${chineseNameHtml}
     ${fallbackNameHtml}
+    ${renderSmallPreparedIdentity(effectiveChem, model)}
     ${renderContinuationBadge(continuation, model)}
   </div>`;
 };
@@ -778,6 +605,49 @@ const renderPreparedMeta = (chemical, model) => {
   }
   if (rows.length === 0) return "";
   return `<div class="prepared-meta" data-testid="prepared-meta">${rows.join("")}</div>`;
+};
+
+// Solvent hazard status for prepared items. Items built before the status
+// existed are treated conservatively: any non-water solvent reads as "not
+// included" so a missing lookup is never shown as "no solvent hazards".
+const renderPreparedSolventHazards = (chemical, model) => {
+  if (!isPrepared(chemical)) return "";
+  const solventHazards = getRecordedSolventHazards(chemical);
+  if (solventHazards.status === SOLVENT_HAZARD_STATUS.WATER) return "";
+  if (!String(solventHazards.solvent || "").trim()) return "";
+  const included = solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED;
+  const text = included
+    ? model.t("print.solventHazardsIncluded", {
+        solvent: getSolventHazardDisplayName(solventHazards, model.locale),
+        solventEn: getSolventHazardDisplayName(solventHazards, "en"),
+        cas: solventHazards.solventCas || "-",
+      })
+    : model.t("print.solventHazardsNotIncluded", {
+        solvent: solventHazards.solvent,
+      });
+  return `<div class="prepared-solvent-hazards ${
+    included
+      ? "prepared-solvent-hazards-included"
+      : "prepared-solvent-hazards-missing"
+  }" data-testid="prepared-solvent-hazards" data-solvent-hazard-status="${escapeHtml(
+    solventHazards.status,
+  )}">${escapeHtml(text)}</div>`;
+};
+
+// Which substance the GHS data describes (e.g. hydrogen chloride including
+// the gas, not hydrochloric acid solution). Printed on complete labels only;
+// QR and identification small labels carry no such text by contract.
+const renderSubstanceNotes = (chemical, model) => {
+  const notes = getSubstanceNotes(chemical);
+  if (notes.length === 0) return "";
+  return `<div class="substance-scope-notes" data-testid="substance-scope-notes">${notes
+    .map(
+      (note) =>
+        `<div class="substance-scope-note" data-substance-note-code="${escapeHtml(
+          note.code || "",
+        )}">${escapeHtml(getLocalizedTextForModel(note, model))}</div>`,
+    )
+    .join("")}</div>`;
 };
 
 const renderPreparedNote = (chemical, model, { fullPagePrimary = false } = {}) => {
@@ -833,6 +703,7 @@ const renderPreparedFullPageBlock = (chemical, model) => {
   return `<div class="prepared-identity-block" data-testid="prepared-identity-block">
     ${renderPreparedFullPageIdentity(model)}
     ${renderPreparedMeta(chemical, model)}
+    ${renderPreparedSolventHazards(chemical, model)}
     ${renderPreparedOperational(chemical, model)}
     ${renderPreparedNote(chemical, model, { fullPagePrimary: true })}
   </div>`;
@@ -877,6 +748,22 @@ const renderHazardCode = (statement, className) =>
   `<div class="${className} hazard-code-only">${escapeHtml(
     statement.code,
   )}</div>`;
+
+const renderHazardCodeOverflow = (statements, model) => {
+  if (!statements.length) return "";
+  return `<div class="hazard-overflow-codes hazard-code-list" data-testid="hazard-overflow-codes">
+    ${statements
+      .map((statement) =>
+        renderHazardCode(statement, "hazard-item hazard-primary-item"),
+      )
+      .join("")}
+  </div>
+  <div class="hazard-text-omitted" data-testid="hazard-text-omitted" data-hazard-text-omitted-count="${escapeHtml(
+    statements.length,
+  )}">${escapeHtml(
+    model.t("print.hazardCodesOnlyCount", { count: statements.length }),
+  )}</div>`;
+};
 
 const renderMoreHazards = (count, model, className = "") => {
   if (count <= 0) return "";
@@ -1254,15 +1141,26 @@ const renderStandardTemplate = (chemical, model) => {
     hazardStatements: hazards,
     precautionaryStatements: precautions,
     signalWord: contentSignalWord,
+    policy: contentPolicy,
   } = getLabelContentForRender(chemical, model);
   const signalWord = getSignalWordForModel(effectiveChem, model);
   const signalClass =
     effectiveChem.signal_word === "Danger" ? "danger" : "warning";
   const budgets = model.layout.templateBudgets.standard;
-  const prioritizedHazards = prioritizeHazardStatements(hazards);
-  const primaryHazards = prioritizedHazards.slice(0, budgets.primaryHazards);
-  const omittedHazards = Math.max(0, hazards.length - primaryHazards.length);
   const hazardRenderMode = getStandardHazardRenderMode(model.layout);
+  // Container hazard labels keep every H code: statements beyond the text
+  // budget print as codes only and the label shows how many lost their text.
+  const retainsAllHazardCodes = Boolean(contentPolicy?.retainsAllHazardCodes);
+  const hazardPlan = planHazardStatementsForBudget(hazards, {
+    fullTextBudget: budgets.primaryHazards,
+    codesOnly: hazardRenderMode === "code",
+    retainAllCodes: retainsAllHazardCodes,
+  });
+  const primaryHazards =
+    hazardRenderMode === "code" ? hazardPlan.codeOnly : hazardPlan.fullText;
+  const overflowCodeHazards =
+    hazardRenderMode === "code" ? [] : hazardPlan.codeOnly;
+  const omittedHazards = hazardPlan.omitted.length;
   const prepared = isPrepared(effectiveChem);
   const textOnlyGhs = hasTextOnlyGhsContent({
     pictograms,
@@ -1284,7 +1182,7 @@ const renderStandardTemplate = (chemical, model) => {
             includeCas: true,
             includeBatch: true,
             includePrepared: true,
-            preparedDetailLimit: model.layout.size === "small" ? 1 : 2,
+            preparedDetailLimit: 2,
           }),
         })}
       </div>
@@ -1297,7 +1195,7 @@ const renderStandardTemplate = (chemical, model) => {
                 </div>`
               : ""
           }
-          <div class="standard-main">
+          <div class="standard-main${hazardRenderMode === "code" ? " standard-main-codes" : ""}">
             ${signalWord ? `<div class="standard-signal-row">${renderSignal(signalWord, signalClass, "signal-inline")}</div>` : ""}
             <div class="standard-hazard-board">
             ${
@@ -1317,7 +1215,9 @@ const renderStandardTemplate = (chemical, model) => {
                             ),
                       )
                       .join("")}
+                    ${renderHazardCodeOverflow(overflowCodeHazards, model)}
                     ${
+                      retainsAllHazardCodes ||
                       shouldRenderMoreHazards(model.layout)
                         ? renderMoreHazards(omittedHazards, model)
                         : ""
@@ -1390,12 +1290,14 @@ const renderFullTemplate = (chemical, model) => {
             }),
           })}
           ${!fullPagePrimary ? renderContinuationBadge(continuation, model) : ""}
+          ${!continuation || continuation.current === 1 ? renderSubstanceNotes(effectiveChem, model) : ""}
           ${
             prepared
               ? fullPagePrimary
                 ? renderPreparedFullPageBlock(effectiveChem, model)
                 : renderPreparedBadge(model) +
                   renderPreparedMeta(effectiveChem, model) +
+                  renderPreparedSolventHazards(effectiveChem, model) +
                   renderPreparedOperational(effectiveChem, model)
               : ""
           }
@@ -1710,7 +1612,7 @@ const resolvePrintFrameViewport = (documentBundle) => {
   };
 };
 
-const createHiddenPrintFrame = (documentBundle) => {
+export const createHiddenPrintFrame = (documentBundle) => {
   const existingFrame = document.getElementById(PRINT_FRAME_ID);
   if (existingFrame) existingFrame.remove();
 
@@ -1733,12 +1635,12 @@ const createHiddenPrintFrame = (documentBundle) => {
   };
 };
 
-const waitForRequiredPrintImagesAsync = (images) =>
+export const waitForRequiredPrintImagesAsync = (images) =>
   new Promise((resolve) => {
     waitForRequiredPrintImages(images, resolve);
   });
 
-const getPrintBlockedInfo = (documentBundle, preflightIssues) => {
+export const getPrintBlockedInfo = (documentBundle, preflightIssues) => {
   const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
   const issueTypes = [
     ...new Set(preflightIssues.map((issue) => issue.type).filter(Boolean)),
@@ -1796,7 +1698,7 @@ const getSemanticBlockedMessage = (
   return buildLayoutBlockedAlert(lifecycleMeta, preflightIssues, locale);
 };
 
-const runSemanticPrintPreflight = (
+export const runSemanticPrintPreflight = (
   selectedForLabel,
   labelConfig,
   customGHSSettings,
@@ -1908,7 +1810,7 @@ const runSemanticPrintPreflight = (
   };
 };
 
-const recordSemanticBlockedEvent = (eventName, blockedInfo) => {
+export const recordSemanticBlockedEvent = (eventName, blockedInfo) => {
   const lifecycleMeta = blockedInfo.lifecycleMeta || {};
   recordObservabilityEvent(eventName, {
     status: "blocked",
@@ -1924,7 +1826,7 @@ const recordSemanticBlockedEvent = (eventName, blockedInfo) => {
   });
 };
 
-const recordPreflightBlockedEvent = (eventName, documentBundle, preflightIssues) => {
+export const recordPreflightBlockedEvent = (eventName, documentBundle, preflightIssues) => {
   const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
   recordObservabilityEvent(eventName, {
     status: "blocked",
@@ -1941,266 +1843,13 @@ const recordPreflightBlockedEvent = (eventName, documentBundle, preflightIssues)
   });
 };
 
-const notifyPrintBlocked = (lifecycleCallbacks, blockedInfo) => {
+export const notifyPrintBlocked = (lifecycleCallbacks, blockedInfo) => {
   try {
     lifecycleCallbacks?.onPrintBlocked?.(blockedInfo);
   } catch {
     // UI notification failures must not resume an unsafe print/PDF handoff.
   }
 };
-
-const mapPdfLabelPurpose = (layout = {}) => {
-  if (layout.labelPurpose === "qrSupplement" || layout.template === "qrcode") {
-    return "qr";
-  }
-  if (layout.labelPurpose === "quickId" || layout.template === "icon") {
-    return "identification";
-  }
-  return "complete";
-};
-
-const buildPrintPdfPayload = async (documentBundle, options = {}) => {
-  const page = documentBundle?.model?.layout?.page || {};
-  const layout = documentBundle?.model?.layout || {};
-  return {
-    html: await inlineGhsPictogramSvgs(documentBundle.html, options),
-    page: {
-      width_mm: Number(page.widthMm) || 210,
-      height_mm: Number(page.heightMm) || 297,
-      orientation: page.orientation === "landscape" ? "landscape" : "portrait",
-      margin_mm: Number(page.marginMm) || 0,
-    },
-    meta: {
-      label_purpose: mapPdfLabelPurpose(layout),
-      page_count_expected: Math.max(1, Number(documentBundle.model?.totalPages) || 1),
-    },
-  };
-};
-
-const getPdfErrorCode = async (response) => {
-  try {
-    const body = await response.json();
-    const detail = body?.detail;
-    if (typeof detail?.code === "string") return detail.code;
-  } catch {
-    // Fall through to the status-derived code below.
-  }
-  return `pdf_export_http_${response?.status || "error"}`;
-};
-
-const pdfExportErrorMessage = (code) => {
-  const keyByCode = {
-    pdf_renderer_unavailable: "print.pdfExportUnavailable",
-    pdf_render_busy: "print.pdfExportBusy",
-    pdf_render_timeout: "print.pdfExportTimeout",
-  };
-  return i18n.t(keyByCode[code] || "print.pdfExportFailed", {
-    defaultValue:
-      "Could not generate the PDF right now. Please try again in a moment.",
-  });
-};
-
-const getPdfFilename = () =>
-  `ghs-labels-${new Date().toISOString().slice(0, 10)}.pdf`;
-
-const downloadPdfBlob = (blob, filename) => {
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(objectUrl);
-};
-
-const handoffPdfBlob = async (blob, filename, options = {}) => {
-  const navigatorObj = options.navigatorObj || globalThis.navigator;
-  const fileCtor = globalThis.File;
-  if (
-    typeof fileCtor === "function" &&
-    typeof navigatorObj?.share === "function"
-  ) {
-    const file = new fileCtor([blob], filename, { type: "application/pdf" });
-    const sharePayload = {
-      files: [file],
-      title: "GHS Labels",
-    };
-    const canShare =
-      typeof navigatorObj.canShare !== "function" ||
-      navigatorObj.canShare(sharePayload);
-    if (canShare) {
-      try {
-        await navigatorObj.share(sharePayload);
-        return "share";
-      } catch {
-        // Fall back to a normal download if the share sheet is unavailable.
-      }
-    }
-  }
-  downloadPdfBlob(blob, filename);
-  return "download";
-};
-
-export async function exportLabelsPdf(
-  selectedForLabel,
-  labelConfig,
-  customGHSSettings,
-  customLabelFields = {},
-  labelQuantities = {},
-  labProfile = {},
-  lifecycleCallbacks = {},
-  options = {},
-) {
-  const semanticPreflight = runSemanticPrintPreflight(
-    selectedForLabel,
-    labelConfig,
-    customGHSSettings,
-    customLabelFields,
-    labelQuantities,
-    labProfile,
-    options,
-  );
-  if (!semanticPreflight.documentBundle) {
-    return { ok: false, status: "empty" };
-  }
-  if (!semanticPreflight.canPrint) {
-    recordSemanticBlockedEvent(
-      "pdf_export_blocked",
-      semanticPreflight.blockedInfo,
-    );
-    notifyPrintBlocked(lifecycleCallbacks, semanticPreflight.blockedInfo);
-    return {
-      ok: false,
-      status: "blocked",
-      blockedInfo: semanticPreflight.blockedInfo,
-    };
-  }
-
-  const documentBundle = buildPrintDocument(
-    selectedForLabel,
-    labelConfig,
-    customGHSSettings,
-    customLabelFields,
-    labelQuantities,
-    labProfile,
-    options,
-  );
-
-  if (!documentBundle) return { ok: false, status: "empty" };
-
-  const { iframe, iframeDoc, images } = createHiddenPrintFrame(documentBundle);
-  const imageLoadIssues = await waitForRequiredPrintImagesAsync(images);
-  const preflightIssues = collectPrintPreflightIssues(
-    documentBundle,
-    iframeDoc,
-    imageLoadIssues,
-  );
-
-  if (preflightIssues.length > 0) {
-    const retryPlan = resolvePrintPreflightRetry({
-      documentBundle,
-      preflightIssues,
-      selectedForLabel,
-      labelConfig,
-    });
-    iframe.remove();
-    if (retryPlan) {
-      return exportLabelsPdf(
-        retryPlan.selectedForLabel,
-        retryPlan.labelConfig,
-        customGHSSettings,
-        customLabelFields,
-        labelQuantities,
-        labProfile,
-        lifecycleCallbacks,
-        options,
-      );
-    }
-    recordPreflightBlockedEvent(
-      "pdf_export_blocked",
-      documentBundle,
-      preflightIssues,
-    );
-    const blockedInfo = getPrintBlockedInfo(documentBundle, preflightIssues);
-    notifyPrintBlocked(lifecycleCallbacks, blockedInfo);
-    return {
-      ok: false,
-      status: "blocked",
-      blockedInfo,
-    };
-  }
-
-  iframe.remove();
-  const lifecycleMeta = buildPrintLifecycleMeta(documentBundle);
-  try {
-    const payload = await buildPrintPdfPayload(documentBundle, options);
-    recordObservabilityEvent("pdf_export_start", {
-      status: "started",
-      count: lifecycleMeta.totalLabels || 1,
-      meta: lifecycleMeta,
-    });
-    const response = await getFetchImplementation(options.fetchImpl)(
-      `${API}/print/pdf`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      },
-    );
-    if (!response?.ok) {
-      const code = await getPdfErrorCode(response);
-      throw Object.assign(new Error(pdfExportErrorMessage(code)), { code });
-    }
-    const blob = await response.blob();
-    const filename = getPdfFilename();
-    const handoffMethod = await handoffPdfBlob(blob, filename, options);
-    recordObservabilityEvent("pdf_export_complete", {
-      status: handoffMethod,
-      count: lifecycleMeta.totalLabels || 1,
-      meta: {
-        ...lifecycleMeta,
-        completionReason: handoffMethod,
-      },
-    });
-    lifecycleCallbacks?.onPdfExportComplete?.({
-      ...lifecycleMeta,
-      handoffMethod,
-      filename,
-    });
-    return {
-      ok: true,
-      status: handoffMethod,
-      filename,
-    };
-  } catch (error) {
-    const code = error?.code || "pdf_export_failed";
-    recordObservabilityEvent("pdf_export_blocked", {
-      status: "error",
-      count: lifecycleMeta.totalLabels || 1,
-      meta: {
-        ...lifecycleMeta,
-        errorCode: code,
-      },
-    });
-    const blockedInfo = {
-      imageFailure: false,
-      issueCasNumbers: [],
-      issueCount: 1,
-      issueTypes: [code],
-      lifecycleMeta,
-      message: error?.message || pdfExportErrorMessage(code),
-    };
-    notifyPrintBlocked(lifecycleCallbacks, blockedInfo);
-    lifecycleCallbacks?.onPdfExportError?.(blockedInfo);
-    return {
-      ok: false,
-      status: "error",
-      code,
-      blockedInfo,
-    };
-  }
-}
 
 export function printLabels(
   selectedForLabel,

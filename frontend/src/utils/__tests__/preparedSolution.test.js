@@ -11,6 +11,10 @@
   preparedRecentKey,
   todayDateString,
 } from "../preparedSolution";
+import {
+  getGhsClassificationFingerprint,
+  listGhsClassifications,
+} from "../selectedGhsClassification";
 
 const baseParent = {
   cas_number: "64-17-5",
@@ -104,6 +108,120 @@ describe("buildPreparedSolutionItem", () => {
     expect(item.signal_word_zh).toBe(baseParent.signal_word_zh);
   });
 
+  describe("hazards of a gas under pressure", () => {
+    const hydrogenChloride = {
+      found: true,
+      cas_number: "7647-01-0",
+      name_en: "Hydrogen chloride",
+      name_zh: "氯化氫",
+      ghs_pictograms: [{ code: "GHS04" }, { code: "GHS05" }, { code: "GHS06" }],
+      hazard_statements: [{ code: "H280" }, { code: "H314" }, { code: "H331" }],
+      precautionary_statements: [{ code: "P260" }],
+      signal_word: "Danger",
+      signal_word_zh: "危險",
+    };
+    const codes = (items) => items.map((item) => item.code);
+
+    it("are left off a water solution, and every other hazard stays", () => {
+      const item = buildPreparedSolutionItem(hydrogenChloride, {
+        concentration: "1 M",
+        solvent: "Water",
+      });
+
+      expect(codes(item.ghs_pictograms)).toEqual(["GHS05", "GHS06"]);
+      expect(codes(item.hazard_statements)).toEqual(["H314", "H331"]);
+      expect(item.signal_word).toBe("Danger");
+    });
+
+    it("are left off a solution with looked-up solvent hazards", () => {
+      const item = buildPreparedSolutionItem(
+        hydrogenChloride,
+        { concentration: "4 M", solvent: "1,4-dioxane" },
+        {
+          solventResult: {
+            found: true,
+            cas_number: "123-91-1",
+            ghs_pictograms: [{ code: "GHS02" }, { code: "GHS08" }],
+            hazard_statements: [{ code: "H225" }, { code: "H351" }],
+            precautionary_statements: [],
+            signal_word: "Danger",
+          },
+        },
+      );
+
+      expect(codes(item.ghs_pictograms)).toEqual([
+        "GHS05",
+        "GHS06",
+        "GHS02",
+        "GHS08",
+      ]);
+      expect(codes(item.hazard_statements)).toEqual([
+        "H314",
+        "H331",
+        "H225",
+        "H351",
+      ]);
+    });
+
+    it("keep the pictogram when another pressure hazard still needs it", () => {
+      const item = buildPreparedSolutionItem(
+        {
+          ...hydrogenChloride,
+          hazard_statements: [{ code: "H280" }, { code: "H284" }],
+        },
+        { concentration: "1 M", solvent: "Water" },
+      );
+
+      expect(codes(item.ghs_pictograms)).toContain("GHS04");
+      expect(codes(item.hazard_statements)).toEqual(["H284"]);
+    });
+
+    it("are left off alternate classifications, which keep their fingerprints", () => {
+      const alternate = {
+        pictograms: [{ code: "GHS04" }, { code: "GHS05" }],
+        hazard_statements: [{ code: "H281" }, { code: "H314" }],
+        precautionary_statements: [],
+        signal_word: "Danger",
+      };
+      const parent = {
+        ...hydrogenChloride,
+        other_classifications: [alternate],
+      };
+
+      const item = buildPreparedSolutionItem(parent, {
+        concentration: "1 M",
+        solvent: "Water",
+      });
+      const [primaryAfter, alternateAfter] = listGhsClassifications(item);
+      const [primaryBefore, alternateBefore] = listGhsClassifications(parent);
+
+      expect(codes(alternateAfter.hazard_statements)).toEqual(["H314"]);
+      expect(codes(alternateAfter.pictograms)).toEqual(["GHS05"]);
+      expect(getGhsClassificationFingerprint(primaryAfter)).toBe(
+        getGhsClassificationFingerprint(primaryBefore),
+      );
+      expect(getGhsClassificationFingerprint(alternateAfter)).toBe(
+        getGhsClassificationFingerprint(alternateBefore),
+      );
+    });
+
+    it("leave a chemical without them untouched", () => {
+      const parent = {
+        ...hydrogenChloride,
+        ghs_pictograms: [{ code: "GHS05" }],
+        hazard_statements: [{ code: "H314" }],
+      };
+
+      const item = buildPreparedSolutionItem(parent, {
+        concentration: "1 M",
+        solvent: "Water",
+      });
+
+      expect(item.ghs_pictograms).toBe(parent.ghs_pictograms);
+      expect(item.hazard_statements).toBe(parent.hazard_statements);
+    });
+  });
+
   it("sets isPreparedSolution true", () => {
     const item = buildPreparedSolutionItem(baseParent, {
       concentration: "10%",
@@ -130,6 +248,7 @@ describe("buildPreparedSolutionItem", () => {
       preparedBy: null,
       preparedDate: null,
       expiryDate: null,
+      solventHazards: { status: "water", solvent: "Water" },
     });
   });
 

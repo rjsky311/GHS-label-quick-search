@@ -119,11 +119,11 @@ stability:
 
 | Family | Representative output | Required physical evidence |
 | --- | --- | --- |
-| Complete A4 label | Hydrochloric Acid or a dense batch item on A4 | Full H/P content prints or continues on the same stock; identity, CAS, signal, pictograms, QR, and profile stay readable |
-| Complete Letter label | Hydrochloric Acid or a dense batch item on Letter | Same as A4, with Letter paper selected |
+| Complete A4 label | Hydrogen chloride (7647-01-0) or a dense batch item on A4 | Full H/P content prints or continues on the same stock; identity, CAS, signal, pictograms, QR, and profile stay readable |
+| Complete Letter label | Hydrogen chloride (7647-01-0) or a dense batch item on Letter | Same as A4, with Letter paper selected |
 | Complete continuation set | Formaldehyde, Aniline, or another dense H/P item | Pages print in order; each continuation repeats identity, CAS, signal, pictograms, profile, and quiet page marker |
-| QR small label | Hydrochloric Acid or a multi-pictogram item on 62 x 40 mm | CAS/English/Chinese identity is readable; QR scans; all pictograms appear across same-output continuation labels |
-| Identification small label | Hydrochloric Acid or a multi-pictogram item on 70 x 24 mm | CAS/English/Chinese identity is readable; all pictograms appear across same-output continuation labels; no QR/H/P/signal appears |
+| QR small label | Hydrogen chloride (7647-01-0) or a multi-pictogram item on 62 x 40 mm | CAS/English/Chinese identity is readable; QR scans; all pictograms appear across same-output continuation labels |
+| Identification small label | Hydrogen chloride (7647-01-0) or a multi-pictogram item on 70 x 24 mm | CAS/English/Chinese identity is readable; all pictograms appear across same-output continuation labels; no QR/H/P/signal appears |
 
 Historical/internal regression families can be validated only after the current
 public outputs pass or when a bug report specifically involves that legacy
@@ -143,8 +143,11 @@ fixture:
 
 Use at least these chemicals because they stress different failure modes:
 
-- Hydrochloric Acid (`7647-01-0`): four pictograms, dense H/P content, small
-  label pressure.
+- Hydrogen chloride (`7647-01-0`, also found by "hydrochloric acid" / "鹽酸"):
+  every pictogram in its current data (today four, including the gas-only
+  GHS04), dense H/P content, small label pressure, and the substance note on
+  the complete label. Do not treat GHS04 as correct for a hydrochloric acid
+  solution; that label is usually GHS05 and GHS07 per the supplier SDS.
 - Formaldehyde (`50-00-0`): dense content and continuation-page pressure.
 - Ethanol (`64-17-5`): lower-density flammable case.
 - Nitrogen (`7727-37-9`) or another sparse single-pictogram case: verifies

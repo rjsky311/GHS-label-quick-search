@@ -120,7 +120,7 @@ const PREPARED_CASES = Object.freeze([
     expectedMinPictogramSidePx: 35,
     expectedMinTotalLabels: 1,
     expectedHasPreparedBadge: false,
-    expectedPreparedTexts: [],
+    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
   },
   {
     id: "prepared-tube-quick-id",
@@ -132,7 +132,7 @@ const PREPARED_CASES = Object.freeze([
     expectedHasQr: false,
     expectedMinPictogramSidePx: 26,
     expectedHasPreparedBadge: false,
-    expectedPreparedTexts: [],
+    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
   },
 ]);
 
@@ -160,7 +160,10 @@ const ALL_PREPARED_CASES = Object.freeze([
   ...PREPARED_PRESET_CASES,
 ]);
 
-const EXPECTED_PICTOGRAMS = Object.freeze(["GHS04", "GHS05", "GHS06", "GHS07"]);
+// Every pictogram in the current PubChem data for CAS 7647-01-0 must print,
+// except GHS04: that data is the hydrogen chloride classification and includes
+// the gas, and a prepared solution is not a gas under pressure.
+const EXPECTED_PICTOGRAMS = Object.freeze(["GHS05", "GHS06", "GHS07"]);
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 
@@ -726,7 +729,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           })),
           ...Array.from(
             document.querySelectorAll(
-              ".meta-chip-cas, .signal, .prepared-badge, .prepared-solution-identity, .meta-chip-prepared-detail",
+              ".meta-chip-cas, .signal, .prepared-badge, .prepared-solution-identity, .meta-chip-prepared-detail, .small-prepared-identity, .small-prepared-warning",
             ),
           ).map((element, index) => ({
             element,

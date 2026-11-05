@@ -174,6 +174,7 @@ export function resolvePrintContentPolicy(
   const isCompletePrimary = role === PRINT_CONTENT_ROLE.COMPLETE_PRIMARY;
   const isQrSupplement = role === PRINT_CONTENT_ROLE.QR_SUPPLEMENT;
   const isQuickId = role === PRINT_CONTENT_ROLE.QUICK_ID;
+  const isContainerFront = role === PRINT_CONTENT_ROLE.CONTAINER_FRONT;
 
   return {
     role,
@@ -186,7 +187,12 @@ export function resolvePrintContentPolicy(
     isSupplemental: !isCompletePrimary,
     isQrSupplement,
     isQuickId,
+    isContainerFront,
     pictogramsMustRender: true,
+    // Container hazard labels (complete primary and container front) never
+    // drop an H code for space. Statements that do not fit as full text are
+    // printed as codes only, with a visible count.
+    retainsAllHazardCodes: isCompletePrimary || isContainerFront,
     qrCanReplaceRequiredElements: false,
     requiresResponsibleProfile: isCompletePrimary,
     permitsFullHazardText: isCompletePrimary,

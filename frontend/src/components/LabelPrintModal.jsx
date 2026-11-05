@@ -20,7 +20,9 @@ import {
   STOCK_IDS_BY_PRINT_TARGET,
   buildDisplayNames,
   buildBatchReviewCsv,
+  buildPreparedSolventRisk,
   buildPreviewRisks,
+  buildSubstanceNoteRisks,
   formatMmValue,
   getBatchCategoryLabel,
   getBatchPurposeLabel,
@@ -494,7 +496,12 @@ export default function LabelPrintModal({
     displayNames,
     tx,
   });
-  const visiblePreviewRisks =
+  const preparedSolventRisk = buildPreparedSolventRisk({
+    previewChem,
+    locale: currentLocale,
+    tx,
+  });
+  const plannedPreviewRisks =
     outputPlanState === PRINT_OUTPUT_PLAN_STATE.READY_WITH_NOTICE &&
     plannerPreviewRisk
       ? [plannerPreviewRisk]
@@ -504,6 +511,17 @@ export default function LabelPrintModal({
           ...previewRisks.filter((risk) => risk !== readyPreviewMessage),
         ]
       : previewRisks;
+  // Substance and solvent notes always show, ahead of the planner's notice.
+  const pinnedPreviewRisks = [
+    ...buildSubstanceNoteRisks({ previewChem, locale: currentLocale, tx }),
+    preparedSolventRisk,
+  ].filter(Boolean);
+  const visiblePreviewRisks = pinnedPreviewRisks.length
+    ? [
+        ...pinnedPreviewRisks,
+        ...plannedPreviewRisks.filter((risk) => risk !== readyPreviewMessage),
+      ]
+    : plannedPreviewRisks;
   const outputNotApplicableLabel = tx(
     "label.outputNotApplicable",
     "Not applicable",

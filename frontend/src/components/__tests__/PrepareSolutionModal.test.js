@@ -1145,4 +1145,47 @@ describe("PrepareSolutionModal", () => {
       screen.getByTestId("prepare-solution-preset-item-0").textContent
     ).toContain("10% (v/v) Ethanol in Water");
   });
+
+  it("hints that a non-water solvent's hazards are looked up and added", () => {
+    render(
+      <PrepareSolutionModal parent={baseParent} onSubmit={jest.fn()} onClose={jest.fn()} />
+    );
+    const solventInput = screen.getByTestId("prepared-solvent-input");
+
+    fireEvent.change(solventInput, { target: { value: "Water" } });
+    expect(
+      screen.queryByTestId("prepared-solvent-hazard-hint")
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(solventInput, { target: { value: "Methanol" } });
+    const hint = screen.getByTestId("prepared-solvent-hazard-hint");
+    expect(hint.textContent).toBe("prepared.solventHazardHint");
+    expect(solventInput).toHaveAttribute(
+      "aria-describedby",
+      "prepared-solvent-hazard-hint"
+    );
+  });
+
+  it("disables submit while the solvent lookup is pending", () => {
+    const onSubmit = jest.fn();
+    render(
+      <PrepareSolutionModal
+        parent={baseParent}
+        onSubmit={onSubmit}
+        onClose={jest.fn()}
+        submitPending
+      />
+    );
+    fireEvent.change(screen.getByTestId("prepared-concentration-input"), {
+      target: { value: "10 mM" },
+    });
+    fireEvent.change(screen.getByTestId("prepared-solvent-input"), {
+      target: { value: "Methanol" },
+    });
+    const submit = screen.getByTestId("prepare-solution-submit-btn");
+    expect(submit).toBeDisabled();
+    expect(submit.textContent).toBe("prepared.solventLookupPending");
+    fireEvent.submit(submit.closest("form"));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

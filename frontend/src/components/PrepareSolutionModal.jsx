@@ -8,6 +8,7 @@ import {
   todayDateString,
 } from "@/utils/preparedSolution";
 import { resolveTrustedChineseName } from "@/utils/ghsText";
+import { getSolventLookupQuery } from "@/utils/preparedSolventHazards";
 import {
   modalViewportBodyClassName,
   modalViewportOverlayClassName,
@@ -57,8 +58,10 @@ function getRecentExpiryStatus(expiryDate) {
  * submit hands them back to the parent via `onSubmit({concentration,
  * solvent})`. The parent (App.js) then:
  *
- *   1. builds a derived prepared-solution item via
- *      `buildPreparedSolutionItem(parent, formValues)`
+ *   1. for a solvent other than water, looks the solvent up
+ *      (`/search-single`) while `submitPending` is true, then builds a
+ *      derived prepared-solution item via
+ *      `buildPreparedSolutionItem(parent, formValues, { solventResult })`
  *   2. REPLACES `selectedForLabel` with `[preparedItem]`
  *   3. RESETS `labelQuantities` to `{}`
  *   4. CLOSES DetailModal + this modal, OPENS LabelPrintModal
@@ -68,7 +71,8 @@ function getRecentExpiryStatus(expiryDate) {
  *
  *   - no fields for pictograms / H-codes / P-codes / signal word.
  *     The user cannot override GHS classification; only concentration
- *     and solvent. Any impulse to add a "custom hazard" field at this
+ *     and solvent (a non-water solvent's looked-up hazards are added by
+ *     union, never typed in). Any impulse to add a "custom hazard" field at this
  *     layer must be resisted.
  *   - the parent-chemical identity is shown read-only at the top so
  *     the user always sees what the derived label will be based on.
@@ -78,6 +82,8 @@ function getRecentExpiryStatus(expiryDate) {
  * @param {Object}   parent    ChemicalResult the user is deriving from
  * @param {Function} onSubmit  ({concentration, solvent}) => void
  * @param {Function} onClose   () => void (called for both Cancel and Esc)
+ * @param {boolean}  submitPending  true while the parent looks up a
+ *   non-water solvent's hazards; submit is disabled meanwhile
  */
 export default function PrepareSolutionModal({
   parent,
@@ -88,6 +94,7 @@ export default function PrepareSolutionModal({
   onSavePreset,
   presetNameValue,
   onPresetNameChange,
+  submitPending = false,
 }) {
   const { t, i18n } = useTranslation();
   const concentrationInputRef = useRef(null);
@@ -217,10 +224,13 @@ export default function PrepareSolutionModal({
   const trimmedConcentration = concentration.trim();
   const trimmedSolvent = solvent.trim();
   const canSubmit = Boolean(trimmedConcentration && trimmedSolvent);
+  // A solvent other than water is looked up so its hazards join the label;
+  // the hint says so before the user commits.
+  const solventNeedsLookup = Boolean(getSolventLookupQuery(trimmedSolvent));
 
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || submitPending) return;
     // Operational fields are passed through as-is. Any blank-string →
     // null normalisation happens inside buildPreparedSolutionItem;
     // keeping it there means a single source of truth and lets other
@@ -529,9 +539,21 @@ export default function PrepareSolutionModal({
               placeholder={t("prepared.solventPlaceholder")}
               className={NOTEBOOK_FIELD_CLASS}
               data-testid="prepared-solvent-input"
+              aria-describedby={
+                solventNeedsLookup ? "prepared-solvent-hazard-hint" : undefined
+              }
               required
               maxLength={60}
             />
+            {solventNeedsLookup && (
+              <p
+                id="prepared-solvent-hazard-hint"
+                className="notebook-tone-warning mt-1.5 text-xs leading-5"
+                data-testid="prepared-solvent-hazard-hint"
+              >
+                {t("prepared.solventHazardHint", { solvent: trimmedSolvent })}
+              </p>
+            )}
           </div>
 
           {/* Tier 2 PR-1: Operational metadata section.
@@ -673,11 +695,14 @@ export default function PrepareSolutionModal({
             )}
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || submitPending}
+              aria-busy={submitPending || undefined}
               className="notebook-control notebook-control-primary w-full justify-center px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               data-testid="prepare-solution-submit-btn"
             >
-              {t("prepared.continueToPrint")}
+              {submitPending
+                ? t("prepared.solventLookupPending")
+                : t("prepared.continueToPrint")}
             </button>
           </div>
         </form>
