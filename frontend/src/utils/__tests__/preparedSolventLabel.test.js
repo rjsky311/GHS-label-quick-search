@@ -166,3 +166,68 @@ describe("label preview note for the solvent", () => {
     expect(buildPreparedSolventRisk({ previewChem: parentX, locale: "en", tx })).toBe("");
   });
 });
+
+describe("prepared-solution small labels", () => {
+  const SMALL_LAYOUTS = [
+    ["quick ID", { labelPurpose: "quickId", template: "icon", stockPreset: "small-strip" }],
+    [
+      "QR",
+      {
+        labelPurpose: "qrSupplement",
+        template: "qrcode",
+        stockPreset: "brother-62mm-continuous",
+      },
+    ],
+  ];
+  const WARNING = 'data-testid="small-prepared-warning"';
+  const IDENTITY = 'data-testid="small-prepared-identity"';
+
+  it.each(SMALL_LAYOUTS)("%s: names the concentration and solvent", (_label, layout) => {
+    expect(preview(inWater, layout)).toMatch(/small-prepared-identity[^>]*>10 mM in Water</);
+    expect(preview(inMethanol, layout)).toMatch(/small-prepared-identity[^>]*>10 mM in Methanol</);
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: a merged solvent adds its pictograms and no warning", (_label, layout) => {
+    const html = preview(inMethanol, layout);
+    expect(html).toContain("GHS06.svg");
+    expect(html).toContain("GHS07.svg");
+    expect(html).not.toContain(WARNING);
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: warns on the label when the solvent lookup failed", (_label, layout) => {
+    const html = preview(inMethanolNotFound, layout);
+    expect(html).toContain(WARNING);
+    expect(html).toContain("Solvent hazards not included");
+    expect(html).toContain("10 mM in Methanol");
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: water needs no warning", (_label, layout) => {
+    expect(preview(inWater, layout)).not.toContain(WARNING);
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: an old record with no status warns unless water", (_label, layout) => {
+    const oldRecord = (solvent) => {
+      const item = buildPreparedSolutionItem(parentX, form(solvent));
+      const { solventHazards: _dropped, ...preparedSolution } = item.preparedSolution;
+      return { ...item, preparedSolution };
+    };
+    expect(preview(oldRecord("Methanol"), layout)).toContain(WARNING);
+    expect(preview(oldRecord("Water"), layout)).not.toContain(WARNING);
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: the pure substance has no solution line", (_label, layout) => {
+    const html = preview(parentX, layout);
+    expect(html).not.toContain(IDENTITY);
+    expect(html).not.toContain(WARNING);
+  });
+
+  it.each(SMALL_LAYOUTS)("%s: escapes what the user typed", (_label, layout) => {
+    const item = buildPreparedSolutionItem(
+      parentX,
+      { ...form("Water"), concentration: "<b>1 M</b>" },
+    );
+    const html = preview(item, layout);
+    expect(html).not.toContain("<b>1 M</b>");
+    expect(html).toContain("&lt;b&gt;1 M&lt;/b&gt;");
+  });
+});

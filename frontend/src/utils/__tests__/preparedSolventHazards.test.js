@@ -109,6 +109,53 @@ describe("strongerSignalWord", () => {
   });
 });
 
+describe("merging statements that have no code", () => {
+  const parent = {
+    cas_number: "7647-14-5",
+    name_en: "Compound X",
+    found: true,
+    ghs_pictograms: [{ code: "GHS07" }],
+    hazard_statements: [{ code: "", text_en: "Parent hazard with no code" }],
+    precautionary_statements: [],
+    signal_word: "Warning",
+    other_classifications: [],
+  };
+  const solvent = {
+    found: true,
+    ghs_pictograms: [{ code: "GHS06" }],
+    hazard_statements: [
+      { code: "", text_en: "Solvent hazard with no code" },
+      { code: "", text_en: "Parent hazard with no code" },
+      { code: "H301", text_en: "Toxic if swallowed" },
+    ],
+    precautionary_statements: [],
+    signal_word: "危險",
+  };
+
+  it("keeps each one once instead of dropping it", () => {
+    const item = buildPreparedSolutionItem(
+      parent,
+      { concentration: "1 M", solvent: "Solvent Y" },
+      { solventResult: solvent },
+    );
+    expect(item.hazard_statements.map((s) => s.text_en)).toEqual([
+      "Parent hazard with no code",
+      "Solvent hazard with no code",
+      "Toxic if swallowed",
+    ]);
+  });
+
+  it("recognises a Chinese signal word as the stronger one", () => {
+    const item = buildPreparedSolutionItem(
+      parent,
+      { concentration: "1 M", solvent: "Solvent Y" },
+      { solventResult: solvent },
+    );
+    expect(item.signal_word).toBe("危險");
+    expect(item.signal_word_zh).toBe("危險");
+  });
+});
+
 describe("prepared solution: X in methanol", () => {
   const item = buildPreparedSolutionItem(parentX, form("Methanol"), {
     solventResult: methanolResult,

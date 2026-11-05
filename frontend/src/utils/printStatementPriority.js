@@ -4,11 +4,16 @@
 // budget never pushes them behind irritation statements. Ties keep the
 // original upstream order, so the result stays deterministic.
 
-const getStatementCodes = (statement) =>
-  String(statement?.code || "")
-    .split("+")
+// Combined statements may join codes with "+", "/" or ",", and a later part
+// may drop its prefix ("H300+310"), so that part inherits the first prefix.
+const getStatementCodes = (statement) => {
+  const parts = String(statement?.code || "")
+    .split(/[+/,]/)
     .map((code) => code.trim().toUpperCase())
     .filter(Boolean);
+  const prefix = /^[A-Z]+/.exec(parts[0] || "")?.[0] || "";
+  return parts.map((code) => (/^\d/.test(code) ? `${prefix}${code}` : code));
+};
 
 const scoreStatementCodes = (statement, scoreCode) => {
   const codes = getStatementCodes(statement);
@@ -29,6 +34,7 @@ export const HAZARD_PRIORITY_TIER = Object.freeze({
   PHYSICAL: 85,
   PRESSURE_OR_METAL_CORROSION: 80,
   IRRITANT_OR_HARMFUL: 50,
+  ENVIRONMENTAL: 40,
   OTHER: 10,
 });
 
@@ -54,10 +60,16 @@ const PHYSICAL_HAZARD_CODES = new Set([
 
 const PRESSURE_OR_METAL_CORROSION_CODES = new Set([280, 281, 284, 290]);
 
-// Irritation, skin sensitisation, drowsiness/dizziness, and acute toxicity
-// category 4 ("harmful").
+// Irritation, skin sensitisation, drowsiness/dizziness, acute toxicity
+// categories 4 and 5, aspiration category 2, and mild skin or eye irritation.
 const IRRITANT_OR_HARMFUL_CODES = new Set([
-  302, 312, 315, 317, 319, 332, 335, 336, 337,
+  302, 303, 305, 312, 313, 315, 316, 317, 319, 320, 332, 333, 335, 336, 337,
+]);
+
+// Aquatic and ozone hazards. They rank below health hazards but stay ahead of
+// any code this file does not recognise.
+const ENVIRONMENTAL_HAZARD_CODES = new Set([
+  400, 401, 402, 410, 411, 412, 413, 420,
 ]);
 
 const scoreHazardCode = (code) => {
@@ -73,6 +85,9 @@ const scoreHazardCode = (code) => {
   }
   if (IRRITANT_OR_HARMFUL_CODES.has(number)) {
     return HAZARD_PRIORITY_TIER.IRRITANT_OR_HARMFUL;
+  }
+  if (ENVIRONMENTAL_HAZARD_CODES.has(number)) {
+    return HAZARD_PRIORITY_TIER.ENVIRONMENTAL;
   }
   return HAZARD_PRIORITY_TIER.OTHER;
 };

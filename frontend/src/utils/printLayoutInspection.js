@@ -103,6 +103,8 @@ const REQUIRED_TEXT_CLIP_SELECTORS = [
   [".small-name-en", "required-small-name-en-clipped"],
   [".small-name-zh", "required-small-name-zh-clipped"],
   [".small-cas", "required-small-cas-clipped"],
+  [".small-prepared-identity", "required-small-prepared-identity-clipped"],
+  [".small-prepared-warning", "required-small-prepared-warning-clipped"],
   [".cas", "required-cas-clipped"],
   [".meta-chip-cas .meta-chip-value", "required-cas-value-clipped"],
 ];
@@ -167,6 +169,8 @@ export function inspectPrintLayoutDocument(documentLike) {
       [".small-name-en", "small-name-en-overflow"],
       [".small-name-zh", "small-name-zh-overflow"],
       [".small-cas", "small-cas-overflow"],
+      [".small-prepared-identity", "small-prepared-identity-overflow"],
+      [".small-prepared-warning", "small-prepared-warning-overflow"],
       [".standard-rail", "standard-rail-overflow"],
       [".standard-main", "standard-main-overflow"],
       [".standard-hazard-board", "standard-hazard-board-overflow"],

@@ -133,6 +133,7 @@ const PRINT_TEXT_FALLBACKS = {
     "print.morePrecautionary": "+{{count}} more",
     "print.preparedSolution": "Prepared solution",
     "print.preparedShort": "Prepared",
+    "print.preparedSmallIdentity": "{{concentration}} in {{solvent}}",
     "print.concentration": "Concentration",
     "print.concentrationShort": "Conc.",
     "print.solvent": "Solvent",
@@ -218,6 +219,7 @@ const PRINT_TEXT_FALLBACKS = {
     "print.morePrecautionary": "另有 {{count}} 項",
     "print.preparedSolution": "配製溶液 / Prepared solution",
     "print.preparedShort": "配製 / Prepared",
+    "print.preparedSmallIdentity": "{{concentration}} 溶於 {{solvent}}",
     "print.concentration": "濃度 / Concentration",
     "print.concentrationShort": "濃度 / Conc.",
     "print.solvent": "溶劑 / Solvent",
@@ -757,6 +759,31 @@ const renderNameSection = (effectiveChem, model, options = {}) => {
   </div>`;
 };
 
+// A small label for a prepared solution must not read as the pure substance:
+// it always names the concentration and solvent, and it says so when a
+// solvent's hazards could not be added, because the on-screen warning does not
+// travel with the container.
+const renderSmallPreparedIdentity = (chemical, model) => {
+  if (!isPrepared(chemical)) return "";
+  const meta = chemical.preparedSolution || {};
+  const concentration = String(meta.concentration || "").trim();
+  const solvent = String(meta.solvent || "").trim();
+  const identity =
+    concentration && solvent
+      ? model.t("print.preparedSmallIdentity", { concentration, solvent })
+      : concentration || solvent || model.t("print.preparedShort");
+  const solventHazards = getRecordedSolventHazards(chemical);
+  const warning =
+    solventHazards.status === SOLVENT_HAZARD_STATUS.NOT_INCLUDED
+      ? `<div class="small-prepared-warning" data-testid="small-prepared-warning">${escapeHtml(
+          model.t("print.solventHazardsNotIncludedShort"),
+        )}</div>`
+      : "";
+  return `<div class="small-prepared-identity" data-testid="small-prepared-identity">${escapeHtml(
+    identity,
+  )}</div>${warning}`;
+};
+
 const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
   const nameDisplay = resolveNameDisplayForChemical(effectiveChem, model);
   const englishName =
@@ -781,6 +808,7 @@ const renderSmallIdentitySection = (chemical, effectiveChem, model) => {
     ${englishNameHtml}
     ${chineseNameHtml}
     ${fallbackNameHtml}
+    ${renderSmallPreparedIdentity(effectiveChem, model)}
     ${renderContinuationBadge(continuation, model)}
   </div>`;
 };

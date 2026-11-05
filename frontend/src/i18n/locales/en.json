@@ -925,6 +925,7 @@
   "print.morePrecautionary": "+{{count}} more",
   "print.preparedSolution": "Prepared solution",
   "print.preparedShort": "Prepared",
+  "print.preparedSmallIdentity": "{{concentration}} in {{solvent}}",
   "print.concentration": "Concentration",
   "print.concentrationShort": "Conc.",
   "print.solvent": "Solvent",

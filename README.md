@@ -64,8 +64,10 @@ Important boundaries:
 - Bilingual English/Traditional Chinese UI.
 - Purpose-first label print flow with three public outputs: A4/Letter complete
   labels, QR small labels, and identification small labels, with live preview,
-  recent prints, lab profile, and prepared-solution support (a non-water
-  solvent's hazards are added to the parent's, never reduced for dilution).
+  recent prints, lab profile, and prepared-solution support. Prepared-solution
+  labels combine the parent's hazards with a non-water solvent's, never reduced
+  for dilution, and every label says so if the solvent's hazards could not be
+  retrieved.
 - Admin-gated pilot tools for dictionary/manual-reference maintenance and
   optional workspace sync.
 
@@ -142,9 +144,12 @@ rate-limit storage with `RATE_LIMIT_STORAGE_URI`, `LIMITS_STORAGE_URI`, or
 
 ```bash
 cd frontend
-npm ci
+npx npm@11.6.2 ci
 npm run dev
 ```
+
+Use Node 22. The lockfile matches the npm version pinned in
+`frontend/package.json`, so install with that version as shown.
 
 Frontend environment defaults are in [frontend/.env.example](./frontend/.env.example).
 For local development, `VITE_BACKEND_URL` normally points to

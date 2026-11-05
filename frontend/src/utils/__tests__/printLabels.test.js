@@ -6395,9 +6395,9 @@ describe("prepared solution print rendering", () => {
   });
 
   describe("icon template", () => {
-    // Space-constrained templates now keep the same simple identity contract
-    // as non-prepared chemicals: CAS, English name, Chinese name, and icons.
-    it("renders prepared chemicals with the compact identity block only", () => {
+    // Space-constrained templates add one line to the compact identity so a
+    // prepared solution does not read as the pure substance.
+    it("renders prepared chemicals with the compact identity and the solution line", () => {
       printLabels(
         [makePrepared()],
         { size: "medium", template: "icon", orientation: "portrait" },
@@ -6409,8 +6409,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(mockChemical.name_zh);
       expect(html).not.toMatch(/<div\s+class="prepared-badge"/);
       expect(html).not.toMatch(/<div\s+class="prepared-meta"/);
-      expect(html).not.toContain("10% (v/v)");
-      expect(html).not.toContain("Water");
+      expect(html).toMatch(/<div class="small-prepared-identity"[^>]*>10% \(v\/v\) in Water</);
     });
 
     it("does NOT render the full prepared-note on icon template (space)", () => {
@@ -6448,8 +6447,7 @@ describe("prepared solution print rendering", () => {
       expect(html).toContain(mockChemical.name_zh);
       expect(html).not.toMatch(/<div\s+class="meta-ribbon"/);
       expect(html).not.toContain("print.preparedShort");
-      expect(html).not.toContain("10% (v/v)");
-      expect(html).not.toContain("Water");
+      expect(html).toMatch(/<div class="small-prepared-identity"[^>]*>10% \(v\/v\) in Water</);
     });
 
     it("does NOT render the full prepared-note on qrcode template (space)", () => {

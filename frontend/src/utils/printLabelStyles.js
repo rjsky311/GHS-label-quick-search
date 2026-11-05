@@ -624,6 +624,22 @@ export const buildPrintStyles = (model) => {
       white-space: nowrap;
       min-width: 0;
     }
+    .small-prepared-identity {
+      color: #0f172a;
+      font-size: 6.6px;
+      font-weight: 850;
+      line-height: 1.12;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .small-prepared-warning {
+      color: #b91c1c;
+      font-size: 6.2px;
+      font-weight: 850;
+      line-height: 1.12;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     .small-identity .continuation-badge {
       position: absolute;
       right: 1mm;
@@ -1775,6 +1791,36 @@ export const buildPrintStyles = (model) => {
       width: 11.4mm;
       height: 11.4mm;
     }
+    /* A prepared solution's identity lines take height from the pictograms. */
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-7 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-8 .pictograms-icon,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-9 .pictograms-icon {
+      grid-template-columns: repeat(9, 7mm);
+      grid-auto-rows: 7mm;
+      gap: 0.3mm;
+    }
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-7 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-8 .pictograms-icon img,
+    .label-icon.label-stock-small-strip.label-form-strip.label-prepared.label-pictogram-count-9 .pictograms-icon img {
+      width: 7mm;
+      height: 7mm;
+    }
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-5 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-6 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-7 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-8 .pictograms-icon,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-9 .pictograms-icon {
+      grid-template-columns: repeat(6, 8.1mm);
+      gap: 0.25mm;
+    }
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-5 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-6 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-7 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-8 .pictograms-icon img,
+    .label-icon.label-stock-small-rack.label-prepared.label-pictogram-count-9 .pictograms-icon img {
+      width: 8.1mm;
+      height: 8.1mm;
+    }
     .label-icon.label-stock-small-rack .signal {
       font-size: 5.5px;
       min-width: 11mm;
@@ -2327,6 +2373,14 @@ export const buildPrintStyles = (model) => {
     .label-stock-medium-rack.label-qr.label-form-compact .pictograms.qr-pics img {
       width: 9mm;
       height: 9mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact.label-prepared.label-pictogram-count-9 .pictograms.qr-pics {
+      grid-template-columns: repeat(5, 7.2mm);
+      gap: 0.35mm;
+    }
+    .label-stock-medium-rack.label-qr.label-form-compact.label-prepared.label-pictogram-count-9 .pictograms.qr-pics img {
+      width: 7.2mm;
+      height: 7.2mm;
     }
     .label-stock-medium-rack.label-qr.label-form-compact .qr-priority-block {
       padding: 0.45mm 0;

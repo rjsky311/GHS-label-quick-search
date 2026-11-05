@@ -120,7 +120,7 @@ const PREPARED_CASES = Object.freeze([
     expectedMinPictogramSidePx: 35,
     expectedMinTotalLabels: 1,
     expectedHasPreparedBadge: false,
-    expectedPreparedTexts: [],
+    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
   },
   {
     id: "prepared-tube-quick-id",
@@ -132,7 +132,7 @@ const PREPARED_CASES = Object.freeze([
     expectedHasQr: false,
     expectedMinPictogramSidePx: 26,
     expectedHasPreparedBadge: false,
-    expectedPreparedTexts: [],
+    expectedPreparedTexts: [PREPARED_FORM.concentration, PREPARED_FORM.solvent],
   },
 ]);
 
@@ -730,7 +730,7 @@ const inspectPreviewFrame = async (page, testCase) => {
           })),
           ...Array.from(
             document.querySelectorAll(
-              ".meta-chip-cas, .signal, .prepared-badge, .prepared-solution-identity, .meta-chip-prepared-detail",
+              ".meta-chip-cas, .signal, .prepared-badge, .prepared-solution-identity, .meta-chip-prepared-detail, .small-prepared-identity, .small-prepared-warning",
             ),
           ).map((element, index) => ({
             element,

@@ -79,8 +79,13 @@ export function getSolventLookupQuery(solvent) {
   return query;
 }
 
-const SIGNAL_WORD_RANK = { danger: 2, warning: 1 };
-const SIGNAL_WORD_ZH = { danger: "危險", warning: "警告" };
+const SIGNAL_WORD_RANK = { danger: 2, warning: 1, 危險: 2, 警告: 1 };
+const SIGNAL_WORD_ZH = {
+  danger: "危險",
+  warning: "警告",
+  危險: "危險",
+  警告: "警告",
+};
 
 const signalRank = (signalWord) =>
   SIGNAL_WORD_RANK[String(signalWord || "").trim().toLowerCase()] || 0;
@@ -90,13 +95,17 @@ export function strongerSignalWord(first, second) {
   return signalRank(second) > signalRank(first) ? second : first;
 }
 
+// A statement with no code is kept and matched on its wording: dropping it
+// would silently remove a hazard from the label.
 const unionByCode = (primary = [], extra = []) => {
   const seen = new Set();
   const merged = [];
   [...(primary || []), ...(extra || [])].forEach((item) => {
-    const code = String(item?.code || "").trim().toUpperCase();
-    if (!code || seen.has(code)) return;
-    seen.add(code);
+    const key = String(item?.code || item?.text_en || item?.text_zh || "")
+      .trim()
+      .toUpperCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
     merged.push(item);
   });
   return merged;

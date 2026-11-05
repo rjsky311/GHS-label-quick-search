@@ -585,6 +585,7 @@
   "print.morePrecautionary": "另有 {{count}} 項",
   "print.preparedSolution": "配製溶液 / Prepared solution",
   "print.preparedShort": "配製 / Prepared",
+  "print.preparedSmallIdentity": "{{concentration}} 溶於 {{solvent}}",
   "print.concentration": "濃度 / Concentration",
   "print.concentrationShort": "濃度 / Conc.",
   "print.solvent": "溶劑 / Solvent",
