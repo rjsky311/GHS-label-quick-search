@@ -1,6 +1,7 @@
 import dictionary_resolution_audit as audit
 from chemical_dict import CAS_TO_EN
-from dictionary_audit_reviewed import COMMON_REAGENTS, REVIEWED_AUDIT_ROWS
+from dictionary_audit_reviewed import COMMON_REAGENTS, REVIEWED_AUDIT_ROWS, REVIEWED_OTHER_REPORTS
+from reviewed_cas_resolutions import FOREIGN_GHS_REPORTS, foreign_report_numbers
 
 
 def _row(**fields):
@@ -117,18 +118,87 @@ def test_main_report_about_another_substance_needs_a_person():
     assert "Oxidase, glucose" in reasons[0]
 
 
-def test_wrong_report_outside_the_main_classification_is_counted_not_flagged():
-    """Sodium chloride's record holds an azo dye's H318, but the label shows H319."""
-    row = _row(
-        hazards=["H226", "H314"],
+_DYE = {"source": "CLP", "name": "polyazodyestuff (EC: 111-111-1)", "codes": ["H318"]}
+
+
+def _row_with_dye(**fields):
+    """A record that also holds an azo dye's report, which a user could pick and print."""
+    return _row(
         reports=[
             {"source": "ECHA", "name": "Acetic acid (EC: 200-580-7)", "codes": ["H226", "H314"]},
-            {"source": "CLP", "name": "polyazodyestuff", "codes": ["H318"]},
+            _DYE,
+        ],
+        **fields,
+    )
+
+
+def test_unread_report_among_other_classifications_needs_a_person(monkeypatch):
+    monkeypatch.setattr(audit, "COMMON_REAGENTS", {})
+    row = _row_with_dye()
+
+    assert audit.other_reports_off_record(row) == ["polyazodyestuff (EC: 111-111-1)"]
+    report = audit.build_report([row])
+    assert [item["cas"] for item in report["needsPerson"]] == ["64-19-7"]
+    assert "polyazodyestuff" in report["needsPerson"][0]["reasons"][0]
+    assert report["rowsWithOtherReportsOffRecord"] == 1
+    assert not audit.report_passes(report)
+
+
+def test_reviewed_row_does_not_waive_an_unread_report(monkeypatch):
+    monkeypatch.setattr(audit, "COMMON_REAGENTS", {})
+    monkeypatch.setattr(audit, "REVIEWED_AUDIT_ROWS", {"64-19-7": {"cid": 176, "note": "looked at it"}})
+
+    report = audit.build_report([_row_with_dye(synonyms=["Acetic acid", "EC 200-580-7"])])
+
+    assert [item["cas"] for item in report["needsPerson"]] == ["64-19-7"]
+    assert report["reviewed"] == []
+
+
+def test_read_report_passes_even_under_a_new_revision(monkeypatch):
+    monkeypatch.setattr(audit, "COMMON_REAGENTS", {})
+    monkeypatch.setattr(audit, "REVIEWED_OTHER_REPORTS", {"64-19-7": ("Vinegar acid",)})
+    row = _row(
+        reports=[
+            {"source": "ECHA", "name": "Acetic acid (EC: 200-580-7)", "codes": ["H226", "H314"]},
+            {"source": "NITE", "name": "Vinegar acid - FY2031 (Revised classification)", "codes": ["H318"]},
         ],
     )
 
-    assert audit.review_reasons(row) == []
-    assert audit.other_reports_off_record(row) == ["polyazodyestuff"]
+    assert audit.unread_other_reports(row) == []
+    assert audit.build_report([row])["needsPerson"] == []
+
+
+def test_report_without_hazard_codes_offers_nothing_to_pick(monkeypatch):
+    monkeypatch.setattr(audit, "COMMON_REAGENTS", {})
+    row = _row(
+        reports=[
+            {"source": "ECHA", "name": "Acetic acid (EC: 200-580-7)", "codes": ["H226", "H314"]},
+            {"source": "ECHA", "name": "Styrene copolymer (EC: 111-111-1)", "codes": []},
+        ],
+    )
+
+    assert audit.other_reports_off_record(row) == []
+    assert audit.build_report([row])["needsPerson"] == []
+
+
+def test_foreign_reports_are_named_by_what_starts_the_report():
+    record = {
+        "RecordNumber": 5234,
+        "Reference": [
+            {"ReferenceNumber": 97, "Name": "product-by-process definition polyazodyestuff obtained by coupling..."},
+            {"ReferenceNumber": 52, "Name": "Sodium chloride (EC: 231-598-3)"},
+        ],
+    }
+
+    assert foreign_report_numbers(record) == (97,)
+    assert foreign_report_numbers({**record, "RecordNumber": 1}) == ()
+    assert foreign_report_numbers({"RecordNumber": 5234}) == ()
+    assert foreign_report_numbers({"RecordNumber": [5234], "Reference": "x"}) == ()
+
+
+def test_reviewed_reports_and_foreign_reports_do_not_overlap():
+    foreign = tuple(name for names in FOREIGN_GHS_REPORTS.values() for name in names)
+    assert not [name for names in REVIEWED_OTHER_REPORTS.values() for name in names if name.startswith(foreign)]
 
 
 def test_row_without_hazard_data_cannot_mislead():
@@ -137,6 +207,19 @@ def test_row_without_hazard_data_cannot_mislead():
 
 def test_upstream_failure_needs_a_rerun():
     assert audit.review_reasons({"cas": "64-19-7", "upstream_error": True}) == ["PubChem did not answer; run again"]
+
+
+def test_reviewed_row_does_not_waive_a_new_pubchem_outage(monkeypatch):
+    """The CID still matches, so this used to read as reviewed and pass."""
+    monkeypatch.setattr(audit, "COMMON_REAGENTS", {})
+    monkeypatch.setattr(audit, "REVIEWED_AUDIT_ROWS", {"64-19-7": {"cid": 176, "note": "looked at it"}})
+
+    report = audit.build_report([_row(upstream_error=True)])
+
+    assert report["reviewed"] == []
+    assert [item["cas"] for item in report["needsPerson"]] == ["64-19-7"]
+    assert not audit.report_passes(report)
+
 
 
 def test_report_separates_new_rows_from_reviewed_ones(monkeypatch):

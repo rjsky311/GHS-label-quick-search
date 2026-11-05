@@ -39,8 +39,8 @@ from typing import Any, Dict, Iterable, List, Optional
 import httpx
 
 from chemical_dict import ALIASES_EN, ALIASES_ZH, CAS_TO_EN, EN_TO_CAS, ZH_TO_CAS
-from dictionary_audit_reviewed import COMMON_REAGENTS, REVIEWED_AUDIT_ROWS
-from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS
+from dictionary_audit_reviewed import COMMON_REAGENTS, REVIEWED_AUDIT_ROWS, REVIEWED_OTHER_REPORTS
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS, foreign_report_numbers
 from substance_scope_notes import SUBSTANCE_SCOPE_NOTES
 
 ROWS_FILENAME = "rows.jsonl"
@@ -72,6 +72,7 @@ def hazard_reports(ghs_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Source, name and H codes of each report behind a PubChem record's GHS data."""
     record = (ghs_data or {}).get("Record") or {}
     references = {ref.get("ReferenceNumber"): ref for ref in record.get("Reference") or []}
+    foreign = foreign_report_numbers(record)
     reports: List[Dict[str, Any]] = []
 
     def walk(section: Dict[str, Any], inside: bool) -> None:
@@ -81,7 +82,7 @@ def hazard_reports(ghs_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         if not inside:
             return
         for info in section.get("Information") or []:
-            if info.get("Name") != "GHS Hazard Statements":
+            if info.get("Name") != "GHS Hazard Statements" or info.get("ReferenceNumber") in foreign:
                 continue
             reference = references.get(info.get("ReferenceNumber"), {})
             markups = (info.get("Value") or {}).get("StringWithMarkup") or []
@@ -149,14 +150,29 @@ def review_reasons(row: Dict[str, Any]) -> List[str]:
 
 
 def other_reports_off_record(row: Dict[str, Any]) -> List[str]:
-    """Reports not behind the main classification that name something else."""
+    """Other classifications a user can pick whose report names something else.
+
+    A report without H codes gives the site nothing to offer, so it does not count.
+    """
     main = set(main_report_names(row.get("reports") or [], row.get("hazards") or []))
     return [
         report["name"]
         for report in row.get("reports") or []
-        if report["name"] not in main
+        if report["codes"]
+        and report["name"] not in main
         and not report_is_on_record(report["name"], row.get("synonyms") or [], row.get("title"))
     ]
+
+
+def report_key(name: str) -> str:
+    """A report's name without what changes each revision (EC number, fiscal year)."""
+    return _REPORT_NAME_SUFFIX_RE.sub("", name or "").strip()
+
+
+def unread_other_reports(row: Dict[str, Any]) -> List[str]:
+    """Of those, the ones nobody has read. It may be another substance's data."""
+    read = REVIEWED_OTHER_REPORTS.get(row["cas"], ())
+    return [name for name in other_reports_off_record(row) if report_key(name) not in read]
 
 
 def build_report(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
@@ -164,7 +180,10 @@ def build_report(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     needs_person = []
     reviewed = []
     for cas, row in sorted(by_cas.items()):
-        reasons = review_reasons(row)
+        unread = unread_other_reports(row)
+        reasons = review_reasons(row) + [
+            f"another classification's report names something else: {name}" for name in unread
+        ]
         if not reasons:
             continue
         item = {
@@ -175,7 +194,8 @@ def build_report(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
             "reasons": reasons,
         }
         accepted = REVIEWED_AUDIT_ROWS.get(cas)
-        if accepted and accepted["cid"] == row.get("cid"):
+        # A reviewed row settles who the record is, and nothing newer than that.
+        if accepted and accepted["cid"] == row.get("cid") and not (unread or row.get("upstream_error")):
             reviewed.append({**item, "note": accepted["note"]})
         else:
             needs_person.append(item)

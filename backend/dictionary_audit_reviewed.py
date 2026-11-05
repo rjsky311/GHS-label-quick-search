@@ -3,13 +3,19 @@
 REVIEWED_AUDIT_ROWS: the audit flags these, and the record is right anyway. A row
 applies only while the site still uses that CID for the CAS.
 
+REVIEWED_OTHER_REPORTS: reports among a record's other classifications whose name
+is not on the record, read one by one. Each names this substance in other words, or
+a grade, form, solution, mixture or labelled version of it. A name not listed here
+needs a person: it may be another substance's data, which a user could pick and
+print. If it is, it goes in reviewed_cas_resolutions.FOREIGN_GHS_REPORTS instead.
+
 COMMON_REAGENTS: what the site showed for common reagents when last reviewed. A
 difference is not an error, since PubChem's data changes. It means look again.
 """
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 
 class ReviewedAuditRow(TypedDict):
@@ -69,7 +75,14 @@ REVIEWED_AUDIT_ROWS: Dict[str, ReviewedAuditRow] = {
     "1676-73-9": {"cid": 122337, "note": _OTHER_WORDS},
     "17201-43-3": {"cid": 86996, "note": _OTHER_WORDS},
     "29858-07-9": {"cid": 9903262, "note": _OTHER_WORDS},
-    "30562-09-5": {"cid": 6436668, "note": _OTHER_WORDS},
+    # 6441057 has the dictionary's structure, but it also holds an E,Z report.
+    "30562-09-5": {
+        "cid": 6436668,
+        "note": (
+            "PubChem draws this record as (9E,11Z), but its ECHA report is the dictionary's "
+            "(Z,E), EC 250-242-8. Kept for the report, not the drawing."
+        ),
+    },
     "3460-24-0": {"cid": 2724603, "note": _EC_ONLY},
     "34699-28-0": {"cid": 24882208, "note": _EC_ONLY},
     "41492-05-1": {"cid": 521059, "note": _OTHER_WORDS},
@@ -84,6 +97,110 @@ REVIEWED_AUDIT_ROWS: Dict[str, ReviewedAuditRow] = {
     "98327-87-8": {"cid": 634876, "note": _OTHER_WORDS},
     # No report's H codes match the main classification exactly.
     "1336-21-6": {"cid": 14923, "note": "Ammonia solution; the reports name it as ammonia ...%."},
+}
+
+REVIEWED_OTHER_REPORTS: Dict[str, Tuple[str, ...]] = {
+    "100-02-7": ("p-Nnitrophenol",),
+    "10025-73-7": ("Chromium trichloride",),
+    "10025-77-1": ("Iron chloride (FeCl3), hexahydrate",),
+    "10031-43-3": ("Copper(II) dinitrate trihydrate",),
+    "10043-35-3": ("Boric acid (crude natural)",),
+    "10196-18-6": ("Zinc(II) nitrate hexahydrate",),
+    "102-82-9": ("Tributan-1-ylamine",),
+    "103-11-7": ("2-Propenoic acid, octyl ester, branched",),
+    "104-15-4": ("p-toluenesulphonic acid (containing a maximum of 5 % H2SO4)",),
+    "106-42-3": ("p-Xylene-α,α′-di-13C",),
+    "106-44-5": ("p-cresol [1]",),
+    "106-93-4": ("1,2-Dibromoethane (EDB)",),
+    "106-94-5": ("1-Bromopropane [propyl bromide]",),
+    "106-97-8": ("butane (containing ≥ 0,1 % butadiene (203-450-8))",),
+    "108-46-3": ("Resorcinol (Resorcin)",),
+    "110-19-0": ("Isobutyle acetate",),
+    "110-46-3": ("‘amyl nitrite’, mixed isomers",),
+    "110-54-3": ("Hexane, branched and linear",),
+    "112-02-7": ("Hexadecan-1-yl(trimethyl)ammonium chloride",),
+    "112926-00-8": (
+        "Amorphous silica (silica gel, precipitated silica)",
+        "Crystalline silica (cristabolite)",
+        "Silica (silicon dioxide containing crystalline and amorphous)",
+    ),
+    "120-80-9": ("Catechol (synonym: Pyrocatechol)",),
+    "12069-69-1": ("12069-69-1",),
+    "121-43-7": ("Methyl borate-11B",),
+    "1305-78-8": ("Quicklime [Calcium oxide]",),
+    "1314-62-1": ("Vanadium oxide",),
+    "1317-39-1": ("Copper (I) oxide (Cu2O)",),
+    "1344-81-6": ("calcium polysulphides",),
+    "13478-10-9": ("Iron chloride (FeCl2), tetrahydrate",),
+    "138526-69-9": ("1-Brom-3,4,5-trifluorbenzol",),
+    "14459-95-1": ("tetrapotassium iron(6+) hexacyanide",),
+    "14808-60-7": (
+        "Amorphous silica (silica gel, precipitated silica)",
+        "Crystalline silica (cristabolite)",
+        "Silica (silicon dioxide containing crystalline and amorphous)",
+    ),
+    "14901-07-6": ("beta-Ionone",),
+    "151-21-3": ("Sodium dodecan-1-yl sulfate",),
+    "16731-55-8": ("Disulfurous acid, dipotassium salt",),
+    "21908-53-2": ("Mercury monoxide",),
+    "2530-83-8": ("2-{[3-(Trimethoxysilyl)propoxy]methyl}oxirane",),
+    "2592-95-2": ("1-hydroxybenzotriazole, anhydrous",),
+    "27610-45-3": ("Disodium sulfide",),
+    "335-67-1": ("Perfluorooctanic acid",),
+    "3483-12-3": ("[R-(R*,R*)]-1,4-dimercaptobutane-2,3-diol",),
+    "431-03-8": ("EC:694-187-1",),
+    "557-34-6": ("Acetic acid, zinc(2+) salt",),
+    "577-11-7": ("Sodium salt of bis(2-ethylhexyl) sulfosuccinate",),
+    "630-08-0": ("EC:685-227-9",),
+    "67485-29-4": ("5,5-dimethyl-perhydro-pyrimidin-2-one...",),
+    "74-89-5": ("EC:685-222-1",),
+    "7429-90-5": (
+        "Aluminium metal",
+        "aluminium powder (stabilised)",
+    ),
+    "7439-92-1": ("lead massive: [particle diameter ≥ 1 mm]",),
+    "7440-22-4": (
+        "Silver (excluding nanoparticles)",
+        "silver massive: [particle diameter ≥ 1 mm]",
+        "silver nano: [particle diameter > 1 nm ≤ 100 nm]",
+        "silver powder: [particle diameter > 100 nm < 1 mm]",
+    ),
+    "7440-50-8": ("copper [specific surface area > 0,67 mm2/mg]",),
+    "7440-66-6": (
+        "zinc powder - zinc dust (stabilised)",
+        "zinc powder - zinc dust (stabilized)",
+    ),
+    "7446-70-0": ("aluminium chloride, anhydrous",),
+    "76-13-1": ("1,1,2-Trichloro-1,2,2-trifluoroethane (trichlorotrifluoroethane, CFC-113)",),
+    "7631-86-9": (
+        "Amorphous silica (silica gel, precipitated silica)",
+        "Crystalline silica (cristabolite)",
+        "Silica (silicon dioxide containing crystalline and amorphous)",
+    ),
+    "7631-90-5": ("Sodium hydrogen sulfite (34% aqueous solution)",),
+    "7646-79-9": ("Cobalt(II) dichloride",),
+    "7664-38-2": ("phosphoric acid ... %, orthophosphoric acid ... %",),
+    "7681-52-9": (
+        "Sodium hypochlorite (aqueous solution)",
+        "Sodium hypochlorite (effective chlorine concentration: 6-15 %)",
+        "sodium hypochlorite, solution ... % Cl active",
+        "sodium hypochlorite, solution ... % Cl active",
+    ),
+    "7681-57-4": ("Sodium disulfite (solid)",),
+    "7697-37-2": (
+        "nitric acid ...% [C > 70 %]",
+        "nitric acid …% [C ≤ 70 %]",
+    ),
+    "7722-64-7": ("Potassium permanganate(VII)",),
+    "7722-84-1": ("hydrogen peroxide solution",),
+    "7727-54-0": ("Diammonium peroxodisulfate",),
+    "7761-88-8": ("Nitric acid silver(I)",),
+    "7783-96-2": ("Silver (I) iodide",),
+    "872-50-4": ("N-Methyl-2-pyrrolidone [N-methylpyrrolidone]",),
+    "89-32-7": ("1, 2, 4, 5-Benzenetetracarboxylic acid anhydride",),
+    "90-05-1": ("EC:804-496-7",),
+    "90076-65-6": ("Methanesulfonamide, 1,1,1-trifluoro-N-[(trifluoromethyl)sulfonyl]-, lithium salt (1:1)",),
+    "95-53-4": ("o-Toluidine / Toluidines",),
 }
 
 COMMON_REAGENTS: Dict[str, CommonReagent] = {

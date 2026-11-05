@@ -19,7 +19,7 @@ which test_reviewed_cas_resolutions.py checks.
 
 from __future__ import annotations
 
-from typing import Dict, Optional, TypedDict
+from typing import Any, Dict, Optional, Tuple, TypedDict
 
 
 class ReviewedCasResolution(TypedDict):
@@ -111,3 +111,37 @@ REVIEWED_CAS_RESOLUTIONS: Dict[str, ReviewedCasResolution] = {
     "8032-32-4": _row("Petroleum ether", None, "Records lead to an unrelated hydrazide (48418096)."),
     "84787-70-2": _row("Sandalwood oil", None, "All 20 records lead to biphenyl-4,4'-dicarboxylic acid (13084)."),
 }
+
+
+# Reports PubChem files on a compound that are about another substance. The site
+# would offer them as a classification of that compound, so they are dropped before
+# classifications are built. This removes data and never adds any. Each was read
+# one by one; a value is how the report's name starts. Grades, forms, solutions and
+# labelled versions of the substance stay, and are listed in
+# dictionary_audit_reviewed.REVIEWED_OTHER_REPORTS.
+FOREIGN_GHS_REPORTS: Dict[int, Tuple[str, ...]] = {
+    # Sodium chloride: CLP 611-142-00-3 is a polyazo dye made with it.
+    5234: ("product-by-process definition polyazodyestuff",),
+    # Isopropanol: CLP 607-403-00-6 is a reaction mass. Its own entry is 603-117-00-0.
+    3776: ("reaction mass of:",),
+    # Methyl salicylate: EC 289-888-0 is an extract of wintergreen.
+    4133: ("Gaultheria procumbens, ext.",),
+    # Disilver oxide: EC 628-958-0 is mostly silver(II) oxide, a different oxide.
+    9794626: ("SILVER OXIDE (PREDOM. SILVER(II) OXIDE)",),
+}
+
+
+def foreign_report_numbers(record: Any) -> Tuple[Any, ...]:
+    """Reference numbers of the reports on a PUG View record that are about something else."""
+    number = record.get("RecordNumber")
+    names = FOREIGN_GHS_REPORTS.get(number) if isinstance(number, int) else None
+    references = record.get("Reference")
+    if not names or not isinstance(references, list):
+        return ()
+    return tuple(
+        reference.get("ReferenceNumber")
+        for reference in references
+        if isinstance(reference, dict)
+        and isinstance(reference.get("Name"), str)
+        and reference["Name"].startswith(names)
+    )

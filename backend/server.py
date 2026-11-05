@@ -87,7 +87,7 @@ from chemical_dict import (
 )
 from h_code_translations import H_CODE_MISSING_TEXT_ZH, H_CODE_TRANSLATIONS
 from p_code_translations import P_CODE_TRANSLATIONS, P_CODE_TEXTS_EN
-from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS
+from reviewed_cas_resolutions import REVIEWED_CAS_RESOLUTIONS, foreign_report_numbers
 from export_helpers import (
     EXPORT_DATA_HEADERS,
     _add_export_pilot_summary_sheet,
@@ -1303,6 +1303,7 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
         return []
 
     record = _ghs_payload_mapping(ghs_data.get("Record"), "Record")
+    foreign_reports = foreign_report_numbers(record)
     
     try:
         sections = _ghs_payload_optional_list(record, "Section", "Record.Section")
@@ -1362,6 +1363,8 @@ def extract_all_ghs_classifications(ghs_data: dict) -> List[Dict[str, Any]]:
                                         raw_info,
                                         f"GHS Classification.Information[{info_index}]",
                                     )
+                                    if foreign_reports and info.get("ReferenceNumber") in foreign_reports:
+                                        continue
                                     info_name = _ghs_payload_optional_string(
                                         info,
                                         "Name",

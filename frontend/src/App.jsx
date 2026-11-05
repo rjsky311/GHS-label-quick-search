@@ -443,6 +443,10 @@ function App() {
   const batchCount = batchSearchInput.acceptedCount;
 
   const filteredResults = useMemo(() => {
+    // One result has nothing to narrow down, and the toolbar that clears these
+    // filters only shows for more than one. Filtering would just empty the table.
+    if (results.length <= 1) return results;
+
     let filtered = results;
 
     // Signal word filter
@@ -479,9 +483,7 @@ function App() {
       });
     }
 
-    // One result has nothing to narrow down, and the toolbar that clears this
-    // filter only shows for more than one. Filtering would just empty the table.
-    if (advancedFilter.reviewIssueType && results.length > 1) {
+    if (advancedFilter.reviewIssueType) {
       filtered = filtered.filter((r) => {
         const effective = r.found ? getEffectiveClassification(r) : null;
         return getDataQualityIssues(r, effective).some(

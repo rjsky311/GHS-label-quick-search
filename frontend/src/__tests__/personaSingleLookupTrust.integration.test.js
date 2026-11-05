@@ -240,4 +240,68 @@ describe("persona gate: general single lookup trust", () => {
 
     expect(screen.getByTestId("result-row-0")).toBeInTheDocument();
   });
+
+  async function runBatchSearch() {
+    axios.post.mockResolvedValue({
+      data: [
+        singleLookupTrustResult,
+        {
+          ...singleLookupTrustResult,
+          cas_number: "64-17-5",
+          name_en: "Ethanol",
+          signal_word: "Danger",
+          has_multiple_classifications: false,
+          other_classifications: [],
+        },
+      ],
+    });
+    axios.get.mockResolvedValue({ data: { results: [] } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("batch-search-tab"));
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("batch-cas-input"), {
+        target: { value: "84-65-1\n64-17-5" },
+      });
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("batch-search-btn"));
+    });
+    await screen.findByTestId("results-filter-toolbar");
+  }
+
+  it("does not let a batch filter hide the next single search", async () => {
+    render(<App />);
+    await runBatchSearch();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("result-filter-danger"));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("single-search-tab"));
+    });
+    await runSingleSearch({
+      ...singleLookupTrustResult,
+      has_multiple_classifications: false,
+      other_classifications: [],
+    });
+
+    expect(screen.queryByTestId("results-filter-toolbar")).not.toBeInTheDocument();
+    expect(screen.getByTestId("result-row-0")).toBeInTheDocument();
+  });
+
+  it("still narrows a batch, and the toolbar clears it", async () => {
+    render(<App />);
+    await runBatchSearch();
+    expect(screen.getAllByTestId(/^result-row-/)).toHaveLength(2);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("results-multiple-ghs-review-primary"));
+    });
+    expect(screen.getAllByTestId(/^result-row-/)).toHaveLength(1);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("active-review-reason-filter"));
+    });
+    expect(screen.getAllByTestId(/^result-row-/)).toHaveLength(2);
+  });
 });
