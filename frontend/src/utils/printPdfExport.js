@@ -7,6 +7,7 @@
  */
 import { API } from "@/constants/ghs";
 import i18n from "@/i18n";
+import { isMobilePdfPreferredEnvironment } from "@/utils/mobilePdfEnvironment";
 import { recordObservabilityEvent } from "@/utils/observability";
 import {
   collectPrintPreflightIssues,
@@ -156,10 +157,11 @@ const downloadPdfBlob = (blob, filename) => {
   URL.revokeObjectURL(objectUrl);
 };
 
-const handoffPdfBlob = async (blob, filename, options = {}) => {
+export const handoffPdfBlob = async (blob, filename, options = {}) => {
   const navigatorObj = options.navigatorObj || globalThis.navigator;
   const fileCtor = globalThis.File;
   if (
+    isMobilePdfPreferredEnvironment() &&
     typeof fileCtor === "function" &&
     typeof navigatorObj?.share === "function"
   ) {

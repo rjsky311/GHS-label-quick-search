@@ -1509,6 +1509,10 @@ describe("printLabels", () => {
       canShare: jest.fn(() => true),
       share: jest.fn(async () => {}),
     };
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = jest.fn((query) => ({
+      matches: query === "(pointer: coarse)",
+    }));
 
     printLabels(
       [overriddenChemical],
@@ -1531,6 +1535,7 @@ describe("printLabels", () => {
       {},
       { fetchImpl: fetchMock, locale: "en", navigatorObj },
     );
+    window.matchMedia = originalMatchMedia;
 
     expect(createElementSpy).toHaveBeenCalledWith("iframe");
     expect(mockIframeWindow.print).toHaveBeenCalled();
