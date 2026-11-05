@@ -1625,6 +1625,15 @@ export const buildPrintStyles = (model) => {
       justify-content: flex-start;
       gap: 0.45mm;
     }
+    /* Codes only on a strip label: keep every code by sharing the signal word's row. */
+    .label-standard.label-form-strip .standard-main-codes {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.45mm;
+    }
+    .label-standard.label-form-strip .standard-main-codes .standard-hazard-board {
+      flex: 1 1 0;
+    }
     .label-standard.label-form-strip .standard-main {
       gap: 0.38mm;
     }

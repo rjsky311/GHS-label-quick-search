@@ -1114,7 +1114,7 @@ function App() {
     );
     setPrintBlockedInfo(null);
 
-    const { exportLabelsPdf } = await import("@/utils/printLabels");
+    const { exportLabelsPdf } = await import("@/utils/printPdfExport");
 
     const result = await exportLabelsPdf(
       printableSelection,

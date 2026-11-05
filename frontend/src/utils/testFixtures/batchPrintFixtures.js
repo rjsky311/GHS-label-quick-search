@@ -512,8 +512,8 @@ const sparseChemicals = batchChemicalSamples.map(([cas, name, zh], index) =>
 export const batchPrintMixedFixture50 = [
   makeChemical({
     cas: "7647-01-0",
-    name: "Hydrochloric Acid",
-    zh: "鹽酸",
+    name: "Hydrogen chloride",
+    zh: "氯化氫",
     pictogramCodes: ["GHS04", "GHS05", "GHS06", "GHS07"],
     hazardCount: 6,
     precautionCount: 22,

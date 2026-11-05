@@ -212,6 +212,68 @@ export function mergeSolventHazardsIntoChemical(parent, solventResult) {
   };
 }
 
+const statementCode = (item) => String(item?.code || "").trim().toUpperCase();
+
+const withoutGasContainerHazards = (classification) => {
+  const hazardStatements = classification.hazard_statements || [];
+  const remaining = hazardStatements.filter(
+    (statement) => !/^H28[01]\b/.test(statementCode(statement)),
+  );
+  // H282-H284 (chemicals under pressure) also use the gas cylinder pictogram.
+  const pictogramStillNeeded = remaining.some((statement) =>
+    /^H28[2-4]\b/.test(statementCode(statement)),
+  );
+  return {
+    ...classification,
+    hazard_statements: remaining,
+    pictograms: pictogramStillNeeded
+      ? classification.pictograms || []
+      : (classification.pictograms || []).filter(
+          (pictogram) => statementCode(pictogram) !== "GHS04",
+        ),
+  };
+};
+
+const hasGasContainerHazard = (classification) =>
+  (classification.hazard_statements || []).some((statement) =>
+    /^H28[01]\b/.test(statementCode(statement)),
+  );
+
+/**
+ * A prepared solution cannot be a gas under pressure, so H280, H281 and the
+ * gas cylinder pictogram they need do not describe it. This is about the
+ * stated form, not dilution: every other hazard stays. Each classification
+ * keeps its original fingerprint, so saved choices still match.
+ */
+export function dropGasContainerHazards(chemical) {
+  const classifications = listGhsClassifications(chemical);
+  if (!classifications.some(hasGasContainerHazard)) return chemical;
+
+  const primary = withoutGasContainerHazards({
+    pictograms: chemical.ghs_pictograms || [],
+    hazard_statements: chemical.hazard_statements || [],
+  });
+  const basePrimaryFingerprint = getGhsClassificationFingerprint(
+    classifications[0],
+  );
+  return {
+    ...chemical,
+    ghs_pictograms: primary.pictograms,
+    hazard_statements: primary.hazard_statements,
+    primary_solvent_base_fingerprint: basePrimaryFingerprint,
+    classification_fingerprint:
+      chemical.classification_fingerprint || basePrimaryFingerprint,
+    other_classifications: Array.isArray(chemical.other_classifications)
+      ? chemical.other_classifications.map((classification) => ({
+          ...withoutGasContainerHazards(classification || {}),
+          solvent_base_fingerprint: getGhsClassificationFingerprint(
+            classification || {},
+          ),
+        }))
+      : chemical.other_classifications,
+  };
+}
+
 /**
  * Decide the solvent-hazard status for a prepared item and describe it.
  * `solventResult` is the single-search response for the solvent, or null

@@ -1103,7 +1103,7 @@ describe("print QA matrix report", () => {
       chemical: expect.objectContaining({
         id: "preparedHydrochloricAcid",
         cas: "7647-01-0",
-        expectedPictograms: ["GHS04", "GHS05", "GHS06", "GHS07"],
+        expectedPictograms: ["GHS05", "GHS06", "GHS07"],
       }),
       actual: expect.objectContaining({
         hasPreparedIdentityTexts: true,

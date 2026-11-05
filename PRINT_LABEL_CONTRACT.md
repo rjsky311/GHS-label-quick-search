@@ -50,6 +50,8 @@ The best path is a label workflow that a lab user can print without guessing:
   solvent text. There is no mixture threshold calculation. A parent with no
   hazard data of its own takes no solvent hazards and stays blocked from
   printing, the same as without a solvent.
+  A prepared solution is not a gas under pressure, so H280, H281 and the
+  GHS04 pictogram they need are left off its label; every other hazard stays.
 - The public print modal exposes exactly three first-level outputs: Complete
   A4/Letter label, QR small label, and Identification small label.
 - A complete primary label includes product identifier, CAS, signal word, all

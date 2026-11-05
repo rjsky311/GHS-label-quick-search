@@ -36,17 +36,19 @@ import {
   buildPrintDocument,
   buildPrintDocumentModel,
   buildPrintPreviewDocument,
-  exportLabelsPdf,
   inspectPrintContentFit,
   inspectPrintLayoutDocument,
-  inlineGhsPictogramSvgs,
   printLabels,
-  resetPrintPdfExportCacheForTests,
   getQRCodeUrl,
   getChemicalLookupUrl,
   getHazardFontTier,
   escapeHtml,
 } from "../printLabels";
+import {
+  exportLabelsPdf,
+  inlineGhsPictogramSvgs,
+  resetPrintPdfExportCacheForTests,
+} from "../printPdfExport";
 import { resolvePrintLayoutConfig } from "@/constants/labelStocks";
 import { recordObservabilityEvent } from "@/utils/observability";
 import { getFullPageStatementTier } from "@/utils/printDocumentLayoutHelpers";

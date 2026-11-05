@@ -32,9 +32,10 @@ const budgets = [
     label: "Lazy print engine chunk",
     // Raw budget raised 150 -> 160 KiB on 2026-07-07 when the engine gained
     // the mobile PDF-export handoff (exportLabelsPdf); the gzip budget is
-    // the transfer-size gate and stays unchanged. If this chunk approaches
-    // 160 KiB again, split the PDF-export path into its own lazy chunk
-    // instead of raising the budget further.
+    // the transfer-size gate and stays unchanged. The PDF-export path and the
+    // fallback wording moved to their own chunks (printPdfExport,
+    // print-text-fallbacks) when the engine reached 160 KiB again; keep
+    // splitting rarely used code and data rather than raising the budget.
     pattern: /^printLabels-[\w-]+\.js$/,
     maxBytes: 160 * kib,
     maxGzipBytes: 40 * kib,

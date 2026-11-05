@@ -160,11 +160,10 @@ const ALL_PREPARED_CASES = Object.freeze([
   ...PREPARED_PRESET_CASES,
 ]);
 
-// Every pictogram in the current PubChem data for CAS 7647-01-0 must print
-// (pictograms are never hidden). That data is the hydrogen chloride
-// classification and includes the gas, which is why GHS04 is here; it is
-// not the expected set for a hydrochloric acid solution label.
-const EXPECTED_PICTOGRAMS = Object.freeze(["GHS04", "GHS05", "GHS06", "GHS07"]);
+// Every pictogram in the current PubChem data for CAS 7647-01-0 must print,
+// except GHS04: that data is the hydrogen chloride classification and includes
+// the gas, and a prepared solution is not a gas under pressure.
+const EXPECTED_PICTOGRAMS = Object.freeze(["GHS05", "GHS06", "GHS07"]);
 
 const maybeJson = (value) => JSON.stringify(value, null, 2);
 

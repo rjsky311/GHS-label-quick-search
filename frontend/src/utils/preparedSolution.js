@@ -82,6 +82,7 @@
 import { listGhsClassifications } from "@/utils/selectedGhsClassification";
 import {
   SOLVENT_HAZARD_STATUS,
+  dropGasContainerHazards,
   mergeSolventHazardsIntoChemical,
   resolveSolventHazards,
 } from "@/utils/preparedSolventHazards";
@@ -149,10 +150,11 @@ export function buildPreparedSolutionItem(parent, formValues, options = {}) {
     solvent,
     parentHasHazardEvidence ? options?.solventResult || null : null,
   );
-  const hazardSource =
+  const hazardSource = dropGasContainerHazards(
     solventHazards.status === SOLVENT_HAZARD_STATUS.INCLUDED
       ? mergeSolventHazardsIntoChemical(parent, options.solventResult)
-      : parent;
+      : parent,
+  );
 
   return {
     // Pass every parent field through verbatim (GHS fields merged with
