@@ -39,8 +39,10 @@ device, and record which path each evidence line used:
   baseline settings.
 - **Download PDF** (mobile-primary, added 2026-07-07): press `下載 PDF (N 張)`.
   This POSTs the exact print HTML to the server renderer
-  (`POST /api/print/pdf`, headless Chromium) and downloads a true PDF, which
-  sidesteps mobile-browser print clipping/headers. On phones this is the
+  (`POST /api/print/pdf`, headless Chromium) and returns a true PDF, which
+  sidesteps mobile-browser print clipping/headers. Desktops download the file;
+  phones and tablets open the share sheet and download if it is cancelled or
+  unavailable. On phones this is the
   PRIMARY recommended path — validate by opening the downloaded PDF and
   printing it at 100% / actual size. The endpoint must be healthy
   (`/api/print/pdf` returns `200 application/pdf`); a 503 means the render

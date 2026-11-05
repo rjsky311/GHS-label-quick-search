@@ -77,6 +77,7 @@ import {
   resolvePrintContentPolicy,
 } from "@/utils/printContentPolicy";
 import AuthoritativeSourceNote from "@/components/AuthoritativeSourceNote";
+import { isMobilePdfPreferredEnvironment } from "@/utils/mobilePdfEnvironment";
 import { buildPrintPreviewDocument } from "@/utils/printLabels";
 import useFocusTrap from "@/hooks/useFocusTrap";
 import useLabelPrintPreviewState from "@/hooks/useLabelPrintPreviewState";
@@ -124,17 +125,6 @@ const normalizePublicPrintConfig = (config = {}) => {
 // Mobile PDF preference is capability-shaped: coarse pointer catches phones and
 // tablets, while the UA fallback covers iOS Safari variants whose print engine
 // injects headers/footers even when pointer media is unavailable.
-const isMobilePdfPreferredEnvironment = () => {
-  if (typeof window === "undefined") return false;
-  try {
-    if (window.matchMedia?.("(pointer: coarse)")?.matches) return true;
-  } catch {
-    // Fall back to user agent below.
-  }
-  const ua = window.navigator?.userAgent || "";
-  return /iPhone|iPad|iPod|Android/i.test(ua);
-};
-
 export default function LabelPrintModal({
   selectedForLabel,
   labelConfig,
