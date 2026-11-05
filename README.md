@@ -191,6 +191,7 @@ backend/                            FastAPI service, Python 3.11
   h_code_coverage_audit.py,
   p_code_coverage_audit.py          H- and P-statement wording coverage audits
   p_code_translations.py            Traditional Chinese P-statement wording
+  substance_scope_notes.py          what a CAS entry's GHS data covers, printed on complete labels
   scripts/                          maintainer command-line wrappers for the audits above
   test_*.py                         pytest suite
 
